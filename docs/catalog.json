@@ -782,218 +782,218 @@
               "title": "3. Il runtime decide quali tool e skill sono utilizzabili",
               "level": 1,
               "start": 97,
-              "end": 120,
+              "end": 125,
               "summary": "Il motore di inferenza non deve implementare la semantica della gerarchia."
             },
             {
               "title": "4. Estensione API",
               "level": 1,
-              "start": 121,
-              "end": 160,
+              "start": 126,
+              "end": 179,
               "summary": "Mantenere il normale payload OpenAI-compatible e aggiungere le informazioni specifiche del sistema in un namespace:"
             },
             {
               "title": "5. `allowed_tools` e `allowed_skills`",
               "level": 1,
-              "start": 161,
-              "end": 195,
+              "start": 180,
+              "end": 215,
               "summary": "`allowed_tools` contiene i tool ordinari utilizzabili nello scope corrente."
             },
             {
               "title": "6. Tool masking",
               "level": 1,
-              "start": 196,
-              "end": 221,
+              "start": 216,
+              "end": 241,
               "summary": "Durante una call il modello deve poter generare solamente uno dei nomi presenti in:"
             },
             {
               "title": "7. Il path non serve all'inference engine",
               "level": 1,
-              "start": 222,
-              "end": 247,
+              "start": 242,
+              "end": 267,
               "summary": "Il modello può ricevere informazioni sul path corrente tramite le istruzioni della skill o altri messaggi costruiti dal runtime."
             },
             {
               "title": "8. Apertura di una skill",
               "level": 1,
-              "start": 248,
-              "end": 285,
+              "start": 268,
+              "end": 305,
               "summary": "Una skill viene aperta attraverso una normale tool call."
             },
             {
               "title": "9. Il `call_id` è un riferimento logico",
               "level": 1,
-              "start": 286,
-              "end": 324,
+              "start": 306,
+              "end": 344,
               "summary": "Non utilizzare il `call_id` stesso come rappresentazione fisica del checkpoint."
             },
             {
               "title": "10. Posizione esatta del checkpoint",
               "level": 1,
-              "start": 325,
-              "end": 356,
+              "start": 345,
+              "end": 376,
               "summary": "Il checkpoint associato alla skill deve rappresentare:"
             },
             {
               "title": "11. Entrata nella skill",
               "level": 1,
-              "start": 357,
-              "end": 394,
+              "start": 377,
+              "end": 414,
               "summary": "Dopo aver salvato su SSD lo stato ricorrente e registrato la frontiera parent, il runtime può aggiungere i nuovi token necessari alla skill:"
             },
             {
               "title": "12. Non serve un'operazione `enter`",
               "level": 1,
-              "start": 395,
-              "end": 428,
+              "start": 415,
+              "end": 449,
               "summary": "Non è necessario introdurre:"
             },
             {
               "title": "13. Esecuzione interna della skill",
               "level": 1,
-              "start": 429,
-              "end": 449,
+              "start": 450,
+              "end": 470,
               "summary": "Durante l'esecuzione interna la sequence può continuare normalmente:"
             },
             {
               "title": "14. Chiusura della skill",
               "level": 1,
-              "start": 450,
-              "end": 472,
+              "start": 471,
+              "end": 493,
               "summary": "La skill termina tramite il proprio tool di uscita e produce un risultato."
             },
             {
               "title": "15. API di return",
               "level": 1,
-              "start": 473,
-              "end": 526,
+              "start": 494,
+              "end": 549,
               "summary": "In fase di risalita il runtime invia:"
             },
             {
               "title": "16. Semantica di `return`",
               "level": 1,
-              "start": 527,
-              "end": 559,
+              "start": 550,
+              "end": 582,
               "summary": "Quando riceve:"
             },
             {
               "title": "17. History prima e dopo il return",
               "level": 1,
-              "start": 560,
-              "end": 585,
+              "start": 583,
+              "end": 608,
               "summary": "Prima:"
             },
             {
               "title": "18. Prefill alla risalita",
               "level": 1,
-              "start": 586,
-              "end": 633,
+              "start": 609,
+              "end": 656,
               "summary": "Il risultato della skill deve essere processato nuovamente nel contesto parent."
             },
             {
               "title": "19. Implementazione della frontiera e checkpoint SSD",
               "level": 1,
-              "start": 634,
-              "end": 670,
+              "start": 657,
+              "end": 703,
               "summary": "La sessione deve rappresentare logicamente una struttura tipo:"
             },
             {
               "title": "20. Skill annidate",
               "level": 1,
-              "start": 671,
-              "end": 718,
+              "start": 704,
+              "end": 752,
               "summary": "Il sistema deve supportare skill annidate arbitrariamente."
             },
             {
               "title": "21. Skill ricorsive",
               "level": 1,
-              "start": 719,
-              "end": 746,
+              "start": 753,
+              "end": 780,
               "summary": "Non assumere che ogni `skill_id` compaia una sola volta."
             },
             {
               "title": "22. API finale da supportare",
               "level": 1,
-              "start": 747,
-              "end": 797,
+              "start": 781,
+              "end": 833,
               "summary": "\"agentic\": {"
             },
             {
               "title": "Caso normale",
               "level": 2,
-              "start": 749,
-              "end": 767,
+              "start": 783,
+              "end": 802,
               "summary": "\"agentic\": {"
             },
             {
               "title": "Return da skill",
               "level": 2,
-              "start": 768,
-              "end": 797,
+              "start": 803,
+              "end": 833,
               "summary": "\"agentic\": {"
             },
             {
               "title": "23. Compatibilità",
               "level": 1,
-              "start": 798,
-              "end": 829,
+              "start": 834,
+              "end": 865,
               "summary": "Il campo:"
             },
             {
               "title": "24. Stato interno da verificare durante restore",
               "level": 1,
-              "start": 830,
-              "end": 852,
+              "start": 866,
+              "end": 888,
               "summary": "Il restore non riguarda necessariamente solo i tensori KV."
             },
             {
               "title": "25. Test fondamentale: apertura",
               "level": 1,
-              "start": 853,
-              "end": 890,
+              "start": 889,
+              "end": 926,
               "summary": "Creare un parent prefix molto lungo."
             },
             {
               "title": "26. Test fondamentale: return",
               "level": 1,
-              "start": 891,
-              "end": 929,
+              "start": 927,
+              "end": 965,
               "summary": "Esempio:"
             },
             {
               "title": "27. Test API sintetici, classificazione e masking",
               "level": 1,
-              "start": 930,
-              "end": 995,
+              "start": 966,
+              "end": 1031,
               "summary": "Implementare una suite Python sottile che invii richieste HTTP fittizie alle API esistenti e concateni normali response/tool output/skill return."
             },
             {
               "title": "28. Metriche utili",
               "level": 1,
-              "start": 996,
-              "end": 1020,
+              "start": 1032,
+              "end": 1056,
               "summary": "Aggiungere o verificare metriche equivalenti a:"
             },
             {
               "title": "29. Logging utile",
               "level": 1,
-              "start": 1021,
-              "end": 1048,
+              "start": 1057,
+              "end": 1084,
               "summary": "Apertura:"
             },
             {
               "title": "30. Requisito finale",
               "level": 1,
-              "start": 1049,
-              "end": 1111,
+              "start": 1085,
+              "end": 1147,
               "summary": "Il comportamento che vogliamo ottenere è:"
             },
             {
               "title": "31. Implementazione e gate di validazione",
               "level": 1,
-              "start": 1112,
-              "end": 1126,
-              "summary": "L'implementazione usa un envelope checkpoint v3."
+              "start": 1148,
+              "end": 1164,
+              "summary": "Il server usa il payload KV completo della sessione, comprendente full-attention,"
             }
           ]
         },

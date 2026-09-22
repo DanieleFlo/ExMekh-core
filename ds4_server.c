@@ -735,6 +735,19 @@ static bool schema_json_validate(const schema_json_value *schema,
         const schema_json_value *max = schema_json_object_get(schema, "maxLength");
         if (min && (min->kind != SCHEMA_JSON_NUMBER || (double)length < min->number)) return false;
         if (max && (max->kind != SCHEMA_JSON_NUMBER || (double)length > max->number)) return false;
+        const schema_json_value *pattern = schema_json_object_get(schema, "pattern");
+        if (pattern) {
+            if (pattern->kind != SCHEMA_JSON_STRING || strcmp(pattern->string, "\\S"))
+                return false;
+            bool has_non_space = false;
+            for (const unsigned char *p = (const unsigned char *)value->string; *p; p++) {
+                if (!isspace(*p)) {
+                    has_non_space = true;
+                    break;
+                }
+            }
+            if (!has_non_space) return false;
+        }
     }
     if (value->kind == SCHEMA_JSON_NUMBER) {
         const schema_json_value *min = schema_json_object_get(schema, "minimum");
@@ -771,7 +784,7 @@ static bool schema_json_schema_supported(const schema_json_value *schema,
      * sync with tools/import_jsonschemabench_subset.py. */
     static const char *known[] = {
         "type", "properties", "required", "additionalProperties", "items",
-        "allOf", "anyOf", "oneOf", "enum", "const", "minLength",
+        "allOf", "anyOf", "oneOf", "enum", "const", "minLength", "pattern",
         "maxLength", "minItems", "maxItems", "minProperties",
         "maxProperties", "minimum", "maximum", "exclusiveMinimum",
         "exclusiveMaximum", "multipleOf", "uniqueItems",
@@ -789,7 +802,7 @@ static bool schema_json_schema_supported(const schema_json_value *schema,
         if (!recognized) return false;
     }
     static const char *unsupported[] = {
-        "$ref", "$dynamicRef", "not", "if", "then", "else", "pattern",
+        "$ref", "$dynamicRef", "not", "if", "then", "else",
         "patternProperties", "unevaluatedProperties", "dependentSchemas",
         "dependentRequired", "contains", "minContains", "maxContains",
         "prefixItems", "propertyNames", "contentSchema"
@@ -820,6 +833,9 @@ static bool schema_json_schema_supported(const schema_json_value *schema,
             }
         } else return false;
     }
+    const schema_json_value *pattern = schema_json_object_get(schema, "pattern");
+    if (pattern && (pattern->kind != SCHEMA_JSON_STRING ||
+                    strcmp(pattern->string, "\\S"))) return false;
     const schema_json_value *props = schema_json_object_get(schema, "properties");
     if (props) {
         if (props->kind != SCHEMA_JSON_OBJECT) return false;
@@ -1858,6 +1874,7 @@ typedef struct {
     bool reasoning_summary_specified;
     bool agentic_present;
     bool agentic_return;
+    char *agent_context_id;
     stop_list allowed_tools;
     stop_list allowed_skills;
     char *agentic_skill_call_id;
@@ -2098,6 +2115,7 @@ static void request_free(request *r) {
     id_list_free(&r->allowed_tools);
     id_list_free(&r->allowed_skills);
     free(r->agentic_skill_call_id);
+    free(r->agent_context_id);
     tool_schema_orders_free(&r->tool_orders);
     memset(r, 0, sizeof(*r));
 }
@@ -2591,6 +2609,7 @@ static bool parse_agentic_value(const char **p, request *r,
     bool got_skills = false;
     bool got_operation = false;
     bool got_call_id = false;
+    bool got_context_id = false;
     r->agentic_present = true;
     json_ws(p);
     while (**p && **p != '}') {
@@ -2638,6 +2657,18 @@ static bool parse_agentic_value(const char **p, request *r,
             free(r->agentic_skill_call_id);
             r->agentic_skill_call_id = id;
             got_call_id = true;
+        } else if (!strcmp(key, "agent_context_id")) {
+            char *id = NULL;
+            if (got_context_id || !json_string(p, &id) || !id || !id[0]) {
+                snprintf(err, errlen,
+                         "agentic.agent_context_id must be a non-empty string");
+                free(id);
+                free(key);
+                return false;
+            }
+            free(r->agent_context_id);
+            r->agent_context_id = id;
+            got_context_id = true;
         } else {
             snprintf(err, errlen, "unsupported agentic field: %s", key);
             free(key);
@@ -2654,8 +2685,9 @@ static bool parse_agentic_value(const char **p, request *r,
     }
     if (**p != '}') return false;
     (*p)++;
-    if (!got_tools || !got_skills) {
-        snprintf(err, errlen, "agentic requires allowed_tools and allowed_skills");
+    if (!got_tools || !got_skills || !got_context_id) {
+        snprintf(err, errlen,
+                 "agentic requires agent_context_id, allowed_tools and allowed_skills");
         return false;
     }
     if (r->agentic_return != got_call_id) {
@@ -4610,8 +4642,19 @@ static void append_qwen_agentic_scope_instruction(chat_msgs *msgs,
                  "successful calls just because the original request mentions them.\n");
         if (r->agentic_return) {
             buf_puts(&scope,
-                     "A skill has completed and returned its result. Continue "
-                     "from that result using the current scope above.\n");
+                     "The invoked skill has already finished and EXITED. "
+                     "You are now back in its caller, outside that skill. "
+                     "Do not execute that completed skill's exit instructions "
+                     "again: its exit has already produced the returned result. "
+                     "Its internal conversation, tool calls and nested skills "
+                     "have been removed from this context and replaced by this "
+                     "result. Their absence is not evidence of unfinished work. "
+                     "This is the result of executing the skill, not an instruction "
+                     "to enter it. Resume the caller after that skill invocation; "
+                     "do not reopen it to replay steps hidden by compaction. "
+                     "If the result reports a failure or missing work, handle that "
+                     "explicitly; otherwise continue with the next caller step "
+                     "or answer the user when the requested work is complete.\n");
         }
     }
     if (zero_arg_required) {
@@ -12729,19 +12772,20 @@ struct skill_frame {
     skill_frame *next;
 };
 
-/* One HDS delegation checkpoint per resident frontend session.  Configured HDS
- * children are ordinary tools on the wire, so unlike regular deep skills they
- * have no explicit enter/return operation.  A changed system-prompt prefix
- * identifies descent; the saved parent call ids identify the matching ascent. */
-typedef struct {
-    bool valid;
+/* Suspended agent state is keyed only by the opaque client-supplied context
+ * id.  DS4 deliberately assigns no parent/child meaning to these records. */
+typedef struct agent_context_checkpoint agent_context_checkpoint;
+struct agent_context_checkpoint {
+    char *context_id;
+    char registry_sha[41];
     char *checkpoint_path;
     uint64_t checkpoint_bytes;
     ds4_tokens frontier;
     ds4_tokens system_prefix;
     live_tool_state responses_live;
     double write_ms;
-} subagent_checkpoint;
+    agent_context_checkpoint *next;
+};
 
 struct server_slot {
     server *srv;
@@ -12751,7 +12795,8 @@ struct server_slot {
     live_tool_state anthropic_live;
     visible_live_state thinking_live;
     resident_kv_frontier system_frontier;
-    subagent_checkpoint subagent;
+    agent_context_checkpoint *agent_contexts;
+    char *active_agent_context_id;
     ds4_tokens active_system_prefix;
     int continued_last_store_tokens;
     skill_frame *skills;
@@ -12827,8 +12872,8 @@ struct server {
     uint64_t skill_return_count;
     uint64_t skill_checkpoint_live_bytes;
     uint64_t skill_checkpoint_peak_bytes;
-    uint64_t subagent_checkpoint_count;
-    uint64_t subagent_return_count;
+    uint64_t agent_context_checkpoint_count;
+    uint64_t agent_context_restore_count;
 };
 
 static bool response_json_piece_is_string_interior(const char *piece,
@@ -13599,20 +13644,52 @@ static void live_tool_state_copy_locked(live_tool_state *dst,
     }
 }
 
-static void subagent_checkpoint_clear(subagent_checkpoint *cp,
-                                      bool unlink_file) {
+static void agent_context_checkpoint_free(agent_context_checkpoint *cp,
+                                          bool unlink_file) {
     if (!cp) return;
     if (unlink_file && cp->checkpoint_path) {
         (void)skill_checkpoint_unlink(cp->checkpoint_path);
     }
+    free(cp->context_id);
     free(cp->checkpoint_path);
-    cp->checkpoint_path = NULL;
     ds4_tokens_free(&cp->frontier);
     ds4_tokens_free(&cp->system_prefix);
     live_tool_state_free(&cp->responses_live);
-    cp->valid = false;
-    cp->checkpoint_bytes = 0;
-    cp->write_ms = 0.0;
+    free(cp);
+}
+
+static void agent_context_checkpoints_clear(server_slot *slot,
+                                            bool unlink_files) {
+    if (!slot) return;
+    agent_context_checkpoint *cp = slot->agent_contexts;
+    slot->agent_contexts = NULL;
+    while (cp) {
+        agent_context_checkpoint *next = cp->next;
+        agent_context_checkpoint_free(cp, unlink_files);
+        cp = next;
+    }
+}
+
+static agent_context_checkpoint *agent_context_checkpoint_find_locked(
+        const server_slot *slot, const char *context_id) {
+    if (!slot || !context_id) return NULL;
+    for (agent_context_checkpoint *cp = slot->agent_contexts;
+         cp; cp = cp->next) {
+        if (!strcmp(cp->context_id, context_id)) return cp;
+    }
+    return NULL;
+}
+
+static void agent_context_checkpoint_remove_locked(
+        server_slot *slot, agent_context_checkpoint *target,
+        bool unlink_file) {
+    if (!slot || !target) return;
+    agent_context_checkpoint **link = &slot->agent_contexts;
+    while (*link && *link != target) link = &(*link)->next;
+    if (!*link) return;
+    *link = target->next;
+    target->next = NULL;
+    agent_context_checkpoint_free(target, unlink_file);
 }
 
 static void visible_live_clear_locked(visible_live_state *st) {
@@ -13891,11 +13968,10 @@ static bool responses_live_has_call_id(server *s, const char *id) {
     for (int i = 0; i < s->slot_count && !found; i++) {
         found = s->slots[i].responses_live.valid &&
                 id_list_contains(&s->slots[i].responses_live.call_ids, id);
-        if (!found) {
-            found = s->slots[i].subagent.valid &&
-                    s->slots[i].subagent.responses_live.valid &&
-                    id_list_contains(
-                        &s->slots[i].subagent.responses_live.call_ids, id);
+        for (agent_context_checkpoint *cp = s->slots[i].agent_contexts;
+             cp && !found; cp = cp->next) {
+            found = cp->responses_live.valid &&
+                    id_list_contains(&cp->responses_live.call_ids, id);
         }
     }
     pthread_mutex_unlock(&s->tool_mu);
@@ -17198,65 +17274,55 @@ static bool token_prefix_equal(const ds4_tokens *a, int an,
            !memcmp(a->v, b->v, (size_t)an * sizeof(a->v[0]));
 }
 
-static bool subagent_request_matches_saved(const server_slot *slot,
-                                           const request *req,
-                                           const ds4_tokens *incoming_system) {
-    if (!slot || !req || !slot->subagent.valid ||
-        req->responses_live_call_ids.len == 0) return false;
-    const live_tool_state *saved = &slot->subagent.responses_live;
-    if (!saved->valid || saved->call_ids.len != req->responses_live_call_ids.len)
-        return false;
-    for (int i = 0; i < req->responses_live_call_ids.len; i++) {
-        if (!id_list_contains(&saved->call_ids,
-                              req->responses_live_call_ids.v[i])) return false;
-    }
+static bool agent_context_request_matches_saved(
+        const agent_context_checkpoint *cp, const request *req,
+        const ds4_tokens *incoming_system) {
+    if (!cp || !req || !incoming_system) return false;
+    if (strcmp(cp->registry_sha, req->agentic_registry_sha)) return false;
+    if (incoming_system->len == 0 && cp->system_prefix.len == 0)
+        return true;
     return token_prefix_equal(incoming_system, incoming_system->len,
-                              &slot->subagent.system_prefix,
-                              slot->subagent.system_prefix.len);
+                              &cp->system_prefix, cp->system_prefix.len);
 }
 
-static bool subagent_checkpoint_save(server *s, server_slot *slot,
-                                     char *err, size_t errlen) {
+static bool agent_context_checkpoint_save(server *s, server_slot *slot,
+                                          const char *context_id,
+                                          char *err, size_t errlen) {
     if (!s || !slot || !slot->session || !s->skill_dir ||
-        slot->active_system_prefix.len <= 0) {
-        snprintf(err, errlen, "invalid sub-agent checkpoint request");
+        !context_id || !context_id[0]) {
+        snprintf(err, errlen, "invalid agent context checkpoint request");
         return false;
     }
     const ds4_tokens *live = ds4_session_tokens(slot->session);
     if (!live) {
-        snprintf(err, errlen, "invalid sub-agent parent frontier");
+        snprintf(err, errlen, "invalid agent context frontier");
         return false;
     }
     const uint64_t expected = ds4_session_payload_bytes(slot->session);
     if (expected == 0) {
-        snprintf(err, errlen, "sub-agent parent session has no portable payload");
+        snprintf(err, errlen, "agent context has no portable session payload");
         return false;
     }
 
-    size_t final_n = strlen(s->skill_dir) + 48;
-    char *final_path = xmalloc(final_n);
-    snprintf(final_path, final_n, "%s/subagent-slot-%d.dsh",
+    size_t path_n = strlen(s->skill_dir) + 64;
+    char *path = xmalloc(path_n);
+    snprintf(path, path_n, "%s/agent-context-slot-%d-XXXXXX.dsh",
              s->skill_dir, slot->id);
-    size_t tmp_n = strlen(final_path) + sizeof(".tmp.XXXXXX");
-    char *tmp_path = xmalloc(tmp_n);
-    snprintf(tmp_path, tmp_n, "%s.tmp.XXXXXX", final_path);
-    int fd = mkstemp(tmp_path);
+    int fd = mkstemps(path, 4);
     if (fd < 0) {
-        snprintf(err, errlen, "failed to create sub-agent checkpoint: %s",
+        snprintf(err, errlen, "failed to create agent context checkpoint: %s",
                  strerror(errno));
-        free(tmp_path);
-        free(final_path);
+        free(path);
         return false;
     }
     FILE *fp = fdopen(fd, "wb");
     if (!fp) {
         int saved = errno;
         close(fd);
-        unlink(tmp_path);
-        snprintf(err, errlen, "failed to open sub-agent checkpoint: %s",
+        unlink(path);
+        snprintf(err, errlen, "failed to open agent context checkpoint: %s",
                  strerror(saved));
-        free(tmp_path);
-        free(final_path);
+        free(path);
         return false;
     }
 
@@ -17265,169 +17331,198 @@ static bool subagent_checkpoint_save(server *s, server_slot *slot,
     int rc = ds4_session_save_payload(slot->session, fp, err, errlen);
     pthread_mutex_unlock(&s->inference_mu);
     if (rc == 0 && fflush(fp) != 0) {
-        snprintf(err, errlen, "failed to flush sub-agent checkpoint: %s",
+        snprintf(err, errlen, "failed to flush agent context checkpoint: %s",
                  strerror(errno));
         rc = 1;
     }
     if (rc == 0 && fsync(fileno(fp)) != 0) {
-        snprintf(err, errlen, "failed to sync sub-agent checkpoint: %s",
+        snprintf(err, errlen, "failed to sync agent context checkpoint: %s",
                  strerror(errno));
         rc = 1;
     }
     if (fclose(fp) != 0 && rc == 0) {
-        snprintf(err, errlen, "failed to close sub-agent checkpoint: %s",
-                 strerror(errno));
-        rc = 1;
-    }
-    if (rc == 0 && rename(tmp_path, final_path) != 0) {
-        snprintf(err, errlen, "failed to publish sub-agent checkpoint: %s",
+        snprintf(err, errlen, "failed to close agent context checkpoint: %s",
                  strerror(errno));
         rc = 1;
     }
     const double write_ms = (now_sec() - t0) * 1000.0;
-    unlink(tmp_path);
-    free(tmp_path);
     if (rc != 0) {
-        unlink(final_path);
-        free(final_path);
+        unlink(path);
+        free(path);
         return false;
     }
 
-    subagent_checkpoint *cp = &slot->subagent;
-    subagent_checkpoint_clear(cp, false);
-    cp->checkpoint_path = final_path;
+    agent_context_checkpoint *cp = xmalloc(sizeof(*cp));
+    memset(cp, 0, sizeof(*cp));
+    cp->context_id = xstrdup(context_id);
+    snprintf(cp->registry_sha, sizeof(cp->registry_sha), "%s",
+             slot->agentic_registry_sha);
+    cp->checkpoint_path = path;
     cp->checkpoint_bytes = expected;
     cp->write_ms = write_ms;
     ds4_tokens_copy(&cp->frontier, live);
     ds4_tokens_copy(&cp->system_prefix, &slot->active_system_prefix);
+
     pthread_mutex_lock(&s->tool_mu);
     live_tool_state_copy_locked(&cp->responses_live, &slot->responses_live);
-    cp->valid = cp->responses_live.valid && cp->responses_live.call_ids.len > 0;
-    s->subagent_checkpoint_count++;
-    const uint64_t count = s->subagent_checkpoint_count;
-    pthread_mutex_unlock(&s->tool_mu);
-    if (!cp->valid) {
-        subagent_checkpoint_clear(cp, true);
-        snprintf(err, errlen, "sub-agent parent has no live delegation call");
+    if (!cp->responses_live.valid || cp->responses_live.call_ids.len == 0) {
+        pthread_mutex_unlock(&s->tool_mu);
+        agent_context_checkpoint_free(cp, true);
+        snprintf(err, errlen, "agent context has no live tool call");
         return false;
     }
+    agent_context_checkpoint *previous =
+        agent_context_checkpoint_find_locked(slot, context_id);
+    if (previous) {
+        agent_context_checkpoint_remove_locked(slot, previous, true);
+    }
+    cp->next = slot->agent_contexts;
+    slot->agent_contexts = cp;
+    s->agent_context_checkpoint_count++;
+    const uint64_t count = s->agent_context_checkpoint_count;
+    pthread_mutex_unlock(&s->tool_mu);
+
     server_log(DS4_LOG_KVCACHE,
-               "HDS_CHECKPOINT slot=%d checkpoint_tokens=%d system_tokens=%d checkpoint_file=%s checkpoint_bytes=%llu checkpoint_write_ms=%.3f subagent_checkpoint_count=%llu",
-               slot->id, cp->frontier.len, cp->system_prefix.len,
-               cp->checkpoint_path,
+               "AGENT_CONTEXT_CHECKPOINT slot=%d context_id=%s checkpoint_tokens=%d system_tokens=%d checkpoint_file=%s checkpoint_bytes=%llu checkpoint_write_ms=%.3f agent_context_checkpoint_count=%llu",
+               slot->id, cp->context_id, cp->frontier.len,
+               cp->system_prefix.len, cp->checkpoint_path,
                (unsigned long long)cp->checkpoint_bytes, cp->write_ms,
                (unsigned long long)count);
     return true;
 }
 
-static bool subagent_checkpoint_restore(server *s, server_slot *slot,
-                                        double *read_ms,
-                                        char *err, size_t errlen) {
+static bool agent_context_checkpoint_restore(
+        server *s, server_slot *slot, agent_context_checkpoint *cp,
+        double *read_ms, char *err, size_t errlen) {
     if (read_ms) *read_ms = 0.0;
-    if (!s || !slot || !slot->subagent.valid ||
-        !slot->subagent.checkpoint_path) {
-        snprintf(err, errlen, "sub-agent checkpoint is unavailable");
+    if (!s || !slot || !cp || !cp->checkpoint_path) {
+        snprintf(err, errlen, "agent context checkpoint is unavailable");
         return false;
     }
-    FILE *fp = fopen(slot->subagent.checkpoint_path, "rb");
+    FILE *fp = fopen(cp->checkpoint_path, "rb");
     if (!fp) {
-        snprintf(err, errlen, "failed to open sub-agent checkpoint: %s",
+        snprintf(err, errlen, "failed to open agent context checkpoint: %s",
                  strerror(errno));
         return false;
     }
     const double t0 = now_sec();
     pthread_mutex_lock(&s->inference_mu);
     int rc = ds4_session_load_payload(slot->session, fp,
-                                      slot->subagent.checkpoint_bytes,
-                                      err, errlen);
+                                      cp->checkpoint_bytes, err, errlen);
     pthread_mutex_unlock(&s->inference_mu);
     if (fclose(fp) != 0 && rc == 0) {
-        snprintf(err, errlen, "failed to close sub-agent checkpoint: %s",
+        snprintf(err, errlen, "failed to close agent context checkpoint: %s",
                  strerror(errno));
         rc = 1;
     }
     if (read_ms) *read_ms = (now_sec() - t0) * 1000.0;
     if (rc != 0) return false;
     pthread_mutex_lock(&s->tool_mu);
-    live_tool_state_copy_locked(&slot->responses_live,
-                                &slot->subagent.responses_live);
+    live_tool_state_copy_locked(&slot->responses_live, &cp->responses_live);
     pthread_mutex_unlock(&s->tool_mu);
     return true;
 }
 
-static bool maybe_checkpoint_subagent_descent(server *s, server_slot *slot,
-                                              const request *req,
-                                              const ds4_tokens *incoming_system,
-                                              char *err, size_t errlen) {
-    if (!s || !slot || !req || !s->qwen_session_cache ||
-        req->api != API_RESPONSES || !req->agentic_present ||
-        req->agentic_return) return true;
-    if (slot->active_system_prefix.len <= 0 || incoming_system->len <= 0 ||
-        token_prefix_equal(&slot->active_system_prefix,
-                           slot->active_system_prefix.len,
-                           incoming_system, incoming_system->len)) return true;
-
+static bool agent_context_has_pending_tool_call(server *s,
+                                                server_slot *slot) {
     pthread_mutex_lock(&s->tool_mu);
-    const bool pending_hds = slot->responses_live.valid &&
-        slot->responses_live.call_ids.len > 0 &&
-        slot->responses_live.visible_text &&
-        strstr(slot->responses_live.visible_text,
-               "send-message-to-child-hds") != NULL;
+    const bool pending = slot->responses_live.valid &&
+                         slot->responses_live.call_ids.len > 0;
     pthread_mutex_unlock(&s->tool_mu);
-    if (!pending_hds) return true;
-    return subagent_checkpoint_save(s, slot, err, errlen);
+    return pending;
 }
+
 
 static void generate_job_inner(server *s, server_slot *slot, job *j) {
     char err[160];
     err[0] = '\0';
+    /* Agent contexts are opaque ownership keys. Suspended contexts survive
+     * unrelated requests; DS4 never infers a hierarchy from tool names,
+     * prompts, or context switches. */
+    ds4_tokens incoming_system = {0};
+    request_system_prefix_tokens(s, &j->req, &incoming_system);
+    agent_context_checkpoint *restored_context = NULL;
+    int agent_context_discarded_tokens = 0;
+    double agent_context_read_ms = 0.0;
+
     if (!j->req.agentic_present) {
-        pthread_mutex_lock(&s->tool_mu);
-        skill_frames_clear_locked(s, slot);
-        pthread_mutex_unlock(&s->tool_mu);
-    }
-    if (!j->req.agentic_present) {
+        free(slot->active_agent_context_id);
+        slot->active_agent_context_id = NULL;
         slot->agentic_registry_bound = false;
         slot->agentic_registry_sha[0] = '\0';
-    } else if (!slot->agentic_registry_bound) {
+    } else {
+        pthread_mutex_lock(&s->tool_mu);
+        agent_context_checkpoint *saved =
+            agent_context_checkpoint_find_locked(
+                slot, j->req.agent_context_id);
+        pthread_mutex_unlock(&s->tool_mu);
+        const bool same_context = slot->active_agent_context_id &&
+            !strcmp(slot->active_agent_context_id,
+                    j->req.agent_context_id);
+
+        if (saved &&
+            !agent_context_request_matches_saved(
+                saved, &j->req, &incoming_system)) {
+            ds4_tokens_free(&incoming_system);
+            http_error(j->fd, s->enable_cors, 409,
+                       "Agent context system prompt or tool registry changed");
+            return;
+        }
+
+        if (!same_context && slot->active_agent_context_id &&
+            agent_context_has_pending_tool_call(s, slot) &&
+            !agent_context_checkpoint_save(
+                s, slot, slot->active_agent_context_id,
+                err, sizeof(err))) {
+            ds4_tokens_free(&incoming_system);
+            http_error(j->fd, s->enable_cors, 500,
+                       err[0] ? err :
+                       "Agent context checkpoint save failed");
+            return;
+        }
+
+        if (saved) {
+            const int previous_pos = ds4_session_pos(slot->session);
+            agent_context_discarded_tokens =
+                previous_pos > saved->frontier.len ?
+                previous_pos - saved->frontier.len : 0;
+            if (!agent_context_checkpoint_restore(
+                    s, slot, saved, &agent_context_read_ms,
+                    err, sizeof(err))) {
+                ds4_tokens_free(&incoming_system);
+                http_error(j->fd, s->enable_cors, 409,
+                           err[0] ? err :
+                           "Agent context checkpoint restore failed");
+                return;
+            }
+            ds4_tokens_copy(&slot->active_system_prefix,
+                            &saved->system_prefix);
+            restored_context = saved;
+        } else {
+            if (same_context && slot->agentic_registry_bound &&
+                strcmp(slot->agentic_registry_sha,
+                       j->req.agentic_registry_sha)) {
+                ds4_tokens_free(&incoming_system);
+                http_error(
+                    j->fd, s->enable_cors, 409,
+                    "Agentic tool registry changed within an agent context");
+                return;
+            }
+            if (incoming_system.len > 0) {
+                ds4_tokens_copy(&slot->active_system_prefix,
+                                &incoming_system);
+            } else {
+                ds4_tokens_free(&slot->active_system_prefix);
+            }
+        }
+
+        free(slot->active_agent_context_id);
+        slot->active_agent_context_id =
+            xstrdup(j->req.agent_context_id);
         snprintf(slot->agentic_registry_sha,
                  sizeof(slot->agentic_registry_sha), "%s",
                  j->req.agentic_registry_sha);
         slot->agentic_registry_bound = true;
-    } else if (strcmp(slot->agentic_registry_sha,
-                      j->req.agentic_registry_sha)) {
-        http_error(j->fd, s->enable_cors, 409,
-                   "Agentic tool registry changed within a live session");
-        return;
-    }
-    ds4_tokens incoming_system = {0};
-    request_system_prefix_tokens(s, &j->req, &incoming_system);
-    bool subagent_return = false;
-    int subagent_discarded_tokens = 0;
-    double subagent_read_ms = 0.0;
-    if (subagent_request_matches_saved(slot, &j->req, &incoming_system)) {
-        const int child_pos = ds4_session_pos(slot->session);
-        subagent_discarded_tokens = child_pos > slot->subagent.frontier.len ?
-                                    child_pos - slot->subagent.frontier.len : 0;
-        if (!subagent_checkpoint_restore(s, slot, &subagent_read_ms,
-                                         err, sizeof(err))) {
-            ds4_tokens_free(&incoming_system);
-            http_error(j->fd, s->enable_cors, 409,
-                       err[0] ? err : "Sub-agent checkpoint restore failed");
-            return;
-        }
-        ds4_tokens_copy(&slot->active_system_prefix,
-                        &slot->subagent.system_prefix);
-        subagent_return = true;
-    } else if (!maybe_checkpoint_subagent_descent(s, slot, &j->req,
-                                                   &incoming_system,
-                                                   err, sizeof(err))) {
-        ds4_tokens_free(&incoming_system);
-        http_error(j->fd, s->enable_cors, 500,
-                   err[0] ? err : "Sub-agent checkpoint save failed");
-        return;
-    } else if (incoming_system.len > 0) {
-        ds4_tokens_copy(&slot->active_system_prefix, &incoming_system);
     }
     ds4_tokens_free(&incoming_system);
     const int old_pos = ds4_session_pos(slot->session);
@@ -17835,24 +17930,30 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         free(returned_call_id);
         return_frame = NULL;
     }
-    if (subagent_return) {
+    if (restored_context) {
         const int result_prefill = prompt_for_sync->len > cached ?
                                    prompt_for_sync->len - cached : 0;
-        const int restored_tokens = slot->subagent.frontier.len;
+        const int restored_tokens = restored_context->frontier.len;
+        char *restored_context_id =
+            xstrdup(restored_context->context_id);
         const bool checkpoint_deleted =
-            skill_checkpoint_unlink(slot->subagent.checkpoint_path);
+            skill_checkpoint_unlink(restored_context->checkpoint_path);
         pthread_mutex_lock(&s->tool_mu);
-        s->subagent_return_count++;
-        const uint64_t return_count = s->subagent_return_count;
+        s->agent_context_restore_count++;
+        const uint64_t restore_count =
+            s->agent_context_restore_count;
+        agent_context_checkpoint_remove_locked(
+            slot, restored_context, false);
         pthread_mutex_unlock(&s->tool_mu);
         server_log(DS4_LOG_KVCACHE,
-                   "HDS_RETURN slot=%d restored_tokens=%d discarded_child_tokens=%d result_prefill_tokens=%d checkpoint_read_ms=%.3f checkpoint_deleted=%s subagent_return_count=%llu",
-                   slot->id, restored_tokens, subagent_discarded_tokens,
-                   result_prefill, subagent_read_ms,
+                   "AGENT_CONTEXT_RESTORE slot=%d context_id=%s restored_tokens=%d discarded_context_tokens=%d result_prefill_tokens=%d checkpoint_read_ms=%.3f checkpoint_deleted=%s agent_context_restore_count=%llu",
+                   slot->id, restored_context_id, restored_tokens,
+                   agent_context_discarded_tokens, result_prefill,
+                   agent_context_read_ms,
                    checkpoint_deleted ? "true" : "false",
-                   (unsigned long long)return_count);
-        subagent_checkpoint_clear(&slot->subagent, false);
-        subagent_return = false;
+                   (unsigned long long)restore_count);
+        free(restored_context_id);
+        restored_context = NULL;
     }
     /* Once a non-live request wins, old protocol live bindings are stale. Keep
      * a binding only when this request explicitly continued from it. */
@@ -17882,7 +17983,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
     }
 
     /* This is the pre-thinking rollback point only. Keep its recurrent Gated
-     * DeltaNet state in VRAM; system, skill, and subagent checkpoints retain
+     * DeltaNet state in VRAM; system, skill, and agent-context checkpoints retain
      * their independent storage policies. */
     const bool needs_post_response_frontier =
         ds4_engine_is_qwen(s->engine) &&
@@ -19346,21 +19447,35 @@ static bool live_state_contains_all(const live_tool_state *state,
 /* Return the only slot eligible for an explicit live continuation, or -1 when
  * the request has no resident binding. A missing binding is intentionally not
  * treated as ineligible: generate_job() then emits the existing 409 response. */
+static int agent_context_slot_locked(server *s,
+                                     const char *context_id) {
+    if (!s || !context_id) return -1;
+    for (int i = 0; i < s->slot_count; i++) {
+        server_slot *slot = &s->slots[i];
+        if ((slot->active_agent_context_id &&
+             !strcmp(slot->active_agent_context_id, context_id)) ||
+            agent_context_checkpoint_find_locked(slot, context_id)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 static int job_required_slot_locked(server *s, const job *j) {
     if (!s || !j) return -1;
     const request *r = &j->req;
     if (r->agentic_return) {
         return skill_frame_slot_locked(s, r->agentic_skill_call_id);
     }
+    if (r->agentic_present && r->agent_context_id) {
+        const int context_slot =
+            agent_context_slot_locked(s, r->agent_context_id);
+        if (context_slot >= 0) return context_slot;
+    }
     for (int i = 0; i < s->slot_count; i++) {
         server_slot *slot = &s->slots[i];
         if (r->responses_requires_live_tool_state &&
             live_state_contains_all(&slot->responses_live,
-                                    &r->responses_live_call_ids)) {
-            return i;
-        }
-        if (r->responses_requires_live_tool_state && slot->subagent.valid &&
-            live_state_contains_all(&slot->subagent.responses_live,
                                     &r->responses_live_call_ids)) {
             return i;
         }
@@ -19372,6 +19487,7 @@ static int job_required_slot_locked(server *s, const job *j) {
     }
     return -1;
 }
+
 
 static int job_slot_score(server *s, server_slot *slot, const job *j,
                           int required_slot) {
@@ -20017,7 +20133,9 @@ static void server_close_resources(server *s) {
         live_tool_state_free(&slot->anthropic_live);
         visible_live_free(&slot->thinking_live);
         resident_kv_frontier_clear(&slot->system_frontier);
-        subagent_checkpoint_clear(&slot->subagent, true);
+        agent_context_checkpoints_clear(slot, true);
+        free(slot->active_agent_context_id);
+        slot->active_agent_context_id = NULL;
         ds4_tokens_free(&slot->active_system_prefix);
         skill_frames_clear_locked(s, slot);
         if (slot->session) ds4_session_free(slot->session);
@@ -20716,12 +20834,17 @@ static void test_batched_live_continuation_slot_binding(void) {
     TEST_ASSERT(job_required_slot_locked(&s, &j) == 1);
 
     slots[1].responses_live.valid = false;
-    slots[1].subagent.valid = true;
-    slots[1].subagent.responses_live.valid = true;
-    id_list_push_unique(&slots[1].subagent.responses_live.call_ids,
-                        "call-slot-1");
+    agent_context_checkpoint suspended = {0};
+    suspended.context_id = xstrdup("agent-parent");
+    slots[1].agent_contexts = &suspended;
+    j.req.agentic_present = true;
+    j.req.agent_context_id = xstrdup("agent-parent");
     TEST_ASSERT(job_required_slot_locked(&s, &j) == 1);
-    slots[1].subagent.valid = false;
+    free(suspended.context_id);
+    slots[1].agent_contexts = NULL;
+    free(j.req.agent_context_id);
+    j.req.agent_context_id = NULL;
+    j.req.agentic_present = false;
 
     j.req.responses_requires_live_tool_state = false;
     j.req.anthropic_requires_live_tool_state = true;
@@ -20734,9 +20857,9 @@ static void test_batched_live_continuation_slot_binding(void) {
     TEST_ASSERT(job_required_slot_locked(&s, &j) == -1);
     request_free(&j.req);
     live_tool_state_free(&slots[1].responses_live);
-    live_tool_state_free(&slots[1].subagent.responses_live);
     live_tool_state_free(&slots[2].anthropic_live);
 }
+
 
 static void test_tool_schema_order_from_anthropic_schema(void) {
     tool_schema_orders orders = {0};
@@ -22384,6 +22507,14 @@ static void test_qwen_agentic_scope_reaches_live_tool_tail(void) {
                     strstr(r.responses_live_suffix_text, returning ?
                         "Allowed ordinary tools: mock-tool" :
                         "Allowed ordinary tools: mock-sub-tool"));
+        const bool has_compaction_notice = r.responses_live_suffix_text &&
+            strstr(r.responses_live_suffix_text,
+                   "Their absence is not evidence of unfinished work.");
+        TEST_ASSERT(has_compaction_notice == (returning != 0));
+        if (returning) {
+            TEST_ASSERT(strstr(r.responses_live_suffix_text,
+                               "result reports a failure or missing work") != NULL);
+        }
         request_free(&r);
         chat_msgs_free(&msgs);
     }
@@ -26119,7 +26250,8 @@ static void test_agentic_parser_and_registry_validation(void) {
     request r;
     request_init(&r, REQ_CHAT, 32);
     const char *json =
-        "{\"allowed_tools\":[\"execute\"],"
+        "{\"agent_context_id\":\"agent-A\","
+        "\"allowed_tools\":[\"execute\"],"
         "\"allowed_skills\":[\"skill-A\"]}";
     char err[160] = {0};
     TEST_ASSERT(parse_agentic_value(&json, &r, err, sizeof(err)));
@@ -26144,7 +26276,8 @@ static void test_agentic_parser_and_registry_validation(void) {
 
     request_init(&r, REQ_CHAT, 32);
     json =
-        "{\"allowed_tools\":[\"same\"],"
+        "{\"agent_context_id\":\"agent-A\","
+        "\"allowed_tools\":[\"same\"],"
         "\"allowed_skills\":[\"same\"]}";
     TEST_ASSERT(parse_agentic_value(&json, &r, err, sizeof(err)));
     tool_schema_order same = {
@@ -26158,11 +26291,19 @@ static void test_agentic_parser_and_registry_validation(void) {
 
     request_init(&r, REQ_CHAT, 32);
     json =
-        "{\"allowed_tools\":[],\"allowed_skills\":[],"
+        "{\"agent_context_id\":\"agent-A\","
+        "\"allowed_tools\":[],\"allowed_skills\":[],"
         "\"operation\":\"return\",\"skill_call_id\":\"call_A\"}";
     TEST_ASSERT(parse_agentic_value(&json, &r, err, sizeof(err)));
     TEST_ASSERT(r.agentic_return);
     TEST_ASSERT(!strcmp(r.agentic_skill_call_id, "call_A"));
+    request_free(&r);
+
+    request_init(&r, REQ_CHAT, 32);
+    json = "{\"allowed_tools\":[],\"allowed_skills\":[]}";
+    err[0] = '\0';
+    TEST_ASSERT(!parse_agentic_value(&json, &r, err, sizeof(err)));
+    TEST_ASSERT(strstr(err, "agent_context_id") != NULL);
     request_free(&r);
 }
 
@@ -27559,12 +27700,21 @@ static void test_json_schema_unknown_keywords_fail_closed(void) {
         &r, xstrdup("{\"type\":\"object\",\"properties\":{"
                     "\"id\":{\"type\":\"string\",\"pattern\":\"^x$\"}}}")));
     TEST_ASSERT(request_set_response_schema(
+        &r, xstrdup("{\"type\":\"object\",\"required\":[\"text\"],"
+                    "\"properties\":{\"text\":{\"type\":\"string\","
+                    "\"pattern\":\"\\\\S\"}}}")));
+    TEST_ASSERT(schema_json_validate_raw(r.response_schema,
+                                         "{\"text\":\"go\"}"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema,
+                                          "{\"text\":\"  \"}"));
+    TEST_ASSERT(request_set_response_schema(
         &r, xstrdup("{\"$schema\":\"http://json-schema.org/draft-07/schema#\","
                     "\"title\":\"known annotations remain inert\","
                     "\"type\":\"object\",\"properties\":{},"
                     "\"additionalProperties\":false}")));
     request_free(&r);
 }
+
 
 static void test_static_string_partition_classifier(void) {
     TEST_ASSERT(response_json_piece_is_string_interior("plain", 5));

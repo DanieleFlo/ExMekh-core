@@ -1259,13 +1259,25 @@ complete tool block has been emitted. The decoder recognizes both established
 `DSML` markers and Qwen's emitted `DSMl` spelling, including markers split over
 multiple vocabulary tokens.
 
+Every `agentic` object must include a non-empty `agent_context_id`. The value
+is an opaque ownership key chosen by the client runtime. DS4 uses it to bind
+live KV, the system-prefix frontier, Responses tool-call state, and the stable
+tool-registry hash for that context. When a request switches to another context,
+DS4 can suspend the current live tool-call state and later restore it by the
+same key. DS4 does not interpret context keys as parent/child relationships and
+does not inspect tool names to infer delegation. Different contexts may use
+different stable registries; changing the registry inside one context is a
+conflict.
+
 Strict JSON output is available through Chat Completions
 `response_format.type=json_schema` and Responses `text.format.type=json_schema`.
 The same filtered sampler masks JSON syntax and schema-invalid completions, and
 generation stops at the first complete schema-valid document. Structured JSON
 disables reasoning and cannot be combined with tools in one request; unsupported
-assertion keywords such as `$ref`, `pattern`, conditionals, and `contains` are
-rejected instead of being silently ignored.
+assertion keywords such as `$ref`, arbitrary `pattern` expressions,
+conditionals, and `contains` are rejected instead of being silently ignored.
+The exact string constraint `pattern: "\\S"` is supported for required
+non-whitespace text fields.
 
 The real-model adversarial suite exercises both tool calls and structured JSON
 with and without a synthetic multi-message history. Its history fixture is
@@ -1286,8 +1298,8 @@ duplicate keys, broken closing delimiters, DSML-looking tags, SQL-style
 injection text, control-character escapes, lone surrogate escapes, forbidden
 tool names, and JSON breakout attempts. It parses returned arguments/content
 with duplicate-key rejection and fails on any `finish_reason: error`. Tool
-scenarios keep one stable agentic registry and isolate the active capability via
-`allowed_tools`, matching the live-KV registry contract.
+scenarios keep one stable registry per `agent_context_id` and isolate the active
+capability via `allowed_tools`, matching the live-KV ownership contract.
 
 Minimal OpenAI example:
 
@@ -1540,19 +1552,18 @@ while the payload contains the corresponding exact tokens and complete DS4
 session state. Qwen keeps at most ten `agent-system` files across restarts; a
 hit updates recency and the least-recently-used prompt is removed when an
 eleventh distinct prompt is stored.
-
-Only those system-prompt anchors are durable in the managed Qwen cache.
 Conversation history is not written as `agent-history` or `agent-session` on a
-completed turn, slot eviction, or shutdown. HDS delegation instead owns one
-temporary `.dsh` checkpoint per resident frontend slot: a changed system
-prefix while `send-message-to-child-hds` is pending saves the complete parent
-frontier, and the matching child result restores it and prefills only the
-returned result. Regular deep skills use their explicit enter/return `call_id`
-and temporary `.dsk` checkpoints. Both temporary forms are overwritten or
-consumed during the live server session and are deleted on return/shutdown;
-they are never restart caches.
+completed turn, slot eviction, or shutdown. Agent contexts instead own
+temporary `.dsh` checkpoints keyed by their opaque `agent_context_id`. When a
+request switches IDs while the active context has a pending Responses tool
+call, DS4 saves that context's complete frontier; a later request with the same
+ID restores it and prefills only the new suffix. This mechanism has no HDS or
+parent/child semantics and never depends on a particular tool name. Regular
+deep skills use their explicit enter/return `call_id` and temporary `.dsk`
+checkpoints. Both temporary forms are replaced or consumed during the live
+server session and are deleted on return/shutdown; they are never restart
+caches.
 
-The cache key is the SHA1 of the rendered byte prefix, and files are named
 `<sha1>.kv`. The DS4 payload still stores the exact token IDs and graph state
 for that prefix. This matters for continued chats: the model may have generated
 one token whose decoded text is later sent back by a client as two canonical

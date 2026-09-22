@@ -86,7 +86,7 @@ def read_log_from(path: Path, offset: int) -> str:
     while time.monotonic() < deadline:
         raw = path.read_bytes() if path.exists() else b""
         text = raw[offset:].decode("utf-8", errors="replace")
-        if "prompt done" in text or "SKILL_RETURN" in text or "HDS_RETURN" in text:
+        if "prompt done" in text or "SKILL_RETURN" in text or "AGENT_CONTEXT_RESTORE" in text:
             time.sleep(0.1)
             raw = path.read_bytes()
             return raw[offset:].decode("utf-8", errors="replace")
@@ -326,9 +326,9 @@ def run_hds_cases(
         ).response,
     )
     assert_response(response, HDS_RESPONSE)
-    if "HDS_CHECKPOINT" not in segment:
+    if "AGENT_CONTEXT_CHECKPOINT" not in segment:
         raise AssertionError("agent-wiki-hds: parent history was not saved")
-    assert_short_return(segment, "HDS_RETURN", "agent-wiki-hds")
+    assert_short_return(segment, "AGENT_CONTEXT_RESTORE", "agent-wiki-hds")
     assert_system_cache(segment, phase, "agent-wiki-hds", warm_cache)
     return [{"case": "agent-wiki-hds", "response": response}]
 

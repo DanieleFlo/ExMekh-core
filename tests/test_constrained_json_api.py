@@ -275,6 +275,7 @@ def responses_tool_payload(
             "summary": "auto" if thinking else "none",
         },
         "agentic": {
+            "agent_context_id": "constrained-json-test",
             "allowed_tools": [tool["name"]],
             "allowed_skills": [],
         },
@@ -356,6 +357,7 @@ def responses_agent_skill_auto_payload(messages: list[dict]) -> dict:
         "stream": False,
         "reasoning": {"effort": "none", "summary": "none"},
         "agentic": {
+            "agent_context_id": "constrained-json-test",
             "allowed_tools": [],
             "allowed_skills": ["exit-with-info"],
         },
@@ -377,6 +379,7 @@ def responses_general_tools_payload(
     }
     if agentic:
         payload["agentic"] = {
+            "agent_context_id": "constrained-json-test",
             "allowed_tools": allowed_tools,
             "allowed_skills": [],
         }

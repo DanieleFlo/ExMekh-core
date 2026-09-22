@@ -51,12 +51,14 @@ def response_payload(
     *,
     allowed_tools: list[str],
     allowed_skills: list[str],
+    agent_context_id: str = "agentic-api-test",
     operation: str | None = None,
     skill_call_id: str | None = None,
     max_output_tokens: int = 160,
     tool_choice: str = "auto",
 ) -> dict:
     agentic: dict = {
+        "agent_context_id": agent_context_id,
         "allowed_tools": allowed_tools,
         "allowed_skills": allowed_skills,
     }
@@ -267,6 +269,56 @@ class AgenticResponsesApiTests(unittest.TestCase):
                    .get("input_tokens_details", {}))
         self.assertGreater(details.get("cached_tokens", 0), 0)
 
+    def test_opaque_agent_context_switch_restores_parent_with_distinct_registry(self) -> None:
+        sub_agent_tool = {
+            "type": "function",
+            "name": "call_sub_agent",
+            "description": "Call the worker sub-agent.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "sub_agent": {"type": "string", "enum": ["worker"]},
+                    "text": {"type": "string", "pattern": r"\S"},
+                },
+                "required": ["sub_agent", "text"],
+                "additionalProperties": False,
+            },
+        }
+        parent = response_payload(
+            [user_item("Call call_sub_agent for worker with text: inspect.")],
+            allowed_tools=["call_sub_agent"],
+            allowed_skills=[],
+            agent_context_id="context-parent",
+            tool_choice="required",
+        )
+        parent["tools"] = [sub_agent_tool]
+        delegated = require_single_call(
+            post_response(parent), "call_sub_agent"
+        )
+
+        child = response_payload(
+            [user_item("Call safe_tool now.")],
+            allowed_tools=["safe_tool"],
+            allowed_skills=[],
+            agent_context_id="context-child",
+            tool_choice="required",
+        )
+        child["tools"] = [function_tool("safe_tool")]
+        require_single_call(post_response(child), "safe_tool")
+
+        returning = response_payload(
+            [call_output(delegated["call_id"], "worker finished")],
+            allowed_tools=[],
+            allowed_skills=[],
+            agent_context_id="context-parent",
+            max_output_tokens=64,
+        )
+        returning["tools"] = [sub_agent_tool]
+        restored = post_response(returning)
+        self.assertEqual(restored["status"], "completed")
+        details = restored.get("usage", {}).get("input_tokens_details", {})
+        self.assertGreater(details.get("cached_tokens", 0), 0)
+
     def test_request_without_agentic_keeps_standard_tool_behavior(self) -> None:
         before = checkpoint_files()
         payload = response_payload(
@@ -294,6 +346,36 @@ class AgenticResponsesApiTests(unittest.TestCase):
         require_single_call(response, "safe_tool")
         if CHECKPOINT_ROOT:
             self.assertEqual(checkpoint_files(), before)
+
+    def test_skill_return_survives_unrelated_structured_title_request(self) -> None:
+        opening = response_payload(
+            [user_item("Open skill-A once, then report its final result.")],
+            allowed_tools=[], allowed_skills=["skill-A"], tool_choice="required",
+        )
+        opening["reasoning"] = {"effort": "none"}
+        skill = require_single_call(post_response(opening), "skill-A")
+        title = post_response({
+            "model": opening["model"],
+            "input": [user_item("Return a short chat title about mountains.")],
+            "reasoning": {"effort": "none"},
+            "max_output_tokens": 128,
+            "text": {"format": {
+                "type": "json_schema", "name": "title", "strict": True,
+                "schema": {"type": "object", "properties": {
+                    "title": {"type": "string"}},
+                    "required": ["title"], "additionalProperties": False},
+            }},
+        })
+        self.assertEqual(title["status"], "completed")
+        returning = response_payload(
+            [call_output(skill["call_id"], "The mountain report is complete.")],
+            allowed_tools=[], allowed_skills=["skill-A"],
+            operation="return", skill_call_id=skill["call_id"],
+        )
+        returning["reasoning"] = {"effort": "none"}
+        result = post_response(returning)
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(function_calls(result), [])
 
     def test_allowed_skill_checkpoint_and_return(self) -> None:
         before = checkpoint_files()

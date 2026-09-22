@@ -141,6 +141,7 @@ def request_payload(scenario: str, sampling: dict[str, Any]) -> dict[str, Any]:
         },
         "tools": [PROBE_RESPONSES_TOOL],
         "agentic": {
+            "agent_context_id": "sampling-matrix-test",
             "allowed_tools": ["matrix_probe"],
             "allowed_skills": [],
         },

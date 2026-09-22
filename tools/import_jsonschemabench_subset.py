@@ -26,6 +26,7 @@ REGRESSION_IDS = (
 SEMANTIC_KEYS = {
     "type", "properties", "required", "additionalProperties", "items",
     "allOf", "anyOf", "oneOf", "enum", "const", "minLength", "maxLength",
+    "pattern",
     "minItems", "maxItems", "minProperties", "maxProperties", "minimum",
     "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf",
     "uniqueItems",
@@ -128,6 +129,8 @@ def unsupported_reasons(schema: Any, path: str = "$") -> list[str]:
                 reasons.append(f"{path}.multipleOf:not_positive_number")
         elif key == "uniqueItems" and not isinstance(value, bool):
             reasons.append(f"{path}.uniqueItems:not_boolean")
+        elif key == "pattern" and value != r"\S":
+            reasons.append(f"{path}.pattern:unsupported_expression")
         elif key == "enum":
             if not isinstance(value, list) or not value:
                 reasons.append(f"{path}.enum:not_nonempty_array")

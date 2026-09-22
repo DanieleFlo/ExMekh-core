@@ -129,6 +129,7 @@ Mantenere il normale payload OpenAI-compatible e aggiungere le informazioni spec
 
 ```json
 "agentic": {
+    "agent_context_id": "agent-run-42:root",
     "allowed_tools": [...],
     "allowed_skills": [...]
 }
@@ -143,6 +144,7 @@ Concettualmente una richiesta normale può quindi essere:
     "tools": [...],
 
     "agentic": {
+        "agent_context_id": "agent-run-42:root",
         "allowed_tools": [
             "execute",
             "work-with-files/read-file",
@@ -161,6 +163,18 @@ Il motore deve considerare `agentic` un'estensione opzionale.
 
 In assenza del campo deve mantenere il comportamento normale esistente.
 
+Quando `agentic` è presente, `agent_context_id` è obbligatorio e non vuoto.
+Il runtime client assegna e mantiene l'identità del contesto; DS4 la tratta
+come chiave opaca. DS4 associa a quella chiave KV live, prefisso di sistema,
+stato delle tool call Responses e hash del registro. Il registro deve restare
+stabile nello stesso contesto, ma contesti diversi possono avere registri
+diversi.
+
+DS4 non riceve né ricostruisce relazioni parent/child. Un passaggio da un ID a
+un altro sospende eventualmente lo stato live del primo; una richiesta futura
+con il primo ID lo ripristina. La gerarchia, la scelta del figlio e il ritorno
+al padre restano responsabilità esclusiva del runtime agentico.
+
 ---
 
 # 5. `allowed_tools` e `allowed_skills`
@@ -172,6 +186,7 @@ Esempio:
 
 ```json
 "agentic": {
+    "agent_context_id": "agent-run-42:root",
     "allowed_tools": [
         "execute",
         "work-with-files/read-file"
@@ -424,6 +439,7 @@ Durante la skill può quindi bastare:
 
 ```json
 "agentic": {
+    "agent_context_id": "agent-run-42:root",
     "allowed_tools": [...],
     "allowed_skills": [...]
 }
@@ -481,6 +497,7 @@ In fase di risalita il runtime invia:
 
 ```json
 "agentic": {
+    "agent_context_id": "agent-run-42:root",
     "allowed_tools": [
         "..."
     ],
@@ -507,6 +524,7 @@ Concettualmente:
     ],
 
     "agentic": {
+        "agent_context_id": "agent-run-42:root",
         "allowed_tools": [
             "execute",
             "work-with-files"
@@ -708,6 +726,7 @@ Quando `C` termina:
 
 ```json
 "agentic": {
+    "agent_context_id": "agent-run-42:root",
     "operation": "return",
     "skill_call_id": "call_C",
     "allowed_tools": [...],
@@ -765,6 +784,7 @@ Questo rende naturalmente possibile la ricorsione.
 
 ```json
 "agentic": {
+    "agent_context_id": "agent-run-42:root",
     "allowed_tools": [...],
     "allowed_skills": [...]
 }
@@ -784,6 +804,7 @@ e usa allowed_skills per classificare le nuove call
 
 ```json
 "agentic": {
+    "agent_context_id": "agent-run-42:root",
     "allowed_tools": [...],
     "allowed_skills": [...],
     "operation": "return",
