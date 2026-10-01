@@ -6,6 +6,81 @@
       "index": "docs/architecture/_INDEX.md",
       "documents": [
         {
+          "path": "docs/architecture/ds4-upstream-merge-20261001.md",
+          "sections": [
+            {
+              "title": "Merge DS4 upstream — 1 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 256,
+              "summary": "Branch `codex/merge-ds4-upstream-2026-10-01`, creato da"
+            },
+            {
+              "title": "Provenienza e perimetro",
+              "level": 2,
+              "start": 3,
+              "end": 20,
+              "summary": "Branch `codex/merge-ds4-upstream-2026-10-01`, creato da"
+            },
+            {
+              "title": "Contratti preservati",
+              "level": 2,
+              "start": 21,
+              "end": 43,
+              "summary": "tokenizer, prompt, kernel specializzati, GDN, grafi CUDA e launcher locali."
+            },
+            {
+              "title": "Immagini e presentazione del codice",
+              "level": 2,
+              "start": 44,
+              "end": 56,
+              "summary": "Sono importati integralmente decoder PNG/JPEG, fixture, encoder e percorsi vision"
+            },
+            {
+              "title": "Kernel e risoluzioni rilevanti",
+              "level": 2,
+              "start": 57,
+              "end": 91,
+              "summary": "Il MMQ Q4_K generico upstream non supera il gate numerico esistente del fork su"
+            },
+            {
+              "title": "Hardware, RAM e artefatti",
+              "level": 2,
+              "start": 92,
+              "end": 116,
+              "summary": "RTX 3090, 24 GiB, `sm_86`, driver 610.62, CUDA toolkit 12.4; i9-14900K,"
+            },
+            {
+              "title": "Confronto Qwen27",
+              "level": 2,
+              "start": 117,
+              "end": 162,
+              "summary": "Cinque ripetizioni misurate dopo warm-up, contesto allocato 22593, prefill chunk"
+            },
+            {
+              "title": "Matrice di verifica",
+              "level": 2,
+              "start": 163,
+              "end": 200,
+              "summary": "Il 27B supera i gate locali di accettazione."
+            },
+            {
+              "title": "Tentativo Flash Next",
+              "level": 2,
+              "start": 201,
+              "end": 238,
+              "summary": "È usato il Q2 originale, circa 137.10 GiB su disco: circa 41.73 GiB di pesi"
+            },
+            {
+              "title": "Riproduzione",
+              "level": 2,
+              "start": 239,
+              "end": 256,
+              "summary": "make -j4 ds4 ds4-server ds4-bench ds4-eval CUDA_ARCH=sm_86"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/qwen36-mtp-design.md",
           "sections": [
             {
@@ -94,42 +169,49 @@
               "title": "Qwen3.8 27B UD-Q4_K_S compatibility audit",
               "level": 1,
               "start": 1,
-              "end": 108,
+              "end": 114,
               "summary": "> Current runtime: Qwen3.8 only for the `qwen35` family."
+            },
+            {
+              "title": "Full upstream merge",
+              "level": 2,
+              "start": 7,
+              "end": 12,
+              "summary": "The 2026-10-01 merge audit qualifies this"
             },
             {
               "title": "Pinned artifacts",
               "level": 2,
-              "start": 7,
-              "end": 19,
+              "start": 13,
+              "end": 25,
               "summary": "DS4 recognizes only the audited Unsloth pair at repository revision"
             },
             {
               "title": "Architecture and GGUF contract",
               "level": 2,
-              "start": 20,
-              "end": 48,
+              "start": 26,
+              "end": 54,
               "summary": "The runtime architecture is the existing `qwen35` implementation: 64 target"
             },
             {
               "title": "Frontend behavior",
               "level": 2,
-              "start": 49,
-              "end": 71,
+              "start": 55,
+              "end": 77,
               "summary": "Both `ds4` and `ds4-server` recognize the stable model ID"
             },
             {
               "title": "Test and oracle isolation",
               "level": 2,
-              "start": 72,
-              "end": 97,
+              "start": 78,
+              "end": 103,
               "summary": "`make test-qwen38` validates the pinned metadata snapshots, embedded and"
             },
             {
               "title": "CUDA runtime status",
               "level": 2,
-              "start": 98,
-              "end": 108,
+              "start": 104,
+              "end": 114,
               "summary": "The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,"
             }
           ]
@@ -5747,6 +5829,707 @@
               "start": 74,
               "end": 83,
               "summary": "Puo' spiegare differenze riproducibili quando cambia il percorso matematico:"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "upstream",
+      "index": "docs/upstream/_INDEX.md",
+      "documents": [
+        {
+          "path": "docs/upstream/CLIENTS.md",
+          "sections": [
+            {
+              "title": "Coding Agent Clients",
+              "level": 1,
+              "start": 1,
+              "end": 125,
+              "summary": "README | Server"
+            },
+            {
+              "title": "Pi",
+              "level": 2,
+              "start": 16,
+              "end": 58,
+              "summary": "Add this provider to `~/.pi/agent/models.json`:"
+            },
+            {
+              "title": "OpenCode",
+              "level": 2,
+              "start": 59,
+              "end": 86,
+              "summary": "Merge the provider into `~/.config/opencode/opencode.json`:"
+            },
+            {
+              "title": "Codex CLI",
+              "level": 2,
+              "start": 87,
+              "end": 102,
+              "summary": "Use the Responses API."
+            },
+            {
+              "title": "Claude Code",
+              "level": 2,
+              "start": 103,
+              "end": 125,
+              "summary": "Use the Anthropic-compatible endpoint."
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/CUDA_MULTI_GPU.md",
+          "sections": [
+            {
+              "title": "NVIDIA CUDA GPUs",
+              "level": 1,
+              "start": 1,
+              "end": 17,
+              "summary": "README | Getting started"
+            },
+            {
+              "title": "Build",
+              "level": 2,
+              "start": 11,
+              "end": 17,
+              "summary": "Install the NVIDIA driver and CUDA toolkit, including `nvcc` and cuBLAS."
+            },
+            {
+              "title": "For an Ada build:",
+              "level": 1,
+              "start": 18,
+              "end": 90,
+              "summary": "make cuda CUDA_ARCH=sm_89"
+            },
+            {
+              "title": "Normal layer placement",
+              "level": 2,
+              "start": 24,
+              "end": 38,
+              "summary": "Without tensor parallelism, DwarfStar places complete layers on the selected"
+            },
+            {
+              "title": "Flash tensor parallelism",
+              "level": 2,
+              "start": 39,
+              "end": 69,
+              "summary": "`--cuda-tensor-parallel` pairs GPUs and divides routed-expert work inside"
+            },
+            {
+              "title": "Serve multiple users",
+              "level": 2,
+              "start": 70,
+              "end": 90,
+              "summary": "./ds4-server --cuda --cuda-tensor-parallel \\"
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/DGX_SPARK.md",
+          "sections": [
+            {
+              "title": "DGX Spark",
+              "level": 1,
+              "start": 1,
+              "end": 150,
+              "summary": "README | Getting started"
+            },
+            {
+              "title": "Build and run",
+              "level": 2,
+              "start": 9,
+              "end": 21,
+              "summary": "make cuda-spark"
+            },
+            {
+              "title": "DeepSeek V4.1 Flash",
+              "level": 2,
+              "start": 22,
+              "end": 62,
+              "summary": "Q2 needs SSD streaming on one 128 GB Spark:"
+            },
+            {
+              "title": "Qwen3.8 Flash Next",
+              "level": 2,
+              "start": 63,
+              "end": 83,
+              "summary": "Both Q2 and Q4 fit on one Spark."
+            },
+            {
+              "title": "GLM 5.3 Flash",
+              "level": 2,
+              "start": 84,
+              "end": 95,
+              "summary": "Q2 is the resident target for one Spark:"
+            },
+            {
+              "title": "Vision and speculative decoding",
+              "level": 2,
+              "start": 96,
+              "end": 111,
+              "summary": "DeepSeek Vision Experimental needs its matching text model and encoder:"
+            },
+            {
+              "title": "Flash Q2 with DSpark",
+              "level": 2,
+              "start": 112,
+              "end": 140,
+              "summary": "September 6, 2026, fully resident Flash 0731: median generation speed from"
+            },
+            {
+              "title": "Larger models and serving",
+              "level": 2,
+              "start": 141,
+              "end": 150,
+              "summary": "CUDA also has SSD streaming paths for larger weights."
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/DISTRIBUTED.md",
+          "sections": [
+            {
+              "title": "Inference Across Machines",
+              "level": 1,
+              "start": 1,
+              "end": 42,
+              "summary": "README"
+            },
+            {
+              "title": "Tensor parallelism between two Macs",
+              "level": 2,
+              "start": 17,
+              "end": 42,
+              "summary": "This is a 50/50 split with exactly one worker."
+            },
+            {
+              "title": "Link setup",
+              "level": 3,
+              "start": 29,
+              "end": 42,
+              "summary": "Use a Thunderbolt cable."
+            },
+            {
+              "title": "Machine A, example member interface en1.",
+              "level": 1,
+              "start": 43,
+              "end": 44,
+              "summary": "sudo ifconfig en1 inet 10.99.0.2/30 alias"
+            },
+            {
+              "title": "Machine B, example member interface en6.",
+              "level": 1,
+              "start": 45,
+              "end": 70,
+              "summary": "sudo ifconfig en6 inet 10.99.0.1/30 alias"
+            },
+            {
+              "title": "Start the pair",
+              "level": 3,
+              "start": 60,
+              "end": 70,
+              "summary": "Download the same model on both machines."
+            },
+            {
+              "title": "Machine B.",
+              "level": 1,
+              "start": 71,
+              "end": 74,
+              "summary": "./ds4 --tensor-parallel --role worker \\"
+            },
+            {
+              "title": "Machine A.",
+              "level": 1,
+              "start": 75,
+              "end": 114,
+              "summary": "./ds4 --tensor-parallel --role coordinator \\"
+            },
+            {
+              "title": "Tensor parallelism between two Sparks",
+              "level": 2,
+              "start": 100,
+              "end": 114,
+              "summary": "V4.1 Flash Q2 text inference supports one GPU per rank, with a 50/50 expert"
+            },
+            {
+              "title": "Worker.",
+              "level": 1,
+              "start": 115,
+              "end": 119,
+              "summary": "./ds4 --cuda -m gguf/DeepSeek-V4.1-Flash-Q2.gguf --ctx 32768 \\"
+            },
+            {
+              "title": "Coordinator.",
+              "level": 1,
+              "start": 120,
+              "end": 146,
+              "summary": "./ds4 --cuda -m gguf/DeepSeek-V4.1-Flash-Q2.gguf --ctx 32768 \\"
+            },
+            {
+              "title": "Pipeline parallelism",
+              "level": 2,
+              "start": 137,
+              "end": 146,
+              "summary": "Each process maps only its assigned layers, retaining that slice of the KV"
+            },
+            {
+              "title": "Machine A.",
+              "level": 1,
+              "start": 147,
+              "end": 149,
+              "summary": "./ds4 --role coordinator --layers 0:19 --listen 10.99.0.2 9911"
+            },
+            {
+              "title": "Machine B.",
+              "level": 1,
+              "start": 150,
+              "end": 168,
+              "summary": "./ds4 --role worker --layers 20:output --coordinator 10.99.0.2 9911"
+            },
+            {
+              "title": "Full PRO Q4",
+              "level": 3,
+              "start": 164,
+              "end": 168,
+              "summary": "For two 512 GB Mac Studios, use the split artifacts:"
+            },
+            {
+              "title": "Machine A.",
+              "level": 1,
+              "start": 169,
+              "end": 173,
+              "summary": "./download_model.sh pro-q4-layers00-30"
+            },
+            {
+              "title": "Machine B.",
+              "level": 1,
+              "start": 174,
+              "end": 199,
+              "summary": "./download_model.sh pro-q4-layers31-output"
+            },
+            {
+              "title": "Tuning and recovery",
+              "level": 3,
+              "start": 183,
+              "end": 199,
+              "summary": "Keep default chunk sizes first."
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/METAL.md",
+          "sections": [
+            {
+              "title": "Metal on Apple Silicon",
+              "level": 1,
+              "start": 1,
+              "end": 71,
+              "summary": "README | Getting started"
+            },
+            {
+              "title": "Build and run",
+              "level": 2,
+              "start": 5,
+              "end": 24,
+              "summary": "Install Apple's command-line developer tools if needed:"
+            },
+            {
+              "title": "Choose a model",
+              "level": 2,
+              "start": 25,
+              "end": 55,
+              "summary": "Here, Flash means DeepSeek V4 Flash."
+            },
+            {
+              "title": "Two Macs",
+              "level": 2,
+              "start": 56,
+              "end": 62,
+              "summary": "Two 128 GB Macs can run a larger model fully resident with a 50/50 routed-expert"
+            },
+            {
+              "title": "Next steps",
+              "level": 2,
+              "start": 63,
+              "end": 71,
+              "summary": "For DeepSeek V4 Flash and PRO, `--power 70` trades throughput for lower"
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/MODELS.md",
+          "sections": [
+            {
+              "title": "Models and Vision",
+              "level": 1,
+              "start": 1,
+              "end": 250,
+              "summary": "README | Getting started"
+            },
+            {
+              "title": "DeepSeek V4",
+              "level": 2,
+              "start": 17,
+              "end": 45,
+              "summary": "./download_model.sh ds4f-q2"
+            },
+            {
+              "title": "DeepSeek V4.1 Flash",
+              "level": 2,
+              "start": 46,
+              "end": 119,
+              "summary": "V4.1 Flash text and vision inference work on Metal."
+            },
+            {
+              "title": "Qwen3.8 Flash Next",
+              "level": 2,
+              "start": 120,
+              "end": 146,
+              "summary": "`./download_model.sh qwen38-q2` downloads one **137.10 GiB** GGUF: 41.73 GiB"
+            },
+            {
+              "title": "GLM 5.3 Flash",
+              "level": 2,
+              "start": 147,
+              "end": 176,
+              "summary": "./download_model.sh glm53-q2"
+            },
+            {
+              "title": "Full GLM 5.3 and GLM 5.2",
+              "level": 2,
+              "start": 177,
+              "end": 199,
+              "summary": "Full GLM 5.3 Q2 is about 197 GiB."
+            },
+            {
+              "title": "Vision",
+              "level": 2,
+              "start": 200,
+              "end": 250,
+              "summary": "PNG and JPEG input works in the CLI, native agent, and HTTP server on Metal,"
+            },
+            {
+              "title": "DeepSeek Flash Vision Experimental",
+              "level": 3,
+              "start": 206,
+              "end": 219,
+              "summary": "Vision Experimental is a different language checkpoint from Flash 0731."
+            },
+            {
+              "title": "GLM 5.3 Flash",
+              "level": 3,
+              "start": 220,
+              "end": 237,
+              "summary": "The text GGUF stays the same."
+            },
+            {
+              "title": "Qwen3.8 Flash Next",
+              "level": 3,
+              "start": 238,
+              "end": 250,
+              "summary": "The text GGUF stays the same."
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/PERFORMANCE.md",
+          "sections": [
+            {
+              "title": "Performance and Benchmarking",
+              "level": 1,
+              "start": 1,
+              "end": 72,
+              "summary": "README"
+            },
+            {
+              "title": "Context sweeps",
+              "level": 2,
+              "start": 10,
+              "end": 34,
+              "summary": "`ds4-bench` measures prefill and generation at successive context frontiers:"
+            },
+            {
+              "title": "Recorded Flash Q2 baseline",
+              "level": 2,
+              "start": 35,
+              "end": 58,
+              "summary": "These existing sweeps use 2048-token intervals and 128 generation tokens per"
+            },
+            {
+              "title": "What to compare next",
+              "level": 2,
+              "start": 59,
+              "end": 72,
+              "summary": "from a warm cache."
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/QWEN38_FLASH_NEXT.md",
+          "sections": [
+            {
+              "title": "Qwen3.8 Flash Next",
+              "level": 1,
+              "start": 1,
+              "end": 257,
+              "summary": "Back to README"
+            },
+            {
+              "title": "Download and run",
+              "level": 2,
+              "start": 9,
+              "end": 71,
+              "summary": "make"
+            },
+            {
+              "title": "DGX Spark performance",
+              "level": 2,
+              "start": 72,
+              "end": 88,
+              "summary": "Measured on a single Spark with resident weights and disk-only n-grams:"
+            },
+            {
+              "title": "Conversion",
+              "level": 2,
+              "start": 89,
+              "end": 97,
+              "summary": "See GGUF conversion for conversion from the HF"
+            },
+            {
+              "title": "Vision",
+              "level": 2,
+              "start": 98,
+              "end": 162,
+              "summary": "Images go through the model's Qwen3-VL vision tower."
+            },
+            {
+              "title": "Validation",
+              "level": 2,
+              "start": 163,
+              "end": 257,
+              "summary": "make test-qwen4-kernels test-qwen4-q2 test-qwen4-prefill-reuse test-q8-prefill-variants"
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/SERVER.md",
+          "sections": [
+            {
+              "title": "Serving Models",
+              "level": 1,
+              "start": 1,
+              "end": 149,
+              "summary": "README | Client setup"
+            },
+            {
+              "title": "Start locally",
+              "level": 2,
+              "start": 5,
+              "end": 21,
+              "summary": "./ds4-server --ctx 32768"
+            },
+            {
+              "title": "APIs",
+              "level": 2,
+              "start": 22,
+              "end": 51,
+              "summary": "The Flash and PRO names accepted by the model endpoints are compatibility"
+            },
+            {
+              "title": "Multiple sessions",
+              "level": 2,
+              "start": 52,
+              "end": 93,
+              "summary": "./ds4-server --ctx 4096 --batched-session 4"
+            },
+            {
+              "title": "Images",
+              "level": 2,
+              "start": 94,
+              "end": 103,
+              "summary": "Start with the matching language GGUF and `--vision FILE`; see"
+            },
+            {
+              "title": "Disk KV cache",
+              "level": 2,
+              "start": 104,
+              "end": 132,
+              "summary": "Disk caching saves useful prefixes across slot reuse and server restarts:"
+            },
+            {
+              "title": "Tool history and debugging",
+              "level": 2,
+              "start": 133,
+              "end": 149,
+              "summary": "For DeepSeek, the server preserves sampled DSML tool blocks and assigns"
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/SPECULATIVE_DECODING.md",
+          "sections": [
+            {
+              "title": "Speculative Decoding",
+              "level": 1,
+              "start": 1,
+              "end": 107,
+              "summary": "README"
+            },
+            {
+              "title": "DeepSeek Flash: DSpark",
+              "level": 2,
+              "start": 13,
+              "end": 47,
+              "summary": "DSpark is a separate support GGUF, not a standalone language model."
+            },
+            {
+              "title": "GLM: built-in MTP",
+              "level": 2,
+              "start": 48,
+              "end": 59,
+              "summary": "GLM's draft block is already in its main GGUF:"
+            },
+            {
+              "title": "Qwen3.8: built-in MTP",
+              "level": 2,
+              "start": 60,
+              "end": 79,
+              "summary": "Both Qwen downloads include MTP and native BF16 n-grams in the main GGUF:"
+            },
+            {
+              "title": "Sampling and reproducibility",
+              "level": 2,
+              "start": 80,
+              "end": 107,
+              "summary": "At temperature zero, accepted drafts must match the target's greedy"
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/SSD_STREAMING.md",
+          "sections": [
+            {
+              "title": "Models Larger Than RAM",
+              "level": 1,
+              "start": 1,
+              "end": 26,
+              "summary": "README"
+            },
+            {
+              "title": "Start with the automatic budget",
+              "level": 2,
+              "start": 14,
+              "end": 26,
+              "summary": "./ds4 -m ds4flash.gguf --ssd-streaming"
+            },
+            {
+              "title": "Flash Q2 on a smaller Mac.",
+              "level": 1,
+              "start": 27,
+              "end": 30,
+              "summary": "./download_model.sh ds4f-q2"
+            },
+            {
+              "title": "GLM 5.3 Flash Q4 on a 128 GB Mac.",
+              "level": 1,
+              "start": 31,
+              "end": 34,
+              "summary": "./download_model.sh glm53-q4"
+            },
+            {
+              "title": "PRO Q2 on a 128 GB Mac: usable for inspection, but slow.",
+              "level": 1,
+              "start": 35,
+              "end": 98,
+              "summary": "./download_model.sh pro-q2-imatrix"
+            },
+            {
+              "title": "Adjusting the cache",
+              "level": 2,
+              "start": 44,
+              "end": 75,
+              "summary": "To leave more room for context or other sessions:"
+            },
+            {
+              "title": "M5 Max measurements",
+              "level": 2,
+              "start": 76,
+              "end": 98,
+              "summary": "On a 128 GB M5 Max, with automatic cache sizing and no speculative decoding:"
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/STRIX_HALO.md",
+          "sections": [
+            {
+              "title": "AMD Strix Halo",
+              "level": 1,
+              "start": 1,
+              "end": 85,
+              "summary": "README | Getting started"
+            },
+            {
+              "title": "Prerequisites",
+              "level": 2,
+              "start": 9,
+              "end": 33,
+              "summary": "For a container setup, see the maintained"
+            },
+            {
+              "title": "GPU-visible memory",
+              "level": 2,
+              "start": 34,
+              "end": 51,
+              "summary": "Check the memory pool reported by `rocminfo`."
+            },
+            {
+              "title": "Build and run Flash",
+              "level": 2,
+              "start": 52,
+              "end": 64,
+              "summary": "make strix-halo"
+            },
+            {
+              "title": "GLM 5.3 Flash",
+              "level": 2,
+              "start": 65,
+              "end": 85,
+              "summary": "The reference Q2 setup uses SSD streaming to leave room for its graph and KV"
+            }
+          ]
+        },
+        {
+          "path": "docs/upstream/TESTING.md",
+          "sections": [
+            {
+              "title": "Testing and Development",
+              "level": 1,
+              "start": 1,
+              "end": 66,
+              "summary": "README"
+            },
+            {
+              "title": "Focused checks",
+              "level": 2,
+              "start": 10,
+              "end": 37,
+              "summary": "Model-free checks include:"
+            },
+            {
+              "title": "Investigating output",
+              "level": 2,
+              "start": 38,
+              "end": 51,
+              "summary": "./ds4 --dump-tokens -p \"...\""
+            },
+            {
+              "title": "Tools and source references",
+              "level": 2,
+              "start": 52,
+              "end": 66,
+              "summary": "calibration corpus"
             }
           ]
         }

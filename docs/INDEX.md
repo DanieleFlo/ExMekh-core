@@ -18,13 +18,14 @@ Accesso alternativo compatto: [indice degli indici](indexes/INDEX.md).
 - [performance](performance/_INDEX.md) — Contratti, misure, drift numerico e progressione delle ottimizzazioni.
 - [roadmaps](roadmaps/_INDEX.md) — Piani operativi e TODO per decoding, server e kernel engineering.
 - [hardware](hardware/_INDEX.md) — Inventario RTX 3090, caratteristiche Ampere e numerica CUDA.
+- [upstream](upstream/_INDEX.md) — Guide DS4 originali su modelli, vision, server e backend importati.
 - [research](research/INDEX.md) — Paper, piattaforme, fork, guide e fonti CUDA con catalogo e lock di provenienza.
 
 ## Regole di costruzione della wiki
 
 Queste regole generalizzano la struttura già adottata in `docs/research`:
 
-1. **Un tema per directory.** Ogni documento appartiene a un macro-argomento stabile; i file non restano dispersi nella radice di `docs`.
+1. **Un tema per directory.** Ogni documento appartiene a un macro-argomento stabile; i file non restano dispersi nella radice di `docs`; le guide originali sono raccolte in `upstream`.
 2. **Un ingresso curato e un indice compatto.** `INDEX.md` spiega il percorso di lettura; `indexes/INDEX.md` collega rapidamente tutti gli indici.
 3. **Un `_INDEX.md` per gruppo.** L'indice locale elenca ogni documento, ne sintetizza lo scopo e rimanda al file originale.
 4. **Heading come indirizzi semantici.** Ogni sezione significativa usa heading Markdown gerarchici; l'indice registra titolo e intervallo `righe X–Y`.

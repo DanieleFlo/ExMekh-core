@@ -15,6 +15,31 @@ solo Qwen3.8 per la famiglia GGUF `qwen35`. Kernel e strumenti numerici condivis
 restano disponibili; documenti e fixture Qwen3.6 conservano evidenze storiche.
 Gli identificativi della shape e delle cache Qwen3.8 restano invariati.
 
+## Integrazione upstream del 1 ottobre 2026
+
+Il branch dedicato integra `antirez/ds4@0aaea5a` conservando FE/QS come unico
+agente del prodotto e distinguendo Qwen27 `qwen35` da Flash Next/Mini `qwen4exp`.
+Il [report di merge](docs/architecture/ds4-upstream-merge-20261001.md) contiene
+provenienza, matrice PASS/FAIL/NOT_VERIFIED, baseline e limiti hardware.
+Il [riepilogo JSON](docs/performance/ds4-upstream-merge-20261001.json) conserva
+misure, hash e gate in forma verificabile.
+Le [guide upstream](docs/upstream/_INDEX.md) sono incluse nella wiki indicizzata.
+
+| Componente importato | Responsabilità |
+| --- | --- |
+| `ds4_qwen4_cuda.cuh`, `ds4_qwen4_vision.h`, `ds4_qwen4_unicode.inc` | Kernel, vision e tokenizer Flash Next/Mini, distinti da Qwen27 |
+| `ds4_deepseek41_gpu.h`, `ds4_deepseek41_cuda.cuh` | API GPU e kernel DeepSeek 4.1 |
+| `ds4_image.c/h`, `third_party/iris/` | Decodifica immagini e input multimodali |
+| `ds4_deepseek4_vision_gpu.cuh`, `ds4_glm53_vision_gpu.cuh` | Encoder vision per famiglie DeepSeek/GLM |
+| `ds4_prompt_prefix.c/h` | Identità e riuso di prefissi testuali/multimodali |
+| `ds4_engram.c/h`, `ds4_linux_memory.h` | N-gram/Engram, letture disco e budget memoria |
+| `ds4_gpu_tp.h`, `ds4_tp.c/h`, `ds4_ssd.c/h` | Trasporto GPU/TP e streaming ereditato |
+| `ds4_eval_cases.c/h`, `gguf-tools/*41*`, `gguf-tools/*53*` | Valutazione, conversione e quantizzazione delle nuove famiglie |
+
+Il payload ABI della cache disco è 3: le cache precedenti al merge vengono
+rifiutate. I checkpoint skill/subagent mantengono i contratti del fork e non
+introducono un secondo agente frontend.
+
 ## Ordine della spiegazione dettagliata
 
 Questi sono i capitoli da seguire per comprendere il motore dall'esterno verso

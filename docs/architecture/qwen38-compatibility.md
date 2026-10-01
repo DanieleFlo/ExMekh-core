@@ -4,6 +4,12 @@
 > was removed on 2026-10-01; its regression results and shared-kernel evidence
 > below are historical, rather than current compatibility requirements.
 
+## Full upstream merge
+
+The 2026-10-01 [merge audit](ds4-upstream-merge-20261001.md) qualifies this
+`qwen35` path separately from Flash Next/Mini (`qwen4exp`). Public IDs and the
+external MTP sidecar remain unchanged; disk cache payload ABI is now 3.
+
 ## Pinned artifacts
 
 DS4 recognizes only the audited Unsloth pair at repository revision

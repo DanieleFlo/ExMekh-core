@@ -8,8 +8,10 @@ source and the reason an existing solution does or does not transfer to DS4. Kee
 `PROJECT_INDEX.md` updated when a relevant file is added, removed, renamed, or
 changes responsibility.
 
-`ds4.c` is a specialized inference engine for the explicitly audited DeepSeek
-V4, GLM 5.2, and Qwen3.8 layouts. It is not a generic GGUF runner. The
+`ds4.c` is a specialized inference engine for the DeepSeek V4/V4.1, GLM 5.2/5.3,
+and Qwen `qwen35`/`qwen4exp` layouts. Qwen3.8-27B (`qwen35`) and Flash Next
+(`qwen4exp`) have separate execution and protocol paths; only locally tested
+models/backends are qualified. FE/QS remains the sole product agent frontend. It is not a generic GGUF runner. The
 goal is a small, readable, high-performance C codebase with Objective-C only
 where Metal requires it and Metal kernels under `metal/`.
 

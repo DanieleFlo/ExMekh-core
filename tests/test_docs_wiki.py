@@ -11,7 +11,7 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-GROUPS = ("architecture", "agentic", "performance", "roadmaps", "hardware")
+GROUPS = ("architecture", "agentic", "performance", "roadmaps", "hardware", "upstream")
 
 
 class DocsWikiTests(unittest.TestCase):

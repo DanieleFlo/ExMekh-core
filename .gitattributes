@@ -8,3 +8,15 @@ gguf-tools/quality-testing/data/*/continuations/*.txt -diff
 
 # Qwen metadata snapshots are validated by byte-level SHA-256 checksums.
 gguf-tools/quality-testing/data/qwen38-metadata/*.json text eol=lf
+
+# Source and build files stay readable and executable across Windows/WSL.
+# Model fixtures retain their existing byte-level rules above.
+*.c text eol=lf
+*.h text eol=lf
+*.cu text eol=lf
+*.cuh text eol=lf
+*.m text eol=lf
+*.py text eol=lf
+*.ps1 text eol=lf
+Makefile text eol=lf
+*.mk text eol=lf

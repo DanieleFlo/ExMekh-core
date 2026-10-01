@@ -11,8 +11,9 @@ from build_research_indexes import outline
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-GROUPS = ("architecture", "agentic", "performance", "roadmaps", "hardware")
+GROUPS = ("architecture", "agentic", "performance", "roadmaps", "hardware", "upstream")
 DESCRIPTIONS = {
+    "upstream": "Guide DS4 originali su modelli, vision, server e backend importati.",
     "architecture": "Architettura dei modelli, MTP e contratti di compatibilità.",
     "agentic": "API agentica, skill gerarchiche e validazione dei checkpoint.",
     "performance": "Contratti, misure, drift numerico e progressione delle ottimizzazioni.",
@@ -95,7 +96,7 @@ def main() -> int:
             "",
             "Queste regole generalizzano la struttura già adottata in `docs/research`:",
             "",
-            "1. **Un tema per directory.** Ogni documento appartiene a un macro-argomento stabile; i file non restano dispersi nella radice di `docs`.",
+            "1. **Un tema per directory.** Ogni documento appartiene a un macro-argomento stabile; i file non restano dispersi nella radice di `docs`; le guide originali sono raccolte in `upstream`.",
             "2. **Un ingresso curato e un indice compatto.** `INDEX.md` spiega il percorso di lettura; `indexes/INDEX.md` collega rapidamente tutti gli indici.",
             "3. **Un `_INDEX.md` per gruppo.** L'indice locale elenca ogni documento, ne sintetizza lo scopo e rimanda al file originale.",
             "4. **Heading come indirizzi semantici.** Ogni sezione significativa usa heading Markdown gerarchici; l'indice registra titolo e intervallo `righe X–Y`.",
