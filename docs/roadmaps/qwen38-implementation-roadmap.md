@@ -1,5 +1,9 @@
 # Roadmap di integrazione Qwen3.8 27B UD-Q4_K_S
 
+Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture
+ritirati non sono verifiche del frontend corrente. Vedere
+[la guida FE / QS](../agentic/frontend.md).
+
 ## Obiettivo e criterio di completamento
 
 Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
@@ -148,7 +152,7 @@ Gate della fase:
 - [x] Snapshot portabile fra sessioni target-only e fra sessioni MTP.
 - [x] Rifiuto atomico del cambio modalita' target-only/MTP incompatibile.
 - [x] Checkpoint GDN di skill, nesting, return/restore, cleanup e isolamento.
-- [x] Matrice live `run_agent_ssd_live.ps1` cold/warm nelle due direzioni e
+- [x] Matrice SSD storica, oggi ritirata, cold/warm nelle due direzioni e
   con MTP, usando il model ID Qwen3.8.
 
 ## Fase 4 — Regressione Qwen3.6
@@ -220,7 +224,7 @@ Per ogni candidato:
 | 2026-08-24 | Q38-025 | Scartate per misure peggiori o non significative: prefill corto tile4/tile8 e F16, verifier a una riga per CTA (43,72 contro 48,91 tok/s), GQA3 a 28K (84,58 contro 65,18 ms/token) e depth2 forzata a 28K (16,37 contro 18,30-18,55 tok/s). Nessuna variante resta nel default. | `REJECT` |
 | 2026-08-24 | Q38-026 | Dopo il kernel multi-riga, `qwen-numerics` verifica 2/3 righe contro oracle indipendente per tutti i sette formati. `mtp-verify-depth` passa sia 3.8 sia 3.6: 231 token, reject/partial/raw-copy, sampling 128 target-match e percorso disabled bit-exact su 248.320 logits. | `KEEP` |
 | 2026-08-25 | Q38-027 | Causa del tool calling 3.8: server e agent usavano marker ruolo DeepSeek o testo DSML non racchiuso in un ruolo Qwen. Introdotto un percorso Qwen ChatML completo per prompt, history, tool response, recovery e checkpoint, mantenendo DSML come superficie constrained condivisa. | `FIX` |
-| 2026-08-25 | Q38-028 | `ds4-agent` Qwen3.8 model-backed ha emesso ed eseguito esattamente una chiamata DSML `read` su `PROJECT_INDEX.md`; la continuation usa `<tool_response>` ChatML e la risposta finale e' corretta. | `PASS` |
+| 2026-08-25 | Q38-028 | Il fixture storico, oggi ritirato, Qwen3.8 model-backed ha emesso ed eseguito esattamente una chiamata DSML `read` su `PROJECT_INDEX.md`; la continuation usa `<tool_response>` ChatML e la risposta finale e' corretta. | `PASS` |
 | 2026-08-25 | Q38-029 | Suite constrained Qwen3.8 20/20 in `compare_new_vs_oracle`, senza divergenze osservate; suite finale Qwen3.6 20/20. La regressione 3.6 zero-argomenti e' stata corretta con un reminder ristretto al solo schema vuoto, preservando il multi-call. | `PASS` |
 | 2026-08-25 | Q38-030 | Harness trie, 1 warm-up + 5 run: DSML mask 3.8 355,826 ms contro 357,851 ms 3.6 (-0,57%); constrained CPU 1.004,302 contro 999,680 ms (+0,46%, parita' pratica). L'end-to-end 3.8 resta piu' lento: 19,08 contro 22,10 tok/s, spiegato soprattutto da eval UD 2.144,873 contro 1.757,448 ms (+22,0%), non dal masking. | `MEASURED` |
 | 2026-08-25 | Q38-031 | Il cache system-prompt dell'agent interrogava il bit-width degli expert routed; Qwen3.8 e' dense e restituiva 0, pur avendo payload persistente Qwen supportato. Allineata l'identita' a Q4 come nel KV store server; save e warm hit model-backed verificati. | `FIX` |
@@ -239,10 +243,10 @@ Per ogni candidato:
 | Regressione MTP corta 28.768 allocati | `make test-qwen38-perf CUDA_ARCH=sm_86` | `PASS`: CLI 47,71; server 29,59 medio, minimo 29,40, output deterministico |
 | Server contesto riempito | `mtp-depth-2k` + `mtp-long-context-smoke`, target/MTP | `PARTIAL`: 2K 27,74 MTP; 16K 22,01 MTP; 28K 18,43 MTP sotto floor 20 |
 | Target/MTP checkpoint | `DS4_AGENTIC_FAST=1 tests/test_agentic_checkpoint` con target 3.8 | `PASS` target-only e MTP |
-| Agent SSD live | `tests/run_agent_ssd_live.ps1`, ctx 30.000 | `PASS` system/HDS/skill target-only+MTP e cambi bidirezionali |
+| Fixture SSD storico | Matrice ritirata, ctx 30.000 | `PASS` system/HDS/skill target-only+MTP e cambi bidirezionali |
 | MTP depth 3.8/3.6 | `./ds4_test --mtp-verify-depth` con target/sidecar espliciti | `PASS` entrambi; reject/partial/sampling/disabled inclusi |
 | CLI/server live | matrice breve target-only/MTP | `PASS` one-shot/REPL/perplexity; Chat/Responses/Anthropic/SSE server |
-| Tool calling Qwen3.8 | `tests.test_constrained_json_api` + `ds4-agent` one-shot `read` | `PASS`: matrice 20/20, DSML reale eseguito e continuation ChatML corretta |
+| Tool calling Qwen3.8 | `tests.test_constrained_json_api` + fixture storico one-shot `read` | `PASS`: matrice 20/20, DSML reale eseguito e continuation ChatML corretta |
 | Regressione tool calling Qwen3.6 | `tests.test_constrained_json_api` | `PASS`: 20/20 in 344,148 s |
 | Masking DSML Qwen3.8 | `compare_new_vs_oracle` + `qwen38-chatml-dsml-trie-20260825-002` | `PASS`: nessuna divergenza osservata; mask mediana 355,826 ms, output deterministico |
 | Parita' prestazionale Qwen3.6 | `qwen36-chatml-dsml-trie-20260825` | `PASS` masking: 357,851 ms; end-to-end 3.8 `PERFORMANCE_GAP` per eval UD, non per constraint |

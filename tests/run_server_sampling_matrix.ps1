@@ -14,7 +14,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$Python = Join-Path $Repo "agent/.venv/Scripts/python.exe"
+$Python = (Get-Command python -ErrorAction Stop).Source
 $TestModule = "tests.test_server_sampling_matrix.SamplingMatrixLiveTests"
 
 function Resolve-RepoPath([string]$Path) {
@@ -37,9 +37,6 @@ function Convert-ToWslPath([string]$Path) {
     return $converted
 }
 
-if (-not (Test-Path -LiteralPath $Python)) {
-    throw "Agent Wiki Python environment not found: $Python"
-}
 $ModelPath = Resolve-RepoPath $Model
 $WslRepo = Convert-ToWslPath $Repo
 $WslModel = Convert-ToWslPath $ModelPath

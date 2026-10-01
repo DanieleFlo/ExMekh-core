@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+env/
+venv/
+ENV/
+
+# Environment variables
+.env
+!.env.example
+.test-tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Storage / Chats
+data/chats/
+data/projects/
+.qs/
+tmp/
+.tmp/
+*.log
+screenshots/
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# Testing & Coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+
+todo.md
+
+# Local tooling caches
+.ruff_cache/
+.uv-cache/
+.agent-pytest-cache/
+.env.*
+!.env.example

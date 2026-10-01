@@ -163,8 +163,7 @@ void ds4_kvstore_evict(ds4_kvstore *kc, const ds4_tokens *live,
                        uint64_t extra_bytes,
                        const ds4_kvstore_eviction_context *incoming);
 /* Remove entries outside keep_reasons and cap durable system-prompt anchors by
- * strict LRU.  This is used by the managed Qwen agent cache, whose only
- * cross-process state is the ten most recently used system prompts. */
+ * strict LRU for the server cache policy. */
 void ds4_kvstore_prune(ds4_kvstore *kc, uint32_t keep_reasons,
                        int max_system_prompts);
 int ds4_kvstore_find_text_prefix(ds4_kvstore *kc, const char *prompt_text,

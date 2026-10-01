@@ -6,159 +6,159 @@ Indice generato; non modificare a mano.
 
 Queste regole sono vincolanti per tutti i macro-task.
 
-- righe 9–35: **REGOLE DI ESECUZIONE** — Queste regole sono vincolanti per tutti i macro-task.
-- righe 36–52: **DEFINIZIONE DI DONE GLOBALE** — Il progetto può essere considerato completato quando:
-- righe 53–106: **ARCHITETTURA TARGET** — request: tools / JSON Schema
-- righe 107–234: **MACRO 0 — Costruire baseline, oracle e benchmark differenziale** — Prima di cambiare l'algoritmo, rendere misurabile in modo riproducibile:
-- righe 109–119: **Obiettivo** — Prima di cambiare l'algoritmo, rendere misurabile in modo riproducibile:
-- righe 120–137: **Letteratura di riferimento** — Estratto chiave dall'abstract:
-  - righe 122–133: **JSONSchemaBench — Geng et al., 2025** — Estratto chiave dall'abstract:
-  - righe 134–137: **Perché è rilevante per DS4** — Una micro-suite costruita solo sui casi che DS4 gestisce bene rischia di ottimizzare il benchmark invece dell'algoritmo.
-- righe 138–211: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 140–148: **0.1 — Congelare l'oracle** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 149–161: **0.2 — Estendere il profiling** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 162–180: **0.3 — Costruire la suite DSML** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 181–201: **0.4 — Costruire la suite JSON Schema** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 202–211: **0.5 — Aggiungere benchmark esterno** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 212–218: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 219–234: **Stato e retrospettiva — MACRO 0** — ---
-- righe 235–318: **MACRO 1 — Eliminare il doppio lavoro tra forced-prefix e costruzione della mask** — Fare una sola analisi dell'insieme dei token validi quando il decoder deve decidere se:
-- righe 237–245: **Obiettivo** — Fare una sola analisi dell'insieme dei token validi quando il decoder deve decidere se:
-- righe 246–260: **Letteratura di riferimento** — Estratto chiave:
-  - righe 248–256: **Efficient Guided Generation — Willard & Louf, 2023 / Outlines** — Estratto chiave:
-  - righe 257–260: **Interpretazione per DS4** — La decisione “token valido?”, la mask e l'eventuale determinismo devono derivare dalla stessa rappresentazione dell'insieme ammesso, non da passate vocabulary-wide indipendenti.
-- righe 261–297: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 263–273: **1.1 — Definire un risultato unico dell'analisi** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 274–281: **1.2 — Condividere il risultato** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 282–289: **1.3 — Correttezza** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 290–297: **1.4 — Performance** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 298–303: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 304–318: **Stato e retrospettiva — MACRO 1** — ---
-- righe 319–449: **MACRO 2 — Rendere DSML e JSON Schema realmente incrementali** — Smettere di ricostruire o ri-parsare il prefisso per ogni candidate.
-- righe 321–347: **Obiettivo** — Smettere di ricostruire o ri-parsare il prefisso per ogni candidate.
-- righe 348–362: **Letteratura di riferimento** — Estratto chiave:
-  - righe 350–358: **XGrammar — Dong et al., 2024** — Estratto chiave:
-  - righe 359–362: **Interpretazione per DS4** — Il parser stack e lo stato semantico devono essere strutture runtime persistenti.
-- righe 363–427: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 365–380: **2.1 — Disegnare `constraint_state`** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 381–391: **2.2 — API incrementale** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 392–401: **2.3 — Migrare DSML** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 402–411: **2.4 — Migrare structured JSON output** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 412–418: **2.5 — Validazione differenziale** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 419–427: **2.6 — Completare la transizione semantica DSML edge-local** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 428–434: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 435–449: **Stato e retrospettiva — MACRO 2** — ---
-- righe 450–567: **MACRO 3 — Precomputare i piece e costruire un trie byte-level del vocabolario** — Smettere di eseguire:
-- righe 452–468: **Obiettivo** — Smettere di eseguire:
-- righe 469–489: **Letteratura di riferimento** — Estratto chiave:
-  - righe 471–479: **DOMINO — Beurer-Kellner, Fischer, Vechev, 2024** — Estratto chiave:
-  - righe 480–485: **Outlines — Willard & Louf, 2023** — Riferimento concettuale:
-  - righe 486–489: **Interpretazione per DS4** — Il trie deve essere costruito sui **piece reali del tokenizer**, non su stringhe teoriche della grammatica.
-- righe 490–545: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 492–500: **3.1 — Token piece table** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 501–509: **3.2 — Trie** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 510–518: **3.3 — Traversal con parser incrementale** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 519–526: **3.4 — Differential mode** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 527–537: **3.5 — Benchmark** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 538–545: **3.6 — Gate trie DSML edge-local** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 546–551: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 552–567: **Stato e retrospettiva — MACRO 3** — ---
-- righe 568–670: **MACRO 4 — Separare token context-independent e context-dependent; introdurre mask precompilate** — Evitare di interpretare dinamicamente token la cui validità è già determinabile dalla parte statica dello stato grammaticale.
-- righe 570–581: **Obiettivo** — Evitare di interpretare dinamicamente token la cui validità è già determinabile dalla parte statica dello stato grammaticale.
-- righe 582–605: **Letteratura di riferimento** — Estratto chiave:
-  - righe 584–592: **XGrammar — Dong et al., 2024** — Estratto chiave:
-  - righe 593–601: **SynCode — Ugare et al., 2024** — Estratto chiave:
-  - righe 602–605: **Interpretazione per DS4** — La struttura DSML statica, la sintassi JSON e molte transizioni locali possono essere trasformate in mask riusabili.
-- righe 606–648: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 608–615: **4.1 — Classificare lo stato** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 616–624: **4.2 — Static mask store** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 625–631: **4.3 — Dynamic frontier** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 632–639: **4.4 — Mask representation** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 640–648: **4.5 — Cache** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 649–654: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 655–670: **Stato e retrospettiva — MACRO 4** — ---
-- righe 671–792: **MACRO 5 — Trasformare il forced-prefix in vero jump-forward deterministico** — Quando la grammatica determina una sequenza di byte/token senza lasciare scelte semantiche al modello, evitarne il normale ciclo mask → sample ripetuto.
-- righe 673–678: **Obiettivo** — Quando la grammatica determina una sequenza di byte/token senza lasciare scelte semantiche al modello, evitarne il normale ciclo mask → sample ripetuto.
-- righe 679–696: **Letteratura di riferimento** — Estratto chiave:
-  - righe 681–692: **SGLang — Zheng et al., 2023** — Estratto chiave:
-  - righe 693–696: **Interpretazione per DS4** — Le catene di transizioni singole possono essere compresse in archi/path deterministici.
-- righe 697–763: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 699–706: **5.1 — Definire determinismo grammaticale** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 707–715: **5.2 — Estrarre deterministic path** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 716–723: **5.3 — Tokenizzazione corretta** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 724–731: **5.4 — Sync modello** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 732–739: **5.5 — Dispatch micro-suffix** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 740–748: **5.6 — Gate reale DSML post-fix** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 749–756: **5.7 — Chiudere le regressioni JSONSchemaBench** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 757–763: **5.8 — Release gate del test globale** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 764–772: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 773–792: **Stato e retrospettiva — MACRO 5** — ---
-- righe 793–930: **MACRO 6 — Adattare XGrammar 2 alla grammatica agentica DSML** — Evitare di ricompilare un enorme automa monolitico per ogni richiesta.
-- righe 795–816: **Obiettivo** — Evitare di ricompilare un enorme automa monolitico per ogni richiesta.
-- righe 817–835: **Letteratura di riferimento** — Estratto chiave:
-  - righe 819–829: **XGrammar 2 — Li et al., 2026** — Estratto chiave:
-  - righe 830–835: **Interpretazione per DS4** — Tool calling è precisamente un caso di grammatica dinamica: il protocollo resta quasi identico, mentre cambiano nomi tool e schemi.
-- righe 836–905: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 838–844: **6.0 — Design review XGrammar 2** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 845–851: **6.1 — Normalizzazione dei frammenti** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 852–858: **6.2 — Static core** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 859–868: **6.3 — TagDispatch reale** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 869–878: **6.4 — Cross-grammar cache** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 879–886: **6.5 — JIT** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 887–892: **6.6 — Valutare mask generation Earley** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 893–899: **6.7 — Valutare repetition compression** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 900–905: **6.8 — Gate A/B della XGrammar 2 adaptation** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 906–914: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 915–930: **Stato e retrospettiva — MACRO 6** — ---
-- righe 931–1031: **MACRO 7 — Implementare Parser Stack Classification (PSC) per gli stati ad alto riuso** — Per stati/sottogrammatiche sufficientemente stabili, eliminare anche il costo runtime residuo proporzionale alla dimensione del vocabolario o al numero di candidate dinamici.
-- righe 933–948: **Obiettivo** — Per stati/sottogrammatiche sufficientemente stabili, eliminare anche il costo runtime residuo proporzionale alla dimensione del vocabolario o al numero di candidate dinamici.
-- righe 949–965: **Letteratura di riferimento** — Estratto chiave:
-  - righe 951–961: **Efficient Grammar-Constrained Decoding via Parser Stack Classification — Li et al., 2026** — Estratto chiave:
-  - righe 962–965: **Nota critica** — PSC è molto recente.
-- righe 966–1008: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 968–976: **7.1 — Identificare candidati PSC** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 977–984: **7.2 — Costruire classifier prototype** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 985–992: **7.3 — Break-even** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 993–1000: **7.4 — Hybrid selection** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1001–1008: **7.5 — Validazione** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1009–1014: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1015–1031: **Stato e retrospettiva — MACRO 7** — ---
-- righe 1032–1126: **MACRO 8 — Sovrapporre constraint computation e inferenza; integrare speculative decoding solo dopo** — Una volta ridotto il costo algoritmico del constraint engine, togliere dal critical path la quota CPU residua sovrapponendola all'eval GPU quando possibile.
-- righe 1034–1040: **Obiettivo** — Una volta ridotto il costo algoritmico del constraint engine, togliere dal critical path la quota CPU residua sovrapponendola all'eval GPU quando possibile.
-- righe 1041–1060: **Letteratura di riferimento** — Il paper descrive il co-design fra grammar engine e inference engine per sovrapporre il grammar processing all'esecuzione GPU.
-  - righe 1043–1049: **XGrammar — Dong et al., 2024** — Il paper descrive il co-design fra grammar engine e inference engine per sovrapporre il grammar processing all'esecuzione GPU.
-  - righe 1050–1056: **DOMINO — Beurer-Kellner et al., 2024** — DOMINO combina pre-computation, allineamento subword e speculative decoding.
-  - righe 1057–1060: **Interpretazione per DS4** — Non usare MTP per nascondere un constraint engine ancora inefficiente: prima ridurre il lavoro; poi sovrapporlo e infine speculare.
-- righe 1061–1104: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1063–1070: **8.1 — Overlap CPU/GPU** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1071–1078: **8.2 — Double buffering** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1079–1086: **8.3 — Speculative prerequisites** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1087–1096: **8.4 — Constrained MTP** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1097–1104: **8.5 — Benchmark** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1105–1110: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1111–1126: **Stato e retrospettiva — MACRO 8** — ---
-- righe 1127–1261: **MACRO 9 — Hardening, adaptive policy e rimozione del full-scan dal percorso normale** — Integrare i backend sviluppati in una policy adattiva e dimostrare che la scansione completa del vocabolario è diventata un fallback eccezionale.
-- righe 1129–1154: **Obiettivo** — Integrare i backend sviluppati in una policy adattiva e dimostrare che la scansione completa del vocabolario è diventata un fallback eccezionale.
-- righe 1155–1167: **Letteratura di riferimento** — Questa macro-task sintetizza i risultati di:
-- righe 1168–1234: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1170–1179: **9.1 — Adaptive backend selection** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1180–1192: **9.2 — Safety** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1193–1208: **9.3 — End-to-end regression suite** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1209–1223: **9.4 — Performance gate** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 1224–1234: **9.5 — Cleanup** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1235–1242: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1243–1261: **Stato e retrospettiva — MACRO 9** — ---
-- righe 1262–1293: **ORDINE VINCOLANTE CONSIGLIATO** — MACRO 0 Baseline + oracle
-- righe 1294–1339: **METRICHE DA MANTENERE FINO ALLA FINE** — ---
-- righe 1296–1304: **Correttezza** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1305–1318: **Constraint engine** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1319–1326: **Compilation** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1327–1339: **Inference end-to-end** — ---
-- righe 1340–1371: **FONTI PRINCIPALI** — 1.
-- righe 1372–1414: **TEMPLATE REPORT FINALE** — Da compilare al termine di MACRO 9.
-- righe 1376–1391: **Risultato complessivo** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1392–1406: **Contributo di ogni macro-task** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 1407–1414: **Conclusioni** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 13–39: **REGOLE DI ESECUZIONE** — Queste regole sono vincolanti per tutti i macro-task.
+- righe 40–56: **DEFINIZIONE DI DONE GLOBALE** — Il progetto può essere considerato completato quando:
+- righe 57–110: **ARCHITETTURA TARGET** — request: tools / JSON Schema
+- righe 111–238: **MACRO 0 — Costruire baseline, oracle e benchmark differenziale** — Prima di cambiare l'algoritmo, rendere misurabile in modo riproducibile:
+- righe 113–123: **Obiettivo** — Prima di cambiare l'algoritmo, rendere misurabile in modo riproducibile:
+- righe 124–141: **Letteratura di riferimento** — Estratto chiave dall'abstract:
+  - righe 126–137: **JSONSchemaBench — Geng et al., 2025** — Estratto chiave dall'abstract:
+  - righe 138–141: **Perché è rilevante per DS4** — Una micro-suite costruita solo sui casi che DS4 gestisce bene rischia di ottimizzare il benchmark invece dell'algoritmo.
+- righe 142–215: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 144–152: **0.1 — Congelare l'oracle** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 153–165: **0.2 — Estendere il profiling** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 166–184: **0.3 — Costruire la suite DSML** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 185–205: **0.4 — Costruire la suite JSON Schema** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 206–215: **0.5 — Aggiungere benchmark esterno** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 216–222: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 223–238: **Stato e retrospettiva — MACRO 0** — ---
+- righe 239–322: **MACRO 1 — Eliminare il doppio lavoro tra forced-prefix e costruzione della mask** — Fare una sola analisi dell'insieme dei token validi quando il decoder deve decidere se:
+- righe 241–249: **Obiettivo** — Fare una sola analisi dell'insieme dei token validi quando il decoder deve decidere se:
+- righe 250–264: **Letteratura di riferimento** — Estratto chiave:
+  - righe 252–260: **Efficient Guided Generation — Willard & Louf, 2023 / Outlines** — Estratto chiave:
+  - righe 261–264: **Interpretazione per DS4** — La decisione “token valido?”, la mask e l'eventuale determinismo devono derivare dalla stessa rappresentazione dell'insieme ammesso, non da passate vocabulary-wide indipendenti.
+- righe 265–301: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 267–277: **1.1 — Definire un risultato unico dell'analisi** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 278–285: **1.2 — Condividere il risultato** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 286–293: **1.3 — Correttezza** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 294–301: **1.4 — Performance** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 302–307: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 308–322: **Stato e retrospettiva — MACRO 1** — ---
+- righe 323–453: **MACRO 2 — Rendere DSML e JSON Schema realmente incrementali** — Smettere di ricostruire o ri-parsare il prefisso per ogni candidate.
+- righe 325–351: **Obiettivo** — Smettere di ricostruire o ri-parsare il prefisso per ogni candidate.
+- righe 352–366: **Letteratura di riferimento** — Estratto chiave:
+  - righe 354–362: **XGrammar — Dong et al., 2024** — Estratto chiave:
+  - righe 363–366: **Interpretazione per DS4** — Il parser stack e lo stato semantico devono essere strutture runtime persistenti.
+- righe 367–431: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 369–384: **2.1 — Disegnare `constraint_state`** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 385–395: **2.2 — API incrementale** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 396–405: **2.3 — Migrare DSML** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 406–415: **2.4 — Migrare structured JSON output** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 416–422: **2.5 — Validazione differenziale** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 423–431: **2.6 — Completare la transizione semantica DSML edge-local** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 432–438: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 439–453: **Stato e retrospettiva — MACRO 2** — ---
+- righe 454–571: **MACRO 3 — Precomputare i piece e costruire un trie byte-level del vocabolario** — Smettere di eseguire:
+- righe 456–472: **Obiettivo** — Smettere di eseguire:
+- righe 473–493: **Letteratura di riferimento** — Estratto chiave:
+  - righe 475–483: **DOMINO — Beurer-Kellner, Fischer, Vechev, 2024** — Estratto chiave:
+  - righe 484–489: **Outlines — Willard & Louf, 2023** — Riferimento concettuale:
+  - righe 490–493: **Interpretazione per DS4** — Il trie deve essere costruito sui **piece reali del tokenizer**, non su stringhe teoriche della grammatica.
+- righe 494–549: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 496–504: **3.1 — Token piece table** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 505–513: **3.2 — Trie** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 514–522: **3.3 — Traversal con parser incrementale** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 523–530: **3.4 — Differential mode** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 531–541: **3.5 — Benchmark** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 542–549: **3.6 — Gate trie DSML edge-local** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 550–555: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 556–571: **Stato e retrospettiva — MACRO 3** — ---
+- righe 572–674: **MACRO 4 — Separare token context-independent e context-dependent; introdurre mask precompilate** — Evitare di interpretare dinamicamente token la cui validità è già determinabile dalla parte statica dello stato grammaticale.
+- righe 574–585: **Obiettivo** — Evitare di interpretare dinamicamente token la cui validità è già determinabile dalla parte statica dello stato grammaticale.
+- righe 586–609: **Letteratura di riferimento** — Estratto chiave:
+  - righe 588–596: **XGrammar — Dong et al., 2024** — Estratto chiave:
+  - righe 597–605: **SynCode — Ugare et al., 2024** — Estratto chiave:
+  - righe 606–609: **Interpretazione per DS4** — La struttura DSML statica, la sintassi JSON e molte transizioni locali possono essere trasformate in mask riusabili.
+- righe 610–652: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 612–619: **4.1 — Classificare lo stato** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 620–628: **4.2 — Static mask store** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 629–635: **4.3 — Dynamic frontier** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 636–643: **4.4 — Mask representation** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 644–652: **4.5 — Cache** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 653–658: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 659–674: **Stato e retrospettiva — MACRO 4** — ---
+- righe 675–796: **MACRO 5 — Trasformare il forced-prefix in vero jump-forward deterministico** — Quando la grammatica determina una sequenza di byte/token senza lasciare scelte semantiche al modello, evitarne il normale ciclo mask → sample ripetuto.
+- righe 677–682: **Obiettivo** — Quando la grammatica determina una sequenza di byte/token senza lasciare scelte semantiche al modello, evitarne il normale ciclo mask → sample ripetuto.
+- righe 683–700: **Letteratura di riferimento** — Estratto chiave:
+  - righe 685–696: **SGLang — Zheng et al., 2023** — Estratto chiave:
+  - righe 697–700: **Interpretazione per DS4** — Le catene di transizioni singole possono essere compresse in archi/path deterministici.
+- righe 701–767: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 703–710: **5.1 — Definire determinismo grammaticale** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 711–719: **5.2 — Estrarre deterministic path** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 720–727: **5.3 — Tokenizzazione corretta** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 728–735: **5.4 — Sync modello** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 736–743: **5.5 — Dispatch micro-suffix** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 744–752: **5.6 — Gate reale DSML post-fix** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 753–760: **5.7 — Chiudere le regressioni JSONSchemaBench** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 761–767: **5.8 — Release gate del test globale** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 768–776: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 777–796: **Stato e retrospettiva — MACRO 5** — ---
+- righe 797–934: **MACRO 6 — Adattare XGrammar 2 alla grammatica agentica DSML** — Evitare di ricompilare un enorme automa monolitico per ogni richiesta.
+- righe 799–820: **Obiettivo** — Evitare di ricompilare un enorme automa monolitico per ogni richiesta.
+- righe 821–839: **Letteratura di riferimento** — Estratto chiave:
+  - righe 823–833: **XGrammar 2 — Li et al., 2026** — Estratto chiave:
+  - righe 834–839: **Interpretazione per DS4** — Tool calling è precisamente un caso di grammatica dinamica: il protocollo resta quasi identico, mentre cambiano nomi tool e schemi.
+- righe 840–909: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 842–848: **6.0 — Design review XGrammar 2** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 849–855: **6.1 — Normalizzazione dei frammenti** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 856–862: **6.2 — Static core** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 863–872: **6.3 — TagDispatch reale** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 873–882: **6.4 — Cross-grammar cache** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 883–890: **6.5 — JIT** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 891–896: **6.6 — Valutare mask generation Earley** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 897–903: **6.7 — Valutare repetition compression** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 904–909: **6.8 — Gate A/B della XGrammar 2 adaptation** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 910–918: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 919–934: **Stato e retrospettiva — MACRO 6** — ---
+- righe 935–1035: **MACRO 7 — Implementare Parser Stack Classification (PSC) per gli stati ad alto riuso** — Per stati/sottogrammatiche sufficientemente stabili, eliminare anche il costo runtime residuo proporzionale alla dimensione del vocabolario o al numero di candidate dinamici.
+- righe 937–952: **Obiettivo** — Per stati/sottogrammatiche sufficientemente stabili, eliminare anche il costo runtime residuo proporzionale alla dimensione del vocabolario o al numero di candidate dinamici.
+- righe 953–969: **Letteratura di riferimento** — Estratto chiave:
+  - righe 955–965: **Efficient Grammar-Constrained Decoding via Parser Stack Classification — Li et al., 2026** — Estratto chiave:
+  - righe 966–969: **Nota critica** — PSC è molto recente.
+- righe 970–1012: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 972–980: **7.1 — Identificare candidati PSC** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 981–988: **7.2 — Costruire classifier prototype** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 989–996: **7.3 — Break-even** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 997–1004: **7.4 — Hybrid selection** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1005–1012: **7.5 — Validazione** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1013–1018: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1019–1035: **Stato e retrospettiva — MACRO 7** — ---
+- righe 1036–1130: **MACRO 8 — Sovrapporre constraint computation e inferenza; integrare speculative decoding solo dopo** — Una volta ridotto il costo algoritmico del constraint engine, togliere dal critical path la quota CPU residua sovrapponendola all'eval GPU quando possibile.
+- righe 1038–1044: **Obiettivo** — Una volta ridotto il costo algoritmico del constraint engine, togliere dal critical path la quota CPU residua sovrapponendola all'eval GPU quando possibile.
+- righe 1045–1064: **Letteratura di riferimento** — Il paper descrive il co-design fra grammar engine e inference engine per sovrapporre il grammar processing all'esecuzione GPU.
+  - righe 1047–1053: **XGrammar — Dong et al., 2024** — Il paper descrive il co-design fra grammar engine e inference engine per sovrapporre il grammar processing all'esecuzione GPU.
+  - righe 1054–1060: **DOMINO — Beurer-Kellner et al., 2024** — DOMINO combina pre-computation, allineamento subword e speculative decoding.
+  - righe 1061–1064: **Interpretazione per DS4** — Non usare MTP per nascondere un constraint engine ancora inefficiente: prima ridurre il lavoro; poi sovrapporlo e infine speculare.
+- righe 1065–1108: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1067–1074: **8.1 — Overlap CPU/GPU** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1075–1082: **8.2 — Double buffering** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1083–1090: **8.3 — Speculative prerequisites** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1091–1100: **8.4 — Constrained MTP** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1101–1108: **8.5 — Benchmark** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1109–1114: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1115–1130: **Stato e retrospettiva — MACRO 8** — ---
+- righe 1131–1265: **MACRO 9 — Hardening, adaptive policy e rimozione del full-scan dal percorso normale** — Integrare i backend sviluppati in una policy adattiva e dimostrare che la scansione completa del vocabolario è diventata un fallback eccezionale.
+- righe 1133–1158: **Obiettivo** — Integrare i backend sviluppati in una policy adattiva e dimostrare che la scansione completa del vocabolario è diventata un fallback eccezionale.
+- righe 1159–1171: **Letteratura di riferimento** — Questa macro-task sintetizza i risultati di:
+- righe 1172–1238: **Sottotask** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1174–1183: **9.1 — Adaptive backend selection** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1184–1196: **9.2 — Safety** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1197–1212: **9.3 — End-to-end regression suite** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1213–1227: **9.4 — Performance gate** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 1228–1238: **9.5 — Cleanup** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1239–1246: **Criteri di uscita** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1247–1265: **Stato e retrospettiva — MACRO 9** — ---
+- righe 1266–1297: **ORDINE VINCOLANTE CONSIGLIATO** — MACRO 0 Baseline + oracle
+- righe 1298–1343: **METRICHE DA MANTENERE FINO ALLA FINE** — ---
+- righe 1300–1308: **Correttezza** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1309–1322: **Constraint engine** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1323–1330: **Compilation** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1331–1343: **Inference end-to-end** — ---
+- righe 1344–1375: **FONTI PRINCIPALI** — 1.
+- righe 1376–1418: **TEMPLATE REPORT FINALE** — Da compilare al termine di MACRO 9.
+- righe 1380–1395: **Risultato complessivo** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1396–1410: **Contributo di ogni macro-task** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 1411–1418: **Conclusioni** — Sezione strutturale; consultare il contenuto locale indicato.
 
 ## [Constrained JSON e DSML: piano di completamento](constrained-json-decoding-plan.md)
 
@@ -204,54 +204,54 @@ Migliorare il tempo end-to-end a contesti diversi tramite scheduling, senza
 
 Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
 
-- righe 3–19: **Obiettivo e criterio di completamento** — Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
-- righe 20–35: **Stato sintetico** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 36–53: **Fase 0 — Baseline, fonti e invarianti** — knowledge base e la scheda RTX 3090.
-- righe 54–88: **Fase 1 — Kernel indispensabili per il target UD** — Formati mancanti, rilevati dall'inventario pinned:
-- righe 89–104: **Fase 2 — Target Qwen3.8 end-to-end** — indipendente alla revisione llama.cpp fissata; 32/32 greedy identici.
-- righe 105–153: **Fase 3 — Parita' funzionale con Qwen3.6** — perplexity e dump diagnostici.
-  - righe 107–113: **CLI** — perplexity e dump diagnostici.
-  - righe 114–129: **Server** — constrained output e batching/multi-sessione nei percorsi applicabili.
-  - righe 130–145: **MTP** — registrata a contesti brevi e lunghi.
-  - righe 146–153: **SSD e agentic** — con MTP, usando il model ID Qwen3.8.
-- righe 154–168: **Fase 4 — Regressione Qwen3.6** — Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate
-- righe 169–190: **Fase 5 — Ottimizzazioni opzionali comuni** — Valutare soltanto dopo la parita' funzionale del 3.8:
-- righe 191–227: **Registro breve di decisioni e risultati** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 228–249: **Comandi e risultati da compilare durante il lavoro** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 7–23: **Obiettivo e criterio di completamento** — Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
+- righe 24–39: **Stato sintetico** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 40–57: **Fase 0 — Baseline, fonti e invarianti** — knowledge base e la scheda RTX 3090.
+- righe 58–92: **Fase 1 — Kernel indispensabili per il target UD** — Formati mancanti, rilevati dall'inventario pinned:
+- righe 93–108: **Fase 2 — Target Qwen3.8 end-to-end** — indipendente alla revisione llama.cpp fissata; 32/32 greedy identici.
+- righe 109–157: **Fase 3 — Parita' funzionale con Qwen3.6** — perplexity e dump diagnostici.
+  - righe 111–117: **CLI** — perplexity e dump diagnostici.
+  - righe 118–133: **Server** — constrained output e batching/multi-sessione nei percorsi applicabili.
+  - righe 134–149: **MTP** — registrata a contesti brevi e lunghi.
+  - righe 150–157: **SSD e agentic** — con MTP, usando il model ID Qwen3.8.
+- righe 158–172: **Fase 4 — Regressione Qwen3.6** — Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate
+- righe 173–194: **Fase 5 — Ottimizzazioni opzionali comuni** — Valutare soltanto dopo la parita' funzionale del 3.8:
+- righe 195–231: **Registro breve di decisioni e risultati** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 232–253: **Comandi e risultati da compilare durante il lavoro** — Sezione strutturale; consultare il contenuto locale indicato.
 
 ## [TODO — Prestazioni del server agentico e constrained decoding](todo-agentic-server-performance.md)
 
 Questo diario separa il lavoro sulle prestazioni del server agentico dal lavoro
 
-- righe 5–24: **Scopo e vincoli** — Questo diario separa il lavoro sulle prestazioni del server agentico dal lavoro
-- righe 25–45: **Stato sintetico** — target-only/MTP su Chat e Responses agentiche.
-- righe 46–161: **Baseline iniziale ricavata dai log** — Questi numeri sono osservazioni preliminari, non ancora un benchmark controllato.
-  - righe 79–97: **Baseline controllata del server** — Payload fisso: Qwen3.6-27B Q4_K_S, contesto 32768, tool
-  - righe 98–124: **Confronto Qwen3.8/Qwen3.6 dopo la correzione ChatML** — Il confronto del 2026-08-25 usa lo stesso binario, RTX 3090, contesto 32768,
-  - righe 125–161: **Ciclo Qwen3.8 del 2026-08-27: storia agentica senza tool call** — Il nuovo fixture usa il vero `DeepAgent` `bootstrap-wiki`, tool disponibili con
-- righe 162–195: **Punto 1 — Strumentazione e benchmark ripetibile** — (0.3--0.5 ms nel payload controllato, quindi non ulteriormente suddiviso);
-  - righe 164–181: **Telemetria da aggiungere** — (0.3--0.5 ms nel payload controllato, quindi non ulteriormente suddiviso);
-  - righe 182–195: **Matrice minima di misura** — build/commit, flags, modello, hardware e correttezza.
-- righe 196–273: **Punto 2 — Rendere efficiente il constrained decoding DSML/JSON** — Il percorso corrente ha costo almeno lineare nella dimensione del vocabolario a
-  - righe 198–219: **Risultato della ricerca in letteratura** — Il percorso corrente ha costo almeno lineare nella dimensione del vocabolario a
-  - righe 220–273: **Sequenza sperimentale** — massima invece di richiamare e ricopiare il testo per ogni sampling.
-    - righe 222–236: **2A — Eliminare lavoro ripetuto senza cambiare l'algoritmo** — massima invece di richiamare e ricopiare il testo per ogni sampling.
-    - righe 237–252: **2B — Ridurre i candidati visitati** — engine/vocabolario.
-    - righe 253–263: **2C — Cache adattiva per stato e schemi dinamici** — quando tracker e frontiera non contengono marker parziali.
-    - righe 264–273: **2D — Parallelismo e tecniche più invasive, solo se ancora necessarie** — token appena committato: le dipendenze lo permettono, ma serve un protocollo
-- righe 274–357: **Punto 3 — Sincronizzazione efficiente dei piccoli suffissi** — Questo punto resta deliberatamente dopo la telemetria e il primo intervento
-  - righe 281–295: **Requisito esplicito per sessioni live e MTP** — Per preparare il percorso MTP, un prefill live di **2 token o più** deve essere
-  - righe 296–307: **Audit storico completato prima del codice** — il fast-forward DSML (`git log`, `git blame`, diff e test associati).
-  - righe 308–315: **Matrice di crossover da misurare** — Sezione strutturale; consultare il contenuto locale indicato.
-  - righe 316–335: **Misure mirate del crossover live a contesto 8k** — La prima variante, che selezionava il percorso in base al solo `suffix_len`, ha
-  - righe 336–357: **Gate finali eseguiti** — normale roundoff del probe.
-- righe 358–388: **Ledger degli esperimenti e dei tentativi** — Stati ammessi:
-- righe 389–462: **Registro cronologico** — 27.08 tok/s a 16k.
-  - righe 391–403: **2026-08-12 — Apertura** — 27.08 tok/s a 16k.
-  - righe 404–424: **2026-08-12 — Implementazione e chiusura del ciclo** — DSML controllato è passato da circa 12.47 a circa 22.3 tok/s.
-  - righe 425–439: **2026-08-27 — Qwen3.8, `SEARCH` statico e storia live** — target-only/MTP con phase profiling e KV SSD.
-  - righe 440–462: **2026-08-28 — Matrice sampling, thinking e MTP** — temperatura zero e non coprivano il prodotto cartesiano richiesto.
-- righe 463–470: **Prossima azione** — Il ciclo corrente è chiuso.
+- righe 9–28: **Scopo e vincoli** — Questo diario separa il lavoro sulle prestazioni del server agentico dal lavoro
+- righe 29–49: **Stato sintetico** — target-only/MTP su Chat e Responses agentiche.
+- righe 50–165: **Baseline iniziale ricavata dai log** — Questi numeri sono osservazioni preliminari, non ancora un benchmark controllato.
+  - righe 83–101: **Baseline controllata del server** — Payload fisso: Qwen3.6-27B Q4_K_S, contesto 32768, tool
+  - righe 102–128: **Confronto Qwen3.8/Qwen3.6 dopo la correzione ChatML** — Il confronto del 2026-08-25 usa lo stesso binario, RTX 3090, contesto 32768,
+  - righe 129–165: **Ciclo Qwen3.8 del 2026-08-27: storia agentica senza tool call** — Il fixture storico, oggi ritirato, usava tool disponibili con
+- righe 166–199: **Punto 1 — Strumentazione e benchmark ripetibile** — (0.3--0.5 ms nel payload controllato, quindi non ulteriormente suddiviso);
+  - righe 168–185: **Telemetria da aggiungere** — (0.3--0.5 ms nel payload controllato, quindi non ulteriormente suddiviso);
+  - righe 186–199: **Matrice minima di misura** — build/commit, flags, modello, hardware e correttezza.
+- righe 200–277: **Punto 2 — Rendere efficiente il constrained decoding DSML/JSON** — Il percorso corrente ha costo almeno lineare nella dimensione del vocabolario a
+  - righe 202–223: **Risultato della ricerca in letteratura** — Il percorso corrente ha costo almeno lineare nella dimensione del vocabolario a
+  - righe 224–277: **Sequenza sperimentale** — massima invece di richiamare e ricopiare il testo per ogni sampling.
+    - righe 226–240: **2A — Eliminare lavoro ripetuto senza cambiare l'algoritmo** — massima invece di richiamare e ricopiare il testo per ogni sampling.
+    - righe 241–256: **2B — Ridurre i candidati visitati** — engine/vocabolario.
+    - righe 257–267: **2C — Cache adattiva per stato e schemi dinamici** — quando tracker e frontiera non contengono marker parziali.
+    - righe 268–277: **2D — Parallelismo e tecniche più invasive, solo se ancora necessarie** — token appena committato: le dipendenze lo permettono, ma serve un protocollo
+- righe 278–361: **Punto 3 — Sincronizzazione efficiente dei piccoli suffissi** — Questo punto resta deliberatamente dopo la telemetria e il primo intervento
+  - righe 285–299: **Requisito esplicito per sessioni live e MTP** — Per preparare il percorso MTP, un prefill live di **2 token o più** deve essere
+  - righe 300–311: **Audit storico completato prima del codice** — il fast-forward DSML (`git log`, `git blame`, diff e test associati).
+  - righe 312–319: **Matrice di crossover da misurare** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 320–339: **Misure mirate del crossover live a contesto 8k** — La prima variante, che selezionava il percorso in base al solo `suffix_len`, ha
+  - righe 340–361: **Gate finali eseguiti** — normale roundoff del probe.
+- righe 362–392: **Ledger degli esperimenti e dei tentativi** — Stati ammessi:
+- righe 393–466: **Registro cronologico** — 27.08 tok/s a 16k.
+  - righe 395–407: **2026-08-12 — Apertura** — 27.08 tok/s a 16k.
+  - righe 408–428: **2026-08-12 — Implementazione e chiusura del ciclo** — DSML controllato è passato da circa 12.47 a circa 22.3 tok/s.
+  - righe 429–443: **2026-08-27 — Qwen3.8, `SEARCH` statico e storia live** — target-only/MTP con phase profiling e KV SSD.
+  - righe 444–466: **2026-08-28 — Matrice sampling, thinking e MTP** — temperatura zero e non coprivano il prodotto cartesiano richiesto.
+- righe 467–474: **Prossima azione** — Il ciclo corrente è chiuso.
 
 ## [TODO — GPU Kernel Engineering Harness per DS4 / Qwen 3.6 27B](todo-harness.md)
 

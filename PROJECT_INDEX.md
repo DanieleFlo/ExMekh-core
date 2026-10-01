@@ -99,7 +99,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 16. **Snapshot e KV cache su disco**
     - Serializzazione dello stato di una sessione.
     - Envelope, payload ABI, fingerprint e compatibilità.
-    - Politiche differenti di CLI, server e Agent Q.
+    - Politiche differenti di CLI e server.
 
 17. **Inferenza distribuita e tensor parallel**
     - Suddivisione del modello fra worker.
@@ -117,11 +117,10 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
     - Coda dei job, worker residenti e coordinatore del batching.
     - SSE, tool call, prompt rendering e disk KV policy.
 
-20. **Agent Q**
+20. **Agent FE / QS**
     - Transcript, sessioni, strumenti e ciclo agentico.
-    - Stato della directory di lavoro e tool replay.
-    - Session switching, persistenza, future diramazioni KV e path-dependent
-      tool calls.
+    - Progetti, Quick Chats, approvazione dei comandi e steering.
+    - Persistenza JSON del frontend e checkpoint KV gestiti dal server.
 
 21. **Correttezza e osservabilità**
     - Dump di token, logits e top-logprob.
@@ -150,6 +149,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `CONTRIBUTING.md` — regole di sviluppo, build, test e contributi.
 - `STRIXHALO.md` — note operative per build ed esecuzione ROCm su Strix Halo.
 - `PROJECT_INDEX.md` — questo indice e ordine della spiegazione tecnica.
+- `.gitattributes` — fine riga LF per i launcher WSL e i fixture Qwen verificati
+  tramite checksum; gestione dei diff per le continuazioni del modello.
 - `docs/INDEX.md` — indice madre della wiki tecnica, con tassonomia, regole di
   costruzione e accesso agli indici semantici di ogni macro-argomento.
 - `docs/performance/qwen36-drift-hypotheses.md` — registro vivo delle ipotesi sul drift
@@ -219,8 +220,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `download_model.sh` — download dei modelli e support model conosciuti dal
   progetto: DeepSeek Flash 0731/DSpark, PRO 0813, GLM e gli artefatti Qwen3.6
   e Qwen3.8 fissati con revisione e checksum.
-- `start-ds4-server.sh`, `agent/start-ds4-server.sh`, `agent/start.sh` —
-  launcher eseguibili nativi per server CUDA e Agent Wiki dalla copia WSL2
+- `start-ds4-server.sh`, `agent/start-ds4-server.sh`, `agent/run.sh` —
+  launcher eseguibili nativi per server CUDA e frontend FE / QS dalla copia WSL2
   `/home/daniele/ds4`; il progetto non modifica proxy o firewall Windows.
 - `ds4_cli.c` — eseguibile `ds4`: parsing opzioni, modalità one-shot e REPL,
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
@@ -238,8 +239,19 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   canonicalizzazione accetta la riscrittura dell'ultimo token BPE Qwen solo se
   il KV live conserva l'intero prompt byte per byte; le continuazioni agentiche
   riconoscono il tail tool anche dopo lo scope di sistema sintetico.
-- `ds4_agent.c` — eseguibile `ds4-agent`: TUI, transcript, sessioni persistenti,
-  ciclo tool, file/shell/web tools e orchestrazione della generazione.
+- `agent/` — sorgenti, test e configurazione del frontend NiceGUI FE / QS;
+  `agent/src/fe/qs_bridge/` integra Client e DeepAgent, `agent/src/fe/state/`
+  persiste chat e progetti e `agent/src/fe/ui/` gestisce l'interfaccia.
+- `agent/wheels/` — wheel QS versionata, installabile con `uv sync --frozen`.
+- `agent/tests/parallel_execution.py` — test FE per modulo su CPU logiche, con
+  fase esclusiva per test seriali e provider reali dopo il teardown degli altri worker.
+- `qs/tests/conftest.py` — worker QS sulle CPU logiche disponibili, opt-in dei
+  test live e raggruppamento dei test seriali con `--dist=loadgroup`.
+- `qs/` — repository Git locale dei sorgenti QS, con cronologia propria,
+  esclusa dal Git di DS4.
+- `agent/sync_qs.sh` e `agent/src/fe/sync.py` — ricostruiscono QS dai sorgenti
+  locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
+- `docs/agentic/frontend.md` — avvio, configurazione, dipendenze e test di FE.
 - `ds4_bench.c` — benchmark di prefill/decode a diverse frontiere di contesto;
   ripete gli sweep mantenendo il modello residente e usa snapshot o replay fuori
   dalle finestre cronometrate.
@@ -259,13 +271,6 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `performance/jsonschemabench-subset.json` — sparse-fetch riproducibile e
   pinned dell'intero corpus esterno, classificazione fail-closed delle 9.558
   schema e tier `smoke`/`safety`, senza adattare gli schema unsupported.
-- `tools/profile_agent_dsml_story.py` — profilo end-to-end del grafo `/agent`
-  `bootstrap-wiki`: confronta il payload dentro `exit-with-info-tool` e la
-  nuova `plain-story` senza tool call; richiede almeno 10k token di contesto,
-  invia reasoning none esplicito e conserva risposta, hash, token usage,
-  telemetria di fase, checkpoint post-risposta e fallimenti funzionali.
-- `tests/run_agent_story_live.ps1` — runner live Qwen3.8 target-only/MTP della
-  storia lunga, con KV SSD, phase profiling, un warm-up e due run misurate.
 - `tests/test_server_sampling_matrix.py` e
   `tests/run_server_sampling_matrix.ps1` — matrice server Qwen3.8 live per
   temperatura zero/nonzero, thinking on/off e target-only/MTP su testo libero,
@@ -455,8 +460,6 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 
 ### Supporto applicativo
 
-- `ds4_web.c`, `ds4_web.h` — servizio/browser helper controllato da Agent Q per
-  fetch e interazione web.
 - `rax.c`, `rax.h`, `rax_malloc.h` — radix tree usato per lookup e strutture
   indicizzate del server/cache.
 - `dir-steering/` — strumenti e fixture per costruire e applicare direction
@@ -584,13 +587,6 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `tests/ds4_test.c --mtp-verify-depth` — verifica model-backed di accettazione,
   rollback e identità autoregressiva MTP; centralizza il contesto predefinito
   Qwen a 22.593 token, ancora sovrascrivibile con `DS4_TEST_MTP_CTX`.
-- `tests/test_agent_ssd_live.py`, `tests/run_agent_ssd_live.ps1` e
-  `tests/agent_ssd_live/ssd-canary.txt` — gate live sul runtime installato in
-  `/agent` e sul suo prompt `bootstrap-wiki` da oltre 10k token: matrice degli
-  anchor SSD target-only/MTP nelle due direzioni, regressione con un anchor di
-  sistema ChatML deliberatamente corto e save/restore request-local dei checkpoint HDS
-  `.dsh` e deep-skill `.dsk` in un workroot isolato; il runner usa la stessa
-  allocazione Qwen 22K-safe di 22.593 token.
 - `tests/test_qwen36_fixtures.py`, `tests/test_qwen36_equivalence.py`,
   `tests/test_qwen36_numerics.py` — schema, staging, checksum, metriche/gate e
   classificazione sintetica dell'inviluppo numerico Qwen3.6.
@@ -618,7 +614,6 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `tests/test_engine_mgpu_runtime.c`,
   `tests/test_engine_mgpu_refusal.c` — placement, equivalenza e rifiuto sicuro
   delle configurazioni multi-GPU.
-- `tests/ds4_agent_test.c` — parser, stato e operazioni isolate di Agent Q.
 - `tests/dspark_acceptance_fixture.sh` — correttezza e acceptance del percorso
   speculativo DSpark.
 

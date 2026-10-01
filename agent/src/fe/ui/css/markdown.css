@@ -1,0 +1,162 @@
+/* ========================================================================= */
+/* Code Blocks, MathML & Markdown Typography                                 */
+/* ========================================================================= */
+
+/* Code blocks styling */
+pre {
+    background-color: #0c0c0f !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: 6px !important;
+    padding: 12px !important;
+    font-family: 'JetBrains Mono', Consolas, monospace !important;
+}
+
+code {
+    font-family: 'JetBrains Mono', Consolas, monospace !important;
+}
+
+.code-block-wrapper {
+    position: relative;
+    margin: 0.5rem 0;
+    width: 100%;
+}
+
+.code-block-wrapper pre {
+    margin: 0 !important;
+    padding-right: 2.5rem !important;
+}
+
+.code-copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    background: rgba(24, 24, 27, 0.75);
+    color: #71717a;
+    cursor: pointer;
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+}
+
+.code-copy-btn:hover {
+    color: #d4d4d8;
+    background: rgba(39, 39, 42, 0.95);
+    border-color: #3f3f46;
+}
+
+.code-copy-btn.copied {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.code-copy-btn .q-icon,
+.code-copy-btn .material-icons {
+    font-size: 15px;
+    line-height: 1;
+}
+
+/* MathML & LaTeX Math Formula Styling */
+math {
+    font-family: 'KaTeX_Math', 'Cambria Math', 'STIX Two Math', 'Latin Modern Math', serif !important;
+    font-size: 1.08em;
+    color: #f4f4f5 !important;
+}
+
+.math-display {
+    display: block;
+    margin: 0.6rem 0;
+    padding: 0.5rem 0.8rem;
+    overflow-x: auto;
+    text-align: center;
+    background: rgba(24, 24, 27, 0.35);
+    border-radius: 6px;
+    border: 1px solid rgba(39, 39, 42, 0.4);
+}
+
+.math-display math {
+    font-size: 1.18em;
+}
+
+.math-inline {
+    display: inline-block;
+    padding: 0 2px;
+    vertical-align: middle;
+}
+
+.math-fallback {
+    color: #a1a1aa;
+    background: #18181b;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+/* Parsed Markdown HTML Typography (Tables, Lists, Code) */
+.parsed-response-content table,
+.thinking-box table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.75rem 0;
+    font-size: 0.85rem;
+}
+
+.parsed-response-content th,
+.parsed-response-content td,
+.thinking-box th,
+.thinking-box td {
+    border: 1px solid var(--border-subtle);
+    padding: 6px 12px;
+    text-align: left;
+}
+
+.parsed-response-content th,
+.thinking-box th {
+    background: #18181b;
+    color: #f4f4f5;
+    font-weight: 600;
+}
+
+.parsed-response-content tr:nth-child(even),
+.thinking-box tr:nth-child(even) {
+    background: rgba(24, 24, 27, 0.4);
+}
+
+.parsed-response-content ul,
+.thinking-box ul {
+    list-style-type: disc;
+    padding-left: 1.25rem;
+    margin: 0.4rem 0;
+}
+
+.parsed-response-content ol,
+.thinking-box ol {
+    list-style-type: decimal;
+    padding-left: 1.25rem;
+    margin: 0.4rem 0;
+}
+
+.parsed-response-content li,
+.thinking-box li {
+    margin: 0.2rem 0;
+}
+
+.parsed-response-content p,
+.thinking-box p {
+    margin: 0.4rem 0;
+}
+
+.parsed-response-content p:first-child,
+.thinking-box p:first-child {
+    margin-top: 0;
+}
+
+.parsed-response-content p:last-child,
+.thinking-box p:last-child {
+    margin-bottom: 0;
+}

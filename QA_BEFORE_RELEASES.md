@@ -53,7 +53,7 @@ in this system.
   `make clean && make strix-halo` on Strix Halo.
 - Run whitespace checks before committing:
   `git diff --check`.
-- Confirm `./ds4 --help`, `./ds4-server --help`, and `./ds4-agent --help` render
+- Confirm `./ds4 --help`, `./ds4-server --help`, and `./ds4-eval --help` render
   cleanly, with readable section colors and no broken wrapping.
 
 ## 2. Core Regression Tests
@@ -62,7 +62,7 @@ in this system.
   `make test`.
 - Run `tests/test_gpu_args_cli.sh` explicitly after changing executable option
   parsing or multi-GPU placement. Invalid values and device/budget count
-  mismatches must reach the shared GPU parser in all four binaries; an
+  mismatches must reach the shared GPU parser in all three binaries; an
   `unknown option` response from a binary that advertises the flag is a
   release blocker. On CUDA, also start `ds4-server` once with
   `--gpu-vram auto` and the intended `--gpu-devices` list and preserve the
@@ -128,10 +128,7 @@ numbers in the QA report so omissions are visible.
     APIs. A complete tool block inside unclosed reasoning must be recovered
     once, preceding prose must remain reasoning, and no synthetic continuation
     may be generated.
-13. Run `./ds4_agent_test` under ASan with agent-cache strings whose declared
-    lengths exceed the remaining file. Loading must fail without allocating
-    the declared size, and a valid cache must still load.
-14. Run the server parser tests under UBSan with `NaN`, positive infinity, and
+13. Run the server parser tests under UBSan with `NaN`, positive infinity, and
     negative infinity where integer JSON fields are expected. Conversion must
     be defined and clamped, with no sanitizer report.
 
@@ -563,8 +560,7 @@ Disk KV cache bugs are high impact for server users.
   not evicted and useful anchors are retained.
 - Test rejection of incompatible checkpoints when model, quantization, context,
   or raw/compressed KV layout changes.
-- Test stripped agent sessions: `/strip <id>` then `/switch <id>` should rebuild
-  by prefill and render sane history.
+- Reopen a saved FE / QS conversation and verify history and server KV reuse.
 
 ## 12. Server APIs
 
@@ -593,46 +589,19 @@ clients.
 - Test `--trace` and confirm rendered prompts, cache decisions, generated text,
   and tool-parser events are useful without leaking unrelated state.
 
-## 13. ds4-agent
+## 13. Agent FE / QS
 
-The agent is the most stateful component.  Test it manually, not only by build.
-
-- Startup banner, status bar, help, `/power`, `/save`, `/list`, `/switch`,
-  `/history`, `/compact`, `/new`, `/del`, and `/strip`.
-- Ctrl+C during generation, during prefill, during a web fetch, and during a
-  long tool call.  After `Stopped by user`, typing a new prompt must work.
-- Queue messages while the model is busy.  Queued messages must not skip tool
-  execution; after tool results, the queued user text must be provided.
-- Read/search/edit/write tools:
-  create a temp project and ask for edits. By default, verify that exact old/new
-  replacements work and the tool prompt does not advertise `[upto]`. In a
-  separate `--edit-upto` run, verify anchored edits fail safely on ambiguous
-  matches and do not require retyping whole files.
-- Real coding edit loop:
-  delete `/tmp/mymandel`, ask ds4-agent to create a small C ASCII Mandelbrot
-  program there, build and run it, then in a second user turn ask for a small
-  modification that should naturally use the edit tool, such as changing the
-  ASCII character ramp or output dimensions.  Verify the agent edits the
-  existing file instead of rewriting the whole project, and that the final
-  program still builds and runs.
-- With a matched DSpark support file and temperature 1, repeat a coding-tool
-  turn that crosses sampled prose, greedy DSML structure, parameter text, and
-  back to sampled prose. Require the tool to execute, the final answer to be
-  valid, and DSpark stats to show zero verifier errors and replay fallbacks.
-  Run the opportunistic default and `--mtp-exact-sampling`. The M5 Max
-  opportunistic smoke created, compiled, and ran a C program printing
-  `OPPORTUNISTIC_OK`, accepting 196 of 235 draft tokens.
-- Bash tools:
-  test short output, large output truncation, non-zero exit output, long-running
-  jobs, `bash_status`, and `bash_stop`.
-- Web tools:
-  `google_search` and `visit_page` should ask for visible Chrome approval with
-  timeout, open pages without stealing focus when possible, extract Markdown,
-  close tabs, and handle consent/privacy walls as tool errors the model can see.
-- TUI:
-  test multiline prompt editing, history navigation, queued prompt display,
-  status bar fill to terminal width, syntax highlighting in Markdown/code blocks,
-  and SSH/remote terminal flicker.
+- From `agent/`, run `uv sync --frozen`, `uv run pytest`,
+  `uv run ruff check src tests`, and `uv run ruff format --check src tests`.
+- Run Playwright with `uv run playwright install chromium` before browser tests.
+- Run `./agent/sync_qs.sh` in WSL when validating changes to the local QS sources.
+- Start `./agent/start-ds4-server.sh` and `./agent/run.sh` in separate terminals;
+  verify model discovery, Responses streaming, projects, Quick Chats and history.
+- Exercise tools, hierarchical skills, command approval, cancellation and queued
+  steering. Confirm switching conversations preserves drafts and active turns.
+- Run `uv run pytest --no-cov --run-live -m "live and not mock"` from `agent/`
+  when intentionally validating the configured model provider.
+- Check the frontend context limit does not exceed the server allocation.
 
 ## 14. Download Script And Model Files
 
@@ -647,7 +616,7 @@ The agent is the most stateful component.  Test it manually, not only by build.
 
 - Run `ds4-bench` on the release machine and compare with tracked CSV baselines.
 - Test `--power 100` is not throttled.
-- Test `--power 50` visibly reduces duty cycle in CLI, server, agent, eval, and
+- Test `--power 50` visibly reduces duty cycle in CLI, server, eval, and
   bench where practical.
 - Confirm context buffer size, raw KV rows, compressed KV rows, and mmap behavior
   match expectations for 32k, 100k, and any release-advertised context size.

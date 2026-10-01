@@ -1,0 +1,184 @@
+from __future__ import annotations
+
+import os
+import subprocess
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+from fe import sync
+
+
+@pytest.fixture
+def source_projects(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    agent_dir = tmp_path / "agent"
+    agent_dir.mkdir()
+    qs_dir = tmp_path / "qs"
+    qs_dir.mkdir()
+    (qs_dir / "pyproject.toml").write_text('[project]\nname = "qs"\n')
+    monkeypatch.setattr(sync, "__file__", str(agent_dir / "src/fe/sync.py"))
+    monkeypatch.setenv("UV_BIN", "/custom/bin/uv")
+    return agent_dir
+
+
+def test_sync_requires_qs_source_project(source_projects: Path) -> None:
+    (source_projects.parent / "qs/pyproject.toml").unlink()
+    with patch("fe.sync.subprocess.run") as run:
+        assert sync.sync_wheel() == 1
+    run.assert_not_called()
+
+
+@pytest.mark.parametrize("version", ["0.1.0", "0.2.0"])
+def test_sync_builds_current_source_and_installs_new_wheel(
+    source_projects: Path, monkeypatch: pytest.MonkeyPatch, version: str
+) -> None:
+    wheels_dir = source_projects / "wheels"
+    wheels_dir.mkdir()
+    old_wheel = wheels_dir / "qs-0.1.0-py3-none-any.whl"
+    old_wheel.write_bytes(b"old wheel")
+    unrelated = wheels_dir / "another-package.whl"
+    unrelated.write_bytes(b"keep")
+    calls: list[tuple[list[str], Path]] = []
+
+    def run(command: list[str], *, cwd: Path, check: bool) -> None:
+        assert check
+        calls.append((command, cwd))
+        if command[1] == "build":
+            output = Path(command[-1])
+            (output / f"qs-{version}-py3-none-any.whl").write_bytes(b"new source wheel")
+
+    monkeypatch.setattr(sync.subprocess, "run", run)
+    assert sync.sync_wheel() == 0
+    assert [command[1] for command, _ in calls] == ["build", "add", "lock", "sync"]
+    assert calls[0][0][:4] == ["/custom/bin/uv", "build", "--wheel", "--out-dir"]
+    assert calls[0][1] == source_projects.parent / "qs"
+    assert calls[1] == (
+        [
+            "/custom/bin/uv",
+            "add",
+            "--no-sync",
+            f"wheels/qs-{version}-py3-none-any.whl",
+        ],
+        source_projects,
+    )
+    assert calls[2] == (
+        [
+            "/custom/bin/uv",
+            "lock",
+            "--upgrade-package",
+            "qs",
+            "--refresh-package",
+            "qs",
+        ],
+        source_projects,
+    )
+    assert calls[3] == (
+        ["/custom/bin/uv", "sync", "--locked", "--reinstall-package", "qs"],
+        source_projects,
+    )
+    assert (
+        wheels_dir / f"qs-{version}-py3-none-any.whl"
+    ).read_bytes() == b"new source wheel"
+    if version != "0.1.0":
+        assert not old_wheel.exists()
+    assert unrelated.read_bytes() == b"keep"
+    assert not Path(calls[0][0][-1]).exists()
+
+
+@pytest.mark.parametrize("stage", ["build", "add", "lock", "sync"])
+def test_sync_stops_on_uv_failure_and_preserves_previous_wheels(
+    source_projects: Path, monkeypatch: pytest.MonkeyPatch, stage: str
+) -> None:
+    wheels_dir = source_projects / "wheels"
+    wheels_dir.mkdir()
+    old_wheel = wheels_dir / "qs-0.0.9-py3-none-any.whl"
+    old_wheel.write_bytes(b"previous wheel")
+    calls: list[str] = []
+
+    def run(command: list[str], *, cwd: Path, check: bool) -> None:
+        calls.append(command[1])
+        if command[1] == stage:
+            raise subprocess.CalledProcessError(1, command)
+        if command[1] == "build":
+            (Path(command[-1]) / "qs-0.1.0-py3-none-any.whl").write_bytes(b"new")
+
+    monkeypatch.setattr(sync.subprocess, "run", run)
+    assert sync.sync_wheel() == 1
+    assert (
+        calls
+        == ["build", "add", "lock", "sync"][
+            : ["build", "add", "lock", "sync"].index(stage) + 1
+        ]
+    )
+    assert old_wheel.read_bytes() == b"previous wheel"
+
+
+@pytest.mark.parametrize("wheel_names", [[], ["qs-0.1.whl", "qs-0.2.whl"]])
+def test_sync_rejects_missing_or_ambiguous_build_output(
+    source_projects: Path, monkeypatch: pytest.MonkeyPatch, wheel_names: list[str]
+) -> None:
+    def run(command: list[str], *, cwd: Path, check: bool) -> None:
+        for name in wheel_names:
+            (Path(command[-1]) / name).write_bytes(b"wheel")
+
+    with patch("fe.sync.subprocess.run", side_effect=run) as subprocess_run:
+        assert sync.sync_wheel() == 1
+    subprocess_run.assert_called_once()
+    assert not (source_projects / "wheels").exists()
+
+
+def test_sync_reports_missing_uv(source_projects: Path) -> None:
+    with patch("fe.sync.subprocess.run", side_effect=OSError("uv unavailable")):
+        assert sync.sync_wheel() == 1
+
+
+def test_main_returns_sync_result() -> None:
+    with patch("fe.sync.sync_wheel", return_value=1), patch("sys.exit") as exit_mock:
+        sync.main()
+    exit_mock.assert_called_once_with(1)
+
+
+@pytest.mark.parametrize("script", ["run.sh", "sync_qs.sh"])
+def test_wsl_launchers_resolve_paths_and_forward_arguments(
+    tmp_path: Path, script: str
+) -> None:
+    agent_dir = Path(__file__).resolve().parents[1]
+    uv = tmp_path / "uv executable"
+    uv.write_text('#!/bin/bash\nprintf "%s\n" "$PWD" "$UV_BIN" "$@"\n')
+    uv.chmod(0o755)
+    result = subprocess.run(
+        [str(agent_dir / script), "argument with spaces"],
+        cwd=tmp_path,
+        env=dict(os.environ, UV_BIN=str(uv)),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    lines = result.stdout.splitlines()
+    assert lines[:2] == [str(agent_dir), str(uv)]
+    if script == "run.sh":
+        assert lines[2:] == ["run", "--frozen", "fe", "argument with spaces"]
+    else:
+        assert lines[2:] == [
+            "run",
+            "--no-project",
+            "--python",
+            "3.13",
+            str(agent_dir / "src/fe/sync.py"),
+            "argument with spaces",
+        ]
+
+
+@pytest.mark.parametrize("script", ["run.sh", "sync_qs.sh"])
+def test_wsl_launchers_report_invalid_explicit_uv(tmp_path: Path, script: str) -> None:
+    agent_dir = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [str(agent_dir / script)],
+        cwd=tmp_path,
+        env=dict(os.environ, UV_BIN=str(tmp_path / "missing-uv")),
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 127
+    assert "uv executable not found" in result.stderr

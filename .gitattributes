@@ -5,3 +5,6 @@ gguf-tools/quality-testing/data/*/continuations/*.txt -diff
 # Shell scripts are executed inside Linux/WSL even when the checkout is made
 # by Git for Windows.  Preserve a valid shebang and Bash syntax.
 *.sh text eol=lf
+
+# Qwen metadata snapshots are validated by byte-level SHA-256 checksums.
+gguf-tools/quality-testing/data/qwen38-metadata/*.json text eol=lf

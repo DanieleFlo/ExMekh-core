@@ -1,0 +1,101 @@
+"""Controlled provider for steering tests against the real QS runtime."""
+
+from __future__ import annotations
+
+from threading import Event
+from typing import Any
+
+from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
+from qs.core.models.provider_request import ProviderRequest
+from qs.core.models.provider_response import ProviderResponse
+from qs.core.models.provider_stream_event import (
+    ProviderStreamEvent,
+    ProviderStreamEventType,
+)
+
+from fe.qs_bridge.converter import qs_message_to_raw_dict
+from tests.mock_client import MockProvider
+
+
+class SteeringProbeProvider(MockProvider):
+    def __init__(
+        self,
+        *,
+        first_response: str = "tool",
+        block_second: bool = False,
+        block_reply: bool = False,
+    ) -> None:
+        super().__init__()
+        self.first_response = first_response
+        self.block_second = block_second
+        self.block_reply = block_reply
+        self.started = Event()
+        self.release = Event()
+        self.second_started = Event()
+        self.release_second = Event()
+        self.requests: list[list[dict[str, Any]]] = []
+
+    @staticmethod
+    def _tool_response(
+        call_id: str, name: str, arguments: dict[str, Any]
+    ) -> ProviderResponse:
+        return ProviderResponse(
+            AssistantMessage(
+                content=None,
+                tool_calls=[
+                    ToolCall(
+                        id=call_id,
+                        function=FunctionCall(name=name, arguments=arguments),
+                    ),
+                ],
+            )
+        )
+
+    def call(self, request: ProviderRequest) -> ProviderResponse:
+        messages = [qs_message_to_raw_dict(item) for item in request.get_messages()]
+        self.requests.append(messages)
+        request_number = len(self.requests)
+        if request_number == 1:
+            self.started.set()
+            if not self.release.wait(timeout=30):
+                raise TimeoutError("Steering test did not release the first inference")
+            if self.first_response == "error":
+                raise RuntimeError("Mock provider failed during inference")
+            if self.first_response == "answer":
+                return ProviderResponse(AssistantMessage("Initial answer"))
+            opens_skill = self.first_response in ("skill", "nested_skill")
+            return self._tool_response(
+                "steering-probe",
+                "mock-skill" if opens_skill else "bash",
+                {} if opens_skill else {"command": "echo steering_probe"},
+            )
+        if request_number == 2 and (self.block_second or self.block_reply):
+            self.second_started.set()
+            if not self.release_second.wait(timeout=30):
+                raise TimeoutError("Steering test did not release the second inference")
+            if self.block_second:
+                return ProviderResponse(AssistantMessage("Intermediate answer"))
+        if request_number == 2 and self.first_response == "nested_skill":
+            return self._tool_response("open-nested-steering-skill", "nested-skill", {})
+        if request_number == 3 and self.first_response == "nested_skill":
+            return self._tool_response(
+                "nested-steering-tool",
+                "nested-sub-tool",
+                {"text": "Guided nested result"},
+            )
+        if (request_number == 2 and self.first_response == "skill") or (
+            request_number in (4, 5) and self.first_response == "nested_skill"
+        ):
+            return self._tool_response(
+                f"close-steering-skill-{request_number}",
+                "exit_agent",
+                {"text": "Mock skill output", "items": []},
+            )
+        prompt = next(
+            item["content"] for item in reversed(messages) if item["role"] == "user"
+        )
+        reply = f"Reply following guidance: {prompt}"
+        request.execute_on_stream_event(
+            ProviderStreamEvent(ProviderStreamEventType.RESPONSE, reply)
+        )
+        return ProviderResponse(AssistantMessage(reply))

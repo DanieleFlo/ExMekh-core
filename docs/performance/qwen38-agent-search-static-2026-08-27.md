@@ -1,5 +1,9 @@
 # Qwen3.8 agentico: `SEARCH` statica e MTP grammar-aware
 
+Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture
+ritirati non sono verifiche del frontend corrente. Vedere
+[la guida FE / QS](../agentic/frontend.md).
+
 ## Obiettivo e invarianti
 
 Questo ciclo avvicina il decode del server agentico Qwen3.8 alla velocità del
@@ -24,8 +28,8 @@ Solo i token accettati aggiornano il tracker persistente della richiesta.
 ## Baseline prima della modifica
 
 Hardware: RTX 3090, build CUDA `sm_86`, contesto allocato 22.593, prompt
-agentico realmente occupato 10.814 token, KV disk da 8 GiB. Il vero
-`DeepAgent` `bootstrap-wiki` ha tool disponibili con `tool_choice=auto`, ma
+agentico realmente occupato 10.814 token, KV disk da 8 GiB. Il
+fixture storico, oggi ritirato, aveva tool disponibili con `tool_choice=auto`, ma
 deve produrre una storia normale tra 250 e 300 parole. Ogni configurazione usa
 un warm-up e due campioni misurati; tutte le risposte contengono 432 token e 298
 parole e terminano con `stop` in una sola richiesta modello.
@@ -271,19 +275,14 @@ documentazione richiede al chiamante un byte extra nella capacità. Il payload
 binario non dipende dal NUL e viene riaperto in lettura con la sua lunghezza
 esatta.
 
-## Test live ripetibile
+## Verifica corrente
 
-`tests/run_agent_story_live.ps1` avvia in sequenza target-only e MTP, abilita il
-phase profiling, assegna KV SSD e workroot univoci, esegue un warm-up e due run
-misurate e conserva risposta, hash, token usage, phase profile e gate
-funzionali. Il profiler invia esplicitamente `reasoning.effort=none`: senza quel
-campo Qwen3.8 consumava il budget nel reasoning e Agent Wiki effettuava una
-seconda richiesta di recupero.
+Le misure sopra descrivono fixture storici ritirati e non certificano FE / QS.
+La matrice server corrente si esegue con:
 
 ```powershell
-./tests/run_agent_story_live.ps1 -Mode both
+./tests/run_server_sampling_matrix.ps1 -Mode both
 ```
 
-Il test richiede almeno 400 token di output e 250 parole, `finish=stop`, una
-sola richiesta modello, zero tool call, nessun marker DSML esposto e un
-checkpoint post-risposta residente senza rilettura SSD.
+Il frontend in `agent/` ha la propria suite `uv run pytest`, inclusi i test
+mock e i test live con opt-in descritti in [frontend.md](../agentic/frontend.md).

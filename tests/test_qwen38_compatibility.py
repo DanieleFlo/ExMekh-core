@@ -370,15 +370,10 @@ class Qwen38CompatibilityTests(unittest.TestCase):
     def test_server_model_id_cache_and_agentic_gates_cover_qwen38(self) -> None:
         server = (PROJECT_ROOT / "ds4_server.c").read_text(encoding="utf-8")
         engine = (PROJECT_ROOT / "ds4.c").read_text(encoding="utf-8")
-        agent = (PROJECT_ROOT / "ds4_agent.c").read_text(encoding="utf-8")
         kvstore = (PROJECT_ROOT / "ds4_kvstore.c").read_text(encoding="utf-8")
         checkpoint = (PROJECT_ROOT / "tests" / "test_agentic_checkpoint.c").read_text(
             encoding="utf-8")
         checkpoint_runner = (PROJECT_ROOT / "tests" / "run_agentic_checkpoint.sh").read_text(
-            encoding="utf-8")
-        agent_ssd_runner = (PROJECT_ROOT / "tests" / "run_agent_ssd_live.ps1").read_text(
-            encoding="utf-8")
-        story_runner = (PROJECT_ROOT / "tests" / "run_agent_story_live.ps1").read_text(
             encoding="utf-8")
         sampling_runner = (
             PROJECT_ROOT / "tests" / "run_server_sampling_matrix.ps1"
@@ -388,9 +383,6 @@ class Qwen38CompatibilityTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         agent_server_launcher = (
             PROJECT_ROOT / "agent" / "start-ds4-server.sh"
-        ).read_text(encoding="utf-8")
-        agent_profiler = (
-            PROJECT_ROOT / "tools" / "profile_agent_dsml_story.py"
         ).read_text(encoding="utf-8")
         self.assertIn('"Qwen3.8-27B-UD-Q4_K_S.gguf"', server)
         self.assertIn('.canonical_id = "Qwen3.8-27B-UD-Q4_K_S"', engine)
@@ -402,18 +394,10 @@ class Qwen38CompatibilityTests(unittest.TestCase):
         self.assertIn("DS4_MODEL_FAMILY_QWEN35", server)
         self.assertIn("ds4_engine_model_descriptor(ds4_engine *e)", engine)
         self.assertIn("bool ds4_engine_is_qwen(ds4_engine *e)", engine)
-        self.assertIn("ds4_engine_is_qwen(engine)", agent)
-        self.assertIn("ds4_engine_is_qwen_q4_k_s(w->engine)", agent)
         self.assertIn("ds4_engine_is_qwen_q4_k_s(engine)", kvstore)
         self.assertIn("ds4_engine_is_qwen_q4_k_s(engine)", checkpoint)
         self.assertIn("mtp-Qwen3.8-27B-Q4_0.gguf", checkpoint_runner)
         self.assertIn("mtp-Qwen3.6-27B-Q4_0.gguf", checkpoint_runner)
-        self.assertIn("--model-id $ModelId", agent_ssd_runner)
-        self.assertIn("Qwen3.8-27B-UD-Q4_K_S.gguf", agent_ssd_runner)
-        self.assertIn("Qwen3.8-27B-UD-Q4_K_S.gguf", story_runner)
-        self.assertIn("mtp-Qwen3.8-27B-Q4_0.gguf", story_runner)
-        self.assertIn('"--scenario", "plain-story"', story_runner)
-        self.assertIn("DS4_SERVER_PHASE_PROFILE=1", story_runner)
         self.assertIn("Qwen3.8-27B-UD-Q4_K_S.gguf", sampling_runner)
         self.assertIn("DS4_MTP_CYCLE_TRACE=1", sampling_runner)
         self.assertIn('"greedy_nothink"', sampling_matrix)
@@ -424,11 +408,8 @@ class Qwen38CompatibilityTests(unittest.TestCase):
             'SCENARIOS = ("plain", "optional_text", "required_tool")',
             sampling_matrix,
         )
-        self.assertIn("--ctx 22593", agent_server_launcher)
+        self.assertIn("--ctx 28000", agent_server_launcher)
         self.assertNotIn("--ctx 24768", agent_server_launcher)
-        self.assertIn(
-            'default="Qwen3.8-27B-UD-Q4_K_S"', agent_profiler
-        )
 
     @unittest.skipUnless(os.environ.get("DS4_TEST_QWEN38_SHA") == "1",
                          "set DS4_TEST_QWEN38_SHA=1 for the 16.7 GB checksum gate")

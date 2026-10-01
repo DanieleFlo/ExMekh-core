@@ -2,9 +2,7 @@
 /ds4-server
 /ds4-bench
 /ds4-eval
-/ds4-agent
 /ds4_native
-/ds4_agent_test
 /ds4_server_test
 /ds4_test
 /ds4flash.gguf
@@ -31,9 +29,6 @@
 /tests/test_mxfp4_metal
 /tests/test_q4k_dot
 /tests/test_sampling
-/tests/agent-ssd-live-*.log
-/tests/agent-ssd-live-kv/
-/tests/agent-ssd-live-server.pid
 /tests/test_agentic_checkpoint
 /tests/test_server_resident_frontier
 /tests/qwen_mtp_catchup_probe
@@ -47,10 +42,6 @@ __pycache__/
 /gguf-tools/quality-testing/staging/
 .*.swp
 .DS_Store
-/agent/*
-!/agent/lib/
-!/agent/lib/agent_wiki-0.1.0-py3-none-any.whl
-!/agent/start-ds4-server.sh
-!/agent/start.sh
+/qs/
 
 /tests/test_qwen_mtp_callback

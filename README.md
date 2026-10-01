@@ -188,9 +188,10 @@ the same engine/session API used by Qwen3.6. See the
 [Qwen3.8 compatibility audit](docs/architecture/qwen38-compatibility.md).
 
 Qwen3.8 is the primary operational and performance reference. The local server
-launchers, performance harness, JSONSchemaBench gate, Agent SSD runner, and
-long-story profiler default to `Qwen3.8-27B-UD-Q4_K_S` with a 22,593-token
-allocation. Target-only remains the default; pass `--mtp` or an explicit
+launchers, performance harness, and JSONSchemaBench gate use
+`Qwen3.8-27B-UD-Q4_K_S`. The frontend server launcher enables MTP with a
+28,000-token allocation; performance gates retain their own measured contexts.
+For other commands, pass `--mtp` or an explicit
 `--mtp-model gguf/mtp-Qwen3.8-27B-Q4_0.gguf` when the sidecar is wanted.
 Qwen3.6 remains supported and keeps its compatibility and smoke gates.
 
@@ -326,7 +327,7 @@ probability and, on rejection, samples from the remaining target distribution.
 It uses a stricter `0.8` confidence threshold by default. Add `--temp 0` for
 fully greedy decoding. `--quality` and `--dspark-strict` keep target-only
 decoding, which is useful for reproducibility checks.
-The same DSpark flags work with `ds4-agent` and with non-batched
+The same DSpark flags work with non-batched
 `ds4-server` requests. Session-batched serving currently uses ordinary target
 decoding.
 
@@ -625,7 +626,7 @@ slow decode in exchange for being able to inspect the model at all.
 
 Use the coordinator exactly like normal `./ds4`: interactive chat, `/read`,
 and ordinary generation go through the same high-level session API. The same
-distributed options are also wired into `ds4-agent`, `ds4-eval`, and
+distributed options are also wired into `ds4-eval` and
 `ds4-bench`. For benchmarks, workers should already be running; `ds4-bench`
 waits until a complete route is available.
 
@@ -767,7 +768,7 @@ The active verbs device and IPv4-mapped GID are selected automatically. If that
 is ambiguous, add `--rdma-device rdma_en6 --rdma-gid-index 1` on the worker and
 the matching `rdma_en1` flags on the coordinator. Use `--transport tcp` on both
 sides to force TCP. Tensor parallel roles are currently exposed by the `ds4`
-CLI, not by `ds4-server` or `ds4-agent`.
+CLI, not by `ds4-server`.
 
 Startup takes about 9 seconds per machine: each rank pre-faults its
 ~100 GiB shard from SSD and pins it through a Metal residency set.
@@ -821,18 +822,6 @@ aggregate serving throughput. Download and build the L40S target with:
 make cuda CUDA_ARCH=sm_89
 ```
 
-This is the interactive-agent setup used on the eight-L40S server:
-
-```sh
-MODEL=gguf/DeepSeek-V4-Flash-Q4KExperts-F16HC-F16Compressor-F16Indexer-Q8Attn-Q8Shared-Q8Out-chat-v2-imatrix-0731.gguf
-
-./ds4-agent --cuda --cuda-tensor-parallel \
-  --gpu-vram auto \
-  --gpu-devices 0,2,4,6,1,3,5,7 \
-  --model "$MODEL" \
-  --ctx 100000
-```
-
 For serving, keep multiple KV sessions resident so decode rows can be grouped
 across requests. The tested host is configured for up to 16 resident sessions:
 
@@ -881,46 +870,43 @@ and inserting small sleeps between work units: during prefill it sleeps between
 layers, and during generation it sleeps between decoded tokens. This reduces
 sustained load without changing model output.
 
-The option is available on the CLI, server, agent, eval, and benchmark tools
+The option is available on the CLI, server, eval, and benchmark tools
 for DeepSeek models. GLM 5.2 currently accepts only `--power 100`. For example:
 
 ```sh
 ./ds4 --power 50
-./ds4-agent --power 70
 ./ds4-server --power 40 --ctx 100000
 ```
 
-## Native agent
+## Agent FE / QS
 
-DwarfStar features a native coding agent that works in a different way
-than most other systems: the inference is controlled from within the agent
-itself, without socket/API boundaries, so the session is represented
-by the on-disk KV cache itself. Moreover the tools and the system prompt
-are all designed vertically for DeepSeek v4 Flash and PRO. This provides a
-few advantages:
+The agent lives in `agent/`: a NiceGUI frontend backed by the typed QS
+`Client` and `DeepAgent`. Projects run tools and hierarchical capabilities;
+Quick Chats use the same client for ordinary conversations. The inference
+engine runs separately through `ds4-server` and its Responses API.
 
-* Low latency experience, bounded mainly by the prefill speed limits. Displaying of generated text, tool calling, start of a new session are always instantaneous.
-* Live progress bar during prefill time.
-* No DSML tool calling conversion, the tools are handled natively in the LLM format.
-* KV cache mismatch are impossible by construction, the current state is always the truth.
-* Everything is tuned for this model.
-* Ability to switch saved sessions with `/list` and `/switch`; full KV sessions resume without a prefill stage.
+Start the Qwen3.8 inference server and then the frontend in separate terminals:
 
-Agent sessions are stored in `~/.ds4/kvcache`. Use `/save` to persist the
-current session, `/list` to show saved sessions sorted by recent update time,
-and `/switch <sha>` to resume one of them. The session ID is stable across
-future saves and is derived from the first user prompt and creation time.
-`/del <sha>` removes a saved session. `/strip <sha>` keeps the rendered
-conversation text and title but removes the heavy KV payload; switching to a
-stripped session rebuilds the KV cache by prefilling the saved text.
+```sh
+./agent/start-ds4-server.sh
+```
 
-Use `--chdir /path/to/ds4` when launching `ds4-agent` from another directory,
-so relative runtime files such as `metal/*.metal` resolve from the project tree.
+```sh
+./agent/run.sh
+```
 
-However while the system already works, there is a lot of work to do
-in order to make it ready for prime time. When finally the agent will reach
-the wanted shape, we will *likely* split the server and the client creating a stateful
-session-based protocol that can recreate all that in a client-server way.
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). Copy `agent/.env.example`
+to `agent/.env` to customize the provider; defaults target
+`http://localhost:8080/v1` and `Qwen3.8-27B-UD-Q4_K_S`. Set `API_TYPE=responses`
+and keep the client context within the server allocation reported by `/v1/models`.
+
+The frontend installs QS from the versioned wheel in `agent/wheels/`.
+The sibling `qs/` source checkout is local and excluded by `.gitignore`.
+Run `./agent/sync_qs.sh` in WSL to build the current QS sources, update the
+wheel and lockfile, and reinstall QS. Both shell launchers resolve paths from
+their own location. A clean Git checkout can install the frontend without that
+local source folder. See [the frontend guide](docs/agentic/frontend.md) and
+[agent/README.md](agent/README.md) for configuration and tests.
 
 ## Benchmarking
 
@@ -1202,7 +1188,7 @@ headers; it does not expose the server on the LAN. Use `--host 0.0.0.0`
 explicitly when remote machines should be able to connect.
 
 Start the native WSL launcher with `./start-ds4-server.sh`; the MTP launcher used
-by Agent Wiki is `./agent/start-ds4-server.sh`. Both bind the server to
+by the FE / QS frontend is `./agent/start-ds4-server.sh`. Both bind the server to
 `0.0.0.0`. Local Windows clients can use `http://127.0.0.1:8080` through WSL's
 localhost forwarding. The project does not modify Windows port-proxy or firewall
 configuration; configure LAN exposure separately only when it is explicitly
@@ -1313,16 +1299,6 @@ curl http://127.0.0.1:8000/v1/chat/completions \
   }'
 ```
 
-The real Agent Wiki long-generation gate measures the optional DSML `SEARCH`
-state when tools are available but the model writes ordinary prose. It runs a
-warm-up and two measured 250--300-word stories, retains KV checkpoints on SSD,
-and verifies `finish=stop`, one model request, at least 400 output tokens, no
-tool call or exposed DSML marker, and an in-memory post-response rebuild:
-
-```powershell
-./tests/run_agent_story_live.ps1 -Mode both
-```
-
 The complementary server sampling matrix covers temperature zero/non-zero,
 thinking enabled/disabled, and target-only/MTP across unconstrained text,
 optional agentic text, and required tool calls. It uses Qwen's documented
@@ -1342,169 +1318,12 @@ median mask construction from 17,293 ms to 136 ms. Full-vocabulary comparison
 reported zero divergences. See the
 [Qwen3.8 agent SEARCH result](docs/performance/qwen38-agent-search-static-2026-08-27.md).
 
-### Agent Client Usage
+### Agent frontend configuration
 
-`ds4-server` can be used by local coding agents that speak OpenAI-compatible
-chat completions. Start the server first, and set the client context limit no
-higher than the `--ctx` value you started the server with:
-
-```sh
-./ds4-server --ctx 100000 --kv-disk-dir /tmp/ds4-kv --kv-disk-space-mb 8192
-```
-
-You can use larger context and larger cache if you wish. Full context of
-1M tokens is going to use more or less 26GB of memory (compressed indexer
-alone will be like 22GB), so configure a context which makes sense in
-your system. With 128GB of RAM you would run the 2-bit quants, which are
-already 81GB, 26GB are going to be likely too much, so a context window
-of 100~300k tokens is wiser. However users reported being able to run 2bit
-quants with 250k ctx window in a Macs with just 96GB of system memory: make sure
-to kill processes that use too much memory, if you plan doing so ;)
-
-The `384000` output limit below avoids token caps since the model is able
-to generate very long replies otherwise (up to 384k tokens). The server
-still stops when the configured context window is full.
-
-For **opencode**, add a provider and agent entry to
-`~/.config/opencode/opencode.json`:
-
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "ds4": {
-      "name": "ds4.c (local)",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
-        "baseURL": "http://127.0.0.1:8000/v1",
-        "apiKey": "dsv4-local"
-      },
-      "models": {
-        "deepseek-v4-flash": {
-          "name": "DeepSeek V4 Flash (ds4.c local)",
-          "limit": {
-            "context": 100000,
-            "output": 384000
-          }
-        }
-      }
-    }
-  },
-  "agent": {
-    "ds4": {
-      "description": "DeepSeek V4 Flash served by local ds4-server",
-      "model": "ds4/deepseek-v4-flash",
-      "temperature": 0
-    }
-  }
-}
-```
-
-For **Pi**, add a provider to `~/.pi/agent/models.json`:
-
-```json
-{
-  "providers": {
-    "ds4": {
-      "name": "ds4.c local",
-      "baseUrl": "http://127.0.0.1:8000/v1",
-      "api": "openai-completions",
-      "apiKey": "dsv4-local",
-      "compat": {
-        "supportsStore": false,
-        "supportsDeveloperRole": false,
-        "supportsReasoningEffort": true,
-        "supportsUsageInStreaming": true,
-        "maxTokensField": "max_tokens",
-        "supportsStrictMode": false,
-        "thinkingFormat": "deepseek",
-        "requiresReasoningContentOnAssistantMessages": true
-      },
-      "models": [
-        {
-          "id": "deepseek-v4-flash",
-          "name": "DeepSeek V4 Flash (ds4.c local)",
-          "reasoning": true,
-          "thinkingLevelMap": {
-            "off": null,
-            "minimal": "low",
-            "low": "low",
-            "medium": "medium",
-            "high": "high",
-            "xhigh": "xhigh"
-          },
-          "input": ["text"],
-          "contextWindow": 100000,
-          "maxTokens": 384000,
-          "cost": {
-            "input": 0,
-            "output": 0,
-            "cacheRead": 0,
-            "cacheWrite": 0
-          }
-        }
-      ]
-    }
-  }
-}
-```
-
-Optionally make it the default Pi model in `~/.pi/agent/settings.json`:
-
-```json
-{
-  "defaultProvider": "ds4",
-  "defaultModel": "deepseek-v4-flash"
-}
-```
-
-For **Codex CLI**, use the Responses wire API:
-
-```toml
-[model_providers.ds4]
-name = "DS4"
-base_url = "http://127.0.0.1:8000/v1"
-wire_api = "responses"
-stream_idle_timeout_ms = 1000000
-```
-
-Then run:
-
-```sh
-codex --model deepseek-v4-flash -c model_provider=ds4
-```
-
-For **Claude Code**, use the Anthropic-compatible endpoint. A wrapper like this
-matches the local `~/bin/claude-ds4` setup:
-
-```sh
-#!/bin/sh
-unset ANTHROPIC_API_KEY
-
-export ANTHROPIC_BASE_URL="http://127.0.0.1:8000"
-export ANTHROPIC_AUTH_TOKEN="dsv4-local"
-export ANTHROPIC_MODEL="deepseek-v4-flash"
-
-export ANTHROPIC_CUSTOM_MODEL_OPTION="deepseek-v4-flash"
-export ANTHROPIC_CUSTOM_MODEL_OPTION_NAME="DeepSeek V4 Flash local ds4"
-export ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION="ds4.c local GGUF"
-
-export ANTHROPIC_DEFAULT_SONNET_MODEL="deepseek-v4-flash"
-export ANTHROPIC_DEFAULT_HAIKU_MODEL="deepseek-v4-flash"
-export ANTHROPIC_DEFAULT_OPUS_MODEL="deepseek-v4-flash"
-export CLAUDE_CODE_SUBAGENT_MODEL="deepseek-v4-flash"
-
-export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
-export CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK=1
-export CLAUDE_STREAM_IDLE_TIMEOUT_MS=600000
-
-exec "$HOME/.local/bin/claude" "$@"
-```
-
-Claude Code may send a large initial prompt, often around 25k tokens, before it
-starts doing useful work. Keep `--kv-disk-dir` enabled: after the first expensive
-prefill, the disk KV cache lets later continuations or restarted sessions reuse
-the saved prefix instead of processing the whole prompt again.
+Configure the frontend in `agent/.env` or its settings drawer. Use the server's
+`/v1` base URL, the extension-free model ID, and `API_TYPE=responses` for QS
+hierarchical tools and skills. The frontend discovers model IDs and context
+limits from the server. See [Agent FE / QS](#agent-fe--qs).
 
 ## Thinking Modes
 

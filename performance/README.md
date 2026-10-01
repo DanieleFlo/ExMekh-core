@@ -39,13 +39,11 @@ run.
     make test-jsonschemabench-safety \
       JSONSCHEMABENCH_MODEL=gguf/Qwen3.6-27B-Q4_K_S.gguf
 
-Il profilo end-to-end del free-text DSML reale usa
-`tools/profile_agent_dsml_story.py`: costruisce il grafo `bootstrap-wiki`
-installato in `/agent`, richiede la storia nel tool `exit-with-info-tool`,
-verifica almeno 10k token di contesto e salva anche i fallimenti di schema.
-È un profilo funzionale costoso, non una fixture da includere nei test ordinari.
-Le quote di fase provengono dal log server con
-`DS4_SERVER_PHASE_PROFILE=1`; non vanno sostituite col solo tempo HTTP.
+Il frontend corrente FE / QS e documentato in `agent/README.md` e
+`docs/agentic/frontend.md`. I profili agentici datati conservano misure di
+fixture ritirati; non certificano il comportamento del frontend corrente.
+Per i gate server ripetibili usare `tests/run_server_sampling_matrix.ps1`.
+Le quote di fase provengono dal log server con `DS4_SERVER_PHASE_PROFILE=1`.
 La baseline non vincolata equivalente usa un prompt calibrato a 10.770 token e
 147 token di decode, la lunghezza del gate agente valido:
 

@@ -31,8 +31,8 @@ assert_not_grep() {
 }
 
 # Binaries to check
-BINS=(./ds4 ./ds4-server ./ds4-bench ./ds4-agent)
-NAMES=(ds4 ds4-server ds4-bench ds4-agent)
+BINS=(./ds4 ./ds4-server ./ds4-bench)
+NAMES=(ds4 ds4-server ds4-bench)
 
 # 1: each binary's --help mentions both flags.
 for i in "${!BINS[@]}"; do
@@ -59,7 +59,7 @@ for i in "${!BINS[@]}"; do
 done
 
 # 1b: exact DSpark sampling is parsed by every frontend that can run DSpark.
-for i in 0 1 3; do
+for i in 0 1; do
     name=${NAMES[$i]}; bin=${BINS[$i]}
     [ -x "$bin" ] || continue
     "$bin" --mtp-exact-sampling --mtp /dev/null -m /dev/null \
@@ -73,7 +73,7 @@ for i in 0 1 3; do
 done
 
 # The provisional DSpark-specific spelling was never released.
-for i in 0 1 3; do
+for i in 0 1; do
     name=${NAMES[$i]}; bin=${BINS[$i]}
     [ -x "$bin" ] || continue
     "$bin" --dspark-exact-sampling -m /dev/null > "$LOG" 2>&1

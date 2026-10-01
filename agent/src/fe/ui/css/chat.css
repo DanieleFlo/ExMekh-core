@@ -1,0 +1,518 @@
+/* ========================================================================= */
+/* Chat Bubbles, Reasoning Blocks & Chat Scroll Container                    */
+/* ========================================================================= */
+
+/* Chat bubble styling - Codex Minimalist */
+.msg-user {
+    background: #18181b !important;
+    color: #f4f4f5 !important;
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+}
+
+.user-message-footer {
+    position: relative;
+}
+
+.user-copy-btn {
+    position: absolute !important;
+    right: 36px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 150ms ease;
+}
+
+.chat-message-user:hover .user-copy-btn,
+.chat-message-user:focus-within .user-copy-btn {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .user-copy-btn {
+        opacity: 1;
+    }
+}
+
+.msg-user-steering {
+    background: #1d1d22 !important;
+    border: 1px solid #3f3f46 !important;
+    border-left: 2px solid #71717a !important;
+}
+
+.steering-message-label {
+    color: #a1a1aa;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.steering-loading-spinner {
+    color: #a1a1aa !important;
+    opacity: 0.85;
+}
+
+.steering-tool-marker {
+    color: #a1a1aa;
+    font-family: "JetBrains Mono", Consolas, Menlo, monospace;
+    font-size: 10px;
+    padding: 2px 0 2px 8px;
+    border-left: 2px solid #52525b;
+}
+
+.msg-assistant {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Thinking / Reasoning Box (Codex Clean Monospace Guideline) */
+.thinking-box {
+    background: transparent !important;
+    border: none !important;
+    border-left: 2px solid #27272a !important;
+    font-family: "JetBrains Mono", Consolas, Menlo, monospace !important;
+    font-size: 0.82rem !important;
+    line-height: 1.55 !important;
+    color: #a1a1aa !important;
+    padding: 4px 0 4px 12px !important;
+    margin: 4px 0 !important;
+}
+
+.reasoning-expansion {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.reasoning-expansion:hover {
+    background: transparent !important;
+}
+
+/* Master Reasoning Row (Single Compact Line) */
+.reasoning-master-expansion {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-bottom: 2px;
+}
+
+.reasoning-master-header {
+    background: rgba(24, 24, 27, 0.45) !important;
+    border: 1px solid rgba(39, 39, 42, 0.6) !important;
+    border-radius: 8px !important;
+    padding: 6px 12px !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+}
+
+.reasoning-master-header:hover {
+    background: rgba(39, 39, 42, 0.55) !important;
+    border-color: rgba(63, 63, 70, 0.85) !important;
+}
+
+.reasoning-count-badge {
+    background: rgba(39, 39, 42, 0.6) !important;
+    border: 1px solid rgba(63, 63, 70, 0.4) !important;
+}
+
+/* Sub-block Reasoning Cards */
+.reasoning-sub-block {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.reasoning-sub-header {
+    background: rgba(18, 18, 20, 0.4) !important;
+    border: 1px solid rgba(39, 39, 42, 0.35) !important;
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+    transition: all 0.15s ease !important;
+    user-select: none !important;
+}
+
+.reasoning-sub-header:hover {
+    background: rgba(24, 24, 27, 0.65) !important;
+    border-color: rgba(63, 63, 70, 0.6) !important;
+}
+
+/* Smooth Chevron Rotation */
+.reasoning-chevron {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.q-expansion-item--expanded > .q-expansion-item__container > .q-expansion-item__header .reasoning-chevron {
+    transform: rotate(180deg) !important;
+}
+
+.q-expansion-item {
+    background: transparent !important;
+    border: none !important;
+}
+
+.q-expansion-item__container {
+    border: none !important;
+}
+
+/* Smart Chat Scroll Container & Floating Scroll-To-Bottom Button */
+.chat-scroll-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    flex: 1 1 0% !important;
+    overflow-y: auto !important;
+    overflow-anchor: none !important;
+    scroll-behavior: auto !important;
+}
+
+.chat-scroll-container > * {
+    flex-shrink: 0 !important;
+}
+
+.chat-message-row {
+    max-width: 56rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.chat-scroll-container::-webkit-scrollbar {
+    width: 7px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-track {
+    background: rgba(18, 18, 22, 0.5);
+    border-radius: 4px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    border-radius: 4px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+}
+
+.scroll-to-bottom-btn {
+    position: absolute !important;
+    bottom: 16px !important;
+    right: 24px !important;
+    z-index: 30 !important;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 180ms ease, transform 180ms ease, background-color 150ms ease !important;
+    background: rgba(24, 24, 27, 0.92) !important;
+    border: 1px solid #3f3f46 !important;
+    color: #e4e4e7 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(8px) !important;
+}
+
+.scroll-to-bottom-btn:hover {
+    background: rgba(39, 39, 42, 0.98) !important;
+    border-color: #71717a !important;
+}
+
+/* ========================================================================= */
+/* Minimalist Points of Interest (Center-Right Near Scrollbar)               */
+/* ========================================================================= */
+.chat-poi-track {
+    position: absolute !important;
+    right: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: none;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 7px 4px !important;
+    background: rgba(18, 18, 22, 0.65) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 9999px !important;
+    z-index: 25 !important;
+    opacity: 0;
+    transition: opacity 180ms ease, transform 180ms ease !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+}
+
+.chat-poi-track.visible {
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+.chat-poi-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 9999px !important;
+    cursor: pointer !important;
+    position: relative !important;
+    transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease, opacity 150ms ease !important;
+    opacity: 0.85;
+}
+
+.chat-poi-dot:hover {
+    transform: scale(1.4) !important;
+    opacity: 1 !important;
+}
+
+.chat-poi-dot.active {
+    transform: scale(1.3) !important;
+    opacity: 1 !important;
+}
+
+/* User Message: Minimalist Electric Blue */
+.chat-poi-dot.poi-user {
+    background-color: #38bdf8 !important;
+}
+
+.chat-poi-dot.poi-user:hover,
+.chat-poi-dot.poi-user.active {
+    background-color: #00f0ff !important;
+}
+
+/* Final Response: Minimalist Violet / Purple (Slightly Different Accent) */
+.chat-poi-dot.poi-assistant-final {
+    background-color: #c084fc !important;
+}
+
+.chat-poi-dot.poi-assistant-final:hover,
+.chat-poi-dot.poi-assistant-final.active {
+    background-color: #e879f9 !important;
+}
+
+/* Tooltip on Hover */
+.chat-poi-tooltip {
+    position: absolute !important;
+    right: 16px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    background: rgba(18, 18, 22, 0.95) !important;
+    border: 1px solid #3f3f46 !important;
+    border-radius: 6px !important;
+    padding: 3px 8px !important;
+    font-size: 11px !important;
+    color: #e4e4e7 !important;
+    white-space: nowrap !important;
+    max-width: 240px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    pointer-events: none !important;
+    opacity: 0;
+    transition: opacity 150ms ease, transform 150ms ease !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(8px) !important;
+    z-index: 28 !important;
+}
+
+.chat-poi-dot:hover .chat-poi-tooltip {
+    opacity: 1 !important;
+    transform: translateY(-50%) translateX(-4px) !important;
+}
+
+
+/* ========================================================================= */
+/* Linear Generation Progress Bar (Vibrant Minimalist Blue & Purple)         */
+/* ========================================================================= */
+.input-progress-container {
+    width: 100%;
+    height: 4.5px;
+    margin-top: 6px;
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.input-linear-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 50%;
+    border-radius: 9999px;
+    background: linear-gradient(
+        90deg,
+        rgba(0, 240, 255, 0) 0%,
+        #00f0ff 10%,
+        #3b82f6 28%,
+        #6366f1 45%,
+        #a855f7 65%,
+        #d946ef 82%,
+        #f43f5e 92%,
+        rgba(244, 63, 94, 0) 100%
+    );
+    animation: input-linear-stream 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes input-linear-stream {
+    0% {
+        left: -50%;
+        width: 40%;
+    }
+    50% {
+        left: 25%;
+        width: 55%;
+    }
+    100% {
+        left: 100%;
+        width: 40%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .input-linear-progress {
+        animation: none;
+        width: 100%;
+        left: 0;
+        opacity: 0.85;
+    }
+}
+
+/* ========================================================================= */
+/* Input Bar - Command Approval Mode Selector                                */
+/* ========================================================================= */
+.input-bar-approval-select {
+    min-height: 25px !important;
+    height: 25px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+}
+
+.input-bar-approval-select .q-field__inner {
+    min-height: 25px !important;
+    height: 25px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.input-bar-approval-select .q-field__control {
+    min-height: 25px !important;
+    height: 25px !important;
+    padding: 0 6px !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.input-bar-approval-select .q-field__control-container {
+    min-height: 25px !important;
+    height: 25px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.input-bar-approval-select .q-field__marginal {
+    min-height: 25px !important;
+    height: 25px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.input-bar-approval-select .q-field__native {
+    min-height: 25px !important;
+    height: 25px !important;
+    padding: 0 !important;
+    font-size: 10.5px !important;
+    line-height: 25px !important;
+    color: #d4d4d8 !important;
+    letter-spacing: 0.01em !important;
+}
+
+.input-bar-approval-select .q-field__append {
+    min-height: 25px !important;
+    height: 25px !important;
+    padding-left: 2px !important;
+    padding-right: 0 !important;
+}
+
+.input-bar-approval-select .q-field__append .q-icon {
+    font-size: 13px !important;
+    color: #a1a1aa !important;
+    transition: transform 0.15s ease !important;
+}
+
+.input-bar-approval-select:hover {
+    border-color: rgba(161, 161, 170, 0.6) !important;
+    background-color: rgba(39, 39, 42, 0.9) !important;
+}
+
+/* ========================================================================= */
+/* Command Approval Dropdown Menu & Select Listbox (Remove max-width)         */
+/* ========================================================================= */
+.input-bar-approval-menu {
+    max-width: none !important;
+    min-width: max-content !important;
+    width: auto !important;
+    overflow-x: hidden !important;
+}
+
+.input-bar-approval-menu .q-item {
+    white-space: nowrap !important;
+}
+
+.input-bar-approval-menu .q-item__label {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+/* ========================================================================= */
+/* Drag-and-Drop File Upload Overlay & Animations                            */
+/* ========================================================================= */
+.qs-drop-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(18, 18, 22, 0.94);
+    backdrop-filter: blur(10px);
+    border: 2px dashed rgba(56, 189, 248, 0.85);
+    border-radius: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.98);
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.22), inset 0 0 15px rgba(56, 189, 248, 0.12);
+}
+
+.qs-drop-overlay * {
+    pointer-events: none;
+}
+
+.qs-drop-overlay.qs-active {
+    opacity: 1;
+    pointer-events: all;
+    transform: scale(1);
+}
+
+.qs-drop-bounce-icon {
+    animation: qs-drop-float 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes qs-drop-float {
+    0% {
+        transform: translateY(3px) scale(0.95);
+    }
+    100% {
+        transform: translateY(-5px) scale(1.05);
+    }
+}
+
+.qs-input-box-dragover {
+    border-color: rgba(56, 189, 248, 0.85) !important;
+    box-shadow: 0 0 22px rgba(56, 189, 248, 0.28) !important;
+}

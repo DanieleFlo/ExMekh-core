@@ -1,5 +1,9 @@
 # TODO — Prestazioni del server agentico e constrained decoding
 
+Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture
+ritirati non sono verifiche del frontend corrente. Vedere
+[la guida FE / QS](../agentic/frontend.md).
+
 Ultimo aggiornamento: 2026-08-28
 
 ## Scopo e vincoli
@@ -124,7 +128,7 @@ Artifact:
 
 ### Ciclo Qwen3.8 del 2026-08-27: storia agentica senza tool call
 
-Il nuovo fixture usa il vero `DeepAgent` `bootstrap-wiki`, tool disponibili con
+Il fixture storico, oggi ritirato, usava tool disponibili con
 scelta automatica e `reasoning.effort=none`. Il prompt occupa 10.814 token e la
 risposta deterministica contiene 432 token e 298 parole, termina con `stop`, usa
 una sola richiesta modello e non emette tool call.
@@ -372,7 +376,7 @@ layer-major da 128 in su. Il gate numerico obbligatorio è stato superato.
 | OPT-20260812-06 | Copiare history/raw una sola volta per scansione | Riuso del prefisso nella scratch del filtro | output identico, 5 run | `KEEP` | Filtro mediano circa 0.265 -> 0.246 s; decode mediano statisticamente invariato (2.372 -> 2.377 s). |
 | BENCH-20260812-01 | Matrice ampia parallela 4--512 | Più processi benchmark | CSV completo e isolamento | `REJECT` | Timeout senza dataset valido; sostituita da run seriali mirate per non contaminare la GPU. |
 | BASE-20260827-01 | La storia agentica libera espone il costo residuo di `SEARCH` | Nessuna modifica server | warm-up + 2 run target/MTP, phase profile | `KEEP` | 11,739 tok/s target; masking mediano 17.293 ms su 432 token. |
-| TEST-20260827-01 | Un fixture plain-story deve distinguere risposta testuale e tool call | Solo profiler/runner | stop, una richiesta, >=400 token, >=250 parole, SSD | `KEEP` | 432 token, 298 parole, zero tool call; reasoning none esplicito evita il recupero Agent Wiki. |
+| TEST-20260827-01 | Un fixture plain-story deve distinguere risposta testuale e tool call | Solo profiler/runner | stop, una richiesta, >=400 token, >=250 parole, SSD | `KEEP` | 432 token, 298 parole, zero tool call; reasoning none esplicito evitava una seconda richiesta di recupero nel fixture storico. |
 | OPT-20260827-01 | La partizione statica DSML è sicura in `SEARCH` sincronizzato | Eligibility `SEARCH` soltanto | A/B, hash, compare-oracle, SSD | `KEEP` | 23,457 tok/s (+99,82%), masking 136 ms (-99,21%), 433 confronti e zero divergenze. |
 | TEST-20260828-01 | Temperatura, thinking e MTP devono essere assi espliciti del server | Harness Chat/Responses e runner target/MTP | 12 casi per variante, contatori, semantica/contratto | `KEEP` | 12/12 target e 12/12 MTP; confronto 6 semantic-exact + 6 contract, inclusa transizione fallback→SEARCH statico dopo `</think>`. |
 | FIX-20260828-01 | Il frontier host deve sopravvivere al cambio MTP → target | Capacità fisica `payload+1` per `fmemopen`, lunghezza logica invariata | Ultimo byte, checksum, system/HDS/skill cold-warm nelle due direzioni | `KEEP` | Rimossa la corruzione dell'ultimo byte; nessun reload SSD post-risposta e tutti i gruppi Agent SSD passano. |
@@ -425,7 +429,7 @@ Stati ammessi:
 ### 2026-08-27 — Qwen3.8, `SEARCH` statico e storia live
 
 - Congelate curve server target-only/MTP a 2K, 8K, 10,8K, 16K e 22K.
-- Aggiunto `plain-story` al profiler reale Agent Wiki e un runner PowerShell per
+- Aggiunto `plain-story` al profiler storico, oggi ritirato, e un runner PowerShell per
   target-only/MTP con phase profiling e KV SSD.
 - Isolato il masking `SEARCH` come collo dominante: circa 17,3 s su 36,8 s di
   decode per 432 token.

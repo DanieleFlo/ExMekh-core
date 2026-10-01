@@ -94,7 +94,7 @@
               "title": "Qwen3.8 27B UD-Q4_K_S compatibility audit",
               "level": 1,
               "start": 1,
-              "end": 111,
+              "end": 104,
               "summary": "DS4 recognizes only the audited Unsloth pair at repository revision"
             },
             {
@@ -115,21 +115,21 @@
               "title": "Frontend behavior",
               "level": 2,
               "start": 45,
-              "end": 73,
+              "end": 67,
               "summary": "Both `ds4` and `ds4-server` recognize the stable model ID"
             },
             {
               "title": "Test and oracle isolation",
               "level": 2,
-              "start": 74,
-              "end": 100,
+              "start": 68,
+              "end": 93,
               "summary": "`make test-qwen38` validates the pinned metadata snapshots, embedded and"
             },
             {
               "title": "CUDA runtime status",
               "level": 2,
-              "start": 101,
-              "end": 111,
+              "start": 94,
+              "end": 104,
               "summary": "The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,"
             }
           ]
@@ -1041,6 +1041,46 @@
               "start": 89,
               "end": 123,
               "summary": "Il gate model-backed verifica che i seguenti errori non modifichino token o"
+            }
+          ]
+        },
+        {
+          "path": "docs/agentic/frontend.md",
+          "sections": [
+            {
+              "title": "Frontend Agent FE / QS",
+              "level": 1,
+              "start": 1,
+              "end": 99,
+              "summary": "L'agente del progetto e il frontend NiceGUI in `agent/`."
+            },
+            {
+              "title": "Avvio in WSL / Linux",
+              "level": 2,
+              "start": 8,
+              "end": 28,
+              "summary": "Da root, avviare il server in un terminale:"
+            },
+            {
+              "title": "Configurazione e stato",
+              "level": 2,
+              "start": 29,
+              "end": 42,
+              "summary": "Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider."
+            },
+            {
+              "title": "Dipendenza QS",
+              "level": 2,
+              "start": 43,
+              "end": 71,
+              "summary": "`agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`."
+            },
+            {
+              "title": "Verifica",
+              "level": 2,
+              "start": 72,
+              "end": 99,
+              "summary": "Da `agent/`:"
             }
           ]
         }
@@ -2217,64 +2257,64 @@
               "title": "Qwen3.8 agentico: `SEARCH` statica e MTP grammar-aware",
               "level": 1,
               "start": 1,
-              "end": 289,
-              "summary": "Questo ciclo avvicina il decode del server agentico Qwen3.8 alla velocità del"
+              "end": 288,
+              "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
             },
             {
               "title": "Obiettivo e invarianti",
               "level": 2,
-              "start": 3,
-              "end": 23,
+              "start": 7,
+              "end": 27,
               "summary": "Questo ciclo avvicina il decode del server agentico Qwen3.8 alla velocità del"
             },
             {
               "title": "Baseline prima della modifica",
               "level": 2,
-              "start": 24,
-              "end": 46,
+              "start": 28,
+              "end": 50,
               "summary": "Hardware: RTX 3090, build CUDA `sm_86`, contesto allocato 22.593, prompt"
             },
             {
               "title": "Risultato appaiato",
               "level": 2,
-              "start": 47,
-              "end": 69,
+              "start": 51,
+              "end": 73,
               "summary": "Il masking target-only scende del 99,21%."
             },
             {
               "title": "MTP grammar-aware: implementazione e vantaggio",
               "level": 2,
-              "start": 70,
-              "end": 122,
+              "start": 74,
+              "end": 126,
               "summary": "Il server passa al verifier un callback per ogni distribuzione target della"
             },
             {
               "title": "Gate di correttezza",
               "level": 2,
-              "start": 123,
-              "end": 156,
+              "start": 127,
+              "end": 160,
               "summary": "La storia completa è stata ripetuta con `compare_new_vs_oracle`: 433 confronti"
             },
             {
               "title": "Matrice temperatura, thinking e MTP",
               "level": 2,
-              "start": 157,
-              "end": 224,
+              "start": 161,
+              "end": 228,
               "summary": "Il gate `tests/test_server_sampling_matrix.py` esplicita il prodotto cartesiano"
             },
             {
               "title": "Fonti primarie e scelte implementative",
               "level": 2,
-              "start": 225,
-              "end": 273,
+              "start": 229,
+              "end": 277,
               "summary": "I valori campionati non sono inventati dal benchmark."
             },
             {
-              "title": "Test live ripetibile",
+              "title": "Verifica corrente",
               "level": 2,
-              "start": 274,
-              "end": 289,
-              "summary": "`tests/run_agent_story_live.ps1` avvia in sequenza target-only e MTP, abilita il"
+              "start": 278,
+              "end": 288,
+              "summary": "Le misure sopra descrivono fixture storici ritirati e non certificano FE / QS."
             }
           ]
         },
@@ -2324,1078 +2364,1078 @@
               "title": "TODO Roadmap — Constrained Decoding DSML/JSON ad alte prestazioni",
               "level": 1,
               "start": 1,
-              "end": 8,
-              "summary": "> Obiettivo: costruire per DS4 un constraint engine che mantenga la correttezza fail-closed dell'implementazione attuale, ma elimini progressivamente la dipendenza runtime dalla scansione completa del vocabolario e dalla…"
+              "end": 12,
+              "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
             },
             {
               "title": "REGOLE DI ESECUZIONE",
               "level": 1,
-              "start": 9,
-              "end": 35,
+              "start": 13,
+              "end": 39,
               "summary": "Queste regole sono vincolanti per tutti i macro-task."
             },
             {
               "title": "DEFINIZIONE DI DONE GLOBALE",
               "level": 1,
-              "start": 36,
-              "end": 52,
+              "start": 40,
+              "end": 56,
               "summary": "Il progetto può essere considerato completato quando:"
             },
             {
               "title": "ARCHITETTURA TARGET",
               "level": 1,
-              "start": 53,
-              "end": 106,
+              "start": 57,
+              "end": 110,
               "summary": "request: tools / JSON Schema"
             },
             {
               "title": "MACRO 0 — Costruire baseline, oracle e benchmark differenziale",
               "level": 1,
-              "start": 107,
-              "end": 234,
+              "start": 111,
+              "end": 238,
               "summary": "Prima di cambiare l'algoritmo, rendere misurabile in modo riproducibile:"
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 109,
-              "end": 119,
+              "start": 113,
+              "end": 123,
               "summary": "Prima di cambiare l'algoritmo, rendere misurabile in modo riproducibile:"
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 120,
-              "end": 137,
+              "start": 124,
+              "end": 141,
               "summary": "Estratto chiave dall'abstract:"
             },
             {
               "title": "JSONSchemaBench — Geng et al., 2025",
               "level": 3,
-              "start": 122,
-              "end": 133,
+              "start": 126,
+              "end": 137,
               "summary": "Estratto chiave dall'abstract:"
             },
             {
               "title": "Perché è rilevante per DS4",
               "level": 3,
-              "start": 134,
-              "end": 137,
+              "start": 138,
+              "end": 141,
               "summary": "Una micro-suite costruita solo sui casi che DS4 gestisce bene rischia di ottimizzare il benchmark invece dell'algoritmo."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 138,
-              "end": 211,
+              "start": 142,
+              "end": 215,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "0.1 — Congelare l'oracle",
               "level": 3,
-              "start": 140,
-              "end": 148,
+              "start": 144,
+              "end": 152,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "0.2 — Estendere il profiling",
               "level": 3,
-              "start": 149,
-              "end": 161,
+              "start": 153,
+              "end": 165,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "0.3 — Costruire la suite DSML",
               "level": 3,
-              "start": 162,
-              "end": 180,
+              "start": 166,
+              "end": 184,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "0.4 — Costruire la suite JSON Schema",
               "level": 3,
-              "start": 181,
-              "end": 201,
+              "start": 185,
+              "end": 205,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "0.5 — Aggiungere benchmark esterno",
               "level": 3,
-              "start": 202,
-              "end": 211,
+              "start": 206,
+              "end": 215,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 212,
-              "end": 218,
+              "start": 216,
+              "end": 222,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 0",
               "level": 2,
-              "start": 219,
-              "end": 234,
+              "start": 223,
+              "end": 238,
               "summary": "---"
             },
             {
               "title": "MACRO 1 — Eliminare il doppio lavoro tra forced-prefix e costruzione della mask",
               "level": 1,
-              "start": 235,
-              "end": 318,
+              "start": 239,
+              "end": 322,
               "summary": "Fare una sola analisi dell'insieme dei token validi quando il decoder deve decidere se:"
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 237,
-              "end": 245,
+              "start": 241,
+              "end": 249,
               "summary": "Fare una sola analisi dell'insieme dei token validi quando il decoder deve decidere se:"
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 246,
-              "end": 260,
+              "start": 250,
+              "end": 264,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Efficient Guided Generation — Willard & Louf, 2023 / Outlines",
               "level": 3,
-              "start": 248,
-              "end": 256,
+              "start": 252,
+              "end": 260,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Interpretazione per DS4",
               "level": 3,
-              "start": 257,
-              "end": 260,
+              "start": 261,
+              "end": 264,
               "summary": "La decisione “token valido?”, la mask e l'eventuale determinismo devono derivare dalla stessa rappresentazione dell'insieme ammesso, non da passate vocabulary-wide indipendenti."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 261,
-              "end": 297,
+              "start": 265,
+              "end": 301,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "1.1 — Definire un risultato unico dell'analisi",
               "level": 3,
-              "start": 263,
-              "end": 273,
+              "start": 267,
+              "end": 277,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "1.2 — Condividere il risultato",
               "level": 3,
-              "start": 274,
-              "end": 281,
+              "start": 278,
+              "end": 285,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "1.3 — Correttezza",
               "level": 3,
-              "start": 282,
-              "end": 289,
+              "start": 286,
+              "end": 293,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "1.4 — Performance",
               "level": 3,
-              "start": 290,
-              "end": 297,
+              "start": 294,
+              "end": 301,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 298,
-              "end": 303,
+              "start": 302,
+              "end": 307,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 1",
               "level": 2,
-              "start": 304,
-              "end": 318,
+              "start": 308,
+              "end": 322,
               "summary": "---"
             },
             {
               "title": "MACRO 2 — Rendere DSML e JSON Schema realmente incrementali",
               "level": 1,
-              "start": 319,
-              "end": 449,
+              "start": 323,
+              "end": 453,
               "summary": "Smettere di ricostruire o ri-parsare il prefisso per ogni candidate."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 321,
-              "end": 347,
+              "start": 325,
+              "end": 351,
               "summary": "Smettere di ricostruire o ri-parsare il prefisso per ogni candidate."
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 348,
-              "end": 362,
+              "start": 352,
+              "end": 366,
               "summary": "Estratto chiave:"
             },
             {
               "title": "XGrammar — Dong et al., 2024",
               "level": 3,
-              "start": 350,
-              "end": 358,
+              "start": 354,
+              "end": 362,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Interpretazione per DS4",
               "level": 3,
-              "start": 359,
-              "end": 362,
+              "start": 363,
+              "end": 366,
               "summary": "Il parser stack e lo stato semantico devono essere strutture runtime persistenti."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 363,
-              "end": 427,
+              "start": 367,
+              "end": 431,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "2.1 — Disegnare `constraint_state`",
               "level": 3,
-              "start": 365,
-              "end": 380,
+              "start": 369,
+              "end": 384,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "2.2 — API incrementale",
               "level": 3,
-              "start": 381,
-              "end": 391,
+              "start": 385,
+              "end": 395,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "2.3 — Migrare DSML",
               "level": 3,
-              "start": 392,
-              "end": 401,
+              "start": 396,
+              "end": 405,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "2.4 — Migrare structured JSON output",
               "level": 3,
-              "start": 402,
-              "end": 411,
+              "start": 406,
+              "end": 415,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "2.5 — Validazione differenziale",
               "level": 3,
-              "start": 412,
-              "end": 418,
+              "start": 416,
+              "end": 422,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "2.6 — Completare la transizione semantica DSML edge-local",
               "level": 3,
-              "start": 419,
-              "end": 427,
+              "start": 423,
+              "end": 431,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 428,
-              "end": 434,
+              "start": 432,
+              "end": 438,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 2",
               "level": 2,
-              "start": 435,
-              "end": 449,
+              "start": 439,
+              "end": 453,
               "summary": "---"
             },
             {
               "title": "MACRO 3 — Precomputare i piece e costruire un trie byte-level del vocabolario",
               "level": 1,
-              "start": 450,
-              "end": 567,
+              "start": 454,
+              "end": 571,
               "summary": "Smettere di eseguire:"
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 452,
-              "end": 468,
+              "start": 456,
+              "end": 472,
               "summary": "Smettere di eseguire:"
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 469,
-              "end": 489,
+              "start": 473,
+              "end": 493,
               "summary": "Estratto chiave:"
             },
             {
               "title": "DOMINO — Beurer-Kellner, Fischer, Vechev, 2024",
               "level": 3,
-              "start": 471,
-              "end": 479,
+              "start": 475,
+              "end": 483,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Outlines — Willard & Louf, 2023",
               "level": 3,
-              "start": 480,
-              "end": 485,
+              "start": 484,
+              "end": 489,
               "summary": "Riferimento concettuale:"
             },
             {
               "title": "Interpretazione per DS4",
               "level": 3,
-              "start": 486,
-              "end": 489,
+              "start": 490,
+              "end": 493,
               "summary": "Il trie deve essere costruito sui **piece reali del tokenizer**, non su stringhe teoriche della grammatica."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 490,
-              "end": 545,
+              "start": 494,
+              "end": 549,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "3.1 — Token piece table",
               "level": 3,
-              "start": 492,
-              "end": 500,
+              "start": 496,
+              "end": 504,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "3.2 — Trie",
               "level": 3,
-              "start": 501,
-              "end": 509,
+              "start": 505,
+              "end": 513,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "3.3 — Traversal con parser incrementale",
               "level": 3,
-              "start": 510,
-              "end": 518,
+              "start": 514,
+              "end": 522,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "3.4 — Differential mode",
               "level": 3,
-              "start": 519,
-              "end": 526,
+              "start": 523,
+              "end": 530,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "3.5 — Benchmark",
               "level": 3,
-              "start": 527,
-              "end": 537,
+              "start": 531,
+              "end": 541,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "3.6 — Gate trie DSML edge-local",
               "level": 3,
-              "start": 538,
-              "end": 545,
+              "start": 542,
+              "end": 549,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 546,
-              "end": 551,
+              "start": 550,
+              "end": 555,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 3",
               "level": 2,
-              "start": 552,
-              "end": 567,
+              "start": 556,
+              "end": 571,
               "summary": "---"
             },
             {
               "title": "MACRO 4 — Separare token context-independent e context-dependent; introdurre mask precompilate",
               "level": 1,
-              "start": 568,
-              "end": 670,
+              "start": 572,
+              "end": 674,
               "summary": "Evitare di interpretare dinamicamente token la cui validità è già determinabile dalla parte statica dello stato grammaticale."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 570,
-              "end": 581,
+              "start": 574,
+              "end": 585,
               "summary": "Evitare di interpretare dinamicamente token la cui validità è già determinabile dalla parte statica dello stato grammaticale."
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 582,
-              "end": 605,
+              "start": 586,
+              "end": 609,
               "summary": "Estratto chiave:"
             },
             {
               "title": "XGrammar — Dong et al., 2024",
               "level": 3,
-              "start": 584,
-              "end": 592,
+              "start": 588,
+              "end": 596,
               "summary": "Estratto chiave:"
             },
             {
               "title": "SynCode — Ugare et al., 2024",
               "level": 3,
-              "start": 593,
-              "end": 601,
+              "start": 597,
+              "end": 605,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Interpretazione per DS4",
               "level": 3,
-              "start": 602,
-              "end": 605,
+              "start": 606,
+              "end": 609,
               "summary": "La struttura DSML statica, la sintassi JSON e molte transizioni locali possono essere trasformate in mask riusabili."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 606,
-              "end": 648,
+              "start": 610,
+              "end": 652,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "4.1 — Classificare lo stato",
               "level": 3,
-              "start": 608,
-              "end": 615,
+              "start": 612,
+              "end": 619,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "4.2 — Static mask store",
               "level": 3,
-              "start": 616,
-              "end": 624,
+              "start": 620,
+              "end": 628,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "4.3 — Dynamic frontier",
               "level": 3,
-              "start": 625,
-              "end": 631,
+              "start": 629,
+              "end": 635,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "4.4 — Mask representation",
               "level": 3,
-              "start": 632,
-              "end": 639,
+              "start": 636,
+              "end": 643,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "4.5 — Cache",
               "level": 3,
-              "start": 640,
-              "end": 648,
+              "start": 644,
+              "end": 652,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 649,
-              "end": 654,
+              "start": 653,
+              "end": 658,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 4",
               "level": 2,
-              "start": 655,
-              "end": 670,
+              "start": 659,
+              "end": 674,
               "summary": "---"
             },
             {
               "title": "MACRO 5 — Trasformare il forced-prefix in vero jump-forward deterministico",
               "level": 1,
-              "start": 671,
-              "end": 792,
+              "start": 675,
+              "end": 796,
               "summary": "Quando la grammatica determina una sequenza di byte/token senza lasciare scelte semantiche al modello, evitarne il normale ciclo mask → sample ripetuto."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 673,
-              "end": 678,
+              "start": 677,
+              "end": 682,
               "summary": "Quando la grammatica determina una sequenza di byte/token senza lasciare scelte semantiche al modello, evitarne il normale ciclo mask → sample ripetuto."
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 679,
-              "end": 696,
+              "start": 683,
+              "end": 700,
               "summary": "Estratto chiave:"
             },
             {
               "title": "SGLang — Zheng et al., 2023",
               "level": 3,
-              "start": 681,
-              "end": 692,
+              "start": 685,
+              "end": 696,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Interpretazione per DS4",
               "level": 3,
-              "start": 693,
-              "end": 696,
+              "start": 697,
+              "end": 700,
               "summary": "Le catene di transizioni singole possono essere compresse in archi/path deterministici."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 697,
-              "end": 763,
+              "start": 701,
+              "end": 767,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "5.1 — Definire determinismo grammaticale",
               "level": 3,
-              "start": 699,
-              "end": 706,
+              "start": 703,
+              "end": 710,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "5.2 — Estrarre deterministic path",
               "level": 3,
-              "start": 707,
-              "end": 715,
+              "start": 711,
+              "end": 719,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "5.3 — Tokenizzazione corretta",
               "level": 3,
-              "start": 716,
-              "end": 723,
+              "start": 720,
+              "end": 727,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "5.4 — Sync modello",
               "level": 3,
-              "start": 724,
-              "end": 731,
+              "start": 728,
+              "end": 735,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "5.5 — Dispatch micro-suffix",
               "level": 3,
-              "start": 732,
-              "end": 739,
+              "start": 736,
+              "end": 743,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "5.6 — Gate reale DSML post-fix",
               "level": 3,
-              "start": 740,
-              "end": 748,
+              "start": 744,
+              "end": 752,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "5.7 — Chiudere le regressioni JSONSchemaBench",
               "level": 3,
-              "start": 749,
-              "end": 756,
+              "start": 753,
+              "end": 760,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "5.8 — Release gate del test globale",
               "level": 3,
-              "start": 757,
-              "end": 763,
+              "start": 761,
+              "end": 767,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 764,
-              "end": 772,
+              "start": 768,
+              "end": 776,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 5",
               "level": 2,
-              "start": 773,
-              "end": 792,
+              "start": 777,
+              "end": 796,
               "summary": "---"
             },
             {
               "title": "MACRO 6 — Adattare XGrammar 2 alla grammatica agentica DSML",
               "level": 1,
-              "start": 793,
-              "end": 930,
+              "start": 797,
+              "end": 934,
               "summary": "Evitare di ricompilare un enorme automa monolitico per ogni richiesta."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 795,
-              "end": 816,
+              "start": 799,
+              "end": 820,
               "summary": "Evitare di ricompilare un enorme automa monolitico per ogni richiesta."
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 817,
-              "end": 835,
+              "start": 821,
+              "end": 839,
               "summary": "Estratto chiave:"
             },
             {
               "title": "XGrammar 2 — Li et al., 2026",
               "level": 3,
-              "start": 819,
-              "end": 829,
+              "start": 823,
+              "end": 833,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Interpretazione per DS4",
               "level": 3,
-              "start": 830,
-              "end": 835,
+              "start": 834,
+              "end": 839,
               "summary": "Tool calling è precisamente un caso di grammatica dinamica: il protocollo resta quasi identico, mentre cambiano nomi tool e schemi."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 836,
-              "end": 905,
+              "start": 840,
+              "end": 909,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.0 — Design review XGrammar 2",
               "level": 3,
-              "start": 838,
-              "end": 844,
+              "start": 842,
+              "end": 848,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.1 — Normalizzazione dei frammenti",
               "level": 3,
-              "start": 845,
-              "end": 851,
+              "start": 849,
+              "end": 855,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.2 — Static core",
               "level": 3,
-              "start": 852,
-              "end": 858,
+              "start": 856,
+              "end": 862,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.3 — TagDispatch reale",
               "level": 3,
-              "start": 859,
-              "end": 868,
+              "start": 863,
+              "end": 872,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.4 — Cross-grammar cache",
               "level": 3,
-              "start": 869,
-              "end": 878,
+              "start": 873,
+              "end": 882,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.5 — JIT",
               "level": 3,
-              "start": 879,
-              "end": 886,
+              "start": 883,
+              "end": 890,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.6 — Valutare mask generation Earley",
               "level": 3,
-              "start": 887,
-              "end": 892,
+              "start": 891,
+              "end": 896,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.7 — Valutare repetition compression",
               "level": 3,
-              "start": 893,
-              "end": 899,
+              "start": 897,
+              "end": 903,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "6.8 — Gate A/B della XGrammar 2 adaptation",
               "level": 3,
-              "start": 900,
-              "end": 905,
+              "start": 904,
+              "end": 909,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 906,
-              "end": 914,
+              "start": 910,
+              "end": 918,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 6",
               "level": 2,
-              "start": 915,
-              "end": 930,
+              "start": 919,
+              "end": 934,
               "summary": "---"
             },
             {
               "title": "MACRO 7 — Implementare Parser Stack Classification (PSC) per gli stati ad alto riuso",
               "level": 1,
-              "start": 931,
-              "end": 1031,
+              "start": 935,
+              "end": 1035,
               "summary": "Per stati/sottogrammatiche sufficientemente stabili, eliminare anche il costo runtime residuo proporzionale alla dimensione del vocabolario o al numero di candidate dinamici."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 933,
-              "end": 948,
+              "start": 937,
+              "end": 952,
               "summary": "Per stati/sottogrammatiche sufficientemente stabili, eliminare anche il costo runtime residuo proporzionale alla dimensione del vocabolario o al numero di candidate dinamici."
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 949,
-              "end": 965,
+              "start": 953,
+              "end": 969,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Efficient Grammar-Constrained Decoding via Parser Stack Classification — Li et al., 2026",
               "level": 3,
-              "start": 951,
-              "end": 961,
+              "start": 955,
+              "end": 965,
               "summary": "Estratto chiave:"
             },
             {
               "title": "Nota critica",
               "level": 3,
-              "start": 962,
-              "end": 965,
+              "start": 966,
+              "end": 969,
               "summary": "PSC è molto recente."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 966,
-              "end": 1008,
+              "start": 970,
+              "end": 1012,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "7.1 — Identificare candidati PSC",
               "level": 3,
-              "start": 968,
-              "end": 976,
+              "start": 972,
+              "end": 980,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "7.2 — Costruire classifier prototype",
               "level": 3,
-              "start": 977,
-              "end": 984,
+              "start": 981,
+              "end": 988,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "7.3 — Break-even",
               "level": 3,
-              "start": 985,
-              "end": 992,
+              "start": 989,
+              "end": 996,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "7.4 — Hybrid selection",
               "level": 3,
-              "start": 993,
-              "end": 1000,
+              "start": 997,
+              "end": 1004,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "7.5 — Validazione",
               "level": 3,
-              "start": 1001,
-              "end": 1008,
+              "start": 1005,
+              "end": 1012,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 1009,
-              "end": 1014,
+              "start": 1013,
+              "end": 1018,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 7",
               "level": 2,
-              "start": 1015,
-              "end": 1031,
+              "start": 1019,
+              "end": 1035,
               "summary": "---"
             },
             {
               "title": "MACRO 8 — Sovrapporre constraint computation e inferenza; integrare speculative decoding solo dopo",
               "level": 1,
-              "start": 1032,
-              "end": 1126,
+              "start": 1036,
+              "end": 1130,
               "summary": "Una volta ridotto il costo algoritmico del constraint engine, togliere dal critical path la quota CPU residua sovrapponendola all'eval GPU quando possibile."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 1034,
-              "end": 1040,
+              "start": 1038,
+              "end": 1044,
               "summary": "Una volta ridotto il costo algoritmico del constraint engine, togliere dal critical path la quota CPU residua sovrapponendola all'eval GPU quando possibile."
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 1041,
-              "end": 1060,
+              "start": 1045,
+              "end": 1064,
               "summary": "Il paper descrive il co-design fra grammar engine e inference engine per sovrapporre il grammar processing all'esecuzione GPU."
             },
             {
               "title": "XGrammar — Dong et al., 2024",
               "level": 3,
-              "start": 1043,
-              "end": 1049,
+              "start": 1047,
+              "end": 1053,
               "summary": "Il paper descrive il co-design fra grammar engine e inference engine per sovrapporre il grammar processing all'esecuzione GPU."
             },
             {
               "title": "DOMINO — Beurer-Kellner et al., 2024",
               "level": 3,
-              "start": 1050,
-              "end": 1056,
+              "start": 1054,
+              "end": 1060,
               "summary": "DOMINO combina pre-computation, allineamento subword e speculative decoding."
             },
             {
               "title": "Interpretazione per DS4",
               "level": 3,
-              "start": 1057,
-              "end": 1060,
+              "start": 1061,
+              "end": 1064,
               "summary": "Non usare MTP per nascondere un constraint engine ancora inefficiente: prima ridurre il lavoro; poi sovrapporlo e infine speculare."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1061,
-              "end": 1104,
+              "start": 1065,
+              "end": 1108,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "8.1 — Overlap CPU/GPU",
               "level": 3,
-              "start": 1063,
-              "end": 1070,
+              "start": 1067,
+              "end": 1074,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "8.2 — Double buffering",
               "level": 3,
-              "start": 1071,
-              "end": 1078,
+              "start": 1075,
+              "end": 1082,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "8.3 — Speculative prerequisites",
               "level": 3,
-              "start": 1079,
-              "end": 1086,
+              "start": 1083,
+              "end": 1090,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "8.4 — Constrained MTP",
               "level": 3,
-              "start": 1087,
-              "end": 1096,
+              "start": 1091,
+              "end": 1100,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "8.5 — Benchmark",
               "level": 3,
-              "start": 1097,
-              "end": 1104,
+              "start": 1101,
+              "end": 1108,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 1105,
-              "end": 1110,
+              "start": 1109,
+              "end": 1114,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 8",
               "level": 2,
-              "start": 1111,
-              "end": 1126,
+              "start": 1115,
+              "end": 1130,
               "summary": "---"
             },
             {
               "title": "MACRO 9 — Hardening, adaptive policy e rimozione del full-scan dal percorso normale",
               "level": 1,
-              "start": 1127,
-              "end": 1261,
+              "start": 1131,
+              "end": 1265,
               "summary": "Integrare i backend sviluppati in una policy adattiva e dimostrare che la scansione completa del vocabolario è diventata un fallback eccezionale."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 1129,
-              "end": 1154,
+              "start": 1133,
+              "end": 1158,
               "summary": "Integrare i backend sviluppati in una policy adattiva e dimostrare che la scansione completa del vocabolario è diventata un fallback eccezionale."
             },
             {
               "title": "Letteratura di riferimento",
               "level": 2,
-              "start": 1155,
-              "end": 1167,
+              "start": 1159,
+              "end": 1171,
               "summary": "Questa macro-task sintetizza i risultati di:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1168,
-              "end": 1234,
+              "start": 1172,
+              "end": 1238,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "9.1 — Adaptive backend selection",
               "level": 3,
-              "start": 1170,
-              "end": 1179,
+              "start": 1174,
+              "end": 1183,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "9.2 — Safety",
               "level": 3,
-              "start": 1180,
-              "end": 1192,
+              "start": 1184,
+              "end": 1196,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "9.3 — End-to-end regression suite",
               "level": 3,
-              "start": 1193,
-              "end": 1208,
+              "start": 1197,
+              "end": 1212,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "9.4 — Performance gate",
               "level": 3,
-              "start": 1209,
-              "end": 1223,
+              "start": 1213,
+              "end": 1227,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "9.5 — Cleanup",
               "level": 3,
-              "start": 1224,
-              "end": 1234,
+              "start": 1228,
+              "end": 1238,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Criteri di uscita",
               "level": 2,
-              "start": 1235,
-              "end": 1242,
+              "start": 1239,
+              "end": 1246,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Stato e retrospettiva — MACRO 9",
               "level": 2,
-              "start": 1243,
-              "end": 1261,
+              "start": 1247,
+              "end": 1265,
               "summary": "---"
             },
             {
               "title": "ORDINE VINCOLANTE CONSIGLIATO",
               "level": 1,
-              "start": 1262,
-              "end": 1293,
+              "start": 1266,
+              "end": 1297,
               "summary": "MACRO 0 Baseline + oracle"
             },
             {
               "title": "METRICHE DA MANTENERE FINO ALLA FINE",
               "level": 1,
-              "start": 1294,
-              "end": 1339,
+              "start": 1298,
+              "end": 1343,
               "summary": "---"
             },
             {
               "title": "Correttezza",
               "level": 2,
-              "start": 1296,
-              "end": 1304,
+              "start": 1300,
+              "end": 1308,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Constraint engine",
               "level": 2,
-              "start": 1305,
-              "end": 1318,
+              "start": 1309,
+              "end": 1322,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Compilation",
               "level": 2,
-              "start": 1319,
-              "end": 1326,
+              "start": 1323,
+              "end": 1330,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Inference end-to-end",
               "level": 2,
-              "start": 1327,
-              "end": 1339,
+              "start": 1331,
+              "end": 1343,
               "summary": "---"
             },
             {
               "title": "FONTI PRINCIPALI",
               "level": 1,
-              "start": 1340,
-              "end": 1371,
+              "start": 1344,
+              "end": 1375,
               "summary": "1."
             },
             {
               "title": "TEMPLATE REPORT FINALE",
               "level": 1,
-              "start": 1372,
-              "end": 1414,
+              "start": 1376,
+              "end": 1418,
               "summary": "Da compilare al termine di MACRO 9."
             },
             {
               "title": "Risultato complessivo",
               "level": 2,
-              "start": 1376,
-              "end": 1391,
+              "start": 1380,
+              "end": 1395,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Contributo di ogni macro-task",
               "level": 2,
-              "start": 1392,
-              "end": 1406,
+              "start": 1396,
+              "end": 1410,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Conclusioni",
               "level": 2,
-              "start": 1407,
-              "end": 1414,
+              "start": 1411,
+              "end": 1418,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             }
           ]
@@ -3641,105 +3681,105 @@
               "title": "Roadmap di integrazione Qwen3.8 27B UD-Q4_K_S",
               "level": 1,
               "start": 1,
-              "end": 249,
-              "summary": "Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target"
+              "end": 253,
+              "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
             },
             {
               "title": "Obiettivo e criterio di completamento",
               "level": 2,
-              "start": 3,
-              "end": 19,
+              "start": 7,
+              "end": 23,
               "summary": "Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target"
             },
             {
               "title": "Stato sintetico",
               "level": 2,
-              "start": 20,
-              "end": 35,
+              "start": 24,
+              "end": 39,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Fase 0 — Baseline, fonti e invarianti",
               "level": 2,
-              "start": 36,
-              "end": 53,
+              "start": 40,
+              "end": 57,
               "summary": "knowledge base e la scheda RTX 3090."
             },
             {
               "title": "Fase 1 — Kernel indispensabili per il target UD",
               "level": 2,
-              "start": 54,
-              "end": 88,
+              "start": 58,
+              "end": 92,
               "summary": "Formati mancanti, rilevati dall'inventario pinned:"
             },
             {
               "title": "Fase 2 — Target Qwen3.8 end-to-end",
               "level": 2,
-              "start": 89,
-              "end": 104,
+              "start": 93,
+              "end": 108,
               "summary": "indipendente alla revisione llama.cpp fissata; 32/32 greedy identici."
             },
             {
               "title": "Fase 3 — Parita' funzionale con Qwen3.6",
               "level": 2,
-              "start": 105,
-              "end": 153,
+              "start": 109,
+              "end": 157,
               "summary": "perplexity e dump diagnostici."
             },
             {
               "title": "CLI",
               "level": 3,
-              "start": 107,
-              "end": 113,
+              "start": 111,
+              "end": 117,
               "summary": "perplexity e dump diagnostici."
             },
             {
               "title": "Server",
               "level": 3,
-              "start": 114,
-              "end": 129,
+              "start": 118,
+              "end": 133,
               "summary": "constrained output e batching/multi-sessione nei percorsi applicabili."
             },
             {
               "title": "MTP",
               "level": 3,
-              "start": 130,
-              "end": 145,
+              "start": 134,
+              "end": 149,
               "summary": "registrata a contesti brevi e lunghi."
             },
             {
               "title": "SSD e agentic",
               "level": 3,
-              "start": 146,
-              "end": 153,
+              "start": 150,
+              "end": 157,
               "summary": "con MTP, usando il model ID Qwen3.8."
             },
             {
               "title": "Fase 4 — Regressione Qwen3.6",
               "level": 2,
-              "start": 154,
-              "end": 168,
+              "start": 158,
+              "end": 172,
               "summary": "Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate"
             },
             {
               "title": "Fase 5 — Ottimizzazioni opzionali comuni",
               "level": 2,
-              "start": 169,
-              "end": 190,
+              "start": 173,
+              "end": 194,
               "summary": "Valutare soltanto dopo la parita' funzionale del 3.8:"
             },
             {
               "title": "Registro breve di decisioni e risultati",
               "level": 2,
-              "start": 191,
-              "end": 227,
+              "start": 195,
+              "end": 231,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Comandi e risultati da compilare durante il lavoro",
               "level": 2,
-              "start": 228,
-              "end": 249,
+              "start": 232,
+              "end": 253,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             }
           ]
@@ -3751,210 +3791,210 @@
               "title": "TODO — Prestazioni del server agentico e constrained decoding",
               "level": 1,
               "start": 1,
-              "end": 470,
-              "summary": "Ultimo aggiornamento: 2026-08-28"
+              "end": 474,
+              "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
             },
             {
               "title": "Scopo e vincoli",
               "level": 2,
-              "start": 5,
-              "end": 24,
+              "start": 9,
+              "end": 28,
               "summary": "Questo diario separa il lavoro sulle prestazioni del server agentico dal lavoro"
             },
             {
               "title": "Stato sintetico",
               "level": 2,
-              "start": 25,
-              "end": 45,
+              "start": 29,
+              "end": 49,
               "summary": "target-only/MTP su Chat e Responses agentiche."
             },
             {
               "title": "Baseline iniziale ricavata dai log",
               "level": 2,
-              "start": 46,
-              "end": 161,
+              "start": 50,
+              "end": 165,
               "summary": "Questi numeri sono osservazioni preliminari, non ancora un benchmark controllato."
             },
             {
               "title": "Baseline controllata del server",
               "level": 3,
-              "start": 79,
-              "end": 97,
+              "start": 83,
+              "end": 101,
               "summary": "Payload fisso: Qwen3.6-27B Q4_K_S, contesto 32768, tool"
             },
             {
               "title": "Confronto Qwen3.8/Qwen3.6 dopo la correzione ChatML",
               "level": 3,
-              "start": 98,
-              "end": 124,
+              "start": 102,
+              "end": 128,
               "summary": "Il confronto del 2026-08-25 usa lo stesso binario, RTX 3090, contesto 32768,"
             },
             {
               "title": "Ciclo Qwen3.8 del 2026-08-27: storia agentica senza tool call",
               "level": 3,
-              "start": 125,
-              "end": 161,
-              "summary": "Il nuovo fixture usa il vero `DeepAgent` `bootstrap-wiki`, tool disponibili con"
+              "start": 129,
+              "end": 165,
+              "summary": "Il fixture storico, oggi ritirato, usava tool disponibili con"
             },
             {
               "title": "Punto 1 — Strumentazione e benchmark ripetibile",
               "level": 2,
-              "start": 162,
-              "end": 195,
+              "start": 166,
+              "end": 199,
               "summary": "(0.3--0.5 ms nel payload controllato, quindi non ulteriormente suddiviso);"
             },
             {
               "title": "Telemetria da aggiungere",
               "level": 3,
-              "start": 164,
-              "end": 181,
+              "start": 168,
+              "end": 185,
               "summary": "(0.3--0.5 ms nel payload controllato, quindi non ulteriormente suddiviso);"
             },
             {
               "title": "Matrice minima di misura",
               "level": 3,
-              "start": 182,
-              "end": 195,
+              "start": 186,
+              "end": 199,
               "summary": "build/commit, flags, modello, hardware e correttezza."
             },
             {
               "title": "Punto 2 — Rendere efficiente il constrained decoding DSML/JSON",
               "level": 2,
-              "start": 196,
-              "end": 273,
+              "start": 200,
+              "end": 277,
               "summary": "Il percorso corrente ha costo almeno lineare nella dimensione del vocabolario a"
             },
             {
               "title": "Risultato della ricerca in letteratura",
               "level": 3,
-              "start": 198,
-              "end": 219,
+              "start": 202,
+              "end": 223,
               "summary": "Il percorso corrente ha costo almeno lineare nella dimensione del vocabolario a"
             },
             {
               "title": "Sequenza sperimentale",
               "level": 3,
-              "start": 220,
-              "end": 273,
+              "start": 224,
+              "end": 277,
               "summary": "massima invece di richiamare e ricopiare il testo per ogni sampling."
             },
             {
               "title": "2A — Eliminare lavoro ripetuto senza cambiare l'algoritmo",
               "level": 4,
-              "start": 222,
-              "end": 236,
+              "start": 226,
+              "end": 240,
               "summary": "massima invece di richiamare e ricopiare il testo per ogni sampling."
             },
             {
               "title": "2B — Ridurre i candidati visitati",
               "level": 4,
-              "start": 237,
-              "end": 252,
+              "start": 241,
+              "end": 256,
               "summary": "engine/vocabolario."
             },
             {
               "title": "2C — Cache adattiva per stato e schemi dinamici",
               "level": 4,
-              "start": 253,
-              "end": 263,
+              "start": 257,
+              "end": 267,
               "summary": "quando tracker e frontiera non contengono marker parziali."
             },
             {
               "title": "2D — Parallelismo e tecniche più invasive, solo se ancora necessarie",
               "level": 4,
-              "start": 264,
-              "end": 273,
+              "start": 268,
+              "end": 277,
               "summary": "token appena committato: le dipendenze lo permettono, ma serve un protocollo"
             },
             {
               "title": "Punto 3 — Sincronizzazione efficiente dei piccoli suffissi",
               "level": 2,
-              "start": 274,
-              "end": 357,
+              "start": 278,
+              "end": 361,
               "summary": "Questo punto resta deliberatamente dopo la telemetria e il primo intervento"
             },
             {
               "title": "Requisito esplicito per sessioni live e MTP",
               "level": 3,
-              "start": 281,
-              "end": 295,
+              "start": 285,
+              "end": 299,
               "summary": "Per preparare il percorso MTP, un prefill live di **2 token o più** deve essere"
             },
             {
               "title": "Audit storico completato prima del codice",
               "level": 3,
-              "start": 296,
-              "end": 307,
+              "start": 300,
+              "end": 311,
               "summary": "il fast-forward DSML (`git log`, `git blame`, diff e test associati)."
             },
             {
               "title": "Matrice di crossover da misurare",
               "level": 3,
-              "start": 308,
-              "end": 315,
+              "start": 312,
+              "end": 319,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Misure mirate del crossover live a contesto 8k",
               "level": 3,
-              "start": 316,
-              "end": 335,
+              "start": 320,
+              "end": 339,
               "summary": "La prima variante, che selezionava il percorso in base al solo `suffix_len`, ha"
             },
             {
               "title": "Gate finali eseguiti",
               "level": 3,
-              "start": 336,
-              "end": 357,
+              "start": 340,
+              "end": 361,
               "summary": "normale roundoff del probe."
             },
             {
               "title": "Ledger degli esperimenti e dei tentativi",
               "level": 2,
-              "start": 358,
-              "end": 388,
+              "start": 362,
+              "end": 392,
               "summary": "Stati ammessi:"
             },
             {
               "title": "Registro cronologico",
               "level": 2,
-              "start": 389,
-              "end": 462,
+              "start": 393,
+              "end": 466,
               "summary": "27.08 tok/s a 16k."
             },
             {
               "title": "2026-08-12 — Apertura",
               "level": 3,
-              "start": 391,
-              "end": 403,
+              "start": 395,
+              "end": 407,
               "summary": "27.08 tok/s a 16k."
             },
             {
               "title": "2026-08-12 — Implementazione e chiusura del ciclo",
               "level": 3,
-              "start": 404,
-              "end": 424,
+              "start": 408,
+              "end": 428,
               "summary": "DSML controllato è passato da circa 12.47 a circa 22.3 tok/s."
             },
             {
               "title": "2026-08-27 — Qwen3.8, `SEARCH` statico e storia live",
               "level": 3,
-              "start": 425,
-              "end": 439,
+              "start": 429,
+              "end": 443,
               "summary": "target-only/MTP con phase profiling e KV SSD."
             },
             {
               "title": "2026-08-28 — Matrice sampling, thinking e MTP",
               "level": 3,
-              "start": 440,
-              "end": 462,
+              "start": 444,
+              "end": 466,
               "summary": "temperatura zero e non coprivano il prodotto cartesiano richiesto."
             },
             {
               "title": "Prossima azione",
               "level": 2,
-              "start": 463,
-              "end": 470,
+              "start": 467,
+              "end": 474,
               "summary": "Il ciclo corrente è chiuso."
             }
           ]

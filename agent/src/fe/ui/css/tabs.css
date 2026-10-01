@@ -1,0 +1,50 @@
+/* ========================================================================= */
+/* Sub-Tabs Bar & Views Styling                                              */
+/* ========================================================================= */
+
+.sub-tabs-bar {
+    background: transparent !important;
+    min-height: 42px;
+}
+
+.sub-tabs-bar .q-tab {
+    min-height: 38px;
+    padding: 0 16px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-radius: 6px 6px 0 0;
+}
+
+.sub-tabs-bar .q-tab--active {
+    color: #f4f4f5 !important;
+    border-bottom: 2px solid #38bdf8;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.sub-tabs-bar .q-tab:hover {
+    color: #e4e4e7 !important;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+@media (max-width: 900px) {
+    .sub-tabs-bar {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 520px) {
+    .sub-tabs-bar {
+        width: 100%;
+    }
+    .sub-tabs-bar .q-tab {
+        min-width: 0;
+        flex: 1;
+        padding: 0 4px;
+        font-size: 11px;
+    }
+    .sub-tabs-bar .q-tab .q-icon {
+        font-size: 17px;
+    }
+}

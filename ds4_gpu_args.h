@@ -1,5 +1,5 @@
 /* ds4_gpu_args.h — shared CLI argument parser for --gpu-vram and
- * --gpu-devices flags. Used by ds4_cli, ds4_server, ds4_agent, and
+ * --gpu-devices flags. Used by ds4_cli, ds4_server, and
  * ds4_bench. See mgpu-cli-wiring task (wave 2) for design.
  *
  * The parser does not link CUDA headers directly. On CUDA builds the

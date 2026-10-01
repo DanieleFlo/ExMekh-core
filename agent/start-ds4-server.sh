@@ -16,7 +16,7 @@ exec ./ds4-server \
     --cuda \
     -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
     --mtp \
-    --ctx 22593 \
+    --ctx 28000 \
     --host 0.0.0.0 \
     --port "$SERVER_PORT" \
     "$@"

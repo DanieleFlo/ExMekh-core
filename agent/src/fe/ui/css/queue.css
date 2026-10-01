@@ -1,0 +1,54 @@
+/* ========================================================================= */
+/* Message Queue Component Styles                                            */
+/* ========================================================================= */
+
+.qs-queue-box {
+    box-shadow: 0 -8px 24px -4px rgba(0, 0, 0, 0.45), 0 -2px 6px -1px rgba(0, 0, 0, 0.3) !important;
+}
+
+.qs-queue-item {
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.qs-queue-item.qs-dragging {
+    opacity: 0.4;
+    background: rgba(39, 39, 42, 0.5) !important;
+    border: 1px dashed #71717a !important;
+}
+
+.qs-queue-item.qs-drop-before {
+    border-top: 2px solid #38bdf8 !important;
+    box-shadow: 0 -2px 8px rgba(56, 189, 248, 0.35);
+}
+
+.qs-queue-item.qs-drop-after {
+    border-bottom: 2px solid #38bdf8 !important;
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.35);
+}
+
+.qs-queue-drag-handle {
+    cursor: grab !important;
+    user-select: none;
+}
+
+.qs-queue-drag-handle:active {
+    cursor: grabbing !important;
+}
+
+.qs-queue-menu-item {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+}
+
+.qs-queue-menu-item .q-icon,
+.qs-queue-menu-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-self: center !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    margin-top: auto !important;
+    margin-bottom: auto !important;
+}

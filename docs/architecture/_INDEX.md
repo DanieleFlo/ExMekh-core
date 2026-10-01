@@ -23,9 +23,9 @@ DS4 recognizes only the audited Unsloth pair at repository revision
 
 - righe 3–15: **Pinned artifacts** — DS4 recognizes only the audited Unsloth pair at repository revision
 - righe 16–44: **Architecture and GGUF contract** — The runtime architecture is the existing `qwen35` implementation: 64 target
-- righe 45–73: **Frontend behavior** — Both `ds4` and `ds4-server` recognize the stable model ID
-- righe 74–100: **Test and oracle isolation** — `make test-qwen38` validates the pinned metadata snapshots, embedded and
-- righe 101–111: **CUDA runtime status** — The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,
+- righe 45–67: **Frontend behavior** — Both `ds4` and `ds4-server` recognize the stable model ID
+- righe 68–93: **Test and oracle isolation** — `make test-qwen38` validates the pinned metadata snapshots, embedded and
+- righe 94–104: **CUDA runtime status** — The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,
 
 ## [Qwen3.6-27B Q4_K_S — Architettura completa, memoria ricorrente e quantizzazione](qwen_architecture.md)
 

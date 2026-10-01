@@ -410,7 +410,11 @@ class SamplingMatrixFixtureTests(unittest.TestCase):
         self.assertNotIn("seed", optional)
         self.assertEqual(
             optional["agentic"],
-            {"allowed_tools": ["matrix_probe"], "allowed_skills": []},
+            {
+                "agent_context_id": "sampling-matrix-test",
+                "allowed_tools": ["matrix_probe"],
+                "allowed_skills": [],
+            },
         )
         self.assertNotIn("tool_choice", optional)
         self.assertEqual(required["tool_choice"], "required")
