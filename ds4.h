@@ -310,6 +310,9 @@ uint64_t ds4_engine_hidden_f32_values(ds4_engine *e);
 int ds4_engine_embd_dim(ds4_engine *e);
 uint64_t ds4_engine_model_bytes(ds4_engine *e);
 bool ds4_engine_has_vision(ds4_engine *e);
+/* Serial with session work on this engine. Qwen27 temporarily stages each
+ * live session's full payload, releases its graph, encodes to host embeddings,
+ * unloads the vision GPU map and restores the text graphs before returning. */
 int ds4_engine_vision_encode_file(ds4_engine *e,
                                   const char *path,
                                   ds4_vision_embedding *out,

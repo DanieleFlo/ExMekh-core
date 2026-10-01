@@ -1154,6 +1154,26 @@ mxfp4-dot-test: tests/test_mxfp4_dot.c
 	$(CC) -O2 -Wall -Wextra -std=c99 -o tests/test_mxfp4_dot tests/test_mxfp4_dot.c -lm
 	./tests/test_mxfp4_dot
 
+tests/test_qwen35_mrope.o: tests/test_qwen35_mrope.c ds4_gpu.h
+	$(CC) $(CFLAGS) -I. -c -o $@ $<
+
+tests/test_qwen35_mrope: tests/test_qwen35_mrope.o $(CORE_OBJS)
+	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
+
+.PHONY: test-qwen35-mrope
+test-qwen35-mrope: tests/test_qwen35_mrope
+	./tests/test_qwen35_mrope
+
+tests/test_server_agentic_payload.o: tests/test_server_agentic_payload.c ds4_server.c ds4.h ds4_env.h
+	$(CC) $(CFLAGS) -Wno-unused-function -I. -c -o $@ $<
+
+tests/test_server_agentic_payload: tests/test_server_agentic_payload.o ds4_help.o ds4_gpu_args.o ds4_kvstore.o rax.o $(CORE_OBJS)
+ifeq ($(UNAME_S),Darwin)
+	$(CC) $(CFLAGS) -o $@ $^ $(METAL_LDLIBS)
+else
+	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
+endif
+
 tests/test_server_resident_frontier.o: tests/test_server_resident_frontier.c ds4_server.c ds4.h ds4_env.h
 	$(CC) $(CFLAGS) -Wno-unused-function -I. -c -o $@ $<
 
@@ -1185,7 +1205,7 @@ ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o tests/test_session_state.o \
 tests/test_session_state_gpu.o: ds4_tool_text.h
 
 clean:
-	rm -f tests/test_qwen_mtp_callback tests/test_server_resident_frontier tests/test_agentic_checkpoint tests/qwen_numerics_probe tests/test_mmq_parity
+	rm -f tests/test_qwen35_mrope tests/test_server_agentic_payload tests/test_qwen_mtp_callback tests/test_server_resident_frontier tests/test_agentic_checkpoint tests/qwen_numerics_probe tests/test_mmq_parity
 	rm -f tests/test_qwen4_ngrams
 	rm -f tests/test_qwen4_ngram_state
 	rm -f tests/test_web_recovery

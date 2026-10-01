@@ -4131,6 +4131,24 @@ extern "C" int ds4_gpu_set_aux_model_map_range(
     return 1;
 }
 
+extern "C" int ds4_gpu_release_aux_model_map(const void *model_map) {
+    if (!cuda_ok(cudaDeviceSynchronize(), "release auxiliary model")) return 0;
+    for (size_t i = g_model_ranges.size(); i-- > 0;) {
+        const cuda_model_range &r = g_model_ranges[i];
+        if (r.host_base != model_map) continue;
+        if (r.host_registered || r.arena_allocated) return 0;
+        if (!r.borrowed) {
+            if (!cuda_ok(cudaFree(r.device_ptr), "free auxiliary model")) return 0;
+            g_model_range_bytes -= r.bytes;
+        }
+        g_model_ranges.erase(g_model_ranges.begin() + i);
+    }
+    g_model_range_by_offset.clear();
+    for (size_t i = 0; i < g_model_ranges.size(); i++)
+        g_model_range_by_offset[g_model_ranges[i].offset] = i;
+    return 1;
+}
+
 /* Register the mmap'd host model pointer for selective-cache lookups WITHOUT
  * triggering any device-side copy. Used by multi-GPU placement scaffolding's
  * multi-tier path so DS4_CUDA_COPY_MODEL cannot reintroduce a full-model
@@ -37400,10 +37418,13 @@ static int qwen35_attention_split_k_launch(
     return cuda_ok(cudaGetLastError(), "qwen35 split-k attention merge");
 }
 
+/* 32 rotary frequency pairs interleave T/H/W, giving sections [11,11,10].
+ * Cache addresses still use token offsets, independently of rotary positions. */
+template <bool multimodal = false>
 __global__ static void qwen35_prepare_q_rows_kernel(
         float *q_gate,
         const float *norm,
-        uint32_t position_start) {
+        uint32_t position_start, const uint32_t *pos3 = NULL) {
     const uint32_t h = blockIdx.x;
     const uint32_t t = blockIdx.y;
     const uint32_t d = threadIdx.x;
@@ -37414,7 +37435,9 @@ __global__ static void qwen35_prepare_q_rows_kernel(
     q[d] *= rsqrtf(reduce[0] / 256.0f + 1.0e-6f) * norm[d];
     __syncthreads();
     if (d < 32u) {
-        const uint32_t position = position_start + t;
+        const uint32_t position = multimodal ?
+            pos3[t * 3u + d % 3u] :
+            position_start + t;
         const float theta = (float)position *
             powf(10000000.0f, -(2.0f * (float)d) / 64.0f);
         const float c = cosf(theta), s = sinf(theta);
@@ -37424,13 +37447,14 @@ __global__ static void qwen35_prepare_q_rows_kernel(
     }
 }
 
+template <bool multimodal = false>
 __global__ static void qwen35_prepare_kv_rows_kernel(
         float *k,
         const float *v,
         const float *norm,
         float *key_cache,
         float *value_cache,
-        uint32_t position_start) {
+        uint32_t position_start, const uint32_t *pos3 = NULL) {
     const uint32_t h = blockIdx.x;
     const uint32_t t = blockIdx.y;
     const uint32_t d = threadIdx.x;
@@ -37443,7 +37467,9 @@ __global__ static void qwen35_prepare_kv_rows_kernel(
     __syncthreads();
     const uint32_t position = position_start + t;
     if (d < 32u) {
-        const float theta = (float)position *
+        const uint32_t rope_position = multimodal ?
+            pos3[t * 3u + d % 3u] : position;
+        const float theta = (float)rope_position *
             powf(10000000.0f, -(2.0f * (float)d) / 64.0f);
         const float c = cosf(theta), s = sinf(theta);
         const float x0 = kh[d], x1 = kh[d + 32u];
@@ -37599,12 +37625,14 @@ static int qwen35_attention_gemm_rows_launch(
     return cuda_ok(cudaGetLastError(), "qwen35 attention gate rows");
 }
 
-extern "C" int ds4_gpu_qwen35_store_kv_rows_tensor(
+static int ds4_gpu_qwen35_store_kv_rows_tensor_impl(
         ds4_gpu_tensor *k, ds4_gpu_tensor *v,
         ds4_gpu_tensor *key_cache, ds4_gpu_tensor *value_cache,
         const void *model_map, uint64_t model_size,
         uint64_t k_norm_offset, uint32_t position_start,
-        uint32_t n_tokens, uint32_t context_capacity) {
+        uint32_t n_tokens, uint32_t context_capacity, const ds4_gpu_tensor *positions) {
+    if (positions && positions->bytes < (uint64_t)n_tokens * 3u * sizeof(uint32_t)) return 0;
+    const uint32_t *pos3 = positions ? (const uint32_t *)positions->ptr : NULL;
     const uint64_t cache_bytes =
         (uint64_t)context_capacity * 4u * 256u * sizeof(float);
     if (!k || !v || !key_cache || !value_cache || !model_map ||
@@ -37621,21 +37649,53 @@ extern "C" int ds4_gpu_qwen35_store_kv_rows_tensor(
         cuda_current_tier(), "qwen35_k_norm");
     if (!kn) return 0;
     const dim3 kvgrid(4u, n_tokens, 1u);
-    qwen35_prepare_kv_rows_kernel<<<kvgrid, 256>>>(
-        (float *)k->ptr, (const float *)v->ptr, kn,
-        (float *)key_cache->ptr, (float *)value_cache->ptr,
-        position_start);
+    if (pos3) {
+        qwen35_prepare_kv_rows_kernel<true><<<kvgrid, 256>>>(
+            (float *)k->ptr, (const float *)v->ptr, kn,
+            (float *)key_cache->ptr, (float *)value_cache->ptr,
+            position_start, pos3);
+    } else {
+        qwen35_prepare_kv_rows_kernel<<<kvgrid, 256>>>(
+            (float *)k->ptr, (const float *)v->ptr, kn,
+            (float *)key_cache->ptr, (float *)value_cache->ptr,
+            position_start);
+    }
     return cuda_ok(cudaGetLastError(), "qwen35 cache-only prepare kv rows");
 }
 
-extern "C" int ds4_gpu_qwen35_full_attention_rows_tensor(
+extern "C" int ds4_gpu_qwen35_store_kv_rows_tensor(
+        ds4_gpu_tensor *k, ds4_gpu_tensor *v,
+        ds4_gpu_tensor *key_cache, ds4_gpu_tensor *value_cache,
+        const void *model_map, uint64_t model_size,
+        uint64_t k_norm_offset, uint32_t position_start,
+        uint32_t n_tokens, uint32_t context_capacity) {
+    return ds4_gpu_qwen35_store_kv_rows_tensor_impl(k, v, key_cache, value_cache,
+        model_map, model_size, k_norm_offset, position_start, n_tokens,
+        context_capacity, NULL);
+}
+
+extern "C" int ds4_gpu_qwen35_store_kv_mrope_rows_tensor(
+        ds4_gpu_tensor *k, ds4_gpu_tensor *v,
+        ds4_gpu_tensor *key_cache, ds4_gpu_tensor *value_cache,
+        const void *model_map, uint64_t model_size,
+        uint64_t k_norm_offset, uint32_t position_start,
+        uint32_t n_tokens, uint32_t context_capacity, const ds4_gpu_tensor *positions) {
+    if (!positions) return 0;
+    return ds4_gpu_qwen35_store_kv_rows_tensor_impl(k, v, key_cache, value_cache,
+        model_map, model_size, k_norm_offset, position_start, n_tokens,
+        context_capacity, positions);
+}
+
+static int ds4_gpu_qwen35_full_attention_rows_tensor_impl(
         ds4_gpu_tensor *out_heads, ds4_gpu_tensor *q_gate,
         ds4_gpu_tensor *k, ds4_gpu_tensor *v,
         ds4_gpu_tensor *key_cache, ds4_gpu_tensor *value_cache,
         const void *model_map, uint64_t model_size,
         uint64_t q_norm_offset, uint64_t k_norm_offset,
         uint32_t position_start, uint32_t n_tokens,
-        uint32_t context_capacity) {
+        uint32_t context_capacity, const ds4_gpu_tensor *positions) {
+    if (positions && positions->bytes < (uint64_t)n_tokens * 3u * sizeof(uint32_t)) return 0;
+    const uint32_t *pos3 = positions ? (const uint32_t *)positions->ptr : NULL;
     const uint64_t cache_bytes =
         (uint64_t)context_capacity * 4u * 256u * sizeof(float);
     if (!out_heads || !q_gate || !k || !v || !key_cache || !value_cache ||
@@ -37658,12 +37718,23 @@ extern "C" int ds4_gpu_qwen35_full_attention_rows_tensor(
     if (!qn || !kn) return 0;
     const dim3 qgrid(24u, n_tokens, 1u);
     const dim3 kvgrid(4u, n_tokens, 1u);
-    qwen35_prepare_q_rows_kernel<<<qgrid, 256>>>(
-        (float *)q_gate->ptr, qn, position_start);
+    if (pos3) {
+        qwen35_prepare_q_rows_kernel<true><<<qgrid, 256>>>(
+            (float *)q_gate->ptr, qn, position_start, pos3);
+    } else {
+        qwen35_prepare_q_rows_kernel<<<qgrid, 256>>>(
+            (float *)q_gate->ptr, qn, position_start);
+    }
     if (!cuda_ok(cudaGetLastError(), "qwen35 prepare q rows")) return 0;
-    qwen35_prepare_kv_rows_kernel<<<kvgrid, 256>>>(
-        (float *)k->ptr, (const float *)v->ptr, kn,
-        (float *)key_cache->ptr, (float *)value_cache->ptr, position_start);
+    if (pos3) {
+        qwen35_prepare_kv_rows_kernel<true><<<kvgrid, 256>>>(
+            (float *)k->ptr, (const float *)v->ptr, kn,
+            (float *)key_cache->ptr, (float *)value_cache->ptr, position_start, pos3);
+    } else {
+        qwen35_prepare_kv_rows_kernel<<<kvgrid, 256>>>(
+            (float *)k->ptr, (const float *)v->ptr, kn,
+            (float *)key_cache->ptr, (float *)value_cache->ptr, position_start);
+    }
     if (!cuda_ok(cudaGetLastError(), "qwen35 prepare kv rows")) return 0;
     if (n_tokens >= 512u &&
         !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_FLASH_ATTN", 0)) {
@@ -37706,6 +37777,33 @@ extern "C" int ds4_gpu_qwen35_full_attention_rows_tensor(
     return cuda_ok(cudaGetLastError(), "qwen35 full attention rows");
 }
 
+extern "C" int ds4_gpu_qwen35_full_attention_rows_tensor(
+        ds4_gpu_tensor *out_heads, ds4_gpu_tensor *q_gate,
+        ds4_gpu_tensor *k, ds4_gpu_tensor *v,
+        ds4_gpu_tensor *key_cache, ds4_gpu_tensor *value_cache,
+        const void *model_map, uint64_t model_size,
+        uint64_t q_norm_offset, uint64_t k_norm_offset,
+        uint32_t position_start, uint32_t n_tokens,
+        uint32_t context_capacity) {
+    return ds4_gpu_qwen35_full_attention_rows_tensor_impl(out_heads, q_gate, k, v,
+        key_cache, value_cache, model_map, model_size, q_norm_offset, k_norm_offset,
+        position_start, n_tokens, context_capacity, NULL);
+}
+
+extern "C" int ds4_gpu_qwen35_full_attention_mrope_rows_tensor(
+        ds4_gpu_tensor *out_heads, ds4_gpu_tensor *q_gate,
+        ds4_gpu_tensor *k, ds4_gpu_tensor *v,
+        ds4_gpu_tensor *key_cache, ds4_gpu_tensor *value_cache,
+        const void *model_map, uint64_t model_size,
+        uint64_t q_norm_offset, uint64_t k_norm_offset,
+        uint32_t position_start, uint32_t n_tokens,
+        uint32_t context_capacity, const ds4_gpu_tensor *positions) {
+    if (!positions) return 0;
+    return ds4_gpu_qwen35_full_attention_rows_tensor_impl(out_heads, q_gate, k, v,
+        key_cache, value_cache, model_map, model_size, q_norm_offset, k_norm_offset,
+        position_start, n_tokens, context_capacity, positions);
+}
+
 extern "C" int ds4_gpu_qwen35_full_attention_tensor(
         ds4_gpu_tensor *out_heads, ds4_gpu_tensor *q_gate,
         ds4_gpu_tensor *k, ds4_gpu_tensor *v,
@@ -37718,6 +37816,7 @@ extern "C" int ds4_gpu_qwen35_full_attention_tensor(
         model_map, model_size, q_norm_offset, k_norm_offset,
         position, 1u, context_capacity);
 }
+
 
 /* llama.cpp-style state mapping for decode: four warps own four output
  * columns and each lane keeps four rows of its column in registers.  This

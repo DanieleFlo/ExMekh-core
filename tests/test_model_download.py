@@ -14,7 +14,10 @@ PART1, PART2 = Q4 + ".part1", Q4 + ".part2"
 VISION = "DeepSeek-V4.1-Flash-Vision.gguf"
 QWEN_Q2 = "Qwen3.8-Flash-Next-Q2.gguf"
 QWEN_Q4 = "Qwen3.8-Flash-Next-Q4.gguf"
+QWEN27_VISION_REMOTE = "mmproj-F16.gguf"
+QWEN27_VISION = "mmproj-Qwen3.8-27B-F16.gguf"
 ARTIFACTS = {
+    QWEN27_VISION_REMOTE: (927607488, "cbb841a9ee0636b2ec172f5bb8df2ea8dfeb01e90fe7c6126581d662a0b4e43e"),
     QWEN_Q2: (147207127040, "b1b93fa69aca5f187b0fb813aca8f3ec1beb5cf8cf0bd38cf041b93e0b6ccac9"),
     QWEN_Q4: (177280286720, "680944460a8cbe93ba8b6d7b6107213ffb7e22320bd913000e563ca0a0f25a8a"),
     Q2: (365713686528, "1ce6a8f8806205c13330d7ca287bd198331dc5ca35ccc5d8a9a92a188a6f6f42"),
@@ -56,8 +59,12 @@ from pathlib import Path
 import sys
 args = sys.argv[1:]
 assert args[0] == 'download'
-assert args[1] == ('antirez/qwen3.8-flash-next-gguf' if args[2].startswith('Qwen')
-                   else 'antirez/deepseek-v4.1-flash-gguf')
+if args[2] == 'mmproj-F16.gguf':
+    assert args[1] == 'unsloth/Qwen3.8-27B-GGUF'
+    assert args[args.index('--revision') + 1] == '4ca720788d1e01f1bff70c033e0d0028fd02e502'
+else:
+    assert args[1] == ('antirez/qwen3.8-flash-next-gguf' if args[2].startswith('Qwen')
+                       else 'antirez/deepseek-v4.1-flash-gguf')
 if os.environ.get('FAIL_DOWNLOAD'):
     sys.exit(7)
 out = Path(args[args.index('--local-dir') + 1])
@@ -74,6 +81,20 @@ out.mkdir(parents=True, exist_ok=True)
                                 text=True, capture_output=True, timeout=30)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
         return result.stdout + result.stderr
+
+    def test_qwen27_vision_name_hash_and_model_selection(self):
+        selected = self.root / "ds4flash.gguf"
+        selected.write_bytes(b"keep the selected language model")
+        self.assertIn("Verifying SHA-256", self.run_download("qwen38-27b-vision"))
+        encoder = self.out / QWEN27_VISION
+        self.assertEqual(encoder.read_bytes(), payload(QWEN27_VISION_REMOTE))
+        self.assertFalse((self.out / QWEN27_VISION_REMOTE).exists())
+        self.assertEqual(selected.read_bytes(), b"keep the selected language model")
+        self.assertIn("Already downloaded", self.run_download("qwen38-27b-vision"))
+        # A same-sized corrupt file must not be accepted as a completed download.
+        encoder.write_bytes(bytes(len(payload(QWEN27_VISION_REMOTE))))
+        self.assertIn("Checksum mismatch", self.run_download("qwen38-27b-vision", ok=False))
+        self.assertEqual(selected.read_bytes(), b"keep the selected language model")
 
     def test_quants_vision_and_existing(self):
         self.assertIn("Verifying SHA-256", self.run_download("ds41f-q2"))

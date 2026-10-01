@@ -15389,6 +15389,7 @@ static void live_tool_state_copy_locked(live_tool_state *dst,
     if (!src) return;
     dst->valid = src->valid;
     dst->live_tokens = src->live_tokens;
+    dst->images = src->images;
     if (src->visible_text) {
         dst->visible_text = xstrdup(src->visible_text);
         dst->visible_len = src->visible_len;
@@ -15561,6 +15562,8 @@ static bool resident_kv_frontier_capture(ds4_session *session,
                                          char *err, size_t errlen) {
     if (!session || !frontier) return false;
     frontier->valid = false;
+    request_local = request_local && !ds4_session_has_vision_state(session) &&
+                    ds4_session_skill_state_bytes(session) != 0;
     frontier->full_payload = !request_local;
     if (request_local) {
         if (ds4_session_capture_device_frontier(session,
@@ -17994,6 +17997,21 @@ static int server_session_sync_multimodal(server *s, server_slot *slot,
            DS4_SESSION_SYNC_INTERRUPTED : 0;
 }
 
+/* A forced suffix appends to the authoritative KV frontier. Re-entering the
+ * text-only sync API would discard image identities and rebuild placeholders
+ * without their embeddings. Decode the new rows under the ordinary executor
+ * lock instead; this also works for tool continuations with no replay pixels. */
+static bool append_vision_suffix(server *s, server_slot *slot,
+                                 const int *tokens, int count,
+                                 char *err, size_t errlen) {
+    if (!server_prefill_enter(s, slot)) return false;
+    bool ok = true;
+    for (int i = 0; ok && i < count; i++)
+        ok = ds4_session_eval(slot->session, tokens[i], err, errlen) == 0;
+    server_prefill_leave(s);
+    return ok;
+}
+
 static bool append_rendered_suffix_to_live_session(server *s, server_slot *slot,
                                                    const char *suffix,
                                                    int *tokens_appended,
@@ -18009,7 +18027,9 @@ static bool append_rendered_suffix_to_live_session(server *s, server_slot *slot,
     ds4_tokens target = {0};
     build_prompt_from_exact_prefix_and_text_suffix(s->engine, live, suffix, &target);
     const int before = ds4_session_pos(slot->session);
-    bool ok = server_session_sync(s, slot, &target, err, errlen) == 0;
+    bool ok = ds4_session_has_vision_state(slot->session) ?
+        append_vision_suffix(s, slot, target.v + live->len, target.len - live->len, err, errlen) :
+        server_session_sync(s, slot, &target, err, errlen) == 0;
     if (ok && tokens_appended) {
         int delta = ds4_session_pos(slot->session) - before;
         *tokens_appended = delta > 0 ? delta : 0;
@@ -18030,7 +18050,9 @@ static bool append_exact_tokens_to_live_session(server *s, server_slot *slot,
     ds4_tokens target = {0};
     ds4_tokens_copy(&target, live);
     for (int i = 0; i < count; i++) ds4_tokens_push(&target, tokens[i]);
-    bool ok = server_session_sync(s, slot, &target, err, errlen) == 0;
+    bool ok = ds4_session_has_vision_state(slot->session) ?
+        append_vision_suffix(s, slot, target.v + live->len, target.len - live->len, err, errlen) :
+        server_session_sync(s, slot, &target, err, errlen) == 0;
     ds4_tokens_free(&target);
     return ok;
 }
@@ -18911,6 +18933,23 @@ static char *build_toolless_thinking_visible_text(const request *r,
     buf_puts(&visible,
              r->model_syntax == SERVER_MODEL_SYNTAX_QWEN ?
              "<|im_end|>\n" : "<｜end▁of▁sentence｜>");
+    return buf_take(&visible);
+}
+
+/* Non-thinking Qwen27 generation has an empty think block which clients
+ * omit from historical assistant turns. Bind the visible image transcript to
+ * the sampled KV using the existing fingerprint-aware live suffix mechanism.
+ * Leave the end marker in the next suffix: decode stopped before evaluating it. */
+static char *build_qwen_vision_visible_text(const request *r, const char *content) {
+    if (!r || !r->prompt_text || !r->image_count || r->kind != REQ_CHAT ||
+        r->api != API_OPENAI || r->model_syntax != SERVER_MODEL_SYNTAX_QWEN ||
+        ds4_think_mode_enabled(r->think_mode)) return NULL;
+    const char *empty_think = "<think>\n\n</think>\n\n";
+    size_t len = strlen(r->prompt_text), tail = strlen(empty_think);
+    if (len < tail || memcmp(r->prompt_text + len - tail, empty_think, tail)) return NULL;
+    buf visible = {0};
+    buf_append(&visible, r->prompt_text, len - tail);
+    append_qwen_trimmed_content(&visible, content);
     return buf_take(&visible);
 }
 
@@ -21864,6 +21903,13 @@ decode_again:
                        "ds4-server: chat/completions post-response thinking checkpoint canonicalization failed ctx=%s",
                        ctx_span);
         }
+        free(visible);
+    }
+
+    if (response_ok && !parsed_calls.len && !strcmp(final_finish, "stop")) {
+        char *visible = build_qwen_vision_visible_text(&j->req,
+            parsed_content ? parsed_content : "");
+        if (visible) thinking_live_remember(s, slot, visible, &j->req);
         free(visible);
     }
 

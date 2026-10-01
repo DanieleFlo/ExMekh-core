@@ -152,8 +152,13 @@ suspended frontiers so a skill return resumes its caller, rather than replaying
 or inheriting the child conversation. See [frontend setup](docs/agentic/frontend.md).
 
 Image messages and image tool outputs use the upstream multimodal server
-contracts on supported vision models. Qwen3.8-27B remains text-only; selecting a
-vision encoder cannot add a vision tower to its architecture.
+contracts on supported vision models. Qwen3.8-27B supports images on CUDA
+with its matching 5120-wide encoder.
+Download it with `./download_model.sh qwen38-27b-vision`; both local server
+launchers select it automatically when present. During uncached image encoding,
+full text-session checkpoints are written to SSD, their GPU graphs are released,
+and the graphs are restored after unloading the vision weights. See the
+[vision verification report](docs/architecture/qwen27-vision-checkpoint-20261001.md).
 
 ### Models, images, and speculation
 
@@ -170,7 +175,7 @@ local SSD. See the [model guide](docs/upstream/MODELS.md#deepseek-v41-flash) for
 and setup.
 
 With the matching encoder passed as `--vision FILE`, use `/read image.png`
-in the CLI or `view_image` in the native agent.
+in the CLI or send image content through the HTTP APIs.
 
 Qwen3.8's smaller Q2 release has **41.73 GiB** of main/MTP weights,
 with imatrix IQ2_XXS gate/up experts and padded Q2_K down projections.

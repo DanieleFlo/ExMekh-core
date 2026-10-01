@@ -8,6 +8,15 @@ Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture
 ritirati non sono verifiche del frontend corrente. Vedere
 [la guida FE / QS](../agentic/frontend.md).
 
+## Vision dopo il merge upstream
+
+Il [report del 1 ottobre 2026](../architecture/qwen27-vision-checkpoint-20261001.md)
+registra il nuovo supporto immagini CUDA del 27B: encoder antirez condiviso
+con proiettore 5120, mRoPE [11,11,10], MTP e payload multimodali completi.
+Il contesto viene salvato su SSD e il grafo rilasciato prima del ViT; i pesi
+vision vengono rilasciati prima del ripristino. Non è richiesto thinking
+fra immagini dello stesso turno. I risultati testuali storici restano datati.
+
 ## Obiettivo e criterio di completamento
 
 Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target

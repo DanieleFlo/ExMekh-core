@@ -23,6 +23,10 @@ Il [report di merge](docs/architecture/ds4-upstream-merge-20261001.md) contiene
 provenienza, matrice PASS/FAIL/NOT_VERIFIED, baseline e limiti hardware.
 Il [riepilogo JSON](docs/performance/ds4-upstream-merge-20261001.json) conserva
 misure, hash e gate in forma verificabile.
+Il [report vision Qwen27](docs/architecture/qwen27-vision-checkpoint-20261001.md)
+descrive encoder condiviso, mRoPE interleaved e checkpoint completi durante
+l’alternanza vision/testo. Il matching mmproj si scarica con
+`download_model.sh qwen38-27b-vision`; il modello selezionato resta Qwen27.
 Le [guide upstream](docs/upstream/_INDEX.md) sono incluse nella wiki indicizzata.
 
 | Componente importato | Responsabilità |
@@ -601,6 +605,15 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `DS4_QS_MIN_ROOT_RETURNS=2` estende la prova a due cicli per client.
   `DS4_QS_REQUIRE_COMPLETION=1` abilita anche
   il gate separato che richiede una risposta finale spontanea.
+- `tests/test_qwen35_mrope.c` — oracle float64 per mRoPE [11,11,10],
+  identità del percorso testo e KV MTP; target CUDA `test-qwen35-mrope`.
+- `tests/test_server_agentic_payload.c` — checkpoint completi skill/subagent
+  per Qwen27 e Flash Next: logits/token bit-exact, sessione ricreata, file
+  corrotti e nesting; opzionalmente immagini e contesto testuale popolato.
+- `tests/qs_vision_live.py` — gate opt-in attraverso il client QS installato
+  per immagini e continuazioni sulle API Chat Completions e Responses.
+- `tests/test_qwen35_vision_api.py` — gate live opt-in CUDA per immagini singole
+  e multiple, thinking, JSON, tool, riuso KV, SSE e API Anthropic.
 - `tests/test_qwen_mtp_callback.c` — regressione CUDA/MTP oltre 2K token:
   il callback può declinare una riga draft o bonus del verifier V(2); verifica
   ripristino bit-exact dell'intero payload e del generatore casuale, senza errore

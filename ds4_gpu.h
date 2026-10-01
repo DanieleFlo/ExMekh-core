@@ -194,6 +194,7 @@ int ds4_gpu_model_range_replaced(const void *model_map, uint64_t offset,
                                  uint64_t bytes);
 int ds4_gpu_set_model_map_range(const void *model_map, uint64_t model_size, uint64_t map_offset, uint64_t map_size, uint64_t max_tensor_bytes);
 /* Add a secondary GGUF mapping without replacing the primary model mapping. */
+int ds4_gpu_release_aux_model_map(const void *model_map);
 int ds4_gpu_set_aux_model_map_range(const void *model_map,
                                     uint64_t model_size,
                                     uint64_t map_offset,
@@ -786,6 +787,23 @@ int ds4_gpu_qwen35_full_attention_rows_tensor(
         uint32_t              n_tokens,
         uint32_t              context_capacity);
 
+/* Interleaved 27B mRoPE rows: positions are [n_tokens,3] (t,h,w). */
+int ds4_gpu_qwen35_full_attention_mrope_rows_tensor(
+        ds4_gpu_tensor       *out_heads,
+        ds4_gpu_tensor       *q_gate,
+        ds4_gpu_tensor       *k,
+        ds4_gpu_tensor       *v,
+        ds4_gpu_tensor       *key_cache,
+        ds4_gpu_tensor       *value_cache,
+        const void           *model_map,
+        uint64_t              model_size,
+        uint64_t              q_norm_offset,
+        uint64_t              k_norm_offset,
+        uint32_t              position_start,
+        uint32_t              n_tokens,
+        uint32_t              context_capacity,
+        const ds4_gpu_tensor *positions);
+
 /* Cache-only Qwen MTP catch-up: apply K norm/RoPE and overwrite the
  * position-addressed K/V rows without computing Q or attention outputs. */
 int ds4_gpu_qwen35_store_kv_rows_tensor(
@@ -799,6 +817,20 @@ int ds4_gpu_qwen35_store_kv_rows_tensor(
         uint32_t              position_start,
         uint32_t              n_tokens,
         uint32_t              context_capacity);
+
+/* Interleaved 27B mRoPE rows: positions are [n_tokens,3] (t,h,w). */
+int ds4_gpu_qwen35_store_kv_mrope_rows_tensor(
+        ds4_gpu_tensor       *k,
+        ds4_gpu_tensor       *v,
+        ds4_gpu_tensor       *key_cache,
+        ds4_gpu_tensor       *value_cache,
+        const void           *model_map,
+        uint64_t              model_size,
+        uint64_t              k_norm_offset,
+        uint32_t              position_start,
+        uint32_t              n_tokens,
+        uint32_t              context_capacity,
+        const ds4_gpu_tensor *positions);
 
 int ds4_gpu_qwen35_gated_delta_net_tensor(
         ds4_gpu_tensor       *out_heads,

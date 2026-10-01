@@ -41,6 +41,14 @@ sospese sono associate al processo/sessione: come nel fork precedente, un nuovo
 server pulisce i frame orfani. Il recupero dopo riavvio usa history FE/QS e cache
 KV durevoli; non è introdotta una nuova persistenza di stack privati incompleti.
 
+## Sviluppo vision successivo al merge
+
+Il [report Qwen27 vision/checkpoint](qwen27-vision-checkpoint-20261001.md)
+qualifica il matching encoder del 27B, mRoPE interleaved, parcheggio completo
+delle sessioni su SSD e ripristino di skill/subagent. La matrice qui sotto
+resta la fotografia del commit di merge; le verifiche vision successive
+sono registrate nel report dedicato, senza promuovere i vecchi risultati.
+
 ## Immagini e presentazione del codice
 
 Sono importati integralmente decoder PNG/JPEG, fixture, encoder e percorsi vision

@@ -46,6 +46,8 @@ GLM53_VISION_FILE="GLM-5.3-Flash-Vision-Encoder.gguf"
 QWEN38_Q4_FILE="Qwen3.8-Flash-Next-Q4.gguf"
 QWEN38_Q2_FILE="Qwen3.8-Flash-Next-Q2.gguf"
 QWEN38_VISION_FILE="mmproj-Qwen3.8-Flash-Next-Q8_0.gguf"
+QWEN38_27B_VISION_REMOTE="mmproj-F16.gguf"
+QWEN38_27B_VISION_FILE="mmproj-Qwen3.8-27B-F16.gguf"
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 OUT_DIR=${DS4_GGUF_DIR:-"$ROOT/gguf"}
@@ -84,6 +86,7 @@ Usage:
   ./download_model.sh qwen38-q4-s [--token TOKEN]
   ./download_model.sh qwen38-mtp [--token TOKEN]
   ./download_model.sh qwen38-q4-mtp [--token TOKEN]
+  ./download_model.sh qwen38-27b-vision [--token TOKEN]
   ./download_model.sh glm53-full-q2 [--token TOKEN]
   ./download_model.sh glm53-q2 [--token TOKEN]
   ./download_model.sh glm53-q4 [--token TOKEN]
@@ -192,6 +195,9 @@ Targets:
   qwen38-mtp
        Matching Qwen3.8 27B MTP sidecar, about 1.4 GB. Enable it with --mtp;
        the generation-specific path is selected from the target metadata.
+
+  qwen38-27b-vision
+       Pinned 27B F16 vision encoder, about 928 MB. Keeps the selected text model.
 
   qwen38-q4-mtp
        Downloads both pinned Qwen3.8 artifacts, verifies their SHA-256
@@ -370,6 +376,13 @@ case "$MODEL" in
         FLATTEN_DOWNLOADS=1
         LINK_MODEL=0
         ;;
+    qwen38-27b-vision)
+        REPO=$QWEN38_27B_REPO
+        HF_REVISION=$QWEN38_REVISION
+        MODEL_FILE=$QWEN38_27B_VISION_REMOTE
+        FORCE_HF_DOWNLOAD=1
+        LINK_MODEL=0
+        ;;
     qwen38-q4-mtp)
         REPO=$QWEN38_27B_REPO
         HF_REVISION=$QWEN38_REVISION
@@ -487,6 +500,10 @@ find_hf_command() {
 }
 
 local_download_name() {
+    if [ "$MODEL" = qwen38-27b-vision ] && [ "$1" = "$QWEN38_27B_VISION_REMOTE" ]; then
+        printf '%s\n' "$QWEN38_27B_VISION_FILE"
+        return 0
+    fi
     if [ "${FLATTEN_DOWNLOADS:-0}" -eq 1 ]; then
         basename "$1"
     else
@@ -496,6 +513,10 @@ local_download_name() {
 
 artifact_identity() {
     case "$1" in
+        "$QWEN38_27B_VISION_REMOTE")
+            expected_bytes=927607488
+            expected_sha=cbb841a9ee0636b2ec172f5bb8df2ea8dfeb01e90fe7c6126581d662a0b4e43e
+            ;;
         "$QWEN38_Q2_FILE")
             expected_bytes=147207127040
             expected_sha=b1b93fa69aca5f187b0fb813aca8f3ec1beb5cf8cf0bd38cf041b93e0b6ccac9
@@ -798,4 +819,9 @@ if [ "$MODEL" = qwen38-vision ]; then
     echo
     echo "Qwen3.8 vision encoder downloaded. Pass it with --vision, for example:"
     printf '  ./ds4 --vision "%s/%s"\n' "$OUT_DIR" "$QWEN38_VISION_FILE"
+fi
+
+if [ "$MODEL" = qwen38-27b-vision ]; then
+    echo "Qwen3.8-27B vision encoder downloaded; the language model selection is unchanged."
+    printf '  ./ds4 -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf --vision "%s/%s"\n' "$OUT_DIR" "$QWEN38_27B_VISION_FILE"
 fi

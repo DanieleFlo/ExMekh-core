@@ -10,6 +10,21 @@ The 2026-10-01 [merge audit](ds4-upstream-merge-20261001.md) qualifies this
 `qwen35` path separately from Flash Next/Mini (`qwen4exp`). Public IDs and the
 external MTP sidecar remain unchanged; disk cache payload ABI is now 3.
 
+## Native vision on CUDA
+
+The 27B is a vision-language model; its GGUF text weights need the matching
+`mmproj-Qwen3.8-27B-F16.gguf` (927,607,488 bytes; SHA-256
+`cbb841a9ee0636b2ec172f5bb8df2ea8dfeb01e90fe7c6126581d662a0b4e43e`).
+`download_model.sh qwen38-27b-vision` pins the same Unsloth revision as the
+text/MTP pair and does not change the selected text model. The Flash Next
+encoder has a different projection width and is rejected for the 27B.
+
+The [vision/checkpoint report](qwen27-vision-checkpoint-20261001.md) describes
+interleaved mRoPE, full context parking, image identity and the tests actually
+executed. Text payload bytes retain ABI 3; image-conditioned payloads wrap the
+family body in a versioned `VMCP` envelope. Compact rollback is used only when
+it can preserve the complete state.
+
 ## Pinned artifacts
 
 DS4 recognizes only the audited Unsloth pair at repository revision
