@@ -20,6 +20,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "ds4_env.h"
+
 #include "cuda/mmq/ds4_mmq.h"
 #include "cuda/mmq/ds4_repack.h"
 
@@ -390,9 +392,9 @@ static void cuda_decode_dispatch_env_refresh(void) {
         getenv("DS4_CUDA_EXACT_SCORE_SPLIT_FUSE_INV_ROPE") != NULL;
     g_cuda_moe_decode_graph = getenv("DS4_CUDA_MOE_DECODE_GRAPH") != NULL;
     g_cuda_qwen_q8_act_diag =
-        getenv("DS4_CUDA_QWEN_Q8_ACT_DIAG") != NULL;
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_Q8_ACT_DIAG", 0);
     g_cuda_qwen_q8_0_cpu_scale_diag =
-        getenv("DS4_CUDA_QWEN_Q8_0_CPU_SCALE_DIAG") != NULL;
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_Q8_0_CPU_SCALE_DIAG", 0);
 }
 
 /* WITH_DEVICE(d) { ... } scope macro.
@@ -1469,12 +1471,6 @@ static uint32_t cuda_parse_u32_env_clamped(const char *name, uint32_t fallback,
     return (uint32_t)v;
 }
 
-static int cuda_env_flag_enabled(const char *name, int fallback) {
-    const char *env = getenv(name);
-    if (!env || !env[0]) return fallback;
-    return strcmp(env, "0") != 0;
-}
-
 extern "C" int ds4_gpu_set_decode_fast_attention(int enabled) {
     const int old = g_decode_fast_attention;
     g_decode_fast_attention = enabled != 0;
@@ -1488,9 +1484,9 @@ extern "C" int ds4_gpu_set_decode_score_vec4(int enabled) {
 }
 
 static bool cuda_splitkv_decode_requested(void) {
-    if (cuda_env_flag_enabled("DS4_CUDA_NO_SPLITKV_DECODE", 0)) return false;
+    if (ds4_env_flag_enabled("DS4_CUDA_NO_SPLITKV_DECODE", 0)) return false;
     return g_decode_fast_attention ||
-           cuda_env_flag_enabled("DS4_CUDA_SPLITKV_DECODE", 0);
+           ds4_env_flag_enabled("DS4_CUDA_SPLITKV_DECODE", 0);
 }
 
 static uint64_t cuda_q8_f16_cache_limit_bytes(void) {
@@ -9194,10 +9190,10 @@ static int attention_decode_score_split_launch(
         uint32_t head_dim,
         uint32_t final_threads,
         const cuda_attention_inv_rope_params *inv_rope) {
-    if (cuda_env_flag_enabled("DS4_CUDA_NO_EXACT_SCORE_SPLIT_DECODE", 0)) return 0;
+    if (ds4_env_flag_enabled("DS4_CUDA_NO_EXACT_SCORE_SPLIT_DECODE", 0)) return 0;
     const int explicit_exact =
-        cuda_env_flag_enabled("DS4_CUDA_EXACT_SCORE_SPLIT_DECODE", 0);
-    if (!cuda_env_flag_enabled("DS4_CUDA_EXACT_SCORE_SPLIT_DECODE", 1)) return 0;
+        ds4_env_flag_enabled("DS4_CUDA_EXACT_SCORE_SPLIT_DECODE", 0);
+    if (!ds4_env_flag_enabled("DS4_CUDA_EXACT_SCORE_SPLIT_DECODE", 1)) return 0;
     if (!explicit_exact && cuda_splitkv_decode_requested()) return 0;
     if (g_cuda_decode_score4 || g_cuda_decode_score8) return 0;
     if (head_dim == 0u || n_head == 0u) return 0;
@@ -17080,7 +17076,7 @@ static int attention_decode_splitkv_launch(
     }
     uint32_t n_score = raw_count + visible_comp;
     if (n_score == 0u) return 0;     /* nothing to do; let old path handle it */
-    const int manual_splitkv = cuda_env_flag_enabled("DS4_CUDA_SPLITKV_DECODE", 0);
+    const int manual_splitkv = ds4_env_flag_enabled("DS4_CUDA_SPLITKV_DECODE", 0);
     const uint32_t scoped_min_score =
         (g_decode_fast_attention && !manual_splitkv) ? 512u : 0u;
     uint32_t min_score = cuda_parse_u32_env_clamped("DS4_CUDA_SPLITKV_MIN_SCORE",
@@ -17115,7 +17111,7 @@ static int attention_decode_splitkv_launch(
     if (S < min_needed) S = min_needed;
     if (S > n_score) S = n_score;
     if (S <= 1u) return 0;           /* S==1: caller uses the old kernel anchor */
-    if (cuda_env_flag_enabled("DS4_CUDA_SPLITKV_GLOBAL_SOFTMAX", 0)) {
+    if (ds4_env_flag_enabled("DS4_CUDA_SPLITKV_GLOBAL_SOFTMAX", 0)) {
         const uint64_t score_count = (uint64_t)n_head * n_score;
         const uint64_t score_bytes = score_count * sizeof(float);
         const uint64_t denom_offset = (score_bytes + 255u) & ~255ull;
@@ -17434,8 +17430,8 @@ extern "C" int ds4_gpu_attention_decode_rows_rope_tensor(
     /* This first grouped path mirrors the promoted default decode exactly.
      * Alternative score kernels and graph/split-KV experiments retain the
      * one-session dispatcher until they gain equivalent row-table variants. */
-    if (cuda_env_flag_enabled("DS4_CUDA_NO_EXACT_SCORE_SPLIT_DECODE", 0) ||
-        !cuda_env_flag_enabled("DS4_CUDA_EXACT_SCORE_SPLIT_DECODE", 1) ||
+    if (ds4_env_flag_enabled("DS4_CUDA_NO_EXACT_SCORE_SPLIT_DECODE", 0) ||
+        !ds4_env_flag_enabled("DS4_CUDA_EXACT_SCORE_SPLIT_DECODE", 1) ||
         cuda_splitkv_decode_requested() ||
         g_cuda_decode_heads8_online || g_cuda_decode_score4 ||
         g_cuda_decode_score8 || g_cuda_no_decode_value512 ||
@@ -30863,8 +30859,8 @@ static int qwen38_ud_q8_1_matmul(
         uint64_t               n_tok);
 
 static bool qwen38_ud_decode_r8_enabled(void) {
-    return cuda_env_flag_enabled("DS4_CUDA_QWEN38_DECODE_Q8_1_R8", 1) &&
-           !cuda_env_flag_enabled("DS4_CUDA_QWEN38_NO_DECODE_Q8_1_R8", 0);
+    return ds4_env_flag_enabled("DS4_CUDA_QWEN38_DECODE_Q8_1_R8", 1) &&
+           !ds4_env_flag_enabled("DS4_CUDA_QWEN38_NO_DECODE_Q8_1_R8", 0);
 }
 
 static int qwen38_ud_matmul(
@@ -30905,26 +30901,26 @@ static int qwen38_ud_matmul(
 
     const bool q8_1_r8_microbatch =
         n_tok >= 2u && n_tok <= 3u && qwen38_ud_decode_r8_enabled() &&
-        getenv("DS4_CUDA_QWEN38_NO_VERIFY_Q8_1_R8") == NULL;
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN38_NO_VERIFY_Q8_1_R8", 0);
     if ((n_tok == 1u &&
-         (getenv("DS4_CUDA_QWEN38_DECODE_Q8_1") != NULL ||
+         (ds4_env_flag_enabled("DS4_CUDA_QWEN38_DECODE_Q8_1", 0) ||
           qwen38_ud_decode_r8_enabled())) ||
         q8_1_r8_microbatch) {
         return qwen38_ud_q8_1_matmul(
             out, w, weight_type, in_dim, out_dim, x, n_tok);
     }
 
-    /* Long prefill shares one dequantized matrix across the token rows.  The
-     * F16 tensor-core path is diagnostic until it clears the full-model
-     * equivalence gate; the default remains the correctness-first F32 path. */
+    /* Long prefill shares one dequantized matrix across the token rows.
+     * The calibrated default uses F16 tensor cores for at least 128 rows;
+     * smaller batches retain F32 unless the diagnostic F16 override is set. */
     if (n_tok >= 8u && g_cublas_ready) {
         if (out_dim > UINT64_MAX / in_dim) return 0;
         const uint64_t weight_elems = out_dim * in_dim;
         if (weight_elems > UINT64_MAX / sizeof(float)) return 0;
         const bool f16_gemm =
-            getenv("DS4_CUDA_QWEN38_PREFILL_F16") != NULL ||
+            ds4_env_flag_enabled("DS4_CUDA_QWEN38_PREFILL_F16", 0) ||
             (n_tok >= 128u &&
-             getenv("DS4_CUDA_QWEN38_NO_PREFILL_F16") == NULL);
+             !ds4_env_flag_enabled("DS4_CUDA_QWEN38_NO_PREFILL_F16", 0));
         const uint64_t weight_tmp_bytes = weight_elems *
             (f16_gemm ? sizeof(__half) : sizeof(float));
         const uint64_t xh_offset = (weight_tmp_bytes + 255u) & ~255ull;
@@ -30941,7 +30937,7 @@ static int qwen38_ud_matmul(
         const uint64_t grid = (weight_elems + 255u) / 256u;
         if (grid > UINT32_MAX) return 0;
         const bool cooperative_iq4 = weight_type == 23u &&
-            getenv("DS4_CUDA_QWEN_NO_COOPERATIVE_DEQUANT") == NULL;
+            !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_COOPERATIVE_DEQUANT", 0);
         if (cooperative_iq4) {
             const uint64_t blocks = weight_elems / CUDA_QK_K;
             const uint32_t cooperative_grid = (uint32_t)((blocks + 7u) / 8u);
@@ -30975,7 +30971,7 @@ static int qwen38_ud_matmul(
         const float beta = 0.0f;
         const cublasComputeType_t compute =
             f16_gemm ? CUBLAS_COMPUTE_32F :
-            getenv("DS4_CUDA_QWEN_PREFILL_PEDANTIC") != NULL ?
+            ds4_env_flag_enabled("DS4_CUDA_QWEN_PREFILL_PEDANTIC", 0) ?
                 CUBLAS_COMPUTE_32F_PEDANTIC : CUBLAS_COMPUTE_32F_FAST_TF32;
         const cublasStatus_t st = cublasGemmEx(
             cuda_cublas_for_tier(cuda_current_tier()),
@@ -31116,11 +31112,11 @@ static int qwen35_q4_0_matmul(
                                              cuda_current_tier(), "qwen35_mtp_q4_0");
     if (!w) return 0;
     if (n_tok == 1u &&
-        getenv("DS4_CUDA_QWEN_MTP_NO_Q4_0_Q8_1_R8") == NULL) {
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_MTP_NO_Q4_0_Q8_1_R8", 0)) {
         return qwen35_q4_0_q8_1_r8_matmul(
             out, (const cuda_block_q4_0 *)w, in_dim, out_dim, x);
     }
-    if (n_tok == 1u && getenv("DS4_CUDA_QWEN_MTP_NO_Q4_0_WARP8") == NULL) {
+    if (n_tok == 1u && !ds4_env_flag_enabled("DS4_CUDA_QWEN_MTP_NO_Q4_0_WARP8", 0)) {
         qwen35_q4_0_matvec_warp8_kernel
             <<<((uint32_t)out_dim + 7u) / 8u, 256>>>(
                 (float *)out->ptr, (const cuda_block_q4_0 *)w,
@@ -33282,7 +33278,7 @@ static qwen35_q8_1_r8_profile qwen35_q8_1_r8_profile_begin(
     const uint32_t slot = weight_type - 12u;
     if (slot >= 3u || profiled[slot] ||
         context.stage != DS4_QWEN_STAGE_DECODE ||
-        getenv("DS4_CUDA_QWEN_DECODE_Q8_1_R8_PROFILE") == NULL) return result;
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q8_1_R8_PROFILE", 0)) return result;
     if (cudaEventCreate(&result.start) != cudaSuccess ||
         cudaEventCreate(&result.quantized) != cudaSuccess ||
         cudaEventCreate(&result.done) != cudaSuccess ||
@@ -33349,13 +33345,13 @@ static int qwen35_quant_k_matmul(
         (!adaptive_layers_env || context.layer < adaptive_q8_layers) &&
         (!adaptive_start_env || context.layer >= adaptive_q8_start);
     const bool q4_q8_decode =
-        getenv("DS4_CUDA_QWEN_DECODE_Q4_Q8") != NULL ||
-        (getenv("DS4_CUDA_QWEN_DECODE_Q4_Q8_LSQ") != NULL &&
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q4_Q8", 0) ||
+        (ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q4_Q8_LSQ", 0) &&
          (!adaptive_q8 || adaptive_q8_selected)) ||
-        (getenv("DS4_CUDA_QWEN_DECODE_Q4_Q8_GATE_UP") != NULL &&
+        (ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q4_Q8_GATE_UP", 0) &&
          (!adaptive_q8 || adaptive_q8_selected) &&
          in_dim == 5120u && out_dim == 17408u) ||
-        (getenv("DS4_CUDA_QWEN_DECODE_Q4_Q8_DOWN") != NULL &&
+        (ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q4_Q8_DOWN", 0) &&
          (!adaptive_q8 || adaptive_q8_selected) &&
          in_dim == 17408u && out_dim == 5120u);
     if ((weight_type == 12u || weight_type == 13u) &&
@@ -33365,7 +33361,7 @@ static int qwen35_quant_k_matmul(
             cuda_current_tier(), (uint64_t)xq_blocks * sizeof(cuda_block_q8_K),
             "qwen35 decode Q8_K activation");
         if (!xq) return 0;
-        if (getenv("DS4_CUDA_QWEN_DECODE_Q4_Q8_LSQ") != NULL) {
+        if (ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q4_Q8_LSQ", 0)) {
             q8_K_quantize_lsq_kernel<<<xq_blocks, 256>>>(
                 xq, (const float *)x->ptr, (uint32_t)in_dim, 1u);
         } else {
@@ -33392,10 +33388,10 @@ static int qwen35_quant_k_matmul(
      * Keep both an explicit NO switch for reproducible F32 A/B runs and the
      * historical positive flag (where =0 can still disable it). */
     const bool q8_1_r8 =
-        cuda_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q8_1_R8", 1) &&
-        !cuda_env_flag_enabled("DS4_CUDA_QWEN_NO_DECODE_Q8_1_R8", 0);
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q8_1_R8", 1) &&
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_DECODE_Q8_1_R8", 0);
     if ((weight_type == 12u || weight_type == 13u) && n_tok == 1u &&
-        (getenv("DS4_CUDA_QWEN_DECODE_Q8_1") != NULL || q8_1_r8)) {
+        (ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q8_1", 0) || q8_1_r8)) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         const uint64_t xq_bytes =
             (uint64_t)blocks * 8u * sizeof(qwen35_block_q8_1);
@@ -33452,7 +33448,7 @@ static int qwen35_quant_k_matmul(
     }
 
     if (weight_type == 12u && n_tok == 1u &&
-        getenv("DS4_CUDA_QWEN_DECODE_Q8_32") != NULL) {
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q8_32", 0)) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         const uint32_t groups = blocks * 8u;
         qwen35_block_q8_32 *xq = (qwen35_block_q8_32 *)cuda_tmp_alloc_on(
@@ -33471,7 +33467,7 @@ static int qwen35_quant_k_matmul(
     }
 
     if (weight_type == 12u && n_tok == 1u &&
-        getenv("DS4_CUDA_QWEN_DECODE_Q8_128") != NULL) {
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q8_128", 0)) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         qwen35_block_q8_128 *xq = (qwen35_block_q8_128 *)cuda_tmp_alloc_on(
             cuda_current_tier(), (uint64_t)blocks * 2u * sizeof(*xq),
@@ -33489,7 +33485,7 @@ static int qwen35_quant_k_matmul(
     }
 
     if (weight_type == 12u && n_tok == 1u &&
-        (getenv("DS4_CUDA_QWEN_NO_DECODE_F32_WARP8") == NULL ||
+        (!ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_DECODE_F32_WARP8", 0) ||
          (adaptive_q8 && !adaptive_q8_selected))) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         qwen35_q4_k_f32_matvec_warp8_kernel
@@ -33500,7 +33496,7 @@ static int qwen35_quant_k_matmul(
     }
 
     if (weight_type == 13u && n_tok == 1u &&
-        getenv("DS4_CUDA_QWEN_NO_DECODE_F32_WARP8") == NULL) {
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_DECODE_F32_WARP8", 0)) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         qwen35_q5_k_f32_matvec_warp8_kernel
             <<<((uint32_t)out_dim + 7u) / 8u, 256>>>(
@@ -33510,7 +33506,7 @@ static int qwen35_quant_k_matmul(
     }
 
     if (weight_type == 14u && n_tok == 1u &&
-        (getenv("DS4_CUDA_QWEN_DECODE_Q6_Q8_1") != NULL || q8_1_r8)) {
+        (ds4_env_flag_enabled("DS4_CUDA_QWEN_DECODE_Q6_Q8_1", 0) || q8_1_r8)) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         const uint64_t xq_bytes =
             (uint64_t)blocks * 8u * sizeof(qwen35_block_q8_1);
@@ -33555,7 +33551,7 @@ static int qwen35_quant_k_matmul(
     }
 
     if (weight_type == 14u && n_tok == 1u &&
-        getenv("DS4_CUDA_QWEN_NO_DECODE_F32_WARP8") == NULL) {
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_DECODE_F32_WARP8", 0)) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         qwen35_q6_k_f32_matvec_warp8_kernel
             <<<((uint32_t)out_dim + 7u) / 8u, 256>>>(
@@ -33566,10 +33562,10 @@ static int qwen35_quant_k_matmul(
 
     const bool verify3 =
         n_tok == 3u &&
-        getenv("DS4_CUDA_QWEN_NO_VERIFY3_Q8_1_R8") == NULL;
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_VERIFY3_Q8_1_R8", 0);
     if ((n_tok == 2u || verify3) && q8_1_r8 &&
         (weight_type == 12u || weight_type == 13u || weight_type == 14u) &&
-        getenv("DS4_CUDA_QWEN_NO_VERIFY2_Q8_1_R8") == NULL) {
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_VERIFY2_Q8_1_R8", 0)) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         const uint64_t groups_per_token = (uint64_t)blocks * 8u;
         if (groups_per_token > UINT64_MAX /
@@ -33682,7 +33678,7 @@ static int qwen35_quant_k_matmul(
     }
 
     if (n_tok >= 2u && n_tok <= 4u &&
-        getenv("DS4_CUDA_QWEN_NO_MICROBATCH_WARP8") == NULL) {
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_MICROBATCH_WARP8", 0)) {
         const uint32_t blocks = (uint32_t)(in_dim / CUDA_QK_K);
         const dim3 grid(((uint32_t)out_dim + 7u) / 8u, 1u, 1u);
         if (weight_type == 12u && n_tok == 2u) {
@@ -33729,7 +33725,7 @@ static int qwen35_quant_k_matmul(
     if (weight_type == 12u && n_tok >= 8u &&
         (out_dim % 8u) == 0u && out_dim >= 512u &&
         cuda_q4_mma_ok() &&
-        getenv("DS4_CUDA_QWEN_PREFILL_Q4_MMA") != NULL) {
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_PREFILL_Q4_MMA", 0)) {
         const uint32_t xq_blocks = (uint32_t)(in_dim / CUDA_QK_K);
         const uint64_t xq_count = (uint64_t)n_tok * xq_blocks;
         if (xq_count > UINT64_MAX / sizeof(cuda_block_q8_K)) return 0;
@@ -33759,7 +33755,7 @@ static int qwen35_quant_k_matmul(
      * re-reading every Q4_K row once per token.  Keep smaller prompts on the
      * calibrated token-exact path selected by the graph scheduler. */
     if (n_tok >= 128u && g_cublas_ready &&
-        getenv("DS4_CUDA_QWEN_NO_DEQUANT_GEMM") == NULL) {
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_DEQUANT_GEMM", 0)) {
         if (out_dim > UINT64_MAX / in_dim) return 0;
         const uint64_t weight_elems = out_dim * in_dim;
         if (weight_elems > UINT64_MAX / sizeof(float)) return 0;
@@ -33768,10 +33764,10 @@ static int qwen35_quant_k_matmul(
         const uint32_t f16_layers = f16_layers_env ?
             (uint32_t)strtoul(f16_layers_env, NULL, 10) : 64u;
         const bool f16_requested =
-            getenv("DS4_CUDA_QWEN_PREFILL_F16") != NULL ||
-            (getenv("DS4_CUDA_QWEN_NO_PREFILL_F16_GATE_UP") == NULL &&
+            ds4_env_flag_enabled("DS4_CUDA_QWEN_PREFILL_F16", 0) ||
+            (!ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_PREFILL_F16_GATE_UP", 0) &&
              in_dim == 5120u && out_dim == 17408u) ||
-            (getenv("DS4_CUDA_QWEN_PREFILL_F16_DOWN") != NULL &&
+            (ds4_env_flag_enabled("DS4_CUDA_QWEN_PREFILL_F16_DOWN", 0) &&
              in_dim == 17408u && out_dim == 5120u);
         const bool f16_gemm = f16_requested &&
             context.layer < f16_layers;
@@ -33828,7 +33824,7 @@ static int qwen35_quant_k_matmul(
         const float beta = 0.0f;
         const cublasComputeType_t compute =
             f16_gemm ? CUBLAS_COMPUTE_32F :
-            getenv("DS4_CUDA_QWEN_PREFILL_PEDANTIC") != NULL ?
+            ds4_env_flag_enabled("DS4_CUDA_QWEN_PREFILL_PEDANTIC", 0) ?
                 CUBLAS_COMPUTE_32F_PEDANTIC : CUBLAS_COMPUTE_32F_FAST_TF32;
         const cublasStatus_t st = cublasGemmEx(
                 cuda_cublas_for_tier(cuda_current_tier()),
@@ -34215,7 +34211,7 @@ static int qwen35_attention_split_k_launch(
      * Keep a deterministic scalar fallback for A/B and field diagnostics. */
     uint32_t gqa_group = cuda_parse_u32_env_clamped(
         "DS4_CUDA_QWEN_GQA_GROUP_ATTN", 2u, 1u, 6u, NULL);
-    if (cuda_env_flag_enabled("DS4_CUDA_QWEN_NO_GQA_GROUP_ATTN", 0)) {
+    if (ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_GQA_GROUP_ATTN", 0)) {
         gqa_group = 1u;
     }
     if (gqa_group != 1u && gqa_group != 2u &&
@@ -34522,7 +34518,7 @@ extern "C" int ds4_gpu_qwen35_full_attention_rows_tensor(
         (float *)key_cache->ptr, (float *)value_cache->ptr, position_start);
     if (!cuda_ok(cudaGetLastError(), "qwen35 prepare kv rows")) return 0;
     if (n_tokens >= 512u &&
-        !cuda_env_flag_enabled("DS4_CUDA_QWEN_NO_FLASH_ATTN", 0)) {
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_FLASH_ATTN", 0)) {
         return qwen35_attention_gemm_rows_launch(
             out_heads, q_gate, key_cache, value_cache,
             position_start, n_tokens);
@@ -34534,10 +34530,10 @@ extern "C" int ds4_gpu_qwen35_full_attention_rows_tensor(
      * cannot diverge again. FORCE exists for numerical/threshold probes; NO
      * is the reproducible serial A/B fallback. */
     const int force_split_k =
-        cuda_env_flag_enabled("DS4_CUDA_QWEN_SPLIT_K_ATTN", 0);
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_SPLIT_K_ATTN", 0);
     const int automatic_split_k =
         position_start >= 96u &&
-        !cuda_env_flag_enabled("DS4_CUDA_QWEN_NO_SPLIT_K_ATTN", 0);
+        !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_SPLIT_K_ATTN", 0);
     /* MTP verifies at most four drafts plus the mandatory target token.  Use
      * the same crossover as ordinary decode for those small row batches;
      * otherwise V(3) falls back to a serial KV scan precisely where the
@@ -34548,7 +34544,7 @@ extern "C" int ds4_gpu_qwen35_full_attention_rows_tensor(
             position_start, n_tokens);
     }
     if (n_tokens == 1u &&
-        cuda_env_flag_enabled("DS4_CUDA_QWEN_WARP_ATTN", 0)) {
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_WARP_ATTN", 0)) {
         qwen35_attention_rows_warp_kernel<<<qgrid, 256>>>(
             (float *)out_heads->ptr, (const float *)q_gate->ptr,
             (const float *)key_cache->ptr, (const float *)value_cache->ptr,
@@ -34807,7 +34803,7 @@ extern "C" int ds4_gpu_qwen35_gated_delta_net_rows_tensor(
         n_tokens);
     if (!cuda_ok(cudaGetLastError(), "qwen35 convolution rows")) return 0;
     if (n_tokens == 1u &&
-        getenv("DS4_CUDA_QWEN_GDN_STATE_WARP4") != NULL) {
+        ds4_env_flag_enabled("DS4_CUDA_QWEN_GDN_STATE_WARP4", 0)) {
         const dim3 grid(48u, 32u, 1u);
         qwen35_gdn_state_warp4_kernel<<<grid, 128>>>(
             (float *)out_heads->ptr, (const float *)qkv->ptr,

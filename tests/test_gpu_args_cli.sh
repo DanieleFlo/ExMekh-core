@@ -234,6 +234,27 @@ if [ -x ./ds4 ]; then
     fi
 fi
 
+# 8: a typo in the constraint mode must fail before loading any model.
+if [ -x ./ds4-server ]; then
+    for mode in misspelled 0 false off; do
+        DS4_CONSTRAINT_MODE="$mode" ./ds4-server -m /dev/null > "$LOG" 2>&1
+        rc=$?
+        if [ "$rc" -eq 2 ] && grep -q "invalid DS4_CONSTRAINT_MODE" "$LOG" &&
+           ! grep -q "model file is too small" "$LOG"; then
+            ok "ds4-server rejects invalid constraint mode $mode before model loading"
+        else
+            fail "ds4-server accepted invalid constraint mode $mode or loaded the model"
+        fi
+    done
+    DS4_CONSTRAINT_MODE=misspelled ./ds4-server --help > "$LOG" 2>&1
+    rc=$?
+    if [ "$rc" -eq 0 ] && ! grep -q "invalid DS4_CONSTRAINT_MODE" "$LOG"; then
+        ok "ds4-server help remains available with an invalid constraint mode"
+    else
+        fail "ds4-server help was blocked by an invalid constraint mode"
+    fi
+fi
+
 rm -f "$LOG"
 
 echo ""

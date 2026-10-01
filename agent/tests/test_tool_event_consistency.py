@@ -3,6 +3,8 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
+from qs.core.agents.deep_agent import DeepAgentExecutionEvent
+from qs.core.agents.deep_agent.stream_event import DeepAgentExecutionEventType
 
 from fe.qs_bridge.collector import TurnStreamCollector
 from fe.qs_bridge.converter import reconstruct_execution_history_and_cache
@@ -14,6 +16,7 @@ from fe.qs_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
+from fe.qs_bridge.tool_events import tool_event_from_execution
 from fe.ui.chat_view import ChatViewComponent
 from fe.ui.input_bar import InputBarComponent
 
@@ -193,3 +196,47 @@ def test_queue_sync_detects_in_place_edits_without_rebuilding_unchanged_rows() -
         bar.sync_queue([message], can_steer=False)
         render.assert_called_once()
     assert bar.queued_messages[0].text == "Edited guidance"
+
+
+@pytest.mark.parametrize("failed", [True, False])
+def test_framework_failure_status_is_preserved_in_root_child_and_ui(
+    failed: bool,
+) -> None:
+    start = tool_event_from_execution(
+        DeepAgentExecutionEvent(
+            type=DeepAgentExecutionEventType.TOOL_START,
+            depth=0,
+            skill_path="/",
+            history=[],
+            history_tree=[],
+            tool_name="work",
+            tool_call_id="invocation",
+        ),
+        now=1,
+    )
+    end = tool_event_from_execution(
+        DeepAgentExecutionEvent(
+            type=DeepAgentExecutionEventType.TOOL_END,
+            depth=0,
+            skill_path="/",
+            history=[],
+            history_tree=[],
+            tool_name="work",
+            tool_call_id="invocation",
+            failed=failed,
+        ),
+        now=3,
+    )
+    collector = TurnStreamCollector()
+    child = SubAgentConversation(path="main/worker")
+    child.start_call("Run work")
+    view = ChatViewComponent(lambda _: None)
+    view.current_skills_container = MagicMock()
+    view._refresh_streaming_skills_and_tools = MagicMock()
+    for record in (collector.append_tool, child.add_tool_event, view.add_tool_event):
+        record(start)
+        record(end)
+    root = collector.tools[0]
+    assert root == child.messages[-1].tool_events[0] == view.streaming_root_tools[0]
+    assert root.status == ("error" if failed else "completed")
+    assert root.duration_seconds == 2

@@ -27,6 +27,11 @@ from fe.qs_bridge.skill_history import inner_skill_history_messages, take_skill_
 from fe.qs_bridge.tool_calls import parse_tool_calls, tool_result_for_call
 
 logger = logging.getLogger(__name__)
+FE_METADATA_KEYS = (
+    "_fe_chat_message_snapshot",
+    "_fe_session_metadata",
+    "_fe_steering_message",
+)
 
 
 def raw_dict_to_qs_message(
@@ -83,12 +88,9 @@ def raw_dict_to_qs_message(
     else:
         qs_msg = UserMessage(content=str(content or ""))
 
-    if "_fe_chat_message_snapshot" in data:
-        qs_msg._fe_chat_message_snapshot = data["_fe_chat_message_snapshot"]
-    if "_fe_session_metadata" in data:
-        qs_msg._fe_session_metadata = data["_fe_session_metadata"]
-    if "_fe_steering_message" in data:
-        qs_msg._fe_steering_message = data["_fe_steering_message"]
+    for key in FE_METADATA_KEYS:
+        if key in data:
+            qs_msg.set_metadata(key, data[key])
 
     return qs_msg
 
@@ -139,12 +141,8 @@ def qs_message_to_raw_dict(
         res = {"role": role, "content": str(msg.get_message() or "")}
 
     if include_snapshots:
-        if hasattr(msg, "_fe_chat_message_snapshot"):
-            res["_fe_chat_message_snapshot"] = msg._fe_chat_message_snapshot
-        if hasattr(msg, "_fe_session_metadata"):
-            res["_fe_session_metadata"] = msg._fe_session_metadata
-        if hasattr(msg, "_fe_steering_message"):
-            res["_fe_steering_message"] = msg._fe_steering_message
+        metadata = msg.get_metadata()
+        res.update({key: metadata[key] for key in FE_METADATA_KEYS if key in metadata})
 
     return res
 
@@ -194,12 +192,12 @@ def chat_message_to_qs_messages(msg: ChatMessage) -> list[Message[Any]]:
     """
     if msg.role == "user":
         um = UserMessage(content=msg.content)
-        um._fe_chat_message_snapshot = msg.model_dump()
+        um.set_metadata("_fe_chat_message_snapshot", msg.model_dump())
         return [um]
 
     if msg.role == "system":
         sm = SystemMessage(content=msg.content)
-        sm._fe_chat_message_snapshot = msg.model_dump()
+        sm.set_metadata("_fe_chat_message_snapshot", msg.model_dump())
         return [sm]
 
     qs_list: list[Message[Any]] = []
@@ -210,7 +208,7 @@ def chat_message_to_qs_messages(msg: ChatMessage) -> list[Message[Any]]:
         for item in raw_slice:
             qs_msg = raw_dict_to_qs_message(item, pending_tool_calls=pending_tool_calls)
             if isinstance(qs_msg, UserMessage):
-                qs_msg._fe_steering_message = True
+                qs_msg.set_metadata("_fe_steering_message", True)
             # Ensure a ToolMessage is never the first message of an assistant turn without a preceding AssistantMessage
             if isinstance(qs_msg, ToolMessage) and not qs_list:
                 synth_tc = ToolCall(
@@ -267,7 +265,7 @@ def chat_message_to_qs_messages(msg: ChatMessage) -> list[Message[Any]]:
         qs_list.append(AssistantMessage(content=msg.content or "[Interrupted]"))
 
     # Attach lossless snapshot to the final AssistantMessage of the turn
-    qs_list[-1]._fe_chat_message_snapshot = msg.model_dump()
+    qs_list[-1].set_metadata("_fe_chat_message_snapshot", msg.model_dump())
     return qs_list
 
 
@@ -284,7 +282,7 @@ def qs_messages_to_chat_messages(
             return
 
         last_msg = current_assistant_qs[-1]
-        snapshot = getattr(last_msg, "_fe_chat_message_snapshot", None)
+        snapshot = last_msg.get_metadata().get("_fe_chat_message_snapshot", None)
         if isinstance(snapshot, dict):
             chat_messages.append(ChatMessage.model_validate(snapshot))
             current_assistant_qs = []
@@ -371,11 +369,11 @@ def qs_messages_to_chat_messages(
         current_assistant_qs = []
 
     for msg in qs_messages:
-        if getattr(msg, "_fe_steering_message", False):
+        if msg.get_metadata().get("_fe_steering_message", False):
             current_assistant_qs.append(msg)
         elif isinstance(msg, SystemMessage):
             flush_assistant()
-            snap = getattr(msg, "_fe_chat_message_snapshot", None)
+            snap = msg.get_metadata().get("_fe_chat_message_snapshot", None)
             if isinstance(snap, dict):
                 chat_messages.append(ChatMessage.model_validate(snap))
             else:
@@ -384,7 +382,7 @@ def qs_messages_to_chat_messages(
                 )
         elif isinstance(msg, UserMessage):
             flush_assistant()
-            snap = getattr(msg, "_fe_chat_message_snapshot", None)
+            snap = msg.get_metadata().get("_fe_chat_message_snapshot", None)
             if isinstance(snap, dict):
                 chat_messages.append(ChatMessage.model_validate(snap))
             else:
@@ -395,7 +393,7 @@ def qs_messages_to_chat_messages(
             current_assistant_qs.append(msg)
         else:
             flush_assistant()
-            role = getattr(msg, "get_role_name", lambda: "user")()
+            role = msg.get_role_name()
             chat_messages.append(
                 ChatMessage(role=role, content=str(msg.get_message() or ""))
             )
@@ -412,18 +410,21 @@ def session_to_qs_messages(session: ChatSession) -> list[Message[Any]]:
         or "You are a friendly, accurate, and professional AI assistant."
     )
     sys_msg = SystemMessage(content=sys_prompt)
-    sys_msg._fe_session_metadata = {
-        "id": session.id,
-        "title": session.title,
-        "project_id": session.project_id,
-        "created_at": session.created_at,
-        "updated_at": session.updated_at,
-        "model": session.model,
-        "agent_mode": session.agent_mode,
-        "system_prompt": session.system_prompt,
-        "settings": session.settings.model_dump(),
-        "queued_messages": [m.model_dump() for m in session.queued_messages],
-    }
+    sys_msg.set_metadata(
+        "_fe_session_metadata",
+        {
+            "id": session.id,
+            "title": session.title,
+            "project_id": session.project_id,
+            "created_at": session.created_at,
+            "updated_at": session.updated_at,
+            "model": session.model,
+            "agent_mode": session.agent_mode,
+            "system_prompt": session.system_prompt,
+            "settings": session.settings.model_dump(),
+            "queued_messages": [m.model_dump() for m in session.queued_messages],
+        },
+    )
     qs_messages.append(sys_msg)
 
     for msg in session.messages:
@@ -447,7 +448,7 @@ def qs_messages_to_session(
     for i, m in enumerate(qs_messages):
         if i == 0 and isinstance(m, SystemMessage):
             sys_prompt = str(m.get_message() or "")
-            session_meta = getattr(m, "_fe_session_metadata", None)
+            session_meta = m.get_metadata().get("_fe_session_metadata", None)
         else:
             filtered_qs.append(m)
 

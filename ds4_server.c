@@ -1,4 +1,5 @@
 #include "ds4.h"
+#include "ds4_env.h"
 #include "ds4_distributed.h"
 #include "ds4_gpu_args.h"
 #include "ds4_help.h"
@@ -12557,6 +12558,7 @@ typedef struct {
 } server_decode_phase_metrics;
 
 typedef enum {
+    SERVER_CONSTRAINT_INVALID = -1,
     SERVER_CONSTRAINT_OPTIMIZED,
     SERVER_CONSTRAINT_INCREMENTAL,
     SERVER_CONSTRAINT_TRIE,
@@ -12627,11 +12629,12 @@ static server_constraint_mode server_constraint_mode_from_env(void) {
         return SERVER_CONSTRAINT_OPTIMIZED;
     }
     return value && value[0] ?
-        SERVER_CONSTRAINT_ORACLE_ONLY : SERVER_CONSTRAINT_TRIE;
+        SERVER_CONSTRAINT_INVALID : SERVER_CONSTRAINT_TRIE;
 }
 
 static const char *server_constraint_mode_name(server_constraint_mode mode) {
     switch (mode) {
+    case SERVER_CONSTRAINT_INVALID: return "invalid";
     case SERVER_CONSTRAINT_ORACLE_ONLY: return "oracle_only";
     case SERVER_CONSTRAINT_INCREMENTAL: return "incremental";
     case SERVER_CONSTRAINT_TRIE: return "trie";
@@ -12642,8 +12645,7 @@ static const char *server_constraint_mode_name(server_constraint_mode mode) {
 }
 
 static bool server_phase_profile_enabled(void) {
-    const char *value = getenv("DS4_SERVER_PHASE_PROFILE");
-    return value && value[0] && strcmp(value, "0") != 0;
+    return ds4_env_flag_enabled("DS4_SERVER_PHASE_PROFILE", 0);
 }
 
 static pthread_mutex_t server_log_mu = PTHREAD_MUTEX_INITIALIZER;
@@ -17171,7 +17173,7 @@ static void *decode_worker_main(void *arg) {
     ds4_decode_item *items = xmalloc((size_t)s->slot_count * sizeof(*items));
     server_slot **members = xmalloc((size_t)s->slot_count * sizeof(*members));
     const long coalesce_us = server_decode_coalesce_us();
-    const bool log_batches = getenv("DS4_SERVER_BATCH_LOG") != NULL;
+    const bool log_batches = ds4_env_flag_enabled("DS4_SERVER_BATCH_LOG", 0);
 
     pthread_mutex_lock(&s->model_mu);
     for (;;) {
@@ -18437,7 +18439,7 @@ decode_again:
         const bool speculative_base_available =
             ntok == 0 && !s->batched_mode &&
             ds4_engine_mtp_draft_tokens(s->engine) > 1 &&
-            getenv("DS4_MTP_SPEC_DISABLE") == NULL;
+            !ds4_env_flag_enabled("DS4_MTP_SPEC_DISABLE", 0);
         const bool grammar_aware_speculative =
             speculative_base_available &&
             (constrained_sample || j->req.response_schema != NULL ||
@@ -20458,6 +20460,13 @@ int main(int argc, char **argv) {
     sigaction(SIGTERM, &sa, NULL);
 
     server_config cfg = parse_options(argc, argv);
+    if (server_constraint_mode_from_env() == SERVER_CONSTRAINT_INVALID) {
+        fprintf(stderr,
+                "ds4-server: invalid DS4_CONSTRAINT_MODE '%s'; expected trie, "
+                "incremental, optimized, oracle_only or compare_new_vs_oracle\n",
+                getenv("DS4_CONSTRAINT_MODE"));
+        return 2;
+    }
     if (cfg.chdir_path && chdir(cfg.chdir_path) != 0) {
         server_log(DS4_LOG_DEFAULT, "ds4-server: failed to chdir to %s: %s",
                    cfg.chdir_path, strerror(errno));
@@ -26745,6 +26754,33 @@ static void test_agentic_invoke_header_is_exact(void) {
     request_free(&r);
 }
 
+static void test_environment_boolean_flags(void) {
+    const char *name = "DS4_MTP_SPEC_DISABLE";
+    const char *saved = getenv(name);
+    char *copy = saved ? xstrdup(saved) : NULL;
+    unsetenv(name);
+    TEST_ASSERT(!ds4_env_flag_enabled(name, 0));
+    TEST_ASSERT(ds4_env_flag_enabled(name, 1));
+    setenv(name, "", 1);
+    TEST_ASSERT(!ds4_env_flag_enabled(name, 0));
+    TEST_ASSERT(ds4_env_flag_enabled(name, 1));
+    const char *disabled[] = {"0", "false", "FALSE", "off", "Off", "no", "NO"};
+    for (size_t i = 0; i < sizeof(disabled) / sizeof(disabled[0]); i++) {
+        setenv(name, disabled[i], 1);
+        TEST_ASSERT(!ds4_env_flag_enabled(name, 0));
+        TEST_ASSERT(!ds4_env_flag_enabled(name, 1));
+    }
+    const char *enabled[] = {"1", "true", "on", "yes", "legacy"};
+    for (size_t i = 0; i < sizeof(enabled) / sizeof(enabled[0]); i++) {
+        setenv(name, enabled[i], 1);
+        TEST_ASSERT(ds4_env_flag_enabled(name, 0));
+        TEST_ASSERT(ds4_env_flag_enabled(name, 1));
+    }
+    if (copy) setenv(name, copy, 1);
+    else unsetenv(name);
+    free(copy);
+}
+
 static void test_constraint_runtime_modes_fail_closed(void) {
     const char *saved = getenv("DS4_CONSTRAINT_MODE");
     char *copy = saved ? xstrdup(saved) : NULL;
@@ -26761,8 +26797,13 @@ static void test_constraint_runtime_modes_fail_closed(void) {
     setenv("DS4_CONSTRAINT_MODE", "compare_new_vs_oracle", 1);
     TEST_ASSERT(server_constraint_mode_from_env() ==
                 SERVER_CONSTRAINT_COMPARE_ORACLE);
-    setenv("DS4_CONSTRAINT_MODE", "misspelled", 1);
-    TEST_ASSERT(server_constraint_mode_from_env() == SERVER_CONSTRAINT_ORACLE_ONLY);
+    const char *invalid_values[] = {"misspelled", "0", "false", "off"};
+    for (size_t i = 0; i < sizeof(invalid_values) / sizeof(invalid_values[0]); i++) {
+        setenv("DS4_CONSTRAINT_MODE", invalid_values[i], 1);
+        TEST_ASSERT(server_constraint_mode_from_env() == SERVER_CONSTRAINT_INVALID);
+    }
+    setenv("DS4_CONSTRAINT_MODE", "", 1);
+    TEST_ASSERT(server_constraint_mode_from_env() == SERVER_CONSTRAINT_TRIE);
     if (copy) setenv("DS4_CONSTRAINT_MODE", copy, 1);
     else unsetenv("DS4_CONSTRAINT_MODE");
     free(copy);
@@ -28004,6 +28045,7 @@ static void ds4_server_unit_tests_run(void) {
     test_agentic_parameter_filter_switches_active_tool();
     test_agentic_parameter_header_is_exact();
     test_agentic_invoke_header_is_exact();
+    test_environment_boolean_flags();
     test_constraint_runtime_modes_fail_closed();
     test_agentic_constrained_sampling_scope();
     test_agentic_structure_rejects_nested_invoke();

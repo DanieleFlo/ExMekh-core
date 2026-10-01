@@ -152,3 +152,24 @@ def test_xml_tool_output_parses_metadata_and_body() -> None:
     assert _parse_xml_header_output(
         "<header><name>search</name><type>Tool</type><id>stored</id></header>\nresult"
     ) == ("search", "Tool", "stored", "result")
+
+
+def test_raw_metadata_snapshots_are_owned_and_never_sent_to_provider() -> None:
+    raw = {
+        "role": "user",
+        "content": "hello",
+        "_fe_chat_message_snapshot": {"content": "original"},
+        "_fe_steering_message": False,
+        "_fe_session_metadata": None,
+    }
+    message = raw_dict_to_qs_message(raw)
+    raw["_fe_chat_message_snapshot"]["content"] = "changed"
+    exported = qs_message_to_raw_dict(message, include_snapshots=True)
+    assert exported["_fe_chat_message_snapshot"] == {"content": "original"}
+    assert exported["_fe_steering_message"] is False
+    assert exported["_fe_session_metadata"] is None
+    assert message.message_dump() == {"role": "user", "content": "hello"}
+    exported["_fe_chat_message_snapshot"]["content"] = "changed again"
+    assert message.get_metadata()["_fe_chat_message_snapshot"] == {
+        "content": "original"
+    }

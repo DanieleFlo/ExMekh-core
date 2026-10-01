@@ -6,11 +6,11 @@ Indice generato; non modificare a mano.
 
 Una modifica è utile soltanto se migliora il workload dichiarato di DS4 senza
 
-- righe 6–18: **Obiettivo** — Una modifica è utile soltanto se migliora il workload dichiarato di DS4 senza
-- righe 19–38: **Ciclo obbligatorio** — 1.
-- righe 39–54: **Significatività minima** — Il default è cinque ripetizioni dopo un warm-up per workload.
-- righe 55–65: **Correttezza** — Il harness non sostituisce gli scorer Qwen già presenti in
-- righe 66–73: **Misurazione hardware** — I tempi finali vengono dal percorso sincronizzato di ds4-bench.
+- righe 7–19: **Obiettivo** — Una modifica è utile soltanto se migliora il workload dichiarato di DS4 senza
+- righe 20–39: **Ciclo obbligatorio** — 1.
+- righe 40–55: **Significatività minima** — Il default è cinque ripetizioni dopo un warm-up per workload.
+- righe 56–66: **Correttezza** — Il harness non sostituisce gli scorer Qwen già presenti in
+- righe 67–74: **Misurazione hardware** — I tempi finali vengono dal percorso sincronizzato di ds4-bench.
 
 ## [Audit dell'inferenza Qwen: interventi e risultati](qwen-inference-audit-2026-09-09.md)
 

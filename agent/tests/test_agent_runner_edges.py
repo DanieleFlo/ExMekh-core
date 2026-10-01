@@ -26,6 +26,8 @@ def _execution_event(
 ):
     event = MagicMock(spec=DeepAgentExecutionEvent)
     event.type = kind
+    event.is_tool_running = kind == "tool_start"
+    event.failed = False
     event.tool_name = name
     event.skill_path = path
     event.depth = depth

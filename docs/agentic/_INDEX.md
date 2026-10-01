@@ -56,5 +56,6 @@ Da root, avviare il server in un terminale:
 
 - righe 8–28: **Avvio in WSL / Linux** — Da root, avviare il server in un terminale:
 - righe 29–42: **Configurazione e stato** — Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider.
-- righe 43–71: **Dipendenza QS** — `agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`.
-- righe 72–99: **Verifica** — Da `agent/`:
+- righe 43–55: **Confini dell'integrazione** — QS possiede i messaggi e il risultato dell'esecuzione dei tool.
+- righe 56–84: **Dipendenza QS** — `agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`.
+- righe 85–112: **Verifica** — Da `agent/`:

@@ -40,6 +40,19 @@ Quick Chats usano il client per conversazioni ordinarie. FE conserva chat in
 sotto `tmp/` della directory di lavoro. Questi dati, `.env`, ambienti Python e
 cache locali sono esclusi da Git.
 
+## Confini dell'integrazione
+
+QS possiede i messaggi e il risultato dell'esecuzione dei tool. FE usa
+`Message.set_metadata()` e `Message.get_metadata()` per gli snapshot locali:
+questi dati restano separati da `message_dump()` e non vengono inviati al
+provider. Le letture e le copie dei messaggi non condividono valori mutabili.
+I nomi dei campi dei vecchi snapshot salvati restano compatibili.
+
+Gli eventi QS distinguono una fine riuscita da un errore di argomenti o di
+esecuzione. FE conserva questa distinzione nella conversazione principale,
+nei sotto-agenti e nella UI. Un risultato applicativo come `{"ok": false}`
+resta un risultato completato: non viene interpretato come errore del runtime.
+
 ## Dipendenza QS
 
 `agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`.

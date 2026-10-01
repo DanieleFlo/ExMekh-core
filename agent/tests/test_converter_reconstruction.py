@@ -71,6 +71,7 @@ def test_unknown_qs_message_is_preserved_as_plain_chat_message() -> None:
     unknown = MagicMock(spec=Message)
     unknown.get_role_name.return_value = "user"
     unknown.get_message.return_value = "plain"
+    unknown.get_metadata.return_value = {}
     assert qs_message_to_raw_dict(unknown) == {"role": "user", "content": "plain"}
     result = qs_messages_to_chat_messages([unknown])
     assert result[0].content == "plain"

@@ -141,7 +141,7 @@ sono `docs/performance/qwen36-performance-experiments-2026-08-05.md`,
 | Decode pesi | Matvec Q4_K/Q5_K F32 warp8 | circa 9,8 → 15–18 tok/s corto; probe bit-exact rispetto al block256 | KEEP |
 | Output head | Q6_K F32 warp8 | 248.320 → 31.040 blocchi; bit-exact contro block256 | KEEP |
 | GDN | Stato ricorrente e convoluzionale mantenuti in registri nel percorso multi-riga | prefill 549,50 → 740,15 tok/s su Q4_K_M; probe entro roundoff | KEEP |
-| Long-context | Split-K32 automatico da 8K, legacy sotto soglia | slow residente, 5 run/punto: 4,56 → 15,49 tok/s a 8K, 3,31 → 14,70 a 12K, 2,60 → 13,94 a 16K; 16/16 token identici su tutti i punti | KEEP |
+| Long-context | Split-K32 automatico da 8K nel gate storico; cutoff corrente 96 token, legacy sotto soglia | slow residente, 5 run/punto: 4,56 → 15,49 tok/s a 8K, 3,31 → 14,70 a 12K, 2,60 → 13,94 a 16K; 16/16 token identici su tutti i punti | KEEP |
 | Decode | Q8_1-R8 a due stadi per Q4_K/Q5_K/Q6_K, weight decode fuso | probe entro roundoff, 8/8 e 512/512; 17,41→32,69 a 128 e 10,71→14,93 a 2K; cinque run finali stabili | KEEP; default, rollback `DS4_CUDA_QWEN_NO_DECODE_Q8_1_R8=1` |
 
 ## Soluzioni scartate o non promosse

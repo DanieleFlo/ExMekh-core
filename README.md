@@ -206,6 +206,17 @@ This boundary is intentional: a new Qwen generation or kernel policy should be
 added to the model catalog and engine/backend scheduler, not copied into both
 frontends.
 
+The Qwen CUDA boolean controls, plus the MTP speculation, depth, split-target
+and snapshot overrides, accept
+`0`, `false`, `off`, and `no` (case-insensitive) as disabled; an unset or empty
+value uses the default. For negative overrides such as `DS4_MTP_SPEC_DISABLE`,
+`DS4_CUDA_QWEN38_NO_VERIFY_Q8_1_R8`, and
+`DS4_CUDA_QWEN_NO_COOPERATIVE_DEQUANT`, set `1` to disable the corresponding
+fast path. Qwen diagnostic and profiling switches follow the same boolean rule;
+numeric values and directory paths keep their own parsing. An empty
+`DS4_QWEN_TRACE_DIR` keeps normal prefill;
+a nonempty directory enables the diagnostic token-by-token trace path.
+
 GLM 5.2 support is limited to the GGUF files tested by this branch:
 
 ```sh
@@ -1187,12 +1198,18 @@ For browser JavaScript clients served from another origin, start the server with
 headers; it does not expose the server on the LAN. Use `--host 0.0.0.0`
 explicitly when remote machines should be able to connect.
 
-Start the native WSL launcher with `./start-ds4-server.sh`; the MTP launcher used
-by the FE / QS frontend is `./agent/start-ds4-server.sh`. Both bind the server to
+Start the target-only native WSL launcher with `./start-ds4-server.sh`;
+`./start-ds4-server.sh --mtp` enables the sidecar. The MTP launcher used by the
+FE / QS frontend is `./agent/start-ds4-server.sh`. Both bind the server to
 `0.0.0.0`. Local Windows clients can use `http://127.0.0.1:8080` through WSL's
 localhost forwarding. The project does not modify Windows port-proxy or firewall
 configuration; configure LAN exposure separately only when it is explicitly
 needed.
+
+Constrained decoding defaults to `DS4_CONSTRAINT_MODE=trie`. Explicit diagnostic
+modes are `incremental`, `optimized`, `oracle_only`, and
+`compare_new_vs_oracle`; `optimized` is the historical analysis path.
+Unknown nonempty values are rejected before model loading.
 
 For fast startup, keep both the repository and GGUF files on the native WSL
 filesystem rather than under `/mnt/c`; the native launchers run directly from

@@ -548,7 +548,7 @@ def test_queued_messages_operations_and_converter_preservation() -> None:
         "queued_messages": [QueuedMessage(text="Direct")],
     }
     sys_m = SystemMessage(content="sys")
-    sys_m._fe_session_metadata = dummy_meta
+    sys_m.set_metadata("_fe_session_metadata", dummy_meta)
     restored2 = qs_messages_to_session([sys_m])
     assert len(restored2.queued_messages) == 1
     assert restored2.queued_messages[0].text == "Direct"

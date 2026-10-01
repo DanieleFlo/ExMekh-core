@@ -1389,6 +1389,7 @@ def binary_freshness(binary: Path, inputs: list[Path]) -> dict[str, Any]:
 def cmd_doctor(_args: argparse.Namespace) -> int:
     profile = hardware_profile()
     shared_inputs = [
+        ROOT / "ds4_env.h",
         ROOT / "ds4_cuda.cu", ROOT / "ds4_cuda.o",
         ROOT / "ds4.c", ROOT / "ds4.o",
         ROOT / "ds4_distributed.c", ROOT / "ds4_distributed.o",

@@ -5,11 +5,14 @@ from __future__ import annotations
 import importlib.util
 import array
 import copy
+import io
 import json
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
@@ -617,6 +620,34 @@ class PerfHarnessTests(unittest.TestCase):
             report = HARNESS.binary_freshness(binary, [source])
             self.assertFalse(report["fresh"])
             self.assertEqual(report["newer_inputs"], [str(source)])
+
+    def test_doctor_detects_changes_to_shared_environment_parser(self) -> None:
+        profile = {
+            "gpu": {"available": True},
+            "tools": {"nsys": {"available": False}, "ncu": {"available": False}},
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("ds4", "ds4-bench", "ds4-server"):
+                binary = root / name
+                binary.write_bytes(b"binary")
+                os.utime(binary, ns=(2_000_000_000, 2_000_000_000))
+            header = root / "ds4_env.h"
+            header.write_text("/* parser */", encoding="utf-8")
+            for mtime, fresh in ((1_000_000_000, True), (3_000_000_000, False)):
+                with self.subTest(header_newer=not fresh):
+                    os.utime(header, ns=(mtime, mtime))
+                    output = io.StringIO()
+                    with patch.object(HARNESS, "ROOT", root), patch.object(
+                        HARNESS, "hardware_profile", return_value=profile
+                    ), redirect_stdout(output):
+                        args = HARNESS.build_parser().parse_args(["doctor"])
+                        status = HARNESS.cmd_doctor(args)
+                    report = json.loads(output.getvalue())
+                    self.assertEqual(status, 0 if fresh else 1)
+                    for binary in report["runtime_binaries"].values():
+                        self.assertEqual(binary["fresh"], fresh)
+                        self.assertEqual(binary["newer_inputs"], [] if fresh else [str(header)])
 
     def test_summary_marks_noisy_samples_unstable(self) -> None:
         stable = HARNESS.summary([100.0, 101.0, 99.0, 100.5, 99.5])

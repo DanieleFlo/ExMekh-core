@@ -1051,7 +1051,7 @@
               "title": "Frontend Agent FE / QS",
               "level": 1,
               "start": 1,
-              "end": 99,
+              "end": 112,
               "summary": "L'agente del progetto e il frontend NiceGUI in `agent/`."
             },
             {
@@ -1069,17 +1069,24 @@
               "summary": "Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider."
             },
             {
-              "title": "Dipendenza QS",
+              "title": "Confini dell'integrazione",
               "level": 2,
               "start": 43,
-              "end": 71,
+              "end": 55,
+              "summary": "QS possiede i messaggi e il risultato dell'esecuzione dei tool."
+            },
+            {
+              "title": "Dipendenza QS",
+              "level": 2,
+              "start": 56,
+              "end": 84,
               "summary": "`agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`."
             },
             {
               "title": "Verifica",
               "level": 2,
-              "start": 72,
-              "end": 99,
+              "start": 85,
+              "end": 112,
               "summary": "Da `agent/`:"
             }
           ]
@@ -1097,42 +1104,42 @@
               "title": "Contratto operativo per kernel engineering",
               "level": 1,
               "start": 1,
-              "end": 73,
+              "end": 74,
               "summary": "Questo documento è il gate operativo del performance harness."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 6,
-              "end": 18,
+              "start": 7,
+              "end": 19,
               "summary": "Una modifica è utile soltanto se migliora il workload dichiarato di DS4 senza"
             },
             {
               "title": "Ciclo obbligatorio",
               "level": 2,
-              "start": 19,
-              "end": 38,
+              "start": 20,
+              "end": 39,
               "summary": "1."
             },
             {
               "title": "Significatività minima",
               "level": 2,
-              "start": 39,
-              "end": 54,
+              "start": 40,
+              "end": 55,
               "summary": "Il default è cinque ripetizioni dopo un warm-up per workload."
             },
             {
               "title": "Correttezza",
               "level": 2,
-              "start": 55,
-              "end": 65,
+              "start": 56,
+              "end": 66,
               "summary": "Il harness non sostituisce gli scorer Qwen già presenti in"
             },
             {
               "title": "Misurazione hardware",
               "level": 2,
-              "start": 66,
-              "end": 73,
+              "start": 67,
+              "end": 74,
               "summary": "I tempi finali vengono dal percorso sincronizzato di ds4-bench."
             }
           ]

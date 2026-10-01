@@ -1,8 +1,8 @@
 # Indice tecnico di DwarfStar
 
 Questo file è la mappa di ingresso al progetto. Deve essere letto insieme ad
-`AGENT.md` e `todo.md` prima di iniziare un task e aggiornato quando un file
-rilevante viene aggiunto, rimosso, rinominato o cambia responsabilità.
+`AGENT.md` e le roadmap pertinenti in `docs/roadmaps/` prima di iniziare un task.
+Va aggiornato quando un file rilevante viene aggiunto, rimosso, rinominato o cambia responsabilità.
 
 DwarfStar non è un runner GGUF generico. È un motore specializzato che riconosce
 un insieme ristretto di famiglie e forme di modello, ne valida esplicitamente i
@@ -139,7 +139,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 
 - `AGENT.md` — vincoli architetturali, qualità, sicurezza e test obbligatori per
   chi modifica il progetto.
-- `todo.md` — roadmap ordinata, obiettivi Qwen3.6 e gate di correttezza.
+- `docs/roadmaps/` — roadmap ordinate, obiettivi di inferenza e gate di correttezza.
 - `README.md` — manuale utente e panoramica delle funzionalità, inclusi backend,
   streaming, distribuito, server, agent, KV e strumenti diagnostici.
 - `MODEL_CARD.md` — descrizione dei meccanismi specifici dei modelli DeepSeek,
@@ -242,11 +242,16 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `agent/` — sorgenti, test e configurazione del frontend NiceGUI FE / QS;
   `agent/src/fe/qs_bridge/` integra Client e DeepAgent, `agent/src/fe/state/`
   persiste chat e progetti e `agent/src/fe/ui/` gestisce l'interfaccia.
+  Il converter usa l'API pubblica dei metadati Message, senza esporre snapshot
+  al provider; l'adapter dei tool conserva lo stato di errore emesso da QS per
+  root, conversazioni figlie e UI.
 - `agent/wheels/` — wheel QS versionata, installabile con `uv sync --frozen`.
 - `agent/tests/parallel_execution.py` — test FE per modulo su CPU logiche, con
   fase esclusiva per test seriali e provider reali dopo il teardown degli altri worker.
 - `qs/tests/conftest.py` — worker QS sulle CPU logiche disponibili, opt-in dei
   test live e raggruppamento dei test seriali con `--dist=loadgroup`.
+  Le regressioni distinguono errori di esecuzione da risultati applicativi
+  negativi e verificano le due piattaforme di cancellazione dei processi.
 - `qs/` — repository Git locale dei sorgenti QS, con cronologia propria,
   esclusa dal Git di DS4.
 - `agent/sync_qs.sh` e `agent/src/fe/sync.py` — ricostruiscono QS dai sorgenti
@@ -351,6 +356,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   accelerati; descrive tensori opachi, operazioni, attention e batching,
   incluse le due primitive interne Qwen per full-attention gated e Gated
   DeltaNet.
+- `ds4_env.h` — parsing booleano condiviso dei flag Qwen CUDA/MTP, con default
+  per valori vuoti e riconoscimento di `0`, `false`, `off` e `no`.
 - `ds4_gpu_args.c`, `ds4_gpu_args.h` — parsing condiviso di dispositivi, budget
   VRAM e configurazione multi-GPU.
 - `ds4_layer_pack.c`, `ds4_layer_pack.h` — algoritmo puro C per assegnare
@@ -605,7 +612,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   dense, MoE, pair e vector MMQ; eseguibile con
   `make test-mmq-parity CUDA_ARCH=sm_86`.
 - `tests/test_sampling.c` — comportamento deterministico e filtri del sampling.
-- `tests/test_gpu_args.c`, `tests/test_gpu_args_cli.sh` — parsing e propagazione
+- `tests/test_gpu_args.c`, `tests/test_gpu_args_cli.sh` — rifiuto anticipato delle
+  modalità di constraint sconosciute, parsing e propagazione
   della configurazione GPU.
 - `tests/test_layer_pack.c` — invarianti del placement contiguo dei layer.
 - `tests/test_gpu_model_cache.c`, `tests/test_gpu_lookup_cache_strict.c` —

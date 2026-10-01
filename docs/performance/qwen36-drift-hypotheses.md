@@ -27,7 +27,7 @@ sequenza teacher-forced per entrambi i motori. Richiede:
 - nessun NaN o Inf;
 - determinismo su tre esecuzioni DS4 identiche;
 - overlap top-20 almeno 0,95, rank agreement top-20 almeno 0,98 e MAE delle
-  logprob dei token oracle non oltre 0,05, come definito in `todo.md`;
+  logprob dei token oracle non oltre 0,05;
 - confronto separato contro llama.cpp CPU e CUDA sullo stesso GGUF, senza
   promuovere automaticamente uno dei due a verita' semantica;
 - registrazione di commit, hash GGUF, driver, CUDA, build flags, modalita'
@@ -316,5 +316,5 @@ Stato: `DA ESEGUIRE`.
 - La RTX 3090 e' il sistema sotto test, non l'oracle semantico. Il confronto
   CPU/CUDA di llama.cpp serve a stimare l'effetto della diversa aritmetica,
   non a giustificare divergenze greedy.
-- Le prove 4K/16K restano bloccate finche' il gate corto e il gate prestazionale
-  definiti in `todo.md` non sono verdi.
+- Le prove 4K/16K restano bloccate finche' il gate corto di questo contratto e il
+  gate prestazionale di `docs/performance/agent_performance_contract.md` non sono verdi.

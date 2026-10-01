@@ -1,7 +1,8 @@
 # Contratto operativo per kernel engineering
 
 Questo documento è il gate operativo del performance harness. Va letto insieme
-ad AGENT.md, PROJECT_INDEX.md e todo.md prima di modificare kernel CUDA.
+ad `AGENT.md`, `PROJECT_INDEX.md` e alle roadmap pertinenti in `docs/roadmaps/`
+prima di modificare kernel CUDA.
 
 ## Obiettivo
 

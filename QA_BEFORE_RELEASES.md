@@ -4,7 +4,7 @@ This is the release gate for DwarfStar.  Run it before tagging or pushing a
 release build.  The goal is not to prove every code path exhaustively; it is to
 exercise the paths that have historically regressed: Metal graph inference,
 CUDA, ROCm, SSD streaming, distributed execution, disk KV cache, server APIs, and the
-agent TUI/tool state machine.
+FE/QS frontend, tool/skill state machine and browser UI.
 
 Do not run multiple huge model processes at the same time.  Record the commit,
 hardware, GGUF file, context size, and any non-default flags for every manual

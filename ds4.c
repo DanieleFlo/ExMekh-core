@@ -41,6 +41,7 @@
 #include <unistd.h>
 
 #include "ds4.h"
+#include "ds4_env.h"
 #include "ds4_distributed.h"
 #include "ds4_tp.h"
 
@@ -52645,7 +52646,7 @@ static bool qwen_graph_forward_rows(
     for (uint32_t i = 0; i < n_tokens; i++) {
         if (tokens[i] < 0 || (uint32_t)tokens[i] >= DS4_N_VOCAB) return false;
     }
-    const bool profile = getenv("DS4_CUDA_QWEN_PROFILE") != NULL;
+    const bool profile = ds4_env_flag_enabled("DS4_CUDA_QWEN_PROFILE", 0);
     double recurrent_attn_ms = 0.0, recurrent_ffn_ms = 0.0;
     double full_attn_ms = 0.0, full_ffn_ms = 0.0;
     bool ok = ds4_gpu_tensor_write(g->tokens, 0, tokens,
@@ -52789,7 +52790,7 @@ static bool qwen_graph_mtp_step(
         (!cache_only && (!hidden_out || (!logits_out && !top_out)))) return false;
 
     const ds4_layer_weights *l = &weights->block;
-    const bool profile = getenv("DS4_CUDA_QWEN_MTP_PROFILE") != NULL;
+    const bool profile = ds4_env_flag_enabled("DS4_CUDA_QWEN_MTP_PROFILE", 0);
     const double profile_t0 = profile ? now_sec() : 0.0;
     double input_ms = 0.0, attention_ms = 0.0, ffn_ms = 0.0;
     double head_ms = 0.0, read_ms = 0.0;
@@ -64061,7 +64062,8 @@ static int ds4_session_sync_internal(ds4_session *s, const ds4_tokens *prompt, c
             }
         }
         const int chunk_tokens = (int)s->prefill_cap;
-        const bool trace_token_path = getenv("DS4_QWEN_TRACE_DIR") != NULL;
+        const char *trace_dir = getenv("DS4_QWEN_TRACE_DIR");
+        const bool trace_token_path = trace_dir && trace_dir[0];
         for (int chunk_start = start; chunk_start < prompt->len; chunk_start += chunk_tokens) {
             const int remaining = prompt->len - chunk_start;
             const int span = chunk_tokens < remaining ? chunk_tokens : remaining;
@@ -71554,7 +71556,7 @@ static int ds4_session_qwen_mtp_spec_cycle(
     /* Sampling needs all target rows so the same sampler can consume them in
      * order. Keep the split layout strictly greedy/diagnostic. */
     const bool fused_target = target_row_sampling ||
-                              getenv("DS4_MTP_SPLIT_TARGET") == NULL;
+                              !ds4_env_flag_enabled("DS4_MTP_SPLIT_TARGET", 0);
     const uint64_t hidden_bytes = (uint64_t)DS4_N_EMBD * sizeof(float);
     const double target_t0 = now_sec();
     double cycle_seed_ms = 0.0;
@@ -71587,9 +71589,9 @@ static int ds4_session_qwen_mtp_spec_cycle(
      * versus target-only).  Keep the engine-level depth above one so the
      * frontends enter speculation, then cap this cycle only. */
     const bool force_depth2 =
-        getenv("DS4_MTP_QWEN_FORCE_DRAFT2") != NULL;
+        ds4_env_flag_enabled("DS4_MTP_QWEN_FORCE_DRAFT2", 0);
     if (!force_depth2 && draft_cap > 1 &&
-        (getenv("DS4_MTP_QWEN_DRAFT1") != NULL ||
+        (ds4_env_flag_enabled("DS4_MTP_QWEN_DRAFT1", 0) ||
          (uint32_t)start >= DS4_QWEN_MTP_DEPTH1_CONTEXT))
         draft_cap = 1;
     if (draft_cap > max_tokens - n_accept) draft_cap = max_tokens - n_accept;
@@ -71715,7 +71717,7 @@ static int ds4_session_qwen_mtp_spec_cycle(
         bool snap_ok = false;
         const bool lean_v2_snapshot =
             draft_n == 1 &&
-            getenv("DS4_MTP_QWEN_V2_SAFE_SNAPSHOT") == NULL;
+            !ds4_env_flag_enabled("DS4_MTP_QWEN_V2_SAFE_SNAPSHOT", 0);
         const uint64_t verify_rng_start = sampling && sampling->rng ?
             *sampling->rng : 0;
         if (target_row_sampling ||
