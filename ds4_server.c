@@ -4256,7 +4256,7 @@ static void append_qwen_assistant_message_prefix(buf *out,
     buf_puts(out, "\n</think>\n\n");
 }
 
-/* Qwen3.6 and Qwen3.8 are ChatML models.  DS4 deliberately keeps DSML as its
+/* Qwen3.8 is a ChatML model.  DS4 deliberately keeps DSML as its
  * constrained tool surface, but the surrounding roles and turn boundaries
  * must still match the audited tokenizer.chat_template.  Treating Qwen as
  * DeepSeek happened to work for short prompts because both vocabularies can
@@ -22224,10 +22224,6 @@ static void test_reasoning_effort_mapping(void) {
 }
 
 static void test_model_alias_thinking_controls(void) {
-    const ds4_model_descriptor *qwen36 =
-        ds4_model_descriptor_for_id("Qwen3.6-27B-Q4_K_S");
-    const ds4_model_descriptor *qwen36_legacy =
-        ds4_model_descriptor_for_id("Qwen3.6-27B-Q4_K_S.gguf");
     const ds4_model_descriptor *qwen38 =
         ds4_model_descriptor_for_id("Qwen3.8-27B-UD-Q4_K_S");
     TEST_ASSERT(model_alias_disables_thinking("deepseek-chat"));
@@ -22240,23 +22236,20 @@ static void test_model_alias_thinking_controls(void) {
     TEST_ASSERT(model_alias_enables_thinking("zai/glm-5.2-reasoner"));
     TEST_ASSERT(server_model_alias_known("glm-5.2-chat"));
     TEST_ASSERT(server_model_alias_known("glm-5.2-reasoner"));
-    TEST_ASSERT(server_model_alias_known("Qwen3.6-27B-Q4_K_S"));
-    TEST_ASSERT(server_model_alias_known("Qwen3.6-27B-Q4_K_M"));
+    TEST_ASSERT(!server_model_alias_known("Qwen3.6-27B-Q4_K_S"));
+    TEST_ASSERT(ds4_model_descriptor_for_id("Qwen3.6-27B-Q4_K_S") == NULL);
+    TEST_ASSERT(!server_model_alias_known("Qwen3.6-27B-Q4_K_M"));
+    TEST_ASSERT(ds4_model_descriptor_for_id("Qwen3.6-27B-Q4_K_M") == NULL);
     TEST_ASSERT(server_model_alias_known("Qwen3.8-27B-UD-Q4_K_S"));
-    TEST_ASSERT(server_model_alias_known("Qwen3.6-27B-Q4_K_S.gguf"));
-    TEST_ASSERT(server_model_alias_known("Qwen3.6-27B-Q4_K_M.gguf"));
+    TEST_ASSERT(!server_model_alias_known("Qwen3.6-27B-Q4_K_S.gguf"));
+    TEST_ASSERT(ds4_model_descriptor_for_id("Qwen3.6-27B-Q4_K_S.gguf") == NULL);
+    TEST_ASSERT(!server_model_alias_known("Qwen3.6-27B-Q4_K_M.gguf"));
+    TEST_ASSERT(ds4_model_descriptor_for_id("Qwen3.6-27B-Q4_K_M.gguf") == NULL);
     TEST_ASSERT(server_model_alias_known("Qwen3.8-27B-UD-Q4_K_S.gguf"));
     TEST_ASSERT(!server_model_alias_known("Qwen3.6-27B-Q4_K_X.gguf"));
-    TEST_ASSERT(qwen36 && qwen36->family == DS4_MODEL_FAMILY_QWEN35);
-    TEST_ASSERT(qwen36 == qwen36_legacy);
-    TEST_ASSERT(qwen36 &&
-                !strcmp(qwen36->canonical_id, "Qwen3.6-27B-Q4_K_S"));
-    TEST_ASSERT(qwen36 && qwen36->default_mtp_path &&
-                !strcmp(qwen36->default_mtp_path,
-                        DS4_QWEN36_DEFAULT_MTP_PATH));
-    TEST_ASSERT(qwen36 && qwen36->managed_cache_subdir &&
-                !strcmp(qwen36->managed_cache_subdir,
-                        ".ds4/qwen36-q4ks-kv"));
+    TEST_ASSERT(qwen38 == ds4_model_descriptor_for_id("Qwen3.8-27B-UD-Q4_K_S.gguf"));
+    TEST_ASSERT(qwen38 && qwen38->default_mtp_path &&
+                !strcmp(qwen38->default_mtp_path, DS4_QWEN38_DEFAULT_MTP_PATH));
     TEST_ASSERT(qwen38 && qwen38->kind ==
                 DS4_MODEL_QWEN38_27B_UD_Q4_K_S);
     TEST_ASSERT(qwen38 && qwen38->managed_cache_subdir &&
@@ -24671,17 +24664,6 @@ static void test_model_metadata_clamps_completion_to_context(void) {
     TEST_ASSERT(strstr(b.ptr, "\"name\":\"DeepSeek V4 Pro\"") != NULL);
     TEST_ASSERT(strstr(b.ptr, "\"context_length\":100000") != NULL);
     TEST_ASSERT(strstr(b.ptr, "\"max_completion_tokens\":4096") != NULL);
-    buf_free(&b);
-
-    append_model_json_values(&b,
-                             "Qwen3.6-27B-Q4_K_S",
-                             "Qwen3.6-27B-Q4_K_S",
-                             32768, 393216);
-    TEST_ASSERT(strstr(b.ptr,
-                       "\"id\":\"Qwen3.6-27B-Q4_K_S\"") != NULL);
-    TEST_ASSERT(strstr(b.ptr,
-                       "\"name\":\"Qwen3.6-27B-Q4_K_S\"") != NULL);
-    TEST_ASSERT(strstr(b.ptr, "\"max_completion_tokens\":32768") != NULL);
     buf_free(&b);
 
     append_model_json_values(&b,

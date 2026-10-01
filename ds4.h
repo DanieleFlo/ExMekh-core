@@ -62,7 +62,7 @@ typedef struct ds4_session ds4_session;
 /* Canonical model identity.
  *
  * GGUF architecture names describe a tensor layout, not a product name:
- * both Qwen3.6 and Qwen3.8 currently use the "qwen35" architecture string.
+ * Qwen3.8 uses the "qwen35" architecture string.
  * Frontends should use this descriptor instead of inferring the loaded model
  * from file paths, display names, or a growing list of boolean predicates. */
 typedef enum {
@@ -75,9 +75,8 @@ typedef enum {
     DS4_MODEL_DEEPSEEK_V4_FLASH = 0,
     DS4_MODEL_DEEPSEEK_V4_PRO,
     DS4_MODEL_GLM_52,
-    DS4_MODEL_QWEN36_27B_Q4_K_M,
-    DS4_MODEL_QWEN36_27B_Q4_K_S,
-    DS4_MODEL_QWEN38_27B_UD_Q4_K_S,
+    /* Keep the existing ID after retiring the Qwen3.6 catalog entries. */
+    DS4_MODEL_QWEN38_27B_UD_Q4_K_S = 5,
 } ds4_model_kind;
 
 typedef struct {
@@ -162,7 +161,6 @@ typedef struct {
 /* Known Qwen sidecars in the repository's normal ./gguf layout.  Frontends
  * set mtp_auto for --mtp; the engine selects the sidecar only after it has
  * structurally identified the target generation. */
-#define DS4_QWEN36_DEFAULT_MTP_PATH "gguf/mtp-Qwen3.6-27B-Q4_0.gguf"
 #define DS4_QWEN38_DEFAULT_MTP_PATH "gguf/mtp-Qwen3.8-27B-Q4_0.gguf"
 
 typedef struct {
@@ -295,7 +293,6 @@ bool ds4_engine_glm_layer_payload_bytes(ds4_engine *e,
 int ds4_engine_model_id(ds4_engine *e);
 /* Exact audited Qwen target predicates.  Cache policy uses these instead of
  * guessing from the model path or nominal quant bits. */
-bool ds4_engine_is_qwen36_q4_k_s(ds4_engine *e);
 bool ds4_engine_is_qwen38_ud_q4_k_s(ds4_engine *e);
 bool ds4_engine_is_qwen_q4_k_s(ds4_engine *e);
 bool ds4_engine_is_qwen(ds4_engine *e);

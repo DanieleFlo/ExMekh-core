@@ -39,10 +39,10 @@ class PerfHarnessTests(unittest.TestCase):
     def test_advertised_model_id_uses_the_server_canonical_id(self) -> None:
         payload = {
             "object": "list",
-            "data": [{"id": "Qwen3.6-27B-Q4_K_S", "object": "model"}],
+            "data": [{"id": "Qwen3.8-27B-UD-Q4_K_S", "object": "model"}],
         }
         self.assertEqual(
-            HARNESS.advertised_model_id(payload), "Qwen3.6-27B-Q4_K_S"
+            HARNESS.advertised_model_id(payload), "Qwen3.8-27B-UD-Q4_K_S"
         )
         for invalid in ({}, {"data": []}, {"data": [{}]}):
             with self.assertRaises(HARNESS.HarnessError):

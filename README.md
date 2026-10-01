@@ -5,7 +5,7 @@
 </p>
 
 **DwarfStar** is a small native inference engine for a deliberately narrow set
-of audited models: **DeepSeek V4 Flash/PRO**, **Qwen3.6/Qwen3.8 27B**, and
+of audited models: **DeepSeek V4 Flash/PRO**, **Qwen3.8 27B**, and
 **GLM 5.2**. It is self-contained, not a general GGUF runner. Model loading,
 prompt rendering, tool calls, KV state, the HTTP server, and the coding agent
 are built and tested together.
@@ -101,7 +101,7 @@ next sections.
 
 ## Model Weights
 
-This implementation only works with the audited DeepSeek V4, Qwen3.6/Qwen3.8
+This implementation only works with the audited DeepSeek V4, Qwen3.8
 27B, and GLM 5.2 GGUFs listed below. It is not a general GGUF loader, and arbitrary GGUF
 files will not have
 the tensor layout, quantization mix, metadata, or optional MTP state expected by
@@ -150,27 +150,14 @@ Flash and PRO GGUF generation are supported by the local tools. PRO conversion
 uses a compatible published PRO GGUF as its metadata, tensor-layout, and output
 type template.
 
-Qwen3.6 27B supports both audited quantizations below. The CLI takes the GGUF
-path, while clients connected to `ds4-server` use the extension-free API IDs
-`Qwen3.6-27B-Q4_K_S` or `Qwen3.6-27B-Q4_K_M`:
+Qwen3.8 27B UD-Q4_K_S is the supported Qwen target. Qwen3.6 targets and
+sidecars are rejected, including files renamed on disk. The `qwen35` GGUF
+architecture, shared quantization kernels and historical numerical fixtures
+remain available for Qwen3.8 and future audited models.
 
-```sh
-./ds4 -m gguf/Qwen3.6-27B-Q4_K_S.gguf
-./ds4 -m gguf/Qwen3.6-27B-Q4_K_M.gguf
-```
-
-Qwen MTP is off unless `--mtp` is present. That flag automatically loads
-`gguf/mtp-Qwen3.6-27B-Q4_0.gguf`; `--mtp-model FILE` overrides the support
-GGUF when an explicit path is needed. Qwen defaults to draft depth two and is
-hard-capped at depth four. On the local 24 GB RTX 3090, Qwen3.6 Q4_K_S plus MTP
-must use `--ctx 30000` or less so dynamic workspace and driver allocations keep
-enough VRAM headroom. On the RTX 3090 Q4_K_S validation, a simple repeated
-copy measured 1.52x in the CLI and 1.62x generation throughput through the
-server. With the normal sampled defaults (`temperature=1`, `top_p=1`,
-`min_p=0.05`), a fixed-seed CLI run measured 1.54x and remained token-identical
-to target-only sampling; lower draft acceptance gives a smaller gain. See the
-[MTP design](docs/architecture/qwen36-mtp-design.md) and the
-[llama.cpp control-flow/kernel audit](docs/research/guides/qwen36-mtp-llamacpp-ds4-control-flow.md).
+Qwen MTP is off unless `--mtp` is present. That flag automatically selects
+`gguf/mtp-Qwen3.8-27B-Q4_0.gguf`; `--mtp-model FILE` overrides the sidecar
+path. Qwen defaults to draft depth two and is hard-capped at depth four.
 
 The pinned Qwen3.8 target and matching MTP sidecar can be downloaded together:
 
@@ -184,7 +171,7 @@ DS4 audits its 65-block target layout, embedded NextN block, tokenizer, dynamic
 quant inventory, and the mixed Q3_K/Q4_K/Q6_K MTP layout. The CUDA backend has
 dedicated paths for the artifact's Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,
 IQ4_NL, and IQ4_XS tensors, so both target-only and MTP inference run through
-the same engine/session API used by Qwen3.6. See the
+the shared engine/session API. See the
 [Qwen3.8 compatibility audit](docs/architecture/qwen38-compatibility.md).
 
 Qwen3.8 is the primary operational and performance reference. The local server
@@ -193,7 +180,6 @@ launchers, performance harness, and JSONSchemaBench gate use
 28,000-token allocation; performance gates retain their own measured contexts.
 For other commands, pass `--mtp` or an explicit
 `--mtp-model gguf/mtp-Qwen3.8-27B-Q4_0.gguf` when the sidecar is wanted.
-Qwen3.6 remains supported and keeps its compatibility and smoke gates.
 
 ### Runtime ownership
 
@@ -262,8 +248,7 @@ make cpu              # CPU-only diagnostics build
 ```
 
 `./ds4flash.gguf` is the default model path used by both binaries. Pass `-m` to
-select another supported GGUF from `./gguf/`. The Qwen variants are exposed as
-`Qwen3.6-27B-Q4_K_S.gguf`, `Qwen3.6-27B-Q4_K_M.gguf`, and
+select another supported GGUF from `./gguf/`. The Qwen target is exposed as
 `Qwen3.8-27B-UD-Q4_K_S.gguf`. Run `./ds4 --help` and
 `./ds4-server --help` for the full flag list.
 
@@ -1138,8 +1123,6 @@ Supported endpoints:
 - `GET /v1/models`
 - `GET /v1/models/deepseek-v4-flash`
 - `GET /v1/models/deepseek-v4-pro`
-- `GET /v1/models/Qwen3.6-27B-Q4_K_S`
-- `GET /v1/models/Qwen3.6-27B-Q4_K_M`
 - `GET /v1/models/Qwen3.8-27B-UD-Q4_K_S`
 - `POST /v1/chat/completions`
 - `POST /v1/responses`
@@ -1368,8 +1351,7 @@ re-processing if it was written to the disk KV cache. In other words, memory
 cache handles the active session; disk cache is the resume mechanism for
 different sessions.
 
-For audited Qwen Q4_K_S targets this cache is enabled automatically at a
-generation-specific path: `~/.ds4/qwen36-q4ks-kv` or
+For Qwen3.8 UD-Q4_K_S this cache is enabled automatically at
 `~/.ds4/qwen38-ud-q4ks-kv`. Its default budget is 8192 MiB and its hard ceiling is
 9216 MiB, keeping the complete managed cache below 10 GB decimal. The budget
 also reserves space for active hierarchical skill checkpoints. Its default
@@ -1515,7 +1497,7 @@ Then it stores:
 The logits are raw IEEE-754 `float32` values from the host `ds4_session`
 buffer. They are saved immediately after the checkpoint tokens so a loaded
 snapshot can sample or continue from the exact next-token distribution without
-running one extra decode step. The audited Qwen3.6 Q4_K_S payload also persists
+running one extra decode step. The audited Qwen3.8 UD-Q4_K_S payload also persists
 the MTP pending hidden state, draft logits and metadata, and the live MTP KV
 rows. Other model payloads invalidate draft state after loading and rebuild it
 through normal generation.

@@ -10,6 +10,11 @@ metadata e costruisce percorsi di inferenza dedicati. La semantica del modello e
 lo scheduling principale vivono in C; Objective-C è usato solo per il runtime
 Metal, mentre CUDA e HIP contengono le implementazioni GPU specifiche.
 
+Qwen3.6 non è più un target supportato: catalogo, loader e downloader accettano
+solo Qwen3.8 per la famiglia GGUF `qwen35`. Kernel e strumenti numerici condivisi
+restano disponibili; documenti e fixture Qwen3.6 conservano evidenze storiche.
+Gli identificativi della shape e delle cache Qwen3.8 restano invariati.
+
 ## Ordine della spiegazione dettagliata
 
 Questi sono i capitoli da seguire per comprendere il motore dall'esterno verso
@@ -218,8 +223,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   linking, target dei binari e suite di test; espone anche la parita' CUDA
   isolata del backend MMQ vendorizzato tramite `test-mmq-parity`.
 - `download_model.sh` — download dei modelli e support model conosciuti dal
-  progetto: DeepSeek Flash 0731/DSpark, PRO 0813, GLM e gli artefatti Qwen3.6
-  e Qwen3.8 fissati con revisione e checksum.
+  progetto: DeepSeek Flash 0731/DSpark, PRO 0813, GLM e gli artefatti Qwen3.8
+  fissati con revisione e checksum.
 - `start-ds4-server.sh`, `agent/start-ds4-server.sh`, `agent/run.sh` —
   launcher eseguibili nativi per server CUDA e frontend FE / QS dalla copia WSL2
   `/home/daniele/ds4`; il progetto non modifica proxy o firewall Windows.
@@ -232,7 +237,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   espone per Qwen ID API canonici senza l'estensione `.gguf`, mantenendo gli ID
   storici come alias di compatibilità;
   per Responses gestisce inoltre il namespace `agentic`, il masking DSML dei
-  nomi e le frame gerarchiche delle skill. Per Qwen3.6 Q4_K_S abilita
+  nomi e le frame gerarchiche delle skill. Per Qwen3.8 UD-Q4_K_S abilita
   automaticamente una cache durevole con budget condiviso fra sessioni,
   prefissi di sistema e checkpoint delle skill; le history Responses vengono
   canonicalizzate senza reasoning storico prima della persistenza. La
@@ -292,8 +297,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   dall'harness per build/correctness, relink congiunto di `ds4`, `ds4-bench` e
   `ds4-server`, A/B F32-vs-R8 e ciclo profile/direction/slow sui contesti
   8K–16K, compreso il confronto GQA scalare/fuso. R8 fuso, split-K32 da 96 token e
-  GQA2, MTP V(3) sotto 2K e V(2) da 2K sono la baseline Qwen3.6 CUDA comune a
-  client e server.
+  GQA2 e i percorsi MTP conservano le primitive condivise Qwen CUDA. Le
+  misure Qwen3.6 restano evidenze storiche, non gate per il runtime corrente.
 - `performance/workloads.yaml` — workload canonici direction/quick/standard/slow/exhaustive
   e curva completa 2K–30K a passo 2K, incluse la conferma R8 breve e quella
   long-context a finestre da 64 token, separati per fase, batch, context e
@@ -335,10 +340,10 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   shape dei modelli, tensor binding, tokenizer, CPU reference, costruzione e
   scheduling del grafo, sessioni, prefill/decode, KV, logits, MTP e payload
   degli snapshot. Include il percorso specializzato Qwen `qwen35` text-only:
-  validazione del 27B Q4_K_M e Q4_K_S, tokenizer/template Qwen e sessione ibrida
+  validazione del Qwen3.8 27B UD-Q4_K_S, tokenizer/template Qwen e sessione ibrida
   full-attention/Gated DeltaNet CUDA e prefill layer-major a chunk. Espone il
   salvataggio/ripristino session-scoped su SSD dello stato ricorrente Qwen per
-  le frontiere delle skill; per Qwen3.6 Q4_K_S il payload generale portabile
+  le frontiere delle skill; per Qwen3.8 UD-Q4_K_S il payload generale portabile
   comprende inoltre timeline, logits, stato GDN, KV full-attention e stato MTP,
   e rifiuta il restore quando payload e runtime non concordano sulla modalita'
   MTP.
@@ -594,6 +599,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `tests/ds4_test.c --mtp-verify-depth` — verifica model-backed di accettazione,
   rollback e identità autoregressiva MTP; centralizza il contesto predefinito
   Qwen a 22.593 token, ancora sovrascrivibile con `DS4_TEST_MTP_CTX`.
+- `tests/test_qwen38_compatibility.py` — artefatti e caricamento Qwen3.8, rifiuto
+  di target/sidecar Qwen3.6 anche rinominati, downloader e help dei binari.
 - `tests/test_qwen36_fixtures.py`, `tests/test_qwen36_equivalence.py`,
   `tests/test_qwen36_numerics.py` — schema, staging, checksum, metriche/gate e
   classificazione sintetica dell'inviluppo numerico Qwen3.6.

@@ -1,5 +1,9 @@
 # Progressione di ottimizzazione CUDA — Qwen3.6 27B Q4_K_S su RTX 3090
 
+> Historical Qwen3.6 record. Runtime support was removed on 2026-10-01;
+> shared kernels and numerical tooling remain available for Qwen3.8 and other
+> audited models. Commands requiring Qwen3.6 inference no longer apply.
+
 > Checklist storica. I verdetti consolidati e gli esperimenti successivi sono
 > registrati in `docs/performance/qwen36-performance-ledger.md`.
 

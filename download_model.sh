@@ -3,9 +3,6 @@ set -e
 
 GLM_UNSLOTH_REPO="unsloth/GLM-5.2-GGUF"
 GLM_ANTIREZ_REPO="antirez/GLM-5.2-GGUF"
-QWEN36_REPO="ggml-org/Qwen3.6-27B-GGUF"
-QWEN36_UNSLOTH_REPO="unsloth/Qwen3.6-27B-GGUF"
-QWEN36_REVISION="8a7ee08e8b9bfb857107ecc25a5599d2f38b76f8"
 QWEN38_REPO="unsloth/Qwen3.8-27B-GGUF"
 QWEN38_REVISION="4ca720788d1e01f1bff70c033e0d0028fd02e502"
 REPO="antirez/deepseek-v4-gguf"
@@ -23,12 +20,6 @@ GLM_UNSLOTH_Q4_FIRST_FILE="$GLM_UNSLOTH_Q4_LOCAL_BASE-00001-of-00011.gguf"
 GLM_ANTIREZ_IQ2XXS_FILE="GLM-5.2-UD-IQ2_XXS_RoutedIQ2XXS_blk78Q2K.gguf"
 GLM_ANTIREZ_Q2_FILE="GLM-5.2-UD-Q2_K_RoutedQ2K.gguf"
 GLM_ANTIREZ_Q4_FILE="GLM-5.2-UD-Q4_K_RoutedQ4K.gguf"
-QWEN36_Q4_FILE="Qwen3.6-27B-Q4_K_M.gguf"
-QWEN36_Q4_S_FILE="Qwen3.6-27B-Q4_K_S.gguf"
-QWEN36_Q4_SHA256="65b753ea835627f7b511143c6ceb976525c7f21f5df8c664bc0a9c23d1c49921"
-QWEN36_Q4_S_SHA256="ff857ba9f2184d8be408e8cabda12c89ba5adb202fddc1a88b3774d7bb232aca"
-QWEN36_MTP_FILE="mtp-Qwen3.6-27B-Q4_0.gguf"
-QWEN36_MTP_SHA256="3d593f9e2788d59bb30d6024706b1efd5219fea466b6397c46159e3540937173"
 QWEN38_Q4_S_FILE="Qwen3.8-27B-UD-Q4_K_S.gguf"
 QWEN38_Q4_S_SHA256="75bc9c8adba2842e72f0ab5201aaa07133c5010b566305c09187fcbdcd364017"
 QWEN38_MTP_REMOTE_FILE="MTP/mtp-Qwen3.8-27B-Q4_0.gguf"
@@ -61,10 +52,6 @@ Usage:
   ./download_model.sh glm-antirez-iq2xxs [--token TOKEN]
   ./download_model.sh glm-antirez-q2 [--token TOKEN]
   ./download_model.sh glm-antirez-q4 [--token TOKEN]
-  ./download_model.sh qwen36-q4 [--token TOKEN]
-  ./download_model.sh qwen36-q4-s [--token TOKEN]
-  ./download_model.sh qwen36-mtp [--token TOKEN]
-  ./download_model.sh qwen36-q4-mtp [--token TOKEN]
   ./download_model.sh qwen38-q4-s [--token TOKEN]
   ./download_model.sh qwen38-mtp [--token TOKEN]
   ./download_model.sh qwen38-q4-mtp [--token TOKEN]
@@ -126,21 +113,6 @@ Targets:
   glm-antirez-q4
        GLM 5.2 antirez routed Q4_K GGUF from antirez/GLM-5.2-GGUF.
        About 434 GB on disk.
-
-  qwen36-q4
-       Qwen3.6 27B Q4_K_M target GGUF, about 19 GB on disk.
-
-  qwen36-q4-s
-       Qwen3.6 27B Q4_K_S target GGUF from unsloth/Qwen3.6-27B-GGUF,
-       about 15.9 GB on disk. Recommended for a 24 GB RTX 3090.
-
-  qwen36-mtp
-       Optional Qwen3.6 27B MTP Q4_0 GGUF, about 1.7 GB on disk. Enable it
-       with --mtp; no path argument is required for the default ./gguf layout.
-
-  qwen36-q4-mtp
-       Downloads both Qwen3.6 files, verifies their SHA-256 checksums, and
-       links ./ds4flash.gguf to the Q4_K_M target model.
 
   qwen38-q4-s
        Qwen3.8 27B Unsloth dynamic UD-Q4_K_S target GGUF, about 15.4 GB.
@@ -226,32 +198,6 @@ case "$MODEL" in
     glm-antirez-q4)
         REPO=$GLM_ANTIREZ_REPO
         MODEL_FILE=$GLM_ANTIREZ_Q4_FILE
-        FORCE_HF_DOWNLOAD=1
-        ;;
-    qwen36-q4)
-        REPO=$QWEN36_REPO
-        HF_REVISION=$QWEN36_REVISION
-        MODEL_FILE=$QWEN36_Q4_FILE
-        FORCE_HF_DOWNLOAD=1
-        ;;
-    qwen36-q4-s)
-        REPO=$QWEN36_UNSLOTH_REPO
-        HF_REVISION=
-        MODEL_FILE=$QWEN36_Q4_S_FILE
-        FORCE_HF_DOWNLOAD=1
-        ;;
-    qwen36-mtp)
-        REPO=$QWEN36_REPO
-        HF_REVISION=$QWEN36_REVISION
-        MODEL_FILE=$QWEN36_MTP_FILE
-        FORCE_HF_DOWNLOAD=1
-        LINK_MODEL=0
-        ;;
-    qwen36-q4-mtp)
-        REPO=$QWEN36_REPO
-        HF_REVISION=$QWEN36_REVISION
-        MODEL_FILE=$QWEN36_Q4_FILE
-        MODEL_FILES="$QWEN36_Q4_FILE $QWEN36_MTP_FILE"
         FORCE_HF_DOWNLOAD=1
         ;;
     qwen38-q4-s)
@@ -405,9 +351,6 @@ verify_sha256() {
     file=$1
     expected=
     case "$(basename "$file")" in
-        "$QWEN36_Q4_FILE") expected=$QWEN36_Q4_SHA256 ;;
-        "$QWEN36_Q4_S_FILE") expected=$QWEN36_Q4_S_SHA256 ;;
-        "$QWEN36_MTP_FILE") expected=$QWEN36_MTP_SHA256 ;;
         "$QWEN38_Q4_S_FILE") expected=$QWEN38_Q4_S_SHA256 ;;
         "$QWEN38_MTP_FILE") expected=$QWEN38_MTP_SHA256 ;;
         *) return 0 ;;
@@ -482,11 +425,7 @@ else
     verify_sha256 "$MODEL_FILE"
 fi
 
-if [ "$MODEL" = "qwen36-mtp" ]; then
-    echo
-    echo "Qwen3.6 MTP downloaded to $OUT_DIR/$QWEN36_MTP_FILE."
-    echo "Enable it with ./ds4 --mtp or ./ds4-server --mtp."
-elif [ "$MODEL" = "qwen38-mtp" ]; then
+if [ "$MODEL" = "qwen38-mtp" ]; then
     echo
     echo "Qwen3.8 MTP downloaded to $OUT_DIR/$QWEN38_MTP_FILE."
     echo "Enable it with ./ds4 --mtp or ./ds4-server --mtp."

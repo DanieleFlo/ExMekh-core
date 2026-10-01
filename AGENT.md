@@ -9,7 +9,7 @@ source and the reason an existing solution does or does not transfer to DS4. Kee
 changes responsibility.
 
 `ds4.c` is a specialized inference engine for the explicitly audited DeepSeek
-V4, GLM 5.2, and Qwen3.6/Qwen3.8 layouts. It is not a generic GGUF runner. The
+V4, GLM 5.2, and Qwen3.8 layouts. It is not a generic GGUF runner. The
 goal is a small, readable, high-performance C codebase with Objective-C only
 where Metal requires it and Metal kernels under `metal/`.
 

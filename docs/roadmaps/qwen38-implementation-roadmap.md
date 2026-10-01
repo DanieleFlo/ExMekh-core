@@ -1,5 +1,9 @@
 # Roadmap di integrazione Qwen3.8 27B UD-Q4_K_S
 
+> Current runtime: Qwen3.8 only for the `qwen35` family. Qwen3.6 support
+> was removed on 2026-10-01; its regression results and shared-kernel evidence
+> below are historical, rather than current compatibility requirements.
+
 Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture
 ritirati non sono verifiche del frontend corrente. Vedere
 [la guida FE / QS](../agentic/frontend.md).

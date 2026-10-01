@@ -12,77 +12,77 @@
               "title": "Qwen3.6 MTP implementation",
               "level": 1,
               "start": 1,
-              "end": 249,
-              "summary": "DS4 supports native Qwen3.6 Multi-Token Prediction on the single-GPU CUDA"
+              "end": 253,
+              "summary": "> Historical Qwen3.6 record."
             },
             {
               "title": "Scope and contract",
               "level": 2,
-              "start": 3,
-              "end": 25,
+              "start": 7,
+              "end": 29,
               "summary": "DS4 supports native Qwen3.6 Multi-Token Prediction on the single-GPU CUDA"
             },
             {
               "title": "GGUF and NextN semantics",
               "level": 2,
-              "start": 26,
-              "end": 54,
+              "start": 30,
+              "end": 58,
               "summary": "The support model is selected structurally, not by filename:"
             },
             {
               "title": "Session state",
               "level": 2,
-              "start": 55,
-              "end": 70,
+              "start": 59,
+              "end": 74,
               "summary": "Each enabled Qwen session owns:"
             },
             {
               "title": "Production adaptive-depth cycle",
               "level": 2,
-              "start": 71,
-              "end": 107,
+              "start": 75,
+              "end": 111,
               "summary": "Below 2K, the configured depth-two cycle is:"
             },
             {
               "title": "Sampling and logits masks",
               "level": 2,
-              "start": 108,
-              "end": 137,
+              "start": 112,
+              "end": 141,
               "summary": "DS4 follows llama.cpp's current sample-and-match contract."
             },
             {
               "title": "CUDA paths",
               "level": 2,
-              "start": 138,
-              "end": 166,
+              "start": 142,
+              "end": 170,
               "summary": "Q4_K, Q5_K, and Q6_K verifier matmuls use Q8_1 plus a second Q8_1 residual."
             },
             {
               "title": "Target verifier",
               "level": 3,
-              "start": 140,
-              "end": 159,
+              "start": 144,
+              "end": 163,
               "summary": "Q4_K, Q5_K, and Q6_K verifier matmuls use Q8_1 plus a second Q8_1 residual."
             },
             {
               "title": "Support network",
               "level": 3,
-              "start": 160,
-              "end": 166,
+              "start": 164,
+              "end": 170,
               "summary": "The Q4_0 shared head uses Q8_1+residual DP4A and schedules eight output rows per"
             },
             {
               "title": "Failure policy",
               "level": 2,
-              "start": 167,
-              "end": 178,
+              "start": 171,
+              "end": 182,
               "summary": "diagnostic."
             },
             {
               "title": "Validation gate",
               "level": 2,
-              "start": 179,
-              "end": 249,
+              "start": 183,
+              "end": 253,
               "summary": "The production model-backed command is:"
             }
           ]
@@ -94,42 +94,42 @@
               "title": "Qwen3.8 27B UD-Q4_K_S compatibility audit",
               "level": 1,
               "start": 1,
-              "end": 104,
-              "summary": "DS4 recognizes only the audited Unsloth pair at repository revision"
+              "end": 108,
+              "summary": "> Current runtime: Qwen3.8 only for the `qwen35` family."
             },
             {
               "title": "Pinned artifacts",
               "level": 2,
-              "start": 3,
-              "end": 15,
+              "start": 7,
+              "end": 19,
               "summary": "DS4 recognizes only the audited Unsloth pair at repository revision"
             },
             {
               "title": "Architecture and GGUF contract",
               "level": 2,
-              "start": 16,
-              "end": 44,
+              "start": 20,
+              "end": 48,
               "summary": "The runtime architecture is the existing `qwen35` implementation: 64 target"
             },
             {
               "title": "Frontend behavior",
               "level": 2,
-              "start": 45,
-              "end": 67,
+              "start": 49,
+              "end": 71,
               "summary": "Both `ds4` and `ds4-server` recognize the stable model ID"
             },
             {
               "title": "Test and oracle isolation",
               "level": 2,
-              "start": 68,
-              "end": 93,
+              "start": 72,
+              "end": 97,
               "summary": "`make test-qwen38` validates the pinned metadata snapshots, embedded and"
             },
             {
               "title": "CUDA runtime status",
               "level": 2,
-              "start": 94,
-              "end": 104,
+              "start": 98,
+              "end": 108,
               "summary": "The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,"
             }
           ]
@@ -1275,112 +1275,112 @@
               "title": "Progressione di ottimizzazione CUDA — Qwen3.6 27B Q4_K_S su RTX 3090",
               "level": 1,
               "start": 1,
-              "end": 478,
-              "summary": "> Checklist storica."
+              "end": 482,
+              "summary": "> Historical Qwen3.6 record."
             },
             {
               "title": "Stato sintetico",
               "level": 2,
-              "start": 15,
-              "end": 33,
+              "start": 19,
+              "end": 37,
               "summary": "Le caselle vanno marcate solo quando sono presenti nel registro del punto:"
             },
             {
               "title": "Invarianti comuni",
               "level": 2,
-              "start": 34,
-              "end": 56,
+              "start": 38,
+              "end": 60,
               "summary": "F32=449, Q4_K=341, Q5_K=60 e Q6_K=1."
             },
             {
               "title": "Cosa significa “occupare tutta la bandwidth”",
               "level": 2,
-              "start": 57,
-              "end": 92,
+              "start": 61,
+              "end": 96,
               "summary": "La RTX 3090 dichiara 936 GB/s di banda GDDR6X (circa 871,7 GiB/s)."
             },
             {
               "title": "Protocollo di rollback e diagnosi",
               "level": 2,
-              "start": 93,
-              "end": 111,
+              "start": 97,
+              "end": 115,
               "summary": "Ogni punto segue la stessa sequenza:"
             },
             {
               "title": "0. Congelare artefatto, baseline e budget VRAM",
               "level": 2,
-              "start": 112,
-              "end": 145,
+              "start": 116,
+              "end": 149,
               "summary": "**Gap.** Le misure storiche non sono tutte artifact-identical: LM Studio ha"
             },
             {
               "title": "1. Portare Q8_1 e MMVQ per Q4_K e Q5_K",
               "level": 2,
-              "start": 146,
-              "end": 199,
+              "start": 150,
+              "end": 203,
               "summary": "**Gap.** DS4 possiede Q8_K a 256 valori e un Q8_32 ingenuo, ma non il blocco"
             },
             {
               "title": "2. Portare Q6_K × Q8_1 per l'output head",
               "level": 2,
-              "start": 200,
-              "end": 230,
+              "start": 204,
+              "end": 234,
               "summary": "**Gap.** L'unico tensore Q6_K è l'output head da 248.320 righe."
             },
             {
               "title": "3. Riutilizzare Q8_1 e fondere gate/up/SwiGLU",
               "level": 2,
-              "start": 231,
-              "end": 259,
+              "start": 235,
+              "end": 263,
               "summary": "**Gap.** Gate e up leggono la stessa attivazione normalizzata, ma oggi ciascun"
             },
             {
               "title": "4. Allineare e profilare il Gated Delta Net decode fuso",
               "level": 2,
-              "start": 260,
-              "end": 295,
+              "start": 264,
+              "end": 299,
               "summary": "**Gap.** DS4 ha già kernel GDN dedicati e il probe numerico è verde, ma avere"
             },
             {
               "title": "5. Preallocare tutto lo scratch del decode",
               "level": 2,
-              "start": 296,
-              "end": 321,
+              "start": 300,
+              "end": 325,
               "summary": "**Gap.** I candidati Q8 correnti usano `cuda_tmp_alloc_on` durante il matmul;"
             },
             {
               "title": "6. Reintrodurre CUDA Graph sul percorso stabile",
               "level": 2,
-              "start": 322,
-              "end": 354,
+              "start": 326,
+              "end": 358,
               "summary": "**Gap.** Il prototipo precedente riusava il graph ma non accelerava i matvec e"
             },
             {
               "title": "7. Autotuning controllato per saturare la bandwidth",
               "level": 2,
-              "start": 355,
-              "end": 395,
+              "start": 359,
+              "end": 399,
               "summary": "**Gap.** La geometria upstream è un ottimo punto iniziale, ma la RTX 3090"
             },
             {
               "title": "8. Matrice context/VRAM e validazione finale GPU",
               "level": 2,
-              "start": 396,
-              "end": 424,
+              "start": 400,
+              "end": 428,
               "summary": "**Gap.** Un percorso veloce a context 128 può perdere vantaggio o superare i"
             },
             {
               "title": "9. Valutazione e confronto finale con la CPU",
               "level": 2,
-              "start": 425,
-              "end": 463,
+              "start": 429,
+              "end": 467,
               "summary": "Questo è obbligatoriamente l'ultimo punto."
             },
             {
               "title": "Riferimenti principali",
               "level": 2,
-              "start": 464,
-              "end": 478,
+              "start": 468,
+              "end": 482,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             }
           ]
@@ -1392,161 +1392,161 @@
               "title": "Registro delle ipotesi sul drift Qwen3.6",
               "level": 1,
               "start": 1,
-              "end": 320,
-              "summary": "> Questo file conserva la diagnosi del drift."
+              "end": 324,
+              "summary": "> Historical Qwen3.6 record."
             },
             {
               "title": "Contratto di successo",
               "level": 2,
-              "start": 18,
-              "end": 40,
+              "start": 22,
+              "end": 44,
               "summary": "Il gate minimo usa lo stesso GGUF, gli stessi token di prompt e la stessa"
             },
             {
               "title": "Metodo",
               "level": 2,
-              "start": 41,
-              "end": 52,
+              "start": 45,
+              "end": 56,
               "summary": "1."
             },
             {
               "title": "Stato sintetico",
               "level": 2,
-              "start": 53,
-              "end": 78,
+              "start": 57,
+              "end": 82,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Evidenze consolidate",
               "level": 2,
-              "start": 79,
-              "end": 243,
+              "start": 83,
+              "end": 247,
               "summary": "teacher-forced delle logprob oracle 0,21145."
             },
             {
               "title": "2026-08-04 - corpus corto corretto",
               "level": 3,
-              "start": 81,
-              "end": 93,
+              "start": 85,
+              "end": 97,
               "summary": "teacher-forced delle logprob oracle 0,21145."
             },
             {
               "title": "2026-08-04 - bisezione per prefisso",
               "level": 3,
-              "start": 94,
-              "end": 103,
+              "start": 98,
+              "end": 107,
               "summary": "2,7811; dopo `assistant`, prefisso 19, cambia l'argmax."
             },
             {
               "title": "2026-08-04 - bisezione per layer",
               "level": 3,
-              "start": 104,
-              "end": 114,
+              "start": 108,
+              "end": 118,
               "summary": "1,217 al layer 63; nessun NaN/Inf."
             },
             {
               "title": "2026-08-05 - testata, matrice numerica e inviluppo CPU/CUDA",
               "level": 3,
-              "start": 115,
-              "end": 132,
+              "start": 119,
+              "end": 136,
               "summary": "output norm i logits hanno MAE centrata 0,532, coseno 0,959 e overlap top-20"
             },
             {
               "title": "2026-08-05 - gate reale 32+32 contro llama CPU",
               "level": 3,
-              "start": 133,
-              "end": 150,
+              "start": 137,
+              "end": 154,
               "summary": "0,22287, MAE centrata 0,17247 e MAE logprob target 0,18266."
             },
             {
               "title": "2026-08-05 - esperimenti matvec quantizzato",
               "level": 3,
-              "start": 151,
-              "end": 171,
+              "start": 155,
+              "end": 175,
               "summary": "misurabili sono QKV 2,19e-4, attention output 1,83e-5 e FFN output 1,64e-4."
             },
             {
               "title": "2026-08-05 - determinismo release",
               "level": 3,
-              "start": 172,
-              "end": 179,
+              "start": 176,
+              "end": 183,
               "summary": "Tre processi separati, stesso build `sm_86`, stesso GGUF, prompt e posizione"
             },
             {
               "title": "2026-08-05 - laboratorio numerico e audit Ollama",
               "level": 3,
-              "start": 180,
-              "end": 201,
+              "start": 184,
+              "end": 205,
               "summary": "CPU indipendente a input identici."
             },
             {
               "title": "2026-08-05 - correzione layout tiled confermata end-to-end",
               "level": 3,
-              "start": 202,
-              "end": 215,
+              "start": 206,
+              "end": 219,
               "summary": "Hugging Face fissato."
             },
             {
               "title": "2026-08-05 - suite corta tiled rigenerata",
               "level": 3,
-              "start": 216,
-              "end": 243,
+              "start": 220,
+              "end": 247,
               "summary": "passi greedy e 32 teacher-forced per caso; verifica struttura/checksum `PASS`."
             },
             {
               "title": "Sequenza degli esperimenti",
               "level": 2,
-              "start": 244,
-              "end": 310,
+              "start": 248,
+              "end": 314,
               "summary": "Stato: `COMPLETATO, H04 RESPINTA`."
             },
             {
               "title": "E01 - ultimo residuo, output norm e output head",
               "level": 3,
-              "start": 246,
-              "end": 254,
+              "start": 250,
+              "end": 258,
               "summary": "Stato: `COMPLETATO, H04 RESPINTA`."
             },
             {
               "title": "E02 - inviluppo llama.cpp CPU/CUDA",
               "level": 3,
-              "start": 255,
-              "end": 263,
+              "start": 259,
+              "end": 267,
               "summary": "Stato: `COMPLETATO, H05 CONFERMATA`."
             },
             {
               "title": "E03 - matrice numerica DS4",
               "level": 3,
-              "start": 264,
-              "end": 277,
+              "start": 268,
+              "end": 281,
               "summary": "Stato: `COMPLETATO; TF32 BIT-EXACT, FAST-MATH NON RISOLUTIVO`."
             },
             {
               "title": "E04 - prima primitiva divergente",
               "level": 3,
-              "start": 278,
-              "end": 286,
+              "start": 282,
+              "end": 290,
               "summary": "Stato: `IN CORSO; GDN DECODE RESPINTA, POLICY MATVEC QUANTIZZATO ISOLATA`."
             },
             {
               "title": "E05 - gate 32 token",
               "level": 3,
-              "start": 287,
-              "end": 295,
+              "start": 291,
+              "end": 299,
               "summary": "Stato: `GATE CORTO CALIBRATO, ZERO FAILURE; RENDERER NATIVO NON VERIFICATO`."
             },
             {
               "title": "E06 - oracle semantico e prossima localizzazione",
               "level": 3,
-              "start": 296,
-              "end": 310,
+              "start": 300,
+              "end": 314,
               "summary": "Stato: `DA ESEGUIRE`."
             },
             {
               "title": "Diario delle decisioni",
               "level": 2,
-              "start": 311,
-              "end": 320,
+              "start": 315,
+              "end": 324,
               "summary": "`--use_fast_math` e' una proprieta' di compilazione dei kernel custom."
             }
           ]
@@ -1558,273 +1558,273 @@
               "title": "Perché LM Studio raggiunge 37,66 token/s con Qwen3.6 27B e come replicarlo in DS4",
               "level": 1,
               "start": 1,
-              "end": 614,
-              "summary": "> Analisi storica e fonte di ipotesi."
+              "end": 618,
+              "summary": "> Historical Qwen3.6 record."
             },
             {
               "title": "1. Risultato osservato e configurazione confrontata",
               "level": 2,
-              "start": 25,
-              "end": 50,
+              "start": 29,
+              "end": 54,
               "summary": "LM Studio ha prodotto 329 token a **37,66 token/s**, cioè circa **26,56 ms per"
             },
             {
               "title": "2. Il modello mentale corretto per la RTX 3090",
               "level": 2,
-              "start": 51,
-              "end": 96,
+              "start": 55,
+              "end": 100,
               "summary": "Per ogni nuovo token, un modello denso deve attraversare quasi tutti i pesi di"
             },
             {
               "title": "2.1 Perché il decoding è soprattutto limitato dalla memoria",
               "level": 3,
-              "start": 53,
-              "end": 73,
+              "start": 57,
+              "end": 77,
               "summary": "Per ogni nuovo token, un modello denso deve attraversare quasi tutti i pesi di"
             },
             {
               "title": "2.2 Warp, coalescing e occupazione",
               "level": 3,
-              "start": 74,
-              "end": 96,
+              "start": 78,
+              "end": 100,
               "summary": "Una RTX 3090 esegue i thread in warp da 32."
             },
             {
               "title": "3. Cosa fa llama.cpp nel percorso veloce",
               "level": 2,
-              "start": 97,
-              "end": 232,
+              "start": 101,
+              "end": 236,
               "summary": "Il sorgente della build usata da LM Studio è stato ispezionato al commit esatto"
             },
             {
               "title": "3.1 Pesi compressi e attivazioni Q8_1 temporanee",
               "level": 3,
-              "start": 102,
-              "end": 158,
+              "start": 106,
+              "end": 162,
               "summary": "I pesi rimangono Q4_K, Q5_K o Q6_K in VRAM."
             },
             {
               "title": "3.2 MMVQ specializzato",
               "level": 3,
-              "start": 159,
-              "end": 172,
+              "start": 163,
+              "end": 176,
               "summary": "llama.cpp non usa un loop scalare generico sopra questi blocchi."
             },
             {
               "title": "3.3 Full offload e memoria residente",
               "level": 3,
-              "start": 173,
-              "end": 183,
+              "start": 177,
+              "end": 187,
               "summary": "Con tutti i layer sulla RTX 3090, il token non attraversa PCIe fra CPU e GPU a"
             },
             {
               "title": "3.4 Flash Attention",
               "level": 3,
-              "start": 184,
-              "end": 199,
+              "start": 188,
+              "end": 203,
               "summary": "Flash Attention fonde la formazione dei punteggi, softmax e prodotto con V in"
             },
             {
               "title": "3.5 Gated Delta Net fusa",
               "level": 3,
-              "start": 200,
-              "end": 216,
+              "start": 204,
+              "end": 220,
               "summary": "Qwen3.6 alterna full attention e layer ricorrenti Gated Delta Net."
             },
             {
               "title": "3.6 Riuso del grafo CUDA",
               "level": 3,
-              "start": 217,
-              "end": 232,
+              "start": 221,
+              "end": 236,
               "summary": "CUDA Graph registra una sequenza di kernel e la ripresenta con una sola"
             },
             {
               "title": "4. Cosa è già implementato in DS4",
               "level": 2,
-              "start": 233,
-              "end": 320,
+              "start": 237,
+              "end": 324,
               "summary": "Il loader ora riconosce e valida il layout misto del Q4_K_S, inclusi i tensori"
             },
             {
               "title": "4.1 Supporto completo del GGUF Q4_K_S",
               "level": 3,
-              "start": 235,
-              "end": 250,
+              "start": 239,
+              "end": 254,
               "summary": "Il loader ora riconosce e valida il layout misto del Q4_K_S, inclusi i tensori"
             },
             {
               "title": "4.2 Modello interamente residente e layer-major prefill",
               "level": 3,
-              "start": 251,
-              "end": 258,
+              "start": 255,
+              "end": 262,
               "summary": "DS4 copia il modello sulla GPU, conserva la KV sulla GPU e usa prefill"
             },
             {
               "title": "4.3 Kernel float warp8 affidabili",
               "level": 3,
-              "start": 259,
-              "end": 266,
+              "start": 263,
+              "end": 270,
               "summary": "Q4_K, Q5_K e Q6_K hanno percorsi warp8 che riducono drasticamente il numero di"
             },
             {
               "title": "4.4 Q4_K/Q5_K × Q8_K diagnostico",
               "level": 3,
-              "start": 267,
-              "end": 307,
+              "start": 271,
+              "end": 311,
               "summary": "È stato esteso il percorso sperimentale"
             },
             {
               "title": "4.5 Selettori per isolare le proiezioni",
               "level": 3,
-              "start": 308,
-              "end": 320,
+              "start": 312,
+              "end": 324,
               "summary": "I flag diagnostici permettono di applicare Q8 soltanto a:"
             },
             {
               "title": "5. Esperimenti scartati o non promossi",
               "level": 2,
-              "start": 321,
-              "end": 374,
+              "start": 325,
+              "end": 378,
               "summary": "È stato costruito un prototipo che:"
             },
             {
               "title": "5.1 CUDA Graph DS4",
               "level": 3,
-              "start": 323,
-              "end": 339,
+              "start": 327,
+              "end": 343,
               "summary": "È stato costruito un prototipo che:"
             },
             {
               "title": "5.2 Q8 per gruppi da 32 implementato in modo ingenuo",
               "level": 3,
-              "start": 340,
-              "end": 349,
+              "start": 344,
+              "end": 353,
               "summary": "DS4 possedeva già un esperimento `Q8_32`, concettualmente più vicino a Q8_1:"
             },
             {
               "title": "5.3 Q6_K × Q8_K artigianale",
               "level": 3,
-              "start": 350,
-              "end": 361,
+              "start": 354,
+              "end": 365,
               "summary": "È stato provato un kernel Q6 per accelerare l'output head da 248.320 righe."
             },
             {
               "title": "5.4 KV cache a 8 bit",
               "level": 3,
-              "start": 362,
-              "end": 369,
+              "start": 366,
+              "end": 373,
               "summary": "Non è stata implementata né forzata."
             },
             {
               "title": "5.5 MTP/speculative decoding",
               "level": 3,
-              "start": 370,
-              "end": 374,
+              "start": 374,
+              "end": 378,
               "summary": "Non è stato usato."
             },
             {
               "title": "6. Risultati prestazionali della sessione",
               "level": 2,
-              "start": 375,
-              "end": 401,
+              "start": 379,
+              "end": 405,
               "summary": "Benchmark comune:"
             },
             {
               "title": "7. Gate numerici ed end-to-end",
               "level": 2,
-              "start": 402,
-              "end": 476,
+              "start": 406,
+              "end": 480,
               "summary": "La suite `qwen_numerics_probe` è PASS:"
             },
             {
               "title": "7.1 Probe di primitive: riusciti",
               "level": 3,
-              "start": 404,
-              "end": 418,
+              "start": 408,
+              "end": 422,
               "summary": "La suite `qwen_numerics_probe` è PASS:"
             },
             {
               "title": "7.2 Un singolo prompt: riuscito ma insufficiente",
               "level": 3,
-              "start": 419,
-              "end": 434,
+              "start": 423,
+              "end": 438,
               "summary": "Su `short_fact_english`, Q4/Q5×Q8_K completo contro la baseline float ha dato:"
             },
             {
               "title": "7.3 Suite corta completa: fallimenti",
               "level": 3,
-              "start": 435,
-              "end": 455,
+              "start": 439,
+              "end": 459,
               "summary": "La suite contiene otto casi e confronta 32 righe greedy più 32 righe"
             },
             {
               "title": "7.4 Perché il probe passa ma il modello fallisce",
               "level": 3,
-              "start": 456,
-              "end": 476,
+              "start": 460,
+              "end": 480,
               "summary": "Il probe risponde alla domanda:"
             },
             {
               "title": "8. Come rifare meglio la conversione float→int8",
               "level": 2,
-              "start": 477,
-              "end": 558,
+              "start": 481,
+              "end": 562,
               "summary": "Il prossimo candidato dovrebbe adottare esattamente un blocco da 32:"
             },
             {
               "title": "8.1 Portare Q8_1, non rinominare Q8_K",
               "level": 3,
-              "start": 479,
-              "end": 499,
+              "start": 483,
+              "end": 503,
               "summary": "Il prossimo candidato dovrebbe adottare esattamente un blocco da 32:"
             },
             {
               "title": "8.2 Portare insieme il vec-dot e la geometria MMVQ",
               "level": 3,
-              "start": 500,
-              "end": 516,
+              "start": 504,
+              "end": 520,
               "summary": "La sequenza consigliata è:"
             },
             {
               "title": "8.3 Quantizzare una volta e riusare per gate/up",
               "level": 3,
-              "start": 517,
-              "end": 530,
+              "start": 521,
+              "end": 534,
               "summary": "Gate e up leggono la stessa attivazione normalizzata."
             },
             {
               "title": "8.4 Preallocare lo scratch prima di CUDA Graph",
               "level": 3,
-              "start": 531,
-              "end": 545,
+              "start": 535,
+              "end": 549,
               "summary": "Il buffer Q8_1 massimo necessario per ciascuna dimensione deve appartenere al"
             },
             {
               "title": "8.5 Usare una frontiera di layer solo come strumento diagnostico",
               "level": 3,
-              "start": 546,
-              "end": 558,
+              "start": 550,
+              "end": 562,
               "summary": "Ridurre Q8 ai primi o agli ultimi layer aiuta a localizzare la sensibilità, ma"
             },
             {
               "title": "9. Relazione con il riferimento CPU",
               "level": 2,
-              "start": 559,
-              "end": 578,
+              "start": 563,
+              "end": 582,
               "summary": "Il backend CPU rimane un riferimento utile per layout, formula e ordine"
             },
             {
               "title": "10. Piano di lavoro consigliato",
               "level": 2,
-              "start": 579,
-              "end": 604,
+              "start": 583,
+              "end": 608,
               "summary": "Ordine suggerito, con un gate dopo ogni passo:"
             },
             {
               "title": "Riferimenti principali",
               "level": 2,
-              "start": 605,
-              "end": 614,
+              "start": 609,
+              "end": 618,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             }
           ]
@@ -1836,63 +1836,63 @@
               "title": "Laboratorio numerico Qwen3.6",
               "level": 1,
               "start": 1,
-              "end": 198,
-              "summary": "> I risultati numerici dettagliati restano qui; i verdetti prestazionali"
+              "end": 202,
+              "summary": "> Historical Qwen3.6 record."
             },
             {
               "title": "Componenti",
               "level": 2,
-              "start": 12,
-              "end": 31,
+              "start": 16,
+              "end": 35,
               "summary": "oracle CPU indipendenti."
             },
             {
               "title": "Comandi",
               "level": 2,
-              "start": 32,
-              "end": 49,
+              "start": 36,
+              "end": 53,
               "summary": "Su RTX 3090 (`sm_86`):"
             },
             {
               "title": "Audit del sorgente Ollama",
               "level": 2,
-              "start": 50,
-              "end": 77,
+              "start": 54,
+              "end": 81,
               "summary": "Audit eseguito il 2026-08-05 sul commit Ollama"
             },
             {
               "title": "Risultati ottenuti",
               "level": 2,
-              "start": 78,
-              "end": 198,
+              "start": 82,
+              "end": 202,
               "summary": "Il probe CUDA sintetico passa:"
             },
             {
               "title": "Suite corta rigenerata dopo la correzione",
               "level": 3,
-              "start": 108,
-              "end": 140,
+              "start": 112,
+              "end": 144,
               "summary": "Il run `ds4-q4-cuda-tiled-short-001` usa llama.cpp non patchato"
             },
             {
               "title": "Regressioni e long context",
               "level": 3,
-              "start": 141,
-              "end": 155,
+              "start": 145,
+              "end": 159,
               "summary": "Le regressioni CUDA granulari condivise sono verdi, inclusi"
             },
             {
               "title": "System prompt",
               "level": 3,
-              "start": 156,
-              "end": 163,
+              "start": 160,
+              "end": 167,
               "summary": "Il system prompt non era stato rimosso: la CLI usa per default"
             },
             {
               "title": "Prefill layer-major e tentativi di decode veloce",
               "level": 3,
-              "start": 164,
-              "end": 198,
+              "start": 168,
+              "end": 202,
               "summary": "Il collo di bottiglia originale era strutturale: `ds4_session_sync` inoltrava"
             }
           ]
@@ -1904,189 +1904,189 @@
               "title": "Esperimenti prestazionali Qwen3.6 27B CUDA",
               "level": 1,
               "start": 1,
-              "end": 468,
-              "summary": "> Registro storico."
+              "end": 472,
+              "summary": "> Historical Qwen3.6 record."
             },
             {
               "title": "Obiettivo",
               "level": 2,
-              "start": 9,
-              "end": 20,
+              "start": 13,
+              "end": 24,
               "summary": "Velocizzare il percorso CUDA di Qwen3.6 27B Q4_K_M senza degradare la"
             },
             {
               "title": "Ambiente di prova",
               "level": 2,
-              "start": 21,
-              "end": 34,
+              "start": 25,
+              "end": 38,
               "summary": "`65b753ea835627f7b511143c6ceb976525c7f21f5df8c664bc0a9c23d1c49921`;"
             },
             {
               "title": "Baseline iniziale",
               "level": 2,
-              "start": 35,
-              "end": 48,
+              "start": 39,
+              "end": 52,
               "summary": "Prima delle modifiche, il prefill inoltrava un token alla volta attraverso i"
             },
             {
               "title": "Modifica strutturale: prefill layer-major",
               "level": 2,
-              "start": 49,
-              "end": 66,
+              "start": 53,
+              "end": 70,
               "summary": "È stato introdotto un grafo Qwen multi-riga che:"
             },
             {
               "title": "Esperimenti sul prefill",
               "level": 2,
-              "start": 67,
-              "end": 112,
+              "start": 71,
+              "end": 116,
               "summary": "Le misure principali usano 2.048 token, chunk 2.048 e RTX 3090."
             },
             {
               "title": "Profilazione del prefill",
               "level": 3,
-              "start": 83,
-              "end": 99,
+              "start": 87,
+              "end": 103,
               "summary": "Su un chunk da 128 token, prima dell'attention GEMM, la profilazione aggregata"
             },
             {
               "title": "Tentativi di prefill scartati",
               "level": 3,
-              "start": 100,
-              "end": 112,
+              "start": 104,
+              "end": 116,
               "summary": "136,39 token/s."
             },
             {
               "title": "Esperimenti sul decode",
               "level": 2,
-              "start": 113,
-              "end": 148,
+              "start": 117,
+              "end": 152,
               "summary": "Le misure corte usano context 128 e 16 token generati, salvo indicazione"
             },
             {
               "title": "Causa del rifiuto del decode Q8",
               "level": 3,
-              "start": 132,
-              "end": 148,
+              "start": 136,
+              "end": 152,
               "summary": "Nel caso `short_fact_english`, il candidato Q8 coincide con l'oracolo per i"
             },
             {
               "title": "Test di correttezza eseguiti",
               "level": 2,
-              "start": 149,
-              "end": 241,
+              "start": 153,
+              "end": 245,
               "summary": "Comando:"
             },
             {
               "title": "Probe numerici CUDA",
               "level": 3,
-              "start": 151,
-              "end": 173,
+              "start": 155,
+              "end": 177,
               "summary": "Comando:"
             },
             {
               "title": "Pattern dei layer Qwen",
               "level": 3,
-              "start": 174,
-              "end": 183,
+              "start": 178,
+              "end": 187,
               "summary": "Comando:"
             },
             {
               "title": "Test del comparatore",
               "level": 3,
-              "start": 184,
-              "end": 198,
+              "start": 188,
+              "end": 202,
               "summary": "Comando:"
             },
             {
               "title": "Suite corta full-vocabulary finale",
               "level": 3,
-              "start": 199,
-              "end": 241,
+              "start": 203,
+              "end": 245,
               "summary": "Run DS4 finale:"
             },
             {
               "title": "Configurazione finale consegnata",
               "level": 2,
-              "start": 242,
-              "end": 260,
+              "start": 246,
+              "end": 264,
               "summary": "Il percorso predefinito conserva soltanto le modifiche considerate affidabili:"
             },
             {
               "title": "Confronto locale con LM Studio",
               "level": 2,
-              "start": 261,
-              "end": 410,
+              "start": 265,
+              "end": 414,
               "summary": "Su richiesta e' stata analizzata l'installazione locale di LM Studio senza"
             },
             {
               "title": "Baseline di release dopo il confronto",
               "level": 3,
-              "start": 292,
-              "end": 312,
+              "start": 296,
+              "end": 316,
               "summary": "Con la stessa build CUDA e lo stesso Q4_K_M DS4:"
             },
             {
               "title": "Crossover Q4_K per il physical batch da 128",
               "level": 3,
-              "start": 313,
-              "end": 340,
+              "start": 317,
+              "end": 344,
               "summary": "Il primo tentativo di imitare il physical batch 512 di LM Studio aveva lasciato"
             },
             {
               "title": "Verifiche reali 4K e 16K dopo il crossover",
               "level": 3,
-              "start": 341,
-              "end": 393,
+              "start": 345,
+              "end": 397,
               "summary": "Sul caso `long_canary_ctx4096` sono stati eseguiti i chunk 128, 512, 2048 e"
             },
             {
               "title": "Regressioni finali",
               "level": 3,
-              "start": 394,
-              "end": 410,
+              "start": 398,
+              "end": 414,
               "summary": "Il `make test` senza selezione e' stato interrotto dopo oltre 16 minuti mentre"
             },
             {
               "title": "Conclusione",
               "level": 2,
-              "start": 411,
-              "end": 420,
+              "start": 415,
+              "end": 424,
               "summary": "La configurazione di release misurata con la stessa build raggiunge 549,50"
             },
             {
               "title": "Aggiornamento 2026-08-06: Ottimizzazione Register-State Caching per GDN CUDA",
               "level": 2,
-              "start": 421,
-              "end": 468,
+              "start": 425,
+              "end": 472,
               "summary": "In data 2026-08-06 e' stata implementata l'ottimizzazione del caching dello stato nei registri GPU nei kernel CUDA `qwen35_gdn_rows_kernel` e `qwen35_conv_rows_kernel` in `ds4_cuda.cu`."
             },
             {
               "title": "Modifiche Apportate",
               "level": 3,
-              "start": 425,
-              "end": 428,
+              "start": 429,
+              "end": 432,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Risultati delle Misure",
               "level": 3,
-              "start": 429,
-              "end": 434,
+              "start": 433,
+              "end": 438,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Verifica Q4_K_S e residency del 2026-08-06",
               "level": 3,
-              "start": 435,
-              "end": 451,
+              "start": 439,
+              "end": 455,
               "summary": "Il GGUF Unsloth Q4_K_S verificato ha SHA-256"
             },
             {
               "title": "Decode long-context: warp attention e tentativo grouped GQA del 2026-08-10",
               "level": 3,
-              "start": 452,
-              "end": 468,
+              "start": 456,
+              "end": 472,
               "summary": "Sul Q4_K_S, con 10.666 token di prompt e 200 token greedy a context 32.768,"
             }
           ]
@@ -2098,161 +2098,161 @@
               "title": "Ledger prestazionale Qwen3.6 CUDA",
               "level": 1,
               "start": 1,
-              "end": 736,
-              "summary": "Questo è il registro canonico delle ottimizzazioni Qwen3.6 27B Q4_K_S/M su"
+              "end": 740,
+              "summary": "> Historical Qwen3.6 record."
             },
             {
               "title": "Contratto",
               "level": 2,
-              "start": 8,
-              "end": 40,
+              "start": 12,
+              "end": 44,
               "summary": "Aggiornamento 2026-09-09: audit operativo Qwen3.8/Qwen3.6."
             },
             {
               "title": "Stato corrente",
               "level": 2,
-              "start": 41,
-              "end": 130,
+              "start": 45,
+              "end": 134,
               "summary": "lookahead constraint engine-only, callback constraint dopo submission,"
             },
             {
               "title": "Soluzioni mantenute",
               "level": 2,
-              "start": 131,
-              "end": 146,
+              "start": 135,
+              "end": 150,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Soluzioni scartate o non promosse",
               "level": 2,
-              "start": 147,
-              "end": 178,
+              "start": 151,
+              "end": 182,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Parity Q8_1/MMVQ sul riferimento storico, 2026-08-12",
               "level": 2,
-              "start": 179,
-              "end": 441,
+              "start": 183,
+              "end": 445,
               "summary": "Il checkout LM Studio esatto `1a064ab0921238c1daa397d6f4a900ef33884de2`"
             },
             {
               "title": "FATTO DIMOSTRATO — dispatch reale",
               "level": 3,
-              "start": 181,
-              "end": 198,
+              "start": 185,
+              "end": 202,
               "summary": "Il checkout LM Studio esatto `1a064ab0921238c1daa397d6f4a900ef33884de2`"
             },
             {
               "title": "FATTO DIMOSTRATO — A/B/C al greedy step 3",
               "level": 3,
-              "start": 199,
-              "end": 214,
+              "start": 203,
+              "end": 218,
               "summary": "Configurazione congelata: GGUF Q4_K_S SHA-256 `ff857ba9…232aca`, RTX 3090"
             },
             {
               "title": "FATTO DIMOSTRATO — primitive e quantizer parity",
               "level": 3,
-              "start": 215,
-              "end": 243,
+              "start": 219,
+              "end": 247,
               "summary": "Un entry point diagnostico temporaneo ha alimentato i kernel DS4 e llama.cpp"
             },
             {
               "title": "FATTO DIMOSTRATO — frozen output head e scala FP16",
               "level": 3,
-              "start": 244,
-              "end": 256,
+              "start": 248,
+              "end": 260,
               "summary": "Con lo stesso hidden pre-output-norm, il solo output head F32 riproduce"
             },
             {
               "title": "INFERENZA E DECISIONE",
               "level": 3,
-              "start": 257,
-              "end": 265,
+              "start": 261,
+              "end": 269,
               "summary": "La precisione Q8_1 può cambiare una decisione a margine basso anche quando DS4"
             },
             {
               "title": "FATTO DIMOSTRATO — sensibilità Q4/Q5/Q6",
               "level": 3,
-              "start": 266,
-              "end": 298,
+              "start": 270,
+              "end": 302,
               "summary": "Due selettori temporanei, poi rimossi, hanno separato Q4-only e Q5-only."
             },
             {
               "title": "FATTO DIMOSTRATO — precision staircase",
               "level": 3,
-              "start": 299,
-              "end": 318,
+              "start": 303,
+              "end": 322,
               "summary": "La ricostruzione offline dello stesso `output_norm` F32 e il risultato"
             },
             {
               "title": "FATTO DIMOSTRATO — Q8_1 LSQ offline e proiezione",
               "level": 3,
-              "start": 319,
-              "end": 336,
+              "start": 323,
+              "end": 340,
               "summary": "Sul vero vettore critico, un passo LSQ per blocco da 32 riduce activation MAE"
             },
             {
               "title": "FATTO DIMOSTRATO — residuo diffuso e Q8_1-R8",
               "level": 3,
-              "start": 337,
-              "end": 441,
+              "start": 341,
+              "end": 445,
               "summary": "Il simulatore offline ha decodificato direttamente le righe 310 e 728 del vero"
             },
             {
               "title": "Analisi del residuo a 8K, 2026-08-11",
               "level": 2,
-              "start": 442,
-              "end": 466,
+              "start": 446,
+              "end": 470,
               "summary": "Il conto dei soli byte di peso per operazione è: ricorrente 3,426 GB, full"
             },
             {
               "title": "Esperimenti long-context 2026-08-11",
               "level": 2,
-              "start": 467,
-              "end": 487,
+              "start": 471,
+              "end": 491,
               "summary": "Fonti recuperate: guida locale `problem-to-source.md`, FlashDecoding++,"
             },
             {
               "title": "Trasferimento vLLM/Marlin e visibilità R8, 2026-08-12",
               "level": 2,
-              "start": 488,
-              "end": 539,
+              "start": 492,
+              "end": 543,
               "summary": "È stato ispezionato vLLM al commit fissato"
             },
             {
               "title": "Stabilizzazione R8 long-context e riuso GQA, 2026-08-12",
               "level": 2,
-              "start": 540,
-              "end": 619,
+              "start": 544,
+              "end": 623,
               "summary": "La riproduzione a 10.666 token ha separato due fenomeni che prima venivano"
             },
             {
               "title": "Curva completa 2K–30K e soglia split-K, 2026-08-13",
               "level": 2,
-              "start": 620,
-              "end": 649,
+              "start": 624,
+              "end": 653,
               "summary": "La nuova suite non rapida `context-curve-full` misura 15 frontiere a passo 2K,"
             },
             {
               "title": "MTP long-context e crossover split-K, 2026-08-13",
               "level": 2,
-              "start": 650,
-              "end": 695,
+              "start": 654,
+              "end": 699,
               "summary": "La curva server target-only 0–28K a passo 2K, capacità 28.737, due run per"
             },
             {
               "title": "Coda ordinata",
               "level": 2,
-              "start": 696,
-              "end": 718,
+              "start": 700,
+              "end": 722,
               "summary": "1."
             },
             {
               "title": "Template per il prossimo record",
               "level": 2,
-              "start": 719,
-              "end": 736,
+              "start": 723,
+              "end": 740,
               "summary": "ID / data / commit / dirty state:"
             }
           ]
@@ -2264,63 +2264,63 @@
               "title": "Qwen3.8 agentico: `SEARCH` statica e MTP grammar-aware",
               "level": 1,
               "start": 1,
-              "end": 288,
+              "end": 289,
               "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
             },
             {
               "title": "Obiettivo e invarianti",
               "level": 2,
               "start": 7,
-              "end": 27,
+              "end": 28,
               "summary": "Questo ciclo avvicina il decode del server agentico Qwen3.8 alla velocità del"
             },
             {
               "title": "Baseline prima della modifica",
               "level": 2,
-              "start": 28,
-              "end": 50,
+              "start": 29,
+              "end": 51,
               "summary": "Hardware: RTX 3090, build CUDA `sm_86`, contesto allocato 22.593, prompt"
             },
             {
               "title": "Risultato appaiato",
               "level": 2,
-              "start": 51,
-              "end": 73,
+              "start": 52,
+              "end": 74,
               "summary": "Il masking target-only scende del 99,21%."
             },
             {
               "title": "MTP grammar-aware: implementazione e vantaggio",
               "level": 2,
-              "start": 74,
-              "end": 126,
+              "start": 75,
+              "end": 127,
               "summary": "Il server passa al verifier un callback per ogni distribuzione target della"
             },
             {
               "title": "Gate di correttezza",
               "level": 2,
-              "start": 127,
-              "end": 160,
+              "start": 128,
+              "end": 161,
               "summary": "La storia completa è stata ripetuta con `compare_new_vs_oracle`: 433 confronti"
             },
             {
               "title": "Matrice temperatura, thinking e MTP",
               "level": 2,
-              "start": 161,
-              "end": 228,
+              "start": 162,
+              "end": 229,
               "summary": "Il gate `tests/test_server_sampling_matrix.py` esplicita il prodotto cartesiano"
             },
             {
               "title": "Fonti primarie e scelte implementative",
               "level": 2,
-              "start": 229,
-              "end": 277,
+              "start": 230,
+              "end": 278,
               "summary": "I valori campionati non sono inventati dal benchmark."
             },
             {
               "title": "Verifica corrente",
               "level": 2,
-              "start": 278,
-              "end": 288,
+              "start": 279,
+              "end": 289,
               "summary": "Le misure sopra descrivono fixture storici ritirati e non certificano FE / QS."
             }
           ]
@@ -3688,105 +3688,105 @@
               "title": "Roadmap di integrazione Qwen3.8 27B UD-Q4_K_S",
               "level": 1,
               "start": 1,
-              "end": 253,
-              "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
+              "end": 257,
+              "summary": "> Current runtime: Qwen3.8 only for the `qwen35` family."
             },
             {
               "title": "Obiettivo e criterio di completamento",
               "level": 2,
-              "start": 7,
-              "end": 23,
+              "start": 11,
+              "end": 27,
               "summary": "Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target"
             },
             {
               "title": "Stato sintetico",
               "level": 2,
-              "start": 24,
-              "end": 39,
+              "start": 28,
+              "end": 43,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Fase 0 — Baseline, fonti e invarianti",
               "level": 2,
-              "start": 40,
-              "end": 57,
+              "start": 44,
+              "end": 61,
               "summary": "knowledge base e la scheda RTX 3090."
             },
             {
               "title": "Fase 1 — Kernel indispensabili per il target UD",
               "level": 2,
-              "start": 58,
-              "end": 92,
+              "start": 62,
+              "end": 96,
               "summary": "Formati mancanti, rilevati dall'inventario pinned:"
             },
             {
               "title": "Fase 2 — Target Qwen3.8 end-to-end",
               "level": 2,
-              "start": 93,
-              "end": 108,
+              "start": 97,
+              "end": 112,
               "summary": "indipendente alla revisione llama.cpp fissata; 32/32 greedy identici."
             },
             {
               "title": "Fase 3 — Parita' funzionale con Qwen3.6",
               "level": 2,
-              "start": 109,
-              "end": 157,
+              "start": 113,
+              "end": 161,
               "summary": "perplexity e dump diagnostici."
             },
             {
               "title": "CLI",
               "level": 3,
-              "start": 111,
-              "end": 117,
+              "start": 115,
+              "end": 121,
               "summary": "perplexity e dump diagnostici."
             },
             {
               "title": "Server",
               "level": 3,
-              "start": 118,
-              "end": 133,
+              "start": 122,
+              "end": 137,
               "summary": "constrained output e batching/multi-sessione nei percorsi applicabili."
             },
             {
               "title": "MTP",
               "level": 3,
-              "start": 134,
-              "end": 149,
+              "start": 138,
+              "end": 153,
               "summary": "registrata a contesti brevi e lunghi."
             },
             {
               "title": "SSD e agentic",
               "level": 3,
-              "start": 150,
-              "end": 157,
+              "start": 154,
+              "end": 161,
               "summary": "con MTP, usando il model ID Qwen3.8."
             },
             {
               "title": "Fase 4 — Regressione Qwen3.6",
               "level": 2,
-              "start": 158,
-              "end": 172,
+              "start": 162,
+              "end": 176,
               "summary": "Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate"
             },
             {
               "title": "Fase 5 — Ottimizzazioni opzionali comuni",
               "level": 2,
-              "start": 173,
-              "end": 194,
+              "start": 177,
+              "end": 198,
               "summary": "Valutare soltanto dopo la parita' funzionale del 3.8:"
             },
             {
               "title": "Registro breve di decisioni e risultati",
               "level": 2,
-              "start": 195,
-              "end": 231,
+              "start": 199,
+              "end": 235,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Comandi e risultati da compilare durante il lavoro",
               "level": 2,
-              "start": 232,
-              "end": 253,
+              "start": 236,
+              "end": 257,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             }
           ]
@@ -4013,889 +4013,889 @@
               "title": "TODO — GPU Kernel Engineering Harness per DS4 / Qwen 3.6 27B",
               "level": 1,
               "start": 1,
-              "end": 91,
-              "summary": "Obiettivo finale: costruire su DS4 un sistema completo che permetta a un agente locale di **misurare, diagnosticare, progettare, implementare, verificare e iterare ottimizzazioni GPU**, usando dati hardware reali, profil…"
+              "end": 95,
+              "summary": "> Current runtime: Qwen3.8 only for the `qwen35` family."
             },
             {
               "title": "Stato verificato dell'incremento iniziale (2026-08-11)",
               "level": 2,
-              "start": 5,
-              "end": 91,
+              "start": 9,
+              "end": 95,
               "summary": "I checkbox completati sotto indicano funzionalità presenti e testate; i"
             },
             {
               "title": "[x] 1. Creare il manifesto operativo dell'agente",
               "level": 1,
-              "start": 92,
-              "end": 145,
+              "start": 96,
+              "end": 149,
               "summary": "* [x] Creare `docs/performance/agent_performance_contract.md`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 94,
-              "end": 139,
+              "start": 98,
+              "end": 143,
               "summary": "* [x] Creare `docs/performance/agent_performance_contract.md`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 140,
-              "end": 145,
+              "start": 144,
+              "end": 149,
               "summary": "Il macro-task è completo quando esiste un documento letto automaticamente dall'agente prima di ogni sessione di kernel engineering e l'harness **rifiuta un esperimento** privo di baseline, ipotesi, workload target, corre…"
             },
             {
               "title": "[ ] 2. Costruire il rilevatore hardware della GPU",
               "level": 1,
-              "start": 146,
-              "end": 215,
+              "start": 150,
+              "end": 219,
               "summary": "* [x] Implementare `hardware_probe()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 148,
-              "end": 209,
+              "start": 152,
+              "end": 213,
               "summary": "* [x] Implementare `hardware_probe()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 210,
-              "end": 215,
+              "start": 214,
+              "end": 219,
               "summary": "Il macro-task è completo quando una sola chiamata restituisce un `hardware_profile.json` sufficientemente completo da impedire all'agente di proporre una tecnica non supportata dall'hardware senza segnalarlo esplicitamen…"
             },
             {
               "title": "[ ] 3. Creare il modello teorico dei costi del modello",
               "level": 1,
-              "start": 216,
-              "end": 290,
+              "start": 220,
+              "end": 294,
               "summary": "* [x] Implementare `model_cost()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 218,
-              "end": 284,
+              "start": 222,
+              "end": 288,
               "summary": "* [x] Implementare `model_cost()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 285,
-              "end": 290,
+              "start": 289,
+              "end": 294,
               "summary": "Il macro-task è completo quando, dato un workload reale, il sistema può produrre per ogni operazione principale una stima verificabile di **FLOP, minimum bytes, arithmetic intensity e limite teorico memoria/compute**."
             },
             {
               "title": "[ ] 4. Definire la suite canonica dei workload",
               "level": 1,
-              "start": 291,
-              "end": 327,
+              "start": 295,
+              "end": 331,
               "summary": "* [x] Creare `workloads.yaml`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 293,
-              "end": 321,
+              "start": 297,
+              "end": 325,
               "summary": "* [x] Creare `workloads.yaml`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 322,
-              "end": 327,
+              "start": 326,
+              "end": 331,
               "summary": "Il macro-task è completo quando ogni esperimento può essere riprodotto sulla stessa matrice di workload e nessuna dichiarazione “questo kernel è più veloce” può essere emessa senza specificare **batch, context, fase e sh…"
             },
             {
               "title": "[ ] 5. Implementare il benchmark end-to-end affidabile",
               "level": 1,
-              "start": 328,
-              "end": 371,
+              "start": 332,
+              "end": 375,
               "summary": "* [x] Implementare `benchmark_model()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 330,
-              "end": 365,
+              "start": 334,
+              "end": 369,
               "summary": "* [x] Implementare `benchmark_model()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 366,
-              "end": 371,
+              "start": 370,
+              "end": 375,
               "summary": "Il macro-task è completo quando due esecuzioni consecutive della suite producono risultati statisticamente sufficientemente stabili da permettere di distinguere in modo affidabile una regressione o un miglioramento reale…"
             },
             {
               "title": "[ ] 6. Inserire una gerarchia NVTX nel runtime",
               "level": 1,
-              "start": 372,
-              "end": 416,
+              "start": 376,
+              "end": 420,
               "summary": "* [ ] Annotare con NVTX:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 374,
-              "end": 398,
+              "start": 378,
+              "end": 402,
               "summary": "* [ ] Annotare con NVTX:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 399,
-              "end": 416,
+              "start": 403,
+              "end": 420,
               "summary": "Il macro-task è completo quando è possibile isolare automaticamente, per esempio:"
             },
             {
               "title": "[ ] 7. Costruire il sistema di tracing con Nsight Systems",
               "level": 1,
-              "start": 417,
-              "end": 466,
+              "start": 421,
+              "end": 470,
               "summary": "* [ ] Implementare `trace_model()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 419,
-              "end": 460,
+              "start": 423,
+              "end": 464,
               "summary": "* [ ] Implementare `trace_model()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 461,
-              "end": 466,
+              "start": 465,
+              "end": 470,
               "summary": "Il macro-task è completo quando l'agente riceve automaticamente una classifica dei kernel/range responsabili di almeno il **90–95% del tempo GPU osservato** e può distinguere kernel bottleneck da launch/runtime bottlenec…"
             },
             {
               "title": "[ ] 8. Costruire il profiler dettagliato con Nsight Compute",
               "level": 1,
-              "start": 467,
-              "end": 526,
+              "start": 471,
+              "end": 530,
               "summary": "* [ ] Implementare `profile_kernel()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 469,
-              "end": 520,
+              "start": 473,
+              "end": 524,
               "summary": "* [ ] Implementare `profile_kernel()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 521,
-              "end": 526,
+              "start": 525,
+              "end": 530,
               "summary": "Il macro-task è completo quando un kernel selezionato produce automaticamente una scheda strutturata sufficiente a diagnosticare **bandwidth, latency, compute, occupancy, register pressure, shared-memory pressure, insuff…"
             },
             {
               "title": "[ ] 9. Implementare l'analisi del traffico memoria",
               "level": 1,
-              "start": 527,
-              "end": 597,
+              "start": 531,
+              "end": 601,
               "summary": "* [ ] Calcolare per ogni kernel:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 529,
-              "end": 579,
+              "start": 533,
+              "end": 583,
               "summary": "* [ ] Calcolare per ogni kernel:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 580,
-              "end": 597,
+              "start": 584,
+              "end": 601,
               "summary": "Il macro-task è completo quando l'agente può distinguere chiaramente fra:"
             },
             {
               "title": "[ ] 10. Implementare il classificatore automatico dei bottleneck",
               "level": 1,
-              "start": 598,
-              "end": 658,
+              "start": 602,
+              "end": 662,
               "summary": "* [ ] Creare `diagnosis_engine.py`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 600,
-              "end": 652,
+              "start": 604,
+              "end": 656,
               "summary": "* [ ] Creare `diagnosis_engine.py`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 653,
-              "end": 658,
+              "start": 657,
+              "end": 662,
               "summary": "Il macro-task è completo quando almeno una suite di kernel noti può essere classificata correttamente nei principali tipi di bottleneck e ogni diagnosi contiene **evidenze, contro-evidenze e prossimo test consigliato**."
             },
             {
               "title": "[ ] 11. Creare il sistema di ispezione della compilazione",
               "level": 1,
-              "start": 659,
-              "end": 702,
+              "start": 663,
+              "end": 706,
               "summary": "* [ ] Implementare `inspect_kernel()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 661,
-              "end": 696,
+              "start": 665,
+              "end": 700,
               "summary": "* [ ] Implementare `inspect_kernel()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 697,
-              "end": 702,
+              "start": 701,
+              "end": 706,
               "summary": "Il macro-task è completo quando ogni modifica kernel genera un diff automatico delle risorse hardware e delle principali classi di istruzione prodotte dal compilatore."
             },
             {
               "title": "[ ] 12. Costruire il framework di microbenchmark dei kernel",
               "level": 1,
-              "start": 703,
-              "end": 738,
+              "start": 707,
+              "end": 742,
               "summary": "* [ ] Implementare `benchmark_kernel()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 705,
-              "end": 732,
+              "start": 709,
+              "end": 736,
               "summary": "* [ ] Implementare `benchmark_kernel()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 733,
-              "end": 738,
+              "start": 737,
+              "end": 742,
               "summary": "Il macro-task è completo quando qualsiasi kernel candidato può essere confrontato in modo riproducibile con reference e baseline su tutte le shape rilevanti."
             },
             {
               "title": "[ ] 13. Creare il framework di correctness e numerical validation",
               "level": 1,
-              "start": 739,
-              "end": 776,
+              "start": 743,
+              "end": 780,
               "summary": "* [x] Implementare `correctness_test()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 741,
-              "end": 770,
+              "start": 745,
+              "end": 774,
               "summary": "* [x] Implementare `correctness_test()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 771,
-              "end": 776,
+              "start": 775,
+              "end": 780,
               "summary": "Il macro-task è completo quando nessun kernel può entrare nel ramo `accepted` senza aver superato automaticamente correctness unitario e almeno un controllo end-to-end."
             },
             {
               "title": "[ ] 14. Creare la Knowledge Base — fondamenti GPU",
               "level": 1,
-              "start": 777,
-              "end": 842,
+              "start": 781,
+              "end": 846,
               "summary": "* [ ] Creare struttura:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 779,
-              "end": 836,
+              "start": 783,
+              "end": 840,
               "summary": "* [ ] Creare struttura:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 837,
-              "end": 842,
+              "start": 841,
+              "end": 846,
               "summary": "Il macro-task è completo quando esistono almeno **50 card GPU atomiche e operative**, ognuna recuperabile tramite sintomo, metrica, tecnica o architettura."
             },
             {
               "title": "[ ] 15. Creare la Knowledge Base — pattern di ottimizzazione",
               "level": 1,
-              "start": 843,
-              "end": 887,
+              "start": 847,
+              "end": 891,
               "summary": "* [ ] Creare card su:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 845,
-              "end": 881,
+              "start": 849,
+              "end": 885,
               "summary": "* [ ] Creare card su:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 882,
-              "end": 887,
+              "start": 886,
+              "end": 891,
               "summary": "Il macro-task è completo quando a ogni principale classe di bottleneck corrispondono almeno **3 strategie concrete**, corredate da metriche che permettono di verificare se hanno funzionato."
             },
             {
               "title": "[ ] 16. Creare la Knowledge Base — anti-pattern e failure modes",
               "level": 1,
-              "start": 888,
-              "end": 932,
+              "start": 892,
+              "end": 936,
               "summary": "* [ ] Creare card specifiche per:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 890,
-              "end": 926,
+              "start": 894,
+              "end": 930,
               "summary": "* [ ] Creare card specifiche per:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 927,
-              "end": 932,
+              "start": 931,
+              "end": 936,
               "summary": "Il macro-task è completo quando il retrieval può fornire all'agente **non soltanto idee da provare ma anche ragioni tecniche per cui l'idea proposta potrebbe peggiorare il kernel**."
             },
             {
               "title": "[ ] 17. Creare la Knowledge Base — LLM inference",
               "level": 1,
-              "start": 933,
-              "end": 987,
+              "start": 937,
+              "end": 991,
               "summary": "* [ ] Creare sezione specifica:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 935,
-              "end": 975,
+              "start": 939,
+              "end": 979,
               "summary": "* [ ] Creare sezione specifica:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 976,
-              "end": 987,
+              "start": 980,
+              "end": 991,
               "summary": "Il macro-task è completo quando l'agente può ricevere una diagnosi come:"
             },
             {
               "title": "[ ] 18. Creare la Knowledge Base per architettura GPU",
               "level": 1,
-              "start": 988,
-              "end": 1023,
+              "start": 992,
+              "end": 1027,
               "summary": "* [ ] Creare:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 990,
-              "end": 1017,
+              "start": 994,
+              "end": 1021,
               "summary": "* [ ] Creare:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1018,
-              "end": 1023,
+              "start": 1022,
+              "end": 1027,
               "summary": "Il macro-task è completo quando l'agente non propone come azione primaria un meccanismo hardware assente dalla GPU installata senza marcarlo come incompatibile."
             },
             {
               "title": "[ ] 19. Implementare il sistema di retrieval della Knowledge Base",
               "level": 1,
-              "start": 1024,
-              "end": 1079,
+              "start": 1028,
+              "end": 1083,
               "summary": "* [ ] Creare metadata strutturati per ogni card."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1026,
-              "end": 1073,
+              "start": 1030,
+              "end": 1077,
               "summary": "* [ ] Creare metadata strutturati per ogni card."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1074,
-              "end": 1079,
+              "start": 1078,
+              "end": 1083,
               "summary": "Il macro-task è completo quando, dato un report strutturato di un kernel, il sistema restituisce automaticamente un piccolo set di conoscenze **specifiche, compatibili con l'hardware e pertinenti al bottleneck** più un s…"
             },
             {
               "title": "[ ] 20. Implementare il motore di generazione delle ipotesi",
               "level": 1,
-              "start": 1080,
-              "end": 1121,
+              "start": 1084,
+              "end": 1125,
               "summary": "* [ ] Creare schema obbligatorio:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1082,
-              "end": 1115,
+              "start": 1086,
+              "end": 1119,
               "summary": "* [ ] Creare schema obbligatorio:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1116,
-              "end": 1121,
+              "start": 1120,
+              "end": 1125,
               "summary": "Il macro-task è completo quando l'agente non può modificare un kernel senza aver prodotto prima una previsione falsificabile degli effetti hardware e prestazionali."
             },
             {
               "title": "[ ] 21. Creare il sistema di esperimenti e memoria tecnica",
               "level": 1,
-              "start": 1122,
-              "end": 1172,
+              "start": 1126,
+              "end": 1176,
               "summary": "* [ ] Implementare `experiment_log()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1124,
-              "end": 1166,
+              "start": 1128,
+              "end": 1170,
               "summary": "* [ ] Implementare `experiment_log()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1167,
-              "end": 1172,
+              "start": 1171,
+              "end": 1176,
               "summary": "Il macro-task è completo quando l'agente può recuperare automaticamente la storia tecnica delle precedenti ottimizzazioni e non deve “riscoprire” continuamente gli stessi risultati."
             },
             {
               "title": "[ ] 22. Implementare il comparatore automatico degli esperimenti",
               "level": 1,
-              "start": 1173,
-              "end": 1207,
+              "start": 1177,
+              "end": 1211,
               "summary": "* [x] Implementare `compare_experiment()`."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1175,
-              "end": 1201,
+              "start": 1179,
+              "end": 1205,
               "summary": "* [x] Implementare `compare_experiment()`."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1202,
-              "end": 1207,
+              "start": 1206,
+              "end": 1211,
               "summary": "Il macro-task è completo quando il sistema può decidere automaticamente se una modifica è globalmente utile rispetto agli obiettivi dichiarati, senza basarsi su una singola misura."
             },
             {
               "title": "[ ] 23. Implementare una pipeline specifica per kernel memory-bound",
               "level": 1,
-              "start": 1208,
-              "end": 1254,
+              "start": 1212,
+              "end": 1258,
               "summary": "* [ ] Quando classificato memory-bound, calcolare:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1210,
-              "end": 1248,
+              "start": 1214,
+              "end": 1252,
               "summary": "* [ ] Quando classificato memory-bound, calcolare:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1249,
-              "end": 1254,
+              "start": 1253,
+              "end": 1258,
               "summary": "Il macro-task è completo quando ogni kernel memory-bound viene analizzato automaticamente distinguendo **saturazione della banda** da **traffico evitabile**."
             },
             {
               "title": "[ ] 24. Implementare una pipeline specifica per kernel latency-bound",
               "level": 1,
-              "start": 1255,
-              "end": 1284,
+              "start": 1259,
+              "end": 1288,
               "summary": "* [ ] Analizzare:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1257,
-              "end": 1278,
+              "start": 1261,
+              "end": 1282,
               "summary": "* [ ] Analizzare:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1279,
-              "end": 1284,
+              "start": 1283,
+              "end": 1288,
               "summary": "Il macro-task è completo quando il sistema sa proporre esperimenti diversi per `memory latency` e `memory bandwidth`, giustificando la distinzione con metriche osservate."
             },
             {
               "title": "[ ] 25. Implementare una pipeline specifica per compute-bound",
               "level": 1,
-              "start": 1285,
-              "end": 1312,
+              "start": 1289,
+              "end": 1316,
               "summary": "* [ ] Analizzare:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1287,
-              "end": 1306,
+              "start": 1291,
+              "end": 1310,
               "summary": "* [ ] Analizzare:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1307,
-              "end": 1312,
+              "start": 1311,
+              "end": 1316,
               "summary": "Il macro-task è completo quando un kernel compute-bound viene trattato con strategie di utilizzo delle pipeline di calcolo e non erroneamente con ottimizzazioni orientate alla DRAM."
             },
             {
               "title": "[ ] 26. Implementare pipeline register/shared-memory/occupancy",
               "level": 1,
-              "start": 1313,
-              "end": 1342,
+              "start": 1317,
+              "end": 1346,
               "summary": "* [ ] Monitorare automaticamente registers/thread."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1315,
-              "end": 1336,
+              "start": 1319,
+              "end": 1340,
               "summary": "* [ ] Monitorare automaticamente registers/thread."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1337,
-              "end": 1342,
+              "start": 1341,
+              "end": 1346,
               "summary": "Il macro-task è completo quando il sistema sa spiegare **perché** l'occupancy è limitata e se quella limitazione è realmente correlata alle prestazioni osservate."
             },
             {
               "title": "[ ] 27. Implementare pipeline per quantizzazione",
               "level": 1,
-              "start": 1343,
-              "end": 1373,
+              "start": 1347,
+              "end": 1377,
               "summary": "* [ ] Distinguere sempre:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1345,
-              "end": 1367,
+              "start": 1349,
+              "end": 1371,
               "summary": "* [ ] Distinguere sempre:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1368,
-              "end": 1373,
+              "start": 1372,
+              "end": 1377,
               "summary": "Il macro-task è completo quando l'agente può determinare se una quantizzazione accelera realmente il workload oppure trasferisce il costo dalla memoria a unpack/dequant/compute inefficiente."
             },
             {
               "title": "[ ] 28. Implementare pipeline specifica attention/KV-cache",
               "level": 1,
-              "start": 1374,
-              "end": 1402,
+              "start": 1378,
+              "end": 1406,
               "summary": "* [ ] Calcolare dimensione KV cache per workload."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1376,
-              "end": 1396,
+              "start": 1380,
+              "end": 1400,
               "summary": "* [ ] Calcolare dimensione KV cache per workload."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1397,
-              "end": 1402,
+              "start": 1401,
+              "end": 1406,
               "summary": "Il macro-task è completo quando l'harness può spiegare perché l'attention cambia comportamento al crescere del context e proporre strategie diverse per prefill e decode."
             },
             {
               "title": "[ ] 29. Implementare pipeline per launch overhead e runtime",
               "level": 1,
-              "start": 1403,
-              "end": 1426,
+              "start": 1407,
+              "end": 1430,
               "summary": "* [ ] Analizzare timeline Nsight Systems."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1405,
-              "end": 1420,
+              "start": 1409,
+              "end": 1424,
               "summary": "* [ ] Analizzare timeline Nsight Systems."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1421,
-              "end": 1426,
+              "start": 1425,
+              "end": 1430,
               "summary": "Il macro-task è completo quando il sistema può riconoscere un workload launch-bound e impedire all'agente di perdere tempo ottimizzando l'aritmetica di kernel già molto brevi."
             },
             {
               "title": "[ ] 30. Creare il kernel workspace controllato",
               "level": 1,
-              "start": 1427,
-              "end": 1462,
+              "start": 1431,
+              "end": 1466,
               "summary": "* [ ] Creare:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1429,
-              "end": 1456,
+              "start": 1433,
+              "end": 1460,
               "summary": "* [ ] Creare:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1457,
-              "end": 1462,
+              "start": 1461,
+              "end": 1466,
               "summary": "Il macro-task è completo quando un agente può creare, compilare, testare, confrontare e scartare un kernel senza modificare manualmente lo stato stabile di DS4."
             },
             {
               "title": "[ ] 31. Creare l'interfaccia tool-facing per l'agente",
               "level": 1,
-              "start": 1463,
-              "end": 1498,
+              "start": 1467,
+              "end": 1502,
               "summary": "* [ ] Esporre tool ad alto livello:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1465,
-              "end": 1492,
+              "start": 1469,
+              "end": 1496,
               "summary": "* [ ] Esporre tool ad alto livello:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1493,
-              "end": 1498,
+              "start": 1497,
+              "end": 1502,
               "summary": "Il macro-task è completo quando Qwen può svolgere un ciclo completo di profiling e ottimizzazione attraverso tool strutturati senza dover interpretare direttamente migliaia di righe di output Nsight."
             },
             {
               "title": "[ ] 32. Creare il report sintetico standard di un kernel",
               "level": 1,
-              "start": 1499,
-              "end": 1560,
+              "start": 1503,
+              "end": 1564,
               "summary": "* [ ] Definire uno schema simile:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1501,
-              "end": 1554,
+              "start": 1505,
+              "end": 1558,
               "summary": "* [ ] Definire uno schema simile:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1555,
-              "end": 1560,
+              "start": 1559,
+              "end": 1564,
               "summary": "Il macro-task è completo quando l'agente può capire la situazione principale di un kernel leggendo un singolo oggetto strutturato di dimensioni limitate."
             },
             {
               "title": "[ ] 33. Creare la pipeline automatica “hotspot → proposta”",
               "level": 1,
-              "start": 1561,
-              "end": 1584,
+              "start": 1565,
+              "end": 1588,
               "summary": "* [ ] Benchmark iniziale."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1563,
-              "end": 1578,
+              "start": 1567,
+              "end": 1582,
               "summary": "* [ ] Benchmark iniziale."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1579,
-              "end": 1584,
+              "start": 1583,
+              "end": 1588,
               "summary": "Il macro-task è completo quando il sistema può partire da un'inferenza DS4 non ottimizzata e arrivare autonomamente a una **specifica tecnica di modifica di un kernel**, accompagnata da evidenze e previsione quantitativa…"
             },
             {
               "title": "[ ] 34. Creare la pipeline automatica “proposta → verdict”",
               "level": 1,
-              "start": 1585,
-              "end": 1612,
+              "start": 1589,
+              "end": 1616,
               "summary": "* [ ] Compilare candidate."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1587,
-              "end": 1606,
+              "start": 1591,
+              "end": 1610,
               "summary": "* [ ] Compilare candidate."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1607,
-              "end": 1612,
+              "start": 1611,
+              "end": 1616,
               "summary": "Il macro-task è completo quando una modifica può attraversare autonomamente l'intero percorso dal codice candidato a un verdetto basato su correttezza, microbenchmark, profiler ed end-to-end."
             },
             {
               "title": "[ ] 35. Creare un sistema di apprendimento dagli esperimenti",
               "level": 1,
-              "start": 1613,
-              "end": 1642,
+              "start": 1617,
+              "end": 1646,
               "summary": "* [ ] Dopo ogni esperimento generare:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1615,
-              "end": 1636,
+              "start": 1619,
+              "end": 1640,
               "summary": "* [ ] Dopo ogni esperimento generare:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1637,
-              "end": 1642,
+              "start": 1641,
+              "end": 1646,
               "summary": "Il macro-task è completo quando il sistema migliora progressivamente la propria conoscenza locale e può usare esperimenti precedenti come evidenza nelle decisioni future."
             },
             {
               "title": "[ ] 36. Costruire benchmark di validazione dell'intero harness",
               "level": 1,
-              "start": 1643,
-              "end": 1671,
+              "start": 1647,
+              "end": 1675,
               "summary": "Creare piccoli kernel artificiali con bottleneck intenzionali:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1645,
-              "end": 1665,
+              "start": 1649,
+              "end": 1669,
               "summary": "Creare piccoli kernel artificiali con bottleneck intenzionali:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1666,
-              "end": 1671,
+              "start": 1670,
+              "end": 1675,
               "summary": "Il macro-task è completo quando l'harness supera una suite di casi con **bottleneck conosciuto a priori** e dimostra che la catena misurazione → diagnosi → retrieval → esperimento funziona correttamente."
             },
             {
               "title": "[ ] 37. Eseguire la prima caratterizzazione completa di Qwen su DS4",
               "level": 1,
-              "start": 1672,
-              "end": 1717,
+              "start": 1676,
+              "end": 1721,
               "summary": "* [ ] Congelare una baseline."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1674,
-              "end": 1711,
+              "start": 1678,
+              "end": 1715,
               "summary": "* [ ] Congelare una baseline."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1712,
-              "end": 1717,
+              "start": 1716,
+              "end": 1721,
               "summary": "Il macro-task è completo quando esiste un report quantitativo che identifica **dove DS4/Qwen passa il tempo, perché e quali 3–5 interventi hanno il miglior rapporto potenziale/costo** sulla GPU installata."
             },
             {
               "title": "[ ] 38. Ottimizzare il primo kernel reale end-to-end",
               "level": 1,
-              "start": 1718,
-              "end": 1742,
+              "start": 1722,
+              "end": 1746,
               "summary": "* [ ] Selezionare il primo hotspot sulla base dei dati."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1720,
-              "end": 1736,
+              "start": 1724,
+              "end": 1740,
               "summary": "* [ ] Selezionare il primo hotspot sulla base dei dati."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1737,
-              "end": 1742,
+              "start": 1741,
+              "end": 1746,
               "summary": "Il macro-task è completo quando almeno una modifica reale di un kernel DS4 produce un miglioramento end-to-end statisticamente verificabile **senza regressione di correttezza**, e l'intero processo è stato eseguito attra…"
             },
             {
               "title": "[ ] 39. Ottimizzare separatamente prefill e decode",
               "level": 1,
-              "start": 1743,
-              "end": 1766,
+              "start": 1747,
+              "end": 1770,
               "summary": "* [ ] Costruire una classifica hotspot prefill."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1745,
-              "end": 1760,
+              "start": 1749,
+              "end": 1764,
               "summary": "* [ ] Costruire una classifica hotspot prefill."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1761,
-              "end": 1766,
+              "start": 1765,
+              "end": 1770,
               "summary": "Il macro-task è completo quando DS4 può selezionare strategie/kernel differenti per workload significativamente diversi invece di utilizzare un'unica implementazione “media”."
             },
             {
               "title": "[ ] 40. Implementare dispatch e autotuning controllato",
               "level": 1,
-              "start": 1767,
-              "end": 1794,
+              "start": 1771,
+              "end": 1798,
               "summary": "* [ ] Identificare le dimensioni rilevanti:"
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1769,
-              "end": 1788,
+              "start": 1773,
+              "end": 1792,
               "summary": "* [ ] Identificare le dimensioni rilevanti:"
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1789,
-              "end": 1794,
+              "start": 1793,
+              "end": 1798,
               "summary": "Il macro-task è completo quando DS4 può scegliere automaticamente la configurazione kernel migliore per classi di workload rappresentative usando risultati misurati e persistenti."
             },
             {
               "title": "[ ] 41. Integrare tutto nel ciclo operativo dell'agente",
               "level": 1,
-              "start": 1795,
-              "end": 1832,
+              "start": 1799,
+              "end": 1836,
               "summary": "* [ ] Creare prompt/system contract per il kernel agent."
             },
             {
               "title": "Sottotask",
               "level": 2,
-              "start": 1797,
-              "end": 1826,
+              "start": 1801,
+              "end": 1830,
               "summary": "* [ ] Creare prompt/system contract per il kernel agent."
             },
             {
               "title": "Condizione di completamento",
               "level": 2,
-              "start": 1827,
-              "end": 1832,
+              "start": 1831,
+              "end": 1836,
               "summary": "Il macro-task è completo quando un agente può condurre autonomamente più cicli consecutivi di kernel engineering e ogni decisione importante è ancorata a dati, conoscenza recuperata e risultati sperimentali."
             },
             {
               "title": "[ ] 42. Definition of Done dell'intero progetto",
               "level": 1,
-              "start": 1833,
-              "end": 1887,
+              "start": 1837,
+              "end": 1891,
               "summary": "Il progetto è completo soltanto quando **tutte** le condizioni seguenti sono vere:"
             },
             {
               "title": "Condizione finale di successo",
               "level": 2,
-              "start": 1867,
-              "end": 1887,
+              "start": 1871,
+              "end": 1891,
               "summary": "Un agente che non possiede preventivamente una conoscenza profonda"
             }
           ]

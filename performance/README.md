@@ -1,5 +1,8 @@
 # DS4 performance harness
 
+Il runtime supporta Qwen3.8 UD-Q4_K_S. I report Qwen3.6 sono evidenze storiche;
+le primitive e gli strumenti numerici condivisi restano disponibili.
+
 Il punto d'ingresso unico è tools/perf_harness.py. Riusa ds4-bench e gli scorer
 Qwen esistenti: non introduce un secondo percorso di inferenza.
 
@@ -37,7 +40,7 @@ l'avvio dell'inferenza: una risposta 2xx o un'inferenza iniziata falliscono il
 run.
 
     make test-jsonschemabench-safety \
-      JSONSCHEMABENCH_MODEL=gguf/Qwen3.6-27B-Q4_K_S.gguf
+      JSONSCHEMABENCH_MODEL=gguf/Qwen3.8-27B-UD-Q4_K_S.gguf
 
 Il frontend corrente FE / QS e documentato in `agent/README.md` e
 `docs/agentic/frontend.md`. I profili agentici datati conservano misure di
@@ -50,7 +53,7 @@ La baseline non vincolata equivalente usa un prompt calibrato a 10.770 token e
     python3 tools/perf_harness.py server-curve \
       --id constraint-m56-unconstrained-c10770-g147-001 \
       --suite agent-dsml-unconstrained-baseline \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf --repetitions 1 \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf --repetitions 1 \
       --minimum-completion-tokens 147 --baseline-run \
       --hypothesis "same-context unconstrained ceiling for the DSML agent gate"
 
@@ -149,7 +152,7 @@ non vengono rallentati o penalizzati.
 
     python3 tools/perf_harness.py run \
       --id context-curve-default-01 \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --suite context-curve-full --repetitions 2 --warmup always \
       --hypothesis "default decode stays above 20 tok/s from 2K to 30K" \
@@ -180,7 +183,7 @@ test-qwen38-perf`; la suite isolata usata internamente e'
 
     python3 tools/perf_harness.py server-curve \
       --id server-context-curve-default-01 \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --repetitions 2 \
       --hypothesis "server decode stays above 20 tok/s from 2K to 30K" \
       --baseline-run
@@ -225,7 +228,7 @@ processo di warm-up separato e serve a capire subito la direzione; non può
 emettere KEEP, soltanto NEED_MORE_DATA o un rifiuto per drift numerico.
 
     python3 tools/perf_harness.py run --id base-direction \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --hypothesis "freeze direction baseline" \
       --metric gen_steady_tps --baseline-run
@@ -237,7 +240,7 @@ Il verdetto mostra quindi velocità e drift nello stesso comando e il gate
 attraversa i kernel di decode oggetto dell'esperimento:
 
     python3 tools/perf_harness.py run --id candidate-direction \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --hypothesis "the candidate reduces decode traffic" \
       --metric gen_steady_tps \
@@ -249,14 +252,14 @@ ripetizioni e warm-up:
 
     python3 tools/perf_harness.py run --id base-slow --suite slow \
       --repetitions 5 --warmup always \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --hypothesis "freeze slow confirmation baseline" \
       --metric gen_steady_tps --baseline-run
 
     python3 tools/perf_harness.py run --id candidate-slow --suite slow \
       --repetitions 5 --warmup always \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --hypothesis "confirm score4 on representative contexts" \
       --metric gen_steady_tps \
@@ -270,7 +273,7 @@ layer Gated DeltaNet ricorrenti e full-attention. Un solo comando produce quote,
 hotspot ordinati e il numero di elementi che copre il 95% del tempo profilato:
 
     python3 tools/perf_harness.py profile-network \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --context 1024 --generation-tokens 2 --prefill-chunk 512 \
       --output performance-results/base-network.json
@@ -279,7 +282,7 @@ Ripetere sulla candidate e localizzare subito le differenze nello stesso
 comando:
 
     python3 tools/perf_harness.py profile-network \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --context 1024 --generation-tokens 2 --prefill-chunk 512 \
       --env DS4_CUDA_DECODE_SCORE4=1 \
@@ -350,10 +353,10 @@ Il gate semantico di una suite oracle completa non richiede piu script ad hoc:
 Il report conta separatamente sequenze greedy complete, argmax greedy e argmax
 teacher-forced; con otto casi da 32 step il gate atteso e `8/8` e `512/512`.
 
-Il decode Q8_1-R8 a due stadi è la baseline di produzione per Qwen3.6 CUDA:
+Il decode Qwen3.8 CUDA conserva le primitive Q8_1-R8 condivise:
 
     ./ds4-bench \
-      --cuda -m gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --cuda -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt-file tests/long_context_story_prompt.txt \
       --ctx-start 128 --ctx-max 2048 --gen-tokens 8 --repetitions 3
 
@@ -374,7 +377,7 @@ carica né calcola lo SHA-256 dei pesi. Per il decode collega byte minimi, FLOP,
 arithmetic intensity e roofline al profilo appena prodotto:
 
     python3 tools/perf_harness.py model-cost \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --phase decode --context 1024 \
       --network-profile performance-results/base-network.json \
       --output performance-results/base-decode-cost.json
@@ -382,7 +385,7 @@ arithmetic intensity e roofline al profilo appena prodotto:
 Per il secondo chunk prefill da 512 token:
 
     python3 tools/perf_harness.py model-cost \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --phase prefill --context 512 \
       --network-profile performance-results/base-network.json \
       --output performance-results/base-prefill-cost.json
@@ -405,12 +408,12 @@ tempo atteso.
     python3 tools/perf_harness.py doctor
     python3 tools/perf_harness.py probe
     python3 tools/perf_harness.py run --id baseline --suite quick \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --hypothesis "freeze current release baseline" \
       --metric gen_steady_tps --baseline-run
     python3 tools/perf_harness.py run --id candidate --suite quick \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --prompt tests/long_context_story_prompt.txt \
       --hypothesis "score4 reduces decode weight traffic" \
       --metric gen_steady_tps --env DS4_CUDA_DECODE_SCORE4=1 \
@@ -481,38 +484,38 @@ Su Windows il binario ds4-bench del repository è ELF: i comandi model-backed
 vanno eseguiti nella stessa distribuzione WSL/Linux usata per compilare DS4.
 Probe e test puramente Python funzionano anche dall'host.
 
-## Gate MTP Qwen3.6 depth 2
+## Gate MTP Qwen3.8 depth 2
 
 I prompt canonici sono `mtp-copy-simple-prompt.txt` (copia ripetitiva ad alta
 acceptance) e `mtp-copy-prompt.txt` (testo naturale a acceptance piu' bassa).
 Il confronto greedy va eseguito sullo stesso binario e senza flag di tuning:
 
-    ./ds4 --cuda -m gguf/Qwen3.6-27B-Q4_K_S.gguf \
+    ./ds4 --cuda -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --ctx 768 --prefill-chunk 16 --raw-prompt \
       --prompt-file performance/mtp-copy-simple-prompt.txt -n 128 --temp 0
 
     DS4_MTP_STATS=1 ./ds4 --cuda \
-      -m gguf/Qwen3.6-27B-Q4_K_S.gguf --mtp \
+      -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf --mtp \
       --ctx 768 --prefill-chunk 16 --raw-prompt \
       --prompt-file performance/mtp-copy-simple-prompt.txt -n 128 --temp 0
 
 La gate sampled usa lo stesso seed e gli stessi filtri nei due processi:
 
-    ./ds4 --cuda -m gguf/Qwen3.6-27B-Q4_K_S.gguf \
+    ./ds4 --cuda -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
       --ctx 768 --prefill-chunk 16 --raw-prompt --seed 123 \
       --prompt-file performance/mtp-copy-simple-prompt.txt -n 128 \
       --temp 1 --top-p 1 --min-p 0.05
 
     DS4_MTP_STATS=1 ./ds4 --cuda \
-      -m gguf/Qwen3.6-27B-Q4_K_S.gguf --mtp \
+      -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf --mtp \
       --ctx 768 --prefill-chunk 16 --raw-prompt --seed 123 \
       --prompt-file performance/mtp-copy-simple-prompt.txt -n 128 \
       --temp 1 --top-p 1 --min-p 0.05
 
 La gate model-backed di correttezza e':
 
-    DS4_TEST_MODEL=gguf/Qwen3.6-27B-Q4_K_S.gguf \
-    DS4_TEST_MTP=gguf/mtp-Qwen3.6-27B-Q4_0.gguf \
+    DS4_TEST_MODEL=gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
+    DS4_TEST_MTP=gguf/mtp-Qwen3.8-27B-Q4_0.gguf \
     DS4_TEST_MTP_CTX=768 DS4_TEST_MTP_PREFILL_CHUNK=16 \
     DS4_TEST_QWEN_MTP_PATHS=1 DS4_MTP_STATS=1 \
     ./ds4_test --mtp-verify-depth
@@ -550,7 +553,7 @@ cache CUDA su una RTX 3090 da 24 GiB. Copre il bucket di prompt minimo e poi
 
     python3 tools/perf_harness.py server-curve \
       --id mtp-curve --suite mtp-context-curve \
-      --model gguf/Qwen3.6-27B-Q4_K_S.gguf --mtp \
+      --model gguf/Qwen3.8-27B-UD-Q4_K_S.gguf --mtp \
       --repetitions 2 --hypothesis "MTP stays faster through 22K" \
       --baseline performance-results/target-curve/experiment.json
 

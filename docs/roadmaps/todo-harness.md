@@ -1,5 +1,9 @@
 # TODO — GPU Kernel Engineering Harness per DS4 / Qwen 3.6 27B
 
+> Current runtime: Qwen3.8 only for the `qwen35` family. Qwen3.6 support
+> was removed on 2026-10-01; its regression results and shared-kernel evidence
+> below are historical, rather than current compatibility requirements.
+
 Obiettivo finale: costruire su DS4 un sistema completo che permetta a un agente locale di **misurare, diagnosticare, progettare, implementare, verificare e iterare ottimizzazioni GPU**, usando dati hardware reali, profiling strutturato, una knowledge base tecnica, un sistema di esperimenti e pipeline decisionali riproducibili.
 
 ## Stato verificato dell'incremento iniziale (2026-08-11)

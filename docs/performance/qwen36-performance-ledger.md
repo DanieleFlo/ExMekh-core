@@ -1,5 +1,9 @@
 # Ledger prestazionale Qwen3.6 CUDA
 
+> Historical Qwen3.6 record. Runtime support was removed on 2026-10-01;
+> shared kernels and numerical tooling remain available for Qwen3.8 and other
+> audited models. Commands requiring Qwen3.6 inference no longer apply.
+
 Questo è il registro canonico delle ottimizzazioni Qwen3.6 27B Q4_K_S/M su
 RTX 3090. I documenti datati conservano il racconto completo delle singole
 sessioni; qui ogni tecnica compare una sola volta con stato, evidenza e motivo

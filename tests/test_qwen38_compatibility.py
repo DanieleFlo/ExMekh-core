@@ -7,6 +7,7 @@ import io
 import json
 import re
 import subprocess
+import struct
 import sys
 import tempfile
 import unittest
@@ -27,6 +28,78 @@ from qwen38_fixtures import (  # noqa: E402
 )
 from qwen38_speed_gate import validate_speed_report  # noqa: E402
 import generate_qwen36_oracle as oracle_generator  # noqa: E402
+
+
+def write_retired_qwen_metadata(path: Path, *, mtp: bool = False) -> None:
+    def gguf_string(value: str) -> bytes:
+        encoded = value.encode("utf-8")
+        return struct.pack("<Q", len(encoded)) + encoded
+
+    metadata = {"general.architecture": "qwen35", "general.name": "Qwen3.6-27B"}
+    tensor_names = ()
+    if mtp:
+        metadata.update({"qwen35.nextn_predict_layers": 1, "qwen35.block_count": 65})
+        tensor_names = ("blk.64.nextn.eh_proj.weight", "blk.64.attn_q.weight")
+    payload = struct.pack("<4sIQQ", b"GGUF", 3, len(tensor_names), len(metadata))
+    for key, value in metadata.items():
+        payload += gguf_string(key)
+        if isinstance(value, str):
+            payload += struct.pack("<I", 8) + gguf_string(value)
+        else:
+            payload += struct.pack("<II", 4, value)
+    for index, name in enumerate(tensor_names):
+        payload += gguf_string(name) + struct.pack("<IQIQ", 1, 1, 0, 32 * index)
+    path.write_bytes(payload + bytes(-len(payload) % 32) + bytes(32 * len(tensor_names)))
+
+
+class RetiredQwenCompatibilityTests(unittest.TestCase):
+    def test_runtime_rejects_qwen36_metadata_even_with_a_renamed_file(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            model = Path(directory) / "renamed-target.gguf"
+            write_retired_qwen_metadata(model)
+            prompt = Path(directory) / "prompt.txt"
+            prompt.write_text("x", encoding="utf-8")
+            for executable in ("ds4", "ds4-server", "ds4-bench"):
+                with self.subTest(executable=executable):
+                    binary = PROJECT_ROOT / executable
+                    if not binary.is_file():
+                        self.skipTest(f"Build {executable} before the runtime checks")
+                    command = [str(binary), "-m", str(model)]
+                    if executable == "ds4":
+                        command.append("--inspect")
+                    elif executable == "ds4-bench":
+                        command.extend(["--prompt-file", str(prompt)])
+                    result = subprocess.run(
+                        command, cwd=PROJECT_ROOT, text=True, capture_output=True,
+                        timeout=15, check=False,
+                    )
+                    self.assertEqual(result.returncode, 1, result.stderr)
+                    self.assertIn("unsupported qwen35 model Qwen3.6-27B", result.stderr)
+                    self.assertIn("expected Qwen3.8-27B", result.stderr)
+
+    def test_downloader_rejects_all_retired_targets(self) -> None:
+        for target in ("qwen36-q4", "qwen36-q4-s", "qwen36-mtp", "qwen36-q4-mtp"):
+            with self.subTest(target=target):
+                result = subprocess.run(
+                    ["sh", str(PROJECT_ROOT / "download_model.sh"), target],
+                    cwd=PROJECT_ROOT, text=True, capture_output=True,
+                    timeout=15, check=False,
+                )
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(f"Unknown model: {target}", result.stderr)
+
+    def test_help_only_advertises_supported_qwen_targets(self) -> None:
+        for executable in ("ds4", "ds4-server", "ds4-bench"):
+            with self.subTest(executable=executable):
+                binary = PROJECT_ROOT / executable
+                if not binary.is_file():
+                    self.skipTest(f"Build {executable} before the help checks")
+                result = subprocess.run(
+                    [str(binary), "--help"], cwd=PROJECT_ROOT, text=True,
+                    capture_output=True, timeout=15, check=False,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertNotIn("Qwen3.6", result.stdout + result.stderr)
 
 
 class FakeQwen38Tokenizer:
@@ -356,14 +429,16 @@ class Qwen38CompatibilityTests(unittest.TestCase):
 
     def test_qwen36_mtp_is_rejected_for_qwen38(self) -> None:
         runtime = self._local_runtime()
-        old_mtp = PROJECT_ROOT / "gguf" / "mtp-Qwen3.6-27B-Q4_0.gguf"
-        if runtime is None or not old_mtp.is_file():
-            self.skipTest("local Qwen3.8 target or Qwen3.6 mismatch sidecar is absent")
+        if runtime is None:
+            self.skipTest("local Qwen3.8 target or CLI is absent")
         target, _mtp, binary = runtime
-        result = subprocess.run(
-            [str(binary), "-m", str(target), "--inspect", "--mtp-model", str(old_mtp)],
-            cwd=PROJECT_ROOT, text=True, capture_output=True, timeout=60, check=False,
-        )
+        with tempfile.TemporaryDirectory() as directory:
+            old_mtp = Path(directory) / "renamed-sidecar.gguf"
+            write_retired_qwen_metadata(old_mtp, mtp=True)
+            result = subprocess.run(
+                [str(binary), "-m", str(target), "--inspect", "--mtp-model", str(old_mtp)],
+                cwd=PROJECT_ROOT, text=True, capture_output=True, timeout=60, check=False,
+            )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("MTP generation does not match", result.stderr)
 
@@ -397,7 +472,7 @@ class Qwen38CompatibilityTests(unittest.TestCase):
         self.assertIn("ds4_engine_is_qwen_q4_k_s(engine)", kvstore)
         self.assertIn("ds4_engine_is_qwen_q4_k_s(engine)", checkpoint)
         self.assertIn("mtp-Qwen3.8-27B-Q4_0.gguf", checkpoint_runner)
-        self.assertIn("mtp-Qwen3.6-27B-Q4_0.gguf", checkpoint_runner)
+        self.assertNotIn("mtp-Qwen3.6-27B-Q4_0.gguf", checkpoint_runner)
         self.assertIn("Qwen3.8-27B-UD-Q4_K_S.gguf", sampling_runner)
         self.assertIn("DS4_MTP_CYCLE_TRACE=1", sampling_runner)
         self.assertIn('"greedy_nothink"', sampling_matrix)

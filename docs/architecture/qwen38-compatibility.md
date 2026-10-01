@@ -1,5 +1,9 @@
 # Qwen3.8 27B UD-Q4_K_S compatibility audit
 
+> Current runtime: Qwen3.8 only for the `qwen35` family. Qwen3.6 support
+> was removed on 2026-10-01; its regression results and shared-kernel evidence
+> below are historical, rather than current compatibility requirements.
+
 ## Pinned artifacts
 
 DS4 recognizes only the audited Unsloth pair at repository revision

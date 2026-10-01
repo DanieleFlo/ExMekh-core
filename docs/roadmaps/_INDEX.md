@@ -204,20 +204,20 @@ Migliorare il tempo end-to-end a contesti diversi tramite scheduling, senza
 
 Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
 
-- righe 7–23: **Obiettivo e criterio di completamento** — Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
-- righe 24–39: **Stato sintetico** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 40–57: **Fase 0 — Baseline, fonti e invarianti** — knowledge base e la scheda RTX 3090.
-- righe 58–92: **Fase 1 — Kernel indispensabili per il target UD** — Formati mancanti, rilevati dall'inventario pinned:
-- righe 93–108: **Fase 2 — Target Qwen3.8 end-to-end** — indipendente alla revisione llama.cpp fissata; 32/32 greedy identici.
-- righe 109–157: **Fase 3 — Parita' funzionale con Qwen3.6** — perplexity e dump diagnostici.
-  - righe 111–117: **CLI** — perplexity e dump diagnostici.
-  - righe 118–133: **Server** — constrained output e batching/multi-sessione nei percorsi applicabili.
-  - righe 134–149: **MTP** — registrata a contesti brevi e lunghi.
-  - righe 150–157: **SSD e agentic** — con MTP, usando il model ID Qwen3.8.
-- righe 158–172: **Fase 4 — Regressione Qwen3.6** — Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate
-- righe 173–194: **Fase 5 — Ottimizzazioni opzionali comuni** — Valutare soltanto dopo la parita' funzionale del 3.8:
-- righe 195–231: **Registro breve di decisioni e risultati** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 232–253: **Comandi e risultati da compilare durante il lavoro** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 11–27: **Obiettivo e criterio di completamento** — Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
+- righe 28–43: **Stato sintetico** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 44–61: **Fase 0 — Baseline, fonti e invarianti** — knowledge base e la scheda RTX 3090.
+- righe 62–96: **Fase 1 — Kernel indispensabili per il target UD** — Formati mancanti, rilevati dall'inventario pinned:
+- righe 97–112: **Fase 2 — Target Qwen3.8 end-to-end** — indipendente alla revisione llama.cpp fissata; 32/32 greedy identici.
+- righe 113–161: **Fase 3 — Parita' funzionale con Qwen3.6** — perplexity e dump diagnostici.
+  - righe 115–121: **CLI** — perplexity e dump diagnostici.
+  - righe 122–137: **Server** — constrained output e batching/multi-sessione nei percorsi applicabili.
+  - righe 138–153: **MTP** — registrata a contesti brevi e lunghi.
+  - righe 154–161: **SSD e agentic** — con MTP, usando il model ID Qwen3.8.
+- righe 162–176: **Fase 4 — Regressione Qwen3.6** — Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate
+- righe 177–198: **Fase 5 — Ottimizzazioni opzionali comuni** — Valutare soltanto dopo la parita' funzionale del 3.8:
+- righe 199–235: **Registro breve di decisioni e risultati** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 236–257: **Comandi e risultati da compilare durante il lavoro** — Sezione strutturale; consultare il contenuto locale indicato.
 
 ## [TODO — Prestazioni del server agentico e constrained decoding](todo-agentic-server-performance.md)
 
@@ -257,132 +257,132 @@ Questo diario separa il lavoro sulle prestazioni del server agentico dal lavoro
 
 I checkbox completati sotto indicano funzionalità presenti e testate; i
 
-- righe 5–91: **Stato verificato dell'incremento iniziale (2026-08-11)** — I checkbox completati sotto indicano funzionalità presenti e testate; i
-- righe 92–145: **[x] 1. Creare il manifesto operativo dell'agente** — * [x] Creare `docs/performance/agent_performance_contract.md`.
-- righe 94–139: **Sottotask** — * [x] Creare `docs/performance/agent_performance_contract.md`.
-- righe 140–145: **Condizione di completamento** — Il macro-task è completo quando esiste un documento letto automaticamente dall'agente prima di ogni sessione di kernel engineering e l'harness **rifiuta un esperimento** privo di baseline, ipotesi, workload target, corre…
-- righe 146–215: **[ ] 2. Costruire il rilevatore hardware della GPU** — * [x] Implementare `hardware_probe()`.
-- righe 148–209: **Sottotask** — * [x] Implementare `hardware_probe()`.
-- righe 210–215: **Condizione di completamento** — Il macro-task è completo quando una sola chiamata restituisce un `hardware_profile.json` sufficientemente completo da impedire all'agente di proporre una tecnica non supportata dall'hardware senza segnalarlo esplicitamen…
-- righe 216–290: **[ ] 3. Creare il modello teorico dei costi del modello** — * [x] Implementare `model_cost()`.
-- righe 218–284: **Sottotask** — * [x] Implementare `model_cost()`.
-- righe 285–290: **Condizione di completamento** — Il macro-task è completo quando, dato un workload reale, il sistema può produrre per ogni operazione principale una stima verificabile di **FLOP, minimum bytes, arithmetic intensity e limite teorico memoria/compute**.
-- righe 291–327: **[ ] 4. Definire la suite canonica dei workload** — * [x] Creare `workloads.yaml`.
-- righe 293–321: **Sottotask** — * [x] Creare `workloads.yaml`.
-- righe 322–327: **Condizione di completamento** — Il macro-task è completo quando ogni esperimento può essere riprodotto sulla stessa matrice di workload e nessuna dichiarazione “questo kernel è più veloce” può essere emessa senza specificare **batch, context, fase e sh…
-- righe 328–371: **[ ] 5. Implementare il benchmark end-to-end affidabile** — * [x] Implementare `benchmark_model()`.
-- righe 330–365: **Sottotask** — * [x] Implementare `benchmark_model()`.
-- righe 366–371: **Condizione di completamento** — Il macro-task è completo quando due esecuzioni consecutive della suite producono risultati statisticamente sufficientemente stabili da permettere di distinguere in modo affidabile una regressione o un miglioramento reale…
-- righe 372–416: **[ ] 6. Inserire una gerarchia NVTX nel runtime** — * [ ] Annotare con NVTX:
-- righe 374–398: **Sottotask** — * [ ] Annotare con NVTX:
-- righe 399–416: **Condizione di completamento** — Il macro-task è completo quando è possibile isolare automaticamente, per esempio:
-- righe 417–466: **[ ] 7. Costruire il sistema di tracing con Nsight Systems** — * [ ] Implementare `trace_model()`.
-- righe 419–460: **Sottotask** — * [ ] Implementare `trace_model()`.
-- righe 461–466: **Condizione di completamento** — Il macro-task è completo quando l'agente riceve automaticamente una classifica dei kernel/range responsabili di almeno il **90–95% del tempo GPU osservato** e può distinguere kernel bottleneck da launch/runtime bottlenec…
-- righe 467–526: **[ ] 8. Costruire il profiler dettagliato con Nsight Compute** — * [ ] Implementare `profile_kernel()`.
-- righe 469–520: **Sottotask** — * [ ] Implementare `profile_kernel()`.
-- righe 521–526: **Condizione di completamento** — Il macro-task è completo quando un kernel selezionato produce automaticamente una scheda strutturata sufficiente a diagnosticare **bandwidth, latency, compute, occupancy, register pressure, shared-memory pressure, insuff…
-- righe 527–597: **[ ] 9. Implementare l'analisi del traffico memoria** — * [ ] Calcolare per ogni kernel:
-- righe 529–579: **Sottotask** — * [ ] Calcolare per ogni kernel:
-- righe 580–597: **Condizione di completamento** — Il macro-task è completo quando l'agente può distinguere chiaramente fra:
-- righe 598–658: **[ ] 10. Implementare il classificatore automatico dei bottleneck** — * [ ] Creare `diagnosis_engine.py`.
-- righe 600–652: **Sottotask** — * [ ] Creare `diagnosis_engine.py`.
-- righe 653–658: **Condizione di completamento** — Il macro-task è completo quando almeno una suite di kernel noti può essere classificata correttamente nei principali tipi di bottleneck e ogni diagnosi contiene **evidenze, contro-evidenze e prossimo test consigliato**.
-- righe 659–702: **[ ] 11. Creare il sistema di ispezione della compilazione** — * [ ] Implementare `inspect_kernel()`.
-- righe 661–696: **Sottotask** — * [ ] Implementare `inspect_kernel()`.
-- righe 697–702: **Condizione di completamento** — Il macro-task è completo quando ogni modifica kernel genera un diff automatico delle risorse hardware e delle principali classi di istruzione prodotte dal compilatore.
-- righe 703–738: **[ ] 12. Costruire il framework di microbenchmark dei kernel** — * [ ] Implementare `benchmark_kernel()`.
-- righe 705–732: **Sottotask** — * [ ] Implementare `benchmark_kernel()`.
-- righe 733–738: **Condizione di completamento** — Il macro-task è completo quando qualsiasi kernel candidato può essere confrontato in modo riproducibile con reference e baseline su tutte le shape rilevanti.
-- righe 739–776: **[ ] 13. Creare il framework di correctness e numerical validation** — * [x] Implementare `correctness_test()`.
-- righe 741–770: **Sottotask** — * [x] Implementare `correctness_test()`.
-- righe 771–776: **Condizione di completamento** — Il macro-task è completo quando nessun kernel può entrare nel ramo `accepted` senza aver superato automaticamente correctness unitario e almeno un controllo end-to-end.
-- righe 777–842: **[ ] 14. Creare la Knowledge Base — fondamenti GPU** — * [ ] Creare struttura:
-- righe 779–836: **Sottotask** — * [ ] Creare struttura:
-- righe 837–842: **Condizione di completamento** — Il macro-task è completo quando esistono almeno **50 card GPU atomiche e operative**, ognuna recuperabile tramite sintomo, metrica, tecnica o architettura.
-- righe 843–887: **[ ] 15. Creare la Knowledge Base — pattern di ottimizzazione** — * [ ] Creare card su:
-- righe 845–881: **Sottotask** — * [ ] Creare card su:
-- righe 882–887: **Condizione di completamento** — Il macro-task è completo quando a ogni principale classe di bottleneck corrispondono almeno **3 strategie concrete**, corredate da metriche che permettono di verificare se hanno funzionato.
-- righe 888–932: **[ ] 16. Creare la Knowledge Base — anti-pattern e failure modes** — * [ ] Creare card specifiche per:
-- righe 890–926: **Sottotask** — * [ ] Creare card specifiche per:
-- righe 927–932: **Condizione di completamento** — Il macro-task è completo quando il retrieval può fornire all'agente **non soltanto idee da provare ma anche ragioni tecniche per cui l'idea proposta potrebbe peggiorare il kernel**.
-- righe 933–987: **[ ] 17. Creare la Knowledge Base — LLM inference** — * [ ] Creare sezione specifica:
-- righe 935–975: **Sottotask** — * [ ] Creare sezione specifica:
-- righe 976–987: **Condizione di completamento** — Il macro-task è completo quando l'agente può ricevere una diagnosi come:
-- righe 988–1023: **[ ] 18. Creare la Knowledge Base per architettura GPU** — * [ ] Creare:
-- righe 990–1017: **Sottotask** — * [ ] Creare:
-- righe 1018–1023: **Condizione di completamento** — Il macro-task è completo quando l'agente non propone come azione primaria un meccanismo hardware assente dalla GPU installata senza marcarlo come incompatibile.
-- righe 1024–1079: **[ ] 19. Implementare il sistema di retrieval della Knowledge Base** — * [ ] Creare metadata strutturati per ogni card.
-- righe 1026–1073: **Sottotask** — * [ ] Creare metadata strutturati per ogni card.
-- righe 1074–1079: **Condizione di completamento** — Il macro-task è completo quando, dato un report strutturato di un kernel, il sistema restituisce automaticamente un piccolo set di conoscenze **specifiche, compatibili con l'hardware e pertinenti al bottleneck** più un s…
-- righe 1080–1121: **[ ] 20. Implementare il motore di generazione delle ipotesi** — * [ ] Creare schema obbligatorio:
-- righe 1082–1115: **Sottotask** — * [ ] Creare schema obbligatorio:
-- righe 1116–1121: **Condizione di completamento** — Il macro-task è completo quando l'agente non può modificare un kernel senza aver prodotto prima una previsione falsificabile degli effetti hardware e prestazionali.
-- righe 1122–1172: **[ ] 21. Creare il sistema di esperimenti e memoria tecnica** — * [ ] Implementare `experiment_log()`.
-- righe 1124–1166: **Sottotask** — * [ ] Implementare `experiment_log()`.
-- righe 1167–1172: **Condizione di completamento** — Il macro-task è completo quando l'agente può recuperare automaticamente la storia tecnica delle precedenti ottimizzazioni e non deve “riscoprire” continuamente gli stessi risultati.
-- righe 1173–1207: **[ ] 22. Implementare il comparatore automatico degli esperimenti** — * [x] Implementare `compare_experiment()`.
-- righe 1175–1201: **Sottotask** — * [x] Implementare `compare_experiment()`.
-- righe 1202–1207: **Condizione di completamento** — Il macro-task è completo quando il sistema può decidere automaticamente se una modifica è globalmente utile rispetto agli obiettivi dichiarati, senza basarsi su una singola misura.
-- righe 1208–1254: **[ ] 23. Implementare una pipeline specifica per kernel memory-bound** — * [ ] Quando classificato memory-bound, calcolare:
-- righe 1210–1248: **Sottotask** — * [ ] Quando classificato memory-bound, calcolare:
-- righe 1249–1254: **Condizione di completamento** — Il macro-task è completo quando ogni kernel memory-bound viene analizzato automaticamente distinguendo **saturazione della banda** da **traffico evitabile**.
-- righe 1255–1284: **[ ] 24. Implementare una pipeline specifica per kernel latency-bound** — * [ ] Analizzare:
-- righe 1257–1278: **Sottotask** — * [ ] Analizzare:
-- righe 1279–1284: **Condizione di completamento** — Il macro-task è completo quando il sistema sa proporre esperimenti diversi per `memory latency` e `memory bandwidth`, giustificando la distinzione con metriche osservate.
-- righe 1285–1312: **[ ] 25. Implementare una pipeline specifica per compute-bound** — * [ ] Analizzare:
-- righe 1287–1306: **Sottotask** — * [ ] Analizzare:
-- righe 1307–1312: **Condizione di completamento** — Il macro-task è completo quando un kernel compute-bound viene trattato con strategie di utilizzo delle pipeline di calcolo e non erroneamente con ottimizzazioni orientate alla DRAM.
-- righe 1313–1342: **[ ] 26. Implementare pipeline register/shared-memory/occupancy** — * [ ] Monitorare automaticamente registers/thread.
-- righe 1315–1336: **Sottotask** — * [ ] Monitorare automaticamente registers/thread.
-- righe 1337–1342: **Condizione di completamento** — Il macro-task è completo quando il sistema sa spiegare **perché** l'occupancy è limitata e se quella limitazione è realmente correlata alle prestazioni osservate.
-- righe 1343–1373: **[ ] 27. Implementare pipeline per quantizzazione** — * [ ] Distinguere sempre:
-- righe 1345–1367: **Sottotask** — * [ ] Distinguere sempre:
-- righe 1368–1373: **Condizione di completamento** — Il macro-task è completo quando l'agente può determinare se una quantizzazione accelera realmente il workload oppure trasferisce il costo dalla memoria a unpack/dequant/compute inefficiente.
-- righe 1374–1402: **[ ] 28. Implementare pipeline specifica attention/KV-cache** — * [ ] Calcolare dimensione KV cache per workload.
-- righe 1376–1396: **Sottotask** — * [ ] Calcolare dimensione KV cache per workload.
-- righe 1397–1402: **Condizione di completamento** — Il macro-task è completo quando l'harness può spiegare perché l'attention cambia comportamento al crescere del context e proporre strategie diverse per prefill e decode.
-- righe 1403–1426: **[ ] 29. Implementare pipeline per launch overhead e runtime** — * [ ] Analizzare timeline Nsight Systems.
-- righe 1405–1420: **Sottotask** — * [ ] Analizzare timeline Nsight Systems.
-- righe 1421–1426: **Condizione di completamento** — Il macro-task è completo quando il sistema può riconoscere un workload launch-bound e impedire all'agente di perdere tempo ottimizzando l'aritmetica di kernel già molto brevi.
-- righe 1427–1462: **[ ] 30. Creare il kernel workspace controllato** — * [ ] Creare:
-- righe 1429–1456: **Sottotask** — * [ ] Creare:
-- righe 1457–1462: **Condizione di completamento** — Il macro-task è completo quando un agente può creare, compilare, testare, confrontare e scartare un kernel senza modificare manualmente lo stato stabile di DS4.
-- righe 1463–1498: **[ ] 31. Creare l'interfaccia tool-facing per l'agente** — * [ ] Esporre tool ad alto livello:
-- righe 1465–1492: **Sottotask** — * [ ] Esporre tool ad alto livello:
-- righe 1493–1498: **Condizione di completamento** — Il macro-task è completo quando Qwen può svolgere un ciclo completo di profiling e ottimizzazione attraverso tool strutturati senza dover interpretare direttamente migliaia di righe di output Nsight.
-- righe 1499–1560: **[ ] 32. Creare il report sintetico standard di un kernel** — * [ ] Definire uno schema simile:
-- righe 1501–1554: **Sottotask** — * [ ] Definire uno schema simile:
-- righe 1555–1560: **Condizione di completamento** — Il macro-task è completo quando l'agente può capire la situazione principale di un kernel leggendo un singolo oggetto strutturato di dimensioni limitate.
-- righe 1561–1584: **[ ] 33. Creare la pipeline automatica “hotspot → proposta”** — * [ ] Benchmark iniziale.
-- righe 1563–1578: **Sottotask** — * [ ] Benchmark iniziale.
-- righe 1579–1584: **Condizione di completamento** — Il macro-task è completo quando il sistema può partire da un'inferenza DS4 non ottimizzata e arrivare autonomamente a una **specifica tecnica di modifica di un kernel**, accompagnata da evidenze e previsione quantitativa…
-- righe 1585–1612: **[ ] 34. Creare la pipeline automatica “proposta → verdict”** — * [ ] Compilare candidate.
-- righe 1587–1606: **Sottotask** — * [ ] Compilare candidate.
-- righe 1607–1612: **Condizione di completamento** — Il macro-task è completo quando una modifica può attraversare autonomamente l'intero percorso dal codice candidato a un verdetto basato su correttezza, microbenchmark, profiler ed end-to-end.
-- righe 1613–1642: **[ ] 35. Creare un sistema di apprendimento dagli esperimenti** — * [ ] Dopo ogni esperimento generare:
-- righe 1615–1636: **Sottotask** — * [ ] Dopo ogni esperimento generare:
-- righe 1637–1642: **Condizione di completamento** — Il macro-task è completo quando il sistema migliora progressivamente la propria conoscenza locale e può usare esperimenti precedenti come evidenza nelle decisioni future.
-- righe 1643–1671: **[ ] 36. Costruire benchmark di validazione dell'intero harness** — Creare piccoli kernel artificiali con bottleneck intenzionali:
-- righe 1645–1665: **Sottotask** — Creare piccoli kernel artificiali con bottleneck intenzionali:
-- righe 1666–1671: **Condizione di completamento** — Il macro-task è completo quando l'harness supera una suite di casi con **bottleneck conosciuto a priori** e dimostra che la catena misurazione → diagnosi → retrieval → esperimento funziona correttamente.
-- righe 1672–1717: **[ ] 37. Eseguire la prima caratterizzazione completa di Qwen su DS4** — * [ ] Congelare una baseline.
-- righe 1674–1711: **Sottotask** — * [ ] Congelare una baseline.
-- righe 1712–1717: **Condizione di completamento** — Il macro-task è completo quando esiste un report quantitativo che identifica **dove DS4/Qwen passa il tempo, perché e quali 3–5 interventi hanno il miglior rapporto potenziale/costo** sulla GPU installata.
-- righe 1718–1742: **[ ] 38. Ottimizzare il primo kernel reale end-to-end** — * [ ] Selezionare il primo hotspot sulla base dei dati.
-- righe 1720–1736: **Sottotask** — * [ ] Selezionare il primo hotspot sulla base dei dati.
-- righe 1737–1742: **Condizione di completamento** — Il macro-task è completo quando almeno una modifica reale di un kernel DS4 produce un miglioramento end-to-end statisticamente verificabile **senza regressione di correttezza**, e l'intero processo è stato eseguito attra…
-- righe 1743–1766: **[ ] 39. Ottimizzare separatamente prefill e decode** — * [ ] Costruire una classifica hotspot prefill.
-- righe 1745–1760: **Sottotask** — * [ ] Costruire una classifica hotspot prefill.
-- righe 1761–1766: **Condizione di completamento** — Il macro-task è completo quando DS4 può selezionare strategie/kernel differenti per workload significativamente diversi invece di utilizzare un'unica implementazione “media”.
-- righe 1767–1794: **[ ] 40. Implementare dispatch e autotuning controllato** — * [ ] Identificare le dimensioni rilevanti:
-- righe 1769–1788: **Sottotask** — * [ ] Identificare le dimensioni rilevanti:
-- righe 1789–1794: **Condizione di completamento** — Il macro-task è completo quando DS4 può scegliere automaticamente la configurazione kernel migliore per classi di workload rappresentative usando risultati misurati e persistenti.
-- righe 1795–1832: **[ ] 41. Integrare tutto nel ciclo operativo dell'agente** — * [ ] Creare prompt/system contract per il kernel agent.
-- righe 1797–1826: **Sottotask** — * [ ] Creare prompt/system contract per il kernel agent.
-- righe 1827–1832: **Condizione di completamento** — Il macro-task è completo quando un agente può condurre autonomamente più cicli consecutivi di kernel engineering e ogni decisione importante è ancorata a dati, conoscenza recuperata e risultati sperimentali.
-- righe 1833–1887: **[ ] 42. Definition of Done dell'intero progetto** — Il progetto è completo soltanto quando **tutte** le condizioni seguenti sono vere:
-- righe 1867–1887: **Condizione finale di successo** — Un agente che non possiede preventivamente una conoscenza profonda
+- righe 9–95: **Stato verificato dell'incremento iniziale (2026-08-11)** — I checkbox completati sotto indicano funzionalità presenti e testate; i
+- righe 96–149: **[x] 1. Creare il manifesto operativo dell'agente** — * [x] Creare `docs/performance/agent_performance_contract.md`.
+- righe 98–143: **Sottotask** — * [x] Creare `docs/performance/agent_performance_contract.md`.
+- righe 144–149: **Condizione di completamento** — Il macro-task è completo quando esiste un documento letto automaticamente dall'agente prima di ogni sessione di kernel engineering e l'harness **rifiuta un esperimento** privo di baseline, ipotesi, workload target, corre…
+- righe 150–219: **[ ] 2. Costruire il rilevatore hardware della GPU** — * [x] Implementare `hardware_probe()`.
+- righe 152–213: **Sottotask** — * [x] Implementare `hardware_probe()`.
+- righe 214–219: **Condizione di completamento** — Il macro-task è completo quando una sola chiamata restituisce un `hardware_profile.json` sufficientemente completo da impedire all'agente di proporre una tecnica non supportata dall'hardware senza segnalarlo esplicitamen…
+- righe 220–294: **[ ] 3. Creare il modello teorico dei costi del modello** — * [x] Implementare `model_cost()`.
+- righe 222–288: **Sottotask** — * [x] Implementare `model_cost()`.
+- righe 289–294: **Condizione di completamento** — Il macro-task è completo quando, dato un workload reale, il sistema può produrre per ogni operazione principale una stima verificabile di **FLOP, minimum bytes, arithmetic intensity e limite teorico memoria/compute**.
+- righe 295–331: **[ ] 4. Definire la suite canonica dei workload** — * [x] Creare `workloads.yaml`.
+- righe 297–325: **Sottotask** — * [x] Creare `workloads.yaml`.
+- righe 326–331: **Condizione di completamento** — Il macro-task è completo quando ogni esperimento può essere riprodotto sulla stessa matrice di workload e nessuna dichiarazione “questo kernel è più veloce” può essere emessa senza specificare **batch, context, fase e sh…
+- righe 332–375: **[ ] 5. Implementare il benchmark end-to-end affidabile** — * [x] Implementare `benchmark_model()`.
+- righe 334–369: **Sottotask** — * [x] Implementare `benchmark_model()`.
+- righe 370–375: **Condizione di completamento** — Il macro-task è completo quando due esecuzioni consecutive della suite producono risultati statisticamente sufficientemente stabili da permettere di distinguere in modo affidabile una regressione o un miglioramento reale…
+- righe 376–420: **[ ] 6. Inserire una gerarchia NVTX nel runtime** — * [ ] Annotare con NVTX:
+- righe 378–402: **Sottotask** — * [ ] Annotare con NVTX:
+- righe 403–420: **Condizione di completamento** — Il macro-task è completo quando è possibile isolare automaticamente, per esempio:
+- righe 421–470: **[ ] 7. Costruire il sistema di tracing con Nsight Systems** — * [ ] Implementare `trace_model()`.
+- righe 423–464: **Sottotask** — * [ ] Implementare `trace_model()`.
+- righe 465–470: **Condizione di completamento** — Il macro-task è completo quando l'agente riceve automaticamente una classifica dei kernel/range responsabili di almeno il **90–95% del tempo GPU osservato** e può distinguere kernel bottleneck da launch/runtime bottlenec…
+- righe 471–530: **[ ] 8. Costruire il profiler dettagliato con Nsight Compute** — * [ ] Implementare `profile_kernel()`.
+- righe 473–524: **Sottotask** — * [ ] Implementare `profile_kernel()`.
+- righe 525–530: **Condizione di completamento** — Il macro-task è completo quando un kernel selezionato produce automaticamente una scheda strutturata sufficiente a diagnosticare **bandwidth, latency, compute, occupancy, register pressure, shared-memory pressure, insuff…
+- righe 531–601: **[ ] 9. Implementare l'analisi del traffico memoria** — * [ ] Calcolare per ogni kernel:
+- righe 533–583: **Sottotask** — * [ ] Calcolare per ogni kernel:
+- righe 584–601: **Condizione di completamento** — Il macro-task è completo quando l'agente può distinguere chiaramente fra:
+- righe 602–662: **[ ] 10. Implementare il classificatore automatico dei bottleneck** — * [ ] Creare `diagnosis_engine.py`.
+- righe 604–656: **Sottotask** — * [ ] Creare `diagnosis_engine.py`.
+- righe 657–662: **Condizione di completamento** — Il macro-task è completo quando almeno una suite di kernel noti può essere classificata correttamente nei principali tipi di bottleneck e ogni diagnosi contiene **evidenze, contro-evidenze e prossimo test consigliato**.
+- righe 663–706: **[ ] 11. Creare il sistema di ispezione della compilazione** — * [ ] Implementare `inspect_kernel()`.
+- righe 665–700: **Sottotask** — * [ ] Implementare `inspect_kernel()`.
+- righe 701–706: **Condizione di completamento** — Il macro-task è completo quando ogni modifica kernel genera un diff automatico delle risorse hardware e delle principali classi di istruzione prodotte dal compilatore.
+- righe 707–742: **[ ] 12. Costruire il framework di microbenchmark dei kernel** — * [ ] Implementare `benchmark_kernel()`.
+- righe 709–736: **Sottotask** — * [ ] Implementare `benchmark_kernel()`.
+- righe 737–742: **Condizione di completamento** — Il macro-task è completo quando qualsiasi kernel candidato può essere confrontato in modo riproducibile con reference e baseline su tutte le shape rilevanti.
+- righe 743–780: **[ ] 13. Creare il framework di correctness e numerical validation** — * [x] Implementare `correctness_test()`.
+- righe 745–774: **Sottotask** — * [x] Implementare `correctness_test()`.
+- righe 775–780: **Condizione di completamento** — Il macro-task è completo quando nessun kernel può entrare nel ramo `accepted` senza aver superato automaticamente correctness unitario e almeno un controllo end-to-end.
+- righe 781–846: **[ ] 14. Creare la Knowledge Base — fondamenti GPU** — * [ ] Creare struttura:
+- righe 783–840: **Sottotask** — * [ ] Creare struttura:
+- righe 841–846: **Condizione di completamento** — Il macro-task è completo quando esistono almeno **50 card GPU atomiche e operative**, ognuna recuperabile tramite sintomo, metrica, tecnica o architettura.
+- righe 847–891: **[ ] 15. Creare la Knowledge Base — pattern di ottimizzazione** — * [ ] Creare card su:
+- righe 849–885: **Sottotask** — * [ ] Creare card su:
+- righe 886–891: **Condizione di completamento** — Il macro-task è completo quando a ogni principale classe di bottleneck corrispondono almeno **3 strategie concrete**, corredate da metriche che permettono di verificare se hanno funzionato.
+- righe 892–936: **[ ] 16. Creare la Knowledge Base — anti-pattern e failure modes** — * [ ] Creare card specifiche per:
+- righe 894–930: **Sottotask** — * [ ] Creare card specifiche per:
+- righe 931–936: **Condizione di completamento** — Il macro-task è completo quando il retrieval può fornire all'agente **non soltanto idee da provare ma anche ragioni tecniche per cui l'idea proposta potrebbe peggiorare il kernel**.
+- righe 937–991: **[ ] 17. Creare la Knowledge Base — LLM inference** — * [ ] Creare sezione specifica:
+- righe 939–979: **Sottotask** — * [ ] Creare sezione specifica:
+- righe 980–991: **Condizione di completamento** — Il macro-task è completo quando l'agente può ricevere una diagnosi come:
+- righe 992–1027: **[ ] 18. Creare la Knowledge Base per architettura GPU** — * [ ] Creare:
+- righe 994–1021: **Sottotask** — * [ ] Creare:
+- righe 1022–1027: **Condizione di completamento** — Il macro-task è completo quando l'agente non propone come azione primaria un meccanismo hardware assente dalla GPU installata senza marcarlo come incompatibile.
+- righe 1028–1083: **[ ] 19. Implementare il sistema di retrieval della Knowledge Base** — * [ ] Creare metadata strutturati per ogni card.
+- righe 1030–1077: **Sottotask** — * [ ] Creare metadata strutturati per ogni card.
+- righe 1078–1083: **Condizione di completamento** — Il macro-task è completo quando, dato un report strutturato di un kernel, il sistema restituisce automaticamente un piccolo set di conoscenze **specifiche, compatibili con l'hardware e pertinenti al bottleneck** più un s…
+- righe 1084–1125: **[ ] 20. Implementare il motore di generazione delle ipotesi** — * [ ] Creare schema obbligatorio:
+- righe 1086–1119: **Sottotask** — * [ ] Creare schema obbligatorio:
+- righe 1120–1125: **Condizione di completamento** — Il macro-task è completo quando l'agente non può modificare un kernel senza aver prodotto prima una previsione falsificabile degli effetti hardware e prestazionali.
+- righe 1126–1176: **[ ] 21. Creare il sistema di esperimenti e memoria tecnica** — * [ ] Implementare `experiment_log()`.
+- righe 1128–1170: **Sottotask** — * [ ] Implementare `experiment_log()`.
+- righe 1171–1176: **Condizione di completamento** — Il macro-task è completo quando l'agente può recuperare automaticamente la storia tecnica delle precedenti ottimizzazioni e non deve “riscoprire” continuamente gli stessi risultati.
+- righe 1177–1211: **[ ] 22. Implementare il comparatore automatico degli esperimenti** — * [x] Implementare `compare_experiment()`.
+- righe 1179–1205: **Sottotask** — * [x] Implementare `compare_experiment()`.
+- righe 1206–1211: **Condizione di completamento** — Il macro-task è completo quando il sistema può decidere automaticamente se una modifica è globalmente utile rispetto agli obiettivi dichiarati, senza basarsi su una singola misura.
+- righe 1212–1258: **[ ] 23. Implementare una pipeline specifica per kernel memory-bound** — * [ ] Quando classificato memory-bound, calcolare:
+- righe 1214–1252: **Sottotask** — * [ ] Quando classificato memory-bound, calcolare:
+- righe 1253–1258: **Condizione di completamento** — Il macro-task è completo quando ogni kernel memory-bound viene analizzato automaticamente distinguendo **saturazione della banda** da **traffico evitabile**.
+- righe 1259–1288: **[ ] 24. Implementare una pipeline specifica per kernel latency-bound** — * [ ] Analizzare:
+- righe 1261–1282: **Sottotask** — * [ ] Analizzare:
+- righe 1283–1288: **Condizione di completamento** — Il macro-task è completo quando il sistema sa proporre esperimenti diversi per `memory latency` e `memory bandwidth`, giustificando la distinzione con metriche osservate.
+- righe 1289–1316: **[ ] 25. Implementare una pipeline specifica per compute-bound** — * [ ] Analizzare:
+- righe 1291–1310: **Sottotask** — * [ ] Analizzare:
+- righe 1311–1316: **Condizione di completamento** — Il macro-task è completo quando un kernel compute-bound viene trattato con strategie di utilizzo delle pipeline di calcolo e non erroneamente con ottimizzazioni orientate alla DRAM.
+- righe 1317–1346: **[ ] 26. Implementare pipeline register/shared-memory/occupancy** — * [ ] Monitorare automaticamente registers/thread.
+- righe 1319–1340: **Sottotask** — * [ ] Monitorare automaticamente registers/thread.
+- righe 1341–1346: **Condizione di completamento** — Il macro-task è completo quando il sistema sa spiegare **perché** l'occupancy è limitata e se quella limitazione è realmente correlata alle prestazioni osservate.
+- righe 1347–1377: **[ ] 27. Implementare pipeline per quantizzazione** — * [ ] Distinguere sempre:
+- righe 1349–1371: **Sottotask** — * [ ] Distinguere sempre:
+- righe 1372–1377: **Condizione di completamento** — Il macro-task è completo quando l'agente può determinare se una quantizzazione accelera realmente il workload oppure trasferisce il costo dalla memoria a unpack/dequant/compute inefficiente.
+- righe 1378–1406: **[ ] 28. Implementare pipeline specifica attention/KV-cache** — * [ ] Calcolare dimensione KV cache per workload.
+- righe 1380–1400: **Sottotask** — * [ ] Calcolare dimensione KV cache per workload.
+- righe 1401–1406: **Condizione di completamento** — Il macro-task è completo quando l'harness può spiegare perché l'attention cambia comportamento al crescere del context e proporre strategie diverse per prefill e decode.
+- righe 1407–1430: **[ ] 29. Implementare pipeline per launch overhead e runtime** — * [ ] Analizzare timeline Nsight Systems.
+- righe 1409–1424: **Sottotask** — * [ ] Analizzare timeline Nsight Systems.
+- righe 1425–1430: **Condizione di completamento** — Il macro-task è completo quando il sistema può riconoscere un workload launch-bound e impedire all'agente di perdere tempo ottimizzando l'aritmetica di kernel già molto brevi.
+- righe 1431–1466: **[ ] 30. Creare il kernel workspace controllato** — * [ ] Creare:
+- righe 1433–1460: **Sottotask** — * [ ] Creare:
+- righe 1461–1466: **Condizione di completamento** — Il macro-task è completo quando un agente può creare, compilare, testare, confrontare e scartare un kernel senza modificare manualmente lo stato stabile di DS4.
+- righe 1467–1502: **[ ] 31. Creare l'interfaccia tool-facing per l'agente** — * [ ] Esporre tool ad alto livello:
+- righe 1469–1496: **Sottotask** — * [ ] Esporre tool ad alto livello:
+- righe 1497–1502: **Condizione di completamento** — Il macro-task è completo quando Qwen può svolgere un ciclo completo di profiling e ottimizzazione attraverso tool strutturati senza dover interpretare direttamente migliaia di righe di output Nsight.
+- righe 1503–1564: **[ ] 32. Creare il report sintetico standard di un kernel** — * [ ] Definire uno schema simile:
+- righe 1505–1558: **Sottotask** — * [ ] Definire uno schema simile:
+- righe 1559–1564: **Condizione di completamento** — Il macro-task è completo quando l'agente può capire la situazione principale di un kernel leggendo un singolo oggetto strutturato di dimensioni limitate.
+- righe 1565–1588: **[ ] 33. Creare la pipeline automatica “hotspot → proposta”** — * [ ] Benchmark iniziale.
+- righe 1567–1582: **Sottotask** — * [ ] Benchmark iniziale.
+- righe 1583–1588: **Condizione di completamento** — Il macro-task è completo quando il sistema può partire da un'inferenza DS4 non ottimizzata e arrivare autonomamente a una **specifica tecnica di modifica di un kernel**, accompagnata da evidenze e previsione quantitativa…
+- righe 1589–1616: **[ ] 34. Creare la pipeline automatica “proposta → verdict”** — * [ ] Compilare candidate.
+- righe 1591–1610: **Sottotask** — * [ ] Compilare candidate.
+- righe 1611–1616: **Condizione di completamento** — Il macro-task è completo quando una modifica può attraversare autonomamente l'intero percorso dal codice candidato a un verdetto basato su correttezza, microbenchmark, profiler ed end-to-end.
+- righe 1617–1646: **[ ] 35. Creare un sistema di apprendimento dagli esperimenti** — * [ ] Dopo ogni esperimento generare:
+- righe 1619–1640: **Sottotask** — * [ ] Dopo ogni esperimento generare:
+- righe 1641–1646: **Condizione di completamento** — Il macro-task è completo quando il sistema migliora progressivamente la propria conoscenza locale e può usare esperimenti precedenti come evidenza nelle decisioni future.
+- righe 1647–1675: **[ ] 36. Costruire benchmark di validazione dell'intero harness** — Creare piccoli kernel artificiali con bottleneck intenzionali:
+- righe 1649–1669: **Sottotask** — Creare piccoli kernel artificiali con bottleneck intenzionali:
+- righe 1670–1675: **Condizione di completamento** — Il macro-task è completo quando l'harness supera una suite di casi con **bottleneck conosciuto a priori** e dimostra che la catena misurazione → diagnosi → retrieval → esperimento funziona correttamente.
+- righe 1676–1721: **[ ] 37. Eseguire la prima caratterizzazione completa di Qwen su DS4** — * [ ] Congelare una baseline.
+- righe 1678–1715: **Sottotask** — * [ ] Congelare una baseline.
+- righe 1716–1721: **Condizione di completamento** — Il macro-task è completo quando esiste un report quantitativo che identifica **dove DS4/Qwen passa il tempo, perché e quali 3–5 interventi hanno il miglior rapporto potenziale/costo** sulla GPU installata.
+- righe 1722–1746: **[ ] 38. Ottimizzare il primo kernel reale end-to-end** — * [ ] Selezionare il primo hotspot sulla base dei dati.
+- righe 1724–1740: **Sottotask** — * [ ] Selezionare il primo hotspot sulla base dei dati.
+- righe 1741–1746: **Condizione di completamento** — Il macro-task è completo quando almeno una modifica reale di un kernel DS4 produce un miglioramento end-to-end statisticamente verificabile **senza regressione di correttezza**, e l'intero processo è stato eseguito attra…
+- righe 1747–1770: **[ ] 39. Ottimizzare separatamente prefill e decode** — * [ ] Costruire una classifica hotspot prefill.
+- righe 1749–1764: **Sottotask** — * [ ] Costruire una classifica hotspot prefill.
+- righe 1765–1770: **Condizione di completamento** — Il macro-task è completo quando DS4 può selezionare strategie/kernel differenti per workload significativamente diversi invece di utilizzare un'unica implementazione “media”.
+- righe 1771–1798: **[ ] 40. Implementare dispatch e autotuning controllato** — * [ ] Identificare le dimensioni rilevanti:
+- righe 1773–1792: **Sottotask** — * [ ] Identificare le dimensioni rilevanti:
+- righe 1793–1798: **Condizione di completamento** — Il macro-task è completo quando DS4 può scegliere automaticamente la configurazione kernel migliore per classi di workload rappresentative usando risultati misurati e persistenti.
+- righe 1799–1836: **[ ] 41. Integrare tutto nel ciclo operativo dell'agente** — * [ ] Creare prompt/system contract per il kernel agent.
+- righe 1801–1830: **Sottotask** — * [ ] Creare prompt/system contract per il kernel agent.
+- righe 1831–1836: **Condizione di completamento** — Il macro-task è completo quando un agente può condurre autonomamente più cicli consecutivi di kernel engineering e ogni decisione importante è ancorata a dati, conoscenza recuperata e risultati sperimentali.
+- righe 1837–1891: **[ ] 42. Definition of Done dell'intero progetto** — Il progetto è completo soltanto quando **tutte** le condizioni seguenti sono vere:
+- righe 1871–1891: **Condizione finale di successo** — Un agente che non possiede preventivamente una conoscenza profonda
 
 ## [PROTOCOLLO DEFINITIVO — CUDA Q8_1 / MMVQ, PARITY LLAMA.CPP E OTTIMIZZAZIONE QWEN3.6 27B](todo-performance.md)
 

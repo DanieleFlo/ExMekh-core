@@ -9,7 +9,8 @@ ritirati non sono verifiche del frontend corrente. Vedere
 Questo ciclo avvicina il decode del server agentico Qwen3.8 alla velocità del
 server non agentico senza modificare kernel CUDA, API, formati DSML/JSON, KV su
 SSD o semantica del sampling. Qwen3.8-27B-UD-Q4_K_S è il riferimento primario;
-Qwen3.6 resta coperto come compatibilità.
+La compatibilità Qwen3.6 descritta in questo gate è storica: il supporto runtime
+è stato rimosso il 2026-10-01; le primitive condivise restano disponibili.
 
 La candidate riusa la partizione statica DSML già impiegata nelle stringhe
 libere anche nello stato opzionale `SEARCH`, soltanto quando il tracker è

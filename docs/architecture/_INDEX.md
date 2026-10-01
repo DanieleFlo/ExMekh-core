@@ -6,26 +6,26 @@ Indice generato; non modificare a mano.
 
 DS4 supports native Qwen3.6 Multi-Token Prediction on the single-GPU CUDA
 
-- righe 3–25: **Scope and contract** — DS4 supports native Qwen3.6 Multi-Token Prediction on the single-GPU CUDA
-- righe 26–54: **GGUF and NextN semantics** — The support model is selected structurally, not by filename:
-- righe 55–70: **Session state** — Each enabled Qwen session owns:
-- righe 71–107: **Production adaptive-depth cycle** — Below 2K, the configured depth-two cycle is:
-- righe 108–137: **Sampling and logits masks** — DS4 follows llama.cpp's current sample-and-match contract.
-- righe 138–166: **CUDA paths** — Q4_K, Q5_K, and Q6_K verifier matmuls use Q8_1 plus a second Q8_1 residual.
-  - righe 140–159: **Target verifier** — Q4_K, Q5_K, and Q6_K verifier matmuls use Q8_1 plus a second Q8_1 residual.
-  - righe 160–166: **Support network** — The Q4_0 shared head uses Q8_1+residual DP4A and schedules eight output rows per
-- righe 167–178: **Failure policy** — diagnostic.
-- righe 179–249: **Validation gate** — The production model-backed command is:
+- righe 7–29: **Scope and contract** — DS4 supports native Qwen3.6 Multi-Token Prediction on the single-GPU CUDA
+- righe 30–58: **GGUF and NextN semantics** — The support model is selected structurally, not by filename:
+- righe 59–74: **Session state** — Each enabled Qwen session owns:
+- righe 75–111: **Production adaptive-depth cycle** — Below 2K, the configured depth-two cycle is:
+- righe 112–141: **Sampling and logits masks** — DS4 follows llama.cpp's current sample-and-match contract.
+- righe 142–170: **CUDA paths** — Q4_K, Q5_K, and Q6_K verifier matmuls use Q8_1 plus a second Q8_1 residual.
+  - righe 144–163: **Target verifier** — Q4_K, Q5_K, and Q6_K verifier matmuls use Q8_1 plus a second Q8_1 residual.
+  - righe 164–170: **Support network** — The Q4_0 shared head uses Q8_1+residual DP4A and schedules eight output rows per
+- righe 171–182: **Failure policy** — diagnostic.
+- righe 183–253: **Validation gate** — The production model-backed command is:
 
 ## [Qwen3.8 27B UD-Q4_K_S compatibility audit](qwen38-compatibility.md)
 
 DS4 recognizes only the audited Unsloth pair at repository revision
 
-- righe 3–15: **Pinned artifacts** — DS4 recognizes only the audited Unsloth pair at repository revision
-- righe 16–44: **Architecture and GGUF contract** — The runtime architecture is the existing `qwen35` implementation: 64 target
-- righe 45–67: **Frontend behavior** — Both `ds4` and `ds4-server` recognize the stable model ID
-- righe 68–93: **Test and oracle isolation** — `make test-qwen38` validates the pinned metadata snapshots, embedded and
-- righe 94–104: **CUDA runtime status** — The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,
+- righe 7–19: **Pinned artifacts** — DS4 recognizes only the audited Unsloth pair at repository revision
+- righe 20–48: **Architecture and GGUF contract** — The runtime architecture is the existing `qwen35` implementation: 64 target
+- righe 49–71: **Frontend behavior** — Both `ds4` and `ds4-server` recognize the stable model ID
+- righe 72–97: **Test and oracle isolation** — `make test-qwen38` validates the pinned metadata snapshots, embedded and
+- righe 98–108: **CUDA runtime status** — The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,
 
 ## [Qwen3.6-27B Q4_K_S — Architettura completa, memoria ricorrente e quantizzazione](qwen_architecture.md)
 

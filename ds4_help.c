@@ -141,7 +141,7 @@ static const char *tool_summary(ds4_help_tool tool) {
 static void print_model_runtime(FILE *fp, const help_colors *c,
                                 ds4_help_tool tool, bool full) {
     title(fp, c, "Model And Runtime");
-    opt(fp, c, "-m, --model FILE", "GGUF model path. Qwen: Qwen3.6-27B Q4_K_S/Q4_K_M or Qwen3.8-27B-UD-Q4_K_S. Default: ds4flash.gguf");
+    opt(fp, c, "-m, --model FILE", "GGUF model path. Qwen: Qwen3.8-27B-UD-Q4_K_S. Default: ds4flash.gguf");
 #ifdef DS4_ROCM_BUILD
     opt(fp, c, "--metal | --rocm | --cpu", "Select the backend explicitly.");
     opt(fp, c, "--backend NAME", "Backend name: metal, rocm, or cpu.");
@@ -307,7 +307,7 @@ static void print_server_api(FILE *fp, const help_colors *c) {
     opt(fp, c, "--batched-session N", "Keep N resident sessions and batch decode-ready requests.");
     opt(fp, c, "--mixed-prefill-quantum N", "Prefill chunk while generations are active. Default: 128");
     para(fp, c, "Endpoints: /v1/chat/completions, /v1/responses, /v1/completions, and /v1/messages.");
-    para(fp, c, "DeepSeek endpoint aliases remain available; Qwen uses an extension-free API ID: Qwen3.6-27B-Q4_K_S, Qwen3.6-27B-Q4_K_M, or Qwen3.8-27B-UD-Q4_K_S. Legacy .gguf IDs remain accepted.");
+    para(fp, c, "DeepSeek endpoint aliases remain available; Qwen uses an extension-free API ID: Qwen3.8-27B-UD-Q4_K_S. Legacy .gguf IDs remain accepted.");
     fputc('\n', fp);
 }
 

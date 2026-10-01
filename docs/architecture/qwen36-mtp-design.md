@@ -1,5 +1,9 @@
 # Qwen3.6 MTP implementation
 
+> Historical Qwen3.6 record. Runtime support was removed on 2026-10-01;
+> shared kernels and numerical tooling remain available for Qwen3.8 and other
+> audited models. Commands requiring Qwen3.6 inference no longer apply.
+
 ## Scope and contract
 
 DS4 supports native Qwen3.6 Multi-Token Prediction on the single-GPU CUDA

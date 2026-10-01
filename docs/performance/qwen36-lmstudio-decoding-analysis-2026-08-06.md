@@ -1,5 +1,9 @@
 # Perché LM Studio raggiunge 37,66 token/s con Qwen3.6 27B e come replicarlo in DS4
 
+> Historical Qwen3.6 record. Runtime support was removed on 2026-10-01;
+> shared kernels and numerical tooling remain available for Qwen3.8 and other
+> audited models. Commands requiring Qwen3.6 inference no longer apply.
+
 > Analisi storica e fonte di ipotesi. Per lo stato canonico delle soluzioni
 > mantenute e scartate vedere `docs/performance/qwen36-performance-ledger.md`.
 
