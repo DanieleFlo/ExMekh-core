@@ -12,7 +12,7 @@
               "title": "Merge DS4 upstream — 1 ottobre 2026",
               "level": 1,
               "start": 1,
-              "end": 256,
+              "end": 264,
               "summary": "Branch `codex/merge-ds4-upstream-2026-10-01`, creato da"
             },
             {
@@ -30,53 +30,149 @@
               "summary": "tokenizer, prompt, kernel specializzati, GDN, grafi CUDA e launcher locali."
             },
             {
-              "title": "Immagini e presentazione del codice",
+              "title": "Sviluppo vision successivo al merge",
               "level": 2,
               "start": 44,
-              "end": 56,
+              "end": 51,
+              "summary": "Il report Qwen27 vision/checkpoint"
+            },
+            {
+              "title": "Immagini e presentazione del codice",
+              "level": 2,
+              "start": 52,
+              "end": 64,
               "summary": "Sono importati integralmente decoder PNG/JPEG, fixture, encoder e percorsi vision"
             },
             {
               "title": "Kernel e risoluzioni rilevanti",
               "level": 2,
-              "start": 57,
-              "end": 91,
+              "start": 65,
+              "end": 99,
               "summary": "Il MMQ Q4_K generico upstream non supera il gate numerico esistente del fork su"
             },
             {
               "title": "Hardware, RAM e artefatti",
               "level": 2,
-              "start": 92,
-              "end": 116,
+              "start": 100,
+              "end": 124,
               "summary": "RTX 3090, 24 GiB, `sm_86`, driver 610.62, CUDA toolkit 12.4; i9-14900K,"
             },
             {
               "title": "Confronto Qwen27",
               "level": 2,
-              "start": 117,
-              "end": 162,
+              "start": 125,
+              "end": 170,
               "summary": "Cinque ripetizioni misurate dopo warm-up, contesto allocato 22593, prefill chunk"
             },
             {
               "title": "Matrice di verifica",
               "level": 2,
-              "start": 163,
-              "end": 200,
+              "start": 171,
+              "end": 208,
               "summary": "Il 27B supera i gate locali di accettazione."
             },
             {
               "title": "Tentativo Flash Next",
               "level": 2,
-              "start": 201,
-              "end": 238,
+              "start": 209,
+              "end": 246,
               "summary": "È usato il Q2 originale, circa 137.10 GiB su disco: circa 41.73 GiB di pesi"
             },
             {
               "title": "Riproduzione",
               "level": 2,
-              "start": 239,
-              "end": 256,
+              "start": 247,
+              "end": 264,
               "summary": "make -j4 ds4 ds4-server ds4-bench ds4-eval CUDA_ARCH=sm_86"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/qwen27-vision-checkpoint-20261001.md",
+          "sections": [
+            {
+              "title": "Qwen27 vision e checkpoint completi — 1 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 223,
+              "summary": "Sviluppo sul branch `codex/merge-ds4-upstream-2026-10-01`, dopo il merge"
+            },
+            {
+              "title": "Implementazione e perimetro",
+              "level": 2,
+              "start": 3,
+              "end": 20,
+              "summary": "Sviluppo sul branch `codex/merge-ds4-upstream-2026-10-01`, dopo il merge"
+            },
+            {
+              "title": "Ordine delle immagini e del thinking",
+              "level": 2,
+              "start": 21,
+              "end": 35,
+              "summary": "Il forward ufficiale Transformers"
+            },
+            {
+              "title": "Ciclo VRAM effettivo",
+              "level": 2,
+              "start": 36,
+              "end": 59,
+              "summary": "Per ogni immagine non presente nella cache embedding, sotto il lock d’inferenza:"
+            },
+            {
+              "title": "Payload, skill e subagent",
+              "level": 2,
+              "start": 60,
+              "end": 85,
+              "summary": "Un payload multimodale contiene un envelope `VMCP`, versione 1, con:"
+            },
+            {
+              "title": "Artefatti riproducibili",
+              "level": 2,
+              "start": 86,
+              "end": 105,
+              "summary": "Il mmproj Unsloth"
+            },
+            {
+              "title": "Verifica",
+              "level": 2,
+              "start": 106,
+              "end": 142,
+              "summary": "I test numerici non cambiano tolleranze né golden."
+            },
+            {
+              "title": "Prestazioni del percorso testo",
+              "level": 2,
+              "start": 143,
+              "end": 180,
+              "summary": "Baseline vision: merge `0edbded`, con binari congelati; implementazione verificata"
+            },
+            {
+              "title": "Limiti osservati e verifiche mancanti",
+              "level": 2,
+              "start": 181,
+              "end": 212,
+              "summary": "La prima fixture OCR con scritta `RED7` ha prodotto `R7`; l’oracle llama.cpp"
+            },
+            {
+              "title": "Riproduzione",
+              "level": 2,
+              "start": 213,
+              "end": 223,
+              "summary": "./download_model.sh qwen38-27b-vision"
+            },
+            {
+              "title": "In un secondo terminale, con server fermo rispetto ad altri client:",
+              "level": 1,
+              "start": 224,
+              "end": 225,
+              "summary": "python3 tests/test_qwen35_vision_api.py --url http://127.0.0.1:8080"
+            },
+            {
+              "title": "Ripetere con ./agent/start-ds4-server.sh per MTP.",
+              "level": 1,
+              "start": 226,
+              "end": 229,
+              "summary": "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB=16 DS4_TEST_CTX=256 \\"
             }
           ]
         },
@@ -169,7 +265,7 @@
               "title": "Qwen3.8 27B UD-Q4_K_S compatibility audit",
               "level": 1,
               "start": 1,
-              "end": 114,
+              "end": 129,
               "summary": "> Current runtime: Qwen3.8 only for the `qwen35` family."
             },
             {
@@ -180,38 +276,45 @@
               "summary": "The 2026-10-01 merge audit qualifies this"
             },
             {
-              "title": "Pinned artifacts",
+              "title": "Native vision on CUDA",
               "level": 2,
               "start": 13,
-              "end": 25,
+              "end": 27,
+              "summary": "The 27B is a vision-language model; its GGUF text weights need the matching"
+            },
+            {
+              "title": "Pinned artifacts",
+              "level": 2,
+              "start": 28,
+              "end": 40,
               "summary": "DS4 recognizes only the audited Unsloth pair at repository revision"
             },
             {
               "title": "Architecture and GGUF contract",
               "level": 2,
-              "start": 26,
-              "end": 54,
+              "start": 41,
+              "end": 69,
               "summary": "The runtime architecture is the existing `qwen35` implementation: 64 target"
             },
             {
               "title": "Frontend behavior",
               "level": 2,
-              "start": 55,
-              "end": 77,
+              "start": 70,
+              "end": 92,
               "summary": "Both `ds4` and `ds4-server` recognize the stable model ID"
             },
             {
               "title": "Test and oracle isolation",
               "level": 2,
-              "start": 78,
-              "end": 103,
+              "start": 93,
+              "end": 118,
               "summary": "`make test-qwen38` validates the pinned metadata snapshots, embedded and"
             },
             {
               "title": "CUDA runtime status",
               "level": 2,
-              "start": 104,
-              "end": 114,
+              "start": 119,
+              "end": 129,
               "summary": "The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,"
             }
           ]
@@ -3770,105 +3873,112 @@
               "title": "Roadmap di integrazione Qwen3.8 27B UD-Q4_K_S",
               "level": 1,
               "start": 1,
-              "end": 257,
+              "end": 266,
               "summary": "> Current runtime: Qwen3.8 only for the `qwen35` family."
+            },
+            {
+              "title": "Vision dopo il merge upstream",
+              "level": 2,
+              "start": 11,
+              "end": 19,
+              "summary": "Il report del 1 ottobre 2026"
             },
             {
               "title": "Obiettivo e criterio di completamento",
               "level": 2,
-              "start": 11,
-              "end": 27,
+              "start": 20,
+              "end": 36,
               "summary": "Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target"
             },
             {
               "title": "Stato sintetico",
               "level": 2,
-              "start": 28,
-              "end": 43,
+              "start": 37,
+              "end": 52,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Fase 0 — Baseline, fonti e invarianti",
               "level": 2,
-              "start": 44,
-              "end": 61,
+              "start": 53,
+              "end": 70,
               "summary": "knowledge base e la scheda RTX 3090."
             },
             {
               "title": "Fase 1 — Kernel indispensabili per il target UD",
               "level": 2,
-              "start": 62,
-              "end": 96,
+              "start": 71,
+              "end": 105,
               "summary": "Formati mancanti, rilevati dall'inventario pinned:"
             },
             {
               "title": "Fase 2 — Target Qwen3.8 end-to-end",
               "level": 2,
-              "start": 97,
-              "end": 112,
+              "start": 106,
+              "end": 121,
               "summary": "indipendente alla revisione llama.cpp fissata; 32/32 greedy identici."
             },
             {
               "title": "Fase 3 — Parita' funzionale con Qwen3.6",
               "level": 2,
-              "start": 113,
-              "end": 161,
+              "start": 122,
+              "end": 170,
               "summary": "perplexity e dump diagnostici."
             },
             {
               "title": "CLI",
               "level": 3,
-              "start": 115,
-              "end": 121,
+              "start": 124,
+              "end": 130,
               "summary": "perplexity e dump diagnostici."
             },
             {
               "title": "Server",
               "level": 3,
-              "start": 122,
-              "end": 137,
+              "start": 131,
+              "end": 146,
               "summary": "constrained output e batching/multi-sessione nei percorsi applicabili."
             },
             {
               "title": "MTP",
               "level": 3,
-              "start": 138,
-              "end": 153,
+              "start": 147,
+              "end": 162,
               "summary": "registrata a contesti brevi e lunghi."
             },
             {
               "title": "SSD e agentic",
               "level": 3,
-              "start": 154,
-              "end": 161,
+              "start": 163,
+              "end": 170,
               "summary": "con MTP, usando il model ID Qwen3.8."
             },
             {
               "title": "Fase 4 — Regressione Qwen3.6",
               "level": 2,
-              "start": 162,
-              "end": 176,
+              "start": 171,
+              "end": 185,
               "summary": "Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate"
             },
             {
               "title": "Fase 5 — Ottimizzazioni opzionali comuni",
               "level": 2,
-              "start": 177,
-              "end": 198,
+              "start": 186,
+              "end": 207,
               "summary": "Valutare soltanto dopo la parita' funzionale del 3.8:"
             },
             {
               "title": "Registro breve di decisioni e risultati",
               "level": 2,
-              "start": 199,
-              "end": 235,
+              "start": 208,
+              "end": 244,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "Comandi e risultati da compilare durante il lavoro",
               "level": 2,
-              "start": 236,
-              "end": 257,
+              "start": 245,
+              "end": 266,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             }
           ]

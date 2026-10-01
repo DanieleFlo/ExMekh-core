@@ -8,13 +8,30 @@ Branch `codex/merge-ds4-upstream-2026-10-01`, creato da
 
 - righe 3–20: **Provenienza e perimetro** — Branch `codex/merge-ds4-upstream-2026-10-01`, creato da
 - righe 21–43: **Contratti preservati** — tokenizer, prompt, kernel specializzati, GDN, grafi CUDA e launcher locali.
-- righe 44–56: **Immagini e presentazione del codice** — Sono importati integralmente decoder PNG/JPEG, fixture, encoder e percorsi vision
-- righe 57–91: **Kernel e risoluzioni rilevanti** — Il MMQ Q4_K generico upstream non supera il gate numerico esistente del fork su
-- righe 92–116: **Hardware, RAM e artefatti** — RTX 3090, 24 GiB, `sm_86`, driver 610.62, CUDA toolkit 12.4; i9-14900K,
-- righe 117–162: **Confronto Qwen27** — Cinque ripetizioni misurate dopo warm-up, contesto allocato 22593, prefill chunk
-- righe 163–200: **Matrice di verifica** — Il 27B supera i gate locali di accettazione.
-- righe 201–238: **Tentativo Flash Next** — È usato il Q2 originale, circa 137.10 GiB su disco: circa 41.73 GiB di pesi
-- righe 239–256: **Riproduzione** — make -j4 ds4 ds4-server ds4-bench ds4-eval CUDA_ARCH=sm_86
+- righe 44–51: **Sviluppo vision successivo al merge** — Il report Qwen27 vision/checkpoint
+- righe 52–64: **Immagini e presentazione del codice** — Sono importati integralmente decoder PNG/JPEG, fixture, encoder e percorsi vision
+- righe 65–99: **Kernel e risoluzioni rilevanti** — Il MMQ Q4_K generico upstream non supera il gate numerico esistente del fork su
+- righe 100–124: **Hardware, RAM e artefatti** — RTX 3090, 24 GiB, `sm_86`, driver 610.62, CUDA toolkit 12.4; i9-14900K,
+- righe 125–170: **Confronto Qwen27** — Cinque ripetizioni misurate dopo warm-up, contesto allocato 22593, prefill chunk
+- righe 171–208: **Matrice di verifica** — Il 27B supera i gate locali di accettazione.
+- righe 209–246: **Tentativo Flash Next** — È usato il Q2 originale, circa 137.10 GiB su disco: circa 41.73 GiB di pesi
+- righe 247–264: **Riproduzione** — make -j4 ds4 ds4-server ds4-bench ds4-eval CUDA_ARCH=sm_86
+
+## [Qwen27 vision e checkpoint completi — 1 ottobre 2026](qwen27-vision-checkpoint-20261001.md)
+
+Sviluppo sul branch `codex/merge-ds4-upstream-2026-10-01`, dopo il merge
+
+- righe 3–20: **Implementazione e perimetro** — Sviluppo sul branch `codex/merge-ds4-upstream-2026-10-01`, dopo il merge
+- righe 21–35: **Ordine delle immagini e del thinking** — Il forward ufficiale Transformers
+- righe 36–59: **Ciclo VRAM effettivo** — Per ogni immagine non presente nella cache embedding, sotto il lock d’inferenza:
+- righe 60–85: **Payload, skill e subagent** — Un payload multimodale contiene un envelope `VMCP`, versione 1, con:
+- righe 86–105: **Artefatti riproducibili** — Il mmproj Unsloth
+- righe 106–142: **Verifica** — I test numerici non cambiano tolleranze né golden.
+- righe 143–180: **Prestazioni del percorso testo** — Baseline vision: merge `0edbded`, con binari congelati; implementazione verificata
+- righe 181–212: **Limiti osservati e verifiche mancanti** — La prima fixture OCR con scritta `RED7` ha prodotto `R7`; l’oracle llama.cpp
+- righe 213–223: **Riproduzione** — ./download_model.sh qwen38-27b-vision
+- righe 224–225: **In un secondo terminale, con server fermo rispetto ad altri client:** — python3 tests/test_qwen35_vision_api.py --url http://127.0.0.1:8080
+- righe 226–229: **Ripetere con ./agent/start-ds4-server.sh per MTP.** — DS4_CUDA_WEIGHT_CACHE_LIMIT_GB=16 DS4_TEST_CTX=256 \
 
 ## [Qwen3.6 MTP implementation](qwen36-mtp-design.md)
 
@@ -36,11 +53,12 @@ DS4 supports native Qwen3.6 Multi-Token Prediction on the single-GPU CUDA
 The 2026-10-01 merge audit qualifies this
 
 - righe 7–12: **Full upstream merge** — The 2026-10-01 merge audit qualifies this
-- righe 13–25: **Pinned artifacts** — DS4 recognizes only the audited Unsloth pair at repository revision
-- righe 26–54: **Architecture and GGUF contract** — The runtime architecture is the existing `qwen35` implementation: 64 target
-- righe 55–77: **Frontend behavior** — Both `ds4` and `ds4-server` recognize the stable model ID
-- righe 78–103: **Test and oracle isolation** — `make test-qwen38` validates the pinned metadata snapshots, embedded and
-- righe 104–114: **CUDA runtime status** — The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,
+- righe 13–27: **Native vision on CUDA** — The 27B is a vision-language model; its GGUF text weights need the matching
+- righe 28–40: **Pinned artifacts** — DS4 recognizes only the audited Unsloth pair at repository revision
+- righe 41–69: **Architecture and GGUF contract** — The runtime architecture is the existing `qwen35` implementation: 64 target
+- righe 70–92: **Frontend behavior** — Both `ds4` and `ds4-server` recognize the stable model ID
+- righe 93–118: **Test and oracle isolation** — `make test-qwen38` validates the pinned metadata snapshots, embedded and
+- righe 119–129: **CUDA runtime status** — The Qwen3.6 graph is reused, while Q3_K, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S,
 
 ## [Qwen3.6-27B Q4_K_S — Architettura completa, memoria ricorrente e quantizzazione](qwen_architecture.md)
 

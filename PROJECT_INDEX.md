@@ -25,7 +25,8 @@ Il [riepilogo JSON](docs/performance/ds4-upstream-merge-20261001.json) conserva
 misure, hash e gate in forma verificabile.
 Il [report vision Qwen27](docs/architecture/qwen27-vision-checkpoint-20261001.md)
 descrive encoder condiviso, mRoPE interleaved e checkpoint completi durante
-l’alternanza vision/testo. Il matching mmproj si scarica con
+l’alternanza vision/testo. Le [evidenze vision compatte](docs/performance/qwen27-vision-checkpoint-20261001.json)
+registrano correttezza, memoria, prestazioni e prove applicative rimandate. Il matching mmproj si scarica con
 `download_model.sh qwen38-27b-vision`; il modello selezionato resta Qwen27.
 Le [guide upstream](docs/upstream/_INDEX.md) sono incluse nella wiki indicizzata.
 

@@ -202,22 +202,23 @@ Migliorare il tempo end-to-end a contesti diversi tramite scheduling, senza
 
 ## [Roadmap di integrazione Qwen3.8 27B UD-Q4_K_S](qwen38-implementation-roadmap.md)
 
-Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
+Il report del 1 ottobre 2026
 
-- righe 11–27: **Obiettivo e criterio di completamento** — Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
-- righe 28–43: **Stato sintetico** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 44–61: **Fase 0 — Baseline, fonti e invarianti** — knowledge base e la scheda RTX 3090.
-- righe 62–96: **Fase 1 — Kernel indispensabili per il target UD** — Formati mancanti, rilevati dall'inventario pinned:
-- righe 97–112: **Fase 2 — Target Qwen3.8 end-to-end** — indipendente alla revisione llama.cpp fissata; 32/32 greedy identici.
-- righe 113–161: **Fase 3 — Parita' funzionale con Qwen3.6** — perplexity e dump diagnostici.
-  - righe 115–121: **CLI** — perplexity e dump diagnostici.
-  - righe 122–137: **Server** — constrained output e batching/multi-sessione nei percorsi applicabili.
-  - righe 138–153: **MTP** — registrata a contesti brevi e lunghi.
-  - righe 154–161: **SSD e agentic** — con MTP, usando il model ID Qwen3.8.
-- righe 162–176: **Fase 4 — Regressione Qwen3.6** — Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate
-- righe 177–198: **Fase 5 — Ottimizzazioni opzionali comuni** — Valutare soltanto dopo la parita' funzionale del 3.8:
-- righe 199–235: **Registro breve di decisioni e risultati** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 236–257: **Comandi e risultati da compilare durante il lavoro** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 11–19: **Vision dopo il merge upstream** — Il report del 1 ottobre 2026
+- righe 20–36: **Obiettivo e criterio di completamento** — Portare `Qwen3.8-27B-UD-Q4_K_S.gguf` allo stesso livello funzionale del target
+- righe 37–52: **Stato sintetico** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 53–70: **Fase 0 — Baseline, fonti e invarianti** — knowledge base e la scheda RTX 3090.
+- righe 71–105: **Fase 1 — Kernel indispensabili per il target UD** — Formati mancanti, rilevati dall'inventario pinned:
+- righe 106–121: **Fase 2 — Target Qwen3.8 end-to-end** — indipendente alla revisione llama.cpp fissata; 32/32 greedy identici.
+- righe 122–170: **Fase 3 — Parita' funzionale con Qwen3.6** — perplexity e dump diagnostici.
+  - righe 124–130: **CLI** — perplexity e dump diagnostici.
+  - righe 131–146: **Server** — constrained output e batching/multi-sessione nei percorsi applicabili.
+  - righe 147–162: **MTP** — registrata a contesti brevi e lunghi.
+  - righe 163–170: **SSD e agentic** — con MTP, usando il model ID Qwen3.8.
+- righe 171–185: **Fase 4 — Regressione Qwen3.6** — Le fixture predefinite dichiaratamente DeepSeek e Metal Flash sono saltate
+- righe 186–207: **Fase 5 — Ottimizzazioni opzionali comuni** — Valutare soltanto dopo la parita' funzionale del 3.8:
+- righe 208–244: **Registro breve di decisioni e risultati** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 245–266: **Comandi e risultati da compilare durante il lavoro** — Sezione strutturale; consultare il contenuto locale indicato.
 
 ## [TODO — Prestazioni del server agentico e constrained decoding](todo-agentic-server-performance.md)
 

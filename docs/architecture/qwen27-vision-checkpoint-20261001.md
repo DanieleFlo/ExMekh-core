@@ -3,7 +3,8 @@
 ## Implementazione e perimetro
 
 Sviluppo sul branch `codex/merge-ds4-upstream-2026-10-01`, dopo il merge
-`0edbded0ff3476190060450149dd74a10fa12043`. `main` resta il riferimento
+`0edbded0ff3476190060450149dd74a10fa12043`. L’implementazione è contenuta in
+`82d4e51b47d85c1e7155e09580a0c7349f148e96`. `main` resta il riferimento
 precedente. FE/QS rimane l’unico frontend agentico; nessuna delega è stata usata.
 
 Qwen3.8-27B è nativamente multimodale: il [config ufficiale Qwen](https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/config.json)
@@ -117,7 +118,65 @@ Il gate ViT upstream richiede coseno ≥0.99. Il test mRoPE indipendente float64
 richiede errore assoluto <2e-5 su Q/K e identità bit-exact del percorso testo
 e della KV MTP. Il massimo misurato è 6.49012663e-6 su Q e 5.95160248e-6 su K.
 
-VERIFICATION_RESULTS_PENDING
+| Verifica | Esito effettivo |
+| --- | --- |
+| Build CPU e CUDA `sm_86`, unit server/core | PASS |
+| Probe numerico Qwen, formati quantizzati e mRoPE | PASS; tolleranze e golden invariati |
+| Contratti Python | 101 PASS, 4 SKIP su 105 test |
+| Suite FE, inclusi E2E disponibili | 612 PASS, 16 SKIP; coverage 100% |
+| HTTP vision, target-only e MTP esterno | 9 casi PASS per variante: immagine, continuazione con KV riusata, due immagini, pixel cambiati, thinking, JSON, tool e continuazione, SSE, Anthropic |
+| Checkpoint skill/subagent multimodali Qwen27 | PASS: 248.320 logits e token identici, sessione ricreata, continuazione, tre livelli, checksum corrotto rifiutato senza mutazione |
+| Immagine da 1024 token con chunk prefill 256 e MTP | PASS |
+| Checkpoint testuali Flash Next Q2 | PASS con target-only e MTP embedded, sessione ricreata e tre livelli |
+| CLI vision, nuova immagine su contesto attivo tramite HTTP, client QS reale e launcher FE/QS con vision | NOT_VERIFIED; rimandati dall’utente a un’altra sessione |
+
+La prova lunga ha **20.000 token testuali già popolati**, poi una immagine e
+20.100 token nel checkpoint, con capacità 22.593 e MTP attivo. Ciascun file
+skill/subagent misura 2.960.394.456 byte. Salvare da solo lascia invariata la
+VRAM libera (3.018.530.816 byte); distruggere il grafo la porta a
+7.342.129.152 byte: **4.323.598.336 byte, circa 4,03 GiB**, effettivamente
+liberati. Dopo encoder, scarico dei pesi vision e restore, la VRAM libera torna
+al valore iniziale e i logits sono bit-exact. La prova di nuova immagine dopo
+un prefisso testuale lungo è quindi verificata a livello del motore; la nuova
+immagine su history multimodale tramite HTTP resta fra le prove rimandate.
+
+## Prestazioni del percorso testo
+
+Baseline vision: merge `0edbded`, con binari congelati; implementazione verificata
+`82d4e51`. Ogni workload usa warm-up e cinque campioni; prompt e binari sono
+identificati nel JSON. Il confronto diretto dei dump conserva esattamente tutti
+i 248.320 logits alle frontiere e dopo decode, oltre ai 64 token greedy, a
+2K, 8K, 16K e 22K. I tempi TTFT usano richieste streamed non riusate, con 32 token
+in uscita e contesti effettivi controllati.
+
+| Contesto | Prefill prima/dopo (token/s), prima misura | Decode prima/dopo (token/s), prima misura | TTFT prima/dopo (ms) |
+| ---: | ---: | ---: | ---: |
+| 2048 | 662.07 / 635.25 | 29.98 / 28.71 | 2738.07 / 2726.74 |
+| 8192 | 749.17 / 690.94 | 26.78 / 24.51 | 11564.05 / 11138.14 |
+| 16384 | 666.30 / 665.60 | 23.04 / 22.74 | 24544.87 / 23834.68 |
+| 22528 | 633.76 / 632.89 | 21.10 / 20.73 | 35695.80 / 34538.33 |
+
+La prima misura resta **REJECT_CANDIDATE** nell’harness: decode −4,24% a 2K e
+−8,48% a 8K. Non viene cancellata né vengono allargate le soglie. Per verificare
+la riproducibilità sono stati ripetuti entrambi i contesti nell’ordine
+baseline/candidate e poi candidate/baseline, con warm-up nel processo e cinque
+campioni per eseguibile e per giro.
+
+| Contesto | Giro | Variazione prefill | Variazione decode | CV entro 5% |
+| ---: | ---: | ---: | ---: | --- |
+| 2048 | 1 | -0.60% | -0.54% | sì |
+| 2048 | 2 | +0.08% | +0.48% | sì |
+| 8192 | 1 | -0.44% | +0.11% | sì |
+| 8192 | 2 | +0.38% | -0.04% | sì |
+
+Nelle ripetizioni il calo iniziale non è riprodotto; tutte rispettano sia il
+limite richiesto del 5% sia la soglia del 2% sul decode dell’harness. TTFT è
+PASS in tutti i contesti, con output identici e CV sotto 5%. Il verdetto di
+questa verifica di conservazione è **PASS**, senza dichiarare uno speedup;
+il verdetto della prima serie resta nel report. Le misure non identificano
+la causa della variazione fra serie: non viene attribuita al kernel o
+all’hardware senza ulteriori prove.
+
 
 ## Limiti osservati e verifiche mancanti
 
@@ -145,9 +204,11 @@ skill/subagent testuali sono stati provati realmente con Q2 e con MTP embedded.
 L’envelope rende rappresentabile anche il suo stato immagine, ma non sostituisce
 un test pratico vision. QS ha già mapper `ImagesUserMessage` per Chat Completions e Responses.
 Gli allegati FE attuali vengono referenziati come file; questa modifica non
-aggiunge una UI di invio diretto dei pixel. I test vision live qualificano
-CLI/HTTP, mentre i test FE/QS verificano i contratti agentici esistenti.
-Un test del client QS con immagini è registrato separatamente se eseguito.
+aggiunge una UI di invio diretto dei pixel. I test vision live eseguiti qualificano
+HTTP sui casi elencati; la suite FE verifica i contratti agentici esistenti.
+CLI vision, nuova immagine su contesto attivo tramite HTTP e client QS reale
+sono rimandati dall’utente alla prossima sessione e restano NOT_VERIFIED.
+I relativi test opt-in sono presenti per riprenderli senza doverli riscrivere.
 
 ## Riproduzione
 
