@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from fe.exmekh_bridge.models import ChatSession
-from fe.state.json_store import JsonRecordStore
+from exmekh_agent.exmekh_bridge.models import ChatSession
+from exmekh_agent.state.json_store import JsonRecordStore
 
 
 def test_failed_replacement_preserves_previous_record_and_cleans_temporary_files(

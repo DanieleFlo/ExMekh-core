@@ -7,7 +7,10 @@ from exmekh_lib.core.agents.exit_tool.data import ExitToolData
 from exmekh_lib.core.agents.exit_tool.exit_tool import ExitTool
 from exmekh_lib.core.models.tool import Tool
 
-from fe.exmekh_bridge.tool_approval import TOOL_APPROVAL_ALL, CommandApprovalHook
+from exmekh_agent.exmekh_bridge.tool_approval import (
+    TOOL_APPROVAL_ALL,
+    CommandApprovalHook,
+)
 from tests.test_exit_agent_misuse_live import SkillExecutionTrace
 
 

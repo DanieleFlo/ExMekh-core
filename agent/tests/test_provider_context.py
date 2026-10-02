@@ -25,23 +25,26 @@ from exmekh_lib.interfaces.provider import Provider
 from exmekh_lib.tokenizers.qwen import QwenTokenizer
 from pydantic import BaseModel
 
-from fe.config import config
-from fe.exmekh_bridge.agent_runner import execute_agent_turn_sync
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.context_usage import (
+from exmekh_agent.config import config
+from exmekh_agent.exmekh_bridge.agent_runner import execute_agent_turn_sync
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.context_usage import (
     compute_session_context_usage,
     count_text_tokens,
     populate_skill_closure_tokens,
 )
-from fe.exmekh_bridge.ds4_prompt import apply_ds4_scope, render_ds4_qwen_prompt
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.ds4_prompt import (
+    apply_ds4_scope,
+    render_ds4_qwen_prompt,
+)
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ProviderContextUsage,
     SkillNode,
     SubAgentConversation,
 )
-from fe.exmekh_bridge.provider_context import ContextTrackingProvider
+from exmekh_agent.exmekh_bridge.provider_context import ContextTrackingProvider
 
 
 class StubProvider(Provider):
@@ -464,7 +467,8 @@ def test_agent_runner_wires_typed_context_observer(base_url: str) -> None:
     provider = StubProvider()
     with (
         patch(
-            "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider
+            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            return_value=provider,
         ) as provider_factory,
         patch.dict(config.model_owners, {(base_url, "test-qwen"): "ds4.c"}),
     ):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Opt-in vision/memory gate through the ExMekh-Lib wheel installed in FE.
+"""Opt-in vision/memory gate through the ExMekh-Lib wheel installed in ExMekh Agent.
 
 From agent/: uv run --frozen python ../tests/exmekh_vision_live.py --url URL
 Requires an idle Qwen27 server with its matching --vision encoder. Real tool

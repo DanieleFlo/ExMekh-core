@@ -1280,52 +1280,52 @@
           "path": "docs/agentic/frontend.md",
           "sections": [
             {
-              "title": "Frontend Agent FE / ExMekh-Lib",
+              "title": "ExMekh Agent",
               "level": 1,
               "start": 1,
-              "end": 164,
+              "end": 170,
               "summary": "L'agente del progetto e il frontend NiceGUI in `agent/`."
             },
             {
               "title": "Avvio in WSL / Linux",
               "level": 2,
               "start": 8,
-              "end": 28,
+              "end": 31,
               "summary": "Da root, avviare il server in un terminale:"
             },
             {
               "title": "Configurazione e stato",
               "level": 2,
-              "start": 29,
-              "end": 42,
+              "start": 32,
+              "end": 48,
               "summary": "Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider."
             },
             {
               "title": "Modifica dei messaggi",
               "level": 2,
-              "start": 43,
-              "end": 70,
+              "start": 49,
+              "end": 76,
               "summary": "Il pulsante con la matita compare accanto a quello di copia quando si passa"
             },
             {
               "title": "Confini dell'integrazione",
               "level": 2,
-              "start": 71,
-              "end": 90,
+              "start": 77,
+              "end": 96,
               "summary": "ExMekh-Lib possiede i messaggi e il risultato dell'esecuzione dei tool."
             },
             {
               "title": "Dipendenza ExMekh-Lib",
               "level": 2,
-              "start": 91,
-              "end": 136,
+              "start": 97,
+              "end": 142,
               "summary": "`agent/pyproject.toml` installa ExMekh-Lib dalla wheel versionata in `agent/wheels/`."
             },
             {
               "title": "Verifica",
               "level": 2,
-              "start": 137,
-              "end": 164,
+              "start": 143,
+              "end": 170,
               "summary": "Da `agent/`:"
             }
           ]
@@ -2504,7 +2504,7 @@
               "level": 1,
               "start": 1,
               "end": 289,
-              "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
+              "summary": "Il frontend corrente è ExMekh Agent in `agent/`; i risultati datati di fixture"
             },
             {
               "title": "Obiettivo e invarianti",
@@ -2560,7 +2560,7 @@
               "level": 2,
               "start": 279,
               "end": 289,
-              "summary": "Le misure sopra descrivono fixture storici ritirati e non certificano FE / QS."
+              "summary": "Le misure sopra descrivono fixture storici ritirati e non certificano ExMekh Agent."
             }
           ]
         },
@@ -2611,7 +2611,7 @@
               "level": 1,
               "start": 1,
               "end": 12,
-              "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
+              "summary": "Il frontend corrente è ExMekh Agent in `agent/`; i risultati datati di fixture"
             },
             {
               "title": "REGOLE DI ESECUZIONE",
@@ -4045,7 +4045,7 @@
               "level": 1,
               "start": 1,
               "end": 474,
-              "summary": "Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture"
+              "summary": "Il frontend corrente è ExMekh Agent in `agent/`; i risultati datati di fixture"
             },
             {
               "title": "Scopo e vincoli",

@@ -14,8 +14,11 @@ from uuid import uuid4
 
 import pytest
 
-from fe.config import config
-from fe.exmekh_bridge.agent_runner import check_provider_health, run_agent_turn
+from exmekh_agent.config import config
+from exmekh_agent.exmekh_bridge.agent_runner import (
+    check_provider_health,
+    run_agent_turn,
+)
 
 pytestmark = pytest.mark.live
 

@@ -1,4 +1,4 @@
-"""Exercise saved steering through real FE turns and the installed ExMekh-Lib wheel."""
+"""Exercise saved steering through real ExMekh Agent turns and the installed ExMekh-Lib wheel."""
 
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ import pytest
 from exmekh_lib.core.agents.node import DefaultCapabilities
 from PIL import Image
 
-from fe.exmekh_bridge.agent_runner import run_agent_turn
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.image_input import image_data_url
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.agent_runner import run_agent_turn
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.image_input import image_data_url
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ChatSettings,
@@ -64,7 +64,9 @@ async def test_saved_steering_is_discovered_and_read_in_later_fe_turns(
             on_raw_history=current.set_raw_history,
         )
 
-    with patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider):
+    with patch(
+        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider", return_value=provider
+    ):
         task = asyncio.create_task(run("Start", collector))
         try:
             assert await asyncio.to_thread(provider.started.wait, 5)
@@ -112,7 +114,7 @@ async def test_saved_steering_is_discovered_and_read_in_later_fe_turns(
                     if part["type"] == "image_url"
                 ]
                 assert urls == guidance.image_urls
-            # Neither reopening FE nor rereading the output changes its ID.
+            # Neither reopening ExMekh Agent nor rereading the output changes its ID.
             session.messages.extend(
                 [
                     ChatMessage(role="user", content="Inspect saved guidance"),

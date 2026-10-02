@@ -7,12 +7,17 @@ from pathlib import Path
 import pytest
 from playwright.async_api import async_playwright
 
-from fe.exmekh_bridge.models import ChatMessage, ChatSession, SkillNode, ToolEvent
+from exmekh_agent.exmekh_bridge.models import (
+    ChatMessage,
+    ChatSession,
+    SkillNode,
+    ToolEvent,
+)
 from tests.browser_support import BrowserTestServer, get_edge_executable
 
 
 @pytest.fixture(scope="module")
-def fe_server(tmp_path_factory: pytest.TempPathFactory):
+def agent_server(tmp_path_factory: pytest.TempPathFactory):
     """Sets up test sessions and starts NiceGUI server for Playwright E2E screenshots."""
     data_dir = tmp_path_factory.mktemp("skills-data")
     chats_dir = data_dir / "chats"
@@ -115,15 +120,15 @@ def fe_server(tmp_path_factory: pytest.TempPathFactory):
 
 
 @pytest.mark.asyncio
-async def test_nested_skills_animation_and_screenshots(fe_server: str) -> None:
+async def test_nested_skills_animation_and_screenshots(agent_server: str) -> None:
     """E2E Test capturing 3 distinct screenshots:
 
     1. Active opening state with glowing border and nested sub-skill.
     2. Vertically compacted accordion summary header.
     3. Interactive click-to-expand details view.
     """
-    fe_dir = Path(__file__).resolve().parents[1]
-    screenshots_dir = fe_dir / "screenshots"
+    agent_dir = Path(__file__).resolve().parents[1]
+    screenshots_dir = agent_dir / "screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
 
     edge_bin = get_edge_executable()
@@ -139,7 +144,7 @@ async def test_nested_skills_animation_and_screenshots(fe_server: str) -> None:
         # -------------------------------------------------------------
         # 1. SCREENSHOT 1: Active Skill Opening & Nested Structure
         # -------------------------------------------------------------
-        await page.goto(fe_server, wait_until="networkidle")
+        await page.goto(agent_server, wait_until="networkidle")
         await page.get_by_text("Skill Attiva Annidata", exact=True).click()
         await page.wait_for_selector(".skill-container-active", timeout=10000)
 

@@ -1,9 +1,9 @@
-# Frontend Agent FE / ExMekh-Lib
+# ExMekh Agent
 
-L'agente del progetto e il frontend NiceGUI in `agent/`. Il package `fe`
+L'agente del progetto e il frontend NiceGUI in `agent/`. Il package `exmekh_agent`
 usa `exmekh_lib.core.models.client.Client` e `DeepAgent` per conversazioni, strumenti,
 skill gerarchiche e subagenti. `ds4-server` gestisce inferenza e checkpoint KV;
-FE conserva chat e configurazione dei progetti in JSON.
+ExMekh Agent conserva chat e configurazione dei progetti in JSON.
 
 ## Avvio in WSL / Linux
 
@@ -21,7 +21,10 @@ In un altro terminale:
 
 Il launcher server usa Qwen3.8 e MTP con `--ctx 28000`, porta 8080.
 Il frontend si apre su [http://127.0.0.1:8000](http://127.0.0.1:8000).
-Il launcher FE installa le dipendenze dal lockfile quando necessario.
+Il launcher installa le dipendenze dal lockfile quando necessario. Da `agent/`,
+il comando equivalente è `uv run --frozen exmekh-agent`. La distribuzione si
+chiama `exmekh-agent` e il namespace Python è `exmekh_agent`; `exmekh-lib`
+rimane la CLI separata della libreria.
 I launcher risolvono i percorsi dalla propria posizione e funzionano anche
 quando invocati da un'altra directory. `run.sh` e `sync_exmekh_lib.sh` cercano `uv`
 nel `PATH` o in `~/.local/bin/uv`; `UV_BIN=/percorso/uv` permette di sceglierlo.
@@ -29,13 +32,16 @@ nel `PATH` o in `~/.local/bin/uv`; `UV_BIN=/percorso/uv` permette di sceglierlo.
 ## Configurazione e stato
 
 Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider.
+Le impostazioni della UI sono `EXMEKH_AGENT_HOST`, `EXMEKH_AGENT_PORT` e
+`EXMEKH_AGENT_TITLE`; sostituiscono i precedenti `FE_HOST`, `FE_PORT` e `FE_TITLE`.
+Le chiavi del provider come `BASE_URL`, `API_KEY` e `DEFAULT_MODEL` restano uguali.
 `BASE_URL=http://localhost:8080/v1`, `DEFAULT_MODEL=Qwen3.8-27B-UD-Q4_K_S`
 e `API_TYPE=responses` collegano il client alle API agentic di DS4.
 Il limite del client deve restare entro l'allocazione del server; il frontend
 scopre ID e limiti dei modelli attraverso l'endpoint dei modelli.
 
 I progetti usano DeepAgent e una directory di lavoro scelta dall'utente;
-Quick Chats usano il client per conversazioni ordinarie. FE conserva chat in
+Quick Chats usano il client per conversazioni ordinarie. ExMekh Agent conserva chat in
 `agent/data/chats/`, progetti in `agent/data/projects/` e gli allegati temporanei
 sotto `tmp/` della directory di lavoro. Questi dati, `.env`, ambienti Python e
 cache locali sono esclusi da Git.
@@ -70,14 +76,14 @@ i tool mostrano lo stato di errore del modello anche nelle schede della chat.
 
 ## Confini dell'integrazione
 
-ExMekh-Lib possiede i messaggi e il risultato dell'esecuzione dei tool. FE usa
+ExMekh-Lib possiede i messaggi e il risultato dell'esecuzione dei tool. ExMekh Agent usa
 `Message.set_metadata()` e `Message.get_metadata()` per gli snapshot locali:
 questi dati restano separati da `message_dump()` e non vengono inviati al
 provider. Le letture e le copie dei messaggi non condividono valori mutabili.
 I nomi dei campi dei vecchi snapshot salvati restano compatibili.
 
 Gli eventi ExMekh-Lib distinguono una fine riuscita da un errore di argomenti o di
-esecuzione. FE conserva questa distinzione nella conversazione principale,
+esecuzione. ExMekh Agent conserva questa distinzione nella conversazione principale,
 nei sotto-agenti e nella UI. Un risultato applicativo come `{"ok": false}`
 resta un risultato completato: non viene interpretato come errore del runtime.
 
@@ -111,15 +117,15 @@ Per aggiornare la wheel, dalla root in WSL:
 ./agent/sync_exmekh_lib.sh
 ```
 
-Il launcher esegue `agent/src/fe/sync.py`: ricostruisce ExMekh-Lib dai sorgenti locali,
+Il launcher esegue `agent/src/exmekh_agent/sync.py`: ricostruisce ExMekh-Lib dai sorgenti locali,
 copia la wheel in `agent/wheels/`, aggiorna il percorso in `pyproject.toml` e
 il lockfile e reinstalla ExMekh-Lib. Gestisce anche una nuova versione della wheel e
 rimuove quelle precedenti dopo il successo. Non richiede un build precedente
-ne un ambiente FE gia installato. Dopo il successo rimuove anche la vecchia
+ne un ambiente ExMekh Agent gia installato. Dopo il successo rimuove anche la vecchia
 wheel `qs`; la pulizia viene eseguita solo dopo l’installazione riuscita.
 
 Il namespace Python è `exmekh_lib`, mentre la distribuzione e la CLI sono
-`exmekh-lib`. Il bridge FE si trova in `agent/src/fe/exmekh_bridge/`.
+`exmekh-lib`. Il bridge ExMekh Agent si trova in `agent/src/exmekh_agent/exmekh_bridge/`.
 Da `agent/` si possono invocare i comandi installati:
 
 ```sh
@@ -146,7 +152,7 @@ uv run ruff format --check src tests
 ```
 
 I test browser usano Edge quando installato, altrimenti Chromium di Playwright.
-ExMekh-Lib e FE usano automaticamente tutte le CPU logiche disponibili al processo.
+ExMekh-Lib e ExMekh Agent usano automaticamente tutte le CPU logiche disponibili al processo.
 Da ciascuna directory, `uv run pytest -n 16` sceglie sedici worker;
 `PYTEST_XDIST_AUTO_NUM_WORKERS=16 uv run pytest` imposta il conteggio di `auto`.
 In WSL questo segue il limite configurato in `.wslconfig`; il numero di worker

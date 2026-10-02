@@ -804,6 +804,55 @@ wheels = [
 ]
 
 [[package]]
+name = "exmekh-agent"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "exmekh-lib" },
+    { name = "httpx" },
+    { name = "latex2mathml" },
+    { name = "nh3" },
+    { name = "nicegui" },
+    { name = "pillow" },
+    { name = "pydantic" },
+    { name = "pypdfium2" },
+    { name = "python-dotenv" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "playwright" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "exmekh-lib", path = "wheels/exmekh_lib-0.1.0-py3-none-any.whl" },
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "latex2mathml", specifier = ">=3.81.1" },
+    { name = "nh3", specifier = ">=0.3.7" },
+    { name = "nicegui", specifier = ">=2.0.0" },
+    { name = "pillow", specifier = ">=12.3.0" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "pypdfium2", specifier = ">=5.13.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "playwright", specifier = ">=1.63.0" },
+    { name = "pytest", specifier = ">=8.0.0" },
+    { name = "pytest-asyncio", specifier = ">=0.23.0" },
+    { name = "pytest-cov", specifier = ">=7.1.0" },
+    { name = "pytest-xdist", specifier = ">=3.8,<4" },
+    { name = "ruff", specifier = ">=0.16.8" },
+]
+
+[[package]]
 name = "exmekh-lib"
 version = "0.1.0"
 source = { path = "wheels/exmekh_lib-0.1.0-py3-none-any.whl" }
@@ -912,55 +961,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e0/c8/2ce1c78f983a2c4987ea865d9516dbdfb141a120fd3abb977ae6f02ba7ca/fastuuid-0.14.0-cp314-cp314-musllinux_1_1_x86_64.whl", hash = "sha256:ec27778c6ca3393ef662e2762dba8af13f4ec1aaa32d08d77f71f2a70ae9feb8", size = 450837, upload-time = "2025-10-19T22:34:37.178Z" },
     { url = "https://files.pythonhosted.org/packages/df/60/dad662ec9a33b4a5fe44f60699258da64172c39bd041da2994422cdc40fe/fastuuid-0.14.0-cp314-cp314-win32.whl", hash = "sha256:e23fc6a83f112de4be0cc1990e5b127c27663ae43f866353166f87df58e73d06", size = 154532, upload-time = "2025-10-19T22:35:18.217Z" },
     { url = "https://files.pythonhosted.org/packages/1f/f6/da4db31001e854025ffd26bc9ba0740a9cbba2c3259695f7c5834908b336/fastuuid-0.14.0-cp314-cp314-win_amd64.whl", hash = "sha256:df61342889d0f5e7a32f7284e55ef95103f2110fee433c2ae7c2c0956d76ac8a", size = 156457, upload-time = "2025-10-19T22:33:44.579Z" },
-]
-
-[[package]]
-name = "fe"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "exmekh-lib" },
-    { name = "httpx" },
-    { name = "latex2mathml" },
-    { name = "nh3" },
-    { name = "nicegui" },
-    { name = "pillow" },
-    { name = "pydantic" },
-    { name = "pypdfium2" },
-    { name = "python-dotenv" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "playwright" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-cov" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "exmekh-lib", path = "wheels/exmekh_lib-0.1.0-py3-none-any.whl" },
-    { name = "httpx", specifier = ">=0.27.0" },
-    { name = "latex2mathml", specifier = ">=3.81.1" },
-    { name = "nh3", specifier = ">=0.3.7" },
-    { name = "nicegui", specifier = ">=2.0.0" },
-    { name = "pillow", specifier = ">=12.3.0" },
-    { name = "pydantic", specifier = ">=2.0.0" },
-    { name = "pypdfium2", specifier = ">=5.13.0" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "playwright", specifier = ">=1.63.0" },
-    { name = "pytest", specifier = ">=8.0.0" },
-    { name = "pytest-asyncio", specifier = ">=0.23.0" },
-    { name = "pytest-cov", specifier = ">=7.1.0" },
-    { name = "pytest-xdist", specifier = ">=3.8,<4" },
-    { name = "ruff", specifier = ">=0.16.8" },
 ]
 
 [[package]]

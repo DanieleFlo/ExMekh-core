@@ -17,19 +17,19 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.exmekh_bridge.converter import exmekh_messages_to_chat_messages
-from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.converter import exmekh_messages_to_chat_messages
+from exmekh_agent.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
     ReasoningBlock,
     ToolEvent,
 )
-from fe.exmekh_bridge.sub_agents import ObservedNode, SubAgentEventRouter
-from fe.exmekh_bridge.tool_calls import extract_tool_arguments
-from fe.ui.chat_export import export_chat
-from fe.ui.chat_view import ChatViewComponent
+from exmekh_agent.exmekh_bridge.sub_agents import ObservedNode, SubAgentEventRouter
+from exmekh_agent.exmekh_bridge.tool_calls import extract_tool_arguments
+from exmekh_agent.ui.chat_export import export_chat
+from exmekh_agent.ui.chat_view import ChatViewComponent
 from tests.interface_sample import interface_session
 
 
@@ -197,7 +197,8 @@ async def test_copy_actions_use_visible_user_text_and_current_root_chat():
     with (
         client,
         patch(
-            "fe.ui.chat_view.session_manager.get_current_session", return_value=session
+            "exmekh_agent.ui.chat_view.session_manager.get_current_session",
+            return_value=session,
         ),
         patch.object(ui.clipboard, "write") as write,
         patch.object(ui, "notify"),

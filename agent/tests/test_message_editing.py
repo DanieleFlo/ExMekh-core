@@ -9,27 +9,27 @@ import pytest
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.message_edit import prepare_message_edit
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.message_edit import prepare_message_edit
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.exmekh_bridge.pasted_input import (
+from exmekh_agent.exmekh_bridge.pasted_input import (
     PreparedUserInput,
     create_staged_attachment_from_file,
     format_user_input_file_xml,
     prepare_user_input,
 )
-from fe.state.active_turns import ActiveTurnRegistry, active_turns
-from fe.state.session_manager import SessionManager, session_manager
-from fe.state.temp_storage import TempStorage
-from fe.ui.chat_view import ChatViewComponent
-from fe.ui.input_bar import InputBarComponent
-from fe.ui.page_controller import ChatPageController
+from exmekh_agent.state.active_turns import ActiveTurnRegistry, active_turns
+from exmekh_agent.state.session_manager import SessionManager, session_manager
+from exmekh_agent.state.temp_storage import TempStorage
+from exmekh_agent.ui.chat_view import ChatViewComponent
+from exmekh_agent.ui.input_bar import InputBarComponent
+from exmekh_agent.ui.page_controller import ChatPageController
 
 
 def test_rewrite_persists_only_the_retained_branch_and_child_history(tmp_path: Path):
@@ -246,8 +246,8 @@ async def test_controller_edits_and_regenerates_without_stale_events(running: bo
         controller.input_bar.build()
     try:
         with (
-            patch("fe.ui.page_controller.run_agent_turn", side_effect=run),
-            patch("fe.ui.page_controller.ui.notify"),
+            patch("exmekh_agent.ui.page_controller.run_agent_turn", side_effect=run),
+            patch("exmekh_agent.ui.page_controller.ui.notify"),
         ):
             controller._send_prepared(
                 session, PreparedUserInput("Old prompt", None, "Old prompt")
@@ -299,12 +299,12 @@ async def test_controller_rejects_missing_empty_or_unsavable_edits():
     user = ChatMessage(role="user", content="Original")
     session.messages = [user]
     try:
-        with patch("fe.ui.page_controller.ui.notify"):
+        with patch("exmekh_agent.ui.page_controller.ui.notify"):
             assert not await controller.edit_message("missing", user.id, "Changed")
             assert not await controller.edit_message(session.id, "missing", "Changed")
             assert not await controller.edit_message(session.id, user.id, " ")
             with patch(
-                "fe.ui.page_controller.prepare_message_edit",
+                "exmekh_agent.ui.page_controller.prepare_message_edit",
                 side_effect=ValueError("Invalid file"),
             ):
                 assert not await controller.edit_message(session.id, user.id, "Changed")
@@ -336,7 +336,7 @@ async def test_simultaneous_edits_serialize_their_turn_replacement():
         return "Reply: " + kwargs["user_prompt"]
 
     try:
-        with patch("fe.ui.page_controller.run_agent_turn", side_effect=run):
+        with patch("exmekh_agent.ui.page_controller.run_agent_turn", side_effect=run):
             assert await asyncio.gather(
                 controller.edit_message(session.id, user.id, "First edit"),
                 controller.edit_message(session.id, user.id, "Second edit"),
@@ -521,7 +521,7 @@ async def test_stop_and_send_are_scoped_to_the_selected_session():
         controller = ChatPageController(client)
         controller._active_task = task_a
     try:
-        with patch("fe.ui.page_controller.ui.notify"):
+        with patch("exmekh_agent.ui.page_controller.ui.notify"):
             controller.stop()
         await asyncio.sleep(0)
         assert not task_a.cancelling()
@@ -535,7 +535,7 @@ async def test_stop_and_send_are_scoped_to_the_selected_session():
         with (
             patch.object(session_manager, "add_message", return_value=False),
             patch.object(controller, "_start_turn") as start,
-            patch("fe.ui.page_controller.ui.notify"),
+            patch("exmekh_agent.ui.page_controller.ui.notify"),
         ):
             controller._send_prepared(
                 session_b, PreparedUserInput("Unsaved", None, "Unsaved")

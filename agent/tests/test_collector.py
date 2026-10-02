@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.models import SkillNode, ToolEvent, format_duration
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.models import SkillNode, ToolEvent, format_duration
 
 
 def test_turn_stream_collector_token_accumulation() -> None:

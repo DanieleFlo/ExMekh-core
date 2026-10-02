@@ -24,16 +24,19 @@ from nicegui.page import page
 from PIL import Image
 from starlette.testclient import TestClient
 
-from fe.exmekh_bridge.agent_runner import run_agent_turn
-from fe.exmekh_bridge.context_usage import count_message_dict_tokens
-from fe.exmekh_bridge.converter import (
+from exmekh_agent.exmekh_bridge.agent_runner import run_agent_turn
+from exmekh_agent.exmekh_bridge.context_usage import count_message_dict_tokens
+from exmekh_agent.exmekh_bridge.converter import (
     chat_message_to_exmekh_messages,
     exmekh_message_to_raw_dict,
     exmekh_messages_to_chat_messages,
     raw_dict_to_exmekh_message,
 )
-from fe.exmekh_bridge.ds4_prompt import apply_ds4_scope, render_ds4_qwen_prompt
-from fe.exmekh_bridge.image_input import (
+from exmekh_agent.exmekh_bridge.ds4_prompt import (
+    apply_ds4_scope,
+    render_ds4_qwen_prompt,
+)
+from exmekh_agent.exmekh_bridge.image_input import (
     MAX_IMAGE_SIDE,
     MAX_PDF_PAGES,
     attachment_images,
@@ -45,23 +48,23 @@ from fe.exmekh_bridge.image_input import (
     serialize_user_content,
     user_content,
 )
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ChatSettings,
     QueuedMessage,
 )
-from fe.exmekh_bridge.pasted_input import (
+from exmekh_agent.exmekh_bridge.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
     format_user_input_file_xml,
     prepare_user_input,
 )
-from fe.exmekh_bridge.steering import TurnSteering
-from fe.state.session_manager import SessionManager, session_manager
-from fe.ui.chat_export import export_chat
-from fe.ui.file_upload import upload_router
-from fe.ui.image_preview import render_image_thumbnail, show_image_preview
+from exmekh_agent.exmekh_bridge.steering import TurnSteering
+from exmekh_agent.state.session_manager import SessionManager, session_manager
+from exmekh_agent.ui.chat_export import export_chat
+from exmekh_agent.ui.file_upload import upload_router
+from exmekh_agent.ui.image_preview import render_image_thumbnail, show_image_preview
 from tests.image_samples import pdf_bytes, png_bytes
 from tests.mock_client import MockProvider
 from tests.steering_probe import SteeringProbeProvider
@@ -144,12 +147,12 @@ def test_bad_visual_attachments_fail_before_writing(tmp_path, filename, data):
 
 
 def test_empty_pdf_and_oversized_image_have_clear_errors():
-    with patch("fe.exmekh_bridge.image_input.pdfium.PdfDocument") as cls:
+    with patch("exmekh_agent.exmekh_bridge.image_input.pdfium.PdfDocument") as cls:
         cls.return_value.__enter__.return_value.__len__.return_value = 0
         with pytest.raises(ValueError, match="no pages"):
             attachment_images("empty.pdf", b"%PDF-")
     with patch(
-        "fe.exmekh_bridge.image_input.Image.open",
+        "exmekh_agent.exmekh_bridge.image_input.Image.open",
         side_effect=Image.DecompressionBombError,
     ):
         with pytest.raises(ValueError, match="too large"):
@@ -260,7 +263,9 @@ async def test_real_exmekh_runner_receives_and_replays_images(tmp_path, mode):
     url = image_data_url(Image.new("RGB", (2, 2), "red"))
     provider = MockProvider()
     histories = []
-    with patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider):
+    with patch(
+        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider", return_value=provider
+    ):
         result = await run_agent_turn(
             user_prompt="Inspect",
             image_urls=[url, url],
@@ -360,7 +365,9 @@ async def test_multimodal_steering_is_confirmed_and_restored_in_nested_history(
     provider = SteeringProbeProvider(first_response="answer")
     steering = TurnSteering()
     histories = []
-    with patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider):
+    with patch(
+        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider", return_value=provider
+    ):
         task = asyncio.create_task(
             run_agent_turn(
                 user_prompt="Start",

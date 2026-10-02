@@ -4,9 +4,10 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from exmekh_lib.core.agents.node import DefaultCapabilities
 
-from fe.config import AppConfig
+from exmekh_agent.config import AppConfig
 
 
 def test_app_config_defaults() -> None:
@@ -81,5 +82,24 @@ def test_save_to_env_updates_known_keys_atomically(tmp_path: Path) -> None:
     assert "BASE_URL=http://new/v1" in content
     assert "CUSTOM=value" in content
     assert "API_KEY=secret" in content
-    assert "FE_PORT=9000" in content
+    assert "EXMEKH_AGENT_PORT=9000" in content
     assert not env_path.with_suffix(".env.tmp").exists()
+
+
+def test_application_uses_exmekh_agent_environment_names(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("EXMEKH_AGENT_HOST", "0.0.0.0")
+    monkeypatch.setenv("EXMEKH_AGENT_PORT", "8765")
+    monkeypatch.setenv("EXMEKH_AGENT_TITLE", "Custom ExMekh Agent")
+    configuration = AppConfig()
+    assert configuration.host == "0.0.0.0"
+    assert configuration.port == 8765
+    assert configuration.app_title == "Custom ExMekh Agent"
+    env_path = tmp_path / ".env"
+    configuration.save_to_env(env_path)
+    content = env_path.read_text()
+    assert "EXMEKH_AGENT_HOST=0.0.0.0" in content
+    assert "EXMEKH_AGENT_PORT=8765" in content
+    assert "EXMEKH_AGENT_TITLE=Custom ExMekh Agent" in content
+    assert "\nFE_" not in content

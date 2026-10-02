@@ -29,13 +29,13 @@ import os
 import runpy
 from pathlib import Path
 
-from fe.config import config
+from exmekh_agent.config import config
 
-config.data_dir = Path(os.environ["FE_TEST_DATA_DIR"])
-if os.environ.get("FE_TEST_SCRIPT"):
-    runpy.run_path(os.environ["FE_TEST_SCRIPT"], run_name="__main__")
+config.data_dir = Path(os.environ["EXMEKH_AGENT_TEST_DATA_DIR"])
+if os.environ.get("EXMEKH_AGENT_TEST_SCRIPT"):
+    runpy.run_path(os.environ["EXMEKH_AGENT_TEST_SCRIPT"], run_name="__main__")
 else:
-    runpy.run_module(os.environ["FE_TEST_MODULE"], run_name="__main__")
+    runpy.run_module(os.environ["EXMEKH_AGENT_TEST_MODULE"], run_name="__main__")
 """
 
 
@@ -53,7 +53,7 @@ class BrowserTestServer:
         self,
         data_dir: Path,
         *,
-        module: str = "fe.main",
+        module: str = "exmekh_agent.main",
         script: Path | None = None,
         environment: Mapping[str, str] | None = None,
     ) -> None:
@@ -75,12 +75,12 @@ class BrowserTestServer:
         environment = dict(os.environ)
         environment.update(self._environment)
         environment.pop("PYTEST_CURRENT_TEST", None)
-        environment.pop("FE_TEST_SCRIPT", None)
+        environment.pop("EXMEKH_AGENT_TEST_SCRIPT", None)
         environment.update(
-            FE_TEST_DATA_DIR=str(self._data_dir),
-            FE_TEST_MODULE=self._module,
-            FE_PORT=str(port),
-            FE_HOST="127.0.0.1",
+            EXMEKH_AGENT_TEST_DATA_DIR=str(self._data_dir),
+            EXMEKH_AGENT_TEST_MODULE=self._module,
+            EXMEKH_AGENT_PORT=str(port),
+            EXMEKH_AGENT_HOST="127.0.0.1",
             PYTHONPATH=os.pathsep.join(
                 [
                     str(PROJECT_ROOT / "src"),
@@ -90,7 +90,7 @@ class BrowserTestServer:
             ),
         )
         if self._script is not None:
-            environment["FE_TEST_SCRIPT"] = str(self._script)
+            environment["EXMEKH_AGENT_TEST_SCRIPT"] = str(self._script)
         try:
             with log_path.open("w", encoding="utf-8") as log:
                 self._process = subprocess.Popen(
@@ -146,15 +146,15 @@ class BrowserTestServer:
 
 def start_mock_server(
     stream_delay: float = 0,
-    entry_module: str = "tests.run_mock_fe",
+    entry_module: str = "tests.run_mock_agent",
     *,
     steering_first_response: str = "tool",
 ) -> Generator[str]:
     ARTIFACT_ROOT.mkdir(exist_ok=True)
     environment = {
-        "FE_MOCK_CLIENT": "1",
-        "FE_MOCK_STREAM_DELAY": str(stream_delay),
-        "FE_STEERING_FIRST_RESPONSE": steering_first_response,
+        "EXMEKH_AGENT_MOCK_CLIENT": "1",
+        "EXMEKH_AGENT_MOCK_STREAM_DELAY": str(stream_delay),
+        "EXMEKH_AGENT_STEERING_FIRST_RESPONSE": steering_first_response,
     }
     with tempfile.TemporaryDirectory(
         prefix="server-data-", dir=ARTIFACT_ROOT

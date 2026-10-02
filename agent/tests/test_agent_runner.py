@@ -17,13 +17,13 @@ from exmekh_lib.core.models.provider_stream_event import (
 )
 from exmekh_lib.core.models.reasoning_effort import ReasoningEffortLMX
 
-from fe.config import config
-from fe.exmekh_bridge.agent_runner import (
+from exmekh_agent.config import config
+from exmekh_agent.exmekh_bridge.agent_runner import (
     check_provider_health,
     execute_agent_turn_sync,
     run_agent_turn,
 )
-from fe.exmekh_bridge.models import ChatSettings
+from exmekh_agent.exmekh_bridge.models import ChatSettings
 
 
 @pytest.mark.asyncio
@@ -37,7 +37,9 @@ async def test_check_provider_health_success() -> None:
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_resp
 
-    with patch("fe.exmekh_bridge.agent_runner.httpx.AsyncClient") as mock_client_cls:
+    with patch(
+        "exmekh_agent.exmekh_bridge.agent_runner.httpx.AsyncClient"
+    ) as mock_client_cls:
         mock_client_cls.return_value.__aenter__.return_value = mock_client
         is_alive, models = await check_provider_health(
             "http://localhost:8080/v1", "key123"
@@ -53,7 +55,9 @@ async def test_check_provider_health_non_200() -> None:
     mock_client = AsyncMock()
     mock_client.get.return_value = mock_resp
 
-    with patch("fe.exmekh_bridge.agent_runner.httpx.AsyncClient") as mock_client_cls:
+    with patch(
+        "exmekh_agent.exmekh_bridge.agent_runner.httpx.AsyncClient"
+    ) as mock_client_cls:
         mock_client_cls.return_value.__aenter__.return_value = mock_client
         is_alive, models = await check_provider_health()
         assert is_alive is False
@@ -65,7 +69,9 @@ async def test_check_provider_health_exception() -> None:
     mock_client = AsyncMock()
     mock_client.get.side_effect = RuntimeError("Network down")
 
-    with patch("fe.exmekh_bridge.agent_runner.httpx.AsyncClient") as mock_client_cls:
+    with patch(
+        "exmekh_agent.exmekh_bridge.agent_runner.httpx.AsyncClient"
+    ) as mock_client_cls:
         mock_client_cls.return_value.__aenter__.return_value = mock_client
         is_alive, models = await check_provider_health("http://invalid")
         assert is_alive is False
@@ -81,8 +87,8 @@ def test_execute_agent_turn_sync_quick_chat() -> None:
     mock_response.get_message.return_value = "Quick chat answer"
 
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.Client") as mock_client_cls,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.Client") as mock_client_cls,
     ):
         mock_client_instance = MagicMock()
         mock_client_instance.call.return_value = mock_response
@@ -129,8 +135,8 @@ def test_quick_chat_forwards_provider_stream_events() -> None:
         return response
 
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.Client") as client_class,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.Client") as client_class,
     ):
         client_class.return_value.call.side_effect = call_with_events
         result = execute_agent_turn_sync(
@@ -232,8 +238,8 @@ def test_execute_agent_turn_sync_deep_agent(tmp_path: Path) -> None:
         return mock_response
 
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.DeepAgent") as mock_agent_cls,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.DeepAgent") as mock_agent_cls,
     ):
         mock_agent_instance = MagicMock()
         mock_agent_instance.run.side_effect = fake_deep_agent_run
@@ -289,8 +295,8 @@ def test_execute_agent_turn_sync_fallback_reasoning_signature() -> None:
         return m
 
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.DeepAgent") as mock_agent_cls,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.DeepAgent") as mock_agent_cls,
     ):
         mock_agent_instance = MagicMock()
         mock_agent_instance.run.side_effect = fake_deep_agent_run
@@ -320,7 +326,7 @@ def test_execute_agent_turn_sync_fallback_reasoning_signature() -> None:
 @pytest.mark.asyncio
 async def test_run_agent_turn_async() -> None:
     with patch(
-        "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+        "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
         return_value="Async turn completed",
     ) as mock_exec:
         res = await run_agent_turn(
@@ -344,7 +350,8 @@ async def test_run_agent_turn_uses_chat_options_without_overriding_provider() ->
         coding_agent_persistent_history=False,
     )
     with patch(
-        "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync", return_value="ok"
+        "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+        return_value="ok",
     ) as execute:
         await run_agent_turn(
             user_prompt="hello",
@@ -383,8 +390,10 @@ def test_execute_agent_turn_sync_reasoning_effort_mapping(
     mock_response.get_message.return_value = "Done"
 
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider") as mock_provider_cls,
-        patch("fe.exmekh_bridge.agent_runner.Client") as mock_client_cls,
+        patch(
+            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"
+        ) as mock_provider_cls,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.Client") as mock_client_cls,
     ):
         mock_client = MagicMock()
         mock_client.call.return_value = mock_response
@@ -423,9 +432,9 @@ def test_execute_agent_turn_sync_uses_distinct_agent_context_id(
     response.get_message.return_value = "done"
 
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.Node") as node_class,
-        patch("fe.exmekh_bridge.agent_runner.DeepAgent") as agent_class,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.Node") as node_class,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.DeepAgent") as agent_class,
     ):
         agent_class.return_value.run.return_value = response
         execute_agent_turn_sync(
@@ -459,9 +468,9 @@ def test_deep_agent_adds_bundled_mock_sub_agent() -> None:
     response.get_message.return_value = "done"
 
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.Node") as node_class,
-        patch("fe.exmekh_bridge.agent_runner.DeepAgent") as agent_class,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.Node") as node_class,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.DeepAgent") as agent_class,
     ):
         agent_class.return_value.run.return_value = response
         execute_agent_turn_sync(
@@ -504,7 +513,7 @@ def test_provider_requests_are_serialized_across_worker_threads() -> None:
         return "done"
 
     with patch(
-        "fe.exmekh_bridge.agent_runner._execute_agent_turn_sync_unlocked",
+        "exmekh_agent.exmekh_bridge.agent_runner._execute_agent_turn_sync_unlocked",
         side_effect=slow_call,
     ):
         common = {
@@ -539,7 +548,7 @@ def test_provider_requests_are_serialized_across_worker_threads() -> None:
 async def test_run_agent_turn_does_not_retry_type_error() -> None:
     with (
         patch(
-            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
             side_effect=TypeError("callback bug"),
         ) as execute,
         pytest.raises(TypeError, match="callback bug"),

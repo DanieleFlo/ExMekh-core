@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from fe.config import AppConfig, config
-from fe.state.session_manager import SessionManager, session_manager
+from exmekh_agent.config import AppConfig, config
+from exmekh_agent.state.session_manager import SessionManager, session_manager
 from tests import conftest as test_fixtures
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -17,8 +17,8 @@ COLLECTION_PROBE = """
 import json
 import pytest
 import tests
-from fe.config import config
-from fe.state.session_manager import session_manager
+from exmekh_agent.config import config
+from exmekh_agent.state.session_manager import session_manager
 
 project = session_manager.create_project(config.data_dir)
 chat = session_manager.create_session(project_id=project.id)

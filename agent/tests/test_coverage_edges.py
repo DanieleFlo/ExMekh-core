@@ -15,16 +15,16 @@ from exmekh_lib.core.models.provider_stream_event import (
 )
 from exmekh_lib.core.models.system_message import SystemMessage
 
-from fe.config import AppConfig
-from fe.exmekh_bridge.agent_runner import convert_to_exmekh_messages
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.converter import (
+from exmekh_agent.config import AppConfig
+from exmekh_agent.exmekh_bridge.agent_runner import convert_to_exmekh_messages
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.converter import (
     chat_message_to_exmekh_messages,
     exmekh_messages_to_session,
     session_to_exmekh_messages,
 )
-from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
@@ -33,7 +33,11 @@ from fe.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.exmekh_bridge.sub_agents import ObservedNode, SubAgentEvent, SubAgentEventRouter
+from exmekh_agent.exmekh_bridge.sub_agents import (
+    ObservedNode,
+    SubAgentEvent,
+    SubAgentEventRouter,
+)
 
 
 def test_save_to_env_recovers_when_existing_file_cannot_be_read(tmp_path: Path) -> None:
@@ -404,7 +408,7 @@ def test_observed_child_restores_only_persistent_history() -> None:
         event_router=router,
     )
     prior_exmekh = convert_to_exmekh_messages(conversation.replay_history())
-    with patch("fe.exmekh_bridge.sub_agents.restore_node_history") as restore:
+    with patch("exmekh_agent.exmekh_bridge.sub_agents.restore_node_history") as restore:
         fresh.restore_conversation(conversation, prior_exmekh=prior_exmekh)
         persistent.restore_conversation(conversation, prior_exmekh=[])
         persistent.restore_conversation(conversation, prior_exmekh=prior_exmekh)

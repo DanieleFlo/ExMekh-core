@@ -22,7 +22,7 @@ async def safe_screenshot(page, path: Path) -> None:
 
 
 @pytest.fixture(scope="module")
-def fe_scroll_server(tmp_path_factory):
+def agent_scroll_server(tmp_path_factory):
     """Starts a NiceGUI server with a phased streaming mock to test smart scroll."""
     runner_dir = tmp_path_factory.mktemp("scroll_server")
     runner_script = runner_dir / "run_scroll_test_server.py"
@@ -34,11 +34,11 @@ def fe_scroll_server(tmp_path_factory):
             import asyncio
             import time
             from nicegui import app, ui
-            from fe.config import config
-            from fe.state.session_manager import session_manager
-            import fe.ui.page_controller as pc_mod
-            from fe.ui.page_controller import ChatPageController
-            from fe.ui.styles import load_css
+            from exmekh_agent.config import config
+            from exmekh_agent.state.session_manager import session_manager
+            import exmekh_agent.ui.page_controller as pc_mod
+            from exmekh_agent.ui.page_controller import ChatPageController
+            from exmekh_agent.ui.styles import load_css
 
             phase2_event = asyncio.Event()
             phase3_event = asyncio.Event()
@@ -153,7 +153,7 @@ def fe_scroll_server(tmp_path_factory):
 
 @pytest.mark.asyncio
 async def test_smart_chat_scroll_lifecycle_and_screenshots(
-    fe_scroll_server: str,
+    agent_scroll_server: str,
 ) -> None:
     """Verifies the complete smart auto-scroll lifecycle across 4 distinct moments:
     1. Default auto-scroll follows text downward as it grows.
@@ -162,8 +162,8 @@ async def test_smart_chat_scroll_lifecycle_and_screenshots(
     4. Scrolling all the way back down to the bottom re-attaches (`data-scroll-pinned='true'`)
        and resumes following new text downward.
     """
-    fe_dir = Path(__file__).resolve().parents[1]
-    screenshots_dir = fe_dir / "screenshots"
+    agent_dir = Path(__file__).resolve().parents[1]
+    screenshots_dir = agent_dir / "screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
 
     async with async_playwright() as p:
@@ -173,8 +173,8 @@ async def test_smart_chat_scroll_lifecycle_and_screenshots(
         context = await browser.new_context(viewport={"width": 1360, "height": 860})
         page = await context.new_page()
 
-        await page.goto(f"{fe_scroll_server}/_test/reset_events")
-        await page.goto(fe_scroll_server, wait_until="networkidle")
+        await page.goto(f"{agent_scroll_server}/_test/reset_events")
+        await page.goto(agent_scroll_server, wait_until="networkidle")
 
         chat_box = page.locator(".chat-scroll-container").first
         await chat_box.wait_for(state="visible", timeout=10000)
@@ -330,7 +330,7 @@ async def test_smart_chat_scroll_lifecycle_and_screenshots(
 
 @pytest.mark.asyncio
 async def test_point_of_interest_targets_current_message_row(
-    fe_scroll_server: str,
+    agent_scroll_server: str,
 ) -> None:
     """A replaced message row with identical text must receive the dot's click."""
     async with async_playwright() as playwright:
@@ -338,7 +338,7 @@ async def test_point_of_interest_targets_current_message_row(
             executable_path=get_edge_executable(), headless=True
         )
         page = await browser.new_page(viewport={"width": 1360, "height": 860})
-        await page.goto(fe_scroll_server, wait_until="networkidle")
+        await page.goto(agent_scroll_server, wait_until="networkidle")
         result = await page.evaluate(
             """() => {
                 const chat = document.querySelector('.chat-scroll-container');

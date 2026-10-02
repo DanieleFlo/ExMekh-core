@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the outstanding Qwen27 CUDA vision gates serially on one GPU.
 
-Uses the real photo fixture, the FE-installed ExMekh-Lib wheel and existing native
+Uses the real photo fixture, the EXMEKH-AGENT-installed ExMekh-Lib wheel and existing native
 checkpoint gates. No model download or frontend conversation state is modified.
 """
 
@@ -229,7 +229,7 @@ class Acceptance:
                     environment=environment,
                 )
                 self.command(
-                    f"fe-agentic-live-{tag}",
+                    f"exmekh_agent-agentic-live-{tag}",
                     [
                         self.uv,
                         "run",

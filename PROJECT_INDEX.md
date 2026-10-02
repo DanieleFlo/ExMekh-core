@@ -17,7 +17,7 @@ Gli identificativi della shape e delle cache Qwen3.8 restano invariati.
 
 ## Integrazione upstream del 1 ottobre 2026
 
-Il branch dedicato integra `antirez/ds4@0aaea5a` conservando FE/ExMekh-Lib come unico
+Il branch dedicato integra `antirez/ds4@0aaea5a` conservando ExMekh Agent come unico
 agente del prodotto e distinguendo Qwen27 `qwen35` da Flash Next/Mini `qwen4exp`.
 Il [report di merge](docs/architecture/ds4-upstream-merge-20261001.md) contiene
 provenienza, matrice PASS/FAIL/NOT_VERIFIED, baseline e limiti hardware.
@@ -152,7 +152,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
     - Coda dei job, worker residenti e coordinatore del batching.
     - SSE, tool call, prompt rendering e disk KV policy.
 
-20. **Agent FE / ExMekh-Lib**
+20. **ExMekh Agent**
     - Transcript, sessioni, strumenti e ciclo agentico.
     - Progetti, Quick Chats, approvazione dei comandi e steering.
     - Persistenza JSON del frontend e checkpoint KV gestiti dal server.
@@ -256,7 +256,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   progetto: DeepSeek Flash 0731/DSpark, PRO 0813, GLM e gli artefatti Qwen3.8
   fissati con revisione e checksum.
 - `start-ds4-server.sh`, `agent/start-ds4-server.sh`, `agent/run.sh` —
-  launcher eseguibili nativi per server CUDA e frontend FE / ExMekh-Lib dalla copia WSL2
+  launcher eseguibili nativi per server CUDA e frontend ExMekh Agent dalla copia WSL2
   `/home/daniele/ds4`; il progetto non modifica proxy o firewall Windows.
 - `ds4_cli.c` — eseguibile `ds4`: parsing opzioni, modalità one-shot e REPL,
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
@@ -274,20 +274,22 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   canonicalizzazione accetta la riscrittura dell'ultimo token BPE Qwen solo se
   il KV live conserva l'intero prompt byte per byte; le continuazioni agentiche
   riconoscono il tail tool anche dopo lo scope di sistema sintetico.
-- `agent/` — sorgenti, test e configurazione del frontend NiceGUI FE / ExMekh-Lib;
-  `agent/src/fe/exmekh_bridge/` integra Client e DeepAgent, `agent/src/fe/state/`
-  persiste chat e progetti e `agent/src/fe/ui/` gestisce l'interfaccia.
+- `agent/` — sorgenti, test e configurazione del frontend NiceGUI ExMekh Agent;
+  `agent/src/exmekh_agent/exmekh_bridge/` integra Client e DeepAgent, `agent/src/exmekh_agent/state/`
+  persiste chat e progetti e `agent/src/exmekh_agent/ui/` gestisce l'interfaccia.
+  La distribuzione e la CLI web sono `exmekh-agent`; le variabili UI sono
+  `EXMEKH_AGENT_HOST`, `EXMEKH_AGENT_PORT` e `EXMEKH_AGENT_TITLE`.
   Il converter usa l'API pubblica dei metadati Message, senza esporre snapshot
   al provider; l'adapter dei tool conserva lo stato di errore emesso da ExMekh-Lib per
   root, conversazioni figlie e UI.
-- `agent/src/fe/exmekh_bridge/execution_restore.py` — ricostruisce history e cache
+- `agent/src/exmekh_agent/exmekh_bridge/execution_restore.py` — ricostruisce history e cache
   tramite le API pubbliche ExMekh-Lib, mantenendo identità e metadati degli output
   riletti e lo scope dei messaggi di steering dopo la compattazione.
-- `agent/src/fe/exmekh_bridge/recorded_output.py` — parser unico degli header XML
+- `agent/src/exmekh_agent/exmekh_bridge/recorded_output.py` — parser unico degli header XML
   persistiti; conserva corpo e riferimenti degli output, con fallback legacy.
-- `agent/src/fe/exmekh_bridge/steering_history.py` — seleziona gli ID di steering
+- `agent/src/exmekh_agent/exmekh_bridge/steering_history.py` — seleziona gli ID di steering
   del livello corrente, escludendo quelli delle skill discendenti.
-- `agent/src/fe/exmekh_bridge/message_edit.py` — prepara il testo modificato,
+- `agent/src/exmekh_agent/exmekh_bridge/message_edit.py` — prepara il testo modificato,
   conservando gli upload espliciti e rigenerando i file del testo incollato.
   Il controller ferma e attende il turno precedente prima di salvare il ramo
   aggiornato. ChatSession gestisce il ramo, ChatSettings le approvazioni e
@@ -297,18 +299,18 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `agent/tests/test_message_editing.py`, `agent/tests/test_message_editing_e2e.py`
   — regressioni su modifica a inizio/metà/fine chat, streaming, riconnessione,
   annullamento, approvazioni pendenti, testi/immagini/PDF e persistenza in
-  Quick Chat e progetto. `agent/tests/run_message_edit_fe.py` usa un provider
+  Quick Chat e progetto. `agent/tests/run_message_edit_agent.py` usa un provider
   deterministico con il client mock e il ciclo di esecuzione ExMekh-Lib reale.
-- `agent/src/fe/exmekh_bridge/image_input.py` — decodifica immagini, orientamento,
+- `agent/src/exmekh_agent/exmekh_bridge/image_input.py` — decodifica immagini, orientamento,
   rendering PDF locale (prime 10 pagine), parti native ExMekh-Lib e serializzazione
   PNG della cronologia; i payload base64 non vengono contati come testo.
-- `agent/src/fe/ui/image_preview.py` — miniature e anteprima modale condivise
+- `agent/src/exmekh_agent/ui/image_preview.py` — miniature e anteprima modale condivise
   fra compositore e chat; gli allegati visivi non hanno un secondo chip file.
 - `agent/tests/test_image_input.py`, `agent/tests/test_images_e2e.py`,
   `agent/tests/test_images_live.py` — regressioni multimodali, browser e prove
   opt-in sui due endpoint DS4, inclusi PDF, steering e replay.
 - `agent/wheels/` — wheel ExMekh-Lib versionata, installabile con `uv sync --frozen`.
-- `agent/tests/parallel_execution.py` — test FE per modulo su CPU logiche, con
+- `agent/tests/parallel_execution.py` — test ExMekh Agent per modulo su CPU logiche, con
   fase esclusiva per test seriali e provider reali dopo il teardown degli altri worker.
 - `exmekh_lib/tests/conftest.py` — worker ExMekh-Lib sulle CPU logiche disponibili, opt-in dei
   test live e raggruppamento dei test seriali con `--dist=loadgroup`.
@@ -316,12 +318,12 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   negativi e verificano le due piattaforme di cancellazione dei processi.
 - `exmekh_lib/` — repository Git locale dei sorgenti ExMekh-Lib, con cronologia propria,
   esclusa dal Git di DS4.
-- `agent/sync_exmekh_lib.sh` e `agent/src/fe/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
+- `agent/sync_exmekh_lib.sh` e `agent/src/exmekh_agent/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
   locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
   La distribuzione e la CLI sono `exmekh-lib`, il namespace Python è
   `exmekh_lib` e il comando installato di sync è `sync-exmekh-lib`. Dopo
   l’installazione riuscita il sync rimuove anche le vecchie wheel `qs`.
-- `docs/agentic/frontend.md` — avvio, configurazione, dipendenze e test di FE.
+- `docs/agentic/frontend.md` — avvio, configurazione, dipendenze e test di ExMekh Agent.
 - `ds4_bench.c` — benchmark di prefill/decode a diverse frontiere di contesto;
   ripete gli sweep mantenendo il modello residente e usa snapshot o replay fuori
   dalle finestre cronometrate.

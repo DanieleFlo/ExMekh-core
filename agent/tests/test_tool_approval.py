@@ -13,8 +13,8 @@ from exmekh_lib.interfaces.tool_hook import ToolContext, ToolResponse
 from nicegui.client import Client as NiceGuiClient
 from nicegui.page import page
 
-from fe.exmekh_bridge.models import ChatSession
-from fe.exmekh_bridge.tool_approval import (
+from exmekh_agent.exmekh_bridge.models import ChatSession
+from exmekh_agent.exmekh_bridge.tool_approval import (
     COMMAND_APPROVAL_SYSTEM_PROMPT,
     DEFAULT_TOOL_APPROVAL_MODE,
     TOOL_APPROVAL_ALL,
@@ -29,9 +29,9 @@ from fe.exmekh_bridge.tool_approval import (
     load_command_approval_hds,
     normalize_tool_approval_mode,
 )
-from fe.state.session_manager import SessionManager
-from fe.ui.input_bar import InputBarComponent
-from fe.ui.page_controller import ChatPageController
+from exmekh_agent.state.session_manager import SessionManager
+from exmekh_agent.ui.input_bar import InputBarComponent
+from exmekh_agent.ui.page_controller import ChatPageController
 
 
 def test_approval_mode_constants() -> None:
@@ -245,8 +245,10 @@ def test_evaluate_command_approval_llm_calls_client_structured() -> None:
     )
 
     with (
-        patch("fe.exmekh_bridge.tool_approval.LocalProvider") as mock_provider_cls,
-        patch("fe.exmekh_bridge.tool_approval.Client") as mock_client_cls,
+        patch(
+            "exmekh_agent.exmekh_bridge.tool_approval.LocalProvider"
+        ) as mock_provider_cls,
+        patch("exmekh_agent.exmekh_bridge.tool_approval.Client") as mock_client_cls,
     ):
         mock_client = MagicMock()
         mock_client.call_structured.return_value = mock_response
@@ -280,7 +282,7 @@ def test_evaluate_command_approval_llm_calls_client_structured() -> None:
 
 def test_evaluate_command_approval_llm_handles_exception() -> None:
     with patch(
-        "fe.exmekh_bridge.tool_approval.LocalProvider",
+        "exmekh_agent.exmekh_bridge.tool_approval.LocalProvider",
         side_effect=RuntimeError("Provider down"),
     ):
         decision = evaluate_command_approval_llm("echo test")
@@ -295,8 +297,8 @@ def test_evaluator_rolls_back_history_when_declined() -> None:
     )
 
     with (
-        patch("fe.exmekh_bridge.tool_approval.LocalProvider"),
-        patch("fe.exmekh_bridge.tool_approval.Client") as mock_client_cls,
+        patch("exmekh_agent.exmekh_bridge.tool_approval.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.tool_approval.Client") as mock_client_cls,
     ):
         mock_client = MagicMock()
         mock_client.call_structured.return_value = mock_response
@@ -332,7 +334,7 @@ def test_load_command_approval_hds_and_history_building() -> None:
 
     # Fallback when HDS file does not exist
     with patch(
-        "fe.exmekh_bridge.tool_approval.COMMAND_APPROVAL_HDS_PATH",
+        "exmekh_agent.exmekh_bridge.tool_approval.COMMAND_APPROVAL_HDS_PATH",
         Path("non_existent.md"),
     ):
         fallback_hds = load_command_approval_hds()
@@ -340,7 +342,7 @@ def test_load_command_approval_hds_and_history_building() -> None:
 
 
 def test_chat_settings_approval_mode_defaults_and_persistence(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -436,8 +438,8 @@ def test_input_bar_approval_ui_interaction() -> None:
 
 def test_page_controller_approval_mode_changed(tmp_path: Path) -> None:
     with (
-        patch("fe.state.session_manager.config") as mock_cfg,
-        patch("fe.ui.page_controller.ui.notify") as mock_notify,
+        patch("exmekh_agent.state.session_manager.config") as mock_cfg,
+        patch("exmekh_agent.ui.page_controller.ui.notify") as mock_notify,
     ):
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
@@ -449,7 +451,7 @@ def test_page_controller_approval_mode_changed(tmp_path: Path) -> None:
         controller._client = MagicMock()
         controller._client.is_deleted = False
 
-        with patch("fe.ui.page_controller.session_manager", sm):
+        with patch("exmekh_agent.ui.page_controller.session_manager", sm):
             controller.approval_mode_changed("Approve via LLM")
             assert session.settings.tool_approval_mode == "Approve via LLM"
             mock_notify.assert_called_with(
@@ -468,9 +470,9 @@ def test_page_controller_stop_cleans_pending_approval(tmp_path: Path) -> None:
     controller.input_bar = bar
 
     with (
-        patch("fe.ui.page_controller.session_manager", manager),
-        patch("fe.ui.page_controller.ui.notify"),
-        patch("fe.ui.page_controller.active_turns.stop", return_value=True),
+        patch("exmekh_agent.ui.page_controller.session_manager", manager),
+        patch("exmekh_agent.ui.page_controller.ui.notify"),
+        patch("exmekh_agent.ui.page_controller.active_turns.stop", return_value=True),
         patch.object(controller, "update_context_usage"),
     ):
         controller.stop()
@@ -507,7 +509,7 @@ def test_build_approval_message_history_edge_cases() -> None:
 
     # Exception during check_history falls back to base_history
     with patch(
-        "fe.exmekh_bridge.tool_approval.MessageHistory.check_history",
+        "exmekh_agent.exmekh_bridge.tool_approval.MessageHistory.check_history",
         side_effect=ValueError("bad history"),
     ):
         mh_fallback = build_approval_message_history(
@@ -525,8 +527,8 @@ def test_command_approval_evaluator_with_work_root() -> None:
     )
 
     with (
-        patch("fe.exmekh_bridge.tool_approval.LocalProvider"),
-        patch("fe.exmekh_bridge.tool_approval.Client") as mock_client_cls,
+        patch("exmekh_agent.exmekh_bridge.tool_approval.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.tool_approval.Client") as mock_client_cls,
     ):
         mock_client = MagicMock()
         mock_client.call_structured.return_value = mock_resp

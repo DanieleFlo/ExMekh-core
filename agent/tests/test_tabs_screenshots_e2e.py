@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from playwright.async_api import async_playwright, expect
 
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     Project,
@@ -19,14 +19,14 @@ from tests.browser_support import BrowserTestServer, get_edge_executable
 
 
 @pytest.fixture(scope="module")
-def fe_tabs_server(tmp_path_factory: pytest.TempPathFactory):
+def agent_tabs_server(tmp_path_factory: pytest.TempPathFactory):
     """Sets up a test session with hierarchical skills and starts NiceGUI server."""
-    fe_dir = Path(__file__).resolve().parents[1]
+    agent_dir = Path(__file__).resolve().parents[1]
     data_dir = tmp_path_factory.mktemp("tabs-data")
     chats_dir = data_dir / "chats"
     chats_dir.mkdir(parents=True, exist_ok=True)
 
-    project = Project(id="test-tabs-project", work_root=str(fe_dir))
+    project = Project(id="test-tabs-project", work_root=str(agent_dir))
     project_dir = data_dir / "projects"
     project_dir.mkdir(parents=True, exist_ok=True)
     project_file = project_dir / f"{project.id}.json"
@@ -110,7 +110,7 @@ def fe_tabs_server(tmp_path_factory: pytest.TempPathFactory):
     with open(session_file, "w", encoding="utf-8") as f:
         f.write(session.model_dump_json(indent=2))
 
-    with BrowserTestServer(data_dir, module="tests.run_projects_fe") as url:
+    with BrowserTestServer(data_dir, module="tests.run_projects_agent") as url:
         yield url
 
 
@@ -125,14 +125,14 @@ async def safe_screenshot(page, path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_sub_agent_cards_and_tabs_live(fe_tabs_server: str) -> None:
+async def test_sub_agent_cards_and_tabs_live(agent_tabs_server: str) -> None:
     """Open the running NiceGUI page and navigate all child tabs in a browser."""
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             executable_path=get_edge_executable(), headless=True
         )
         page = await browser.new_page(viewport={"width": 1360, "height": 920})
-        await page.goto(fe_tabs_server, wait_until="networkidle")
+        await page.goto(agent_tabs_server, wait_until="networkidle")
 
         cards = page.locator(".sub-agent-card")
         await cards.first.wait_for(state="visible")
@@ -207,13 +207,15 @@ async def test_sub_agent_cards_and_tabs_live(fe_tabs_server: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_narrow_layout_keeps_navigation_accessible(fe_tabs_server: str) -> None:
+async def test_narrow_layout_keeps_navigation_accessible(
+    agent_tabs_server: str,
+) -> None:
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             executable_path=get_edge_executable(), headless=True
         )
         page = await browser.new_page(viewport={"width": 390, "height": 844})
-        await page.goto(fe_tabs_server, wait_until="networkidle")
+        await page.goto(agent_tabs_server, wait_until="networkidle")
         await page.screenshot(
             path=str(
                 Path(__file__).resolve().parents[1]
@@ -232,14 +234,14 @@ async def test_narrow_layout_keeps_navigation_accessible(fe_tabs_server: str) ->
 
 @pytest.mark.asyncio
 async def test_global_and_project_settings_with_delete_confirmation(
-    fe_tabs_server: str,
+    agent_tabs_server: str,
 ) -> None:
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             executable_path=get_edge_executable(), headless=True
         )
         page = await browser.new_page(viewport={"width": 1360, "height": 920})
-        await page.goto(fe_tabs_server, wait_until="networkidle")
+        await page.goto(agent_tabs_server, wait_until="networkidle")
 
         await page.locator("button:has(.q-icon:text-is('tune'))").click()
         await page.get_by_text("LOCAL PROVIDER").wait_for(state="visible")
@@ -303,13 +305,13 @@ async def test_global_and_project_settings_with_delete_confirmation(
 
 
 @pytest.mark.asyncio
-async def test_sub_tabs_and_raw_history_e2e_screenshots(fe_tabs_server: str) -> None:
+async def test_sub_tabs_and_raw_history_e2e_screenshots(agent_tabs_server: str) -> None:
     """Verifies the 3 sub-tabs in the UI, navigates between them, tests the colorized
 
     Raw History and vertical compactions with matryoshka nesting, and captures screenshots.
     """
-    fe_dir = Path(__file__).resolve().parents[1]
-    screenshots_dir = fe_dir / "screenshots"
+    agent_dir = Path(__file__).resolve().parents[1]
+    screenshots_dir = agent_dir / "screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
     edge_bin = get_edge_executable()
 
@@ -318,7 +320,7 @@ async def test_sub_tabs_and_raw_history_e2e_screenshots(fe_tabs_server: str) -> 
         context = await browser.new_context(viewport={"width": 1360, "height": 920})
         page = await context.new_page()
 
-        await page.goto(fe_tabs_server, wait_until="networkidle")
+        await page.goto(agent_tabs_server, wait_until="networkidle")
         await page.wait_for_selector(".sub-tabs-bar", timeout=12000)
         conversation = (
             page.locator(".sidebar-item")

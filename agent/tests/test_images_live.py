@@ -8,9 +8,9 @@ from exmekh_lib.core.models.system_message import SystemMessage
 from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.providers.local import LocalProvider
 
-from fe.config import config
-from fe.exmekh_bridge.image_input import user_content
-from fe.exmekh_bridge.pasted_input import (
+from exmekh_agent.config import config
+from exmekh_agent.exmekh_bridge.image_input import user_content
+from exmekh_agent.exmekh_bridge.pasted_input import (
     create_staged_attachment_from_file,
     prepare_user_input,
 )

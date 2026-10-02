@@ -8,10 +8,10 @@ import pytest
 from exmekh_lib.core.cache.session_cache import SessionCache
 from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
 
-from fe.exmekh_bridge.converter import reconstruct_execution_history_and_cache
-from fe.exmekh_bridge.models import ChatMessage
-from fe.exmekh_bridge.recorded_output import RecordedToolOutput
-from fe.exmekh_bridge.steering_history import direct_steering_output_ids
+from exmekh_agent.exmekh_bridge.converter import reconstruct_execution_history_and_cache
+from exmekh_agent.exmekh_bridge.models import ChatMessage
+from exmekh_agent.exmekh_bridge.recorded_output import RecordedToolOutput
+from exmekh_agent.exmekh_bridge.steering_history import direct_steering_output_ids
 
 
 def header(output_id: str, references: list[tuple[str, str]]) -> str:

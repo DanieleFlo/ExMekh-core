@@ -4,10 +4,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from fe.config import config
-from fe.ui.header import HeaderComponent
-from fe.ui.settings_drawer import SettingsDrawerComponent
-from fe.ui.sidebar import SidebarComponent
+from exmekh_agent.config import config
+from exmekh_agent.ui.header import HeaderComponent
+from exmekh_agent.ui.settings_drawer import SettingsDrawerComponent
+from exmekh_agent.ui.sidebar import SidebarComponent
 
 
 def test_header_has_no_mode_toggle() -> None:
@@ -47,7 +47,7 @@ async def test_settings_refresh_handles_offline_and_empty_models() -> None:
     drawer.status_badge = MagicMock()
     drawer.model_select = MagicMock()
     with patch(
-        "fe.ui.settings_drawer.check_provider_health", new_callable=AsyncMock
+        "exmekh_agent.ui.settings_drawer.check_provider_health", new_callable=AsyncMock
     ) as health:
         health.return_value = (False, [])
         await drawer.refresh_models()
@@ -73,8 +73,8 @@ async def test_settings_save_handles_sync_callback_and_restores_button_on_failur
     drawer.save_button = MagicMock()
     drawer.close = MagicMock()
     with (
-        patch("fe.ui.settings_drawer.config.update") as update,
-        patch("fe.ui.settings_drawer.ui.notify"),
+        patch("exmekh_agent.ui.settings_drawer.config.update") as update,
+        patch("exmekh_agent.ui.settings_drawer.ui.notify"),
     ):
         await drawer._save_settings()
     assert saved == [True]
@@ -83,7 +83,7 @@ async def test_settings_save_handles_sync_callback_and_restores_button_on_failur
     drawer.save_button.props.assert_any_call(remove="loading")
 
     drawer.on_settings_saved = MagicMock(side_effect=RuntimeError("callback failed"))
-    with patch("fe.ui.settings_drawer.config.update"):
+    with patch("exmekh_agent.ui.settings_drawer.config.update"):
         with pytest.raises(RuntimeError, match="callback failed"):
             await drawer._save_settings()
     drawer.save_button.props.assert_any_call(remove="loading")

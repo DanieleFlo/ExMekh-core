@@ -21,10 +21,10 @@ from tests.image_samples import pdf_bytes, png_bytes
 def recovery_server(tmp_path_factory: pytest.TempPathFactory) -> Generator[str]:
     with BrowserTestServer(
         tmp_path_factory.mktemp("steering-recovery"),
-        module="tests.run_steering_fe",
+        module="tests.run_steering_agent",
         environment={
-            "FE_STEERING_FIRST_RESPONSE": "nested_skill",
-            "FE_STEERING_RECOVER_OUTPUT": "1",
+            "EXMEKH_AGENT_STEERING_FIRST_RESPONSE": "nested_skill",
+            "EXMEKH_AGENT_STEERING_RECOVER_OUTPUT": "1",
         },
     ) as url:
         yield url

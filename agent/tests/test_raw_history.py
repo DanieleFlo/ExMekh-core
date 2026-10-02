@@ -8,16 +8,16 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ReasoningBlock,
     SkillNode,
     ToolEvent,
 )
-from fe.state.session_manager import session_manager
-from fe.ui.chat_view import ChatViewComponent
-from fe.ui.raw_history_view import (
+from exmekh_agent.state.session_manager import session_manager
+from exmekh_agent.ui.chat_view import ChatViewComponent
+from exmekh_agent.ui.raw_history_view import (
     RawHistoryComponent,
     build_raw_history_from_session,
     format_json_to_highlighted_html,

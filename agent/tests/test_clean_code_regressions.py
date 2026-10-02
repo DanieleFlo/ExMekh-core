@@ -13,10 +13,10 @@ from exmekh_lib.core.models.assistant_message import AssistantMessage
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.converter import chat_message_to_exmekh_messages
-from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.converter import chat_message_to_exmekh_messages
+from exmekh_agent.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ReasoningBlock,
@@ -24,15 +24,18 @@ from fe.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.exmekh_bridge.sub_agents import SubAgentEventRouter
-from fe.exmekh_bridge.tool_calls import extract_tool_arguments, parse_tool_calls
-from fe.exmekh_bridge.tool_events import tool_event_from_execution
-from fe.state.active_turns import active_turns
-from fe.state.session_manager import SessionManager
-from fe.ui.chat_export import export_chat
-from fe.ui.graph_data import build_graph_data_from_session
-from fe.ui.message_text import message_display_text
-from fe.ui.raw_history_view import RawHistoryComponent
+from exmekh_agent.exmekh_bridge.sub_agents import SubAgentEventRouter
+from exmekh_agent.exmekh_bridge.tool_calls import (
+    extract_tool_arguments,
+    parse_tool_calls,
+)
+from exmekh_agent.exmekh_bridge.tool_events import tool_event_from_execution
+from exmekh_agent.state.active_turns import active_turns
+from exmekh_agent.state.session_manager import SessionManager
+from exmekh_agent.ui.chat_export import export_chat
+from exmekh_agent.ui.graph_data import build_graph_data_from_session
+from exmekh_agent.ui.message_text import message_display_text
+from exmekh_agent.ui.raw_history_view import RawHistoryComponent
 
 
 def recorded_call(call_id, arguments):
@@ -129,7 +132,8 @@ def test_execution_adapter_and_handler_keep_actual_elapsed_time():
         None,
     )
     with patch(
-        "fe.exmekh_bridge.event_handlers.time.time", side_effect=[10, 10, 15, 15]
+        "exmekh_agent.exmekh_bridge.event_handlers.time.time",
+        side_effect=[10, 10, 15, 15],
     ):
         handler.handle(start)
         handler.handle(end)

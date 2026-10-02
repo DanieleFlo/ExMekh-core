@@ -205,7 +205,7 @@ Questo ciclo avvicina il decode del server agentico Qwen3.8 alla velocità del
 - righe 128–161: **Gate di correttezza** — La storia completa è stata ripetuta con `compare_new_vs_oracle`: 433 confronti
 - righe 162–229: **Matrice temperatura, thinking e MTP** — Il gate `tests/test_server_sampling_matrix.py` esplicita il prodotto cartesiano
 - righe 230–278: **Fonti primarie e scelte implementative** — I valori campionati non sono inventati dal benchmark.
-- righe 279–289: **Verifica corrente** — Le misure sopra descrivono fixture storici ritirati e non certificano FE / QS.
+- righe 279–289: **Verifica corrente** — Le misure sopra descrivono fixture storici ritirati e non certificano ExMekh Agent.
 
 ## [Qualificazione numerica Qwen3.8 — 17 settembre 2026](qwen38-qualification-2026-09-17.md)
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,

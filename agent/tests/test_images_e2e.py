@@ -15,7 +15,7 @@ from tests.image_samples import pdf_bytes, png_bytes
 
 @pytest.fixture(scope="module")
 def image_server() -> Generator[str]:
-    yield from start_mock_server(0, "tests.run_images_fe")
+    yield from start_mock_server(0, "tests.run_images_agent")
 
 
 async def test_images_pdf_preview_persistence_and_provider_protocol(image_server):

@@ -5,10 +5,10 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.exmekh_bridge.models import ChatMessage
-from fe.state.session_manager import session_manager
-from fe.ui.page_controller import ChatPageController
-from fe.ui.sidebar import SidebarComponent
+from exmekh_agent.exmekh_bridge.models import ChatMessage
+from exmekh_agent.state.session_manager import session_manager
+from exmekh_agent.ui.page_controller import ChatPageController
+from exmekh_agent.ui.sidebar import SidebarComponent
 
 
 @pytest.mark.parametrize("has_messages", [False, True])

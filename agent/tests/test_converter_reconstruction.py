@@ -12,7 +12,7 @@ from exmekh_lib.core.models.system_message import SystemMessage
 from exmekh_lib.core.models.tool_message import ToolMessage
 from exmekh_lib.interfaces.message import Message
 
-from fe.exmekh_bridge.converter import (
+from exmekh_agent.exmekh_bridge.converter import (
     chat_message_to_exmekh_messages,
     exmekh_message_to_raw_dict,
     exmekh_messages_to_chat_messages,
@@ -22,7 +22,7 @@ from fe.exmekh_bridge.converter import (
     reconstruct_execution_history_and_cache,
     restore_node_history,
 )
-from fe.exmekh_bridge.models import ChatMessage, ToolEvent
+from exmekh_agent.exmekh_bridge.models import ChatMessage, ToolEvent
 
 
 def _tool_call(call_id: str, name: str) -> dict:
@@ -189,7 +189,7 @@ def test_restore_node_history_ignores_legacy_reconstruction_errors() -> None:
 
     node.restore_history.side_effect = restore
     with patch(
-        "fe.exmekh_bridge.converter.reconstruct_execution_history_and_cache",
+        "exmekh_agent.exmekh_bridge.converter.reconstruct_execution_history_and_cache",
         side_effect=ValueError("bad"),
     ):
         restore_node_history(

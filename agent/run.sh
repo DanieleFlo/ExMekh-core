@@ -12,4 +12,4 @@ if ! command -v "$UV_BIN" >/dev/null 2>&1; then
     fi
 fi
 cd "$SCRIPT_DIR"
-exec "$UV_BIN" run --frozen fe "$@"
+exec "$UV_BIN" run --frozen exmekh-agent "$@"

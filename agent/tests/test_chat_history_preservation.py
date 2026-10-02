@@ -16,12 +16,12 @@ from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
 from exmekh_lib.core.tool_calls.harness_memory_tools import HarnessMemoryTools
 
-from fe.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agent_runner import (
     convert_to_exmekh_messages,
     execute_agent_turn_sync,
     run_agent_turn,
 )
-from fe.exmekh_bridge.converter import (
+from exmekh_agent.exmekh_bridge.converter import (
     exmekh_message_to_raw_dict,
     exmekh_messages_to_chat_messages,
     exmekh_messages_to_session,
@@ -29,7 +29,7 @@ from fe.exmekh_bridge.converter import (
     reconstruct_execution_history_and_cache,
     session_to_exmekh_messages,
 )
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ChatSettings,
@@ -77,7 +77,8 @@ def test_history_preserved_in_quick_chat_agent_turn() -> None:
     ]
 
     with patch(
-        "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=mock_provider
+        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+        return_value=mock_provider,
     ):
         execute_agent_turn_sync(
             user_prompt="Come mi chiamo?",
@@ -116,7 +117,8 @@ def test_history_preserved_in_deep_agent_turn() -> None:
     ]
 
     with patch(
-        "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=mock_provider
+        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+        return_value=mock_provider,
     ):
         execute_agent_turn_sync(
             user_prompt="Secondo messaggio",
@@ -152,7 +154,8 @@ async def test_run_agent_turn_passes_history_to_model() -> None:
     session = ChatSession(title="Test Multi-turn", agent_mode="quick_chat")
 
     with patch(
-        "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=mock_provider
+        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+        return_value=mock_provider,
     ):
         # Turn 1
         user1 = ChatMessage(role="user", content="Il mio numero fortunato è 77")
@@ -811,7 +814,8 @@ def build_10_diverse_realistic_chats() -> list[ChatSession]:
         agent_mode="deep_agent",
         messages=[
             ChatMessage(
-                role="user", content="Costruisci FE, BE e lancia la verifica E2E."
+                role="user",
+                content="Costruisci ExMekh Agent, BE e lancia la verifica E2E.",
             ),
             ChatMessage(
                 role="assistant",

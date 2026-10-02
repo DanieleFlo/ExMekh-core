@@ -5,18 +5,18 @@ from unittest.mock import patch
 import pytest
 from exmekh_lib.core.models.assistant_message import FunctionCall, ToolCall
 
-from fe.exmekh_bridge.agent_runner import convert_to_exmekh_messages
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.converter import raw_dict_to_exmekh_message
-from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.agent_runner import convert_to_exmekh_messages
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.converter import raw_dict_to_exmekh_message
+from exmekh_agent.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ReasoningBlock,
     SkillNode,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.exmekh_bridge.sub_agents import SubAgentEventRouter
+from exmekh_agent.exmekh_bridge.sub_agents import SubAgentEventRouter
 
 
 @pytest.mark.parametrize("status", ["completed", "error"])
@@ -59,7 +59,7 @@ def test_timing_normalization_does_not_close_active_work() -> None:
     assert open_block.end_time is None
     assert finished_tool.duration_seconds == finished_block.duration_seconds == 3
     assert instant_tool.duration_seconds == 0
-    with patch("fe.exmekh_bridge.models.time.time", return_value=10):
+    with patch("exmekh_agent.exmekh_bridge.models.time.time", return_value=10):
         open_tool.finalize_timing("error")
         open_block.finalize_timing()
         skill.finalize_timing("completed")

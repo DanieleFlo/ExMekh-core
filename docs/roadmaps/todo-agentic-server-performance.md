@@ -1,8 +1,8 @@
 # TODO — Prestazioni del server agentico e constrained decoding
 
-Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture
+Il frontend corrente è ExMekh Agent in `agent/`; i risultati datati di fixture
 ritirati non sono verifiche del frontend corrente. Vedere
-[la guida FE / QS](../agentic/frontend.md).
+[la guida ExMekh Agent](../agentic/frontend.md).
 
 Ultimo aggiornamento: 2026-08-28
 

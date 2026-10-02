@@ -7,15 +7,15 @@ from unittest.mock import patch
 
 import pytest
 
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.models import ChatMessage, ChatSession, ChatSettings
-from fe.state.active_turns import active_turns
-from fe.state.session_manager import CODE_WORK_ROOT, SessionManager
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.models import ChatMessage, ChatSession, ChatSettings
+from exmekh_agent.state.active_turns import active_turns
+from exmekh_agent.state.session_manager import CODE_WORK_ROOT, SessionManager
 
 
 @pytest.fixture
 def isolated_session_manager(tmp_path: Path) -> Generator[SessionManager]:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -201,7 +201,7 @@ def test_reload_empty_storage_clears_selection(
 
 
 def test_session_manager_init_empty(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -212,7 +212,7 @@ def test_session_manager_init_empty(tmp_path: Path) -> None:
 
 
 def test_session_manager_create_and_switch(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "quick_chat"
@@ -231,7 +231,7 @@ def test_session_manager_create_and_switch(tmp_path: Path) -> None:
 
 
 def test_session_manager_get_current_session_fallback(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -252,7 +252,7 @@ def test_session_manager_get_current_session_fallback(tmp_path: Path) -> None:
 
 
 def test_session_manager_delete_session(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -277,7 +277,7 @@ def test_session_manager_delete_session(tmp_path: Path) -> None:
 
 
 def test_session_manager_delete_session_unlink_error(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -292,7 +292,7 @@ def test_session_manager_delete_session_unlink_error(tmp_path: Path) -> None:
 
 @pytest.mark.asyncio
 async def test_deleting_session_cancels_active_turn(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -319,7 +319,7 @@ async def test_deleting_session_cancels_active_turn(tmp_path: Path) -> None:
 
 
 def test_session_manager_save_session_error(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -336,7 +336,7 @@ def test_session_manager_save_session_error(tmp_path: Path) -> None:
 
 
 def test_save_session_is_atomic_and_updates_timestamp(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"
@@ -364,7 +364,7 @@ def test_session_manager_load_all_corrupted_file(tmp_path: Path) -> None:
     # Corrupted JSON file
     (chats_dir / "bad.json").write_text("{corrupted json", encoding="utf-8")
 
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         sm = SessionManager()
         assert "valid1" in sm.sessions
@@ -372,7 +372,7 @@ def test_session_manager_load_all_corrupted_file(tmp_path: Path) -> None:
 
 
 def test_session_manager_list_sessions_sorted(tmp_path: Path) -> None:
-    with patch("fe.state.session_manager.config") as mock_cfg:
+    with patch("exmekh_agent.state.session_manager.config") as mock_cfg:
         mock_cfg.data_dir = tmp_path
         mock_cfg.default_model = "test-model"
         mock_cfg.agent_mode = "deep_agent"

@@ -16,11 +16,11 @@ from exmekh_lib.interfaces.tool_hook import ToolContext, ToolResponse
 from nicegui.client import Client as NiceGuiClient
 from nicegui.page import page
 
-from fe.config import config
-from fe.exmekh_bridge.agent_runner import check_provider_health
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.models import ChatSession
-from fe.exmekh_bridge.tool_approval import (
+from exmekh_agent.config import config
+from exmekh_agent.exmekh_bridge.agent_runner import check_provider_health
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.models import ChatSession
+from exmekh_agent.exmekh_bridge.tool_approval import (
     TOOL_APPROVAL_ALL,
     TOOL_APPROVAL_LLM,
     CommandApprovalDecision,
@@ -28,10 +28,10 @@ from fe.exmekh_bridge.tool_approval import (
     CommandApprovalHook,
     build_approval_message_history,
 )
-from fe.state.active_turns import active_turns
-from fe.state.session_manager import SessionManager
-from fe.ui.input_bar import InputBarComponent
-from fe.ui.page_controller import ChatPageController
+from exmekh_agent.state.active_turns import active_turns
+from exmekh_agent.state.session_manager import SessionManager
+from exmekh_agent.ui.input_bar import InputBarComponent
+from exmekh_agent.ui.page_controller import ChatPageController
 from tests.mock_client import MockProvider
 
 
@@ -49,7 +49,10 @@ def test_evaluator_preserves_only_approved_turns_using_the_real_exmekh_client() 
 
     evaluator = CommandApprovalEvaluator(history=["pwd"], api_type="responses")
     with (
-        patch("fe.exmekh_bridge.tool_approval.LocalProvider", return_value=provider),
+        patch(
+            "exmekh_agent.exmekh_bridge.tool_approval.LocalProvider",
+            return_value=provider,
+        ),
         patch.object(provider, "call_structured", side_effect=respond),
     ):
         assert evaluator.evaluate("git status").approved
@@ -61,7 +64,7 @@ def test_evaluator_preserves_only_approved_turns_using_the_real_exmekh_client() 
     assert requests[1].get_response_model() is CommandApprovalDecision
 
     with patch(
-        "fe.exmekh_bridge.tool_approval.LocalProvider",
+        "exmekh_agent.exmekh_bridge.tool_approval.LocalProvider",
         side_effect=RuntimeError("offline"),
     ):
         assert not evaluator.evaluate("echo missing provider").approved
@@ -155,9 +158,9 @@ async def test_manual_approval_releases_the_worker_on_every_ui_exit(
         return await loop.run_in_executor(None, request_approval)
 
     with (
-        patch("fe.ui.page_controller.session_manager", manager),
-        patch("fe.ui.page_controller.run_agent_turn", side_effect=fake_turn),
-        patch("fe.ui.page_controller.ui.notify"),
+        patch("exmekh_agent.ui.page_controller.session_manager", manager),
+        patch("exmekh_agent.ui.page_controller.run_agent_turn", side_effect=fake_turn),
+        patch("exmekh_agent.ui.page_controller.ui.notify"),
     ):
         collector = TurnStreamCollector()
         turn = asyncio.create_task(

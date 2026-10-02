@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.state.active_turns import ActiveTurnRegistry
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.state.active_turns import ActiveTurnRegistry
 
 
 @pytest.mark.asyncio

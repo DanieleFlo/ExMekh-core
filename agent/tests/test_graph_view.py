@@ -8,7 +8,7 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
@@ -17,8 +17,8 @@ from fe.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.exmekh_bridge.skill_history import inner_skill_history_messages
-from fe.ui.graph_data import (
+from exmekh_agent.exmekh_bridge.skill_history import inner_skill_history_messages
+from exmekh_agent.ui.graph_data import (
     FIXED_NODE_SPACING_X,
     FIXED_SUB_AGENT_NODE_SPACING,
     NODE_COLORS,
@@ -37,9 +37,9 @@ from fe.ui.graph_data import (
     build_graph_data_from_session,
     check_sub_agent_branches_do_not_cross,
 )
-from fe.ui.graph_svg import render_star_svg_html
-from fe.ui.graph_view import GraphViewComponent
-from fe.ui.raw_history_view import load_real_hds_system_prompt
+from exmekh_agent.ui.graph_svg import render_star_svg_html
+from exmekh_agent.ui.graph_view import GraphViewComponent
+from exmekh_agent.ui.raw_history_view import load_real_hds_system_prompt
 
 
 @pytest.fixture(autouse=True)
@@ -1236,11 +1236,11 @@ def test_graph_view_renders_nodes_with_windows_paths_and_unicode_escapes() -> No
         messages=[
             ChatMessage(
                 role="user",
-                content=r"Analyze file in C:\Users\danie\Desktop\exmekh_lib\FE",
+                content=r"Analyze file in C:\Users\danie\Desktop\exmekh_lib\ExMekh Agent",
             ),
             ChatMessage(
                 role="assistant",
-                content=r"Nella directory `C:\Users\danie\Desktop\exmekh_lib\FE` ho trovato i file.",
+                content=r"Nella directory `C:\Users\danie\Desktop\exmekh_lib\ExMekh Agent` ho trovato i file.",
             ),
         ],
     )

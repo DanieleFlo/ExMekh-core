@@ -3,21 +3,21 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from fe.config import AppConfig
-from fe.exmekh_bridge.models import (
+from exmekh_agent.config import AppConfig
+from exmekh_agent.exmekh_bridge.models import (
     ChatSession,
     ReasoningBlock,
     SkillNode,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.exmekh_bridge.sub_agents import SubAgentEvent
-from fe.state.json_store import JsonRecordStore
-from fe.state.session_manager import SessionManager
-from fe.state.sub_agent_conversations import apply_sub_agent_event
-from fe.ui.input_bar import InputBarComponent
-from fe.ui.project_settings_dialog import ProjectSettingsDialogComponent
-from fe.ui.sidebar import SidebarComponent
+from exmekh_agent.exmekh_bridge.sub_agents import SubAgentEvent
+from exmekh_agent.state.json_store import JsonRecordStore
+from exmekh_agent.state.session_manager import SessionManager
+from exmekh_agent.state.sub_agent_conversations import apply_sub_agent_event
+from exmekh_agent.ui.input_bar import InputBarComponent
+from exmekh_agent.ui.project_settings_dialog import ProjectSettingsDialogComponent
+from exmekh_agent.ui.sidebar import SidebarComponent
 
 
 def test_config_saves_new_env_file(tmp_path) -> None:
@@ -113,7 +113,7 @@ def test_project_settings_dialog_handles_unbuilt_dialog() -> None:
     dialog._save_settings()
     dialog.project_id = "missing"
     with patch(
-        "fe.ui.project_settings_dialog.session_manager.save_project_settings"
+        "exmekh_agent.ui.project_settings_dialog.session_manager.save_project_settings"
     ) as save:
         dialog._save_settings()
     save.assert_not_called()

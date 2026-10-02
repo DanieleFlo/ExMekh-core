@@ -11,7 +11,7 @@ from xdist.workermanage import WorkerController
 
 from tests.execution_policy import is_live_provider_test
 
-_SERIAL_SUFFIX = "@fe_serial"
+_SERIAL_SUFFIX = "@agent_serial"
 _SERIAL_SCOPE = "exclusive tests"
 
 

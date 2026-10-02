@@ -1,8 +1,8 @@
 # TODO Roadmap — Constrained Decoding DSML/JSON ad alte prestazioni
 
-Il frontend corrente e FE / QS in `agent/`; i risultati datati di fixture
+Il frontend corrente è ExMekh Agent in `agent/`; i risultati datati di fixture
 ritirati non sono verifiche del frontend corrente. Vedere
-[la guida FE / QS](../agentic/frontend.md).
+[la guida ExMekh Agent](../agentic/frontend.md).
 
 > Obiettivo: costruire per DS4 un constraint engine che mantenga la correttezza fail-closed dell'implementazione attuale, ma elimini progressivamente la dipendenza runtime dalla scansione completa del vocabolario e dalla ri-parsing del prefisso.
 >

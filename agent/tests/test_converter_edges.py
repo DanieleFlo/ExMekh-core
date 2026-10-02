@@ -10,7 +10,7 @@ from exmekh_lib.core.models.system_message import SystemMessage
 from exmekh_lib.core.models.tool_message import ToolMessage
 from exmekh_lib.core.models.user_message import UserMessage
 
-from fe.exmekh_bridge.converter import (
+from exmekh_agent.exmekh_bridge.converter import (
     chat_message_to_exmekh_messages,
     exmekh_message_to_raw_dict,
     exmekh_messages_to_chat_messages,
@@ -18,8 +18,8 @@ from fe.exmekh_bridge.converter import (
     parse_tool_calls,
     raw_dict_to_exmekh_message,
 )
-from fe.exmekh_bridge.models import ChatMessage
-from fe.exmekh_bridge.recorded_output import RecordedToolOutput
+from exmekh_agent.exmekh_bridge.models import ChatMessage
+from exmekh_agent.exmekh_bridge.recorded_output import RecordedToolOutput
 
 
 @pytest.mark.parametrize("invalid", ["", "null", "{broken", 12, [], ["bad"]])

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from fe.ui.markdown_parser import convert_latex_to_mathml, parse_markdown_to_html
+from exmekh_agent.ui.markdown_parser import (
+    convert_latex_to_mathml,
+    parse_markdown_to_html,
+)
 
 
 def test_user_integral_example_display_and_inline() -> None:

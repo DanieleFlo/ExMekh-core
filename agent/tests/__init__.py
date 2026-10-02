@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from fe.config import config
+from exmekh_agent.config import config
 
 # Collection imports the global session manager before any fixtures can run.
 # Browser server entry points also import this package, but use their own storage.

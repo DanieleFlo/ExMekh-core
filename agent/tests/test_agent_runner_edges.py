@@ -16,13 +16,13 @@ from exmekh_lib.core.models.provider_stream_event import (
 from exmekh_lib.core.models.system_message import SystemMessage
 from exmekh_lib.core.models.user_message import UserMessage
 
-from fe.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agent_runner import (
     convert_to_exmekh_messages,
     execute_agent_turn_sync,
     generate_chat_title_sync,
     serialize_skill_execution,
 )
-from fe.exmekh_bridge.models import ChatMessage
+from exmekh_agent.exmekh_bridge.models import ChatMessage
 
 
 def _execution_event(
@@ -90,8 +90,10 @@ def _run_deep(
     )
     arguments.update(overrides)
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.DeepAgent", side_effect=build_agent),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch(
+            "exmekh_agent.exmekh_bridge.agent_runner.DeepAgent", side_effect=build_agent
+        ),
     ):
         assert execute_agent_turn_sync(**arguments) == "final"
     return tokens, tools, skills
@@ -226,8 +228,8 @@ def test_quick_chat_recovers_from_history_seed_failure_and_captures_raw_history(
             raise RuntimeError("observer failed")
 
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.Client") as client_class,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.Client") as client_class,
     ):
         client = client_class.return_value
         client.replace_history_from.side_effect = ValueError("legacy history")
@@ -258,8 +260,8 @@ def test_empty_structured_title_falls_back_to_user_prompt() -> None:
     response = MagicMock()
     response.get_message.return_value.title = "  "
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.Client") as client_class,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.Client") as client_class,
     ):
         client_class.return_value.call_structured.return_value = response
         title = generate_chat_title_sync("  A short prompt  ")
@@ -283,8 +285,8 @@ def test_quick_chat_ignores_noncontent_provider_event() -> None:
 
     tokens = []
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
-        patch("fe.exmekh_bridge.agent_runner.Client") as client_class,
+        patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("exmekh_agent.exmekh_bridge.agent_runner.Client") as client_class,
     ):
         client_class.return_value.call.side_effect = call
         execute_agent_turn_sync(

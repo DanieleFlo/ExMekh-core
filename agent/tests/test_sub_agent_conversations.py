@@ -15,19 +15,19 @@ from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEventType,
 )
 
-from fe.exmekh_bridge.agent_runner import execute_agent_turn_sync
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.agent_runner import execute_agent_turn_sync
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.exmekh_bridge.sub_agents import (
+from exmekh_agent.exmekh_bridge.sub_agents import (
     ObservedNode,
     SubAgentEvent,
     SubAgentEventRouter,
 )
-from fe.state.sub_agent_conversations import apply_sub_agent_event
+from exmekh_agent.state.sub_agent_conversations import apply_sub_agent_event
 from tests.mock_client import MockProvider
 
 
@@ -261,9 +261,12 @@ def test_live_child_calls_follow_history_policy(
     provider = TwoCallProvider()
     events: list[SubAgentEvent] = []
     with (
-        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
         patch(
-            "fe.exmekh_bridge.agent_runner.config.coding_agent_persistent_history",
+            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            return_value=provider,
+        ),
+        patch(
+            "exmekh_agent.exmekh_bridge.agent_runner.config.coding_agent_persistent_history",
             persistent,
         ),
     ):
@@ -307,9 +310,12 @@ def test_live_persistent_child_reuses_block_and_history_across_root_turns(
         provider = OneCallProvider()
         raw_history: list[dict] = []
         with (
-            patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
             patch(
-                "fe.exmekh_bridge.agent_runner.config.coding_agent_persistent_history",
+                "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+                return_value=provider,
+            ),
+            patch(
+                "exmekh_agent.exmekh_bridge.agent_runner.config.coding_agent_persistent_history",
                 True,
             ),
         ):

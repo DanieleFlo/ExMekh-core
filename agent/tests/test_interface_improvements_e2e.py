@@ -13,7 +13,7 @@ pytestmark = pytest.mark.serial(reason="Reads and writes the shared system clipb
 
 @pytest.fixture(scope="module")
 def interface_server():
-    yield from start_mock_server(0.0, "tests.run_interface_fe")
+    yield from start_mock_server(0.0, "tests.run_interface_agent")
 
 
 async def test_copy_menu_hover_and_single_line_tool_arguments(

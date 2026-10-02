@@ -11,7 +11,7 @@ from tests.browser_support import BrowserTestServer
 SERVER_SCRIPT = """
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from fe.config import config
+from exmekh_agent.config import config
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):

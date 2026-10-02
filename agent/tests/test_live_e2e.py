@@ -5,15 +5,18 @@ from pathlib import Path
 import pytest
 from dotenv import load_dotenv
 
-from fe.config import config
-from fe.exmekh_bridge.agent_runner import check_provider_health, run_agent_turn
-from fe.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
-from fe.state.session_manager import SessionManager
-from fe.ui.chat_view import ChatViewComponent
-from fe.ui.header import HeaderComponent
-from fe.ui.input_bar import InputBarComponent
-from fe.ui.settings_drawer import SettingsDrawerComponent
-from fe.ui.sidebar import SidebarComponent
+from exmekh_agent.config import config
+from exmekh_agent.exmekh_bridge.agent_runner import (
+    check_provider_health,
+    run_agent_turn,
+)
+from exmekh_agent.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
+from exmekh_agent.state.session_manager import SessionManager
+from exmekh_agent.ui.chat_view import ChatViewComponent
+from exmekh_agent.ui.header import HeaderComponent
+from exmekh_agent.ui.input_bar import InputBarComponent
+from exmekh_agent.ui.settings_drawer import SettingsDrawerComponent
+from exmekh_agent.ui.sidebar import SidebarComponent
 
 load_dotenv()
 pytestmark = pytest.mark.live
@@ -55,7 +58,7 @@ async def test_live_provider_health_check() -> None:
 
 
 def test_live_web_ui_components_init() -> None:
-    """Verifies that all FE UI components instantiate and wire callbacks cleanly."""
+    """Verifies that all ExMekh Agent UI components instantiate and wire callbacks cleanly."""
     header = HeaderComponent(
         on_toggle_drawer=lambda: None,
     )
@@ -141,7 +144,7 @@ async def test_live_e2e_deep_agent_tool_execution() -> None:
     reasoning_tokens: list[str] = []
     tool_events: list[ToolEvent] = []
 
-    token_value = "FE-LIVE-E2E-OK"
+    token_value = "EXMEKH-AGENT-LIVE-E2E-OK"
     prompt = (
         f"Usa il tool mock-tool una sola volta con il parametro text='{token_value}'. "
         f"Poi restituisci una breve conferma che includa la parola {token_value}."
@@ -156,7 +159,7 @@ async def test_live_e2e_deep_agent_tool_execution() -> None:
         agent_mode="deep_agent",
     )
 
-    # Verify that mock-tool was invoked and registered by the FE runner
+    # Verify that mock-tool was invoked and registered by the ExMekh Agent runner
     tool_names = [ev.tool_name for ev in tool_events]
     assert "mock-tool" in tool_names, (
         f"Expected 'mock-tool' to be executed during DeepAgent run. Observed tools: {tool_names}"

@@ -8,20 +8,25 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from fe.exmekh_bridge.collector import TurnStreamCollector
-from fe.exmekh_bridge.converter import (
+from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.converter import (
     exmekh_messages_to_session,
     session_to_exmekh_messages,
 )
-from fe.exmekh_bridge.models import ChatMessage, ChatSession, Project, ProjectSettings
-from fe.exmekh_bridge.pasted_input import (
+from exmekh_agent.exmekh_bridge.models import (
+    ChatMessage,
+    ChatSession,
+    Project,
+    ProjectSettings,
+)
+from exmekh_agent.exmekh_bridge.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
     prepare_user_input,
 )
-from fe.state.active_turns import active_turns
-from fe.state.session_manager import CODE_WORK_ROOT, SessionManager
-from fe.state.temp_storage import TempStorage
+from exmekh_agent.state.active_turns import active_turns
+from exmekh_agent.state.session_manager import CODE_WORK_ROOT, SessionManager
+from exmekh_agent.state.temp_storage import TempStorage
 
 
 @pytest.fixture

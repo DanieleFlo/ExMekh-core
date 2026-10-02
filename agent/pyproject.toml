@@ -1,5 +1,5 @@
 [project]
-name = "fe"
+name = "exmekh-agent"
 version = "0.1.0"
 description = "Local AI Studio frontend for exmekh_lib inspired by LM Studio and Unsloth"
 readme = "README.md"
@@ -30,14 +30,14 @@ dev = [
 ]
 
 [project.scripts]
-fe = "fe.main:main"
-sync-exmekh-lib = "fe.sync:main"
+exmekh-agent = "exmekh_agent.main:main"
+sync-exmekh-lib = "exmekh_agent.sync:main"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = ["-n", "auto", "--dist=loadfile", "--cov=fe", "--cov-branch", "--cov-report=term-missing"]
+addopts = ["-n", "auto", "--dist=loadfile", "--cov=exmekh_agent", "--cov-branch", "--cov-report=term-missing"]
 markers = [
     "live: contacts a real model provider and runs only with explicit opt-in",
     "mock: live tests using the mock provider",
@@ -46,20 +46,20 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["fe"]
+source = ["exmekh_agent"]
 omit = [
-    "src/fe/main.py",
-    "src/fe/sync.py",
-    "src/fe/ui/project_settings_dialog.py",
-    "src/fe/ui/new_project_dialog.py",
-    "src/fe/ui/chat_view.py",
-    "src/fe/ui/file_icons.py",
-    "src/fe/ui/input_bar.py",
-    "src/fe/ui/markdown_parser.py",
-    "src/fe/ui/page_controller.py",
-    "src/fe/ui/raw_history_view.py",
-    "src/fe/ui/settings_drawer.py",
-    "src/fe/ui/sidebar.py",
+    "src/exmekh_agent/main.py",
+    "src/exmekh_agent/sync.py",
+    "src/exmekh_agent/ui/project_settings_dialog.py",
+    "src/exmekh_agent/ui/new_project_dialog.py",
+    "src/exmekh_agent/ui/chat_view.py",
+    "src/exmekh_agent/ui/file_icons.py",
+    "src/exmekh_agent/ui/input_bar.py",
+    "src/exmekh_agent/ui/markdown_parser.py",
+    "src/exmekh_agent/ui/page_controller.py",
+    "src/exmekh_agent/ui/raw_history_view.py",
+    "src/exmekh_agent/ui/settings_drawer.py",
+    "src/exmekh_agent/ui/sidebar.py",
 ]
 
 [tool.coverage.report]

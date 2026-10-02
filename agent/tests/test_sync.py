@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from fe import sync
+from exmekh_agent import sync
 
 
 @pytest.fixture
@@ -19,14 +19,14 @@ def source_projects(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     exmekh_dir = tmp_path / "exmekh_lib"
     exmekh_dir.mkdir()
     (exmekh_dir / "pyproject.toml").write_text('[project]\nname = "exmekh-lib"\n')
-    monkeypatch.setattr(sync, "__file__", str(agent_dir / "src/fe/sync.py"))
+    monkeypatch.setattr(sync, "__file__", str(agent_dir / "src/exmekh_agent/sync.py"))
     monkeypatch.setenv("UV_BIN", "/custom/bin/uv")
     return agent_dir
 
 
 def test_sync_requires_exmekh_source_project(source_projects: Path) -> None:
     (source_projects.parent / "exmekh_lib/pyproject.toml").unlink()
-    with patch("fe.sync.subprocess.run") as run:
+    with patch("exmekh_agent.sync.subprocess.run") as run:
         assert sync.sync_wheel() == 1
     run.assert_not_called()
 
@@ -136,19 +136,24 @@ def test_sync_rejects_missing_or_ambiguous_build_output(
         for name in wheel_names:
             (Path(command[-1]) / name).write_bytes(b"wheel")
 
-    with patch("fe.sync.subprocess.run", side_effect=run) as subprocess_run:
+    with patch("exmekh_agent.sync.subprocess.run", side_effect=run) as subprocess_run:
         assert sync.sync_wheel() == 1
     subprocess_run.assert_called_once()
     assert not (source_projects / "wheels").exists()
 
 
 def test_sync_reports_missing_uv(source_projects: Path) -> None:
-    with patch("fe.sync.subprocess.run", side_effect=OSError("uv unavailable")):
+    with patch(
+        "exmekh_agent.sync.subprocess.run", side_effect=OSError("uv unavailable")
+    ):
         assert sync.sync_wheel() == 1
 
 
 def test_main_returns_sync_result() -> None:
-    with patch("fe.sync.sync_wheel", return_value=1), patch("sys.exit") as exit_mock:
+    with (
+        patch("exmekh_agent.sync.sync_wheel", return_value=1),
+        patch("sys.exit") as exit_mock,
+    ):
         sync.main()
     exit_mock.assert_called_once_with(1)
 
@@ -172,14 +177,14 @@ def test_wsl_launchers_resolve_paths_and_forward_arguments(
     lines = result.stdout.splitlines()
     assert lines[:2] == [str(agent_dir), str(uv)]
     if script == "run.sh":
-        assert lines[2:] == ["run", "--frozen", "fe", "argument with spaces"]
+        assert lines[2:] == ["run", "--frozen", "exmekh-agent", "argument with spaces"]
     else:
         assert lines[2:] == [
             "run",
             "--no-project",
             "--python",
             "3.13",
-            str(agent_dir / "src/fe/sync.py"),
+            str(agent_dir / "src/exmekh_agent/sync.py"),
             "argument with spaces",
         ]
 
@@ -199,7 +204,8 @@ def test_wsl_launchers_report_invalid_explicit_uv(tmp_path: Path, script: str) -
 
 
 def test_installed_frontend_uses_renamed_distribution_and_console_scripts() -> None:
-    metadata = importlib.metadata.distribution("fe")
+    metadata = importlib.metadata.distribution("exmekh-agent")
+    assert metadata.metadata["Name"] == "exmekh-agent"
     requirements = metadata.requires or []
     assert any(
         requirement.lower().startswith("exmekh-lib") for requirement in requirements
@@ -212,8 +218,11 @@ def test_installed_frontend_uses_renamed_distribution_and_console_scripts() -> N
         entry.name: entry.value
         for entry in importlib.metadata.entry_points(group="console_scripts")
     }
+    assert scripts["exmekh-agent"] == "exmekh_agent.main:main"
+    assert "fe" not in scripts
+    assert importlib.util.find_spec("fe") is None
     assert scripts["exmekh-lib"] == "exmekh_lib.main:main"
-    assert scripts["sync-exmekh-lib"] == "fe.sync:main"
+    assert scripts["sync-exmekh-lib"] == "exmekh_agent.sync:main"
     assert "sync-qs" not in scripts
     assert "qs" not in scripts
     assert importlib.util.find_spec("qs") is None

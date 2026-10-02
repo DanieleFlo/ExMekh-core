@@ -42,7 +42,7 @@ run.
     make test-jsonschemabench-safety \
       JSONSCHEMABENCH_MODEL=gguf/Qwen3.8-27B-UD-Q4_K_S.gguf
 
-Il frontend corrente FE / QS e documentato in `agent/README.md` e
+Il frontend corrente ExMekh Agent e documentato in `agent/README.md` e
 `docs/agentic/frontend.md`. I profili agentici datati conservano misure di
 fixture ritirati; non certificano il comportamento del frontend corrente.
 Per i gate server ripetibili usare `tests/run_server_sampling_matrix.ps1`.

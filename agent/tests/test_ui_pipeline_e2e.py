@@ -18,44 +18,44 @@ from tests.browser_support import (
 
 
 @pytest.fixture(scope="module")
-def fe_mock_server() -> Generator[str]:
+def agent_mock_server() -> Generator[str]:
     yield from start_mock_server(0.0)
 
 
 @pytest.fixture(scope="module")
-def fe_slow_mock_server() -> Generator[str]:
+def agent_slow_mock_server() -> Generator[str]:
     yield from start_mock_server(0.8)
 
 
 @pytest.fixture(scope="module")
-def fe_refresh_mock_server() -> Generator[str]:
+def agent_refresh_mock_server() -> Generator[str]:
     yield from start_mock_server(0.8)
 
 
 @pytest.fixture(scope="module")
-def fe_reopen_mock_server() -> Generator[str]:
+def agent_reopen_mock_server() -> Generator[str]:
     yield from start_mock_server(5.0)
 
 
 @pytest.fixture(scope="module")
-def fe_approval_mock_server() -> Generator[str]:
-    yield from start_mock_server(0.0, "tests.run_approval_fe")
+def agent_approval_mock_server() -> Generator[str]:
+    yield from start_mock_server(0.0, "tests.run_approval_agent")
 
 
 @pytest.fixture(scope="module")
-def fe_steering_mock_server() -> Generator[str]:
-    yield from start_mock_server(0.0, "tests.run_steering_fe")
+def agent_steering_mock_server() -> Generator[str]:
+    yield from start_mock_server(0.0, "tests.run_steering_agent")
 
 
 @pytest.fixture(scope="module")
-def fe_nested_steering_mock_server() -> Generator[str]:
+def agent_nested_steering_mock_server() -> Generator[str]:
     yield from start_mock_server(
-        0.0, "tests.run_steering_fe", steering_first_response="nested_skill"
+        0.0, "tests.run_steering_agent", steering_first_response="nested_skill"
     )
 
 
 async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
-    fe_steering_mock_server: str,
+    agent_steering_mock_server: str,
 ) -> None:
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
@@ -63,7 +63,7 @@ async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
         )
         try:
             page = await browser.new_page(viewport={"width": 1360, "height": 860})
-            await page.goto(fe_steering_mock_server, wait_until="networkidle")
+            await page.goto(agent_steering_mock_server, wait_until="networkidle")
             await page.get_by_role(
                 "button", name="New project chat", exact=True
             ).first.click()
@@ -73,7 +73,7 @@ async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
             await send_command(page, "Start steering test")
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
             await wait_for_mock_requests(
-                page, f"{fe_steering_mock_server}/test/steering-stats", 1
+                page, f"{agent_steering_mock_server}/test/steering-stats", 1
             )
             await send_command(page, "Use the other file")
             first_row = page.locator(".exmekh-queue-item").filter(
@@ -96,7 +96,9 @@ async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
             )
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
             stats = await (
-                await page.request.get(f"{fe_steering_mock_server}/test/steering-stats")
+                await page.request.get(
+                    f"{agent_steering_mock_server}/test/steering-stats"
+                )
             ).json()
             assert len(stats["requests"]) == 1
             await expect(page.locator(".steering-tool-marker")).to_have_count(0)
@@ -115,21 +117,25 @@ async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
                     "Also keep the existing API",
                 ]
             )
-            await page.request.post(f"{fe_steering_mock_server}/test/release-inference")
+            await page.request.post(
+                f"{agent_steering_mock_server}/test/release-inference"
+            )
             # ExMekh-Lib confirms insertion before the next inference completes.
             await expect(page.locator(".steering-tool-marker")).to_have_count(2)
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
             await page.reload(wait_until="networkidle")
             await expect(page.locator(".steering-tool-marker")).to_have_count(2)
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
-            await page.request.post(f"{fe_steering_mock_server}/test/release-reply")
+            await page.request.post(f"{agent_steering_mock_server}/test/release-reply")
             await wait_turn_completion(page)
             await expect(page.locator(".msg-assistant")).to_contain_text(
                 "Reply following guidance: Also keep the existing API"
             )
             await expect(page.locator(".steering-tool-marker")).to_have_count(2)
             stats = await (
-                await page.request.get(f"{fe_steering_mock_server}/test/steering-stats")
+                await page.request.get(
+                    f"{agent_steering_mock_server}/test/steering-stats"
+                )
             ).json()
             request = stats["requests"][1]
             guidance_index = next(
@@ -152,14 +158,18 @@ async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
             await expect(page.locator(".msg-user-steering")).to_have_count(2)
             await expect(page.locator(".steering-tool-marker")).to_have_count(2)
             stats = await (
-                await page.request.get(f"{fe_steering_mock_server}/test/steering-stats")
+                await page.request.get(
+                    f"{agent_steering_mock_server}/test/steering-stats"
+                )
             ).json()
             # ExMekh-Lib may retrieve asynchronous bash output before ending the first run.
             completed_request_count = len(stats["requests"])
             await send_command(page, "Continue")
             await wait_turn_completion(page)
             stats = await (
-                await page.request.get(f"{fe_steering_mock_server}/test/steering-stats")
+                await page.request.get(
+                    f"{agent_steering_mock_server}/test/steering-stats"
+                )
             ).json()
             assert len(stats["requests"]) == completed_request_count + 1
             assert len(stats["session"]["messages"][1]["steering_insertions"]) == 2
@@ -181,9 +191,9 @@ async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
 
 
 async def test_graph_keeps_steering_inside_nested_skill_after_reload(
-    fe_nested_steering_mock_server: str,
+    agent_nested_steering_mock_server: str,
 ) -> None:
-    server = fe_nested_steering_mock_server
+    server = agent_nested_steering_mock_server
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             executable_path=get_edge_executable(), headless=True
@@ -251,14 +261,14 @@ async def test_graph_keeps_steering_inside_nested_skill_after_reload(
 
 
 @pytest.mark.asyncio
-async def test_new_chat_reuses_existing_empty_chat(fe_mock_server: str) -> None:
+async def test_new_chat_reuses_existing_empty_chat(agent_mock_server: str) -> None:
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             executable_path=get_edge_executable(), headless=True
         )
         try:
             page = await browser.new_page(viewport={"width": 1360, "height": 860})
-            await page.goto(fe_mock_server, wait_until="networkidle")
+            await page.goto(agent_mock_server, wait_until="networkidle")
             new_chat = page.get_by_role(
                 "button", name="New project chat", exact=True
             ).first
@@ -307,7 +317,7 @@ async def test_new_chat_reuses_existing_empty_chat(fe_mock_server: str) -> None:
 
 
 async def test_stop_while_awaiting_approval_stops_inference_and_persists_in_chat(
-    fe_approval_mock_server: str,
+    agent_approval_mock_server: str,
 ) -> None:
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
@@ -315,7 +325,7 @@ async def test_stop_while_awaiting_approval_stops_inference_and_persists_in_chat
         )
         try:
             page = await browser.new_page(viewport={"width": 1360, "height": 860})
-            await page.goto(fe_approval_mock_server, wait_until="networkidle")
+            await page.goto(agent_approval_mock_server, wait_until="networkidle")
             await page.get_by_role(
                 "button", name="New project chat", exact=True
             ).first.click()
@@ -332,7 +342,7 @@ async def test_stop_while_awaiting_approval_stops_inference_and_persists_in_chat
             ).to_be_visible()
             await wait_turn_completion(page)
             stats = await page.request.get(
-                f"{fe_approval_mock_server}/test/approval-stats"
+                f"{agent_approval_mock_server}/test/approval-stats"
             )
             assert (await stats.json())["requests"] == 1
 
@@ -344,7 +354,7 @@ async def test_stop_while_awaiting_approval_stops_inference_and_persists_in_chat
                 page.get_by_text("Reply after declining the command", exact=True)
             ).to_be_visible()
             stats = await page.request.get(
-                f"{fe_approval_mock_server}/test/approval-stats"
+                f"{agent_approval_mock_server}/test/approval-stats"
             )
             assert (await stats.json())["requests"] == 2
         finally:
@@ -353,7 +363,7 @@ async def test_stop_while_awaiting_approval_stops_inference_and_persists_in_chat
 
 @pytest.mark.asyncio
 async def test_file_drop_stages_text_and_binary_files_in_the_current_chat(
-    fe_mock_server: str,
+    agent_mock_server: str,
 ) -> None:
     staged_paths: list[Path] = []
     async with async_playwright() as playwright:
@@ -362,7 +372,7 @@ async def test_file_drop_stages_text_and_binary_files_in_the_current_chat(
         )
         page = await browser.new_page(viewport={"width": 1360, "height": 860})
         try:
-            await page.goto(fe_mock_server, wait_until="networkidle")
+            await page.goto(agent_mock_server, wait_until="networkidle")
             await page.get_by_role(
                 "button", name="New project chat", exact=True
             ).first.click()
@@ -423,7 +433,7 @@ async def test_file_drop_stages_text_and_binary_files_in_the_current_chat(
 
 @pytest.mark.asyncio
 async def test_reselecting_active_chat_keeps_live_output(
-    fe_slow_mock_server: str,
+    agent_slow_mock_server: str,
 ) -> None:
     """A sidebar click must not detach the assistant row during generation."""
     async with async_playwright() as playwright:
@@ -431,7 +441,7 @@ async def test_reselecting_active_chat_keeps_live_output(
             executable_path=get_edge_executable(), headless=True
         )
         page = await browser.new_page(viewport={"width": 1360, "height": 860})
-        await page.goto(fe_slow_mock_server, wait_until="networkidle")
+        await page.goto(agent_slow_mock_server, wait_until="networkidle")
         await page.get_by_role(
             "button", name="New project chat", exact=True
         ).first.click()
@@ -469,14 +479,16 @@ async def test_reselecting_active_chat_keeps_live_output(
 
 
 @pytest.mark.asyncio
-async def test_refresh_restores_active_generation(fe_refresh_mock_server: str) -> None:
+async def test_refresh_restores_active_generation(
+    agent_refresh_mock_server: str,
+) -> None:
     """A refreshed page must reconnect to the running turn and its final answer."""
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             executable_path=get_edge_executable(), headless=True
         )
         page = await browser.new_page(viewport={"width": 1360, "height": 860})
-        await page.goto(fe_refresh_mock_server, wait_until="networkidle")
+        await page.goto(agent_refresh_mock_server, wait_until="networkidle")
         await page.get_by_role(
             "button", name="New project chat", exact=True
         ).first.click()
@@ -505,14 +517,14 @@ async def test_refresh_restores_active_generation(fe_refresh_mock_server: str) -
 
 @pytest.mark.asyncio
 async def test_reopening_tab_restores_active_generation(
-    fe_reopen_mock_server: str,
+    agent_reopen_mock_server: str,
 ) -> None:
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
             executable_path=get_edge_executable(), headless=True
         )
         page = await browser.new_page(viewport={"width": 1360, "height": 860})
-        await page.goto(fe_reopen_mock_server, wait_until="networkidle")
+        await page.goto(agent_reopen_mock_server, wait_until="networkidle")
         await page.get_by_role(
             "button", name="New project chat", exact=True
         ).first.click()
@@ -525,7 +537,7 @@ async def test_reopening_tab_restores_active_generation(
 
         await page.close()
         page = await browser.new_page(viewport={"width": 1360, "height": 860})
-        await page.goto(fe_reopen_mock_server, wait_until="domcontentloaded")
+        await page.goto(agent_reopen_mock_server, wait_until="domcontentloaded")
         await expect(page.locator(".input-linear-progress:visible")).to_have_count(1)
         await expect(page.locator(".chat-message-streaming:visible")).to_have_count(1)
         await wait_turn_completion(page, timeout=40000)
@@ -536,16 +548,16 @@ async def test_reopening_tab_restores_active_generation(
 
 
 @pytest.mark.asyncio
-async def test_ui_e2e_consecutive_commands_pipeline(fe_mock_server: str) -> None:
+async def test_ui_e2e_consecutive_commands_pipeline(agent_mock_server: str) -> None:
     """E2E Test verifying a full 3-step consecutive command pipeline in the UI:
 
     1. Step 1 (Diagnostic): Input command 1 -> thinking + tool mock-tool + SYS_DIAG_OK response.
     2. Step 2 (Nested Skills): Input command 2 -> hierarchical skill container + nested-sub-tool.
     3. Step 3 (Synthesis Report): Input command 3 -> compacted skill + consolidated markdown report.
-    4. Captures screenshot to FE/screenshots/05_pipeline_consecutive_commands_e2e.png.
+    4. Captures screenshot to agent/screenshots/05_pipeline_consecutive_commands_e2e.png.
     """
-    fe_dir = Path(__file__).resolve().parents[1]
-    screenshots_dir = fe_dir / "screenshots"
+    agent_dir = Path(__file__).resolve().parents[1]
+    screenshots_dir = agent_dir / "screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
     edge_bin = get_edge_executable()
 
@@ -557,7 +569,7 @@ async def test_ui_e2e_consecutive_commands_pipeline(fe_mock_server: str) -> None
         context = await browser.new_context(viewport={"width": 1360, "height": 920})
         page = await context.new_page()
 
-        await page.goto(fe_mock_server, wait_until="networkidle")
+        await page.goto(agent_mock_server, wait_until="networkidle")
         await page.wait_for_selector(".lm-sidebar", timeout=15000)
 
         # Start a fresh conversation inside the test project.
@@ -649,7 +661,7 @@ async def test_ui_e2e_consecutive_commands_pipeline(fe_mock_server: str) -> None
 
 @pytest.mark.asyncio
 async def test_ui_e2e_pipeline_session_switch_and_history_persistence(
-    fe_mock_server: str,
+    agent_mock_server: str,
 ) -> None:
     """E2E Test verifying multi-session switching with pipeline conversation preserved."""
     edge_bin = get_edge_executable()
@@ -662,7 +674,7 @@ async def test_ui_e2e_pipeline_session_switch_and_history_persistence(
         context = await browser.new_context(viewport={"width": 1360, "height": 860})
         page = await context.new_page()
 
-        await page.goto(fe_mock_server, wait_until="networkidle")
+        await page.goto(agent_mock_server, wait_until="networkidle")
         await page.wait_for_selector(".lm-sidebar", timeout=15000)
 
         # Create new chat session A
@@ -685,7 +697,7 @@ async def test_ui_e2e_pipeline_session_switch_and_history_persistence(
 
         # In session B, chat view should be reset to welcome hero
         assert await page.locator(".msg-user").count() == 0
-        assert await page.locator("text=ExMekh-Lib Studio").first.is_visible()
+        assert await page.locator("text=ExMekh Agent").first.is_visible()
 
         # Switch back to session A via sidebar
         session_a_item = page.locator(
@@ -706,7 +718,7 @@ async def test_ui_e2e_pipeline_session_switch_and_history_persistence(
 
 @pytest.mark.asyncio
 async def test_ui_e2e_pipeline_stop_generation_control_flow(
-    fe_mock_server: str,
+    agent_mock_server: str,
 ) -> None:
     """E2E Test verifying interactive control flow: user clicking Stop button during generation."""
     edge_bin = get_edge_executable()
@@ -719,7 +731,7 @@ async def test_ui_e2e_pipeline_stop_generation_control_flow(
         context = await browser.new_context(viewport={"width": 1360, "height": 860})
         page = await context.new_page()
 
-        await page.goto(fe_mock_server, wait_until="networkidle")
+        await page.goto(agent_mock_server, wait_until="networkidle")
         await page.wait_for_selector(".lm-sidebar", timeout=15000)
 
         # 1. Start a fresh chat session
@@ -757,7 +769,7 @@ async def test_ui_e2e_pipeline_stop_generation_control_flow(
 @pytest.mark.asyncio
 @pytest.mark.serial(reason="Copies code to the shared system clipboard")
 async def test_ui_e2e_fenced_code_block_copy_button(
-    fe_mock_server: str,
+    agent_mock_server: str,
 ) -> None:
     """E2E Test verifying that fenced code and special text sections render a dedicated copy button that copies only that section."""
     edge_bin = get_edge_executable()
@@ -770,7 +782,7 @@ async def test_ui_e2e_fenced_code_block_copy_button(
         context = await browser.new_context(viewport={"width": 1360, "height": 860})
         page = await context.new_page()
 
-        await page.goto(fe_mock_server, wait_until="networkidle")
+        await page.goto(agent_mock_server, wait_until="networkidle")
         await page.wait_for_selector(".lm-sidebar", timeout=15000)
 
         await page.get_by_role(

@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from fe.exmekh_bridge.models import ChatMessage, ChatSession, ProjectSettings
-from fe.state.session_manager import SessionManager
+from exmekh_agent.exmekh_bridge.models import ChatMessage, ChatSession, ProjectSettings
+from exmekh_agent.state.session_manager import SessionManager
 
 
 def test_execution_settings_are_independent_and_shared_updates_preserve_chat_order(

@@ -1,12 +1,17 @@
 from pathlib import Path
 
-from fe.config import config
-from fe.exmekh_bridge.models import ChatMessage, ChatSession, ReasoningBlock, ToolEvent
-from fe.state.session_manager import SessionManager
-from fe.ui.chat_view import ChatViewComponent
-from fe.ui.header import HeaderComponent
-from fe.ui.input_bar import InputBarComponent
-from fe.ui.settings_drawer import SettingsDrawerComponent
+from exmekh_agent.config import config
+from exmekh_agent.exmekh_bridge.models import (
+    ChatMessage,
+    ChatSession,
+    ReasoningBlock,
+    ToolEvent,
+)
+from exmekh_agent.state.session_manager import SessionManager
+from exmekh_agent.ui.chat_view import ChatViewComponent
+from exmekh_agent.ui.header import HeaderComponent
+from exmekh_agent.ui.input_bar import InputBarComponent
+from exmekh_agent.ui.settings_drawer import SettingsDrawerComponent
 
 
 def test_config_defaults() -> None:
@@ -76,7 +81,7 @@ def test_session_manager(tmp_path: Path) -> None:
 
 
 def test_no_euro_or_neurology_icon() -> None:
-    ui_dir = Path(__file__).resolve().parents[1] / "src" / "fe" / "ui"
+    ui_dir = Path(__file__).resolve().parents[1] / "src" / "exmekh_agent" / "ui"
     for py_file in ui_dir.glob("*.py"):
         content = py_file.read_text(encoding="utf-8")
         assert "neurology" not in content, (

@@ -18,7 +18,7 @@ from tests.image_samples import pdf_bytes, png_bytes
 
 @pytest.fixture(scope="module")
 def edit_server():
-    yield from start_mock_server(0, "tests.run_message_edit_fe")
+    yield from start_mock_server(0, "tests.run_message_edit_agent")
 
 
 async def state(url: str) -> dict:

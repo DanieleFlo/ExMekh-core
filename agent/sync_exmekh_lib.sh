@@ -13,4 +13,4 @@ if ! command -v "$UV_BIN" >/dev/null 2>&1; then
 fi
 cd "$SCRIPT_DIR"
 export UV_BIN
-exec "$UV_BIN" run --no-project --python "$(<.python-version)" "$SCRIPT_DIR/src/fe/sync.py" "$@"
+exec "$UV_BIN" run --no-project --python "$(<.python-version)" "$SCRIPT_DIR/src/exmekh_agent/sync.py" "$@"

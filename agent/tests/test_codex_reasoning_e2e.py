@@ -7,19 +7,19 @@ from pathlib import Path
 import pytest
 from playwright.async_api import async_playwright
 
-from fe.exmekh_bridge.models import (
+from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ReasoningBlock,
     SkillNode,
     ToolEvent,
 )
-from fe.ui.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat_view import ChatViewComponent
 from tests.browser_support import BrowserTestServer, get_edge_executable
 
 
 @pytest.fixture(scope="module")
-def fe_codex_server(tmp_path_factory: pytest.TempPathFactory):
+def agent_codex_server(tmp_path_factory: pytest.TempPathFactory):
     """Starts NiceGUI server with a multi-path, multi-generation reasoning session."""
     data_dir = tmp_path_factory.mktemp("codex-data")
     chats_dir = data_dir / "chats"
@@ -91,16 +91,16 @@ def fe_codex_server(tmp_path_factory: pytest.TempPathFactory):
 
 
 @pytest.mark.asyncio
-async def test_codex_multipath_reasoning_e2e(fe_codex_server: str) -> None:
+async def test_codex_multipath_reasoning_e2e(agent_codex_server: str) -> None:
     """E2E Test verifying:
 
     1. Reasoning text is partitioned into separate blocks by path and generation (NOT merged into one).
     2. Paths and generation indicators are clearly labeled on each block.
     3. UI reflects clean Codex aesthetic (subtle dark borders, no bright purple gradients or neon glow).
-    4. Captures screenshot to FE/screenshots/04_codex_multipath_reasoning.png.
+    4. Captures screenshot to agent/screenshots/04_codex_multipath_reasoning.png.
     """
-    fe_dir = Path(__file__).resolve().parents[1]
-    screenshots_dir = fe_dir / "screenshots"
+    agent_dir = Path(__file__).resolve().parents[1]
+    screenshots_dir = agent_dir / "screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
 
     edge_bin = get_edge_executable()
@@ -113,7 +113,7 @@ async def test_codex_multipath_reasoning_e2e(fe_codex_server: str) -> None:
         context = await browser.new_context(viewport={"width": 1360, "height": 880})
         page = await context.new_page()
 
-        await page.goto(fe_codex_server, wait_until="networkidle")
+        await page.goto(agent_codex_server, wait_until="networkidle")
 
         # Select the session if not already opened
         session_locator = page.locator("text=Codex Multi-Path Reasoning").first

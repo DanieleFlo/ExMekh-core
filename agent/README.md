@@ -1,4 +1,4 @@
-# `fe` — Local AI Studio Frontend for ExMekh-Lib
+# ExMekh Agent — Local AI Studio Frontend for ExMekh-Lib
 
 A Python frontend inspired by modern local LLM interfaces such as **LM Studio**, **Unsloth**, and **BionicGPT**. It is designed to integrate directly with the hierarchical agentic framework `exmekh_lib` and its distributed wheel package.
 
@@ -61,7 +61,7 @@ uv run --frozen --env-file .env exmekh-lib
 ```
 
 The Python namespace is `exmekh_lib`; the distribution and console command are
-`exmekh-lib`. The frontend integration module is `fe.exmekh_bridge`. The CLI
+`exmekh-lib`. The frontend integration module is `exmekh_agent.exmekh_bridge`. The CLI
 loads `BASE_URL` and `API_KEY` from `.env` with the command above. Set `QS_MODEL`
 and `QS_API` to override its model and API; these remain the environment variable
 names exposed by the renamed library.
@@ -81,7 +81,14 @@ From the repository root in WSL:
 ```
 
 The launcher installs the locked dependencies when needed and starts the frontend.
-From `agent/`, the equivalent command is `./run.sh`.
+From `agent/`, the equivalent command is `uv run --frozen exmekh-agent`.
+The distribution and UI command are `exmekh-agent`; Python imports use
+`exmekh_agent`. The framework CLI remains `exmekh-lib`.
+
+Copy `.env.example` to `.env` to configure the application. Its web settings
+are `EXMEKH_AGENT_HOST`, `EXMEKH_AGENT_PORT`, and `EXMEKH_AGENT_TITLE`. Existing
+`.env` files using `FE_HOST`, `FE_PORT`, and `FE_TITLE` must use those new names.
+Provider settings such as `BASE_URL`, `API_KEY`, and `DEFAULT_MODEL` stay the same.
 
 The application will open at:
 [http://127.0.0.1:8000](http://127.0.0.1:8000)
@@ -111,7 +118,7 @@ pytest invocations can run concurrently. Server logs are retained in `.test-tmp`
 
 The test suite automatically enforces branch coverage and requires 100% on the
 Python configuration, state, and ExMekh-Lib integration code. The calculation excludes the
-`fe.main` and `fe.sync` entrypoints and the UI modules listed in `pyproject.toml`, which are verified by
+`exmekh_agent.main` and `exmekh_agent.sync` entrypoints and the UI modules listed in `pyproject.toml`, which are verified by
 functional and Playwright tests in the same suite. To run only a subset of tests,
 use `--no-cov`; the threshold applies to the full suite.
 
@@ -142,7 +149,7 @@ With the provider configured in `.env` available, run all tests with a real mode
 uv run pytest --no-cov --run-live -m "live and not mock" -s -v
 ```
 
-`--run-live` enables tests that send requests to the model. Without this option (or `EXMEKH_LIB_RUN_LIVE_TESTS=1`), the standard suite skips them; mock tests remain runnable.
+`--run-live` enables tests that send requests to the model. Without this option (or `EXMEKH_AGENT_RUN_LIVE_TESTS=1`), the standard suite skips them; mock tests remain runnable.
 Each adversarial case of `exit_agent` has a 90-second timeout. A timeout terminates the process and marks the case as skipped because recovery was not verified. Cases where the model does not produce the requested malformed payload are also skipped. Deterministic argument tests independently check omitted `items` and invalid item types.
 
 ---
@@ -166,7 +173,7 @@ agent/
 │   ├── chats/           # JSON storage for conversations
 │   └── projects/        # Shared project settings
 └── src/
-    └── fe/
+    └── exmekh_agent/
         ├── __init__.py
         ├── main.py       # NiceGUI entry point
         ├── config.py     # Configuration and capabilities paths

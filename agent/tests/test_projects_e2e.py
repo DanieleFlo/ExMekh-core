@@ -16,7 +16,7 @@ from tests.browser_support import (
 
 @pytest.fixture(scope="module")
 def projects_server():
-    yield from start_mock_server(0, "tests.run_projects_fe")
+    yield from start_mock_server(0, "tests.run_projects_agent")
 
 
 async def read_state(url: str) -> dict:
