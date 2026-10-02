@@ -16,7 +16,9 @@ from fe.state.session_manager import session_manager
 from tests.steering_probe import SteeringProbeProvider
 
 provider = SteeringProbeProvider(
-    first_response=os.getenv("FE_STEERING_FIRST_RESPONSE", "tool"), block_reply=True
+    first_response=os.getenv("FE_STEERING_FIRST_RESPONSE", "tool"),
+    block_reply=True,
+    recover_steering=os.getenv("FE_STEERING_RECOVER_OUTPUT") == "1",
 )
 agent_runner.LocalProvider = lambda *args, **kwargs: provider
 config.agent_mode = "deep_agent"

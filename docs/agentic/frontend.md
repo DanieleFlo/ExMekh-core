@@ -53,6 +53,13 @@ esecuzione. FE conserva questa distinzione nella conversazione principale,
 nei sotto-agenti e nella UI. Un risultato applicativo come `{"ok": false}`
 resta un risultato completato: non viene interpretato come errore del runtime.
 
+Il converter converte messaggi e snapshot; `ExecutionHistoryRestorer` ricostruisce
+history e cache usando le API pubbliche QS. Tool, skill e steering condividono
+il parser degli header `RecordedToolOutput`. Le riletture conservano l'identità,
+gli argomenti e i riferimenti dell'output originale, senza sostituirli con i
+metadati della chiamata di lettura. Lo steering nelle skill conserva testo,
+immagini e ID canonico anche dopo la compattazione e nei turni successivi.
+
 ## Dipendenza QS
 
 `agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`.

@@ -280,6 +280,13 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   Il converter usa l'API pubblica dei metadati Message, senza esporre snapshot
   al provider; l'adapter dei tool conserva lo stato di errore emesso da QS per
   root, conversazioni figlie e UI.
+- `agent/src/fe/qs_bridge/execution_restore.py` — ricostruisce history e cache
+  tramite le API pubbliche QS, mantenendo identità e metadati degli output
+  riletti e lo scope dei messaggi di steering dopo la compattazione.
+- `agent/src/fe/qs_bridge/recorded_output.py` — parser unico degli header XML
+  persistiti; conserva corpo e riferimenti degli output, con fallback legacy.
+- `agent/src/fe/qs_bridge/steering_history.py` — seleziona gli ID di steering
+  del livello corrente, escludendo quelli delle skill discendenti.
 - `agent/src/fe/qs_bridge/image_input.py` — decodifica immagini, orientamento,
   rendering PDF locale (prime 10 pagine), parti native QS e serializzazione
   PNG della cronologia; i payload base64 non vengono contati come testo.

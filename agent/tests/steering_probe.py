@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from threading import Event
 from typing import Any
+from xml.etree import ElementTree as ET
 
 from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
 from qs.core.models.provider_request import ProviderRequest
@@ -12,6 +13,8 @@ from qs.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
+from qs.core.models.tool_message import ToolMessage
+from qs.core.models.user_message import UserMessage
 
 from fe.qs_bridge.converter import qs_message_to_raw_dict
 from tests.mock_client import MockProvider
@@ -24,11 +27,14 @@ class SteeringProbeProvider(MockProvider):
         first_response: str = "tool",
         block_second: bool = False,
         block_reply: bool = False,
+        recover_steering: bool = False,
     ) -> None:
         super().__init__()
         self.first_response = first_response
         self.block_second = block_second
         self.block_reply = block_reply
+        self.recover_steering = recover_steering
+        self._initial_turn_complete = False
         self.started = Event()
         self.release = Event()
         self.second_started = Event()
@@ -55,6 +61,8 @@ class SteeringProbeProvider(MockProvider):
         messages = [qs_message_to_raw_dict(item) for item in request.get_messages()]
         self.requests.append(messages)
         request_number = len(self.requests)
+        if self.recover_steering and self._initial_turn_complete:
+            return self._recover_steering(request, request_number)
         if request_number == 1:
             self.started.set()
             if not self.release.wait(timeout=30):
@@ -94,7 +102,50 @@ class SteeringProbeProvider(MockProvider):
         prompt = next(
             item["content"] for item in reversed(messages) if item["role"] == "user"
         )
+        self._initial_turn_complete = True
         reply = f"Reply following guidance: {prompt}"
+        request.execute_on_stream_event(
+            ProviderStreamEvent(ProviderStreamEventType.RESPONSE, reply)
+        )
+        return ProviderResponse(AssistantMessage(reply))
+
+    def _recover_steering(
+        self, request: ProviderRequest, request_number: int
+    ) -> ProviderResponse:
+        messages = request.get_messages()
+        last = messages[-1]
+        if isinstance(last, UserMessage) and not last.has_attachments():
+            return self._tool_response(
+                f"inspect-history-{request_number}",
+                "get_execution_history",
+                {},
+            )
+        result = next(
+            item for item in reversed(messages) if isinstance(item, ToolMessage)
+        )
+        if result.get_name() == "get_execution_history":
+            history = ET.fromstring(result.get_message())
+            entries = [
+                item
+                for item in history.findall("call")
+                if item.findtext("name") == "steering_message"
+            ]
+            assert len(entries) == 1, (
+                "Saved steering missing or duplicated in FE history"
+            )
+            return self._tool_response(
+                f"recover-steering-{request_number}",
+                "read_tool_output",
+                {"output_id": entries[0].findtext("saved-output-id")},
+            )
+        assert result.get_name() == "read_tool_output"
+        attachments = result.get_attachments()
+        images = (
+            sum(not isinstance(part, str) for part in attachments.iter_content_parts())
+            if attachments is not None
+            else 0
+        )
+        reply = f"Recovered steering with {images} images: {result.get_message()}"
         request.execute_on_stream_event(
             ProviderStreamEvent(ProviderStreamEventType.RESPONSE, reply)
         )

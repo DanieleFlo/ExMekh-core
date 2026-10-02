@@ -128,7 +128,10 @@ def test_reconstruction_records_child_skill_and_inner_tool_output() -> None:
         "read",
     ]
     assert cache.store.call_count == 2
-    assert history.attach_output.call_args.args[0] == "open"
+    assert history.record.return_value.attach_output.call_args.args == (
+        "skill-output",
+        cache.session_dir,
+    )
 
 
 def test_reconstruction_matches_child_by_name_and_handles_missing_output() -> None:

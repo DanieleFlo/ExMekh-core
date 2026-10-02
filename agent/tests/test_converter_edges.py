@@ -7,7 +7,6 @@ from qs.core.models.tool_message import ToolMessage
 from qs.core.models.user_message import UserMessage
 
 from fe.qs_bridge.converter import (
-    _parse_xml_header_output,
     chat_message_to_qs_messages,
     parse_tool_calls,
     qs_message_to_raw_dict,
@@ -16,6 +15,7 @@ from fe.qs_bridge.converter import (
     raw_dict_to_qs_message,
 )
 from fe.qs_bridge.models import ChatMessage
+from fe.qs_bridge.recorded_output import RecordedToolOutput
 
 
 @pytest.mark.parametrize("invalid", ["", "null", "{broken", 12, [], ["bad"]])
@@ -144,14 +144,14 @@ def test_session_without_metadata_uses_requested_defaults() -> None:
 )
 def test_invalid_xml_tool_output_is_ignored(value: str) -> None:
 
-    assert _parse_xml_header_output(value) is None
+    assert RecordedToolOutput.parse(value) is None
 
 
 def test_xml_tool_output_parses_metadata_and_body() -> None:
 
-    assert _parse_xml_header_output(
+    assert RecordedToolOutput.parse(
         "<header><name>search</name><type>Tool</type><id>stored</id></header>\nresult"
-    ) == ("search", "Tool", "stored", "result")
+    ) == RecordedToolOutput("search", "Tool", "stored", "result", None)
 
 
 def test_raw_metadata_snapshots_are_owned_and_never_sent_to_provider() -> None:

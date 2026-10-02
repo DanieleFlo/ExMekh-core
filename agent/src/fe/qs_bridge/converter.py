@@ -4,11 +4,9 @@ import logging
 import time
 from collections.abc import Sequence
 from typing import Any
-from xml.etree import ElementTree as ET
 
 from qs.core.agents.node import Node
 from qs.core.cache.node_cache import NodeCache
-from qs.core.cache.tool_call_record import ToolCallRecord
 from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
 from qs.core.models.system_message import SystemMessage
 from qs.core.models.tool_message import ToolMessage
@@ -16,6 +14,7 @@ from qs.core.models.user_message import UserMessage
 from qs.core.tool_calls.execution_history import ExecutionHistory
 from qs.interfaces.message import Message
 
+from fe.qs_bridge.execution_restore import ExecutionHistoryRestorer
 from fe.qs_bridge.image_input import (
     deserialize_user_content,
     serialize_user_content,
@@ -28,8 +27,7 @@ from fe.qs_bridge.models import (
     SkillNode,
     ToolEvent,
 )
-from fe.qs_bridge.skill_history import inner_skill_history_messages, take_skill_for_call
-from fe.qs_bridge.tool_calls import parse_tool_calls, tool_result_for_call
+from fe.qs_bridge.tool_calls import parse_tool_calls
 
 logger = logging.getLogger(__name__)
 FE_METADATA_KEYS = (
@@ -507,148 +505,13 @@ def qs_messages_to_session(
     return session
 
 
-def _parse_xml_header_output(text: str) -> tuple[str, str, str, str] | None:
-    """Parse an XmlHeader (<header>...</header>\\nbody) into (name, source_type, id, body)."""
-    if not isinstance(text, str) or not text.lstrip().startswith("<header>"):
-        return None
-    end_tag = "</header>"
-    end_idx = text.find(end_tag)
-    if end_idx < 0:
-        return None
-    header_xml = text[: end_idx + len(end_tag)]
-    body = text[end_idx + len(end_tag) :].lstrip("\r\n")
-    try:
-        root = ET.fromstring(header_xml)
-        name = (root.findtext("name") or "").strip()
-        source_type = (root.findtext("type") or "Tool").strip()
-        output_id = (root.findtext("id") or "").strip()
-        if not output_id:
-            return None
-        return name, source_type, output_id, body
-    except Exception:
-        return None
-
-
 def reconstruct_execution_history_and_cache(
     messages: Sequence[ChatMessage],
     execution_history: ExecutionHistory,
     node_cache: NodeCache | None = None,
 ) -> None:
-    """Reconstruct ExecutionHistory entries and NodeCache ToolCallRecords from prior ChatMessages.
-
-    Walks each assistant turn's new raw_history segment and its skill_history_tree so that
-    get_execution_history, search_tool_outputs, and read_tool_output see all
-    tools and skills executed in prior turns (including nested skills and exit_agent calls).
-    """
-
-    def _walk_scope(
-        raw_slice: list[dict[str, Any]],
-        children_nodes: list[dict[str, Any]],
-        skill_path: str,
-    ) -> None:
-        children_queue = list(children_nodes)
-        i = 0
-        n = len(raw_slice)
-        while i < n:
-            item = raw_slice[i]
-            if item.get("role") != "assistant":
-                i += 1
-                continue
-
-            tcs = parse_tool_calls(item.get("tool_calls")) or []
-            following_tools: list[dict[str, Any]] = []
-            j = i + 1
-            while j < n and raw_slice[j].get("role") == "tool":
-                following_tools.append(raw_slice[j])
-                j += 1
-
-            for idx, tc in enumerate(tcs):
-                tc_name = tc.get_name()
-                tc_id = tc.get_id()
-                tc_args = tc.get_arguments()
-                entry = execution_history.record(tc_name, tc_id)
-                matched_child = take_skill_for_call(children_queue, tc)
-                tool_result = tool_result_for_call(following_tools, tc_id, idx)
-
-                if matched_child is not None:
-                    child_raw = matched_child.get("history") or []
-                    inner_slice = inner_skill_history_messages(child_raw)
-                    child_children = matched_child.get("children") or []
-                    child_path = (
-                        f"/{tc_name}"
-                        if skill_path == "/"
-                        else f"{skill_path.rstrip('/')}/{tc_name}"
-                    )
-                    _walk_scope(inner_slice, child_children, child_path)
-
-                    child_output = str(
-                        matched_child.get("output")
-                        or (
-                            tool_result.get("content", "")
-                            if tool_result is not None
-                            else ""
-                        )
-                    )
-                    parsed = _parse_xml_header_output(child_output)
-                    if parsed is not None and node_cache is not None:
-                        _, _, output_id, body = parsed
-                        record = ToolCallRecord(
-                            name=tc_name,
-                            id=output_id,
-                            tool_call_id=tc_id,
-                            args=tc_args,
-                            result={"text": body},
-                            skill_path=skill_path,
-                            thinking=None,
-                            source="DeepSkill",
-                        )
-                        node_cache.store(record)
-                        execution_history.attach_output(
-                            tc_id, output_id, node_cache.session_dir
-                        )
-                else:
-                    if tool_result is not None:
-                        tm_content = str(tool_result.get("content", ""))
-                        parsed = _parse_xml_header_output(tm_content)
-                        if parsed is not None and node_cache is not None:
-                            _, h_type, output_id, body = parsed
-                            source_lit = (
-                                "DeepSkill" if h_type == "DeepSkill" else "Tool"
-                            )
-                            res_val: Any = (
-                                {"text": body} if source_lit == "DeepSkill" else body
-                            )
-                            record = ToolCallRecord(
-                                name=tc_name,
-                                id=output_id,
-                                tool_call_id=tc_id,
-                                args=tc_args,
-                                result=res_val,
-                                skill_path=skill_path,
-                                thinking=None,
-                                source=source_lit,
-                            )
-                            node_cache.store(record)
-                            entry.attach_output(output_id, node_cache.session_dir)
-
-            i = j
-
-    prev_raw: list[dict[str, Any]] = []
-    for msg in messages:
-        if msg.role != "assistant":
-            continue
-        if msg.raw_history:
-            raw = msg.raw_history
-            turn_slice = msg.turn_raw_history(previous_history=prev_raw)
-            prev_raw = raw
-            _walk_scope(turn_slice, list(msg.skill_history_tree or []), "/")
-        elif msg.tool_events:
-            seen_call_ids: set[str] = set()
-            for idx, ev in enumerate(msg.tool_events):
-                call_id = ev.tool_call_id or f"call_{msg.id[:8]}_{idx}"
-                if call_id not in seen_call_ids:
-                    execution_history.record(ev.tool_name, call_id)
-                    seen_call_ids.add(call_id)
+    """Restore tool, skill and steering state from persisted frontend turns."""
+    ExecutionHistoryRestorer(execution_history, node_cache).restore(messages)
 
 
 def restore_node_history(

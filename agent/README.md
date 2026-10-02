@@ -10,7 +10,7 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
 - **Real-Time Streaming**:
   - **Collapsible Thinking Block**: visualization of reasoning tokens with an expandable animated view, identical to DeepSeek-R1 / LM Studio.
   - **Tool & Skill Execution Cards**: monitoring of hierarchical tools invoked by `DeepAgent` with depth tracking and skill paths.
-  - **Turn Steering**: send a queued message as guidance to the active DeepAgent run. Accepted guidance and its delivery position remain visible after a page refresh and in saved conversation history.
+  - **Turn Steering**: send a queued message as guidance to the active DeepAgent run. Accepted guidance and its delivery position remain visible after a page refresh and in saved conversation history. Guidance delivered inside a skill retains its canonical output ID in `get_execution_history` and `read_tool_output` across later turns, including its attached images and rendered PDF pages.
 - **Images and PDFs**:
   - Pick, drop, or paste several images in one message, including queued guidance.
   - Click thumbnails in the composer or saved chat for a large preview with a blurred backdrop; close it with the button or Escape.

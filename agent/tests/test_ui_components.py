@@ -693,15 +693,15 @@ def test_chat_view_timers_rendering_and_live_updates(ui_context: Client) -> None
         )
         assert cv.current_live_reasoning_timer_label is not None
         assert cv.current_live_reasoning_block is not None
-        cv.current_live_reasoning_block.timestamp -= 70.0
+        wall_time = 10_000.0
+        cv.current_live_reasoning_block.timestamp = wall_time - 70.0
 
         active_skill = SkillNode(
             name="live-skill",
             path="/live-skill",
             depth=1,
             status="active",
-            start_time=cv.current_live_reasoning_block.timestamp
-            - 7390.0,  # total ~7460s (2h 4m 20s)
+            start_time=wall_time - 7460.0,  # 2h 4m 20s
         )
         cv.handle_live_skill_event(active_skill, "opened")
 
@@ -713,12 +713,15 @@ def test_chat_view_timers_rendering_and_live_updates(ui_context: Client) -> None
             skill_path="/",
             depth=0,
         )
-        running_tool.timestamp -= 59.0
+        running_tool.timestamp = wall_time - 59.0
         cv.add_tool_event(running_tool)
 
         assert cv.stream_started_at is not None
-        cv.stream_started_at -= 70.0
-        cv._update_stream_duration()
+        cv.stream_started_at = 930.0
+        with patch("fe.ui.chat_view.time") as clock:
+            clock.time.return_value = wall_time
+            clock.monotonic.return_value = 1000.0
+            cv._update_stream_duration()
 
         assert cv.stream_duration_label is not None
         assert "1m 10s" in cv.stream_duration_label.text
