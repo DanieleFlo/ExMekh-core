@@ -3653,7 +3653,21 @@ static bool parse_image_url_value(const char **p, char **url) {
     return *url != NULL;
 }
 
-static bool parse_openai_content_object(const char **p, chat_msg *msg) {
+static bool server_is_text_content_type(const char *type) {
+    return type && (!strcmp(type, "text") || !strcmp(type, "input_text") ||
+                    !strcmp(type, "output_text") || !strcmp(type, "summary_text") ||
+                    !strcmp(type, "reasoning_text"));
+}
+
+static void server_unsupported_content_error(char *err, size_t errlen) {
+    if (err && errlen)
+        snprintf(err, errlen,
+                 "Unsupported content type: only text and images are supported. "
+                 "Convert documents or other attachments to text or images before sending.");
+}
+
+static bool parse_openai_content_object(const char **p, chat_msg *msg,
+                                        char *err, size_t errlen) {
     if (**p != '{') return false;
     (*p)++;
     char *type = NULL;
@@ -3694,8 +3708,13 @@ static bool parse_openai_content_object(const char **p, chat_msg *msg) {
         if (!server_image_inputs_push_data_uri(&msg->images, image_url, marker))
             goto bad;
         append_owned_text(&msg->content, marker);
+    } else if (type && !server_is_text_content_type(type)) {
+        server_unsupported_content_error(err, errlen);
+        goto bad;
     } else if (text) {
         append_owned_text(&msg->content, text);
+    } else {
+        goto bad;
     }
     free(type);
     free(text);
@@ -3708,7 +3727,8 @@ bad:
     return false;
 }
 
-static bool parse_openai_content(const char **p, chat_msg *msg) {
+static bool parse_openai_content(const char **p, chat_msg *msg,
+                                 char *err, size_t errlen) {
     json_ws(p);
     if (**p == '"') {
         char *text = NULL;
@@ -3728,8 +3748,9 @@ static bool parse_openai_content(const char **p, chat_msg *msg) {
             append_owned_text(&msg->content, text);
             free(text);
         } else if (**p == '{') {
-            if (!parse_openai_content_object(p, msg)) return false;
-        } else if (!json_skip_value(p)) {
+            if (!parse_openai_content_object(p, msg, err, errlen)) return false;
+        } else {
+            server_unsupported_content_error(err, errlen);
             return false;
         }
         json_ws(p);
@@ -3741,7 +3762,8 @@ static bool parse_openai_content(const char **p, chat_msg *msg) {
     return true;
 }
 
-static bool parse_messages(const char **p, chat_msgs *msgs) {
+static bool parse_messages(const char **p, chat_msgs *msgs,
+                            char *err, size_t errlen) {
     json_ws(p);
     if (**p != '[') return false;
     (*p)++;
@@ -3770,7 +3792,7 @@ static bool parse_messages(const char **p, chat_msgs *msgs) {
                 free(msg.content);
                 msg.content = NULL;
                 server_image_inputs_free(&msg.images);
-                if (!parse_openai_content(p, &msg)) {
+                if (!parse_openai_content(p, &msg, err, errlen)) {
                     free(key);
                     goto fail;
                 }
@@ -6082,7 +6104,7 @@ static bool parse_chat_request(ds4_engine *e, server *s, const char *body, int d
         p++;
         if (!strcmp(key, "messages")) {
             chat_msgs_free(&msgs);
-            if (!parse_messages(&p, &msgs)) {
+            if (!parse_messages(&p, &msgs, err, errlen)) {
                 free(key);
                 goto bad;
             }
@@ -6532,7 +6554,8 @@ bad:
  * level all reject so the client sees a 400 instead of an answer built on
  * silently dropped context. */
 static bool parse_responses_content_array(const char **p, char **out,
-                                          server_image_inputs *images) {
+                                          server_image_inputs *images,
+                                          char *err, size_t errlen) {
     json_ws(p);
     if (**p == '"') return json_string(p, out);
     if (json_lit(p, "null")) {
@@ -6630,12 +6653,7 @@ static bool parse_responses_content_array(const char **p, char **out,
              * image/file/audio types, future schema-drift — is rejected so the
              * client gets a 400 instead of an answer built on context the
              * server discarded silently. */
-            bool is_text_block = type && (
-                !strcmp(type, "input_text") ||
-                !strcmp(type, "output_text") ||
-                !strcmp(type, "text") ||
-                !strcmp(type, "summary_text") ||
-                !strcmp(type, "reasoning_text"));
+            bool is_text_block = server_is_text_content_type(type);
             bool is_image_block = type && !strcmp(type, "input_image");
             if (is_image_block) {
                 char marker[SERVER_IMAGE_MARKER_BYTES];
@@ -6648,6 +6666,8 @@ static bool parse_responses_content_array(const char **p, char **out,
                 }
                 buf_puts(&b, marker);
             } else if (!is_text_block || !text) {
+                if (type && !is_text_block)
+                    server_unsupported_content_error(err, errlen);
                 free(type);
                 free(text);
                 free(image_url);
@@ -6676,19 +6696,21 @@ fail:
     return false;
 }
 
-static bool parse_responses_content_array_replace(const char **p, char **dst) {
+static bool parse_responses_content_array_replace(const char **p, char **dst,
+                                                  char *err, size_t errlen) {
     char *tmp = NULL;
-    if (!parse_responses_content_array(p, &tmp, NULL)) return false;
+    if (!parse_responses_content_array(p, &tmp, NULL, err, errlen)) return false;
     free(*dst);
     *dst = tmp;
     return true;
 }
 
 static bool parse_responses_content_array_multimodal(
-        const char **p, char **dst, server_image_inputs *images) {
+        const char **p, char **dst, server_image_inputs *images,
+        char *err, size_t errlen) {
     char *tmp = NULL;
     server_image_inputs_free(images);
-    if (!parse_responses_content_array(p, &tmp, images)) {
+    if (!parse_responses_content_array(p, &tmp, images, err, errlen)) {
         server_image_inputs_free(images);
         return false;
     }
@@ -6709,7 +6731,8 @@ static bool parse_responses_content_array_multimodal(
  *     calls are the complete historical prompt surface. */
 static bool parse_responses_input(const char **p, chat_msgs *msgs,
                                   buf *loaded_tool_schemas,
-                                  tool_schema_orders *orders) {
+                                  tool_schema_orders *orders,
+                                  char *err, size_t errlen) {
     json_ws(p);
     if (**p != '[') return false;
     (*p)++;
@@ -6758,7 +6781,7 @@ static bool parse_responses_input(const char **p, chat_msgs *msgs,
                 }
             } else if (!strcmp(key, "content")) {
                 if (!parse_responses_content_array_multimodal(
-                        p, &content, &content_images)) {
+                        p, &content, &content_images, err, errlen)) {
                     free(key);
                     goto item_fail;
                 }
@@ -6797,7 +6820,7 @@ static bool parse_responses_input(const char **p, chat_msgs *msgs,
                 server_image_inputs_free(&output_images);
                 json_ws(p);
                 if (**p == '[') {
-                    if (!parse_responses_content_array_multimodal(p, &output, &output_images)) {
+                    if (!parse_responses_content_array_multimodal(p, &output, &output_images, err, errlen)) {
                         free(key);
                         goto item_fail;
                     }
@@ -6822,7 +6845,7 @@ static bool parse_responses_input(const char **p, chat_msgs *msgs,
                     goto item_fail;
                 }
             } else if (!strcmp(key, "summary")) {
-                if (!parse_responses_content_array_replace(p, &summary)) {
+                if (!parse_responses_content_array_replace(p, &summary, err, errlen)) {
                     free(key);
                     goto item_fail;
                 }
@@ -7318,7 +7341,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
                 msg.content = plain;
                 chat_msgs_push(&msgs, msg);
             } else if (!parse_responses_input(&p, &msgs, &loaded_tool_schemas,
-                                              &r->tool_orders)) {
+                                              &r->tool_orders, err, errlen)) {
                 free(key);
                 goto bad;
             }
@@ -24286,7 +24309,7 @@ static void test_responses_input_tool_search_output_loads_tools(void) {
     chat_msgs msgs = {0};
     buf loaded = {0};
     tool_schema_orders orders = {0};
-    TEST_ASSERT(parse_responses_input(&p, &msgs, &loaded, &orders));
+    TEST_ASSERT(parse_responses_input(&p, &msgs, &loaded, &orders, NULL, 0));
     TEST_ASSERT(loaded.ptr && strstr(loaded.ptr, "\"name\":\"mcp__perplexity__perplexity_search\""));
     const tool_schema_order *order =
         tool_schema_orders_find(&orders, "mcp__perplexity__perplexity_search");
@@ -24311,7 +24334,7 @@ static void test_responses_input_tool_search_output_rejects_bad_tools(void) {
     chat_msgs msgs = {0};
     buf loaded = {0};
     tool_schema_orders orders = {0};
-    TEST_ASSERT(!parse_responses_input(&p, &msgs, &loaded, &orders));
+    TEST_ASSERT(!parse_responses_input(&p, &msgs, &loaded, &orders, NULL, 0));
     buf_free(&loaded);
     tool_schema_orders_free(&orders);
     chat_msgs_free(&msgs);
@@ -24334,7 +24357,7 @@ static void test_responses_input_function_call_namespace_round_trips_to_dsml(voi
         "\"arguments\":{\"query\":\"deepseek\"}}]";
     const char *input_p = input_json;
     chat_msgs msgs = {0};
-    TEST_ASSERT(parse_responses_input(&input_p, &msgs, NULL, NULL));
+    TEST_ASSERT(parse_responses_input(&input_p, &msgs, NULL, NULL, NULL, 0));
     TEST_ASSERT(msgs.len == 1);
     TEST_ASSERT(msgs.v[0].calls.len == 1);
     TEST_ASSERT(!strcmp(msgs.v[0].calls.v[0].name,
@@ -28260,7 +28283,7 @@ static void test_responses_input_filters_historical_reasoning(void) {
         "]";
     const char *p = json;
     chat_msgs msgs = {0};
-    TEST_ASSERT(parse_responses_input(&p, &msgs, NULL, NULL));
+    TEST_ASSERT(parse_responses_input(&p, &msgs, NULL, NULL, NULL, 0));
     TEST_ASSERT(msgs.len == 1);
     TEST_ASSERT(msgs.v[0].reasoning == NULL);
     TEST_ASSERT(!strcmp(msgs.v[0].content, "visible answer"));
@@ -28733,7 +28756,7 @@ static void test_request_parsers_reject_malformed_duplicate_owned_fields(void) {
         "\"content\":[{\"type\":\"input_text\",\"text\":\"hello\"}],"
         "\"content\":[{\"type\":\"input_text\",\"text\":\"bad\\q\"}]}]";
     msgs = (chat_msgs){0};
-    TEST_ASSERT(!parse_responses_input(&p, &msgs, NULL, NULL));
+    TEST_ASSERT(!parse_responses_input(&p, &msgs, NULL, NULL, NULL, 0));
     chat_msgs_free(&msgs);
 
     tool_schema_orders orders = {0};
@@ -28877,7 +28900,7 @@ static void test_json_parser_handles_tool_heavy_requests(void) {
 
         const char *mp = messages.ptr;
         chat_msgs msgs = {0};
-        TEST_ASSERT(parse_messages(&mp, &msgs));
+        TEST_ASSERT(parse_messages(&mp, &msgs, NULL, 0));
         json_ws(&mp);
         TEST_ASSERT(*mp == '\0');
         TEST_ASSERT(msgs.len == 98);
@@ -32359,6 +32382,46 @@ static void test_agentic_orphan_checkpoint_cleanup(void) {
 static const char test_inline_png_base64[] =
     "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFUlEQVR4nGP8z8DQwMDAwMAEIkAYABglAYOd/VRoAAAAAElFTkSuQmCC";
 
+static void test_unsupported_content_is_rejected_with_clear_error(void) {
+    const char *types[] = {"file", "input_file", "input_audio", "video", "future_type"};
+    for (size_t i = 0; i < sizeof(types) / sizeof(types[0]); i++) {
+        for (int responses = 0; responses < 2; responses++) {
+            buf json = {0};
+            buf_puts(&json, responses ? "{\"input\":[" : "{\"messages\":[");
+            buf_puts(&json, "{\"role\":\"user\",\"content\":[");
+            buf_puts(&json, responses ?
+                     "{\"type\":\"input_text\",\"text\":\"before\"}," :
+                     "{\"type\":\"text\",\"text\":\"before\"},");
+            buf_printf(&json,
+                       "{\"type\":\"%s\",\"text\":\"must not be accepted\","
+                       "\"file\":{\"filename\":\"attachment.pdf\","
+                       "\"file_data\":\"data:application/pdf;base64,ZGF0YQ==\"}}]}]}",
+                       types[i]);
+            request req;
+            char err[160] = {0};
+            bool ok = responses ?
+                parse_responses_request(NULL, NULL, json.ptr, 16, 256, &req, err, sizeof(err)) :
+                parse_chat_request(NULL, NULL, json.ptr, 16, 256, &req, err, sizeof(err));
+            TEST_ASSERT(!ok);
+            TEST_ASSERT(strstr(err, "only text and images are supported") != NULL);
+            TEST_ASSERT(strstr(err, "Convert documents") != NULL);
+            buf_free(&json);
+        }
+    }
+
+    const char *invalid = "[{\"role\":\"user\",\"content\":[42]}]";
+    chat_msgs msgs = {0};
+    char err[160] = {0};
+    TEST_ASSERT(!parse_messages(&invalid, &msgs, err, sizeof(err)));
+    TEST_ASSERT(strstr(err, "only text and images") != NULL);
+    chat_msgs_free(&msgs);
+
+    const char *valid = "[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"next turn\"}]}]";
+    TEST_ASSERT(parse_messages(&valid, &msgs, NULL, 0));
+    TEST_ASSERT(msgs.len == 1 && !strcmp(msgs.v[0].content, "next turn"));
+    chat_msgs_free(&msgs);
+}
+
 static void test_openai_inline_image_content(void) {
     buf json = {0};
     buf_puts(&json,
@@ -32369,7 +32432,7 @@ static void test_openai_inline_image_content(void) {
     buf_puts(&json, "\"}},{\"type\":\"text\",\"text\":\" please\"}]}]");
     const char *p = json.ptr;
     chat_msgs msgs = {0};
-    TEST_ASSERT(parse_messages(&p, &msgs));
+    TEST_ASSERT(parse_messages(&p, &msgs, NULL, 0));
     TEST_ASSERT(msgs.len == 1);
     TEST_ASSERT(msgs.v[0].images.len == 1);
     TEST_ASSERT(strstr(msgs.v[0].content, "describe ") == msgs.v[0].content);
@@ -32390,7 +32453,7 @@ static void test_http_image_paths_and_urls_are_rejected(void) {
     for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
         const char *p = cases[i];
         chat_msgs msgs = {0};
-        TEST_ASSERT(!parse_messages(&p, &msgs));
+        TEST_ASSERT(!parse_messages(&p, &msgs, NULL, 0));
         chat_msgs_free(&msgs);
     }
 }
@@ -32423,7 +32486,7 @@ static void test_responses_inline_image_content(void) {
     const char *p = json.ptr;
     char *content = NULL;
     server_image_inputs images = {0};
-    TEST_ASSERT(parse_responses_content_array_multimodal(&p, &content, &images));
+    TEST_ASSERT(parse_responses_content_array_multimodal(&p, &content, &images, NULL, 0));
     TEST_ASSERT(images.len == 1);
     TEST_ASSERT(strstr(content, "describe ") == content);
     free(content);
@@ -32507,7 +32570,7 @@ static void test_responses_tool_image_output(void) {
         buf_puts(&json, "\"}]}]");
         const char *p = json.ptr;
         chat_msgs msgs = {0};
-        bool ok = parse_responses_input(&p, &msgs, NULL, NULL);
+        bool ok = parse_responses_input(&p, &msgs, NULL, NULL, NULL, 0);
         TEST_ASSERT(ok == (i < 2));
         if (ok) {
             TEST_ASSERT(msgs.len == 1 && !strcmp(msgs.v[0].role, "tool"));
@@ -32665,7 +32728,7 @@ static void test_deepseek41_server_tools(void) {
         "{\"role\":\"tool\",\"content\":\"second\"},"
         "{\"role\":\"system\",\"content\":\"Continue\"}]";
     chat_msgs msgs = {0};
-    TEST_ASSERT(parse_messages(&json, &msgs));
+    TEST_ASSERT(parse_messages(&json, &msgs, NULL, 0));
     char *full = render_deepseek41_chat(&msgs, 0, NULL, DS4_THINK_HIGH, false);
     char *tail = render_deepseek41_chat(&msgs, 2, NULL, DS4_THINK_HIGH, true);
     const char *boundary = strstr(full, "<｜end▁of▁sentence｜>");
@@ -32735,7 +32798,7 @@ static void test_deepseek41_live_result_order(void) {
             "[{\"role\":\"tool\",\"tool_call_id\":\"b\",\"content\":\"SECOND\"},"
             "{\"role\":\"tool\",\"tool_call_id\":\"a\",\"content\":\"FIRST\"}]";
         chat_msgs msgs = {0};
-        TEST_ASSERT(anthropic ? parse_anthropic_messages(&json, &msgs) : parse_messages(&json, &msgs));
+        TEST_ASSERT(anthropic ? parse_anthropic_messages(&json, &msgs) : parse_messages(&json, &msgs, NULL, 0));
         if (anthropic) anthropic_prepare_live_continuation(&s, &r, &msgs);
         else responses_prepare_live_continuation(&s, &r, &msgs);
         const char *tail = anthropic ? r.anthropic_live_suffix_text : r.responses_live_suffix_text;
@@ -32929,6 +32992,7 @@ static void ds4_server_unit_tests_run(void) {
     test_thinking_canonical_multi_turn();
     test_thinking_canonical_with_tools_preserves_reasoning();
     test_thinking_canonical_non_thinking_mode_noop();
+    test_unsupported_content_is_rejected_with_clear_error();
     test_openai_inline_image_content();
     test_http_image_paths_and_urls_are_rejected();
     test_anthropic_inline_image_content();
