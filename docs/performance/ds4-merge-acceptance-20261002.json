@@ -1,0 +1,938 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-02",
+  "branch": "codex/merge-ds4-upstream-2026-10-01",
+  "acceptance": "PASS",
+  "scope": "Qwen27 acceptance of the complete pinned upstream merge",
+  "main_reference": "5bf2b96ee5e888a2b09212e84dbc29751ca4a194",
+  "upstream_commit": "0aaea5a238fb41a35106a551e73c8409dfb751ac",
+  "merge_commit": "0edbded0ff3476190060450149dd74a10fa12043",
+  "engine_implementation_commit": "82d4e51b47d85c1e7155e09580a0c7349f148e96",
+  "qs_commit": "a665e5a85bd00c36031f3fb0c380e61e4ec4f6dd",
+  "qs_source_clean": true,
+  "qs_wheel_sha256": "1863bfa6f9f866f819ca06c8fc1065fc35190ca70a2bcf47008fa1b1a66f8ea1",
+  "binary_sha256": {
+    "ds4": "0244b6195d6c45af53eec07759133aa679ffc1b7dbfcce825268ba33d6583ac8",
+    "ds4-server": "69edea025ca451e0f7e3b4afe80ba6cc8ef793d556e51ec825352a786e17877c",
+    "ds4-bench": "89caf0dbdc4897145feb5e5e04f1f5319b02070b2f4d3c11976ec2dc929ff621"
+  },
+  "same_binaries_as_previous_validation": true,
+  "numerics_and_performance": {
+    "status": "PASS",
+    "evidence": "docs/performance/qwen27-vision-checkpoint-20261001.json",
+    "original_merge_comparison": "docs/performance/ds4-upstream-merge-20261001.json",
+    "tolerances_changed": false,
+    "golden_promoted": false,
+    "speedup_claim": false
+  },
+  "offline": {
+    "qs": {
+      "passed": 1958,
+      "coverage_percent": 100,
+      "lint": "PASS",
+      "format": "PASS",
+      "typecheck": "PASS"
+    },
+    "fe": {
+      "passed": 612,
+      "skipped_live": 16,
+      "coverage_percent": 100,
+      "lint": "PASS",
+      "format": "PASS"
+    },
+    "core": {
+      "status": "PASS",
+      "groups": [
+        "qwen35-layer-pattern",
+        "constraint-trie",
+        "server"
+      ]
+    },
+    "server": "PASS",
+    "python_contracts": {
+      "status": "PASS",
+      "total": 109,
+      "skipped": 4
+    }
+  },
+  "numeric_rechecks": {
+    "qwen-numerics": "PASS",
+    "qwen-mrope": "PASS"
+  },
+  "live_gates": [
+    {
+      "case": "native-cli-photo-memory-target",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 28.64545584699954,
+      "command": [
+        "./ds4",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--vision",
+        "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+        "--ctx",
+        "8192",
+        "--prefill-chunk",
+        "256",
+        "--temp",
+        "0",
+        "--nothink",
+        "-n",
+        "96"
+      ],
+      "secret": "68061135fee3",
+      "encoded_images": 2,
+      "recall_exact": true,
+      "vision_parking_cycles": 2,
+      "errors": []
+    },
+    {
+      "case": "http-vision-target",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 66.63740818899987,
+      "command": [
+        "python3",
+        "tests/test_qwen35_vision_api.py",
+        "--url",
+        "http://127.0.0.1:18080",
+        "--report",
+        "/home/daniele/ds4/performance-results/qwen27-vision-20261002/http-target.json"
+      ]
+    },
+    {
+      "case": "qs-photo-tools-target",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 131.5193477869998,
+      "command": [
+        "/home/daniele/.local/bin/uv",
+        "run",
+        "--frozen",
+        "python",
+        "../tests/qs_vision_live.py",
+        "--url",
+        "http://127.0.0.1:18080/v1",
+        "--photo",
+        "/home/daniele/ds4/tests/vision-fixtures/glm53/earth.jpg",
+        "--report",
+        "/home/daniele/ds4/performance-results/qwen27-vision-20261002/qs-target.json"
+      ]
+    },
+    {
+      "case": "qs-upstream-mixed-live-target",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 105.12715927799945,
+      "command": [
+        "/home/daniele/ds4/qs/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-n",
+        "0",
+        "--run-live",
+        "tests/live/test_mixed_user_inputs_live.py",
+        "-k",
+        "not native_file",
+        "-q",
+        "--tb=short"
+      ]
+    },
+    {
+      "case": "fe-agentic-live-target",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 224.3222734130004,
+      "command": [
+        "/home/daniele/.local/bin/uv",
+        "run",
+        "--frozen",
+        "pytest",
+        "-n",
+        "0",
+        "--run-live",
+        "--no-cov",
+        "tests/test_live_e2e.py::test_live_e2e_multi_turn_execution_history_preserves_prior_tools",
+        "-q",
+        "--tb=short"
+      ]
+    },
+    {
+      "case": "vision-vram-release-target",
+      "status": "PASS",
+      "cycles": [
+        {
+          "free_before": 4886376448,
+          "free_parked": 9063890944,
+          "free_restored": 4877987840
+        },
+        {
+          "free_before": 4877987840,
+          "free_parked": 9055502336,
+          "free_restored": 4877987840
+        },
+        {
+          "free_before": 4869926912,
+          "free_parked": 9055502336,
+          "free_restored": 4812992512
+        },
+        {
+          "free_before": 4550373376,
+          "free_parked": 8705277952,
+          "free_restored": 4550373376
+        },
+        {
+          "free_before": 4603092992,
+          "free_parked": 8703180800,
+          "free_restored": 4603092992
+        },
+        {
+          "free_before": 4603092992,
+          "free_parked": 8703180800,
+          "free_restored": 4603092992
+        }
+      ],
+      "launcher": "start-ds4-server.sh",
+      "configured_context": 22593
+    },
+    {
+      "case": "photo-20k-skill-checkpoint-target",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 409.54261746299926,
+      "command": [
+        "./tests/test_server_agentic_payload",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--vision",
+        "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+        "--image",
+        "/home/daniele/ds4/tests/vision-fixtures/glm53/earth.jpg"
+      ]
+    },
+    {
+      "case": "native-cli-photo-memory-mtp",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 27.155579078999835,
+      "command": [
+        "./ds4",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--vision",
+        "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+        "--ctx",
+        "8192",
+        "--prefill-chunk",
+        "256",
+        "--temp",
+        "0",
+        "--nothink",
+        "-n",
+        "96",
+        "--mtp"
+      ],
+      "secret": "d47cf5f9f58a",
+      "encoded_images": 2,
+      "recall_exact": true,
+      "vision_parking_cycles": 2,
+      "errors": []
+    },
+    {
+      "case": "http-vision-mtp",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 121.34604836800008,
+      "command": [
+        "python3",
+        "tests/test_qwen35_vision_api.py",
+        "--url",
+        "http://127.0.0.1:18080",
+        "--report",
+        "/home/daniele/ds4/performance-results/qwen27-vision-20261002/http-mtp.json"
+      ]
+    },
+    {
+      "case": "qs-photo-tools-mtp",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 205.96303026900023,
+      "command": [
+        "/home/daniele/.local/bin/uv",
+        "run",
+        "--frozen",
+        "python",
+        "../tests/qs_vision_live.py",
+        "--url",
+        "http://127.0.0.1:18080/v1",
+        "--photo",
+        "/home/daniele/ds4/tests/vision-fixtures/glm53/earth.jpg",
+        "--report",
+        "/home/daniele/ds4/performance-results/qwen27-vision-20261002/qs-mtp.json"
+      ]
+    },
+    {
+      "case": "qs-upstream-mixed-live-mtp",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 224.76562359299987,
+      "command": [
+        "/home/daniele/ds4/qs/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-n",
+        "0",
+        "--run-live",
+        "tests/live/test_mixed_user_inputs_live.py",
+        "-k",
+        "not native_file",
+        "-q",
+        "--tb=short"
+      ]
+    },
+    {
+      "case": "fe-agentic-live-mtp",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 448.0860236240005,
+      "command": [
+        "/home/daniele/.local/bin/uv",
+        "run",
+        "--frozen",
+        "pytest",
+        "-n",
+        "0",
+        "--run-live",
+        "--no-cov",
+        "tests/test_live_e2e.py::test_live_e2e_multi_turn_execution_history_preserves_prior_tools",
+        "-q",
+        "--tb=short"
+      ]
+    },
+    {
+      "case": "vision-vram-release-mtp",
+      "status": "PASS",
+      "cycles": [
+        {
+          "free_before": 2395250688,
+          "free_parked": 7702839296,
+          "free_restored": 2386862080
+        },
+        {
+          "free_before": 2370478080,
+          "free_parked": 7694450688,
+          "free_restored": 2386862080
+        },
+        {
+          "free_before": 2380636160,
+          "free_parked": 7692353536,
+          "free_restored": 2368643072
+        },
+        {
+          "free_before": 2380832768,
+          "free_parked": 7692353536,
+          "free_restored": 2380832768
+        },
+        {
+          "free_before": 2353111040,
+          "free_parked": 7692353536,
+          "free_restored": 2392170496
+        },
+        {
+          "free_before": 2199756800,
+          "free_parked": 7342129152,
+          "free_restored": 2114166784
+        },
+        {
+          "free_before": 2190057472,
+          "free_parked": 7342129152,
+          "free_restored": 2127142912
+        },
+        {
+          "free_before": 2127142912,
+          "free_parked": 7342129152,
+          "free_restored": 2190057472
+        }
+      ],
+      "launcher": "agent/start-ds4-server.sh",
+      "configured_context": 28000
+    },
+    {
+      "case": "photo-20k-skill-checkpoint-mtp",
+      "status": "PASS",
+      "exit_code": 0,
+      "seconds": 418.5182558739998,
+      "command": [
+        "./tests/test_server_agentic_payload",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--vision",
+        "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+        "--image",
+        "/home/daniele/ds4/tests/vision-fixtures/glm53/earth.jpg",
+        "--mtp"
+      ]
+    }
+  ],
+  "http_cases": {
+    "target": [
+      {
+        "case": "single-red",
+        "status": "PASS",
+        "detail": " red"
+      },
+      {
+        "case": "cached-image-continuation",
+        "status": "PASS",
+        "detail": {
+          "content": "red",
+          "cached_tokens": 110
+        }
+      },
+      {
+        "case": "append-image-to-live-context",
+        "status": "PASS",
+        "detail": {
+          "content": " blue",
+          "cached_tokens": 110
+        }
+      },
+      {
+        "case": "two-images-order",
+        "status": "PASS",
+        "detail": "red\nblue"
+      },
+      {
+        "case": "changed-pixels-blue",
+        "status": "PASS",
+        "detail": " blue"
+      },
+      {
+        "case": "thinking",
+        "status": "PASS",
+        "detail": {
+          "content": "\n\nRed",
+          "reasoning_chars": 234
+        }
+      },
+      {
+        "case": "json-preserves-image",
+        "status": "PASS",
+        "detail": {
+          "color": "blue"
+        }
+      },
+      {
+        "case": "tool-and-image-continuation",
+        "status": "PASS",
+        "detail": {
+          "arguments": "{\"color\":\"red\"}",
+          "continuation": "red"
+        }
+      },
+      {
+        "case": "sse-blue",
+        "status": "PASS",
+        "detail": " Blue"
+      },
+      {
+        "case": "anthropic-blue",
+        "status": "PASS",
+        "detail": " blue"
+      }
+    ],
+    "mtp": [
+      {
+        "case": "single-red",
+        "status": "PASS",
+        "detail": " red"
+      },
+      {
+        "case": "cached-image-continuation",
+        "status": "PASS",
+        "detail": {
+          "content": "red",
+          "cached_tokens": 110
+        }
+      },
+      {
+        "case": "append-image-to-live-context",
+        "status": "PASS",
+        "detail": {
+          "content": " blue",
+          "cached_tokens": 110
+        }
+      },
+      {
+        "case": "two-images-order",
+        "status": "PASS",
+        "detail": "red\nblue"
+      },
+      {
+        "case": "changed-pixels-blue",
+        "status": "PASS",
+        "detail": " blue"
+      },
+      {
+        "case": "thinking",
+        "status": "PASS",
+        "detail": {
+          "content": "\n\nRed",
+          "reasoning_chars": 234
+        }
+      },
+      {
+        "case": "json-preserves-image",
+        "status": "PASS",
+        "detail": {
+          "color": "blue"
+        }
+      },
+      {
+        "case": "tool-and-image-continuation",
+        "status": "PASS",
+        "detail": {
+          "arguments": "{\"color\":\"red\"}",
+          "continuation": "red"
+        }
+      },
+      {
+        "case": "sse-blue",
+        "status": "PASS",
+        "detail": " Blue"
+      },
+      {
+        "case": "anthropic-blue",
+        "status": "PASS",
+        "detail": " blue"
+      }
+    ]
+  },
+  "qs_client_cases": {
+    "target": [
+      {
+        "api": "chat_completions",
+        "case": "red",
+        "content": " red",
+        "continuation": "red",
+        "status": "PASS"
+      },
+      {
+        "api": "chat_completions",
+        "case": "blue",
+        "content": "blue",
+        "continuation": "blue",
+        "status": "PASS"
+      },
+      {
+        "api": "chat_completions",
+        "case": "real-photo-tool-memory",
+        "status": "PASS",
+        "seconds": 46.5460941880001,
+        "detail": {
+          "photo_sha256": "a48278513a38768ff92247972e60bc873eb361a8527cb8686a3e19c3ae1bdf9d",
+          "pixel_sha256": [
+            "192061df33aa0101975c6a4000b321f6f2a2bba10aacd3a7601a652248d51ff0",
+            "093e22f8474342dbe6189be405ec5f579865692f499735334f6902cf0886a4e3"
+          ],
+          "tool_calls": [
+            {
+              "id": "call_39e3a8684b4f01933dc0fd6134b136cb",
+              "name": "read_note",
+              "arguments": {},
+              "result": "<note><secret>5d5a2ac4d434</secret></note>"
+            },
+            {
+              "id": "call_72c8b995295c569b7de3dcdaf2d5d3ba",
+              "name": "record_picture",
+              "arguments": {
+                "object_name": "Earth",
+                "picture": 1
+              },
+              "result": "<record><picture>1</picture><object>Earth</object><receipt>149fcdf403c9</receipt></record>"
+            },
+            {
+              "id": "call_95083dad650b683b7c9edbf100686544",
+              "name": "record_picture",
+              "arguments": {
+                "object_name": "Earth",
+                "picture": 2
+              },
+              "result": "<record><picture>2</picture><object>Earth</object><receipt>f1b290797366</receipt></record>"
+            }
+          ],
+          "answers": [
+            "RECORDED",
+            "RECORDED"
+          ],
+          "recall": {
+            "secret": "5d5a2ac4d434",
+            "first_object": "Earth",
+            "first_receipt": "149fcdf403c9",
+            "second_object": "Earth",
+            "second_receipt": "f1b290797366"
+          },
+          "stream_events": [
+            "start",
+            "totals",
+            "end",
+            "start",
+            "totals",
+            "end"
+          ],
+          "note_deleted_before_images": true,
+          "secret_absent_from_user_prompts": true,
+          "history_messages": 15
+        }
+      },
+      {
+        "api": "responses",
+        "case": "red",
+        "content": " red",
+        "continuation": "red",
+        "status": "PASS"
+      },
+      {
+        "api": "responses",
+        "case": "blue",
+        "content": "blue",
+        "continuation": "blue",
+        "status": "PASS"
+      },
+      {
+        "api": "responses",
+        "case": "real-photo-tool-memory",
+        "status": "PASS",
+        "seconds": 47.85145505999935,
+        "detail": {
+          "photo_sha256": "a48278513a38768ff92247972e60bc873eb361a8527cb8686a3e19c3ae1bdf9d",
+          "pixel_sha256": [
+            "192061df33aa0101975c6a4000b321f6f2a2bba10aacd3a7601a652248d51ff0",
+            "093e22f8474342dbe6189be405ec5f579865692f499735334f6902cf0886a4e3"
+          ],
+          "tool_calls": [
+            {
+              "id": "call_9149d98c3c8077d16f29055a0a4c2861",
+              "name": "read_note",
+              "arguments": {},
+              "result": "<note><secret>e8cb68c7ee6a</secret></note>"
+            },
+            {
+              "id": "call_5bfe8dc65b6ce2e5c1e4358697792c5c",
+              "name": "record_picture",
+              "arguments": {
+                "object_name": "Earth",
+                "picture": 1
+              },
+              "result": "<record><picture>1</picture><object>Earth</object><receipt>84671b1bf0e8</receipt></record>"
+            },
+            {
+              "id": "call_607735b9547231b8201beedbb076c8c8",
+              "name": "record_picture",
+              "arguments": {
+                "object_name": "Earth",
+                "picture": 2
+              },
+              "result": "<record><picture>2</picture><object>Earth</object><receipt>694583a3d75e</receipt></record>"
+            }
+          ],
+          "answers": [
+            "RECORDED",
+            "RECORDED"
+          ],
+          "recall": {
+            "secret": "e8cb68c7ee6a",
+            "first_object": "Earth",
+            "first_receipt": "84671b1bf0e8",
+            "second_object": "Earth",
+            "second_receipt": "694583a3d75e"
+          },
+          "stream_events": [
+            "start",
+            "totals",
+            "end",
+            "start",
+            "totals",
+            "end"
+          ],
+          "note_deleted_before_images": true,
+          "secret_absent_from_user_prompts": true,
+          "history_messages": 15
+        }
+      }
+    ],
+    "mtp": [
+      {
+        "api": "chat_completions",
+        "case": "red",
+        "content": " red",
+        "continuation": "red",
+        "status": "PASS"
+      },
+      {
+        "api": "chat_completions",
+        "case": "blue",
+        "content": "blue",
+        "continuation": "blue",
+        "status": "PASS"
+      },
+      {
+        "api": "chat_completions",
+        "case": "real-photo-tool-memory",
+        "status": "PASS",
+        "seconds": 51.9990363930001,
+        "detail": {
+          "photo_sha256": "a48278513a38768ff92247972e60bc873eb361a8527cb8686a3e19c3ae1bdf9d",
+          "pixel_sha256": [
+            "192061df33aa0101975c6a4000b321f6f2a2bba10aacd3a7601a652248d51ff0",
+            "093e22f8474342dbe6189be405ec5f579865692f499735334f6902cf0886a4e3"
+          ],
+          "tool_calls": [
+            {
+              "id": "call_a2771f725b6daa0fd4ce07ed290bdb2a",
+              "name": "read_note",
+              "arguments": {},
+              "result": "<note><secret>00d0af4fbb4f</secret></note>"
+            },
+            {
+              "id": "call_e66207e4f25a337138d7dd445be25e08",
+              "name": "record_picture",
+              "arguments": {
+                "object_name": "Earth",
+                "picture": 1
+              },
+              "result": "<record><picture>1</picture><object>Earth</object><receipt>299504222c6f</receipt></record>"
+            },
+            {
+              "id": "call_26b9f7f932c1ffb2f878d29f01a1bdbd",
+              "name": "record_picture",
+              "arguments": {
+                "object_name": "Earth",
+                "picture": 2
+              },
+              "result": "<record><picture>2</picture><object>Earth</object><receipt>292c9d2c24a8</receipt></record>"
+            }
+          ],
+          "answers": [
+            "RECORDED",
+            "RECORDED"
+          ],
+          "recall": {
+            "secret": "00d0af4fbb4f",
+            "first_object": "Earth",
+            "first_receipt": "299504222c6f",
+            "second_object": "Earth",
+            "second_receipt": "292c9d2c24a8"
+          },
+          "stream_events": [
+            "start",
+            "totals",
+            "end",
+            "start",
+            "totals",
+            "end"
+          ],
+          "note_deleted_before_images": true,
+          "secret_absent_from_user_prompts": true,
+          "history_messages": 15
+        }
+      },
+      {
+        "api": "responses",
+        "case": "red",
+        "content": " red",
+        "continuation": "red",
+        "status": "PASS"
+      },
+      {
+        "api": "responses",
+        "case": "blue",
+        "content": "blue",
+        "continuation": "blue",
+        "status": "PASS"
+      },
+      {
+        "api": "responses",
+        "case": "real-photo-tool-memory",
+        "status": "PASS",
+        "seconds": 63.602726887000244,
+        "detail": {
+          "photo_sha256": "a48278513a38768ff92247972e60bc873eb361a8527cb8686a3e19c3ae1bdf9d",
+          "pixel_sha256": [
+            "192061df33aa0101975c6a4000b321f6f2a2bba10aacd3a7601a652248d51ff0",
+            "093e22f8474342dbe6189be405ec5f579865692f499735334f6902cf0886a4e3"
+          ],
+          "tool_calls": [
+            {
+              "id": "call_429f57accf6c1981f00c5c6004af1772",
+              "name": "read_note",
+              "arguments": {},
+              "result": "<note><secret>2ecc8547ddae</secret></note>"
+            },
+            {
+              "id": "call_0e3fb3ce65187a7d84f6b4da09e784ab",
+              "name": "record_picture",
+              "arguments": {
+                "object_name": "Earth",
+                "picture": 1
+              },
+              "result": "<record><picture>1</picture><object>Earth</object><receipt>ebbb8da14c60</receipt></record>"
+            },
+            {
+              "id": "call_91794b9cde3fb2817b1823f1baedc8fa",
+              "name": "record_picture",
+              "arguments": {
+                "object_name": "Earth",
+                "picture": 2
+              },
+              "result": "<record><picture>2</picture><object>Earth</object><receipt>28179a18dc7a</receipt></record>"
+            }
+          ],
+          "answers": [
+            "RECORDED",
+            "RECORDED"
+          ],
+          "recall": {
+            "secret": "2ecc8547ddae",
+            "first_object": "Earth",
+            "first_receipt": "ebbb8da14c60",
+            "second_object": "Earth",
+            "second_receipt": "28179a18dc7a"
+          },
+          "stream_events": [
+            "start",
+            "totals",
+            "end",
+            "start",
+            "totals",
+            "end"
+          ],
+          "note_deleted_before_images": true,
+          "secret_absent_from_user_prompts": true,
+          "history_messages": 15
+        }
+      }
+    ]
+  },
+  "checkpoint_measurements": {
+    "target": {
+      "populated_text_prefix": 20000,
+      "images": 1,
+      "ctx": 22593,
+      "mtp": false,
+      "parent_tokens": 20274,
+      "vocab": 248320,
+      "skill_bytes": 2817530808,
+      "subagent_bytes": 2817530808,
+      "skill_restore_bit_exact": true,
+      "corruption_rejected_without_mutation": true,
+      "recreated_session_bit_exact": true,
+      "continuation_bit_exact": true,
+      "nested_three_levels_bit_exact": true,
+      "free_vram_before_save": 4591427584,
+      "free_vram_after_save": 4582318080,
+      "free_vram_after_release": 8705277952
+    },
+    "mtp": {
+      "populated_text_prefix": 20000,
+      "images": 1,
+      "ctx": 22593,
+      "mtp": true,
+      "parent_tokens": 20276,
+      "vocab": 248320,
+      "skill_bytes": 2984907736,
+      "subagent_bytes": 2984907736,
+      "skill_restore_bit_exact": true,
+      "corruption_rejected_without_mutation": true,
+      "recreated_session_bit_exact": true,
+      "continuation_bit_exact": true,
+      "nested_three_levels_bit_exact": true,
+      "free_vram_before_save": 2497486848,
+      "free_vram_after_save": 2423119872,
+      "free_vram_after_release": 7342129152
+    }
+  },
+  "photo": {
+    "path": "tests/vision-fixtures/glm53/earth.jpg",
+    "sha256": "a48278513a38768ff92247972e60bc873eb361a8527cb8686a3e19c3ae1bdf9d",
+    "variants": "Original and horizontally mirrored pixels of one photograph, not two scenes."
+  },
+  "nonblocking_recorded_failures": [
+    {
+      "name": "original OCR RED7",
+      "status": "FAIL",
+      "evidence": "docs/performance/qwen27-vision-checkpoint-20261001.json",
+      "note": "DS4 and same-GGUF llama.cpp oracle both returned R7."
+    },
+    {
+      "name": "upstream TP socket timeout on WSL",
+      "status": "FAIL",
+      "evidence": "docs/performance/ds4-upstream-merge-20261001.json",
+      "note": "Kernel returned 52 ms for requested 50 ms; original gate retained."
+    }
+  ],
+  "not_verified": [
+    "Metal",
+    "ROCm",
+    "distributed inference",
+    "large unavailable models",
+    "Flash Next live vision checkpoint",
+    "Qwen27 CPU vision",
+    "extended complex image/OCR corpus",
+    "native document inputs"
+  ],
+  "limitations": [
+    "FE attachments remain file references; direct pixel upload from the UI is not added.",
+    "Tools between photos are executed by the CLI QS client test; native CLI has no autonomous tool executor.",
+    "History dumps contain hashes, not reconstructable image data.",
+    "Restart qualifications cover durable system-prefix cache and history replay, not suspended private skill stacks."
+  ],
+  "resolved_test_invocation_errors": [
+    "uv resolved from its installed path after direct WSL PATH failure; unchanged native/HTTP PASS evidence resumed.",
+    "Subset mock tests passed but lacked global coverage; full FE suite repeated with 100%.",
+    "Concurrent core test rejected by instance lock; static groups repeated after server shutdown.",
+    "Default --all includes unavailable-model gates and resolved an old local Qwen3.6 file; without-model groups were selected explicitly.",
+    "The copied local numerics probe was not executable; permission restored, numerical gate rerun PASS."
+  ],
+  "raw_evidence_sha256": {
+    "performance-results/qwen27-vision-20261002/core-static-units.log": "0ed1ac9409c7255761cc08dd204056c421cb2f82ccdc3017106f4dc20e968180",
+    "performance-results/qwen27-vision-20261002/core-units-busy.log": "497db6db88f09db87eef518247658d050f28aab4e8518caf9cb944bcec848d9c",
+    "performance-results/qwen27-vision-20261002/core-units.log": "b44c7bdfce68fa113a03558325a77dec1cecdd80196bcb838350525f2a69d173",
+    "performance-results/qwen27-vision-20261002/cpu-units-build.log": "f0d5a20df9f9b14cca3dfd422e281413d8f529045663fa7a9dec6b1bd8fec99d",
+    "performance-results/qwen27-vision-20261002/fe-agentic-live-mtp.log": "800ae1a96a1f196b95924b6abca8129e50a80ea1bc8ac81bd9f571dbd4cdd2b0",
+    "performance-results/qwen27-vision-20261002/fe-agentic-live-target.log": "112030f4c86d7993aca4463871908c69e8da911acc68b60c5569a4b15e8efdf9",
+    "performance-results/qwen27-vision-20261002/http-vision-mtp.log": "babc0e2ca093d6cf73a68a7f2f2508ed793824ff99d9c87e99de037ca8cb2e55",
+    "performance-results/qwen27-vision-20261002/http-vision-target.log": "babc0e2ca093d6cf73a68a7f2f2508ed793824ff99d9c87e99de037ca8cb2e55",
+    "performance-results/qwen27-vision-20261002/native-cli-photo-memory-mtp.log": "37b05269e6f10d6e652a167cbbc35a0620e75be819df539501f1f7deea2b442f",
+    "performance-results/qwen27-vision-20261002/native-cli-photo-memory-target.log": "95fd89c690d17e04be19d83de6a825e575528de05fbc6d0bd8c1d20813ece47c",
+    "performance-results/qwen27-vision-20261002/photo-20k-skill-checkpoint-mtp.log": "dce451b3d2603bcfb44fcc178f32583b4b5da1f10e48a22028775c4726e52f09",
+    "performance-results/qwen27-vision-20261002/photo-20k-skill-checkpoint-target.log": "0e66f33c88304f3c43cb54a9e3a1641a3691771e4dd7591714ad5db438711cf9",
+    "performance-results/qwen27-vision-20261002/python-contracts.log": "53e9ad5fe9701cdcaedc850718c0af11d1fe5c140469cf01117bc5ba8d11e036",
+    "performance-results/qwen27-vision-20261002/qs-photo-tools-mtp.log": "0b2136fd1477bd893ee8b71ed6f471c1676b45fbec9f422ec95b4c867d2f0de5",
+    "performance-results/qwen27-vision-20261002/qs-photo-tools-target.log": "0b2136fd1477bd893ee8b71ed6f471c1676b45fbec9f422ec95b4c867d2f0de5",
+    "performance-results/qwen27-vision-20261002/qs-upstream-mixed-live-mtp.log": "7873880e33c25e944484fd901fa043ed46cb9326795a3f4ea1c9da1526163309",
+    "performance-results/qwen27-vision-20261002/qs-upstream-mixed-live-target.log": "3ba0dbb3663c480852ca0b3bbf4f87da9c5c73009e09b82731b7ba4650e5d803",
+    "performance-results/qwen27-vision-20261002/qwen-mrope.log": "e55a54b13baa3a3367d166f2238a42e9efe2c9018943539339a3fc7d2b0357e4",
+    "performance-results/qwen27-vision-20261002/qwen-numerics.log": "f57f9d416843cb29ca79b487c2a728a3de9ca921d546a7544e3971df99366fdb",
+    "performance-results/qwen27-vision-20261002/server-mtp.log": "b727e3440b872c692959d1e56d66c12c6eff7697fa0cd1be72c974ecc386e2fe",
+    "performance-results/qwen27-vision-20261002/server-target.log": "8914ce8d46318aa26a5d746c4e7ac8c8bb8cef64920c31b5ce62fa9d314a75cb",
+    "performance-results/qwen27-vision-20261002/server-units.log": "941c57efe4f13d8eae03d1c84c21a1e6f1966e16d86a6a9bdfab1e2a49f781f3",
+    "performance-results/qwen27-vision-20261002/binary-identity.json": "c37b50f0829816de14dc5b897c25e681f863ea55a42b28e377c0ebbda1a79f5f",
+    "performance-results/qwen27-vision-20261002/http-mtp.json": "18d5f7176d539202344b9393b51dfa73163442efac2e305639c4b44f3474800b",
+    "performance-results/qwen27-vision-20261002/http-target.json": "18d5f7176d539202344b9393b51dfa73163442efac2e305639c4b44f3474800b",
+    "performance-results/qwen27-vision-20261002/qs-mtp.json": "51645e4141c19fe1368b296a867b6d2163b88c26cb05b05577244e88dea37ed3",
+    "performance-results/qwen27-vision-20261002/qs-target.json": "a293bee1cffb5d4c347e21c2cf2a09042e6ae5c34891ef81e6ffa3ffd8d4131b",
+    "performance-results/qwen27-vision-20261002/results.json": "8cd7a4087df0316cf14a9e9dd036655d1172f1dc36340704b2682ec8bf0501b2",
+    "performance-results/qwen27-vision-20261002/serial-results.json": "2b64682f5667d642fd96edbdf8a7afad1e8eb2a2c3b3cf10bf8af2dd60f792b5",
+    "performance-results/qwen27-vision-20261002/core-units.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "performance-results/qwen27-vision-20261002/python-contracts.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "performance-results/qwen27-vision-20261002/qwen-mrope.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "performance-results/qwen27-vision-20261002/qwen-numerics.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "performance-results/qwen27-vision-20261002/server-units.exit": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "performance-results/qwen27-vision-20261001/qs-20261002-tests.log": "ab945e89d52f3af7614ff49c8456074e832e495ce4666664c2897648fb721757",
+    "performance-results/qwen27-vision-20261001/qs-coverage-20261002.log": "29b0a062f2cb4c84c81123d702ea35c7dc2002083f42cebe1aa21dd4e3eb5a02",
+    "performance-results/qwen27-vision-20261001/fe-full-20261002-tests.log": "ec0e8b41e052c3ab409841974ec66cb2687c0db590883e9e81333b9e8f7ae0aa",
+    "performance-results/qwen27-vision-20261001/qs-sync-20261002.log": "81691362931ace29441270b92412b443c85b8222a2a04fdf292415e3eaa392e4"
+  }
+}

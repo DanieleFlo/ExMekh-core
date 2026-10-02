@@ -1,5 +1,8 @@
 # Qwen27 vision e checkpoint completi — 1 ottobre 2026
 
+Verifiche residue concluse il 2 ottobre: [accettazione finale e integrazione QS](ds4-merge-acceptance-20261002.md).
+La matrice seguente conserva gli esiti alla data originaria.
+
 ## Implementazione e perimetro
 
 Sviluppo sul branch `codex/merge-ds4-upstream-2026-10-01`, dopo il merge
