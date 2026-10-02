@@ -40,6 +40,34 @@ Quick Chats usano il client per conversazioni ordinarie. FE conserva chat in
 sotto `tmp/` della directory di lavoro. Questi dati, `.env`, ambienti Python e
 cache locali sono esclusi da Git.
 
+## Modifica dei messaggi
+
+Il pulsante con la matita compare accanto a quello di copia quando si passa
+sopra un messaggio utente; su dispositivi touch rimane visibile. L'editor
+permette di annullare oppure salvare con **Save & regenerate**. Il salvataggio
+interrompe l'eventuale generazione, elimina il ramo successivo e avvia una
+nuova risposta. Conserva gli allegati espliciti, mentre il testo lungo
+trasformato automaticamente in file viene ricreato dalla versione modificata.
+
+La modifica elimina anche gli input in coda e la history dei sottoagenti
+successiva al punto di ripartenza. Azzera il contesto delle approvazioni dei
+comandi, mantenendo la modalità di approvazione scelta. Se si modifica uno
+steering, la risposta che lo contiene riparte mantenendo gli input precedenti.
+Il ramo aggiornato viene salvato prima di avviare la nuova risposta e rimane
+coerente dopo il reload della pagina.
+
+ChatSession possiede le operazioni sul ramo della conversazione;
+SubAgentConversation conserva uno snapshot per chiamata e gestisce il replay;
+ChatSettings azzera le approvazioni obsolete. SessionManager salva il ramo
+prima di applicarlo alla sessione in memoria. Gli upload testuali di Quick Chat
+rimangono inline nelle richieste al provider anche dopo una modifica.
+
+I test e2e usano il client mock con un provider deterministico attraverso il
+ciclo QS reale. Coprono le posizioni iniziale, intermedia e finale, la generazione
+in corso, la riconnessione, l'annullamento, le approvazioni pendenti e gli allegati
+testuali, immagine e PDF. Stop e accodamento sono limitati alla chat selezionata;
+i tool mostrano lo stato di errore del modello anche nelle schede della chat.
+
 ## Confini dell'integrazione
 
 QS possiede i messaggi e il risultato dell'esecuzione dei tool. FE usa

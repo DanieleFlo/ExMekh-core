@@ -23,6 +23,7 @@ from fe.qs_bridge.models import (
     ToolEvent,
 )
 from fe.qs_bridge.sub_agents import SubAgentEvent
+from fe.state.active_turns import active_turns
 from fe.state.session_manager import session_manager
 from fe.state.sub_agent_conversations import apply_sub_agent_event
 from fe.ui.graph_data import build_graph_data_from_session
@@ -471,7 +472,15 @@ async def test_live_ui_controller_stop_generation_flow(
                 other_conversation = other_session.start_sub_agent_conversation(
                     "other-call", "main/other", True, "Other task"
                 )
-            # User clicks STOP
+                controller.session_switched(other_session.id)
+                controller.stop()
+                await asyncio.sleep(0)
+                assert active_turns.is_running(session.id)
+                assert not controller._active_task.cancelling()
+                assert other_conversation.status == "active"
+                session_manager.switch_session(session.id)
+                controller.session_switched(session.id)
+            # User clicks STOP in the chat that owns the running turn.
             controller.stop()
             await asyncio.sleep(0.05)
 

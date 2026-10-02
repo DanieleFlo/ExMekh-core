@@ -462,6 +462,7 @@ def test_page_controller_stop_cleans_pending_approval(tmp_path: Path) -> None:
     manager = SessionManager(tmp_path / "chats")
     decision: Future[bool] = Future()
     controller._pending_approval = decision
+    controller._pending_approval_session_id = manager.get_current_session().id
     bar = MagicMock()
     controller.input_bar = bar
 

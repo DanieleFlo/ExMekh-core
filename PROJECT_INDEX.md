@@ -287,6 +287,18 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   persistiti; conserva corpo e riferimenti degli output, con fallback legacy.
 - `agent/src/fe/qs_bridge/steering_history.py` — seleziona gli ID di steering
   del livello corrente, escludendo quelli delle skill discendenti.
+- `agent/src/fe/qs_bridge/message_edit.py` — prepara il testo modificato,
+  conservando gli upload espliciti e rigenerando i file del testo incollato.
+  Il controller ferma e attende il turno precedente prima di salvare il ramo
+  aggiornato. ChatSession gestisce il ramo, ChatSettings le approvazioni e
+  SubAgentConversation il replay e gli snapshot delle chiamate; SessionManager
+  salva prima di pubblicare le modifiche in memoria. StagedAttachment ripristina
+  gli upload tramite TempStorage; Quick Chat conserva i testi inline.
+- `agent/tests/test_message_editing.py`, `agent/tests/test_message_editing_e2e.py`
+  — regressioni su modifica a inizio/metà/fine chat, streaming, riconnessione,
+  annullamento, approvazioni pendenti, testi/immagini/PDF e persistenza in
+  Quick Chat e progetto. `agent/tests/run_message_edit_fe.py` usa un provider
+  deterministico con il client mock e il ciclo di esecuzione QS reale.
 - `agent/src/fe/qs_bridge/image_input.py` — decodifica immagini, orientamento,
   rendering PDF locale (prime 10 pagine), parti native QS e serializzazione
   PNG della cronologia; i payload base64 non vengono contati come testo.

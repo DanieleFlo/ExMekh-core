@@ -451,7 +451,7 @@ def _execute_agent_turn_sync_unlocked(
             if previous:
                 child.restore_conversation(
                     previous,
-                    prior_qs=convert_to_qs_messages(previous.raw_history),
+                    prior_qs=convert_to_qs_messages(previous.replay_history()),
                 )
 
         if history:

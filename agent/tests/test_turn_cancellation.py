@@ -29,6 +29,7 @@ from fe.qs_bridge.cancellation import CancellableProvider, CancellationEventHand
 from fe.qs_bridge.collector import TurnStreamCollector
 from fe.qs_bridge.event_handlers import QuickChatEventHandler
 from fe.qs_bridge.models import ChatSession, ChatTitle
+from fe.state.active_turns import active_turns
 from fe.state.session_manager import SessionManager
 from fe.ui.chat_view import ChatViewComponent
 from fe.ui.input_bar import InputBarComponent
@@ -156,6 +157,7 @@ async def test_real_qs_turn_stops_before_another_inference_when_approval_is_canc
             )
         )
         controller._active_task = turn
+        active_turns.start(session.id, turn, collector, started_at=0)
         try:
             async with asyncio.timeout(5):
                 while not controller.input_bar.approval_container.visible:

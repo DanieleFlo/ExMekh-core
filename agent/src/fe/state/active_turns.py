@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from weakref import WeakValueDictionary
 
 from fe.qs_bridge.collector import TurnStreamCollector
 from fe.qs_bridge.models import ChatMessage, QueuedMessage
@@ -30,6 +31,11 @@ class ActiveTurnRegistry:
     def __init__(self) -> None:
         self._turns: dict[str, _ActiveTurn] = {}
         self._queue_handoffs: set[str] = set()
+        self._edit_locks: WeakValueDictionary[str, asyncio.Lock] = WeakValueDictionary()
+
+    def edit_lock(self, session_id: str) -> asyncio.Lock:
+        """Serialize edits from multiple pages of the same conversation."""
+        return self._edit_locks.setdefault(session_id, asyncio.Lock())
 
     def start(
         self,
@@ -84,6 +90,18 @@ class ActiveTurnRegistry:
             return False
         turn.task.cancel()
         return True
+
+    async def stop_and_wait(self, session_id: str) -> None:
+        """Wait for final persistence before replacing a turn's history."""
+        turn = self._turns.get(session_id)
+        if turn is None:
+            return
+        if not turn.task.done():
+            turn.task.cancel()
+        await asyncio.gather(turn.task, return_exceptions=True)
+        # Also covers cancellation before the task entered its own finally block.
+        self.finish(session_id, turn.task)
+        self._queue_handoffs.discard(session_id)
 
     def can_steer(self, session_id: str) -> bool:
         turn = self._turns.get(session_id)

@@ -10,6 +10,7 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
+from fe.qs_bridge.collector import TurnStreamCollector
 from fe.qs_bridge.models import (
     ChatMessage,
     QueuedMessage,
@@ -19,6 +20,7 @@ from fe.qs_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
+from fe.state.active_turns import active_turns
 from fe.state.session_manager import session_manager
 from fe.ui.chat_view import (
     CHAT_SCROLL_JS_PATH,
@@ -761,6 +763,7 @@ async def test_page_controller_message_queue_flow(ui_context: Client) -> None:
         # Simulate busy agent turn
         fake_task = asyncio.create_task(asyncio.sleep(10))
         controller._active_task = fake_task
+        active_turns.start(session.id, fake_task, TurnStreamCollector(), started_at=0)
 
         # Send while busy -> message queued
         await controller.send("First message queued")
@@ -797,6 +800,8 @@ async def test_page_controller_message_queue_flow(ui_context: Client) -> None:
         session.add_queued_message("Next 1")
         session.add_queued_message("Next 2")
         fake_task.cancel()
+        active_turns.finish(session.id, fake_task)
+        await asyncio.gather(fake_task, return_exceptions=True)
         controller._active_task = None
 
         with patch.object(controller, "_send_prepared") as mock_send_prepared:
@@ -814,10 +819,12 @@ async def test_page_controller_message_queue_flow(ui_context: Client) -> None:
         # Stop while active task running
         fake_task2 = asyncio.create_task(asyncio.sleep(10))
         controller._active_task = fake_task2
+        active_turns.start(session.id, fake_task2, TurnStreamCollector(), started_at=0)
         session.add_queued_message("Kept in queue")
         controller.stop()
         await asyncio.sleep(0)
         assert fake_task2.cancelled()
+        active_turns.finish(session.id, fake_task2)
         # Queued messages remain preserved
         assert len(session.queued_messages) == 1
         session.queued_messages.clear()

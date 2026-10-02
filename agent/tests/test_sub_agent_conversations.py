@@ -289,9 +289,17 @@ def test_live_child_calls_follow_history_policy(
     assert len([event for event in events if event.action == "token"]) == 2
 
 
-def test_live_persistent_child_reuses_block_and_history_across_root_turns() -> None:
+@pytest.mark.parametrize("legacy_history", [False, True])
+def test_live_persistent_child_reuses_block_and_history_across_root_turns(
+    legacy_history: bool,
+) -> None:
     session = ChatSession()
     for turn in (1, 2):
+        if turn == 2 and legacy_history:
+            for child in session.sub_agent_conversations:
+                child.raw_history = []
+                for message in child.messages:
+                    message.raw_history = []
         provider = OneCallProvider()
         raw_history: list[dict] = []
         with (

@@ -86,8 +86,8 @@ class ObservedNode(Node):
         if not self.persistent_history:
             return
         self._conversation_id = previous.id
-        if previous.raw_history:
-            restore_node_history(self, previous.messages, prior_qs=prior_qs)
+        if prior_qs:
+            restore_node_history(self, previous.message_history(), prior_qs=prior_qs)
 
     def forward_stream_event(self, event: DeepAgentEvent) -> None:
         if self._active_call_id is None:

@@ -15,7 +15,8 @@
     position: relative;
 }
 
-.user-copy-btn {
+.user-copy-btn,
+.user-edit-btn {
     position: absolute !important;
     right: 36px;
     top: 50%;
@@ -24,13 +25,20 @@
     transition: opacity 150ms ease;
 }
 
+.user-edit-btn {
+    right: 68px;
+}
+
 .chat-message-user:hover .user-copy-btn,
-.chat-message-user:focus-within .user-copy-btn {
+.chat-message-user:focus-within .user-copy-btn,
+.chat-message-user:hover .user-edit-btn,
+.chat-message-user:focus-within .user-edit-btn {
     opacity: 1;
 }
 
 @media (hover: none) {
-    .user-copy-btn {
+    .user-copy-btn,
+    .user-edit-btn {
         opacity: 1;
     }
 }

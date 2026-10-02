@@ -383,7 +383,9 @@ def test_collector_preserves_skill_duration_and_updates_live_skill() -> None:
 
 def test_observed_child_restores_only_persistent_history() -> None:
     conversation = SubAgentConversation(
-        id="prior", path="main/child", raw_history=[{"role": "user"}]
+        id="prior",
+        path="main/child",
+        messages=[ChatMessage(role="user", content="Earlier")],
     )
     router = SubAgentEventRouter(None)
     fresh = ObservedNode(
@@ -398,10 +400,14 @@ def test_observed_child_restores_only_persistent_history() -> None:
         persistent_history=True,
         event_router=router,
     )
+    prior_qs = convert_to_qs_messages(conversation.replay_history())
     with patch("fe.qs_bridge.sub_agents.restore_node_history") as restore:
-        fresh.restore_conversation(conversation, prior_qs=[])
+        fresh.restore_conversation(conversation, prior_qs=prior_qs)
         persistent.restore_conversation(conversation, prior_qs=[])
-    restore.assert_called_once_with(persistent, conversation.messages, prior_qs=[])
+        persistent.restore_conversation(conversation, prior_qs=prior_qs)
+    restore.assert_called_once_with(
+        persistent, conversation.message_history(), prior_qs=prior_qs
+    )
     assert persistent._conversation_id == "prior"
     assert fresh._conversation_id != "prior"
 

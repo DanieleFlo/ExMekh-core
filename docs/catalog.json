@@ -1283,7 +1283,7 @@
               "title": "Frontend Agent FE / QS",
               "level": 1,
               "start": 1,
-              "end": 112,
+              "end": 147,
               "summary": "L'agente del progetto e il frontend NiceGUI in `agent/`."
             },
             {
@@ -1301,24 +1301,31 @@
               "summary": "Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider."
             },
             {
-              "title": "Confini dell'integrazione",
+              "title": "Modifica dei messaggi",
               "level": 2,
               "start": 43,
-              "end": 55,
+              "end": 70,
+              "summary": "Il pulsante con la matita compare accanto a quello di copia quando si passa"
+            },
+            {
+              "title": "Confini dell'integrazione",
+              "level": 2,
+              "start": 71,
+              "end": 90,
               "summary": "QS possiede i messaggi e il risultato dell'esecuzione dei tool."
             },
             {
               "title": "Dipendenza QS",
               "level": 2,
-              "start": 56,
-              "end": 84,
+              "start": 91,
+              "end": 119,
               "summary": "`agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`."
             },
             {
               "title": "Verifica",
               "level": 2,
-              "start": 85,
-              "end": 112,
+              "start": 120,
+              "end": 147,
               "summary": "Da `agent/`:"
             }
           ]

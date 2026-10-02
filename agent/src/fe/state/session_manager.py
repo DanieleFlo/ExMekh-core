@@ -203,8 +203,42 @@ class SessionManager:
         """Append and persist a message while the session is still managed."""
         if not self.owns_session(session):
             return False
+        updated = session.model_copy(
+            update={"messages": [*session.message_history(), message]}
+        )
+        if not self.save_session(updated):
+            return False
         session.add_message(message)
-        return self.save_session(session)
+        session.updated_at = updated.updated_at
+        return True
+
+    def find_user_message(
+        self, session: ChatSession, message_id: str
+    ) -> ChatMessage | None:
+        """Find saved input or steering accepted by an unfinished turn."""
+        if not self.owns_session(session):
+            return None
+        message = session.find_user_message(message_id)
+        if message is not None:
+            return message
+        snapshot = active_turns.snapshot(session.id, after_revision=-1)
+        return (
+            snapshot.message.find_user_message(message_id)
+            if snapshot and snapshot.message
+            else None
+        )
+
+    def edit_message(
+        self, session: ChatSession, message_id: str, replacement: ChatMessage
+    ) -> bool:
+        """Persist a revised branch atomically before exposing it to the UI."""
+        if not self.owns_session(session):
+            return False
+        updated = session.revised_user_message(message_id, replacement)
+        if updated is None or not self.save_session(updated):
+            return False
+        session.apply_revision(updated)
+        return True
 
     def update_title(self, session: ChatSession, title: str) -> bool:
         if not title or not self.owns_session(session):

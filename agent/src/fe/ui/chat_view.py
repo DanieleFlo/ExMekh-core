@@ -4,7 +4,7 @@ import asyncio
 import html
 import json
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -17,6 +17,7 @@ from fe.qs_bridge.context_usage import (
     populate_skill_closure_tokens,
 )
 from fe.qs_bridge.image_input import IMAGE_SUFFIXES
+from fe.qs_bridge.message_edit import retained_attachment_paths
 from fe.qs_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -80,8 +81,13 @@ def _upsert_streaming_skill(
 
 
 class ChatViewComponent:
-    def __init__(self, on_suggested_prompt: Callable[[str], None]) -> None:
+    def __init__(
+        self,
+        on_suggested_prompt: Callable[[str], None],
+        on_edit_message: Callable[[str, str, str], Awaitable[bool]] | None = None,
+    ) -> None:
         self.on_suggested_prompt = on_suggested_prompt
+        self.on_edit_message = on_edit_message
         self.chat_container: ui.column | None = None
         self.child_chat_container: ui.column | None = None
         self.other_chat_container: ui.column | None = None
@@ -558,6 +564,51 @@ class ChatViewComponent:
                         ui.code(content_text).classes("w-full text-xs font-mono")
             dlg.open()
 
+    def _open_message_editor(self, session_id: str, message: ChatMessage) -> None:
+        has_attachments = bool(retained_attachment_paths(message) or message.image_urls)
+        with ui.dialog().classes("message-edit-dialog") as dialog:
+            with ui.card().classes("w-[640px] max-w-[94vw] bg-zinc-900 gap-4"):
+                ui.label("Edit message").classes("text-lg text-zinc-100")
+                editor = (
+                    ui.textarea(label="Message", value=message_display_text(message))
+                    .props("outlined autogrow autofocus")
+                    .classes("w-full")
+                )
+                ui.label(
+                    "Saving restarts the response and removes the conversation after this message."
+                ).classes("text-xs text-zinc-400")
+                if has_attachments:
+                    ui.label("Attachments will be kept.").classes(
+                        "text-xs text-zinc-400"
+                    )
+
+                async def save() -> None:
+                    save_button.disable()
+                    editor.disable()
+                    try:
+                        if self.on_edit_message and await self.on_edit_message(
+                            session_id, message.id, editor.value or ""
+                        ):
+                            dialog.close()
+                    finally:
+                        save_button.enable()
+                        editor.enable()
+
+                with ui.row().classes("w-full justify-end gap-2"):
+                    ui.button("Cancel", on_click=dialog.close).props("flat")
+                    save_button = (
+                        ui.button("Save & regenerate", on_click=save)
+                        .props("unelevated")
+                        .bind_enabled_from(
+                            editor,
+                            "value",
+                            backward=lambda value: bool(
+                                str(value or "").strip() or has_attachments
+                            ),
+                        )
+                    )
+        dialog.open()
+
     def _render_message(self, msg: ChatMessage) -> None:
         for guidance in msg.steering_messages:
             self._render_message_body(
@@ -576,7 +627,12 @@ class ChatViewComponent:
         if msg.role == "user":
             attached_files = [
                 path
-                for path in extract_attached_files_from_content(msg.content)
+                for path in dict.fromkeys(
+                    [
+                        *retained_attachment_paths(msg),
+                        *extract_attached_files_from_content(msg.content),
+                    ]
+                )
                 if path not in msg.image_paths
                 and not (
                     msg.image_urls
@@ -658,6 +714,18 @@ class ChatViewComponent:
                             datetime.fromtimestamp(msg.timestamp).strftime("%H:%M")
                         ).classes("message-time text-[10px]")
                         self._render_copy_button(display_text, user=True)
+                        if self.on_edit_message and self.selected_sub_agent_id is None:
+                            session_id = session_manager.get_current_session().id
+                            ui.button(
+                                icon="edit",
+                                on_click=lambda: self._open_message_editor(
+                                    session_id, msg
+                                ),
+                            ).props(
+                                'flat round dense size=xs aria-label="Edit message"'
+                            ).classes(
+                                "text-zinc-600 hover:text-zinc-300 response-copy-btn user-edit-btn"
+                            ).tooltip("Edit message")
 
         else:
             with ui.row().classes(
@@ -979,6 +1047,17 @@ class ChatViewComponent:
             with ui.row().classes(
                 "tool-event-meta items-center gap-2 text-[11px] text-zinc-500 font-mono"
             ):
+                if not is_running:
+                    ui.icon(
+                        "error" if ev.execution_status == "error" else "check_circle",
+                        size="xs",
+                    ).classes(
+                        "tool-event-status text-red-400"
+                        if ev.execution_status == "error"
+                        else "tool-event-status text-emerald-400"
+                    ).tooltip(
+                        "Failed" if ev.execution_status == "error" else "Completed"
+                    )
                 ui.label(f"depth: {ev.depth}")
                 ui.label(f"path: {ev.skill_path}")
                 tool_timer_lbl = ui.label(

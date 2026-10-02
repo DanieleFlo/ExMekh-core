@@ -24,6 +24,7 @@ from fe.qs_bridge.tool_approval import (
     CommandApprovalHook,
     build_approval_message_history,
 )
+from fe.state.active_turns import active_turns
 from fe.state.session_manager import SessionManager
 from fe.ui.input_bar import InputBarComponent
 from fe.ui.page_controller import ChatPageController
@@ -153,16 +154,18 @@ async def test_manual_approval_releases_the_worker_on_every_ui_exit(
         patch("fe.ui.page_controller.run_agent_turn", side_effect=fake_turn),
         patch("fe.ui.page_controller.ui.notify"),
     ):
+        collector = TurnStreamCollector()
         turn = asyncio.create_task(
             controller._run_turn(
                 session=session,
                 user_text="Inspect repository",
                 prior_history=[],
-                collector=TurnStreamCollector(),
+                collector=collector,
                 generate_title=False,
             )
         )
         controller._active_task = turn
+        active_turns.start(session.id, turn, collector, started_at=0)
         try:
             for _ in range(100):
                 if bar.approval_container.visible:

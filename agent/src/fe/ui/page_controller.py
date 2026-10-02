@@ -19,6 +19,7 @@ from fe.qs_bridge.context_usage import (
     populate_skill_closure_tokens,
 )
 from fe.qs_bridge.errors import build_execution_error_message
+from fe.qs_bridge.message_edit import prepare_message_edit
 from fe.qs_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -94,6 +95,7 @@ class ChatPageController:
         self.chat_view: ChatViewComponent | None = None
         self.input_bar: InputBarComponent | None = None
         self._pending_approval: Future[bool] | None = None
+        self._pending_approval_session_id: str | None = None
         self._client.on_delete(lambda: self._cancel_pending_approval())
 
     def build(self) -> None:
@@ -132,7 +134,8 @@ class ChatPageController:
 
         with ui.column().classes("chat-page-layout w-full justify-between"):
             self.chat_view = ChatViewComponent(
-                on_suggested_prompt=self.use_suggested_prompt
+                on_suggested_prompt=self.use_suggested_prompt,
+                on_edit_message=self.edit_message,
             )
             self.chat_view.build()
             self.input_bar = InputBarComponent(
@@ -387,6 +390,55 @@ class ChatPageController:
                 self.chat_view.show_sub_agent(conversation_id)
             self.update_context_usage()
 
+    async def edit_message(self, session_id: str, message_id: str, text: str) -> bool:
+        async with active_turns.edit_lock(session_id):
+            return await self._edit_message(session_id, message_id, text)
+
+    async def _edit_message(self, session_id: str, message_id: str, text: str) -> bool:
+        session = session_manager.get_session(session_id)
+        if session is None:
+            return False
+        message = session_manager.find_user_message(session, message_id)
+        if message is None:
+            return False
+        try:
+            prepared = await asyncio.get_running_loop().run_in_executor(
+                None,
+                partial(
+                    prepare_message_edit,
+                    message,
+                    text.strip(),
+                    storage=session_manager.temp_storage(session),
+                    use_file_references=session.agent_mode == "deep_agent",
+                ),
+            )
+        except (OSError, ValueError) as error:
+            with self._client:
+                ui.notify(f"Unable to prepare message: {error}", type="negative")
+            return False
+        if not prepared.prompt and not prepared.image_urls:
+            return False
+        await active_turns.stop_and_wait(session.id)
+        if not session_manager.owns_session(session):
+            return False
+        replacement = prepared.to_chat_message()
+        with self._client:
+            if not session_manager.edit_message(session, message_id, replacement):
+                ui.notify("Unable to save edited message", type="negative")
+                return False
+            if self.chat_view and self.chat_view.is_streaming_session(session.id):
+                self.chat_view.finalize_stream()
+            self._followed_session_id = None
+            self._followed_revision = -1
+            self._render_queue_ui(session)
+            self._start_turn(
+                session,
+                prepared,
+                prior_history=session.message_history()[:-1],
+                generate_title=False,
+            )
+        return True
+
     def start_send(
         self,
         user_text: str,
@@ -431,14 +483,13 @@ class ChatPageController:
         if not session_manager.owns_session(session):
             return
         with self._client:
-            if active_turns.is_running(session.id) or (
-                self._active_task is not None and not self._active_task.done()
-            ):
+            if active_turns.is_running(session.id):
                 session.add_queued_message(
                     prepared_input.prompt,
                     prepared_input.display_content,
                     image_urls=prepared_input.image_urls,
                     image_paths=prepared_input.image_paths,
+                    attachment_paths=prepared_input.attachment_paths,
                 )
                 session_manager.save_session(session)
                 self._render_queue_ui(session)
@@ -450,34 +501,46 @@ class ChatPageController:
                 return
 
             session.model = config.default_model or session.model
-            if self.sidebar:
-                self.sidebar.clear_sub_agent_selection()
-            if self.chat_view:
-                self.chat_view.show_main()
             prior_history = session.message_history()
             generate_title = not prior_history
             title_text = prepared_input.title_text
             if generate_title:
                 session.title = self._fallback_title(title_text)
 
-            session_manager.add_message(
+            if not session_manager.add_message(
+                session, prepared_input.to_chat_message()
+            ):
+                ui.notify("Unable to save message", type="negative")
+                return
+            self._start_turn(
                 session,
-                ChatMessage(
-                    role="user",
-                    content=prepared_input.prompt,
-                    image_urls=prepared_input.image_urls,
-                    image_paths=prepared_input.image_paths,
-                    display_content=prepared_input.display_content,
-                ),
+                prepared_input,
+                prior_history=prior_history,
+                generate_title=generate_title,
             )
+
+    def _start_turn(
+        self,
+        session: ChatSession,
+        prepared_input: PreparedUserInput,
+        *,
+        prior_history: list[ChatMessage],
+        generate_title: bool,
+    ) -> None:
+        with self._client:
+            if self._is_session_visible(session):
+                if self.sidebar:
+                    self.sidebar.clear_sub_agent_selection()
+                if self.chat_view:
+                    self.chat_view.show_main()
             self._render_session_lists()
             collector = TurnStreamCollector()
             self.update_context_usage(session=session, collector=collector)
 
-            if self.input_bar:
+            if self.input_bar and self._is_session_visible(session):
                 self.input_bar.set_busy(True)
             started_at = time.monotonic()
-            if self.chat_view:
+            if self.chat_view and self._is_session_visible(session):
                 self.chat_view.start_assistant_stream(started_at=started_at)
 
             self._active_task = asyncio.create_task(
@@ -488,7 +551,7 @@ class ChatPageController:
                     prior_history=prior_history,
                     collector=collector,
                     generate_title=generate_title,
-                    title_text=title_text,
+                    title_text=prepared_input.title_text,
                 )
             )
             active_turns.start(
@@ -520,14 +583,18 @@ class ChatPageController:
         collector: TurnStreamCollector,
         *,
         force: bool = False,
+        accepts_events: Callable[[], bool] | None = None,
     ) -> None:
         now = time.time()
         if not force and (now - self._last_context_update_ts) < 0.15:
             return
         self._last_context_update_ts = now
-        loop.call_soon_threadsafe(
-            self._update_live_context_in_client, session, collector
-        )
+
+        def update() -> None:
+            if accepts_events is None or accepts_events():
+                self._update_live_context_in_client(session, collector)
+
+        loop.call_soon_threadsafe(update)
 
     def _update_live_context_in_client(
         self,
@@ -560,15 +627,31 @@ class ChatPageController:
                     turn_task.done() or turn_task.cancelling() or cancelled
                 )
 
+            def accepts_pending_events() -> bool:
+                # Normal completion can precede queued UI callbacks. Cancellation
+                # or a replacement turn must still reject those callbacks.
+                return (
+                    turn_task is not None
+                    and not turn_task.cancelling()
+                    and not cancelled
+                    and (
+                        not active_turns.is_running(session.id)
+                        or active_turns.is_task(session.id, turn_task)
+                    )
+                )
+
             def on_sub_agent(event: SubAgentEvent) -> None:
-                if accepts_events():
+                if accepts_pending_events():
                     self._on_sub_agent(session, event)
 
             def show_stream_update(action: Callable[[ChatViewComponent], None]) -> None:
                 if not self._client.is_deleted:
-                    loop.call_soon_threadsafe(
-                        self._update_stream_view, session.id, action
-                    )
+
+                    def update() -> None:
+                        if accepts_pending_events():
+                            self._update_stream_view(session.id, action)
+
+                    loop.call_soon_threadsafe(update)
 
             def mark_stream_changed() -> None:
                 active_turns.mark_changed(session.id, collector)
@@ -579,7 +662,9 @@ class ChatPageController:
                 collector.append_token(token)
                 mark_stream_changed()
                 show_stream_update(lambda view: view.stream_token(token))
-                self._schedule_live_context_update(loop, session, collector)
+                self._schedule_live_context_update(
+                    loop, session, collector, accepts_events=accepts_pending_events
+                )
 
             def on_reasoning(token: str, skill_path: str = "/", depth: int = 0) -> None:
                 if not accepts_events():
@@ -596,7 +681,9 @@ class ChatPageController:
                         generation_index=block.generation_index,
                     )
                 )
-                self._schedule_live_context_update(loop, session, collector)
+                self._schedule_live_context_update(
+                    loop, session, collector, accepts_events=accepts_pending_events
+                )
 
             def on_tool(event: ToolEvent) -> None:
                 if not accepts_events():
@@ -605,7 +692,13 @@ class ChatPageController:
                 mark_stream_changed()
                 snapshot = event.model_copy(deep=True)
                 show_stream_update(lambda view: view.add_tool_event(snapshot))
-                self._schedule_live_context_update(loop, session, collector, force=True)
+                self._schedule_live_context_update(
+                    loop,
+                    session,
+                    collector,
+                    force=True,
+                    accepts_events=accepts_pending_events,
+                )
 
             def on_skill(node: SkillNode, action: str) -> None:
                 if not accepts_events():
@@ -619,7 +712,13 @@ class ChatPageController:
                 show_stream_update(
                     lambda view: view.handle_live_skill_event(snapshot, action)
                 )
-                self._schedule_live_context_update(loop, session, collector, force=True)
+                self._schedule_live_context_update(
+                    loop,
+                    session,
+                    collector,
+                    force=True,
+                    accepts_events=accepts_pending_events,
+                )
 
             def on_raw_history(
                 raw_history: list[dict[str, object]],
@@ -632,7 +731,13 @@ class ChatPageController:
                 snapshot = collector.snapshot_message()
                 show_stream_update(lambda view: view.show_steering_insertions(snapshot))
                 populate_skill_closure_tokens(session, collector=collector)
-                self._schedule_live_context_update(loop, session, collector, force=True)
+                self._schedule_live_context_update(
+                    loop,
+                    session,
+                    collector,
+                    force=True,
+                    accepts_events=accepts_pending_events,
+                )
 
             def on_steering_added() -> None:
                 if not accepts_events():
@@ -652,7 +757,13 @@ class ChatPageController:
                             snapshot, "updated"
                         )
                     )
-                self._schedule_live_context_update(loop, session, collector, force=True)
+                self._schedule_live_context_update(
+                    loop,
+                    session,
+                    collector,
+                    force=True,
+                    accepts_events=accepts_pending_events,
+                )
 
             def on_request_manual_approval(command: str) -> bool:
                 decision: Future[bool] = Future()
@@ -668,9 +779,12 @@ class ChatPageController:
             def on_command_approved(
                 command: str, raw_history: list[dict[str, str]]
             ) -> None:
-                loop.call_soon_threadsafe(
-                    self._record_command_approval, session, command, raw_history
-                )
+                def record() -> None:
+                    if accepts_pending_events():
+                        self._record_command_approval(session, command, raw_history)
+
+                if accepts_events():
+                    loop.call_soon_threadsafe(record)
 
             started_at = time.time()
             message_error = None
@@ -720,7 +834,9 @@ class ChatPageController:
                         position="top",
                     )
             finally:
-                self._cancel_pending_approval(interrupt_turn=cancelled)
+                self._cancel_pending_approval(
+                    session_id=session.id, interrupt_turn=cancelled
+                )
 
             assistant_message = collector.build_message(
                 role="assistant",
@@ -740,7 +856,8 @@ class ChatPageController:
                             )
                         )
             finally:
-                self._active_task = None
+                if self._active_task is turn_task:
+                    self._active_task = None
                 if turn_task is not None:
                     active_turns.finish(
                         session.id,
@@ -800,7 +917,7 @@ class ChatPageController:
             self.chat_view.finalize_session_stream(session.id)
         if self.sidebar:
             self.sidebar.render_sessions()
-        if self.input_bar:
+        if self.input_bar and self._is_session_visible(session):
             self.input_bar.set_busy(False)
         self.update_context_usage(session=session)
 
@@ -824,7 +941,6 @@ class ChatPageController:
         decision: Future[bool],
         accepts_events: Callable[[], bool],
     ) -> None:
-        self._cancel_pending_approval()
         if not accepts_events():
             decision.set_exception(asyncio.CancelledError())
             return
@@ -835,7 +951,9 @@ class ChatPageController:
         ):
             decision.set_result(False)
             return
+        self._cancel_pending_approval()
         self._pending_approval = decision
+        self._pending_approval_session_id = session.id
         with self._client:
             self.input_bar.show_approval_prompt(
                 command,
@@ -848,11 +966,16 @@ class ChatPageController:
             decision.set_result(approved)
         if self._pending_approval is decision:
             self._pending_approval = None
+            self._pending_approval_session_id = None
             if not self._client.is_deleted and self.input_bar:
                 with self._client:
                     self.input_bar.hide_approval_prompt()
 
-    def _cancel_pending_approval(self, *, interrupt_turn: bool = False) -> None:
+    def _cancel_pending_approval(
+        self, *, session_id: str | None = None, interrupt_turn: bool = False
+    ) -> None:
+        if session_id is not None and self._pending_approval_session_id != session_id:
+            return
         if self._pending_approval is not None:
             if interrupt_turn and not self._pending_approval.done():
                 self._pending_approval.set_exception(asyncio.CancelledError())
@@ -868,10 +991,7 @@ class ChatPageController:
         with self._client:
             session = session_manager.get_current_session()
             stopped = active_turns.stop(session.id)
-            if not stopped and self._active_task and not self._active_task.done():
-                self._active_task.cancel()
-                stopped = True
-            self._cancel_pending_approval(interrupt_turn=stopped)
+            self._cancel_pending_approval(session_id=session.id, interrupt_turn=stopped)
             if self.input_bar:
                 self.input_bar.hide_approval_prompt()
             if stopped:
@@ -921,6 +1041,7 @@ class ChatPageController:
             title_text=next_msg.visible_text,
             image_urls=next_msg.image_urls,
             image_paths=next_msg.image_paths,
+            attachment_paths=next_msg.attachment_paths or [],
         )
         self._send_prepared(session, prepared_input)
 

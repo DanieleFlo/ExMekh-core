@@ -486,6 +486,7 @@ class QueuedMessage(BaseModel):
     text: str
     image_urls: list[str] = Field(default_factory=list)
     image_paths: list[str] = Field(default_factory=list)
+    attachment_paths: list[str] | None = None
     display_content: str | None = None
     created_at: float = Field(default_factory=time.time)
 
@@ -500,6 +501,11 @@ class QueuedMessage(BaseModel):
             content=self.text,
             image_urls=list(self.image_urls),
             image_paths=list(self.image_paths),
+            attachment_paths=(
+                list(self.attachment_paths)
+                if self.attachment_paths is not None
+                else None
+            ),
             display_content=self.display_content,
             timestamp=self.created_at,
         )
@@ -520,6 +526,7 @@ class ChatMessage(BaseModel):
     content: str = ""
     image_urls: list[str] = Field(default_factory=list)
     image_paths: list[str] = Field(default_factory=list)
+    attachment_paths: list[str] | None = None
     display_content: str | None = None
     reasoning_content: str = ""
     reasoning_blocks: list[ReasoningBlock] = Field(default_factory=list)
@@ -542,6 +549,15 @@ class ChatMessage(BaseModel):
         return (
             self.display_content if self.display_content is not None else self.content
         )
+
+    def find_user_message(self, message_id: str) -> ChatMessage | None:
+        """Return an independent user input, including guidance owned by this turn."""
+        if self.role == "user" and self.id == message_id:
+            return self.model_copy(deep=True)
+        guidance = next(
+            (item for item in self.steering_messages if item.id == message_id), None
+        )
+        return guidance.to_chat_message() if guidance is not None else None
 
     def arguments_for_tool(self, event: ToolEvent) -> dict[str, Any]:
         """Resolve saved invocations, including legacy nested skill transcripts."""
@@ -729,6 +745,25 @@ class SubAgentConversation(BaseModel):
     def message_history(self) -> list[ChatMessage]:
         return list(self.messages)
 
+    def replay_history(self) -> list[dict[str, Any]] | list[ChatMessage]:
+        """Replay the retained QS snapshot, with a safe fallback for legacy calls."""
+        return (
+            deepcopy(self.raw_history) if self.raw_history else deepcopy(self.messages)
+        )
+
+    def discard_calls_from(self, timestamp: float) -> bool:
+        """Retain completed calls that began before a revised parent turn."""
+        self.messages = [
+            message for message in self.messages if message.timestamp < timestamp
+        ]
+        if not self.messages:
+            self.raw_history = []
+            return False
+        last = self.messages[-1]
+        self.raw_history = deepcopy(last.raw_history)
+        self.status = "error" if last.error else "completed"
+        return True
+
     def start_call(self, user_message: str) -> None:
         if self.messages and self.messages[-1].is_streaming:
             raise ValueError(f"Sub-agent conversation {self.id} is already active")
@@ -769,11 +804,13 @@ class SubAgentConversation(BaseModel):
         message = self._active_assistant()
         message.content = response or message.content
         message.finish("completed")
-        self.raw_history = list(raw_history)
+        self.raw_history = deepcopy(raw_history)
+        message.raw_history = deepcopy(raw_history)
         self.status = "completed"
 
     def fail_call(self) -> None:
         message = self._active_assistant()
+        message.error = "Sub-agent call failed"
         message.finish("error")
         self.status = "error"
 
@@ -832,6 +869,11 @@ class ChatSettings(ProjectSettings):
     def set_tool_approval_mode(self, mode: str) -> None:
         self.tool_approval_mode = normalize_tool_approval_mode(mode)
 
+    def clear_command_approvals(self) -> None:
+        """Discard evaluator history and cached decisions from an obsolete branch."""
+        self.approved_commands_history = []
+        self.tool_approval_raw_history = []
+
     def record_command_approval(
         self, command: str, raw_history: list[dict[str, str]]
     ) -> None:
@@ -889,6 +931,79 @@ class ChatSession(BaseModel):
     def add_message(self, message: ChatMessage) -> None:
         self.messages.append(message)
 
+    def find_user_message(self, message_id: str) -> ChatMessage | None:
+        for message in self.messages:
+            found = message.find_user_message(message_id)
+            if found is not None:
+                return found
+        return None
+
+    def revised_user_message(
+        self, message_id: str, replacement: ChatMessage
+    ) -> ChatSession | None:
+        """Build an independent conversation branch without modifying this session."""
+        if replacement.role != "user":
+            return None
+        revised = self.model_copy(deep=True)
+        boundary = revised._revision_boundary(message_id)
+        if boundary is None:
+            return None
+        prefix, original, cutoff = boundary
+        revised.messages = prefix + [
+            replacement.model_copy(
+                deep=True,
+                update={
+                    "id": original.id,
+                    "timestamp": original.timestamp,
+                },
+            )
+        ]
+        revised.sub_agent_conversations = [
+            child
+            for child in revised.sub_agent_conversations
+            if child.discard_calls_from(cutoff)
+        ]
+        revised.queued_messages = []
+        revised.settings.clear_command_approvals()
+        return revised
+
+    def _revision_boundary(
+        self, message_id: str
+    ) -> tuple[list[ChatMessage], ChatMessage, float] | None:
+        for index, message in enumerate(self.messages):
+            if message.role == "user" and message.id == message_id:
+                return self.messages[:index], message, message.timestamp
+            earlier_guidance = []
+            for guidance in message.steering_messages:
+                if guidance.id == message_id:
+                    # Guidance bubbles precede their owning response. Restart
+                    # that response at its initiating input, including child calls.
+                    cutoff = next(
+                        (
+                            item.timestamp
+                            for item in reversed(self.messages[:index])
+                            if item.role == "user"
+                        ),
+                        message.timestamp,
+                    )
+                    return (
+                        self.messages[:index] + earlier_guidance,
+                        guidance.to_chat_message(),
+                        cutoff,
+                    )
+                earlier_guidance.append(guidance.to_chat_message())
+        return None
+
+    def apply_revision(self, revised: ChatSession) -> None:
+        """Publish a persisted branch while retaining this managed instance."""
+        if revised.id != self.id:
+            raise ValueError("Revision belongs to another conversation")
+        self.messages = revised.messages
+        self.sub_agent_conversations = revised.sub_agent_conversations
+        self.queued_messages = revised.queued_messages
+        self.settings = revised.settings
+        self.updated_at = revised.updated_at
+
     def find_sub_agent_conversation(
         self, conversation_id: str | None
     ) -> SubAgentConversation | None:
@@ -940,12 +1055,14 @@ class ChatSession(BaseModel):
         *,
         image_urls: list[str] | None = None,
         image_paths: list[str] | None = None,
+        attachment_paths: list[str] | None = None,
     ) -> QueuedMessage:
         msg = QueuedMessage(
             text=text,
             display_content=display_content,
             image_urls=image_urls or [],
             image_paths=image_paths or [],
+            attachment_paths=attachment_paths,
         )
         self.queued_messages.append(msg)
         return msg

@@ -10,6 +10,7 @@ from typing import Any
 
 from fe.qs_bridge.context_usage import count_text_tokens
 from fe.qs_bridge.image_input import attachment_images
+from fe.qs_bridge.models import ChatMessage
 from fe.state.temp_storage import TempStorage, clean_attachment_filename
 
 PASTE_TOKEN_THRESHOLD: int = 300
@@ -120,6 +121,49 @@ class StagedAttachment:
             pdf_pages=int(payload.get("pdf_pages", 0)),
         )
 
+    @classmethod
+    def from_saved_file(
+        cls, relative_path: str, *, storage: TempStorage
+    ) -> StagedAttachment:
+        """Restore an explicit upload using the storage's scoped public API."""
+        file_path = storage.resolve_attachment(relative_path, allow_legacy=True)
+        return cls.from_file_data(
+            file_path.name, file_path.read_bytes(), file_path, relative_path
+        )
+
+    @classmethod
+    def from_file_data(
+        cls,
+        filename: str,
+        data: bytes,
+        file_path: Path | None = None,
+        relative_path: str | None = None,
+    ) -> StagedAttachment:
+        """Validate and describe file data before any staging write."""
+        image_urls, pdf_pages = attachment_images(filename, data)
+        clean_name = clean_attachment_filename(filename)
+        is_binary = bool(image_urls) or b"\x00" in data
+        text_content = ""
+        if not is_binary:
+            try:
+                text_content = data.decode("utf-8")
+            except UnicodeDecodeError:
+                is_binary = True
+        return cls(
+            id=uuid.uuid4().hex[:6],
+            content=text_content,
+            preview=clean_name,
+            token_count=0 if is_binary else count_text_tokens(text_content),
+            file_path=file_path,
+            relative_path=relative_path,
+            filename=clean_name,
+            is_binary=is_binary,
+            file_size=len(data),
+            data=data,
+            image_urls=image_urls,
+            pdf_pages=pdf_pages,
+        )
+
     def delete_file(self) -> None:
         """Remove the staged file when the user discards or inlines it."""
         if self.file_path is not None:
@@ -138,6 +182,18 @@ class PreparedUserInput:
     title_text: str
     image_urls: list[str] = field(default_factory=list)
     image_paths: list[str] = field(default_factory=list)
+    attachment_paths: list[str] = field(default_factory=list)
+
+    def to_chat_message(self) -> ChatMessage:
+        """Use one mapping for new input and edited input."""
+        return ChatMessage(
+            role="user",
+            content=self.prompt,
+            display_content=self.display_content,
+            image_urls=list(self.image_urls),
+            image_paths=list(self.image_paths),
+            attachment_paths=list(self.attachment_paths),
+        )
 
 
 def extract_content_preview(content: str, max_chars: int = 25) -> str:
@@ -207,37 +263,9 @@ def create_staged_attachment_from_file(
 
     Handles binary content and excessively long filenames safely.
     """
-    image_urls, pdf_pages = attachment_images(filename, data)
-    file_path, relative_path = (
-        storage or TempStorage(work_root, temp_dirname)
-    ).write_file(filename, data)
-    clean_name = clean_attachment_filename(filename)
-
-    is_binary = False
-    text_content = ""
-    if image_urls or b"\x00" in data:
-        is_binary = True
-    else:
-        try:
-            text_content = data.decode("utf-8")
-        except UnicodeDecodeError:
-            is_binary = True
-
-    att_id = uuid.uuid4().hex[:6]
-    return StagedAttachment(
-        id=att_id,
-        content=text_content,
-        preview=clean_name,
-        token_count=0 if is_binary else count_text_tokens(text_content),
-        file_path=file_path,
-        relative_path=relative_path,
-        filename=clean_name,
-        is_binary=is_binary,
-        file_size=len(data),
-        data=data,
-        image_urls=image_urls,
-        pdf_pages=pdf_pages,
-    )
+    attachment = StagedAttachment.from_file_data(filename, data)
+    attachment.reference(work_root, temp_dirname, storage=storage)
+    return attachment
 
 
 def create_staged_attachments_from_text(
@@ -338,7 +366,7 @@ def prepare_user_input(
             ),
         ]
         prompt = "\n\n".join(part for part in parts if part)
-        display_content = text if any(a.image_urls for a in attachments or []) else None
+        display_content = text if attachments else None
     elif attachments is None:
         prompt, display_content, _ = process_user_input_text(
             text, work_root=work_root, temp_dirname=temp_dirname, storage=storage
@@ -385,8 +413,20 @@ def prepare_user_input(
         if urls:
             image_urls.extend(urls)
             image_paths.append(relative_path)
+    attachment_paths = list(
+        dict.fromkeys(
+            [
+                *(
+                    attachment.relative_path
+                    for attachment in attachments or []
+                    if attachment.relative_path
+                ),
+                *extract_attached_files_from_content(text),
+            ]
+        )
+    )
     return PreparedUserInput(
-        prompt, display_content, title_text, image_urls, image_paths
+        prompt, display_content, title_text, image_urls, image_paths, attachment_paths
     )
 
 
