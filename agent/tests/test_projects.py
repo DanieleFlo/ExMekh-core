@@ -8,10 +8,13 @@ from unittest.mock import patch
 import pytest
 from pydantic import ValidationError
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.converter import qs_messages_to_session, session_to_qs_messages
-from fe.qs_bridge.models import ChatMessage, ChatSession, Project, ProjectSettings
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.converter import (
+    exmekh_messages_to_session,
+    session_to_exmekh_messages,
+)
+from fe.exmekh_bridge.models import ChatMessage, ChatSession, Project, ProjectSettings
+from fe.exmekh_bridge.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
     prepare_user_input,
@@ -271,9 +274,9 @@ def test_quick_chat_keeps_long_text_inline_and_includes_text_attachments(
         )
 
 
-def test_project_identity_survives_qs_conversion(tmp_path: Path) -> None:
+def test_project_identity_survives_exmekh_conversion(tmp_path: Path) -> None:
     session = ChatSession(
         project_id="project", messages=[ChatMessage(role="user", content="Hello")]
     )
-    restored = qs_messages_to_session(session_to_qs_messages(session))
+    restored = exmekh_messages_to_session(session_to_exmekh_messages(session))
     assert restored.project_id == "project"

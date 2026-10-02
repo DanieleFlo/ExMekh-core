@@ -25,7 +25,7 @@ class HeaderComponent:
                 ).classes("text-zinc-300")
                 ui.icon("terminal", size="sm").classes("text-zinc-300")
                 with ui.column().classes("gap-0"):
-                    ui.label("QS Studio").classes(
+                    ui.label("ExMekh-Lib Studio").classes(
                         "font-bold text-base tracking-wider text-zinc-100"
                     )
                     ui.label("Hierarchical Agent Engine").classes(

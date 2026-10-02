@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import time
 
-from qs.core.agents.deep_agent import DeepAgentExecutionEvent
+from exmekh_lib.core.agents.deep_agent import DeepAgentExecutionEvent
 
-from fe.qs_bridge.models import ToolEvent
-from fe.qs_bridge.tool_calls import extract_tool_arguments
+from fe.exmekh_bridge.models import ToolEvent
+from fe.exmekh_bridge.tool_calls import extract_tool_arguments
 
 
 def tool_event_from_execution(

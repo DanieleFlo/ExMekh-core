@@ -12,6 +12,7 @@ from tests.browser_support import (
     get_edge_executable,
     send_command,
     start_mock_server,
+    wait_for_mock_requests,
     wait_turn_completion,
 )
 
@@ -53,7 +54,7 @@ def fe_nested_steering_mock_server() -> Generator[str]:
     )
 
 
-async def test_steering_button_updates_the_running_qs_turn_after_refresh(
+async def test_steering_button_updates_the_running_exmekh_turn_after_refresh(
     fe_steering_mock_server: str,
 ) -> None:
     async with async_playwright() as playwright:
@@ -71,8 +72,11 @@ async def test_steering_button_updates_the_running_qs_turn_after_refresh(
             await page.get_by_role("option", name="Approve All", exact=True).click()
             await send_command(page, "Start steering test")
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
+            await wait_for_mock_requests(
+                page, f"{fe_steering_mock_server}/test/steering-stats", 1
+            )
             await send_command(page, "Use the other file")
-            first_row = page.locator(".qs-queue-item").filter(
+            first_row = page.locator(".exmekh-queue-item").filter(
                 has_text="Use the other file"
             )
             await expect(first_row).to_be_visible()
@@ -98,11 +102,11 @@ async def test_steering_button_updates_the_running_qs_turn_after_refresh(
             await expect(page.locator(".steering-tool-marker")).to_have_count(0)
 
             # The second queued message also steers the same original run.
-            row = page.locator(".qs-queue-item").filter(
+            row = page.locator(".exmekh-queue-item").filter(
                 has_text="Also keep the existing API"
             )
             await row.get_by_role("button", name="Steering").click()
-            await expect(page.locator(".qs-queue-box")).not_to_be_visible()
+            await expect(page.locator(".exmekh-queue-box")).not_to_be_visible()
             await page.reload(wait_until="networkidle")
             await expect(page.locator(".msg-user")).to_contain_text(
                 [
@@ -112,7 +116,7 @@ async def test_steering_button_updates_the_running_qs_turn_after_refresh(
                 ]
             )
             await page.request.post(f"{fe_steering_mock_server}/test/release-inference")
-            # QS confirms insertion before the next inference completes.
+            # ExMekh-Lib confirms insertion before the next inference completes.
             await expect(page.locator(".steering-tool-marker")).to_have_count(2)
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
             await page.reload(wait_until="networkidle")
@@ -150,7 +154,7 @@ async def test_steering_button_updates_the_running_qs_turn_after_refresh(
             stats = await (
                 await page.request.get(f"{fe_steering_mock_server}/test/steering-stats")
             ).json()
-            # QS may retrieve asynchronous bash output before ending the first run.
+            # ExMekh-Lib may retrieve asynchronous bash output before ending the first run.
             completed_request_count = len(stats["requests"])
             await send_command(page, "Continue")
             await wait_turn_completion(page)
@@ -196,18 +200,11 @@ async def test_graph_keeps_steering_inside_nested_skill_after_reload(
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
             await page.request.post(f"{server}/test/release-inference")
 
-            async def wait_for_nested_inference() -> None:
-                while True:
-                    stats = await (
-                        await page.request.get(f"{server}/test/steering-stats")
-                    ).json()
-                    if len(stats["requests"]) == 2:
-                        return
-                    await asyncio.sleep(0.1)
-
-            await asyncio.wait_for(wait_for_nested_inference(), 5)
+            await wait_for_mock_requests(page, f"{server}/test/steering-stats", 2)
             await send_command(page, "Use the nested route")
-            row = page.locator(".qs-queue-item").filter(has_text="Use the nested route")
+            row = page.locator(".exmekh-queue-item").filter(
+                has_text="Use the nested route"
+            )
             await row.get_by_role("button", name="Steering").click()
             await expect(page.locator(".msg-user-steering")).to_contain_text(
                 "Use the nested route"
@@ -265,7 +262,7 @@ async def test_new_chat_reuses_existing_empty_chat(fe_mock_server: str) -> None:
             new_chat = page.get_by_role(
                 "button", name="New project chat", exact=True
             ).first
-            input_box = page.locator(".qs-chat-input-box")
+            input_box = page.locator(".exmekh-chat-input-box")
             chat_cards = page.locator(".lm-sidebar .sidebar-item:not(.sub-agent-card)")
             await new_chat.click()
             await expect(input_box).to_have_attribute(
@@ -323,12 +320,12 @@ async def test_stop_while_awaiting_approval_stops_inference_and_persists_in_chat
                 "button", name="New project chat", exact=True
             ).first.click()
             await send_command(page, "Run echo approval_probe")
-            await expect(page.locator(".qs-approval-box")).to_be_visible()
+            await expect(page.locator(".exmekh-approval-box")).to_be_visible()
             await page.locator("button:has(i:has-text('stop'))").first.click()
             await expect(page.locator(".generation-stopped")).to_have_text(
                 "stop_circleGeneration stopped by user"
             )
-            await expect(page.locator(".qs-approval-box")).not_to_be_visible()
+            await expect(page.locator(".exmekh-approval-box")).not_to_be_visible()
             await expect(page.locator(".chat-message-streaming")).to_have_count(0)
             await expect(
                 page.get_by_text("Output before approval", exact=True)
@@ -369,7 +366,7 @@ async def test_file_drop_stages_text_and_binary_files_in_the_current_chat(
             await page.get_by_role(
                 "button", name="New project chat", exact=True
             ).first.click()
-            drop_zone = page.locator(".qs-chat-input-box")
+            drop_zone = page.locator(".exmekh-chat-input-box")
             await expect(drop_zone).to_have_attribute(
                 "data-session-id", re.compile(r".+")
             )
@@ -380,11 +377,11 @@ async def test_file_drop_stages_text_and_binary_files_in_the_current_chat(
                 return transfer;
             }""")
             await drop_zone.dispatch_event("dragenter", {"dataTransfer": transfer})
-            await expect(page.locator(".qs-drop-overlay")).to_have_class(
-                re.compile(r".*qs-active.*")
+            await expect(page.locator(".exmekh-drop-overlay")).to_have_class(
+                re.compile(r".*exmekh-active.*")
             )
             async with page.expect_response(
-                lambda response: response.url.endswith("/_qs/upload")
+                lambda response: response.url.endswith("/_exmekh/upload")
             ) as pending_upload:
                 await drop_zone.dispatch_event("drop", {"dataTransfer": transfer})
             response = await pending_upload.value
@@ -398,15 +395,17 @@ async def test_file_drop_stages_text_and_binary_files_in_the_current_chat(
                 b"print(42)",
                 b"\x00\xff\x01\x02",
             ]
-            await expect(page.locator(".qs-attachment-chip")).to_have_count(2)
-            await expect(page.locator(".qs-drop-overlay")).not_to_have_class(
-                re.compile(r".*qs-active.*")
+            await expect(page.locator(".exmekh-attachment-chip")).to_have_count(2)
+            await expect(page.locator(".exmekh-drop-overlay")).not_to_have_class(
+                re.compile(r".*exmekh-active.*")
             )
             await send_command(page, "Review the attachments")
             await wait_turn_completion(page)
-            await expect(page.locator(".qs-message-attachment-chip")).to_have_count(2)
+            await expect(page.locator(".exmekh-message-attachment-chip")).to_have_count(
+                2
+            )
             await (
-                page.locator(".qs-message-attachment-chip")
+                page.locator(".exmekh-message-attachment-chip")
                 .filter(has_text=".bin")
                 .click()
             )
@@ -686,7 +685,7 @@ async def test_ui_e2e_pipeline_session_switch_and_history_persistence(
 
         # In session B, chat view should be reset to welcome hero
         assert await page.locator(".msg-user").count() == 0
-        assert await page.locator("text=QS Studio").first.is_visible()
+        assert await page.locator("text=ExMekh-Lib Studio").first.is_visible()
 
         # Switch back to session A via sidebar
         session_a_item = page.locator(
@@ -793,13 +792,13 @@ async def test_ui_e2e_fenced_code_block_copy_button(
 
         # Click first block copy button -> should copy only the python block
         await btn_0.click()
-        copied_0 = await page.evaluate("() => window.__qsLastCopiedCode")
+        copied_0 = await page.evaluate("() => window.__exmekhLastCopiedCode")
         assert copied_0 == "def calcola(x):\n    return x * 2"
         assert await btn_0.get_attribute("data-copied") == "true"
 
         # Click second block copy button -> should copy only the special text block
         await btn_1.click()
-        copied_1 = await page.evaluate("() => window.__qsLastCopiedCode")
+        copied_1 = await page.evaluate("() => window.__exmekhLastCopiedCode")
         assert copied_1 == "SEZIONE_TESTO_SPECIALE_SOLO_QUESTO"
         assert await btn_1.get_attribute("data-copied") == "true"
 

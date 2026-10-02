@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Generator
 
 import pytest
@@ -12,6 +11,7 @@ from tests.browser_support import (
     BrowserTestServer,
     get_edge_executable,
     send_command,
+    wait_for_mock_requests,
     wait_turn_completion,
 )
 from tests.image_samples import pdf_bytes, png_bytes
@@ -51,17 +51,8 @@ async def test_nested_steering_output_and_pdf_images_are_read_after_browser_relo
             await expect(page.locator(".chat-message-streaming")).to_be_visible()
             await page.request.post(f"{server}/test/release-inference")
 
-            async def wait_for_skill() -> None:
-                while True:
-                    stats = await (
-                        await page.request.get(f"{server}/test/steering-stats")
-                    ).json()
-                    if len(stats["requests"]) == 2:
-                        return
-                    await asyncio.sleep(0.1)
-
-            await asyncio.wait_for(wait_for_skill(), 5)
-            await page.locator(".qs-file-picker").set_input_files(
+            await wait_for_mock_requests(page, f"{server}/test/steering-stats", 2)
+            await page.locator(".exmekh-file-picker").set_input_files(
                 [
                     {"name": "red.png", "mimeType": "image/png", "buffer": png_bytes()},
                     {
@@ -71,9 +62,9 @@ async def test_nested_steering_output_and_pdf_images_are_read_after_browser_relo
                     },
                 ]
             )
-            await expect(page.locator(".qs-attachment-chip")).to_have_count(2)
+            await expect(page.locator(".exmekh-attachment-chip")).to_have_count(2)
             await send_command(page, "Read the attached correction")
-            row = page.locator(".qs-queue-item").filter(
+            row = page.locator(".exmekh-queue-item").filter(
                 has_text="Read the attached correction"
             )
             await row.get_by_role("button", name="Steering").click()

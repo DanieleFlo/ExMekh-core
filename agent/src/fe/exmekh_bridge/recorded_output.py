@@ -1,11 +1,11 @@
-"""Parse persisted QS output headers at the frontend boundary."""
+"""Parse persisted ExMekh-Lib output headers at the frontend boundary."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from xml.etree import ElementTree as ET
 
-from qs.core.models.tool_output_reference import ToolOutputReference
+from exmekh_lib.core.models.tool_output_reference import ToolOutputReference
 
 
 @dataclass(frozen=True, slots=True)

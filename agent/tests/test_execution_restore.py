@@ -5,13 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from qs.core.cache.session_cache import SessionCache
-from qs.core.tool_calls.execution_history import ExecutionHistory
+from exmekh_lib.core.cache.session_cache import SessionCache
+from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
 
-from fe.qs_bridge.converter import reconstruct_execution_history_and_cache
-from fe.qs_bridge.models import ChatMessage
-from fe.qs_bridge.recorded_output import RecordedToolOutput
-from fe.qs_bridge.steering_history import direct_steering_output_ids
+from fe.exmekh_bridge.converter import reconstruct_execution_history_and_cache
+from fe.exmekh_bridge.models import ChatMessage
+from fe.exmekh_bridge.recorded_output import RecordedToolOutput
+from fe.exmekh_bridge.steering_history import direct_steering_output_ids
 
 
 def header(output_id: str, references: list[tuple[str, str]]) -> str:

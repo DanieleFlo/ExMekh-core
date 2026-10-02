@@ -6,28 +6,32 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from pydantic import BaseModel
-from qs.core.models.assistant_message import AssistantMessage
-from qs.core.models.client import Client
-from qs.core.models.client_request import ClientRequest
-from qs.core.models.provider_request import ProviderRequest
-from qs.core.models.provider_response import ProviderResponse
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.models.assistant_message import AssistantMessage
+from exmekh_lib.core.models.client import Client
+from exmekh_lib.core.models.client_request import ClientRequest
+from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.core.models.structured_assistant_message import StructuredAssistantMessage
-from qs.core.models.structured_provider_request import StructuredProviderRequest
-from qs.core.models.structured_provider_response import StructuredProviderResponse
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.tools import Tools
-from qs.core.models.user_message import UserMessage
-from qs.interfaces.provider import Provider
-from qs.interfaces.tokenizer import Tokenizer
-from qs.tokenizers.qwen import QwenTokenizer
+from exmekh_lib.core.models.structured_assistant_message import (
+    StructuredAssistantMessage,
+)
+from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
+from exmekh_lib.core.models.structured_provider_response import (
+    StructuredProviderResponse,
+)
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.tools import Tools
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.interfaces.provider import Provider
+from exmekh_lib.interfaces.tokenizer import Tokenizer
+from exmekh_lib.tokenizers.qwen import QwenTokenizer
+from pydantic import BaseModel
 
-from fe.qs_bridge import agent_runner as ar
-from fe.qs_bridge.models import ChatTitle, SkillNode, ToolEvent
+from fe.exmekh_bridge import agent_runner as ar
+from fe.exmekh_bridge.models import ChatTitle, SkillNode, ToolEvent
 
 logger = logging.getLogger(__name__)
 
@@ -309,7 +313,7 @@ def create_quick_chat_pipeline() -> ScenarioPipeline:
 
 
 class MockProvider(Provider):
-    """Mock Provider extending qs.interfaces.provider.Provider to serve scenario pipelines."""
+    """Mock Provider extending exmekh_lib.interfaces.provider.Provider to serve scenario pipelines."""
 
     def __init__(
         self,
@@ -404,7 +408,7 @@ class MockProvider(Provider):
 
 
 class MockClient(Client):
-    """Mock Client inheriting from qs.core.models.client.Client backed by a MockProvider instance."""
+    """Mock Client inheriting from exmekh_lib.core.models.client.Client backed by a MockProvider instance."""
 
     def __init__(
         self,
@@ -449,10 +453,12 @@ class MockClient(Client):
         history: Any | None = None,
     ) -> str:
         """Executes a full turn across the pipeline, driving all UI stream callbacks."""
-        prior_qs = ar.convert_to_qs_messages(history, current_user_prompt=user_prompt)
-        if prior_qs:
+        prior_exmekh = ar.convert_to_exmekh_messages(
+            history, current_user_prompt=user_prompt
+        )
+        if prior_exmekh:
             try:
-                self.replace_history_from(1, prior_qs)
+                self.replace_history_from(1, prior_exmekh)
             except Exception:
                 pass
 
@@ -531,7 +537,7 @@ class MockClient(Client):
                     "content": "You are a friendly, accurate, and professional AI assistant.",
                 },
             ]
-            for pm in prior_qs:
+            for pm in prior_exmekh:
                 raw_hist.append(
                     {"role": pm.get_role_name(), "content": str(pm.get_message() or "")}
                 )
@@ -642,7 +648,7 @@ _ORIG_TITLE = getattr(ar, "generate_chat_title_sync", None)
 
 
 def uninstall_mock_provider() -> None:
-    """Restores fe.qs_bridge.agent_runner to original production implementations."""
+    """Restores fe.exmekh_bridge.agent_runner to original production implementations."""
     if _ORIG_LOCAL_PROVIDER:
         ar.LocalProvider = _ORIG_LOCAL_PROVIDER
     if _ORIG_HEALTH:
@@ -654,7 +660,7 @@ def uninstall_mock_provider() -> None:
 
 
 def install_mock_provider(mock_provider: MockProvider | None = None) -> MockProvider:
-    """Installs the MockProvider into fe.qs_bridge.agent_runner at test runtime."""
+    """Installs the MockProvider into fe.exmekh_bridge.agent_runner at test runtime."""
     provider = mock_provider or get_global_mock_provider()
 
     def mock_local_provider(*args: Any, **kwargs: Any) -> MockProvider:

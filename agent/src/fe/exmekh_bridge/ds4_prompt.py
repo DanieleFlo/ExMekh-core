@@ -6,7 +6,7 @@ import json
 from html import escape
 from typing import Any
 
-from fe.qs_bridge.image_input import content_text
+from fe.exmekh_bridge.image_input import content_text
 
 _TOOLS_PREFIX = "# Tools\n\nYou have access to the following functions:\n\n<tools>\n"
 _TOOLS_SUFFIX = (

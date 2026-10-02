@@ -1,12 +1,12 @@
-"""Interpret recorded QS skill invocations consistently across views and restores."""
+"""Interpret recorded ExMekh-Lib skill invocations consistently across views and restores."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from qs.core.models.assistant_message import ToolCall
+from exmekh_lib.core.models.assistant_message import ToolCall
 
-from fe.qs_bridge.tool_calls import parse_tool_calls
+from fe.exmekh_bridge.tool_calls import parse_tool_calls
 
 
 def inner_skill_history_messages(history: list[dict[str, Any]]) -> list[dict[str, Any]]:

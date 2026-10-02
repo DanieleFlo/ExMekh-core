@@ -1,11 +1,15 @@
-"""Deterministic provider for exercising the real QS command approval flow."""
+"""Deterministic provider for exercising the real ExMekh-Lib command approval flow."""
 
 from __future__ import annotations
 
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
-from qs.core.models.provider_request import ProviderRequest
-from qs.core.models.provider_response import ProviderResponse
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )

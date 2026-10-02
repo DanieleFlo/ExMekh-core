@@ -230,7 +230,7 @@ async def test_edit_running_turn_with_mock_client_cancels_and_discards_queue(
         "Reply: Slow original"
     )
     await send_command(page, "Discarded queue")
-    await expect(page.locator(".qs-queue-item")).to_contain_text("Discarded queue")
+    await expect(page.locator(".exmekh-queue-item")).to_contain_text("Discarded queue")
     if reload:
         await page.reload(wait_until="networkidle")
         await expect(page.locator(".chat-message-streaming")).to_be_visible()
@@ -241,7 +241,7 @@ async def test_edit_running_turn_with_mock_client_cancels_and_discards_queue(
     assert not data["session"]["queued_messages"]
     assert len(data["session"]["messages"]) == 4
     assert not any(item["error"] for item in data["session"]["messages"])
-    await expect(page.locator(".qs-queue-box")).not_to_be_visible()
+    await expect(page.locator(".exmekh-queue-box")).not_to_be_visible()
     await expect(page.locator(".generation-stopped")).to_have_count(0)
 
 
@@ -271,7 +271,7 @@ async def test_edit_caption_keeps_image_pdf_parts_in_mock_requests_after_reload(
 ):
     page = edit_page
     await new_conversation(page, mode)
-    await page.locator(".qs-file-picker").set_input_files(
+    await page.locator(".exmekh-file-picker").set_input_files(
         [
             {"name": "red.png", "mimeType": "image/png", "buffer": png_bytes()},
             {
@@ -281,7 +281,7 @@ async def test_edit_caption_keeps_image_pdf_parts_in_mock_requests_after_reload(
             },
         ]
     )
-    await expect(page.locator(".qs-attachment-chip")).to_have_count(2)
+    await expect(page.locator(".exmekh-attachment-chip")).to_have_count(2)
     await send_command(page, "Original caption")
     await wait_turn_completion(page)
     before = await state(page.url.rstrip("/"))
@@ -301,9 +301,9 @@ async def test_edit_caption_keeps_image_pdf_parts_in_mock_requests_after_reload(
     assert "Original caption" not in request["prompt"]
     assert "PDF report.pdf: pages 1–2 of 2" in request["prompt"]
     await page.reload(wait_until="networkidle")
-    await expect(page.locator(".qs-message-images .qs-image-thumbnail")).to_have_count(
-        3
-    )
+    await expect(
+        page.locator(".exmekh-message-images .exmekh-image-thumbnail")
+    ).to_have_count(3)
     await send_command(page, "Inspect previous attachments")
     await wait_saved_response(page, "Reply: Inspect previous attachments")
     data = await state(page.url.rstrip("/"))
@@ -325,7 +325,7 @@ async def test_edit_waiting_command_approval_restarts_without_executing_the_comm
     await page.locator(".input-bar-approval-select").first.click()
     await page.get_by_role("option", name="Manual", exact=True).click()
     await send_command(page, "Await approval")
-    await expect(page.locator(".qs-approval-command")).to_have_text(
+    await expect(page.locator(".exmekh-approval-command")).to_have_text(
         "echo edit_approval"
     )
     before = await state(page.url.rstrip("/"))
@@ -336,7 +336,7 @@ async def test_edit_waiting_command_approval_restarts_without_executing_the_comm
     assert len(data["session"]["messages"]) == 2
     assert not data["session"]["settings"]["approved_commands_history"]
     await expect(page.locator(".generation-stopped")).to_have_count(0)
-    await expect(page.locator(".qs-approval-command")).not_to_be_visible()
+    await expect(page.locator(".exmekh-approval-command")).not_to_be_visible()
     await expect(page.locator(".tool-argument-value")).to_have_count(0)
 
 
@@ -346,14 +346,14 @@ async def test_text_upload_remains_available_after_edit_and_reload(
 ):
     page = edit_page
     await new_conversation(page, mode)
-    await page.locator(".qs-file-picker").set_input_files(
+    await page.locator(".exmekh-file-picker").set_input_files(
         {
             "name": "notes.txt",
             "mimeType": "text/plain",
             "buffer": b"Content from the retained attachment",
         }
     )
-    await expect(page.locator(".qs-attachment-chip")).to_have_count(1)
+    await expect(page.locator(".exmekh-attachment-chip")).to_have_count(1)
     await send_command(page, "Old text instruction")
     await wait_turn_completion(page)
     original = (await state(page.url.rstrip("/")))["session"]["messages"][0]

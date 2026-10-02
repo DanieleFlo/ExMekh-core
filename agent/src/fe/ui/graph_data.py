@@ -5,8 +5,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from fe.qs_bridge.image_input import content_text
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.image_input import content_text
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
@@ -14,9 +14,12 @@ from fe.qs_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.skill_history import inner_skill_history_messages, take_skill_for_call
-from fe.qs_bridge.system_prompt import load_real_hds_system_prompt
-from fe.qs_bridge.tool_calls import parse_tool_calls, tool_result_for_call
+from fe.exmekh_bridge.skill_history import (
+    inner_skill_history_messages,
+    take_skill_for_call,
+)
+from fe.exmekh_bridge.system_prompt import load_real_hds_system_prompt
+from fe.exmekh_bridge.tool_calls import parse_tool_calls, tool_result_for_call
 
 GraphNodeKind = Literal[
     "system",
@@ -640,7 +643,7 @@ def _extract_real_system_prompt_event(
     name_hds: str = "main",
     is_sub_agent: bool = False,
 ) -> dict[str, Any] | None:
-    """Extract the real System Prompt event from recorded raw_history or from the real qs Node HDS."""
+    """Extract the real System Prompt event from recorded raw_history or from the real exmekh_lib Node HDS."""
     for msg in messages:
         for rm in msg.raw_history:
             role = str(rm.get("role", "")).lower()

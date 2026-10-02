@@ -5,7 +5,7 @@ import os
 
 from nicegui import ui
 
-from fe.qs_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.collector import TurnStreamCollector
 from fe.state.active_turns import active_turns
 from fe.state.session_manager import session_manager
 from fe.ui.chat_view import ChatViewComponent

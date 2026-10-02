@@ -1,4 +1,4 @@
-"""Exercise saved steering through real FE turns and the installed QS wheel."""
+"""Exercise saved steering through real FE turns and the installed ExMekh-Lib wheel."""
 
 from __future__ import annotations
 
@@ -8,13 +8,18 @@ from unittest.mock import patch
 from xml.etree import ElementTree as ET
 
 import pytest
+from exmekh_lib.core.agents.node import DefaultCapabilities
 from PIL import Image
-from qs.core.agents.node import DefaultCapabilities
 
-from fe.qs_bridge.agent_runner import run_agent_turn
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.image_input import image_data_url
-from fe.qs_bridge.models import ChatMessage, ChatSession, ChatSettings, QueuedMessage
+from fe.exmekh_bridge.agent_runner import run_agent_turn
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.image_input import image_data_url
+from fe.exmekh_bridge.models import (
+    ChatMessage,
+    ChatSession,
+    ChatSettings,
+    QueuedMessage,
+)
 from tests.steering_probe import SteeringProbeProvider
 
 
@@ -59,7 +64,7 @@ async def test_saved_steering_is_discovered_and_read_in_later_fe_turns(
             on_raw_history=current.set_raw_history,
         )
 
-    with patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider):
+    with patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider):
         task = asyncio.create_task(run("Start", collector))
         try:
             assert await asyncio.to_thread(provider.started.wait, 5)

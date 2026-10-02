@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,

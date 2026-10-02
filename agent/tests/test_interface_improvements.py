@@ -4,26 +4,30 @@ import json
 from unittest.mock import patch
 
 import pytest
-from nicegui import ui
-from nicegui.client import Client
-from nicegui.page import page
-from qs.core.agents.deep_agent import (
+from exmekh_lib.core.agents.deep_agent import (
     DeepAgentExecutionEvent,
     DeepAgentExecutionEventType,
 )
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from nicegui import ui
+from nicegui.client import Client
+from nicegui.page import page
 
-from fe.qs_bridge.converter import qs_messages_to_chat_messages
-from fe.qs_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.converter import exmekh_messages_to_chat_messages
+from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
     ReasoningBlock,
     ToolEvent,
 )
-from fe.qs_bridge.sub_agents import ObservedNode, SubAgentEventRouter
-from fe.qs_bridge.tool_calls import extract_tool_arguments
+from fe.exmekh_bridge.sub_agents import ObservedNode, SubAgentEventRouter
+from fe.exmekh_bridge.tool_calls import extract_tool_arguments
 from fe.ui.chat_export import export_chat
 from fe.ui.chat_view import ChatViewComponent
 from tests.interface_sample import interface_session
@@ -137,7 +141,7 @@ def test_unavailable_arguments_do_not_break_legacy_sessions(history, call_id):
 def test_arguments_survive_root_and_child_streaming_and_conversion():
     arguments = {"command": "echo hello"}
     call = ToolCall(id="call", function=FunctionCall(name="bash", arguments=arguments))
-    converted = qs_messages_to_chat_messages(
+    converted = exmekh_messages_to_chat_messages(
         [AssistantMessage(content="", tool_calls=[call])]
     )
     assert converted[0].tool_events[0].arguments == arguments

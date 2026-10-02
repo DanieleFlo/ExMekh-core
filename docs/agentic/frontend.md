@@ -1,7 +1,7 @@
-# Frontend Agent FE / QS
+# Frontend Agent FE / ExMekh-Lib
 
 L'agente del progetto e il frontend NiceGUI in `agent/`. Il package `fe`
-usa `qs.core.models.client.Client` e `DeepAgent` per conversazioni, strumenti,
+usa `exmekh_lib.core.models.client.Client` e `DeepAgent` per conversazioni, strumenti,
 skill gerarchiche e subagenti. `ds4-server` gestisce inferenza e checkpoint KV;
 FE conserva chat e configurazione dei progetti in JSON.
 
@@ -23,7 +23,7 @@ Il launcher server usa Qwen3.8 e MTP con `--ctx 28000`, porta 8080.
 Il frontend si apre su [http://127.0.0.1:8000](http://127.0.0.1:8000).
 Il launcher FE installa le dipendenze dal lockfile quando necessario.
 I launcher risolvono i percorsi dalla propria posizione e funzionano anche
-quando invocati da un'altra directory. `run.sh` e `sync_qs.sh` cercano `uv`
+quando invocati da un'altra directory. `run.sh` e `sync_exmekh_lib.sh` cercano `uv`
 nel `PATH` o in `~/.local/bin/uv`; `UV_BIN=/percorso/uv` permette di sceglierlo.
 
 ## Configurazione e stato
@@ -63,59 +63,76 @@ prima di applicarlo alla sessione in memoria. Gli upload testuali di Quick Chat
 rimangono inline nelle richieste al provider anche dopo una modifica.
 
 I test e2e usano il client mock con un provider deterministico attraverso il
-ciclo QS reale. Coprono le posizioni iniziale, intermedia e finale, la generazione
+ciclo ExMekh-Lib reale. Coprono le posizioni iniziale, intermedia e finale, la generazione
 in corso, la riconnessione, l'annullamento, le approvazioni pendenti e gli allegati
 testuali, immagine e PDF. Stop e accodamento sono limitati alla chat selezionata;
 i tool mostrano lo stato di errore del modello anche nelle schede della chat.
 
 ## Confini dell'integrazione
 
-QS possiede i messaggi e il risultato dell'esecuzione dei tool. FE usa
+ExMekh-Lib possiede i messaggi e il risultato dell'esecuzione dei tool. FE usa
 `Message.set_metadata()` e `Message.get_metadata()` per gli snapshot locali:
 questi dati restano separati da `message_dump()` e non vengono inviati al
 provider. Le letture e le copie dei messaggi non condividono valori mutabili.
 I nomi dei campi dei vecchi snapshot salvati restano compatibili.
 
-Gli eventi QS distinguono una fine riuscita da un errore di argomenti o di
+Gli eventi ExMekh-Lib distinguono una fine riuscita da un errore di argomenti o di
 esecuzione. FE conserva questa distinzione nella conversazione principale,
 nei sotto-agenti e nella UI. Un risultato applicativo come `{"ok": false}`
 resta un risultato completato: non viene interpretato come errore del runtime.
 
 Il converter converte messaggi e snapshot; `ExecutionHistoryRestorer` ricostruisce
-history e cache usando le API pubbliche QS. Tool, skill e steering condividono
+history e cache usando le API pubbliche ExMekh-Lib. Tool, skill e steering condividono
 il parser degli header `RecordedToolOutput`. Le riletture conservano l'identità,
 gli argomenti e i riferimenti dell'output originale, senza sostituirli con i
 metadati della chiamata di lettura. Lo steering nelle skill conserva testo,
 immagini e ID canonico anche dopo la compattazione e nei turni successivi.
 
-## Dipendenza QS
+## Dipendenza ExMekh-Lib
 
-`agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`.
+`agent/pyproject.toml` installa ExMekh-Lib dalla wheel versionata in `agent/wheels/`.
 La `.python-version` fissa Python 3.13 come nell'ambiente sorgente.
-`uv sync --frozen` ricrea l'ambiente anche senza la cartella locale `qs/`.
-Quest'ultima contiene una copia dei sorgenti QS e dei suoi test, con una
+`uv sync --frozen` ricrea l'ambiente anche senza la cartella locale `exmekh_lib/`.
+Quest'ultima contiene una copia dei sorgenti ExMekh-Lib e dei suoi test, con una
 repository Git autonoma e la cronologia dell'originale. Rimane esclusa dal
-Git di DS4 tramite il `.gitignore` della root. Le modifiche locali a `qs/`
+Git di DS4 tramite il `.gitignore` della root. Le modifiche locali a `exmekh_lib/`
 non modificano la repository originale sul Desktop.
 
 Per controllare la copia locale, dalla root DS4:
 
 ```sh
-git -C qs status
-git -C qs log -5 --oneline
+git -C exmekh_lib status
+git -C exmekh_lib log -5 --oneline
 ```
 
 Per aggiornare la wheel, dalla root in WSL:
 
 ```sh
-./agent/sync_qs.sh
+./agent/sync_exmekh_lib.sh
 ```
 
-Il launcher esegue `agent/src/fe/sync.py`: ricostruisce QS dai sorgenti locali,
+Il launcher esegue `agent/src/fe/sync.py`: ricostruisce ExMekh-Lib dai sorgenti locali,
 copia la wheel in `agent/wheels/`, aggiorna il percorso in `pyproject.toml` e
-il lockfile e reinstalla QS. Gestisce anche una nuova versione della wheel e
+il lockfile e reinstalla ExMekh-Lib. Gestisce anche una nuova versione della wheel e
 rimuove quelle precedenti dopo il successo. Non richiede un build precedente
-ne un ambiente FE gia installato.
+ne un ambiente FE gia installato. Dopo il successo rimuove anche la vecchia
+wheel `qs`; la pulizia viene eseguita solo dopo l’installazione riuscita.
+
+Il namespace Python è `exmekh_lib`, mentre la distribuzione e la CLI sono
+`exmekh-lib`. Il bridge FE si trova in `agent/src/fe/exmekh_bridge/`.
+Da `agent/` si possono invocare i comandi installati:
+
+```sh
+uv run sync-exmekh-lib
+uv run --frozen --env-file .env exmekh-lib
+```
+
+Le chat JSON e i metadati di ripristino conservano il formato esistente. Le nuove
+cache della libreria usano `.exmekh_lib/`; le vecchie `.qs/` restano ignorate da
+Git. Le variabili `QS_API`, `QS_MODEL` e `QS_TOKENIZER_CACHE_DIR` rimangono
+quelle esposte dalla configurazione pubblica della libreria rinominata. La CLI
+carica `BASE_URL` e `API_KEY` dal file `.env` con il comando sopra; `QS_MODEL` e
+`QS_API` permettono di scegliere modello e API indipendentemente dalla UI.
 
 ## Verifica
 
@@ -129,7 +146,7 @@ uv run ruff format --check src tests
 ```
 
 I test browser usano Edge quando installato, altrimenti Chromium di Playwright.
-QS e FE usano automaticamente tutte le CPU logiche disponibili al processo.
+ExMekh-Lib e FE usano automaticamente tutte le CPU logiche disponibili al processo.
 Da ciascuna directory, `uv run pytest -n 16` sceglie sedici worker;
 `PYTEST_XDIST_AUTO_NUM_WORKERS=16 uv run pytest` imposta il conteggio di `auto`.
 In WSL questo segue il limite configurato in `.wslconfig`; il numero di worker

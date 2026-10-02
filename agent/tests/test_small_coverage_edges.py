@@ -4,14 +4,14 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from fe.config import AppConfig
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatSession,
     ReasoningBlock,
     SkillNode,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.sub_agents import SubAgentEvent
+from fe.exmekh_bridge.sub_agents import SubAgentEvent
 from fe.state.json_store import JsonRecordStore
 from fe.state.session_manager import SessionManager
 from fe.state.sub_agent_conversations import apply_sub_agent_event

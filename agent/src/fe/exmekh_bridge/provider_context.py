@@ -5,20 +5,24 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 
-from pydantic import BaseModel
-from qs.core.models.provider_request import ProviderRequest
-from qs.core.models.provider_response import ProviderResponse
-from qs.core.models.structured_provider_request import StructuredProviderRequest
-from qs.core.models.structured_provider_response import StructuredProviderResponse
-from qs.core.providers.openai_chat_completion_tool_mapper import (
+from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
+from exmekh_lib.core.models.structured_provider_response import (
+    StructuredProviderResponse,
+)
+from exmekh_lib.core.providers.openai_chat_completion_tool_mapper import (
     OpenAIChatCompletionToolMapper,
 )
-from qs.core.providers.openai_response_tool_mapper import OpenAIResponseToolMapper
-from qs.interfaces.provider import Provider
+from exmekh_lib.core.providers.openai_response_tool_mapper import (
+    OpenAIResponseToolMapper,
+)
+from exmekh_lib.interfaces.provider import Provider
+from pydantic import BaseModel
 
-from fe.qs_bridge.context_usage import count_message_dict_tokens, count_text_tokens
-from fe.qs_bridge.ds4_context import Ds4ContextEstimator
-from fe.qs_bridge.models import ProviderContextUsage
+from fe.exmekh_bridge.context_usage import count_message_dict_tokens, count_text_tokens
+from fe.exmekh_bridge.ds4_context import Ds4ContextEstimator
+from fe.exmekh_bridge.models import ProviderContextUsage
 
 
 class ContextTrackingProvider(Provider):

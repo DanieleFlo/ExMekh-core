@@ -3,22 +3,26 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.tool_message import ToolMessage
-from qs.interfaces.message import Message
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.tool_message import ToolMessage
+from exmekh_lib.interfaces.message import Message
 
-from fe.qs_bridge.converter import (
-    chat_message_to_qs_messages,
+from fe.exmekh_bridge.converter import (
+    chat_message_to_exmekh_messages,
+    exmekh_message_to_raw_dict,
+    exmekh_messages_to_chat_messages,
+    exmekh_messages_to_session,
     parse_tool_calls,
-    qs_message_to_raw_dict,
-    qs_messages_to_chat_messages,
-    qs_messages_to_session,
-    raw_dict_to_qs_message,
+    raw_dict_to_exmekh_message,
     reconstruct_execution_history_and_cache,
     restore_node_history,
 )
-from fe.qs_bridge.models import ChatMessage, ToolEvent
+from fe.exmekh_bridge.models import ChatMessage, ToolEvent
 
 
 def _tool_call(call_id: str, name: str) -> dict:
@@ -41,18 +45,18 @@ def test_tool_call_parser_accepts_flat_valid_json_arguments() -> None:
 
 def test_tool_reply_fills_only_missing_metadata() -> None:
     pending = [ToolCall(id="one", function=FunctionCall(name="read", arguments={}))]
-    reply = raw_dict_to_qs_message({"role": "tool", "name": "override"}, pending)
+    reply = raw_dict_to_exmekh_message({"role": "tool", "name": "override"}, pending)
     assert reply.get_tool_call_id() == "one"
     assert reply.get_name() == "override"
     pending = [ToolCall(id="two", function=FunctionCall(name="write", arguments={}))]
-    reply = raw_dict_to_qs_message(
+    reply = raw_dict_to_exmekh_message(
         {"role": "tool", "tool_call_id": "override"}, pending
     )
     assert reply.get_tool_call_id() == "override"
     assert reply.get_name() == "tool_default"
     assert [call.id for call in pending] == ["two"]
     pending = [ToolCall(id="three", function=FunctionCall(name="run", arguments={}))]
-    raw_dict_to_qs_message(
+    raw_dict_to_exmekh_message(
         {"role": "tool", "tool_call_id": "unknown", "name": "other"}, pending
     )
     assert len(pending) == 1
@@ -60,26 +64,28 @@ def test_tool_reply_fills_only_missing_metadata() -> None:
 
 def test_system_snapshot_round_trips_and_session_can_generate_id() -> None:
     original = ChatMessage(role="system", content="custom rules")
-    restored = qs_messages_to_chat_messages(chat_message_to_qs_messages(original))
+    restored = exmekh_messages_to_chat_messages(
+        chat_message_to_exmekh_messages(original)
+    )
     assert restored == [original]
-    session = qs_messages_to_session([SystemMessage("system")])
+    session = exmekh_messages_to_session([SystemMessage("system")])
     assert session.id
     assert session.system_prompt == "system"
 
 
-def test_unknown_qs_message_is_preserved_as_plain_chat_message() -> None:
+def test_unknown_exmekh_message_is_preserved_as_plain_chat_message() -> None:
     unknown = MagicMock(spec=Message)
     unknown.get_role_name.return_value = "user"
     unknown.get_message.return_value = "plain"
     unknown.get_metadata.return_value = {}
-    assert qs_message_to_raw_dict(unknown) == {"role": "user", "content": "plain"}
-    result = qs_messages_to_chat_messages([unknown])
+    assert exmekh_message_to_raw_dict(unknown) == {"role": "user", "content": "plain"}
+    result = exmekh_messages_to_chat_messages([unknown])
     assert result[0].content == "plain"
 
 
 def test_unmatched_tool_reply_is_recorded_but_matching_one_is_not_duplicated() -> None:
     matched = ToolCall(id="call", function=FunctionCall(name="read", arguments={}))
-    messages = qs_messages_to_chat_messages(
+    messages = exmekh_messages_to_chat_messages(
         [
             AssistantMessage(content=None, tool_calls=[matched]),
             ToolMessage(content="result", name="read", tool_call_id="call"),
@@ -183,16 +189,18 @@ def test_restore_node_history_ignores_legacy_reconstruction_errors() -> None:
 
     node.restore_history.side_effect = restore
     with patch(
-        "fe.qs_bridge.converter.reconstruct_execution_history_and_cache",
+        "fe.exmekh_bridge.converter.reconstruct_execution_history_and_cache",
         side_effect=ValueError("bad"),
     ):
         restore_node_history(
-            node, [ChatMessage(role="user", content="old")], prior_qs=[]
+            node, [ChatMessage(role="user", content="old")], prior_exmekh=[]
         )
     node.restore_history.assert_called_once()
     node.restore_history.side_effect = RuntimeError("restore failed")
-    restore_node_history(node, [ChatMessage(role="user", content="old")], prior_qs=[])
-    restore_node_history(node, [], prior_qs=[])
+    restore_node_history(
+        node, [ChatMessage(role="user", content="old")], prior_exmekh=[]
+    )
+    restore_node_history(node, [], prior_exmekh=[])
 
 
 def test_flat_tool_call_parser_keeps_object_arguments() -> None:

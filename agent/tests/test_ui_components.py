@@ -10,8 +10,8 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.models import (
     ChatMessage,
     QueuedMessage,
     ReasoningBlock,
@@ -597,7 +597,7 @@ def test_chat_view_edge_cases(ui_context: Client) -> None:
 def test_chat_scroll_js_and_reset_scroll(ui_context: Client) -> None:
     assert CHAT_SCROLL_JS_PATH.is_file()
     js_code = get_chat_scroll_js()
-    assert "__qsChatScroll" in js_code
+    assert "__exmekhChatScroll" in js_code
     assert "chat-scroll-container" in js_code
 
     with patch("fe.ui.chat_view.CHAT_SCROLL_JS_PATH", Path("nonexistent_scroll.js")):

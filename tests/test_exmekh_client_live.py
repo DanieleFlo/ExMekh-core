@@ -1,19 +1,18 @@
-"""Opt-in acceptance test against the real qs CLI and a running local server.
+"""Opt-in acceptance test against the real ExMekh-Lib CLI and a running local server.
 
-Set DS4_QS_ROOT to the qs checkout and DS4_QS_BASE_URL to its /v1 endpoint.
+Set DS4_EXMEKH_LIB_ROOT to the exmekh_lib checkout and DS4_EXMEKH_LIB_BASE_URL to its /v1 endpoint.
 The test runs the reported prompt twice, interrupting/restarting only the client.
-Set DS4_QS_MIN_ROOT_RETURNS=2 to exercise two complete skill cycles per client.
-Set DS4_QS_REQUIRE_COMPLETION=1 to also require a spontaneous final answer.
+Set DS4_EXMEKH_LIB_MIN_ROOT_RETURNS=2 to exercise two complete skill cycles per client.
+Set DS4_EXMEKH_LIB_REQUIRE_COMPLETION=1 to also require a spontaneous final answer.
 """
 import os
-from pathlib import Path
 import shutil
 import signal
+import subprocess
 import tempfile
 import time
-import subprocess
 import unittest
-
+from pathlib import Path
 
 PROMPT = "testa una skill e un tool, anche il tool nella skill, fai un check completo delle capacità"
 
@@ -34,9 +33,9 @@ def capabilities_exercised(text: str, minimum_returns: int = 1) -> bool:
     )
 
 
-@unittest.skipUnless(os.getenv("DS4_QS_ROOT") and os.getenv("DS4_QS_BASE_URL"),
-                     "set DS4_QS_ROOT and DS4_QS_BASE_URL for the real qs CLI")
-class QsClientLiveTests(unittest.TestCase):
+@unittest.skipUnless(os.getenv("DS4_EXMEKH_LIB_ROOT") and os.getenv("DS4_EXMEKH_LIB_BASE_URL"),
+                     "set DS4_EXMEKH_LIB_ROOT and DS4_EXMEKH_LIB_BASE_URL for the real ExMekh-Lib CLI")
+class ExMekhClientLiveTests(unittest.TestCase):
     def test_tools_survive_interrupted_client_restart(self):
         """Check real tool/skill round trips, then restart only the client.
 
@@ -46,16 +45,16 @@ class QsClientLiveTests(unittest.TestCase):
         """
         uv = shutil.which("uv")
         self.assertIsNotNone(uv, "uv must be on PATH")
-        env = dict(os.environ, BASE_URL=os.environ["DS4_QS_BASE_URL"],
+        env = dict(os.environ, BASE_URL=os.environ["DS4_EXMEKH_LIB_BASE_URL"],
                    PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1")
-        with tempfile.TemporaryDirectory(prefix="qs-live-") as temp:
-            log_dir = Path(os.getenv("DS4_QS_LOG_DIR", temp))
+        with tempfile.TemporaryDirectory(prefix="exmekh-live-") as temp:
+            log_dir = Path(os.getenv("DS4_EXMEKH_LIB_LOG_DIR", temp))
             log_dir.mkdir(parents=True, exist_ok=True)
             for run in range(2):
-                path = log_dir / f"qs-restart-{run + 1}.log"
+                path = log_dir / f"exmekh-restart-{run + 1}.log"
                 with self.subTest(client_run=run + 1), path.open("wb") as output:
                     proc = subprocess.Popen(
-                        [uv, "run", "qs"], cwd=os.environ["DS4_QS_ROOT"],
+                        [uv, "run", "exmekh-lib"], cwd=os.environ["DS4_EXMEKH_LIB_ROOT"],
                         stdin=subprocess.PIPE, stdout=output,
                         stderr=subprocess.STDOUT, env=env,
                         start_new_session=os.name != "nt",
@@ -68,7 +67,7 @@ class QsClientLiveTests(unittest.TestCase):
                             text = path.read_text(encoding="utf-8", errors="replace")
                             self.assertNotIn("Traceback (most recent call last)", text)
                             self.assertNotIn("Provider response failed", text)
-                            minimum = int(os.getenv("DS4_QS_MIN_ROOT_RETURNS", "1"))
+                            minimum = int(os.getenv("DS4_EXMEKH_LIB_MIN_ROOT_RETURNS", "1"))
                             ready = capabilities_exercised(text, minimum)
                             if ready:
                                 # A completed call chain has reached root; the
@@ -90,18 +89,18 @@ class QsClientLiveTests(unittest.TestCase):
                             proc.wait(timeout=20)
                         proc.stdin.close()
 
-    @unittest.skipUnless(os.getenv("DS4_QS_REQUIRE_COMPLETION"),
-                         "set DS4_QS_REQUIRE_COMPLETION to require a final answer")
+    @unittest.skipUnless(os.getenv("DS4_EXMEKH_LIB_REQUIRE_COMPLETION"),
+                         "set DS4_EXMEKH_LIB_REQUIRE_COMPLETION to require a final answer")
     def test_capabilities_survive_client_restart(self):
         uv = shutil.which("uv")
         self.assertIsNotNone(uv, "uv must be on PATH")
-        env = dict(os.environ, BASE_URL=os.environ["DS4_QS_BASE_URL"],
+        env = dict(os.environ, BASE_URL=os.environ["DS4_EXMEKH_LIB_BASE_URL"],
                    PYTHONIOENCODING="utf-8", PYTHONUNBUFFERED="1")
-        log_dir = os.getenv("DS4_QS_LOG_DIR")
+        log_dir = os.getenv("DS4_EXMEKH_LIB_LOG_DIR")
         for run in range(2):
             with self.subTest(client_run=run + 1):
                 result = subprocess.run(
-                    [uv, "run", "qs"], cwd=os.environ["DS4_QS_ROOT"],
+                    [uv, "run", "exmekh-lib"], cwd=os.environ["DS4_EXMEKH_LIB_ROOT"],
                     input=PROMPT + "\nexit\n", text=True, encoding="utf-8",
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     env=env, timeout=600,
@@ -109,7 +108,7 @@ class QsClientLiveTests(unittest.TestCase):
                 if log_dir:
                     target = Path(log_dir)
                     target.mkdir(parents=True, exist_ok=True)
-                    (target / f"qs-client-{run + 1}.log").write_text(
+                    (target / f"exmekh-client-{run + 1}.log").write_text(
                         result.stdout, encoding="utf-8")
                 self.assertEqual(result.returncode, 0, result.stdout[-16000:])
                 self.assertNotIn("Traceback (most recent call last)", result.stdout)

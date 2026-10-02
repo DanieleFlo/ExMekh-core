@@ -9,16 +9,16 @@ import pytest
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.message_edit import prepare_message_edit
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.message_edit import prepare_message_edit
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.pasted_input import (
     PreparedUserInput,
     create_staged_attachment_from_file,
     format_user_input_file_xml,

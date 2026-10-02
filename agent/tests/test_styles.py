@@ -28,7 +28,7 @@ def test_styles_file_and_constants() -> None:
     assert "--bg-main" in content
     assert ".chat-scroll-container" in content
     assert ".graph-stage" in content
-    assert ".qs-queue-box" in content
+    assert ".exmekh-queue-box" in content
     assert ".input-progress-container" in content
     assert ".nicegui-content" in content
     assert ".chat-message-row" in content

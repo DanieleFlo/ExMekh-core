@@ -9,7 +9,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatMessage,
     MessageRole,
     ProviderContextUsage,
@@ -19,8 +19,8 @@ from fe.qs_bridge.models import (
     extract_turn_raw_history,
     record_tool_event,
 )
-from fe.qs_bridge.skill_history import skill_opening_call_id
-from fe.qs_bridge.steering import TurnSteering
+from fe.exmekh_bridge.skill_history import skill_opening_call_id
+from fe.exmekh_bridge.steering import TurnSteering
 
 
 def _find_skill_by_path(

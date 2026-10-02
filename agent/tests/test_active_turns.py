@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from fe.qs_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.collector import TurnStreamCollector
 from fe.state.active_turns import ActiveTurnRegistry
 
 

@@ -4,11 +4,11 @@ This is the release gate for DwarfStar.  Run it before tagging or pushing a
 release build.  The goal is not to prove every code path exhaustively; it is to
 exercise the paths that have historically regressed: Metal graph inference,
 CUDA, ROCm, SSD streaming, distributed execution, disk KV cache, server APIs, and the
-FE/QS frontend, tool/skill state machine and browser UI.
+FE/ExMekh-Lib frontend, tool/skill state machine and browser UI.
 
-Fork policy: FE/QS is the sole product agent. References below to `ds4-agent`,
+Fork policy: FE/ExMekh-Lib is the sole product agent. References below to `ds4-agent`,
 its PTY/vision tests and Pi agent runs describe upstream QA material; they are
-not product targets in this fork. Use the FE/QS live suite for agent, image
+not product targets in this fork. Use the FE/ExMekh-Lib live suite for agent, image
 attachment, code presentation, tool and skill/checkpoint acceptance. Hardware
 qualification is recorded in the [2026-10-01 merge audit](docs/architecture/ds4-upstream-merge-20261001.md).
 
@@ -1050,7 +1050,7 @@ Disk KV cache bugs are high impact for server users.
   not evicted and useful anchors are retained.
 - Test rejection of incompatible checkpoints when model, quantization, context,
   or raw/compressed KV layout changes.
-- Reopen a saved FE / QS conversation and verify history and server KV reuse.
+- Reopen a saved FE / ExMekh-Lib conversation and verify history and server KV reuse.
 
 ## 12. Server APIs
 
@@ -1138,12 +1138,12 @@ output budget and stop reason before blaming inference, parsing or memory.
 Literal-marker copying needs both deterministic parser tests and real-model
 checks: the model can change the text before the parser sees it.
 
-## 13. Agent FE / QS
+## 13. Agent FE / ExMekh-Lib
 
 - From `agent/`, run `uv sync --frozen`, `uv run pytest`,
   `uv run ruff check src tests`, and `uv run ruff format --check src tests`.
 - Run Playwright with `uv run playwright install chromium` before browser tests.
-- Run `./agent/sync_qs.sh` in WSL when validating changes to the local QS sources.
+- Run `./agent/sync_exmekh_lib.sh` in WSL when validating changes to the local ExMekh-Lib sources.
 - Start `./agent/start-ds4-server.sh` and `./agent/run.sh` in separate terminals;
   verify model discovery, Responses streaming, projects, Quick Chats and history.
 - Exercise tools, hierarchical skills, command approval, cancellation and queued

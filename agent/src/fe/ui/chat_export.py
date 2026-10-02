@@ -6,7 +6,7 @@ import json
 import re
 from typing import Any, Literal
 
-from fe.qs_bridge.models import ChatMessage, ChatSession
+from fe.exmekh_bridge.models import ChatMessage, ChatSession
 from fe.ui.message_text import message_display_text
 
 ExportFormat = Literal["json", "markdown"]

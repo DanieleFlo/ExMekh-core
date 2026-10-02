@@ -6,15 +6,15 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from exmekh_lib.core.models.history import MessageHistory
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.interfaces.tool_hook import ToolContext, ToolResponse
 from nicegui.client import Client as NiceGuiClient
 from nicegui.page import page
-from qs.core.models.history import MessageHistory
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.user_message import UserMessage
-from qs.interfaces.tool_hook import ToolContext, ToolResponse
 
-from fe.qs_bridge.models import ChatSession
-from fe.qs_bridge.tool_approval import (
+from fe.exmekh_bridge.models import ChatSession
+from fe.exmekh_bridge.tool_approval import (
     COMMAND_APPROVAL_SYSTEM_PROMPT,
     DEFAULT_TOOL_APPROVAL_MODE,
     TOOL_APPROVAL_ALL,
@@ -245,8 +245,8 @@ def test_evaluate_command_approval_llm_calls_client_structured() -> None:
     )
 
     with (
-        patch("fe.qs_bridge.tool_approval.LocalProvider") as mock_provider_cls,
-        patch("fe.qs_bridge.tool_approval.Client") as mock_client_cls,
+        patch("fe.exmekh_bridge.tool_approval.LocalProvider") as mock_provider_cls,
+        patch("fe.exmekh_bridge.tool_approval.Client") as mock_client_cls,
     ):
         mock_client = MagicMock()
         mock_client.call_structured.return_value = mock_response
@@ -280,7 +280,7 @@ def test_evaluate_command_approval_llm_calls_client_structured() -> None:
 
 def test_evaluate_command_approval_llm_handles_exception() -> None:
     with patch(
-        "fe.qs_bridge.tool_approval.LocalProvider",
+        "fe.exmekh_bridge.tool_approval.LocalProvider",
         side_effect=RuntimeError("Provider down"),
     ):
         decision = evaluate_command_approval_llm("echo test")
@@ -295,8 +295,8 @@ def test_evaluator_rolls_back_history_when_declined() -> None:
     )
 
     with (
-        patch("fe.qs_bridge.tool_approval.LocalProvider"),
-        patch("fe.qs_bridge.tool_approval.Client") as mock_client_cls,
+        patch("fe.exmekh_bridge.tool_approval.LocalProvider"),
+        patch("fe.exmekh_bridge.tool_approval.Client") as mock_client_cls,
     ):
         mock_client = MagicMock()
         mock_client.call_structured.return_value = mock_response
@@ -332,7 +332,8 @@ def test_load_command_approval_hds_and_history_building() -> None:
 
     # Fallback when HDS file does not exist
     with patch(
-        "fe.qs_bridge.tool_approval.COMMAND_APPROVAL_HDS_PATH", Path("non_existent.md")
+        "fe.exmekh_bridge.tool_approval.COMMAND_APPROVAL_HDS_PATH",
+        Path("non_existent.md"),
     ):
         fallback_hds = load_command_approval_hds()
         assert fallback_hds.name == "command-approval"
@@ -506,7 +507,7 @@ def test_build_approval_message_history_edge_cases() -> None:
 
     # Exception during check_history falls back to base_history
     with patch(
-        "fe.qs_bridge.tool_approval.MessageHistory.check_history",
+        "fe.exmekh_bridge.tool_approval.MessageHistory.check_history",
         side_effect=ValueError("bad history"),
     ):
         mh_fallback = build_approval_message_history(
@@ -524,8 +525,8 @@ def test_command_approval_evaluator_with_work_root() -> None:
     )
 
     with (
-        patch("fe.qs_bridge.tool_approval.LocalProvider"),
-        patch("fe.qs_bridge.tool_approval.Client") as mock_client_cls,
+        patch("fe.exmekh_bridge.tool_approval.LocalProvider"),
+        patch("fe.exmekh_bridge.tool_approval.Client") as mock_client_cls,
     ):
         mock_client = MagicMock()
         mock_client.call_structured.return_value = mock_resp

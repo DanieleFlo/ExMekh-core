@@ -1,6 +1,6 @@
-# `fe` — Local AI Studio Frontend for QS
+# `fe` — Local AI Studio Frontend for ExMekh-Lib
 
-A Python frontend inspired by modern local LLM interfaces such as **LM Studio**, **Unsloth**, and **BionicGPT**. It is designed to integrate directly with the hierarchical agentic framework `qs` and its distributed wheel package.
+A Python frontend inspired by modern local LLM interfaces such as **LM Studio**, **Unsloth**, and **BionicGPT**. It is designed to integrate directly with the hierarchical agentic framework `exmekh_lib` and its distributed wheel package.
 
 ---
 
@@ -17,7 +17,7 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - PDFs render locally into images: at most the first **10 pages per document**, in page order. The composer shows the selected/total page count and warns when pages are omitted.
   - Images keep their orientation and are resized to at most **2048 pixels per side**. Animated images use their first frame.
   - Original files stay in scoped temporary storage; normalized PNG content is also saved in chat JSON so vision history and previews survive refreshes and file cleanup. Chat messages show only previews for these visual attachments.
-  - Chat Completions and Responses both use QS mixed user inputs. The endpoint/model must support vision; DS4 needs its matching encoder loaded with `--vision`.
+  - Chat Completions and Responses both use ExMekh-Lib mixed user inputs. The endpoint/model must support vision; DS4 needs its matching encoder loaded with `--vision`.
 
 - **Local Provider Control**:
   - Dynamic health check of the local server endpoint (LM Studio, Ollama, llama.cpp, vLLM).
@@ -32,23 +32,39 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - Input drafts and uploads stay with their original conversation when switching chats. Quick Chats include text attachments directly in the prompt and send images and rendered PDF pages as native vision inputs.
   - Deleting a project deletes its conversations and stops their active turns. The selected work folder remains available.
   - Existing agent conversations are automatically grouped by work folder. When their previous settings differ, the most recently updated chat supplies the shared project settings; each chat keeps its bash approval mode and approval history.
-- **Automatic `qs` Wheel Synchronization**:
-  - WSL shell script to build the sibling QS sources, update the frontend wheel and lockfile, and reinstall QS.
+- **Automatic `exmekh_lib` Wheel Synchronization**:
+  - WSL shell script to build the sibling ExMekh-Lib sources, update the frontend wheel and lockfile, and reinstall ExMekh-Lib.
 
 ---
 
-## Wheel Synchronization from `qs`
+## Wheel Synchronization from `exmekh_lib`
 
 From the repository root in WSL:
 
 ```sh
-./agent/sync_qs.sh
+./agent/sync_exmekh_lib.sh
 ```
 
-The script builds the current sources in the sibling `qs/` directory, copies the
+The script builds the current sources in the sibling `exmekh_lib/` directory, copies the
 resulting wheel into `agent/wheels/`, updates its path in `pyproject.toml` and
-`uv.lock`, and reinstalls QS. After a successful sync, it removes older QS wheels.
-No previous build or frontend virtual environment is required.
+`uv.lock`, and reinstalls ExMekh-Lib. After a successful sync, it removes older ExMekh-Lib wheels.
+No previous build or frontend virtual environment is required. Successful
+synchronization also removes the previous `qs` wheel. Cleanup runs only after
+a successful installation.
+
+The installed sync command is `uv run sync-exmekh-lib` from `agent/`.
+To start the framework's interactive CLI with the frontend's locked wheel:
+
+```sh
+cd agent
+uv run --frozen --env-file .env exmekh-lib
+```
+
+The Python namespace is `exmekh_lib`; the distribution and console command are
+`exmekh-lib`. The frontend integration module is `fe.exmekh_bridge`. The CLI
+loads `BASE_URL` and `API_KEY` from `.env` with the command above. Set `QS_MODEL`
+and `QS_API` to override its model and API; these remain the environment variable
+names exposed by the renamed library.
 
 Both shell launchers resolve paths from their own location, so they can be called
 from any working directory. They use `uv` from `PATH` or `~/.local/bin/uv`;
@@ -94,7 +110,7 @@ Browser servers use available localhost ports and isolated storage, so separate
 pytest invocations can run concurrently. Server logs are retained in `.test-tmp`.
 
 The test suite automatically enforces branch coverage and requires 100% on the
-Python configuration, state, and QS integration code. The calculation excludes the
+Python configuration, state, and ExMekh-Lib integration code. The calculation excludes the
 `fe.main` and `fe.sync` entrypoints and the UI modules listed in `pyproject.toml`, which are verified by
 functional and Playwright tests in the same suite. To run only a subset of tests,
 use `--no-cov`; the threshold applies to the full suite.
@@ -126,7 +142,7 @@ With the provider configured in `.env` available, run all tests with a real mode
 uv run pytest --no-cov --run-live -m "live and not mock" -s -v
 ```
 
-`--run-live` enables tests that send requests to the model. Without this option (or `QS_RUN_LIVE_TESTS=1`), the standard suite skips them; mock tests remain runnable.
+`--run-live` enables tests that send requests to the model. Without this option (or `EXMEKH_LIB_RUN_LIVE_TESTS=1`), the standard suite skips them; mock tests remain runnable.
 Each adversarial case of `exit_agent` has a 90-second timeout. A timeout terminates the process and marks the case as skipped because recovery was not verified. Cases where the model does not produce the requested malformed payload are also skipped. Deterministic argument tests independently check omitted `items` and invalid item types.
 
 ---
@@ -142,10 +158,10 @@ agent/
 ├── README.md             # Project documentation
 ├── .python-version      # Python 3.13
 ├── run.sh               # WSL launcher for the UI
-├── sync_qs.sh           # Build and install the sibling QS sources
+├── sync_exmekh_lib.sh    # Build and install the sibling ExMekh-Lib sources
 ├── start-ds4-server.sh  # WSL launcher for the inference server
-├── wheels/               # Synchronized qs wheel
-│   └── qs-0.1.0-py3-none-any.whl
+├── wheels/               # Synchronized exmekh_lib wheel
+│   └── exmekh_lib-0.1.0-py3-none-any.whl
 ├── data/
 │   ├── chats/           # JSON storage for conversations
 │   └── projects/        # Shared project settings
@@ -155,9 +171,9 @@ agent/
         ├── main.py       # NiceGUI entry point
         ├── config.py     # Configuration and capabilities paths
         ├── sync.py       # Python sync script
-        ├── qs_bridge/
+        ├── exmekh_bridge/
         │   ├── __init__.py
-        │   ├── agent_runner.py  # Asynchronous qs runner (Client and DeepAgent)
+        │   ├── agent_runner.py  # Asynchronous exmekh_lib runner (Client and DeepAgent)
         │   ├── image_input.py    # Image/PDF decoding and multimodal history
         │   └── models.py        # Pydantic models for messages and sessions
         ├── state/
@@ -179,7 +195,7 @@ agent/
 
 ## DS4 integration
 
-This checkout lives in `agent/`. The sibling `qs/` source copy is ignored by
+This checkout lives in `agent/`. The sibling `exmekh_lib/` source copy is ignored by
 Git; the versioned wheel in `wheels/` is the runtime dependency. In WSL/Linux,
 start `./start-ds4-server.sh` and `./run.sh` in separate terminals. The model
 server uses port 8080 and the frontend uses port 8000. Set `API_TYPE=responses`

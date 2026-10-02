@@ -7,10 +7,10 @@ import pytest
 from nicegui.client import Client as NiceGUIClient
 from nicegui.page import page
 
-import fe.qs_bridge.agent_runner as ar
-from fe.qs_bridge.agent_runner import generate_chat_title, run_agent_turn
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.models import ChatMessage, SkillNode, ToolEvent
+import fe.exmekh_bridge.agent_runner as ar
+from fe.exmekh_bridge.agent_runner import generate_chat_title, run_agent_turn
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
 from fe.state.session_manager import SessionManager, session_manager
 from fe.ui.chat_view import ChatViewComponent
 from fe.ui.header import HeaderComponent

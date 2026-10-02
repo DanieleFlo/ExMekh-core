@@ -8,9 +8,9 @@ import pytest
 from nicegui.client import Client
 from nicegui.page import page
 
+from fe.exmekh_bridge.context_usage import ContextUsageSummary
+from fe.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
 from fe.main import index_page, main, run
-from fe.qs_bridge.context_usage import ContextUsageSummary
-from fe.qs_bridge.models import ChatMessage, SkillNode, ToolEvent
 from fe.state.session_manager import session_manager
 from fe.ui.page_controller import ChatPageController
 

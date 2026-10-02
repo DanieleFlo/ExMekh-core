@@ -1,4 +1,4 @@
-"""Opt-in adversarial runs against a real local model and the real QS agent."""
+"""Opt-in adversarial runs against a real local model and the real ExMekh-Lib agent."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from uuid import uuid4
 import pytest
 
 from fe.config import config
-from fe.qs_bridge.agent_runner import check_provider_health, run_agent_turn
+from fe.exmekh_bridge.agent_runner import check_provider_health, run_agent_turn
 
 pytestmark = pytest.mark.live
 
@@ -92,7 +92,7 @@ class LiveCaseProcess:
 
 @dataclass(frozen=True, slots=True)
 class SkillExecutionTrace:
-    """Read the public serialized history of one QS skill execution."""
+    """Read the public serialized history of one ExMekh-Lib skill execution."""
 
     history: list[dict[str, Any]]
     output: str | None

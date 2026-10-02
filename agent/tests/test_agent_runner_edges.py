@@ -4,22 +4,25 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
-from qs.core.agents.deep_agent import DeepAgentExecutionEvent, DeepAgentStreamEvent
-from qs.core.models.assistant_message import AssistantMessage
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.agents.deep_agent import (
+    DeepAgentExecutionEvent,
+    DeepAgentStreamEvent,
+)
+from exmekh_lib.core.models.assistant_message import AssistantMessage
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.user_message import UserMessage
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.user_message import UserMessage
 
-from fe.qs_bridge.agent_runner import (
-    convert_to_qs_messages,
+from fe.exmekh_bridge.agent_runner import (
+    convert_to_exmekh_messages,
     execute_agent_turn_sync,
     generate_chat_title_sync,
     serialize_skill_execution,
 )
-from fe.qs_bridge.models import ChatMessage
+from fe.exmekh_bridge.models import ChatMessage
 
 
 def _execution_event(
@@ -87,17 +90,17 @@ def _run_deep(
     )
     arguments.update(overrides)
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider"),
-        patch("fe.qs_bridge.agent_runner.DeepAgent", side_effect=build_agent),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("fe.exmekh_bridge.agent_runner.DeepAgent", side_effect=build_agent),
     ):
         assert execute_agent_turn_sync(**arguments) == "final"
     return tokens, tools, skills
 
 
-def test_history_converter_accepts_empty_iterator_and_qs_messages() -> None:
-    assert convert_to_qs_messages(iter(())) == []
+def test_history_converter_accepts_empty_iterator_and_exmekh_messages() -> None:
+    assert convert_to_exmekh_messages(iter(())) == []
     user = UserMessage("question")
-    result = convert_to_qs_messages(
+    result = convert_to_exmekh_messages(
         [
             SystemMessage("system"),
             user,
@@ -111,7 +114,7 @@ def test_history_converter_accepts_empty_iterator_and_qs_messages() -> None:
 
 
 def test_history_converter_keeps_nonmatching_last_message() -> None:
-    result = convert_to_qs_messages(
+    result = convert_to_exmekh_messages(
         [{"role": "user", "content": "previous"}], "current"
     )
     assert len(result) == 1
@@ -181,7 +184,7 @@ def test_deep_agent_tolerates_legacy_reasoning_callback_and_raw_history_error() 
 
 
 def test_history_converter_ignores_unsupported_items() -> None:
-    result = convert_to_qs_messages([object(), {"role": "user", "content": "kept"}])
+    result = convert_to_exmekh_messages([object(), {"role": "user", "content": "kept"}])
     assert result[-1].get_message() == "kept"
 
 
@@ -223,8 +226,8 @@ def test_quick_chat_recovers_from_history_seed_failure_and_captures_raw_history(
             raise RuntimeError("observer failed")
 
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider"),
-        patch("fe.qs_bridge.agent_runner.Client") as client_class,
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("fe.exmekh_bridge.agent_runner.Client") as client_class,
     ):
         client = client_class.return_value
         client.replace_history_from.side_effect = ValueError("legacy history")
@@ -255,8 +258,8 @@ def test_empty_structured_title_falls_back_to_user_prompt() -> None:
     response = MagicMock()
     response.get_message.return_value.title = "  "
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider"),
-        patch("fe.qs_bridge.agent_runner.Client") as client_class,
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("fe.exmekh_bridge.agent_runner.Client") as client_class,
     ):
         client_class.return_value.call_structured.return_value = response
         title = generate_chat_title_sync("  A short prompt  ")
@@ -280,8 +283,8 @@ def test_quick_chat_ignores_noncontent_provider_event() -> None:
 
     tokens = []
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider"),
-        patch("fe.qs_bridge.agent_runner.Client") as client_class,
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider"),
+        patch("fe.exmekh_bridge.agent_runner.Client") as client_class,
     ):
         client_class.return_value.call.side_effect = call
         execute_agent_turn_sync(

@@ -1,4 +1,4 @@
-"""Browser server exercising real QS clients with a deterministic mock provider."""
+"""Browser server exercising real ExMekh-Lib clients with a deterministic mock provider."""
 
 from __future__ import annotations
 
@@ -7,21 +7,25 @@ import time
 from threading import Event
 from typing import Any
 
-from nicegui import app
-from qs.core.agents.node import DefaultCapabilities
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
-from qs.core.models.provider_request import ProviderRequest
-from qs.core.models.provider_response import ProviderResponse
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
+from nicegui import app
 
 from fe.config import config
+from fe.exmekh_bridge import agent_runner
+from fe.exmekh_bridge.converter import exmekh_message_to_raw_dict
+from fe.exmekh_bridge.image_input import content_text
 from fe.main import main
-from fe.qs_bridge import agent_runner
-from fe.qs_bridge.converter import qs_message_to_raw_dict
-from fe.qs_bridge.image_input import content_text
 from fe.state.session_manager import session_manager
 from fe.ui import settings_drawer
 from tests.mock_client import MockClient, MockProvider
@@ -34,7 +38,7 @@ class MessageEditProvider(MockProvider):
         self.release = Event()
 
     def call(self, request: ProviderRequest) -> ProviderResponse:
-        messages = [qs_message_to_raw_dict(item) for item in request.get_messages()]
+        messages = [exmekh_message_to_raw_dict(item) for item in request.get_messages()]
         last_user_index = max(
             i for i, item in enumerate(messages) if item["role"] == "user"
         )

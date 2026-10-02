@@ -10,19 +10,19 @@ import pytest
 from nicegui.client import Client as NiceGUIClient
 from nicegui.page import page
 
-from fe.qs_bridge.agent_runner import (
-    convert_to_qs_messages,
+from fe.exmekh_bridge.agent_runner import (
+    convert_to_exmekh_messages,
     run_agent_turn,
 )
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     SkillNode,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.sub_agents import SubAgentEvent
+from fe.exmekh_bridge.sub_agents import SubAgentEvent
 from fe.state.active_turns import active_turns
 from fe.state.session_manager import session_manager
 from fe.state.sub_agent_conversations import apply_sub_agent_event
@@ -386,22 +386,22 @@ def test_live_early_termination_unresponded_tool_call_history_resilience() -> No
         ),
     ]
 
-    # Convert to QS messages for next turn
-    qs_messages = convert_to_qs_messages(
+    # Convert to ExMekh-Lib messages for next turn
+    exmekh_messages = convert_to_exmekh_messages(
         session.messages, current_user_prompt="Next question"
     )
 
     # 1. Assert unresponded tool call was closed with synthetic tool message
-    tool_messages = [m for m in qs_messages if m.get_role_name() == "tool"]
+    tool_messages = [m for m in exmekh_messages if m.get_role_name() == "tool"]
     assert len(tool_messages) == 1
     assert tool_messages[0].get_message() == "[Execution interrupted]"
     assert tool_messages[0].get_tool_call_id() == "call_db_search"
 
     # 2. Assert history ends with a valid AssistantMessage so provider allows next UserMessage
-    assert qs_messages[-1].get_role_name() == "assistant"
+    assert exmekh_messages[-1].get_role_name() == "assistant"
     assert (
-        qs_messages[-1].get_tool_calls() is None
-        or len(qs_messages[-1].get_tool_calls()) == 0
+        exmekh_messages[-1].get_tool_calls() is None
+        or len(exmekh_messages[-1].get_tool_calls()) == 0
     )
 
 

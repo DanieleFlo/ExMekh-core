@@ -7,7 +7,7 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
 )
@@ -105,7 +105,7 @@ def test_upload_is_bound_to_its_original_conversation(tmp_path: Path) -> None:
     app.include_router(upload_router)
     with TestClient(app) as client:
         response = client.post(
-            "/_qs/upload",
+            "/_exmekh/upload",
             data={"session_id": original.id},
             files={"files": ("source.py", b"print(42)")},
         )
@@ -116,16 +116,20 @@ def test_upload_is_bound_to_its_original_conversation(tmp_path: Path) -> None:
         ).read_bytes() == b"print(42)"
         assert not (current_root / "tmp").exists()
         assert (
-            client.post("/_qs/upload", data={"session_id": "deleted"}).status_code
+            client.post("/_exmekh/upload", data={"session_id": "deleted"}).status_code
             == 404
         )
         assert (
             client.post(
-                "/_qs/upload", data={"session_id": original.id, "files": "not a file"}
+                "/_exmekh/upload",
+                data={"session_id": original.id, "files": "not a file"},
             ).json()
             == []
         )
-        assert client.post("/_qs/upload", data={"session_id": original.id}).json() == []
+        assert (
+            client.post("/_exmekh/upload", data={"session_id": original.id}).json()
+            == []
+        )
 
 
 def test_upload_without_a_filename_receives_a_safe_default(tmp_path: Path) -> None:
@@ -140,7 +144,7 @@ def test_upload_without_a_filename_receives_a_safe_default(tmp_path: Path) -> No
     )
     with TestClient(app) as client:
         response = client.post(
-            "/_qs/upload",
+            "/_exmekh/upload",
             content=body,
             headers={"Content-Type": "multipart/form-data; boundary=upload"},
         )

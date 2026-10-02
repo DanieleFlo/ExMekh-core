@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from fe.config import config
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ChatSettings,

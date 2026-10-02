@@ -6,8 +6,8 @@ import pytest
 from dotenv import load_dotenv
 
 from fe.config import config
-from fe.qs_bridge.agent_runner import check_provider_health, run_agent_turn
-from fe.qs_bridge.models import ChatMessage, SkillNode, ToolEvent
+from fe.exmekh_bridge.agent_runner import check_provider_health, run_agent_turn
+from fe.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
 from fe.state.session_manager import SessionManager
 from fe.ui.chat_view import ChatViewComponent
 from fe.ui.header import HeaderComponent

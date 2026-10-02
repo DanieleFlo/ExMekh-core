@@ -9,7 +9,7 @@ from tkinter import filedialog
 
 from nicegui import ui
 
-from fe.qs_bridge.models import ProjectSettings
+from fe.exmekh_bridge.models import ProjectSettings
 from fe.state.session_manager import CODE_WORK_ROOT, session_manager
 from fe.ui.project_settings_dialog import ProjectSettingsDialogComponent
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fe.qs_bridge.errors import (
+from fe.exmekh_bridge.errors import (
     build_execution_error_message,
     format_exception_chain,
 )

@@ -1,21 +1,25 @@
 from __future__ import annotations
 
 import pytest
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.tool_message import ToolMessage
-from qs.core.models.user_message import UserMessage
-
-from fe.qs_bridge.converter import (
-    chat_message_to_qs_messages,
-    parse_tool_calls,
-    qs_message_to_raw_dict,
-    qs_messages_to_chat_messages,
-    qs_messages_to_session,
-    raw_dict_to_qs_message,
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
 )
-from fe.qs_bridge.models import ChatMessage
-from fe.qs_bridge.recorded_output import RecordedToolOutput
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.tool_message import ToolMessage
+from exmekh_lib.core.models.user_message import UserMessage
+
+from fe.exmekh_bridge.converter import (
+    chat_message_to_exmekh_messages,
+    exmekh_message_to_raw_dict,
+    exmekh_messages_to_chat_messages,
+    exmekh_messages_to_session,
+    parse_tool_calls,
+    raw_dict_to_exmekh_message,
+)
+from fe.exmekh_bridge.models import ChatMessage
+from fe.exmekh_bridge.recorded_output import RecordedToolOutput
 
 
 @pytest.mark.parametrize("invalid", ["", "null", "{broken", 12, [], ["bad"]])
@@ -52,7 +56,7 @@ def test_tool_replies_use_pending_call_metadata_when_missing() -> None:
     pending = [
         ToolCall(id="call_1", function=FunctionCall(name="search", arguments={}))
     ]
-    reply = raw_dict_to_qs_message({"role": "tool", "content": "result"}, pending)
+    reply = raw_dict_to_exmekh_message({"role": "tool", "content": "result"}, pending)
     assert isinstance(reply, ToolMessage)
     assert reply.get_tool_call_id() == "call_1"
     assert reply.get_name() == "search"
@@ -60,7 +64,7 @@ def test_tool_replies_use_pending_call_metadata_when_missing() -> None:
 
 
 def test_tool_replies_use_defaults_without_pending_call() -> None:
-    reply = raw_dict_to_qs_message({"role": "function", "content": "ok"})
+    reply = raw_dict_to_exmekh_message({"role": "function", "content": "ok"})
     assert reply.get_tool_call_id() == "call_default"
     assert reply.get_name() == "tool_default"
 
@@ -70,14 +74,14 @@ def test_tool_replies_remove_matching_pending_call() -> None:
         ToolCall(id="first", function=FunctionCall(name="one", arguments={})),
         ToolCall(id="second", function=FunctionCall(name="two", arguments={})),
     ]
-    raw_dict_to_qs_message(
+    raw_dict_to_exmekh_message(
         {"role": "tool", "tool_call_id": "second", "name": "two"}, pending
     )
     assert [call.id for call in pending] == ["first"]
 
 
 def test_unknown_role_is_restored_as_user_and_snapshots_round_trip() -> None:
-    message = raw_dict_to_qs_message(
+    message = raw_dict_to_exmekh_message(
         {
             "role": "custom",
             "content": "hello",
@@ -86,8 +90,8 @@ def test_unknown_role_is_restored_as_user_and_snapshots_round_trip() -> None:
         }
     )
     assert isinstance(message, UserMessage)
-    assert qs_message_to_raw_dict(message) == {"role": "user", "content": "hello"}
-    assert qs_message_to_raw_dict(message, include_snapshots=True)[
+    assert exmekh_message_to_raw_dict(message) == {"role": "user", "content": "hello"}
+    assert exmekh_message_to_raw_dict(message, include_snapshots=True)[
         "_fe_session_metadata"
     ] == {"id": "session"}
 
@@ -104,7 +108,7 @@ def test_assistant_raw_history_synthesizes_tool_call_for_orphan_reply() -> None:
             }
         ],
     )
-    restored = chat_message_to_qs_messages(message)
+    restored = chat_message_to_exmekh_messages(message)
     assert isinstance(restored[0], AssistantMessage)
     assert restored[0].get_tool_calls()[0].id == "orphan"
     assert isinstance(restored[1], ToolMessage)
@@ -112,7 +116,7 @@ def test_assistant_raw_history_synthesizes_tool_call_for_orphan_reply() -> None:
 
 def test_system_message_without_snapshot_uses_plain_content() -> None:
 
-    result = qs_messages_to_chat_messages(
+    result = exmekh_messages_to_chat_messages(
         [SystemMessage("rules"), UserMessage("question")]
     )
     assert [(message.role, message.content) for message in result] == [
@@ -123,7 +127,7 @@ def test_system_message_without_snapshot_uses_plain_content() -> None:
 
 def test_session_without_metadata_uses_requested_defaults() -> None:
 
-    session = qs_messages_to_session(
+    session = exmekh_messages_to_session(
         [SystemMessage("instructions"), UserMessage("hi")],
         session_id="requested",
         title="Title",
@@ -162,9 +166,9 @@ def test_raw_metadata_snapshots_are_owned_and_never_sent_to_provider() -> None:
         "_fe_steering_message": False,
         "_fe_session_metadata": None,
     }
-    message = raw_dict_to_qs_message(raw)
+    message = raw_dict_to_exmekh_message(raw)
     raw["_fe_chat_message_snapshot"]["content"] = "changed"
-    exported = qs_message_to_raw_dict(message, include_snapshots=True)
+    exported = exmekh_message_to_raw_dict(message, include_snapshots=True)
     assert exported["_fe_chat_message_snapshot"] == {"content": "original"}
     assert exported["_fe_steering_message"] is False
     assert exported["_fe_session_metadata"] is None

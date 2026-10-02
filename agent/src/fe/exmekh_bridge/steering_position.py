@@ -1,6 +1,6 @@
-"""Locate accepted steering messages in the actual QS execution history."""
+"""Locate accepted steering messages in the actual ExMekh-Lib execution history."""
 
-from fe.qs_bridge.models import ChatMessage, SteeringInsertion
+from fe.exmekh_bridge.models import ChatMessage, SteeringInsertion
 
 
 def find_steering_insertions(message: ChatMessage) -> list[SteeringInsertion]:

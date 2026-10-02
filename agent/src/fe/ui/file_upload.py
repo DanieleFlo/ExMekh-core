@@ -8,10 +8,10 @@ from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from fe.qs_bridge.pasted_input import create_staged_attachment_from_file
+from fe.exmekh_bridge.pasted_input import create_staged_attachment_from_file
 from fe.state.session_manager import session_manager
 
-upload_router = APIRouter(prefix="/_qs")
+upload_router = APIRouter(prefix="/_exmekh")
 
 
 @upload_router.post("/upload")

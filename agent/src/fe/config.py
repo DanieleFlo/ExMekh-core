@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from dotenv import load_dotenv
-from qs.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.agents.node import DefaultCapabilities
 
 # Load .env if present in the current working directory or FE root
 load_dotenv()
@@ -54,7 +54,7 @@ class AppConfig:
     host: str = field(default_factory=lambda: os.getenv("FE_HOST", "127.0.0.1"))
     port: int = field(default_factory=lambda: int(os.getenv("FE_PORT", "8000")))
     app_title: str = field(
-        default_factory=lambda: os.getenv("FE_TITLE", "QS AI Studio")
+        default_factory=lambda: os.getenv("FE_TITLE", "ExMekh-Lib AI Studio")
     )
     data_dir: Path = field(
         default_factory=lambda: Path(__file__).resolve().parents[2] / "data"

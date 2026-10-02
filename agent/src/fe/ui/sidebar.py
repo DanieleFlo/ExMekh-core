@@ -5,7 +5,7 @@ from datetime import datetime
 
 from nicegui import ui
 
-from fe.qs_bridge.models import ChatSession, Project
+from fe.exmekh_bridge.models import ChatSession, Project
 from fe.state.session_manager import session_manager
 
 
@@ -52,7 +52,9 @@ class SidebarComponent:
                 "w-full pt-3 border-t border-zinc-800 text-[11px] text-zinc-400 gap-1 flex-shrink-0"
             ):
                 with ui.row().classes("items-center justify-between w-full"):
-                    ui.label("QS Framework").classes("font-semibold text-zinc-300")
+                    ui.label("ExMekh-Lib Framework").classes(
+                        "font-semibold text-zinc-300"
+                    )
                     ui.badge("v0.1.0").classes(
                         "font-mono text-[10px] border border-zinc-700 bg-zinc-800 text-zinc-400"
                     )

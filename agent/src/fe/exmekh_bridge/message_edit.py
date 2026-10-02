@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from fe.qs_bridge.image_input import IMAGE_SUFFIXES
-from fe.qs_bridge.models import ChatMessage
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.image_input import IMAGE_SUFFIXES
+from fe.exmekh_bridge.models import ChatMessage
+from fe.exmekh_bridge.pasted_input import (
     PreparedUserInput,
     StagedAttachment,
     extract_attached_files_from_content,

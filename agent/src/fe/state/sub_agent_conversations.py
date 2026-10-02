@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from fe.qs_bridge.models import ChatSession, SubAgentConversation
-from fe.qs_bridge.sub_agents import SubAgentEvent
+from fe.exmekh_bridge.models import ChatSession, SubAgentConversation
+from fe.exmekh_bridge.sub_agents import SubAgentEvent
 
 
 def apply_sub_agent_event(

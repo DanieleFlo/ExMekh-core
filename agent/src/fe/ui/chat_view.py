@@ -11,14 +11,14 @@ from typing import Any, Literal
 
 from nicegui import ui
 
-from fe.qs_bridge.context_usage import (
+from fe.exmekh_bridge.context_usage import (
     compute_skill_node_closure_tokens,
     format_skill_closure_tokens,
     populate_skill_closure_tokens,
 )
-from fe.qs_bridge.image_input import IMAGE_SUFFIXES
-from fe.qs_bridge.message_edit import retained_attachment_paths
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.image_input import IMAGE_SUFFIXES
+from fe.exmekh_bridge.message_edit import retained_attachment_paths
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
@@ -29,7 +29,7 @@ from fe.qs_bridge.models import (
     format_duration,
     record_tool_event,
 )
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.pasted_input import (
     extract_attached_files_from_content,
 )
 from fe.state.session_manager import session_manager
@@ -240,7 +240,7 @@ class ChatViewComponent:
                     on_click=lambda: self.reset_scroll_to_bottom(),
                 )
                 .props(
-                    "id=qs-scroll-to-bottom-btn round dense color=dark text-color=white size=sm aria-label='Torna in fondo'"
+                    "id=exmekh-scroll-to-bottom-btn round dense color=dark text-color=white size=sm aria-label='Torna in fondo'"
                 )
                 .classes("scroll-to-bottom-btn")
             )
@@ -248,7 +248,7 @@ class ChatViewComponent:
             # Floating points of interest rail near right scrollbar
             self.poi_track = (
                 ui.element("div")
-                .props("id=qs-chat-poi-track")
+                .props("id=exmekh-chat-poi-track")
                 .classes("chat-poi-track")
             )
 
@@ -458,7 +458,7 @@ class ChatViewComponent:
             "items-center justify-center w-full py-16 gap-3 text-center chat-message-row"
         ):
             ui.icon("terminal", size="md").classes("text-zinc-400 mb-1")
-            ui.label("QS Studio").classes(
+            ui.label("ExMekh-Lib Studio").classes(
                 "text-2xl font-bold tracking-tight text-zinc-100"
             )
             ui.label(
@@ -667,7 +667,9 @@ class ChatViewComponent:
                         ui.markdown(display_text).classes("text-sm text-zinc-100")
 
                     if msg.image_urls:
-                        with ui.row().classes("qs-message-images gap-2 flex-wrap mt-2"):
+                        with ui.row().classes(
+                            "exmekh-message-images gap-2 flex-wrap mt-2"
+                        ):
                             for index, url in enumerate(msg.image_urls):
                                 render_image_thumbnail(
                                     url, f"Attached image {index + 1}"
@@ -675,7 +677,7 @@ class ChatViewComponent:
 
                     if attached_files:
                         with ui.row().classes(
-                            "qs-message-attachments items-center gap-1.5 mt-1.5 pt-1.5 border-t border-zinc-700/50 flex-wrap"
+                            "exmekh-message-attachments items-center gap-1.5 mt-1.5 pt-1.5 border-t border-zinc-700/50 flex-wrap"
                         ):
                             for file_path in attached_files:
                                 filename = Path(file_path).name
@@ -683,7 +685,7 @@ class ChatViewComponent:
                                 with (
                                     ui.row()
                                     .classes(
-                                        "qs-message-attachment-chip items-center gap-1.5 px-2 py-0.5 rounded "
+                                        "exmekh-message-attachment-chip items-center gap-1.5 px-2 py-0.5 rounded "
                                         "bg-zinc-800/80 border border-zinc-700/60 max-w-[240px] "
                                         "shadow-sm cursor-pointer hover:bg-zinc-700/80 transition-colors select-none"
                                     )

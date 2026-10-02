@@ -6,18 +6,18 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
 
-from qs.tokenizers.qwen import QwenTokenizer
+from exmekh_lib.tokenizers.qwen import QwenTokenizer
 
 from fe.config import config
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.image_input import content_text
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.image_input import content_text
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     SkillNode,
     SubAgentConversation,
 )
-from fe.qs_bridge.system_prompt import load_real_hds_system_prompt
+from fe.exmekh_bridge.system_prompt import load_real_hds_system_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def get_qwen_tokenizer() -> QwenTokenizer:
 
 @lru_cache(maxsize=4096)
 def count_text_tokens(text: str) -> int:
-    """Count tokens in a string using the QwenTokenizer exposed by the qs package."""
+    """Count tokens in a string using the QwenTokenizer exposed by the exmekh_lib package."""
     if not text:
         return 0
     try:

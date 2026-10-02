@@ -3,20 +3,20 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
-from qs.core.models.assistant_message import FunctionCall, ToolCall
+from exmekh_lib.core.models.assistant_message import FunctionCall, ToolCall
 
-from fe.qs_bridge.agent_runner import convert_to_qs_messages
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.converter import raw_dict_to_qs_message
-from fe.qs_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.agent_runner import convert_to_exmekh_messages
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.converter import raw_dict_to_exmekh_message
+from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ReasoningBlock,
     SkillNode,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.sub_agents import SubAgentEventRouter
+from fe.exmekh_bridge.sub_agents import SubAgentEventRouter
 
 
 @pytest.mark.parametrize("status", ["completed", "error"])
@@ -59,7 +59,7 @@ def test_timing_normalization_does_not_close_active_work() -> None:
     assert open_block.end_time is None
     assert finished_tool.duration_seconds == finished_block.duration_seconds == 3
     assert instant_tool.duration_seconds == 0
-    with patch("fe.qs_bridge.models.time.time", return_value=10):
+    with patch("fe.exmekh_bridge.models.time.time", return_value=10):
         open_tool.finalize_timing("error")
         open_block.finalize_timing()
         skill.finalize_timing("completed")
@@ -112,7 +112,7 @@ def test_missing_tool_name_matches_id_instead_of_batch_order() -> None:
         ToolCall(id="first", function=FunctionCall(name="first_tool", arguments={})),
         ToolCall(id="second", function=FunctionCall(name="second_tool", arguments={})),
     ]
-    message = raw_dict_to_qs_message(
+    message = raw_dict_to_exmekh_message(
         {"role": "tool", "tool_call_id": "second", "content": "result"},
         pending,
     )
@@ -122,7 +122,7 @@ def test_missing_tool_name_matches_id_instead_of_batch_order() -> None:
 
 @pytest.mark.parametrize("next_role", ["user", "assistant"])
 def test_interrupted_tool_batch_is_closed_before_later_messages(next_role: str) -> None:
-    messages = convert_to_qs_messages(
+    messages = convert_to_exmekh_messages(
         [
             {"role": "user", "content": "first turn"},
             {

@@ -7,14 +7,14 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-import fe.qs_bridge.context_usage as cu
+import fe.exmekh_bridge.context_usage as cu
 from fe.config import AppConfig, config
-from fe.qs_bridge.agent_runner import (
+from fe.exmekh_bridge.agent_runner import (
     check_provider_health,
     extract_model_context_length,
 )
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.context_usage import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.context_usage import (
     _annotate_skill_tree_recursive,
     _apply_skill_compaction_to_scope,
     _is_skill_tree_entry_open,
@@ -34,7 +34,7 @@ from fe.qs_bridge.context_usage import (
     get_qwen_tokenizer,
     populate_skill_closure_tokens,
 )
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ReasoningBlock,
@@ -535,7 +535,7 @@ def test_nested_matryoshka_skills_and_synthesized_turns() -> None:
         ],
     )
     with patch(
-        "fe.qs_bridge.context_usage.load_real_hds_system_prompt",
+        "fe.exmekh_bridge.context_usage.load_real_hds_system_prompt",
         return_value="Real HDS Prompt",
     ):
         tree_msgs = build_compacted_context_messages(session_tree_only)
@@ -624,7 +624,7 @@ def test_collector_sub_agent_and_system_prompt_resolution() -> None:
 
     # _resolve_system_prompt_for_session fallback when deep_agent prompt returns empty
     with patch(
-        "fe.qs_bridge.context_usage.load_real_hds_system_prompt", return_value=""
+        "fe.exmekh_bridge.context_usage.load_real_hds_system_prompt", return_value=""
     ):
         fallback_prompt = _resolve_system_prompt_for_session(
             ChatSession(agent_mode="deep_agent", system_prompt=""),

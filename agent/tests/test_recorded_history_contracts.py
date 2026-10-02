@@ -8,9 +8,9 @@ import pytest
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.converter import reconstruct_execution_history_and_cache
-from fe.qs_bridge.models import ChatMessage, ChatSession, SkillNode, ToolEvent
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.converter import reconstruct_execution_history_and_cache
+from fe.exmekh_bridge.models import ChatMessage, ChatSession, SkillNode, ToolEvent
 from fe.ui.graph_data import build_graph_data_from_session
 from fe.ui.raw_history_view import RawHistoryComponent
 

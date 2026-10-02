@@ -5,8 +5,11 @@ from collections.abc import Callable
 from nicegui import ui
 
 from fe.config import config
-from fe.qs_bridge.models import ProjectSettings
-from fe.qs_bridge.tool_approval import TOOL_APPROVAL_MODES, normalize_tool_approval_mode
+from fe.exmekh_bridge.models import ProjectSettings
+from fe.exmekh_bridge.tool_approval import (
+    TOOL_APPROVAL_MODES,
+    normalize_tool_approval_mode,
+)
 from fe.state.session_manager import session_manager
 
 

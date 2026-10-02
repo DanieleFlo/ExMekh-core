@@ -3,8 +3,8 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from qs.config.runtime import RUNTIME
-from qs.core.agents.node import DefaultCapabilities, Node
+from exmekh_lib.config.runtime import RUNTIME
+from exmekh_lib.core.agents.node import DefaultCapabilities, Node
 
 from fe.config import config
 

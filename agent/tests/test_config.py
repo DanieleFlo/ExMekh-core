@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
-from qs.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.agents.node import DefaultCapabilities
 
 from fe.config import AppConfig
 
@@ -71,7 +71,7 @@ def test_save_to_env_updates_known_keys_atomically(tmp_path: Path) -> None:
         api_type="responses",
         host="127.0.0.1",
         port=9000,
-        app_title="QS",
+        app_title="ExMekh-Lib",
     )
 
     cfg.save_to_env(env_path)

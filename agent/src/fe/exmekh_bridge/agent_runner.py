@@ -9,43 +9,43 @@ from pathlib import Path
 from typing import Any
 
 import httpx
-from qs.core.agents.deep_agent.deep_agent import DeepAgent
-from qs.core.agents.deep_skill.execution import DeepSkillExecution
-from qs.core.agents.node import DefaultCapabilities, Node
-from qs.core.models.assistant_message import AssistantMessage, ToolCall
-from qs.core.models.client import Client
-from qs.core.models.client_request import ClientRequest
-from qs.core.models.reasoning_effort import (
+from exmekh_lib.core.agents.deep_agent.deep_agent import DeepAgent
+from exmekh_lib.core.agents.deep_skill.execution import DeepSkillExecution
+from exmekh_lib.core.agents.node import DefaultCapabilities, Node
+from exmekh_lib.core.models.assistant_message import AssistantMessage, ToolCall
+from exmekh_lib.core.models.client import Client
+from exmekh_lib.core.models.client_request import ClientRequest
+from exmekh_lib.core.models.reasoning_effort import (
     ReasoningEffort,
     ReasoningEffortLMH,
     ReasoningEffortLMX,
 )
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.tool_hooks import ToolHooks
-from qs.core.models.user_message import UserMessage
-from qs.interfaces.message import Message
-from qs.providers.local import LocalProvider
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.tool_hooks import ToolHooks
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.interfaces.message import Message
+from exmekh_lib.providers.local import LocalProvider
 
 from fe.config import config
-from fe.qs_bridge.cancellation import CancellableProvider, raise_if_cancelled
-from fe.qs_bridge.converter import (
-    chat_message_to_qs_messages,
+from fe.exmekh_bridge.cancellation import CancellableProvider, raise_if_cancelled
+from fe.exmekh_bridge.converter import (
+    chat_message_to_exmekh_messages,
     close_pending_tool_calls,
-    qs_message_to_raw_dict,
-    raw_dict_to_qs_message,
+    exmekh_message_to_raw_dict,
+    raw_dict_to_exmekh_message,
     restore_node_history,
 )
-from fe.qs_bridge.event_handlers import (
+from fe.exmekh_bridge.event_handlers import (
     DeepAgentTurnEventHandler,
     QuickChatEventHandler,
     publish_raw_history,
 )
-from fe.qs_bridge.image_input import (
+from fe.exmekh_bridge.image_input import (
     restore_image_history,
     serialize_user_content,
     user_content,
 )
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSettings,
     ChatTitle,
@@ -54,14 +54,14 @@ from fe.qs_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.provider_context import ContextTrackingProvider
-from fe.qs_bridge.steering import TurnSteering
-from fe.qs_bridge.sub_agents import (
+from fe.exmekh_bridge.provider_context import ContextTrackingProvider
+from fe.exmekh_bridge.steering import TurnSteering
+from fe.exmekh_bridge.sub_agents import (
     ObservedNode,
     SubAgentEvent,
     SubAgentEventRouter,
 )
-from fe.qs_bridge.tool_approval import (
+from fe.exmekh_bridge.tool_approval import (
     DEFAULT_TOOL_APPROVAL_MODE,
     CommandApprovalHook,
     CommandApprovedCallback,
@@ -76,11 +76,11 @@ logger = logging.getLogger(__name__)
 _provider_request_lock = threading.RLock()
 
 
-def convert_to_qs_messages(
+def convert_to_exmekh_messages(
     history: Any | None,
     current_user_prompt: str = "",
 ) -> list[Message[Any]]:
-    """Converts a sequence of ChatMessage objects or dicts into qs Message instances.
+    """Converts a sequence of ChatMessage objects or dicts into exmekh_lib Message instances.
 
     Filters out initial system messages (managed by Client) and any trailing user message
     matching current_user_prompt to prevent duplication, while preserving all tool calls,
@@ -89,7 +89,7 @@ def convert_to_qs_messages(
     if not history:
         return []
 
-    qs_messages: list[Message[Any]] = []
+    exmekh_messages: list[Message[Any]] = []
     items = list(history)
 
     if items:
@@ -120,31 +120,33 @@ def convert_to_qs_messages(
         if isinstance(item, Message):
             role = item.get_role_name()
         if pending_tool_calls and role in ("user", "assistant"):
-            close_pending_tool_calls(qs_messages, pending_tool_calls)
+            close_pending_tool_calls(exmekh_messages, pending_tool_calls)
             if role == "user":
-                qs_messages.append(AssistantMessage(content="[Execution interrupted]"))
+                exmekh_messages.append(
+                    AssistantMessage(content="[Execution interrupted]")
+                )
         if isinstance(item, Message):
             if item.get_role_name() != "system":
-                qs_messages.append(item)
+                exmekh_messages.append(item)
             continue
 
         if isinstance(item, ChatMessage):
             if item.role == "system":
                 continue
-            qs_messages.extend(chat_message_to_qs_messages(item))
+            exmekh_messages.extend(chat_message_to_exmekh_messages(item))
         elif isinstance(item, dict):
             role = str(item.get("role", "")).lower()
             if role == "system":
                 continue
-            qs_messages.append(
-                raw_dict_to_qs_message(item, pending_tool_calls=pending_tool_calls)
+            exmekh_messages.append(
+                raw_dict_to_exmekh_message(item, pending_tool_calls=pending_tool_calls)
             )
 
     if pending_tool_calls:
-        close_pending_tool_calls(qs_messages, pending_tool_calls)
-        qs_messages.append(AssistantMessage(content="[Execution interrupted]"))
+        close_pending_tool_calls(exmekh_messages, pending_tool_calls)
+        exmekh_messages.append(AssistantMessage(content="[Execution interrupted]"))
 
-    return qs_messages
+    return exmekh_messages
 
 
 def extract_model_context_length(model_data: dict[str, Any]) -> int | None:
@@ -203,7 +205,9 @@ def serialize_skill_execution(execution: DeepSkillExecution) -> dict[str, Any]:
     tree["opening_tool_call_id"] = execution.opening_tool_call_id
     tree["start_index"] = execution.start_index
     tree["end_index"] = execution.end_index
-    tree["history"] = [qs_message_to_raw_dict(message) for message in execution.history]
+    tree["history"] = [
+        exmekh_message_to_raw_dict(message) for message in execution.history
+    ]
     tree["children"] = [
         serialize_skill_execution(child) for child in execution.children
     ]
@@ -314,7 +318,7 @@ def _execute_agent_turn_sync_unlocked(
     on_steering_added: Callable[[], None] | None = None,
     image_urls: list[str] | None = None,
 ) -> str:
-    """Synchronous execution of a turn using qs, dispatched in background thread."""
+    """Synchronous execution of a turn using exmekh_lib, dispatched in background thread."""
     content = user_content(user_prompt, image_urls or [])
     reasoning_effort: ReasoningEffort | None = None
     if reasoning_effort_str:
@@ -403,10 +407,12 @@ def _execute_agent_turn_sync_unlocked(
             default_capabilities=default_caps,
         )
 
-        prior_qs = convert_to_qs_messages(history, current_user_prompt=user_prompt)
+        prior_exmekh = convert_to_exmekh_messages(
+            history, current_user_prompt=user_prompt
+        )
         content_by_dump = {
             message.message_dump()["content"]: serialize_user_content(message)
-            for message in [*prior_qs, UserMessage(content)]
+            for message in [*prior_exmekh, UserMessage(content)]
             if isinstance(message, UserMessage)
             and not isinstance(message.get_message(), str)
         }
@@ -451,17 +457,17 @@ def _execute_agent_turn_sync_unlocked(
             if previous:
                 child.restore_conversation(
                     previous,
-                    prior_qs=convert_to_qs_messages(previous.replay_history()),
+                    prior_exmekh=convert_to_exmekh_messages(previous.replay_history()),
                 )
 
         if history:
-            restore_node_history(root_node, history, prior_qs=prior_qs)
+            restore_node_history(root_node, history, prior_exmekh=prior_exmekh)
 
         try:
             if steering is not None:
                 # Restored messages follow one system message and precede the
                 # initial user message. Skill compaction preserves that prefix.
-                steering.bind(agent.steer, history_start=len(prior_qs) + 2)
+                steering.bind(agent.steer, history_start=len(prior_exmekh) + 2)
             response = agent.run(user_message=content)
         except BaseException:
             event_handler.finish("error")
@@ -488,10 +494,12 @@ def _execute_agent_turn_sync_unlocked(
                 "You are a friendly, accurate, and professional AI assistant."
             ),
         )
-        prior_qs = convert_to_qs_messages(history, current_user_prompt=user_prompt)
-        if prior_qs:
+        prior_exmekh = convert_to_exmekh_messages(
+            history, current_user_prompt=user_prompt
+        )
+        if prior_exmekh:
             try:
-                client.replace_history_from(1, prior_qs)
+                client.replace_history_from(1, prior_exmekh)
             except Exception as e:  # noqa: BLE001 - legacy history is best-effort
                 logger.warning(f"Failed to seed history into Client: {e}")
 
@@ -509,7 +517,7 @@ def _execute_agent_turn_sync_unlocked(
         if on_raw_history:
             publish_raw_history(
                 on_raw_history,
-                [qs_message_to_raw_dict(item) for item in client.get_history()],
+                [exmekh_message_to_raw_dict(item) for item in client.get_history()],
                 [],
             )
 

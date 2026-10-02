@@ -5,11 +5,11 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from qs.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.provider_response import ProviderResponse
 
-from fe.qs_bridge.context_usage import count_text_tokens, find_skill_opening_index
-from fe.qs_bridge.ds4_prompt import apply_ds4_scope, render_ds4_qwen_prompt
-from fe.qs_bridge.models import ProviderContextUsage
+from fe.exmekh_bridge.context_usage import count_text_tokens, find_skill_opening_index
+from fe.exmekh_bridge.ds4_prompt import apply_ds4_scope, render_ds4_qwen_prompt
+from fe.exmekh_bridge.models import ProviderContextUsage
 
 
 class Ds4ContextEstimator:

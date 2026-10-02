@@ -6,30 +6,30 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from qs.core.cache.node_cache import NodeCache
-from qs.core.cache.session_cache import SessionCache
-from qs.core.models.client import Client
-from qs.core.models.client_request import ClientRequest
-from qs.core.models.history import MessageHistory
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.user_message import UserMessage
-from qs.core.tool_calls.execution_history import ExecutionHistory
-from qs.core.tool_calls.harness_memory_tools import HarnessMemoryTools
+from exmekh_lib.core.cache.node_cache import NodeCache
+from exmekh_lib.core.cache.session_cache import SessionCache
+from exmekh_lib.core.models.client import Client
+from exmekh_lib.core.models.client_request import ClientRequest
+from exmekh_lib.core.models.history import MessageHistory
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
+from exmekh_lib.core.tool_calls.harness_memory_tools import HarnessMemoryTools
 
-from fe.qs_bridge.agent_runner import (
-    convert_to_qs_messages,
+from fe.exmekh_bridge.agent_runner import (
+    convert_to_exmekh_messages,
     execute_agent_turn_sync,
     run_agent_turn,
 )
-from fe.qs_bridge.converter import (
-    qs_message_to_raw_dict,
-    qs_messages_to_chat_messages,
-    qs_messages_to_session,
-    raw_dict_to_qs_message,
+from fe.exmekh_bridge.converter import (
+    exmekh_message_to_raw_dict,
+    exmekh_messages_to_chat_messages,
+    exmekh_messages_to_session,
+    raw_dict_to_exmekh_message,
     reconstruct_execution_history_and_cache,
-    session_to_qs_messages,
+    session_to_exmekh_messages,
 )
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ChatSettings,
@@ -40,7 +40,7 @@ from fe.qs_bridge.models import (
 from tests.mock_client import MockProvider
 
 
-def test_chat_options_survive_qs_history_roundtrip() -> None:
+def test_chat_options_survive_exmekh_history_roundtrip() -> None:
     session = ChatSession(
         settings=ChatSettings(
             name_hds="chat-hds",
@@ -50,15 +50,16 @@ def test_chat_options_survive_qs_history_roundtrip() -> None:
         )
     )
 
-    messages = session_to_qs_messages(session)
-    restored = qs_messages_to_session(messages)
+    messages = session_to_exmekh_messages(session)
+    restored = exmekh_messages_to_session(messages)
     assert restored.settings == session.settings
 
     serialized = [
-        qs_message_to_raw_dict(message, include_snapshots=True) for message in messages
+        exmekh_message_to_raw_dict(message, include_snapshots=True)
+        for message in messages
     ]
-    restored_from_json = qs_messages_to_session(
-        [raw_dict_to_qs_message(item) for item in serialized]
+    restored_from_json = exmekh_messages_to_session(
+        [raw_dict_to_exmekh_message(item) for item in serialized]
     )
     assert restored_from_json.settings == session.settings
 
@@ -75,7 +76,9 @@ def test_history_preserved_in_quick_chat_agent_turn() -> None:
         ChatMessage(role="assistant", content="Piacere Mario!"),
     ]
 
-    with patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=mock_provider):
+    with patch(
+        "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=mock_provider
+    ):
         execute_agent_turn_sync(
             user_prompt="Come mi chiamo?",
             model="test-model",
@@ -112,7 +115,9 @@ def test_history_preserved_in_deep_agent_turn() -> None:
         ChatMessage(role="assistant", content="Prima risposta"),
     ]
 
-    with patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=mock_provider):
+    with patch(
+        "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=mock_provider
+    ):
         execute_agent_turn_sync(
             user_prompt="Secondo messaggio",
             model="test-model",
@@ -146,7 +151,9 @@ async def test_run_agent_turn_passes_history_to_model() -> None:
     mock_provider = MockProvider()
     session = ChatSession(title="Test Multi-turn", agent_mode="quick_chat")
 
-    with patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=mock_provider):
+    with patch(
+        "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=mock_provider
+    ):
         # Turn 1
         user1 = ChatMessage(role="user", content="Il mio numero fortunato è 77")
         session.messages.append(user1)
@@ -1023,39 +1030,39 @@ def test_10_realistic_chats_bidirectional_conversion_and_roundtrip(
 ) -> None:
     """Tests each of the 10 realistic chats:
 
-    1. Converts ChatSession -> qs Message list (session_to_qs_messages).
-    2. Validates that qs MessageHistory accepts the entire sequence (check_history).
+    1. Converts ChatSession -> exmekh_lib Message list (session_to_exmekh_messages).
+    2. Validates that exmekh_lib MessageHistory accepts the entire sequence (check_history).
     3. Verifies Client can load the converted history and send all turns to Provider on a follow-up prompt.
-    4. Converts qs Message list -> ChatSession (qs_messages_to_session) and verifies exact equality.
-    5. Serializes through raw dicts (qs_message_to_raw_dict -> raw_dict_to_qs_message) and back, verifying exact equality.
-    6. Strips snapshots and verifies structural reconstruction from pure qs Messages.
+    4. Converts exmekh_lib Message list -> ChatSession (exmekh_messages_to_session) and verifies exact equality.
+    5. Serializes through raw dicts (exmekh_message_to_raw_dict -> raw_dict_to_exmekh_message) and back, verifying exact equality.
+    6. Strips snapshots and verifies structural reconstruction from pure exmekh_lib Messages.
     """
     all_chats = build_10_diverse_realistic_chats()
     original_session = all_chats[chat_index]
 
-    # 1. Forward conversion: ChatSession -> list[qs.interfaces.message.Message]
-    qs_messages = session_to_qs_messages(original_session)
-    assert len(qs_messages) >= len(original_session.messages) + 1
-    assert qs_messages[0].get_role_name() == "system"
+    # 1. Forward conversion: ChatSession -> list[exmekh_lib.interfaces.message.Message]
+    exmekh_messages = session_to_exmekh_messages(original_session)
+    assert len(exmekh_messages) >= len(original_session.messages) + 1
+    assert exmekh_messages[0].get_role_name() == "system"
 
-    # 2. Validate against qs MessageHistory rules (system first, valid role transitions, valid ToolCalls)
-    msg_history = MessageHistory(history=qs_messages)
+    # 2. Validate against exmekh_lib MessageHistory rules (system first, valid role transitions, valid ToolCalls)
+    msg_history = MessageHistory(history=exmekh_messages)
     msg_history.check_history()
 
-    # 3. Verify that loading into a qs Client and sending a new message passes the ENTIRE history to the model
+    # 3. Verify that loading into a exmekh_lib Client and sending a new message passes the ENTIRE history to the model
     mock_provider = MockProvider()
     client = Client(
         provider=mock_provider,
         system_message=SystemMessage(original_session.system_prompt or "System"),
     )
-    prior_qs = convert_to_qs_messages(original_session.messages)
-    client.replace_history_from(1, prior_qs)
+    prior_exmekh = convert_to_exmekh_messages(original_session.messages)
+    client.replace_history_from(1, prior_exmekh)
     client.call(ClientRequest(UserMessage("Messaggio di verifica finale")))
 
     assert mock_provider.last_request is not None
     sent_messages = mock_provider.last_request.get_messages()
     # Must contain System + all converted history messages + the new UserMessage
-    assert len(sent_messages) == 1 + len(prior_qs) + 1
+    assert len(sent_messages) == 1 + len(prior_exmekh) + 1
     # Verify every single user prompt from the original session is present in order in sent_messages
     original_user_prompts = [
         m.content for m in original_session.messages if m.role == "user"
@@ -1065,30 +1072,32 @@ def test_10_realistic_chats_bidirectional_conversion_and_roundtrip(
     ]
     assert sent_user_prompts == [*original_user_prompts, "Messaggio di verifica finale"]
 
-    # 4. Backward conversion (Round-trip 1): list[qs.Message] -> ChatSession
-    restored_session = qs_messages_to_session(qs_messages)
+    # 4. Backward conversion (Round-trip 1): list[exmekh_lib.Message] -> ChatSession
+    restored_session = exmekh_messages_to_session(exmekh_messages)
     assert restored_session.model_dump() == original_session.model_dump()
     assert restored_session == original_session
 
-    # 5. Round-trip through JSON dicts: ChatSession -> qs_messages -> raw_dicts -> qs_messages -> ChatSession
-    raw_dicts = [qs_message_to_raw_dict(m, include_snapshots=True) for m in qs_messages]
-    pending_tcs: list[Any] = []
-    reconstructed_qs = [
-        raw_dict_to_qs_message(d, pending_tool_calls=pending_tcs) for d in raw_dicts
+    # 5. Round-trip through JSON dicts: ChatSession -> exmekh_messages -> raw_dicts -> exmekh_messages -> ChatSession
+    raw_dicts = [
+        exmekh_message_to_raw_dict(m, include_snapshots=True) for m in exmekh_messages
     ]
-    restored_from_dicts = qs_messages_to_session(reconstructed_qs)
+    pending_tcs: list[Any] = []
+    reconstructed_exmekh = [
+        raw_dict_to_exmekh_message(d, pending_tool_calls=pending_tcs) for d in raw_dicts
+    ]
+    restored_from_dicts = exmekh_messages_to_session(reconstructed_exmekh)
     assert restored_from_dicts.model_dump() == original_session.model_dump()
 
-    # 6. Pure qs Messages reconstruction (without snapshots) preserves roles, contents, skills, and tools
-    pure_qs_dicts = [
-        qs_message_to_raw_dict(m, include_snapshots=False) for m in qs_messages
+    # 6. Pure exmekh_lib Messages reconstruction (without snapshots) preserves roles, contents, skills, and tools
+    pure_exmekh_dicts = [
+        exmekh_message_to_raw_dict(m, include_snapshots=False) for m in exmekh_messages
     ]
     pending_pure: list[Any] = []
-    pure_qs_msgs = [
-        raw_dict_to_qs_message(d, pending_tool_calls=pending_pure)
-        for d in pure_qs_dicts
+    pure_exmekh_msgs = [
+        raw_dict_to_exmekh_message(d, pending_tool_calls=pending_pure)
+        for d in pure_exmekh_dicts
     ]
-    pure_restored = qs_messages_to_chat_messages(pure_qs_msgs[1:])
+    pure_restored = exmekh_messages_to_chat_messages(pure_exmekh_msgs[1:])
 
     assert len(pure_restored) == len(original_session.messages)
     for orig_msg, pure_msg in zip(original_session.messages, pure_restored):

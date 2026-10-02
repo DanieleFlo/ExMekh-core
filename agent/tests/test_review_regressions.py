@@ -7,8 +7,8 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,

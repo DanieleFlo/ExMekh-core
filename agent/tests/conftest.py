@@ -13,7 +13,7 @@ from tests.execution_policy import is_live_provider_test
 
 pytest_plugins = ["tests.parallel_execution"]
 
-_LIVE_TEST_ENV_VAR = "QS_RUN_LIVE_TESTS"
+_LIVE_TEST_ENV_VAR = "EXMEKH_LIB_RUN_LIVE_TESTS"
 _TRUTHY_VALUES = {"1", "true", "yes", "on"}
 
 

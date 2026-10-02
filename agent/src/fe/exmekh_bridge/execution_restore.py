@@ -1,4 +1,4 @@
-"""Restore execution state through public QS history and cache interfaces."""
+"""Restore execution state through public ExMekh-Lib history and cache interfaces."""
 
 from __future__ import annotations
 
@@ -6,20 +6,26 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from qs.config.runtime import RUNTIME
-from qs.core.cache.node_cache import NodeCache
-from qs.core.cache.tool_call_record import ToolCallRecord
-from qs.core.cache.user_message_codec import serialize_user_message
-from qs.core.models.assistant_message import ToolCall
-from qs.core.models.user_message import UserMessage
-from qs.core.tool_calls.execution_history import ExecutionHistory, ExecutionHistoryEntry
+from exmekh_lib.config.runtime import RUNTIME
+from exmekh_lib.core.cache.node_cache import NodeCache
+from exmekh_lib.core.cache.tool_call_record import ToolCallRecord
+from exmekh_lib.core.cache.user_message_codec import serialize_user_message
+from exmekh_lib.core.models.assistant_message import ToolCall
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.core.tool_calls.execution_history import (
+    ExecutionHistory,
+    ExecutionHistoryEntry,
+)
 
-from fe.qs_bridge.image_input import deserialize_user_content
-from fe.qs_bridge.models import ChatMessage
-from fe.qs_bridge.recorded_output import RecordedToolOutput
-from fe.qs_bridge.skill_history import inner_skill_history_messages, take_skill_for_call
-from fe.qs_bridge.steering_history import direct_steering_output_ids
-from fe.qs_bridge.tool_calls import parse_tool_calls, tool_result_for_call
+from fe.exmekh_bridge.image_input import deserialize_user_content
+from fe.exmekh_bridge.models import ChatMessage
+from fe.exmekh_bridge.recorded_output import RecordedToolOutput
+from fe.exmekh_bridge.skill_history import (
+    inner_skill_history_messages,
+    take_skill_for_call,
+)
+from fe.exmekh_bridge.steering_history import direct_steering_output_ids
+from fe.exmekh_bridge.tool_calls import parse_tool_calls, tool_result_for_call
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,7 +68,7 @@ def scope_events(
 
 
 class ExecutionHistoryRestorer:
-    """Own chronological restoration; conversion never accesses QS internals."""
+    """Own chronological restoration; conversion never accesses ExMekh-Lib internals."""
 
     def __init__(
         self, history: ExecutionHistory, cache: NodeCache | None = None

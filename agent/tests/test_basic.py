@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from fe.config import config
-from fe.qs_bridge.models import ChatMessage, ChatSession, ReasoningBlock, ToolEvent
+from fe.exmekh_bridge.models import ChatMessage, ChatSession, ReasoningBlock, ToolEvent
 from fe.state.session_manager import SessionManager
 from fe.ui.chat_view import ChatViewComponent
 from fe.ui.header import HeaderComponent

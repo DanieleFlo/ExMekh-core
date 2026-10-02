@@ -1,4 +1,4 @@
-"""Local image/PDF decoding and lossless QS multimodal history conversion."""
+"""Local image/PDF decoding and lossless ExMekh-Lib multimodal history conversion."""
 
 from __future__ import annotations
 
@@ -11,12 +11,12 @@ from threading import Lock
 from typing import Any
 
 import pypdfium2 as pdfium
-from PIL import Image, ImageOps, UnidentifiedImageError
-from qs.core.models.user_message import (
+from exmekh_lib.core.models.user_message import (
     ImagesUserMessage,
     UserMessage,
     UserMessageContent,
 )
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 # PDFium is not thread-safe; uploads run in the shared executor.
 _pdf_render_lock = Lock()
@@ -99,7 +99,7 @@ def user_content(text: str, image_urls: list[str]) -> UserMessageContent:
 
 
 def serialize_user_content(message: UserMessage) -> str | list[dict[str, Any]]:
-    """QS dumps only image hashes; persist actual parts so reload keeps vision."""
+    """ExMekh-Lib dumps only image hashes; persist actual parts so reload keeps vision."""
     content = message.get_message()
     if isinstance(content, str):
         return content
@@ -144,7 +144,7 @@ def restore_image_history(
     tree: list[dict[str, Any]],
     content_by_dump: dict[str, list[dict[str, Any]]],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Replace QS image hashes in snapshots without mutating runtime history."""
+    """Replace ExMekh-Lib image hashes in snapshots without mutating runtime history."""
     history, tree = deepcopy((history, tree))
     histories = [history]
     pending = list(tree)

@@ -1,7 +1,7 @@
 [project]
 name = "fe"
 version = "0.1.0"
-description = "Local AI Studio frontend for qs inspired by LM Studio and Unsloth"
+description = "Local AI Studio frontend for exmekh_lib inspired by LM Studio and Unsloth"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -9,7 +9,7 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx>=0.27.0",
     "pydantic>=2.0.0",
-    "qs",
+    "exmekh-lib",
     "latex2mathml>=3.81.1",
     "nh3>=0.3.7",
     "pillow>=12.3.0",
@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-qs = { path = "wheels/qs-0.1.0-py3-none-any.whl" }
+exmekh-lib = { path = "wheels/exmekh_lib-0.1.0-py3-none-any.whl" }
 
 [dependency-groups]
 dev = [
@@ -31,7 +31,7 @@ dev = [
 
 [project.scripts]
 fe = "fe.main:main"
-sync-qs = "fe.sync:main"
+sync-exmekh-lib = "fe.sync:main"
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

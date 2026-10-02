@@ -87,7 +87,7 @@ senza nuova persistenza degli stack privati sospesi.
 Con gli altri processi motore arrestati:
 
 ```sh
-./agent/sync_qs.sh
+./agent/sync_exmekh_lib.sh
 python3 tests/run_qwen27_vision_acceptance.py \
   --out-dir performance-results/qwen27-vision-recheck
 ```

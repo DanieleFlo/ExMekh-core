@@ -169,7 +169,7 @@ async def test_new_quick_chat_shows_confirmation_after_sidebar_refresh(
             page = await browser.new_page(viewport={"width": 1360, "height": 920})
             await page.goto(projects_server, wait_until="networkidle")
             new_chat = page.get_by_role("button", name="New Quick Chat", exact=True)
-            input_box = page.locator(".qs-chat-input-box")
+            input_box = page.locator(".exmekh-chat-input-box")
             confirmation = page.get_by_text("Conversation ready", exact=True)
 
             await new_chat.click()

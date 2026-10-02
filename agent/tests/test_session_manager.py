@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.models import ChatMessage, ChatSession, ChatSettings
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.models import ChatMessage, ChatSession, ChatSettings
 from fe.state.active_turns import active_turns
 from fe.state.session_manager import CODE_WORK_ROOT, SessionManager
 

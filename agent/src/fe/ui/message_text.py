@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from fe.qs_bridge.models import ChatMessage
-from fe.qs_bridge.pasted_input import strip_user_input_file_xml
+from fe.exmekh_bridge.models import ChatMessage
+from fe.exmekh_bridge.pasted_input import strip_user_input_file_xml
 
 
 def message_display_text(message: ChatMessage) -> str:

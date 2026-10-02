@@ -1,15 +1,15 @@
-"""Browser test server using the real QS runtime and a controlled provider."""
+"""Browser test server using the real ExMekh-Lib runtime and a controlled provider."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from exmekh_lib.core.agents.node import DefaultCapabilities
 from nicegui import app
-from qs.core.agents.node import DefaultCapabilities
 
 from fe.config import config
+from fe.exmekh_bridge import agent_runner
 from fe.main import main
-from fe.qs_bridge import agent_runner
 from fe.state.session_manager import session_manager
 from tests.approval_probe import ApprovalProbeProvider
 

@@ -39,23 +39,25 @@ async def test_images_pdf_preview_persistence_and_provider_protocol(image_server
                     "buffer": pdf_bytes(),
                 },
             ]
-            await page.locator(".qs-file-picker").set_input_files(files)
-            await expect(page.locator(".qs-attachment-chip")).to_have_count(3)
+            await page.locator(".exmekh-file-picker").set_input_files(files)
+            await expect(page.locator(".exmekh-attachment-chip")).to_have_count(3)
             await expect(
-                page.locator(".qs-attachments-bar .qs-image-thumbnail")
+                page.locator(".exmekh-attachments-bar .exmekh-image-thumbnail")
             ).to_have_count(4)
-            await expect(page.locator(".qs-message-attachment-chip")).to_have_count(0)
-            await page.locator(".qs-image-thumbnail").first.click()
-            await expect(page.locator(".qs-image-preview")).to_be_visible()
-            await expect(page.locator(".qs-preview-image img")).to_be_visible()
+            await expect(page.locator(".exmekh-message-attachment-chip")).to_have_count(
+                0
+            )
+            await page.locator(".exmekh-image-thumbnail").first.click()
+            await expect(page.locator(".exmekh-image-preview")).to_be_visible()
+            await expect(page.locator(".exmekh-preview-image img")).to_be_visible()
             assert (
-                await page.locator(".qs-image-dialog .q-dialog__backdrop").evaluate(
+                await page.locator(".exmekh-image-dialog .q-dialog__backdrop").evaluate(
                     "(el) => getComputedStyle(el).backdropFilter"
                 )
                 == "blur(8px)"
             )
             await page.get_by_role("button", name="Close image preview").click()
-            await expect(page.locator(".qs-image-preview")).to_have_count(0)
+            await expect(page.locator(".exmekh-image-preview")).to_have_count(0)
             await page.locator("textarea").fill("Compare the attachments")
             await page.locator("textarea").press("Enter")
             await wait_turn_completion(page)
@@ -63,9 +65,11 @@ async def test_images_pdf_preview_persistence_and_provider_protocol(image_server
                 "Received 4 images"
             )
             await expect(
-                page.locator(".qs-message-images .qs-image-thumbnail")
+                page.locator(".exmekh-message-images .exmekh-image-thumbnail")
             ).to_have_count(4)
-            await expect(page.locator(".qs-message-attachment-chip")).to_have_count(0)
+            await expect(page.locator(".exmekh-message-attachment-chip")).to_have_count(
+                0
+            )
             stats = await (
                 await page.request.get(image_server + "/test/image-stats")
             ).json()
@@ -80,13 +84,17 @@ async def test_images_pdf_preview_persistence_and_provider_protocol(image_server
             assert len(stats["session"]["messages"][0]["image_urls"]) == 4
             await page.reload(wait_until="networkidle")
             await expect(
-                page.locator(".qs-message-images .qs-image-thumbnail")
+                page.locator(".exmekh-message-images .exmekh-image-thumbnail")
             ).to_have_count(4)
-            await expect(page.locator(".qs-message-attachment-chip")).to_have_count(0)
-            await page.locator(".qs-message-images .qs-image-thumbnail").last.click()
-            await expect(page.locator(".qs-image-preview")).to_be_visible()
+            await expect(page.locator(".exmekh-message-attachment-chip")).to_have_count(
+                0
+            )
+            await page.locator(
+                ".exmekh-message-images .exmekh-image-thumbnail"
+            ).last.click()
+            await expect(page.locator(".exmekh-image-preview")).to_be_visible()
             await page.keyboard.press("Escape")
-            await expect(page.locator(".qs-image-preview")).to_have_count(0)
+            await expect(page.locator(".exmekh-image-preview")).to_have_count(0)
             # An image copied to the clipboard follows the same multipart path.
             await page.locator("textarea").evaluate(
                 """(el) => {
@@ -97,7 +105,7 @@ async def test_images_pdf_preview_persistence_and_provider_protocol(image_server
                 % list(png_bytes("green"))
             )
             await expect(
-                page.locator(".qs-attachments-bar .qs-image-thumbnail")
+                page.locator(".exmekh-attachments-bar .exmekh-image-thumbnail")
             ).to_have_count(1)
             await page.locator("textarea").press("Enter")
             await wait_turn_completion(page)

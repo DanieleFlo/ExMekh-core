@@ -1,4 +1,4 @@
-"""Normalize recorded QS tool calls at the integration boundary."""
+"""Normalize recorded ExMekh-Lib tool calls at the integration boundary."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import json
 from collections.abc import Sequence
 from typing import Any
 
-from qs.core.models.assistant_message import FunctionCall, ToolCall
+from exmekh_lib.core.models.assistant_message import FunctionCall, ToolCall
 
 
 def _decode_json(value: Any) -> Any:
@@ -21,7 +21,7 @@ def _decode_json(value: Any) -> Any:
 def parse_tool_calls(
     value: Any, *, generate_missing_ids: bool = True
 ) -> list[ToolCall] | None:
-    """Accept QS calls, recorded dictionaries, and JSON-encoded lists."""
+    """Accept ExMekh-Lib calls, recorded dictionaries, and JSON-encoded lists."""
     value = _decode_json(value)
     if not isinstance(value, list):
         return None
@@ -52,7 +52,7 @@ def parse_tool_calls(
 
 
 def extract_tool_arguments(history: Any, call_id: str | None) -> dict[str, Any]:
-    """Resolve the exact invocation through the public QS ToolCall methods."""
+    """Resolve the exact invocation through the public ExMekh-Lib ToolCall methods."""
     if not call_id or not isinstance(history, list):
         return {}
     for message in reversed(history):

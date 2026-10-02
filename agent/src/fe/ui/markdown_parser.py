@@ -177,7 +177,7 @@ def _render_fenced_code_block(info_string: str, raw_code: str) -> str:
         'title="Copy section" '
         'aria-label="Copy section" '
         f'data-code="{escaped_code_attr}" '
-        'onclick="if(window.__qsCopyCodeBlock){window.__qsCopyCodeBlock(this, event);}">'
+        'onclick="if(window.__exmekhCopyCodeBlock){window.__exmekhCopyCodeBlock(this, event);}">'
         '<i class="q-icon notranslate material-icons" aria-hidden="true" role="presentation">content_copy</i>'
         "</button>"
     )

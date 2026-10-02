@@ -804,6 +804,62 @@ wheels = [
 ]
 
 [[package]]
+name = "exmekh-lib"
+version = "0.1.0"
+source = { path = "wheels/exmekh_lib-0.1.0-py3-none-any.whl" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "crawl4ai" },
+    { name = "ddgs" },
+    { name = "huggingface-hub" },
+    { name = "lxml" },
+    { name = "numpy" },
+    { name = "openai" },
+    { name = "openvino" },
+    { name = "pillow" },
+    { name = "playwright" },
+    { name = "psutil" },
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "pyyaml" },
+    { name = "sympy" },
+    { name = "tokenizers" },
+    { name = "torch" },
+    { name = "torchvision" },
+    { name = "transformers" },
+    { name = "tzdata" },
+    { name = "z3-solver" },
+]
+wheels = [
+    { filename = "exmekh_lib-0.1.0-py3-none-any.whl", hash = "sha256:4fbd2a3092b9710ad9573cd2a08559375fda79d6433497bce232bd77ceb0c9c7" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiohttp", specifier = ">=3.14.1" },
+    { name = "crawl4ai", specifier = ">=0.9.2" },
+    { name = "ddgs", specifier = ">=9.14.4" },
+    { name = "huggingface-hub", specifier = ">=0.35.0" },
+    { name = "lxml", specifier = ">=5.3.0" },
+    { name = "numpy", specifier = ">=2.4.0" },
+    { name = "openai", specifier = ">=3.3.0" },
+    { name = "openvino", specifier = ">=2026.1.0" },
+    { name = "pillow", specifier = ">=12.3.0" },
+    { name = "playwright", specifier = ">=1.53.0" },
+    { name = "psutil", specifier = ">=7.2.2" },
+    { name = "pydantic", specifier = ">=2.0.0" },
+    { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
+    { name = "sympy", specifier = ">=1.14.0" },
+    { name = "tokenizers", specifier = ">=0.22.2,<0.23" },
+    { name = "torch", specifier = ">=2.13.0" },
+    { name = "torchvision", specifier = ">=0.24.0" },
+    { name = "transformers", specifier = ">=5.14.0" },
+    { name = "tzdata", specifier = ">=2025.2" },
+    { name = "z3-solver", specifier = ">=4.15.4.0" },
+]
+
+[[package]]
 name = "fake-useragent"
 version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -863,6 +919,7 @@ name = "fe"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "exmekh-lib" },
     { name = "httpx" },
     { name = "latex2mathml" },
     { name = "nh3" },
@@ -871,7 +928,6 @@ dependencies = [
     { name = "pydantic" },
     { name = "pypdfium2" },
     { name = "python-dotenv" },
-    { name = "qs" },
 ]
 
 [package.dev-dependencies]
@@ -886,6 +942,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "exmekh-lib", path = "wheels/exmekh_lib-0.1.0-py3-none-any.whl" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "latex2mathml", specifier = ">=3.81.1" },
     { name = "nh3", specifier = ">=0.3.7" },
@@ -894,7 +951,6 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pypdfium2", specifier = ">=5.13.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "qs", path = "wheels/qs-0.1.0-py3-none-any.whl" },
 ]
 
 [package.metadata.requires-dev]
@@ -2710,62 +2766,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/da/92/1446574745d74df0c92e6aa4a7b0b3130706a4142b2d1a5869f2eaa423c6/pyyaml-6.0.3-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:16249ee61e95f858e83976573de0f5b2893b3677ba71c9dd36b9cf8be9ac6d65", size = 829923, upload-time = "2025-09-25T21:32:54.537Z" },
     { url = "https://files.pythonhosted.org/packages/f0/7a/1c7270340330e575b92f397352af856a8c06f230aa3e76f86b39d01b416a/pyyaml-6.0.3-cp314-cp314t-win_amd64.whl", hash = "sha256:4ad1906908f2f5ae4e5a8ddfce73c320c2a1429ec52eafd27138b7f1cbe341c9", size = 174062, upload-time = "2025-09-25T21:32:55.767Z" },
     { url = "https://files.pythonhosted.org/packages/f1/12/de94a39c2ef588c7e6455cfbe7343d3b2dc9d6b6b2f40c4c6565744c873d/pyyaml-6.0.3-cp314-cp314t-win_arm64.whl", hash = "sha256:ebc55a14a21cb14062aa4162f906cd962b28e2e9ea38f9b4391244cd8de4ae0b", size = 149341, upload-time = "2025-09-25T21:32:56.828Z" },
-]
-
-[[package]]
-name = "qs"
-version = "0.1.0"
-source = { path = "wheels/qs-0.1.0-py3-none-any.whl" }
-dependencies = [
-    { name = "aiohttp" },
-    { name = "crawl4ai" },
-    { name = "ddgs" },
-    { name = "huggingface-hub" },
-    { name = "lxml" },
-    { name = "numpy" },
-    { name = "openai" },
-    { name = "openvino" },
-    { name = "pillow" },
-    { name = "playwright" },
-    { name = "psutil" },
-    { name = "pydantic" },
-    { name = "python-dotenv" },
-    { name = "pyyaml" },
-    { name = "sympy" },
-    { name = "tokenizers" },
-    { name = "torch" },
-    { name = "torchvision" },
-    { name = "transformers" },
-    { name = "tzdata" },
-    { name = "z3-solver" },
-]
-wheels = [
-    { filename = "qs-0.1.0-py3-none-any.whl", hash = "sha256:a14089be5b64de33a58c305e936553792bfd2ca8aae47a058165f1fb4b6822fe" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiohttp", specifier = ">=3.14.1" },
-    { name = "crawl4ai", specifier = ">=0.9.2" },
-    { name = "ddgs", specifier = ">=9.14.4" },
-    { name = "huggingface-hub", specifier = ">=0.35.0" },
-    { name = "lxml", specifier = ">=5.3.0" },
-    { name = "numpy", specifier = ">=2.4.0" },
-    { name = "openai", specifier = ">=3.3.0" },
-    { name = "openvino", specifier = ">=2026.1.0" },
-    { name = "pillow", specifier = ">=12.3.0" },
-    { name = "playwright", specifier = ">=1.53.0" },
-    { name = "psutil", specifier = ">=7.2.2" },
-    { name = "pydantic", specifier = ">=2.0.0" },
-    { name = "python-dotenv", specifier = ">=1.0.0" },
-    { name = "pyyaml", specifier = ">=6.0.3" },
-    { name = "sympy", specifier = ">=1.14.0" },
-    { name = "tokenizers", specifier = ">=0.22.2,<0.23" },
-    { name = "torch", specifier = ">=2.13.0" },
-    { name = "torchvision", specifier = ">=0.24.0" },
-    { name = "transformers", specifier = ">=5.14.0" },
-    { name = "tzdata", specifier = ">=2025.2" },
-    { name = "z3-solver", specifier = ">=4.15.4.0" },
 ]
 
 [[package]]

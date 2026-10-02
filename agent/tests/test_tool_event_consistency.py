@@ -3,12 +3,12 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from qs.core.agents.deep_agent import DeepAgentExecutionEvent
-from qs.core.agents.deep_agent.stream_event import DeepAgentExecutionEventType
+from exmekh_lib.core.agents.deep_agent import DeepAgentExecutionEvent
+from exmekh_lib.core.agents.deep_agent.stream_event import DeepAgentExecutionEventType
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.converter import reconstruct_execution_history_and_cache
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.converter import reconstruct_execution_history_and_cache
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
@@ -16,7 +16,7 @@ from fe.qs_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.tool_events import tool_event_from_execution
+from fe.exmekh_bridge.tool_events import tool_event_from_execution
 from fe.ui.chat_view import ChatViewComponent
 from fe.ui.input_bar import InputBarComponent
 

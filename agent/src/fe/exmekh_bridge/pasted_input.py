@@ -8,9 +8,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from fe.qs_bridge.context_usage import count_text_tokens
-from fe.qs_bridge.image_input import attachment_images
-from fe.qs_bridge.models import ChatMessage
+from fe.exmekh_bridge.context_usage import count_text_tokens
+from fe.exmekh_bridge.image_input import attachment_images
+from fe.exmekh_bridge.models import ChatMessage
 from fe.state.temp_storage import TempStorage, clean_attachment_filename
 
 PASTE_TOKEN_THRESHOLD: int = 300
@@ -306,7 +306,7 @@ def create_staged_attachments_from_text(
 
 
 def is_large_input(text: str, threshold: int = PASTE_TOKEN_THRESHOLD) -> bool:
-    """Return True if text exceeds the token threshold using the qs tokenizer."""
+    """Return True if text exceeds the token threshold using the exmekh_lib tokenizer."""
     if not text:
         return False
     return count_text_tokens(text) > threshold

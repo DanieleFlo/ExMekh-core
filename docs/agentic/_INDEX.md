@@ -50,13 +50,13 @@ Una skill viene chiamata dal modello esattamente come un normale tool.
 - righe 69–88: **Gate MTP** — Il gate MTP usa una frontiera corta mirata, perché il sidecar aggiorna la propria
 - righe 89–123: **Robustezza e lifetime** — Il gate model-backed verifica che i seguenti errori non modifichino token o
 
-## [Frontend Agent FE / QS](frontend.md)
+## [Frontend Agent FE / ExMekh-Lib](frontend.md)
 
 Da root, avviare il server in un terminale:
 
 - righe 8–28: **Avvio in WSL / Linux** — Da root, avviare il server in un terminale:
 - righe 29–42: **Configurazione e stato** — Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider.
 - righe 43–70: **Modifica dei messaggi** — Il pulsante con la matita compare accanto a quello di copia quando si passa
-- righe 71–90: **Confini dell'integrazione** — QS possiede i messaggi e il risultato dell'esecuzione dei tool.
-- righe 91–119: **Dipendenza QS** — `agent/pyproject.toml` installa QS dalla wheel versionata in `agent/wheels/`.
-- righe 120–147: **Verifica** — Da `agent/`:
+- righe 71–90: **Confini dell'integrazione** — ExMekh-Lib possiede i messaggi e il risultato dell'esecuzione dei tool.
+- righe 91–136: **Dipendenza ExMekh-Lib** — `agent/pyproject.toml` installa ExMekh-Lib dalla wheel versionata in `agent/wheels/`.
+- righe 137–164: **Verifica** — Da `agent/`:

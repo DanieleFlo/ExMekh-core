@@ -5,18 +5,18 @@ import json
 from unittest.mock import patch
 
 import pytest
-from nicegui.client import Client
-from nicegui.page import page
-from qs.core.agents.deep_agent import (
+from exmekh_lib.core.agents.deep_agent import (
     DeepAgentExecutionEvent,
     DeepAgentExecutionEventType,
 )
-from qs.core.models.assistant_message import AssistantMessage
+from exmekh_lib.core.models.assistant_message import AssistantMessage
+from nicegui.client import Client
+from nicegui.page import page
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.converter import chat_message_to_qs_messages
-from fe.qs_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.converter import chat_message_to_exmekh_messages
+from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ReasoningBlock,
@@ -24,9 +24,9 @@ from fe.qs_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.sub_agents import SubAgentEventRouter
-from fe.qs_bridge.tool_calls import extract_tool_arguments, parse_tool_calls
-from fe.qs_bridge.tool_events import tool_event_from_execution
+from fe.exmekh_bridge.sub_agents import SubAgentEventRouter
+from fe.exmekh_bridge.tool_calls import extract_tool_arguments, parse_tool_calls
+from fe.exmekh_bridge.tool_events import tool_event_from_execution
 from fe.state.active_turns import active_turns
 from fe.state.session_manager import SessionManager
 from fe.ui.chat_export import export_chat
@@ -128,7 +128,9 @@ def test_execution_adapter_and_handler_keep_actual_elapsed_time():
         lambda node, _: snapshots.append(node.model_copy(deep=True)),
         None,
     )
-    with patch("fe.qs_bridge.event_handlers.time.time", side_effect=[10, 10, 15, 15]):
+    with patch(
+        "fe.exmekh_bridge.event_handlers.time.time", side_effect=[10, 10, 15, 15]
+    ):
         handler.handle(start)
         handler.handle(end)
     assert tools[-1].elapsed_seconds() == 5
@@ -475,9 +477,9 @@ def test_conversion_and_graph_preserve_recorded_arguments_without_raw_history():
     message = ChatMessage(role="assistant", tool_events=[event])
     calls = [
         call
-        for qs_message in chat_message_to_qs_messages(message)
-        if isinstance(qs_message, AssistantMessage)
-        for call in qs_message.get_tool_calls() or []
+        for exmekh_message in chat_message_to_exmekh_messages(message)
+        if isinstance(exmekh_message, AssistantMessage)
+        for call in exmekh_message.get_tool_calls() or []
     ]
     assert calls[0].get_id() == "original"
     assert calls[0].get_arguments() == event.arguments

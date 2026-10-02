@@ -477,7 +477,7 @@
 /* ========================================================================= */
 /* Drag-and-Drop File Upload Overlay & Animations                            */
 /* ========================================================================= */
-.qs-drop-overlay {
+.exmekh-drop-overlay {
     position: absolute;
     inset: 0;
     z-index: 40;
@@ -497,21 +497,21 @@
     box-shadow: 0 0 25px rgba(56, 189, 248, 0.22), inset 0 0 15px rgba(56, 189, 248, 0.12);
 }
 
-.qs-drop-overlay * {
+.exmekh-drop-overlay * {
     pointer-events: none;
 }
 
-.qs-drop-overlay.qs-active {
+.exmekh-drop-overlay.exmekh-active {
     opacity: 1;
     pointer-events: all;
     transform: scale(1);
 }
 
-.qs-drop-bounce-icon {
-    animation: qs-drop-float 1.2s ease-in-out infinite alternate;
+.exmekh-drop-bounce-icon {
+    animation: exmekh-drop-float 1.2s ease-in-out infinite alternate;
 }
 
-@keyframes qs-drop-float {
+@keyframes exmekh-drop-float {
     0% {
         transform: translateY(3px) scale(0.95);
     }
@@ -520,27 +520,27 @@
     }
 }
 
-.qs-input-box-dragover {
+.exmekh-input-box-dragover {
     border-color: rgba(56, 189, 248, 0.85) !important;
     box-shadow: 0 0 22px rgba(56, 189, 248, 0.28) !important;
 }
 
 /* Keep previews above the conversation, with the source image fully visible. */
-.qs-image-thumbnail {
+.exmekh-image-thumbnail {
     width: 64px;
     height: 64px;
     flex-shrink: 0;
     background: #18181b;
 }
-.qs-image-dialog .q-dialog__backdrop {
+.exmekh-image-dialog .q-dialog__backdrop {
     backdrop-filter: blur(8px);
     background: rgba(0, 0, 0, 0.7);
 }
-.qs-image-preview {
+.exmekh-image-preview {
     width: min(1100px, 94vw);
     max-width: 94vw !important;
 }
-.qs-preview-image {
+.exmekh-preview-image {
     width: 100%;
     height: 78vh;
 }

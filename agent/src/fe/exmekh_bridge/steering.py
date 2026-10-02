@@ -1,4 +1,4 @@
-"""Thread-safe access to steering for one running QS turn."""
+"""Thread-safe access to steering for one running ExMekh-Lib turn."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from collections.abc import Callable
 from copy import deepcopy
 from threading import Lock
 
-from qs.core.models.user_message import UserMessage, UserMessageContent
+from exmekh_lib.core.models.user_message import UserMessage, UserMessageContent
 
-from fe.qs_bridge.image_input import serialize_user_content, user_content
-from fe.qs_bridge.models import ChatMessage, QueuedMessage, SteeringInsertion
+from fe.exmekh_bridge.image_input import serialize_user_content, user_content
+from fe.exmekh_bridge.models import ChatMessage, QueuedMessage, SteeringInsertion
 
 
 class TurnSteering:
@@ -49,14 +49,14 @@ class TurnSteering:
             return self._history_start
 
     def send(self, message: QueuedMessage) -> bool:
-        """Queue guidance in QS; confirmation arrives separately through its events."""
+        """Queue guidance in ExMekh-Lib; confirmation arrives separately through its events."""
         with self._lock:
             if self._handler is None:
                 return False
             try:
                 self._handler(user_content(message.text, message.image_urls))
             except RuntimeError:
-                # QS may close the run between the UI check and the click.
+                # ExMekh-Lib may close the run between the UI check and the click.
                 return False
             self._messages.append(message.model_copy(deep=True))
             return True

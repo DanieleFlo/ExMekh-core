@@ -3,11 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from qs.core.agents.exit_tool.data import ExitToolData
-from qs.core.agents.exit_tool.exit_tool import ExitTool
-from qs.core.models.tool import Tool
+from exmekh_lib.core.agents.exit_tool.data import ExitToolData
+from exmekh_lib.core.agents.exit_tool.exit_tool import ExitTool
+from exmekh_lib.core.models.tool import Tool
 
-from fe.qs_bridge.tool_approval import TOOL_APPROVAL_ALL, CommandApprovalHook
+from fe.exmekh_bridge.tool_approval import TOOL_APPROVAL_ALL, CommandApprovalHook
 from tests.test_exit_agent_misuse_live import SkillExecutionTrace
 
 
@@ -22,7 +22,7 @@ def finish(text: str, items: list[str]) -> ExitToolData:
         ({"text": "attempt", "items": "abc"}, "items must be a list"),
     ],
 )
-def test_qs_exit_tool_rejects_exact_malformed_arguments_before_execution(
+def test_exmekh_exit_tool_rejects_exact_malformed_arguments_before_execution(
     tmp_path: Path, arguments: dict, error: str
 ) -> None:
     tool = ExitTool(
@@ -40,7 +40,7 @@ def test_qs_exit_tool_rejects_exact_malformed_arguments_before_execution(
     ) == {"text": "Recovered", "items": []}
 
 
-def test_qs_tool_executes_only_after_command_approval(tmp_path: Path) -> None:
+def test_exmekh_tool_executes_only_after_command_approval(tmp_path: Path) -> None:
     executed: list[str] = []
 
     def run_command(command: str) -> str:

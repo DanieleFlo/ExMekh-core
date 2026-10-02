@@ -1,5 +1,5 @@
 /**
- * Smart Chat Auto-Scroll Controller for QS Studio.
+ * Smart Chat Auto-Scroll Controller for ExMekh-Lib Studio.
  *
  * Behavior:
  * - By default (`pinned = true`), automatically scrolls `.chat-scroll-container`
@@ -10,7 +10,7 @@
  *   becomes `true` again and automatic downward scrolling resumes.
  */
 (function () {
-    if (window.__qsChatScroll) return;
+    if (window.__exmekhChatScroll) return;
 
     const BOTTOM_THRESHOLD = 24;
 
@@ -29,18 +29,18 @@
     }
 
     function refreshFloatingButton() {
-        const btn = document.getElementById('qs-scroll-to-bottom-btn');
+        const btn = document.getElementById('exmekh-scroll-to-bottom-btn');
         if (!btn) return;
         const containers = Array.from(document.querySelectorAll('.chat-scroll-container'));
         const active = containers.find(isContainerVisible);
-        if (!active || !active.__qsScrollState) {
+        if (!active || !active.__exmekhScrollState) {
             btn.style.opacity = '0';
             btn.style.pointerEvents = 'none';
             btn.style.transform = 'translateY(8px)';
             btn.setAttribute('data-visible', 'false');
             return;
         }
-        const state = active.__qsScrollState;
+        const state = active.__exmekhScrollState;
         const shouldShow = !state.pinned && (active.scrollHeight - active.clientHeight > BOTTOM_THRESHOLD);
         btn.style.opacity = shouldShow ? '1' : '0';
         btn.style.pointerEvents = shouldShow ? 'auto' : 'none';
@@ -75,7 +75,7 @@
     }
 
     function refreshPointsOfInterest() {
-        const track = document.getElementById('qs-chat-poi-track');
+        const track = document.getElementById('exmekh-chat-poi-track');
         if (!track) return;
 
         const containers = Array.from(document.querySelectorAll('.chat-scroll-container'));
@@ -86,7 +86,7 @@
                 track.classList.remove('visible');
                 track.innerHTML = '';
                 track.dataset.poiKey = '';
-                track.__qsPoiRows = [];
+                track.__exmekhPoiRows = [];
             }
             return;
         }
@@ -102,7 +102,7 @@
                 track.classList.remove('visible');
                 track.innerHTML = '';
                 track.dataset.poiKey = '';
-                track.__qsPoiRows = [];
+                track.__exmekhPoiRows = [];
             }
             return;
         }
@@ -129,14 +129,14 @@
         }
 
         const poiKey = items.map(it => it.type + ':' + it.label).join('|');
-        const sameRows = track.__qsPoiRows && items.every((item, index) => track.__qsPoiRows[index] === item.el);
+        const sameRows = track.__exmekhPoiRows && items.every((item, index) => track.__exmekhPoiRows[index] === item.el);
         if (track.dataset.poiKey === poiKey && track.children.length === items.length && sameRows) {
             updateActivePoiHighlight(active, items, track);
             return;
         }
 
         track.dataset.poiKey = poiKey;
-        track.__qsPoiRows = items.map(item => item.el);
+        track.__exmekhPoiRows = items.map(item => item.el);
         track.classList.add('visible');
         track.innerHTML = '';
 
@@ -151,12 +151,12 @@
 
             dot.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (active.__qsScrollState) {
+                if (active.__exmekhScrollState) {
                     if (item.type === 'assistant-final') {
-                        active.__qsScrollState.pinned = true;
-                        active.__qsScrollState.lastUserUpInputAt = 0;
+                        active.__exmekhScrollState.pinned = true;
+                        active.__exmekhScrollState.lastUserUpInputAt = 0;
                     } else {
-                        active.__qsScrollState.pinned = false;
+                        active.__exmekhScrollState.pinned = false;
                     }
                 }
                 item.el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -270,7 +270,7 @@
     }
 
     function initScrollContainer(el) {
-        if (el.__qsScrollState) return;
+        if (el.__exmekhScrollState) return;
 
         const state = {
             pinned: true,
@@ -284,7 +284,7 @@
             lastTouchY: null,
             wasEmptyOrHidden: (el.clientHeight === 0 || el.children.length === 0),
         };
-        el.__qsScrollState = state;
+        el.__exmekhScrollState = state;
         updatePinnedIndicators(el, state);
 
         el.addEventListener('wheel', (e) => {
@@ -466,7 +466,7 @@
     }
 
     function copyTextToClipboard(text) {
-        window.__qsLastCopiedCode = text;
+        window.__exmekhLastCopiedCode = text;
         if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
             return navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
         }
@@ -477,8 +477,8 @@
     function handleCopyCodeBlock(btn, evt) {
         if (!btn) return;
         if (evt) {
-            if (evt.__qsHandledCopy) return;
-            evt.__qsHandledCopy = true;
+            if (evt.__exmekhHandledCopy) return;
+            evt.__exmekhHandledCopy = true;
         }
         let text = btn.getAttribute('data-code');
         if (text === null) {
@@ -494,10 +494,10 @@
         }
         btn.classList.add('copied');
         btn.setAttribute('data-copied', 'true');
-        if (btn.__qsCopyResetTimer) {
-            clearTimeout(btn.__qsCopyResetTimer);
+        if (btn.__exmekhCopyResetTimer) {
+            clearTimeout(btn.__exmekhCopyResetTimer);
         }
-        btn.__qsCopyResetTimer = setTimeout(() => {
+        btn.__exmekhCopyResetTimer = setTimeout(() => {
             if (icon) {
                 icon.textContent = 'content_copy';
             }
@@ -506,10 +506,10 @@
         }, 1500);
     }
 
-    window.__qsCopyCodeBlock = handleCopyCodeBlock;
+    window.__exmekhCopyCodeBlock = handleCopyCodeBlock;
 
     document.addEventListener('click', (e) => {
-        if (e.__qsHandledCopy) return;
+        if (e.__exmekhHandledCopy) return;
         const target = e.target && typeof e.target.closest === 'function'
             ? e.target.closest('.code-copy-btn')
             : null;
@@ -518,16 +518,16 @@
         }
     });
 
-    window.__qsChatScroll = {
+    window.__exmekhChatScroll = {
         scanContainers,
         refreshPointsOfInterest,
         scrollActiveToBottom() {
             const containers = Array.from(document.querySelectorAll('.chat-scroll-container'));
             for (const el of containers) {
-                if (isContainerVisible(el) && el.__qsScrollState) {
-                    el.__qsScrollState.pinned = true;
-                    el.__qsScrollState.lastUserUpInputAt = 0;
-                    scrollToBottom(el, el.__qsScrollState);
+                if (isContainerVisible(el) && el.__exmekhScrollState) {
+                    el.__exmekhScrollState.pinned = true;
+                    el.__exmekhScrollState.lastUserUpInputAt = 0;
+                    scrollToBottom(el, el.__exmekhScrollState);
                 }
             }
         },
@@ -545,7 +545,7 @@
         let shouldScan = false;
         for (const m of mutations) {
             const target = m.target;
-            if (target && target.closest && (target.closest('#qs-chat-poi-track') || target.closest('#qs-scroll-to-bottom-btn'))) {
+            if (target && target.closest && (target.closest('#exmekh-chat-poi-track') || target.closest('#exmekh-scroll-to-bottom-btn'))) {
                 continue;
             }
             shouldScan = true;

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Opt-in vision/memory gate through the QS wheel installed in FE.
+"""Opt-in vision/memory gate through the ExMekh-Lib wheel installed in FE.
 
-From agent/: uv run --frozen python ../tests/qs_vision_live.py --url URL
+From agent/: uv run --frozen python ../tests/exmekh_vision_live.py --url URL
 Requires an idle Qwen27 server with its matching --vision encoder. Real tool
 results, two distinct photo inputs, SSE and structured recall are exercised.
 """
@@ -16,22 +16,22 @@ import time
 from pathlib import Path
 from uuid import uuid4
 
-from PIL import Image, ImageOps
-from pydantic import BaseModel, ConfigDict
-from qs.core.models.client import Client
-from qs.core.models.client_request import ClientRequest
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.models.client import Client
+from exmekh_lib.core.models.client_request import ClientRequest
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.core.models.reasoning_effort import ReasoningEffortLMH
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.tool import Tool
-from qs.core.models.tool_message import ToolMessage
-from qs.core.models.tools import Tools
-from qs.core.models.user_message import ImagesUserMessage, UserMessage
-from qs.interfaces.event_handler import ProviderEventHandler
-from qs.providers.local import LocalProvider
+from exmekh_lib.core.models.reasoning_effort import ReasoningEffortLMH
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.tool import Tool
+from exmekh_lib.core.models.tool_message import ToolMessage
+from exmekh_lib.core.models.tools import Tools
+from exmekh_lib.core.models.user_message import ImagesUserMessage, UserMessage
+from exmekh_lib.interfaces.event_handler import ProviderEventHandler
+from exmekh_lib.providers.local import LocalProvider
+from PIL import Image, ImageOps
+from pydantic import BaseModel, ConfigDict
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -128,7 +128,7 @@ def finish_tools(client: Client, response, extra: dict, trace: list[dict]):
 
 
 def photo_memory(provider: LocalProvider, api: str, photo_path: Path) -> dict:
-    with tempfile.TemporaryDirectory(prefix="qs-photo-memory-") as directory:
+    with tempfile.TemporaryDirectory(prefix="exmekh-photo-memory-") as directory:
         state = PhotoTools(Path(directory))
         tools = Tools(
             [

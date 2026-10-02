@@ -7,8 +7,8 @@ Qwen3.8 Flash Next and the locally qualified **Qwen3.8-27B UD-Q4_K_S**.
 The 27B is architecture `qwen35`; Flash Next is `qwen4exp`. They have
 separate loaders, graphs and tool dialects. This is an audited GGUF engine.
 
-The sole agent frontend is **FE/QS**. The native upstream agent remains removed.
-See [FE/QS setup](docs/agentic/frontend.md),
+The sole agent frontend is **FE/ExMekh-Lib**. The native upstream agent remains removed.
+See [FE/ExMekh-Lib setup](docs/agentic/frontend.md),
 [27B compatibility](docs/architecture/qwen38-compatibility.md),
 [verification report](docs/architecture/ds4-upstream-merge-20261001.md) and
 [documentation index](docs/INDEX.md). Imported backend support does not imply
@@ -143,10 +143,10 @@ The interactive CLI keeps a multi-turn conversation. Use `/help`, `/read FILE`,
 `/ctx N`, and `/quit`. Ctrl+C interrupts generation and returns to the prompt.
 Run each binary with `--help` for its full options.
 
-### FE/QS agent
+### FE/ExMekh-Lib agent
 
 Start `./agent/start-ds4-server.sh` and `./agent/run.sh`, then open
-`http://127.0.0.1:8000`. FE/QS uses the Responses API and keeps conversation
+`http://127.0.0.1:8000`. FE/ExMekh-Lib uses the Responses API and keeps conversation
 history, hierarchical skills and subagent context identities. The server saves
 suspended frontiers so a skill return resumes its caller, rather than replaying
 or inheriting the child conversation. See [frontend setup](docs/agentic/frontend.md).

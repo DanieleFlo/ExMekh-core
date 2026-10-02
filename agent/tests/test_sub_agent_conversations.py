@@ -3,22 +3,26 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import pytest
-from qs.core.agents.node import Node
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
-from qs.core.models.provider_response import ProviderResponse
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.agents.node import Node
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
 
-from fe.qs_bridge.agent_runner import execute_agent_turn_sync
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.agent_runner import execute_agent_turn_sync
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.sub_agents import (
+from fe.exmekh_bridge.sub_agents import (
     ObservedNode,
     SubAgentEvent,
     SubAgentEventRouter,
@@ -165,7 +169,7 @@ def test_persistent_child_reuses_identity_after_call_without_raw_history() -> No
     )
     node.restore_conversation(
         SubAgentConversation(id="previous-call", path="main/child"),
-        prior_qs=[],
+        prior_exmekh=[],
     )
     response = MagicMock()
     response.get_message.return_value = "done"
@@ -253,13 +257,13 @@ class OneCallProvider(TwoCallProvider):
 def test_live_child_calls_follow_history_policy(
     persistent: bool, expected_counts: list[int]
 ) -> None:
-    """Exercise the real QS node tree and call_sub_agent with a scripted provider."""
+    """Exercise the real ExMekh-Lib node tree and call_sub_agent with a scripted provider."""
     provider = TwoCallProvider()
     events: list[SubAgentEvent] = []
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
         patch(
-            "fe.qs_bridge.agent_runner.config.coding_agent_persistent_history",
+            "fe.exmekh_bridge.agent_runner.config.coding_agent_persistent_history",
             persistent,
         ),
     ):
@@ -303,9 +307,10 @@ def test_live_persistent_child_reuses_block_and_history_across_root_turns(
         provider = OneCallProvider()
         raw_history: list[dict] = []
         with (
-            patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
+            patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
             patch(
-                "fe.qs_bridge.agent_runner.config.coding_agent_persistent_history", True
+                "fe.exmekh_bridge.agent_runner.config.coding_agent_persistent_history",
+                True,
             ),
         ):
             answer = execute_agent_turn_sync(

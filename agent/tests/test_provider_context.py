@@ -4,38 +4,44 @@ import json
 from unittest.mock import patch
 
 import pytest
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from exmekh_lib.core.models.model_usage import ModelUsage
+from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
+from exmekh_lib.core.models.structured_provider_response import (
+    StructuredProviderResponse,
+)
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.tool import Tool
+from exmekh_lib.core.models.tool_message import ToolMessage
+from exmekh_lib.core.models.tools import Tools
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.interfaces.provider import Provider
+from exmekh_lib.tokenizers.qwen import QwenTokenizer
 from pydantic import BaseModel
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
-from qs.core.models.model_usage import ModelUsage
-from qs.core.models.provider_request import ProviderRequest
-from qs.core.models.provider_response import ProviderResponse
-from qs.core.models.structured_provider_request import StructuredProviderRequest
-from qs.core.models.structured_provider_response import StructuredProviderResponse
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.tool import Tool
-from qs.core.models.tool_message import ToolMessage
-from qs.core.models.tools import Tools
-from qs.core.models.user_message import UserMessage
-from qs.interfaces.provider import Provider
-from qs.tokenizers.qwen import QwenTokenizer
 
 from fe.config import config
-from fe.qs_bridge.agent_runner import execute_agent_turn_sync
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.context_usage import (
+from fe.exmekh_bridge.agent_runner import execute_agent_turn_sync
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.context_usage import (
     compute_session_context_usage,
     count_text_tokens,
     populate_skill_closure_tokens,
 )
-from fe.qs_bridge.ds4_prompt import apply_ds4_scope, render_ds4_qwen_prompt
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.ds4_prompt import apply_ds4_scope, render_ds4_qwen_prompt
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ProviderContextUsage,
     SkillNode,
     SubAgentConversation,
 )
-from fe.qs_bridge.provider_context import ContextTrackingProvider
+from fe.exmekh_bridge.provider_context import ContextTrackingProvider
 
 
 class StubProvider(Provider):
@@ -458,7 +464,7 @@ def test_agent_runner_wires_typed_context_observer(base_url: str) -> None:
     provider = StubProvider()
     with (
         patch(
-            "fe.qs_bridge.agent_runner.LocalProvider", return_value=provider
+            "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider
         ) as provider_factory,
         patch.dict(config.model_owners, {(base_url, "test-qwen"): "ds4.c"}),
     ):

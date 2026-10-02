@@ -4,24 +4,27 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from qs.core.agents.deep_agent import DeepAgentExecutionEvent, DeepAgentStreamEvent
-from qs.core.agents.node import Node
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.agents.deep_agent import (
+    DeepAgentExecutionEvent,
+    DeepAgentStreamEvent,
+)
+from exmekh_lib.core.agents.node import Node
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.system_message import SystemMessage
 
 from fe.config import AppConfig
-from fe.qs_bridge.agent_runner import convert_to_qs_messages
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.converter import (
-    chat_message_to_qs_messages,
-    qs_messages_to_session,
-    session_to_qs_messages,
+from fe.exmekh_bridge.agent_runner import convert_to_exmekh_messages
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.converter import (
+    chat_message_to_exmekh_messages,
+    exmekh_messages_to_session,
+    session_to_exmekh_messages,
 )
-from fe.qs_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
@@ -30,7 +33,7 @@ from fe.qs_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.sub_agents import ObservedNode, SubAgentEvent, SubAgentEventRouter
+from fe.exmekh_bridge.sub_agents import ObservedNode, SubAgentEvent, SubAgentEventRouter
 
 
 def test_save_to_env_recovers_when_existing_file_cannot_be_read(tmp_path: Path) -> None:
@@ -400,13 +403,13 @@ def test_observed_child_restores_only_persistent_history() -> None:
         persistent_history=True,
         event_router=router,
     )
-    prior_qs = convert_to_qs_messages(conversation.replay_history())
-    with patch("fe.qs_bridge.sub_agents.restore_node_history") as restore:
-        fresh.restore_conversation(conversation, prior_qs=prior_qs)
-        persistent.restore_conversation(conversation, prior_qs=[])
-        persistent.restore_conversation(conversation, prior_qs=prior_qs)
+    prior_exmekh = convert_to_exmekh_messages(conversation.replay_history())
+    with patch("fe.exmekh_bridge.sub_agents.restore_node_history") as restore:
+        fresh.restore_conversation(conversation, prior_exmekh=prior_exmekh)
+        persistent.restore_conversation(conversation, prior_exmekh=[])
+        persistent.restore_conversation(conversation, prior_exmekh=prior_exmekh)
     restore.assert_called_once_with(
-        persistent, conversation.message_history(), prior_qs=prior_qs
+        persistent, conversation.message_history(), prior_exmekh=prior_exmekh
     )
     assert persistent._conversation_id == "prior"
     assert fresh._conversation_id != "prior"
@@ -542,8 +545,8 @@ def test_queued_messages_operations_and_converter_preservation() -> None:
 
     # Converter round-trip preservation
     session.add_queued_message("Another queued")
-    qs_msgs = session_to_qs_messages(session)
-    restored = qs_messages_to_session(qs_msgs)
+    exmekh_msgs = session_to_exmekh_messages(session)
+    restored = exmekh_messages_to_session(exmekh_msgs)
     assert len(restored.queued_messages) == 2
     assert restored.queued_messages[0].text == m3.text
     assert restored.queued_messages[1].text == "Another queued"
@@ -555,12 +558,12 @@ def test_queued_messages_operations_and_converter_preservation() -> None:
     }
     sys_m = SystemMessage(content="sys")
     sys_m.set_metadata("_fe_session_metadata", dummy_meta)
-    restored2 = qs_messages_to_session([sys_m])
+    restored2 = exmekh_messages_to_session([sys_m])
     assert len(restored2.queued_messages) == 1
     assert restored2.queued_messages[0].text == "Direct"
 
 
-def test_convert_to_qs_messages_unclosed_tool_call() -> None:
+def test_convert_to_exmekh_messages_unclosed_tool_call() -> None:
     raw = [
         {"role": "user", "content": "run tool"},
         {
@@ -574,16 +577,16 @@ def test_convert_to_qs_messages_unclosed_tool_call() -> None:
             ],
         },
     ]
-    qs = convert_to_qs_messages(raw)
-    assert len(qs) == 4
-    assert qs[0].get_role_name() == "user"
-    assert qs[1].get_role_name() == "assistant"
-    assert qs[2].get_role_name() == "tool"
-    assert qs[2].get_message() == "[Execution interrupted]"
-    assert qs[3].get_role_name() == "assistant"
+    exmekh_lib = convert_to_exmekh_messages(raw)
+    assert len(exmekh_lib) == 4
+    assert exmekh_lib[0].get_role_name() == "user"
+    assert exmekh_lib[1].get_role_name() == "assistant"
+    assert exmekh_lib[2].get_role_name() == "tool"
+    assert exmekh_lib[2].get_message() == "[Execution interrupted]"
+    assert exmekh_lib[3].get_role_name() == "assistant"
 
 
-def test_chat_message_to_qs_messages_unclosed_tool_call() -> None:
+def test_chat_message_to_exmekh_messages_unclosed_tool_call() -> None:
     msg = ChatMessage(
         role="assistant",
         raw_history=[
@@ -600,12 +603,12 @@ def test_chat_message_to_qs_messages_unclosed_tool_call() -> None:
             },
         ],
     )
-    qs = chat_message_to_qs_messages(msg)
+    exmekh_lib = chat_message_to_exmekh_messages(msg)
     assert any(
         m.get_role_name() == "tool" and m.get_message() == "[Execution interrupted]"
-        for m in qs
+        for m in exmekh_lib
     )
-    assert qs[-1].get_role_name() == "assistant"
+    assert exmekh_lib[-1].get_role_name() == "assistant"
 
 
 def test_complete_skill_recursively_completes_active_sub_skills() -> None:

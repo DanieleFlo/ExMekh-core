@@ -1,4 +1,4 @@
-"""Controlled provider for steering tests against the real QS runtime."""
+"""Controlled provider for steering tests against the real ExMekh-Lib runtime."""
 
 from __future__ import annotations
 
@@ -6,17 +6,21 @@ from threading import Event
 from typing import Any
 from xml.etree import ElementTree as ET
 
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
-from qs.core.models.provider_request import ProviderRequest
-from qs.core.models.provider_response import ProviderResponse
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.core.models.tool_message import ToolMessage
-from qs.core.models.user_message import UserMessage
+from exmekh_lib.core.models.tool_message import ToolMessage
+from exmekh_lib.core.models.user_message import UserMessage
 
-from fe.qs_bridge.converter import qs_message_to_raw_dict
+from fe.exmekh_bridge.converter import exmekh_message_to_raw_dict
 from tests.mock_client import MockProvider
 
 
@@ -58,7 +62,7 @@ class SteeringProbeProvider(MockProvider):
         )
 
     def call(self, request: ProviderRequest) -> ProviderResponse:
-        messages = [qs_message_to_raw_dict(item) for item in request.get_messages()]
+        messages = [exmekh_message_to_raw_dict(item) for item in request.get_messages()]
         self.requests.append(messages)
         request_number = len(self.requests)
         if self.recover_steering and self._initial_turn_complete:

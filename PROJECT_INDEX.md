@@ -17,7 +17,7 @@ Gli identificativi della shape e delle cache Qwen3.8 restano invariati.
 
 ## Integrazione upstream del 1 ottobre 2026
 
-Il branch dedicato integra `antirez/ds4@0aaea5a` conservando FE/QS come unico
+Il branch dedicato integra `antirez/ds4@0aaea5a` conservando FE/ExMekh-Lib come unico
 agente del prodotto e distinguendo Qwen27 `qwen35` da Flash Next/Mini `qwen4exp`.
 Il [report di merge](docs/architecture/ds4-upstream-merge-20261001.md) contiene
 provenienza, matrice PASS/FAIL/NOT_VERIFIED, baseline e limiti hardware.
@@ -152,7 +152,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
     - Coda dei job, worker residenti e coordinatore del batching.
     - SSE, tool call, prompt rendering e disk KV policy.
 
-20. **Agent FE / QS**
+20. **Agent FE / ExMekh-Lib**
     - Transcript, sessioni, strumenti e ciclo agentico.
     - Progetti, Quick Chats, approvazione dei comandi e steering.
     - Persistenza JSON del frontend e checkpoint KV gestiti dal server.
@@ -256,7 +256,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   progetto: DeepSeek Flash 0731/DSpark, PRO 0813, GLM e gli artefatti Qwen3.8
   fissati con revisione e checksum.
 - `start-ds4-server.sh`, `agent/start-ds4-server.sh`, `agent/run.sh` —
-  launcher eseguibili nativi per server CUDA e frontend FE / QS dalla copia WSL2
+  launcher eseguibili nativi per server CUDA e frontend FE / ExMekh-Lib dalla copia WSL2
   `/home/daniele/ds4`; il progetto non modifica proxy o firewall Windows.
 - `ds4_cli.c` — eseguibile `ds4`: parsing opzioni, modalità one-shot e REPL,
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
@@ -274,20 +274,20 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   canonicalizzazione accetta la riscrittura dell'ultimo token BPE Qwen solo se
   il KV live conserva l'intero prompt byte per byte; le continuazioni agentiche
   riconoscono il tail tool anche dopo lo scope di sistema sintetico.
-- `agent/` — sorgenti, test e configurazione del frontend NiceGUI FE / QS;
-  `agent/src/fe/qs_bridge/` integra Client e DeepAgent, `agent/src/fe/state/`
+- `agent/` — sorgenti, test e configurazione del frontend NiceGUI FE / ExMekh-Lib;
+  `agent/src/fe/exmekh_bridge/` integra Client e DeepAgent, `agent/src/fe/state/`
   persiste chat e progetti e `agent/src/fe/ui/` gestisce l'interfaccia.
   Il converter usa l'API pubblica dei metadati Message, senza esporre snapshot
-  al provider; l'adapter dei tool conserva lo stato di errore emesso da QS per
+  al provider; l'adapter dei tool conserva lo stato di errore emesso da ExMekh-Lib per
   root, conversazioni figlie e UI.
-- `agent/src/fe/qs_bridge/execution_restore.py` — ricostruisce history e cache
-  tramite le API pubbliche QS, mantenendo identità e metadati degli output
+- `agent/src/fe/exmekh_bridge/execution_restore.py` — ricostruisce history e cache
+  tramite le API pubbliche ExMekh-Lib, mantenendo identità e metadati degli output
   riletti e lo scope dei messaggi di steering dopo la compattazione.
-- `agent/src/fe/qs_bridge/recorded_output.py` — parser unico degli header XML
+- `agent/src/fe/exmekh_bridge/recorded_output.py` — parser unico degli header XML
   persistiti; conserva corpo e riferimenti degli output, con fallback legacy.
-- `agent/src/fe/qs_bridge/steering_history.py` — seleziona gli ID di steering
+- `agent/src/fe/exmekh_bridge/steering_history.py` — seleziona gli ID di steering
   del livello corrente, escludendo quelli delle skill discendenti.
-- `agent/src/fe/qs_bridge/message_edit.py` — prepara il testo modificato,
+- `agent/src/fe/exmekh_bridge/message_edit.py` — prepara il testo modificato,
   conservando gli upload espliciti e rigenerando i file del testo incollato.
   Il controller ferma e attende il turno precedente prima di salvare il ramo
   aggiornato. ChatSession gestisce il ramo, ChatSettings le approvazioni e
@@ -298,26 +298,29 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   — regressioni su modifica a inizio/metà/fine chat, streaming, riconnessione,
   annullamento, approvazioni pendenti, testi/immagini/PDF e persistenza in
   Quick Chat e progetto. `agent/tests/run_message_edit_fe.py` usa un provider
-  deterministico con il client mock e il ciclo di esecuzione QS reale.
-- `agent/src/fe/qs_bridge/image_input.py` — decodifica immagini, orientamento,
-  rendering PDF locale (prime 10 pagine), parti native QS e serializzazione
+  deterministico con il client mock e il ciclo di esecuzione ExMekh-Lib reale.
+- `agent/src/fe/exmekh_bridge/image_input.py` — decodifica immagini, orientamento,
+  rendering PDF locale (prime 10 pagine), parti native ExMekh-Lib e serializzazione
   PNG della cronologia; i payload base64 non vengono contati come testo.
 - `agent/src/fe/ui/image_preview.py` — miniature e anteprima modale condivise
   fra compositore e chat; gli allegati visivi non hanno un secondo chip file.
 - `agent/tests/test_image_input.py`, `agent/tests/test_images_e2e.py`,
   `agent/tests/test_images_live.py` — regressioni multimodali, browser e prove
   opt-in sui due endpoint DS4, inclusi PDF, steering e replay.
-- `agent/wheels/` — wheel QS versionata, installabile con `uv sync --frozen`.
+- `agent/wheels/` — wheel ExMekh-Lib versionata, installabile con `uv sync --frozen`.
 - `agent/tests/parallel_execution.py` — test FE per modulo su CPU logiche, con
   fase esclusiva per test seriali e provider reali dopo il teardown degli altri worker.
-- `qs/tests/conftest.py` — worker QS sulle CPU logiche disponibili, opt-in dei
+- `exmekh_lib/tests/conftest.py` — worker ExMekh-Lib sulle CPU logiche disponibili, opt-in dei
   test live e raggruppamento dei test seriali con `--dist=loadgroup`.
   Le regressioni distinguono errori di esecuzione da risultati applicativi
   negativi e verificano le due piattaforme di cancellazione dei processi.
-- `qs/` — repository Git locale dei sorgenti QS, con cronologia propria,
+- `exmekh_lib/` — repository Git locale dei sorgenti ExMekh-Lib, con cronologia propria,
   esclusa dal Git di DS4.
-- `agent/sync_qs.sh` e `agent/src/fe/sync.py` — ricostruiscono QS dai sorgenti
+- `agent/sync_exmekh_lib.sh` e `agent/src/fe/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
   locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
+  La distribuzione e la CLI sono `exmekh-lib`, il namespace Python è
+  `exmekh_lib` e il comando installato di sync è `sync-exmekh-lib`. Dopo
+  l’installazione riuscita il sync rimuove anche le vecchie wheel `qs`.
 - `docs/agentic/frontend.md` — avvio, configurazione, dipendenze e test di FE.
 - `ds4_bench.c` — benchmark di prefill/decode a diverse frontiere di contesto;
   ripete gli sweep mantenendo il modello residente e usa snapshot o replay fuori
@@ -626,19 +629,19 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   atomico dei checkpoint mancanti, corrotti o troncati; i casi che verificano
   un nome preciso usano `tool_choice=required` con un unico nome consentito,
   separando il protocollo dalla propensione del modello a chiamare un tool.
-- `tests/test_qs_client_live.py` — accettazione opt-in con `uv run qs`: esegue
+- `tests/test_exmekh_client_live.py` — accettazione opt-in con `uv run exmekh-lib`: esegue
   il prompt originale due volte sullo stesso server riavviando solo il client;
-  verifica tool, skill e ritorno alla profondità zero, poi interrompe solo qs
+  verifica tool, skill e ritorno alla profondità zero, poi interrompe solo il client ExMekh-Lib
   e ripete sul server acceso; attende la risposta server dopo il return.
-  `DS4_QS_MIN_ROOT_RETURNS=2` estende la prova a due cicli per client.
-  `DS4_QS_REQUIRE_COMPLETION=1` abilita anche
+  `DS4_EXMEKH_LIB_MIN_ROOT_RETURNS=2` estende la prova a due cicli per client.
+  `DS4_EXMEKH_LIB_REQUIRE_COMPLETION=1` abilita anche
   il gate separato che richiede una risposta finale spontanea.
 - `tests/test_qwen35_mrope.c` — oracle float64 per mRoPE [11,11,10],
   identità del percorso testo e KV MTP; target CUDA `test-qwen35-mrope`.
 - `tests/test_server_agentic_payload.c` — checkpoint completi skill/subagent
   per Qwen27 e Flash Next: logits/token bit-exact, sessione ricreata, file
   corrotti e nesting; opzionalmente immagini e contesto testuale popolato.
-- `tests/qs_vision_live.py` — gate opt-in attraverso il client QS installato
+- `tests/exmekh_vision_live.py` — gate opt-in attraverso il client ExMekh-Lib installato
   per immagini e continuazioni sulle API Chat Completions e Responses.
 - `tests/test_qwen35_vision_api.py` — gate live opt-in CUDA per immagini singole
   e multiple, thinking, JSON, tool, riuso KV, SSE e API Anthropic.

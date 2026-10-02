@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 
 def sync_wheel() -> int:
     agent_dir = Path(__file__).resolve().parents[2]
-    qs_dir = agent_dir.parent / "qs"
+    exmekh_dir = agent_dir.parent / "exmekh_lib"
     wheels_dir = agent_dir / "wheels"
     uv = (
         os.getenv("UV_BIN")
@@ -18,21 +18,23 @@ def sync_wheel() -> int:
         or str(Path.home() / ".local" / "bin" / "uv")
     )
 
-    if not (qs_dir / "pyproject.toml").is_file():
-        print(f"[ERROR] QS source project not found: {qs_dir}")
+    if not (exmekh_dir / "pyproject.toml").is_file():
+        print(f"[ERROR] ExMekh-Lib source project not found: {exmekh_dir}")
         return 1
 
     try:
-        print(f"Building QS from {qs_dir}...", flush=True)
-        with TemporaryDirectory(prefix="qs-wheel-") as build_dir:
+        print(f"Building ExMekh-Lib from {exmekh_dir}...", flush=True)
+        with TemporaryDirectory(prefix="exmekh-wheel-") as build_dir:
             subprocess.run(
                 [uv, "build", "--wheel", "--out-dir", build_dir],
-                cwd=qs_dir,
+                cwd=exmekh_dir,
                 check=True,
             )
-            wheels = list(Path(build_dir).glob("qs-*.whl"))
+            wheels = list(Path(build_dir).glob("exmekh_lib-*.whl"))
             if len(wheels) != 1:
-                raise RuntimeError("QS build must produce exactly one qs wheel")
+                raise RuntimeError(
+                    "ExMekh-Lib build must produce exactly one exmekh_lib wheel"
+                )
 
             wheels_dir.mkdir(parents=True, exist_ok=True)
             target = wheels_dir / wheels[0].name
@@ -48,26 +50,34 @@ def sync_wheel() -> int:
                 cwd=agent_dir,
                 check=True,
             )
-            # Re-resolve QS even when a rebuilt wheel keeps its version and path.
+            # Re-resolve ExMekh-Lib even when a rebuilt wheel keeps its version and path.
             subprocess.run(
-                [uv, "lock", "--upgrade-package", "qs", "--refresh-package", "qs"],
+                [
+                    uv,
+                    "lock",
+                    "--upgrade-package",
+                    "exmekh-lib",
+                    "--refresh-package",
+                    "exmekh-lib",
+                ],
                 cwd=agent_dir,
                 check=True,
             )
             subprocess.run(
-                [uv, "sync", "--locked", "--reinstall-package", "qs"],
+                [uv, "sync", "--locked", "--reinstall-package", "exmekh-lib"],
                 cwd=agent_dir,
                 check=True,
             )
 
             # Keep the wheel used by the updated project and lockfile.
-            for old_wheel in wheels_dir.glob("qs-*.whl"):
-                if old_wheel != target:
-                    old_wheel.unlink()
-        print("QS synchronized and installed successfully.")
+            for pattern in ("exmekh_lib-*.whl", "qs-*.whl"):
+                for old_wheel in wheels_dir.glob(pattern):
+                    if old_wheel != target:
+                        old_wheel.unlink()
+        print("ExMekh-Lib synchronized and installed successfully.")
         return 0
     except (OSError, RuntimeError, subprocess.CalledProcessError) as error:
-        print(f"[ERROR] QS synchronization failed: {error}")
+        print(f"[ERROR] ExMekh-Lib synchronization failed: {error}")
         return 1
 
 

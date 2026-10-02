@@ -12,15 +12,15 @@ from nicegui import ui
 from nicegui.client import Client
 
 from fe.config import config
-from fe.qs_bridge.agent_runner import generate_chat_title, run_agent_turn
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.context_usage import (
+from fe.exmekh_bridge.agent_runner import generate_chat_title, run_agent_turn
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.context_usage import (
     compute_session_context_usage,
     populate_skill_closure_tokens,
 )
-from fe.qs_bridge.errors import build_execution_error_message
-from fe.qs_bridge.message_edit import prepare_message_edit
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.errors import build_execution_error_message
+from fe.exmekh_bridge.message_edit import prepare_message_edit
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ProviderContextUsage,
@@ -28,12 +28,12 @@ from fe.qs_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.pasted_input import (
     PreparedUserInput,
     StagedAttachment,
     prepare_user_input,
 )
-from fe.qs_bridge.sub_agents import SubAgentEvent
+from fe.exmekh_bridge.sub_agents import SubAgentEvent
 from fe.state.active_turns import active_turns
 from fe.state.session_manager import session_manager
 from fe.state.sub_agent_conversations import apply_sub_agent_event
@@ -130,7 +130,7 @@ class ChatPageController:
 
         load_queue_drag_js()
         load_file_drop_js()
-        ui.on("qs_queue_reorder", self._handle_queue_reorder_event)
+        ui.on("exmekh_queue_reorder", self._handle_queue_reorder_event)
 
         with ui.column().classes("chat-page-layout w-full justify-between"):
             self.chat_view = ChatViewComponent(

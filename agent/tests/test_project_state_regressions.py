@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from fe.qs_bridge.models import ChatMessage, ChatSession, ProjectSettings
+from fe.exmekh_bridge.models import ChatMessage, ChatSession, ProjectSettings
 from fe.state.session_manager import SessionManager
 
 

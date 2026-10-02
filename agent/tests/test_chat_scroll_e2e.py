@@ -137,7 +137,7 @@ def fe_scroll_server(tmp_path_factory):
             ui.run(
                 host="127.0.0.1",
                 port=config.port,
-                title="QS Scroll E2E Test",
+                title="ExMekh-Lib Scroll E2E Test",
                 dark=True,
                 reload=False,
                 show=False,
@@ -347,8 +347,8 @@ async def test_point_of_interest_targets_current_message_row(
                 original.textContent = 'Same message';
                 original.style.height = '1600px';
                 chat.appendChild(original);
-                window.__qsChatScroll.refreshPointsOfInterest();
-                const track = document.getElementById('qs-chat-poi-track');
+                window.__exmekhChatScroll.refreshPointsOfInterest();
+                const track = document.getElementById('exmekh-chat-poi-track');
                 const oldDot = track.querySelector('.chat-poi-dot');
                 if (!oldDot) return { initialized: false };
 
@@ -357,7 +357,7 @@ async def test_point_of_interest_targets_current_message_row(
                 let target = null;
                 replacement.scrollIntoView = () => { target = 'replacement'; };
                 original.scrollIntoView = () => { target = 'original'; };
-                window.__qsChatScroll.refreshPointsOfInterest();
+                window.__exmekhChatScroll.refreshPointsOfInterest();
                 const newDot = track.querySelector('.chat-poi-dot');
                 newDot.click();
                 return { initialized: true, rebuilt: newDot !== oldDot, target };

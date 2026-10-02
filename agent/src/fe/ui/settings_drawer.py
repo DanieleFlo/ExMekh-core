@@ -4,11 +4,11 @@ import asyncio
 import inspect
 from collections.abc import Awaitable, Callable
 
+from exmekh_lib.core.models.reasoning_effort import ReasoningEffortLMX
 from nicegui import ui
-from qs.core.models.reasoning_effort import ReasoningEffortLMX
 
 from fe.config import config
-from fe.qs_bridge.agent_runner import check_provider_health
+from fe.exmekh_bridge.agent_runner import check_provider_health
 from fe.state.temp_storage import TempStorage, TempStorageStats
 from fe.ui.file_icons import format_file_size, get_file_icon
 

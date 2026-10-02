@@ -5,20 +5,27 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
+from exmekh_lib.core.agents.hds.hds import HDS
+from exmekh_lib.core.agents.hds.metadata import HDSMetadata
+from exmekh_lib.core.agents.hds.parser import HDSMarkdownParser
+from exmekh_lib.core.models.assistant_message import AssistantMessage
+from exmekh_lib.core.models.client import Client
+from exmekh_lib.core.models.client_request import ClientRequest
+from exmekh_lib.core.models.history import MessageHistory
+from exmekh_lib.core.models.structured_assistant_message import (
+    StructuredAssistantMessage,
+)
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.interfaces.message import Message
+from exmekh_lib.interfaces.tool_hook import (
+    BeforeTool,
+    ToolArguments,
+    ToolContext,
+    ToolResponse,
+)
+from exmekh_lib.providers.local import LocalProvider
 from pydantic import BaseModel, Field, ValidationError
-from qs.core.agents.hds.hds import HDS
-from qs.core.agents.hds.metadata import HDSMetadata
-from qs.core.agents.hds.parser import HDSMarkdownParser
-from qs.core.models.assistant_message import AssistantMessage
-from qs.core.models.client import Client
-from qs.core.models.client_request import ClientRequest
-from qs.core.models.history import MessageHistory
-from qs.core.models.structured_assistant_message import StructuredAssistantMessage
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.user_message import UserMessage
-from qs.interfaces.message import Message
-from qs.interfaces.tool_hook import BeforeTool, ToolArguments, ToolContext, ToolResponse
-from qs.providers.local import LocalProvider
 
 from fe.config import config
 
@@ -173,7 +180,7 @@ def build_approval_message_history(
 
 
 class CommandApprovalEvaluator:
-    """Evaluates candidate shell commands using an HDS system prompt, a QS Client, and MessageHistory."""
+    """Evaluates candidate shell commands using an HDS system prompt, a ExMekh-Lib Client, and MessageHistory."""
 
     def __init__(
         self,

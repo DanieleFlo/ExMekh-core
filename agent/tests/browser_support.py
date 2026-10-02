@@ -182,3 +182,19 @@ async def wait_turn_completion(page: Page, timeout: float = 15000) -> None:
     send_button = page.locator("button:has(i:has-text('arrow_upward'))").first
     await send_button.wait_for(state="visible", timeout=timeout)
     await asyncio.sleep(0.5)
+
+
+async def wait_for_mock_requests(
+    page: Page, stats_url: str, count: int, timeout: float = 10
+) -> None:
+    """Wait for the provider to receive requests before interacting with its turn."""
+
+    async def wait_for_provider() -> None:
+        while True:
+            response = await page.request.get(stats_url)
+            stats = await response.json()
+            if len(stats["requests"]) >= count:
+                return
+            await asyncio.sleep(0.1)
+
+    await asyncio.wait_for(wait_for_provider(), timeout)

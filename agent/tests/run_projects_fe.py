@@ -6,8 +6,8 @@ from typing import Any
 
 from nicegui import app
 
+from fe.exmekh_bridge import agent_runner
 from fe.main import main
-from fe.qs_bridge import agent_runner
 from fe.state.session_manager import session_manager
 from fe.ui import settings_drawer
 

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from qs.config.runtime import RUNTIME
+from exmekh_lib.config.runtime import RUNTIME
 
-from fe.qs_bridge.recorded_output import RecordedToolOutput
+from fe.exmekh_bridge.recorded_output import RecordedToolOutput
 
 
 def direct_steering_output_ids(

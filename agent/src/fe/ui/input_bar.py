@@ -8,17 +8,17 @@ from functools import partial
 from nicegui import ui
 
 from fe.config import config
-from fe.qs_bridge.context_usage import (
+from fe.exmekh_bridge.context_usage import (
     format_compact_tokens,
     format_context_percentage,
 )
-from fe.qs_bridge.models import QueuedMessage
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.models import QueuedMessage
+from fe.exmekh_bridge.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
     create_staged_attachments_from_text,
 )
-from fe.qs_bridge.tool_approval import (
+from fe.exmekh_bridge.tool_approval import (
     DEFAULT_TOOL_APPROVAL_MODE,
     TOOL_APPROVAL_MODES,
     normalize_tool_approval_mode,
@@ -30,7 +30,7 @@ from fe.ui.image_preview import render_image_thumbnail
 PASTE_JS_HANDLER = (
     "(e) => {"
     " if (e.clipboardData?.files?.length) {"
-    "   e.preventDefault(); window.__qsUploadFiles(e.clipboardData.files); return;"
+    "   e.preventDefault(); window.__exmekhUploadFiles(e.clipboardData.files); return;"
     " }"
     " const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';"
     " if (text.length > 400) {"
@@ -117,8 +117,8 @@ class InputBarComponent:
         self.context_length: int = config.get_context_length(config.default_model)
 
     def build(self) -> ui.column:
-        ui.on("qs_files_dropped", self._handle_files_dropped)
-        ui.on("qs_files_dropped_error", self._handle_files_dropped_error)
+        ui.on("exmekh_files_dropped", self._handle_files_dropped)
+        ui.on("exmekh_files_dropped_error", self._handle_files_dropped_error)
 
         with ui.column().classes(
             "w-full max-w-4xl mx-auto mb-4 items-center gap-0 relative"
@@ -129,7 +129,7 @@ class InputBarComponent:
             # Queue Box (peeks out partially above the input box)
             # -------------------------------------------------------------
             with ui.column().classes(
-                "qs-queue-box w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
+                "exmekh-queue-box w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
                 "border border-b-0 border-zinc-800 rounded-t-xl overflow-hidden shadow-2xl "
                 "transition-all duration-200 z-0 -mb-1 px-3 pt-2 pb-1.5 gap-1.5"
             ) as q_box:
@@ -170,7 +170,7 @@ class InputBarComponent:
             # Attachments Container (peeks out / sits above the input box)
             # -------------------------------------------------------------
             with ui.row().classes(
-                "qs-attachments-bar w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
+                "exmekh-attachments-bar w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
                 "border border-b-0 border-zinc-800 rounded-t-xl px-2.5 py-1.5 gap-2 items-center flex-wrap z-0 -mb-1"
             ) as att_bar:
                 self.attachments_container = att_bar
@@ -183,13 +183,13 @@ class InputBarComponent:
             # Main Input Bar
             # -------------------------------------------------------------
             with ui.column().classes(
-                "qs-chat-input-box w-full px-2.5 pt-2 pb-1.5 items-center gap-1 bg-zinc-900/90 backdrop-blur-md rounded-xl border border-zinc-800 z-10 relative overflow-hidden"
+                "exmekh-chat-input-box w-full px-2.5 pt-2 pb-1.5 items-center gap-1 bg-zinc-900/90 backdrop-blur-md rounded-xl border border-zinc-800 z-10 relative overflow-hidden"
             ) as input_container:
                 self.input_container = input_container
-                with ui.element("div").classes("qs-drop-overlay") as drop_overlay:
+                with ui.element("div").classes("exmekh-drop-overlay") as drop_overlay:
                     self.drop_overlay = drop_overlay
                     with ui.element("div").classes(
-                        "w-11 h-11 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/40 flex items-center justify-center qs-drop-bounce-icon"
+                        "w-11 h-11 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/40 flex items-center justify-center exmekh-drop-bounce-icon"
                     ):
                         ui.icon("cloud_upload", size="26px")
                     ui.label("Drop files here").classes(
@@ -201,18 +201,18 @@ class InputBarComponent:
 
                 with ui.row().classes("w-full items-center gap-2 no-wrap"):
                     ui.element("input").props("type=file multiple").classes(
-                        "hidden qs-file-picker"
+                        "hidden exmekh-file-picker"
                     ).on(
                         "change",
-                        js_handler="(e) => { window.__qsUploadFiles(e.target.files); e.target.value = ''; }",
+                        js_handler="(e) => { window.__exmekhUploadFiles(e.target.files); e.target.value = ''; }",
                     )
                     ui.button(icon="attach_file").props("flat round dense").on(
                         "click",
-                        js_handler="() => document.querySelector('.qs-file-picker').click()",
+                        js_handler="() => document.querySelector('.exmekh-file-picker').click()",
                     ).tooltip("Attach files, images or PDFs")
                     self.textarea = (
                         ui.textarea(
-                            placeholder="Send a message to QS Studio... (Enter to send, Shift+Enter for new line)"
+                            placeholder="Send a message to ExMekh-Lib Studio... (Enter to send, Shift+Enter for new line)"
                         )
                         .props("autogrow borderless dark rows=1")
                         .classes(
@@ -310,7 +310,7 @@ class InputBarComponent:
 
     def _build_approval_prompt(self) -> None:
         with ui.column().classes(
-            "qs-approval-box w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
+            "exmekh-approval-box w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
             "border border-b-0 border-amber-500/60 rounded-t-xl px-3 py-2 gap-2 shadow-2xl z-0 -mb-1"
         ) as app_box:
             self.approval_container = app_box
@@ -326,7 +326,7 @@ class InputBarComponent:
                 )
 
             self.approval_command_label = ui.label("").classes(
-                "qs-approval-command text-xs font-mono text-zinc-200 bg-zinc-950/80 px-2.5 py-1.5 rounded border border-zinc-800 break-all select-text max-h-32 overflow-y-auto w-full"
+                "exmekh-approval-command text-xs font-mono text-zinc-200 bg-zinc-950/80 px-2.5 py-1.5 rounded border border-zinc-800 break-all select-text max-h-32 overflow-y-auto w-full"
             )
 
             with ui.row().classes("w-full items-center justify-end gap-2 pt-0.5"):
@@ -393,7 +393,7 @@ class InputBarComponent:
                 with (
                     ui.row()
                     .classes(
-                        "qs-queue-item w-full items-center justify-between px-2.5 py-1.5 "
+                        "exmekh-queue-item w-full items-center justify-between px-2.5 py-1.5 "
                         "bg-zinc-800/50 hover:bg-zinc-800/80 rounded-lg border border-zinc-700/40 "
                         "gap-2 select-none"
                     )
@@ -406,7 +406,7 @@ class InputBarComponent:
                             ui.button(icon="drag_indicator").props(
                                 "dense flat round size=xs text-color=zinc-500"
                             ).classes(
-                                "qs-queue-drag-handle cursor-grab active:cursor-grabbing hover:text-zinc-200 select-none shrink-0"
+                                "exmekh-queue-drag-handle cursor-grab active:cursor-grabbing hover:text-zinc-200 select-none shrink-0"
                             ).tooltip("Drag to reorder queue")
 
                         ui.label(f"#{idx + 1}").classes(
@@ -451,10 +451,10 @@ class InputBarComponent:
                                         mid
                                     ),
                                 ).classes(
-                                    "qs-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
+                                    "exmekh-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
                                 ):
                                     ui.icon("edit", size="14px").classes(
-                                        "qs-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
+                                        "exmekh-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
                                     )
                                     ui.label("Edit").classes(
                                         "self-center leading-none text-zinc-200"
@@ -465,10 +465,10 @@ class InputBarComponent:
                                         mid
                                     ),
                                 ).classes(
-                                    "qs-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer text-rose-400"
+                                    "exmekh-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer text-rose-400"
                                 ):
                                     ui.icon("delete", size="14px").classes(
-                                        "qs-queue-menu-icon flex items-center justify-center self-center text-rose-400 shrink-0"
+                                        "exmekh-queue-menu-icon flex items-center justify-center self-center text-rose-400 shrink-0"
                                     )
                                     ui.label("Delete").classes(
                                         "self-center leading-none text-rose-400"
@@ -484,12 +484,12 @@ class InputBarComponent:
                                                 )
                                             ),
                                         ).classes(
-                                            "qs-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
+                                            "exmekh-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
                                         ):
                                             ui.icon(
                                                 "arrow_upward", size="14px"
                                             ).classes(
-                                                "qs-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
+                                                "exmekh-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
                                             )
                                             ui.label("Move up").classes(
                                                 "self-center leading-none text-zinc-200"
@@ -502,12 +502,12 @@ class InputBarComponent:
                                                 self._trigger_reorder(mid, nid, "after")
                                             ),
                                         ).classes(
-                                            "qs-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
+                                            "exmekh-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
                                         ):
                                             ui.icon(
                                                 "arrow_downward", size="14px"
                                             ).classes(
-                                                "qs-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
+                                                "exmekh-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
                                             )
                                             ui.label("Move down").classes(
                                                 "self-center leading-none text-zinc-200"
@@ -621,7 +621,7 @@ class InputBarComponent:
     def _render_attachment_chip(self, att: StagedAttachment) -> None:
         icon_name, color_class, ext_label = get_file_icon(att.filename)
         with ui.row().classes(
-            "qs-attachment-chip items-center gap-1.5 px-2.5 py-1 bg-zinc-800/90 hover:bg-zinc-800 "
+            "exmekh-attachment-chip items-center gap-1.5 px-2.5 py-1 bg-zinc-800/90 hover:bg-zinc-800 "
             "border border-zinc-700/70 rounded-lg shadow-sm select-none max-w-[320px] transition-all"
         ):
             if att.image_urls:

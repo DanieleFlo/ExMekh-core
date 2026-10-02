@@ -8,16 +8,16 @@ from typing import Any
 
 from nicegui import ui
 
-import fe.qs_bridge.context_usage as context_usage
-from fe.qs_bridge.models import (
+import fe.exmekh_bridge.context_usage as context_usage
+from fe.exmekh_bridge.models import (
     ChatSession,
     SkillNode,
     ToolEvent,
     record_tool_event,
 )
-from fe.qs_bridge.skill_history import take_skill_for_call
-from fe.qs_bridge.system_prompt import load_real_hds_system_prompt
-from fe.qs_bridge.tool_calls import parse_tool_calls
+from fe.exmekh_bridge.skill_history import take_skill_for_call
+from fe.exmekh_bridge.system_prompt import load_real_hds_system_prompt
+from fe.exmekh_bridge.tool_calls import parse_tool_calls
 
 
 @dataclass

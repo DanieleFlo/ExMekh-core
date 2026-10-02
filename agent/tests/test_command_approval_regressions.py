@@ -6,17 +6,21 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from exmekh_lib.core.models.structured_assistant_message import (
+    StructuredAssistantMessage,
+)
+from exmekh_lib.core.models.structured_provider_response import (
+    StructuredProviderResponse,
+)
+from exmekh_lib.interfaces.tool_hook import ToolContext, ToolResponse
 from nicegui.client import Client as NiceGuiClient
 from nicegui.page import page
-from qs.core.models.structured_assistant_message import StructuredAssistantMessage
-from qs.core.models.structured_provider_response import StructuredProviderResponse
-from qs.interfaces.tool_hook import ToolContext, ToolResponse
 
 from fe.config import config
-from fe.qs_bridge.agent_runner import check_provider_health
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.models import ChatSession
-from fe.qs_bridge.tool_approval import (
+from fe.exmekh_bridge.agent_runner import check_provider_health
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.models import ChatSession
+from fe.exmekh_bridge.tool_approval import (
     TOOL_APPROVAL_ALL,
     TOOL_APPROVAL_LLM,
     CommandApprovalDecision,
@@ -31,7 +35,7 @@ from fe.ui.page_controller import ChatPageController
 from tests.mock_client import MockProvider
 
 
-def test_evaluator_preserves_only_approved_turns_using_the_real_qs_client() -> None:
+def test_evaluator_preserves_only_approved_turns_using_the_real_exmekh_client() -> None:
     provider = MockProvider()
     decisions = [
         CommandApprovalDecision(approved=True, reason="Read only"),
@@ -45,7 +49,7 @@ def test_evaluator_preserves_only_approved_turns_using_the_real_qs_client() -> N
 
     evaluator = CommandApprovalEvaluator(history=["pwd"], api_type="responses")
     with (
-        patch("fe.qs_bridge.tool_approval.LocalProvider", return_value=provider),
+        patch("fe.exmekh_bridge.tool_approval.LocalProvider", return_value=provider),
         patch.object(provider, "call_structured", side_effect=respond),
     ):
         assert evaluator.evaluate("git status").approved
@@ -57,7 +61,8 @@ def test_evaluator_preserves_only_approved_turns_using_the_real_qs_client() -> N
     assert requests[1].get_response_model() is CommandApprovalDecision
 
     with patch(
-        "fe.qs_bridge.tool_approval.LocalProvider", side_effect=RuntimeError("offline")
+        "fe.exmekh_bridge.tool_approval.LocalProvider",
+        side_effect=RuntimeError("offline"),
     ):
         assert not evaluator.evaluate("echo missing provider").approved
     assert evaluator.dump_history() == approved_history

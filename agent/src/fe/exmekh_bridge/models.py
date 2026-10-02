@@ -7,11 +7,11 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Literal
 
+from exmekh_lib.core.models.assistant_message import ToolCall
 from pydantic import BaseModel, Field
-from qs.core.models.assistant_message import ToolCall
 
-from fe.qs_bridge.tool_approval import normalize_tool_approval_mode
-from fe.qs_bridge.tool_calls import extract_tool_arguments, parse_tool_calls
+from fe.exmekh_bridge.tool_approval import normalize_tool_approval_mode
+from fe.exmekh_bridge.tool_calls import extract_tool_arguments, parse_tool_calls
 
 MessageRole = Literal["user", "assistant", "system"]
 TerminalStatus = Literal["completed", "error"]
@@ -512,7 +512,7 @@ class QueuedMessage(BaseModel):
 
 
 class SteeringInsertion(BaseModel):
-    """The execution boundary where QS confirmed a queued message."""
+    """The execution boundary where ExMekh-Lib confirmed a queued message."""
 
     message_id: str
     after_tool_call_id: str | None
@@ -746,7 +746,7 @@ class SubAgentConversation(BaseModel):
         return list(self.messages)
 
     def replay_history(self) -> list[dict[str, Any]] | list[ChatMessage]:
-        """Replay the retained QS snapshot, with a safe fallback for legacy calls."""
+        """Replay the retained ExMekh-Lib snapshot, with a safe fallback for legacy calls."""
         return (
             deepcopy(self.raw_history) if self.raw_history else deepcopy(self.messages)
         )
@@ -828,7 +828,7 @@ class SubAgentConversation(BaseModel):
 
 
 class ProjectSettings(BaseModel):
-    """Shared QS options and the approval default for new project chats."""
+    """Shared ExMekh-Lib options and the approval default for new project chats."""
 
     name_hds: str | None = None
     capabilities_path: str | None = None

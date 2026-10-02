@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from playwright.async_api import async_playwright, expect
 
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     Project,
@@ -244,7 +244,9 @@ async def test_global_and_project_settings_with_delete_confirmation(
         await page.locator("button:has(.q-icon:text-is('tune'))").click()
         await page.get_by_text("LOCAL PROVIDER").wait_for(state="visible")
         assert await page.locator(".header-provider").is_visible()
-        assert not await page.get_by_text("QS HIERARCHICAL CAPABILITIES").is_visible()
+        assert not await page.get_by_text(
+            "ExMekh-Lib HIERARCHICAL CAPABILITIES"
+        ).is_visible()
         await page.wait_for_timeout(350)
         await page.screenshot(
             path=str(

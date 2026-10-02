@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from playwright.async_api import async_playwright
 
-from fe.qs_bridge.models import ChatMessage, ChatSession, SkillNode, ToolEvent
+from fe.exmekh_bridge.models import ChatMessage, ChatSession, SkillNode, ToolEvent
 from tests.browser_support import BrowserTestServer, get_edge_executable
 
 

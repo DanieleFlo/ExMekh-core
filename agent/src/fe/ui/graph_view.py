@@ -5,7 +5,7 @@ from typing import Any
 
 from nicegui import ui
 
-from fe.qs_bridge.models import ChatMessage, ChatSession
+from fe.exmekh_bridge.models import ChatMessage, ChatSession
 from fe.ui.graph_data import (
     NODE_COLORS,
     GraphNode,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the outstanding Qwen27 CUDA vision gates serially on one GPU.
 
-Uses the real photo fixture, the FE-installed QS wheel and existing native
+Uses the real photo fixture, the FE-installed ExMekh-Lib wheel and existing native
 checkpoint gates. No model download or frontend conversation state is modified.
 """
 
@@ -188,19 +188,19 @@ class Acceptance:
                     ],
                 )
                 self.command(
-                    f"qs-photo-tools-{tag}",
+                    f"exmekh-photo-tools-{tag}",
                     [
                         self.uv,
                         "run",
                         "--frozen",
                         "python",
-                        "../tests/qs_vision_live.py",
+                        "../tests/exmekh_vision_live.py",
                         "--url",
                         f"http://127.0.0.1:{self.port}/v1",
                         "--photo",
                         str(PHOTO),
                         "--report",
-                        str(self.directory / f"qs-{tag}.json"),
+                        str(self.directory / f"exmekh-{tag}.json"),
                     ],
                     cwd=ROOT / "agent",
                 )
@@ -208,13 +208,12 @@ class Acceptance:
                     self.environment,
                     BASE_URL=f"http://127.0.0.1:{self.port}/v1",
                     API_KEY="local-test",
-                    QS_RUN_LIVE_TESTS="1",
                     QS_LIVE_IMAGE_PATH=str(PHOTO),
                 )
                 self.command(
-                    f"qs-upstream-mixed-live-{tag}",
+                    f"exmekh-upstream-mixed-live-{tag}",
                     [
-                        str(ROOT / "qs/.venv/bin/python"),
+                        str(ROOT / "exmekh_lib/.venv/bin/python"),
                         "-m",
                         "pytest",
                         "-n",
@@ -226,7 +225,7 @@ class Acceptance:
                         "-q",
                         "--tb=short",
                     ],
-                    cwd=ROOT / "qs",
+                    cwd=ROOT / "exmekh_lib",
                     environment=environment,
                 )
                 self.command(

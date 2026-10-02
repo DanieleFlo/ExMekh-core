@@ -7,18 +7,18 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 from uuid import uuid4
 
-from qs.core.agents.deep_agent import (
+from exmekh_lib.core.agents.deep_agent import (
     DeepAgentEvent,
     DeepAgentExecutionEvent,
     DeepAgentStreamEvent,
 )
-from qs.core.agents.node import Node
-from qs.core.models.provider_stream_event import ProviderStreamEventType
-from qs.interfaces.message import Message
+from exmekh_lib.core.agents.node import Node
+from exmekh_lib.core.models.provider_stream_event import ProviderStreamEventType
+from exmekh_lib.interfaces.message import Message
 
-from fe.qs_bridge.converter import restore_node_history
-from fe.qs_bridge.models import SubAgentConversation, ToolEvent
-from fe.qs_bridge.tool_events import tool_event_from_execution
+from fe.exmekh_bridge.converter import restore_node_history
+from fe.exmekh_bridge.models import SubAgentConversation, ToolEvent
+from fe.exmekh_bridge.tool_events import tool_event_from_execution
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,13 +81,15 @@ class ObservedNode(Node):
     def restore_conversation(
         self,
         previous: SubAgentConversation,
-        prior_qs: list[Message[Any]],
+        prior_exmekh: list[Message[Any]],
     ) -> None:
         if not self.persistent_history:
             return
         self._conversation_id = previous.id
-        if prior_qs:
-            restore_node_history(self, previous.message_history(), prior_qs=prior_qs)
+        if prior_exmekh:
+            restore_node_history(
+                self, previous.message_history(), prior_exmekh=prior_exmekh
+            )
 
     def forward_stream_event(self, event: DeepAgentEvent) -> None:
         if self._active_call_id is None:

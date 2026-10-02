@@ -7,28 +7,28 @@ from threading import Event
 from unittest.mock import patch
 
 import pytest
-from nicegui.client import Client as NiceGuiClient
-from nicegui.page import page
-from qs.core.agents.node import DefaultCapabilities
-from qs.core.models.provider_request import ProviderRequest
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.core.models.structured_provider_request import StructuredProviderRequest
-from qs.core.models.user_message import UserMessage
-from qs.providers.local import LocalProvider
+from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.providers.local import LocalProvider
+from nicegui.client import Client as NiceGuiClient
+from nicegui.page import page
 
 from fe.config import config
-from fe.qs_bridge.agent_runner import (
+from fe.exmekh_bridge.agent_runner import (
     check_provider_health,
     execute_agent_turn_sync,
     run_agent_turn,
 )
-from fe.qs_bridge.cancellation import CancellableProvider, CancellationEventHandler
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.event_handlers import QuickChatEventHandler
-from fe.qs_bridge.models import ChatSession, ChatTitle
+from fe.exmekh_bridge.cancellation import CancellableProvider, CancellationEventHandler
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.event_handlers import QuickChatEventHandler
+from fe.exmekh_bridge.models import ChatSession, ChatTitle
 from fe.state.active_turns import active_turns
 from fe.state.session_manager import SessionManager
 from fe.ui.chat_view import ChatViewComponent
@@ -112,7 +112,7 @@ def test_non_streaming_response_is_discarded_when_cancelled() -> None:
 
 
 @pytest.mark.parametrize("action", ["stop", "decline"])
-async def test_real_qs_turn_stops_before_another_inference_when_approval_is_cancelled(
+async def test_real_exmekh_turn_stops_before_another_inference_when_approval_is_cancelled(
     tmp_path: Path, action: str
 ) -> None:
     provider = ApprovalProbeProvider()
@@ -141,8 +141,10 @@ async def test_real_qs_turn_stops_before_another_inference_when_approval_is_canc
             loop.call_soon_threadsafe(worker_finished.set)
 
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
-        patch("fe.qs_bridge.agent_runner.execute_agent_turn_sync", side_effect=execute),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch(
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync", side_effect=execute
+        ),
         patch("fe.ui.page_controller.session_manager", manager),
         patch("fe.ui.chat_view.session_manager", manager),
         patch("fe.ui.page_controller.ui.notify"),
@@ -196,7 +198,7 @@ async def test_real_qs_turn_stops_before_another_inference_when_approval_is_canc
 async def test_cancelled_turn_waiting_for_the_provider_lock_never_starts() -> None:
     cancellation = Event()
     cancellation.set()
-    with patch("fe.qs_bridge.agent_runner.LocalProvider") as provider:
+    with patch("fe.exmekh_bridge.agent_runner.LocalProvider") as provider:
         with pytest.raises(asyncio.CancelledError):
             await asyncio.get_running_loop().run_in_executor(
                 None,
@@ -255,7 +257,9 @@ async def test_live_stop_pending_approval_prevents_another_model_request(
 
     with (
         patch.object(LocalProvider, "call", call),
-        patch("fe.qs_bridge.agent_runner.execute_agent_turn_sync", side_effect=execute),
+        patch(
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync", side_effect=execute
+        ),
     ):
         turn = asyncio.create_task(
             run_agent_turn(

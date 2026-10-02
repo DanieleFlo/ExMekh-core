@@ -1,18 +1,18 @@
-"""Browser test entry point using the actual QS execution path."""
+"""Browser test entry point using the actual ExMekh-Lib execution path."""
 
 from typing import Any
 
+from exmekh_lib.core.models.assistant_message import AssistantMessage
+from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.user_message import UserMessage
 from nicegui import app
 from PIL import Image
-from qs.core.models.assistant_message import AssistantMessage
-from qs.core.models.provider_request import ProviderRequest
-from qs.core.models.provider_response import ProviderResponse
-from qs.core.models.user_message import UserMessage
 
 from fe.config import config
+from fe.exmekh_bridge import agent_runner
+from fe.exmekh_bridge.converter import exmekh_message_to_raw_dict
 from fe.main import main
-from fe.qs_bridge import agent_runner
-from fe.qs_bridge.converter import qs_message_to_raw_dict
 from fe.state.session_manager import session_manager
 from tests.mock_client import MockProvider
 
@@ -24,7 +24,7 @@ class ImageProbeProvider(MockProvider):
 
     def call(self, request: ProviderRequest) -> ProviderResponse:
         self.requests.append(
-            [qs_message_to_raw_dict(item) for item in request.get_messages()]
+            [exmekh_message_to_raw_dict(item) for item in request.get_messages()]
         )
         users = [
             item for item in request.get_messages() if isinstance(item, UserMessage)

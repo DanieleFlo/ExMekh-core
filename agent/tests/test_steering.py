@@ -9,35 +9,35 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from nicegui.client import Client
-from nicegui.page import page
-from qs.core.agents.deep_agent import (
+from exmekh_lib.core.agents.deep_agent import (
     DeepAgentExecutionEvent,
     DeepAgentExecutionEventType,
     DeepAgentStreamEvent,
 )
-from qs.core.agents.node import DefaultCapabilities
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.core.models.user_message import UserMessage
+from exmekh_lib.core.models.user_message import UserMessage
+from nicegui.client import Client
+from nicegui.page import page
 
-from fe.qs_bridge.agent_runner import (
-    convert_to_qs_messages,
+from fe.exmekh_bridge.agent_runner import (
+    convert_to_exmekh_messages,
     execute_agent_turn_sync,
     run_agent_turn,
 )
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.context_usage import build_compacted_context_messages
-from fe.qs_bridge.converter import (
-    qs_message_to_raw_dict,
-    qs_messages_to_session,
-    raw_dict_to_qs_message,
-    session_to_qs_messages,
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.context_usage import build_compacted_context_messages
+from fe.exmekh_bridge.converter import (
+    exmekh_message_to_raw_dict,
+    exmekh_messages_to_session,
+    raw_dict_to_exmekh_message,
+    session_to_exmekh_messages,
 )
-from fe.qs_bridge.event_handlers import DeepAgentTurnEventHandler
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ChatSettings,
@@ -45,10 +45,10 @@ from fe.qs_bridge.models import (
     SkillNode,
     ToolEvent,
 )
-from fe.qs_bridge.pasted_input import PreparedUserInput
-from fe.qs_bridge.steering import TurnSteering
-from fe.qs_bridge.steering_position import find_steering_insertions
-from fe.qs_bridge.sub_agents import SubAgentEventRouter
+from fe.exmekh_bridge.pasted_input import PreparedUserInput
+from fe.exmekh_bridge.steering import TurnSteering
+from fe.exmekh_bridge.steering_position import find_steering_insertions
+from fe.exmekh_bridge.sub_agents import SubAgentEventRouter
 from fe.state.active_turns import ActiveTurnRegistry, active_turns
 from fe.state.session_manager import SessionManager
 from fe.ui.chat_view import ChatViewComponent
@@ -236,7 +236,7 @@ def test_steering_position_does_not_assign_an_unknown_result_to_a_pending_call()
     assert insertion.tool_name == "read"
 
 
-def test_steering_positions_follow_qs_delivery_and_repeated_messages() -> None:
+def test_steering_positions_follow_exmekh_delivery_and_repeated_messages() -> None:
     first = QueuedMessage(text="Same correction")
     second = QueuedMessage(text="Same correction")
     later = QueuedMessage(text="Later correction")
@@ -393,16 +393,17 @@ def test_steering_close_waits_for_inflight_acceptance() -> None:
     assert snapshot.raw_history_start == 2
 
 
-async def test_mock_qs_accepts_burst_and_later_guidance_during_inference(
+async def test_mock_exmekh_accepts_burst_and_later_guidance_during_inference(
     tmp_path: Path,
 ) -> None:
     provider = SteeringProbeProvider(block_second=True)
     steering = TurnSteering()
     observed_history: list[list[dict[str, Any]]] = []
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
         patch(
-            "fe.qs_bridge.agent_runner.execute_agent_turn_sync", execute_agent_turn_sync
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            execute_agent_turn_sync,
         ),
     ):
         task = asyncio.create_task(
@@ -430,7 +431,7 @@ async def test_mock_qs_accepts_burst_and_later_guidance_during_inference(
                 for index, item in enumerate(second_request)
                 if item.get("content") == "First correction"
             )
-            # QS may read asynchronous bash output before accepting guidance.
+            # ExMekh-Lib may read asynchronous bash output before accepting guidance.
             preceding_tool = second_request[guidance_index - 1]
             assert preceding_tool["role"] == "tool"
             assert all(
@@ -474,7 +475,7 @@ async def test_mock_qs_accepts_burst_and_later_guidance_during_inference(
     assert not steering.send(QueuedMessage(text="Too late"))
     steering.apply_to(confirmed)
     assert len(confirmed.steering_insertions) == 3
-    # QS may deliver completed asynchronous output after the intermediate answer.
+    # ExMekh-Lib may deliver completed asynchronous output after the intermediate answer.
     # Check the actual insertion boundary instead of assuming that no tool ran.
     third_request = provider.requests[2]
     third_index = next(
@@ -490,7 +491,7 @@ async def test_mock_qs_accepts_burst_and_later_guidance_during_inference(
 
 
 @pytest.mark.parametrize("nested", [False, True], ids=["skill", "nested-skill"])
-async def test_qs_steering_in_skill_survives_compaction_and_export(
+async def test_exmekh_steering_in_skill_survives_compaction_and_export(
     tmp_path: Path,
     nested: bool,
 ) -> None:
@@ -511,9 +512,10 @@ async def test_qs_steering_in_skill_survives_compaction_and_export(
         on_steering_added=lambda: notifications.append(collector.snapshot_message()),
     )
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
         patch(
-            "fe.qs_bridge.agent_runner.execute_agent_turn_sync", execute_agent_turn_sync
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            execute_agent_turn_sync,
         ),
     ):
         task = asyncio.create_task(run_agent_turn(**options))
@@ -554,17 +556,19 @@ async def test_qs_steering_in_skill_survives_compaction_and_export(
     message = collector.build_message(fallback_content=result)
     assert message.steering_insertions == [position]
     session = ChatSession(messages=[ChatMessage(role="user", content="Start"), message])
-    exported = session_to_qs_messages(session)
-    restored = qs_messages_to_session(
+    exported = session_to_exmekh_messages(session)
+    restored = exmekh_messages_to_session(
         [
-            raw_dict_to_qs_message(qs_message_to_raw_dict(item, include_snapshots=True))
+            raw_dict_to_exmekh_message(
+                exmekh_message_to_raw_dict(item, include_snapshots=True)
+            )
             for item in exported
         ]
     )
     assert find_steering_insertions(restored.messages[-1]) == [position]
     assert message.skills[0].status == "completed"
     assert len(provider.requests) == (6 if nested else 3)
-    # QS compacts the user entry out of root history into the skill transcript.
+    # ExMekh-Lib compacts the user entry out of root history into the skill transcript.
     assert not any(
         item.get("content") == guidance.text for item in provider.requests[-1]
     )
@@ -597,15 +601,16 @@ async def test_qs_steering_in_skill_survives_compaction_and_export(
     )
 
 
-async def test_mock_qs_continues_after_plain_answer_when_steered(
+async def test_mock_exmekh_continues_after_plain_answer_when_steered(
     tmp_path: Path,
 ) -> None:
     provider = SteeringProbeProvider(first_response="answer")
     steering = TurnSteering()
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
         patch(
-            "fe.qs_bridge.agent_runner.execute_agent_turn_sync", execute_agent_turn_sync
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            execute_agent_turn_sync,
         ),
     ):
         task = asyncio.create_task(
@@ -633,15 +638,16 @@ async def test_mock_qs_continues_after_plain_answer_when_steered(
     assert not steering.available
 
 
-async def test_mock_qs_failure_does_not_transfer_guidance_to_a_new_run(
+async def test_mock_exmekh_failure_does_not_transfer_guidance_to_a_new_run(
     tmp_path: Path,
 ) -> None:
     provider = SteeringProbeProvider(first_response="error")
     steering = TurnSteering()
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
         patch(
-            "fe.qs_bridge.agent_runner.execute_agent_turn_sync", execute_agent_turn_sync
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            execute_agent_turn_sync,
         ),
     ):
         task = asyncio.create_task(
@@ -679,7 +685,7 @@ async def test_mock_qs_failure_does_not_transfer_guidance_to_a_new_run(
     )
 
 
-async def test_mock_qs_cancellation_rejects_late_steering_and_stops_inference(
+async def test_mock_exmekh_cancellation_rejects_late_steering_and_stops_inference(
     tmp_path: Path,
 ) -> None:
     provider = SteeringProbeProvider()
@@ -693,8 +699,10 @@ async def test_mock_qs_cancellation_rejects_late_steering_and_stops_inference(
             worker_finished.set()
 
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
-        patch("fe.qs_bridge.agent_runner.execute_agent_turn_sync", side_effect=execute),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch(
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync", side_effect=execute
+        ),
     ):
         task = asyncio.create_task(
             run_agent_turn(**_mock_turn_options(tmp_path, steering))
@@ -718,9 +726,10 @@ async def test_quick_chat_never_offers_deep_agent_steering(tmp_path: Path) -> No
     provider = SteeringProbeProvider(first_response="answer")
     steering = TurnSteering()
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
         patch(
-            "fe.qs_bridge.agent_runner.execute_agent_turn_sync", execute_agent_turn_sync
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            execute_agent_turn_sync,
         ),
     ):
         task = asyncio.create_task(
@@ -865,10 +874,10 @@ def test_sync_runner_closes_steering_when_the_run_exits(fails: bool) -> None:
     agent.run.side_effect = run
     with (
         patch(
-            "fe.qs_bridge.agent_runner.LocalProvider",
+            "fe.exmekh_bridge.agent_runner.LocalProvider",
             return_value=SteeringProbeProvider(),
         ),
-        patch("fe.qs_bridge.agent_runner.DeepAgent", return_value=agent),
+        patch("fe.exmekh_bridge.agent_runner.DeepAgent", return_value=agent),
     ):
         arguments = dict(
             user_prompt="Start",
@@ -930,18 +939,18 @@ def test_steered_turn_keeps_tool_pairs_and_guidance_on_history_reload() -> None:
         ]
     )
     restored = ChatSession.model_validate_json(session.model_dump_json())
-    exported = session_to_qs_messages(restored)
-    assert qs_messages_to_session(exported).messages == restored.messages
+    exported = session_to_exmekh_messages(restored)
+    assert exmekh_messages_to_session(exported).messages == restored.messages
     serialized = [
-        qs_message_to_raw_dict(item, include_snapshots=True) for item in exported
+        exmekh_message_to_raw_dict(item, include_snapshots=True) for item in exported
     ]
     assert (
-        qs_messages_to_session(
-            [raw_dict_to_qs_message(item) for item in serialized]
+        exmekh_messages_to_session(
+            [raw_dict_to_exmekh_message(item) for item in serialized]
         ).messages
         == restored.messages
     )
-    messages = convert_to_qs_messages(restored.messages)
+    messages = convert_to_exmekh_messages(restored.messages)
     assert [item.get_role_name() for item in messages] == [
         "user",
         "assistant",
@@ -1018,8 +1027,8 @@ def test_multiple_steering_messages_preserve_both_tool_batches_on_export() -> No
             ),
         ]
     )
-    qs_messages = session_to_qs_messages(session)
-    assert [item.get_role_name() for item in qs_messages] == [
+    exmekh_messages = session_to_exmekh_messages(session)
+    assert [item.get_role_name() for item in exmekh_messages] == [
         "system",
         "user",
         "assistant",
@@ -1031,10 +1040,12 @@ def test_multiple_steering_messages_preserve_both_tool_batches_on_export() -> No
         "user",
         "assistant",
     ]
-    reconstructed = qs_messages_to_session(
+    reconstructed = exmekh_messages_to_session(
         [
-            raw_dict_to_qs_message(qs_message_to_raw_dict(item, include_snapshots=True))
-            for item in qs_messages
+            raw_dict_to_exmekh_message(
+                exmekh_message_to_raw_dict(item, include_snapshots=True)
+            )
+            for item in exmekh_messages
         ]
     )
     assert reconstructed.messages == session.messages
@@ -1042,7 +1053,7 @@ def test_multiple_steering_messages_preserve_both_tool_batches_on_export() -> No
     assert build_raw_history_from_session(reconstructed)[0] == raw_history
 
 
-async def test_controller_steers_real_qs_after_refresh_and_preserves_next_turn(
+async def test_controller_steers_real_exmekh_after_refresh_and_preserves_next_turn(
     tmp_path: Path,
 ) -> None:
     provider = SteeringProbeProvider(block_reply=True)
@@ -1061,9 +1072,10 @@ async def test_controller_steers_real_qs_after_refresh_and_preserves_next_turn(
     clients = [Client(page(f"/test-steering-{i}")) for i in range(2)]
     controllers = []
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
         patch(
-            "fe.qs_bridge.agent_runner.execute_agent_turn_sync", execute_agent_turn_sync
+            "fe.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            execute_agent_turn_sync,
         ),
         patch("fe.ui.page_controller.session_manager", manager),
         patch("fe.ui.chat_view.session_manager", manager),

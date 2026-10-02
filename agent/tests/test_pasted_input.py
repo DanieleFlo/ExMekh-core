@@ -13,9 +13,9 @@ from nicegui.page import page
 from starlette.testclient import TestClient
 
 from fe.config import config
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.models import ChatMessage
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.models import ChatMessage
+from fe.exmekh_bridge.pasted_input import (
     StagedAttachment,
     create_input_markdown_file,
     create_staged_attachment,
@@ -1016,7 +1016,9 @@ def test_upload_endpoint(tmp_path: Path) -> None:
         ("files", ("test1.py", b"print('one')", "text/x-python")),
         ("files", ("test2.png", png_bytes(), "image/png")),
     ]
-    response = client.post("/_qs/upload", data={"session_id": session.id}, files=files)
+    response = client.post(
+        "/_exmekh/upload", data={"session_id": session.id}, files=files
+    )
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 2
@@ -1028,7 +1030,7 @@ def test_upload_endpoint(tmp_path: Path) -> None:
     # Upload single file under 'file' key
     single_file = [("file", ("single.txt", b"single file text", "text/plain"))]
     resp_single = client.post(
-        "/_qs/upload", data={"session_id": session.id}, files=single_file
+        "/_exmekh/upload", data={"session_id": session.id}, files=single_file
     )
     assert resp_single.status_code == 200
     data_single = resp_single.json()
@@ -1056,7 +1058,7 @@ def test_upload_endpoint_reports_staging_errors_and_deleted_chats(
         "fe.ui.file_upload.create_staged_attachment_from_file", side_effect=stage
     ):
         response = TestClient(upload_app).post(
-            "/_qs/upload",
+            "/_exmekh/upload",
             data={"session_id": session.id},
             files=[("file", ("code.py", b"print(42)", "text/plain"))],
         )

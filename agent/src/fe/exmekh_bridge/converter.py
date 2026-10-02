@@ -5,29 +5,33 @@ import time
 from collections.abc import Sequence
 from typing import Any
 
-from qs.core.agents.node import Node
-from qs.core.cache.node_cache import NodeCache
-from qs.core.models.assistant_message import AssistantMessage, FunctionCall, ToolCall
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.tool_message import ToolMessage
-from qs.core.models.user_message import UserMessage
-from qs.core.tool_calls.execution_history import ExecutionHistory
-from qs.interfaces.message import Message
+from exmekh_lib.core.agents.node import Node
+from exmekh_lib.core.cache.node_cache import NodeCache
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.tool_message import ToolMessage
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
+from exmekh_lib.interfaces.message import Message
 
-from fe.qs_bridge.execution_restore import ExecutionHistoryRestorer
-from fe.qs_bridge.image_input import (
+from fe.exmekh_bridge.execution_restore import ExecutionHistoryRestorer
+from fe.exmekh_bridge.image_input import (
     deserialize_user_content,
     serialize_user_content,
     user_content,
 )
-from fe.qs_bridge.models import (
+from fe.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     QueuedMessage,
     SkillNode,
     ToolEvent,
 )
-from fe.qs_bridge.tool_calls import parse_tool_calls
+from fe.exmekh_bridge.tool_calls import parse_tool_calls
 
 logger = logging.getLogger(__name__)
 FE_METADATA_KEYS = (
@@ -37,27 +41,27 @@ FE_METADATA_KEYS = (
 )
 
 
-def raw_dict_to_qs_message(
+def raw_dict_to_exmekh_message(
     data: dict[str, Any],
     pending_tool_calls: list[ToolCall] | None = None,
 ) -> Message[Any]:
-    """Converts a raw dictionary (from raw_history or dump_history) to a qs Message instance."""
+    """Converts a raw dictionary (from raw_history or dump_history) to a exmekh_lib Message instance."""
     role = str(data.get("role", "user")).lower()
     content = data.get("content")
-    qs_msg: Message[Any]
+    exmekh_msg: Message[Any]
 
     if role == "system":
-        qs_msg = SystemMessage(content=str(content or ""))
+        exmekh_msg = SystemMessage(content=str(content or ""))
 
     elif role == "user":
-        qs_msg = UserMessage(content=deserialize_user_content(content))
+        exmekh_msg = UserMessage(content=deserialize_user_content(content))
 
     elif role == "assistant":
         tool_calls = parse_tool_calls(data.get("tool_calls"))
         if tool_calls and pending_tool_calls is not None:
             pending_tool_calls.extend(tool_calls)
         content_str = str(content) if content is not None else None
-        qs_msg = AssistantMessage(content=content_str, tool_calls=tool_calls)
+        exmekh_msg = AssistantMessage(content=content_str, tool_calls=tool_calls)
 
     elif role in ("tool", "function"):
         tool_call_id = str(data.get("tool_call_id") or "")
@@ -84,24 +88,24 @@ def raw_dict_to_qs_message(
         if not name:
             name = "tool_default"
 
-        qs_msg = ToolMessage(
+        exmekh_msg = ToolMessage(
             content=str(content or ""), tool_call_id=tool_call_id, name=name
         )
 
     else:
-        qs_msg = UserMessage(content=deserialize_user_content(content))
+        exmekh_msg = UserMessage(content=deserialize_user_content(content))
 
     for key in FE_METADATA_KEYS:
         if key in data:
-            qs_msg.set_metadata(key, data[key])
+            exmekh_msg.set_metadata(key, data[key])
 
-    return qs_msg
+    return exmekh_msg
 
 
-def qs_message_to_raw_dict(
+def exmekh_message_to_raw_dict(
     msg: Message[Any], include_snapshots: bool = False
 ) -> dict[str, Any]:
-    """Converts a qs Message instance to a clean, standardized raw history dict."""
+    """Converts a exmekh_lib Message instance to a clean, standardized raw history dict."""
     role = msg.get_role_name()
 
     if isinstance(msg, SystemMessage):
@@ -185,8 +189,8 @@ def close_pending_tool_calls(
     pending_tool_calls.clear()
 
 
-def chat_message_to_qs_messages(msg: ChatMessage) -> list[Message[Any]]:
-    """Converts a ChatMessage into a sequence of qs Message objects.
+def chat_message_to_exmekh_messages(msg: ChatMessage) -> list[Message[Any]]:
+    """Converts a ChatMessage into a sequence of exmekh_lib Message objects.
 
     Guarantees valid MessageHistory role transitions:
     - user ChatMessage -> [UserMessage]
@@ -203,27 +207,31 @@ def chat_message_to_qs_messages(msg: ChatMessage) -> list[Message[Any]]:
         sm.set_metadata("_fe_chat_message_snapshot", msg.model_dump())
         return [sm]
 
-    qs_list: list[Message[Any]] = []
+    exmekh_list: list[Message[Any]] = []
 
     if msg.raw_history:
         raw_slice = msg.turn_raw_history()
         pending_tool_calls: list[ToolCall] = []
         for item in raw_slice:
-            qs_msg = raw_dict_to_qs_message(item, pending_tool_calls=pending_tool_calls)
-            if isinstance(qs_msg, UserMessage):
-                qs_msg.set_metadata("_fe_steering_message", True)
+            exmekh_msg = raw_dict_to_exmekh_message(
+                item, pending_tool_calls=pending_tool_calls
+            )
+            if isinstance(exmekh_msg, UserMessage):
+                exmekh_msg.set_metadata("_fe_steering_message", True)
             # Ensure a ToolMessage is never the first message of an assistant turn without a preceding AssistantMessage
-            if isinstance(qs_msg, ToolMessage) and not qs_list:
+            if isinstance(exmekh_msg, ToolMessage) and not exmekh_list:
                 synth_tc = ToolCall(
-                    id=qs_msg.get_tool_call_id(),
-                    function=FunctionCall(name=qs_msg.get_name(), arguments={}),
+                    id=exmekh_msg.get_tool_call_id(),
+                    function=FunctionCall(name=exmekh_msg.get_name(), arguments={}),
                 )
-                qs_list.append(AssistantMessage(content=None, tool_calls=[synth_tc]))
-            qs_list.append(qs_msg)
+                exmekh_list.append(
+                    AssistantMessage(content=None, tool_calls=[synth_tc])
+                )
+            exmekh_list.append(exmekh_msg)
 
-        close_pending_tool_calls(qs_list, pending_tool_calls)
+        close_pending_tool_calls(exmekh_list, pending_tool_calls)
 
-    if not qs_list:
+    if not exmekh_list:
         if msg.skills:
             tool_calls: list[ToolCall] = []
             tool_msgs: list[ToolMessage] = []
@@ -231,8 +239,8 @@ def chat_message_to_qs_messages(msg: ChatMessage) -> list[Message[Any]]:
                 tc, tm = _serialize_skill_node_to_tool_call(sk, idx + 1)
                 tool_calls.append(tc)
                 tool_msgs.append(tm)
-            qs_list.append(AssistantMessage(content=None, tool_calls=tool_calls))
-            qs_list.extend(tool_msgs)
+            exmekh_list.append(AssistantMessage(content=None, tool_calls=tool_calls))
+            exmekh_list.extend(tool_msgs)
 
         if msg.tool_events:
             tool_calls = []
@@ -258,45 +266,45 @@ def chat_message_to_qs_messages(msg: ChatMessage) -> list[Message[Any]]:
                 )
                 tool_calls.append(tc)
                 tool_msgs.append(tm)
-            qs_list.append(AssistantMessage(content=None, tool_calls=tool_calls))
-            qs_list.extend(tool_msgs)
+            exmekh_list.append(AssistantMessage(content=None, tool_calls=tool_calls))
+            exmekh_list.extend(tool_msgs)
 
-        qs_list.append(AssistantMessage(content=msg.content))
+        exmekh_list.append(AssistantMessage(content=msg.content))
 
     # Ensure the sequence ends with an AssistantMessage so transition to next UserMessage is valid
-    if not isinstance(qs_list[-1], AssistantMessage):
-        qs_list.append(AssistantMessage(content=msg.content or "[Interrupted]"))
+    if not isinstance(exmekh_list[-1], AssistantMessage):
+        exmekh_list.append(AssistantMessage(content=msg.content or "[Interrupted]"))
 
     # Attach lossless snapshot to the final AssistantMessage of the turn
-    qs_list[-1].set_metadata("_fe_chat_message_snapshot", msg.model_dump())
-    return qs_list
+    exmekh_list[-1].set_metadata("_fe_chat_message_snapshot", msg.model_dump())
+    return exmekh_list
 
 
-def qs_messages_to_chat_messages(
-    qs_messages: Sequence[Message[Any]],
+def exmekh_messages_to_chat_messages(
+    exmekh_messages: Sequence[Message[Any]],
 ) -> list[ChatMessage]:
-    """Converts a sequence of qs Message objects back into structured ChatMessage instances."""
+    """Converts a sequence of exmekh_lib Message objects back into structured ChatMessage instances."""
     chat_messages: list[ChatMessage] = []
-    current_assistant_qs: list[Message[Any]] = []
+    current_assistant_exmekh: list[Message[Any]] = []
 
     def flush_assistant() -> None:
-        nonlocal current_assistant_qs
-        if not current_assistant_qs:
+        nonlocal current_assistant_exmekh
+        if not current_assistant_exmekh:
             return
 
-        last_msg = current_assistant_qs[-1]
+        last_msg = current_assistant_exmekh[-1]
         snapshot = last_msg.get_metadata().get("_fe_chat_message_snapshot", None)
         if isinstance(snapshot, dict):
             chat_messages.append(ChatMessage.model_validate(snapshot))
-            current_assistant_qs = []
+            current_assistant_exmekh = []
             return
 
-        raw_hist = [qs_message_to_raw_dict(m) for m in current_assistant_qs]
+        raw_hist = [exmekh_message_to_raw_dict(m) for m in current_assistant_exmekh]
         tool_events: list[ToolEvent] = []
         skills: list[SkillNode] = []
         final_content = ""
 
-        for m in current_assistant_qs:
+        for m in current_assistant_exmekh:
             if isinstance(m, AssistantMessage):
                 if m.get_message() is not None:
                     final_content = str(m.get_message() or "")
@@ -369,11 +377,11 @@ def qs_messages_to_chat_messages(
                 raw_history=raw_hist,
             )
         )
-        current_assistant_qs = []
+        current_assistant_exmekh = []
 
-    for msg in qs_messages:
+    for msg in exmekh_messages:
         if msg.get_metadata().get("_fe_steering_message", False):
-            current_assistant_qs.append(msg)
+            current_assistant_exmekh.append(msg)
         elif isinstance(msg, SystemMessage):
             flush_assistant()
             snap = msg.get_metadata().get("_fe_chat_message_snapshot", None)
@@ -407,7 +415,7 @@ def qs_messages_to_chat_messages(
                     )
                 )
         elif isinstance(msg, (AssistantMessage, ToolMessage)):
-            current_assistant_qs.append(msg)
+            current_assistant_exmekh.append(msg)
         else:
             flush_assistant()
             role = msg.get_role_name()
@@ -419,9 +427,9 @@ def qs_messages_to_chat_messages(
     return chat_messages
 
 
-def session_to_qs_messages(session: ChatSession) -> list[Message[Any]]:
-    """Bidirectional conversion: ChatSession -> list[qs.interfaces.message.Message]."""
-    qs_messages: list[Message[Any]] = []
+def session_to_exmekh_messages(session: ChatSession) -> list[Message[Any]]:
+    """Bidirectional conversion: ChatSession -> list[exmekh_lib.interfaces.message.Message]."""
+    exmekh_messages: list[Message[Any]] = []
     sys_prompt = (
         session.system_prompt
         or "You are a friendly, accurate, and professional AI assistant."
@@ -442,34 +450,34 @@ def session_to_qs_messages(session: ChatSession) -> list[Message[Any]]:
             "queued_messages": [m.model_dump() for m in session.queued_messages],
         },
     )
-    qs_messages.append(sys_msg)
+    exmekh_messages.append(sys_msg)
 
     for msg in session.messages:
-        qs_messages.extend(chat_message_to_qs_messages(msg))
+        exmekh_messages.extend(chat_message_to_exmekh_messages(msg))
 
-    return qs_messages
+    return exmekh_messages
 
 
-def qs_messages_to_session(
-    qs_messages: Sequence[Message[Any]],
+def exmekh_messages_to_session(
+    exmekh_messages: Sequence[Message[Any]],
     session_id: str | None = None,
     title: str = "New Conversation",
     model: str = "Qwen3.8-27B-UD-Q4_K_S",
     agent_mode: str = "deep_agent",
 ) -> ChatSession:
-    """Bidirectional conversion: list[qs.interfaces.message.Message] -> ChatSession."""
+    """Bidirectional conversion: list[exmekh_lib.interfaces.message.Message] -> ChatSession."""
     sys_prompt = ""
     session_meta: dict[str, Any] | None = None
-    filtered_qs: list[Message[Any]] = []
+    filtered_exmekh: list[Message[Any]] = []
 
-    for i, m in enumerate(qs_messages):
+    for i, m in enumerate(exmekh_messages):
         if i == 0 and isinstance(m, SystemMessage):
             sys_prompt = str(m.get_message() or "")
             session_meta = m.get_metadata().get("_fe_session_metadata", None)
         else:
-            filtered_qs.append(m)
+            filtered_exmekh.append(m)
 
-    messages = qs_messages_to_chat_messages(filtered_qs)
+    messages = exmekh_messages_to_chat_messages(filtered_exmekh)
 
     if isinstance(session_meta, dict):
         raw_queued = session_meta.get("queued_messages", [])
@@ -517,9 +525,9 @@ def reconstruct_execution_history_and_cache(
 def restore_node_history(
     node: Node,
     history: Sequence[ChatMessage] | None,
-    prior_qs: list[Message[Any]],
+    prior_exmekh: list[Message[Any]],
 ) -> None:
-    """Convert saved FE state into the public QS node restoration API."""
+    """Convert saved FE state into the public ExMekh-Lib node restoration API."""
     if not history:
         return
 
@@ -534,6 +542,6 @@ def restore_node_history(
             logger.warning("Failed to restore node execution history: %s", error)
 
     try:
-        node.restore_history(prior_qs, restore_execution_state)
+        node.restore_history(prior_exmekh, restore_execution_state)
     except Exception as error:  # noqa: BLE001 - legacy history is best-effort
         logger.warning("Failed to restore node message history: %s", error)

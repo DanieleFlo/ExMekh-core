@@ -1,17 +1,17 @@
 import pytest
-from qs.core.models.client import Client
-from qs.core.models.client_request import ClientRequest
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.models.client import Client
+from exmekh_lib.core.models.client_request import ClientRequest
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.core.models.system_message import SystemMessage
-from qs.core.models.user_message import UserMessage
-from qs.interfaces.event_handler import ProviderEventHandler
-from qs.interfaces.provider import Provider
+from exmekh_lib.core.models.system_message import SystemMessage
+from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.interfaces.event_handler import ProviderEventHandler
+from exmekh_lib.interfaces.provider import Provider
 
-import fe.qs_bridge.agent_runner as ar
-from fe.qs_bridge.models import ToolEvent
+import fe.exmekh_bridge.agent_runner as ar
+from fe.exmekh_bridge.models import ToolEvent
 from tests.mock_client import (
     MockClient,
     MockProvider,

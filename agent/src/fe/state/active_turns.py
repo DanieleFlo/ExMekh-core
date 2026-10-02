@@ -6,8 +6,8 @@ import asyncio
 from dataclasses import dataclass
 from weakref import WeakValueDictionary
 
-from fe.qs_bridge.collector import TurnStreamCollector
-from fe.qs_bridge.models import ChatMessage, QueuedMessage
+from fe.exmekh_bridge.collector import TurnStreamCollector
+from fe.exmekh_bridge.models import ChatMessage, QueuedMessage
 
 
 @dataclass(frozen=True)

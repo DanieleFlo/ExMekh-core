@@ -6,34 +6,34 @@ from io import BytesIO
 from unittest.mock import patch
 
 import pytest
-from fastapi import FastAPI
-from nicegui.client import Client as UIClient
-from nicegui.page import page
-from PIL import Image
-from qs.core.agents.node import DefaultCapabilities
-from qs.core.models.user_message import (
+from exmekh_lib.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.models.user_message import (
     DocumentUserMessage,
     FilesUserMessage,
     ImagesUserMessage,
     TextsUserMessage,
     UserMessage,
 )
-from qs.core.providers.to_openai_chat_completion_mapper import (
+from exmekh_lib.core.providers.to_openai_chat_completion_mapper import (
     ToOpenAIChatCompletionMapper,
 )
-from qs.core.providers.to_openai_response_mapper import ToOpenAIResponseMapper
+from exmekh_lib.core.providers.to_openai_response_mapper import ToOpenAIResponseMapper
+from fastapi import FastAPI
+from nicegui.client import Client as UIClient
+from nicegui.page import page
+from PIL import Image
 from starlette.testclient import TestClient
 
-from fe.qs_bridge.agent_runner import run_agent_turn
-from fe.qs_bridge.context_usage import count_message_dict_tokens
-from fe.qs_bridge.converter import (
-    chat_message_to_qs_messages,
-    qs_message_to_raw_dict,
-    qs_messages_to_chat_messages,
-    raw_dict_to_qs_message,
+from fe.exmekh_bridge.agent_runner import run_agent_turn
+from fe.exmekh_bridge.context_usage import count_message_dict_tokens
+from fe.exmekh_bridge.converter import (
+    chat_message_to_exmekh_messages,
+    exmekh_message_to_raw_dict,
+    exmekh_messages_to_chat_messages,
+    raw_dict_to_exmekh_message,
 )
-from fe.qs_bridge.ds4_prompt import apply_ds4_scope, render_ds4_qwen_prompt
-from fe.qs_bridge.image_input import (
+from fe.exmekh_bridge.ds4_prompt import apply_ds4_scope, render_ds4_qwen_prompt
+from fe.exmekh_bridge.image_input import (
     MAX_IMAGE_SIDE,
     MAX_PDF_PAGES,
     attachment_images,
@@ -45,14 +45,19 @@ from fe.qs_bridge.image_input import (
     serialize_user_content,
     user_content,
 )
-from fe.qs_bridge.models import ChatMessage, ChatSession, ChatSettings, QueuedMessage
-from fe.qs_bridge.pasted_input import (
+from fe.exmekh_bridge.models import (
+    ChatMessage,
+    ChatSession,
+    ChatSettings,
+    QueuedMessage,
+)
+from fe.exmekh_bridge.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
     format_user_input_file_xml,
     prepare_user_input,
 )
-from fe.qs_bridge.steering import TurnSteering
+from fe.exmekh_bridge.steering import TurnSteering
 from fe.state.session_manager import SessionManager, session_manager
 from fe.ui.chat_export import export_chat
 from fe.ui.file_upload import upload_router
@@ -139,12 +144,13 @@ def test_bad_visual_attachments_fail_before_writing(tmp_path, filename, data):
 
 
 def test_empty_pdf_and_oversized_image_have_clear_errors():
-    with patch("fe.qs_bridge.image_input.pdfium.PdfDocument") as cls:
+    with patch("fe.exmekh_bridge.image_input.pdfium.PdfDocument") as cls:
         cls.return_value.__enter__.return_value.__len__.return_value = 0
         with pytest.raises(ValueError, match="no pages"):
             attachment_images("empty.pdf", b"%PDF-")
     with patch(
-        "fe.qs_bridge.image_input.Image.open", side_effect=Image.DecompressionBombError
+        "fe.exmekh_bridge.image_input.Image.open",
+        side_effect=Image.DecompressionBombError,
     ):
         with pytest.raises(ValueError, match="too large"):
             attachment_images("large.png", b"large")
@@ -158,16 +164,16 @@ def test_saved_content_round_trips_text_containers_images_and_empty_parts():
             TextsUserMessage(["After", ""]),
         ]
     )
-    raw = qs_message_to_raw_dict(message)
+    raw = exmekh_message_to_raw_dict(message)
     assert [part["type"] for part in raw["content"]] == [
         "text",
         "image_url",
         "text",
         "text",
     ]
-    restored = raw_dict_to_qs_message(json.loads(json.dumps(raw)))
+    restored = raw_dict_to_exmekh_message(json.loads(json.dumps(raw)))
     assert serialize_user_content(restored) == raw["content"]
-    chat = qs_messages_to_chat_messages([restored])[0]
+    chat = exmekh_messages_to_chat_messages([restored])[0]
     assert chat.content == "Before\nAfter\n"
     assert len(chat.image_urls) == 1
     assert serialize_user_content(UserMessage("Plain")) == "Plain"
@@ -190,7 +196,7 @@ def test_saved_content_round_trips_text_containers_images_and_empty_parts():
         )
 
 
-def test_both_qs_provider_mappers_send_png_images_in_one_user_message():
+def test_both_exmekh_provider_mappers_send_png_images_in_one_user_message():
     url = image_data_url(Image.new("RGB", (2, 2), "blue"))
     message = UserMessage(user_content("Inspect", [url, url]))
     chat = ToOpenAIChatCompletionMapper.map_user_message(message)
@@ -223,8 +229,8 @@ def test_images_survive_json_storage_history_replay_and_exports(tmp_path):
     restored = SessionManager(storage_dir=tmp_path / "chats").get_session(session.id)
     assert restored.messages[0].image_urls == [url]
     assert restored.queued_messages[0].image_urls == [url]
-    qs_message = chat_message_to_qs_messages(restored.messages[0])[0]
-    assert qs_messages_to_chat_messages([qs_message]) == [message]
+    exmekh_message = chat_message_to_exmekh_messages(restored.messages[0])[0]
+    assert exmekh_messages_to_chat_messages([exmekh_message]) == [message]
     assert url in export_chat(restored, "json", include_history=False)
     assert f"![Attached image 1]({url})" in export_chat(
         restored, "markdown", include_history=False
@@ -239,7 +245,7 @@ def test_images_survive_json_storage_history_replay_and_exports(tmp_path):
 
 def test_context_estimates_do_not_tokenize_binary_base64():
     url = image_data_url(Image.new("RGB", (32, 32), "blue"))
-    raw = qs_message_to_raw_dict(UserMessage(user_content("Inspect", [url])))
+    raw = exmekh_message_to_raw_dict(UserMessage(user_content("Inspect", [url])))
     assert count_message_dict_tokens(raw) == count_message_dict_tokens(
         {"content": "Inspect"}
     )
@@ -250,11 +256,11 @@ def test_context_estimates_do_not_tokenize_binary_base64():
 
 
 @pytest.mark.parametrize("mode", ["quick_chat", "deep_agent"])
-async def test_real_qs_runner_receives_and_replays_images(tmp_path, mode):
+async def test_real_exmekh_runner_receives_and_replays_images(tmp_path, mode):
     url = image_data_url(Image.new("RGB", (2, 2), "red"))
     provider = MockProvider()
     histories = []
-    with patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider):
+    with patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider):
         result = await run_agent_turn(
             user_prompt="Inspect",
             image_urls=[url, url],
@@ -354,7 +360,7 @@ async def test_multimodal_steering_is_confirmed_and_restored_in_nested_history(
     provider = SteeringProbeProvider(first_response="answer")
     steering = TurnSteering()
     histories = []
-    with patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider):
+    with patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider):
         task = asyncio.create_task(
             run_agent_turn(
                 user_prompt="Start",
@@ -393,7 +399,7 @@ async def test_multimodal_steering_is_confirmed_and_restored_in_nested_history(
     assert len(message.steering_insertions) == 1
     assert message.steering_messages[0].image_urls == [url]
     assert isinstance(message.skill_history_tree[0]["history"][0]["content"], list)
-    replay = chat_message_to_qs_messages(message)
+    replay = chat_message_to_exmekh_messages(message)
     guidance = next(item for item in replay if isinstance(item, UserMessage))
     assert isinstance(list(guidance.iter_content_parts())[1], Image.Image)
 
@@ -424,11 +430,12 @@ def test_thumbnails_and_modal_build_in_the_client_context():
         render_image_thumbnail(url, "Red")
         show_image_preview(url, "Red")
         assert any(
-            "qs-image-thumbnail" in element.classes
+            "exmekh-image-thumbnail" in element.classes
             for element in client.elements.values()
         )
         assert any(
-            "qs-image-dialog" in element.classes for element in client.elements.values()
+            "exmekh-image-dialog" in element.classes
+            for element in client.elements.values()
         )
 
 
@@ -439,7 +446,7 @@ def test_partial_upload_failure_removes_previously_staged_files(tmp_path):
     app.include_router(upload_router)
     with TestClient(app) as client:
         result = client.post(
-            "/_qs/upload",
+            "/_exmekh/upload",
             data={"session_id": session.id},
             files=[
                 ("files", ("good.png", png_bytes(), "image/png")),

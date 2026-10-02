@@ -7,21 +7,24 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from qs.core.agents.deep_agent import (
+from exmekh_lib.core.agents.deep_agent import (
     DeepAgentEvent,
     DeepAgentExecutionEvent,
     DeepAgentStreamEvent,
 )
-from qs.core.models.provider_stream_event import (
+from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
 )
-from qs.interfaces.event_handler import DeepAgentEventHandler, ProviderEventHandler
+from exmekh_lib.interfaces.event_handler import (
+    DeepAgentEventHandler,
+    ProviderEventHandler,
+)
 
-from fe.qs_bridge.models import SkillNode, TerminalStatus, ToolEvent
-from fe.qs_bridge.steering import TurnSteering
-from fe.qs_bridge.sub_agents import SubAgentEventRouter
-from fe.qs_bridge.tool_events import tool_event_from_execution
+from fe.exmekh_bridge.models import SkillNode, TerminalStatus, ToolEvent
+from fe.exmekh_bridge.steering import TurnSteering
+from fe.exmekh_bridge.sub_agents import SubAgentEventRouter
+from fe.exmekh_bridge.tool_events import tool_event_from_execution
 
 logger = logging.getLogger(__name__)
 

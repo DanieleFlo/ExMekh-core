@@ -5,16 +5,20 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
+from exmekh_lib.core.models.structured_assistant_message import (
+    StructuredAssistantMessage,
+)
+from exmekh_lib.core.models.structured_provider_response import (
+    StructuredProviderResponse,
+)
 from nicegui.client import Client as NiceGUIClient
 from nicegui.page import page
 from pydantic import ValidationError
-from qs.core.models.structured_assistant_message import StructuredAssistantMessage
-from qs.core.models.structured_provider_response import StructuredProviderResponse
 
 from fe.config import config
+from fe.exmekh_bridge.agent_runner import generate_chat_title, generate_chat_title_sync
+from fe.exmekh_bridge.models import ChatTitle
 from fe.main import index_page
-from fe.qs_bridge.agent_runner import generate_chat_title, generate_chat_title_sync
-from fe.qs_bridge.models import ChatTitle
 from fe.state.session_manager import session_manager
 from tests.mock_client import MockProvider
 
@@ -52,8 +56,10 @@ def test_generate_chat_title_sync_with_mock_client() -> None:
     provider = MockProvider()
 
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=provider),
-        patch("qs.core.models.client.Client.call_structured") as mock_call_structured,
+        patch("fe.exmekh_bridge.agent_runner.LocalProvider", return_value=provider),
+        patch(
+            "exmekh_lib.core.models.client.Client.call_structured"
+        ) as mock_call_structured,
     ):
         mock_response = StructuredProviderResponse(
             StructuredAssistantMessage(ChatTitle(title="Guida Python E2E"))
@@ -71,7 +77,7 @@ def test_generate_chat_title_sync_with_mock_client() -> None:
 def test_generate_chat_title_sync_fallback_on_error() -> None:
     """Verifies that when the provider encounters an error, a clean fallback is returned."""
     with patch(
-        "fe.qs_bridge.agent_runner.LocalProvider",
+        "fe.exmekh_bridge.agent_runner.LocalProvider",
         side_effect=ConnectionError("Offline"),
     ):
         title = generate_chat_title_sync(
@@ -86,7 +92,7 @@ def test_generate_chat_title_sync_fallback_on_error() -> None:
 async def test_generate_chat_title_async_wrapper() -> None:
     """Verifies that generate_chat_title runs in executor and returns the structured title."""
     with patch(
-        "fe.qs_bridge.agent_runner.generate_chat_title_sync",
+        "fe.exmekh_bridge.agent_runner.generate_chat_title_sync",
         return_value="Titolo Asincrono",
     ):
         result = await generate_chat_title("Qualsiasi prompt")
@@ -176,8 +182,10 @@ def test_title_generation_disables_thinking_and_uses_api_token_budget(
     api_type, budget_key, reasoning
 ):
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=MockProvider()),
-        patch("qs.core.models.client.Client.call_structured") as call,
+        patch(
+            "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=MockProvider()
+        ),
+        patch("exmekh_lib.core.models.client.Client.call_structured") as call,
     ):
         call.return_value = StructuredProviderResponse(
             StructuredAssistantMessage(ChatTitle(title="Un titolo breve"))
@@ -193,9 +201,11 @@ def test_title_generation_disables_thinking_and_uses_api_token_budget(
 
 def test_title_generation_does_not_repeat_failed_request():
     with (
-        patch("fe.qs_bridge.agent_runner.LocalProvider", return_value=MockProvider()),
         patch(
-            "qs.core.models.client.Client.call_structured",
+            "fe.exmekh_bridge.agent_runner.LocalProvider", return_value=MockProvider()
+        ),
+        patch(
+            "exmekh_lib.core.models.client.Client.call_structured",
             side_effect=TimeoutError("generation timed out"),
         ) as call,
     ):

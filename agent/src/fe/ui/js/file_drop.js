@@ -1,12 +1,12 @@
 /**
- * Drag-and-drop controller for file uploads into the chat input bar in QS Studio.
+ * Drag-and-drop controller for file uploads into the chat input bar in ExMekh-Lib Studio.
  *
  * Provides responsive visual drop feedback, prevents unwanted browser tab navigations,
  * and seamlessly uploads dropped files to the temporary staging area.
  */
 (function () {
-    if (window.__qsFileDropInit) return;
-    window.__qsFileDropInit = true;
+    if (window.__exmekhFileDropInit) return;
+    window.__exmekhFileDropInit = true;
 
     let dragCounter = 0;
 
@@ -32,11 +32,11 @@
     });
 
     function getDropZone() {
-        return document.querySelector('.qs-chat-input-box');
+        return document.querySelector('.exmekh-chat-input-box');
     }
 
     function getOverlay() {
-        return document.querySelector('.qs-drop-overlay');
+        return document.querySelector('.exmekh-drop-overlay');
     }
 
     document.addEventListener('dragenter', (e) => {
@@ -47,8 +47,8 @@
 
         if (dropZone.contains(e.target) || overlay.contains(e.target)) {
             dragCounter++;
-            overlay.classList.add('qs-active');
-            dropZone.classList.add('qs-input-box-dragover');
+            overlay.classList.add('exmekh-active');
+            dropZone.classList.add('exmekh-input-box-dragover');
         }
     });
 
@@ -63,8 +63,8 @@
             if (e.dataTransfer) {
                 e.dataTransfer.dropEffect = 'copy';
             }
-            overlay.classList.add('qs-active');
-            dropZone.classList.add('qs-input-box-dragover');
+            overlay.classList.add('exmekh-active');
+            dropZone.classList.add('exmekh-input-box-dragover');
         }
     });
 
@@ -78,13 +78,13 @@
             dragCounter--;
             if (dragCounter <= 0) {
                 dragCounter = 0;
-                overlay.classList.remove('qs-active');
-                dropZone.classList.remove('qs-input-box-dragover');
+                overlay.classList.remove('exmekh-active');
+                dropZone.classList.remove('exmekh-input-box-dragover');
             }
         }
     });
 
-    window.__qsUploadFiles = async (files) => {
+    window.__exmekhUploadFiles = async (files) => {
         if (!files?.length) return;
         const formData = new FormData();
         const sessionId = getDropZone()?.dataset.sessionId;
@@ -95,7 +95,7 @@
         }
 
         try {
-            const response = await fetch('/_qs/upload', {
+            const response = await fetch('/_exmekh/upload', {
                 method: 'POST',
                 body: formData,
             });
@@ -105,12 +105,12 @@
             }
             const result = await response.json();
             if (typeof emitEvent === 'function') {
-                emitEvent('qs_files_dropped', { session_id: sessionId, files: result });
+                emitEvent('exmekh_files_dropped', { session_id: sessionId, files: result });
             }
         } catch (err) {
             console.error('File drop upload error:', err);
             if (typeof emitEvent === 'function') {
-                emitEvent('qs_files_dropped_error', { error: String(err) });
+                emitEvent('exmekh_files_dropped_error', { error: String(err) });
             }
         }
     };
@@ -125,13 +125,13 @@
             e.preventDefault();
             e.stopPropagation();
             dragCounter = 0;
-            overlay.classList.remove('qs-active');
-            dropZone.classList.remove('qs-input-box-dragover');
+            overlay.classList.remove('exmekh-active');
+            dropZone.classList.remove('exmekh-input-box-dragover');
 
             const files = e.dataTransfer.files;
             if (!files || files.length === 0) return;
 
-            await window.__qsUploadFiles(files);
+            await window.__exmekhUploadFiles(files);
         }
     });
 })();
