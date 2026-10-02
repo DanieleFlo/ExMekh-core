@@ -21,15 +21,15 @@ def test_binary_attachment_retains_bytes_and_extension_across_work_roots(
 ) -> None:
     data = b"\x00\xfforiginal binary contents"
     attachment = create_staged_attachment_from_file(
-        "picture.png", data, tmp_path / "first"
+        "archive.bin", data, tmp_path / "first"
     )
     descriptor = attachment.upload_payload()
     assert "data" not in descriptor and "file_path" not in descriptor
     restored = StagedAttachment.from_upload(descriptor, tmp_path / "first")
     restored.reference(tmp_path / "second")
     assert restored.file_path.read_bytes() == data
-    assert restored.file_path.suffix == ".png"
-    assert restored.filename == "picture.png"
+    assert restored.file_path.suffix == ".bin"
+    assert restored.filename == "archive.bin"
 
     attachment.file_path.unlink()
     attachment.reference(tmp_path / "second")

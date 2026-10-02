@@ -25,9 +25,13 @@ from fe.qs_bridge.tool_approval import (
 )
 from fe.state.temp_storage import TempStorage
 from fe.ui.file_icons import format_file_size, get_file_icon
+from fe.ui.image_preview import render_image_thumbnail
 
 PASTE_JS_HANDLER = (
     "(e) => {"
+    " if (e.clipboardData?.files?.length) {"
+    "   e.preventDefault(); window.__qsUploadFiles(e.clipboardData.files); return;"
+    " }"
     " const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';"
     " if (text.length > 400) {"
     "   e.preventDefault();"
@@ -196,6 +200,16 @@ class InputBarComponent:
                     )
 
                 with ui.row().classes("w-full items-center gap-2 no-wrap"):
+                    ui.element("input").props("type=file multiple").classes(
+                        "hidden qs-file-picker"
+                    ).on(
+                        "change",
+                        js_handler="(e) => { window.__qsUploadFiles(e.target.files); e.target.value = ''; }",
+                    )
+                    ui.button(icon="attach_file").props("flat round dense").on(
+                        "click",
+                        js_handler="() => document.querySelector('.qs-file-picker').click()",
+                    ).tooltip("Attach files, images or PDFs")
                     self.textarea = (
                         ui.textarea(
                             placeholder="Send a message to QS Studio... (Enter to send, Shift+Enter for new line)"
@@ -610,7 +624,15 @@ class InputBarComponent:
             "qs-attachment-chip items-center gap-1.5 px-2.5 py-1 bg-zinc-800/90 hover:bg-zinc-800 "
             "border border-zinc-700/70 rounded-lg shadow-sm select-none max-w-[320px] transition-all"
         ):
-            ui.icon(icon_name, size="16px").classes(f"{color_class} shrink-0")
+            if att.image_urls:
+                with ui.row().classes("gap-1 flex-wrap"):
+                    for index, url in enumerate(att.image_urls):
+                        label = att.filename
+                        if att.pdf_pages:
+                            label += f" · page {index + 1}"
+                        render_image_thumbnail(url, label)
+            else:
+                ui.icon(icon_name, size="16px").classes(f"{color_class} shrink-0")
             with ui.column().classes("min-w-0 flex-1 gap-0"):
                 ui.label(att.filename or att.preview).classes(
                     "text-xs font-mono text-zinc-200 truncate max-w-[140px] leading-tight"
@@ -619,6 +641,8 @@ class InputBarComponent:
                     info_text = f"{format_file_size(att.file_size)} • {ext_label}"
                 else:
                     info_text = f"{att.token_count} tok • {ext_label}"
+                if att.pdf_pages:
+                    info_text = f"Pages 1–{len(att.image_urls)} of {att.pdf_pages}"
                 ui.label(info_text).classes(
                     "text-[10px] text-zinc-400 leading-tight font-mono"
                 )
@@ -710,6 +734,13 @@ class InputBarComponent:
         if self.session_id == session_id:
             self.staged_attachments.extend(attachments)
             self.render_attachments()
+            for attachment in attachments:
+                if attachment.pdf_pages > len(attachment.image_urls):
+                    ui.notify(
+                        f"{attachment.filename}: only the first {len(attachment.image_urls)} "
+                        f"of {attachment.pdf_pages} pages will be sent",
+                        type="warning",
+                    )
         elif session_id is not None:
             self._drafts.setdefault(session_id, _InputDraft()).attachments.extend(
                 attachments

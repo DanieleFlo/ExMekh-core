@@ -474,8 +474,19 @@ async def test_mock_qs_accepts_burst_and_later_guidance_during_inference(
     assert not steering.send(QueuedMessage(text="Too late"))
     steering.apply_to(confirmed)
     assert len(confirmed.steering_insertions) == 3
-    # The intermediate answer emitted no streaming tokens or tool calls.
-    assert confirmed.steering_insertions[-1].after_tool_call_id is None
+    # QS may deliver completed asynchronous output after the intermediate answer.
+    # Check the actual insertion boundary instead of assuming that no tool ran.
+    third_request = provider.requests[2]
+    third_index = next(
+        index
+        for index, item in enumerate(third_request)
+        if item.get("content") == "Third correction"
+    )
+    preceding = third_request[third_index - 1]
+    expected_call_id = (
+        preceding.get("tool_call_id") if preceding["role"] == "tool" else None
+    )
+    assert confirmed.steering_insertions[-1].after_tool_call_id == expected_call_id
 
 
 @pytest.mark.parametrize("nested", [False, True], ids=["skill", "nested-skill"])

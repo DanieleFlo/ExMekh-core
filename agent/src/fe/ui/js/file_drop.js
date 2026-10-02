@@ -84,6 +84,37 @@
         }
     });
 
+    window.__qsUploadFiles = async (files) => {
+        if (!files?.length) return;
+        const formData = new FormData();
+        const sessionId = getDropZone()?.dataset.sessionId;
+        if (!sessionId) return;
+        formData.append('session_id', sessionId);
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+
+        try {
+            const response = await fetch('/_qs/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Upload failed with status ' + response.status);
+            }
+            const result = await response.json();
+            if (typeof emitEvent === 'function') {
+                emitEvent('qs_files_dropped', { session_id: sessionId, files: result });
+            }
+        } catch (err) {
+            console.error('File drop upload error:', err);
+            if (typeof emitEvent === 'function') {
+                emitEvent('qs_files_dropped_error', { error: String(err) });
+            }
+        }
+    };
+
     document.addEventListener('drop', async (e) => {
         if (!hasFiles(e)) return;
         const dropZone = getDropZone();
@@ -100,32 +131,7 @@
             const files = e.dataTransfer.files;
             if (!files || files.length === 0) return;
 
-            const formData = new FormData();
-            const sessionId = dropZone.dataset.sessionId;
-            formData.append('session_id', sessionId);
-            for (let i = 0; i < files.length; i++) {
-                formData.append('files', files[i]);
-            }
-
-            try {
-                const response = await fetch('/_qs/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Upload failed with status ' + response.status);
-                }
-                const result = await response.json();
-                if (typeof emitEvent === 'function') {
-                    emitEvent('qs_files_dropped', { session_id: sessionId, files: result });
-                }
-            } catch (err) {
-                console.error('File drop upload error:', err);
-                if (typeof emitEvent === 'function') {
-                    emitEvent('qs_files_dropped_error', { error: String(err) });
-                }
-            }
+            await window.__qsUploadFiles(files);
         }
     });
 })();

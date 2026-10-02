@@ -11,6 +11,14 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - **Collapsible Thinking Block**: visualization of reasoning tokens with an expandable animated view, identical to DeepSeek-R1 / LM Studio.
   - **Tool & Skill Execution Cards**: monitoring of hierarchical tools invoked by `DeepAgent` with depth tracking and skill paths.
   - **Turn Steering**: send a queued message as guidance to the active DeepAgent run. Accepted guidance and its delivery position remain visible after a page refresh and in saved conversation history.
+- **Images and PDFs**:
+  - Pick, drop, or paste several images in one message, including queued guidance.
+  - Click thumbnails in the composer or saved chat for a large preview with a blurred backdrop; close it with the button or Escape.
+  - PDFs render locally into images: at most the first **10 pages per document**, in page order. The composer shows the selected/total page count and warns when pages are omitted.
+  - Images keep their orientation and are resized to at most **2048 pixels per side**. Animated images use their first frame.
+  - Original files stay in scoped temporary storage; normalized PNG content is also saved in chat JSON so vision history and previews survive refreshes and file cleanup. Chat messages show only previews for these visual attachments.
+  - Chat Completions and Responses both use QS mixed user inputs. The endpoint/model must support vision; DS4 needs its matching encoder loaded with `--vision`.
+
 - **Local Provider Control**:
   - Dynamic health check of the local server endpoint (LM Studio, Ollama, llama.cpp, vLLM).
   - Dynamic discovery and selection of installed models.
@@ -21,7 +29,7 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - Bash approval changes inside a chat stay local; the project default applies to newly created conversations.
   - Persistent chat history lives under `data/chats/`, and project settings under `data/projects/`.
   - Temporary uploads and pasted files use `<work_root>/tmp/projects/<project_id>/`; Quick Chats use the frontend code folder and `tmp/quickchats/`.
-  - Input drafts and uploads stay with their original conversation when switching chats. Quick Chats include text attachments directly in the prompt.
+  - Input drafts and uploads stay with their original conversation when switching chats. Quick Chats include text attachments directly in the prompt and send images and rendered PDF pages as native vision inputs.
   - Deleting a project deletes its conversations and stops their active turns. The selected work folder remains available.
   - Existing agent conversations are automatically grouped by work folder. When their previous settings differ, the most recently updated chat supplies the shared project settings; each chat keeps its bash approval mode and approval history.
 - **Automatic `qs` Wheel Synchronization**:
@@ -106,6 +114,13 @@ cd agent
 uv run pytest --no-cov -m mock
 ```
 
+For a vision-enabled DS4 server, verify multiple images, PDF conversion and
+follow-up turns through both APIs:
+
+```shell
+uv run pytest --no-cov --run-live -n 0 tests/test_images_live.py
+```
+
 With the provider configured in `.env` available, run all tests with a real model (conversation, streaming, tools, persistence, title generation, and adversarial cases of `exit_agent`):
 ```shell
 uv run pytest --no-cov --run-live -m "live and not mock" -s -v
@@ -143,6 +158,7 @@ agent/
         ├── qs_bridge/
         │   ├── __init__.py
         │   ├── agent_runner.py  # Asynchronous qs runner (Client and DeepAgent)
+        │   ├── image_input.py    # Image/PDF decoding and multimodal history
         │   └── models.py        # Pydantic models for messages and sessions
         ├── state/
         │   ├── __init__.py
@@ -156,6 +172,7 @@ agent/
             ├── header.py         # Branding, sidebar toggle, and global settings
             ├── sidebar.py        # Projects and Quick Chats sidebar
             ├── chat_view.py      # Chat timeline with thinking and tool blocks
+            ├── image_preview.py   # Shared thumbnails and modal preview
             ├── input_bar.py      # Input bar with send and stop buttons
             └── settings_drawer.py # Advanced settings drawer
 ```

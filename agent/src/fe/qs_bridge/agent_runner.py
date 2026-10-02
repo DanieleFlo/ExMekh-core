@@ -31,6 +31,7 @@ from fe.qs_bridge.cancellation import CancellableProvider, raise_if_cancelled
 from fe.qs_bridge.converter import (
     chat_message_to_qs_messages,
     close_pending_tool_calls,
+    qs_message_to_raw_dict,
     raw_dict_to_qs_message,
     restore_node_history,
 )
@@ -38,6 +39,11 @@ from fe.qs_bridge.event_handlers import (
     DeepAgentTurnEventHandler,
     QuickChatEventHandler,
     publish_raw_history,
+)
+from fe.qs_bridge.image_input import (
+    restore_image_history,
+    serialize_user_content,
+    user_content,
 )
 from fe.qs_bridge.models import (
     ChatMessage,
@@ -197,6 +203,10 @@ def serialize_skill_execution(execution: DeepSkillExecution) -> dict[str, Any]:
     tree["opening_tool_call_id"] = execution.opening_tool_call_id
     tree["start_index"] = execution.start_index
     tree["end_index"] = execution.end_index
+    tree["history"] = [qs_message_to_raw_dict(message) for message in execution.history]
+    tree["children"] = [
+        serialize_skill_execution(child) for child in execution.children
+    ]
     return tree
 
 
@@ -231,6 +241,7 @@ def execute_agent_turn_sync(
     cancellation_event: threading.Event | None = None,
     steering: TurnSteering | None = None,
     on_steering_added: Callable[[], None] | None = None,
+    image_urls: list[str] | None = None,
 ) -> str:
     """Run one complete provider request without overlapping another request."""
     with _provider_request_lock:
@@ -266,6 +277,7 @@ def execute_agent_turn_sync(
             cancellation_event=cancellation_event,
             steering=steering,
             on_steering_added=on_steering_added,
+            image_urls=image_urls,
         )
 
 
@@ -300,8 +312,10 @@ def _execute_agent_turn_sync_unlocked(
     cancellation_event: threading.Event | None = None,
     steering: TurnSteering | None = None,
     on_steering_added: Callable[[], None] | None = None,
+    image_urls: list[str] | None = None,
 ) -> str:
     """Synchronous execution of a turn using qs, dispatched in background thread."""
+    content = user_content(user_prompt, image_urls or [])
     reasoning_effort: ReasoningEffort | None = None
     if reasoning_effort_str:
         clean_effort = reasoning_effort_str.strip().lower()
@@ -389,13 +403,27 @@ def _execute_agent_turn_sync_unlocked(
             default_capabilities=default_caps,
         )
 
+        prior_qs = convert_to_qs_messages(history, current_user_prompt=user_prompt)
+        content_by_dump = {
+            message.message_dump()["content"]: serialize_user_content(message)
+            for message in [*prior_qs, UserMessage(content)]
+            if isinstance(message, UserMessage)
+            and not isinstance(message.get_message(), str)
+        }
+
+        def publish_multimodal_history(raw_history, skill_tree):
+            restored_history, restored_tree = restore_image_history(
+                raw_history, skill_tree, content_by_dump
+            )
+            publish_raw_history(on_raw_history, restored_history, restored_tree)
+
         event_handler = DeepAgentTurnEventHandler(
             event_router,
             on_token,
             on_reasoning,
             on_tool_event,
             on_skill_event,
-            on_raw_history,
+            publish_multimodal_history if on_raw_history else None,
             steering,
             on_steering_added,
         )
@@ -426,7 +454,6 @@ def _execute_agent_turn_sync_unlocked(
                     prior_qs=convert_to_qs_messages(previous.raw_history),
                 )
 
-        prior_qs = convert_to_qs_messages(history, current_user_prompt=user_prompt)
         if history:
             restore_node_history(root_node, history, prior_qs=prior_qs)
 
@@ -435,7 +462,7 @@ def _execute_agent_turn_sync_unlocked(
                 # Restored messages follow one system message and precede the
                 # initial user message. Skill compaction preserves that prefix.
                 steering.bind(agent.steer, history_start=len(prior_qs) + 2)
-            response = agent.run(user_message=user_prompt)
+            response = agent.run(user_message=content)
         except BaseException:
             event_handler.finish("error")
             raise
@@ -446,8 +473,7 @@ def _execute_agent_turn_sync_unlocked(
                 steering.close()
 
         if on_raw_history:
-            publish_raw_history(
-                on_raw_history,
+            publish_multimodal_history(
                 response.history,
                 [serialize_skill_execution(s) for s in response.skill_executions],
             )
@@ -473,7 +499,7 @@ def _execute_agent_turn_sync_unlocked(
 
         response = client.call(
             ClientRequest(
-                UserMessage(user_prompt),
+                UserMessage(content),
                 streaming=True,
                 on_event=event_handler,
             )
@@ -481,7 +507,11 @@ def _execute_agent_turn_sync_unlocked(
         final_text = event_handler.finish(str(response.get_message() or ""))
 
         if on_raw_history:
-            publish_raw_history(on_raw_history, client.dump_history(), [])
+            publish_raw_history(
+                on_raw_history,
+                [qs_message_to_raw_dict(item) for item in client.get_history()],
+                [],
+            )
 
         return final_text
 
@@ -506,6 +536,7 @@ async def run_agent_turn(
     on_command_approved: CommandApprovedCallback | None = None,
     steering: TurnSteering | None = None,
     on_steering_added: Callable[[], None] | None = None,
+    image_urls: list[str] | None = None,
 ) -> str:
     """Asynchronously runs the agent turn in a background worker thread."""
     loop = asyncio.get_running_loop()
@@ -564,6 +595,7 @@ async def run_agent_turn(
             cancellation_event=cancellation_event,
             steering=steering,
             on_steering_added=on_steering_added,
+            image_urls=image_urls,
         )
 
     try:

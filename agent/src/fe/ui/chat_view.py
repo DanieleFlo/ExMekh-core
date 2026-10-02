@@ -16,6 +16,7 @@ from fe.qs_bridge.context_usage import (
     format_skill_closure_tokens,
     populate_skill_closure_tokens,
 )
+from fe.qs_bridge.image_input import IMAGE_SUFFIXES
 from fe.qs_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -34,6 +35,7 @@ from fe.state.session_manager import session_manager
 from fe.ui.chat_export import ExportFormat, export_chat
 from fe.ui.file_icons import get_file_icon
 from fe.ui.graph_view import GraphViewComponent
+from fe.ui.image_preview import render_image_thumbnail
 from fe.ui.markdown_parser import parse_markdown_to_html
 from fe.ui.message_text import message_display_text
 from fe.ui.raw_history_view import RawHistoryComponent
@@ -572,7 +574,16 @@ class ChatViewComponent:
         pending_steering: bool = False,
     ) -> None:
         if msg.role == "user":
-            attached_files = extract_attached_files_from_content(msg.content)
+            attached_files = [
+                path
+                for path in extract_attached_files_from_content(msg.content)
+                if path not in msg.image_paths
+                and not (
+                    msg.image_urls
+                    and not msg.image_paths
+                    and Path(path).suffix.lower() in IMAGE_SUFFIXES | {".pdf"}
+                )
+            ]
             with ui.row().classes(
                 "w-full justify-end items-start chat-message-row chat-message-user"
             ):
@@ -598,6 +609,13 @@ class ChatViewComponent:
 
                     if display_text:
                         ui.markdown(display_text).classes("text-sm text-zinc-100")
+
+                    if msg.image_urls:
+                        with ui.row().classes("qs-message-images gap-2 flex-wrap mt-2"):
+                            for index, url in enumerate(msg.image_urls):
+                                render_image_thumbnail(
+                                    url, f"Attached image {index + 1}"
+                                )
 
                     if attached_files:
                         with ui.row().classes(

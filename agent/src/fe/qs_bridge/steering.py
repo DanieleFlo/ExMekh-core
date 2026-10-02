@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from copy import deepcopy
 from threading import Lock
 
-from qs.core.models.user_message import UserMessage
+from qs.core.models.user_message import UserMessage, UserMessageContent
 
+from fe.qs_bridge.image_input import serialize_user_content, user_content
 from fe.qs_bridge.models import ChatMessage, QueuedMessage, SteeringInsertion
 
 
@@ -15,13 +17,16 @@ class TurnSteering:
 
     def __init__(self) -> None:
         self._lock = Lock()
-        self._handler: Callable[[str], None] | None = None
+        self._handler: Callable[[UserMessageContent], None] | None = None
         self._history_start: int | None = None
         self._messages: list[QueuedMessage] = []
         self._insertions: list[SteeringInsertion] = []
         self._closed = False
+        self._image_content: dict[str, object] = {}
 
-    def bind(self, handler: Callable[[str], None], *, history_start: int) -> None:
+    def bind(
+        self, handler: Callable[[UserMessageContent], None], *, history_start: int
+    ) -> None:
         with self._lock:
             if self._closed:
                 return
@@ -49,7 +54,7 @@ class TurnSteering:
             if self._handler is None:
                 return False
             try:
-                self._handler(message.text)
+                self._handler(user_content(message.text, message.image_urls))
             except RuntimeError:
                 # QS may close the run between the UI check and the click.
                 return False
@@ -70,8 +75,13 @@ class TurnSteering:
             if index >= len(self._messages):
                 return False
             queued = self._messages[index]
-            if message.get_message() != queued.text:
+            expected = UserMessage(user_content(queued.text, queued.image_urls))
+            if message.message_dump() != expected.message_dump():
                 return False
+            if queued.image_urls:
+                self._image_content[message.message_dump()["content"]] = (
+                    serialize_user_content(message)
+                )
             self._insertions.append(
                 SteeringInsertion(
                     message_id=queued.id,
@@ -92,3 +102,17 @@ class TurnSteering:
                     item.model_copy(deep=True) for item in self._messages
                 ]
                 message.raw_history_start = self._history_start
+            histories = [message.raw_history]
+            pending = list(message.skill_history_tree)
+            for entry in pending:
+                histories.append(entry.get("history", []))
+                pending.extend(entry.get("children", []))
+            for history in histories:
+                for item in history:
+                    content = item.get("content")
+                    if (
+                        item.get("role") == "user"
+                        and isinstance(content, str)
+                        and content in self._image_content
+                    ):
+                        item["content"] = deepcopy(self._image_content[content])

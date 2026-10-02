@@ -16,6 +16,11 @@ from qs.core.models.user_message import UserMessage
 from qs.core.tool_calls.execution_history import ExecutionHistory
 from qs.interfaces.message import Message
 
+from fe.qs_bridge.image_input import (
+    deserialize_user_content,
+    serialize_user_content,
+    user_content,
+)
 from fe.qs_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -47,7 +52,7 @@ def raw_dict_to_qs_message(
         qs_msg = SystemMessage(content=str(content or ""))
 
     elif role == "user":
-        qs_msg = UserMessage(content=str(content or ""))
+        qs_msg = UserMessage(content=deserialize_user_content(content))
 
     elif role == "assistant":
         tool_calls = parse_tool_calls(data.get("tool_calls"))
@@ -86,7 +91,7 @@ def raw_dict_to_qs_message(
         )
 
     else:
-        qs_msg = UserMessage(content=str(content or ""))
+        qs_msg = UserMessage(content=deserialize_user_content(content))
 
     for key in FE_METADATA_KEYS:
         if key in data:
@@ -108,7 +113,7 @@ def qs_message_to_raw_dict(
         }
 
     elif isinstance(msg, UserMessage):
-        res = {"role": "user", "content": str(msg.get_message() or "")}
+        res = {"role": "user", "content": serialize_user_content(msg)}
 
     elif isinstance(msg, AssistantMessage):
         tool_calls = msg.get_tool_calls()
@@ -191,7 +196,7 @@ def chat_message_to_qs_messages(msg: ChatMessage) -> list[Message[Any]]:
     - assistant ChatMessage -> [AssistantMessage(tool_calls), ToolMessage, ..., AssistantMessage(final)]
     """
     if msg.role == "user":
-        um = UserMessage(content=msg.content)
+        um = UserMessage(content=user_content(msg.content, msg.image_urls))
         um.set_metadata("_fe_chat_message_snapshot", msg.model_dump())
         return [um]
 
@@ -387,7 +392,21 @@ def qs_messages_to_chat_messages(
                 chat_messages.append(ChatMessage.model_validate(snap))
             else:
                 chat_messages.append(
-                    ChatMessage(role="user", content=str(msg.get_message() or ""))
+                    ChatMessage(
+                        role="user",
+                        content="\n".join(
+                            part
+                            for part in msg.iter_content_parts()
+                            if isinstance(part, str)
+                        ),
+                        image_urls=[
+                            part["image_url"]["url"]
+                            for part in serialize_user_content(msg)
+                            if isinstance(part, dict) and part["type"] == "image_url"
+                        ]
+                        if not isinstance(msg.get_message(), str)
+                        else [],
+                    )
                 )
         elif isinstance(msg, (AssistantMessage, ToolMessage)):
             current_assistant_qs.append(msg)

@@ -484,6 +484,8 @@ class ProviderContextUsage(BaseModel):
 class QueuedMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     text: str
+    image_urls: list[str] = Field(default_factory=list)
+    image_paths: list[str] = Field(default_factory=list)
     display_content: str | None = None
     created_at: float = Field(default_factory=time.time)
 
@@ -496,6 +498,8 @@ class QueuedMessage(BaseModel):
             id=self.id,
             role="user",
             content=self.text,
+            image_urls=list(self.image_urls),
+            image_paths=list(self.image_paths),
             display_content=self.display_content,
             timestamp=self.created_at,
         )
@@ -514,6 +518,8 @@ class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     role: MessageRole
     content: str = ""
+    image_urls: list[str] = Field(default_factory=list)
+    image_paths: list[str] = Field(default_factory=list)
     display_content: str | None = None
     reasoning_content: str = ""
     reasoning_blocks: list[ReasoningBlock] = Field(default_factory=list)
@@ -928,9 +934,19 @@ class ChatSession(BaseModel):
             conversation.interrupt_call()
 
     def add_queued_message(
-        self, text: str, display_content: str | None = None
+        self,
+        text: str,
+        display_content: str | None = None,
+        *,
+        image_urls: list[str] | None = None,
+        image_paths: list[str] | None = None,
     ) -> QueuedMessage:
-        msg = QueuedMessage(text=text, display_content=display_content)
+        msg = QueuedMessage(
+            text=text,
+            display_content=display_content,
+            image_urls=image_urls or [],
+            image_paths=image_paths or [],
+        )
         self.queued_messages.append(msg)
         return msg
 

@@ -6,6 +6,8 @@ import json
 from html import escape
 from typing import Any
 
+from fe.qs_bridge.image_input import content_text
+
 _TOOLS_PREFIX = "# Tools\n\nYou have access to the following functions:\n\n<tools>\n"
 _TOOLS_SUFFIX = (
     "\n</tools>\n\n"
@@ -64,7 +66,7 @@ def apply_ds4_scope(messages: list[dict[str, Any]], agentic: dict[str, Any]) -> 
     scope += "</agent_runtime>"
     for message in reversed(messages):
         if message["role"] in ("user", "tool"):
-            content = message.get("content") or ""
+            content = content_text(message.get("content"))
             message["content"] = content + ("\n\n" if content else "") + scope
             return
     messages.append({"role": "system", "content": scope})
@@ -121,7 +123,7 @@ def render_ds4_qwen_prompt(
         schemas = "\n".join(_json(tool.get("function", tool)) for tool in tools)
         system_parts.append(_TOOLS_PREFIX + schemas + _TOOLS_SUFFIX)
     system_parts.extend(
-        str(message.get("content") or "").strip()
+        content_text(message.get("content")).strip()
         for message in messages
         if message["role"] in ("system", "developer")
     )
@@ -141,7 +143,7 @@ def render_ds4_qwen_prompt(
     pending_assistant = False
     for index, message in enumerate(messages):
         role = message["role"]
-        content = str(message.get("content") or "").strip()
+        content = content_text(message.get("content")).strip()
         if role != "tool" and tool_group:
             parts.append("<|im_end|>\n")
             tool_group = False

@@ -264,7 +264,7 @@ def test_quick_chat_keeps_long_text_inline_and_includes_text_attachments(
     )
     assert "print(42)" in prepared.prompt
     assert "<user_input_file" not in prepared.prompt
-    binary = create_staged_attachment_from_file("image.png", b"\x00data", tmp_path)
+    binary = create_staged_attachment_from_file("archive.bin", b"\x00data", tmp_path)
     with pytest.raises(ValueError, match="text attachments"):
         prepare_user_input(
             "Read", work_root=tmp_path, attachments=[binary], use_file_references=False

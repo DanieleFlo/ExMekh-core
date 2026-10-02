@@ -280,6 +280,14 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   Il converter usa l'API pubblica dei metadati Message, senza esporre snapshot
   al provider; l'adapter dei tool conserva lo stato di errore emesso da QS per
   root, conversazioni figlie e UI.
+- `agent/src/fe/qs_bridge/image_input.py` — decodifica immagini, orientamento,
+  rendering PDF locale (prime 10 pagine), parti native QS e serializzazione
+  PNG della cronologia; i payload base64 non vengono contati come testo.
+- `agent/src/fe/ui/image_preview.py` — miniature e anteprima modale condivise
+  fra compositore e chat; gli allegati visivi non hanno un secondo chip file.
+- `agent/tests/test_image_input.py`, `agent/tests/test_images_e2e.py`,
+  `agent/tests/test_images_live.py` — regressioni multimodali, browser e prove
+  opt-in sui due endpoint DS4, inclusi PDF, steering e replay.
 - `agent/wheels/` — wheel QS versionata, installabile con `uv sync --frozen`.
 - `agent/tests/parallel_execution.py` — test FE per modulo su CPU logiche, con
   fase esclusiva per test seriali e provider reali dopo il teardown degli altri worker.

@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from qs.core.agents.deep_agent import DeepAgentExecutionEvent, DeepAgentStreamEvent
+from qs.core.models.assistant_message import AssistantMessage
 from qs.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
@@ -128,6 +129,8 @@ def test_skill_execution_serialization_keeps_checkpoint_metadata() -> None:
         "opening_tool_call_id": "call",
         "start_index": 2,
         "end_index": 5,
+        "history": [],
+        "children": [],
     }
 
 
@@ -226,7 +229,7 @@ def test_quick_chat_recovers_from_history_seed_failure_and_captures_raw_history(
         client = client_class.return_value
         client.replace_history_from.side_effect = ValueError("legacy history")
         client.call.return_value = response
-        client.dump_history.return_value = [{"role": "assistant", "content": "answer"}]
+        client.get_history.return_value = [AssistantMessage("answer")]
         result = execute_agent_turn_sync(
             user_prompt="task",
             model="model",

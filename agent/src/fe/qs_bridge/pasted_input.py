@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from fe.qs_bridge.context_usage import count_text_tokens
+from fe.qs_bridge.image_input import attachment_images
 from fe.state.temp_storage import TempStorage, clean_attachment_filename
 
 PASTE_TOKEN_THRESHOLD: int = 300
@@ -29,6 +30,8 @@ class StagedAttachment:
     is_binary: bool = False
     file_size: int = 0
     data: bytes | None = field(default=None, repr=False)
+    image_urls: list[str] = field(default_factory=list)
+    pdf_pages: int = 0
 
     def reference(
         self,
@@ -72,6 +75,8 @@ class StagedAttachment:
             "filename": self.filename,
             "is_binary": self.is_binary,
             "file_size": self.file_size,
+            "image_urls": self.image_urls,
+            "pdf_pages": self.pdf_pages,
         }
 
     @classmethod
@@ -111,6 +116,8 @@ class StagedAttachment:
             filename=str(payload.get("filename", "file")),
             is_binary=bool(payload.get("is_binary", False)),
             file_size=int(payload.get("file_size", 0)),
+            image_urls=list(payload.get("image_urls", [])),
+            pdf_pages=int(payload.get("pdf_pages", 0)),
         )
 
     def delete_file(self) -> None:
@@ -129,6 +136,8 @@ class PreparedUserInput:
     prompt: str
     display_content: str | None
     title_text: str
+    image_urls: list[str] = field(default_factory=list)
+    image_paths: list[str] = field(default_factory=list)
 
 
 def extract_content_preview(content: str, max_chars: int = 25) -> str:
@@ -198,6 +207,7 @@ def create_staged_attachment_from_file(
 
     Handles binary content and excessively long filenames safely.
     """
+    image_urls, pdf_pages = attachment_images(filename, data)
     file_path, relative_path = (
         storage or TempStorage(work_root, temp_dirname)
     ).write_file(filename, data)
@@ -205,7 +215,7 @@ def create_staged_attachment_from_file(
 
     is_binary = False
     text_content = ""
-    if b"\x00" in data:
+    if image_urls or b"\x00" in data:
         is_binary = True
     else:
         try:
@@ -225,6 +235,8 @@ def create_staged_attachment_from_file(
         is_binary=is_binary,
         file_size=len(data),
         data=data,
+        image_urls=image_urls,
+        pdf_pages=pdf_pages,
     )
 
 
@@ -309,19 +321,24 @@ def prepare_user_input(
 ) -> PreparedUserInput:
     """Prepare model text and the separate text displayed in the chat."""
     if not use_file_references:
-        if any(attachment.is_binary for attachment in attachments or []):
+        if any(
+            attachment.is_binary and not attachment.image_urls
+            for attachment in attachments or []
+        ):
             raise ValueError(
                 "Quick Chat supports text attachments; use a project for other files"
             )
         parts = [
             text,
             *(
-                f"Attachment: {attachment.filename}\n{attachment.content}"
+                attachment.reference(work_root, temp_dirname, storage=storage)
+                if attachment.image_urls
+                else f"Attachment: {attachment.filename}\n{attachment.content}"
                 for attachment in attachments or []
             ),
         ]
         prompt = "\n\n".join(part for part in parts if part)
-        display_content = None
+        display_content = text if any(a.image_urls for a in attachments or []) else None
     elif attachments is None:
         prompt, display_content, _ = process_user_input_text(
             text, work_root=work_root, temp_dirname=temp_dirname, storage=storage
@@ -334,7 +351,43 @@ def prepare_user_input(
         prompt = "\n\n".join(part for part in [text, *references] if part)
         display_content = text if attachments else None
     title_text = text or (attachments[0].preview if attachments else "Attached file")
-    return PreparedUserInput(prompt, display_content, title_text)
+    image_urls = [
+        url for attachment in attachments or [] for url in attachment.image_urls
+    ]
+    for attachment in attachments or []:
+        if attachment.pdf_pages:
+            prompt += (
+                f"\n\nPDF {attachment.filename}: pages 1–{len(attachment.image_urls)} "
+                f"of {attachment.pdf_pages} are attached as images in page order."
+            )
+            if attachment.pdf_pages > len(attachment.image_urls):
+                prompt += " Remaining pages were not sent."
+    image_paths = [
+        attachment.relative_path
+        for attachment in attachments or []
+        if attachment.image_urls and attachment.relative_path is not None
+    ]
+    # Editing a queued message returns its original references to the composer.
+    # Rebuild vision parts from those scoped files instead of losing the images.
+    reference_storage = storage or TempStorage(work_root, temp_dirname)
+    for relative_path in extract_attached_files_from_content(text):
+        if relative_path in image_paths:
+            continue
+        try:
+            file_path = reference_storage.resolve_attachment(
+                relative_path, allow_legacy=True
+            )
+        except ValueError:
+            continue
+        if not file_path.is_file():
+            continue
+        urls, _ = attachment_images(file_path.name, file_path.read_bytes())
+        if urls:
+            image_urls.extend(urls)
+            image_paths.append(relative_path)
+    return PreparedUserInput(
+        prompt, display_content, title_text, image_urls, image_paths
+    )
 
 
 def resolve_attached_file_path(relative_path: str, work_root: Path | str) -> Path:

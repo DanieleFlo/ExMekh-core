@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from fe.qs_bridge.image_input import content_text
 from fe.qs_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -435,7 +436,7 @@ def _extract_nodes_from_raw_scope(
         item = raw_slice[i]
         role = str(item.get("role", "")).lower()
         if role == "user":
-            user_content = str(item.get("content") or "")
+            user_content = content_text(item.get("content"))
             raw_message_id = str(item.get("message_id") or "") or None
             emitted_ids = _steering_message_ids(nodes)
             if raw_message_id in emitted_ids:
@@ -750,7 +751,7 @@ def _build_nodes_for_messages(
                     str(rm.get("role", "")).lower() == "user"
                     and str(rm.get("content", "")).strip()
                 ):
-                    raw_user_content = str(rm.get("content", ""))
+                    raw_user_content = content_text(rm.get("content"))
                     break
         if not raw_user_content:
             raw_user_content = (

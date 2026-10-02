@@ -435,7 +435,10 @@ class ChatPageController:
                 self._active_task is not None and not self._active_task.done()
             ):
                 session.add_queued_message(
-                    prepared_input.prompt, prepared_input.display_content
+                    prepared_input.prompt,
+                    prepared_input.display_content,
+                    image_urls=prepared_input.image_urls,
+                    image_paths=prepared_input.image_paths,
                 )
                 session_manager.save_session(session)
                 self._render_queue_ui(session)
@@ -462,6 +465,8 @@ class ChatPageController:
                 ChatMessage(
                     role="user",
                     content=prepared_input.prompt,
+                    image_urls=prepared_input.image_urls,
+                    image_paths=prepared_input.image_paths,
                     display_content=prepared_input.display_content,
                 ),
             )
@@ -479,6 +484,7 @@ class ChatPageController:
                 self._run_turn(
                     session=session,
                     user_text=prepared_input.prompt,
+                    image_urls=prepared_input.image_urls,
                     prior_history=prior_history,
                     collector=collector,
                     generate_title=generate_title,
@@ -542,6 +548,7 @@ class ChatPageController:
         collector: TurnStreamCollector,
         generate_title: bool,
         title_text: str | None = None,
+        image_urls: list[str] | None = None,
     ) -> None:
         with self._client:
             loop = asyncio.get_running_loop()
@@ -670,6 +677,7 @@ class ChatPageController:
             try:
                 response_text = await run_agent_turn(
                     user_prompt=user_text,
+                    image_urls=image_urls,
                     model=config.default_model,
                     on_token=on_token,
                     on_reasoning=on_reasoning,
@@ -911,6 +919,8 @@ class ChatPageController:
             prompt=next_msg.text,
             display_content=next_msg.display_content,
             title_text=next_msg.visible_text,
+            image_urls=next_msg.image_urls,
+            image_paths=next_msg.image_paths,
         )
         self._send_prepared(session, prepared_input)
 

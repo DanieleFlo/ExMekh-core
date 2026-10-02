@@ -10,6 +10,7 @@ from qs.tokenizers.qwen import QwenTokenizer
 
 from fe.config import config
 from fe.qs_bridge.collector import TurnStreamCollector
+from fe.qs_bridge.image_input import content_text
 from fe.qs_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -73,7 +74,7 @@ def _serialize_tool_calls_for_counting(tool_calls: Any) -> str:
 
 def count_message_dict_tokens(message: dict[str, Any]) -> int:
     """Count tokens consumed by a single message dictionary."""
-    content = str(message.get("content") or "")
+    content = content_text(message.get("content"))
     tool_calls_str = _serialize_tool_calls_for_counting(message.get("tool_calls"))
     reasoning_str = str(message.get("reasoning_content") or "")
     name_str = str(message.get("name") or "")

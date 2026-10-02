@@ -45,6 +45,7 @@ from fe.ui.file_upload import upload_router
 from fe.ui.input_bar import InputBarComponent
 from fe.ui.page_controller import ChatPageController
 from fe.ui.settings_drawer import SettingsDrawerComponent
+from tests.image_samples import png_bytes
 
 
 @pytest.fixture
@@ -771,12 +772,12 @@ def test_create_staged_attachment_from_file(tmp_path: Path) -> None:
     # 2. Binary file with null bytes
     bin_data = b"\x00\x01\x02\x03\x04"
     att_bin = create_staged_attachment_from_file(
-        "image.png", bin_data, work_root=tmp_path
+        "data.bin", bin_data, work_root=tmp_path
     )
     assert att_bin.is_binary is True
     assert att_bin.content == ""
     assert att_bin.token_count == 0
-    assert att_bin.preview == "image.png"
+    assert att_bin.preview == "data.bin"
 
     # 3. File with non-UTF-8 bytes (UnicodeDecodeError fallback)
     corrupt_data = b"\xff\xfe\xfd\x80\x81"
@@ -1013,7 +1014,7 @@ def test_upload_endpoint(tmp_path: Path) -> None:
     # Upload multiple files
     files = [
         ("files", ("test1.py", b"print('one')", "text/x-python")),
-        ("files", ("test2.png", b"\x89PNG\r\n\x1a\n\x00\x00", "image/png")),
+        ("files", ("test2.png", png_bytes(), "image/png")),
     ]
     response = client.post("/_qs/upload", data={"session_id": session.id}, files=files)
     assert response.status_code == 200

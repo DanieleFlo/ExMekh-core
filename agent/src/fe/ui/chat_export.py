@@ -30,8 +30,15 @@ def _markdown_messages(
             sections.append(
                 "## User · Steering\n\n"
                 + message_display_text(guidance.to_chat_message())
+                + "".join(
+                    f"\n\n![Steering image]({url})" for url in guidance.image_urls
+                )
             )
         sections.append(f"## {message.role.title()}\n\n{message_display_text(message)}")
+        sections.extend(
+            f"![Attached image {index + 1}]({url})"
+            for index, url in enumerate(message.image_urls)
+        )
         data = message.export_data(include_history=include_history)
         if data["reasoning_blocks"]:
             sections.append(

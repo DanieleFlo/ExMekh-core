@@ -27,7 +27,7 @@ async def upload_files(request: Request) -> JSONResponse:
         storage = session_manager.temp_storage(session)
         files = form.getlist("files") or form.getlist("file")
         loop = asyncio.get_running_loop()
-        results = []
+        staged = []
         for upload in files:
             if not isinstance(upload, UploadFile):
                 continue
@@ -43,13 +43,16 @@ async def upload_files(request: Request) -> JSONResponse:
                     ),
                 )
             except (OSError, ValueError) as error:
+                for previous in staged:
+                    previous.delete_file()
                 return JSONResponse(
                     {"error": f"Upload failed: {error}"}, status_code=400
                 )
             if not session_manager.owns_session(session):
-                attachment.delete_file()
+                for previous in [*staged, attachment]:
+                    previous.delete_file()
                 return JSONResponse(
                     {"error": "Upload conversation was deleted"}, status_code=404
                 )
-            results.append(attachment.upload_payload())
-        return JSONResponse(results)
+            staged.append(attachment)
+        return JSONResponse([attachment.upload_payload() for attachment in staged])
