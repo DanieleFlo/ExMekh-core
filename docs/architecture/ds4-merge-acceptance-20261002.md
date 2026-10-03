@@ -1,10 +1,10 @@
-# Accettazione merge DS4 e QS — 2 ottobre 2026
+# Accettazione merge DS4 e exmekh-lib — 2 ottobre 2026
 
 ## Esito e provenienza
 
 **PASS per Qwen3.8-27B sulla RTX 3090.** Sono concluse le prove residue:
-CLI vision, append di immagini, client QS reale, memoria tra immagini e tool,
-checkpoint skill/subagent e launcher FE con MTP. Il branch è
+CLI vision, append di immagini, client exmekh-lib reale, memoria tra immagini e tool,
+checkpoint skill/subagent e launcher exmekh-agent con MTP. Il branch è
 `codex/merge-ds4-upstream-2026-10-01`; `main` resta `5bf2b96ee5e888a2b09212e84dbc29751ca4a194`.
 Il merge completo `0edbded` integra upstream `0aaea5a` (277 commit).
 
@@ -13,10 +13,10 @@ e nel [report vision/checkpoint](qwen27-vision-checkpoint-20261001.md).
 Quelle matrici fotografano il 1 ottobre; questa verifica conclude i casi
 allora rimandati. Modelli e backend assenti conservano le qualificazioni dichiarate.
 
-QS è al commit `a665e5a85bd00c36031f3fb0c380e61e4ec4f6dd`, working tree pulita e sorgenti non modificati
-in questa chiusura. Il wheel FE è sincronizzato: `1863bfa6f9f866f819ca06c8fc1065fc35190ca70a2bcf47008fa1b1a66f8ea1`.
+exmekh-lib è al commit `a665e5a85bd00c36031f3fb0c380e61e4ec4f6dd`, working tree pulita e sorgenti non modificati
+in questa chiusura. Il wheel exmekh-agent è sincronizzato: `1863bfa6f9f866f819ca06c8fc1065fc35190ca70a2bcf47008fa1b1a66f8ea1`.
 Il lockfile cambia soltanto quell’hash. I test usano la nuova API di lista
-ordinata di testo e `ImagesUserMessage`. FE/QS resta l’unico agente del prodotto.
+ordinata di testo e `ImagesUserMessage`. exmekh-agent / exmekh-lib resta l’unico agente del prodotto.
 
 ## Foto e memoria tra tool
 
@@ -33,25 +33,25 @@ Il test verifica anche pixel nella history, ordine, tool call e fine degli strea
 
 La CLI nativa esegue due `/read` e ricorda oggetti e codice. Verifica vision
 e memoria conversazionale; i tool reali intercalati sono eseguiti dal test
-CLI QS installato in FE, senza ripristinare un agente nativo DS4.
+CLI exmekh-lib installato in exmekh-agent, senza ripristinare un agente nativo DS4.
 
 | Controllo | Target | MTP | Evidenza |
 | --- | --- | --- | --- |
 | CLI foto e ricordo del codice | PASS | PASS | Due encoder, output finale esatto |
 | HTTP append/JSON/tool/SSE/thinking/Anthropic | PASS | PASS | 10 casi per variante |
-| QS Chat Completions e Responses | PASS | PASS | 6 casi per variante, foto e tool reali |
-| QS layout misti e continuation | PASS | PASS | 8 test per variante; 6 documenti nativi esclusi |
-| FE history multi-turn, tool e skill | PASS | PASS | Test live esistente |
+| exmekh-lib Chat Completions e Responses | PASS | PASS | 6 casi per variante, foto e tool reali |
+| exmekh-lib layout misti e continuation | PASS | PASS | 8 test per variante; 6 documenti nativi esclusi |
+| exmekh-agent history multi-turn, tool e skill | PASS | PASS | Test live esistente |
 | VRAM liberata durante vision | PASS | PASS | Target 3.82–3.90 GiB; MTP 4.79–4.97 GiB |
 | Checkpoint su prefisso 20K | PASS | PASS | Token/logit bit-exact, tre livelli annidati |
 
-Il launcher target usa contesto 22593, quello FE/MTP 28000. Il gate checkpoint
+Il launcher target usa contesto 22593, quello exmekh-agent/MTP 28000. Il gate checkpoint
 usa 22593 e popola 20.000 token prima dell’immagine; verifica frontiere,
 continuazione, rifiuto atomico di corruzione e sessione ricreata.
 
 ## Regressioni e prestazioni
 
-QS: **1.958 PASS**, copertura 100%, Ruff e Pyright puliti. FE: **612 PASS,
+exmekh-lib: **1.958 PASS**, copertura 100%, Ruff e Pyright puliti. exmekh-agent: **612 PASS,
 16 live esclusi**, copertura 100%, Ruff pulito; UI/Playwright offline e mock
 inclusi, con due prove aggiuntive sul modello reale. I gruppi C senza modello (layer pattern, trie e server) passano serialmente;
 i contratti Python hanno 109 test, 4 opt-in esclusi. I gate numerici Qwen
@@ -76,8 +76,8 @@ restano NOT_VERIFIED. Flash Next Q2 mantiene le prove precedenti di inferenza
 breve e checkpoint testuali senza/con MTP embedded; non viene introdotto
 streaming SSD degli esperti o un nuovo scheduler.
 
-Gli allegati FE restano riferimenti a file; l’invio pixel diretto dalla UI
-non è aggiunto. QS e HTTP possono inviare pixel. I dump con hash non
+Gli allegati exmekh-agent restano riferimenti a file; l’invio pixel diretto dalla UI
+non è aggiunto. exmekh-lib e HTTP possono inviare pixel. I dump con hash non
 ricostruiscono immagini: gli allegati devono restare disponibili al chiamante.
 La qualificazione del riavvio riguarda cache sistema e replay della history,
 senza nuova persistenza degli stack privati sospesi.
@@ -94,4 +94,4 @@ python3 tests/run_qwen27_vision_acceptance.py \
 
 L’orchestratore esegue serialmente le varianti e arresta solo i propri server.
 Per ogni verifica serve una nuova directory: il runner rifiuta di sovrascrivere
-risultati già presenti. I test non modificano conversazioni FE dell’utente.
+risultati già presenti. I test non modificano conversazioni exmekh-agent dell’utente.

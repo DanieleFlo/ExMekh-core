@@ -70,10 +70,9 @@ def sync_wheel() -> int:
             )
 
             # Keep the wheel used by the updated project and lockfile.
-            for pattern in ("exmekh_lib-*.whl", "qs-*.whl"):
-                for old_wheel in wheels_dir.glob(pattern):
-                    if old_wheel != target:
-                        old_wheel.unlink()
+            for old_wheel in wheels_dir.glob("exmekh_lib-*.whl"):
+                if old_wheel != target:
+                    old_wheel.unlink()
         print("ExMekh-Lib synchronized and installed successfully.")
         return 0
     except (OSError, RuntimeError, subprocess.CalledProcessError) as error:

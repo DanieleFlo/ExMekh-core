@@ -48,9 +48,8 @@ From the repository root in WSL:
 The script builds the current sources in the sibling `exmekh_lib/` directory, copies the
 resulting wheel into `agent/wheels/`, updates its path in `pyproject.toml` and
 `uv.lock`, and reinstalls ExMekh-Lib. After a successful sync, it removes older ExMekh-Lib wheels.
-No previous build or frontend virtual environment is required. Successful
-synchronization also removes the previous `qs` wheel. Cleanup runs only after
-a successful installation.
+No previous build or frontend virtual environment is required. Wheel cleanup runs
+only after a successful installation.
 
 The installed sync command is `uv run sync-exmekh-lib` from `agent/`.
 To start the framework's interactive CLI with the frontend's locked wheel:
@@ -62,9 +61,10 @@ uv run --frozen --env-file .env exmekh-lib
 
 The Python namespace is `exmekh_lib`; the distribution and console command are
 `exmekh-lib`. The frontend integration module is `exmekh_agent.exmekh_bridge`. The CLI
-loads `BASE_URL` and `API_KEY` from `.env` with the command above. Set `QS_MODEL`
-and `QS_API` to override its model and API; these remain the environment variable
-names exposed by the renamed library.
+loads `BASE_URL` and `API_KEY` from `.env` with the command above. Set `EXMEKH_LIB_MODEL`
+and `EXMEKH_LIB_API` to override its model and API; these are the environment variable
+names exposed by the renamed library. After updating the library sources, sync the
+wheel so the installed configuration matches them.
 
 Both shell launchers resolve paths from their own location, so they can be called
 from any working directory. They use `uv` from `PATH` or `~/.local/bin/uv`;
@@ -89,6 +89,9 @@ Copy `.env.example` to `.env` to configure the application. Its web settings
 are `EXMEKH_AGENT_HOST`, `EXMEKH_AGENT_PORT`, and `EXMEKH_AGENT_TITLE`. Existing
 `.env` files using `FE_HOST`, `FE_PORT`, and `FE_TITLE` must use those new names.
 Provider settings such as `BASE_URL`, `API_KEY`, and `DEFAULT_MODEL` stay the same.
+On startup, saved projects and chats that point to the previous library's bundled
+`site-packages/qs/capabilities` are migrated to the installed library defaults.
+Custom capabilities paths, conversation history, and approvals are preserved.
 
 The application will open at:
 [http://127.0.0.1:8000](http://127.0.0.1:8000)

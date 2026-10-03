@@ -322,7 +322,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
   La distribuzione e la CLI sono `exmekh-lib`, il namespace Python è
   `exmekh_lib` e il comando installato di sync è `sync-exmekh-lib`. Dopo
-  l’installazione riuscita il sync rimuove anche le vecchie wheel `qs`.
+  l’installazione riuscita il sync rimuove anche le vecchie wheel `exmekh_lib`.
 - `docs/agentic/frontend.md` — avvio, configurazione, dipendenze e test di ExMekh Agent.
 - `ds4_bench.c` — benchmark di prefill/decode a diverse frontiere di contesto;
   ripete gli sweep mantenendo il modello residente e usa snapshot o replay fuori

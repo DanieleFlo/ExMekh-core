@@ -8,8 +8,8 @@ Baseline sorgenti: e21968e3e94878ef9de55ec9e7a74bb77bedea66 (main pulito).
 Hardware locale: RTX 3090 24 GiB, WSL2, CUDA 12.4, driver 610.43.02.
 Target esclusivo richiesto: Qwen3.8 UD-Q4_K_S con sidecar MTP Qwen3.8.
 Qwen3.6 escluso dai benchmark e dalla matrice di validazione.
-Il messaggio di partenza usa il prefisso qs/: in questo checkout i file sono
-nella radice. `todo.md` citato dall'indice non esiste: usare le roadmap in docs.
+I file citati nel messaggio di partenza sono nella radice di questo checkout.
+`todo.md` citato dall'indice non esiste: usare le roadmap in docs.
 
 ## Metodo e criteri
 

@@ -87,7 +87,7 @@ role markers. Per-turn agentic allowlists are attached to the latest user turn,
 outside the durable system-cache boundary, so they remain recent after archived
 history. A narrow reminder is also added for a required single zero-argument
 tool; it prevents Qwen3.6 from consuming a short reasoning budget in prose
-without perturbing multi-tool calls. The FE / QS frontend sends typed tool
+without perturbing multi-tool calls. The exmekh-agent / exmekh-lib frontend sends typed tool
 items to the server; ChatML rendering and KV persistence belong to the server.
 
 ## Test and oracle isolation
@@ -108,7 +108,7 @@ structured JSON output, hostile protocol/JSON payloads, reasoning decoys and
 unsupported schemas. On 2026-08-25 it passed 20/20 on both Qwen3.8 and Qwen3.6;
 Qwen3.8 also passed the affected zero-argument, multi-call and auto-skill cases
 after the final prompt refinement. Current frontend integration is covered by
-`agent/tests/`; dated engine results do not certify the FE / QS frontend.
+`agent/tests/`; dated engine results do not certify the exmekh-agent / exmekh-lib frontend.
 
 The Qwen3.8 matrix was additionally run with
 `DS4_CONSTRAINT_MODE=compare_new_vs_oracle`: every observed optimized/oracle

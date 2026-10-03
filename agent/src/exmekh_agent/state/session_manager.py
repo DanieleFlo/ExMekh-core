@@ -312,6 +312,21 @@ class SessionManager:
         self.sessions.update(
             (session.id, session) for session in self._session_store.load_all()
         )
+        for store, records in (
+            (self._project_store, self.projects.values()),
+            (self._session_store, self.sessions.values()),
+        ):
+            for record in records:
+                if record.settings.migrate_legacy_capabilities_path():
+                    try:
+                        # Keep the original timestamps and conversation history.
+                        store.save(record.id, record)
+                    except (OSError, ValueError) as error:
+                        logger.warning(
+                            "Could not persist capabilities migration for %s: %s",
+                            record.id,
+                            error,
+                        )
         for session in self.list_sessions_sorted():
             needs_project = (
                 "project_id" not in session.model_fields_set

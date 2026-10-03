@@ -39,8 +39,8 @@ def test_sync_builds_current_source_and_installs_new_wheel(
     wheels_dir.mkdir()
     old_wheel = wheels_dir / "exmekh_lib-0.1.0-py3-none-any.whl"
     old_wheel.write_bytes(b"old wheel")
-    legacy_wheel = wheels_dir / "qs-0.1.0-py3-none-any.whl"
-    legacy_wheel.write_bytes(b"legacy dependency")
+    stale_wheel = wheels_dir / "exmekh_lib-0.0.8-py3-none-any.whl"
+    stale_wheel.write_bytes(b"stale dependency")
     unrelated = wheels_dir / "another-package.whl"
     unrelated.write_bytes(b"keep")
     calls: list[tuple[list[str], Path]] = []
@@ -89,7 +89,7 @@ def test_sync_builds_current_source_and_installs_new_wheel(
     if version != "0.1.0":
         assert not old_wheel.exists()
     assert unrelated.read_bytes() == b"keep"
-    assert not legacy_wheel.exists()
+    assert not stale_wheel.exists()
     assert not Path(calls[0][0][-1]).exists()
 
 
@@ -101,8 +101,8 @@ def test_sync_stops_on_uv_failure_and_preserves_previous_wheels(
     wheels_dir.mkdir()
     old_wheel = wheels_dir / "exmekh_lib-0.0.9-py3-none-any.whl"
     old_wheel.write_bytes(b"previous wheel")
-    legacy_wheel = wheels_dir / "qs-0.1.0-py3-none-any.whl"
-    legacy_wheel.write_bytes(b"legacy dependency")
+    stale_wheel = wheels_dir / "exmekh_lib-0.0.8-py3-none-any.whl"
+    stale_wheel.write_bytes(b"stale dependency")
     calls: list[str] = []
 
     def run(command: list[str], *, cwd: Path, check: bool) -> None:
@@ -123,7 +123,7 @@ def test_sync_stops_on_uv_failure_and_preserves_previous_wheels(
         ]
     )
     assert old_wheel.read_bytes() == b"previous wheel"
-    assert legacy_wheel.read_bytes() == b"legacy dependency"
+    assert stale_wheel.read_bytes() == b"stale dependency"
 
 
 @pytest.mark.parametrize(

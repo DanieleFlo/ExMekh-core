@@ -121,8 +121,8 @@ Il launcher esegue `agent/src/exmekh_agent/sync.py`: ricostruisce ExMekh-Lib dai
 copia la wheel in `agent/wheels/`, aggiorna il percorso in `pyproject.toml` e
 il lockfile e reinstalla ExMekh-Lib. Gestisce anche una nuova versione della wheel e
 rimuove quelle precedenti dopo il successo. Non richiede un build precedente
-ne un ambiente ExMekh Agent gia installato. Dopo il successo rimuove anche la vecchia
-wheel `qs`; la pulizia viene eseguita solo dopo l’installazione riuscita.
+né un ambiente ExMekh Agent già installato. La pulizia delle wheel precedenti
+viene eseguita solo dopo l’installazione riuscita.
 
 Il namespace Python è `exmekh_lib`, mentre la distribuzione e la CLI sono
 `exmekh-lib`. Il bridge ExMekh Agent si trova in `agent/src/exmekh_agent/exmekh_bridge/`.
@@ -133,12 +133,18 @@ uv run sync-exmekh-lib
 uv run --frozen --env-file .env exmekh-lib
 ```
 
+All'avvio, i percorsi salvati delle capabilities standard sotto
+`site-packages/qs/capabilities` vengono migrati ai valori predefiniti della
+libreria installata. La migrazione aggiorna progetti e chat senza modificare
+percorsi personalizzati, messaggi, date o approvazioni.
+
 Le chat JSON e i metadati di ripristino conservano il formato esistente. Le nuove
 cache della libreria usano `.exmekh_lib/`; le vecchie `.qs/` restano ignorate da
-Git. Le variabili `QS_API`, `QS_MODEL` e `QS_TOKENIZER_CACHE_DIR` rimangono
-quelle esposte dalla configurazione pubblica della libreria rinominata. La CLI
-carica `BASE_URL` e `API_KEY` dal file `.env` con il comando sopra; `QS_MODEL` e
-`QS_API` permettono di scegliere modello e API indipendentemente dalla UI.
+Git. Le variabili `EXMEKH_LIB_API`, `EXMEKH_LIB_MODEL` e `EXMEKH_LIB_TOKENIZER_CACHE_DIR` sono
+quelle esposte dalla configurazione pubblica della libreria rinominata. Dopo una
+modifica dei sorgenti occorre sincronizzare la wheel per aggiornare la configurazione
+installata. La CLI carica `BASE_URL` e `API_KEY` dal file `.env` con il comando sopra; `EXMEKH_LIB_MODEL` e
+`EXMEKH_LIB_API` permettono di scegliere modello e API indipendentemente dalla UI.
 
 ## Verifica
 

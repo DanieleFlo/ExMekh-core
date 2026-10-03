@@ -838,6 +838,16 @@ class ProjectSettings(BaseModel):
     coding_agent_persistent_history: bool | None = None
     tool_approval_mode: str = "Manual"
 
+    def migrate_legacy_capabilities_path(self) -> bool:
+        """Use the installed library defaults for paths saved before its rename."""
+        if self.capabilities_path is None:
+            return False
+        path = self.capabilities_path.replace("\\", "/").rstrip("/")
+        if not path.endswith("/site-packages/qs/capabilities"):
+            return False
+        self.capabilities_path = None
+        return True
+
 
 class Project(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))

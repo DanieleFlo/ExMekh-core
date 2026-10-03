@@ -285,3 +285,100 @@ def test_project_identity_survives_exmekh_conversion(tmp_path: Path) -> None:
     )
     restored = exmekh_messages_to_session(session_to_exmekh_messages(session))
     assert restored.project_id == "project"
+
+
+@pytest.mark.parametrize(
+    "capabilities_path",
+    [
+        "/old/agent/.venv/lib/python3.13/site-packages/qs/capabilities/",
+        r"C:\old\FE\.venv\Lib\site-packages\qs\capabilities",
+    ],
+)
+@pytest.mark.parametrize("has_project", [True, False])
+def test_legacy_library_capabilities_migrate_without_changing_chat_state(
+    manager: SessionManager,
+    tmp_path: Path,
+    capabilities_path: str,
+    has_project: bool,
+) -> None:
+    project = manager.create_project(
+        tmp_path, ProjectSettings(capabilities_path=capabilities_path)
+    )
+    chat = manager.create_session(project_id=project.id)
+    chat.updated_at = 123
+    chat.settings.record_command_approval("pwd", [{"role": "user", "content": "pwd"}])
+    chat.add_message(ChatMessage(role="user", content="Preserved history"))
+    manager._session_store.save(chat.id, chat)
+    if not has_project:
+        (manager.projects_dir / f"{project.id}.json").unlink()
+
+    manager.load_all()
+
+    restored = manager.get_session(chat.id)
+    assert restored.settings.capabilities_path is None
+    assert manager.get_project(project.id).settings.capabilities_path is None
+    assert restored.updated_at == 123
+    assert restored.messages == chat.messages
+    assert restored.settings.approved_commands_history == ["pwd"]
+    assert (
+        restored.settings.tool_approval_raw_history
+        == chat.settings.tool_approval_raw_history
+    )
+    for directory, record_id in (
+        (manager.projects_dir, project.id),
+        (manager.storage_dir, chat.id),
+    ):
+        saved = json.loads((directory / f"{record_id}.json").read_text())
+        assert saved["settings"]["capabilities_path"] is None
+    with (
+        patch.object(manager._project_store, "save") as save_project,
+        patch.object(manager._session_store, "save") as save_session,
+    ):
+        manager.load_all()
+    save_project.assert_not_called()
+    save_session.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "capabilities_path",
+    [
+        None,
+        "custom",
+        "/project/qs/capabilities",
+        "/project/site-packages/exmekh_lib/capabilities",
+    ],
+)
+def test_capabilities_migration_preserves_custom_and_current_paths(
+    manager: SessionManager, tmp_path: Path, capabilities_path: str | None
+) -> None:
+    project = manager.create_project(
+        tmp_path, ProjectSettings(capabilities_path=capabilities_path)
+    )
+    manager.load_all()
+    assert (
+        manager.get_project(project.id).settings.capabilities_path == capabilities_path
+    )
+
+
+@pytest.mark.parametrize("record_type", ["project", "chat"])
+def test_capabilities_migration_remains_usable_when_persistence_fails(
+    manager: SessionManager,
+    tmp_path: Path,
+    record_type: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    project = manager.create_project(
+        tmp_path,
+        ProjectSettings(capabilities_path="/old/site-packages/qs/capabilities"),
+    )
+    chat = manager.create_session(project_id=project.id)
+    store = (
+        manager._project_store if record_type == "project" else manager._session_store
+    )
+    with patch.object(store, "save", side_effect=PermissionError("read-only")):
+        manager.load_all()
+    assert (
+        manager.execution_settings(manager.get_session(chat.id)).capabilities_path
+        is None
+    )
+    assert "Could not persist capabilities migration" in caplog.text

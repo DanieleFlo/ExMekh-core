@@ -1,6 +1,6 @@
 # Qwen27 vision e checkpoint completi — 1 ottobre 2026
 
-Verifiche residue concluse il 2 ottobre: [accettazione finale e integrazione QS](ds4-merge-acceptance-20261002.md).
+Verifiche residue concluse il 2 ottobre: [accettazione finale e integrazione exmekh-lib](ds4-merge-acceptance-20261002.md).
 La matrice seguente conserva gli esiti alla data originaria.
 
 ## Implementazione e perimetro
@@ -8,7 +8,7 @@ La matrice seguente conserva gli esiti alla data originaria.
 Sviluppo sul branch `codex/merge-ds4-upstream-2026-10-01`, dopo il merge
 `0edbded0ff3476190060450149dd74a10fa12043`. L’implementazione è contenuta in
 `82d4e51b47d85c1e7155e09580a0c7349f148e96`. `main` resta il riferimento
-precedente. FE/QS rimane l’unico frontend agentico; nessuna delega è stata usata.
+precedente. exmekh-agent / exmekh-lib rimane l’unico frontend agentico; nessuna delega è stata usata.
 
 Qwen3.8-27B è nativamente multimodale: il [config ufficiale Qwen](https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/config.json)
 include un encoder vision a 27 layer, hidden 1152 e uscita 5120. DS4 riusa
@@ -126,12 +126,12 @@ e della KV MTP. Il massimo misurato è 6.49012663e-6 su Q e 5.95160248e-6 su K.
 | Build CPU e CUDA `sm_86`, unit server/core | PASS |
 | Probe numerico Qwen, formati quantizzati e mRoPE | PASS; tolleranze e golden invariati |
 | Contratti Python | 101 PASS, 4 SKIP su 105 test |
-| Suite FE, inclusi E2E disponibili | 612 PASS, 16 SKIP; coverage 100% |
+| Suite exmekh-agent, inclusi E2E disponibili | 612 PASS, 16 SKIP; coverage 100% |
 | HTTP vision, target-only e MTP esterno | 9 casi PASS per variante: immagine, continuazione con KV riusata, due immagini, pixel cambiati, thinking, JSON, tool e continuazione, SSE, Anthropic |
 | Checkpoint skill/subagent multimodali Qwen27 | PASS: 248.320 logits e token identici, sessione ricreata, continuazione, tre livelli, checksum corrotto rifiutato senza mutazione |
 | Immagine da 1024 token con chunk prefill 256 e MTP | PASS |
 | Checkpoint testuali Flash Next Q2 | PASS con target-only e MTP embedded, sessione ricreata e tre livelli |
-| CLI vision, nuova immagine su contesto attivo tramite HTTP, client QS reale e launcher FE/QS con vision | NOT_VERIFIED; rimandati dall’utente a un’altra sessione |
+| CLI vision, nuova immagine su contesto attivo tramite HTTP, client exmekh-lib reale e launcher exmekh-agent / exmekh-lib con vision | NOT_VERIFIED; rimandati dall’utente a un’altra sessione |
 
 La prova lunga ha **20.000 token testuali già popolati**, poi una immagine e
 20.100 token nel checkpoint, con capacità 22.593 e MTP attivo. Ciascun file
@@ -205,11 +205,11 @@ su un corpus esteso e checkpoint vision Flash Next pratici sono
 Flash Next mantiene il proprio encoder e il proprio grafo; i checkpoint
 skill/subagent testuali sono stati provati realmente con Q2 e con MTP embedded.
 L’envelope rende rappresentabile anche il suo stato immagine, ma non sostituisce
-un test pratico vision. QS ha già mapper `ImagesUserMessage` per Chat Completions e Responses.
-Gli allegati FE attuali vengono referenziati come file; questa modifica non
+un test pratico vision. exmekh-lib ha già mapper `ImagesUserMessage` per Chat Completions e Responses.
+Gli allegati exmekh-agent attuali vengono referenziati come file; questa modifica non
 aggiunge una UI di invio diretto dei pixel. I test vision live eseguiti qualificano
-HTTP sui casi elencati; la suite FE verifica i contratti agentici esistenti.
-CLI vision, nuova immagine su contesto attivo tramite HTTP e client QS reale
+HTTP sui casi elencati; la suite exmekh-agent verifica i contratti agentici esistenti.
+CLI vision, nuova immagine su contesto attivo tramite HTTP e client exmekh-lib reale
 sono rimandati dall’utente alla prossima sessione e restano NOT_VERIFIED.
 I relativi test opt-in sono presenti per riprenderli senza doverli riscrivere.
 

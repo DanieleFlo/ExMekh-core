@@ -208,7 +208,7 @@ class Acceptance:
                     self.environment,
                     BASE_URL=f"http://127.0.0.1:{self.port}/v1",
                     API_KEY="local-test",
-                    QS_LIVE_IMAGE_PATH=str(PHOTO),
+                    EXMEKH_LIB_LIVE_IMAGE_PATH=str(PHOTO),
                 )
                 self.command(
                     f"exmekh-upstream-mixed-live-{tag}",

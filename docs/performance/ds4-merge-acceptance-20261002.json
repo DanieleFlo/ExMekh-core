@@ -8,9 +8,9 @@
   "upstream_commit": "0aaea5a238fb41a35106a551e73c8409dfb751ac",
   "merge_commit": "0edbded0ff3476190060450149dd74a10fa12043",
   "engine_implementation_commit": "82d4e51b47d85c1e7155e09580a0c7349f148e96",
-  "qs_commit": "a665e5a85bd00c36031f3fb0c380e61e4ec4f6dd",
-  "qs_source_clean": true,
-  "qs_wheel_sha256": "1863bfa6f9f866f819ca06c8fc1065fc35190ca70a2bcf47008fa1b1a66f8ea1",
+  "exmekh_lib_commit": "a665e5a85bd00c36031f3fb0c380e61e4ec4f6dd",
+  "exmekh_lib_source_clean": true,
+  "exmekh_lib_wheel_sha256": "1863bfa6f9f866f819ca06c8fc1065fc35190ca70a2bcf47008fa1b1a66f8ea1",
   "binary_sha256": {
     "ds4": "0244b6195d6c45af53eec07759133aa679ffc1b7dbfcce825268ba33d6583ac8",
     "ds4-server": "69edea025ca451e0f7e3b4afe80ba6cc8ef793d556e51ec825352a786e17877c",
@@ -26,14 +26,14 @@
     "speedup_claim": false
   },
   "offline": {
-    "qs": {
+    "exmekh_lib": {
       "passed": 1958,
       "coverage_percent": 100,
       "lint": "PASS",
       "format": "PASS",
       "typecheck": "PASS"
     },
-    "fe": {
+    "exmekh_agent": {
       "passed": 612,
       "skipped_live": 16,
       "coverage_percent": 100,
@@ -883,14 +883,14 @@
     "native document inputs"
   ],
   "limitations": [
-    "FE attachments remain file references; direct pixel upload from the UI is not added.",
-    "Tools between photos are executed by the CLI QS client test; native CLI has no autonomous tool executor.",
+    "exmekh-agent attachments remain file references; direct pixel upload from the UI is not added.",
+    "Tools between photos are executed by the CLI exmekh-lib client test; native CLI has no autonomous tool executor.",
     "History dumps contain hashes, not reconstructable image data.",
     "Restart qualifications cover durable system-prefix cache and history replay, not suspended private skill stacks."
   ],
   "resolved_test_invocation_errors": [
     "uv resolved from its installed path after direct WSL PATH failure; unchanged native/HTTP PASS evidence resumed.",
-    "Subset mock tests passed but lacked global coverage; full FE suite repeated with 100%.",
+    "Subset mock tests passed but lacked global coverage; full exmekh-agent suite repeated with 100%.",
     "Concurrent core test rejected by instance lock; static groups repeated after server shutdown.",
     "Default --all includes unavailable-model gates and resolved an old local Qwen3.6 file; without-model groups were selected explicitly.",
     "The copied local numerics probe was not executable; permission restored, numerical gate rerun PASS."

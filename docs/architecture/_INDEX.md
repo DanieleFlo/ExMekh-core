@@ -2,13 +2,13 @@
 
 Indice generato; non modificare a mano.
 
-## [Accettazione merge DS4 e QS — 2 ottobre 2026](ds4-merge-acceptance-20261002.md)
+## [Accettazione merge DS4 e exmekh-lib — 2 ottobre 2026](ds4-merge-acceptance-20261002.md)
 
 **PASS per Qwen3.8-27B sulla RTX 3090.** Sono concluse le prove residue:
 
 - righe 3–20: **Esito e provenienza** — **PASS per Qwen3.8-27B sulla RTX 3090.** Sono concluse le prove residue:
 - righe 21–51: **Foto e memoria tra tool** — La fixture JPEG reale `earth.jpg` proviene dal corpus upstream.
-- righe 52–66: **Regressioni e prestazioni** — QS: **1.958 PASS**, copertura 100%, Ruff e Pyright puliti.
+- righe 52–66: **Regressioni e prestazioni** — exmekh-lib: **1.958 PASS**, copertura 100%, Ruff e Pyright puliti.
 - righe 67–84: **Limiti conservati** — OCR `RED7` resta FAIL (`R7` anche nell’oracle llama.cpp con gli stessi GGUF).
 - righe 85–97: **Riproduzione** — Con gli altri processi motore arrestati:
 

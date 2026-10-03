@@ -1,6 +1,6 @@
 # Merge DS4 upstream — 1 ottobre 2026
 
-Verifiche residue concluse il 2 ottobre: [accettazione finale e integrazione QS](ds4-merge-acceptance-20261002.md).
+Verifiche residue concluse il 2 ottobre: [accettazione finale e integrazione exmekh-lib](ds4-merge-acceptance-20261002.md).
 La matrice seguente conserva gli esiti alla data originaria.
 
 ## Provenienza e perimetro
@@ -11,10 +11,10 @@ Branch `codex/merge-ds4-upstream-2026-10-01`, creato da
 `c1d4597`. La storia del fork viene conservata tramite un merge a due genitori.
 `main` rimane il riferimento precedente. Il lavoro è eseguito da un solo agente Codex.
 
-FE/QS rimane l'unico frontend agentico del prodotto. `ds4_agent.c`,
+exmekh-agent / exmekh-lib rimane l'unico frontend agentico del prodotto. `ds4_agent.c`,
 `ds4_web.c` e il relativo eseguibile non vengono ripristinati. I test standalone
 upstream degli agenti nativi sono conservati come materiale di riferimento;
-non qualificano FE/QS e non diventano target di build del prodotto.
+non qualificano exmekh-agent / exmekh-lib e non diventano target di build del prodotto.
 
 Sono integrati loader e grafi DeepSeek 4.1, GLM 5.3, Qwen Flash Next/Mini,
 CUDA, Metal, ROCm, vision, memoria/SSD streaming, server, strumenti GGUF,
@@ -33,7 +33,7 @@ nell'[indice upstream](../upstream/_INDEX.md).
   e `ds4-eval --mtp FILE`, oltre alle nuove opzioni upstream.
 - Qwen3.6 resta escluso da catalogo, loader, downloader e API.
 - Tool calling, output strutturati, cancellazione, frontiere residenti e
-  checkpoint SSD di skill/subagent restano nel percorso FE/QS.
+  checkpoint SSD di skill/subagent restano nel percorso exmekh-agent / exmekh-lib.
 - Il formato KVC esterno rimane versione 1; il payload ABI passa da 2 a 3.
   I checkpoint pre-merge vengono rifiutati prima del ripristino. I test coprono
   sia ABI 0 sia ABI 2, evitando di leggere un vecchio layout con il nuovo grafo.
@@ -41,7 +41,7 @@ nell'[indice upstream](../upstream/_INDEX.md).
 Il ripristino dei checkpoint agentici durante la vita del server conserva
 logit e continuazione esatti, inclusi tre livelli annidati. Le skill private
 sospese sono associate al processo/sessione: come nel fork precedente, un nuovo
-server pulisce i frame orfani. Il recupero dopo riavvio usa history FE/QS e cache
+server pulisce i frame orfani. Il recupero dopo riavvio usa history exmekh-agent / exmekh-lib e cache
 KV durevoli; non è introdotta una nuova persistenza di stack privati incompleti.
 
 ## Sviluppo vision successivo al merge
@@ -60,10 +60,10 @@ le associazioni immagini/prefissi e il loro riuso KV. Il modello e l'encoder
 vision devono appartenere alla famiglia corretta e l'encoder va configurato
 con `--vision`; una build riuscita non equivale a inferenza vision verificata.
 
-FE/QS conserva allegati, streaming Markdown, blocchi di codice, syntax highlighting,
+exmekh-agent / exmekh-lib conserva allegati, streaming Markdown, blocchi di codice, syntax highlighting,
 copia del testo originale, history e callback di tool/skill. La formattazione
 non deve alterare il codice copiato o interpretare marker di protocollo letterali
-negli argomenti dei tool. Le prove FE esistenti coprono questi contratti.
+negli argomenti dei tool. Le prove exmekh-agent esistenti coprono questi contratti.
 
 ## Kernel e risoluzioni rilevanti
 
@@ -194,8 +194,8 @@ modelli o backend non disponibili.
 | Trasporto TCP sintetico | PASS | Buffer piccoli, EOF e peer disconnessi |
 | RDMA reale | NOT_VERIFIED | Verbs assenti, test escluso |
 | Socket timeout WSL | FAIL | test_tp_commands richiede esattamente 50 ms; il kernel restituisce 52 ms, soglia non modificata |
-| FE regressioni e formattazione | PASS | 612 pass, 16 live esclusi; ruff e copertura 100% |
-| FE/QS provider reale | PASS | Target: 12 pass/4 non esercitati; MTP: 7 pass, incluse skill e history multi-turn |
+| exmekh-agent regressioni e formattazione | PASS | 612 pass, 16 live esclusi; ruff e copertura 100% |
+| exmekh-agent / exmekh-lib provider reale | PASS | Target: 12 pass/4 non esercitati; MTP: 7 pass, incluse skill e history multi-turn |
 | Immagini: decoder e prompt/prefissi sintetici | PASS | Test senza modello |
 | Inferenza vision con encoder reale | NOT_VERIFIED | Encoder non disponibile e architettura da qualificare |
 | TTFT HTTP | PASS | 4 contesti × 5 misure, CV < 5%, output identici |

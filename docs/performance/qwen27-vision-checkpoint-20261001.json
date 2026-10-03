@@ -8,13 +8,13 @@
   "engine_correctness": "PASS",
   "performance_status": "PASS",
   "scope": {
-    "product_agent": "FE/QS only",
+    "product_agent": "exmekh-agent / exmekh-lib only",
     "delegation": false,
     "deferred_by_user": [
       "CLI image generation",
       "HTTP append new image to active image context",
-      "real QS image client Chat/Responses",
-      "default FE/QS launcher live vision test"
+      "real exmekh-lib image client Chat/Responses",
+      "default exmekh-agent / exmekh-lib launcher live vision test"
     ]
   },
   "hardware": {
@@ -94,7 +94,7 @@
       "evidence": "final-python-contracts-serial.log"
     },
     {
-      "name": "FE unit/E2E suite",
+      "name": "exmekh-agent unit/E2E suite",
       "status": "PASS",
       "passed": 612,
       "skipped": 16,
@@ -385,12 +385,12 @@
       "reason": "Deferred by user to another session"
     },
     {
-      "name": "QS real image client Chat/Responses",
+      "name": "exmekh-lib real image client Chat/Responses",
       "status": "NOT_VERIFIED",
       "reason": "Deferred by user to another session"
     },
     {
-      "name": "default FE/QS launcher live vision",
+      "name": "default exmekh-agent / exmekh-lib launcher live vision",
       "status": "NOT_VERIFIED",
       "reason": "Deferred by user to another session"
     },
@@ -1396,7 +1396,7 @@
     "All images in one turn are encoded before language prefill/thinking; no mandatory thinking between images.",
     "Encoder/shared preprocess validated on two simple images; does not qualify universal OCR.",
     "usage reasoning_tokens remains 0 although reasoning_content is nonempty.",
-    "QS existing image mappers are present; FE attachments remain file references and no UI pixel pipeline was added.",
+    "exmekh-lib existing image mappers are present; exmekh-agent attachments remain file references and no UI pixel pipeline was added.",
     "Flash Next image payload is representable in theory; live Flash vision checkpoint test remains NOT_VERIFIED.",
     "Full session payload restores across recreated sessions; agentic .dsk/.dsh lifecycle does not become a durable frontend conversation store."
   ],
