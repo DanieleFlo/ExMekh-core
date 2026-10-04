@@ -56,7 +56,12 @@ llama.cpp e numero di stream.
 
 ## Limiti dell'inventario
 
-Modello esatto della scheda partner, RAM e motherboard non sono ancora stati
-acquisiti con un comando non privilegiato affidabile. Non vanno dedotti dal
-solo subsystem ID. Questi dati sono secondari per il drift, ma utili per una
-baseline prestazionale completa.
+Il modello esatto della scheda partner non è ancora verificato e non va dedotto
+dal solo subsystem ID. Il rilevamento del 4 ottobre 2026 aggiunge la motherboard
+MSI MAG Z790 TOMAHAWK MAX WIFI (MS-7E25) e circa 64 GB di RAM fisica, con circa
+47 GiB esposti a WSL. Windows e NVIDIA rilevano Gen4 x2 anche sotto carico;
+il trasferimento CUDA da RAM pinned misura circa 2,74 GiB/s verso la GPU e
+2,79 GiB/s nella direzione inversa. Quindi la larghezza x2 non è soltanto un
+valore osservato in idle. Il [report prefill Flash](../performance/qwen38-flash-prefill-latency-20261004.md)
+conserva metodo, campioni e limiti della diagnosi; la causa fisica del link
+ridotto richiede ancora verifica.

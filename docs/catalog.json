@@ -2825,6 +2825,53 @@
           ]
         },
         {
+          "path": "docs/performance/qwen38-flash-prefill-latency-20261004.md",
+          "sections": [
+            {
+              "title": "Flash Next: lentezza del prefill e budget RAM, 4 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 163,
+              "summary": "Il doppio prefill e la lentezza del singolo passaggio hanno cause distinte."
+            },
+            {
+              "title": "Metodo e provenienza",
+              "level": 2,
+              "start": 9,
+              "end": 37,
+              "summary": "Baseline congelata: `5d374d4978c644a3de9ce40353b3dcba9b97d235`."
+            },
+            {
+              "title": "Perché la GPU attende",
+              "level": 2,
+              "start": 38,
+              "end": 67,
+              "summary": "Sul prompt HTTP profilato, un solo prefill richiede **185,241 s**."
+            },
+            {
+              "title": "Modifica mantenuta",
+              "level": 2,
+              "start": 68,
+              "end": 98,
+              "summary": "`expert_ram_slot` ora usa il budget derivato dalla memoria disponibile,"
+            },
+            {
+              "title": "Benchmark e correttezza",
+              "level": 2,
+              "start": 99,
+              "end": 148,
+              "summary": "Flash: `speed-bench/promessi_sposi.txt`, ctx allocato 131072, chunk 256,"
+            },
+            {
+              "title": "Limiti e prossime verifiche",
+              "level": 2,
+              "start": 149,
+              "end": 163,
+              "summary": "Il verdetto **KEEP** riguarda il budget RAM e i workload Flash misurati;"
+            }
+          ]
+        },
+        {
           "path": "docs/performance/qwen38-flash-prefill-replay-20261004.md",
           "sections": [
             {
@@ -6342,7 +6389,7 @@
               "title": "Inventario della macchina di validazione",
               "level": 1,
               "start": 1,
-              "end": 62,
+              "end": 67,
               "summary": "Rilevazione locale: 2026-08-05, Europa/Roma."
             },
             {
@@ -6370,8 +6417,8 @@
               "title": "Limiti dell'inventario",
               "level": 2,
               "start": 57,
-              "end": 62,
-              "summary": "Modello esatto della scheda partner, RAM e motherboard non sono ancora stati"
+              "end": 67,
+              "summary": "Il modello esatto della scheda partner non è ancora verificato e non va dedotto"
             }
           ]
         },

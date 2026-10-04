@@ -248,6 +248,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/performance/qwen38-flash-3090-residency-20261003.md` — diagnosi Flash Next Q2, esperimenti CUDA di residency/copie byte-identiche, fonti e gate non promossi sulla RTX 3090.
 - `docs/roadmaps/qwen-flash-performance-action-plan-20261004.md` — audit statico Flash/27B, colli di bottiglia I/O e PCIe, confronto runtime esterni e piano progressivo per performance, checkpoint e portabilità.
 - `docs/performance/qwen38-flash-pipeline-20261004.md` — implementazione Flash isolata, routing compatto, staging per gruppi, slab RAM e ranking esatto; qualifica locale e limiti hardware/scenario.
+- `docs/performance/qwen38-flash-prefill-latency-20261004.md` e il relativo JSON —
+  profilazione del prompt completo dell'agente, misura reale del link PCIe x2,
+  costo del tetto RAM a 16 GiB e qualifica del budget automatico disponibile.
 - `docs/performance/qwen38-flash-prefill-replay-20261004.md` — diagnosi del doppio
   prefill ChatML, confine condiviso RAM/SSD, conteggio model-backed e limiti della
   diagnosi prestazionale sul prompt reale lungo.

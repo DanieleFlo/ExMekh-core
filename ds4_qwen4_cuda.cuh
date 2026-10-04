@@ -1037,11 +1037,13 @@ static size_t expert_ram_slot(uint64_t off, uint64_t bytes) {
     const uint64_t align = std::max<uint64_t>(g_model_direct_align, 1);
     const uint64_t capacity = bytes + 3 * align;
     if (!ram_budget_set) {
-        const uint64_t limit = 16ull * 1073741824ull;
-        ram_budget = limit;
+        ram_budget = 16ull * 1073741824ull; /* fallback when host memory is unknown */
         uint64_t available = 0;
+        /* A fixed 16 GiB ceiling thrashes on Flash even when host RAM is free.
+         * Allocate slabs lazily within the available-memory reserve, so smaller
+         * hosts remain bounded without stranding RAM on larger machines. */
         if (ds4_linux_nonmovable_memory(&available))
-            ram_budget = ds4_qwen4_ram_auto_budget(available, limit);
+            ram_budget = ds4_qwen4_ram_auto_budget(available, UINT64_MAX);
         const char *env = getenv("DS4_CUDA_QWEN4_RAM_CACHE_MB");
         if (env && *env && strcmp(env, "auto")) {
             char *end = NULL; const uint64_t mb = strtoull(env, &end, 10);

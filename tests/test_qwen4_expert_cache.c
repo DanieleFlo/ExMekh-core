@@ -4,6 +4,12 @@
 
 int main(void) {
     const uint64_t GiB = 1073741824ull;
+    assert(ds4_qwen4_ram_auto_budget(48*GiB, UINT64_MAX) == 36*GiB);
+    assert(ds4_qwen4_ram_auto_budget(24*GiB, UINT64_MAX) == 18*GiB);
+    assert(ds4_qwen4_ram_auto_budget(10*GiB, UINT64_MAX) == 4*GiB);
+    assert(ds4_qwen4_ram_auto_budget(6*GiB, UINT64_MAX) == 0);
+    assert(ds4_qwen4_ram_auto_budget(UINT64_MAX, UINT64_MAX) ==
+           UINT64_MAX - UINT64_MAX/4u);
     assert(ds4_qwen4_ram_auto_budget(48*GiB, 16*GiB) == 16*GiB);
     assert(ds4_qwen4_ram_auto_budget(10*GiB, 16*GiB) == 4*GiB);
     assert(ds4_qwen4_ram_auto_budget(6*GiB, 16*GiB) == 0);

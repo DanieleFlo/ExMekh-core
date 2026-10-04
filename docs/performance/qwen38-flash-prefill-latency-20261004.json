@@ -1,0 +1,1153 @@
+{
+  "experiment_id": "flash-prefill-latency-20261004",
+  "baseline_head": "5d374d4978c644a3de9ce40353b3dcba9b97d235",
+  "hypothesis": "The hard 16 GiB pinned RAM ceiling causes repeated reads and GPU-to-RAM demotions despite 43.5 GiB available; compare the identical frozen binary with a 32 GiB host expert cache, preserving ctx128K and model math.",
+  "baseline_sources": {
+    "ds4.c": "77383fdc1b842e61571b614956632b5743fa0057d3a75c97a3f586681e404301",
+    "ds4_cuda.cu": "6f76fd875b795be821429400521ef46ac58f0a48ed20f02b55788f77b3185c22",
+    "ds4_qwen4_cuda.cuh": "25b7e9495fb5a8fdf3d65b863233534dd2810cc13ae697078f78df0c80d5315a",
+    "ds4_qwen4_expert_cache.h": "7acbb2d256fd6bc6e130503d8db8d56e7540e882a91f041ac663a5352732faf7",
+    "ds4_gpu.h": "0641db28ffa33ba46826202fa0a06699ee1ed4eda2f5696e42bf4e33ab0274bf"
+  },
+  "candidate_sources": {
+    "ds4.c": "77383fdc1b842e61571b614956632b5743fa0057d3a75c97a3f586681e404301",
+    "ds4_cuda.cu": "6f76fd875b795be821429400521ef46ac58f0a48ed20f02b55788f77b3185c22",
+    "ds4_qwen4_cuda.cuh": "880343669e1247c34d1c07ca84e6325afaf088e9748aeb102e7edc7a54af59e4",
+    "ds4_qwen4_expert_cache.h": "7acbb2d256fd6bc6e130503d8db8d56e7540e882a91f041ac663a5352732faf7",
+    "ds4_gpu.h": "0641db28ffa33ba46826202fa0a06699ee1ed4eda2f5696e42bf4e33ab0274bf"
+  },
+  "baseline_binaries": {
+    "test_qwen4_cuda.baseline": "6ef0a4b0343b4f3856b8cef05d56839f4297a5587e29a626d6a82e2a16a1514e",
+    "ds4.baseline": "6514b621f0b34806beb6bd513e2cbd723b9e8c993a873b81ff03c0627c546baa",
+    "ds4-bench.baseline": "bf96e6d95bebc664f0209666a5dcf3e844b5032a77736942a107ae7a1daa8631",
+    "ds4-server.baseline": "546adc31a644852412fce749f6a2da9768ded882690a756980e3527bcc72a3c5"
+  },
+  "candidate_binaries": {
+    "ds4.auto-ram": "82f47ec3a8cf859427065b71d33fcd43aabcc7c1a90d76cf82cef837f0cfec3e",
+    "ds4-server.auto-ram": "b353102c8bf232a8bf96604b7de87f1a8d45d4450d62aa7124c95aab9cb9be69",
+    "ds4-bench.auto-ram": "3a4e57662ef3b796e830fd0559243e69c14f78f46c19fee53df09ab7a221839a",
+    "test_qwen4_cuda.auto-ram": "4f548c5c63312ef886aefa6ab0531a8d6de7e18c5e87401ec9e98086627f8e14"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "pci": [
+      {
+        "KeyName": "DEVPKEY_PciDevice_CurrentLinkSpeed",
+        "Data": 4
+      },
+      {
+        "KeyName": "DEVPKEY_PciDevice_CurrentLinkWidth",
+        "Data": 2
+      },
+      {
+        "KeyName": "DEVPKEY_PciDevice_MaxLinkSpeed",
+        "Data": 4
+      },
+      {
+        "KeyName": "DEVPKEY_PciDevice_MaxLinkWidth",
+        "Data": 16
+      },
+      {
+        "KeyName": "DEVPKEY_Device_LocationPaths",
+        "Data": [
+          "PCIROOT(0)#PCI(0100)#PCI(0000)",
+          "ACPI(_SB_)#ACPI(PC00)#ACPI(PEG1)#ACPI(PEGP)"
+        ]
+      }
+    ],
+    "board": {
+      "Manufacturer": "Micro-Star International Co., Ltd.",
+      "Product": "MAG Z790 TOMAHAWK MAX WIFI (MS-7E25)"
+    },
+    "computer": {
+      "TotalPhysicalMemory": 68401946624
+    }
+  },
+  "models": {
+    "gguf/Qwen3.8-Flash-Next-Q2.gguf": {
+      "bytes": 147207127040,
+      "mtime_ns": 1790872117015055196,
+      "sha256": "NOT_REHASHED"
+    },
+    "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf": {
+      "bytes": 616703104,
+      "mtime_ns": 1791047389518584217,
+      "sha256": "NOT_REHASHED"
+    },
+    "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf": {
+      "bytes": 15358213024,
+      "mtime_ns": 1787558112402977100,
+      "sha256": "NOT_REHASHED"
+    }
+  },
+  "link_bandwidth": {
+    "memory": "cudaMallocHost pinned",
+    "copy_bytes": 268435456,
+    "warmups": 2,
+    "measured": 5,
+    "h2d_gib_per_second": [
+      2.7296,
+      2.7379,
+      2.7435,
+      2.7457,
+      2.7462
+    ],
+    "d2h_gib_per_second": [
+      2.7843,
+      2.7846,
+      2.7868,
+      2.7854,
+      2.7826
+    ]
+  },
+  "prefill_benchmark": {
+    "ctx_alloc": 131072,
+    "chunk": 256,
+    "frontiers": [
+      256,
+      512,
+      768,
+      1024
+    ],
+    "new_tokens_per_frontier": 256,
+    "gen_tokens": 0,
+    "warmup_sweeps": 2,
+    "measured_sweeps": 5,
+    "profiled": false,
+    "vision": false,
+    "mtp": false,
+    "statistics": {
+      "baseline": {
+        "256": {
+          "samples": [
+            66.56,
+            64.44,
+            64.08,
+            63.37,
+            66.13
+          ],
+          "min": 63.37,
+          "p10": 63.653999999999996,
+          "median": 64.44,
+          "mean": 64.916,
+          "p90": 66.388,
+          "max": 66.56,
+          "stddev": 1.2241013029974284,
+          "cv_percent": 1.8856696392221153
+        },
+        "512": {
+          "samples": [
+            81.91,
+            81.02,
+            79.35,
+            79.13,
+            82.96
+          ],
+          "min": 79.13,
+          "p10": 79.21799999999999,
+          "median": 81.02,
+          "mean": 80.874,
+          "p90": 82.53999999999999,
+          "max": 82.96,
+          "stddev": 1.4703822632227308,
+          "cv_percent": 1.8181149234892933
+        },
+        "768": {
+          "samples": [
+            66.88,
+            66.93,
+            65.02,
+            64.7,
+            66.99
+          ],
+          "min": 64.7,
+          "p10": 64.828,
+          "median": 66.88,
+          "mean": 66.104,
+          "p90": 66.966,
+          "max": 66.99,
+          "stddev": 1.0213442123006324,
+          "cv_percent": 1.5450565961222202
+        },
+        "1024": {
+          "samples": [
+            66.92,
+            66.21,
+            66.28,
+            66.2,
+            67.7
+          ],
+          "min": 66.2,
+          "p10": 66.204,
+          "median": 66.28,
+          "mean": 66.662,
+          "p90": 67.388,
+          "max": 67.7,
+          "stddev": 0.5844108144105495,
+          "cv_percent": 0.8766775890470575
+        }
+      },
+      "auto-ram": {
+        "256": {
+          "samples": [
+            117.68,
+            120.02,
+            119.29,
+            119.33,
+            115.85
+          ],
+          "min": 115.85,
+          "p10": 116.582,
+          "median": 119.29,
+          "mean": 118.434,
+          "p90": 119.744,
+          "max": 120.02,
+          "stddev": 1.5030981338555387,
+          "cv_percent": 1.2691441088332225
+        },
+        "512": {
+          "samples": [
+            145.23,
+            147.4,
+            146.7,
+            147.22,
+            144.26
+          ],
+          "min": 144.26,
+          "p10": 144.648,
+          "median": 146.7,
+          "mean": 146.162,
+          "p90": 147.328,
+          "max": 147.4,
+          "stddev": 1.2188256643179165,
+          "cv_percent": 0.8338868271629537
+        },
+        "768": {
+          "samples": [
+            125.69,
+            126.52,
+            126.46,
+            126.66,
+            124.13
+          ],
+          "min": 124.13,
+          "p10": 124.75399999999999,
+          "median": 126.46,
+          "mean": 125.892,
+          "p90": 126.604,
+          "max": 126.66,
+          "stddev": 0.9436397617735276,
+          "cv_percent": 0.7495629283620306
+        },
+        "1024": {
+          "samples": [
+            126.19,
+            126.13,
+            125.66,
+            125.13,
+            123.79
+          ],
+          "min": 123.79,
+          "p10": 124.32600000000001,
+          "median": 125.66,
+          "mean": 125.38,
+          "p90": 126.166,
+          "max": 126.19,
+          "stddev": 0.8817709453140277,
+          "cv_percent": 0.7032787887334725
+        }
+      }
+    },
+    "logit_comparison": [
+      {
+        "frontier": 256,
+        "vocab": 248320,
+        "bit_exact": true,
+        "sha256": "caaa27fdd6ec524332a6344ab511734757a5dc853d23cf3f550c1b8cdffdb5d8"
+      },
+      {
+        "frontier": 512,
+        "vocab": 248320,
+        "bit_exact": true,
+        "sha256": "9527089de5d8054d10f49d89ddcacf81980453cef1fb57a4c7830651139ac6da"
+      },
+      {
+        "frontier": 768,
+        "vocab": 248320,
+        "bit_exact": true,
+        "sha256": "2f31b69cc8817267509e8e242835580cce400be218417fe96f714d11d777d5fd"
+      },
+      {
+        "frontier": 1024,
+        "vocab": 248320,
+        "bit_exact": true,
+        "sha256": "89393bca9891ebd861abf91ce47a236edb88c98a2b306e7e7d6c7c97c2b28613"
+      }
+    ]
+  },
+  "qwen27_regression": {
+    "ctx_alloc": 2048,
+    "chunk": 256,
+    "frontiers": [
+      256,
+      512
+    ],
+    "decode_tokens": 16,
+    "teacher_forced": true,
+    "warmup_sweeps": 2,
+    "measured_sweeps": 5,
+    "statistics": {
+      "baseline": {
+        "256": {
+          "prefill_tps": {
+            "samples": [
+              29.83,
+              29.5,
+              30.02,
+              29.7,
+              29.57
+            ],
+            "min": 29.5,
+            "p10": 29.528,
+            "median": 29.7,
+            "mean": 29.724,
+            "p90": 29.944,
+            "max": 30.02,
+            "stddev": 0.1861827059637921,
+            "cv_percent": 0.6263716389577181
+          },
+          "gen_tps": {
+            "samples": [
+              28.37,
+              28.77,
+              28.24,
+              28.65,
+              27.98
+            ],
+            "min": 27.98,
+            "p10": 28.084,
+            "median": 28.37,
+            "mean": 28.402,
+            "p90": 28.721999999999998,
+            "max": 28.77,
+            "stddev": 0.28364766877236947,
+            "cv_percent": 0.9986890668698312
+          },
+          "gen_steady_tps": {
+            "samples": [
+              28.38,
+              28.71,
+              28.17,
+              28.6,
+              27.92
+            ],
+            "min": 27.92,
+            "p10": 28.020000000000003,
+            "median": 28.38,
+            "mean": 28.356,
+            "p90": 28.666,
+            "max": 28.71,
+            "stddev": 0.28639832401744225,
+            "cv_percent": 1.0100096064940127
+          }
+        },
+        "512": {
+          "prefill_tps": {
+            "samples": [
+              382.94,
+              385.05,
+              377.42,
+              385.44,
+              379.55
+            ],
+            "min": 377.42,
+            "p10": 378.272,
+            "median": 382.94,
+            "mean": 382.08,
+            "p90": 385.284,
+            "max": 385.44,
+            "stddev": 3.1294280627616238,
+            "cv_percent": 0.8190504770628204
+          },
+          "gen_tps": {
+            "samples": [
+              27.7,
+              28.01,
+              27.82,
+              28.06,
+              27.82
+            ],
+            "min": 27.7,
+            "p10": 27.748,
+            "median": 27.82,
+            "mean": 27.882,
+            "p90": 28.04,
+            "max": 28.06,
+            "stddev": 0.13332666649999175,
+            "cv_percent": 0.4781818610572834
+          },
+          "gen_steady_tps": {
+            "samples": [
+              27.64,
+              27.92,
+              27.74,
+              27.97,
+              27.74
+            ],
+            "min": 27.64,
+            "p10": 27.68,
+            "median": 27.74,
+            "mean": 27.802,
+            "p90": 27.95,
+            "max": 27.97,
+            "stddev": 0.12335315156087438,
+            "cv_percent": 0.4436844527763268
+          }
+        }
+      },
+      "auto-ram": {
+        "256": {
+          "prefill_tps": {
+            "samples": [
+              29.55,
+              30.0,
+              29.58,
+              29.68,
+              29.62
+            ],
+            "min": 29.55,
+            "p10": 29.562,
+            "median": 29.62,
+            "mean": 29.686,
+            "p90": 29.872,
+            "max": 30.0,
+            "stddev": 0.16292329483533044,
+            "cv_percent": 0.5488219862404179
+          },
+          "gen_tps": {
+            "samples": [
+              28.16,
+              28.75,
+              28.35,
+              28.31,
+              28.51
+            ],
+            "min": 28.16,
+            "p10": 28.22,
+            "median": 28.35,
+            "mean": 28.416,
+            "p90": 28.654,
+            "max": 28.75,
+            "stddev": 0.20075856146127383,
+            "cv_percent": 0.706498315953244
+          },
+          "gen_steady_tps": {
+            "samples": [
+              28.12,
+              28.7,
+              28.27,
+              28.25,
+              28.45
+            ],
+            "min": 28.12,
+            "p10": 28.172,
+            "median": 28.27,
+            "mean": 28.358,
+            "p90": 28.599999999999998,
+            "max": 28.7,
+            "stddev": 0.20073863604199316,
+            "cv_percent": 0.7078730377388855
+          }
+        },
+        "512": {
+          "prefill_tps": {
+            "samples": [
+              382.67,
+              376.04,
+              382.19,
+              376.0,
+              384.02
+            ],
+            "min": 376.0,
+            "p10": 376.016,
+            "median": 382.19,
+            "mean": 380.184,
+            "p90": 383.48,
+            "max": 384.02,
+            "stddev": 3.4524692612679337,
+            "cv_percent": 0.9081048285219613
+          },
+          "gen_tps": {
+            "samples": [
+              28.22,
+              27.71,
+              27.94,
+              27.53,
+              27.98
+            ],
+            "min": 27.53,
+            "p10": 27.602,
+            "median": 27.94,
+            "mean": 27.876,
+            "p90": 28.124,
+            "max": 28.22,
+            "stddev": 0.23686282950264628,
+            "cv_percent": 0.8497016412062215
+          },
+          "gen_steady_tps": {
+            "samples": [
+              28.14,
+              27.64,
+              27.87,
+              27.43,
+              27.89
+            ],
+            "min": 27.43,
+            "p10": 27.514,
+            "median": 27.87,
+            "mean": 27.794,
+            "p90": 28.04,
+            "max": 28.14,
+            "stddev": 0.24121359828998062,
+            "cv_percent": 0.8678621223644694
+          }
+        }
+      }
+    },
+    "logit_comparison": [
+      {
+        "file": "frontier_000256.decode.json",
+        "vocab": 248320,
+        "bit_exact": true,
+        "sha256": "5ba98ab4d42a719c834044def3ee02cebf29e3efcc13a53906a9210198a8b7c3"
+      },
+      {
+        "file": "frontier_000256.logits.json",
+        "vocab": 248320,
+        "bit_exact": true,
+        "sha256": "ea20823341bc885e03506c2c3623e6f998ef015bc32bf56a8161b677e62fe017"
+      },
+      {
+        "file": "frontier_000512.decode.json",
+        "vocab": 248320,
+        "bit_exact": true,
+        "sha256": "89871fbbe5584e54a785f3473f69f1fcca6ee71783e31b43370704655d03bee5"
+      },
+      {
+        "file": "frontier_000512.logits.json",
+        "vocab": 248320,
+        "bit_exact": true,
+        "sha256": "26f0dc401464acb700156cdd99d3b13d003c1c36df3db61f95db5cb5edaaa7bc"
+      }
+    ]
+  },
+  "teacher_forced": {
+    "positions": 200,
+    "vocab": 248320,
+    "bytes_per_variant": 198656000,
+    "gates": [
+      {
+        "name": "quality-current-baseline",
+        "exit": 0,
+        "seconds": 26.281664461002947,
+        "command": [
+          "performance-results/flash-prefill-latency-20261004/ds4.baseline",
+          "--cuda",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ctx",
+          "256",
+          "--first-token-test",
+          "-p",
+          "hello"
+        ],
+        "environment": {
+          "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+          "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+          "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+          "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+          "DS4_QWEN4_GPU": "1",
+          "DS4_QWEN4_FT_LIST": "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/quality-current-baseline/inputs.tsv"
+        }
+      },
+      {
+        "name": "quality-auto-ram",
+        "exit": 0,
+        "seconds": 26.788809959998616,
+        "command": [
+          "performance-results/flash-prefill-latency-20261004/ds4.auto-ram",
+          "--cuda",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ctx",
+          "256",
+          "--first-token-test",
+          "-p",
+          "hello"
+        ],
+        "environment": {
+          "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+          "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+          "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+          "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+          "DS4_QWEN4_GPU": "1",
+          "DS4_QWEN4_FT_LIST": "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/quality-auto-ram/inputs.tsv"
+        }
+      }
+    ],
+    "comparisons": [
+      {
+        "case": "all-136.bin",
+        "bytes": 135086080,
+        "bit_exact": true,
+        "baseline_sha256": "a009f1d28bb5b74d7a3d9eb8e62d1b305192007dd0ee6639ad7a15bb7e352550",
+        "candidate_sha256": "a009f1d28bb5b74d7a3d9eb8e62d1b305192007dd0ee6639ad7a15bb7e352550"
+      },
+      {
+        "case": "case_000.bin",
+        "bytes": 31784960,
+        "bit_exact": true,
+        "baseline_sha256": "f7713af629bd46533943947342f144e9efbdd75aa7d3e53273ed3ed4c29b2797",
+        "candidate_sha256": "f7713af629bd46533943947342f144e9efbdd75aa7d3e53273ed3ed4c29b2797"
+      },
+      {
+        "case": "case_001.bin",
+        "bytes": 31784960,
+        "bit_exact": true,
+        "baseline_sha256": "f9f7b372753628e5b4351a8470434e9f6425b00440f1e9e70714744d19cc6244",
+        "candidate_sha256": "f9f7b372753628e5b4351a8470434e9f6425b00440f1e9e70714744d19cc6244"
+      }
+    ]
+  },
+  "resident_checkpoint_gates": [
+    {
+      "name": "flash-resident",
+      "exit": 0,
+      "seconds": 28.70544731499831,
+      "command": [
+        "./tests/test_server_resident_frontier",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_TEST_PREFILL_CHUNK": "64",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto"
+      }
+    },
+    {
+      "name": "qwen27-resident",
+      "exit": 0,
+      "seconds": 27.86303048099944,
+      "command": [
+        "./tests/test_server_resident_frontier",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "16"
+      }
+    }
+  ],
+  "http": {
+    "real-agent-baseline-profile": {
+      "command": {
+        "command": [
+          "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/ds4-server.baseline",
+          "--cuda",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--vision",
+          "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+          "--ctx",
+          "131072",
+          "--prefill-chunk",
+          "256",
+          "--mtp",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "35697",
+          "--kv-disk-dir",
+          "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/real-agent-baseline-profile/kv",
+          "--kv-disk-space-mb",
+          "1024"
+        ],
+        "environment": {
+          "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+          "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+          "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+          "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+          "DS4_QWEN4_TIMING": "2",
+          "DS4_QWEN4_MOE_PROFILE": "1"
+        }
+      },
+      "request_sha256": "d7648e52118e9910d1444dc5d1c9ae4d1f854ee18aaa488380d13f6e7ea88b78",
+      "ctx_alloc": 131072,
+      "chunk": 256,
+      "vision": true,
+      "mtp": true,
+      "input_tokens": 4395,
+      "output_tokens": 32,
+      "status": "incomplete",
+      "status_reason": "length limit of diagnostic request",
+      "prefill_seconds": 185.241,
+      "response_seconds": 191.93711213699862,
+      "ram_budget_gib": 16.0,
+      "profiled": true,
+      "counter_scope": "expert traffic across prefill + 32 decode tokens, not GPU-wide traffic",
+      "expert_counters": {
+        "slots": 33500,
+        "reserved": 17013527040,
+        "allocated": 17179869184,
+        "hits": 344111,
+        "misses": 148473,
+        "evictions": 366926,
+        "disk_bytes": 80296734720,
+        "demotions": 251953,
+        "h2d_bytes": 247130565120,
+        "direct_io": 1
+      },
+      "host_stage_times_ms": {
+        "expert_read_ms": 0.0,
+        "victim_select_ms": 0.0
+      },
+      "prefill_stage_times_ms": {
+        "ple": 38.900000000000006,
+        "hc_attn": 486.1,
+        "gdn": 2372.3,
+        "attn": 1425.1000000000004,
+        "hc_ffn": 438.6,
+        "moe": 179420.99999999997
+      },
+      "prefill_completion_count": 1
+    },
+    "real-agent-ram32-profile": {
+      "command": {
+        "command": [
+          "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/ds4-server.baseline",
+          "--cuda",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--vision",
+          "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+          "--ctx",
+          "131072",
+          "--prefill-chunk",
+          "256",
+          "--mtp",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "55057",
+          "--kv-disk-dir",
+          "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/real-agent-ram32-profile/kv",
+          "--kv-disk-space-mb",
+          "1024"
+        ],
+        "environment": {
+          "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+          "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+          "DS4_CUDA_QWEN4_RAM_CACHE_MB": "32768",
+          "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+          "DS4_QWEN4_TIMING": "2",
+          "DS4_QWEN4_MOE_PROFILE": "1"
+        }
+      },
+      "request_sha256": "d7648e52118e9910d1444dc5d1c9ae4d1f854ee18aaa488380d13f6e7ea88b78",
+      "ctx_alloc": 131072,
+      "chunk": 256,
+      "vision": true,
+      "mtp": true,
+      "input_tokens": 4395,
+      "output_tokens": 32,
+      "status": "incomplete",
+      "status_reason": "length limit of diagnostic request",
+      "prefill_seconds": 130.177,
+      "response_seconds": 137.5831072589972,
+      "ram_budget_gib": 32.0,
+      "profiled": true,
+      "counter_scope": "expert traffic across prefill + 32 decode tokens, not GPU-wide traffic",
+      "expert_counters": {
+        "slots": 66840,
+        "reserved": 34016524800,
+        "allocated": 34359738368,
+        "hits": 421732,
+        "misses": 70714,
+        "evictions": 75509,
+        "disk_bytes": 35117767680,
+        "demotions": 71635,
+        "h2d_bytes": 246972495360,
+        "direct_io": 1
+      },
+      "host_stage_times_ms": {
+        "expert_read_ms": 0.0,
+        "victim_select_ms": 0.0
+      },
+      "prefill_stage_times_ms": {
+        "ple": 38.70000000000001,
+        "hc_attn": 449.1,
+        "gdn": 2304.2,
+        "attn": 1395.0999999999997,
+        "hc_ffn": 451.6,
+        "moe": 124847.8
+      },
+      "prefill_completion_count": 1
+    },
+    "real-agent-baseline-unprofiled": {
+      "command": {
+        "command": [
+          "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/ds4-server.baseline",
+          "--cuda",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--vision",
+          "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+          "--ctx",
+          "131072",
+          "--prefill-chunk",
+          "256",
+          "--mtp",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "42223",
+          "--kv-disk-dir",
+          "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/real-agent-baseline-unprofiled/kv",
+          "--kv-disk-space-mb",
+          "1024"
+        ],
+        "environment": {
+          "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+          "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+          "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+          "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+        }
+      },
+      "request_sha256": "d7648e52118e9910d1444dc5d1c9ae4d1f854ee18aaa488380d13f6e7ea88b78",
+      "ctx_alloc": 131072,
+      "chunk": 256,
+      "vision": true,
+      "mtp": true,
+      "input_tokens": 4395,
+      "output_tokens": 32,
+      "status": "incomplete",
+      "status_reason": "length limit of diagnostic request",
+      "prefill_seconds": 184.984,
+      "response_seconds": 191.49877552999897,
+      "ram_budget_gib": 16.0,
+      "profiled": false,
+      "counter_scope": "expert traffic across prefill + 32 decode tokens, not GPU-wide traffic",
+      "expert_counters": {
+        "slots": 33500,
+        "reserved": 17013527040,
+        "allocated": 17179869184,
+        "hits": 343401,
+        "misses": 149046,
+        "evictions": 367700,
+        "disk_bytes": 80540774400,
+        "demotions": 252154,
+        "h2d_bytes": 246973363200,
+        "direct_io": 1
+      },
+      "host_stage_times_ms": {
+        "expert_read_ms": 0.0,
+        "victim_select_ms": 0.0
+      },
+      "prefill_stage_times_ms": {},
+      "prefill_completion_count": 1
+    },
+    "real-agent-auto-ram-unprofiled": {
+      "command": {
+        "command": [
+          "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/ds4-server.auto-ram",
+          "--cuda",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--vision",
+          "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+          "--ctx",
+          "131072",
+          "--prefill-chunk",
+          "256",
+          "--mtp",
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "46283",
+          "--kv-disk-dir",
+          "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/real-agent-auto-ram-unprofiled/kv",
+          "--kv-disk-space-mb",
+          "1024"
+        ],
+        "environment": {
+          "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+          "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+          "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+          "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+        }
+      },
+      "request_sha256": "d7648e52118e9910d1444dc5d1c9ae4d1f854ee18aaa488380d13f6e7ea88b78",
+      "ctx_alloc": 131072,
+      "chunk": 256,
+      "vision": true,
+      "mtp": true,
+      "input_tokens": 4395,
+      "output_tokens": 32,
+      "status": "incomplete",
+      "status_reason": "length limit of diagnostic request",
+      "prefill_seconds": 126.103,
+      "response_seconds": 133.47193459499977,
+      "ram_budget_gib": 32.6,
+      "profiled": false,
+      "counter_scope": "expert traffic across prefill + 32 decode tokens, not GPU-wide traffic",
+      "expert_counters": {
+        "slots": 68101,
+        "reserved": 34657763328,
+        "allocated": 35008269312,
+        "hits": 421822,
+        "misses": 70694,
+        "evictions": 54034,
+        "disk_bytes": 35108428800,
+        "demotions": 51441,
+        "h2d_bytes": 247010749440,
+        "direct_io": 1
+      },
+      "host_stage_times_ms": {
+        "expert_read_ms": 0.0,
+        "victim_select_ms": 0.0
+      },
+      "prefill_stage_times_ms": {},
+      "prefill_completion_count": 1
+    }
+  },
+  "discarded_trial": {
+    "hypothesis": "Pin only RAM sources required by current H2D transfers; a selected VRAM hit does not need its duplicate host copy and can make room for actual misses.",
+    "verdict": "REJECT",
+    "reason": "direction samples did not improve warm prefill; full-vocabulary frontier correctness passed, code reverted",
+    "baseline": {
+      "exit": 0,
+      "seconds": 49.62517528399985,
+      "binary_sha256": "bf96e6d95bebc664f0209666a5dcf3e844b5032a77736942a107ae7a1daa8631"
+    },
+    "candidate": {
+      "exit": 0,
+      "seconds": 48.291019322001375,
+      "binary_sha256": "71c62bb1ccb2a32b2ef325bc38351b50daacc902b3cfb66b44cc3469d9323733"
+    },
+    "correctness": [
+      {
+        "frontier": 256,
+        "vocab": 248320,
+        "bit_exact": true,
+        "argmax_equal": true,
+        "sha256": "caaa27fdd6ec524332a6344ab511734757a5dc853d23cf3f550c1b8cdffdb5d8"
+      },
+      {
+        "frontier": 512,
+        "vocab": 248320,
+        "bit_exact": true,
+        "argmax_equal": true,
+        "sha256": "9527089de5d8054d10f49d89ddcacf81980453cef1fb57a4c7830651139ac6da"
+      },
+      {
+        "frontier": 768,
+        "vocab": 248320,
+        "bit_exact": true,
+        "argmax_equal": true,
+        "sha256": "2f31b69cc8817267509e8e242835580cce400be218417fe96f714d11d777d5fd"
+      },
+      {
+        "frontier": 1024,
+        "vocab": 248320,
+        "bit_exact": true,
+        "argmax_equal": true,
+        "sha256": "89393bca9891ebd861abf91ce47a236edb88c98a2b306e7e7d6c7c97c2b28613"
+      }
+    ]
+  },
+  "verdict": "KEEP for memory budget on measured local workloads",
+  "not_verified": [
+    "physical cause of PCIe x2",
+    "cold HTTP five-repeat statistics",
+    "prefill with tens of thousands of tokens",
+    "RAM pressure from concurrent workloads",
+    "Metal runtime",
+    "ROCm runtime",
+    "distributed runtime",
+    "other computers",
+    "global qualification of earlier Flash pipeline changes"
+  ],
+  "http_output_text_equal": true,
+  "memory_samples": {
+    "auto-ram": {
+      "sample_count": 68,
+      "min_mem_available_kib": 9195908,
+      "max_process_rss_kib": 36196548,
+      "max_process_swap_kib": 0,
+      "max_swap_used_kib": 0,
+      "coverage": "from process startup through completion"
+    }
+  },
+  "build_and_primitive_gates": {
+    "C_CUDA_build": "PASS",
+    "policy_test": "PASS",
+    "CUDA_primitive_test": "PASS",
+    "logs": [
+      "auto-ram-build.log",
+      "test_qwen4_expert_cache-auto-ram.log",
+      "test_qwen4_cuda-auto-ram.log"
+    ],
+    "root_python_units": {
+      "passed": 199,
+      "skipped": 41,
+      "subtests_passed": 188,
+      "pattern": "tests/test_*.py"
+    },
+    "docs_check": {
+      "passed": 10
+    },
+    "optional_terminal_harness": "NOT_VERIFIED: unrestricted pytest collection imports ds4_agent_terminal_test.py, which requires unavailable pyte; canonical test_*.py units passed"
+  },
+  "commands": {
+    "baseline-slow-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/baseline-slow.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/baseline-slow-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "auto-ram-slow-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/ds4-bench.auto-ram",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/auto-ram-slow.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/auto-ram-slow-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "qwen27-baseline-slow-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "512",
+        "--ctx-alloc",
+        "2048",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "16",
+        "--teacher-forced-decode",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/qwen27-baseline-slow.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/qwen27-baseline-slow-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "qwen27-auto-ram-slow-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/ds4-bench.auto-ram",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "512",
+        "--ctx-alloc",
+        "2048",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "16",
+        "--teacher-forced-decode",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/qwen27-auto-ram-slow.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-latency-20261004/qwen27-auto-ram-slow-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    }
+  }
+}

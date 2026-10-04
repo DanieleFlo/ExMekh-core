@@ -20,7 +20,7 @@ Al momento della fotografia la scheda era anche display-attached, in P8, con
 - righe 6–28: **Componenti osservate** — Al momento della fotografia la scheda era anche display-attached, in P8, con
 - righe 29–41: **Implicazioni per Qwen3.6 27B Q4_K_M** — 18,50 GiB.
 - righe 42–56: **Snapshot consigliato per ogni run** — Conservare in un file di testo accanto al report:
-- righe 57–62: **Limiti dell'inventario** — Modello esatto della scheda partner, RAM e motherboard non sono ancora stati
+- righe 57–67: **Limiti dell'inventario** — Il modello esatto della scheda partner non è ancora verificato e non va dedotto
 
 ## [Hardware e runtime di riferimento](reference-environment.md)
 

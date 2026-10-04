@@ -245,6 +245,16 @@ Implementazione del piano di azione sul working tree `codex/qwen-flash-3090`, HE
 - righe 67–79: **Correttezza e checkpoint** — I checkpoint del 27B restano utilizzabili con il 27B; i loro scenari/contratti vengono esercitati sul Flash, non i file KV di un modello diverso.
 - righe 80–105: **Riproduzione e lavoro rimanente** — make -j2 ds4 ds4-server ds4-bench CUDA_ARCH=sm_86
 
+## [Flash Next: lentezza del prefill e budget RAM, 4 ottobre 2026](qwen38-flash-prefill-latency-20261004.md)
+
+Baseline congelata: `5d374d4978c644a3de9ce40353b3dcba9b97d235`.
+
+- righe 9–37: **Metodo e provenienza** — Baseline congelata: `5d374d4978c644a3de9ce40353b3dcba9b97d235`.
+- righe 38–67: **Perché la GPU attende** — Sul prompt HTTP profilato, un solo prefill richiede **185,241 s**.
+- righe 68–98: **Modifica mantenuta** — `expert_ram_slot` ora usa il budget derivato dalla memoria disponibile,
+- righe 99–148: **Benchmark e correttezza** — Flash: `speed-bench/promessi_sposi.txt`, ctx allocato 131072, chunk 256,
+- righe 149–163: **Limiti e prossime verifiche** — Il verdetto **KEEP** riguarda il budget RAM e i workload Flash misurati;
+
 ## [Flash: doppio prefill del prefisso agentico — 4 ottobre 2026](qwen38-flash-prefill-replay-20261004.md)
 
 Il server lanciato con `agent/start-ds4-server-flash.sh` riceve un prompt
