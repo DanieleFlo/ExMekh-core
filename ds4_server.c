@@ -417,6 +417,8 @@ static bool json_raw_value(const char **p, char **out) {
     return true;
 }
 
+#define SCHEMA_JSON_MAX_NODES 65536u
+
 typedef enum {
     SCHEMA_JSON_NULL,
     SCHEMA_JSON_BOOL,
@@ -488,7 +490,7 @@ static bool schema_json_number_strict(const char **p, double *out) {
 
 static schema_json_value *schema_json_parse_value(const char **p, int depth,
                                                    size_t *nodes) {
-    if (depth >= JSON_MAX_NESTING || ++*nodes > 65536) return NULL;
+    if (depth >= JSON_MAX_NESTING || ++*nodes > SCHEMA_JSON_MAX_NODES) return NULL;
     json_ws(p);
     schema_json_value *v = xmalloc(sizeof(*v));
     memset(v, 0, sizeof(*v));
@@ -911,6 +913,152 @@ static bool schema_json_schema_supported(const schema_json_value *schema,
         }
     }
     return true;
+}
+
+/* Compile Pydantic's finite local definitions into the existing strict
+ * grammar. Only schema positions are expanded: $ref inside const/enum/example
+ * data is literal. External/recursive references and nested URI scopes fail
+ * closed, and expansion shares the parser's depth/node ceilings. */
+typedef enum {
+    SCHEMA_EXPAND_DATA, SCHEMA_EXPAND_SCHEMA,
+    SCHEMA_EXPAND_PROPERTIES, SCHEMA_EXPAND_LIST,
+} schema_expand_mode;
+
+static const schema_json_value *schema_json_local_definition(
+    const schema_json_value *root, const char *reference) {
+    const char *prefix = "#/$defs/";
+    if (strncmp(reference, prefix, strlen(prefix))) return NULL;
+    const char *name = reference + strlen(prefix);
+    buf key = {0};
+    for (size_t i = 0; name[i]; i++) {
+        if (name[i] == '/' || name[i] == '%') goto fail;
+        if (name[i] == '~') {
+            if (name[i + 1] != '0' && name[i + 1] != '1') goto fail;
+            buf_putc(&key, name[++i] == '0' ? '~' : '/');
+        } else buf_putc(&key, name[i]);
+    }
+    const schema_json_value *defs = schema_json_object_get(root, "$defs");
+    const schema_json_value *value = schema_json_object_get(
+        defs, key.ptr ? key.ptr : "");
+    buf_free(&key);
+    return value;
+fail:
+    buf_free(&key);
+    return NULL;
+}
+
+static schema_json_value *schema_json_expand_local(
+    const schema_json_value *value, const schema_json_value *root,
+    schema_expand_mode mode, int depth, size_t *nodes,
+    const schema_json_value **references, int reference_count, bool scoped) {
+    if (!value || depth >= JSON_MAX_NESTING || ++*nodes > SCHEMA_JSON_MAX_NODES) return NULL;
+    schema_json_value *copy = xmalloc(sizeof(*copy));
+    *copy = (schema_json_value){
+        .kind = value->kind, .boolean = value->boolean, .number = value->number,
+        .string = value->string ? xstrdup(value->string) : NULL,
+    };
+    schema_json_value *resolved = NULL;
+    if (mode == SCHEMA_EXPAND_SCHEMA && value->kind == SCHEMA_JSON_OBJECT) {
+        for (size_t i = 0; i < value->len; i++) {
+            for (size_t j = i + 1; j < value->len; j++) {
+                if (!strcmp(value->member[i].key, value->member[j].key)) goto fail;
+            }
+        }
+        if (value != root && schema_json_object_get(value, "$id")) scoped = true;
+        const schema_json_value *defs = schema_json_object_get(value, "$defs");
+        if (defs) {
+            if (value != root || defs->kind != SCHEMA_JSON_OBJECT) goto fail;
+            for (size_t i = 0; i < defs->len; i++) {
+                if (defs->member[i].value->kind != SCHEMA_JSON_OBJECT &&
+                    defs->member[i].value->kind != SCHEMA_JSON_BOOL) goto fail;
+                for (size_t j = i + 1; j < defs->len; j++) {
+                    if (!strcmp(defs->member[i].key, defs->member[j].key)) goto fail;
+                }
+            }
+        }
+        const schema_json_value *ref = schema_json_object_get(value, "$ref");
+        if (ref) {
+            if (scoped || ref->kind != SCHEMA_JSON_STRING) goto fail;
+            const schema_json_value *dialect = schema_json_object_get(root, "$schema");
+            if (dialect && (dialect->kind != SCHEMA_JSON_STRING ||
+                (strcmp(dialect->string, "https://json-schema.org/draft/2020-12/schema") &&
+                 strcmp(dialect->string, "https://json-schema.org/draft/2019-09/schema")))) goto fail;
+            const schema_json_value *target = schema_json_local_definition(root, ref->string);
+            if (!target || (target->kind != SCHEMA_JSON_OBJECT &&
+                            target->kind != SCHEMA_JSON_BOOL)) goto fail;
+            for (int i = 0; i < reference_count; i++) {
+                if (references[i] == target) goto fail;
+            }
+            references[reference_count] = target;
+            resolved = schema_json_expand_local(target, root, SCHEMA_EXPAND_SCHEMA,
+                depth + 1, nodes, references, reference_count + 1, scoped);
+            if (!resolved) goto fail;
+        }
+    }
+    for (size_t i = 0; i < value->len; i++) {
+        const char *key = value->kind == SCHEMA_JSON_OBJECT ? value->member[i].key : NULL;
+        if (mode == SCHEMA_EXPAND_SCHEMA && key &&
+            (!strcmp(key, "$ref") || !strcmp(key, "$defs"))) continue;
+        schema_expand_mode child_mode = SCHEMA_EXPAND_DATA;
+        if (mode == SCHEMA_EXPAND_PROPERTIES ||
+            (mode == SCHEMA_EXPAND_LIST && value->kind == SCHEMA_JSON_ARRAY))
+            child_mode = SCHEMA_EXPAND_SCHEMA;
+        if (mode == SCHEMA_EXPAND_SCHEMA && key) {
+            if (!strcmp(key, "properties")) child_mode = SCHEMA_EXPAND_PROPERTIES;
+            else if (!strcmp(key, "items") || !strcmp(key, "additionalProperties"))
+                child_mode = SCHEMA_EXPAND_SCHEMA;
+            else if (!strcmp(key, "allOf") || !strcmp(key, "anyOf") || !strcmp(key, "oneOf"))
+                child_mode = SCHEMA_EXPAND_LIST;
+        }
+        const schema_json_value *child = key ? value->member[i].value : value->item[i];
+        schema_json_value *expanded = schema_json_expand_local(child, root, child_mode,
+            depth + 1, nodes, references, reference_count, scoped);
+        if (!expanded) goto fail;
+        if (key) {
+            copy->member = xrealloc(copy->member, (copy->len + 1) * sizeof(*copy->member));
+            copy->member[copy->len++] = (schema_json_member){xstrdup(key), expanded};
+        } else {
+            copy->item = xrealloc(copy->item, (copy->len + 1) * sizeof(*copy->item));
+            copy->item[copy->len++] = expanded;
+        }
+    }
+    if (!resolved) return copy;
+    if (!copy->len) {
+        schema_json_free(copy);
+        return resolved;
+    }
+    /* $ref and its sibling constraints both apply in modern JSON Schema.
+     * Conjunction preserves them, including overlapping property restrictions. */
+    if (*nodes > SCHEMA_JSON_MAX_NODES - 2) goto fail;
+    *nodes += 2;
+    schema_json_value *both = xmalloc(sizeof(*both));
+    *both = (schema_json_value){.kind = SCHEMA_JSON_ARRAY, .len = 2};
+    both->item = xmalloc(2 * sizeof(*both->item));
+    both->item[0] = resolved;
+    both->item[1] = copy;
+    schema_json_value *wrapper = xmalloc(sizeof(*wrapper));
+    *wrapper = (schema_json_value){.kind = SCHEMA_JSON_OBJECT, .len = 1};
+    wrapper->member = xmalloc(sizeof(*wrapper->member));
+    wrapper->member[0] = (schema_json_member){xstrdup("allOf"), both};
+    return wrapper;
+fail:
+    schema_json_free(resolved);
+    schema_json_free(copy);
+    return NULL;
+}
+
+static schema_json_value *schema_json_compile_response(const char *raw) {
+    schema_json_value *root = schema_json_parse(raw);
+    const schema_json_value *references[JSON_MAX_NESTING];
+    size_t nodes = 0;
+    schema_json_value *compiled = schema_json_expand_local(root, root,
+        SCHEMA_EXPAND_SCHEMA, 0, &nodes, references, 0, false);
+    schema_json_free(root);
+    if (compiled && !schema_json_schema_supported(compiled, 0)) {
+        schema_json_free(compiled);
+        compiled = NULL;
+    }
+    return compiled;
 }
 
 static bool schema_json_validate_raw(const schema_json_value *schema,
@@ -2315,10 +2463,8 @@ static bool request_set_response_schema(request *r, char *raw) {
         return false;
     }
     const double compile_t0 = now_sec();
-    schema_json_value *schema = schema_json_parse(raw);
-    if (!schema || (schema->kind != SCHEMA_JSON_OBJECT &&
-                    schema->kind != SCHEMA_JSON_BOOL) ||
-        !schema_json_schema_supported(schema, 0)) {
+    schema_json_value *schema = schema_json_compile_response(raw);
+    if (!schema) {
         schema_json_free(schema);
         free(raw);
         return false;
@@ -2728,6 +2874,13 @@ static server_model_syntax server_model_syntax_for_engine(ds4_engine *engine) {
         return SERVER_MODEL_SYNTAX_DEEPSEEK;
     }
     return SERVER_MODEL_SYNTAX_DEEPSEEK;
+}
+
+/* Flash uses the complete portable payload where Qwen 27B can use a compact
+ * device frontier. Both can restore the exact pre-thinking/system boundary. */
+static bool server_model_uses_resident_frontiers(server_model_syntax syntax) {
+    return syntax == SERVER_MODEL_SYNTAX_QWEN ||
+           syntax == SERVER_MODEL_SYNTAX_QWEN4;
 }
 
 static const char *server_model_syntax_name(server_model_syntax syntax) {
@@ -8654,23 +8807,37 @@ static void qwen_trim_split(char **content_out, char **reasoning_out) {
     }
 }
 
+static const schema_json_value *tool_schema_order_property_schema(
+    const tool_schema_order *order, int prop) {
+    if (!order || !order->schema || prop < 0 || prop >= order->len) return NULL;
+    const schema_json_value *properties =
+        schema_json_object_get(order->schema, "properties");
+    return properties ? schema_json_object_get(properties, order->prop[prop]) : NULL;
+}
+
+/* Native Qwen has no string attribute. A string-only schema preserves raw text,
+ * including JSON-looking text; mixed schemas use the final parser's JSON test. */
+static bool qwen_schema_declared_string(const schema_json_value *schema) {
+    if (!schema_json_allows_kind(schema, SCHEMA_JSON_STRING, 0)) return false;
+    const schema_json_kind other[] = {
+        SCHEMA_JSON_NULL, SCHEMA_JSON_BOOL, SCHEMA_JSON_NUMBER,
+        SCHEMA_JSON_ARRAY, SCHEMA_JSON_OBJECT
+    };
+    for (size_t i = 0; i < sizeof(other) / sizeof(other[0]); i++) {
+        if (schema_json_allows_kind(schema, other[i], 0)) return false;
+    }
+    return true;
+}
+
 static bool qwen_param_declared_string(const tool_schema_orders *orders,
                                        const char *name, const char *key) {
     const tool_schema_order *order = tool_schema_orders_find(orders, name);
     if (!order) return false;
     for (int i = 0; i < order->len; i++) {
-        if (strcmp(order->prop[i], key)) continue;
-        json_args schema = {0};
-        bool is_string = false;
-        if (json_args_parse(order->prop_schema[i], &schema)) {
-            for (int j = 0; j < schema.len; j++) {
-                const json_arg *arg = &schema.v[j];
-                if (!strcmp(arg->key, "type") && arg->is_string && !strcmp(arg->value, "string"))
-                    is_string = true;
-            }
+        if (!strcmp(order->prop[i], key)) {
+            return qwen_schema_declared_string(
+                tool_schema_order_property_schema(order, i));
         }
-        json_args_free(&schema);
-        return is_string;
     }
     return false;
 }
@@ -9777,10 +9944,14 @@ static bool dsml_decode_state_uses_payload_sampling(dsml_decode_state state) {
     return state == DSML_DECODE_STRING_BODY || state == DSML_DECODE_JSON_STRING;
 }
 
+/* Qwen's native block contains one call; another block may follow. */
+static bool tool_block_finishes_turn(server_model_syntax syntax) {
+    return syntax != SERVER_MODEL_SYNTAX_QWEN4;
+}
+
 static bool agentic_should_constrain_sample(const request *r, dsml_decode_state state, bool thinking_inside) {
     return r && (r->agentic_present || r->tool_choice_required) &&
            r->model_syntax != SERVER_MODEL_SYNTAX_GLM &&
-           r->model_syntax != SERVER_MODEL_SYNTAX_QWEN4 &&
            (state != DSML_DECODE_OUTSIDE || !thinking_inside);
 }
 
@@ -10736,6 +10907,17 @@ static agentic_tag_result agentic_sim_invoke_header(
     size_t *after_out)
 {
     const size_t marker_len = strlen(syn->invoke_start);
+    if (syn == &qwen_tool_syntax) {
+        size_t start = pos + marker_len;
+        const char *end = memchr(raw + start, '>', raw_len - start);
+        if (!end) return agentic_name_has_prefix(r, raw + start, raw_len - start) ?
+            AGENTIC_TAG_PARTIAL : AGENTIC_TAG_INVALID;
+        size_t len = (size_t)(end - raw) - start;
+        if (!agentic_name_is_allowed(r, raw + start, len)) return AGENTIC_TAG_INVALID;
+        if (order_out) *order_out = agentic_order_for_name(r, raw + start, len);
+        if (after_out) *after_out = (size_t)(end - raw) + 1;
+        return AGENTIC_TAG_COMPLETE;
+    }
     const char prefix[] = " name=\"";
     const size_t prefix_len = sizeof(prefix) - 1;
     size_t p = pos + marker_len;
@@ -10762,12 +10944,29 @@ static agentic_tag_result agentic_sim_invoke_header(
     return AGENTIC_TAG_COMPLETE;
 }
 
+
 static agentic_tag_result agentic_sim_param_header(
     const tool_schema_order *order, const char *raw, size_t raw_len, size_t pos,
     const dsml_syntax *syn, int *prop_out, bool *string_out, size_t *after_out)
 {
     if (!order) return AGENTIC_TAG_INVALID;
     const size_t marker_len = strlen(syn->param_start);
+    if (syn == &qwen_tool_syntax) {
+        size_t start = pos + marker_len;
+        const char *end = memchr(raw + start, '>', raw_len - start);
+        if (!end) return agentic_prop_has_prefix(order, raw + start, raw_len - start) ?
+            AGENTIC_TAG_PARTIAL : AGENTIC_TAG_INVALID;
+        size_t len = (size_t)(end - raw) - start;
+        for (int prop = 0; prop < order->len; prop++) {
+            if (strlen(order->prop[prop]) != len || memcmp(raw + start, order->prop[prop], len)) continue;
+            const schema_json_value *schema = tool_schema_order_property_schema(order, prop);
+            if (prop_out) *prop_out = prop;
+            if (string_out) *string_out = qwen_schema_declared_string(schema);
+            if (after_out) *after_out = (size_t)(end - raw) + 1;
+            return AGENTIC_TAG_COMPLETE;
+        }
+        return AGENTIC_TAG_INVALID;
+    }
     const char prefix[] = " name=\"";
     const size_t prefix_len = sizeof(prefix) - 1;
     size_t p = pos + marker_len;
@@ -10812,26 +11011,31 @@ static agentic_tag_result agentic_sim_param_header(
     return AGENTIC_TAG_COMPLETE;
 }
 
-static const schema_json_value *agentic_property_schema(
-    const tool_schema_order *order, int prop) {
-    if (!order || !order->schema || prop < 0 || prop >= order->len) return NULL;
-    const schema_json_value *properties =
-        schema_json_object_get(order->schema, "properties");
-    return properties ? schema_json_object_get(properties, order->prop[prop]) : NULL;
-}
-
 static bool agentic_tracker_has_unbounded_string(
         const dsml_decode_tracker *tracker) {
     return tracker && tracker->mode == DSML_TRACK_STRING_BODY &&
         tracker->active_order && schema_json_is_unbounded_string(
-            agentic_property_schema(
+            tool_schema_order_property_schema(
                 tracker->active_order, tracker->active_prop));
+}
+
+static char *agentic_parameter_string(const char *raw, size_t start, size_t end,
+                                      const dsml_syntax *syn) {
+    if (syn == &qwen_tool_syntax) {
+        char *value = qwen_strip_value_newlines(raw + start, raw + end);
+        ds4_tool_text_unescape(value, syn->param_end);
+        return value;
+    }
+    char *encoded = xstrndup(raw + start, end - start);
+    char *decoded = dsml_unescape_text(encoded);
+    free(encoded);
+    return decoded;
 }
 
 static bool agentic_string_parameter_prefix_possible(
     const tool_schema_order *order, int prop,
-    const char *raw, size_t start, size_t end, bool complete) {
-    const schema_json_value *schema = agentic_property_schema(order, prop);
+    const char *raw, size_t start, size_t end, bool complete, const dsml_syntax *syn) {
+    const schema_json_value *schema = tool_schema_order_property_schema(order, prop);
     if (!schema || !raw || start > end) return false;
     const schema_json_value *constant = schema_json_object_get(schema, "const");
     const schema_json_value *enumeration = schema_json_object_get(schema, "enum");
@@ -10843,6 +11047,22 @@ static bool agentic_string_parameter_prefix_possible(
         const schema_json_value *value = constant ? constant : enumeration->item[i];
         if (!value || value->kind != SCHEMA_JSON_STRING) continue;
         buf encoded = {0};
+        if (syn == &qwen_tool_syntax) {
+            append_glm_tag_body_text(&encoded, value->string, syn->param_end);
+            /* The native template permits one framing newline on either side. */
+            for (unsigned frame = 0; frame < 4 && !viable; frame++) {
+                buf framed = {0};
+                if (frame & 1) buf_putc(&framed, '\n');
+                buf_puts(&framed, encoded.ptr ? encoded.ptr : "");
+                if (frame & 2) buf_putc(&framed, '\n');
+                viable = (!complete && have <= framed.len && !memcmp(raw + start, framed.ptr ? framed.ptr : "", have)) ||
+                         (complete && have == framed.len && !memcmp(raw + start, framed.ptr ? framed.ptr : "", have));
+                buf_free(&framed);
+            }
+            buf_free(&encoded);
+            if (viable) break;
+            continue;
+        }
         append_dsml_parameter_text(&encoded, value->string, false);
         if ((!complete && have <= encoded.len &&
              !memcmp(raw + start, encoded.ptr, have)) ||
@@ -10855,32 +11075,54 @@ static bool agentic_string_parameter_prefix_possible(
     return viable;
 }
 
-static bool agentic_validate_parameter_value(
+static schema_json_value *agentic_parameter_value(
     const tool_schema_order *order, int prop, bool is_string,
-    const char *raw, size_t start, size_t end) {
-    const schema_json_value *schema = agentic_property_schema(order, prop);
-    if (!schema || !raw || start > end) return false;
-    schema_json_value *value = NULL;
+    const char *raw, size_t start, size_t end, const dsml_syntax *syn) {
+    const schema_json_value *schema = tool_schema_order_property_schema(order, prop);
+    if (!schema || !raw || start > end) return NULL;
+    char *decoded = NULL;
+    if (syn == &qwen_tool_syntax) {
+        decoded = agentic_parameter_string(raw, start, end, syn);
+        is_string = qwen_schema_declared_string(schema) ||
+                    !qwen_param_value_is_json(decoded);
+    }
     if (is_string) {
-        char *encoded = xstrndup(raw + start, end - start);
-        char *decoded = dsml_unescape_text(encoded);
-        free(encoded);
-        value = xmalloc(sizeof(*value));
+        if (!decoded) decoded = agentic_parameter_string(raw, start, end, syn);
+        schema_json_value *value = xmalloc(sizeof(*value));
         memset(value, 0, sizeof(*value));
         value->kind = SCHEMA_JSON_STRING;
         value->string = decoded;
-    } else {
-        if (json_prefix_document(raw + start, end - start) != JSON_PREFIX_COMPLETE) {
-            return false;
-        }
-        char *json = xstrndup(raw + start, end - start);
-        value = schema_json_parse(json);
-        free(json);
+        return value;
     }
+    free(decoded);
+    char *json = xstrndup(raw + start, end - start);
+    schema_json_value *value = schema_json_parse(json);
+    free(json);
+    return value;
+}
+
+static bool agentic_validate_parameter_value(
+    const tool_schema_order *order, int prop, bool is_string,
+    const char *raw, size_t start, size_t end, const dsml_syntax *syn) {
+    const schema_json_value *schema = tool_schema_order_property_schema(order, prop);
+    schema_json_value *value = agentic_parameter_value(
+        order, prop, is_string, raw, start, end, syn);
     if (!value) return false;
     bool valid = schema_json_validate(schema, value, 0);
     schema_json_free(value);
     return valid;
+}
+
+static bool agentic_json_parameter_prefix_possible(
+    const tool_schema_order *order, int prop, const char *raw,
+    size_t start, size_t end, const dsml_syntax *syn) {
+    const schema_json_value *schema = tool_schema_order_property_schema(order, prop);
+    if (!schema || !raw || start > end) return false;
+    if (syn == &qwen_tool_syntax &&
+        schema_json_allows_kind(schema, SCHEMA_JSON_STRING, 0) &&
+        agentic_string_parameter_prefix_possible(
+            order, prop, raw, start, end, false, syn)) return true;
+    return schema_json_prefix_possible(schema, raw + start, end - start, false);
 }
 
 static bool agentic_invoke_prop_seen(
@@ -10913,7 +11155,7 @@ static bool agentic_validate_invoke_schema(
         bool escaped = false;
         pos = after;
         while (pos < end) {
-            if ((is_string || !in_string) &&
+            if ((is_string || !in_string || syn == &qwen_tool_syntax) &&
                 raw_full_lit(raw, end, pos, syn->param_end)) break;
             unsigned char c = (unsigned char)raw[pos++];
             if (!is_string) {
@@ -10926,22 +11168,10 @@ static bool agentic_validate_invoke_schema(
         }
         if (pos >= end || !raw_full_lit(raw, end, pos, syn->param_end)) goto done;
         if (!agentic_validate_parameter_value(
-                order, prop, is_string, raw, value_start, pos)) goto done;
+                order, prop, is_string, raw, value_start, pos, syn)) goto done;
 
-        schema_json_value *value = NULL;
-        if (is_string) {
-            char *encoded = xstrndup(raw + value_start, pos - value_start);
-            char *decoded = dsml_unescape_text(encoded);
-            free(encoded);
-            value = xmalloc(sizeof(*value));
-            memset(value, 0, sizeof(*value));
-            value->kind = SCHEMA_JSON_STRING;
-            value->string = decoded;
-        } else {
-            char *json = xstrndup(raw + value_start, pos - value_start);
-            value = schema_json_parse(json);
-            free(json);
-        }
+        schema_json_value *value = agentic_parameter_value(
+            order, prop, is_string, raw, value_start, pos, syn);
         if (!value) goto done;
         object.member = xrealloc(object.member,
                                  (object.len + 1) * sizeof(object.member[0]));
@@ -11082,7 +11312,7 @@ static bool agentic_invoke_prop_seen(
         bool escaped = false;
         pos = after;
         while (pos < end) {
-            if ((is_string || !in_string) &&
+            if ((is_string || !in_string || syn == &qwen_tool_syntax) &&
                 raw_full_lit(raw, end, pos, syn->param_end)) break;
             unsigned char c = (unsigned char)raw[pos++];
             if (!is_string) {
@@ -11119,6 +11349,16 @@ static bool agentic_partial_param_header_has_available_prop(
     for (int i = 0; i < order->len; i++) {
         if (agentic_tracker_prop_seen(
                 tracker, raw, invoke_start, header_start, syn, i)) continue;
+        if (syn == &qwen_tool_syntax) {
+            buf header = {0};
+            buf_puts(&header, syn->param_start);
+            buf_puts(&header, order->prop[i]);
+            buf_putc(&header, '>');
+            bool match = have <= header.len && !memcmp(raw + header_start, header.ptr, have);
+            buf_free(&header);
+            if (match) return true;
+            continue;
+        }
         const char *tails[] = {"\" string=\"true\">", "\" string=\"false\">"};
         for (size_t t = 0; t < sizeof(tails) / sizeof(tails[0]); t++) {
             const char *segments[] = {
@@ -11154,12 +11394,23 @@ static bool agentic_simulate_candidate(const request *r,
                                        size_t new_from) {
     if (!r || !tracker || !raw || new_from > raw_len) return false;
     dsml_decode_tracker sim = *tracker;
+    const bool native = r->model_syntax == SERVER_MODEL_SYNTAX_QWEN4;
+    const size_t syntax_count = native ? 1 : sizeof(dsml_syntaxes) / sizeof(dsml_syntaxes[0]);
     if (sim.pos > raw_len) return false;
 
     for (;;) {
         if (sim.mode == DSML_TRACK_DONE) {
             while (sim.pos < raw_len && isspace((unsigned char)raw[sim.pos])) sim.pos++;
-            if (sim.pos != raw_len) return false;
+            if (sim.pos != raw_len) {
+                if (r->model_syntax != SERVER_MODEL_SYNTAX_QWEN4) return false;
+                if (raw_partial_lit(raw, raw_len, sim.pos, qwen_tool_syntax.tool_calls_start)) return true;
+                if (!raw_full_lit(raw, raw_len, sim.pos, qwen_tool_syntax.tool_calls_start)) return false;
+                sim.pos += strlen(qwen_tool_syntax.tool_calls_start);
+                sim.mode = DSML_TRACK_STRUCTURAL;
+                sim.inside_invoke = false;
+                sim.saw_invoke = false;
+                continue;
+            }
             if (r->tool_choice_required && !sim.saw_invoke &&
                 sim.syn &&
                 !find_lit_bounded(raw, raw_len, sim.syn->invoke_start)) {
@@ -11171,8 +11422,8 @@ static bool agentic_simulate_candidate(const request *r,
         if (sim.mode == DSML_TRACK_SEARCH) {
             while (sim.pos < raw_len) {
                 bool opened = false;
-                for (size_t i = 0; i < sizeof(dsml_syntaxes) / sizeof(dsml_syntaxes[0]); i++) {
-                    const dsml_syntax *syn = &dsml_syntaxes[i];
+                for (size_t i = 0; i < syntax_count; i++) {
+                    const dsml_syntax *syn = native ? &qwen_tool_syntax : &dsml_syntaxes[i];
                     if (raw_full_lit(raw, raw_len, sim.pos, syn->tool_calls_start)) {
                         sim.syn = syn;
                         sim.pos += strlen(syn->tool_calls_start);
@@ -11186,8 +11437,8 @@ static bool agentic_simulate_candidate(const request *r,
                 if (opened) break;
 
                 bool partial = false;
-                for (size_t i = 0; i < sizeof(dsml_syntaxes) / sizeof(dsml_syntaxes[0]); i++) {
-                    const char *start = dsml_syntaxes[i].tool_calls_start;
+                for (size_t i = 0; i < syntax_count; i++) {
+                    const char *start = native ? qwen_tool_syntax.tool_calls_start : dsml_syntaxes[i].tool_calls_start;
                     size_t left = raw_len - sim.pos;
                     if (left < strlen(start) && !memcmp(raw + sim.pos, start, left)) {
                         partial = true;
@@ -11201,7 +11452,8 @@ static bool agentic_simulate_candidate(const request *r,
                 if (partial) return true;
 
                 if (raw[sim.pos] == '<' &&
-                    agentic_reserved_dsml_root(raw + sim.pos, raw_len - sim.pos)) {
+                    (agentic_reserved_dsml_root(raw + sim.pos, raw_len - sim.pos) ||
+                     (native && raw_full_lit(raw, raw_len, sim.pos, "<function")))) {
                     const char *old_end = sim.pos < new_from ?
                         memchr(raw + sim.pos, '>', new_from - sim.pos) : NULL;
                     if (sim.pos >= new_from || !old_end) return false;
@@ -11220,15 +11472,15 @@ static bool agentic_simulate_candidate(const request *r,
                 if (sim.pos >= raw_len) {
                     return agentic_string_parameter_prefix_possible(
                         sim.active_order, sim.active_prop, raw,
-                        sim.param_value_start, raw_len, false);
+                        sim.param_value_start, raw_len, false, sim.syn);
                 }
                 if (raw_full_lit(raw, raw_len, sim.pos, sim.syn->param_end)) {
                     if (!agentic_string_parameter_prefix_possible(
                             sim.active_order, sim.active_prop, raw,
-                            sim.param_value_start, sim.pos, true)) return false;
+                            sim.param_value_start, sim.pos, true, sim.syn)) return false;
                     if (!agentic_validate_parameter_value(
                             sim.active_order, sim.active_prop, true, raw,
-                            sim.param_value_start, sim.pos)) return false;
+                            sim.param_value_start, sim.pos, sim.syn)) return false;
                     sim.pos += strlen(sim.syn->param_end);
                     if (sim.seen_props_exact && sim.active_prop >= 0 &&
                         sim.active_prop < 64) {
@@ -11244,10 +11496,10 @@ static bool agentic_simulate_candidate(const request *r,
                      * boundary is already complete (important for const/enum). */
                     return agentic_string_parameter_prefix_possible(
                                sim.active_order, sim.active_prop, raw,
-                               sim.param_value_start, sim.pos, true) &&
+                               sim.param_value_start, sim.pos, true, sim.syn) &&
                            agentic_validate_parameter_value(
                                sim.active_order, sim.active_prop, true, raw,
-                               sim.param_value_start, sim.pos);
+                               sim.param_value_start, sim.pos, sim.syn);
                 }
                 sim.pos++;
             }
@@ -11256,17 +11508,15 @@ static bool agentic_simulate_candidate(const request *r,
         if (sim.mode == DSML_TRACK_JSON_PARAM) {
             for (;;) {
                 if (sim.pos >= raw_len) {
-                    const schema_json_value *schema = agentic_property_schema(
-                        sim.active_order, sim.active_prop);
-                    return schema_json_prefix_possible(
-                        schema, raw + sim.param_value_start,
-                        raw_len - sim.param_value_start, false);
+                    return agentic_json_parameter_prefix_possible(
+                        sim.active_order, sim.active_prop, raw,
+                        sim.param_value_start, raw_len, sim.syn);
                 }
-                if (!sim.json_in_string &&
+                if ((!sim.json_in_string || native) &&
                     raw_full_lit(raw, raw_len, sim.pos, sim.syn->param_end)) {
                     if (!agentic_validate_parameter_value(
                             sim.active_order, sim.active_prop, false, raw,
-                            sim.param_value_start, sim.pos)) return false;
+                            sim.param_value_start, sim.pos, sim.syn)) return false;
                     sim.pos += strlen(sim.syn->param_end);
                     if (sim.seen_props_exact && sim.active_prop >= 0 &&
                         sim.active_prop < 64) {
@@ -11276,11 +11526,11 @@ static bool agentic_simulate_candidate(const request *r,
                     sim.mode = DSML_TRACK_STRUCTURAL;
                     break;
                 }
-                if (!sim.json_in_string &&
+                if ((!sim.json_in_string || native) &&
                     raw_partial_lit(raw, raw_len, sim.pos, sim.syn->param_end)) {
                     return agentic_validate_parameter_value(
                         sim.active_order, sim.active_prop, false, raw,
-                        sim.param_value_start, sim.pos);
+                        sim.param_value_start, sim.pos, sim.syn);
                 }
                 unsigned char c = (unsigned char)raw[sim.pos++];
                 if (sim.json_in_string) {
@@ -11423,12 +11673,14 @@ static bool agentic_filter_token(void *ud, int token,
           tracker->mode == DSML_TRACK_SEARCH))) return true;
     if (f->engine && ds4_token_is_stop_for_think_mode(
             f->engine, token, f->think_mode)) {
-        if (tracker->mode == DSML_TRACK_DONE) return tracker->saw_invoke;
+        if (tracker->mode == DSML_TRACK_DONE) return tracker->saw_invoke &&
+            (tracker->model_syntax != SERVER_MODEL_SYNTAX_QWEN4 || tracker->pos == f->raw_len);
         if (f->req->tool_choice_required) return false;
         return tracker->mode == DSML_TRACK_SEARCH;
     }
     if (piece_len == 0) {
-        if (tracker->mode == DSML_TRACK_DONE) return tracker->saw_invoke;
+        if (tracker->mode == DSML_TRACK_DONE) return tracker->saw_invoke &&
+            (tracker->model_syntax != SERVER_MODEL_SYNTAX_QWEN4 || tracker->pos == f->raw_len);
         if (f->req->tool_choice_required) return false;
         return tracker->mode == DSML_TRACK_SEARCH;
     }
@@ -11775,6 +12027,20 @@ static void dsml_decode_tracker_update(dsml_decode_tracker *dt,
 
     for (;;) {
         if (dt->mode == DSML_TRACK_DONE) {
+            if (dt->model_syntax == SERVER_MODEL_SYNTAX_QWEN4) {
+                while (dt->pos < raw_len && isspace((unsigned char)raw[dt->pos])) dt->pos++;
+            }
+            if (dt->model_syntax == SERVER_MODEL_SYNTAX_QWEN4 && dt->pos < raw_len) {
+                if (raw_full_lit(raw, raw_len, dt->pos, qwen_tool_syntax.tool_calls_start)) {
+                    dt->pos += strlen(qwen_tool_syntax.tool_calls_start);
+                    dt->mode = DSML_TRACK_STRUCTURAL;
+                    dt->decode = DSML_DECODE_STRUCTURAL;
+                    dt->saw_invoke = false;
+                    continue;
+                }
+                dt->decode = DSML_DECODE_STRUCTURAL;
+                return;
+            }
             dt->decode = DSML_DECODE_OUTSIDE;
             return;
         }
@@ -11836,7 +12102,7 @@ static void dsml_decode_tracker_update(dsml_decode_tracker *dt,
 
         if (dt->mode == DSML_TRACK_JSON_PARAM) {
             while (dt->pos < raw_len) {
-                if (!dt->json_in_string) {
+                if (!dt->json_in_string || dt->model_syntax == SERVER_MODEL_SYNTAX_QWEN4) {
                     if (raw_full_lit(raw, raw_len, dt->pos, dt->syn->param_end)) {
                         dt->pos += strlen(dt->syn->param_end);
                         if (dt->seen_props_exact && dt->active_prop >= 0 &&
@@ -11886,7 +12152,8 @@ structural:
                 dt->mode = DSML_TRACK_DONE;
                 dt->pos += strlen(dt->syn->tool_calls_end);
                 dt->decode = DSML_DECODE_OUTSIDE;
-                return;
+                if (dt->model_syntax != SERVER_MODEL_SYNTAX_QWEN4) return;
+                break;
             }
             if (raw_full_lit(raw, raw_len, dt->pos, dt->syn->invoke_end)) {
                 dt->pos += strlen(dt->syn->invoke_end);
@@ -11906,7 +12173,9 @@ structural:
                 }
                 size_t tag_len = (size_t)(tag_end - (raw + dt->pos)) + 1;
                 char *tag = xstrndup(raw + dt->pos, tag_len);
-                char *name = dsml_attr(tag, "name");
+                char *name = dt->syn == &qwen_tool_syntax ?
+                    xstrndup(tag + strlen(dt->syn->invoke_start), tag_len - strlen(dt->syn->invoke_start) - 1) :
+                    dsml_attr(tag, "name");
                 if (name && dt->req) {
                     dt->active_order = tool_schema_orders_find(&dt->req->tool_orders, name);
                 } else {
@@ -11934,16 +12203,20 @@ structural:
                 size_t tag_after = (size_t)(tag_end - raw) + 1;
                 size_t tag_len = tag_after - tag_start;
                 char *tag = xstrndup(raw + tag_start, tag_len);
-                char *pname = dsml_attr(tag, "name");
+                char *pname = dt->syn == &qwen_tool_syntax ?
+                    xstrndup(tag + strlen(dt->syn->param_start), tag_len - strlen(dt->syn->param_start) - 1) :
+                    dsml_attr(tag, "name");
                 if (pname && dt->active_order) {
                     dt->active_prop = tool_schema_order_find_prop(dt->active_order, pname);
                 } else {
                     dt->active_prop = -1;
                 }
-                free(pname);
                 bool string_value = dt->model_syntax == SERVER_MODEL_SYNTAX_GLM ||
-                    dt->model_syntax == SERVER_MODEL_SYNTAX_QWEN4 ||
+                    (dt->model_syntax == SERVER_MODEL_SYNTAX_QWEN4 && dt->req &&
+                     qwen_param_declared_string(&dt->req->tool_orders,
+                         dt->active_order ? dt->active_order->name : "", pname ? pname : "")) ||
                     dsml_attr_is_string_true(raw, raw_len, tag_start, tag_after);
+                free(pname);
                 free(tag);
                 dt->pos = tag_after;
                 dt->param_value_start = tag_after;
@@ -17552,6 +17825,28 @@ static void thinking_state_feed(thinking_state *st, const char *p, size_t len) {
     }
 }
 
+/* MTP shadow rows use the committed-token boundary rules. Tool markers in
+ * reasoning remain inert; </think> inside an argument is literal data. */
+static void generation_protocol_feed(const request *r, thinking_state *thinking,
+                                     dsml_decode_tracker *tracker,
+                                     const char *raw, size_t raw_len,
+                                     const char *piece, size_t piece_len) {
+    const bool was_thinking = thinking->inside;
+    if (!dsml_decode_state_is_tool(tracker->decode))
+        thinking_state_feed(thinking, piece, piece_len);
+    if (r->kind != REQ_CHAT || !r->has_tools) return;
+    if (thinking->inside) {
+        dsml_decode_tracker_init(tracker, r);
+        tracker->pos = raw_len;
+    } else {
+        if (was_thinking) {
+            const char *end = find_last_substr(raw, "</think>");
+            tracker->pos = end ? (size_t)(end + 8 - raw) : raw_len;
+        }
+        dsml_decode_tracker_update(tracker, raw, raw_len);
+    }
+}
+
 static thinking_state thinking_state_from_prompt(const request *r) {
     thinking_state st = {0};
     if (r && r->prompt_text) {
@@ -17891,7 +18186,9 @@ static bool server_resident_frontier_restore(
 static bool ensure_resident_system_frontier(
         server *s, server_slot *slot, const ds4_tokens *prompt,
         char *err, size_t errlen) {
-    if (!s || !slot || !prompt || !ds4_engine_is_qwen(s->engine)) return false;
+    if (!s || !slot || !prompt ||
+        !server_model_uses_resident_frontiers(
+            server_model_syntax_for_engine(s->engine))) return false;
     const ds4_tokens *system = &slot->active_system_prefix;
     if (system->len < RESIDENT_SYSTEM_MIN_TOKENS ||
         !tokens_start_with(prompt, system)) {
@@ -18389,14 +18686,12 @@ static int build_constrained_forced_tokens(
         }
         size_t old_len = shadow.len;
         buf_append(&shadow, piece, piece_len);
-        thinking_state_feed(&shadow_thinking, piece, piece_len);
+        generation_protocol_feed(r, &shadow_thinking, &shadow_tracker,
+                                 shadow.ptr, shadow.len, piece, piece_len);
         if (response_constrained) {
             (void)response_json_lex_sync(
                 &shadow_json_state, shadow.ptr, shadow.len,
                 r->think_mode != DS4_THINK_NONE);
-        }
-        if (r->kind == REQ_CHAT && r->has_tools) {
-            dsml_decode_tracker_update(&shadow_tracker, shadow.ptr, shadow.len);
         }
         out[count++] = token;
         free(piece);
@@ -18529,14 +18824,12 @@ static int constrained_speculative_sample_target(
         }
         const size_t old_len = shadow.len;
         buf_append(&shadow, piece, piece_len);
-        thinking_state_feed(&thinking, piece, piece_len);
+        generation_protocol_feed(ctx->req, &thinking, &tracker,
+                                 shadow.ptr, shadow.len, piece, piece_len);
         if (ctx->req->response_schema) {
             (void)response_json_lex_sync(
                 &json_state, shadow.ptr, shadow.len,
                 ctx->req->think_mode != DS4_THINK_NONE);
-        }
-        if (ctx->req->kind == REQ_CHAT && ctx->req->has_tools) {
-            dsml_decode_tracker_update(&tracker, shadow.ptr, shadow.len);
         }
         free(piece);
 
@@ -18678,7 +18971,8 @@ static bool should_remember_thinking_checkpoint(const request *r,
     /* Qwen Chat Completions clients may omit reasoning even with tools.
      * Remember an alternative visible key without changing exact replay.
      * Actual tool calls have their own checkpoint path at the call site. */
-    const bool qwen_chat = r->model_syntax == SERVER_MODEL_SYNTAX_QWEN &&
+    const bool qwen_chat = (r->model_syntax == SERVER_MODEL_SYNTAX_QWEN ||
+                            r->model_syntax == SERVER_MODEL_SYNTAX_QWEN4) &&
                            r->api != API_RESPONSES && r->api != API_ANTHROPIC;
     if ((r->has_tools || r->prompt_preserves_reasoning) && !qwen_chat) return false;
     if (!ds4_think_mode_enabled(r->think_mode)) return false;
@@ -20420,7 +20714,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
      * DeltaNet state in VRAM; system, skill, and agent-context checkpoints retain
      * their independent storage policies. */
     const bool needs_post_response_frontier =
-        ds4_engine_is_qwen(s->engine) &&
+        server_model_uses_resident_frontiers(j->req.model_syntax) &&
         request_uses_prethinking_frontier(&j->req);
     if (needs_post_response_frontier) {
         char frontier_err[160] = {0};
@@ -21030,27 +21324,14 @@ decode_again:
 
             trace_piece(s, trace_id, piece, piece_len);
             buf_append(&text, piece, piece_len);
-            const bool was_thinking = thinking.inside;
-            if (!dsml_decode_state_is_tool(dsml_tracker.decode))
-                thinking_state_feed(&thinking, piece, piece_len);
+            generation_protocol_feed(&j->req, &thinking, &dsml_tracker,
+                                     text.ptr, text.len, piece, piece_len);
             if (j->req.response_schema) {
                 (void)response_json_lex_sync(
                     &response_json_state, text.ptr, text.len,
                     j->req.think_mode != DS4_THINK_NONE);
             }
-            if (j->req.kind == REQ_CHAT && j->req.has_tools) {
-                if (thinking.inside) {
-                    dsml_decode_tracker_init(&dsml_tracker, &j->req);
-                    dsml_tracker.model_syntax = j->req.model_syntax;
-                    dsml_tracker.pos = text.len;
-                } else {
-                    if (was_thinking) {
-                        const char *end = find_last_substr(text.ptr, "</think>");
-                        dsml_tracker.pos = end ? (size_t)(end + 8 - text.ptr) : text.len;
-                    }
-                    dsml_decode_tracker_update(&dsml_tracker, text.ptr, text.len);
-                }
-            }
+
 
             size_t stop_pos = 0, stop_len = 0;
             bool hit_stop = stop_list_find_from(&j->req.stops, text.ptr,
@@ -21221,7 +21502,8 @@ decode_again:
                 break;
             }
 
-            if (j->req.kind == REQ_CHAT && j->req.has_tools && saw_tool_end) {
+            if (j->req.kind == REQ_CHAT && j->req.has_tools && saw_tool_end &&
+                tool_block_finishes_turn(j->req.model_syntax)) {
                 finish = "tool_calls";
                 stop_decode = true;
                 break;
@@ -28048,6 +28330,10 @@ static void test_response_publish_precedes_checkpoint_cleanup(void) {
 }
 
 static void test_prethinking_frontier_covers_openai_endpoints(void) {
+    TEST_ASSERT(server_model_uses_resident_frontiers(SERVER_MODEL_SYNTAX_QWEN));
+    TEST_ASSERT(server_model_uses_resident_frontiers(SERVER_MODEL_SYNTAX_QWEN4));
+    TEST_ASSERT(!server_model_uses_resident_frontiers(SERVER_MODEL_SYNTAX_DEEPSEEK));
+    TEST_ASSERT(!server_model_uses_resident_frontiers(SERVER_MODEL_SYNTAX_GLM));
     request r;
     request_init(&r, REQ_CHAT, 128);
 
@@ -29344,6 +29630,29 @@ static void test_thinking_checkpoint_remember_gate(void) {
     r.api = API_ANTHROPIC;
     TEST_ASSERT(!should_remember_thinking_checkpoint(&r, &st, "stop"));
     r.has_tools = false;
+    r.think_mode = DS4_THINK_NONE;
+    TEST_ASSERT(!should_remember_thinking_checkpoint(&r, &st, "stop"));
+
+    /* Flash uses the same visible-history binding when tools are declared
+     * but no call is produced. The sampled reasoning must remain in KV. */
+    r.model_syntax = SERVER_MODEL_SYNTAX_QWEN4;
+    r.api = API_OPENAI;
+    r.think_mode = DS4_THINK_HIGH;
+    r.has_tools = true;
+    r.prompt_preserves_reasoning = false;
+    TEST_ASSERT(should_remember_thinking_checkpoint(&r, &st, "stop"));
+    r.prompt_preserves_reasoning = true;
+    TEST_ASSERT(should_remember_thinking_checkpoint(&r, &st, "stop"));
+    TEST_ASSERT(!should_remember_thinking_checkpoint(&r, &st, "length"));
+    TEST_ASSERT(!should_remember_thinking_checkpoint(&r, &st, "error"));
+    st.inside = true;
+    TEST_ASSERT(!should_remember_thinking_checkpoint(&r, &st, "stop"));
+    st.inside = false;
+    r.api = API_RESPONSES;
+    TEST_ASSERT(!should_remember_thinking_checkpoint(&r, &st, "stop"));
+    r.api = API_ANTHROPIC;
+    TEST_ASSERT(!should_remember_thinking_checkpoint(&r, &st, "stop"));
+    r.api = API_OPENAI;
     r.think_mode = DS4_THINK_NONE;
     TEST_ASSERT(!should_remember_thinking_checkpoint(&r, &st, "stop"));
 
@@ -31179,6 +31488,11 @@ static void test_agentic_constrained_sampling_scope(void) {
     TEST_ASSERT(agentic_should_constrain_sample(
         &r, DSML_DECODE_STRUCTURAL, true));
 
+    r.model_syntax = SERVER_MODEL_SYNTAX_QWEN4;
+    TEST_ASSERT(agentic_should_constrain_sample(&r, DSML_DECODE_OUTSIDE, false));
+    TEST_ASSERT(agentic_should_constrain_sample(&r, DSML_DECODE_STRUCTURAL, false));
+    TEST_ASSERT(!agentic_should_constrain_sample(&r, DSML_DECODE_OUTSIDE, true));
+
     /*
      * Critical regression test:
      * GLM must never be sent through the DSML decoder.
@@ -31844,6 +32158,174 @@ static void test_agentic_tool_schema_masking(void) {
     request_free(&r);
 }
 
+static void test_qwen4_generation_protocol_boundaries(void) {
+    request r;
+    request_init(&r, REQ_CHAT, 32);
+    r.model_syntax = SERVER_MODEL_SYNTAX_QWEN4;
+    test_agentic_add_tool(&r, "write",
+        "{\"name\":\"write\",\"input_schema\":{\"type\":\"object\","
+        "\"required\":[\"text\"],\"properties\":{\"text\":{\"type\":\"string\"}}}}");
+    dsml_decode_tracker tracker;
+    dsml_decode_tracker_init(&tracker, &r);
+    thinking_state thinking = {.inside=true};
+    buf raw = {0};
+    const char *pieces[] = {"quote <tool_call><function=forbidden> in reasoning", "</think>",
+        "<tool_call><function=write><parameter=text>", "literal </think> &lt;/parameter>",
+        "</parameter></function></tool_call>"};
+    for (size_t i=0; i<sizeof(pieces)/sizeof(pieces[0]); i++) {
+        buf_puts(&raw, pieces[i]);
+        generation_protocol_feed(&r, &thinking, &tracker, raw.ptr, raw.len, pieces[i], strlen(pieces[i]));
+        if (i==0) TEST_ASSERT(thinking.inside && tracker.mode==DSML_TRACK_SEARCH);
+        if (i==1) TEST_ASSERT(!thinking.inside && tracker.mode==DSML_TRACK_SEARCH);
+        if (i==2 || i==3) TEST_ASSERT(!thinking.inside && tracker.mode==DSML_TRACK_STRING_BODY);
+    }
+    TEST_ASSERT(tracker.mode==DSML_TRACK_DONE);
+    TEST_ASSERT(!tool_block_finishes_turn(SERVER_MODEL_SYNTAX_QWEN4));
+    TEST_ASSERT(tool_block_finishes_turn(SERVER_MODEL_SYNTAX_QWEN));
+    TEST_ASSERT(tool_block_finishes_turn(SERVER_MODEL_SYNTAX_DEEPSEEK));
+    buf_free(&raw); request_free(&r);
+}
+
+static void test_qwen4_native_tool_schema_masking(void) {
+    request r;
+    request_init(&r, REQ_CHAT, 32);
+    r.model_syntax = SERVER_MODEL_SYNTAX_QWEN4;
+    test_agentic_add_tool(&r, "run",
+        "{\"name\":\"run\",\"input_schema\":{\"type\":\"object\","
+        "\"required\":[\"command\",\"count\"],\"additionalProperties\":false,"
+        "\"properties\":{\"command\":{\"type\":\"string\",\"const\":\"safe\"},"
+        "\"count\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":2}}}}");
+    test_agentic_add_tool(&r, "empty",
+        "{\"name\":\"empty\",\"input_schema\":{\"type\":\"object\","
+        "\"properties\":{},\"additionalProperties\":false}}");
+    agentic_token_filter f = {.req=&r, .raw="", .raw_len=0};
+    const char *good = "<tool_call>\n<function=run>\n"
+        "<parameter=command>\nsafe\n</parameter>\n"
+        "<parameter=count>\n2\n</parameter>\n</function>\n</tool_call>";
+    TEST_ASSERT(agentic_filter_token(&f, 0, good, strlen(good)));
+    const char *bad[] = {
+        "<tool_call><function=exit_agent>",
+        "<tool_call><function=run></function></tool_call>",
+        "<tool_call><function=run><parameter=unknown>",
+        "<tool_call><function=run><parameter=command>bad</parameter>",
+        "<tool_call><function=run><parameter=count>01</parameter>",
+        "<tool_call><function=run><parameter=count>3</parameter>",
+        "<tool_call><function=run><parameter=count>\"2\"</parameter>",
+        "<tool_call><function=run><parameter=command>safe</parameter>"
+        "<parameter=command>safe</parameter>",
+        "<tool_call><function=empty><parameter=anything>",
+        "<function=run>", "<tool_call><invoke name=\"run\">",
+    };
+    for (size_t i=0; i<sizeof(bad)/sizeof(bad[0]); i++) {
+        TEST_ASSERT(!agentic_filter_token(&f, 0, bad[i], strlen(bad[i])));
+    }
+    /* Every possible tokenizer boundary must preserve the valid continuation. */
+    for (size_t split=0; split<=strlen(good); split++) {
+        dsml_decode_tracker tracker;
+        dsml_decode_tracker_init(&tracker, &r);
+        dsml_decode_tracker_update(&tracker, good, split);
+        agentic_token_filter part={.req=&r, .raw=good, .raw_len=split, .tracker=&tracker};
+        TEST_ASSERT(agentic_filter_token(&part, 0, good+split, strlen(good)-split));
+        buf_free(&part.scratch);
+    }
+    const char *multiple = "<tool_call><function=empty></function></tool_call>\n"
+        "<tool_call><function=empty></function></tool_call>";
+    TEST_ASSERT(agentic_filter_token(&f, 0, multiple, strlen(multiple)));
+    /* The final parser must see exactly the values admitted by the mask. */
+    char *content = NULL, *reasoning = NULL;
+    tool_calls calls = {0};
+    TEST_ASSERT(parse_qwen4_generated_message_ex(good, false, &content, &reasoning, &calls, &r.tool_orders));
+    TEST_ASSERT(calls.len == 1 && schema_json_validate_raw(
+        tool_schema_orders_find(&r.tool_orders, "run")->schema, calls.v[0].arguments));
+    tool_calls_free(&calls); free(content); free(reasoning);
+    for (size_t split=0; split<=strlen(multiple); split++) {
+        dsml_decode_tracker tracker;
+        dsml_decode_tracker_init(&tracker, &r);
+        dsml_decode_tracker_update(&tracker, multiple, split);
+        agentic_token_filter part={.req=&r, .raw=multiple, .raw_len=split, .tracker=&tracker};
+        TEST_ASSERT(agentic_filter_token(&part, 0, multiple+split, strlen(multiple)-split));
+        buf_free(&part.scratch);
+    }
+    const char *unfinished = "<tool_call><function=empty></function></tool_call><tool_ca";
+    dsml_decode_tracker partial;
+    dsml_decode_tracker_init(&partial, &r);
+    dsml_decode_tracker_update(&partial, unfinished, strlen(unfinished));
+    agentic_token_filter pending={.req=&r, .raw=unfinished, .raw_len=strlen(unfinished), .tracker=&partial};
+    TEST_ASSERT(!agentic_filter_token(&pending, 0, "", 0));
+    TEST_ASSERT(!agentic_filter_token(&pending, 0, "ll><function=exit_agent>", strlen("ll><function=exit_agent>")));
+    TEST_ASSERT(agentic_filter_token(&pending, 0, "ll><function=empty></function></tool_call>", strlen("ll><function=empty></function></tool_call>")));
+    buf_free(&pending.scratch);
+    r.tool_choice_required = true;
+    TEST_ASSERT(!agentic_filter_token(&f, 0, "ordinary prose", strlen("ordinary prose")));
+    TEST_ASSERT(!agentic_filter_token(&f, 0, "", 0));
+    TEST_ASSERT(agentic_filter_token(&f, 0, good, strlen(good)));
+    buf_free(&f.scratch);
+    request_free(&r);
+}
+
+static void test_qwen4_composite_parameter_schemas(void) {
+    const struct {
+        const char *schema;
+        const char *raw;
+        const char *expected;
+    } cases[] = {
+        {"{\"allOf\":[{\"type\":\"string\"}]}", "123", "\"123\""},
+        {"{\"anyOf\":[{\"type\":\"string\"}]}", "null", "\"null\""},
+        {"{\"enum\":[\"123\"]}", "123", "\"123\""},
+        {"{\"type\":[\"string\",\"null\"]}", "hello", "\"hello\""},
+        {"{\"type\":[\"string\",\"null\"]}", "null", "null"},
+        {"{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]}", "hello", "\"hello\""},
+        {"{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]}", "null", "null"},
+        {"{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]}", "say \"hello", "\"say \\\"hello\""},
+        {"{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"integer\"}]}", "123", "123"},
+    };
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+        request r;
+        request_init(&r, REQ_CHAT, 32);
+        r.model_syntax = SERVER_MODEL_SYNTAX_QWEN4;
+        buf tool = {0}, raw = {0};
+        buf_puts(&tool, "{\"name\":\"write\",\"input_schema\":{\"type\":\"object\","
+                         "\"required\":[\"text\"],\"properties\":{\"text\":");
+        buf_puts(&tool, cases[i].schema);
+        buf_puts(&tool, "}}}");
+        test_agentic_add_tool(&r, "write", tool.ptr);
+        buf_puts(&raw, "<tool_call><function=write><parameter=text>\n");
+        buf_puts(&raw, cases[i].raw);
+        buf_puts(&raw, "\n</parameter></function></tool_call>");
+        agentic_token_filter f = {.req = &r, .raw = "", .raw_len = 0};
+        TEST_ASSERT(agentic_filter_token(&f, 0, raw.ptr, raw.len));
+        for (size_t split = 0; split <= raw.len; split++) {
+            dsml_decode_tracker tracker;
+            dsml_decode_tracker_init(&tracker, &r);
+            dsml_decode_tracker_update(&tracker, raw.ptr, split);
+            agentic_token_filter part = {
+                .req = &r, .raw = raw.ptr, .raw_len = split, .tracker = &tracker};
+            TEST_ASSERT(agentic_filter_token(
+                &part, 0, raw.ptr + split, raw.len - split));
+            buf_free(&part.scratch);
+        }
+        char *content = NULL, *reasoning = NULL;
+        tool_calls calls = {0};
+        TEST_ASSERT(parse_qwen4_generated_message_ex(
+            raw.ptr, false, &content, &reasoning, &calls, &r.tool_orders));
+        TEST_ASSERT(calls.len == 1);
+        schema_json_value *arguments = schema_json_parse(calls.v[0].arguments);
+        schema_json_value *expected = schema_json_parse(cases[i].expected);
+        TEST_ASSERT(schema_json_equal(
+            schema_json_object_get(arguments, "text"), expected));
+        TEST_ASSERT(schema_json_validate(
+            tool_schema_orders_find(&r.tool_orders, "write")->schema, arguments, 0));
+        if (strstr(cases[i].schema, "null") && !strstr(cases[i].schema, "integer")) {
+            const char *bad = "<tool_call><function=write><parameter=text>123"
+                              "</parameter></function></tool_call>";
+            TEST_ASSERT(!agentic_filter_token(&f, 0, bad, strlen(bad)));
+        }
+        schema_json_free(arguments); schema_json_free(expected);
+        tool_calls_free(&calls); free(content); free(reasoning);
+        buf_free(&f.scratch); buf_free(&tool); buf_free(&raw); request_free(&r);
+    }
+}
+
 static void test_required_tool_choice_cannot_escape_to_text(void) {
     request r;
     request_init(&r, REQ_CHAT, 32);
@@ -32140,6 +32622,87 @@ static void test_response_json_incremental_lex_state(void) {
     TEST_ASSERT(!response_json_lex_feed(&state, "[01]", 4, NULL));
     response_json_lex_init(&state);
     TEST_ASSERT(!response_json_lex_feed(&state, "{\"x\",1}", 7, NULL));
+}
+
+static void test_response_schema_local_references(void) {
+    request r;
+    request_init(&r, REQ_CHAT, 32);
+    const char *raw =
+        "{\"$defs\":{\"Detail\":{\"type\":\"object\",\"properties\":{"
+        "\"name\":{\"const\":\"Ada\"}},\"required\":[\"name\"],"
+        "\"additionalProperties\":false}},\"type\":\"object\",\"properties\":{"
+        "\"detail\":{\"anyOf\":[{\"$ref\":\"#/$defs/Detail\"},{\"type\":\"null\"}]},"
+        "\"literal\":{\"const\":{\"$ref\":\"inert\"}}},"
+        "\"required\":[\"detail\",\"literal\"],\"additionalProperties\":false}";
+    TEST_ASSERT(request_set_response_schema(&r, xstrdup(raw)));
+    TEST_ASSERT(!strcmp(raw, r.response_schema_json));
+    TEST_ASSERT(schema_json_validate_raw(r.response_schema,
+        "{\"detail\":{\"name\":\"Ada\"},\"literal\":{\"$ref\":\"inert\"}}"));
+    TEST_ASSERT(schema_json_validate_raw(r.response_schema,
+        "{\"detail\":null,\"literal\":{\"$ref\":\"inert\"}}"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema,
+        "{\"detail\":{\"name\":\"bad\"},\"literal\":{\"$ref\":\"inert\"}}"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema,
+        "{\"detail\":{\"name\":\"Ada\",\"admin\":true},\"literal\":{\"$ref\":\"inert\"}}"));
+    response_json_filter filter = {.schema = r.response_schema, .raw = "", .raw_len = 0};
+    TEST_ASSERT(response_json_filter_token(&filter, 0,
+        "{\"detail\":{\"name\":\"Ada\"},\"literal\":{\"$ref\":\"inert\"}}",
+        strlen("{\"detail\":{\"name\":\"Ada\"},\"literal\":{\"$ref\":\"inert\"}}")));
+    TEST_ASSERT(!response_json_filter_token(&filter, 0,
+        "{\"detail\":{\"name\":\"bad\"}", strlen("{\"detail\":{\"name\":\"bad\"}")));
+
+    buf_free(&filter.scratch);
+
+    /* Repeated DAG references are legal; siblings remain a conjunction. */
+    TEST_ASSERT(request_set_response_schema(&r, xstrdup(
+        "{\"$defs\":{\"n\":{\"type\":\"integer\",\"minimum\":2}},"
+        "\"$ref\":\"#/$defs/n\",\"maximum\":3}")));
+    TEST_ASSERT(schema_json_validate_raw(r.response_schema, "2"));
+    TEST_ASSERT(schema_json_validate_raw(r.response_schema, "3"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema, "1"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema, "4"));
+    TEST_ASSERT(request_set_response_schema(&r, xstrdup(
+        "{\"$defs\":{\"a/b~\":{\"const\":true}},"
+        "\"allOf\":[{\"$ref\":\"#/$defs/a~1b~0\"},{\"$ref\":\"#/$defs/a~1b~0\"}]}")));
+    TEST_ASSERT(schema_json_validate_raw(r.response_schema, "true"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema, "false"));
+
+    const char *invalid[] = {
+        "{\"$ref\":\"https://example.com/schema\"}",
+        "{\"$ref\":\"#/$defs/missing\"}",
+        "{\"$defs\":{\"n\":{\"$ref\":\"#/$defs/n\"}},\"$ref\":\"#/$defs/n\"}",
+        "{\"$defs\":{\"a\":{\"$ref\":\"#/$defs/b\"},\"b\":{\"$ref\":\"#/$defs/a\"}},\"$ref\":\"#/$defs/a\"}",
+        "{\"$defs\":{\"n\":7},\"$ref\":\"#/$defs/n\"}",
+        "{\"$defs\":{\"n\":true,\"n\":false},\"$ref\":\"#/$defs/n\"}",
+        "{\"$defs\":{\"n\":true},\"$ref\":\"#/$defs/n\",\"$ref\":\"#/$defs/n\"}",
+        "{\"$defs\":[],\"type\":\"object\"}",
+        "{\"$defs\":{\"unused\":7},\"const\":true}",
+        "{\"$defs\":{\"n\":{\"pattern\":\"^unsafe$\"}},\"$ref\":\"#/$defs/n\"}",
+        "{\"$defs\":{\"n\":true},\"$ref\":\"#/$defs/n\",\"unknownConstraint\":true}",
+        "{\"$defs\":{\"n\":true},\"$ref\":\"#/$defs/n~2\"}",
+        "{\"$defs\":{\"n\":true},\"$ref\":\"#/$defs/%6e\"}",
+        "{\"$defs\":{\"n\":true},\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"$ref\":\"#/$defs/n\"}",
+        "{\"$defs\":{\"n\":true},\"items\":{\"$id\":\"nested\",\"$ref\":\"#/$defs/n\"}}",
+    };
+    for (size_t i = 0; i < sizeof(invalid) / sizeof(invalid[0]); i++) {
+        TEST_ASSERT(!request_set_response_schema(&r, xstrdup(invalid[i])));
+        /* Rejection never replaces the last successfully compiled schema. */
+        TEST_ASSERT(schema_json_validate_raw(r.response_schema, "true"));
+    }
+    /* A compact DAG can expand exponentially; reject before allocating an
+     * unbounded grammar, while leaving the prior schema untouched. */
+    buf expanded = {0};
+    buf_puts(&expanded, "{\"$defs\":{\"n0\":true");
+    for (int i = 1; i <= 20; i++) {
+        buf_printf(&expanded,
+            ",\"n%d\":{\"allOf\":[{\"$ref\":\"#/$defs/n%d\"},{\"$ref\":\"#/$defs/n%d\"}]}",
+            i, i - 1, i - 1);
+    }
+    buf_puts(&expanded, "},\"$ref\":\"#/$defs/n20\"}");
+    TEST_ASSERT(!request_set_response_schema(&r, xstrdup(expanded.ptr)));
+    TEST_ASSERT(schema_json_validate_raw(r.response_schema, "true"));
+    buf_free(&expanded);
+    request_free(&r);
 }
 
 static void test_schema_replacement_and_response_formats(void) {
@@ -32845,6 +33408,9 @@ static void ds4_server_unit_tests_run(void) {
     test_parse_qwen_dsml_dialect();
     test_json_schema_validator_edges();
     test_agentic_tool_schema_masking();
+    test_qwen4_native_tool_schema_masking();
+    test_qwen4_composite_parameter_schemas();
+    test_qwen4_generation_protocol_boundaries();
     test_required_tool_choice_cannot_escape_to_text();
     test_agentic_search_static_partition_guard();
     test_agentic_incremental_free_string();
@@ -32853,6 +33419,7 @@ static void ds4_server_unit_tests_run(void) {
     test_static_string_partition_classifier();
     test_response_json_incremental_lex_state();
     test_schema_replacement_and_response_formats();
+    test_response_schema_local_references();
     test_agentic_orphan_checkpoint_cleanup();
 
     test_deepseek41_server_stream();

@@ -292,6 +292,7 @@ class AgenticResponsesApiTests(unittest.TestCase):
             tool_choice="required",
         )
         parent["tools"] = [sub_agent_tool]
+        parent["reasoning"] = {"effort": "none"}
         delegated = require_single_call(
             post_response(parent), "call_sub_agent"
         )
@@ -304,6 +305,7 @@ class AgenticResponsesApiTests(unittest.TestCase):
             tool_choice="required",
         )
         child["tools"] = [function_tool("safe_tool")]
+        child["reasoning"] = {"effort": "none"}
         require_single_call(post_response(child), "safe_tool")
 
         returning = response_payload(
@@ -314,6 +316,10 @@ class AgenticResponsesApiTests(unittest.TestCase):
             max_output_tokens=64,
         )
         returning["tools"] = [sub_agent_tool]
+        # This gate requires a completed public reply within 64 tokens. Keep
+        # that budget for both families instead of spending it on a model's
+        # default reasoning; reasoning continuation has separate replay gates.
+        returning["reasoning"] = {"effort": "none"}
         restored = post_response(returning)
         self.assertEqual(restored["status"], "completed")
         details = restored.get("usage", {}).get("input_tokens_details", {})

@@ -173,7 +173,8 @@ Queste regole sono vincolanti per tutti i macro-task.
 - righe 90–103: **7. Thinking con output e tool call strict** — **Completato quando:** il reasoning resta libero e separato fino al primo
 - righe 104–125: **8. Fast-forward deterministico dei token vincolati** — **Completato quando:** chiavi, separatori, chiusure, `const`, rami enum gia
 - righe 126–138: **Limiti intenzionali** — al primo `</think>`; subito dopo deve iniziare il documento JSON, senza whitespace
-- righe 139–145: **Ultima verifica model-backed** — Chat e Responses con thinking, tool senza argomenti e tentativi adversariali
+- righe 139–146: **Ultima verifica model-backed** — Chat e Responses con thinking, tool senza argomenti e tentativi adversariali
+- righe 147–170: **Verifica Flash Next del 3 ottobre 2026** — preservando `const`/`enum`, required, nullable e i vincoli dei sibling.
 
 ## [Roadmap: tempi morti CPU/GPU nell'inferenza Qwen](inference-idle-time-roadmap.md)
 
@@ -199,6 +200,27 @@ Migliorare il tempo end-to-end a contesti diversi tramite scheduling, senza
   - righe 334–367: **2b. Gate del candidato ripulito (completato, REJECT)** — Build, test server e nuovi test maschera/RNG/cancellazione: PASS.
   - righe 368–395: **6. Chiusura tecnica e altre idee** — Il callback post-submission e il readback realmente segmentato sono le due
   - righe 396–424: **6. Validazione finale completata (2026-09-18)** — Sorgenti di inferenza finali identici alla baseline iniziale.
+
+## [Piano di azione: Flash Next veloce, Qwen27 protetto](qwen-flash-performance-action-plan-20261004.md)
+
+L'audit indica che la gerarchia VRAM/RAM/SSD è una base valida, ma il percorso Flash CUDA non sfrutta ancora bene la sovrapposizione fra I/O, trasferimenti e calcolo.
+
+- righe 3–10: **Perimetro e verdetto — 4 ottobre 2026** — L'audit indica che la gerarchia VRAM/RAM/SSD è una base valida, ma il percorso Flash CUDA non sfrutta ancora bene la sovrapposizione fra I/O, trasferimenti e calcolo.
+- righe 11–20: **1. Evidenze hardware e limiti del confronto** — Riferimento locale: report residency e qualifiche.
+- righe 21–31: **2. Cosa è stato fatto bene** — 1.
+- righe 32–49: **3. Colli di bottiglia e rischi visibili nel codice** — I numeri di riga si riferiscono al working tree osservato e potranno cambiare.
+- righe 50–61: **4. Interpretazione delle misure esistenti** — Non usare la ripetizione identica del prompt per rappresentare il caso generale.
+- righe 62–76: **5. Fonti esterne: idee trasferibili e incompatibilità** — Fonti consultate il 4 ottobre 2026.
+- righe 77–137: **6. Sequenza operativa e criteri di uscita** — Uscita: baseline riproducibile e matrice di isolamento.
+  - righe 79–87: **Fase 0 — Congelare baseline e proteggere Qwen27** — Uscita: baseline riproducibile e matrice di isolamento.
+  - righe 88–96: **Fase 1 — Diagnosi corta del percorso critico** — Uscita: separare limiti di PCIe/SSD, CPU di gestione e GPU; ipotesi falsificabile per il primo intervento.
+  - righe 97–106: **Fase 2 — Pipeline degli esperti, byte e matematica invariati** — Uscita: correctness breve PASS, riduzione misurabile dei gap e miglioramento end-to-end sul workload nuovo/caldo pertinente.
+  - righe 107–116: **Fase 3 — Prefill e memoria per scenario** — Uscita: configurazione per capacità hardware e scenario, con fallback.
+  - righe 117–126: **Fase 4 — Parità dell'agente e costo dei checkpoint** — Uscita: successo numerico e applicativo distinti, nessun full-prefill del parent quando esiste uno snapshot valido.
+  - righe 127–137: **Fase 5 — Qualifica progressiva e portabilità** — Uscita: un candidato viene promosso solo per hardware/scenari verificati.
+- righe 138–143: **7. Backlog successivo, solo se giustificato dai profili** — CUDA Graph per sottografi stabili dopo aver rimosso readback/allocazioni dinamiche dal percorso; ottimizzazioni attention/GDN e MMQ per le shape davvero dominanti; gestione KV paginata o tiered senza nuova quantizzazione…
+- righe 144–155: **8. Provenienza locale dell'audit** — Hash SHA-256 letti durante l'audit:
+- righe 156–164: **9. Prima implementazione e qualifica — 4 ottobre 2026** — Il registro di implementazione e qualifica descrive il codice risultante, i comandi riproducibili, i gate e le prestazioni.
 
 ## [Roadmap di integrazione Qwen3.8 27B UD-Q4_K_S](qwen38-implementation-roadmap.md)
 

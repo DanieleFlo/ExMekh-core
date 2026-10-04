@@ -38,7 +38,7 @@ async def test_check_provider_health_success() -> None:
     mock_client.get.return_value = mock_resp
 
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.httpx.AsyncClient"
+        "exmekh_agent.exmekh_bridge.provider_health.httpx.AsyncClient"
     ) as mock_client_cls:
         mock_client_cls.return_value.__aenter__.return_value = mock_client
         is_alive, models = await check_provider_health(
@@ -56,7 +56,7 @@ async def test_check_provider_health_non_200() -> None:
     mock_client.get.return_value = mock_resp
 
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.httpx.AsyncClient"
+        "exmekh_agent.exmekh_bridge.provider_health.httpx.AsyncClient"
     ) as mock_client_cls:
         mock_client_cls.return_value.__aenter__.return_value = mock_client
         is_alive, models = await check_provider_health()
@@ -70,7 +70,7 @@ async def test_check_provider_health_exception() -> None:
     mock_client.get.side_effect = RuntimeError("Network down")
 
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.httpx.AsyncClient"
+        "exmekh_agent.exmekh_bridge.provider_health.httpx.AsyncClient"
     ) as mock_client_cls:
         mock_client_cls.return_value.__aenter__.return_value = mock_client
         is_alive, models = await check_provider_health("http://invalid")

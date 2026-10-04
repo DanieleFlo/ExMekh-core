@@ -7592,7 +7592,7 @@ int main(int argc, char **argv) {
         const char *json = argv[3];
         chat_msgs msgs = {0};
         const bool anthropic = !strcmp(argv[1], "--ds41-render-anthropic");
-        if (!(anthropic ? parse_anthropic_messages(&json, &msgs) : parse_messages(&json, &msgs))) {
+        if (!(anthropic ? parse_anthropic_messages(&json, &msgs) : parse_messages(&json, &msgs, NULL, 0))) {
             chat_msgs_free(&msgs);
             return 2;
         }

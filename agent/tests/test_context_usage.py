@@ -123,8 +123,8 @@ def test_config_context_length_management(tmp_path) -> None:
     # Set context length for another model and default model
     cfg.set_model_context_length("model-b", 64000)
     assert cfg.get_context_length("model-b") == 64000
-    # Fallback to first available entry in model_context_lengths when model-a is not yet registered
-    assert cfg.get_context_length("model-a") == 64000
+    # Unknown models must not inherit another model's advertised context.
+    assert cfg.get_context_length("model-a") == 16000
 
     cfg.set_model_context_length("model-a", 22000)
     assert cfg.context_length == 22000

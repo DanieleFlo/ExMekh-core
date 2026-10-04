@@ -207,6 +207,44 @@ Questo ciclo avvicina il decode del server agentico Qwen3.8 alla velocità del
 - righe 230–278: **Fonti primarie e scelte implementative** — I valori campionati non sono inventati dal benchmark.
 - righe 279–289: **Verifica corrente** — Le misure sopra descrivono fixture storici ritirati e non certificano ExMekh Agent.
 
+## [Flash Next Q2: residency CUDA sulla RTX 3090 — 3 ottobre 2026](qwen38-flash-3090-residency-20261003.md)
+
+**Esperimenti diagnostici, non qualificati per il percorso predefinito.**
+
+- righe 3–9: **Stato** — **Esperimenti diagnostici, non qualificati per il percorso predefinito.**
+- righe 10–29: **Diagnosi e provenienza** — Macchina locale: RTX 3090 sm_86, i9-14900K, 64 GB fisici, WSL con 48 GB e
+- righe 30–40: **Variabili isolate** — 1.
+- righe 41–65: **Prime misure direction** — Contesto allocato 64, frontiere 16/32, teacher-forced 4 token per frontiera,
+- righe 66–77: **Gate di promozione** — Richiesti: warm-up e almeno cinque ripetizioni con CV <= 5%, logit del
+- righe 78–113: **Verifiche successive** — Baseline pulita a frontiere 16/32, 4 token teacher-forced, un primo sweep
+- righe 114–125: **Nota sulla scheda madre** — L'inventario Windows identifica MSI MAG Z790 TOMAHAWK MAX WIFI (MS-7E25),
+- righe 126–357: **Gerarchia adattiva e checkpoint: estensione richiesta dall’utente** — La cache statica precedente è superata.
+  - righe 140–175: **Policy e trasferimenti** — per tensor/layer.
+  - righe 176–190: **Persistenza della graduatoria** — Il payload Flash può aggiungere una sezione versionata contenente storia
+  - righe 191–215: **Correttezza e integrazione verificate** — conservazione dei conteggi e sparizione completa della storia oltre 128 token.
+  - righe 216–238: **Selezione dell’algoritmo** — Con cache abbastanza grandi da contenere il working set breve, LRU e finestre
+  - righe 239–259: **Scelta misurata e varianti scartate** — Cinque sweep misurati dopo il warm-up, cache 1 GiB VRAM / 2 GiB RAM, prompt
+  - righe 260–277: **Parità dei checkpoint con Qwen 27B** — Due guard preesistenti escludevano Flash dalla cattura del prefisso di sistema
+  - righe 278–333: **Misure finali della policy selezionata** — Medesimo Q2, testo letterario, ctx allocato 256, frontiere 64/128, 16 token
+  - righe 334–357: **Esito della verifica richiesta** — Con il root SSD corretto, i test HTTP invariati sono:
+- righe 358–502: **Audit upstream e ripresa del 4 ottobre 2026** — Il fetch di `antirez/ds4/main` restituisce ancora
+  - righe 400–502: **Budget degli esperti rispetto al contesto configurato** — Il GGUF locale dichiara `qwen4exp.context_length=262144`.
+
+## [Flash Next: pipeline CUDA e protezione Qwen27 — 4 ottobre 2026](qwen38-flash-pipeline-20261004.md)
+
+Implementazione del piano di azione sul working tree `codex/qwen-flash-3090`, HEAD `bd89b13f0c839d3d9e17c7afab1f8a4dcf1b98e6`.
+
+- righe 3–8: **Perimetro** — Implementazione del piano di azione sul working tree `codex/qwen-flash-3090`, HEAD `bd89b13f0c839d3d9e17c7afab1f8a4dcf1b98e6`.
+- righe 9–20: **Modifiche** — I kernel aritmetici, il router, top-k/tie-break, BF16 PLE, KV e il formato dei checkpoint non sono cambiati.
+- righe 21–23: **Avvio** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 24–26: **Default Qwen27, comando revisionabile senza build/inferenza:** — ./start-ds4-server.sh --print-command
+- righe 27–30: **Launcher dedicati dell’agente, uno per modello:** — ./agent/start-ds4-server.sh # Qwen27B, MTP, ctx 28000
+- righe 31–101: **Le opzioni esplicite restano configurabili; MTP è opzionale:** — DS4_MODEL_PROFILE=flash DS4_CTX=16384 DS4_PREFILL_CHUNK=256 \
+- righe 38–45: **Evidenze e protocollo** — Artefatti locali: `performance-results/flash-pipeline-20261004/`.
+- righe 46–62: **Risultati qualificati localmente** — Il record JSON conserva campioni, statistiche complete, comandi, hash di sorgenti/binari e risultati dei gate.
+- righe 63–75: **Correttezza e checkpoint** — I checkpoint del 27B restano utilizzabili con il 27B; i loro scenari/contratti vengono esercitati sul Flash, non i file KV di un modello diverso.
+- righe 76–101: **Riproduzione e lavoro rimanente** — make -j2 ds4 ds4-server ds4-bench CUDA_ARCH=sm_86
+
 ## [Qualificazione numerica Qwen3.8 — 17 settembre 2026](qwen38-qualification-2026-09-17.md)
 
 RTX 3090 24 GB, WSL Ubuntu 24.04, CUDA 12.4, sm_86, driver 610.62.

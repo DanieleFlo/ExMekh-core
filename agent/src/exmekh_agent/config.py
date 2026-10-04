@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -141,9 +142,15 @@ class AppConfig:
         target_model = model or self.default_model
         if target_model and target_model in self.model_context_lengths:
             return self.model_context_lengths[target_model]
-        if self.model_context_lengths:
-            return next(iter(self.model_context_lengths.values()))
         return self.context_length
+
+    def select_available_model(self, models: Sequence[str]) -> None:
+        """Follow the loaded model in memory; only explicit settings saves persist it."""
+        if not models:
+            return
+        if self.default_model not in models:
+            self.default_model = models[0]
+        self.context_length = self.get_context_length()
 
     def update(self, **kwargs: object) -> None:
         for key, val in kwargs.items():

@@ -6,6 +6,46 @@
       "index": "docs/architecture/_INDEX.md",
       "documents": [
         {
+          "path": "docs/architecture/clean-code-review-20261004.md",
+          "sections": [
+            {
+              "title": "Revisione del codice Flash e dei confini dell'agente — 4 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 98,
+              "summary": "Revisione delle modifiche pendenti sul branch `codex/qwen-flash-3090`, a partire"
+            },
+            {
+              "title": "Perimetro ed esito",
+              "level": 2,
+              "start": 3,
+              "end": 16,
+              "summary": "Revisione delle modifiche pendenti sul branch `codex/qwen-flash-3090`, a partire"
+            },
+            {
+              "title": "Responsabilità e contratti corretti",
+              "level": 2,
+              "start": 17,
+              "end": 46,
+              "summary": "Gli import pubblici precedenti del runner sono mantenuti per compatibilità;"
+            },
+            {
+              "title": "Verifiche della revisione",
+              "level": 2,
+              "start": 47,
+              "end": 82,
+              "summary": "Le prove HTTP usano il server compilato con la correzione degli schemi nativi."
+            },
+            {
+              "title": "Riproduzione dei gate statici",
+              "level": 2,
+              "start": 83,
+              "end": 98,
+              "summary": "(cd agent && .venv/bin/ruff check src tests && .venv/bin/python -m pytest)"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/ds4-merge-acceptance-20261002.md",
           "sections": [
             {
@@ -2565,6 +2605,226 @@
           ]
         },
         {
+          "path": "docs/performance/qwen38-flash-3090-residency-20261003.md",
+          "sections": [
+            {
+              "title": "Flash Next Q2: residency CUDA sulla RTX 3090 — 3 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 502,
+              "summary": "**Esperimenti diagnostici, non qualificati per il percorso predefinito.**"
+            },
+            {
+              "title": "Stato",
+              "level": 2,
+              "start": 3,
+              "end": 9,
+              "summary": "**Esperimenti diagnostici, non qualificati per il percorso predefinito.**"
+            },
+            {
+              "title": "Diagnosi e provenienza",
+              "level": 2,
+              "start": 10,
+              "end": 29,
+              "summary": "Macchina locale: RTX 3090 sm_86, i9-14900K, 64 GB fisici, WSL con 48 GB e"
+            },
+            {
+              "title": "Variabili isolate",
+              "level": 2,
+              "start": 30,
+              "end": 40,
+              "summary": "1."
+            },
+            {
+              "title": "Prime misure direction",
+              "level": 2,
+              "start": 41,
+              "end": 65,
+              "summary": "Contesto allocato 64, frontiere 16/32, teacher-forced 4 token per frontiera,"
+            },
+            {
+              "title": "Gate di promozione",
+              "level": 2,
+              "start": 66,
+              "end": 77,
+              "summary": "Richiesti: warm-up e almeno cinque ripetizioni con CV <= 5%, logit del"
+            },
+            {
+              "title": "Verifiche successive",
+              "level": 2,
+              "start": 78,
+              "end": 113,
+              "summary": "Baseline pulita a frontiere 16/32, 4 token teacher-forced, un primo sweep"
+            },
+            {
+              "title": "Nota sulla scheda madre",
+              "level": 2,
+              "start": 114,
+              "end": 125,
+              "summary": "L'inventario Windows identifica MSI MAG Z790 TOMAHAWK MAX WIFI (MS-7E25),"
+            },
+            {
+              "title": "Gerarchia adattiva e checkpoint: estensione richiesta dall’utente",
+              "level": 2,
+              "start": 126,
+              "end": 357,
+              "summary": "La cache statica precedente è superata."
+            },
+            {
+              "title": "Policy e trasferimenti",
+              "level": 3,
+              "start": 140,
+              "end": 175,
+              "summary": "per tensor/layer."
+            },
+            {
+              "title": "Persistenza della graduatoria",
+              "level": 3,
+              "start": 176,
+              "end": 190,
+              "summary": "Il payload Flash può aggiungere una sezione versionata contenente storia"
+            },
+            {
+              "title": "Correttezza e integrazione verificate",
+              "level": 3,
+              "start": 191,
+              "end": 215,
+              "summary": "conservazione dei conteggi e sparizione completa della storia oltre 128 token."
+            },
+            {
+              "title": "Selezione dell’algoritmo",
+              "level": 3,
+              "start": 216,
+              "end": 238,
+              "summary": "Con cache abbastanza grandi da contenere il working set breve, LRU e finestre"
+            },
+            {
+              "title": "Scelta misurata e varianti scartate",
+              "level": 3,
+              "start": 239,
+              "end": 259,
+              "summary": "Cinque sweep misurati dopo il warm-up, cache 1 GiB VRAM / 2 GiB RAM, prompt"
+            },
+            {
+              "title": "Parità dei checkpoint con Qwen 27B",
+              "level": 3,
+              "start": 260,
+              "end": 277,
+              "summary": "Due guard preesistenti escludevano Flash dalla cattura del prefisso di sistema"
+            },
+            {
+              "title": "Misure finali della policy selezionata",
+              "level": 3,
+              "start": 278,
+              "end": 333,
+              "summary": "Medesimo Q2, testo letterario, ctx allocato 256, frontiere 64/128, 16 token"
+            },
+            {
+              "title": "Esito della verifica richiesta",
+              "level": 3,
+              "start": 334,
+              "end": 357,
+              "summary": "Con il root SSD corretto, i test HTTP invariati sono:"
+            },
+            {
+              "title": "Audit upstream e ripresa del 4 ottobre 2026",
+              "level": 2,
+              "start": 358,
+              "end": 502,
+              "summary": "Il fetch di `antirez/ds4/main` restituisce ancora"
+            },
+            {
+              "title": "Budget degli esperti rispetto al contesto configurato",
+              "level": 3,
+              "start": 400,
+              "end": 502,
+              "summary": "Il GGUF locale dichiara `qwen4exp.context_length=262144`."
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/qwen38-flash-pipeline-20261004.md",
+          "sections": [
+            {
+              "title": "Flash Next: pipeline CUDA e protezione Qwen27 — 4 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 23,
+              "summary": "Implementazione del piano di azione sul working tree `codex/qwen-flash-3090`, HEAD `bd89b13f0c839d3d9e17c7afab1f8a4dcf1b98e6`."
+            },
+            {
+              "title": "Perimetro",
+              "level": 2,
+              "start": 3,
+              "end": 8,
+              "summary": "Implementazione del piano di azione sul working tree `codex/qwen-flash-3090`, HEAD `bd89b13f0c839d3d9e17c7afab1f8a4dcf1b98e6`."
+            },
+            {
+              "title": "Modifiche",
+              "level": 2,
+              "start": 9,
+              "end": 20,
+              "summary": "I kernel aritmetici, il router, top-k/tie-break, BF16 PLE, KV e il formato dei checkpoint non sono cambiati."
+            },
+            {
+              "title": "Avvio",
+              "level": 2,
+              "start": 21,
+              "end": 23,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
+            },
+            {
+              "title": "Default Qwen27, comando revisionabile senza build/inferenza:",
+              "level": 1,
+              "start": 24,
+              "end": 26,
+              "summary": "./start-ds4-server.sh --print-command"
+            },
+            {
+              "title": "Launcher dedicati dell’agente, uno per modello:",
+              "level": 1,
+              "start": 27,
+              "end": 30,
+              "summary": "./agent/start-ds4-server.sh # Qwen27B, MTP, ctx 28000"
+            },
+            {
+              "title": "Le opzioni esplicite restano configurabili; MTP è opzionale:",
+              "level": 1,
+              "start": 31,
+              "end": 101,
+              "summary": "DS4_MODEL_PROFILE=flash DS4_CTX=16384 DS4_PREFILL_CHUNK=256 \\"
+            },
+            {
+              "title": "Evidenze e protocollo",
+              "level": 2,
+              "start": 38,
+              "end": 45,
+              "summary": "Artefatti locali: `performance-results/flash-pipeline-20261004/`."
+            },
+            {
+              "title": "Risultati qualificati localmente",
+              "level": 2,
+              "start": 46,
+              "end": 62,
+              "summary": "Il record JSON conserva campioni, statistiche complete, comandi, hash di sorgenti/binari e risultati dei gate."
+            },
+            {
+              "title": "Correttezza e checkpoint",
+              "level": 2,
+              "start": 63,
+              "end": 75,
+              "summary": "I checkpoint del 27B restano utilizzabili con il 27B; i loro scenari/contratti vengono esercitati sul Flash, non i file KV di un modello diverso."
+            },
+            {
+              "title": "Riproduzione e lavoro rimanente",
+              "level": 2,
+              "start": 76,
+              "end": 101,
+              "summary": "make -j2 ds4 ds4-server ds4-bench CUDA_ARCH=sm_86"
+            }
+          ]
+        },
+        {
           "path": "docs/performance/qwen38-qualification-2026-09-17.md",
           "sections": [
             {
@@ -3693,7 +3953,7 @@
               "title": "Constrained JSON e DSML: piano di completamento",
               "level": 1,
               "start": 1,
-              "end": 145,
+              "end": 170,
               "summary": "Questo documento traccia il completamento del decoder vincolato usato dal"
             },
             {
@@ -3763,8 +4023,15 @@
               "title": "Ultima verifica model-backed",
               "level": 2,
               "start": 139,
-              "end": 145,
+              "end": 146,
               "summary": "Chat e Responses con thinking, tool senza argomenti e tentativi adversariali"
+            },
+            {
+              "title": "Verifica Flash Next del 3 ottobre 2026",
+              "level": 2,
+              "start": 147,
+              "end": 170,
+              "summary": "preservando `const`/`enum`, required, nullable e i vincoli dei sibling."
             }
           ]
         },
@@ -3917,6 +4184,130 @@
               "start": 396,
               "end": 424,
               "summary": "Sorgenti di inferenza finali identici alla baseline iniziale."
+            }
+          ]
+        },
+        {
+          "path": "docs/roadmaps/qwen-flash-performance-action-plan-20261004.md",
+          "sections": [
+            {
+              "title": "Piano di azione: Flash Next veloce, Qwen27 protetto",
+              "level": 1,
+              "start": 1,
+              "end": 164,
+              "summary": "L'audit indica che la gerarchia VRAM/RAM/SSD è una base valida, ma il percorso Flash CUDA non sfrutta ancora bene la sovrapposizione fra I/O, trasferimenti e calcolo."
+            },
+            {
+              "title": "Perimetro e verdetto — 4 ottobre 2026",
+              "level": 2,
+              "start": 3,
+              "end": 10,
+              "summary": "L'audit indica che la gerarchia VRAM/RAM/SSD è una base valida, ma il percorso Flash CUDA non sfrutta ancora bene la sovrapposizione fra I/O, trasferimenti e calcolo."
+            },
+            {
+              "title": "1. Evidenze hardware e limiti del confronto",
+              "level": 2,
+              "start": 11,
+              "end": 20,
+              "summary": "Riferimento locale: report residency e qualifiche."
+            },
+            {
+              "title": "2. Cosa è stato fatto bene",
+              "level": 2,
+              "start": 21,
+              "end": 31,
+              "summary": "1."
+            },
+            {
+              "title": "3. Colli di bottiglia e rischi visibili nel codice",
+              "level": 2,
+              "start": 32,
+              "end": 49,
+              "summary": "I numeri di riga si riferiscono al working tree osservato e potranno cambiare."
+            },
+            {
+              "title": "4. Interpretazione delle misure esistenti",
+              "level": 2,
+              "start": 50,
+              "end": 61,
+              "summary": "Non usare la ripetizione identica del prompt per rappresentare il caso generale."
+            },
+            {
+              "title": "5. Fonti esterne: idee trasferibili e incompatibilità",
+              "level": 2,
+              "start": 62,
+              "end": 76,
+              "summary": "Fonti consultate il 4 ottobre 2026."
+            },
+            {
+              "title": "6. Sequenza operativa e criteri di uscita",
+              "level": 2,
+              "start": 77,
+              "end": 137,
+              "summary": "Uscita: baseline riproducibile e matrice di isolamento."
+            },
+            {
+              "title": "Fase 0 — Congelare baseline e proteggere Qwen27",
+              "level": 3,
+              "start": 79,
+              "end": 87,
+              "summary": "Uscita: baseline riproducibile e matrice di isolamento."
+            },
+            {
+              "title": "Fase 1 — Diagnosi corta del percorso critico",
+              "level": 3,
+              "start": 88,
+              "end": 96,
+              "summary": "Uscita: separare limiti di PCIe/SSD, CPU di gestione e GPU; ipotesi falsificabile per il primo intervento."
+            },
+            {
+              "title": "Fase 2 — Pipeline degli esperti, byte e matematica invariati",
+              "level": 3,
+              "start": 97,
+              "end": 106,
+              "summary": "Uscita: correctness breve PASS, riduzione misurabile dei gap e miglioramento end-to-end sul workload nuovo/caldo pertinente."
+            },
+            {
+              "title": "Fase 3 — Prefill e memoria per scenario",
+              "level": 3,
+              "start": 107,
+              "end": 116,
+              "summary": "Uscita: configurazione per capacità hardware e scenario, con fallback."
+            },
+            {
+              "title": "Fase 4 — Parità dell'agente e costo dei checkpoint",
+              "level": 3,
+              "start": 117,
+              "end": 126,
+              "summary": "Uscita: successo numerico e applicativo distinti, nessun full-prefill del parent quando esiste uno snapshot valido."
+            },
+            {
+              "title": "Fase 5 — Qualifica progressiva e portabilità",
+              "level": 3,
+              "start": 127,
+              "end": 137,
+              "summary": "Uscita: un candidato viene promosso solo per hardware/scenari verificati."
+            },
+            {
+              "title": "7. Backlog successivo, solo se giustificato dai profili",
+              "level": 2,
+              "start": 138,
+              "end": 143,
+              "summary": "CUDA Graph per sottografi stabili dopo aver rimosso readback/allocazioni dinamiche dal percorso; ottimizzazioni attention/GDN e MMQ per le shape davvero dominanti; gestione KV paginata o tiered senza nuova quantizzazione…"
+            },
+            {
+              "title": "8. Provenienza locale dell'audit",
+              "level": 2,
+              "start": 144,
+              "end": 155,
+              "summary": "Hash SHA-256 letti durante l'audit:"
+            },
+            {
+              "title": "9. Prima implementazione e qualifica — 4 ottobre 2026",
+              "level": 2,
+              "start": 156,
+              "end": 164,
+              "summary": "Il registro di implementazione e qualifica descrive il codice risultante, i comandi riproducibili, i gate e le prestazioni."
             }
           ]
         },

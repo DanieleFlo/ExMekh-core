@@ -709,6 +709,32 @@ class ChatMessage(BaseModel):
             previous_history=previous_history,
         )
 
+    def append_token(self, token: str) -> None:
+        """End the active reasoning phase before adding visible answer content."""
+        self.close_reasoning()
+        self.content += token
+
+    def append_reasoning(self, token: str, skill_path: str = "/", depth: int = 0) -> None:
+        """Own reasoning segmentation instead of exposing block storage to callers."""
+        self.reasoning_content += token
+        if (
+            self.reasoning_blocks
+            and self.reasoning_blocks[-1].end_time is None
+            and self.reasoning_blocks[-1].skill_path == skill_path
+            and self.reasoning_blocks[-1].depth == depth
+        ):
+            self.reasoning_blocks[-1].content += token
+            return
+        self.close_reasoning()
+        self.reasoning_blocks.append(
+            ReasoningBlock(
+                skill_path=skill_path,
+                depth=depth,
+                generation_index=len(self.reasoning_blocks) + 1,
+                content=token,
+            )
+        )
+
     def add_tool_event(self, event: ToolEvent) -> None:
         self.close_reasoning()
         record_tool_event(self.tool_events, event)
@@ -775,30 +801,10 @@ class SubAgentConversation(BaseModel):
         self.messages.append(ChatMessage(role="assistant", is_streaming=True))
 
     def append_token(self, token: str) -> None:
-        message = self._active_assistant()
-        message.close_reasoning()
-        message.content += token
+        self._active_assistant().append_token(token)
 
     def append_reasoning(self, token: str, skill_path: str, depth: int) -> None:
-        message = self._active_assistant()
-        message.reasoning_content += token
-        if (
-            message.reasoning_blocks
-            and message.reasoning_blocks[-1].end_time is None
-            and message.reasoning_blocks[-1].skill_path == skill_path
-            and message.reasoning_blocks[-1].depth == depth
-        ):
-            message.reasoning_blocks[-1].content += token
-        else:
-            message.close_reasoning()
-            message.reasoning_blocks.append(
-                ReasoningBlock(
-                    skill_path=skill_path,
-                    depth=depth,
-                    generation_index=len(message.reasoning_blocks) + 1,
-                    content=token,
-                )
-            )
+        self._active_assistant().append_reasoning(token, skill_path, depth)
 
     def add_tool_event(self, event: ToolEvent) -> None:
         self._active_assistant().add_tool_event(event)

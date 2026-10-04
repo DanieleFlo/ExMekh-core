@@ -32,7 +32,9 @@ Le [guide upstream](docs/upstream/_INDEX.md) sono incluse nella wiki indicizzata
 
 | Componente importato | Responsabilità |
 | --- | --- |
-| `ds4_qwen4_cuda.cuh`, `ds4_qwen4_vision.h`, `ds4_qwen4_unicode.inc` | Kernel, vision e tokenizer Flash Next/Mini, distinti da Qwen27 |
+| `ds4_qwen4_cuda.cuh`, `ds4_qwen4_vision.h`, `ds4_qwen4_unicode.inc` | Kernel, vision e tokenizer Flash Next/Mini, distinti da Qwen27; cache CUDA VRAM/RAM/SSD opt-in, routing condiviso mid/down, copie a gruppi con eventi e doppio staging, slab RAM bounded e ranking esatto; budget dal contesto/GGUF e metadata dei checkpoint |
+| `ds4_qwen4_expert_cache.h`, `tests/test_qwen4_expert_cache.c` | Policy C di sostituzione e storia esatta degli ultimi 32/64/128 token; test di pinning e cambi di distribuzione |
+| `tests/qwen4_expert_policy_replay.py` | Confronto diagnostico delle policy su selezioni reali del router, senza cambiare l’inferenza |
 | `ds4_deepseek41_gpu.h`, `ds4_deepseek41_cuda.cuh` | API GPU e kernel DeepSeek 4.1 |
 | `ds4_image.c/h`, `third_party/iris/` | Decodifica immagini e input multimodali |
 | `ds4_deepseek4_vision_gpu.cuh`, `ds4_glm53_vision_gpu.cuh` | Encoder vision per famiglie DeepSeek/GLM |
@@ -220,6 +222,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   allineamento token-hidden, modello prestazionale, verifier target microbatch,
   rollback Gated DeltaNet, scheduling adattivo, fallback e gate di test per il
   target CUDA Q4_K_S/Q4_K_M.
+- `docs/architecture/clean-code-review-20261004.md` — revisione delle modifiche Flash e
+  dei confini del frontend: responsabilità, contratti tool/provider, verifiche e
+  limiti dell'audit; distingue qualifica prestazionale e refactoring successivo.
 - `docs/architecture/qwen38-compatibility.md` — audit pinning del target
   Qwen3.8-27B-UD-Q4_K_S e del relativo MTP: shape, inventario quantizzato,
   integrazione CLI/server e formati CUDA ancora necessari.
@@ -240,6 +245,10 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/roadmaps/qwen38-implementation-roadmap.md` — registro vivo
   dell'integrazione Qwen3.8 UD-Q4_K_S: kernel GGML mancanti, parita' CLI/server,
   MTP, checkpoint SSD, doppi gate Qwen3.6/Qwen3.8, decisioni e risultati.
+- `docs/performance/qwen38-flash-3090-residency-20261003.md` — diagnosi Flash Next Q2, esperimenti CUDA di residency/copie byte-identiche, fonti e gate non promossi sulla RTX 3090.
+- `docs/roadmaps/qwen-flash-performance-action-plan-20261004.md` — audit statico Flash/27B, colli di bottiglia I/O e PCIe, confronto runtime esterni e piano progressivo per performance, checkpoint e portabilità.
+- `docs/performance/qwen38-flash-pipeline-20261004.md` — implementazione Flash isolata, routing compatto, staging per gruppi, slab RAM e ranking esatto; qualifica locale e limiti hardware/scenario.
+- `docs/performance/qwen38-flash-pipeline-20261004.json` — campioni, statistiche, comandi, provenienza e gate numerici/applicativi della qualifica Flash/Qwen27 locale.
 - `docs/hardware/` — inventario della macchina RTX 3090 e note di riferimento
   su GA102, compute capability 8.6, memoria, numerica CUDA e determinismo.
 
@@ -255,15 +264,23 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `download_model.sh` — download dei modelli e support model conosciuti dal
   progetto: DeepSeek Flash 0731/DSpark, PRO 0813, GLM e gli artefatti Qwen3.8
   fissati con revisione e checksum.
-- `start-ds4-server.sh`, `agent/start-ds4-server.sh`, `agent/run.sh` —
+- `start-ds4-server.sh`, `agent/start-ds4-server.sh`,
+  `agent/start-ds4-server-flash.sh`, `agent/run.sh` —
   launcher eseguibili nativi per server CUDA e frontend ExMekh Agent dalla copia WSL2
-  `/home/daniele/ds4`; il progetto non modifica proxy o firewall Windows.
+  `/home/daniele/ds4`; il launcher principale mantiene Qwen27 come default e aggiunge il profilo Flash esplicito; i due launcher in `agent/` selezionano rispettivamente Qwen27B e Flash Next, con proiettore corretto e `--print-command`; il progetto non modifica proxy o firewall Windows.
 - `ds4_cli.c` — eseguibile `ds4`: parsing opzioni, modalità one-shot e REPL,
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
   argomento seleziona il sidecar Qwen auditato; `--mtp FILE` e l'alias
   `--mtp-model FILE` scelgono un support model esplicito, incluso DSpark.
 - `ds4_server.c` — eseguibile `ds4-server`: API HTTP compatibili, code, worker,
+  vincoli dei tool nella sintassi nativa Flash condivisi con il replay MTP,
   session batching, streaming, tool-call mapping e policy della KV su disco;
+  compila i riferimenti locali finiti `#/$defs/nome` degli output Pydantic,
+  mantenendo i vincoli congiunti; riferimenti esterni/ricorsivi falliscono prima
+  dell’inferenza. Parser, limiti di espansione e classifier JSONSchemaBench
+  hanno regressioni dedicate; il client Flash viene verificato in streaming;
+  il riuso dei checkpoint visibili Qwen include Flash anche con tool dichiarati
+  e reasoning omesso o reinviato, preservando il KV campionato;
   espone per Qwen ID API canonici senza l'estensione `.gguf`, mantenendo gli ID
   storici come alias di compatibilità;
   per Responses gestisce inoltre il namespace `agentic`, il masking DSML dei
@@ -282,6 +299,25 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   Il converter usa l'API pubblica dei metadati Message, senza esporre snapshot
   al provider; l'adapter dei tool conserva lo stato di errore emesso da ExMekh-Lib per
   root, conversazioni figlie e UI.
+- `agent/src/exmekh_agent/config.py`, `agent/src/exmekh_agent/exmekh_bridge/provider_health.py`,
+  `agent/src/exmekh_agent/ui/settings_drawer.py` — discovery del modello attivo e del
+  contesto allocato: il probe legge e valida i metadati, AppConfig sceglie il
+  modello in memoria e la UI aggiorna i controlli dopo riavvii Flash/27B, senza
+  salvare preferenze durante i health check.
+  `agent/tests/test_model_discovery_e2e.py` e `agent/tests/run_model_discovery_agent.py`
+  verificano barra modello/contesto, tooltip e modello delle richieste nella stessa pagina.
+- `agent/src/exmekh_agent/exmekh_bridge/converter.py` — serializzazione delle skill, conversione della history e
+  deduplicazione del prompt corrente tramite le API pubbliche Message;
+  `agent_runner.py` coordina l'esecuzione e mantiene gli import di compatibilità.
+- `agent/src/exmekh_agent/exmekh_bridge/provider_context.py` — osservazione uniforme
+  delle richieste normali e strutturate, isolamento dei contesti figli e
+  conservazione dei token totali dichiarati dal provider.
+- `agent/src/exmekh_agent/exmekh_bridge/models.py`,
+  `agent/src/exmekh_agent/exmekh_bridge/event_handlers.py` — ChatMessage gestisce
+  contenuto e segmenti reasoning; gli handler adattano una volta i callback legacy
+  e pubblicano lo stesso scope per Quick Chat e DeepAgent.
+- `agent/tests/test_clean_review_contracts.py` — regressioni sui confini pubblici,
+  metadati invalidi, callback reasoning e osservazione delle richieste strutturate.
 - `agent/src/exmekh_agent/exmekh_bridge/execution_restore.py` — ricostruisce history e cache
   tramite le API pubbliche ExMekh-Lib, mantenendo identità e metadati degli output
   riletti e lo scope dei messaggi di steering dopo la compattazione.
@@ -454,7 +490,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 
 - `ds4_cuda.cu` — runtime CUDA principale: allocazione/copie, cuBLAS, kernel
   custom, quantizzazione, attention, MoE, KV, batching e supporto multi-GPU;
-  contiene inoltre embedding/matvec Q4_K/Q5_K/Q6_K, RoPE parziale, attention gated
+  attiva la cache tiered Flash tramite una capability dell’engine, isolando le variabili Flash dagli allocator degli altri modelli; contiene inoltre embedding/matvec Q4_K/Q5_K/Q6_K, RoPE parziale, attention gated
   e aggiornamento ricorrente Qwen task 6, più i kernel multi-riga causali e i
   GEMM di prefill Qwen. Il decode Q8_1-R8 predefinito rappresenta l'attivazione
   con due residui Q8_1 e riusa MMVQ Q4/Q5/Q6, decodificando una sola volta i
@@ -603,6 +639,10 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   di injection ostili, duplicati, Unicode/escape e validazione degli output;
   usa un'allocazione CUDA Qwen di 22.593 token per restare sotto il limite VRAM
   osservato oltre la frontiera effettiva di 22K.
+- `agent/tests/test_flash_structured_live.py` — matrice opt-in sul client ExMekh
+  installato, con Flash reale: Chat/Responses, streaming, thinking, temperatura,
+  schema Pydantic annidato/nullable, Unicode e rifiuto degli output troncati;
+  eseguibile contro server target-only e MTP, senza dati di chat utente.
 - `tests/test_server_sampling_matrix.py` — fixture model-free incluse in
   `make test` e gate live Chat/Responses per il prodotto cartesiano
   temperatura × thinking × MTP, con separazione fra identità semantica e

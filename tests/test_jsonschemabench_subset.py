@@ -76,6 +76,45 @@ class JSONSchemaBenchSubsetTests(unittest.TestCase):
             len({item["category"] for item in self.record["supported"]}), 9
         )
 
+    def test_local_definitions_match_response_support_without_erasing_constraints(self) -> None:
+        schema = {
+            "$defs": {"a/b~": {"type": "integer", "minimum": 2}},
+            "$ref": "#/$defs/a~1b~0", "maximum": 3,
+        }
+        self.assertEqual(IMPORTER.unsupported_reasons(schema), [])
+        self.assertEqual(IMPORTER.expand_local_definitions(schema), {
+            "allOf": [{"type": "integer", "minimum": 2}, {"maximum": 3}],
+        })
+        literal = {"const": {"$ref": "inert", "$defs": "data"}}
+        self.assertEqual(IMPORTER.expand_local_definitions(literal), literal)
+        invalid = [
+            {"$ref": "https://example.com/schema"},
+            {"$ref": "#/$defs/missing"},
+            {"$defs": {"unused": 7}, "const": True},
+            {"$defs": {"n": {"$ref": "#/$defs/n"}}, "$ref": "#/$defs/n"},
+            {"$defs": {"n": {"pattern": "^unsafe$"}}, "$ref": "#/$defs/n"},
+            {**schema, "unknownConstraint": True},
+            {**schema, "$ref": "#/$defs/a~2"},
+            {**schema, "$ref": "#/$defs/%61"},
+            {**schema, "$schema": "http://json-schema.org/draft-07/schema#"},
+            {"$defs": {"n": True}, "items": {"$id": "nested", "$ref": "#/$defs/n"}},
+        ]
+        for item in invalid:
+            with self.subTest(schema=item):
+                self.assertTrue(IMPORTER.unsupported_reasons(item))
+        dag = {"$defs": {"n0": True}, "$ref": "#/$defs/n20"}
+        for i in range(1, 21):
+            dag["$defs"][f"n{i}"] = {
+                "allOf": [{"$ref": f"#/$defs/n{i - 1}"}] * 2,
+            }
+        self.assertTrue(IMPORTER.unsupported_reasons(dag))
+
+    def test_pinned_subset_still_matches_current_support(self) -> None:
+        for item in self.record["supported"]:
+            self.assertEqual(IMPORTER.unsupported_reasons(item["schema"]), [], item["id"])
+        for item in self.record["unsupported"]:
+            self.assertTrue(IMPORTER.unsupported_reasons(item["schema"]), item["id"])
+
     def test_vendored_schema_hashes_are_canonical(self) -> None:
         for item in self.record["supported"] + self.record["unsupported"]:
             digest = hashlib.sha256(

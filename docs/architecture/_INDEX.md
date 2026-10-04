@@ -2,6 +2,15 @@
 
 Indice generato; non modificare a mano.
 
+## [Revisione del codice Flash e dei confini dell'agente — 4 ottobre 2026](clean-code-review-20261004.md)
+
+Revisione delle modifiche pendenti sul branch `codex/qwen-flash-3090`, a partire
+
+- righe 3–16: **Perimetro ed esito** — Revisione delle modifiche pendenti sul branch `codex/qwen-flash-3090`, a partire
+- righe 17–46: **Responsabilità e contratti corretti** — Gli import pubblici precedenti del runner sono mantenuti per compatibilità;
+- righe 47–82: **Verifiche della revisione** — Le prove HTTP usano il server compilato con la correzione degli schemi nativi.
+- righe 83–98: **Riproduzione dei gate statici** — (cd agent && .venv/bin/ruff check src tests && .venv/bin/python -m pytest)
+
 ## [Accettazione merge DS4 e exmekh-lib — 2 ottobre 2026](ds4-merge-acceptance-20261002.md)
 
 **PASS per Qwen3.8-27B sulla RTX 3090.** Sono concluse le prove residue:

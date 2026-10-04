@@ -11,6 +11,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+SCHEMA_MAX_NESTING = 256
+SCHEMA_MAX_EXPANDED_NODES = 65_536
+
 SOURCE_REPOSITORY = "https://github.com/guidance-ai/jsonschemabench"
 SOURCE_DATASET = "https://huggingface.co/datasets/epfl-dlab/JSONSchemaBench"
 SOURCE_COMMIT = "ba103c73756198dd9b149ddc7db7867da7a077f6"
@@ -64,7 +67,88 @@ def json_number(value: Any) -> bool:
     return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
+def expand_local_definitions(schema: Any) -> Any:
+    """Match the response compiler's finite root-$defs support, fail closed."""
+    nodes = 0
+
+    def expand(value: Any, mode: str, depth: int, refs: tuple[int, ...], scoped: bool) -> Any:
+        nonlocal nodes
+        nodes += 1
+        if depth >= SCHEMA_MAX_NESTING or nodes > SCHEMA_MAX_EXPANDED_NODES:
+            raise ValueError("schema expansion limit")
+        if isinstance(value, list):
+            return [expand(child, "schema" if mode == "list" else "data",
+                           depth + 1, refs, scoped) for child in value]
+        if not isinstance(value, dict):
+            return value
+        resolved = None
+        has_ref = mode == "schema" and "$ref" in value
+        if mode == "schema":
+            scoped = scoped or (value is not schema and "$id" in value)
+            if "$defs" in value and (value is not schema or not isinstance(value["$defs"], dict)):
+                raise ValueError("unsupported definitions")
+            if "$defs" in value and any(
+                not isinstance(definition, (dict, bool)) for definition in value["$defs"].values()
+            ):
+                raise ValueError("definition is not a schema")
+        if has_ref:
+            reference = value["$ref"]
+            dialect = schema.get("$schema")
+            if scoped or (dialect is not None and dialect not in {
+                "https://json-schema.org/draft/2020-12/schema",
+                "https://json-schema.org/draft/2019-09/schema",
+            }):
+                raise ValueError("unsupported reference scope or dialect")
+            if not isinstance(reference, str) or not reference.startswith("#/$defs/"):
+                raise ValueError("unsupported reference")
+            encoded = reference[len("#/$defs/"):]
+            if "/" in encoded or "%" in encoded:
+                raise ValueError("unsupported reference pointer")
+            key, i = "", 0
+            while i < len(encoded):
+                if encoded[i] == "~":
+                    if i + 1 >= len(encoded) or encoded[i + 1] not in "01":
+                        raise ValueError("invalid reference escape")
+                    i += 1
+                    key += "~" if encoded[i] == "0" else "/"
+                else:
+                    key += encoded[i]
+                i += 1
+            target = schema.get("$defs", {}).get(key)
+            if not isinstance(target, (dict, bool)) or id(target) in refs:
+                raise ValueError("missing or recursive reference")
+            resolved = expand(target, "schema", depth + 1, (*refs, id(target)), scoped)
+        result = {}
+        for key, child in value.items():
+            if mode == "schema" and key in {"$ref", "$defs"}:
+                continue
+            child_mode = "schema" if mode == "properties" else "data"
+            if mode == "schema":
+                if key == "properties":
+                    child_mode = "properties"
+                elif key in {"items", "additionalProperties"}:
+                    child_mode = "schema"
+                elif key in {"allOf", "anyOf", "oneOf"}:
+                    child_mode = "list"
+            result[key] = expand(child, child_mode, depth + 1, refs, scoped)
+        if not has_ref:
+            return result
+        if not result:
+            return resolved
+        nodes += 2
+        if nodes > SCHEMA_MAX_EXPANDED_NODES:
+            raise ValueError("schema expansion limit")
+        return {"allOf": [resolved, result]}
+
+    return expand(schema, "schema", 0, (), False)
+
+
 def unsupported_reasons(schema: Any, path: str = "$") -> list[str]:
+    if path == "$" and isinstance(schema, dict) and {"$defs", "$ref"} & schema.keys():
+        try:
+            schema = expand_local_definitions(schema)
+        except (ValueError, TypeError, AttributeError):
+            return ["$:unsupported_local_reference"]
     if isinstance(schema, bool):
         return []
     if not isinstance(schema, dict):

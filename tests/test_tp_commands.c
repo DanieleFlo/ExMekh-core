@@ -40,6 +40,16 @@ static void check_bulk_exchange(void) {
             peer[0].tp.gate_timeout_ms = peer[1].tp.gate_timeout_ms = 50;
             peer[1].delay = 150000;
         }
+        /* Compare the restored timeout with the kernel-applied value: Linux
+         * may round milliseconds to a scheduler tick. Keep the restore check
+         * exact without assuming setsockopt preserves the requested units. */
+        struct timeval expected_timeout[2];
+        for (unsigned rank = 0; rank < 2; rank++) {
+            assert(tp_socket_set_gate_timeout(fd[rank], peer[rank].tp.gate_timeout_ms));
+            socklen_t len = sizeof(expected_timeout[rank]);
+            assert(getsockopt(fd[rank], SOL_SOCKET, SO_RCVTIMEO,
+                              &expected_timeout[rank], &len) == 0);
+        }
         pthread_t thread;
         assert(pthread_create(&thread, NULL, exchange_bulk, &peer[1]) == 0);
         exchange_bulk(&peer[0]);
@@ -51,8 +61,8 @@ static void check_bulk_exchange(void) {
             struct timeval timeout;
             socklen_t len = sizeof(timeout);
             assert(getsockopt(fd[rank], SOL_SOCKET, SO_RCVTIMEO, &timeout, &len) == 0);
-            assert((uint64_t)timeout.tv_sec * 1000u + timeout.tv_usec / 1000u ==
-                   peer[rank].tp.gate_timeout_ms);
+            assert(timeout.tv_sec == expected_timeout[rank].tv_sec &&
+                   timeout.tv_usec == expected_timeout[rank].tv_usec);
             free(peer[rank].in); free(peer[rank].out); close(fd[rank]);
         }
     }

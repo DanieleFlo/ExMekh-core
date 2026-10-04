@@ -3,27 +3,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
-SERVER_PORT="${DS4_SERVER_PORT:-8080}"
-
-cd "$REPO_DIR"
-
-echo "Checking ds4-server build..."
-make --no-print-directory -j2 ds4-server CUDA_ARCH="${CUDA_ARCH:-sm_86}"
-
-vision_args=()
-vision_model="${DS4_VISION_MODEL:-gguf/mmproj-Qwen3.8-27B-F16.gguf}"
-if [[ -f "$vision_model" ]]; then
-    vision_args=(--vision "$vision_model")
+# This entry point always selects Qwen27; Flash has its own launcher.
+export DS4_MODEL_PROFILE=qwen27
+args=()
+if [[ "${1:-}" == --print-command ]]; then
+    args=(--print-command)
+    shift
 fi
-
-echo "Starting ds4-server with MTP on http://0.0.0.0:${SERVER_PORT} ..."
-echo "CUDA decode baseline: Qwen3.8 target + MTP, Q8_1-R8, split-K32 and GQA2"
-exec ./ds4-server \
-    --cuda \
-    -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf \
-    "${vision_args[@]}" \
-    --mtp \
-    --ctx 28000 \
-    --host 0.0.0.0 \
-    --port "$SERVER_PORT" \
-    "$@"
+# Preserve the agent launcher's existing Qwen27 defaults.
+export DS4_CTX="${DS4_CTX:-28000}"
+export DS4_KV_DISK_DIR="${DS4_KV_DISK_DIR-}"
+args+=(--mtp)
+exec "$REPO_DIR/start-ds4-server.sh" "${args[@]}" "$@"

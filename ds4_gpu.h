@@ -47,6 +47,22 @@ typedef struct {
 int ds4_gpu_init(void);
 void ds4_gpu_cleanup(void);
 
+/* Optional Flash CUDA cache metadata; model bytes and KV stay independent. */
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+/* Engine capability: select only for Flash on a single CUDA device. */
+int ds4_gpu_qwen4_set_tiered_cache(bool enabled);
+/* Called after allocating the configured context, before caching weights.
+ * Dense bytes exclude CPU embeddings and routed experts; complete-expert
+ * sizes include gate/up/down, including their GGUF padding. */
+int ds4_gpu_qwen4_cache_prepare(uint32_t ctx, uint32_t prefill,
+        const void *model_map, uint64_t model_size,
+        const uint64_t *offsets, const uint64_t *sizes, uint32_t count,
+        uint64_t expert_min_bytes, uint64_t expert_max_bytes);
+uint64_t ds4_gpu_qwen4_expert_state_bytes(void);
+int ds4_gpu_qwen4_expert_state_export(void *buffer, uint64_t bytes);
+int ds4_gpu_qwen4_expert_state_import(const void *buffer, uint64_t bytes);
+#endif
+
 ds4_gpu_tensor *ds4_gpu_tensor_alloc(uint64_t bytes);
 ds4_gpu_tensor *ds4_gpu_tensor_alloc_managed(uint64_t bytes);
 ds4_gpu_tensor *ds4_gpu_tensor_view(const ds4_gpu_tensor *base, uint64_t offset, uint64_t bytes);

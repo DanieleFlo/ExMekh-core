@@ -87,3 +87,63 @@ async def test_settings_save_handles_sync_callback_and_restores_button_on_failur
         with pytest.raises(RuntimeError, match="callback failed"):
             await drawer._save_settings()
     drawer.save_button.props.assert_any_call(remove="loading")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("previous_model", "models", "context_length"),
+    [
+        (
+            "Qwen3.8-27B-UD-Q4_K_S",
+            [
+                "qwen3.8-flash-next",
+                "qwen3.8-flash-next-chat",
+                "qwen3.8-flash-next-reasoner",
+            ],
+            16384,
+        ),
+        ("qwen3.8-flash-next", ["Qwen3.8-27B-UD-Q4_K_S"], 28000),
+        (
+            "qwen3.8-flash-next-reasoner",
+            [
+                "qwen3.8-flash-next",
+                "qwen3.8-flash-next-chat",
+                "qwen3.8-flash-next-reasoner",
+            ],
+            8192,
+        ),
+    ],
+)
+async def test_settings_discovery_tracks_loaded_qwen_and_allocated_context(
+    monkeypatch, previous_model, models, context_length
+) -> None:
+    monkeypatch.setattr(config, "default_model", previous_model)
+    monkeypatch.setattr(config, "context_length", 22000)
+    monkeypatch.setattr(config, "model_context_lengths", {previous_model: 22000})
+    monkeypatch.setattr(config, "model_owners", {})
+    monkeypatch.setattr(config, "save_to_env", MagicMock())
+    refreshed = []
+    drawer = SettingsDrawerComponent(
+        lambda: None,
+        on_models_refreshed=lambda: refreshed.append(
+            (config.default_model, config.get_context_length())
+        ),
+    )
+    drawer.model_select = MagicMock(value=previous_model)
+    response = MagicMock(status_code=200)
+    response.json.return_value = {
+        "data": [
+            {"id": model, "owned_by": "ds4.c", "context_length": context_length}
+            for model in models
+        ]
+    }
+    with patch("httpx.AsyncClient.get", new_callable=AsyncMock, return_value=response):
+        await drawer.refresh_models()
+    expected_model = previous_model if previous_model in models else models[0]
+    assert config.default_model == expected_model
+    assert drawer.model_select.options == models
+    assert drawer.model_select.value == expected_model
+    assert refreshed == [(expected_model, context_length)]
+    assert config.uses_ds4_qwen_prompt(expected_model, config.base_url)
+    # Discovery is runtime metadata, not an explicit settings save.
+    config.save_to_env.assert_not_called()

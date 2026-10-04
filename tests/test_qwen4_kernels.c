@@ -10,6 +10,9 @@
 #include <string.h>
 #include <time.h>
 #include <sys/mman.h>
+#ifndef __APPLE__
+#include <unistd.h>
+#endif
 
 #include "ds4.h"
 #include "ds4_gpu.h"
@@ -3357,8 +3360,8 @@ static void test_multi_gemv(arena_t *a, uint32_t E, uint32_t T) {
 #ifndef __APPLE__
 /* Check half-operand expert tiles independently at every CUDA tile width.
  * The existing tests above still bound their error versus unrounded weights. */
-static void test_half_expert_tiles(arena_t *a, uint32_t T, uint32_t type, uint32_t dtype, uint32_t F) {
-    const uint32_t E = 256, NE = 4, NS = 2, NO = 3, cap = T+7, guard = 16;
+static void test_half_expert_tiles(arena_t *a, uint32_t T, uint32_t type, uint32_t dtype, uint32_t F, uint32_t NE) {
+    const uint32_t E = 256, NS = 2, NO = 3, cap = T+7, guard = 16;
     const uint32_t DF = dtype == 10 ? (F+255u)/256u*256u : F;
     double *gw, *uw, *dw;
     uint64_t go = arena_tier(a,type,(uint64_t)NE*F,E,&gw);
@@ -3383,6 +3386,19 @@ static void test_half_expert_tiles(arena_t *a, uint32_t T, uint32_t type, uint32
     require_ok(ds4_gpu_tensor_read(gc,0,counts,sizeof(counts)),"half tile counts read");
     require_ok(counts[0] == (int32_t)T && counts[1]+counts[2] == (int32_t)T && counts[3] == 0,
                "half tile hot and empty experts");
+    if (NE == 7) {
+        /* External callers may rewrite lists without rebuilding selected IDs.
+         * Invalidate the compact plan; the rewritten lists are authoritative. */
+        int32_t *host_lists = malloc((uint64_t)NE * cap * sizeof(int32_t));
+        require_ok(host_lists && ds4_gpu_tensor_read(gl, 0, host_lists, (uint64_t)NE * cap * 4),
+                   "external lists read");
+        memcpy(host_lists + (NE-1u) * cap, host_lists, (uint64_t)cap * sizeof(int32_t));
+        counts[NE-1u] = counts[0]; counts[0] = 0;
+        for (uint32_t t = 0; t < T; t++) sel[t*NS] = (int32_t)NE-1;
+        require_ok(ds4_gpu_tensor_write(gl, 0, host_lists, (uint64_t)NE * cap * 4) &&
+                   ds4_gpu_tensor_write(gc, 0, counts, sizeof(counts)), "external route rewrite");
+        free(host_lists);
+    }
     require_ok(ds4_gpu_qwen4_moe_mm_mid_tensor(gm,gx,gl,gc,a->base,a->size,go,uo,type,NE,T,NS,NO,E,F,cap),"half tile mid");
     require_ok(ds4_gpu_qwen4_moe_mm_down_tensor(gp,gm,gl,gc,a->base,a->size,d,dtype,NE,T,NS,NO,F,E,cap),"half tile down");
     float *mid = download(gm,nm+guard), *part = download(gp,np+guard);
@@ -3488,6 +3504,38 @@ static void test_dense_mm(arena_t *a, uint32_t in_dim, uint32_t rows, uint32_t T
 }
 
 #ifndef __APPLE__
+static void test_fixed_cache_prepare(arena_t *a) {
+    const uint32_t K = 64, M = 4;
+    double *weights;
+    const uint64_t off = arena_f32(a, (uint64_t)K * M, &weights, -0.1f, 0.1f);
+    const uint64_t bytes = (uint64_t)K * M * sizeof(float);
+    require_ok(!ds4_gpu_qwen4_cache_prepare(100000, 256, a->base, a->size,
+                    &a->size, &bytes, 1, bytes, bytes), "out-of-bounds fixed range rejected");
+    require_ok(ds4_gpu_qwen4_cache_prepare(100000, 256, a->base, a->size,
+                    &off, &bytes, 1, bytes, bytes), "fixed weights prepared");
+    /* Poison the backing file after preparing it. Reading the host mapping
+     * again would produce zero outputs instead of the original model bytes. */
+    memset((char *)a->base + off, 0, bytes);
+    double ref[M];
+    float x[K];
+    for (uint32_t k = 0; k < K; k++) x[k] = 1.0f;
+    for (uint32_t r = 0; r < M; r++) {
+        ref[r] = 0;
+        for (uint32_t k = 0; k < K; k++) ref[r] += weights[(uint64_t)r * K + k];
+    }
+    ds4_gpu_tensor *gx = upload(x, K), *out = upload(NULL, M);
+    for (unsigned pass = 0; pass < 2; pass++) {
+        require_ok(ds4_gpu_qwen4_dense_mm_tensor(out, gx, a->base, a->size,
+                            off, 0, 1, K, M), "prepared dense projection");
+        check_tensor("prepared dense ignores poisoned source", out, ref, M, 3e-5);
+        /* Recreating a context must keep the original resident weights. */
+        require_ok(ds4_gpu_qwen4_cache_prepare(262144, 256, a->base, a->size,
+                            &off, &bytes, 1, bytes, bytes), "prepared weights reused");
+    }
+    ds4_gpu_tensor_free(gx); ds4_gpu_tensor_free(out); free(weights);
+    puts("Qwen fixed weights precede expert admission: PASS");
+}
+
 /* Cross the former 64 MiB output-tile limit with odd output strides. Reuse
  * 17 independent input rows so the full CPU oracle stays inexpensive. */
 static void test_dense_mm_large(arena_t *a, uint32_t wtype) {
@@ -3531,12 +3579,29 @@ static void test_dense_mm_large(arena_t *a, uint32_t wtype) {
 int main(void) {
     arena_t arena;
     arena.size = (uint64_t)1536 << 20;
-    arena.base = mmap(NULL, arena.size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+    FILE *tiered_file = NULL;
+#ifndef __APPLE__
+    if (getenv("DS4_CUDA_QWEN4_TIERED_CACHE")) {
+        tiered_file = tmpfile();
+        require_ok(tiered_file && ftruncate(fileno(tiered_file), arena.size) == 0, "tiered test backing file");
+        /* Synthetic weights are modified between tests: buffered pread sees
+         * those dirty shared pages. Real GGUF validation also tests O_DIRECT. */
+        setenv("DS4_CUDA_NO_DIRECT_IO", "1", 1);
+    }
+#endif
+    arena.base = mmap(NULL, arena.size, PROT_READ | PROT_WRITE,
+                     tiered_file ? MAP_SHARED : MAP_PRIVATE | MAP_ANON,
+                     tiered_file ? fileno(tiered_file) : -1, 0);
     arena.used = 0;
     if (arena.base == MAP_FAILED) { perror("mmap"); return 1; }
     setenv("DS4_QWEN4_ATTN_SPLIT_KEYS", "8", 1);
     require_ok(ds4_gpu_init(), "GPU initialization");
-    require_ok(ds4_gpu_set_model_map(arena.base, arena.size), "model map registration");
+    if (tiered_file) {
+        require_ok(ds4_gpu_qwen4_set_tiered_cache(true), "Flash tiered capability");
+        const uint64_t offset = 0;
+        require_ok(ds4_gpu_set_model_map_spans(arena.base, arena.size, &offset, &arena.size, 1, arena.size), "unpinned model map");
+        require_ok(ds4_gpu_set_model_fd(fileno(tiered_file)), "tiered model file");
+    } else require_ok(ds4_gpu_set_model_map(arena.base, arena.size), "model map registration");
 
 #ifndef __APPLE__
     if (getenv("DS4_TEST_QWEN4_ATTN_GROUPS")) { test_attn_groups(); return 0; }
@@ -3550,10 +3615,10 @@ int main(void) {
         return 0;
     }
     if (getenv("DS4_TEST_QWEN4_EXPERT_TILES")) {
-        test_half_expert_tiles(&arena,33,16,10,64);
-        test_half_expert_tiles(&arena,33,12,39,64);
-        test_half_expert_tiles(&arena,2049,16,10,192);
-        test_half_expert_tiles(&arena,2049,12,39,192);
+        test_half_expert_tiles(&arena,33,16,10,64, 4);
+        test_half_expert_tiles(&arena,33,12,39,64, 4);
+        test_half_expert_tiles(&arena,2049,16,10,192, 4);
+        test_half_expert_tiles(&arena,2049,12,39,192, 4);
         return 0;
     }
 #endif
@@ -3595,6 +3660,21 @@ int main(void) {
         bench_dispatch(&arena);
         return 0;
     }
+#ifndef __APPLE__
+    /* Counts can grow while the combined pointer/count buffer shrinks.
+     * Odd expert counts also exercise pointer alignment and partial groups. */
+    {
+        const char *env = getenv("DS4_CUDA_QWEN4_COPY_GROUP");
+        char *saved = env ? strdup(env) : NULL;
+        require_ok(!env || saved, "save copy group environment");
+        setenv("DS4_CUDA_QWEN4_COPY_GROUP", "16", 1);
+        test_half_expert_tiles(&arena, 65, 16u, 10u, 256, 16);
+        setenv("DS4_CUDA_QWEN4_COPY_GROUP", "1", 1);
+        test_half_expert_tiles(&arena, 65, 16u, 10u, 256, 7);
+        if (saved) { setenv("DS4_CUDA_QWEN4_COPY_GROUP", saved, 1); free(saved); }
+        else unsetenv("DS4_CUDA_QWEN4_COPY_GROUP");
+    }
+#endif
     printf("hyper-connections\n");
     test_decode_fusions(&arena);
     test_qwen4_argmax();
@@ -3680,14 +3760,14 @@ int main(void) {
     test_dense_mm(&arena, 320, 10240, 40, 1u);
     test_dense_mm(&arena, 2560, 100, 9, 8u);
 #ifndef __APPLE__
-    test_half_expert_tiles(&arena,33,16,10,64);
-    test_half_expert_tiles(&arena,2049,16,10,64);
-    test_half_expert_tiles(&arena,8193,16,10,64);
-    test_half_expert_tiles(&arena,33,12,39,64);
-    test_half_expert_tiles(&arena,2049,12,39,64);
-    test_half_expert_tiles(&arena,8193,12,39,64);
-    test_half_expert_tiles(&arena,2049,16,10,192);
-    test_half_expert_tiles(&arena,2049,12,39,192);
+    test_half_expert_tiles(&arena,33,16,10,64, 4);
+    test_half_expert_tiles(&arena,2049,16,10,64, 4);
+    test_half_expert_tiles(&arena,8193,16,10,64, 4);
+    test_half_expert_tiles(&arena,33,12,39,64, 4);
+    test_half_expert_tiles(&arena,2049,12,39,64, 4);
+    test_half_expert_tiles(&arena,8193,12,39,64, 4);
+    test_half_expert_tiles(&arena,2049,16,10,192, 4);
+    test_half_expert_tiles(&arena,2049,12,39,192, 4);
     test_dense_mm(&arena, 2560, 100, 37, 8u);
     test_dense_mm(&arena, 10240, 1700, 32, 8u);
     test_dense_mm_large(&arena, 1u);
@@ -3714,5 +3794,31 @@ int main(void) {
     test_hc_norm_reuse(&arena);
     test_gdn_prefill_dispatch();
     printf("all qwen4 kernel tests passed\n");
+#ifndef __APPLE__
+    if (tiered_file) {
+        test_fixed_cache_prepare(&arena);
+        const uint64_t state_bytes = ds4_gpu_qwen4_expert_state_bytes();
+        void *state = malloc(state_bytes);
+        require_ok(state && state_bytes > 32 && ds4_gpu_qwen4_expert_state_export(state, state_bytes), "cache metadata export");
+        require_ok(!ds4_gpu_qwen4_expert_state_import(state, state_bytes - 1), "truncated cache metadata rejected");
+        require_ok(ds4_gpu_qwen4_expert_state_import(state, state_bytes), "cache metadata restore");
+        free(state);
+        puts("Qwen recent expert metadata round trip: PASS");
+        /* An unreadable cold expert must fail closed, never launch on zeros
+         * or on the unregistered mmap. This range has not been requested. */
+        require_ok(ftruncate(fileno(tiered_file), 0) == 0, "truncate cold source");
+        const int id = 0;
+        ds4_gpu_tensor *sel = ds4_gpu_tensor_alloc(sizeof(id));
+        require_ok(sel && ds4_gpu_tensor_write(sel, 0, &id, sizeof(id)), "cold failure selection");
+        ds4_gpu_tensor *input = upload(NULL, 64), *output = upload(NULL, 64);
+        require_ok(!ds4_gpu_qwen4_moe_down_tensor(output, input, sel, arena.base, arena.size,
+                       arena.used + 4096, 0, 2, 1, 1, 64, 64, 0, UINT32_MAX), "cold read error fails closed");
+        ds4_gpu_tensor_free(sel); ds4_gpu_tensor_free(input); ds4_gpu_tensor_free(output);
+        puts("Qwen tiered cold read failure: PASS");
+    }
+#endif
+    ds4_gpu_cleanup();
+    munmap(arena.base, arena.size);
+    if (tiered_file) fclose(tiered_file);
     return 0;
 }

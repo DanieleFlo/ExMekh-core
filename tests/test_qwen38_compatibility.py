@@ -6,6 +6,8 @@ import os
 import io
 import json
 import re
+import shlex
+import shutil
 import subprocess
 import struct
 import sys
@@ -456,9 +458,6 @@ class Qwen38CompatibilityTests(unittest.TestCase):
         sampling_matrix = (
             PROJECT_ROOT / "tests" / "test_server_sampling_matrix.py"
         ).read_text(encoding="utf-8")
-        agent_server_launcher = (
-            PROJECT_ROOT / "agent" / "start-ds4-server.sh"
-        ).read_text(encoding="utf-8")
         self.assertIn('"Qwen3.8-27B-UD-Q4_K_S.gguf"', server)
         self.assertIn('.canonical_id = "Qwen3.8-27B-UD-Q4_K_S"', engine)
         self.assertIn('.ds4/qwen38-ud-q4ks-kv', engine)
@@ -483,8 +482,40 @@ class Qwen38CompatibilityTests(unittest.TestCase):
             'SCENARIOS = ("plain", "optional_text", "required_tool")',
             sampling_matrix,
         )
-        self.assertIn("--ctx 28000", agent_server_launcher)
-        self.assertNotIn("--ctx 24768", agent_server_launcher)
+
+    @unittest.skipUnless(shutil.which("bash"), "launcher requires Bash")
+    def test_server_launcher_preserves_model_defaults_and_overrides(self) -> None:
+        clean_env = {k: v for k, v in os.environ.items()
+                     if not k.startswith("DS4_")}
+        cases = (
+            ("start-ds4-server.sh", {}, "22593", "Qwen3.8-27B-UD-Q4_K_S.gguf", False),
+            ("agent/start-ds4-server.sh", {}, "28000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
+            ("agent/start-ds4-server.sh", {"DS4_MODEL_PROFILE": "flash"},
+             "28000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
+            ("agent/start-ds4-server-flash.sh", {},
+             "16384", "Qwen3.8-Flash-Next-Q2.gguf", False),
+            ("agent/start-ds4-server-flash.sh", {"DS4_MODEL_PROFILE": "qwen27"},
+             "16384", "Qwen3.8-Flash-Next-Q2.gguf", False),
+            ("agent/start-ds4-server-flash.sh", {"DS4_MODEL_PROFILE": "flash",
+             "DS4_CTX": "32768", "DS4_PREFILL_CHUNK": "128",
+             "DS4_KV_DISK_DIR": "", "DS4_VISION_MODEL": ""},
+             "32768", "Qwen3.8-Flash-Next-Q2.gguf", False),
+        )
+        for launcher, overrides, ctx, model, mtp in cases:
+            with self.subTest(launcher=launcher, overrides=overrides):
+                result = subprocess.run(
+                    ["bash", str(PROJECT_ROOT / launcher), "--print-command"],
+                    cwd=PROJECT_ROOT, env={**clean_env, **overrides},
+                    text=True, capture_output=True, timeout=10, check=True,
+                )
+                argv = shlex.split(result.stdout)
+                self.assertEqual(argv[argv.index("--ctx") + 1], ctx)
+                self.assertEqual(Path(argv[argv.index("-m") + 1]).name, model)
+                self.assertEqual("--mtp" in argv, mtp)
+                if "DS4_PREFILL_CHUNK" in overrides:
+                    self.assertEqual(argv[argv.index("--prefill-chunk") + 1], "128")
+                    self.assertNotIn("--kv-disk-dir", argv)
+                    self.assertNotIn("--vision", argv)
 
     @unittest.skipUnless(os.environ.get("DS4_TEST_QWEN38_SHA") == "1",
                          "set DS4_TEST_QWEN38_SHA=1 for the 16.7 GB checksum gate")

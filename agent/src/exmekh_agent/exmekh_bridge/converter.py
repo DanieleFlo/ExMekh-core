@@ -5,6 +5,7 @@ import time
 from collections.abc import Sequence
 from typing import Any
 
+from exmekh_lib.core.agents.deep_skill.execution import DeepSkillExecution
 from exmekh_lib.core.agents.node import Node
 from exmekh_lib.core.cache.node_cache import NodeCache
 from exmekh_lib.core.models.assistant_message import (
@@ -39,6 +40,99 @@ AGENT_METADATA_KEYS = (
     "_fe_session_metadata",
     "_fe_steering_message",
 )
+
+
+def serialize_skill_execution(execution: DeepSkillExecution) -> dict[str, Any]:
+    """Keep the call metadata needed to restore saved skill outputs."""
+    tree = execution.history_tree()
+    tree["opening_tool_call_id"] = execution.opening_tool_call_id
+    tree["start_index"] = execution.start_index
+    tree["end_index"] = execution.end_index
+    tree["history"] = [
+        exmekh_message_to_raw_dict(message) for message in execution.history
+    ]
+    tree["children"] = [
+        serialize_skill_execution(child) for child in execution.children
+    ]
+    return tree
+
+
+def _history_role(item: Any) -> str | None:
+    if isinstance(item, Message):
+        return item.get_role_name()
+    if isinstance(item, ChatMessage):
+        return item.role
+    if isinstance(item, dict):
+        return str(item.get("role", "")).lower()
+    return None
+
+
+def convert_to_exmekh_messages(
+    history: Any | None,
+    current_user_prompt: str = "",
+) -> list[Message[Any]]:
+    """Converts a sequence of ChatMessage objects or dicts into exmekh_lib Message instances.
+
+    Filters out initial system messages (managed by Client) and any trailing user message
+    matching current_user_prompt to prevent duplication, while preserving all tool calls,
+    nested skills, and sub-agent interactions.
+    """
+    if not history:
+        return []
+
+    exmekh_messages: list[Message[Any]] = []
+    items = list(history)
+
+    if items:
+        last = items[-1]
+        last_role = _history_role(last)
+        if isinstance(last, Message):
+            last_content = last.get_message()
+        elif isinstance(last, ChatMessage):
+            last_content = last.content
+        elif isinstance(last, dict):
+            last_content = last.get("content")
+        else:
+            last_content = None
+        if (
+            last_role == "user"
+            and current_user_prompt
+            and last_content == current_user_prompt
+        ):
+            items = items[:-1]
+
+    pending_tool_calls: list[ToolCall] = []
+
+    for item in items:
+        role = _history_role(item)
+        if pending_tool_calls and role in ("user", "assistant"):
+            close_pending_tool_calls(exmekh_messages, pending_tool_calls)
+            if role == "user":
+                exmekh_messages.append(
+                    AssistantMessage(content="[Execution interrupted]")
+                )
+        if isinstance(item, Message):
+            if item.get_role_name() != "system":
+                exmekh_messages.append(item)
+            continue
+
+        if isinstance(item, ChatMessage):
+            if item.role == "system":
+                continue
+            exmekh_messages.extend(chat_message_to_exmekh_messages(item))
+        elif isinstance(item, dict):
+            role = str(item.get("role", "")).lower()
+            if role == "system":
+                continue
+            exmekh_messages.append(
+                raw_dict_to_exmekh_message(item, pending_tool_calls=pending_tool_calls)
+            )
+
+    if pending_tool_calls:
+        close_pending_tool_calls(exmekh_messages, pending_tool_calls)
+        exmekh_messages.append(AssistantMessage(content="[Execution interrupted]"))
+
+    return exmekh_messages
 
 
 def raw_dict_to_exmekh_message(

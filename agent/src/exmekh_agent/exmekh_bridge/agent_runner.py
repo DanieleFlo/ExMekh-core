@@ -8,11 +8,8 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
-import httpx
 from exmekh_lib.core.agents.deep_agent.deep_agent import DeepAgent
-from exmekh_lib.core.agents.deep_skill.execution import DeepSkillExecution
 from exmekh_lib.core.agents.node import DefaultCapabilities, Node
-from exmekh_lib.core.models.assistant_message import AssistantMessage, ToolCall
 from exmekh_lib.core.models.client import Client
 from exmekh_lib.core.models.client_request import ClientRequest
 from exmekh_lib.core.models.reasoning_effort import (
@@ -23,7 +20,6 @@ from exmekh_lib.core.models.reasoning_effort import (
 from exmekh_lib.core.models.system_message import SystemMessage
 from exmekh_lib.core.models.tool_hooks import ToolHooks
 from exmekh_lib.core.models.user_message import UserMessage
-from exmekh_lib.interfaces.message import Message
 from exmekh_lib.providers.local import LocalProvider
 
 from exmekh_agent.config import config
@@ -32,11 +28,10 @@ from exmekh_agent.exmekh_bridge.cancellation import (
     raise_if_cancelled,
 )
 from exmekh_agent.exmekh_bridge.converter import (
-    chat_message_to_exmekh_messages,
-    close_pending_tool_calls,
+    convert_to_exmekh_messages,
     exmekh_message_to_raw_dict,
-    raw_dict_to_exmekh_message,
     restore_node_history,
+    serialize_skill_execution,
 )
 from exmekh_agent.exmekh_bridge.event_handlers import (
     DeepAgentTurnEventHandler,
@@ -49,7 +44,6 @@ from exmekh_agent.exmekh_bridge.image_input import (
     user_content,
 )
 from exmekh_agent.exmekh_bridge.models import (
-    ChatMessage,
     ChatSettings,
     ChatTitle,
     ProviderContextUsage,
@@ -58,6 +52,12 @@ from exmekh_agent.exmekh_bridge.models import (
     ToolEvent,
 )
 from exmekh_agent.exmekh_bridge.provider_context import ContextTrackingProvider
+from exmekh_agent.exmekh_bridge.provider_health import (
+    check_provider_health as check_provider_health,
+)
+from exmekh_agent.exmekh_bridge.provider_health import (
+    extract_model_context_length as extract_model_context_length,
+)
 from exmekh_agent.exmekh_bridge.steering import TurnSteering
 from exmekh_agent.exmekh_bridge.sub_agents import (
     ObservedNode,
@@ -77,144 +77,6 @@ logger = logging.getLogger(__name__)
 # conversation's skill checkpoint.  A threading lock also covers worker threads
 # used by title generation and by separate NiceGUI clients.
 _provider_request_lock = threading.RLock()
-
-
-def convert_to_exmekh_messages(
-    history: Any | None,
-    current_user_prompt: str = "",
-) -> list[Message[Any]]:
-    """Converts a sequence of ChatMessage objects or dicts into exmekh_lib Message instances.
-
-    Filters out initial system messages (managed by Client) and any trailing user message
-    matching current_user_prompt to prevent duplication, while preserving all tool calls,
-    nested skills, and sub-agent interactions.
-    """
-    if not history:
-        return []
-
-    exmekh_messages: list[Message[Any]] = []
-    items = list(history)
-
-    if items:
-        last = items[-1]
-        last_role = (
-            getattr(last, "role", None)
-            if not isinstance(last, dict)
-            else last.get("role")
-        )
-        last_content = (
-            getattr(last, "content", None)
-            if not isinstance(last, dict)
-            else last.get("content")
-        )
-        if (
-            last_role == "user"
-            and current_user_prompt
-            and last_content == current_user_prompt
-        ):
-            items = items[:-1]
-
-    pending_tool_calls: list[ToolCall] = []
-
-    for item in items:
-        role = (
-            item.get("role") if isinstance(item, dict) else getattr(item, "role", None)
-        )
-        if isinstance(item, Message):
-            role = item.get_role_name()
-        if pending_tool_calls and role in ("user", "assistant"):
-            close_pending_tool_calls(exmekh_messages, pending_tool_calls)
-            if role == "user":
-                exmekh_messages.append(
-                    AssistantMessage(content="[Execution interrupted]")
-                )
-        if isinstance(item, Message):
-            if item.get_role_name() != "system":
-                exmekh_messages.append(item)
-            continue
-
-        if isinstance(item, ChatMessage):
-            if item.role == "system":
-                continue
-            exmekh_messages.extend(chat_message_to_exmekh_messages(item))
-        elif isinstance(item, dict):
-            role = str(item.get("role", "")).lower()
-            if role == "system":
-                continue
-            exmekh_messages.append(
-                raw_dict_to_exmekh_message(item, pending_tool_calls=pending_tool_calls)
-            )
-
-    if pending_tool_calls:
-        close_pending_tool_calls(exmekh_messages, pending_tool_calls)
-        exmekh_messages.append(AssistantMessage(content="[Execution interrupted]"))
-
-    return exmekh_messages
-
-
-def extract_model_context_length(model_data: dict[str, Any]) -> int | None:
-    """Extract the maximum context length reported by the inference engine for a model."""
-    candidates: list[Any] = [
-        model_data.get("context_length"),
-        model_data.get("top_provider", {}).get("context_length")
-        if isinstance(model_data.get("top_provider"), dict)
-        else None,
-        model_data.get("max_model_len"),
-        model_data.get("n_ctx"),
-        model_data.get("context_window"),
-    ]
-    for val in candidates:
-        if isinstance(val, (int, float)) and not isinstance(val, bool) and int(val) > 0:
-            return int(val)
-    return None
-
-
-async def check_provider_health(
-    base_url: str | None = None, api_key: str | None = None
-) -> tuple[bool, list[str]]:
-    """Check the configured provider endpoint and list its models."""
-    url = (base_url or config.base_url).rstrip("/")
-    key = api_key or config.api_key
-
-    headers = {"Authorization": f"Bearer {key}"} if key else {}
-    models_url = f"{url}/models"
-
-    try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
-            resp = await client.get(models_url, headers=headers)
-            if resp.status_code == 200:
-                data = resp.json()
-                models: list[str] = []
-                for m in data.get("data", []):
-                    m_id = m.get("id", "")
-                    if m_id:
-                        models.append(m_id)
-                        config.set_model_owner(
-                            m_id, str(m.get("owned_by") or ""), base_url=url
-                        )
-                        ctx_len = extract_model_context_length(m)
-                        if ctx_len is not None:
-                            config.set_model_context_length(m_id, ctx_len)
-                return True, sorted(models)
-            return False, []
-    except Exception as e:  # noqa: BLE001 - health probe converts failures to status
-        logger.debug(f"Provider health check failed: {e}")
-        return False, []
-
-
-def serialize_skill_execution(execution: DeepSkillExecution) -> dict[str, Any]:
-    """Keep the call metadata needed to restore saved skill outputs."""
-    tree = execution.history_tree()
-    tree["opening_tool_call_id"] = execution.opening_tool_call_id
-    tree["start_index"] = execution.start_index
-    tree["end_index"] = execution.end_index
-    tree["history"] = [
-        exmekh_message_to_raw_dict(message) for message in execution.history
-    ]
-    tree["children"] = [
-        serialize_skill_execution(child) for child in execution.children
-    ]
-    return tree
 
 
 def execute_agent_turn_sync(

@@ -58,34 +58,45 @@ class ContextTrackingProvider(Provider):
         """Observe owned requests without exposing the provider's callback storage."""
         self._on_request = observer
 
-    def call(self, request: ProviderRequest) -> ProviderResponse:
-        extra = request.get_extra() or {}
-        agentic = extra.get("agentic") or {}
+    def _begin_request(self, request: ProviderRequest) -> ProviderContextUsage | None:
+        agentic = (request.get_extra() or {}).get("agentic") or {}
         if agentic and agentic.get("agent_context_id") != self._context_id:
-            return self._provider.call(request)
-
+            return None
         if self._on_request:
             self._on_request()
         if self._on_context is None:
-            return self._provider.call(request)
-
+            return None
         context = self._estimate_request(request, agentic)
         self._on_context(context)
-        response = self._provider.call(request)
-        if response.usage and response.usage.prompt_tokens is not None:
-            if self._ds4_context:
-                self._ds4_context.record_response(
-                    response,
-                    agentic.get("allowed_skills", []),
-                    context.return_call_id,
-                    response.usage.prompt_tokens,
-                    response.usage.completion_tokens,
-                )
-            self._on_context(
-                context.with_provider_totals(
-                    response.usage.prompt_tokens, response.usage.completion_tokens
-                )
+        return context
+
+    def _record_response(
+        self,
+        context: ProviderContextUsage | None,
+        request: ProviderRequest,
+        response: ProviderResponse | StructuredProviderResponse,
+    ) -> None:
+        if context is None or not response.usage or response.usage.prompt_tokens is None:
+            return
+        if self._ds4_context:
+            agentic = (request.get_extra() or {}).get("agentic") or {}
+            self._ds4_context.record_response(
+                response,
+                agentic.get("allowed_skills", []),
+                context.return_call_id,
+                response.usage.prompt_tokens,
+                response.usage.completion_tokens,
             )
+        self._on_context(
+            context.with_provider_totals(
+                response.usage.prompt_tokens, response.usage.completion_tokens
+            )
+        )
+
+    def call(self, request: ProviderRequest) -> ProviderResponse:
+        context = self._begin_request(request)
+        response = self._provider.call(request)
+        self._record_response(context, request, response)
         return response
 
     def _estimate_request(
@@ -109,4 +120,7 @@ class ContextTrackingProvider(Provider):
     def call_structured[ResponseModel: BaseModel](
         self, request: StructuredProviderRequest[ResponseModel]
     ) -> StructuredProviderResponse[ResponseModel]:
-        return self._provider.call_structured(request)
+        context = self._begin_request(request)
+        response = self._provider.call_structured(request)
+        self._record_response(context, request, response)
+        return response

@@ -6,6 +6,9 @@ from copy import deepcopy
 from typing import Any
 
 from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.structured_provider_response import (
+    StructuredProviderResponse,
+)
 
 from exmekh_agent.exmekh_bridge.context_usage import (
     count_text_tokens,
@@ -60,7 +63,7 @@ class Ds4ContextEstimator:
 
     def record_response(
         self,
-        response: ProviderResponse,
+        response: ProviderResponse | StructuredProviderResponse,
         allowed_skills: list[str],
         return_call_id: str | None,
         prompt_tokens: int,

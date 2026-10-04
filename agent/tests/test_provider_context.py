@@ -12,6 +12,9 @@ from exmekh_lib.core.models.assistant_message import (
 from exmekh_lib.core.models.model_usage import ModelUsage
 from exmekh_lib.core.models.provider_request import ProviderRequest
 from exmekh_lib.core.models.provider_response import ProviderResponse
+from exmekh_lib.core.models.structured_assistant_message import (
+    StructuredAssistantMessage,
+)
 from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
 from exmekh_lib.core.models.structured_provider_response import (
     StructuredProviderResponse,
@@ -47,12 +50,19 @@ from exmekh_agent.exmekh_bridge.models import (
 from exmekh_agent.exmekh_bridge.provider_context import ContextTrackingProvider
 
 
+class StructuredAnswer(BaseModel):
+    text: str
+
+
 class StubProvider(Provider):
     def __init__(self) -> None:
         super().__init__(QwenTokenizer())
         self.requests: list[ProviderRequest] = []
         self.usage: ModelUsage | None = ModelUsage(4000, 100, 4100)
-        self.structured_result = object()
+        self.structured_result = StructuredProviderResponse(
+            StructuredAssistantMessage(StructuredAnswer(text="done")),
+            usage=ModelUsage(4000, 100, 4100),
+        )
         self.tool_calls = None
 
     def call(self, request: ProviderRequest) -> ProviderResponse:
@@ -64,6 +74,7 @@ class StubProvider(Provider):
     def call_structured[ResponseModel: BaseModel](
         self, request: StructuredProviderRequest[ResponseModel]
     ) -> StructuredProviderResponse[ResponseModel]:
+        self.requests.append(request)
         return self.structured_result
 
 
@@ -436,7 +447,13 @@ def test_tracking_provider_forwards_requests_and_isolates_child_context() -> Non
     provider.usage = ModelUsage(completion_tokens=1)
     tracker.call(changed_request)
     assert len(contexts) == 8
-    assert tracker.call_structured(object()) is provider.structured_result
+    structured_request = StructuredProviderRequest(
+        [UserMessage("structured question")], StructuredAnswer
+    )
+    assert tracker.call_structured(structured_request) is provider.structured_result
+    assert provider.requests[-1] is structured_request
+    assert contexts[-1].is_final
+    assert contexts[-1].prompt_tokens == 4000
 
 
 def test_tracking_other_provider_counts_tools_and_handles_tool_choice_none() -> None:

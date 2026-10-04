@@ -8,7 +8,7 @@ from exmekh_lib.core.models.reasoning_effort import ReasoningEffortLMX
 from nicegui import ui
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge.agent_runner import check_provider_health
+from exmekh_agent.exmekh_bridge.provider_health import check_provider_health
 from exmekh_agent.state.temp_storage import TempStorage, TempStorageStats
 from exmekh_agent.ui.file_icons import format_file_size, get_file_icon
 
@@ -164,6 +164,9 @@ class SettingsDrawerComponent:
 
         ui.timer(0, self.refresh_tmp_stats, once=True)
         ui.timer(0.5, self.refresh_models, once=True)
+        # A server restart can replace the loaded model or its allocated ctx
+        # while this page remains open. Refresh metadata without running inference.
+        ui.timer(10, self.refresh_models)
         return drawer
 
     async def refresh_models(self) -> None:
@@ -181,10 +184,14 @@ class SettingsDrawerComponent:
                 f"Online ({len(models)} models)" if is_alive else "Offline"
             )
             self.status_badge.props(f"color={'emerald-9' if is_alive else 'rose-9'}")
-        if is_alive and models and self.model_select:
-            self.model_select.options = list(
-                dict.fromkeys([config.default_model, *models])
-            )
+        if is_alive and models:
+            config.select_available_model(models)
+            if self.model_select:
+                selected = self.model_select.value
+                self.model_select.options = models
+                self.model_select.value = (
+                    selected if selected in models else config.default_model
+                )
         if self.on_models_refreshed:
             self.on_models_refreshed()
 

@@ -555,6 +555,8 @@ static double g_derived_artifact_build_secs;
 static int g_derived_replaces_complete;
 static void *g_aligned_q81_scratch;
 static uint64_t g_model_range_bytes;
+static uint64_t g_model_auto_cache_limit;
+static bool g_qwen4_tiered_cache;
 static uint64_t g_q8_f16_bytes;
 static uint64_t g_q8_f32_bytes;
 static int g_q8_cache_suppressed;
@@ -2463,15 +2465,28 @@ static int cuda_model_copy_to_device_streamed(
     return 1;
 }
 
+static bool cuda_model_cache_auto_requested(void) {
+    const char *env = getenv("DS4_CUDA_WEIGHT_CACHE_LIMIT_GB");
+    return (env && !strcmp(env, "auto")) ||
+           ((!env || !env[0]) && g_qwen4_tiered_cache);
+}
+
 static uint64_t cuda_model_cache_limit_bytes(void) {
+    if (cuda_model_cache_auto_requested()) {
+        if (g_model_auto_cache_limit) return g_model_auto_cache_limit;
+        size_t free_bytes = 0, total_bytes = 0;
+        const uint64_t reserve = 2ull * 1073741824ull;
+        if (cudaMemGetInfo(&free_bytes, &total_bytes) != cudaSuccess) return 0;
+        return g_model_range_bytes + (free_bytes > reserve ? free_bytes - reserve : 0);
+    }
     uint64_t gb = 0;
     const char *env = getenv("DS4_CUDA_WEIGHT_CACHE_LIMIT_GB");
     if (env && env[0]) {
         char *end = NULL;
         unsigned long long v = strtoull(env, &end, 10);
-        if (end != env) gb = (uint64_t)v;
+        if (end != env && !*end) gb = (uint64_t)v;
     }
-    if (gb == 0) return UINT64_MAX;
+    if (gb == 0 || gb > UINT64_MAX / 1073741824ull) return UINT64_MAX;
     return gb * 1073741824ull;
 }
 
@@ -2492,7 +2507,7 @@ static uint64_t cuda_model_arena_chunk_bytes(uint64_t need) {
     return mb * 1048576ull;
 }
 
-static char *cuda_model_arena_alloc(uint64_t bytes, const char *what) {
+static char *cuda_model_arena_alloc(uint64_t bytes, const char *what, uint64_t extra_reserve = 0) {
     if (bytes == 0) return NULL;
     if (g_model_cache_full) return NULL;
     const uint64_t align = 256u;
@@ -2508,9 +2523,27 @@ static char *cuda_model_arena_alloc(uint64_t bytes, const char *what) {
     }
 
     const uint64_t limit = cuda_model_cache_limit_bytes();
+    /* Freeze only at the first weight allocation, after graph/context and
+     * vision model allocations. Loader admission checks run earlier and must
+     * not turn pre-context free memory into an oversized resident cache. */
+    if (cuda_model_cache_auto_requested() && !g_model_auto_cache_limit) {
+        g_model_auto_cache_limit = limit;
+        fprintf(stderr, "ds4: CUDA weight cache auto budget %.2f GiB after context allocation (2.00 GiB workspace reserve)\n",
+                (double)limit / 1073741824.0);
+    }
     if (g_model_range_bytes > limit || aligned > limit - g_model_range_bytes) return NULL;
 
-    const uint64_t chunk = cuda_model_arena_chunk_bytes(aligned);
+    uint64_t chunk = cuda_model_arena_chunk_bytes(aligned);
+    if (g_qwen4_tiered_cache) {
+        size_t free_bytes = 0, total_bytes = 0;
+        const uint64_t reserve = 2ull * 1073741824ull + extra_reserve;
+        if (cudaMemGetInfo(&free_bytes, &total_bytes) != cudaSuccess ||
+            free_bytes <= reserve || aligned > free_bytes - reserve) return NULL;
+        /* A final tensor can fit even when a preferred 256 MiB arena cannot.
+         * Do not strand that tail or consume the outstanding dense reserve
+         * just to keep allocation granularity uniform. */
+        if (chunk > free_bytes - reserve) chunk = aligned;
+    }
     void *dev = NULL;
     cudaError_t err = cudaMalloc(&dev, (size_t)chunk);
     if (err != cudaSuccess) {
@@ -2774,7 +2807,13 @@ copy_failed:
     return 0;
 }
 
+namespace qwen4_cuda {
+    static void expert_cache_reset(void);
+    static void route_invalidate(const void *ptr, uint64_t bytes);
+}
+
 static void cuda_model_range_release_all(void) {
+    qwen4_cuda::expert_cache_reset();
     for (const cuda_model_range &r : g_model_ranges) {
         if (r.host_registered && r.registered_base) {
             (void)cudaHostUnregister(r.registered_base);
@@ -2789,6 +2828,7 @@ static void cuda_model_range_release_all(void) {
     g_model_ranges.clear();
     g_model_range_by_offset.clear();
     g_model_range_bytes = 0;
+    g_model_auto_cache_limit = 0;
     cuda_model_load_progress_reset();
 }
 
@@ -3096,6 +3136,7 @@ extern "C" void ds4_gpu_cleanup(void) {
     /* Continue with legacy global teardown below. */
 
     cuda_model_range_release_all();
+    g_qwen4_tiered_cache = false;
     cuda_derived_range_release_all();
     cuda_q8_f16_cache_release_all();
     g_q8_f16_disabled_after_oom = 0;
@@ -3341,6 +3382,7 @@ extern "C" ds4_gpu_tensor *ds4_gpu_tensor_view(const ds4_gpu_tensor *base, uint6
 
 extern "C" void ds4_gpu_tensor_free(ds4_gpu_tensor *tensor) {
     if (!tensor) return;
+    qwen4_cuda::route_invalidate(tensor->ptr, tensor->bytes);
     int d = ds4_tensor_device_idx(tensor);
     if (tensor->owner && tensor->ptr) {
         WITH_DEVICE(g_gpu[d].device_id) {
@@ -3356,6 +3398,7 @@ extern "C" uint64_t ds4_gpu_tensor_bytes(const ds4_gpu_tensor *tensor) {
 
 extern "C" void *ds4_gpu_tensor_contents(ds4_gpu_tensor *tensor) {
     if (!tensor) return NULL;
+    qwen4_cuda::route_invalidate(tensor->ptr, tensor->bytes);
     /* Full-device sync preserves legacy semantics. */
     (void)cudaDeviceSynchronize();
     return tensor->ptr;
@@ -3364,6 +3407,7 @@ extern "C" void *ds4_gpu_tensor_contents(ds4_gpu_tensor *tensor) {
 extern "C" int ds4_gpu_tensor_fill_f32(ds4_gpu_tensor *tensor, float value, uint64_t count) {
     if (!tensor || count > tensor->bytes / sizeof(float)) return 0;
     if (count == 0) return 1;
+    qwen4_cuda::route_invalidate(tensor->ptr, count * sizeof(float));
     int d = ds4_tensor_device_idx(tensor);
     int ok = 0;
     WITH_DEVICE(g_gpu[d].device_id) {
@@ -3375,6 +3419,7 @@ extern "C" int ds4_gpu_tensor_fill_f32(ds4_gpu_tensor *tensor, float value, uint
 
 extern "C" int ds4_gpu_tensor_write(ds4_gpu_tensor *tensor, uint64_t offset, const void *data, uint64_t bytes) {
     if (!tensor || !data || offset > tensor->bytes || bytes > tensor->bytes - offset) return 0;
+    qwen4_cuda::route_invalidate(tensor->ptr, tensor->bytes);
     int d = ds4_tensor_device_idx(tensor);
     int ok = 0;
     WITH_DEVICE(g_gpu[d].device_id) {
@@ -3405,6 +3450,7 @@ extern "C" int ds4_gpu_tensor_copy(ds4_gpu_tensor *dst, uint64_t dst_offset,
         return 0;
     }
     if (bytes == 0) return 1;
+    qwen4_cuda::route_invalidate(dst->ptr, dst->bytes);
     /* Same-device fast path; for cross-device, callers should use
      * ds4_gpu_tensor_copy_xdev. We still tolerate cross-device callers
      * here by routing to D2D copy on the destination's device. */
@@ -38195,6 +38241,18 @@ extern "C" void ds4_gpu_set_glm_mtp_verify_mode(bool enabled) {
     g_glm_mtp_verify_mode = enabled;
 }
 
+extern "C" int ds4_gpu_qwen4_set_tiered_cache(bool enabled) {
+    /* An inherited Flash environment must not change other model allocators.
+     * The engine supplies this capability before selecting its model map. */
+    if (enabled && (g_n_gpus != 1 || getenv("DS4_CUDA_COPY_MODEL_CHUNKED"))) return 0;
+    g_qwen4_tiered_cache = enabled;
+    if (enabled && cuda_model_cache_limit_bytes() == UINT64_MAX) {
+        g_qwen4_tiered_cache = false;
+        return 0;
+    }
+    return 1;
+}
+
 extern "C" int ds4_gpu_set_model_map_spans(const void *model_map, uint64_t model_size, const uint64_t *offsets, const uint64_t *sizes, uint32_t count, uint64_t max_tensor_bytes) {
     (void)max_tensor_bytes;
     if (!model_map || model_size == 0 || !offsets || !sizes || count == 0) {
@@ -38206,7 +38264,15 @@ extern "C" int ds4_gpu_set_model_map_spans(const void *model_map, uint64_t model
             return 0;
         }
     }
+    if (g_qwen4_tiered_cache &&
+        (g_n_gpus != 1 || cuda_model_cache_limit_bytes() == UINT64_MAX ||
+         getenv("DS4_CUDA_COPY_MODEL_CHUNKED"))) {
+        fprintf(stderr, "ds4: Qwen tiered cache requires one GPU, a finite or auto weight budget and no full-model copy\n");
+        return 0;
+    }
     if (!cuda_register_model_map(model_map, model_size, false)) return 0;
+    if (g_qwen4_tiered_cache)
+        fprintf(stderr, "ds4: Qwen tiered cache leaves %.2f GiB model map unpinned; cold experts use file reads\n", (double)model_size / 1073741824.0);
     if (getenv("DS4_CUDA_COPY_MODEL_CHUNKED") != NULL) {
         for (uint32_t i = 0; i < count; i++) {
             (void)cuda_model_prefetch_range(model_map, model_size,

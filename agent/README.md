@@ -89,6 +89,12 @@ Copy `.env.example` to `.env` to configure the application. Its web settings
 are `EXMEKH_AGENT_HOST`, `EXMEKH_AGENT_PORT`, and `EXMEKH_AGENT_TITLE`. Existing
 `.env` files using `FE_HOST`, `FE_PORT`, and `FE_TITLE` must use those new names.
 Provider settings such as `BASE_URL`, `API_KEY`, and `DEFAULT_MODEL` stay the same.
+The model selector and context bar refresh the provider's `/models` metadata at
+startup and every 10 seconds. If the saved model is unavailable, the running
+client selects an advertised model; supported aliases remain selectable. DS4
+reports the allocated `--ctx`, so switching between Qwen Flash and Qwen 27B also
+updates the displayed context capacity. Automatic discovery does not rewrite
+`.env`; the Save button persists settings.
 On startup, saved projects and chats that point to the previous library's bundled
 `site-packages/qs/capabilities` are migrated to the installed library defaults.
 Custom capabilities paths, conversation history, and approvals are preserved.
@@ -147,6 +153,21 @@ follow-up turns through both APIs:
 uv run pytest --no-cov --run-live -n 0 tests/test_images_live.py
 ```
 
+DS4 accepts finite local `#/$defs/name` references emitted by nested Pydantic
+output models, including nullable branches. All constraints remain active;
+external references, recursive schemas and unsupported constraints return an
+explicit error. Too little output budget fails instead of accepting partial JSON.
+
+For a Flash server, verify strict Pydantic output through the installed client
+with both Chat and Responses, streaming, thinking, greedy/sampled decoding,
+nullable nested fields, Unicode and truncated-output rejection. Run against
+one server at a time, first target-only and then MTP if enabled:
+
+```shell
+DS4_FLASH_STRUCTURED_BASE_URL=http://127.0.0.1:8080/v1 \
+  uv run pytest --no-cov --run-live -n 0 tests/test_flash_structured_live.py
+```
+
 With the provider configured in `.env` available, run all tests with a real model (conversation, streaming, tools, persistence, title generation, and adversarial cases of `exit_agent`):
 ```shell
 uv run pytest --no-cov --run-live -m "live and not mock" -s -v
@@ -169,7 +190,8 @@ agent/
 ├── .python-version      # Python 3.13
 ├── run.sh               # WSL launcher for the UI
 ├── sync_exmekh_lib.sh    # Build and install the sibling ExMekh-Lib sources
-├── start-ds4-server.sh  # WSL launcher for the inference server
+├── start-ds4-server.sh  # WSL launcher for Qwen27B
+├── start-ds4-server-flash.sh  # WSL launcher for Qwen Flash Next
 ├── wheels/               # Synchronized exmekh_lib wheel
 │   └── exmekh_lib-0.1.0-py3-none-any.whl
 ├── data/
@@ -207,7 +229,8 @@ agent/
 
 This checkout lives in `agent/`. The sibling `exmekh_lib/` source copy is ignored by
 Git; the versioned wheel in `wheels/` is the runtime dependency. In WSL/Linux,
-start `./start-ds4-server.sh` and `./run.sh` in separate terminals. The model
+start either `./start-ds4-server.sh` (Qwen27B) or
+`./start-ds4-server-flash.sh` (Flash Next), then `./run.sh` in a separate terminal. The model
 server uses port 8080 and the frontend uses port 8000. Set `API_TYPE=responses`
 and keep the client context at or below the server allocation reported by `/v1/models`.
 See [the DS4 frontend guide](../docs/agentic/frontend.md).
@@ -215,3 +238,24 @@ See [the DS4 frontend guide](../docs/agentic/frontend.md).
 Browser tests use installed Edge when available and otherwise use Playwright Chromium.
 
 The `.python-version` pins Python 3.13, matching the source environment and test baseline.
+
+### Selecting the local inference model
+
+From `agent/`, use a dedicated server launcher for each model:
+
+```sh
+./start-ds4-server.sh        # Qwen27B: MTP, context 28000
+./start-ds4-server-flash.sh  # Flash Next: context 16384, prefill chunk 256
+```
+
+Start the frontend with `./run.sh` in another terminal. Each launcher selects
+its model profile even if `DS4_MODEL_PROFILE` is set in the environment.
+Model discovery reads the real server model and allocated context. Flash uses
+its matching projector and CUDA tiered cache; MTP is explicit with `--mtp`.
+
+Both scripts accept `--print-command` to review the exact command without
+loading weights. `DS4_CTX`, `DS4_PREFILL_CHUNK`, `DS4_MODEL`, `DS4_VISION_MODEL`
+and `DS4_KV_DISK_DIR` can override the profile. An empty vision path disables
+vision; an empty KV directory disables the shared launcher's KV disk arguments.
+See [Flash pipeline qualification](../docs/performance/qwen38-flash-pipeline-20261004.md)
+for measured scenarios and remaining limits.

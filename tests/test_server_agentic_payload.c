@@ -19,6 +19,34 @@ static bool same_frontier(ds4_session *session, const ds4_tokens *tokens,
            !memcmp(expected, actual, (size_t)vocab * sizeof(float));
 }
 
+/* Compare the recent ranking, excluding physical cache addresses/occupancy.
+ * A child may leave useful weight bytes cached, but must not leave its history
+ * in the restored parent's policy. */
+static uint64_t expert_history_hash(void) {
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    const uint64_t n = ds4_gpu_qwen4_expert_state_bytes();
+    if (!n) return 0;
+    unsigned char *bytes = malloc(n);
+    if (!bytes || !ds4_gpu_qwen4_expert_state_export(bytes, n)) { free(bytes); return 0; }
+    const uint32_t count = (uint32_t)bytes[16] | (uint32_t)bytes[17] << 8 | (uint32_t)bytes[18] << 16 | (uint32_t)bytes[19] << 24;
+    uint64_t end = 32, hash = UINT64_C(14695981039346656037);
+    for (uint32_t i = 0; i < count; i++) {
+        if (n - end < 32) { free(bytes); return 0; }
+        uint32_t selected = 0, rows = 0;
+        for (unsigned k = 0; k < 4; k++) {
+            selected |= (uint32_t)bytes[end + 20 + k] << (8 * k);
+            rows |= (uint32_t)bytes[end + 24 + k] << (8 * k);
+        }
+        end += 32 + 4ull * selected * rows;
+        if (end > n) { free(bytes); return 0; }
+    }
+    for (uint64_t i = 32; i < end; i++) { hash ^= bytes[i]; hash *= UINT64_C(1099511628211); }
+    free(bytes); return hash;
+#else
+    return 0;
+#endif
+}
+
 int main(int argc, char **argv) {
 
     bool mtp = false, embedded_mtp = false;
@@ -61,11 +89,14 @@ int main(int argc, char **argv) {
     float *expected = NULL, *actual = NULL, *nested_logits[3] = {0};
     skill_frame *frames[3] = {0};
     uint64_t free_before_save = 0, free_after_save = 0, free_after_release = 0;
+    uint64_t parent_history = 0, nested_history[3] = {0};
+    resident_kv_frontier request_frontier = {0};
     REQUIRE(ds4_engine_open(&engine, &options) == 0);
     srv.engine = engine;
     REQUIRE((ds4_engine_mtp_draft_tokens(engine) > 0) == mtp);
     REQUIRE(ds4_session_create(&session, engine, ctx) == 0);
     slot.session = session;
+    if (ds4_engine_is_qwen4(engine)) REQUIRE(ds4_session_prefill_cap(session) == 256);
     REQUIRE(mkdtemp(dir) != NULL); dir_created = true; srv.skill_dir = dir;
     ds4_chat_append_message(engine, &prefix, "system", "Keep the parent memory: amber.");
     if (image) {
@@ -125,6 +156,44 @@ int main(int argc, char **argv) {
     slot.responses_live.images.count = image_count;
     if (image_count) slot.responses_live.images.offsets[0] = 7u;
     slot.responses_live.visible_len = strlen(slot.responses_live.visible_text);
+    parent_history = expert_history_hash();
+    REQUIRE(resident_kv_frontier_capture(session, &request_frontier, true, err, sizeof(err)));
+    if (ds4_engine_is_qwen4(engine) || image) REQUIRE(request_frontier.full_payload);
+    ds4_tokens_copy(&continuation, &prefix);
+    for (int i = 0; i < tail.len; i++) ds4_tokens_push(&continuation, tail.v[i]);
+    REQUIRE(ds4_session_sync_multimodal(session, &continuation, &span, image_count, err, sizeof(err)) == 0);
+    REQUIRE(resident_kv_frontier_restore(session, &request_frontier, err, sizeof(err)));
+    REQUIRE(same_frontier(session, &prefix, expected, actual, vocab));
+    REQUIRE(expert_history_hash() == parent_history);
+    if (ds4_engine_is_qwen4(engine)) {
+        FILE *legacy = tmpfile(); REQUIRE(legacy != NULL);
+        const uint64_t payload_bytes = ds4_session_payload_bytes(session);
+        REQUIRE(ds4_session_save_payload(session, legacy, err, sizeof(err)) == 0);
+        rewind(legacy);
+        unsigned char header[32];
+        REQUIRE(fread(header, 1, sizeof(header), legacy) == sizeof(header));
+        uint32_t words[8] = {0};
+        for (unsigned i = 0; i < 8; i++)
+            for (unsigned b = 0; b < 4; b++) words[i] |= (uint32_t)header[4 * i + b] << (8 * b);
+        /* VMCP wraps the family header with image identities/positions.
+         * Its word 3 is the body length, not the historical prefill chunk. */
+        const uint64_t body_offset = words[0] == UINT32_C(0x50434d56) ?
+            32u + (uint64_t)words[4] * 40u + (uint64_t)words[6] * 12u : 0;
+        REQUIRE(body_offset + 16u < payload_bytes);
+        REQUIRE(fseeko(legacy, (off_t)(body_offset + 3u * 4u), SEEK_SET) == 0);
+        const unsigned char old_cap[4] = {(unsigned char)ctx, (unsigned char)(ctx >> 8),
+            (unsigned char)(ctx >> 16), (unsigned char)(ctx >> 24)};
+        REQUIRE(fwrite(old_cap, 1, sizeof(old_cap), legacy) == sizeof(old_cap));
+        rewind(legacy);
+        REQUIRE(ds4_session_load_payload(session, legacy, payload_bytes, err, sizeof(err)) == 0);
+        REQUIRE(fclose(legacy) == 0);
+        REQUIRE(same_frontier(session, &prefix, expected, actual, vocab));
+        REQUIRE(expert_history_hash() == parent_history);
+        REQUIRE(ds4_session_prefill_cap(session) == 256);
+        fprintf(stderr, "PASS legacy Flash prefill-cap header: logits and expert history bit-exact\n");
+    }
+    resident_kv_frontier_clear(&request_frontier);
+    fprintf(stderr, "PASS resident pre-thinking rollback: logits and expert history bit-exact\n");
     free_before_save = ds4_gpu_tier_free_vram(0);
     tool_call parent_call = {.id = "skill_parent", .name = "mock-skill"};
     REQUIRE(skill_frame_save(&srv, &slot, &parent_call, NULL, err, sizeof(err)));
@@ -137,6 +206,7 @@ int main(int argc, char **argv) {
     REQUIRE(ds4_session_sync_multimodal(session, &continuation, &span, image_count, err, sizeof(err)) == 0);
     REQUIRE(skill_frame_restore(&slot, parent, NULL, err, sizeof(err)));
     REQUIRE(same_frontier(session, &prefix, expected, actual, vocab));
+    REQUIRE(expert_history_hash() == parent_history);
     if (image) {
         int appended = 0;
         REQUIRE(append_rendered_suffix_to_live_session(&srv, &slot, "{\"color\":", &appended, err, sizeof(err)));
@@ -167,6 +237,7 @@ int main(int argc, char **argv) {
     REQUIRE(agent_context_checkpoint_restore(&srv, &slot, cp, NULL, err, sizeof(err)));
     REQUIRE(same_frontier(session, &prefix, expected, actual, vocab));
     REQUIRE(ds4_session_vision_state_matches(session, &span, image_count));
+    REQUIRE(expert_history_hash() == parent_history);
     REQUIRE(slot.responses_live.images.count == image_count &&
             (!image_count || slot.responses_live.images.offsets[0] == 7u));
     REQUIRE(slot.responses_live.valid && slot.responses_live.call_ids.len == 1 &&
@@ -183,6 +254,7 @@ int main(int argc, char **argv) {
         char id[32]; snprintf(id, sizeof(id), "nested_%d", level);
         tool_call call = {.id = id, .name = "nested-skill"};
         ds4_tokens_copy(&nested_tokens[level], ds4_session_tokens(session));
+        nested_history[level] = expert_history_hash();
         nested_logits[level] = xmalloc((size_t)vocab * sizeof(float));
         REQUIRE(ds4_session_copy_logits(session, nested_logits[level], vocab) == vocab);
         REQUIRE(skill_frame_save(&srv, &slot, &call, NULL, err, sizeof(err)));
@@ -194,11 +266,12 @@ int main(int argc, char **argv) {
     for (int level = 2; level >= 0; level--) {
         REQUIRE(skill_frame_restore(&slot, frames[level], NULL, err, sizeof(err)));
         REQUIRE(same_frontier(session, &nested_tokens[level], nested_logits[level], actual, vocab));
+        REQUIRE(expert_history_hash() == nested_history[level]);
     }
     printf("AGENTIC_PAYLOAD_REPORT {\"populated_text_prefix\":%d,\"images\":%zu,\"ctx\":%d,\"mtp\":%s,\"parent_tokens\":%d,\"vocab\":%d,"
            "\"skill_bytes\":%llu,\"subagent_bytes\":%llu,\"skill_restore_bit_exact\":true,"
            "\"corruption_rejected_without_mutation\":true,\"recreated_session_bit_exact\":true,"
-           "\"continuation_bit_exact\":true,\"nested_three_levels_bit_exact\":true,"
+           "\"continuation_bit_exact\":true,\"nested_three_levels_bit_exact\":true,\"expert_recent_history_restored\":true,"
            "\"free_vram_before_save\":%llu,\"free_vram_after_save\":%llu,\"free_vram_after_release\":%llu}\n",
            warm_prefix, image_count, ctx, mtp ? "true" : "false", prefix.len, vocab,
            (unsigned long long)parent->checkpoint_bytes, (unsigned long long)cp->checkpoint_bytes,
@@ -206,6 +279,7 @@ int main(int argc, char **argv) {
            (unsigned long long)free_after_release);
     rc = 0;
 done:
+    resident_kv_frontier_clear(&request_frontier);
     skill_frames_clear_locked(&srv, &slot);
     agent_context_checkpoints_clear(&slot, true);
     live_tool_state_free(&slot.responses_live);

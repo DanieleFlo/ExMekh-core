@@ -3667,6 +3667,7 @@ static bool accelerator_cache_model_tensors(ds4_backend backend,
     if (backend != DS4_BACKEND_CUDA) return true;
     if (!m || !m->map || m->size == 0) return false;
 #ifndef DS4_ROCM_BUILD
+    if (ds4_model_is_qwen4() && ds4_env_flag_enabled("DS4_CUDA_QWEN4_TIERED_CACHE", 0)) return true;
     if (getenv("DS4_CUDA_DIRECT_MODEL") != NULL) {
         return true;
     }
@@ -59074,7 +59075,7 @@ static ds4_gpu_tensor *qwen4_graph_alloc_f32(uint64_t n) {
  * tensor per layer and this graph takes slot's view of it.  A batched decode
  * then advances all its rows with one dispatch; without a pool each session
  * keeps its own tensors and the batch falls back to a dispatch per row. */
-static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
                               bool mtp, const ds4_qwen4_gpu_graph *shared,
                               ds4_gpu_tensor *const *state_pool,
                               ds4_gpu_tensor *const *hist_pool, uint32_t slot) {
@@ -59209,6 +59210,43 @@ private_state:
         qwen4_graph_free(g);
         return false;
     }
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_TIERED_CACHE", 0)) {
+        /* Count the original GGUF bytes, rather than guessing a dense quota.
+         * Embeddings are gathered on the CPU; n-grams stay on disk. Keep the
+         * embedded MTP dense weights reserved even before their first use. */
+        uint64_t expert_min = UINT64_MAX, expert_max = 0;
+        for (uint32_t il = 0; il < DS4_N_LAYER; il++) {
+            const ds4_layer_weights *l = &w->layer[il];
+            const uint64_t routed = l->ffn_gate_exps->bytes + l->ffn_up_exps->bytes + l->ffn_down_exps->bytes;
+            const uint64_t expert = routed / DS4_N_EXPERT;
+            if (expert < expert_min) expert_min = expert;
+            if (expert > expert_max) expert_max = expert;
+        }
+        uint64_t *offsets = xmalloc(model->n_tensors * sizeof(*offsets));
+        uint64_t *sizes = xmalloc(model->n_tensors * sizeof(*sizes));
+        uint32_t count = 0;
+        for (uint64_t i = 0; i < model->n_tensors; i++) {
+            const ds4_tensor *t = &model->tensors[i];
+            if (!t->bytes || t == model->ngram_tensor || t == w->token_embd) continue;
+            bool routed = false;
+            for (uint32_t il = 0; il < DS4_N_LAYER && !routed; il++) {
+                const ds4_layer_weights *l = &w->layer[il];
+                routed = t == l->ffn_gate_exps || t == l->ffn_up_exps || t == l->ffn_down_exps;
+            }
+            if (routed) continue;
+            offsets[count] = t->abs_offset;
+            sizes[count++] = t->bytes;
+        }
+        /* Make every fixed weight resident before experts compete for VRAM.
+         * Lazy BLAS/staging workspaces can otherwise spend the spare memory
+         * while the final dense projections are still waiting to be loaded. */
+        const int ready = ds4_gpu_qwen4_cache_prepare(ctx_cap, cap_tokens,
+                model->map, model->size, offsets, sizes, count, expert_min, expert_max);
+        free(offsets); free(sizes);
+        if (!ready) { qwen4_graph_free(g); return false; }
+    }
+#endif
     return true;
 }
 
@@ -60418,7 +60456,7 @@ static int generate_qwen4_metal_argmax(
         return 1;
     }
     ds4_qwen4_gpu_graph *g = xcalloc(1, sizeof(*g));
-    if (!qwen4_graph_alloc(g, weights, (uint32_t)ctx_size, qwen4_prefill_chunk_tokens((uint32_t)ctx_size), false, NULL, NULL, NULL, 0)) {
+    if (!qwen4_graph_alloc(g, model, weights, (uint32_t)ctx_size, qwen4_prefill_chunk_tokens((uint32_t)ctx_size), false, NULL, NULL, NULL, 0)) {
         free(g);
         return 1;
     }
@@ -65309,6 +65347,12 @@ static uint64_t ds4_session_payload_body_bytes(ds4_session *s) {
         const uint32_t rows = (uint32_t)s->checkpoint.len;
         const uint32_t mtp_rows = s->qwen4_graph.mtp_pos < rows ? s->qwen4_graph.mtp_pos : rows;
         bytes += qwen4_payload_tensor_bytes(rows, mtp_rows);
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+        if (s->engine->backend == DS4_BACKEND_CUDA) {
+            const uint64_t cache_bytes = ds4_gpu_qwen4_expert_state_bytes();
+            if (cache_bytes) bytes += 4 + cache_bytes;
+        }
+#endif
         return bytes;
 #endif
     }
@@ -65463,6 +65507,7 @@ int ds4_session_stage_payload(ds4_session *s, ds4_session_payload_file *out,
  * conv history and n-gram context.  The header's raw_live field carries the
  * family tag so a DeepSeek payload is never read as a Qwen one. */
 #define DS4_QWEN4_PAYLOAD_TAG 0x51573802u
+#define DS4_QWEN4_CACHE_PAYLOAD_TAG 0x51573803u
 
 static uint64_t qwen4_payload_lin_state_bytes(void) {
     return (uint64_t)DS4_N_LIN_V_HEAD * DS4_N_LIN_HEAD_DIM * DS4_N_LIN_HEAD_DIM * sizeof(float);
@@ -65516,6 +65561,10 @@ static int qwen4_session_save_payload(ds4_session *s, FILE *fp, char *err, size_
         payload_set_err(err, errlen, "Qwen3.8 graph position does not match the checkpoint");
         return 1;
     }
+    uint64_t cache_bytes = 0;
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    if (s->engine->backend == DS4_BACKEND_CUDA) cache_bytes = ds4_gpu_qwen4_expert_state_bytes();
+#endif
     uint32_t header[DS4_SESSION_PAYLOAD_U32_FIELDS] = {
         DS4_SESSION_PAYLOAD_MAGIC,
         DS4_SESSION_PAYLOAD_VERSION,
@@ -65529,7 +65578,7 @@ static int qwen4_session_save_payload(ds4_session *s, FILE *fp, char *err, size_
         DS4_N_HEAD_DIM,
         DS4_N_INDEXER_HEAD_DIM,
         DS4_N_VOCAB,
-        DS4_QWEN4_PAYLOAD_TAG,
+        cache_bytes ? DS4_QWEN4_CACHE_PAYLOAD_TAG : DS4_QWEN4_PAYLOAD_TAG,
     };
     for (uint32_t i = 0; i < DS4_SESSION_PAYLOAD_U32_FIELDS; i++) {
         if (payload_write_u32(fp, header[i], err, errlen) != 0) return 1;
@@ -65575,6 +65624,15 @@ static int qwen4_session_save_payload(ds4_session *s, FILE *fp, char *err, size_
                                        buf, DS4_SESSION_IO_CHUNK, err, errlen);
     }
     free(buf);
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    if (!rc && cache_bytes) {
+        void *cache = xmalloc(cache_bytes);
+        if (cache_bytes > UINT32_MAX || !ds4_gpu_qwen4_expert_state_export(cache, cache_bytes)) rc = 1;
+        if (!rc) rc = payload_write_u32(fp, (uint32_t)cache_bytes, err, errlen);
+        if (!rc) rc = payload_write_bytes(fp, cache, cache_bytes, err, errlen);
+        free(cache);
+    }
+#endif
     return rc;
 }
 
@@ -65586,7 +65644,7 @@ static int qwen4_session_load_payload(ds4_session *s, FILE *fp, const uint32_t *
     }
     ds4_qwen4_gpu_graph *g = &s->qwen4_graph;
     const uint32_t rows = h[7];
-    if (h[12] != DS4_QWEN4_PAYLOAD_TAG || h[8] != DS4_N_LAYER || h[9] != DS4_N_HEAD_DIM ||
+    if ((h[12] != DS4_QWEN4_PAYLOAD_TAG && h[12] != DS4_QWEN4_CACHE_PAYLOAD_TAG) || h[8] != DS4_N_LAYER || h[9] != DS4_N_HEAD_DIM ||
         h[10] != DS4_N_INDEXER_HEAD_DIM || h[11] != DS4_N_VOCAB || h[6] != DS4_N_EMBD * DS4_N_HC) {
         payload_set_err(err, errlen, "KV checkpoint was written by a different model family or shape");
         return 1;
@@ -65675,6 +65733,20 @@ static int qwen4_session_load_payload(ds4_session *s, FILE *fp, const uint32_t *
                                       buf, DS4_SESSION_IO_CHUNK, remaining, err, errlen);
     }
     free(buf);
+    if (!rc && h[12] == DS4_QWEN4_CACHE_PAYLOAD_TAG) {
+        uint32_t n = 0;
+        rc = payload_read_u32(fp, &n, remaining, err, errlen);
+        if (!rc && (n < 32 || n > 16u * 1048576u || n > *remaining)) rc = 1;
+        if (!rc) {
+            void *cache = xmalloc(n);
+            rc = payload_read_bytes(fp, cache, n, remaining, err, errlen);
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+            if (!rc && s->engine->backend == DS4_BACKEND_CUDA && !ds4_gpu_qwen4_expert_state_import(cache, n)) rc = 1;
+#endif
+            free(cache);
+        }
+    }
+    if (!rc && *remaining) { payload_set_err(err, errlen, "Qwen checkpoint has trailing bytes"); rc = 1; }
     if (rc != 0) {
         token_vec_free(&new_checkpoint);
         qwen4_graph_reset(g);
@@ -71253,7 +71325,7 @@ static int qwen4_first_token_test(const ds4_model *model, const ds4_vocab *vocab
             return 1;
         }
         ds4_qwen4_gpu_graph *g = xcalloc(1, sizeof(*g));
-        if (!qwen4_graph_alloc(g, weights, 8192u, 128u, false, NULL, NULL, NULL, 0)) {
+        if (!qwen4_graph_alloc(g, model, weights, 8192u, 128u, false, NULL, NULL, NULL, 0)) {
             free(g);
             fclose(lf);
             return 1;
@@ -71391,7 +71463,7 @@ static int qwen4_first_token_test(const ds4_model *model, const ds4_vocab *vocab
             return 1;
         }
         ds4_qwen4_gpu_graph *g = xcalloc(1, sizeof(*g));
-        if (!qwen4_graph_alloc(g, weights, n_seq + 4u, chunk, draft != NULL, NULL, NULL, NULL, 0)) {
+        if (!qwen4_graph_alloc(g, model, weights, n_seq + 4u, chunk, draft != NULL, NULL, NULL, NULL, 0)) {
             free(g);
             return 1;
         }
@@ -74469,8 +74541,21 @@ static int ds4_engine_open_internal(ds4_engine **out,
             }
 #ifndef DS4_NO_GPU
             if (ds4_backend_uses_graph(e->backend)) {
-                bool ready = ds4_gpu_init() &&
-                    ds4_gpu_set_model_map(e->model.map, e->model.size);
+                bool ready = ds4_gpu_init();
+#ifndef DS4_ROCM_BUILD
+                const bool tiered = e->backend == DS4_BACKEND_CUDA && ds4_model_is_qwen4() &&
+                    ds4_env_flag_enabled("DS4_CUDA_QWEN4_TIERED_CACHE", 0);
+#else
+                const bool tiered = false;
+#endif
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+                if (e->backend == DS4_BACKEND_CUDA) ready = ready && ds4_gpu_qwen4_set_tiered_cache(tiered);
+#endif
+                const uint64_t span_offset = e->model.tensor_data_pos;
+                const uint64_t span_size = e->model.size - span_offset;
+                ready = ready && (tiered ? ds4_gpu_set_model_map_spans(e->model.map, e->model.size,
+                                      &span_offset, &span_size, 1, e->model.max_tensor_bytes) :
+                                      ds4_gpu_set_model_map(e->model.map, e->model.size));
                 if (ready && getenv("DS4_QWEN4_GPU")) {
                     /* Use the normal file-backed CUDA cache, not per-tensor
                      * copies from pageable mmap during the first forward. */
@@ -75280,11 +75365,24 @@ static int ds4_engine_open_internal(ds4_engine **out,
         } else {
             e->startup_model_span_bytes = e->model.size > e->model.tensor_data_pos ?
                 e->model.size - e->model.tensor_data_pos : 0;
-            model_map_ok = ds4_gpu_set_model_map_range(e->model.map,
-                                                       e->model.size,
-                                                       e->model.tensor_data_pos,
-                                                       e->model.size - e->model.tensor_data_pos,
-                                                       e->model.max_tensor_bytes);
+#ifndef DS4_ROCM_BUILD
+            const bool tiered = e->backend == DS4_BACKEND_CUDA && ds4_model_is_qwen4() &&
+                ds4_env_flag_enabled("DS4_CUDA_QWEN4_TIERED_CACHE", 0);
+#else
+            const bool tiered = false;
+#endif
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+            if (e->backend == DS4_BACKEND_CUDA && !ds4_gpu_qwen4_set_tiered_cache(tiered)) {
+                fprintf(stderr, "ds4: invalid Flash CUDA cache configuration\n");
+                ds4_engine_close(e); *out = NULL; return 1;
+            }
+#endif
+            const uint64_t span_offset = e->model.tensor_data_pos;
+            const uint64_t span_size = e->model.size - span_offset;
+            model_map_ok = tiered ? ds4_gpu_set_model_map_spans(e->model.map, e->model.size,
+                                      &span_offset, &span_size, 1, e->model.max_tensor_bytes) :
+                ds4_gpu_set_model_map_range(e->model.map, e->model.size, span_offset, span_size,
+                                           e->model.max_tensor_bytes);
         }
         if (!model_map_ok) {
             fprintf(stderr,
@@ -76735,7 +76833,7 @@ static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx
                                                   ? e->placement_session_count_hint : 0))) {
             s->qwen4_slot = qwen4_state_pool_take(e);
         }
-        if (!qwen4_graph_alloc(&s->qwen4_graph, &e->weights, (uint32_t)ctx_size, cap_tokens,
+        if (!qwen4_graph_alloc(&s->qwen4_graph, &e->model, &e->weights, (uint32_t)ctx_size, cap_tokens,
                                e->glm_mtp, shared,
                                s->qwen4_slot >= 0 ? e->qwen4_lin_state_pool : NULL,
                                s->qwen4_slot >= 0 ? e->qwen4_lin_hist_pool : NULL,
@@ -76765,7 +76863,7 @@ static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx
         }
         s->qwen4_graph_ready = true;
         if (!s->qwen4_graph.owns_scratch) e->qwen4_arena_users++;
-        s->prefill_cap = (uint32_t)ctx_size;
+        s->prefill_cap = cap_tokens;
         s->logits = xmalloc((size_t)DS4_N_VOCAB * sizeof(s->logits[0]));
         s->sample_probs = xmalloc((size_t)DS4_N_VOCAB * sizeof(s->sample_probs[0]));
         if (!ds4_session_tp_register(s)) {

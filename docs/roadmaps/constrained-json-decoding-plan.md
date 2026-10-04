@@ -143,3 +143,28 @@ senza dead-end BPE, UTF-8 parziale o alterazioni dei contatori di output.
 - 15 test passati in 427.166 secondi: vecchie regressioni, fast-forward JSON/DSML,
   Chat e Responses con thinking, tool senza argomenti e tentativi adversariali
   di bypass dello schema strict.
+
+## Verifica Flash Next del 3 ottobre 2026
+
+- [x] Riprodurre il rifiuto degli schema Pydantic annidati nel client installato.
+- [x] Compilare i riferimenti locali finiti `#/$defs/nome` negli output JSON,
+      preservando `const`/`enum`, required, nullable e i vincoli dei sibling.
+      Il JSON originale inviato nelle istruzioni resta byte-identico.
+- [x] Rifiutare riferimenti esterni, ricorsivi, mancanti, scope URI annidati,
+      dialect legacy con `$ref`, keyword sconosciute e espansioni oltre i limiti.
+- [x] Preservare `$ref`/`$defs` dentro i dati letterali (`const`, `enum`, examples).
+- [x] Verificare parser e compilatore, inclusi i limiti, con ASan/UBSan isolati.
+      LSan della suite intera rileva perdite nelle fixture DSML preesistenti;
+      il compilatore e la nuova fixture isolati non perdono memoria.
+- [x] Mantenere il classifier JSONSchemaBench coerente; il corpus pinned resta
+      separato in 33 schema supportati e 16 rifiutati.
+- [x] Matrice del client reale Flash: due API, streaming, thinking, temperatura
+      e rifiuto dell’output troncato con controllo positivo (20 casi PASS).
+- [ ] Completare la verifica MTP della stessa superficie, confermando cicli
+      speculativi reali e rifiuto esplicito dell’output troncato.
+
+Il budget delle prove positive con thinking è 2048 token: a 512 token alcuni
+ragionamenti esaurivano il budget e il server restituiva correttamente un errore.
+Il test negativo resta a un token e deve fallire esplicitamente. La cache CUDA
+esperimentale è usata solo nei test per limitare l’I/O; resta disabilitata nei
+launcher e non viene qualificata da questa verifica degli output.

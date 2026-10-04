@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 import time
 from collections.abc import Callable
@@ -29,6 +30,26 @@ from exmekh_agent.exmekh_bridge.tool_events import tool_event_from_execution
 logger = logging.getLogger(__name__)
 
 
+def scoped_reasoning_callback(
+    callback: Callable[..., None],
+) -> Callable[[str, str, int], None]:
+    """Adapt legacy one-argument observers before calling them, never by retrying.
+
+    A TypeError raised inside an observer is a real failure and must propagate.
+    Callables without an inspectable signature follow the scoped callback API.
+    """
+    try:
+        signature = inspect.signature(callback)
+    except (TypeError, ValueError):
+        return callback
+    try:
+        signature.bind("", "/", 0)
+    except TypeError:
+        signature.bind("")
+        return lambda content, _path, _depth: callback(content)
+    return callback
+
+
 def publish_raw_history(
     callback: Callable[[list[dict[str, Any]], list[dict[str, Any]]], None],
     history: list[dict[str, Any]],
@@ -50,7 +71,7 @@ class QuickChatEventHandler(ProviderEventHandler):
         on_reasoning: Callable[..., None],
     ) -> None:
         self._on_token = on_token
-        self._on_reasoning = on_reasoning
+        self._on_reasoning = scoped_reasoning_callback(on_reasoning)
         self._received_tokens = False
 
     def handle(self, event: ProviderStreamEvent) -> None:
@@ -58,7 +79,7 @@ class QuickChatEventHandler(ProviderEventHandler):
             self._received_tokens = True
             self._on_token(event.content)
         elif event.type == ProviderStreamEventType.REASONING and event.content:
-            self._on_reasoning(event.content)
+            self._on_reasoning(event.content, "/", 0)
 
     def finish(self, final_text: str) -> str:
         if not self._received_tokens:
@@ -83,7 +104,7 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
     ) -> None:
         self.event_router = event_router
         self.on_token = on_token
-        self.on_reasoning = on_reasoning
+        self.on_reasoning = scoped_reasoning_callback(on_reasoning)
         self.on_tool_event = on_tool_event
         self.on_skill_event = on_skill_event
         self.on_raw_history = on_raw_history
@@ -161,10 +182,7 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
             provider_event.type == ProviderStreamEventType.REASONING
             and provider_event.content
         ):
-            try:
-                self.on_reasoning(provider_event.content, event.skill_path, event.depth)
-            except TypeError:
-                self.on_reasoning(provider_event.content)
+            self.on_reasoning(provider_event.content, event.skill_path, event.depth)
         elif (
             provider_event.type == ProviderStreamEventType.RESPONSE
             and provider_event.content
