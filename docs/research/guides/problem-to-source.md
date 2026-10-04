@@ -35,3 +35,9 @@ Leggere i due paper speculative, Medusa e multi-token prediction. Confrontare ll
 ## Offload e memoria insufficiente
 
 Leggere FlexGen e le ricette consumer, ma non confondere throughput batch con latenza batch 1. Il costo PCIe e la sovrapposizione vanno misurati sul rig reale.
+
+## Prefill MoE con offload SSD/RAM/PCIe
+
+Consultare la [ricerca Flash Next](flash-prefill-offload-20261004.md): distinguere
+riuso dei pesi, attese I/O e calcolo. Pipeline e deduplicazione nel chunk sono
+già presenti in DS4; le opportunità residue hanno fonti e gate espliciti.

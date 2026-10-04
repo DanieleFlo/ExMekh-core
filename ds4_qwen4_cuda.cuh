@@ -3,6 +3,7 @@
 
 #include "ds4_qwen4_vision.h"
 #include "ds4_qwen4_expert_cache.h"
+#include "ds4_read_queue.h"
 
 namespace qwen4_cuda {
 
@@ -757,6 +758,108 @@ static uint64_t gpu_victim_epoch = UINT64_MAX, ram_victim_epoch = UINT64_MAX;
 static uint64_t gpu_victim_bytes, ram_victim_bytes;
 static double victim_cpu_seconds;
 
+/* Exact-router read-ahead. Only the inference thread reserves/publishes RAM
+ * slots. Workers own duplicated descriptors and write reserved, epoch-pinned
+ * storage; they do not touch CUDA, cache maps, ranking, or counters. */
+struct expert_read_request {
+    ds4_read_task task;
+    uint64_t offset, bytes, capacity;
+    size_t slot;
+    char *destination;
+    const char *payload;
+    double elapsed;
+    int error;
+    bool active;
+};
+static ds4_read_queue expert_reads;
+static expert_read_request expert_read_requests[DS4_READ_QUEUE_DEPTH];
+static int expert_read_fd[DS4_READ_QUEUE_WORKERS], expert_read_direct_fd[DS4_READ_QUEUE_WORKERS];
+static uint64_t expert_read_align, expert_read_file_size;
+static std::vector<uint64_t> expert_read_offsets;
+static size_t expert_read_cursor;
+static uint64_t expert_read_bytes, expert_async_reads;
+static double expert_read_wait_seconds;
+static unsigned expert_read_workers, expert_read_active;
+
+static void expert_read_run(void *, unsigned worker, void *payload) {
+    auto *r = (expert_read_request *)payload;
+    const double start = cuda_wall_sec();
+    errno = 0;
+    const int ok = cuda_model_stage_read_from(expert_read_fd[worker], &expert_read_direct_fd[worker],
+        expert_read_align, expert_read_file_size, r->destination, r->capacity,
+        r->offset, r->bytes, &r->payload);
+    r->error = ok ? 0 : (errno ? errno : EIO);
+    r->elapsed = cuda_wall_sec() - start;
+}
+
+static int expert_read_publish(expert_read_request *r) {
+    const double start = cuda_wall_sec();
+    ds4_read_queue_wait(&expert_reads, &r->task);
+    expert_read_wait_seconds += cuda_wall_sec() - start;
+    expert_read_seconds += r->elapsed;
+    r->active = false; expert_read_active--;
+    if (r->error) {
+        ram_slot_by_offset.erase(r->offset);
+        fprintf(stderr, "ds4: Qwen async expert read failed offset=%llu: %s\n",
+                (unsigned long long)r->offset, strerror(r->error));
+        return 0;
+    }
+    ram_slots[r->slot].device_ptr = (char *)r->payload;
+    expert_disk_bytes += r->bytes; expert_async_reads++;
+    return 1;
+}
+
+static int expert_reads_finish(void) {
+    int ok = 1;
+    for (auto &r : expert_read_requests) if (r.active && !expert_read_publish(&r)) ok = 0;
+    expert_read_offsets.clear(); expert_read_cursor = 0;
+    return ok;
+}
+
+static void expert_reads_reset(void) {
+    if (ds4_read_queue_workers(&expert_reads)) {
+        (void)expert_reads_finish();
+        const unsigned workers = ds4_read_queue_workers(&expert_reads);
+        ds4_read_queue_stop(&expert_reads);
+        for (unsigned i = 0; i < workers; i++) {
+            close(expert_read_fd[i]);
+            if (expert_read_direct_fd[i] >= 0) close(expert_read_direct_fd[i]);
+        }
+    }
+}
+
+static int expert_reads_start(void) {
+    if (ds4_read_queue_workers(&expert_reads)) return 1;
+    if (g_model_fd < 0 || ds4_env_flag_enabled("DS4_CUDA_QWEN4_SYNC_READS", 0)) return 0;
+    unsigned workers = 4;
+    const char *env = getenv("DS4_CUDA_QWEN4_IO_WORKERS");
+    if (env && *env) {
+        char *end = NULL; const unsigned long n = strtoul(env, &end, 10);
+        if (end != env && !*end && n >= 1 && n <= DS4_READ_QUEUE_WORKERS) workers = (unsigned)n;
+    }
+    for (unsigned i = 0; i < workers; i++) {
+        expert_read_fd[i] = dup(g_model_fd);
+        expert_read_direct_fd[i] = g_model_direct_fd >= 0 ? dup(g_model_direct_fd) : -1;
+        if (expert_read_fd[i] < 0) {
+            for (unsigned j = 0; j <= i; j++) {
+                if (expert_read_fd[j] >= 0) close(expert_read_fd[j]);
+                if (expert_read_direct_fd[j] >= 0) close(expert_read_direct_fd[j]);
+            }
+            return 0;
+        }
+    }
+    expert_read_align = g_model_direct_align; expert_read_file_size = g_model_file_size;
+    if (ds4_read_queue_start(&expert_reads, workers, expert_read_run, NULL)) {
+        expert_read_workers = workers; return 1;
+    }
+    for (unsigned i = 0; i < workers; i++) {
+        close(expert_read_fd[i]);
+        if (expert_read_direct_fd[i] >= 0) close(expert_read_direct_fd[i]);
+    }
+    return 0; /* thread/descriptor pressure preserves the synchronous path */
+}
+
+
 /* Ranking is immutable during one projection: observe and pin all current
  * hits precede admission. New/reused slots are pinned and cannot be victims.
  * Build once instead of rescanning tens of thousands of slots per miss. */
@@ -908,6 +1011,7 @@ static std::unordered_map<uint64_t, expert_usage_window> expert_windows;
 
 
 static void expert_cache_reset(void) {
+    expert_reads_reset();
     if (!ram_slots.empty() || route_host || expert_copy_stream) (void)cudaDeviceSynchronize();
     if (expert_copy_ready) (void)cudaEventDestroy(expert_copy_ready);
     for (unsigned i = 0; i < 2; i++) {
@@ -927,6 +1031,10 @@ static void expert_cache_reset(void) {
         fprintf(stderr, "ds4: Qwen routing readbacks=%llu bytes=%llu copy_groups=%llu expert_read_ms=%.3f victim_select_ms=%.3f\n",
                 (unsigned long long)route_readbacks, (unsigned long long)route_readback_bytes,
                 (unsigned long long)expert_copy_groups, expert_read_seconds * 1000.0, victim_cpu_seconds * 1000.0);
+    if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_CACHE_STATS", 0))
+        fprintf(stderr, "ds4: Qwen async reads=%llu host_wait_ms=%.3f workers=%u\n",
+                (unsigned long long)expert_async_reads, expert_read_wait_seconds * 1000.0, expert_read_workers);
+    expert_async_reads = 0; expert_read_wait_seconds = 0; expert_read_workers = 0;
     route_readbacks = route_readback_bytes = expert_copy_groups = 0; expert_read_seconds = victim_cpu_seconds = 0;
     gpu_victims.clear(); ram_gpu_victims.clear(); ram_other_victims.clear();
     gpu_victim_epoch = ram_victim_epoch = UINT64_MAX;
@@ -1088,10 +1196,54 @@ static size_t expert_ram_slot(uint64_t off, uint64_t bytes) {
     return index;
 }
 
+/* Keep at most sixteen reads reserved ahead, in the same projection/group
+ * order as copies. RAM=0 or pinned pressure leaves an ordinary sync miss. */
+static void expert_reads_pump(void) {
+    for (auto &r : expert_read_requests) {
+        if (r.active) continue;
+        while (expert_read_cursor < expert_read_offsets.size()) {
+            const uint64_t off = expert_read_offsets[expert_read_cursor++];
+            if (expert_slot_by_offset.count(off) || ram_slot_by_offset.count(off)) continue;
+            const size_t slot = expert_ram_slot(off, expert_read_bytes);
+            if (slot == SIZE_MAX) continue;
+            r.offset = off; r.bytes = expert_read_bytes; r.slot = slot;
+            r.destination = ram_slots[slot].device_ptr;
+            r.capacity = ram_slots[slot].capacity - g_model_direct_align;
+            r.payload = NULL; r.elapsed = 0; r.error = 0;
+            if (!ds4_read_queue_submit(&expert_reads, &r.task, &r)) {
+                ram_slot_by_offset.erase(off); break;
+            }
+            r.active = true; expert_read_active++;
+            break;
+        }
+    }
+}
+
+static void expert_reads_begin(uint64_t o0, uint64_t o1, uint64_t bytes,
+                               unsigned NE, unsigned width, const int *uses, bool down) {
+    if (!expert_reads_start()) return;
+    expert_read_bytes = bytes; expert_read_cursor = 0;
+    expert_read_offsets.clear();
+    for (unsigned first = 0; first < NE; first += width)
+        for (unsigned w = 0; w < (down ? 1u : 2u); w++)
+            for (unsigned e = first; e < std::min(first + width, NE); e++)
+                if (uses[e] > 0) expert_read_offsets.push_back((w ? o1 : o0) + e * bytes);
+    expert_reads_pump();
+}
+
 static int expert_ram_source(uint64_t off, uint64_t bytes, const char **ptr) {
     *ptr = NULL;
     auto hit = ram_slot_by_offset.find(off);
-    if (hit != ram_slot_by_offset.end()) { ram_hits++; *ptr = ram_slots[hit->second].device_ptr; return 1; }
+    if (hit != ram_slot_by_offset.end()) {
+        if (expert_read_active) for (auto &r : expert_read_requests) if (r.active && r.offset == off) {
+            ram_misses++;
+            if (!expert_read_publish(&r)) return 0;
+            *ptr = ram_slots[r.slot].device_ptr;
+            expert_reads_pump();
+            return 1;
+        }
+        ram_hits++; *ptr = ram_slots[hit->second].device_ptr; return 1;
+    }
     ram_misses++;
     const size_t index = expert_ram_slot(off, bytes);
     if (index == SIZE_MAX) return 1; /* bounded transient disk staging below */
@@ -2990,6 +3142,8 @@ static int qwen4_moe_mm(ds4_gpu_tensor *out, const ds4_gpu_tensor *x,
             memset(ptrs, 0, NE * 2u * sizeof(char *));
             char *table = cache.prefill_ptr + table_offset;
             const cudaStream_t copy = overlap ? expert_copy_stream : stream;
+            expert_reads_begin(o0, o1, bytes / NE, NE, width, uses, down);
+            int ok = 0;
             for (unsigned group = 0; group < groups; group++) {
                 const unsigned first = group * width, last = std::min(first + width, NE);
                 unsigned pairs = 0, active = 0;
@@ -3003,39 +3157,42 @@ static int qwen4_moe_mm(ds4_gpu_tensor *out, const ds4_gpu_tensor *x,
                  * a prior recorded event is harmless; an unrecorded event is
                  * complete by CUDA's contract. */
                 if (overlap && group >= buffers && !cuda_ok(cudaStreamWaitEvent(copy,
-                        expert_group_consumed[buffer], 0), "Qwen staging reuse")) return 0;
+                        expert_group_consumed[buffer], 0), "Qwen staging reuse")) goto prefill_reads_done;
                 char *group_weights = cache.prefill_ptr + buffer * group_bytes;
                 for (unsigned w = 0; w < (down ? 1u : 2u); w++) for (unsigned e = first; e < last; e++) {
                     if (uses[e] <= 0) continue;
                     const uint64_t off = (w ? o1 : o0) + e * (bytes / NE);
                     const char *cached = NULL;
-                    if (!expert_cache_get(map, off, bytes / NE, copy, &cached)) return 0;
+                    if (!expert_cache_get(map, off, bytes / NE, copy, &cached)) goto prefill_reads_done;
                     char *dst = group_weights + w * projection_bytes + (e - first) * (bytes / NE);
-                    if (!cached && !expert_transfer(map, off, bytes / NE, dst, copy)) return 0;
+                    if (!cached && !expert_transfer(map, off, bytes / NE, dst, copy)) goto prefill_reads_done;
                     ptrs[w * NE + e] = cached ? cached : dst;
                 }
                 int *group_counts = expert_group_counts + (uint64_t)group * NE;
                 if (!cuda_ok(cudaMemcpyAsync(group_counts, host_counts + (uint64_t)group * NE,
-                             NE * sizeof(int), cudaMemcpyHostToDevice, copy), "Qwen group counts")) return 0;
+                             NE * sizeof(int), cudaMemcpyHostToDevice, copy), "Qwen group counts")) goto prefill_reads_done;
                 for (unsigned w = 0; w < (down ? 1u : 2u); w++)
                     if (!cuda_ok(cudaMemcpyAsync(table + (w * NE + first) * sizeof(char *),
                                  ptrs + w * NE + first, (last - first) * sizeof(char *),
-                                 cudaMemcpyHostToDevice, copy), "Qwen group pointers")) return 0;
+                                 cudaMemcpyHostToDevice, copy), "Qwen group pointers")) goto prefill_reads_done;
                 /* Groups write disjoint (token, slot) outputs. Their reductions
                  * remain in the original final kernel and slot order. The host
                  * wait is replaced by the precise copy -> compute dependency. */
                 if (overlap && (!cuda_ok(cudaEventRecord(expert_copy_ready, copy), "Qwen group ready") ||
-                    !cuda_ok(cudaStreamWaitEvent(stream, expert_copy_ready, 0), "Qwen group dependency"))) return 0;
+                    !cuda_ok(cudaStreamWaitEvent(stream, expert_copy_ready, 0), "Qwen group dependency"))) goto prefill_reads_done;
                 expert_copy_groups++;
                 if (!matrix_dispatch((float *)out->ptr, (const float *)x->ptr,
                         group_weights, down ? NULL : group_weights + projection_bytes,
                         (const int *)lists->ptr, group_counts, type, NE, T, NS, NO, K, M, cap,
                         down, (const char *const *)table, down ? NULL : (const char *const *)table + NE,
-                        pairs, active)) return 0;
+                        pairs, active)) goto prefill_reads_done;
                 if (overlap && !cuda_ok(cudaEventRecord(expert_group_consumed[buffer], stream),
-                                       "Qwen staging consumed")) return 0;
+                                       "Qwen staging consumed")) goto prefill_reads_done;
             }
-            return 1;
+            ok = 1;
+prefill_reads_done:
+            const int read_ok = expert_reads_finish();
+            return ok && read_ok;
         } else {
             if (!cuda_stream_selected_ensure_bytes(&cache.prefill_ptr, &cache.prefill_capacity,
                              bytes * (down ? 1u : 2u), "Qwen prefill weights")) return 0;

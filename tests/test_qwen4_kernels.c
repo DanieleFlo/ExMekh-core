@@ -3815,6 +3815,23 @@ int main(void) {
                        arena.used + 4096, 0, 2, 1, 1, 64, 64, 0, UINT32_MAX), "cold read error fails closed");
         ds4_gpu_tensor_free(sel); ds4_gpu_tensor_free(input); ds4_gpu_tensor_free(output);
         puts("Qwen tiered cold read failure: PASS");
+        /* The prefill reader pool must also propagate a truncated file before
+         * any matrix reads an uninitialized reserved RAM slot. */
+        const unsigned rows = 64;
+        int selected[64] = {0};
+        ds4_gpu_tensor *psel = ds4_gpu_tensor_alloc(sizeof(selected));
+        ds4_gpu_tensor *lists = ds4_gpu_tensor_alloc(2u * rows * sizeof(int));
+        ds4_gpu_tensor *counts = ds4_gpu_tensor_alloc(2u * sizeof(int));
+        ds4_gpu_tensor *px = upload(NULL, (uint64_t)rows * 64);
+        ds4_gpu_tensor *po = upload(NULL, (uint64_t)rows * 64);
+        require_ok(psel && lists && counts && px && po &&
+                   ds4_gpu_tensor_write(psel, 0, selected, sizeof(selected)) &&
+                   ds4_gpu_qwen4_moe_build_lists_tensor(lists, counts, psel, rows, 1, 2, rows), "prefill failure routes");
+        require_ok(!ds4_gpu_qwen4_moe_mm_down_tensor(po, px, lists, counts, arena.base, arena.size,
+                   arena.used + 32768, 0, 2, rows, 1, 1, 64, 64, rows), "prefill read error fails closed");
+        ds4_gpu_tensor_free(psel); ds4_gpu_tensor_free(lists); ds4_gpu_tensor_free(counts);
+        ds4_gpu_tensor_free(px); ds4_gpu_tensor_free(po);
+        puts("Qwen tiered prefill read failure: PASS");
     }
 #endif
     ds4_gpu_cleanup();

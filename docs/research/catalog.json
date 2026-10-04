@@ -8309,13 +8309,109 @@
           ]
         },
         {
+          "path": "docs/research/guides/flash-prefill-offload-20261004.md",
+          "sections": [
+            {
+              "title": "Flash Next: ricerca sul prefill con esperti in offload",
+              "level": 1,
+              "start": 1,
+              "end": 228,
+              "summary": "Ricerca del 4 ottobre 2026, riferita a DS4 `e8fb251`, RTX 3090 e GGUF Q2"
+            },
+            {
+              "title": "Esito dell’esperimento successivo",
+              "level": 2,
+              "start": 8,
+              "end": 14,
+              "summary": "La qualifica delle letture anticipate"
+            },
+            {
+              "title": "Diagnosi locale e priorità",
+              "level": 2,
+              "start": 15,
+              "end": 33,
+              "summary": "Il report della latenza"
+            },
+            {
+              "title": "Funzionalità già presenti e attese residue",
+              "level": 2,
+              "start": 34,
+              "end": 51,
+              "summary": "Riferimenti alla revisione auditata: `ds4.c:59769,59944,60473`,"
+            },
+            {
+              "title": "Letteratura pertinente",
+              "level": 2,
+              "start": 52,
+              "end": 79,
+              "summary": "distingue la maggiore densità degli esperti nel prefill dalla sparsità"
+            },
+            {
+              "title": "Repository e sorgenti ispezionati",
+              "level": 2,
+              "start": 80,
+              "end": 127,
+              "summary": "Sono stati letti sorgenti a commit fissati oltre ai README."
+            },
+            {
+              "title": "Interventi proposti per DS4",
+              "level": 2,
+              "start": 128,
+              "end": 200,
+              "summary": "La priorità d'impatto non coincide con l'ordine di implementazione: prima"
+            },
+            {
+              "title": "Pipeline di lettura esatta",
+              "level": 3,
+              "start": 142,
+              "end": 159,
+              "summary": "Provare una coda di miss già noti dal router, con 2/4/8 worker diagnostici."
+            },
+            {
+              "title": "Demozioni distinte per fase",
+              "level": 3,
+              "start": 160,
+              "end": 168,
+              "summary": "I pesi sono immutabili: la demozione conserva una copia utile, non un"
+            },
+            {
+              "title": "Riuso su una finestra maggiore",
+              "level": 3,
+              "start": 169,
+              "end": 188,
+              "summary": "Verificare chunk 256/512/1024/2048 con RAM attuale, ctx128K e stessi prompt."
+            },
+            {
+              "title": "Tuning successivo",
+              "level": 3,
+              "start": 189,
+              "end": 200,
+              "summary": "Ottimizzare gli heap se la selezione rimane costosa, conservando pinning,"
+            },
+            {
+              "title": "Soluzioni escluse o a priorità bassa",
+              "level": 2,
+              "start": 201,
+              "end": 210,
+              "summary": "Escludere pruning/deferral, router modificati, KV INT8, nuove quantizzazioni"
+            },
+            {
+              "title": "Gate economici prima dei benchmark lunghi",
+              "level": 2,
+              "start": 211,
+              "end": 228,
+              "summary": "1."
+            }
+          ]
+        },
+        {
           "path": "docs/research/guides/problem-to-source.md",
           "sections": [
             {
               "title": "Mappa problema → soluzione esistente",
               "level": 1,
               "start": 1,
-              "end": 37,
+              "end": 43,
               "summary": "Prima di tradurre una fonte in codice, usare il componente"
             },
             {
@@ -8371,8 +8467,15 @@
               "title": "Offload e memoria insufficiente",
               "level": 2,
               "start": 35,
-              "end": 37,
+              "end": 38,
               "summary": "Leggere FlexGen e le ricette consumer, ma non confondere throughput batch con latenza batch 1."
+            },
+            {
+              "title": "Prefill MoE con offload SSD/RAM/PCIe",
+              "level": 2,
+              "start": 39,
+              "end": 43,
+              "summary": "Consultare la ricerca Flash Next: distinguere"
             }
           ]
         },

@@ -245,6 +245,16 @@ Implementazione del piano di azione sul working tree `codex/qwen-flash-3090`, HE
 - righe 67–79: **Correttezza e checkpoint** — I checkpoint del 27B restano utilizzabili con il 27B; i loro scenari/contratti vengono esercitati sul Flash, non i file KV di un modello diverso.
 - righe 80–105: **Riproduzione e lavoro rimanente** — make -j2 ds4 ds4-server ds4-bench CUDA_ARCH=sm_86
 
+## [Flash Next CUDA: letture anticipate degli esperti](qwen38-flash-prefill-async-20261004.md)
+
+I tempi del primo workload derivano dal CSV arrotondato a due decimali,
+
+- righe 9–31: **Risultato** — I tempi del primo workload derivano dal CSV arrotondato a due decimali,
+- righe 32–75: **Modifica mantenuta** — La ricerca precedente
+- righe 76–99: **Correttezza e checkpoint** — I test serializzano i processi del modello, rispettando l’instance lock.
+- righe 100–140: **Misure e limiti** — Il modello Flash è il GGUF Q2 locale da 147207127040 byte; Qwen27 è
+- righe 141–161: **Esperimento scartato: chunk più grandi** — A parità di prompt da 1024 token, una prova cold misura 68,69 / 68,43 /
+
 ## [Flash Next: lentezza del prefill e budget RAM, 4 ottobre 2026](qwen38-flash-prefill-latency-20261004.md)
 
 Baseline congelata: `5d374d4978c644a3de9ce40353b3dcba9b97d235`.

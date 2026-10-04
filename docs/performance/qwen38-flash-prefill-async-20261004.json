@@ -1,0 +1,2550 @@
+{
+  "experiment_id": "flash-prefill-async-20261004",
+  "baseline_head": "e8fb251c8cf05a01316f3f084b83bbc05b2235df",
+  "verdict": "KEEP_LOCAL_CUDA_FLASH_READ_AHEAD",
+  "scope": "Only Flash qwen4exp CUDA tiered-cache grouped prefill. No weight, quantization, router, attention/KV, arithmetic order or checkpoint payload changes. Qwen27 uses its existing path.",
+  "hypothesis": "Bounded async reads of exact selected expert misses overlap SSD service with GPU copies/compute without changing weights or arithmetic.",
+  "sources": [
+    "docs/research/guides/flash-prefill-offload-20261004.md",
+    "https://github.com/EfficientMoE/MoE-Infinity",
+    "https://github.com/DominikBucko/qwen38-flash-next-3090"
+  ],
+  "baseline_sources": {
+    "ds4.c": "77383fdc1b842e61571b614956632b5743fa0057d3a75c97a3f586681e404301",
+    "ds4_cuda.cu": "6f76fd875b795be821429400521ef46ac58f0a48ed20f02b55788f77b3185c22",
+    "ds4_qwen4_cuda.cuh": "880343669e1247c34d1c07ca84e6325afaf088e9748aeb102e7edc7a54af59e4",
+    "Makefile": "44a768275fb35e73866ff2a6b77cafa38a6f4f33c770d296705ad710db3b3b5a",
+    "tests/test_qwen4_kernels.c": "6b7de2d1e8c3700abf02acfa6f1fd3bc4ec38d88790b3b5e7df42d3bbcc51f16"
+  },
+  "baseline_binaries": {
+    "ds4": "82f47ec3a8cf859427065b71d33fcd43aabcc7c1a90d76cf82cef837f0cfec3e",
+    "ds4-bench": "3a4e57662ef3b796e830fd0559243e69c14f78f46c19fee53df09ab7a221839a",
+    "ds4-server": "b353102c8bf232a8bf96604b7de87f1a8d45d4450d62aa7124c95aab9cb9be69",
+    "tests/test_qwen4_cuda": "4f548c5c63312ef886aefa6ab0531a8d6de7e18c5e87401ec9e98086627f8e14"
+  },
+  "candidate_sources": {
+    "ds4.c": "77383fdc1b842e61571b614956632b5743fa0057d3a75c97a3f586681e404301",
+    "ds4_cuda.cu": "61c5ec71d9b14b1de55bb5aaebade0b82a3be23c189dbec63e0487a9156d2a49",
+    "ds4_qwen4_cuda.cuh": "2b8f8a36182f6dc373fc6e591ab6ed378d40eeb8c7fed3cd407bc4090ab2cdfd",
+    "ds4_read_queue.h": "39c0c6a3b29b8d926d773902b6a88f4478753c2425a0385c238b56a23d9bc96d",
+    "tests/test_read_queue.c": "2b77733a53351f3c3f9c6f78e82c6dce2c60dea56ed74bf739766b22a8c2f4f4",
+    "tests/test_qwen4_kernels.c": "871cc46f56940fdd33fd728ac13248c0cb365771d663f848f2928351b4e38ad9",
+    "Makefile": "e41c7a52c29338672b1ea4baa378b3ccd24bd9e57facb59f24383af6b78f219a",
+    ".gitignore": "6f18474eb4855af4a2dc2f1757f4411ea1cbc076dfeb97604be572ea3d08a374",
+    "ds4_qwen4_expert_cache.h": "7acbb2d256fd6bc6e130503d8db8d56e7540e882a91f041ac663a5352732faf7"
+  },
+  "candidate_binaries": {
+    "test_qwen4_cuda.candidate": "e27a7bebd0b919954f28706b30b18d031f4963f2bc880a681b742217424efb3a",
+    "test_server_resident_frontier.candidate": "7ae484bbf9bf9090d7ecb12038ad4410360851c77692a75219bbc459d6941ab3",
+    "ds4-eval.candidate": "e5a81813cdf8b2a49d9d2df7ed4a9ca4d6b9163397d2d3bbf21a1365234d161f",
+    "ds4-server.candidate": "671e52711b5f3ecaa5f1880d5c56c1bc4c19454e3f1087e74829fa11a322fa28",
+    "ds4.candidate": "577dbe8421285da1cefe9dab8e83f8f5e8f9691983078e7ff6953d086a076696",
+    "ds4-bench.candidate": "b837759ad08f08bbcdf6bdc78b75fc2535d3a5f877362ad52cad60ce4027d6bd"
+  },
+  "build": {
+    "cuda_arch": "sm_86",
+    "optimization": "-O3 --use_fast_math; unchanged baseline math flags",
+    "compiler": {
+      "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+      "cpu": "Intel(R) Core(TM) i9-14900K",
+      "nvcc": {
+        "exit": 0,
+        "output": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Thu_Mar_28_02:18:24_PDT_2024\nCuda compilation tools, release 12.4, V12.4.131\nBuild cuda_12.4.r12.4/compiler.34097967_0"
+      },
+      "nvidia_smi": {
+        "exit": 0,
+        "output": "NVIDIA GeForce RTX 3090, 610.62, 24576 MiB"
+      }
+    },
+    "commands": [
+      "make ds4 ds4-server ds4-bench ds4-eval tests/test_qwen4_cuda tests/test_server_resident_frontier CUDA_ARCH=sm_86",
+      "make test-read-queue test-qwen4-expert-cache test-linux-memory"
+    ]
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "pci": [
+      {
+        "KeyName": "DEVPKEY_PciDevice_CurrentLinkSpeed",
+        "Data": 4
+      },
+      {
+        "KeyName": "DEVPKEY_PciDevice_CurrentLinkWidth",
+        "Data": 2
+      },
+      {
+        "KeyName": "DEVPKEY_PciDevice_MaxLinkSpeed",
+        "Data": 4
+      },
+      {
+        "KeyName": "DEVPKEY_PciDevice_MaxLinkWidth",
+        "Data": 16
+      },
+      {
+        "KeyName": "DEVPKEY_Device_LocationPaths",
+        "Data": [
+          "PCIROOT(0)#PCI(0100)#PCI(0000)",
+          "ACPI(_SB_)#ACPI(PC00)#ACPI(PEG1)#ACPI(PEGP)"
+        ]
+      }
+    ],
+    "board": {
+      "Manufacturer": "Micro-Star International Co., Ltd.",
+      "Product": "MAG Z790 TOMAHAWK MAX WIFI (MS-7E25)"
+    },
+    "computer": {
+      "TotalPhysicalMemory": 68401946624
+    },
+    "cpu": "Intel Core i9-14900K",
+    "environment": "WSL2 Ubuntu 24.04"
+  },
+  "models": {
+    "gguf/Qwen3.8-Flash-Next-Q2.gguf": {
+      "bytes": 147207127040,
+      "mtime_ns": 1790872117015055196,
+      "sha256": "NOT_REHASHED"
+    },
+    "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf": {
+      "bytes": 616703104,
+      "mtime_ns": 1791047389518584217,
+      "sha256": "NOT_REHASHED"
+    },
+    "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf": {
+      "bytes": 15358213024,
+      "mtime_ns": 1787558112402977100,
+      "sha256": "NOT_REHASHED"
+    }
+  },
+  "link_bandwidth_previous_experiment": {
+    "memory": "cudaMallocHost pinned",
+    "copy_bytes": 268435456,
+    "warmups": 2,
+    "measured": 5,
+    "h2d_gib_per_second": [
+      2.7296,
+      2.7379,
+      2.7435,
+      2.7457,
+      2.7462
+    ],
+    "d2h_gib_per_second": [
+      2.7843,
+      2.7846,
+      2.7868,
+      2.7854,
+      2.7826
+    ]
+  },
+  "runtime": {
+    "workers": 4,
+    "max_pending_reads": 16,
+    "copy_group": 64,
+    "chunk": 256,
+    "ram_budget": "auto, unchanged previous policy",
+    "fallback": "ordinary sync misses when no safe RAM slot, RAM=0, or worker/descriptor setup fails",
+    "diagnostics": {
+      "DS4_CUDA_QWEN4_SYNC_READS": "1 disables async for comparison",
+      "DS4_CUDA_QWEN4_IO_WORKERS": "1..8; only 4 qualified on this machine"
+    }
+  },
+  "cold_prefill": {
+    "ctx_alloc": 131072,
+    "new_tokens": 256,
+    "batch": 1,
+    "gen_tokens": 0,
+    "mtp": false,
+    "vision": false,
+    "warmup": "Direction and slow workloads preceded qualification; each measured sample starts a fresh process with empty expert cache, O_DIRECT when supported. Not a guarantee of cold physical SSD/controller caches. Alternating A/B order, five paired samples.",
+    "tps_precision": "CSV rounded to two decimals; seconds reconstructed as 256/TPS exclude startup.",
+    "samples": [
+      {
+        "variant": "baseline",
+        "repeat": 1,
+        "exit": 0,
+        "wall_seconds": 17.204137378001178,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "20.70",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 12.367149758454106
+      },
+      {
+        "variant": "candidate",
+        "repeat": 1,
+        "exit": 0,
+        "wall_seconds": 12.894681705998664,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "32.16",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 7.9601990049751254
+      },
+      {
+        "variant": "candidate",
+        "repeat": 2,
+        "exit": 0,
+        "wall_seconds": 12.593539314999362,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "32.87",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 7.788256769090356
+      },
+      {
+        "variant": "baseline",
+        "repeat": 2,
+        "exit": 0,
+        "wall_seconds": 17.301178825000534,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "20.48",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 12.5
+      },
+      {
+        "variant": "baseline",
+        "repeat": 3,
+        "exit": 0,
+        "wall_seconds": 18.75466492099804,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "19.48",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 13.141683778234086
+      },
+      {
+        "variant": "candidate",
+        "repeat": 3,
+        "exit": 0,
+        "wall_seconds": 13.04740734200459,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "31.17",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 8.2130253448829
+      },
+      {
+        "variant": "candidate",
+        "repeat": 4,
+        "exit": 0,
+        "wall_seconds": 12.744086701000924,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "32.50",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 7.876923076923077
+      },
+      {
+        "variant": "baseline",
+        "repeat": 4,
+        "exit": 0,
+        "wall_seconds": 17.75157212499471,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "19.80",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 12.929292929292929
+      },
+      {
+        "variant": "baseline",
+        "repeat": 5,
+        "exit": 0,
+        "wall_seconds": 16.89980841900251,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "21.43",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 11.945870275314979
+      },
+      {
+        "variant": "candidate",
+        "repeat": 5,
+        "exit": 0,
+        "wall_seconds": 12.943044676001591,
+        "ctx_tokens": "256",
+        "prefill_tokens": "256",
+        "prefill_tps": "31.38",
+        "gen_tokens": "0",
+        "gen_tps": "0.00",
+        "gen_first_ms": "0.000",
+        "gen_steady_tokens": "0",
+        "gen_steady_tps": "0.00",
+        "kvcache_bytes": "0",
+        "prefill_seconds": 8.158062460165711
+      }
+    ],
+    "statistics": [
+      {
+        "variant": "baseline",
+        "metric": "prefill_tps",
+        "n": 5,
+        "samples": [
+          20.7,
+          20.48,
+          19.48,
+          19.8,
+          21.43
+        ],
+        "min": 19.48,
+        "p10": 19.608,
+        "median": 20.48,
+        "mean": 20.378,
+        "p90": 21.137999999999998,
+        "max": 21.43,
+        "stdev": 0.7683228488077127,
+        "cv_percent": 3.7703545431726013
+      },
+      {
+        "variant": "baseline",
+        "metric": "prefill_seconds",
+        "n": 5,
+        "samples": [
+          12.367149758454106,
+          12.5,
+          13.141683778234086,
+          12.929292929292929,
+          11.945870275314979
+        ],
+        "min": 11.945870275314979,
+        "p10": 12.11438206857063,
+        "median": 12.5,
+        "mean": 12.57679934825922,
+        "p90": 13.056727438657623,
+        "max": 13.141683778234086,
+        "stdev": 0.47203514948115083,
+        "cv_percent": 3.753221598041048
+      },
+      {
+        "variant": "candidate",
+        "metric": "prefill_tps",
+        "n": 5,
+        "samples": [
+          32.16,
+          32.87,
+          31.17,
+          32.5,
+          31.38
+        ],
+        "min": 31.17,
+        "p10": 31.254,
+        "median": 32.16,
+        "mean": 32.016,
+        "p90": 32.722,
+        "max": 32.87,
+        "stdev": 0.7253481922497624,
+        "cv_percent": 2.2655803106251953
+      },
+      {
+        "variant": "candidate",
+        "metric": "prefill_seconds",
+        "n": 5,
+        "samples": [
+          7.9601990049751254,
+          7.788256769090356,
+          8.2130253448829,
+          7.876923076923077,
+          8.158062460165711
+        ],
+        "min": 7.788256769090356,
+        "p10": 7.823723292223445,
+        "median": 7.9601990049751254,
+        "mean": 7.999293331207434,
+        "p90": 8.191040190996024,
+        "max": 8.2130253448829,
+        "stdev": 0.18160966797455377,
+        "cv_percent": 2.27032139534182
+      }
+    ],
+    "paired_differences": [
+      {
+        "repeat": 1,
+        "latency_reduction_percent": 35.63432835820895,
+        "tps_increase_percent": 55.3623188405797
+      },
+      {
+        "repeat": 2,
+        "latency_reduction_percent": 37.69394584727714,
+        "tps_increase_percent": 60.49804687499998
+      },
+      {
+        "repeat": 3,
+        "latency_reduction_percent": 37.50401026628168,
+        "tps_increase_percent": 60.01026694045175
+      },
+      {
+        "repeat": 4,
+        "latency_reduction_percent": 39.07692307692307,
+        "tps_increase_percent": 64.14141414141415
+      },
+      {
+        "repeat": 5,
+        "latency_reduction_percent": 31.70809432759719,
+        "tps_increase_percent": 46.43023798413439
+      }
+    ],
+    "cache_counters": [
+      {
+        "variant": "baseline",
+        "repeat": 1,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "baseline",
+        "repeat": 1,
+        "tier": "gpu",
+        "slots": 22945,
+        "reserved": 11393548800,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5240
+      },
+      {
+        "variant": "baseline",
+        "repeat": 2,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "baseline",
+        "repeat": 2,
+        "tier": "gpu",
+        "slots": 22961,
+        "reserved": 11400084480,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5224
+      },
+      {
+        "variant": "baseline",
+        "repeat": 3,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "baseline",
+        "repeat": 3,
+        "tier": "gpu",
+        "slots": 22939,
+        "reserved": 11389900800,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5246
+      },
+      {
+        "variant": "baseline",
+        "repeat": 4,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "baseline",
+        "repeat": 4,
+        "tier": "gpu",
+        "slots": 22945,
+        "reserved": 11393326080,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5240
+      },
+      {
+        "variant": "baseline",
+        "repeat": 5,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "baseline",
+        "repeat": 5,
+        "tier": "gpu",
+        "slots": 22949,
+        "reserved": 11392343040,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5236
+      },
+      {
+        "variant": "candidate",
+        "repeat": 1,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "candidate",
+        "repeat": 1,
+        "tier": "gpu",
+        "slots": 22928,
+        "reserved": 11384140800,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5257
+      },
+      {
+        "variant": "candidate",
+        "repeat": 2,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "candidate",
+        "repeat": 2,
+        "tier": "gpu",
+        "slots": 22950,
+        "reserved": 11392097280,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5235
+      },
+      {
+        "variant": "candidate",
+        "repeat": 3,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "candidate",
+        "repeat": 3,
+        "tier": "gpu",
+        "slots": 22949,
+        "reserved": 11392343040,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5236
+      },
+      {
+        "variant": "candidate",
+        "repeat": 4,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "candidate",
+        "repeat": 4,
+        "tier": "gpu",
+        "slots": 22945,
+        "reserved": 11393326080,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5240
+      },
+      {
+        "variant": "candidate",
+        "repeat": 5,
+        "tier": "ram",
+        "slots": 28185,
+        "reserved": 14344135680,
+        "allocated": 14495514624,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 0,
+        "disk_bytes": 13997798400,
+        "demotions": 0,
+        "h2d_bytes": 13997798400,
+        "direct_io": 1
+      },
+      {
+        "variant": "candidate",
+        "repeat": 5,
+        "tier": "gpu",
+        "slots": 22965,
+        "reserved": 11399546880,
+        "hits": 0,
+        "misses": 28185,
+        "evictions": 5220
+      }
+    ],
+    "identical_traffic": true
+  },
+  "warm_prefill": {
+    "ctx_alloc": 131072,
+    "frontiers": [
+      256,
+      512,
+      768,
+      1024
+    ],
+    "new_tokens_per_frontier": 256,
+    "batch": 1,
+    "gen_tokens": 0,
+    "mtp": false,
+    "vision": false,
+    "warmup_sweeps": 2,
+    "measured_sweeps": 5,
+    "statistics": [
+      {
+        "variant": "baseline",
+        "frontier": 256,
+        "new_tokens": 256,
+        "n": 5,
+        "samples": [
+          128.75,
+          128.8,
+          130.02,
+          128.12,
+          127.24
+        ],
+        "min": 127.24,
+        "p10": 127.592,
+        "median": 128.75,
+        "mean": 128.586,
+        "p90": 129.532,
+        "max": 130.02,
+        "stdev": 1.019548919866041,
+        "cv_percent": 0.7928926320641756
+      },
+      {
+        "variant": "baseline",
+        "frontier": 512,
+        "new_tokens": 256,
+        "n": 5,
+        "samples": [
+          159.08,
+          158.73,
+          159.56,
+          151.81,
+          155.79
+        ],
+        "min": 151.81,
+        "p10": 153.402,
+        "median": 158.73,
+        "mean": 156.994,
+        "p90": 159.368,
+        "max": 159.56,
+        "stdev": 3.250881418938563,
+        "cv_percent": 2.0707042427981723
+      },
+      {
+        "variant": "baseline",
+        "frontier": 768,
+        "new_tokens": 256,
+        "n": 5,
+        "samples": [
+          136.9,
+          137.96,
+          135.3,
+          133.33,
+          134.08
+        ],
+        "min": 133.33,
+        "p10": 133.63000000000002,
+        "median": 135.3,
+        "mean": 135.514,
+        "p90": 137.536,
+        "max": 137.96,
+        "stdev": 1.9219729446586884,
+        "cv_percent": 1.4182836789251947
+      },
+      {
+        "variant": "baseline",
+        "frontier": 1024,
+        "new_tokens": 256,
+        "n": 5,
+        "samples": [
+          136.37,
+          136.14,
+          135.35,
+          135.25,
+          133.65
+        ],
+        "min": 133.65,
+        "p10": 134.29,
+        "median": 135.35,
+        "mean": 135.352,
+        "p90": 136.278,
+        "max": 136.37,
+        "stdev": 1.0682321844992277,
+        "cv_percent": 0.7892252678196315
+      },
+      {
+        "variant": "candidate",
+        "frontier": 256,
+        "new_tokens": 256,
+        "n": 5,
+        "samples": [
+          128.24,
+          127.82,
+          128.26,
+          129.66,
+          130.01
+        ],
+        "min": 127.82,
+        "p10": 127.988,
+        "median": 128.26,
+        "mean": 128.798,
+        "p90": 129.87,
+        "max": 130.01,
+        "stdev": 0.970731682804263,
+        "cv_percent": 0.7536853699624707
+      },
+      {
+        "variant": "candidate",
+        "frontier": 512,
+        "new_tokens": 256,
+        "n": 5,
+        "samples": [
+          158.2,
+          157.83,
+          158.04,
+          159.37,
+          159.27
+        ],
+        "min": 157.83,
+        "p10": 157.91400000000002,
+        "median": 158.2,
+        "mean": 158.542,
+        "p90": 159.33,
+        "max": 159.37,
+        "stdev": 0.7230975037987651,
+        "cv_percent": 0.4560920789436018
+      },
+      {
+        "variant": "candidate",
+        "frontier": 768,
+        "new_tokens": 256,
+        "n": 5,
+        "samples": [
+          135.71,
+          136.2,
+          136.21,
+          137.35,
+          137.5
+        ],
+        "min": 135.71,
+        "p10": 135.906,
+        "median": 136.21,
+        "mean": 136.594,
+        "p90": 137.44,
+        "max": 137.5,
+        "stdev": 0.786848142909415,
+        "cv_percent": 0.5760488329717374
+      },
+      {
+        "variant": "candidate",
+        "frontier": 1024,
+        "new_tokens": 256,
+        "n": 5,
+        "samples": [
+          135.09,
+          134.72,
+          134.56,
+          136.54,
+          136.94
+        ],
+        "min": 134.56,
+        "p10": 134.624,
+        "median": 135.09,
+        "mean": 135.57,
+        "p90": 136.78,
+        "max": 136.94,
+        "stdev": 1.0943948099292107,
+        "cv_percent": 0.8072544146413002
+      }
+    ],
+    "logit_comparisons": [
+      {
+        "file": "frontier_000256.logits.json",
+        "vocab": 248320,
+        "exact_float32": true
+      },
+      {
+        "file": "frontier_000512.logits.json",
+        "vocab": 248320,
+        "exact_float32": true
+      },
+      {
+        "file": "frontier_000768.logits.json",
+        "vocab": 248320,
+        "exact_float32": true
+      },
+      {
+        "file": "frontier_001024.logits.json",
+        "vocab": 248320,
+        "exact_float32": true
+      }
+    ],
+    "verdict": "No demonstrated warm speedup; median changes smaller than 1%, CV <= 2.1%."
+  },
+  "qwen27": {
+    "ctx_alloc": 2048,
+    "chunk": 256,
+    "frontiers": [
+      256,
+      512
+    ],
+    "decode_tokens_per_frontier": 16,
+    "teacher_forced": true,
+    "mtp": false,
+    "vision": false,
+    "warmup_sweeps": 2,
+    "measured_sweeps": 5,
+    "statistics": [
+      {
+        "variant": "baseline",
+        "frontier": 256,
+        "metric": "prefill_tps",
+        "n": 5,
+        "samples": [
+          32.51,
+          32.72,
+          32.54,
+          32.43,
+          32.54
+        ],
+        "min": 32.43,
+        "p10": 32.461999999999996,
+        "median": 32.54,
+        "mean": 32.548,
+        "p90": 32.647999999999996,
+        "max": 32.72,
+        "stdev": 0.10616025621672154,
+        "cv_percent": 0.3261652212631238
+      },
+      {
+        "variant": "baseline",
+        "frontier": 256,
+        "metric": "gen_tps",
+        "n": 5,
+        "samples": [
+          30.75,
+          30.79,
+          31.33,
+          31.15,
+          30.56
+        ],
+        "min": 30.56,
+        "p10": 30.636,
+        "median": 30.79,
+        "mean": 30.916,
+        "p90": 31.258,
+        "max": 31.33,
+        "stdev": 0.3147697571241554,
+        "cv_percent": 1.018145158248659
+      },
+      {
+        "variant": "baseline",
+        "frontier": 512,
+        "metric": "prefill_tps",
+        "n": 5,
+        "samples": [
+          401.69,
+          412.66,
+          413.95,
+          416.39,
+          417.04
+        ],
+        "min": 401.69,
+        "p10": 406.07800000000003,
+        "median": 413.95,
+        "mean": 412.346,
+        "p90": 416.78000000000003,
+        "max": 417.04,
+        "stdev": 6.217099806179729,
+        "cv_percent": 1.507738599666234
+      },
+      {
+        "variant": "baseline",
+        "frontier": 512,
+        "metric": "gen_tps",
+        "n": 5,
+        "samples": [
+          30.48,
+          31.07,
+          30.69,
+          30.21,
+          30.73
+        ],
+        "min": 30.21,
+        "p10": 30.318,
+        "median": 30.69,
+        "mean": 30.636,
+        "p90": 30.934,
+        "max": 31.07,
+        "stdev": 0.3185592566540798,
+        "cv_percent": 1.0398200047463109
+      },
+      {
+        "variant": "candidate",
+        "frontier": 256,
+        "metric": "prefill_tps",
+        "n": 5,
+        "samples": [
+          32.85,
+          32.73,
+          32.58,
+          32.46,
+          32.49
+        ],
+        "min": 32.46,
+        "p10": 32.472,
+        "median": 32.58,
+        "mean": 32.622,
+        "p90": 32.802,
+        "max": 32.85,
+        "stdev": 0.1651363073342741,
+        "cv_percent": 0.5062114748766908
+      },
+      {
+        "variant": "candidate",
+        "frontier": 256,
+        "metric": "gen_tps",
+        "n": 5,
+        "samples": [
+          31.32,
+          31.1,
+          31.22,
+          30.61,
+          30.2
+        ],
+        "min": 30.2,
+        "p10": 30.364,
+        "median": 31.1,
+        "mean": 30.89,
+        "p90": 31.28,
+        "max": 31.32,
+        "stdev": 0.47233462714478214,
+        "cv_percent": 1.5290858761566273
+      },
+      {
+        "variant": "candidate",
+        "frontier": 512,
+        "metric": "prefill_tps",
+        "n": 5,
+        "samples": [
+          423.26,
+          417.39,
+          410.38,
+          413.81,
+          419.93
+        ],
+        "min": 410.38,
+        "p10": 411.752,
+        "median": 417.39,
+        "mean": 416.954,
+        "p90": 421.928,
+        "max": 423.26,
+        "stdev": 5.047636080384558,
+        "cv_percent": 1.2105978310280172
+      },
+      {
+        "variant": "candidate",
+        "frontier": 512,
+        "metric": "gen_tps",
+        "n": 5,
+        "samples": [
+          30.71,
+          30.62,
+          30.6,
+          30.18,
+          30.82
+        ],
+        "min": 30.18,
+        "p10": 30.348,
+        "median": 30.62,
+        "mean": 30.586000000000002,
+        "p90": 30.776,
+        "max": 30.82,
+        "stdev": 0.24306377763870982,
+        "cv_percent": 0.794689654216667
+      }
+    ],
+    "logit_comparisons": [
+      {
+        "file": "frontier_000256.decode.json",
+        "exact_json_values": true,
+        "vocab": 248320
+      },
+      {
+        "file": "frontier_000256.logits.json",
+        "exact_json_values": true,
+        "vocab": 248320
+      },
+      {
+        "file": "frontier_000512.decode.json",
+        "exact_json_values": true,
+        "vocab": 248320
+      },
+      {
+        "file": "frontier_000512.logits.json",
+        "exact_json_values": true,
+        "vocab": 248320
+      }
+    ],
+    "note": "Includes existing frontier restoration/replay cost, especially frontier256; not pure GEMM throughput. Prefill and post-16-token decode full-vocabulary frontiers compare exactly."
+  },
+  "teacher_forced_flash": {
+    "vocab": 248320,
+    "positions": 200,
+    "compared_float32_bytes": 198656000,
+    "comparisons": [
+      {
+        "file": "all-136.bin",
+        "bytes": 135086080,
+        "bit_exact": true
+      },
+      {
+        "file": "case_000.bin",
+        "bytes": 31784960,
+        "bit_exact": true
+      },
+      {
+        "file": "case_001.bin",
+        "bytes": 31784960,
+        "bit_exact": true
+      }
+    ],
+    "input_fixture_tsv": "248045,8678,198,2523,513,264,10631,17313,248046,198,248045,846,198,814,20139,417,39100,34736,11,2583,39129,321,279,3578,3175,1105,13,248046,198,248045,74455,198,248068,271,248069,271|8160,369,264,2923,13909,28253,15673,314,417,39100,34736,11,17661,279,4437,11767,11,279,28079,314,2357,42898,11,321,279,3050,11256,314,279,3578,2357,13\t/home/daniele/ds4/performance-results/flash-prefill-async-20261004/quality-final/case_000.bin\n248045,8678,198,2523,513,264,10631,17313,248046,198,248045,846,198,7734,264,61446,2790,364,264,25804,1627,3421,421,13081,6103,7982,13,248046,198,248045,74455,198,248068,271,248069,271|8160,369,264,61446,2790,364,264,25804,1627,3421,32237,364,11256,6103,7982,318,1719,328,34,16,15,42,1,466,328,56328,9282,284,1,3377,553,845\t/home/daniele/ds4/performance-results/flash-prefill-async-20261004/quality-final/case_001.bin\n1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4,5,6,1,2,3,4\t/home/daniele/ds4/performance-results/flash-prefill-async-20261004/quality-final/all-136.bin\n",
+    "command": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ctx",
+        "256",
+        "--first-token-test",
+        "-p",
+        "hello"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_QWEN4_GPU": "1",
+        "DS4_QWEN4_FT_LIST": "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/quality-final/inputs.tsv"
+      }
+    }
+  },
+  "http": {
+    "ctx_alloc": 131072,
+    "chunk": 256,
+    "vision_projector_loaded": true,
+    "mtp_cli_flag": true,
+    "temperature": 0,
+    "input_tokens": 4395,
+    "output_tokens": 32,
+    "n_per_variant": 1,
+    "stream": false,
+    "profiled": false,
+    "request_fixture_sha256": "d7648e52118e9910d1444dc5d1c9ae4d1f854ee18aaa488380d13f6e7ea88b78",
+    "results": [
+      {
+        "seconds": 123.62991711400537,
+        "status": "incomplete",
+        "usage": {
+          "input_tokens": 4395,
+          "input_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4395
+          },
+          "output_tokens": 32,
+          "output_tokens_details": {
+            "reasoning_tokens": 0,
+            "constrained_prefill_tokens": 0
+          },
+          "total_tokens": 4427
+        },
+        "variant": "baseline",
+        "prefill_seconds": 117.034,
+        "decode_seconds": 6.427,
+        "ram_counters": {
+          "slots": 67427,
+          "reserved": 34314894336,
+          "allocated": 34661133312,
+          "hits": 421776,
+          "misses": 70701,
+          "evictions": 64589,
+          "disk_bytes": 35112053760,
+          "demotions": 61315,
+          "h2d_bytes": 246993384960,
+          "direct_io": 1
+        },
+        "ram_budget_gib": 32.28,
+        "prompt_done_count": 1,
+        "output_text_sha256": "4ac6ff28b286be18cf67990beffd0c1f40402774e587e3d99aed615fb68282c4"
+      },
+      {
+        "seconds": 116.56196380199981,
+        "status": "incomplete",
+        "usage": {
+          "input_tokens": 4395,
+          "input_tokens_details": {
+            "cached_tokens": 0,
+            "cache_write_tokens": 4395
+          },
+          "output_tokens": 32,
+          "output_tokens_details": {
+            "reasoning_tokens": 0,
+            "constrained_prefill_tokens": 0
+          },
+          "total_tokens": 4427
+        },
+        "variant": "candidate",
+        "prefill_seconds": 109.929,
+        "decode_seconds": 6.433,
+        "ram_counters": {
+          "slots": 67592,
+          "reserved": 34399312896,
+          "allocated": 34746835968,
+          "hits": 421794,
+          "misses": 70639,
+          "evictions": 69990,
+          "disk_bytes": 35082078720,
+          "demotions": 66943,
+          "h2d_bytes": 246965667840,
+          "direct_io": 1
+        },
+        "ram_budget_gib": 32.36,
+        "prompt_done_count": 1,
+        "output_text_sha256": "4ac6ff28b286be18cf67990beffd0c1f40402774e587e3d99aed615fb68282c4"
+      }
+    ],
+    "output_text_equal": true,
+    "no_duplicate_prefill": true,
+    "note": "Smoke/directional end-to-end pair, not statistical qualification of all agent prompts. Status incomplete is the explicit 32-token cap. All cache/read/H2D counters include decode and shutdown; dynamic auto RAM budgets differ by 0.08 GiB."
+  },
+  "chunk_probes": {
+    "ctx_alloc": 131072,
+    "prefill_tokens": 1024,
+    "n_real_prefills_per_chunk": 1,
+    "probes": [
+      {
+        "chunk": 256,
+        "cold_tps_single_sample": 68.69,
+        "exact_logits": true,
+        "argmax_equal": true,
+        "max_abs_logit_difference": 0.0,
+        "changed_logits": 0,
+        "verdict": "CONTROL",
+        "excluded_samples": "Second repetition reused the full frontier and performed no new prefill; its reported TPS is not a speed measurement."
+      },
+      {
+        "chunk": 512,
+        "cold_tps_single_sample": 68.43,
+        "exact_logits": false,
+        "argmax_equal": true,
+        "max_abs_logit_difference": 0.58430791,
+        "changed_logits": 248320,
+        "verdict": "REJECT",
+        "excluded_samples": "Second repetition reused the full frontier and performed no new prefill; its reported TPS is not a speed measurement."
+      },
+      {
+        "chunk": 1024,
+        "cold_tps_single_sample": 89.06,
+        "exact_logits": false,
+        "argmax_equal": true,
+        "max_abs_logit_difference": 1.13070322,
+        "changed_logits": 248320,
+        "verdict": "REJECT",
+        "excluded_samples": "Second repetition reused the full frontier and performed no new prefill; its reported TPS is not a speed measurement."
+      }
+    ],
+    "decision": "Do not change chunk default; larger chunks drift even with unchanged argmax."
+  },
+  "primitive_and_checkpoint_gates": [
+    {
+      "name": "python-regression-final",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_agent_compaction.py",
+        "tests/test_agent_vision.py",
+        "tests/test_agentic_api.py",
+        "tests/test_collect_official.py",
+        "tests/test_compare_glm53_vision_embeddings.py",
+        "tests/test_constrained_json_api.py",
+        "tests/test_deepseek41_conversion.py",
+        "tests/test_deepseek41_http.py",
+        "tests/test_deepseek41_manifest.py",
+        "tests/test_deepseek41_prompt.py",
+        "tests/test_deepseek41_rope.py",
+        "tests/test_deepseek41_vision_conversion.py",
+        "tests/test_deepseek41_vision_image.py",
+        "tests/test_docs_wiki.py",
+        "tests/test_dspark_eos_contract.py",
+        "tests/test_dspark_window.py",
+        "tests/test_exmekh_client_live.py",
+        "tests/test_glm_reference_render.py",
+        "tests/test_glm_rope_prefill.py",
+        "tests/test_jpeg_decode.py",
+        "tests/test_jsonschemabench_subset.py",
+        "tests/test_model_download.py",
+        "tests/test_perf_harness.py",
+        "tests/test_qwen35_vision_api.py",
+        "tests/test_qwen36_equivalence.py",
+        "tests/test_qwen36_fixtures.py",
+        "tests/test_qwen36_numerics.py",
+        "tests/test_qwen36_safety.py",
+        "tests/test_qwen38_compatibility.py",
+        "tests/test_qwen4_checkpoint_replay.py",
+        "tests/test_qwen4_cli_vision.py",
+        "tests/test_qwen4_logit_dump.py",
+        "tests/test_qwen4_mtp_limits.py",
+        "tests/test_qwen4_steering.py",
+        "tests/test_qwen4_vision_ref.py",
+        "tests/test_research_corpus.py",
+        "tests/test_serve_concurrency_bench.py",
+        "tests/test_server_batching.py",
+        "tests/test_server_sampling_matrix.py",
+        "tests/test_server_story.py",
+        "tests/test_server_vision_agent.py",
+        "tests/test_server_vision_cache.py",
+        "tests/test_server_vision_live_state.py",
+        "tests/test_web_recovery.py"
+      ],
+      "environment": {},
+      "exit": 0,
+      "seconds": 4.789149516996986
+    },
+    {
+      "name": "primitive-ram0-final",
+      "command": [
+        "tests/test_qwen4_cuda"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "0",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto"
+      },
+      "exit": 0,
+      "seconds": 18.312302078993525
+    },
+    {
+      "name": "primitive-sync-final",
+      "command": [
+        "tests/test_qwen4_cuda"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "32",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_SYNC_READS": "1"
+      },
+      "exit": 0,
+      "seconds": 18.166563282000425
+    },
+    {
+      "name": "flash-resident-final",
+      "command": [
+        "tests/test_server_resident_frontier",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_TEST_PREFILL_CHUNK": "64"
+      },
+      "exit": 0,
+      "seconds": 22.22521927500202
+    },
+    {
+      "name": "qwen27-resident-final",
+      "command": [
+        "tests/test_server_resident_frontier",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "16"
+      },
+      "exit": 0,
+      "seconds": 25.50675102000241
+    },
+    {
+      "name": "qwen27-benchmark-final",
+      "command": [
+        "/usr/bin/python3",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/run-bench.py",
+        "candidate",
+        "--qwen27",
+        "--suite",
+        "slow",
+        "--tag",
+        "final"
+      ],
+      "environment": {},
+      "exit": 2,
+      "seconds": 0.024107869998260867,
+      "status": "INVALID_HARNESS_ARGUMENTS",
+      "note": "No model was loaded; corrected positional suite argument below."
+    },
+    {
+      "name": "qwen27-benchmark-final-corrected",
+      "command": [
+        "/usr/bin/python3",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/run-bench.py",
+        "candidate",
+        "slow",
+        "--qwen27",
+        "--tag",
+        "final"
+      ],
+      "exit": 0,
+      "seconds": 127.93875020300038
+    },
+    {
+      "name": "host-tests-final",
+      "command": [
+        "make",
+        "test-read-queue",
+        "test-qwen4-expert-cache",
+        "test-linux-memory"
+      ],
+      "exit": 0,
+      "seconds": 0.004903832996205892
+    },
+    {
+      "name": "queue-sanitizer-build-final",
+      "command": [
+        "cc",
+        "-O1",
+        "-g",
+        "-std=c11",
+        "-Wall",
+        "-Wextra",
+        "-fsanitize=address,undefined",
+        "-I.",
+        "tests/test_read_queue.c",
+        "-pthread",
+        "-o",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.17386014200019417
+    },
+    {
+      "name": "queue-sanitizer-final-1",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.005066227000497747
+    },
+    {
+      "name": "queue-sanitizer-final-2",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.004700241996033583
+    },
+    {
+      "name": "queue-sanitizer-final-3",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.004319771003792994
+    },
+    {
+      "name": "queue-sanitizer-final-4",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.004501361996517517
+    },
+    {
+      "name": "queue-sanitizer-final-5",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.004316814003686886
+    },
+    {
+      "name": "queue-sanitizer-final-6",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.004533401996013708
+    },
+    {
+      "name": "queue-sanitizer-final-7",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.0046485559942084365
+    },
+    {
+      "name": "queue-sanitizer-final-8",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.004538627996225841
+    },
+    {
+      "name": "queue-sanitizer-final-9",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.004431419998581987
+    },
+    {
+      "name": "queue-sanitizer-final-10",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/test_read_queue.sanitized-final"
+      ],
+      "exit": 0,
+      "seconds": 0.004557296997518279
+    }
+  ],
+  "initial_final_fast_return_primitive_log": "performance-results/flash-prefill-async-20261004/primitive-final-fast-return.log",
+  "python_regression": {
+    "passed": 199,
+    "skipped": 41,
+    "subtests_passed": 188,
+    "status": "PASS_FOR_EXECUTED_TESTS",
+    "log": "performance-results/flash-prefill-async-20261004/python-regression-final.log"
+  },
+  "invalid_test_attempts": [
+    {
+      "log": "performance-results/flash-prefill-async-20261004/python-unit-regression.log",
+      "reason": "Wrong system Python lacked optional modules and runtime inspection collided with an intentional instance lock. Rerun serially with agent/.venv/bin/python passed."
+    },
+    {
+      "name": "qwen27-benchmark-final",
+      "reason": "--suite is not supported by the local wrapper; no model loaded. Corrected positional command passed."
+    }
+  ],
+  "not_verified": [
+    "Metal, ROCm, distributed and other GPU/CPU/SSD configurations",
+    "Actual populated context beyond 4395 tokens; 128K is allocation capacity in this experiment",
+    "New Nsight trace, SM utilization/occupancy change or independently sampled peak RSS/VRAM/swap",
+    "All semantic agent scenarios, images, tool invocation, long sessions and MTP acceptance statistics",
+    "I/O worker counts other than 4, setup-failure injection and ThreadSanitizer",
+    "41 skipped optional/live Python tests"
+  ],
+  "local_artifacts": "performance-results/flash-prefill-async-20261004/",
+  "commands": {
+    "baseline-direction-chunk256-w4-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "2",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/baseline-direction-chunk256-w4.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/baseline-direction-chunk256-w4-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_QWEN4_IO_WORKERS": "4",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto"
+      }
+    },
+    "baseline-slow-chunk256-w4-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/baseline-slow-chunk256-w4.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/baseline-slow-chunk256-w4-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_QWEN4_IO_WORKERS": "4",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto"
+      }
+    },
+    "candidate-direction-chunk256-w4-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "2",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/candidate-direction-chunk256-w4.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/candidate-direction-chunk256-w4-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_QWEN4_IO_WORKERS": "4",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto"
+      }
+    },
+    "candidate-slow-chunk256-w4-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/candidate-slow-chunk256-w4.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/candidate-slow-chunk256-w4-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_QWEN4_IO_WORKERS": "4",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto"
+      }
+    },
+    "candidate-slow-chunk256-w4-final-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/candidate-slow-chunk256-w4-final.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/candidate-slow-chunk256-w4-final-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_QWEN4_IO_WORKERS": "4",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto"
+      }
+    },
+    "chunk-probe-1024-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "1024",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "1024",
+        "--prefill-chunk",
+        "1024",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "2",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/chunk-probe-1024.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/chunk-probe-1024-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "chunk-probe-256-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "1024",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "1024",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "2",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/chunk-probe-256.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/chunk-probe-256-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "chunk-probe-512-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "1024",
+        "--ctx-max",
+        "1024",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "1024",
+        "--prefill-chunk",
+        "512",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "2",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/chunk-probe-512.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/chunk-probe-512-logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-baseline-1-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-baseline-1.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-baseline-2-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-baseline-2.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-baseline-3-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-baseline-3.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-baseline-4-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-baseline-4.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-baseline-5-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-baseline-5.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-candidate-1-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-candidate-1.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-candidate-2-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-candidate-2.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-candidate-3-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-candidate-3.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-candidate-4-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-candidate-4.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "cold-candidate-5-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "256",
+        "--ctx-alloc",
+        "131072",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "0",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/cold-candidate-5.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "primitive-command.json": {
+      "command": [
+        "performance-results/flash-prefill-async-20261004/test_qwen4_cuda.candidate"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "32",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "qwen27-baseline-slow-chunk256-w4-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "512",
+        "--ctx-alloc",
+        "2048",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "16",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/qwen27-baseline-slow-chunk256-w4.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/qwen27-baseline-slow-chunk256-w4-logits",
+        "--teacher-forced-decode"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_QWEN4_IO_WORKERS": "4"
+      }
+    },
+    "qwen27-candidate-slow-chunk256-w4-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "512",
+        "--ctx-alloc",
+        "2048",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "16",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/qwen27-candidate-slow-chunk256-w4.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/qwen27-candidate-slow-chunk256-w4-logits",
+        "--teacher-forced-decode"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_QWEN4_IO_WORKERS": "4"
+      }
+    },
+    "qwen27-candidate-slow-chunk256-w4-final-command.json": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-bench.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "256",
+        "--ctx-max",
+        "512",
+        "--ctx-alloc",
+        "2048",
+        "--step-incr",
+        "256",
+        "--prefill-chunk",
+        "256",
+        "--gen-tokens",
+        "16",
+        "--repetitions",
+        "7",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/qwen27-candidate-slow-chunk256-w4-final.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/qwen27-candidate-slow-chunk256-w4-final-logits",
+        "--teacher-forced-decode"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_CUDA_QWEN4_IO_WORKERS": "4"
+      }
+    },
+    "quality-final": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ctx",
+        "256",
+        "--first-token-test",
+        "-p",
+        "hello"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1",
+        "DS4_QWEN4_GPU": "1",
+        "DS4_QWEN4_FT_LIST": "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/quality-final/inputs.tsv"
+      }
+    },
+    "real-agent-baseline": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-server.baseline",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--vision",
+        "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+        "--ctx",
+        "131072",
+        "--prefill-chunk",
+        "256",
+        "--mtp",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "50877",
+        "--kv-disk-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/real-agent-baseline-unprofiled/kv",
+        "--kv-disk-space-mb",
+        "1024"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    },
+    "real-agent-candidate": {
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/ds4-server.candidate",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--vision",
+        "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+        "--ctx",
+        "131072",
+        "--prefill-chunk",
+        "256",
+        "--mtp",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "44713",
+        "--kv-disk-dir",
+        "/home/daniele/ds4/performance-results/flash-prefill-async-20261004/real-agent-candidate-unprofiled/kv",
+        "--kv-disk-space-mb",
+        "1024"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_CACHE_STATS": "1"
+      }
+    }
+  },
+  "release_build": {
+    "binaries": {
+      "ds4": {
+        "sha256": "35a7c57b51f725bfddce7943759b285ada0aa505eba1c55dd13dbe0b8d1199c2",
+        "identical_to_benchmarked_candidate": false
+      },
+      "ds4-server": {
+        "sha256": "7039c8bd28ab8f04d0d32cfeb5c9fda125119b727ace3dd86b22cdad7f4e5e4a",
+        "identical_to_benchmarked_candidate": false
+      },
+      "ds4-bench": {
+        "sha256": "17a3b2d6e22a4aa449dbb1dd78a3e3ddd394a642d00cd5e4abd3db559e518849",
+        "identical_to_benchmarked_candidate": false
+      },
+      "ds4-eval": {
+        "sha256": "6a7933fba1c9b26f48ec5665c22fbe9a0d90eeb1da26031854e1ed7621637bb4",
+        "identical_to_benchmarked_candidate": false
+      },
+      "tests/test_qwen4_cuda": {
+        "sha256": "dfc2a7ec74e456203d12fa1681a623002d2ef532bb5249e8d9a72ade3023fab5",
+        "identical_to_benchmarked_candidate": false
+      },
+      "tests/test_server_resident_frontier": {
+        "sha256": "cce582e3d7a945485ea2b4eaaaecfddc1104e4b74d550e9b77e7b7eb0822a0b2",
+        "identical_to_benchmarked_candidate": false
+      }
+    },
+    "sources": {
+      "ds4_cuda.cu": "61c5ec71d9b14b1de55bb5aaebade0b82a3be23c189dbec63e0487a9156d2a49",
+      "ds4_qwen4_cuda.cuh": "2b8f8a36182f6dc373fc6e591ab6ed378d40eeb8c7fed3cd407bc4090ab2cdfd",
+      "ds4_read_queue.h": "160d32faf6f5fb17d52fa59a79ec6e607fc156268f24e21ed78af7465399feef",
+      "Makefile": "e41c7a52c29338672b1ea4baa378b3ccd24bd9e57facb59f24383af6b78f219a"
+    },
+    "note": "After benchmarks, only the ownership comment in ds4_read_queue.h was clarified; executable code is unchanged. Rebuilt all runtime binaries and host queue test.",
+    "section_comparison_all_binaries": {
+      "ds4": {
+        ".text": {
+          "benchmarked_candidate_sha256": "3f2f8ecebeded3735afb81778b65dcb12fdefa79dcfb80547aa5ad9de9f06d30",
+          "release_sha256": "3f2f8ecebeded3735afb81778b65dcb12fdefa79dcfb80547aa5ad9de9f06d30",
+          "identical": true
+        },
+        ".rodata": {
+          "benchmarked_candidate_sha256": "f67dd55f68b6077795e5c3935e0fc996530a978dc830233879cfc3c9677ebcca",
+          "release_sha256": "f67dd55f68b6077795e5c3935e0fc996530a978dc830233879cfc3c9677ebcca",
+          "identical": true
+        },
+        ".nv_fatbin": {
+          "benchmarked_candidate_sha256": "8789dc3f6c2b9b3eb628bbe87b75e56cfe86a460575e4806dbe24cce6e7dbefe",
+          "release_sha256": "8789dc3f6c2b9b3eb628bbe87b75e56cfe86a460575e4806dbe24cce6e7dbefe",
+          "identical": true
+        },
+        ".data": {
+          "benchmarked_candidate_sha256": "f6b92ad2aa848db9e5398dbcf05c1b8d8c5c39ba87550cb73001b65326e412cc",
+          "release_sha256": "f6b92ad2aa848db9e5398dbcf05c1b8d8c5c39ba87550cb73001b65326e412cc",
+          "identical": true
+        },
+        ".nvFatBinSegment": {
+          "benchmarked_candidate_sha256": "d5b8de59a0ab47fa53c37e85281d183732482441055d137131f06d53268301c3",
+          "release_sha256": "d5b8de59a0ab47fa53c37e85281d183732482441055d137131f06d53268301c3",
+          "identical": true
+        }
+      },
+      "ds4-server": {
+        ".text": {
+          "benchmarked_candidate_sha256": "37c54e65ccf5dd3fd34b45a4004fa33ae98a851eb94044304b7b685afce1f330",
+          "release_sha256": "37c54e65ccf5dd3fd34b45a4004fa33ae98a851eb94044304b7b685afce1f330",
+          "identical": true
+        },
+        ".rodata": {
+          "benchmarked_candidate_sha256": "f55f21faeebe83e57cf32b5ea9cf1296c8020c5cb3d6ae06e10b2cc8594a5190",
+          "release_sha256": "f55f21faeebe83e57cf32b5ea9cf1296c8020c5cb3d6ae06e10b2cc8594a5190",
+          "identical": true
+        },
+        ".nv_fatbin": {
+          "benchmarked_candidate_sha256": "e3100b0ff863655e5fa0d461751a2399e8cae5eac0e27fa750480021b6ffbc70",
+          "release_sha256": "e3100b0ff863655e5fa0d461751a2399e8cae5eac0e27fa750480021b6ffbc70",
+          "identical": true
+        },
+        ".data": {
+          "benchmarked_candidate_sha256": "a5409387375f51b2cc9b611258646e93613c35b49e9852c55b1348164471ec23",
+          "release_sha256": "a5409387375f51b2cc9b611258646e93613c35b49e9852c55b1348164471ec23",
+          "identical": true
+        },
+        ".nvFatBinSegment": {
+          "benchmarked_candidate_sha256": "dbade99de2ac7a7cadd6501531eb4e14c821a5c708b282a1c2f5b7f3b29c5a96",
+          "release_sha256": "dbade99de2ac7a7cadd6501531eb4e14c821a5c708b282a1c2f5b7f3b29c5a96",
+          "identical": true
+        }
+      },
+      "ds4-bench": {
+        ".text": {
+          "benchmarked_candidate_sha256": "4248a037dc6db686af49c5492aebca14d117ab6549589bcc4f19847a74f0e52e",
+          "release_sha256": "4248a037dc6db686af49c5492aebca14d117ab6549589bcc4f19847a74f0e52e",
+          "identical": true
+        },
+        ".rodata": {
+          "benchmarked_candidate_sha256": "24cab4ace65bbf72f1438c242414ae1a212f5d1a1d3d3fc8714cf1d8e25112a9",
+          "release_sha256": "24cab4ace65bbf72f1438c242414ae1a212f5d1a1d3d3fc8714cf1d8e25112a9",
+          "identical": true
+        },
+        ".nv_fatbin": {
+          "benchmarked_candidate_sha256": "de916edc8d8bbff608e602ee73684019eccdf017b730832b89584e5d161ddfbd",
+          "release_sha256": "de916edc8d8bbff608e602ee73684019eccdf017b730832b89584e5d161ddfbd",
+          "identical": true
+        },
+        ".data": {
+          "benchmarked_candidate_sha256": "13f3425cab1133c0c2e5bec2577f238d24ac47a67f8274b805410275e7171c8d",
+          "release_sha256": "13f3425cab1133c0c2e5bec2577f238d24ac47a67f8274b805410275e7171c8d",
+          "identical": true
+        },
+        ".nvFatBinSegment": {
+          "benchmarked_candidate_sha256": "a736c4edaa8b2e45035f3fda40596ee32455531d67c2d424131d78187cbfcc86",
+          "release_sha256": "a736c4edaa8b2e45035f3fda40596ee32455531d67c2d424131d78187cbfcc86",
+          "identical": true
+        }
+      },
+      "ds4-eval": {
+        ".text": {
+          "benchmarked_candidate_sha256": "9620b6803a4259b09127b3bcfdc23951d4804cb2e2145a2078df4e6246b670df",
+          "release_sha256": "9620b6803a4259b09127b3bcfdc23951d4804cb2e2145a2078df4e6246b670df",
+          "identical": true
+        },
+        ".rodata": {
+          "benchmarked_candidate_sha256": "86d97e0ed970dd0f0b5b3632d8081ece46e212a7974a7e77ac6f9fc22026c998",
+          "release_sha256": "86d97e0ed970dd0f0b5b3632d8081ece46e212a7974a7e77ac6f9fc22026c998",
+          "identical": true
+        },
+        ".nv_fatbin": {
+          "benchmarked_candidate_sha256": "f19988b38375dca13d184a56d59510af57b87114607e328afb61f1bb9c75b30e",
+          "release_sha256": "f19988b38375dca13d184a56d59510af57b87114607e328afb61f1bb9c75b30e",
+          "identical": true
+        },
+        ".data": {
+          "benchmarked_candidate_sha256": "b2369b1a3d2ab37efcab43c7aecab6d639994123d399eae266472f4f034302dd",
+          "release_sha256": "b2369b1a3d2ab37efcab43c7aecab6d639994123d399eae266472f4f034302dd",
+          "identical": true
+        },
+        ".nvFatBinSegment": {
+          "benchmarked_candidate_sha256": "496a8e1b14f5a58f33c2520dd8af1e901d00e097e188072e9eb103e9cfeceda8",
+          "release_sha256": "496a8e1b14f5a58f33c2520dd8af1e901d00e097e188072e9eb103e9cfeceda8",
+          "identical": true
+        }
+      },
+      "tests/test_qwen4_cuda": {
+        ".text": {
+          "benchmarked_candidate_sha256": "16ae14c7d020dbbc9749718d0a94d4fcd2d19bb2a51eab9b34e338aad16a5ece",
+          "release_sha256": "16ae14c7d020dbbc9749718d0a94d4fcd2d19bb2a51eab9b34e338aad16a5ece",
+          "identical": true
+        },
+        ".rodata": {
+          "benchmarked_candidate_sha256": "f94a806ec421f8853e280807c139df3d2f031ae284731fe40e9f1bd1b6164d2d",
+          "release_sha256": "f94a806ec421f8853e280807c139df3d2f031ae284731fe40e9f1bd1b6164d2d",
+          "identical": true
+        },
+        ".nv_fatbin": {
+          "benchmarked_candidate_sha256": "b7231b5ccfcad377fdeb7e4be4e1b48382161e76d5ac53abc9b743e3f6dfde3d",
+          "release_sha256": "b7231b5ccfcad377fdeb7e4be4e1b48382161e76d5ac53abc9b743e3f6dfde3d",
+          "identical": true
+        },
+        ".data": {
+          "benchmarked_candidate_sha256": "95b8e0ca021a912217572c7e21a0485846b914011c21fc940798aee037f8bb10",
+          "release_sha256": "95b8e0ca021a912217572c7e21a0485846b914011c21fc940798aee037f8bb10",
+          "identical": true
+        },
+        ".nvFatBinSegment": {
+          "benchmarked_candidate_sha256": "5ed74f57e908794bb49a3bc643f371be2c844204130544019a641c3563dc0426",
+          "release_sha256": "5ed74f57e908794bb49a3bc643f371be2c844204130544019a641c3563dc0426",
+          "identical": true
+        }
+      },
+      "tests/test_server_resident_frontier": {
+        ".text": {
+          "benchmarked_candidate_sha256": "9c4ab072362e8fa2d32755a584b222194ad25c99f67ee08a977f4f398c9a7011",
+          "release_sha256": "9c4ab072362e8fa2d32755a584b222194ad25c99f67ee08a977f4f398c9a7011",
+          "identical": true
+        },
+        ".rodata": {
+          "benchmarked_candidate_sha256": "aa9b7901755ce6c5f59e675fa9e6b1b6d4023a3dd1a110a1e324b894b12a70de",
+          "release_sha256": "aa9b7901755ce6c5f59e675fa9e6b1b6d4023a3dd1a110a1e324b894b12a70de",
+          "identical": true
+        },
+        ".nv_fatbin": {
+          "benchmarked_candidate_sha256": "d172041ac979ebd47f5b09e439538b1bf520ec6ddf070750a5f88d39e4474d95",
+          "release_sha256": "d172041ac979ebd47f5b09e439538b1bf520ec6ddf070750a5f88d39e4474d95",
+          "identical": true
+        },
+        ".data": {
+          "benchmarked_candidate_sha256": "3b65096c9100b9a3d4af2b7c921caadd514628ba17500b0f2dcf4f8d2c09fa80",
+          "release_sha256": "3b65096c9100b9a3d4af2b7c921caadd514628ba17500b0f2dcf4f8d2c09fa80",
+          "identical": true
+        },
+        ".nvFatBinSegment": {
+          "benchmarked_candidate_sha256": "361233305c63837da38641174a6f3bf3f4c9cbd0f2f713b866be886e79721213",
+          "release_sha256": "361233305c63837da38641174a6f3bf3f4c9cbd0f2f713b866be886e79721213",
+          "identical": true
+        }
+      }
+    }
+  }
+}

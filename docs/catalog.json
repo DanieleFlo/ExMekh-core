@@ -2825,6 +2825,53 @@
           ]
         },
         {
+          "path": "docs/performance/qwen38-flash-prefill-async-20261004.md",
+          "sections": [
+            {
+              "title": "Flash Next CUDA: letture anticipate degli esperti",
+              "level": 1,
+              "start": 1,
+              "end": 161,
+              "summary": "Qualifica locale del 4 ottobre 2026, baseline `e8fb251`, RTX 3090,"
+            },
+            {
+              "title": "Risultato",
+              "level": 2,
+              "start": 9,
+              "end": 31,
+              "summary": "I tempi del primo workload derivano dal CSV arrotondato a due decimali,"
+            },
+            {
+              "title": "Modifica mantenuta",
+              "level": 2,
+              "start": 32,
+              "end": 75,
+              "summary": "La ricerca precedente"
+            },
+            {
+              "title": "Correttezza e checkpoint",
+              "level": 2,
+              "start": 76,
+              "end": 99,
+              "summary": "I test serializzano i processi del modello, rispettando l’instance lock."
+            },
+            {
+              "title": "Misure e limiti",
+              "level": 2,
+              "start": 100,
+              "end": 140,
+              "summary": "Il modello Flash è il GGUF Q2 locale da 147207127040 byte; Qwen27 è"
+            },
+            {
+              "title": "Esperimento scartato: chunk più grandi",
+              "level": 2,
+              "start": 141,
+              "end": 161,
+              "summary": "A parità di prompt da 1024 token, una prova cold misura 68,69 / 68,43 /"
+            }
+          ]
+        },
+        {
           "path": "docs/performance/qwen38-flash-prefill-latency-20261004.md",
           "sections": [
             {

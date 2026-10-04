@@ -13,6 +13,23 @@ Paper, documentazione NVIDIA, repository che implementa direttamente il kernel, 
 - righe 19–22: **Regola di triangolazione** — Prima di implementare: una fonte semantica primaria, una implementazione concreta e una misura locale.
 - righe 23–25: **Regola di citazione** — Ogni scheda conserva un solo link di ingresso al repository.
 
+## [Flash Next: ricerca sul prefill con esperti in offload](flash-prefill-offload-20261004.md)
+
+La qualifica delle letture anticipate
+
+- righe 8–14: **Esito dell’esperimento successivo** — La qualifica delle letture anticipate
+- righe 15–33: **Diagnosi locale e priorità** — Il report della latenza
+- righe 34–51: **Funzionalità già presenti e attese residue** — Riferimenti alla revisione auditata: `ds4.c:59769,59944,60473`,
+- righe 52–79: **Letteratura pertinente** — distingue la maggiore densità degli esperti nel prefill dalla sparsità
+- righe 80–127: **Repository e sorgenti ispezionati** — Sono stati letti sorgenti a commit fissati oltre ai README.
+- righe 128–200: **Interventi proposti per DS4** — La priorità d'impatto non coincide con l'ordine di implementazione: prima
+  - righe 142–159: **Pipeline di lettura esatta** — Provare una coda di miss già noti dal router, con 2/4/8 worker diagnostici.
+  - righe 160–168: **Demozioni distinte per fase** — I pesi sono immutabili: la demozione conserva una copia utile, non un
+  - righe 169–188: **Riuso su una finestra maggiore** — Verificare chunk 256/512/1024/2048 con RAM attuale, ctx128K e stessi prompt.
+  - righe 189–200: **Tuning successivo** — Ottimizzare gli heap se la selezione rimane costosa, conservando pinning,
+- righe 201–210: **Soluzioni escluse o a priorità bassa** — Escludere pruning/deferral, router modificati, KV INT8, nuove quantizzazioni
+- righe 211–228: **Gate economici prima dei benchmark lunghi** — 1.
+
 ## [Mappa problema → soluzione esistente](problem-to-source.md)
 
 Leggere Marlin, QUICK e Atom; poi confrontare llama.cpp MMVQ/vec-dot, ik_llama MMVQ e ExLlamaV3 GEMM.
@@ -24,7 +41,8 @@ Leggere Marlin, QUICK e Atom; poi confrontare llama.cpp MMVQ/vec-dot, ik_llama M
 - righe 23–26: **KV cache e 24 GiB** — Leggere PagedAttention, KIVI e KVQuant.
 - righe 27–30: **Launch overhead e CUDA Graph** — Confrontare vLLM, TensorRT-LLM e SGLang.
 - righe 31–34: **Speculative e MTP** — Leggere i due paper speculative, Medusa e multi-token prediction.
-- righe 35–37: **Offload e memoria insufficiente** — Leggere FlexGen e le ricette consumer, ma non confondere throughput batch con latenza batch 1.
+- righe 35–38: **Offload e memoria insufficiente** — Leggere FlexGen e le ricette consumer, ma non confondere throughput batch con latenza batch 1.
+- righe 39–43: **Prefill MoE con offload SSD/RAM/PCIe** — Consultare la ricerca Flash Next: distinguere
 
 ## [Qwen3.6 MTP: workflow llama.cpp, confronto DS4 e audit CUDA](qwen36-mtp-llamacpp-ds4-control-flow.md)
 

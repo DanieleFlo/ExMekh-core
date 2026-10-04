@@ -2809,6 +2809,7 @@ copy_failed:
 
 namespace qwen4_cuda {
     static void expert_cache_reset(void);
+    static void expert_reads_reset(void);
     static void route_invalidate(const void *ptr, uint64_t bytes);
 }
 
@@ -4726,6 +4727,7 @@ extern "C" int ds4_gpu_lookup_cache_strict(uint64_t source_offset,
 }
 
 extern "C" int ds4_gpu_set_model_fd(int fd) {
+    qwen4_cuda::expert_reads_reset();
     ds4_gpu_stream_expert_cache_prefetch_finish(true);
     g_model_fd = fd;
     g_model_fd_host_base = g_model_host_base;

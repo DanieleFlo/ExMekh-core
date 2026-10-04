@@ -33,6 +33,7 @@ Le [guide upstream](docs/upstream/_INDEX.md) sono incluse nella wiki indicizzata
 | Componente importato | Responsabilità |
 | --- | --- |
 | `ds4_qwen4_cuda.cuh`, `ds4_qwen4_vision.h`, `ds4_qwen4_unicode.inc` | Kernel, vision e tokenizer Flash Next/Mini, distinti da Qwen27; cache CUDA VRAM/RAM/SSD opt-in, routing condiviso mid/down, copie a gruppi con eventi e doppio staging, slab RAM bounded e ranking esatto; budget dal contesto/GGUF e metadata dei checkpoint |
+| `ds4_read_queue.h`, `tests/test_read_queue.c` | Coda host bounded con worker persistenti e drain; Flash CUDA anticipa solo miss selezionati dal router in slot RAM riservati, con descriptor separati e gestione errori |
 | `ds4_qwen4_expert_cache.h`, `tests/test_qwen4_expert_cache.c` | Policy C di sostituzione e storia esatta degli ultimi 32/64/128 token; test di pinning e cambi di distribuzione |
 | `tests/qwen4_expert_policy_replay.py` | Confronto diagnostico delle policy su selezioni reali del router, senza cambiare l’inferenza |
 | `ds4_deepseek41_gpu.h`, `ds4_deepseek41_cuda.cuh` | API GPU e kernel DeepSeek 4.1 |
@@ -251,6 +252,12 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/performance/qwen38-flash-prefill-latency-20261004.md` e il relativo JSON —
   profilazione del prompt completo dell'agente, misura reale del link PCIe x2,
   costo del tetto RAM a 16 GiB e qualifica del budget automatico disponibile.
+- `docs/performance/qwen38-flash-prefill-async-20261004.md` e il relativo JSON —
+  letture anticipate bounded degli esperti Flash CUDA, gate bit-exact e checkpoint,
+  misure cold/warm/HTTP e rigetto dei chunk più grandi per drift numerico.
+- `docs/research/guides/flash-prefill-offload-20261004.md` e il manifest fonti —
+  confronto di letteratura e sei runtime MoE con il codice Flash: riuso pesi,
+  letture asincrone, cache distinta per fase e gate numerici; proposte non qualificate.
 - `docs/performance/qwen38-flash-prefill-replay-20261004.md` — diagnosi del doppio
   prefill ChatML, confine condiviso RAM/SSD, conteggio model-backed e limiti della
   diagnosi prestazionale sul prompt reale lungo.
