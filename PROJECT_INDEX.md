@@ -248,6 +248,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/performance/qwen38-flash-3090-residency-20261003.md` — diagnosi Flash Next Q2, esperimenti CUDA di residency/copie byte-identiche, fonti e gate non promossi sulla RTX 3090.
 - `docs/roadmaps/qwen-flash-performance-action-plan-20261004.md` — audit statico Flash/27B, colli di bottiglia I/O e PCIe, confronto runtime esterni e piano progressivo per performance, checkpoint e portabilità.
 - `docs/performance/qwen38-flash-pipeline-20261004.md` — implementazione Flash isolata, routing compatto, staging per gruppi, slab RAM e ranking esatto; qualifica locale e limiti hardware/scenario.
+- `docs/performance/qwen38-flash-prefill-replay-20261004.md` — diagnosi del doppio
+  prefill ChatML, confine condiviso RAM/SSD, conteggio model-backed e limiti della
+  diagnosi prestazionale sul prompt reale lungo.
 - `docs/performance/qwen38-flash-pipeline-20261004.json` — campioni, statistiche, comandi, provenienza e gate numerici/applicativi della qualifica Flash/Qwen27 locale.
 - `docs/hardware/` — inventario della macchina RTX 3090 e note di riferimento
   su GA102, compute capability 8.6, memoria, numerica CUDA e determinismo.
@@ -267,13 +270,15 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `start-ds4-server.sh`, `agent/start-ds4-server.sh`,
   `agent/start-ds4-server-flash.sh`, `agent/run.sh` —
   launcher eseguibili nativi per server CUDA e frontend ExMekh Agent dalla copia WSL2
-  `/home/daniele/ds4`; il launcher principale mantiene Qwen27 come default e aggiunge il profilo Flash esplicito; i due launcher in `agent/` selezionano rispettivamente Qwen27B e Flash Next, con proiettore corretto e `--print-command`; il progetto non modifica proxy o firewall Windows.
+  `/home/daniele/ds4`; il launcher principale mantiene Qwen27 come default e aggiunge il profilo Flash esplicito; i due launcher in `agent/` selezionano rispettivamente Qwen27B e Flash Next, con proiettore corretto e `--print-command`, MTP attivo per entrambi e contesto Flash 128K; il progetto non modifica proxy o firewall Windows.
 - `ds4_cli.c` — eseguibile `ds4`: parsing opzioni, modalità one-shot e REPL,
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
   argomento seleziona il sidecar Qwen auditato; `--mtp FILE` e l'alias
   `--mtp-model FILE` scelgono un support model esplicito, incluso DSpark.
 - `ds4_server.c` — eseguibile `ds4-server`: API HTTP compatibili, code, worker,
   vincoli dei tool nella sintassi nativa Flash condivisi con il replay MTP,
+  confine di sistema condiviso fra cache residente e checkpoint SSD per evitare
+  rewind e doppio prefill Flash su prompt ChatML lunghi,
   session batching, streaming, tool-call mapping e policy della KV su disco;
   compila i riferimenti locali finiti `#/$defs/nome` degli output Pydantic,
   mantenendo i vincoli congiunti; riferimenti esterni/ricorsivi falliscono prima
@@ -691,8 +696,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   il callback può declinare una riga draft o bonus del verifier V(2); verifica
   ripristino bit-exact dell'intero payload e del generatore casuale, senza errore
   CUDA. Eseguire con target GGUF e sidecar MTP come argomenti.
-- `tests/test_server_resident_frontier.c` — regressione model-backed della cache
-  di sistema residente e dei checkpoint skill: dopo reset o riscrittura della
+- `tests/test_server_resident_frontier.c` — regressione model-backed Qwen27/Flash della cache
+  di sistema residente e dei checkpoint skill: conta i token del prefill cold
+  per respingere rewind o doppie elaborazioni; dopo reset o riscrittura della
   history, verifica logits bit-exact su tutto il vocabolario, rifiuto atomico di
   file corrotti e rollback compatto per singola risposta. Sistema e skill
   conservano anche le righe KV full-attention, rispettivamente in RAM e su SSD.

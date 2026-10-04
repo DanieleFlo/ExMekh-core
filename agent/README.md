@@ -245,13 +245,13 @@ From `agent/`, use a dedicated server launcher for each model:
 
 ```sh
 ./start-ds4-server.sh        # Qwen27B: MTP, context 28000
-./start-ds4-server-flash.sh  # Flash Next: context 16384, prefill chunk 256
+./start-ds4-server-flash.sh  # Flash Next: MTP, context 131072, prefill chunk 256
 ```
 
 Start the frontend with `./run.sh` in another terminal. Each launcher selects
 its model profile even if `DS4_MODEL_PROFILE` is set in the environment.
 Model discovery reads the real server model and allocated context. Flash uses
-its matching projector and CUDA tiered cache; MTP is explicit with `--mtp`.
+its matching projector and CUDA tiered cache. Both launchers enable MTP.
 
 Both scripts accept `--print-command` to review the exact command without
 loading weights. `DS4_CTX`, `DS4_PREFILL_CHUNK`, `DS4_MODEL`, `DS4_VISION_MODEL`

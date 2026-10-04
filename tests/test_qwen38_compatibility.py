@@ -488,18 +488,18 @@ class Qwen38CompatibilityTests(unittest.TestCase):
         clean_env = {k: v for k, v in os.environ.items()
                      if not k.startswith("DS4_")}
         cases = (
-            ("start-ds4-server.sh", {}, "22593", "Qwen3.8-27B-UD-Q4_K_S.gguf", False),
+            ("start-ds4-server.sh", {}, "22593", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
             ("agent/start-ds4-server.sh", {}, "28000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
             ("agent/start-ds4-server.sh", {"DS4_MODEL_PROFILE": "flash"},
              "28000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
             ("agent/start-ds4-server-flash.sh", {},
-             "16384", "Qwen3.8-Flash-Next-Q2.gguf", False),
+             "131072", "Qwen3.8-Flash-Next-Q2.gguf", True),
             ("agent/start-ds4-server-flash.sh", {"DS4_MODEL_PROFILE": "qwen27"},
-             "16384", "Qwen3.8-Flash-Next-Q2.gguf", False),
+             "131072", "Qwen3.8-Flash-Next-Q2.gguf", True),
             ("agent/start-ds4-server-flash.sh", {"DS4_MODEL_PROFILE": "flash",
              "DS4_CTX": "32768", "DS4_PREFILL_CHUNK": "128",
              "DS4_KV_DISK_DIR": "", "DS4_VISION_MODEL": ""},
-             "32768", "Qwen3.8-Flash-Next-Q2.gguf", False),
+             "32768", "Qwen3.8-Flash-Next-Q2.gguf", True),
         )
         for launcher, overrides, ctx, model, mtp in cases:
             with self.subTest(launcher=launcher, overrides=overrides):
@@ -511,7 +511,7 @@ class Qwen38CompatibilityTests(unittest.TestCase):
                 argv = shlex.split(result.stdout)
                 self.assertEqual(argv[argv.index("--ctx") + 1], ctx)
                 self.assertEqual(Path(argv[argv.index("-m") + 1]).name, model)
-                self.assertEqual("--mtp" in argv, mtp)
+                self.assertEqual(argv.count("--mtp"), int(mtp))
                 if "DS4_PREFILL_CHUNK" in overrides:
                     self.assertEqual(argv[argv.index("--prefill-chunk") + 1], "128")
                     self.assertNotIn("--kv-disk-dir", argv)

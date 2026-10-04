@@ -26,14 +26,18 @@ I kernel aritmetici, il router, top-k/tie-break, BF16 PLE, KV e il formato dei c
 
 # Launcher dedicati dell’agente, uno per modello:
 ./agent/start-ds4-server.sh        # Qwen27B, MTP, ctx 28000
-./agent/start-ds4-server-flash.sh  # Flash Next, ctx 16K / chunk 256
+./agent/start-ds4-server-flash.sh  # Flash Next, MTP, ctx 128K / chunk 256
 
-# Le opzioni esplicite restano configurabili; MTP è opzionale:
+# Il contesto e il chunk restano configurabili; MTP è attivo:
 DS4_MODEL_PROFILE=flash DS4_CTX=16384 DS4_PREFILL_CHUNK=256 \
-  ./start-ds4-server.sh --print-command --mtp
+  ./start-ds4-server.sh --print-command
 ```
 
-`DS4_MODEL`, `DS4_VISION_MODEL` (vuoto disabilita vision), `DS4_CTX`, `DS4_PREFILL_CHUNK`, porta e directory/budget KV sono configurabili. `DS4_KV_DISK_DIR` vuoto omette gli argomenti KV del launcher. Il wrapper `agent/start-ds4-server.sh` conserva i precedenti default Qwen27: MTP, ctx 28000 e nessun argomento KV esplicito; `agent/start-ds4-server-flash.sh` seleziona Flash con MTP opzionale. Entrambi i wrapper fissano il proprio profilo; il launcher radice conserva la scelta tramite `DS4_MODEL_PROFILE`. Il contesto richiesto non è ridotto silenziosamente. Il motore rifiuta configurazioni tiered incompatibili. `DS4_CUDA_QWEN4_NO_OVERLAP`, `DS4_CUDA_QWEN4_COPY_GROUP` e `DS4_CUDA_QWEN4_LINEAR_VICTIMS` sono confronti diagnostici, non profili di prodotto alternativi.
+`DS4_MODEL`, `DS4_VISION_MODEL` (vuoto disabilita vision), `DS4_CTX`, `DS4_PREFILL_CHUNK`, porta e directory/budget KV sono configurabili. `DS4_KV_DISK_DIR` vuoto omette gli argomenti KV del launcher. Il wrapper `agent/start-ds4-server.sh` conserva i precedenti default Qwen27: MTP, ctx 28000 e nessun argomento KV esplicito; `agent/start-ds4-server-flash.sh` seleziona Flash con contesto 128K e MTP attivo. Entrambi i wrapper fissano il proprio profilo; il launcher radice conserva la scelta tramite `DS4_MODEL_PROFILE`. Il contesto richiesto non è ridotto silenziosamente. Il motore rifiuta configurazioni tiered incompatibili. `DS4_CUDA_QWEN4_NO_OVERLAP`, `DS4_CUDA_QWEN4_COPY_GROUP` e `DS4_CUDA_QWEN4_LINEAR_VICTIMS` sono confronti diagnostici, non profili di prodotto alternativi.
+
+I default 128K/MTP sono stati confermati dall’utente durante la correzione del
+doppio prefill. Le misure sotto restano quelle originali a 16K; non qualificano
+le prestazioni del nuovo contesto predefinito.
 
 ## Evidenze e protocollo
 

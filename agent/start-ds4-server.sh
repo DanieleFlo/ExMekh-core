@@ -5,13 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
 # This entry point always selects Qwen27; Flash has its own launcher.
 export DS4_MODEL_PROFILE=qwen27
-args=()
-if [[ "${1:-}" == --print-command ]]; then
-    args=(--print-command)
-    shift
-fi
 # Preserve the agent launcher's existing Qwen27 defaults.
 export DS4_CTX="${DS4_CTX:-28000}"
 export DS4_KV_DISK_DIR="${DS4_KV_DISK_DIR-}"
-args+=(--mtp)
-exec "$REPO_DIR/start-ds4-server.sh" "${args[@]}" "$@"
+exec "$REPO_DIR/start-ds4-server.sh" "$@"

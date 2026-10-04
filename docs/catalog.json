@@ -2788,39 +2788,86 @@
               "summary": "./agent/start-ds4-server.sh # Qwen27B, MTP, ctx 28000"
             },
             {
-              "title": "Le opzioni esplicite restano configurabili; MTP è opzionale:",
+              "title": "Il contesto e il chunk restano configurabili; MTP è attivo:",
               "level": 1,
               "start": 31,
-              "end": 101,
+              "end": 105,
               "summary": "DS4_MODEL_PROFILE=flash DS4_CTX=16384 DS4_PREFILL_CHUNK=256 \\"
             },
             {
               "title": "Evidenze e protocollo",
               "level": 2,
-              "start": 38,
-              "end": 45,
+              "start": 42,
+              "end": 49,
               "summary": "Artefatti locali: `performance-results/flash-pipeline-20261004/`."
             },
             {
               "title": "Risultati qualificati localmente",
               "level": 2,
-              "start": 46,
-              "end": 62,
+              "start": 50,
+              "end": 66,
               "summary": "Il record JSON conserva campioni, statistiche complete, comandi, hash di sorgenti/binari e risultati dei gate."
             },
             {
               "title": "Correttezza e checkpoint",
               "level": 2,
-              "start": 63,
-              "end": 75,
+              "start": 67,
+              "end": 79,
               "summary": "I checkpoint del 27B restano utilizzabili con il 27B; i loro scenari/contratti vengono esercitati sul Flash, non i file KV di un modello diverso."
             },
             {
               "title": "Riproduzione e lavoro rimanente",
               "level": 2,
-              "start": 76,
-              "end": 101,
+              "start": 80,
+              "end": 105,
               "summary": "make -j2 ds4 ds4-server ds4-bench CUDA_ARCH=sm_86"
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/qwen38-flash-prefill-replay-20261004.md",
+          "sections": [
+            {
+              "title": "Flash: doppio prefill del prefisso agentico — 4 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 94,
+              "summary": "Il server lanciato con `agent/start-ds4-server-flash.sh` riceve un prompt"
+            },
+            {
+              "title": "Diagnosi del caso segnalato",
+              "level": 2,
+              "start": 3,
+              "end": 22,
+              "summary": "Il server lanciato con `agent/start-ds4-server-flash.sh` riceve un prompt"
+            },
+            {
+              "title": "Correzione e compatibilità",
+              "level": 2,
+              "start": 23,
+              "end": 32,
+              "summary": "Cache residente e checkpoint cold Qwen usano lo stesso prefisso di sistema"
+            },
+            {
+              "title": "Verifiche",
+              "level": 2,
+              "start": 33,
+              "end": 67,
+              "summary": "cold inferiore al prefisso e cache disabilitata."
+            },
+            {
+              "title": "Lentezza residua e hardware",
+              "level": 2,
+              "start": 68,
+              "end": 81,
+              "summary": "Nella rilevazione del processo originale: circa 22799 MiB di VRAM usata,"
+            },
+            {
+              "title": "Default dei launcher confermati",
+              "level": 2,
+              "start": 82,
+              "end": 94,
+              "summary": "Su richiesta dell'utente, Flash conserva il contesto predefinito 131072 e"
             }
           ]
         },

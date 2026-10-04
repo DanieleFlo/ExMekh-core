@@ -239,11 +239,21 @@ Implementazione del piano di azione sul working tree `codex/qwen-flash-3090`, HE
 - righe 21–23: **Avvio** — Sezione strutturale; consultare il contenuto locale indicato.
 - righe 24–26: **Default Qwen27, comando revisionabile senza build/inferenza:** — ./start-ds4-server.sh --print-command
 - righe 27–30: **Launcher dedicati dell’agente, uno per modello:** — ./agent/start-ds4-server.sh # Qwen27B, MTP, ctx 28000
-- righe 31–101: **Le opzioni esplicite restano configurabili; MTP è opzionale:** — DS4_MODEL_PROFILE=flash DS4_CTX=16384 DS4_PREFILL_CHUNK=256 \
-- righe 38–45: **Evidenze e protocollo** — Artefatti locali: `performance-results/flash-pipeline-20261004/`.
-- righe 46–62: **Risultati qualificati localmente** — Il record JSON conserva campioni, statistiche complete, comandi, hash di sorgenti/binari e risultati dei gate.
-- righe 63–75: **Correttezza e checkpoint** — I checkpoint del 27B restano utilizzabili con il 27B; i loro scenari/contratti vengono esercitati sul Flash, non i file KV di un modello diverso.
-- righe 76–101: **Riproduzione e lavoro rimanente** — make -j2 ds4 ds4-server ds4-bench CUDA_ARCH=sm_86
+- righe 31–105: **Il contesto e il chunk restano configurabili; MTP è attivo:** — DS4_MODEL_PROFILE=flash DS4_CTX=16384 DS4_PREFILL_CHUNK=256 \
+- righe 42–49: **Evidenze e protocollo** — Artefatti locali: `performance-results/flash-pipeline-20261004/`.
+- righe 50–66: **Risultati qualificati localmente** — Il record JSON conserva campioni, statistiche complete, comandi, hash di sorgenti/binari e risultati dei gate.
+- righe 67–79: **Correttezza e checkpoint** — I checkpoint del 27B restano utilizzabili con il 27B; i loro scenari/contratti vengono esercitati sul Flash, non i file KV di un modello diverso.
+- righe 80–105: **Riproduzione e lavoro rimanente** — make -j2 ds4 ds4-server ds4-bench CUDA_ARCH=sm_86
+
+## [Flash: doppio prefill del prefisso agentico — 4 ottobre 2026](qwen38-flash-prefill-replay-20261004.md)
+
+Il server lanciato con `agent/start-ds4-server-flash.sh` riceve un prompt
+
+- righe 3–22: **Diagnosi del caso segnalato** — Il server lanciato con `agent/start-ds4-server-flash.sh` riceve un prompt
+- righe 23–32: **Correzione e compatibilità** — Cache residente e checkpoint cold Qwen usano lo stesso prefisso di sistema
+- righe 33–67: **Verifiche** — cold inferiore al prefisso e cache disabilitata.
+- righe 68–81: **Lentezza residua e hardware** — Nella rilevazione del processo originale: circa 22799 MiB di VRAM usata,
+- righe 82–94: **Default dei launcher confermati** — Su richiesta dell'utente, Flash conserva il contesto predefinito 131072 e
 
 ## [Qualificazione numerica Qwen3.8 — 17 settembre 2026](qwen38-qualification-2026-09-17.md)
 

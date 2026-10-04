@@ -16748,14 +16748,23 @@ static int request_system_prefix_tokens(server *s, const request *req,
 
 static int kv_cache_cold_store_target_request(server *s, const request *req,
                                                const ds4_tokens *prompt,
+                                               const ds4_tokens *system,
                                                bool *system_anchor) {
-    if (s && req && s->qwen_session_cache && s->kv.enabled) {
-        ds4_tokens prefix = {0};
-        const int n = request_system_prefix_tokens(s, req, &prefix);
-        ds4_tokens_free(&prefix);
+    if (system_anchor) *system_anchor = false;
+    if (!s || !prompt || !s->kv.enabled) return 0;
+    if (req && (s->qwen_session_cache ||
+                server_model_uses_resident_frontiers(req->model_syntax))) {
+        /* Share the exact boundary already used by the resident frontier.
+         * ChatML role IDs cannot distinguish system/user/assistant. Falling
+         * back to an aligned cold prefix after capturing a longer system
+         * frontier would rewind recurrent state and replay the prompt. */
+        ds4_tokens rendered_system = {0};
+        const int n = system && tokens_start_with(prompt, system) ? system->len :
+            request_system_prefix_tokens(s, req, &rendered_system);
+        ds4_tokens_free(&rendered_system);
         server_log(DS4_LOG_KVCACHE,
                    "ds4-server: agent-system boundary system_tokens=%d prompt_tokens=%d syntax=%s",
-                   n, prompt ? prompt->len : 0,
+                   n, prompt->len,
                    server_model_syntax_name(req->model_syntax));
         if (n >= s->kv.opt.min_tokens) {
             if (system_anchor) *system_anchor = true;
@@ -20543,7 +20552,8 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
     int cold_store_len = 0;
     if (!multimodal && (cached == 0 || s->qwen_session_cache)) {
         const int candidate = kv_cache_cold_store_target_request(
-            s, &j->req, prompt_for_sync, &cold_store_is_system);
+            s, &j->req, prompt_for_sync, &slot->active_system_prefix,
+            &cold_store_is_system);
         /* A legacy or generic agent-system entry may contain only the BOS.
          * Extend it to the exact rendered system boundary before any tool
          * checkpoint needs to reconstruct the request. */
@@ -29820,6 +29830,40 @@ static void test_qwen_cold_cache_keeps_system_anchor_past_cold_max(void) {
     ds4_tokens_free(&prompt);
 }
 
+static void test_qwen_cold_cache_shares_resident_system_boundary(void) {
+    const server_model_syntax syntaxes[] = {
+        SERVER_MODEL_SYNTAX_QWEN, SERVER_MODEL_SYNTAX_QWEN4
+    };
+    ds4_tokens prompt = {0};
+    for (int i = 0; i < 4431; i++) ds4_tokens_push(&prompt, i + 1);
+    ds4_tokens system = prompt;
+    system.len = 4419;
+    server s = {0};
+    s.kv.enabled = true;
+    s.kv.opt = kv_cache_default_options();
+    /* The reported Flash request captured 4419 tokens, then selected 4096
+     * through generic trim/alignment and had to prefill from zero again. */
+    TEST_ASSERT(kv_cache_store_len(&s.kv, prompt.len) == 4096);
+    for (size_t i = 0; i < sizeof(syntaxes) / sizeof(syntaxes[0]); i++) {
+        request r = {.model_syntax = syntaxes[i]};
+        s.qwen_session_cache = syntaxes[i] == SERVER_MODEL_SYNTAX_QWEN;
+        bool system_anchor = false;
+        TEST_ASSERT(kv_cache_cold_store_target_request(
+            &s, &r, &prompt, &system, &system_anchor) == 4419);
+        TEST_ASSERT(system_anchor);
+        /* A large request still writes only the shared system prefix. */
+        s.kv.opt.cold_max_tokens = 2048;
+        TEST_ASSERT(kv_cache_cold_store_target_request(
+            &s, &r, &prompt, &system, &system_anchor) == 4419);
+        s.kv.enabled = false;
+        TEST_ASSERT(kv_cache_cold_store_target_request(
+            &s, &r, &prompt, &system, &system_anchor) == 0);
+        TEST_ASSERT(!system_anchor);
+        s.kv.enabled = true;
+    }
+    ds4_tokens_free(&prompt);
+}
+
 static void test_kv_cache_continued_uses_aligned_frontiers(void) {
     kv_disk_cache kc = {0};
     kc.enabled = true;
@@ -33592,6 +33636,7 @@ static void ds4_server_unit_tests_run(void) {
     test_kv_cache_chat_anchor_uses_last_user_before_assistant();
     test_kv_cache_chat_anchor_ignores_multiturn_tail();
     test_qwen_cold_cache_keeps_system_anchor_past_cold_max();
+    test_qwen_cold_cache_shares_resident_system_boundary();
     test_kv_cache_continued_uses_aligned_frontiers();
     test_kv_cache_cold_store_suppresses_duplicate_continued_boundary();
     test_kv_cache_file_size_must_fit_budget();

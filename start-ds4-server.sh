@@ -17,7 +17,7 @@ case "$profile" in
     flash)
         model="${DS4_MODEL:-gguf/Qwen3.8-Flash-Next-Q2.gguf}"
         vision_model="${DS4_VISION_MODEL-gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf}"
-        context="${DS4_CTX:-16384}"
+        context="${DS4_CTX:-131072}"
         prefill_args=(--prefill-chunk "${DS4_PREFILL_CHUNK:-256}")
         # Explicit Flash selection opts into the single-device CUDA tiered path.
         # The engine validates family/backend/topology before activating it.
@@ -42,7 +42,7 @@ if [[ -n "$kv_dir" ]]; then
     kv_args=(--kv-disk-dir "$kv_dir" --kv-disk-space-mb "${DS4_KV_DISK_SPACE_MB:-8192}")
 fi
 server_args=(--cuda -m "$model" "${vision_args[@]}" --ctx "$context"
-    "${prefill_args[@]}" --host 0.0.0.0 --port "$SERVER_PORT" "${kv_args[@]}")
+    "${prefill_args[@]}" --host 0.0.0.0 --mtp --port "$SERVER_PORT" "${kv_args[@]}")
 
 # Review the exact command without building, allocating a context or loading weights.
 if [[ "${1:-}" == --print-command ]]; then
