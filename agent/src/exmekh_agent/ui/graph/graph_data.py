@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
+from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 from exmekh_agent.exmekh_bridge.history.skill_history import (
     inner_skill_history_messages,
     take_skill_for_call,
@@ -512,7 +513,10 @@ def _extract_nodes_from_raw_scope(
         tcs = parse_tool_calls(item.get("tool_calls")) or []
         following_tools: list[dict[str, Any]] = []
         j = i + 1
-        while j < n and str(raw_slice[j].get("role", "")).lower() == "tool":
+        while j < n and str(raw_slice[j].get("role", "")).lower() in {
+            "tool",
+            "function",
+        }:
             following_tools.append(raw_slice[j])
             j += 1
 
@@ -555,7 +559,8 @@ def _extract_nodes_from_raw_scope(
                 catalog = tool_result_for_call(child_raw[1:], tc_id, 0)
                 catalog_msg = (
                     str(catalog.get("content", ""))
-                    if catalog is not None and catalog.get("role") == "tool"
+                    if catalog is not None
+                    and str(catalog.get("role", "")).lower() in {"tool", "function"}
                     else str(matched_skill_dict.get("output") or tool_resp_str)
                 )
                 open_triplet = _build_tool_triplet_events(
@@ -874,10 +879,13 @@ def _build_nodes_for_messages(
                 previous_history=prev_raw, fallback_history=effective_raw
             )
             prev_raw = effective_raw
+            turn_slice, skill_tree = RecordedHistory(
+                turn_slice, msg.skill_history_tree
+            ).restored_snapshot({})
 
             _extract_nodes_from_raw_scope(
                 turn_slice,
-                skill_tree=list(msg.skill_history_tree or []),
+                skill_tree=skill_tree,
                 structured_skills=list(msg.skills or []),
                 tool_events=list(msg.tool_events or []),
                 history_id=history_id,

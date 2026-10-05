@@ -91,13 +91,41 @@ def _matches_cached_output(call: ToolCall, output: RecordedToolOutput) -> bool:
     )
 
 
-def restore_tool_call_ids(history: list[dict[str, Any]]) -> None:
-    """Recover IDs omitted by ToolMessage.message_dump in execution snapshots.
+def _result_call_index(pending: list[ToolCall], message: dict[str, Any]) -> int | None:
+    call_id = message.get("tool_call_id")
+    if call_id:
+        return next(
+            (index for index, call in enumerate(pending) if call.get_id() == call_id),
+            None,
+        )
+    recorded = RecordedToolOutput.parse(message.get("content"))
+    declared_name = message.get("name")
+    if recorded is not None and not declared_name:
+        # Cached reads use the source tool's header. Its output identity is a
+        # stronger match than an ordinary pending call with that source name.
+        cached_index = next(
+            (
+                index
+                for index, call in enumerate(pending)
+                if _matches_cached_output(call, recorded)
+            ),
+            None,
+        )
+        if cached_index is not None:
+            return cached_index
+    name = declared_name or (recorded.name if recorded else None)
+    return next(
+        (
+            index
+            for index, call in enumerate(pending)
+            if not name or call.get_name() == name
+        ),
+        None,
+    )
 
-    Preserve explicit identities and match named XML results within the pending
-    batch. Cached reads retain the original tool name, so match their output ID
-    and summary mode. Unnamed legacy replies follow invocation order.
-    """
+
+def restore_tool_call_ids(history: list[dict[str, Any]]) -> None:
+    """Recover omitted IDs, preferring exact identities over names or legacy order."""
     pending: list[ToolCall] = []
     for message in history:
         role = str(message.get("role", "")).lower()
@@ -107,32 +135,10 @@ def restore_tool_call_ids(history: list[dict[str, Any]]) -> None:
                 or []
             )
         elif role in {"tool", "function"}:
-            call_id = message.get("tool_call_id")
-            recorded = RecordedToolOutput.parse(message.get("content"))
-            name = message.get("name") or (recorded.name if recorded else None)
-            match = next(
-                (
-                    index
-                    for index, call in enumerate(pending)
-                    if (
-                        call.get_id() == call_id
-                        if call_id
-                        else (
-                            not name
-                            or call.get_name() == name
-                            or (
-                                not message.get("name")
-                                and recorded is not None
-                                and _matches_cached_output(call, recorded)
-                            )
-                        )
-                    )
-                ),
-                None,
-            )
+            match = _result_call_index(pending, message)
             if match is not None:
                 call = pending.pop(match)
-                if not call_id:
+                if not message.get("tool_call_id"):
                     message["tool_call_id"] = call.get_id()
                 if not message.get("name"):
                     message["name"] = call.get_name()

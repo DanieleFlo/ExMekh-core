@@ -75,9 +75,9 @@ async def test_settings_refresh_handles_offline_and_empty_models(client) -> None
 
 
 @pytest.mark.asyncio
-async def test_settings_save_handles_sync_callback_and_restores_button_on_failure() -> (
-    None
-):
+async def test_settings_save_handles_sync_callback_and_restores_button_on_failure(
+    client,
+) -> None:
     saved = []
     drawer = SettingsDrawerComponent(lambda: saved.append(True))
     drawer.input_base_url = MagicMock(value="http://example.test/v1")
@@ -88,17 +88,29 @@ async def test_settings_save_handles_sync_callback_and_restores_button_on_failur
     drawer.save_button = MagicMock()
     drawer.close = MagicMock()
     with (
-        patch("exmekh_agent.ui.settings.settings_drawer.config.update") as update,
+        client,
+        patch(
+            "exmekh_agent.ui.settings.settings_drawer.config.update_async",
+            new_callable=AsyncMock,
+            return_value=True,
+        ) as update,
         patch("exmekh_agent.ui.settings.settings_drawer.ui.notify"),
     ):
         await drawer._save_settings()
     assert saved == [True]
-    update.assert_called_once()
+    update.assert_awaited_once()
     drawer.close.assert_called_once()
     drawer.save_button.props.assert_any_call(remove="loading")
 
     drawer.on_settings_saved = MagicMock(side_effect=RuntimeError("callback failed"))
-    with patch("exmekh_agent.ui.settings.settings_drawer.config.update"):
+    with (
+        client,
+        patch(
+            "exmekh_agent.ui.settings.settings_drawer.config.update_async",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+    ):
         with pytest.raises(RuntimeError, match="callback failed"):
             await drawer._save_settings()
     drawer.save_button.props.assert_any_call(remove="loading")

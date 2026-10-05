@@ -40,7 +40,9 @@ from exmekh_agent.exmekh_bridge.models import (
 )
 
 
-def test_save_to_env_recovers_when_existing_file_cannot_be_read(tmp_path: Path) -> None:
+def test_save_to_env_preserves_existing_file_when_it_cannot_be_read(
+    tmp_path: Path,
+) -> None:
     env_path = tmp_path / ".env"
     env_path.write_text("BASE_URL=old\n", encoding="utf-8")
     original_read_text = Path.read_text
@@ -51,9 +53,9 @@ def test_save_to_env_recovers_when_existing_file_cannot_be_read(tmp_path: Path) 
         return original_read_text(path, *args, **kwargs)
 
     with patch.object(Path, "read_text", read_text):
-        AppConfig(base_url="new").save_to_env(env_path)
+        assert not AppConfig(base_url="new").save_to_env(env_path)
 
-    assert env_path.read_text(encoding="utf-8").startswith("BASE_URL=new\n")
+    assert env_path.read_text(encoding="utf-8") == "BASE_URL=old\n"
 
 
 @pytest.mark.parametrize("operation", ["write", "replace"])
@@ -67,7 +69,7 @@ def test_save_to_env_cleans_temporary_file_after_write_error(
     original = getattr(Path, method)
 
     def fail_for_temporary(path: Path, *args: object, **kwargs: object):
-        if path == temporary_path:
+        if path.parent == env_path.parent and path.name.endswith(".tmp"):
             raise OSError("disk error")
         return original(path, *args, **kwargs)
 

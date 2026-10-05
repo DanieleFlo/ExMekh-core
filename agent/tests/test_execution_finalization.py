@@ -59,7 +59,9 @@ def test_timing_normalization_does_not_close_active_work() -> None:
     assert open_block.end_time is None
     assert finished_tool.duration_seconds == finished_block.duration_seconds == 3
     assert instant_tool.duration_seconds == 0
-    with patch("exmekh_agent.exmekh_bridge.models.time.time", return_value=10):
+    with patch(
+        "exmekh_agent.exmekh_bridge.models.execution.time.time", return_value=10
+    ):
         open_tool.finalize_timing("error")
         open_block.finalize_timing()
         skill.finalize_timing("completed")

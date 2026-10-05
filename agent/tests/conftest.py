@@ -61,7 +61,9 @@ def preserve_env_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Redirect default settings saves to a test file, preserving explicit paths."""
     save_to_env = AppConfig.save_to_env
 
-    def save_test_settings(self: AppConfig, env_path: Path | None = None) -> None:
-        save_to_env(self, env_path if env_path is not None else tmp_path / ".env")
+    def save_test_settings(self: AppConfig, env_path: Path | None = None) -> bool:
+        return save_to_env(
+            self, env_path if env_path is not None else tmp_path / ".env"
+        )
 
     monkeypatch.setattr(AppConfig, "save_to_env", save_test_settings)

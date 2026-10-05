@@ -226,7 +226,11 @@ agent/
         │   ├── providers/     # Provider integration and token accounting
         │   ├── tools/         # Tool events and command approval
         │   ├── resources/     # Packaged model instructions
-        │   └── models.py      # Pydantic models shared across the bridge
+        │   └── models/        # Public Pydantic model API
+        │       ├── execution.py # Tool/skill lifecycle, timing and context usage
+        │       ├── messages.py  # Messages, guidance and child conversations
+        │       ├── settings.py  # Project settings and chat overrides
+        │       └── sessions.py  # Conversation branches and input queues
         ├── utils/             # Shared functions, divided by responsibility
         │   ├── files.py        # Atomic writes and temporary-file cleanup
         │   ├── filenames.py    # Attachment filename normalization
@@ -264,6 +268,12 @@ or already rendered fragments are marked safe. Model instructions remain in
 `exmekh_bridge/resources/prompts`. Protocol identifiers, model schema keys and
 algorithmic operations belong to code; adjustable defaults and presentation belong
 to the configuration resources.
+
+The `exmekh_bridge.models` package preserves existing imports and JSON formats.
+Invocation correlation belongs to the recorded-history adapter: chat and graph
+use the same rules for regular tools, cached reads and legacy `function` replies.
+Global settings apply on the UI event loop and persist an independent snapshot
+in a worker. Failed persistence is visible in the form and can be retried.
 
 See [architecture and responsibilities](docs/architecture.md) for the public APIs.
 

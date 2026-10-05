@@ -10,19 +10,13 @@ def format_file_size(size_bytes: int) -> str:
     units = FORMAT_DEFAULTS["byte_units"]
     if size_bytes < base:
         return FORMAT_DEFAULTS["byte_template"].format(count=size_bytes, unit=units[0])
-    index = min(
-        len(units) - 1,
-        next(
-            (
-                index
-                for index in range(1, len(units))
-                if size_bytes < base ** (index + 1)
-            ),
-            len(units) - 1,
-        ),
-    )
+    index = 0
+    scaled_size = size_bytes
+    while scaled_size >= base and index < len(units) - 1:
+        scaled_size /= base
+        index += 1
     return FORMAT_DEFAULTS["scaled_byte_template"].format(
-        count=size_bytes / base**index, unit=units[index]
+        count=scaled_size, unit=units[index]
     )
 
 
@@ -51,11 +45,10 @@ def format_duration(seconds: float | int | None) -> str:
     total_seconds = max(0, int(seconds or 0))
     hours, remainder = divmod(total_seconds, 3600)
     minutes, secs = divmod(remainder, 60)
-    template = (
-        FORMAT_DEFAULTS["duration_hours_template"]
-        if hours > 0
-        else FORMAT_DEFAULTS["duration_minutes_template"]
-        if minutes > 0
-        else FORMAT_DEFAULTS["duration_seconds_template"]
-    )
+    if hours > 0:
+        template = FORMAT_DEFAULTS["duration_hours_template"]
+    elif minutes > 0:
+        template = FORMAT_DEFAULTS["duration_minutes_template"]
+    else:
+        template = FORMAT_DEFAULTS["duration_seconds_template"]
     return template.format(hours=hours, minutes=minutes, seconds=secs)

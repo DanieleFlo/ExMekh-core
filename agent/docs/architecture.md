@@ -14,7 +14,7 @@ comportamenti incoerenti verificabili con test.
 | `SessionManager` | Persistenza e aggiornamento dello stato gestito | `save_chat_agent`, `save_project_settings`, `save_project_settings_async`, `execution_settings`, `edit_message` |
 | `RecordedHistory` | Attraversamento, correlazione e ripristino delle history registrate | `scopes`, `arguments_for_call`, `output_for_call`, `restored_snapshot` |
 | `ContextUsageUpdater` | Snapshot del conteggio, coalescenza e consegna nel contesto del client | `request`, `schedule`, `wait_idle`, `close` |
-| `AppConfig` | Configurazione runtime e override di ambiente | `update`, `save_to_env`, `select_available_model`; mantiene l'API pubblica del precedente modulo |
+| `AppConfig` | Configurazione runtime, override di ambiente e persistenza | `update`, `update_async`, `save_to_env`, `select_available_model`; `save_to_env` e `update_async` restituiscono l'esito |
 | `config.catalogs` | Caricamento delle impostazioni e dei testi suddivisi per competenza | `settings`, `presentation_settings`, `message`; snapshot indipendenti delle configurazioni |
 | Risorse UI | Accesso alla presentazione e rendering dei template HTML/SVG | `ui_text`, `presentation_config`, `render_html`; delega ai cataloghi, escaping automatico |
 | `utils` | Operazioni generiche condivise | `atomic_write_text`, normalizzazione dei nomi, formatter, catene di eccezioni, lettori di risorse e parser Markdown/YAML |
@@ -33,7 +33,10 @@ comportamenti incoerenti verificabili con test.
 
 La UI è divisa in `agents`, `chat`, `graph`, `history`, `navigation`, `settings`
 e `shared`. Il bridge separa `agents`, `capabilities`, `history`, `providers`
-e `tools`; i modelli condivisi rimangono nel suo livello principale.
+e `tools`. Il pacchetto `models` separa `execution`, `messages`, `settings` e
+`sessions`; il suo `__init__` mantiene gli import pubblici precedenti.
+Il ciclo di vita degli eventi resta nei modelli di esecuzione, il branching e
+le code nella sessione, gli override nelle impostazioni e il contenuto nel messaggio.
 `state` resta una cartella coesa per stato e persistenza, senza aggiungere
 sottopacchetti che conterrebbero un solo modulo.
 
@@ -106,6 +109,10 @@ i file temporanei predefiniti sono univoci e vengono rimossi anche in caso di er
   del JSON mantiene sempre il contenuto registrato. I risultati di `read_tool_output`
   mantengono il nome del tool originario nell'header: la correlazione considera
   output ID e modalità di sintesi, senza riscrivere le conversazioni salvate.
+  Un risultato cached si associa prima per identità, poi per nome: un'altra
+  chiamata in attesa allo stesso tool non può assorbirlo. Il grafo normalizza uno
+  snapshot indipendente tramite l'adapter della history, come la vista chat,
+  includendo le risposte legacy di ruolo function.
 - Le opzioni Connect to appartengono al modello: sono verificabili con le stesse
   regole di validazione dei collegamenti e non includono archi già presenti.
   Skill e tool condivisi restano collegabili; HDS già assegnati e cicli sono esclusi.
@@ -122,6 +129,14 @@ i file temporanei predefiniti sono univoci e vengono rimossi anche in caso di er
 - Il salvataggio della lavagna valida e restituisce uno snapshot indipendente.
   Durante la validazione i controlli sono bloccati; richieste ripetute vengono
   ignorate e gli errori restituiscono una lavagna ancora modificabile.
+- La configurazione globale applica le modifiche nel loop chiamante; `update_async`
+  consegna al worker uno snapshot indipendente. Solo i campi dichiarati sono
+  aggiornabili: un argomento non può sostituire un metodo. Letture e scritture
+  fallite conservano il file esistente, e la UI mostra un errore con possibilità
+  di riprovare. Il form impedisce invii ripetuti e non tocca controlli di un client
+  eliminato durante la persistenza o la callback. Il refresh dei modelli evita
+  richieste sovrapposte e scarta risultati arrivati dopo un cambio di endpoint;
+  il provider conserva l'autenticazione esplicitamente vuota.
 - La persistenza asincrona delle impostazioni del progetto esegue solo le operazioni
   su file nel worker. Poi aggiorna le chat nel loop chiamante usando il loro stato
   più recente, conservando le approvazioni arrivate durante il salvataggio. Se il
@@ -147,7 +162,7 @@ i file temporanei predefiniti sono univoci e vengono rimossi anche in caso di er
 Clean Code è un insieme di criteri di progettazione, non un elenco certificabile
 tramite la copertura dei test. I componenti UI storici (`ChatViewComponent`,
 `InputBarComponent`, `ChatPageController`) e `graph_data.py` restano estesi e
-possono essere ulteriormente suddivisi per funzionalità. In questa revisione sono stati separati il conteggio asincrono del contesto,
+possono essere ulteriormente suddivisi per funzionalità. In questa revisione sono stati separati i modelli per dominio, il conteggio asincrono del contesto,
 la lettura delle history e il formatter JSON. Sono stati estratti il form di modifica dei messaggi e quello delle capability e sono state rimosse le dipendenze
 più dirette dalle strutture interne introdotte con la personalizzazione degli agenti.
 I modelli Pydantic espongono i dati per serializzazione; le mutazioni della lavagna
@@ -155,9 +170,13 @@ in produzione ora usano i metodi del modello invece di ricostruirne le invariant
 
 ## Verifica
 
-`uv run pytest -n 4`: **873 passed, 40 skipped**.
+`uv run pytest -n 4`: **891 passed, 40 skipped**.
 Copertura configurata di istruzioni e rami: **100.00%**. I test con provider reale
 richiedono opt-in; i test e2e con mock sono stati eseguiti.
+La selezione live sui flussi interessati passa con **6 test**: Quick Chat,
+history multi-turno, titoli con entrambi i protocolli, approvazioni dei comandi e
+stop durante un'approvazione. Gli e2e mirati a personalizzazione, coda e modifica
+dei messaggi passano con **34 test**.
 `uv run ruff check src tests`, `uv run ruff format --check src tests` e
 `git diff --check -- .` non segnalano errori.
 
@@ -216,3 +235,15 @@ I template di presentazione devono ricevere esattamente i parametri dichiarati.
 Un controllo AST impedisce di reintrodurre testi, icone e stili letterali nei
 controlli NiceGUI. Le utility verificano scritture concorrenti con file temporanei
 distinti e la conservazione della destinazione quando scrittura o sostituzione falliscono.
+
+Le regressioni della revisione finale verificano anche thread e snapshot del
+salvataggio globale, errori e retry, richieste ripetute e client eliminati durante
+persistenza, callback e lettura delle statistiche. La discovery scarta metadata
+di capacità arrivati dal provider precedente, conservando l'owner nel suo endpoint.
+Le letture cached sono verificate con tool ordinari aventi lo stesso nome,
+ordine delle risposte invertito, due modalità di sintesi e ruoli `tool` / `function`.
+
+Gli helper e2e attendono la pubblicazione dell'input nella chat o nella coda prima
+di proseguire; la fine del turno richiede sia il compositore pronto sia l'assenza
+di righe in streaming. Questo elimina la race tra l'evento di invio e il suo
+ricevimento sul server, senza assumere che un ritardo fisso basti.

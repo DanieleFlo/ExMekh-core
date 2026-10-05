@@ -188,7 +188,7 @@ def parse_markdown_to_html(text: str) -> str:
     # 3. Display math: $$...$$
     # ------------------------------------------------------------------
 
-    def replace_dollar_display_math(match: re.Match[str]) -> str:
+    def replace_display_math(match: re.Match[str]) -> str:
         latex_code = match.group(1)
         mathml = convert_latex_to_mathml(
             latex_code,
@@ -201,7 +201,7 @@ def parse_markdown_to_html(text: str) -> str:
 
     processed = re.sub(
         r"\$\$(.*?)\$\$",
-        replace_dollar_display_math,
+        replace_display_math,
         processed,
         flags=re.DOTALL,
     )
@@ -210,20 +210,9 @@ def parse_markdown_to_html(text: str) -> str:
     # 4. Display math: \[...\]
     # ------------------------------------------------------------------
 
-    def replace_bracket_display_math(match: re.Match[str]) -> str:
-        latex_code = match.group(1)
-        mathml = convert_latex_to_mathml(
-            latex_code,
-            display="block",
-        )
-
-        fragment = render_html("shared/math_block.html", mathml=Markup(mathml))
-
-        return preserve_math(fragment, block=True)
-
     processed = re.sub(
         r"\\\[(.*?)\\\]",
-        replace_bracket_display_math,
+        replace_display_math,
         processed,
         flags=re.DOTALL,
     )

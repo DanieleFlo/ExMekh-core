@@ -280,3 +280,44 @@ def test_collector_interprets_legacy_opening_calls_through_the_typed_parser(
         assert entry["tokens_after_close"] == 8
     else:
         assert "tokens_before_close" not in entry
+
+
+@pytest.mark.parametrize("role", ["tool", "function"])
+@pytest.mark.parametrize("cached_first", [False, True])
+@pytest.mark.parametrize("summary_mode", ["none", "full"])
+def test_cached_reads_take_priority_over_same_name_pending_tools(
+    role, cached_first, summary_mode
+):
+    """Cached results retain the source name but identify a different invocation."""
+    original = "<header><name>read</name><type>Tool</type><id>new-output</id></header>\nnew body"
+    cached = (
+        "<header><name>read</name><type>Tool</type><id>old-output</id>"
+        f"<summary-mode>{summary_mode}</summary-mode></header>\ncached body"
+    )
+    calls = [
+        tool_call("fresh"),
+        {
+            "id": "cached",
+            "function": {
+                "name": "read_tool_output",
+                "arguments": {"output_id": "old-output", "summary_mode": summary_mode},
+            },
+        },
+    ]
+    responses = [
+        {"role": role, "content": cached},
+        {"role": role, "content": original},
+    ]
+    if not cached_first:
+        responses.reverse()
+    message = ChatMessage(
+        role="assistant",
+        raw_history=[{"role": "assistant", "tool_calls": calls}, *responses],
+    )
+    assert message.output_for_call("fresh") == original
+    assert message.output_for_call("cached") == cached
+    graph = build_graph_data_from_session(ChatSession(messages=[message]))
+    tools = [node for node in graph.histories[0].nodes if node.kind == "tool_bundle"]
+    assert [node.events[-1]["content"] for node in tools] == [original, cached]
+    # Reading either view leaves the recorded transcripts untouched.
+    assert all("tool_call_id" not in item for item in message.raw_history[1:])

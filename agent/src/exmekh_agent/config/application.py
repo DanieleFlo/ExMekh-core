@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -15,7 +16,6 @@ from exmekh_agent.config.environment import ENVIRONMENT_FIELDS, PERSISTED_FIELDS
 from exmekh_agent.config.paths import DEFAULT_DATA_DIR, DEFAULT_ENV_PATH
 from exmekh_agent.config.provider import DEFAULTS as PROVIDER_DEFAULTS
 from exmekh_agent.config.server import DEFAULTS as SERVER_DEFAULTS
-from exmekh_agent.config.storage import DEFAULTS as STORAGE_DEFAULTS
 from exmekh_agent.utils.files import atomic_write_text
 
 # Load .env if present in the current working directory or ExMekh Agent root
@@ -99,8 +99,8 @@ class AppConfig:
     )
     data_dir: Path = field(default_factory=lambda: DEFAULT_DATA_DIR)
 
-    def save_to_env(self, env_path: Path | None = None) -> None:
-        """Persist current configuration to .env file in ExMekh Agent directory."""
+    def save_to_env(self, env_path: Path | None = None) -> bool:
+        """Persist settings atomically, reporting failure without changing the old file."""
         env_path = env_path or DEFAULT_ENV_PATH
         lines: list[str] = []
         if env_path.exists():
@@ -108,7 +108,7 @@ class AppConfig:
                 lines = env_path.read_text(encoding="utf-8").splitlines()
             except OSError as error:
                 logger.warning(app_text("configuration.read_error"), env_path, error)
-                lines = []
+                return False
 
         env_vars = {
             ENVIRONMENT_FIELDS[name]: (
@@ -135,13 +135,12 @@ class AppConfig:
             if k not in updated_keys:
                 new_lines.append(f"{k}={v}")
 
-        temporary_path = env_path.with_suffix(STORAGE_DEFAULTS["env_temporary_suffix"])
         try:
-            atomic_write_text(
-                env_path, "\n".join(new_lines) + "\n", temporary_path=temporary_path
-            )
+            atomic_write_text(env_path, "\n".join(new_lines) + "\n")
         except OSError as error:
             logger.warning(app_text("configuration.persist_error"), env_path, error)
+            return False
+        return True
 
     def set_model_context_length(self, model: str, length: int) -> None:
         if model and isinstance(length, int) and length > 0:
@@ -177,13 +176,26 @@ class AppConfig:
             self.default_model = models[0]
         self.context_length = self.get_context_length()
 
-    def update(self, **kwargs: object) -> None:
-        for key, val in kwargs.items():
-            if hasattr(self, key):
-                setattr(self, key, val)
+    def _apply_updates(self, values: dict[str, object]) -> None:
+        allowed_fields = {item.name for item in fields(self)}
+        for name, value in values.items():
+            if name in allowed_fields:
+                setattr(self, name, value)
         if self.default_model in self.model_context_lengths:
             self.context_length = self.model_context_lengths[self.default_model]
+
+    def update(self, **kwargs: object) -> None:
+        """Apply runtime settings and persist synchronously for non-UI callers."""
+        self._apply_updates(kwargs)
         self.save_to_env()
+
+    async def update_async(self, **kwargs: object) -> bool:
+        """Apply settings on the caller loop; write an independent snapshot in a worker."""
+        self._apply_updates(kwargs)
+        snapshot = replace(self)
+        return await asyncio.get_running_loop().run_in_executor(
+            None, snapshot.save_to_env
+        )
 
 
 config = AppConfig()

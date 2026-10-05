@@ -41,8 +41,9 @@ async def check_provider_health(
     base_url: str | None = None, api_key: str | None = None
 ) -> tuple[bool, list[str]]:
     """Check the configured provider endpoint and list its models."""
-    url = (base_url or config.base_url).rstrip("/")
-    key = api_key or config.api_key
+    configured_endpoint = (config.base_url, config.api_key)
+    url = (config.base_url if base_url is None else base_url).rstrip("/")
+    key = config.api_key if api_key is None else api_key
 
     headers = {"Authorization": f"Bearer {key}"} if key else {}
     models_url = f"{url}/models"
@@ -68,7 +69,10 @@ async def check_provider_health(
                             m_id, str(m.get("owned_by") or ""), base_url=url
                         )
                         ctx_len = extract_model_context_length(m)
-                        if ctx_len is not None:
+                        if ctx_len is not None and configured_endpoint == (
+                            config.base_url,
+                            config.api_key,
+                        ):
                             config.set_model_context_length(m_id, ctx_len)
                 return True, sorted(set(models))
             return False, []

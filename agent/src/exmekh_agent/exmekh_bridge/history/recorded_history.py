@@ -77,3 +77,32 @@ class RecordedHistory:
                 ):
                     message["content"] = deepcopy(image_content[content])
         return restored.messages, restored.skills
+
+
+def extract_turn_raw_history(
+    raw_history: list[dict[str, Any]],
+    *,
+    start: int | None = None,
+    previous_history: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Isolate a turn using its explicit boundary or a legacy cumulative prefix."""
+    if start is None:
+        if (
+            previous_history
+            and raw_history[: len(previous_history)] == previous_history
+        ):
+            start = len(previous_history)
+        else:
+            start = 1 + max(
+                (
+                    index
+                    for index, item in enumerate(raw_history)
+                    if str(item.get("role", "")).lower() == "user"
+                ),
+                default=-1,
+            )
+    return [
+        item
+        for item in raw_history[start:]
+        if str(item.get("role", "")).lower() != "system"
+    ]

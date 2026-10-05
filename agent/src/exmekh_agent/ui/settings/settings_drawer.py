@@ -31,6 +31,8 @@ class SettingsDrawerComponent:
         self.on_settings_saved = on_settings_saved
         self.on_models_refreshed = on_models_refreshed
         self.temp_storage_getter = temp_storage_getter
+        self._saving = False
+        self._refreshing_models = False
         self.drawer: ui.right_drawer | None = None
         self.save_button: ui.button | None = None
         self.input_base_url: ui.input | None = None
@@ -254,38 +256,54 @@ class SettingsDrawerComponent:
         return drawer
 
     async def refresh_models(self) -> None:
+        if self._refreshing_models:
+            return
         client = ui.context.client
-        if self.refresh_btn:
-            self.refresh_btn.props(UI_PRESENTATION["refresh_models.props.loading"])
-        if self.status_spinner:
-            self.status_spinner.set_visibility(True)
-        is_alive, models = await check_provider_health(config.base_url, config.api_key)
         if client.is_deleted:
             return
+        self._refreshing_models = True
+        endpoint = (config.base_url, config.api_key)
         with client:
             if self.refresh_btn:
-                self.refresh_btn.props(remove="loading")
+                self.refresh_btn.props(UI_PRESENTATION["refresh_models.props.loading"])
             if self.status_spinner:
-                self.status_spinner.set_visibility(False)
-            if self.status_badge:
-                self.status_badge.text = (
-                    ui_text("settings.settings_drawer.online", count=len(models))
-                    if is_alive
-                    else ui_text("settings.settings_drawer.offline")
-                )
-                self.status_badge.props(
-                    f"color={UI_PRESENTATION['refresh_models.state_classes'] if is_alive else UI_PRESENTATION['refresh_models.state_classes_2']}"
-                )
-            if is_alive and models:
-                config.select_available_model(models)
-                if self.model_select:
-                    selected = self.model_select.value
-                    self.model_select.options = models
-                    self.model_select.value = (
-                        selected if selected in models else config.default_model
+                self.status_spinner.set_visibility(True)
+        try:
+            is_alive, models = await check_provider_health(*endpoint)
+            if client.is_deleted or endpoint != (config.base_url, config.api_key):
+                return
+            with client:
+                if self.status_badge:
+                    self.status_badge.text = (
+                        ui_text("settings.settings_drawer.online", count=len(models))
+                        if is_alive
+                        else ui_text("settings.settings_drawer.offline")
                     )
-            if self.on_models_refreshed:
-                self.on_models_refreshed()
+                    color = (
+                        UI_PRESENTATION["provider.online_color"]
+                        if is_alive
+                        else UI_PRESENTATION["provider.offline_color"]
+                    )
+                    self.status_badge.props["color"] = color
+                    self.status_badge.update()
+                if is_alive and models:
+                    config.select_available_model(models)
+                    if self.model_select:
+                        selected = self.model_select.value
+                        self.model_select.options = models
+                        self.model_select.value = (
+                            selected if selected in models else config.default_model
+                        )
+                if self.on_models_refreshed:
+                    self.on_models_refreshed()
+        finally:
+            self._refreshing_models = False
+            if not client.is_deleted:
+                with client:
+                    if self.refresh_btn:
+                        self.refresh_btn.props(remove="loading")
+                    if self.status_spinner:
+                        self.status_spinner.set_visibility(False)
 
     async def refresh_tmp_stats(self) -> None:
         storage = (
@@ -393,6 +411,8 @@ class SettingsDrawerComponent:
         if client.is_deleted:
             return
         await self.refresh_tmp_stats()
+        if client.is_deleted:
+            return
         with client:
             self._notify_tmp_cleaned(deleted_count, freed_bytes)
 
@@ -448,33 +468,71 @@ class SettingsDrawerComponent:
         if self.model_select:
             self.model_select.value = config.default_model
 
-    async def _save_settings(self) -> None:
+    def _set_saving(self, saving: bool) -> None:
+        self._saving = saving
+        for control in (
+            self.input_base_url,
+            self.input_api_key,
+            self.select_api_type,
+            self.select_reasoning,
+            self.model_select,
+            self.save_button,
+        ):
+            if control is not None:
+                control.set_enabled(not saving)
         if self.save_button:
-            self.save_button.props(UI_PRESENTATION["save_settings.props.loading"])
+            if saving:
+                self.save_button.props(UI_PRESENTATION["save_settings.props.loading"])
+            else:
+                self.save_button.props(remove="loading")
+
+    async def _save_settings(self) -> None:
+        if self._saving or not all(
+            (
+                self.input_base_url,
+                self.input_api_key,
+                self.select_api_type,
+                self.select_reasoning,
+            )
+        ):
+            return
+        client = ui.context.client
+        if client.is_deleted:
+            return
+        values = {
+            "base_url": self.input_base_url.value,
+            "api_key": self.input_api_key.value,
+            "api_type": self.select_api_type.value,
+            "reasoning_effort": self.select_reasoning.value,
+            "default_model": (self.model_select.value or config.default_model)
+            if self.model_select
+            else config.default_model,
+        }
+        with client:
+            self._set_saving(True)
         try:
-            if (
-                self.input_base_url
-                and self.input_api_key
-                and self.select_api_type
-                and self.select_reasoning
-            ):
-                config.update(
-                    base_url=self.input_base_url.value,
-                    api_key=self.input_api_key.value,
-                    api_type=self.select_api_type.value,
-                    reasoning_effort=self.select_reasoning.value,
-                    default_model=(self.model_select.value or config.default_model)
-                    if self.model_select
-                    else config.default_model,
-                )
+            persisted = await config.update_async(**values)
+            if client.is_deleted:
+                return
+            with client:
                 result = self.on_settings_saved()
                 if inspect.isawaitable(result):
                     await result
-                ui.notify(
-                    ui_text("settings.settings_drawer.global_settings_saved"),
-                    type="positive",
-                )
-                self.close()
+                if client.is_deleted:
+                    return
+                if persisted:
+                    ui.notify(
+                        ui_text("settings.settings_drawer.global_settings_saved"),
+                        type="positive",
+                    )
+                    self.close()
+                else:
+                    ui.notify(
+                        ui_text("settings.settings_drawer.global_settings_save_failed"),
+                        type="negative",
+                    )
         finally:
-            if self.save_button:
-                self.save_button.props(remove="loading")
+            self._saving = False
+            if not client.is_deleted:
+                with client:
+                    self._set_saving(False)
