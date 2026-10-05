@@ -297,9 +297,9 @@ class AgentDesigner:
                 label,
                 icon=UI_PRESENTATION["render_details.icon.link_off"],
                 on_click=partial(self._disconnect, link),
-            ).props(UI_PRESENTATION["render_details.props.flat_no_caps"]).classes(
-                UI_PRESENTATION["render_details.classes.w_full_text_xs"]
-            )
+            ).props(UI_PRESENTATION["render_details.props.connection_button"]).classes(
+                UI_PRESENTATION["render_details.classes.connection_button"]
+            ).tooltip(label)
         if node.id != self._design.root_id:
             ui.button(
                 ui_text("agents.agent_designer.remove_from_board"),

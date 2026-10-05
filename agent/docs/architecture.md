@@ -170,7 +170,7 @@ in produzione ora usano i metodi del modello invece di ricostruirne le invariant
 
 ## Verifica
 
-`uv run pytest -n 4`: **891 passed, 40 skipped**.
+`uv run pytest -n 4`: **892 passed, 40 skipped**.
 Copertura configurata di istruzioni e rami: **100.00%**. I test con provider reale
 richiedono opt-in; i test e2e con mock sono stati eseguiti.
 La selezione live sui flussi interessati passa con **6 test**: Quick Chat,
@@ -247,3 +247,11 @@ Gli helper e2e attendono la pubblicazione dell'input nella chat o nella coda pri
 di proseguire; la fine del turno richiede sia il compositore pronto sia l'assenza
 di righe in streaming. Questo elimina la race tra l'evento di invio e il suo
 ricevimento sul server, senza assumere che un ritardo fisso basti.
+
+Il designer mantiene il catalogo scorrevole a tutte le larghezze; le proprietà
+passano sotto la lavagna sui viewport intermedi e il catalogo diventa una fascia
+orizzontale sui telefoni. Le connessioni hanno icona e testo su una sola riga,
+allineamento a sinistra ed ellissi, conservando nome accessibile e tooltip completi.
+Il nuovo e2e ridimensiona lo stesso editor da 1440 a 320 pixel, include il formato
+orizzontale e il ritorno al desktop, controlla sbordamenti e sovrapposizioni e
+verifica aggiunta, disconnessione e undo dopo il resize.

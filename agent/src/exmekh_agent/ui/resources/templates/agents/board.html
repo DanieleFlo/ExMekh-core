@@ -3,8 +3,8 @@
     <h3>Capabilities</h3>
     {% for item in catalog %}
     <button type="button" draggable="true" class="agent-palette-item"
-            data-catalog="{{ item.id }}" style="--node-color:{{ colors[item.kind] }}">
-      {{ item.name }}<small>{{ item.kind.upper() }}</small>
+            data-catalog="{{ item.id }}" title="{{ item.name }}" style="--node-color:{{ colors[item.kind] }}">
+      <span class="agent-palette-name">{{ item.name }}</span><small>{{ item.kind.upper() }}</small>
     </button>
     {% endfor %}
   </aside>

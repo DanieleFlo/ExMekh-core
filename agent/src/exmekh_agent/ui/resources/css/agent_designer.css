@@ -1,9 +1,13 @@
-.agent-designer-shell { color: #e4e4e7; padding: 18px; }
-.agent-designer-layout { gap: 16px; overflow: hidden; }
-.agent-workbench { display: flex; height: 100%; gap: 12px; min-height: 0; }
+.agent-designer-shell { color: #e4e4e7; padding: 18px; height: 100dvh; max-height: 100dvh; flex-wrap: nowrap; overflow: hidden; }
+.agent-designer-layout { gap: 16px; overflow: hidden; min-width: 0; }
+.agent-designer-header, .agent-designer-help { flex-shrink: 0; }
+.agent-designer-actions { flex-wrap: wrap; }
+.agent-workbench { display: flex; height: 100%; gap: 12px; min-height: 0; min-width: 0; }
+.agent-board-html { min-height: 0; max-width: 100%; }
 .agent-palette { width: 200px; flex-shrink: 0; overflow-y: auto; padding: 12px; background: #18181b; border: 1px solid #3f3f46; border-radius: 10px; }
-.agent-palette h3 { margin: 0 0 12px; font-size: 13px; font-weight: 600; }
+.agent-palette h3 { margin: 0 0 12px; font-size: 13px; line-height: 20px; font-weight: 600; }
 .agent-palette-item { display: flex; flex-direction: column; text-align: left; width: 100%; margin-bottom: 8px; border-left: 3px solid var(--node-color); background: #27272a; border-radius: 5px; padding: 8px; font-size: 12px; cursor: grab; overflow-wrap: anywhere; }
+.agent-palette-name { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .agent-palette-item small, .agent-board-node small { color: var(--node-color); font-size: 10px; }
 .agent-board-viewport { flex: 1; overflow: auto; min-width: 0; border: 1px solid #3f3f46; border-radius: 10px; }
 .agent-board { position: relative; width: 1200px; height: 1000px; background-color: #09090b; background-image: radial-gradient(#3f3f46 1px, transparent 1px); background-size: 20px 20px; }
@@ -12,7 +16,7 @@
 .agent-board-node strong { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .agent-board-node.selected { box-shadow: 0 0 0 2px var(--node-color); background: #27272a; }
 .agent-board-node:focus-visible, .agent-palette-item:focus-visible { outline: 2px solid white; outline-offset: 3px; }
-.agent-node-details { width: 260px; flex-shrink: 0; overflow-y: auto; padding: 12px; border: 1px solid #3f3f46; border-radius: 10px; }
+.agent-node-details { min-width: 0; width: 260px; flex-shrink: 0; overflow-y: auto; padding: 12px; border: 1px solid #3f3f46; border-radius: 10px; }
 .agent-board-area { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; gap: 6px; }
 .agent-board-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: 11px; color: #a1a1aa; }
 .agent-board-toolbar button { min-width: 32px; min-height: 32px; border: 1px solid #3f3f46; border-radius: 6px; background: #27272a; color: #e4e4e7; cursor: pointer; font-size: 18px; }
@@ -20,3 +24,34 @@
 .agent-board-toolbar button:focus-visible, .agent-board-viewport:focus-visible { outline: 2px solid #38bdf8; outline-offset: -2px; }
 .agent-board-viewport { cursor: grab; touch-action: none; user-select: none; }
 .agent-board-viewport.is-panning, .agent-board-viewport.is-panning * { cursor: grabbing; }
+
+/* Connection labels keep their full accessible name and tooltip when clipped. */
+.agent-connection-button { min-width: 0; text-align: left; }
+.agent-connection-button .q-btn__content { width: 100%; min-width: 0; flex-wrap: nowrap; justify-content: flex-start; }
+.agent-connection-button .q-icon { flex-shrink: 0; }
+.agent-connection-button .q-btn__content > .block { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+
+/* Stack properties below the workbench before the board becomes too narrow. */
+@media (max-width: 1100px) {
+    .agent-designer-layout { flex-direction: column; overflow-y: auto; }
+    .agent-board-html { width: 100%; height: clamp(360px, 60dvh, 700px); flex: none; }
+    .agent-node-details { width: 100%; flex: none; overflow: visible; }
+    .agent-palette { width: 170px; }
+}
+@media (max-width: 600px) {
+    .agent-designer-shell { padding: 10px; gap: 10px; }
+    .agent-designer-header { gap: 6px; }
+    .agent-designer-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 4px; }
+    .agent-designer-actions .q-btn { min-width: 0; padding: 4px 8px; }
+    .agent-designer-help { font-size: 11px; }
+    .agent-workbench { flex-direction: column; gap: 8px; }
+    .agent-board-html { height: clamp(410px, 65dvh, 650px); }
+    .agent-palette { display: grid; grid-auto-flow: column; grid-template-rows: 20px minmax(0, 1fr); grid-auto-columns: 145px; gap: 8px; width: 100%; height: 130px; flex: none; overflow-x: auto; overflow-y: hidden; padding: 8px; }
+    .agent-palette h3 { grid-column: 1 / -1; margin: 0; }
+    .agent-palette-item { grid-row: 2; width: 100%; min-height: 0; margin-bottom: 0; justify-content: center; }
+    .agent-board-area { min-height: 260px; }
+}
+@media (max-height: 500px) and (min-width: 601px) {
+    .agent-designer-shell { padding: 10px; gap: 6px; }
+    .agent-board-html { height: 300px; }
+}
