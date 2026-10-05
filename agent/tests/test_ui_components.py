@@ -225,6 +225,8 @@ async def test_project_settings_update_all_chats_and_keep_local_approvals(
     ui_context: Client, tmp_path: Path
 ) -> None:
     project = session_manager.create_project(tmp_path)
+    project.settings.name_hds = "shared-prompt"
+    project.settings.coding_agent_persistent_history = False
     first = session_manager.create_session(project_id=project.id)
     second = session_manager.create_session(project_id=project.id)
     first.settings.tool_approval_mode = "Approve All"
@@ -232,8 +234,8 @@ async def test_project_settings_update_all_chats_and_keep_local_approvals(
         dialog = ProjectSettingsDialogComponent()
         dialog.build()
         dialog.open(project.id)
-        dialog.input_hds.value = "shared-prompt"
-        dialog.switch_coding_history.value = False
+        assert not hasattr(dialog, "input_hds")
+        assert not hasattr(dialog, "switch_coding_history")
         dialog.approval_select.value = "Approve via LLM"
         await dialog._save_settings()
         assert dialog.root_label.text == str(tmp_path)
@@ -847,9 +849,9 @@ async def test_pick_folder_dialog_and_browse(
     folder.mkdir()
 
     with (
-        patch("exmekh_agent.ui.navigation.new_project_dialog.tkinter.Tk") as tk,
+        patch("exmekh_agent.ui.shared.folder_picker.tkinter.Tk") as tk,
         patch(
-            "exmekh_agent.ui.navigation.new_project_dialog.filedialog.askdirectory",
+            "exmekh_agent.ui.shared.folder_picker.filedialog.askdirectory",
             return_value=str(folder),
         ),
     ):
@@ -857,9 +859,9 @@ async def test_pick_folder_dialog_and_browse(
         tk.return_value.destroy.assert_called_once()
 
     with (
-        patch("exmekh_agent.ui.navigation.new_project_dialog.tkinter.Tk") as tk,
+        patch("exmekh_agent.ui.shared.folder_picker.tkinter.Tk") as tk,
         patch(
-            "exmekh_agent.ui.navigation.new_project_dialog.filedialog.askdirectory",
+            "exmekh_agent.ui.shared.folder_picker.filedialog.askdirectory",
             side_effect=OSError("picker failed"),
         ),
     ):

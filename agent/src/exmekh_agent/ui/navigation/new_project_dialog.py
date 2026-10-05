@@ -4,41 +4,18 @@ import asyncio
 import tkinter
 from collections.abc import Callable
 from functools import partial
-from pathlib import Path
-from tkinter import filedialog
 
 from nicegui import ui
 
-from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.models import ProjectSettings
 from exmekh_agent.state.session_manager import CODE_WORK_ROOT, session_manager
 from exmekh_agent.ui.resources import presentation_config, ui_text
 from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
 )
+from exmekh_agent.ui.shared.folder_picker import pick_folder_dialog
 
 UI_PRESENTATION = presentation_config("controls/new_project_dialog")
-
-
-def pick_folder_dialog(initial_dir: str | Path | None = None) -> str | None:
-    """Open the native picker and always release its Tk window."""
-    initial_path = Path(initial_dir).expanduser() if initial_dir else CODE_WORK_ROOT
-    if not initial_path.is_dir():
-        initial_path = initial_path.parent
-    initial_directory = str(initial_path.resolve()) if initial_path.is_dir() else None
-    root = tkinter.Tk()
-    try:
-        root.withdraw()
-        root.attributes("-topmost", True)
-        selected = filedialog.askdirectory(
-            parent=root,
-            initialdir=initial_directory,
-            title=app_text("navigation.new_project_dialog.choose_project_folder"),
-            mustexist=True,
-        )
-        return selected or None
-    finally:
-        root.destroy()
 
 
 class NewProjectDialogComponent:

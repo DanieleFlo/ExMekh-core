@@ -203,7 +203,7 @@ async def test_all_tabs_responsive_and_composer_remains_usable(output_server, vi
                     page.get_by_role("dialog").filter(has_text="Save chat agent").last
                 )
                 await chat_dialog.get_by_role(
-                    "button", name="Customize agent", exact=True
+                    "button", name="Custom", exact=True
                 ).click()
                 canvas = (
                     page.locator(".agent-designer-dialog")

@@ -1,6 +1,25 @@
 {
-  "build.classes.w_full": "w-full",
-  "build.props.outlined_dense_dark": "outlined dense dark",
-  "build.props.flat_no_caps": "flat no-caps",
-  "build.icon.account_tree": "account_tree"
+  "profiles": {
+    "generic": {
+      "icon": "smart_toy",
+      "hint": "agents.agent_selector.generic_hint"
+    },
+    "programmer": {
+      "icon": "code",
+      "hint": "agents.agent_selector.programmer_hint"
+    },
+    "creative": {
+      "icon": "palette",
+      "hint": "agents.agent_selector.creative_hint"
+    },
+    "custom": {
+      "icon": "account_tree",
+      "hint": "agents.agent_selector.custom_hint"
+    }
+  },
+  "build.classes.profile_group": "agent-profile-group w-full",
+  "build.classes.profile_option": "agent-profile-option",
+  "build.classes.profile_selected": "agent-profile-selected",
+  "build.props.profile_option": "flat no-caps",
+  "build.classes.heading": "text-base font-semibold"
 }

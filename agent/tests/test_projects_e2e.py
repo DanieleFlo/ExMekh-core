@@ -62,9 +62,9 @@ async def test_project_creation_settings_quickchats_and_deletion(
             await page.get_by_role(
                 "button", name="Project settings", exact=True
             ).last.click()
-            await page.get_by_label("System HDS Prompt Name", exact=True).fill(
-                "custom-project"
-            )
+            await expect(
+                page.get_by_label("System HDS Prompt Name", exact=True)
+            ).to_have_count(0)
             await select_approval(page, "Approve All", project_default=True)
             await page.get_by_role(
                 "button", name="Save project settings", exact=True
@@ -98,9 +98,6 @@ async def test_project_creation_settings_quickchats_and_deletion(
                 await page.get_by_label("Default bash approval").input_value()
                 == "Approve All"
             )
-            await page.get_by_label("System HDS Prompt Name", exact=True).fill(
-                "changed-project"
-            )
             await select_approval(page, "Approve via LLM", project_default=True)
             assert await page.get_by_label("Project folder", exact=True).count() == 0
             await page.get_by_role(
@@ -118,12 +115,10 @@ async def test_project_creation_settings_quickchats_and_deletion(
             await send_command(page, "Second project message")
             await wait_turn_completion(page)
             data = await read_state(projects_server)
-            assert data["calls"][-1]["name_hds"] == "changed-project"
             assert data["calls"][-1]["tool_approval_mode"] == "Approve via LLM"
             assert data["calls"][-1]["work_root"] == str(folder)
             first = next(item for item in data["sessions"] if item["id"] == first_id)
             assert first["settings"]["tool_approval_mode"] == "Manual"
-            assert first["settings"]["name_hds"] == "changed-project"
             await page.reload(wait_until="networkidle")
             await expect(project_row).to_be_visible()
             await page.screenshot(path=str(screenshots / "projects-expanded.png"))

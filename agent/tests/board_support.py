@@ -12,7 +12,7 @@ async def open_board(page, server):
     await page.goto(server, wait_until="networkidle")
     await page.get_by_role("button", name="Chat agent settings", exact=True).click()
     settings = page.get_by_role("dialog").filter(has_text="Save chat agent").last
-    await settings.get_by_role("button", name="Customize agent", exact=True).click()
+    await settings.get_by_role("button", name="Custom", exact=True).click()
     board = (
         page.locator(".agent-designer-dialog")
         .filter(has=page.locator(".agent-board-node"))

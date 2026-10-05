@@ -268,7 +268,7 @@ async def test_dialog_focus_rejected_changes_navigation_and_reopening_do_not_cor
     await expect(board).not_to_be_visible()
     await page.keyboard.press(undo_shortcut)
     settings = page.get_by_role("dialog").filter(has_text="Save chat agent").last
-    await settings.get_by_role("button", name="Customize agent", exact=True).click()
+    await settings.get_by_role("button", name="Custom", exact=True).click()
     await board.locator('[data-node="root"]').click(trial=True)
     await expect_board_snapshot(board, initial)
     await expect(board.get_by_role("button", name="Undo", exact=True)).to_be_disabled()

@@ -8,9 +8,9 @@ comportamenti incoerenti verificabili con test.
 | Componente | Responsabilità | API da usare |
 | --- | --- | --- |
 | `AgentDesign` | Struttura della lavagna e invarianti di nodi/collegamenti | `add_node`, `replace_node`, `move_node`, `connect`, `disconnect`, `remove_node`, `set_root`, `set_persistent_history`, `consolidate_capabilities`, `capability`, `children`, `connections`, `connection_targets` |
-| `CapabilityRepository` | Catalogo, copie e configurazioni su disco per ExMekh-Lib | `catalog`, `default_design`, `expand_skill_connections`, `add_to_design`, `editable_values`, `copy_for_design`, `copy_capability`, `compile` |
+| `CapabilityRepository` | Catalogo, copie e configurazioni su disco per ExMekh-Lib | `folder_reference`, `catalog`, `default_design`, `expand_skill_connections`, `add_to_design`, `editable_values`, `copy_for_design`, `copy_capability`, `compile` |
 | `CompiledAgentDesign` | Accesso alla configurazione generata | `capabilities_for`, `default_names_for`; i chiamanti non devono conoscere i file interni |
-| `ProjectSettings` / `ChatSettings` | Configurazione e risoluzione dei default/override | `with_agent`, `with_agent_override`, `with_project` |
+| `ProjectSettings` / `ChatSettings` | Configurazione e risoluzione dei default/override | `capability_paths`, `with_additional_capability_paths`, `with_agent`, `with_agent_override`, `with_project` |
 | `SessionManager` | Persistenza e aggiornamento dello stato gestito | `save_chat_agent`, `save_project_settings`, `save_project_settings_async`, `execution_settings`, `edit_message` |
 | `RecordedHistory` | Attraversamento, correlazione e ripristino delle history registrate | `scopes`, `arguments_for_call`, `output_for_call`, `restored_snapshot` |
 | `ContextUsageUpdater` | Snapshot del conteggio, coalescenza e consegna nel contesto del client | `request`, `schedule`, `wait_idle`, `close` |
@@ -24,6 +24,7 @@ comportamenti incoerenti verificabili con test.
 | `CapabilityEditor` | Form di modifica di una capability su uno snapshot indipendente | `open`, callback tipizzata; interpreta e salva tramite `CapabilityRepository` |
 | `validate_agent_design` | Validazione delle capabilities reali al confine con ExMekh-Lib | Costruzione e caricamento tramite le API pubbliche di `Node` |
 | `AgentSelector` | Scelta e personalizzazione del profilo nella UI | `set_value`, `profile`, `design_snapshot`, `apply_to`; i controlli NiceGUI restano privati |
+| `CapabilityPathsEditor` | Cartella predefinita immutabile, riferimenti aggiuntivi e navigazione fuori dal thread UI | `build`, `set_paths`, `all_paths`, `additional_paths`, `browse` |
 | `MessageEditor` | Dialog di modifica e durata degli upload temporanei | `open`, callback di salvataggio tipizzata; la chat non gestisce il ciclo di vita del form |
 | `Disclosure` / `DisclosureState` | Interazione coerente e scelte di apertura locali alla vista | Clic, Enter e Spazio, visibilità, chevron e `aria-expanded` |
 | `RecordedToolOutput` | Interpretazione dei metadati degli output registrati | `parse`; include corpo, riferimenti e thinking già interpretati |
@@ -170,13 +171,13 @@ in produzione ora usano i metodi del modello invece di ricostruirne le invariant
 
 ## Verifica
 
-`uv run pytest -n 4`: **892 passed, 40 skipped**.
+`uv run pytest -n 4`: **907 passed, 40 skipped**.
 Copertura configurata di istruzioni e rami: **100.00%**. I test con provider reale
 richiedono opt-in; i test e2e con mock sono stati eseguiti.
-La selezione live sui flussi interessati passa con **6 test**: Quick Chat,
-history multi-turno, titoli con entrambi i protocolli, approvazioni dei comandi e
-stop durante un'approvazione. Gli e2e mirati a personalizzazione, coda e modifica
-dei messaggi passano con **34 test**.
+La selezione live di questa revisione passa con **4 test**: health check,
+risposta e reasoning DeepAgent, esecuzione dei tool e history multi-turno.
+I test completi includono gli e2e su personalizzazione, coda, modifica dei messaggi,
+impostazioni su desktop e telefono e le sei sequenze complesse di Ctrl+Z / Cmd+Z.
 `uv run ruff check src tests`, `uv run ruff format --check src tests` e
 `git diff --check -- .` non segnalano errori.
 
@@ -255,3 +256,13 @@ allineamento a sinistra ed ellissi, conservando nome accessibile e tooltip compl
 Il nuovo e2e ridimensiona lo stesso editor da 1440 a 320 pixel, include il formato
 orizzontale e il ritorno al desktop, controlla sbordamenti e sovrapposizioni e
 verifica aggiunta, disconnessione e undo dopo il resize.
+
+Le impostazioni di progetto ordinano la scelta dell'agente prima delle approvazioni,
+lasciando le cartelle delle capability in una sezione espandibile. Quattro icone
+distinte espongono nomi accessibili, tooltip e lo stato di selezione; Custom apre
+direttamente il designer. Il flag di history si modifica sulla lavagna.
+Il picker nativo è condiviso tra creazione del progetto e cartelle delle capability;
+la validazione del riferimento appartiene a CapabilityRepository. ProjectSettings
+risolve la lista ordinata e senza duplicati per runtime, catalogo, prompt e conteggio.
+I nuovi e2e verificano il percorso completo su desktop e telefono, inclusi
+annullamento, duplicati, rimozione, salvataggio, esecuzione e refresh.

@@ -269,7 +269,9 @@ async def test_global_and_project_settings_with_delete_confirmation(
         proj = card.locator("xpath=ancestor::*[contains(@class, 'sidebar-project')]")
         await proj.get_by_role("button", name="Project actions", exact=True).click()
         await page.get_by_text("Project settings", exact=True).click()
-        await page.get_by_label("System HDS Prompt Name").wait_for(state="visible")
+        await page.get_by_role("group", name="Agent type", exact=True).wait_for(
+            state="visible"
+        )
         await page.wait_for_timeout(350)
         await page.screenshot(
             path=str(

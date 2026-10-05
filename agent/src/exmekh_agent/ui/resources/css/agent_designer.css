@@ -55,3 +55,10 @@
     .agent-designer-shell { padding: 10px; gap: 6px; }
     .agent-board-html { height: 300px; }
 }
+
+.agent-profile-group { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.agent-profile-option { min-width: 0; min-height: 60px; border: 1px solid #3f3f46; border-radius: 10px; color: #a1a1aa; background: #18181b; }
+.agent-profile-option .q-icon { font-size: 30px; }
+.agent-profile-option.agent-profile-selected { border-color: #38bdf8; color: #38bdf8; background: #082f49; box-shadow: inset 0 0 0 1px #38bdf8; }
+.agent-profile-option:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+.capability-path-row { min-width: 0; }

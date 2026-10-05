@@ -19,8 +19,7 @@ def design_server():
 
 
 async def choose_agent(dialog, page, name: str):
-    await dialog.get_by_label("Agent type", exact=True).click()
-    await page.get_by_role("option", name=name, exact=True).click()
+    await dialog.get_by_role("button", name=name, exact=True).click()
 
 
 async def test_project_profile_chat_override_and_custom_canvas_mock_request(
@@ -45,7 +44,7 @@ async def test_project_profile_chat_override_and_custom_canvas_mock_request(
             )
             await expect(dialog.get_by_label("Agent type", exact=True)).to_have_count(0)
             await expect(
-                dialog.get_by_role("button", name="Customize agent", exact=True)
+                dialog.get_by_role("button", name="Custom", exact=True)
             ).to_have_count(0)
             await dialog.get_by_role(
                 "button", name="Project settings", exact=True
@@ -54,12 +53,10 @@ async def test_project_profile_chat_override_and_custom_canvas_mock_request(
                 page.get_by_role("dialog").filter(has_text="Save project settings").last
             )
             await expect(
-                project_settings.get_by_label("Agent type", exact=True)
-            ).to_have_value("Generic")
+                project_settings.get_by_role("button", name="Generic", exact=True)
+            ).to_have_attribute("aria-pressed", "true")
             await expect(
-                project_settings.get_by_role(
-                    "button", name="Customize agent", exact=True
-                )
+                project_settings.get_by_role("button", name="Custom", exact=True)
             ).to_be_visible()
             await choose_agent(project_settings, page, "Programmer")
             await project_settings.get_by_role(
@@ -71,8 +68,8 @@ async def test_project_profile_chat_override_and_custom_canvas_mock_request(
                 "button", name="Project settings", exact=True
             ).click()
             await expect(
-                project_settings.get_by_label("Agent type", exact=True)
-            ).to_have_value("Programmer")
+                project_settings.get_by_role("button", name="Programmer", exact=True)
+            ).to_have_attribute("aria-pressed", "true")
             await project_settings.get_by_role(
                 "button", name="Save project settings", exact=True
             ).click()
@@ -116,8 +113,8 @@ async def test_project_profile_chat_override_and_custom_canvas_mock_request(
                 page.get_by_role("dialog").filter(has_text="Save chat agent").last
             )
             await expect(
-                chat_dialog.get_by_label("Agent type", exact=True)
-            ).to_have_value("Programmer")
+                chat_dialog.get_by_role("button", name="Programmer", exact=True)
+            ).to_have_attribute("aria-pressed", "true")
             await choose_agent(chat_dialog, page, "Custom")
             cancelled_canvas = (
                 page.locator(".agent-designer-dialog")
@@ -130,11 +127,9 @@ async def test_project_profile_chat_override_and_custom_canvas_mock_request(
             ).click()
             await expect(cancelled_canvas).not_to_be_visible()
             await expect(
-                chat_dialog.get_by_label("Agent type", exact=True)
-            ).to_have_value("Programmer")
-            await chat_dialog.get_by_role(
-                "button", name="Customize agent", exact=True
-            ).click()
+                chat_dialog.get_by_role("button", name="Programmer", exact=True)
+            ).to_have_attribute("aria-pressed", "true")
+            await chat_dialog.get_by_role("button", name="Custom", exact=True).click()
             canvas = (
                 page.locator(".agent-designer-dialog")
                 .filter(has=page.locator(".agent-board-node"))
@@ -263,9 +258,7 @@ async def test_skill_editor_separates_yaml_and_shows_nested_connections(
             settings = (
                 page.get_by_role("dialog").filter(has_text="Save chat agent").last
             )
-            await settings.get_by_role(
-                "button", name="Customize agent", exact=True
-            ).click()
+            await settings.get_by_role("button", name="Custom", exact=True).click()
             canvas = (
                 page.locator(".agent-designer-dialog")
                 .filter(has=page.locator(".agent-board-node"))
@@ -389,9 +382,7 @@ async def test_skill_editor_separates_yaml_and_shows_nested_connections(
             settings = (
                 page.get_by_role("dialog").filter(has_text="Save chat agent").last
             )
-            await settings.get_by_role(
-                "button", name="Customize agent", exact=True
-            ).click()
+            await settings.get_by_role("button", name="Custom", exact=True).click()
             canvas = (
                 page.locator(".agent-designer-dialog")
                 .filter(has=page.locator(".agent-board-node"))

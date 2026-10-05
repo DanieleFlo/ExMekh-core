@@ -29,9 +29,7 @@ async def test_designer_resizes_without_losing_catalog_or_wrapping_connections(
             settings = (
                 page.get_by_role("dialog").filter(has_text="Save chat agent").last
             )
-            await settings.get_by_role(
-                "button", name="Customize agent", exact=True
-            ).click()
+            await settings.get_by_role("button", name="Custom", exact=True).click()
             canvas = (
                 page.locator(".agent-designer-dialog")
                 .filter(has=page.locator(".agent-board-node"))

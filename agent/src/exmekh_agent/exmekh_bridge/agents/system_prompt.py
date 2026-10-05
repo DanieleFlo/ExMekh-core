@@ -14,17 +14,23 @@ def load_real_hds_system_prompt(
     capabilities_path_str: str = "",
     name_hds: str = "main",
     is_sub_agent: bool = False,
+    capability_paths: tuple[str, ...] | None = None,
 ) -> str:
     """Load the system prompt constructed from the selected HDS capabilities."""
     work_dir = Path(config.work_root)
     target = (name_hds or "main").strip("/").split("/")[-1] or "main"
     capabilities_dir = Path(capabilities_path_str or config.capabilities_path)
+    selected_paths = (
+        [Path(path) for path in capability_paths]
+        if capability_paths
+        else [capabilities_dir]
+    )
     fallback_dir = Path(__file__).resolve().parents[2] / "capabilities"
 
     candidates: list[tuple[list[Path], DefaultCapabilities | None, str]] = [
-        ([capabilities_dir], None, target),
+        (selected_paths, None, target),
         ([fallback_dir], DefaultCapabilities(), target),
-        ([capabilities_dir], None, "main"),
+        (selected_paths, None, "main"),
     ]
     for paths, defaults, hds_name in candidates:
         try:

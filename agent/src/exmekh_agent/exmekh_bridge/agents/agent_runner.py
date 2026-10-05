@@ -122,6 +122,7 @@ def execute_agent_turn_sync(
     image_urls: list[str] | None = None,
     agent_profile: str = "generic",
     agent_design: AgentDesign | None = None,
+    capabilities_paths: list[str] | None = None,
 ) -> str:
     """Run one complete provider request without overlapping another request."""
     with _provider_request_lock:
@@ -160,6 +161,7 @@ def execute_agent_turn_sync(
             image_urls=image_urls,
             agent_profile=agent_profile,
             agent_design=agent_design,
+            capabilities_paths=capabilities_paths,
         )
 
 
@@ -197,6 +199,7 @@ def _execute_agent_turn_sync_unlocked(
     image_urls: list[str] | None = None,
     agent_profile: str = "generic",
     agent_design: AgentDesign | None = None,
+    capabilities_paths: list[str] | None = None,
 ) -> str:
     """Synchronous execution of a turn using exmekh_lib, dispatched in background thread."""
     content = user_content(user_prompt, image_urls or [])
@@ -252,10 +255,15 @@ def _execute_agent_turn_sync_unlocked(
         )
         approval_tool_hooks = {"bash": ToolHooks(before=approval_hook)}
         cap_path = Path(capabilities_path_str or config.capabilities_path)
+        cap_paths = (
+            [Path(path) for path in capabilities_paths]
+            if capabilities_paths
+            else [cap_path]
+        )
         event_router = SubAgentEventRouter(on_sub_agent_event)
         if agent_design is not None or agent_profile != "generic":
             design = agent_design or CapabilityRepository().default_design(
-                agent_profile, [str(cap_path)]
+                agent_profile, [str(path) for path in cap_paths]
             )
             root_node, children = build_designed_agent(
                 design, event_router, approval_tool_hooks, agent_context_id
@@ -266,7 +274,9 @@ def _execute_agent_turn_sync_unlocked(
             )
             root_name = name_hds or "main"
             children: list[ObservedNode] = []
-            if cap_path.resolve() == default_caps.capabilities_path.resolve():
+            if default_caps.capabilities_path.resolve() in {
+                path.resolve() for path in cap_paths
+            }:
                 children.append(
                     ObservedNode(
                         name_hds="mock-sub-agent",
@@ -290,7 +300,7 @@ def _execute_agent_turn_sync_unlocked(
                 )
             )
             root_node = Node(
-                capabilities_paths=[cap_path],
+                capabilities_paths=cap_paths,
                 children=children,
                 name_hds=root_name,
                 agent_context_id=agent_context_id,
@@ -470,6 +480,7 @@ async def run_agent_turn(
             name_hds=settings.name_hds or config.name_hds,
             agent_profile=settings.agent_profile,
             agent_design=settings.agent_design,
+            capabilities_paths=settings.capability_paths(config.capabilities_path),
             on_token=on_token,
             on_reasoning=on_reasoning,
             on_tool_event=on_tool_event,

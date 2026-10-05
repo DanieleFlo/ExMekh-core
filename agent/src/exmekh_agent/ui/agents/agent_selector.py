@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
+from functools import partial
 from typing import TypeVar
 
 from nicegui import ui
@@ -23,9 +24,8 @@ class AgentSelector:
         self._paths = paths
         self._profile: AgentProfile = "generic"
         self._design: AgentDesign | None = None
-        self._loading = False
         self._designer = AgentDesigner()
-        self._select: ui.select | None = None
+        self._buttons: dict[AgentProfile, ui.button] = {}
 
     @property
     def profile(self) -> AgentProfile:
@@ -39,23 +39,29 @@ class AgentSelector:
 
     def build(self) -> None:
         self._designer.build()
-        self._select = (
-            ui.select(
-                AGENT_PROFILES,
-                value=self._profile,
-                label=ui_text("agents.agent_selector.agent_type"),
-                on_change=self._changed,
+        ui.label(ui_text("agents.agent_selector.agent_type")).classes(
+            UI_PRESENTATION["build.classes.heading"]
+        )
+        with (
+            ui.row()
+            .classes(UI_PRESENTATION["build.classes.profile_group"])
+            .props(
+                f'role=group aria-label="{ui_text("agents.agent_selector.agent_type")}"'
             )
-            .props(UI_PRESENTATION["build.props.outlined_dense_dark"])
-            .classes(UI_PRESENTATION["build.classes.w_full"])
-        )
-        ui.button(
-            ui_text("agents.agent_selector.customize_agent"),
-            icon=UI_PRESENTATION["build.icon.account_tree"],
-            on_click=self.customize,
-        ).props(UI_PRESENTATION["build.props.flat_no_caps"]).classes(
-            UI_PRESENTATION["build.classes.w_full"]
-        )
+        ):
+            for profile, label in AGENT_PROFILES.items():
+                presentation = UI_PRESENTATION["profiles"][profile]
+                self._buttons[profile] = (
+                    ui.button(
+                        icon=presentation["icon"],
+                        on_click=partial(self._choose_profile, profile),
+                    )
+                    .props(UI_PRESENTATION["build.props.profile_option"])
+                    .props(f'aria-label="{label}"')
+                    .classes(UI_PRESENTATION["build.classes.profile_option"])
+                    .tooltip(ui_text(presentation["hint"]))
+                )
+        self._restore_selection()
 
     def set_value(self, profile: AgentProfile, design: AgentDesign | None) -> None:
         self._profile = profile
@@ -63,22 +69,21 @@ class AgentSelector:
         self._restore_selection()
 
     def _restore_selection(self) -> None:
-        if self._select is None:
-            return
-        self._loading = True
-        try:
-            self._select.value = self.profile
-        finally:
-            self._loading = False
+        for profile, button in self._buttons.items():
+            selected = profile == self.profile
+            button.props(f"aria-pressed={str(selected).lower()}")
+            if selected:
+                button.classes(add=UI_PRESENTATION["build.classes.profile_selected"])
+            else:
+                button.classes(remove=UI_PRESENTATION["build.classes.profile_selected"])
 
-    def _changed(self, event) -> Awaitable[None] | None:
-        if self._loading:
-            return
-        if event.value == "custom":
-            return self.customize()
+    async def _choose_profile(self, profile: AgentProfile) -> None:
+        if profile == "custom":
+            await self.customize()
         else:
-            self._profile = event.value
+            self._profile = profile
             self._design = None
+            self._restore_selection()
 
     async def customize(self) -> None:
         await self._designer.open(

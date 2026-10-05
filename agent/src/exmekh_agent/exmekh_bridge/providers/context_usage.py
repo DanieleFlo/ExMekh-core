@@ -374,6 +374,9 @@ def _resolve_system_prompt_for_session(
     if session.agent_mode == "deep_agent":
         hds_prompt = load_real_hds_system_prompt(
             capabilities_path_str=session.settings.capabilities_path or "",
+            capability_paths=tuple(
+                session.settings.capability_paths(config.capabilities_path)
+            ),
             name_hds=session.settings.name_hds or "main",
             is_sub_agent=False,
         )

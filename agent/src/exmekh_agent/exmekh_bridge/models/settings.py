@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from exmekh_agent.config.approvals import DEFAULT_TOOL_APPROVAL_MODE
 from exmekh_agent.exmekh_bridge.tools.tool_approval import normalize_tool_approval_mode
 from exmekh_agent.state.agent_design import AgentDesign, AgentProfile
+from exmekh_agent.utils.paths import normalize_paths
 
 
 class ProjectSettings(BaseModel):
@@ -21,6 +22,7 @@ class ProjectSettings(BaseModel):
     agent_design: AgentDesign | None = None
     name_hds: str | None = None
     capabilities_path: str | None = None
+    additional_capabilities_paths: list[str] = Field(default_factory=list)
     coding_agent_persistent_history: bool | None = None
     tool_approval_mode: str = DEFAULT_TOOL_APPROVAL_MODE
 
@@ -32,6 +34,31 @@ class ProjectSettings(BaseModel):
                 "agent_profile": profile,
                 "agent_design": design.model_dump() if design else None,
             }
+        )
+
+    def capability_paths(self, default_path: str | Path) -> list[str]:
+        """Keep the default library first and include legacy and additional folders."""
+        return normalize_paths(
+            [
+                default_path,
+                *([self.capabilities_path] if self.capabilities_path else []),
+                *self.additional_capabilities_paths,
+            ]
+        )
+
+    def with_additional_capability_paths(
+        self, paths: list[str], default_path: str | Path
+    ) -> Self:
+        """Store extra references while migrating the former single-folder override."""
+        default = normalize_paths([default_path])[0]
+        return self.model_copy(
+            deep=True,
+            update={
+                "capabilities_path": None,
+                "additional_capabilities_paths": [
+                    path for path in normalize_paths(paths) if path != default
+                ],
+            },
         )
 
     def migrate_legacy_capabilities_path(self) -> bool:
@@ -74,6 +101,9 @@ class ChatSettings(ProjectSettings):
             update={
                 "name_hds": project.settings.name_hds,
                 "capabilities_path": project.settings.capabilities_path,
+                "additional_capabilities_paths": list(
+                    project.settings.additional_capabilities_paths
+                ),
                 "coding_agent_persistent_history": project.settings.coding_agent_persistent_history,
                 "work_root": project.work_root,
             }

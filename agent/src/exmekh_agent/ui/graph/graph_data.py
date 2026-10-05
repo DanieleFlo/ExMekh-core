@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from exmekh_agent.config import config
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
@@ -681,6 +682,7 @@ def _extract_real_system_prompt_event(
     fallback_raw_history: list[dict[str, Any]] | None = None,
     explicit_system_prompt: str = "",
     capabilities_path_str: str = "",
+    capability_paths: tuple[str, ...] | None = None,
     name_hds: str = "main",
     is_sub_agent: bool = False,
 ) -> dict[str, Any] | None:
@@ -726,6 +728,7 @@ def _extract_real_system_prompt_event(
 
     real_hds_prompt = load_real_hds_system_prompt(
         capabilities_path_str=capabilities_path_str,
+        capability_paths=capability_paths,
         name_hds=name_hds,
         is_sub_agent=is_sub_agent,
     )
@@ -748,6 +751,7 @@ def _build_nodes_for_messages(
     history_label: str,
     system_prompt: str = "",
     capabilities_path_str: str = "",
+    capability_paths: tuple[str, ...] | None = None,
     name_hds: str = "main",
     fallback_raw_history: list[dict[str, Any]] | None = None,
     is_sub_agent: bool = False,
@@ -765,6 +769,7 @@ def _build_nodes_for_messages(
             fallback_raw_history=fallback_raw_history,
             explicit_system_prompt=system_prompt,
             capabilities_path_str=capabilities_path_str,
+            capability_paths=capability_paths,
             name_hds=name_hds,
             is_sub_agent=is_sub_agent,
         )
@@ -1415,6 +1420,9 @@ def build_graph_data_from_session(
         history_label=ui_text("graph.graph_data.main_history"),
         system_prompt=session.system_prompt,
         capabilities_path_str=session.settings.capabilities_path,
+        capability_paths=tuple(
+            session.settings.capability_paths(config.capabilities_path)
+        ),
         name_hds=session.settings.name_hds or "main",
         is_sub_agent=False,
     )
@@ -1449,6 +1457,9 @@ def build_graph_data_from_session(
             history_id=sub_conv.id,
             history_label=sub_label,
             capabilities_path_str=session.settings.capabilities_path,
+            capability_paths=tuple(
+                session.settings.capability_paths(config.capabilities_path)
+            ),
             name_hds=sub_conv.path,
             fallback_raw_history=list(sub_conv.raw_history),
             is_sub_agent=True,

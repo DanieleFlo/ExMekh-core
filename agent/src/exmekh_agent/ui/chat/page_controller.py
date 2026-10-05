@@ -423,7 +423,7 @@ class ChatPageController:
                 UI_PRESENTATION["open_chat_agent_settings.classes.text_lg"]
             )
             selector = AgentSelector(
-                lambda: [settings.capabilities_path or config.capabilities_path]
+                lambda: settings.capability_paths(config.capabilities_path)
             )
             selector.build()
             selector.set_value(settings.agent_profile, settings.agent_design)

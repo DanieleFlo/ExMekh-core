@@ -9,6 +9,7 @@ from markupsafe import Markup
 from nicegui import ui
 
 import exmekh_agent.exmekh_bridge.providers.context_usage as context_usage
+from exmekh_agent.config import config
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
@@ -55,6 +56,9 @@ def build_raw_history_from_session(
         if session.agent_mode == "deep_agent":
             default_sys_prompt = load_real_hds_system_prompt(
                 capabilities_path_str=session.settings.capabilities_path,
+                capability_paths=tuple(
+                    session.settings.capability_paths(config.capabilities_path)
+                ),
                 name_hds=session.settings.name_hds or "main",
                 is_sub_agent=False,
             )

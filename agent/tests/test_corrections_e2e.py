@@ -103,9 +103,7 @@ async def test_board_pan_controls_drag_and_rerender_preserve_node_positions(
             settings = (
                 page.get_by_role("dialog").filter(has_text="Save chat agent").last
             )
-            await settings.get_by_role(
-                "button", name="Customize agent", exact=True
-            ).click()
+            await settings.get_by_role("button", name="Custom", exact=True).click()
             canvas = (
                 page.locator(".agent-designer-dialog")
                 .filter(has=page.locator(".agent-board-node"))

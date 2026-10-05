@@ -10,6 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import yaml
+from exmekh_lib.config.capabilities import CAPABILITY_FORMAT
 from exmekh_lib.core.agents.capabilities.defaults import (
     HARNESS_NAMES,
     MOCK_NAMES,
@@ -58,6 +59,21 @@ class CapabilityRepository:
     def __init__(self, data_dir: Path | None = None) -> None:
         self._data_dir = data_dir or config.data_dir
         self._library_path = DefaultCapabilities().capabilities_path
+
+    @staticmethod
+    def folder_reference(path: str) -> str:
+        """Resolve a capabilities folder, accepting its parent project folder."""
+        folder = Path(path).expanduser().resolve()
+        if folder.name != CAPABILITY_FORMAT.root_folder:
+            folder = folder / CAPABILITY_FORMAT.root_folder
+        if not folder.is_dir():
+            raise ValueError(
+                app_text(
+                    "agents.capability_editor.invalid_folder_reference",
+                    name=CAPABILITY_FORMAT.root_folder,
+                )
+            )
+        return str(folder)
 
     def catalog(self, paths: list[str] | None = None) -> list[DesignNode]:
         roots = [

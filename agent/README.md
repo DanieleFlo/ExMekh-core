@@ -21,7 +21,7 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
 
 - **Editable messages**: change text, remove original attachments, and upload new files before regenerating a response. Cancel keeps the original message and attachments. Saving discards subsequent conversation history and restarts the turn.
 - **Agent profiles and visual customization**:
-  - Choose Generic, Programmer, Creative, or Custom when creating a project. Chat agent settings override the project profile only for that conversation; new chats inherit the project default.
+  - Choose Generic, Programmer, Creative, or Custom through four icon buttons in Project settings. The Custom icon opens the visual editor; tooltips and accessible names explain each profile. Chat agent settings override the project profile only for that conversation; new chats inherit the project default.
   - Customize a profile on a draggable canvas. Purple connections represent HDS sub-agents, while blue and green connections assign skills and tools to an HDS or skill. Dashed connections show skill dependencies, including nested skills and shared tools. Select cards to connect, disconnect, remove, choose the root, or configure sub-agent history. Connect to lists only valid new connections. Lines follow nodes during dragging; arrow controls pan smoothly in small steps. Undo or Ctrl+Z / Cmd+Z restores every board edit while text fields keep their native undo.
   - The palette includes bundled resources and capabilities discovered in the configured project paths. Create HDS instructions or edit a capability as a named copy; library originals remain available. Skill and HDS editors separate the description from the instructions and hide the YAML front matter. Sub-skills and sub-tools are read-only in the editor and generated from the canvas connections when saving and running the agent. Copies live under `data/agent-capabilities/`, and generated runtime configurations under `data/agent-designs/`.
   - Deep Thinking retains provider thinking in direct tool output headers, up to 200 tokens before summarizing. A renamed copy follows ordinary skill behavior; the editor explains this distinction.
@@ -34,7 +34,8 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - Project conversations automatically use **DeepAgent**; standalone **Quick Chats** use the typed client without skills or tools.
 - **Projects and Quick Chats**:
   - Projects are named after their selected work folder. The folder is fixed after creation.
-  - Shared HDS, capabilities, coding-agent history, and default bash approval settings open beside each project name.
+  - Project settings prioritize agent selection, then default bash approvals. The less frequently changed capabilities folders stay in a collapsed section. Sub-agent history is configured on the agent canvas.
+  - The default capabilities folder is always included and read-only. Add extra folders with the native folder picker (select a `capabilities` folder or its containing project), remove them independently, and reuse them across project chats. Duplicate references are ignored; saved legacy single-folder overrides are retained as additional folders.
   - Bash approval changes inside a chat stay local; the project default applies to newly created conversations.
   - Persistent chat history lives under `data/chats/`, and project settings under `data/projects/`.
   - Temporary uploads and pasted files use `<work_root>/tmp/projects/<project_id>/`; Quick Chats use the frontend code folder and `tmp/quickchats/`.

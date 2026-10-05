@@ -294,9 +294,9 @@ async def test_folder_picker_failure_is_reported_and_cancellation_preserves_inpu
                 await dialog.browse()
             assert dialog.folder_input.value == "original"
             with (
-                patch("exmekh_agent.ui.navigation.new_project_dialog.tkinter.Tk"),
+                patch("exmekh_agent.ui.shared.folder_picker.tkinter.Tk"),
                 patch(
-                    "exmekh_agent.ui.navigation.new_project_dialog.filedialog.askdirectory",
+                    "exmekh_agent.ui.shared.folder_picker.filedialog.askdirectory",
                     return_value="",
                 ),
             ):
