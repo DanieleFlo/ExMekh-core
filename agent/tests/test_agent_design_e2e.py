@@ -43,7 +43,41 @@ async def test_project_profile_chat_override_and_custom_canvas_mock_request(
             await dialog.get_by_label("Project folder", exact=True).fill(
                 str(project_folder)
             )
-            await choose_agent(dialog, page, "Programmer")
+            await expect(dialog.get_by_label("Agent type", exact=True)).to_have_count(0)
+            await expect(
+                dialog.get_by_role("button", name="Customize agent", exact=True)
+            ).to_have_count(0)
+            await dialog.get_by_role(
+                "button", name="Project settings", exact=True
+            ).click()
+            project_settings = (
+                page.get_by_role("dialog").filter(has_text="Save project settings").last
+            )
+            await expect(
+                project_settings.get_by_label("Agent type", exact=True)
+            ).to_have_value("Generic")
+            await expect(
+                project_settings.get_by_role(
+                    "button", name="Customize agent", exact=True
+                )
+            ).to_be_visible()
+            await choose_agent(project_settings, page, "Programmer")
+            await project_settings.get_by_role(
+                "button", name="Save project settings", exact=True
+            ).click()
+            await expect(project_settings).not_to_be_visible()
+            # Reopening settings retains the draft without a second selector overwriting it.
+            await dialog.get_by_role(
+                "button", name="Project settings", exact=True
+            ).click()
+            await expect(
+                project_settings.get_by_label("Agent type", exact=True)
+            ).to_have_value("Programmer")
+            await project_settings.get_by_role(
+                "button", name="Save project settings", exact=True
+            ).click()
+            await expect(project_settings).not_to_be_visible()
+            await expect(dialog.get_by_label("Agent type", exact=True)).to_have_count(0)
             await dialog.get_by_role(
                 "button", name="Create project", exact=True
             ).click()

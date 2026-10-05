@@ -9,11 +9,9 @@ from tkinter import filedialog
 
 from nicegui import ui
 
-from exmekh_agent.config import config
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.models import ProjectSettings
 from exmekh_agent.state.session_manager import CODE_WORK_ROOT, session_manager
-from exmekh_agent.ui.agents.agent_selector import AgentSelector
 from exmekh_agent.ui.resources import presentation_config, ui_text
 from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
@@ -52,9 +50,6 @@ class NewProjectDialogComponent:
         self.on_created = on_created
         self.settings_dialog = settings_dialog
         self.settings = ProjectSettings()
-        self.agent_selector = AgentSelector(
-            lambda: [self.settings.capabilities_path or config.capabilities_path]
-        )
         self.dialog: ui.dialog | None = None
         self.folder_input: ui.input | None = None
         self.create_button: ui.button | None = None
@@ -89,7 +84,6 @@ class NewProjectDialogComponent:
                     "navigation.new_project_dialog.the_project_uses_the_folder_name_its"
                 )
             ).classes(UI_PRESENTATION["build.classes.text_xs_text_zinc_400"])
-            self.agent_selector.build()
             ui.button(
                 ui_text("navigation.new_project_dialog.project_settings"),
                 icon=UI_PRESENTATION["build.icon.settings"],
@@ -107,19 +101,16 @@ class NewProjectDialogComponent:
 
     def open(self) -> None:
         self.settings = ProjectSettings()
-        self.agent_selector.set_value("generic", None)
         self.folder_input.value = str(CODE_WORK_ROOT)
         self.dialog.open()
 
     def open_settings(self) -> None:
-        self.settings = self.agent_selector.apply_to(self.settings)
         self.settings_dialog.open_draft(
             self.settings, self.folder_input.value, self._set_settings
         )
 
     def _set_settings(self, settings: ProjectSettings) -> None:
         self.settings = settings
-        self.agent_selector.set_value(settings.agent_profile, settings.agent_design)
 
     async def browse(self) -> None:
         client = ui.context.client
@@ -144,7 +135,6 @@ class NewProjectDialogComponent:
 
     async def create(self) -> None:
         client = ui.context.client
-        self.settings = self.agent_selector.apply_to(self.settings)
         self.create_button.props(UI_PRESENTATION["create.props.loading"])
         try:
             project = await asyncio.get_running_loop().run_in_executor(
