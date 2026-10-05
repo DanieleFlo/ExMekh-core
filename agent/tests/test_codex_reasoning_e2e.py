@@ -14,7 +14,7 @@ from exmekh_agent.exmekh_bridge.models import (
     SkillNode,
     ToolEvent,
 )
-from exmekh_agent.ui.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from tests.browser_support import BrowserTestServer, get_edge_executable
 
 

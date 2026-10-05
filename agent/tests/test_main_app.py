@@ -8,11 +8,11 @@ import pytest
 from nicegui.client import Client
 from nicegui.page import page
 
-from exmekh_agent.exmekh_bridge.context_usage import ContextUsageSummary
 from exmekh_agent.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
+from exmekh_agent.exmekh_bridge.providers.context_usage import ContextUsageSummary
 from exmekh_agent.main import index_page, main, run
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui.page_controller import ChatPageController
+from exmekh_agent.ui.chat.page_controller import ChatPageController
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ async def test_index_page_lifecycle_and_callbacks(app_client: Client) -> None:
             return "Final output text"
 
         with patch(
-            "exmekh_agent.ui.page_controller.run_agent_turn",
+            "exmekh_agent.ui.chat.page_controller.run_agent_turn",
             side_effect=fake_run_agent,
         ):
             # 1. Build index page
@@ -71,11 +71,17 @@ async def test_index_page_full_flow(app_client: Client) -> None:
     handlers = {}
 
     with (
-        patch("exmekh_agent.ui.page_controller.HeaderComponent") as mock_hdr_cls,
-        patch("exmekh_agent.ui.page_controller.SidebarComponent") as mock_sidebar_cls,
-        patch("exmekh_agent.ui.page_controller.InputBarComponent") as mock_input_cls,
-        patch("exmekh_agent.ui.page_controller.ChatViewComponent") as mock_cv_cls,
-        patch("exmekh_agent.ui.page_controller.SettingsDrawerComponent") as mock_sd_cls,
+        patch("exmekh_agent.ui.chat.page_controller.HeaderComponent") as mock_hdr_cls,
+        patch(
+            "exmekh_agent.ui.chat.page_controller.SidebarComponent"
+        ) as mock_sidebar_cls,
+        patch(
+            "exmekh_agent.ui.chat.page_controller.InputBarComponent"
+        ) as mock_input_cls,
+        patch("exmekh_agent.ui.chat.page_controller.ChatViewComponent") as mock_cv_cls,
+        patch(
+            "exmekh_agent.ui.chat.page_controller.SettingsDrawerComponent"
+        ) as mock_sd_cls,
     ):
 
         def capture_hdr(**kwargs):
@@ -151,11 +157,11 @@ async def test_index_page_full_flow(app_client: Client) -> None:
 
             with (
                 patch(
-                    "exmekh_agent.ui.page_controller.run_agent_turn",
+                    "exmekh_agent.ui.chat.page_controller.run_agent_turn",
                     side_effect=fake_run_turn_success,
                 ),
                 patch(
-                    "exmekh_agent.ui.page_controller.generate_chat_title",
+                    "exmekh_agent.ui.chat.page_controller.generate_chat_title",
                     new_callable=AsyncMock,
                     return_value="",
                 ),
@@ -182,7 +188,7 @@ async def test_index_page_full_flow(app_client: Client) -> None:
                 raise ConnectionError("Provider server offline")
 
             with patch(
-                "exmekh_agent.ui.page_controller.run_agent_turn",
+                "exmekh_agent.ui.chat.page_controller.run_agent_turn",
                 side_effect=fake_run_turn_error,
             ):
                 handlers["send"]("Error prompt")
@@ -200,7 +206,7 @@ async def test_index_page_full_flow(app_client: Client) -> None:
                 return "slow"
 
             with patch(
-                "exmekh_agent.ui.page_controller.run_agent_turn",
+                "exmekh_agent.ui.chat.page_controller.run_agent_turn",
                 side_effect=slow_turn,
             ) as slow_mock:
                 handlers["send"]("Slow prompt")
@@ -247,12 +253,11 @@ async def test_context_usage_is_counted_off_the_ui_thread(app_client: Client) ->
         return ContextUsageSummary("test-model", 12, 100, estimated=True)
 
     with patch(
-        "exmekh_agent.ui.page_controller.compute_session_context_usage",
+        "exmekh_agent.ui.chat.context_updates.compute_session_context_usage",
         side_effect=count_context,
     ):
         controller.update_context_usage()
-        assert controller._context_update_task is not None
-        await controller._context_update_task
+        await controller._context_updates.wait_idle()
 
     assert calculation_threads and calculation_threads[0] != ui_thread
     controller.input_bar.update_context_info.assert_called_once_with(
@@ -287,7 +292,7 @@ async def test_stream_view_updates_run_on_client_event_loop(app_client: Client) 
         return "worker token"
 
     with patch(
-        "exmekh_agent.ui.page_controller.run_agent_turn", side_effect=run_in_worker
+        "exmekh_agent.ui.chat.page_controller.run_agent_turn", side_effect=run_in_worker
     ):
         await controller.send("test")
         await asyncio.wait_for(update_received.wait(), timeout=3)

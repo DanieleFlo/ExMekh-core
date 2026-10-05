@@ -7,13 +7,13 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from exmekh_agent.exmekh_bridge.pasted_input import (
+from exmekh_agent.exmekh_bridge.history.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
 )
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.state.temp_storage import TempStorage
-from exmekh_agent.ui.file_upload import upload_router
+from exmekh_agent.ui.shared.file_upload import upload_router
 
 
 def test_binary_attachment_retains_bytes_and_extension_across_work_roots(

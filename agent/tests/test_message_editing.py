@@ -9,8 +9,14 @@ import pytest
 from nicegui.client import Client
 from nicegui.page import page
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.message_edit import prepare_message_edit
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.history.message_edit import prepare_message_edit
+from exmekh_agent.exmekh_bridge.history.pasted_input import (
+    PreparedUserInput,
+    create_staged_attachment_from_file,
+    format_user_input_file_xml,
+    prepare_user_input,
+)
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -18,18 +24,12 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from exmekh_agent.exmekh_bridge.pasted_input import (
-    PreparedUserInput,
-    create_staged_attachment_from_file,
-    format_user_input_file_xml,
-    prepare_user_input,
-)
 from exmekh_agent.state.active_turns import ActiveTurnRegistry, active_turns
 from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.state.temp_storage import TempStorage
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.page_controller import ChatPageController
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.chat.page_controller import ChatPageController
 
 
 def test_rewrite_persists_only_the_retained_branch_and_child_history(tmp_path: Path):
@@ -246,8 +246,10 @@ async def test_controller_edits_and_regenerates_without_stale_events(running: bo
         controller.input_bar.build()
     try:
         with (
-            patch("exmekh_agent.ui.page_controller.run_agent_turn", side_effect=run),
-            patch("exmekh_agent.ui.page_controller.ui.notify"),
+            patch(
+                "exmekh_agent.ui.chat.page_controller.run_agent_turn", side_effect=run
+            ),
+            patch("exmekh_agent.ui.chat.page_controller.ui.notify"),
         ):
             controller._send_prepared(
                 session, PreparedUserInput("Old prompt", None, "Old prompt")
@@ -299,12 +301,12 @@ async def test_controller_rejects_missing_empty_or_unsavable_edits():
     user = ChatMessage(role="user", content="Original")
     session.messages = [user]
     try:
-        with patch("exmekh_agent.ui.page_controller.ui.notify"):
+        with patch("exmekh_agent.ui.chat.page_controller.ui.notify"):
             assert not await controller.edit_message("missing", user.id, "Changed")
             assert not await controller.edit_message(session.id, "missing", "Changed")
             assert not await controller.edit_message(session.id, user.id, " ")
             with patch(
-                "exmekh_agent.ui.page_controller.prepare_message_edit",
+                "exmekh_agent.ui.chat.page_controller.prepare_message_edit",
                 side_effect=ValueError("Invalid file"),
             ):
                 assert not await controller.edit_message(session.id, user.id, "Changed")
@@ -336,7 +338,9 @@ async def test_simultaneous_edits_serialize_their_turn_replacement():
         return "Reply: " + kwargs["user_prompt"]
 
     try:
-        with patch("exmekh_agent.ui.page_controller.run_agent_turn", side_effect=run):
+        with patch(
+            "exmekh_agent.ui.chat.page_controller.run_agent_turn", side_effect=run
+        ):
             assert await asyncio.gather(
                 controller.edit_message(session.id, user.id, "First edit"),
                 controller.edit_message(session.id, user.id, "Second edit"),
@@ -521,7 +525,7 @@ async def test_stop_and_send_are_scoped_to_the_selected_session():
         controller = ChatPageController(client)
         controller._active_task = task_a
     try:
-        with patch("exmekh_agent.ui.page_controller.ui.notify"):
+        with patch("exmekh_agent.ui.chat.page_controller.ui.notify"):
             controller.stop()
         await asyncio.sleep(0)
         assert not task_a.cancelling()
@@ -535,7 +539,7 @@ async def test_stop_and_send_are_scoped_to_the_selected_session():
         with (
             patch.object(session_manager, "add_message", return_value=False),
             patch.object(controller, "_start_turn") as start,
-            patch("exmekh_agent.ui.page_controller.ui.notify"),
+            patch("exmekh_agent.ui.chat.page_controller.ui.notify"),
         ):
             controller._send_prepared(
                 session_b, PreparedUserInput("Unsaved", None, "Unsaved")
@@ -639,3 +643,76 @@ def test_caption_edit_preserves_repeated_pdf_pages_without_rereading_files(
     assert edited.image_urls == message.image_urls
     assert edited.image_paths == [pdf_path]
     assert pdf_path in edited.prompt
+
+
+@pytest.mark.parametrize("file_references", [False, True])
+def test_edit_replaces_attachment_selection_and_rejects_foreign_paths(
+    tmp_path: Path, file_references: bool
+):
+    storage = TempStorage(tmp_path)
+    first = create_staged_attachment_from_file(
+        "keep.txt", b"Retained text", storage=storage
+    )
+    removed = create_staged_attachment_from_file(
+        "remove.txt", b"Removed text", storage=storage
+    )
+    added = create_staged_attachment_from_file("new.txt", b"New text", storage=storage)
+    message = ChatMessage(
+        role="user",
+        content="Original",
+        attachment_paths=[first.relative_path, removed.relative_path],
+    )
+    result = prepare_message_edit(
+        message,
+        "Revised",
+        storage=storage,
+        use_file_references=file_references,
+        attachment_paths=[first.relative_path],
+        attachments=[added],
+    )
+    assert result.attachment_paths == [first.relative_path, added.relative_path]
+    assert (
+        removed.relative_path not in result.prompt
+        and "Removed text" not in result.prompt
+    )
+    assert ("Retained text" in result.prompt) == (not file_references)
+    assert ("New text" in result.prompt) == (not file_references)
+    assert storage.resolve_attachment(removed.relative_path).is_file()
+    empty = prepare_message_edit(
+        message,
+        "Text only",
+        storage=storage,
+        use_file_references=file_references,
+        attachment_paths=[],
+    )
+    assert empty.prompt == "Text only" and empty.attachment_paths == []
+    with pytest.raises(ValueError, match="own attachments"):
+        prepare_message_edit(
+            message,
+            "Invalid",
+            storage=storage,
+            use_file_references=file_references,
+            attachment_paths=[added.relative_path],
+        )
+
+
+def test_adding_uploads_without_an_explicit_selection_retains_existing_files(
+    tmp_path: Path,
+):
+    storage = TempStorage(tmp_path)
+    retained = create_staged_attachment_from_file(
+        "old.txt", b"Existing text", storage=storage
+    )
+    added = create_staged_attachment_from_file("new.txt", b"New text", storage=storage)
+    message = ChatMessage(
+        role="user", content="Original", attachment_paths=[retained.relative_path]
+    )
+    result = prepare_message_edit(
+        message,
+        "Revised",
+        storage=storage,
+        use_file_references=False,
+        attachments=[added],
+    )
+    assert result.attachment_paths == [retained.relative_path, added.relative_path]
+    assert "Existing text" in result.prompt and "New text" in result.prompt

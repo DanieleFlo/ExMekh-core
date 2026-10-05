@@ -29,17 +29,8 @@ from exmekh_lib.tokenizers.qwen import QwenTokenizer
 from pydantic import BaseModel
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge.agent_runner import execute_agent_turn_sync
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.context_usage import (
-    compute_session_context_usage,
-    count_text_tokens,
-    populate_skill_closure_tokens,
-)
-from exmekh_agent.exmekh_bridge.ds4_prompt import (
-    apply_ds4_scope,
-    render_ds4_qwen_prompt,
-)
+from exmekh_agent.exmekh_bridge.agents.agent_runner import execute_agent_turn_sync
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -47,7 +38,18 @@ from exmekh_agent.exmekh_bridge.models import (
     SkillNode,
     SubAgentConversation,
 )
-from exmekh_agent.exmekh_bridge.provider_context import ContextTrackingProvider
+from exmekh_agent.exmekh_bridge.providers.context_usage import (
+    compute_session_context_usage,
+    count_text_tokens,
+    populate_skill_closure_tokens,
+)
+from exmekh_agent.exmekh_bridge.providers.ds4_prompt import (
+    apply_ds4_scope,
+    render_ds4_qwen_prompt,
+)
+from exmekh_agent.exmekh_bridge.providers.provider_context import (
+    ContextTrackingProvider,
+)
 
 
 class StructuredAnswer(BaseModel):
@@ -446,7 +448,8 @@ def test_tracking_provider_forwards_requests_and_isolates_child_context() -> Non
     tracker.call(changed_request)
     provider.usage = ModelUsage(completion_tokens=1)
     tracker.call(changed_request)
-    assert len(contexts) == 8
+    assert len(contexts) == 10
+    assert contexts[-1].is_final and contexts[-1].is_estimated
     structured_request = StructuredProviderRequest(
         [UserMessage("structured question")], StructuredAnswer
     )
@@ -484,7 +487,7 @@ def test_agent_runner_wires_typed_context_observer(base_url: str) -> None:
     provider = StubProvider()
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ) as provider_factory,
         patch.dict(config.model_owners, {(base_url, "test-qwen"): "ds4.c"}),

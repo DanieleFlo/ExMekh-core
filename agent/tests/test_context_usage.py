@@ -7,14 +7,22 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-import exmekh_agent.exmekh_bridge.context_usage as cu
+import exmekh_agent.exmekh_bridge.providers.context_usage as cu
 from exmekh_agent.config import AppConfig, config
-from exmekh_agent.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     check_provider_health,
     extract_model_context_length,
 )
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.context_usage import (
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.models import (
+    ChatMessage,
+    ChatSession,
+    ReasoningBlock,
+    SkillNode,
+    SubAgentConversation,
+    ToolEvent,
+)
+from exmekh_agent.exmekh_bridge.providers.context_usage import (
     _annotate_skill_tree_recursive,
     _apply_skill_compaction_to_scope,
     _is_skill_tree_entry_open,
@@ -34,17 +42,9 @@ from exmekh_agent.exmekh_bridge.context_usage import (
     get_qwen_tokenizer,
     populate_skill_closure_tokens,
 )
-from exmekh_agent.exmekh_bridge.models import (
-    ChatMessage,
-    ChatSession,
-    ReasoningBlock,
-    SkillNode,
-    SubAgentConversation,
-    ToolEvent,
-)
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.raw_history_view import RawHistoryComponent
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.history.raw_history_view import RawHistoryComponent
 
 
 def test_qwen_tokenizer_counts_tokens_and_fallback() -> None:
@@ -535,7 +535,7 @@ def test_nested_matryoshka_skills_and_synthesized_turns() -> None:
         ],
     )
     with patch(
-        "exmekh_agent.exmekh_bridge.context_usage.load_real_hds_system_prompt",
+        "exmekh_agent.exmekh_bridge.providers.context_usage.load_real_hds_system_prompt",
         return_value="Real HDS Prompt",
     ):
         tree_msgs = build_compacted_context_messages(session_tree_only)
@@ -624,7 +624,7 @@ def test_collector_sub_agent_and_system_prompt_resolution() -> None:
 
     # _resolve_system_prompt_for_session fallback when deep_agent prompt returns empty
     with patch(
-        "exmekh_agent.exmekh_bridge.context_usage.load_real_hds_system_prompt",
+        "exmekh_agent.exmekh_bridge.providers.context_usage.load_real_hds_system_prompt",
         return_value="",
     ):
         fallback_prompt = _resolve_system_prompt_for_session(

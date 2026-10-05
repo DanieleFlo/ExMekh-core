@@ -1,0 +1,149 @@
+/* ========================================================================= */
+/* CODEX HIERARCHICAL SKILL CONTAINERS & TOOL EVENT CARDS                    */
+/* ========================================================================= */
+
+/* Skill Container Base */
+.skill-container {
+    width: 100%;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+/* Active Skill: seamless with subtle left indicator */
+.skill-container-active {
+    background: transparent !important;
+    border: none !important;
+    border-left: 2px solid #52525b !important;
+    padding-left: 10px !important;
+}
+
+/* Compacted Skill: clean seamless header bar */
+.skill-compact-header {
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 0 !important;
+    cursor: pointer;
+    user-select: none;
+}
+
+.skill-compact-header:hover {
+    background: transparent !important;
+    color: #f4f4f5 !important;
+}
+
+/* Depth levels styling: clean minimal guidelines */
+.skill-depth-1 {
+    border-left: 2px solid #27272a !important;
+    background: transparent !important;
+}
+
+.skill-depth-2 {
+    border-left: 2px solid #3f3f46 !important;
+    background: transparent !important;
+    margin-left: 10px;
+}
+
+.skill-depth-3 {
+    border-left: 2px solid #52525b !important;
+    background: transparent !important;
+    margin-left: 20px;
+}
+
+/* Tool execution card - Codex Minimal CLI Line */
+.tool-event-card {
+    min-width: 0;
+    flex-wrap: nowrap !important;
+    background: transparent !important;
+    border: none !important;
+    border-left: 2px solid #27272a !important;
+    font-size: 0.82rem !important;
+    padding: 2px 0 2px 10px !important;
+}
+
+.tool-event-main {
+    flex: 1;
+    min-width: 0;
+    flex-wrap: nowrap !important;
+}
+
+.tool-event-main > .q-icon,
+.tool-event-main > .q-spinner {
+    flex-shrink: 0;
+}
+
+.tool-event-name {
+    flex-shrink: 0;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tool-arguments-preview {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #a1a1aa;
+}
+
+.tool-argument-name {
+    color: #7dd3fc;
+    margin-right: 5px;
+}
+
+.tool-argument-separator {
+    color: #52525b;
+}
+
+.tool-event-meta {
+    max-width: 40%;
+    flex-shrink: 0;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+}
+
+.tool-event-meta > * {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tool-event-meta > .message-time {
+    flex-shrink: 0;
+}
+
+.tool-event-card:hover {
+    background: transparent !important;
+    border-left-color: #52525b !important;
+}
+
+/* Subskill Vertical Compaction */
+.subskill-compaction {
+    background: #000814 !important;
+    border: 1px solid #3f003b !important;
+    transition: all 0.2s ease;
+}
+
+.subskill-compaction:hover {
+    border-color: #3f3f46 !important;
+}
+
+.subskill-compaction .q-expansion-item__container > .q-item {
+    padding: 4px 12px;
+    min-height: 38px;
+}
+
+.tool-output-toggle { cursor: pointer; }
+.tool-output-toggle:focus-visible { outline: 1px solid #38bdf8; outline-offset: 2px; }
+.invocation-output-panel { position: relative; width: 100%; min-width: 0; max-height: 240px; overflow: auto; padding: 12px 36px 12px 12px; background: #111114; border: 1px solid #27272a; border-radius: 7px; font-family: monospace; font-size: 12px; }
+.output-text { display: block; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; color: #d4d4d8; }
+.output-header { display: flex; gap: 8px; flex-wrap: wrap; color: #7dd3fc; padding-bottom: 10px; border-bottom: 1px solid #27272a; margin-bottom: 10px; }
+.output-id { color: #71717a; font-size: 10px; overflow-wrap: anywhere; }
+.output-thinking { display: block; white-space: pre-wrap; color: #a1a1aa; border-left: 2px solid #52525b; padding-left: 10px; margin-bottom: 12px; }
+.output-unavailable { color: #71717a; }
+.output-copy-button { position: absolute; top: 4px; right: 4px; }
+.skill-output-expansion > .q-expansion-item__container > .q-item { padding: 4px 0; min-height: 28px; color: #a1a1aa; }

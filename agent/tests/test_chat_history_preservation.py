@@ -16,12 +16,12 @@ from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
 from exmekh_lib.core.tool_calls.harness_memory_tools import HarnessMemoryTools
 
-from exmekh_agent.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     convert_to_exmekh_messages,
     execute_agent_turn_sync,
     run_agent_turn,
 )
-from exmekh_agent.exmekh_bridge.converter import (
+from exmekh_agent.exmekh_bridge.history.converter import (
     exmekh_message_to_raw_dict,
     exmekh_messages_to_chat_messages,
     exmekh_messages_to_session,
@@ -77,7 +77,7 @@ def test_history_preserved_in_quick_chat_agent_turn() -> None:
     ]
 
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
         return_value=mock_provider,
     ):
         execute_agent_turn_sync(
@@ -117,7 +117,7 @@ def test_history_preserved_in_deep_agent_turn() -> None:
     ]
 
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
         return_value=mock_provider,
     ):
         execute_agent_turn_sync(
@@ -154,7 +154,7 @@ async def test_run_agent_turn_passes_history_to_model() -> None:
     session = ChatSession(title="Test Multi-turn", agent_mode="quick_chat")
 
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
         return_value=mock_provider,
     ):
         # Turn 1

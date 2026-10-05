@@ -23,20 +23,25 @@ from exmekh_lib.core.models.user_message import UserMessage
 from nicegui.client import Client
 from nicegui.page import page
 
-from exmekh_agent.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     convert_to_exmekh_messages,
     execute_agent_turn_sync,
     run_agent_turn,
 )
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.context_usage import build_compacted_context_messages
-from exmekh_agent.exmekh_bridge.converter import (
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
+from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter
+from exmekh_agent.exmekh_bridge.history.converter import (
     exmekh_message_to_raw_dict,
     exmekh_messages_to_session,
     raw_dict_to_exmekh_message,
     session_to_exmekh_messages,
 )
-from exmekh_agent.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.history.pasted_input import PreparedUserInput
+from exmekh_agent.exmekh_bridge.history.steering_position import (
+    find_steering_insertions,
+)
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -45,17 +50,16 @@ from exmekh_agent.exmekh_bridge.models import (
     SkillNode,
     ToolEvent,
 )
-from exmekh_agent.exmekh_bridge.pasted_input import PreparedUserInput
-from exmekh_agent.exmekh_bridge.steering import TurnSteering
-from exmekh_agent.exmekh_bridge.steering_position import find_steering_insertions
-from exmekh_agent.exmekh_bridge.sub_agents import SubAgentEventRouter
+from exmekh_agent.exmekh_bridge.providers.context_usage import (
+    build_compacted_context_messages,
+)
 from exmekh_agent.state.active_turns import ActiveTurnRegistry, active_turns
 from exmekh_agent.state.session_manager import SessionManager
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.graph_data import build_graph_data_from_session
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.page_controller import ChatPageController
-from exmekh_agent.ui.raw_history_view import build_raw_history_from_session
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.chat.page_controller import ChatPageController
+from exmekh_agent.ui.graph.graph_data import build_graph_data_from_session
+from exmekh_agent.ui.history.raw_history_view import build_raw_history_from_session
 from tests.steering_probe import SteeringProbeProvider
 
 
@@ -401,11 +405,11 @@ async def test_mock_exmekh_accepts_burst_and_later_guidance_during_inference(
     observed_history: list[list[dict[str, Any]]] = []
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             execute_agent_turn_sync,
         ),
     ):
@@ -516,11 +520,11 @@ async def test_exmekh_steering_in_skill_survives_compaction_and_export(
     )
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             execute_agent_turn_sync,
         ),
     ):
@@ -614,11 +618,11 @@ async def test_mock_exmekh_continues_after_plain_answer_when_steered(
     steering = TurnSteering()
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             execute_agent_turn_sync,
         ),
     ):
@@ -654,11 +658,11 @@ async def test_mock_exmekh_failure_does_not_transfer_guidance_to_a_new_run(
     steering = TurnSteering()
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             execute_agent_turn_sync,
         ),
     ):
@@ -712,11 +716,11 @@ async def test_mock_exmekh_cancellation_rejects_late_steering_and_stops_inferenc
 
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             side_effect=execute,
         ),
     ):
@@ -743,11 +747,11 @@ async def test_quick_chat_never_offers_deep_agent_steering(tmp_path: Path) -> No
     steering = TurnSteering()
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             execute_agent_turn_sync,
         ),
     ):
@@ -819,8 +823,8 @@ async def test_controller_steers_only_the_selected_item_and_keeps_other_sessions
     client = Client(page("/test-steering-queue-selection"))
     with (
         client,
-        patch("exmekh_agent.ui.page_controller.session_manager", manager),
-        patch("exmekh_agent.ui.page_controller.ui.notify"),
+        patch("exmekh_agent.ui.chat.page_controller.session_manager", manager),
+        patch("exmekh_agent.ui.chat.page_controller.ui.notify"),
     ):
         controller = ChatPageController(client)
         controller.input_bar = InputBarComponent(
@@ -893,10 +897,13 @@ def test_sync_runner_closes_steering_when_the_run_exits(fails: bool) -> None:
     agent.run.side_effect = run
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=SteeringProbeProvider(),
         ),
-        patch("exmekh_agent.exmekh_bridge.agent_runner.DeepAgent", return_value=agent),
+        patch(
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.DeepAgent",
+            return_value=agent,
+        ),
     ):
         arguments = dict(
             user_prompt="Start",
@@ -1092,16 +1099,16 @@ async def test_controller_steers_real_exmekh_after_refresh_and_preserves_next_tu
     controllers = []
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             execute_agent_turn_sync,
         ),
-        patch("exmekh_agent.ui.page_controller.session_manager", manager),
-        patch("exmekh_agent.ui.chat_view.session_manager", manager),
-        patch("exmekh_agent.ui.page_controller.ui.notify"),
+        patch("exmekh_agent.ui.chat.page_controller.session_manager", manager),
+        patch("exmekh_agent.ui.chat.chat_view.session_manager", manager),
+        patch("exmekh_agent.ui.chat.page_controller.ui.notify"),
     ):
         for client in clients:
             with client:
@@ -1191,8 +1198,8 @@ def test_unavailable_steering_keeps_the_queue_and_disables_the_button(
     client = Client(page("/test-steering-unavailable"))
     with (
         client,
-        patch("exmekh_agent.ui.page_controller.session_manager", manager),
-        patch("exmekh_agent.ui.page_controller.ui.notify"),
+        patch("exmekh_agent.ui.chat.page_controller.session_manager", manager),
+        patch("exmekh_agent.ui.chat.page_controller.ui.notify"),
     ):
         controller = ChatPageController(client)
         controller.input_bar = InputBarComponent(

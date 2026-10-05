@@ -1,0 +1,2 @@
+{% if unavailable %}<span class="output-unavailable">{{ unavailable }}</span>{% else %}{% if recorded %}<span class="output-header"><span>{{ recorded.source }}</span> <strong>{{ recorded.name }}</strong> <span class="output-id">{{ recorded.id }}</span></span>{% if recorded.thinking %}<span class="output-thinking">Thinking
+{{ recorded.thinking }}</span>{% endif %}{% endif %}<span class="output-text">{{ body }}</span>{% endif %}

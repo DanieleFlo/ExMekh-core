@@ -9,11 +9,14 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx>=0.27.0",
     "pydantic>=2.0.0",
+    "pyyaml>=6.0",
     "exmekh-lib",
     "latex2mathml>=3.81.1",
     "nh3>=0.3.7",
     "pillow>=12.3.0",
     "pypdfium2>=5.13.0",
+    "jinja2>=3.1.6",
+    "markupsafe>=3.0.3",
 ]
 
 [tool.uv.sources]
@@ -50,16 +53,20 @@ source = ["exmekh_agent"]
 omit = [
     "src/exmekh_agent/main.py",
     "src/exmekh_agent/sync.py",
-    "src/exmekh_agent/ui/project_settings_dialog.py",
-    "src/exmekh_agent/ui/new_project_dialog.py",
-    "src/exmekh_agent/ui/chat_view.py",
-    "src/exmekh_agent/ui/file_icons.py",
-    "src/exmekh_agent/ui/input_bar.py",
-    "src/exmekh_agent/ui/markdown_parser.py",
-    "src/exmekh_agent/ui/page_controller.py",
-    "src/exmekh_agent/ui/raw_history_view.py",
-    "src/exmekh_agent/ui/settings_drawer.py",
-    "src/exmekh_agent/ui/sidebar.py",
+    "src/exmekh_agent/ui/settings/project_settings_dialog.py",
+    "src/exmekh_agent/ui/navigation/new_project_dialog.py",
+    "src/exmekh_agent/ui/chat/chat_view.py",
+    "src/exmekh_agent/ui/chat/message_editor.py",
+    "src/exmekh_agent/ui/shared/file_icons.py",
+    "src/exmekh_agent/ui/chat/input_bar.py",
+    "src/exmekh_agent/ui/shared/markdown_parser.py",
+    "src/exmekh_agent/ui/chat/page_controller.py",
+    "src/exmekh_agent/ui/history/raw_history_view.py",
+    "src/exmekh_agent/ui/settings/settings_drawer.py",
+    "src/exmekh_agent/ui/navigation/sidebar.py",
+    "src/exmekh_agent/ui/agents/agent_designer.py",
+    "src/exmekh_agent/ui/agents/capability_editor.py",
+    "src/exmekh_agent/ui/agents/agent_selector.py",
 ]
 
 [tool.coverage.report]

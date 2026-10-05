@@ -20,7 +20,7 @@ from exmekh_lib.core.models.provider_stream_event import (
 from exmekh_lib.core.models.tool_message import ToolMessage
 from exmekh_lib.core.models.user_message import UserMessage
 
-from exmekh_agent.exmekh_bridge.converter import exmekh_message_to_raw_dict
+from exmekh_agent.exmekh_bridge.history.converter import exmekh_message_to_raw_dict
 from tests.mock_client import MockProvider
 
 

@@ -7,16 +7,19 @@ import pytest
 from nicegui.client import Client as NiceGUIClient
 from nicegui.page import page
 
-import exmekh_agent.exmekh_bridge.agent_runner as ar
-from exmekh_agent.exmekh_bridge.agent_runner import generate_chat_title, run_agent_turn
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+import exmekh_agent.exmekh_bridge.agents.agent_runner as ar
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
+    generate_chat_title,
+    run_agent_turn,
+)
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
 from exmekh_agent.state.session_manager import SessionManager, session_manager
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.header import HeaderComponent
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.raw_history_view import build_raw_history_from_session
-from exmekh_agent.ui.sidebar import SidebarComponent
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.history.raw_history_view import build_raw_history_from_session
+from exmekh_agent.ui.navigation.header import HeaderComponent
+from exmekh_agent.ui.navigation.sidebar import SidebarComponent
 from tests.mock_client import (
     MockProvider,
     PipelineStep,

@@ -7,7 +7,7 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -17,17 +17,17 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.graph_data import (
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.graph.graph_data import (
     _extract_nodes_from_raw_scope,
     build_graph_data_from_session,
 )
-from exmekh_agent.ui.graph_view import GraphViewComponent
-from exmekh_agent.ui.new_project_dialog import (
+from exmekh_agent.ui.graph.graph_view import GraphViewComponent
+from exmekh_agent.ui.history.raw_history_view import RawHistoryComponent
+from exmekh_agent.ui.navigation.new_project_dialog import (
     NewProjectDialogComponent,
     pick_folder_dialog,
 )
-from exmekh_agent.ui.raw_history_view import RawHistoryComponent
 
 
 @pytest.mark.parametrize("status", ["completed", "error"])
@@ -279,7 +279,7 @@ async def test_folder_picker_failure_is_reported_and_cancellation_preserves_inpu
             dialog.build()
             dialog.folder_input.value = "original"
             with patch(
-                "exmekh_agent.ui.new_project_dialog.pick_folder_dialog",
+                "exmekh_agent.ui.navigation.new_project_dialog.pick_folder_dialog",
                 side_effect=OSError("picker failed"),
             ):
                 await dialog.browse()
@@ -288,15 +288,15 @@ async def test_folder_picker_failure_is_reported_and_cancellation_preserves_inpu
                 == "Unable to open folder picker: picker failed"
             )
             with patch(
-                "exmekh_agent.ui.new_project_dialog.pick_folder_dialog",
+                "exmekh_agent.ui.navigation.new_project_dialog.pick_folder_dialog",
                 return_value=None,
             ):
                 await dialog.browse()
             assert dialog.folder_input.value == "original"
             with (
-                patch("exmekh_agent.ui.new_project_dialog.tkinter.Tk"),
+                patch("exmekh_agent.ui.navigation.new_project_dialog.tkinter.Tk"),
                 patch(
-                    "exmekh_agent.ui.new_project_dialog.filedialog.askdirectory",
+                    "exmekh_agent.ui.navigation.new_project_dialog.filedialog.askdirectory",
                     return_value="",
                 ),
             ):

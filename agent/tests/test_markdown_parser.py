@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from exmekh_agent.ui.markdown_parser import (
+from exmekh_agent.ui.shared.markdown_parser import (
     convert_latex_to_mathml,
     parse_markdown_to_html,
 )

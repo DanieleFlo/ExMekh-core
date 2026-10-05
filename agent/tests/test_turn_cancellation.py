@@ -20,23 +20,23 @@ from nicegui.client import Client as NiceGuiClient
 from nicegui.page import page
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     check_provider_health,
     execute_agent_turn_sync,
     run_agent_turn,
 )
-from exmekh_agent.exmekh_bridge.cancellation import (
+from exmekh_agent.exmekh_bridge.agents.cancellation import (
     CancellableProvider,
     CancellationEventHandler,
 )
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.event_handlers import QuickChatEventHandler
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.event_handlers import QuickChatEventHandler
 from exmekh_agent.exmekh_bridge.models import ChatSession, ChatTitle
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.page_controller import ChatPageController
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.chat.page_controller import ChatPageController
 from tests.approval_probe import ApprovalProbeProvider
 from tests.mock_client import MockProvider
 
@@ -145,16 +145,16 @@ async def test_real_exmekh_turn_stops_before_another_inference_when_approval_is_
 
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             side_effect=execute,
         ),
-        patch("exmekh_agent.ui.page_controller.session_manager", manager),
-        patch("exmekh_agent.ui.chat_view.session_manager", manager),
-        patch("exmekh_agent.ui.page_controller.ui.notify"),
+        patch("exmekh_agent.ui.chat.page_controller.session_manager", manager),
+        patch("exmekh_agent.ui.chat.chat_view.session_manager", manager),
+        patch("exmekh_agent.ui.chat.page_controller.ui.notify"),
     ):
         turn = asyncio.create_task(
             controller._run_turn(
@@ -205,7 +205,9 @@ async def test_real_exmekh_turn_stops_before_another_inference_when_approval_is_
 async def test_cancelled_turn_waiting_for_the_provider_lock_never_starts() -> None:
     cancellation = Event()
     cancellation.set()
-    with patch("exmekh_agent.exmekh_bridge.agent_runner.LocalProvider") as provider:
+    with patch(
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider"
+    ) as provider:
         with pytest.raises(asyncio.CancelledError):
             await asyncio.get_running_loop().run_in_executor(
                 None,
@@ -265,7 +267,7 @@ async def test_live_stop_pending_approval_prevents_another_model_request(
     with (
         patch.object(LocalProvider, "call", call),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.execute_agent_turn_sync",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.execute_agent_turn_sync",
             side_effect=execute,
         ),
     ):

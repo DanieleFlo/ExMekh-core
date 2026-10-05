@@ -8,16 +8,18 @@ import pytest
 from nicegui.client import Client
 from nicegui.page import page
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.converter import reconstruct_execution_history_and_cache
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.history.converter import (
+    reconstruct_execution_history_and_cache,
+)
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     SkillNode,
     ToolEvent,
 )
-from exmekh_agent.ui.graph_data import build_graph_data_from_session
-from exmekh_agent.ui.raw_history_view import RawHistoryComponent
+from exmekh_agent.ui.graph.graph_data import build_graph_data_from_session
+from exmekh_agent.ui.history.raw_history_view import RawHistoryComponent
 
 
 def tool_call(call_id: str, name: str = "read") -> dict:

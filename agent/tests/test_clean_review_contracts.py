@@ -11,14 +11,16 @@ from exmekh_lib.core.models.structured_provider_request import StructuredProvide
 from exmekh_lib.core.models.user_message import UserMessage
 
 from exmekh_agent.config import AppConfig
-from exmekh_agent.exmekh_bridge.converter import convert_to_exmekh_messages
-from exmekh_agent.exmekh_bridge.event_handlers import (
+from exmekh_agent.exmekh_bridge.agents.event_handlers import (
     QuickChatEventHandler,
     scoped_reasoning_callback,
 )
+from exmekh_agent.exmekh_bridge.history.converter import convert_to_exmekh_messages
 from exmekh_agent.exmekh_bridge.models import ChatMessage
-from exmekh_agent.exmekh_bridge.provider_context import ContextTrackingProvider
-from exmekh_agent.exmekh_bridge.provider_health import (
+from exmekh_agent.exmekh_bridge.providers.provider_context import (
+    ContextTrackingProvider,
+)
+from exmekh_agent.exmekh_bridge.providers.provider_health import (
     check_provider_health,
     extract_model_context_length,
 )

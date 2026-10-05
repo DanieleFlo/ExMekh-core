@@ -810,13 +810,16 @@ source = { editable = "." }
 dependencies = [
     { name = "exmekh-lib" },
     { name = "httpx" },
+    { name = "jinja2" },
     { name = "latex2mathml" },
+    { name = "markupsafe" },
     { name = "nh3" },
     { name = "nicegui" },
     { name = "pillow" },
     { name = "pydantic" },
     { name = "pypdfium2" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -833,13 +836,16 @@ dev = [
 requires-dist = [
     { name = "exmekh-lib", path = "wheels/exmekh_lib-0.1.0-py3-none-any.whl" },
     { name = "httpx", specifier = ">=0.27.0" },
+    { name = "jinja2", specifier = ">=3.1.6" },
     { name = "latex2mathml", specifier = ">=3.81.1" },
+    { name = "markupsafe", specifier = ">=3.0.3" },
     { name = "nh3", specifier = ">=0.3.7" },
     { name = "nicegui", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=12.3.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
     { name = "pypdfium2", specifier = ">=5.13.0" },
     { name = "python-dotenv", specifier = ">=1.0.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -880,7 +886,7 @@ dependencies = [
     { name = "z3-solver" },
 ]
 wheels = [
-    { filename = "exmekh_lib-0.1.0-py3-none-any.whl", hash = "sha256:36b2319f0dca3381c74fda9ca5846cebde42946c7521f7f691e182d2dcbf456f" },
+    { filename = "exmekh_lib-0.1.0-py3-none-any.whl", hash = "sha256:b2103f9012dc57143a1f1e64da3a465599473792dcf2313692d8a63db7ccb335" },
 ]
 
 [package.metadata]

@@ -6,8 +6,10 @@ import pytest
 from exmekh_lib.core.agents.deep_agent import DeepAgentExecutionEvent
 from exmekh_lib.core.agents.deep_agent.stream_event import DeepAgentExecutionEventType
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.converter import reconstruct_execution_history_and_cache
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.history.converter import (
+    reconstruct_execution_history_and_cache,
+)
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -16,9 +18,9 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from exmekh_agent.exmekh_bridge.tool_events import tool_event_from_execution
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.input_bar import InputBarComponent
+from exmekh_agent.exmekh_bridge.tools.tool_events import tool_event_from_execution
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
 
 
 @pytest.mark.parametrize("status", ["completed", "error"])
@@ -160,7 +162,7 @@ def test_graph_waits_while_a_child_conversation_is_active() -> None:
     view = ChatViewComponent(lambda _: None)
     view.graph_view = MagicMock()
     with patch(
-        "exmekh_agent.ui.chat_view.session_manager.get_current_session",
+        "exmekh_agent.ui.chat.chat_view.session_manager.get_current_session",
         return_value=session,
     ):
         view._render_selected_graph()

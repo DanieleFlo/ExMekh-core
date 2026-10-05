@@ -10,11 +10,12 @@ import pytest
 from nicegui.client import Client as NiceGUIClient
 from nicegui.page import page
 
-from exmekh_agent.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     convert_to_exmekh_messages,
     run_agent_turn,
 )
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEvent
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -22,13 +23,12 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from exmekh_agent.exmekh_bridge.sub_agents import SubAgentEvent
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.state.sub_agent_conversations import apply_sub_agent_event
-from exmekh_agent.ui.graph_data import build_graph_data_from_session
-from exmekh_agent.ui.page_controller import ChatPageController
-from exmekh_agent.ui.raw_history_view import build_raw_history_from_session
+from exmekh_agent.ui.chat.page_controller import ChatPageController
+from exmekh_agent.ui.graph.graph_data import build_graph_data_from_session
+from exmekh_agent.ui.history.raw_history_view import build_raw_history_from_session
 from tests.mock_client import (
     MockProvider,
     PipelineStep,
@@ -458,7 +458,8 @@ async def test_live_ui_controller_stop_generation_flow(
             return "Should not finish"
 
         with patch(
-            "exmekh_agent.ui.page_controller.run_agent_turn", side_effect=fake_slow_turn
+            "exmekh_agent.ui.chat.page_controller.run_agent_turn",
+            side_effect=fake_slow_turn,
         ):
             controller.start_send("Start long process")
             await asyncio.sleep(0.05)

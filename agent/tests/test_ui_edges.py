@@ -3,11 +3,22 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from nicegui.client import Client
+from nicegui.page import page
 
 from exmekh_agent.config import config
-from exmekh_agent.ui.header import HeaderComponent
-from exmekh_agent.ui.settings_drawer import SettingsDrawerComponent
-from exmekh_agent.ui.sidebar import SidebarComponent
+from exmekh_agent.ui.navigation.header import HeaderComponent
+from exmekh_agent.ui.navigation.sidebar import SidebarComponent
+from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
+
+
+@pytest.fixture
+def client():
+    instance = Client(page("/ui-edges"))
+    try:
+        yield instance
+    finally:
+        instance.delete()
 
 
 def test_header_has_no_mode_toggle() -> None:
@@ -40,15 +51,19 @@ def test_sidebar_optional_callbacks_and_drawer() -> None:
 
 
 @pytest.mark.asyncio
-async def test_settings_refresh_handles_offline_and_empty_models() -> None:
+async def test_settings_refresh_handles_offline_and_empty_models(client) -> None:
     drawer = SettingsDrawerComponent(lambda: None)
     drawer.refresh_btn = MagicMock()
     drawer.status_spinner = MagicMock()
     drawer.status_badge = MagicMock()
     drawer.model_select = MagicMock()
-    with patch(
-        "exmekh_agent.ui.settings_drawer.check_provider_health", new_callable=AsyncMock
-    ) as health:
+    with (
+        client,
+        patch(
+            "exmekh_agent.ui.settings.settings_drawer.check_provider_health",
+            new_callable=AsyncMock,
+        ) as health,
+    ):
         health.return_value = (False, [])
         await drawer.refresh_models()
     assert drawer.status_badge.text == "Offline"
@@ -73,8 +88,8 @@ async def test_settings_save_handles_sync_callback_and_restores_button_on_failur
     drawer.save_button = MagicMock()
     drawer.close = MagicMock()
     with (
-        patch("exmekh_agent.ui.settings_drawer.config.update") as update,
-        patch("exmekh_agent.ui.settings_drawer.ui.notify"),
+        patch("exmekh_agent.ui.settings.settings_drawer.config.update") as update,
+        patch("exmekh_agent.ui.settings.settings_drawer.ui.notify"),
     ):
         await drawer._save_settings()
     assert saved == [True]
@@ -83,7 +98,7 @@ async def test_settings_save_handles_sync_callback_and_restores_button_on_failur
     drawer.save_button.props.assert_any_call(remove="loading")
 
     drawer.on_settings_saved = MagicMock(side_effect=RuntimeError("callback failed"))
-    with patch("exmekh_agent.ui.settings_drawer.config.update"):
+    with patch("exmekh_agent.ui.settings.settings_drawer.config.update"):
         with pytest.raises(RuntimeError, match="callback failed"):
             await drawer._save_settings()
     drawer.save_button.props.assert_any_call(remove="loading")
@@ -115,7 +130,7 @@ async def test_settings_save_handles_sync_callback_and_restores_button_on_failur
     ],
 )
 async def test_settings_discovery_tracks_loaded_qwen_and_allocated_context(
-    monkeypatch, previous_model, models, context_length
+    monkeypatch, previous_model, models, context_length, client
 ) -> None:
     monkeypatch.setattr(config, "default_model", previous_model)
     monkeypatch.setattr(config, "context_length", 22000)
@@ -137,7 +152,10 @@ async def test_settings_discovery_tracks_loaded_qwen_and_allocated_context(
             for model in models
         ]
     }
-    with patch("httpx.AsyncClient.get", new_callable=AsyncMock, return_value=response):
+    with (
+        client,
+        patch("httpx.AsyncClient.get", new_callable=AsyncMock, return_value=response),
+    ):
         await drawer.refresh_models()
     expected_model = previous_model if previous_model in models else models[0]
     assert config.default_model == expected_model

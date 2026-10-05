@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import SkillNode, ToolEvent, format_duration
 
 

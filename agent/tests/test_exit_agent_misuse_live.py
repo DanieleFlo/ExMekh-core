@@ -15,7 +15,7 @@ from uuid import uuid4
 import pytest
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     check_provider_health,
     run_agent_turn,
 )

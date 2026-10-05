@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.state.active_turns import ActiveTurnRegistry
 
 

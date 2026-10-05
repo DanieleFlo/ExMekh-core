@@ -7,8 +7,8 @@ from nicegui.page import page
 
 from exmekh_agent.exmekh_bridge.models import ChatMessage
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui.page_controller import ChatPageController
-from exmekh_agent.ui.sidebar import SidebarComponent
+from exmekh_agent.ui.chat.page_controller import ChatPageController
+from exmekh_agent.ui.navigation.sidebar import SidebarComponent
 
 
 @pytest.mark.parametrize("has_messages", [False, True])

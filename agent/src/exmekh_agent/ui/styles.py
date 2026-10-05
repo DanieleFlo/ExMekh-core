@@ -7,21 +7,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from markupsafe import Markup
 from nicegui import ui
 
-CSS_DIR: Path = Path(__file__).parent / "css"
+from exmekh_agent.ui.resources import presentation_config, render_html
 
-CSS_FILENAMES: tuple[str, ...] = (
-    "base.css",
-    "layout.css",
-    "chat.css",
-    "skills.css",
-    "markdown.css",
-    "tabs.css",
-    "history.css",
-    "graph.css",
-    "queue.css",
-)
+CSS_DIR: Path = Path(__file__).parent / "resources" / "css"
+
+CSS_FILENAMES: tuple[str, ...] = tuple(presentation_config("styles")["files"])
 
 # Backwards compatibility for single-path references
 CSS_FILE_PATH: Path = CSS_DIR / "base.css"
@@ -64,4 +57,4 @@ def load_css() -> None:
 
 
 # Backwards compatibility for components referencing raw HTML style tags
-CUSTOM_CSS: str = f"<style>\n{get_css_content()}\n</style>"
+CUSTOM_CSS: str = render_html("shared/styles.html", content=Markup(get_css_content()))

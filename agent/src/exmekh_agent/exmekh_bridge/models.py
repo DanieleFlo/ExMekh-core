@@ -5,16 +5,17 @@ import uuid
 from collections.abc import Callable, Iterator
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 from exmekh_lib.core.models.assistant_message import ToolCall
 from pydantic import BaseModel, Field
 
-from exmekh_agent.exmekh_bridge.tool_approval import normalize_tool_approval_mode
-from exmekh_agent.exmekh_bridge.tool_calls import (
-    extract_tool_arguments,
+from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
+from exmekh_agent.exmekh_bridge.history.tool_calls import (
     parse_tool_calls,
 )
+from exmekh_agent.exmekh_bridge.tools.tool_approval import normalize_tool_approval_mode
+from exmekh_agent.state.agent_design import AgentDesign, AgentProfile
 
 MessageRole = Literal["user", "assistant", "system"]
 TerminalStatus = Literal["completed", "error"]
@@ -127,9 +128,6 @@ class ToolEvent(BaseModel):
         else:
             if event.event_type == "tool_start":
                 event.event_type = "tool_end"
-            if event.event_type == "tool_end":
-                if event.duration_seconds is None:
-                    event.duration_seconds = 0.0
             if event.end_time is None:
                 event.end_time = event.timestamp
             event.finalize_timing()
@@ -433,6 +431,7 @@ class ProviderContextUsage(BaseModel):
     return_call_id: str | None = None
     streamed_content: str = ""
     streamed_reasoning: str = ""
+    completion_estimate: int | None = None
     is_final: bool = False
     closure_tokens_ready: bool = False
 
@@ -451,6 +450,12 @@ class ProviderContextUsage(BaseModel):
         total = self.authoritative_total
         if total is not None:
             return total
+        if self.is_final and self.completion_estimate is not None:
+            return (
+                self.prompt_tokens
+                + self.completion_estimate
+                + count_tokens(self.streamed_reasoning)
+            )
         return (
             self.prompt_tokens
             + count_tokens(self.streamed_reasoning)
@@ -467,7 +472,8 @@ class ProviderContextUsage(BaseModel):
         return self.model_copy(
             update={
                 "streamed_content": previous.streamed_content,
-                "streamed_reasoning": previous.streamed_reasoning,
+                "streamed_reasoning": self.streamed_reasoning
+                or previous.streamed_reasoning,
             },
             deep=True,
         )
@@ -563,19 +569,18 @@ class ChatMessage(BaseModel):
         return guidance.to_chat_message() if guidance is not None else None
 
     def arguments_for_tool(self, event: ToolEvent) -> dict[str, Any]:
-        """Resolve saved invocations, including legacy nested skill transcripts."""
+        """Resolve arguments through the recorded invocation's public API."""
         if event.arguments:
             return event.arguments
-        arguments = extract_tool_arguments(self.raw_history, event.tool_call_id)
-        if arguments:
-            return arguments
-        pending = list(self.skill_history_tree)
-        for entry in pending:
-            arguments = extract_tool_arguments(entry.get("history"), event.tool_call_id)
-            if arguments:
-                return arguments
-            pending.extend(entry.get("children") or [])
-        return {}
+        return RecordedHistory(
+            self.raw_history, self.skill_history_tree
+        ).arguments_for_call(event.tool_call_id)
+
+    def output_for_call(self, call_id: str | None) -> str | None:
+        """Resolve one invocation without exposing how its transcripts are stored."""
+        return RecordedHistory(
+            self.raw_history, self.skill_history_tree
+        ).output_for_call(call_id)
 
     def find_steering_message(
         self,
@@ -714,7 +719,9 @@ class ChatMessage(BaseModel):
         self.close_reasoning()
         self.content += token
 
-    def append_reasoning(self, token: str, skill_path: str = "/", depth: int = 0) -> None:
+    def append_reasoning(
+        self, token: str, skill_path: str = "/", depth: int = 0
+    ) -> None:
         """Own reasoning segmentation instead of exposing block storage to callers."""
         self.reasoning_content += token
         if (
@@ -839,10 +846,22 @@ class SubAgentConversation(BaseModel):
 class ProjectSettings(BaseModel):
     """Shared ExMekh-Lib options and the approval default for new project chats."""
 
+    agent_profile: AgentProfile = "generic"
+    agent_design: AgentDesign | None = None
     name_hds: str | None = None
     capabilities_path: str | None = None
     coding_agent_persistent_history: bool | None = None
     tool_approval_mode: str = "Manual"
+
+    def with_agent(self, profile: AgentProfile, design: AgentDesign | None) -> Self:
+        """Return independent settings for the selected agent configuration."""
+        return type(self).model_validate(
+            {
+                **self.model_dump(),
+                "agent_profile": profile,
+                "agent_design": design.model_dump() if design else None,
+            }
+        )
 
     def migrate_legacy_capabilities_path(self) -> bool:
         """Use the installed library defaults for paths saved before its rename."""
@@ -869,21 +888,32 @@ class Project(BaseModel):
 class ChatSettings(ProjectSettings):
     """Execution snapshot with conversation-local approvals and evaluator history."""
 
+    agent_override: bool = False
     work_root: str | None = None
     approved_commands_history: list[str] = Field(default_factory=list)
     tool_approval_raw_history: list[dict[str, Any]] = Field(default_factory=list)
 
     def with_project(self, project: Project) -> ChatSettings:
         """Resolve shared options without changing this chat's approval state."""
-        return self.model_copy(
-            deep=True,
+        agent_settings = self if self.agent_override else project.settings
+        resolved = self.with_agent(
+            agent_settings.agent_profile, agent_settings.agent_design
+        )
+        return resolved.model_copy(
             update={
                 "name_hds": project.settings.name_hds,
                 "capabilities_path": project.settings.capabilities_path,
                 "coding_agent_persistent_history": project.settings.coding_agent_persistent_history,
                 "work_root": project.work_root,
-            },
+            }
         )
+
+    def with_agent_override(
+        self, profile: AgentProfile, design: AgentDesign | None
+    ) -> ChatSettings:
+        settings = self.with_agent(profile, design)
+        settings.agent_override = True
+        return settings
 
     def set_tool_approval_mode(self, mode: str) -> None:
         self.tool_approval_mode = normalize_tool_approval_mode(mode)

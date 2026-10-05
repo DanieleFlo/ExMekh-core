@@ -11,9 +11,9 @@ import pytest
 from exmekh_lib.core.agents.node import DefaultCapabilities
 from PIL import Image
 
-from exmekh_agent.exmekh_bridge.agent_runner import run_agent_turn
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.image_input import image_data_url
+from exmekh_agent.exmekh_bridge.agents.agent_runner import run_agent_turn
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.history.image_input import image_data_url
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -65,7 +65,8 @@ async def test_saved_steering_is_discovered_and_read_in_later_fe_turns(
         )
 
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider", return_value=provider
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
+        return_value=provider,
     ):
         task = asyncio.create_task(run("Start", collector))
         try:

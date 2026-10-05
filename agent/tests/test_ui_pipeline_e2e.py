@@ -612,9 +612,23 @@ async def test_ui_e2e_consecutive_commands_pipeline(agent_mock_server: str) -> N
         # Wait for turn completion
         await wait_turn_completion(page)
 
-        # Assert Step 2 UI hierarchical elements:
-        # - Nested sub-tool is displayed
-        assert await page.locator("text=nested-sub-tool").first.is_visible()
+        # Completed invocations open only after user interaction, including nested skills.
+        step_two = page.locator(".msg-assistant").nth(1)
+        skill_header = step_two.locator(".skill-compact-header").filter(
+            has_text="Skill: mock-skill"
+        )
+        await expect(skill_header).to_have_attribute("aria-expanded", "false")
+        await skill_header.click()
+        nested_header = step_two.locator(".skill-compact-header").filter(
+            has_text="Skill: nested-sub-skill"
+        )
+        await expect(nested_header).to_have_attribute("aria-expanded", "false")
+        await nested_header.click()
+        await expect(
+            step_two.locator(".tool-event-card").filter(
+                has_text="Tool: nested-sub-tool"
+            )
+        ).to_be_visible()
         # - Skill container / node is displayed
         assert await page.locator("text=mock-skill").first.is_visible()
         # - Second assistant message content

@@ -6,7 +6,7 @@ import asyncio
 from dataclasses import dataclass
 from weakref import WeakValueDictionary
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import ChatMessage, QueuedMessage
 
 

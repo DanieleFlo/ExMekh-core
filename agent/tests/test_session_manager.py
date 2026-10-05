@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import ChatMessage, ChatSession, ChatSettings
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import CODE_WORK_ROOT, SessionManager

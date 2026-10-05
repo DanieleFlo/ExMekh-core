@@ -6,10 +6,10 @@ from typing import Any
 
 from nicegui import app
 
-from exmekh_agent.exmekh_bridge import agent_runner
+from exmekh_agent.exmekh_bridge.agents import agent_runner
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui import settings_drawer
+from exmekh_agent.ui.settings import settings_drawer
 
 calls: list[dict[str, Any]] = []
 

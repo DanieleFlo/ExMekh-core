@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from exmekh_agent.config import AppConfig
+from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEvent
 from exmekh_agent.exmekh_bridge.models import (
     ChatSession,
     ReasoningBlock,
@@ -11,13 +12,14 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from exmekh_agent.exmekh_bridge.sub_agents import SubAgentEvent
 from exmekh_agent.state.json_store import JsonRecordStore
 from exmekh_agent.state.session_manager import SessionManager
 from exmekh_agent.state.sub_agent_conversations import apply_sub_agent_event
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.project_settings_dialog import ProjectSettingsDialogComponent
-from exmekh_agent.ui.sidebar import SidebarComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.navigation.sidebar import SidebarComponent
+from exmekh_agent.ui.settings.project_settings_dialog import (
+    ProjectSettingsDialogComponent,
+)
 
 
 def test_config_saves_new_env_file(tmp_path) -> None:
@@ -106,14 +108,14 @@ def test_sidebar_optional_callbacks_may_be_absent() -> None:
     assert sidebar.selected_sub_agent_id == "child"
 
 
-def test_project_settings_dialog_handles_unbuilt_dialog() -> None:
+async def test_project_settings_dialog_handles_unbuilt_dialog() -> None:
     dialog = ProjectSettingsDialogComponent()
     dialog.open("missing")
     dialog.close()
-    dialog._save_settings()
+    await dialog._save_settings()
     dialog.project_id = "missing"
     with patch(
-        "exmekh_agent.ui.project_settings_dialog.session_manager.save_project_settings"
+        "exmekh_agent.ui.settings.project_settings_dialog.session_manager.save_project_settings"
     ) as save:
-        dialog._save_settings()
+        await dialog._save_settings()
     save.assert_not_called()

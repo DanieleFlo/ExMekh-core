@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 import pytest
-from playwright.async_api import async_playwright
+from playwright.async_api import async_playwright, expect
 
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
@@ -185,8 +185,17 @@ async def test_nested_skills_animation_and_screenshots(agent_server: str) -> Non
         # Wait for vertical expansion animation
         await asyncio.sleep(0.8)
 
-        # Verify the detailed actions and nested sub-skill are visible
-        assert await page.locator("text=Actions executed in skill:").first.is_visible()
+        # Nested skills stay compact until the user opens their own row.
+        await expect(header_bar).to_have_attribute("aria-expanded", "true")
+        nested_header = page.locator(".skill-compact-header").filter(
+            has_text="Skill: nested-sub-skill"
+        )
+        await expect(nested_header).to_have_attribute("aria-expanded", "false")
+        await nested_header.click()
+        await expect(nested_header).to_have_attribute("aria-expanded", "true")
+        await expect(
+            page.get_by_text("Actions executed in skill:", exact=True).last
+        ).to_be_visible()
 
         screenshot_3 = screenshots_dir / "03_skill_expanded_detail.png"
         await page.screenshot(path=str(screenshot_3))

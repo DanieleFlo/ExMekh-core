@@ -5,10 +5,11 @@ from unittest.mock import patch
 import pytest
 from exmekh_lib.core.models.assistant_message import FunctionCall, ToolCall
 
-from exmekh_agent.exmekh_bridge.agent_runner import convert_to_exmekh_messages
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.converter import raw_dict_to_exmekh_message
-from exmekh_agent.exmekh_bridge.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.agents.agent_runner import convert_to_exmekh_messages
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter
+from exmekh_agent.exmekh_bridge.history.converter import raw_dict_to_exmekh_message
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ReasoningBlock,
@@ -16,7 +17,6 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from exmekh_agent.exmekh_bridge.sub_agents import SubAgentEventRouter
 
 
 @pytest.mark.parametrize("status", ["completed", "error"])

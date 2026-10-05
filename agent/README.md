@@ -19,6 +19,15 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - Original files stay in scoped temporary storage; normalized PNG content is also saved in chat JSON so vision history and previews survive refreshes and file cleanup. Chat messages show only previews for these visual attachments.
   - Chat Completions and Responses both use ExMekh-Lib mixed user inputs. The endpoint/model must support vision; DS4 needs its matching encoder loaded with `--vision`.
 
+- **Editable messages**: change text, remove original attachments, and upload new files before regenerating a response. Cancel keeps the original message and attachments. Saving discards subsequent conversation history and restarts the turn.
+- **Agent profiles and visual customization**:
+  - Choose Generic, Programmer, Creative, or Custom when creating a project. Chat agent settings override the project profile only for that conversation; new chats inherit the project default.
+  - Customize a profile on a draggable canvas. Purple connections represent HDS sub-agents, while blue and green connections assign skills and tools to an HDS or skill. Dashed connections show skill dependencies, including nested skills and shared tools. Select cards to connect, disconnect, remove, choose the root, or configure sub-agent history.
+  - The palette includes bundled resources and capabilities discovered in the configured project paths. Create HDS instructions or edit a capability as a named copy; library originals remain available. Skill and HDS editors separate the description from the instructions and hide the YAML front matter. Sub-skills and sub-tools are read-only in the editor and generated from the canvas connections when saving and running the agent. Copies live under `data/agent-capabilities/`, and generated runtime configurations under `data/agent-designs/`.
+  - Deep Thinking retains provider thinking in direct tool output headers, up to 200 tokens before summarizing. A renamed copy follows ordinary skill behavior; the editor explains this distinction.
+- **Readable execution results**: tool rows remain compact until clicked or activated with Enter/Space. Expanded results scroll within a bounded panel; completed skills offer their result in the last row of the expanded skill. Raw History displays multiline text, JSON, XML, and recorded output headers readably while copying the original JSON.
+- **Responsive tabs**: chat, execution graph, history, dialogs, and the agent editor adapt to desktop, tablet, and phone widths.
+
 - **Local Provider Control**:
   - Dynamic health check of the local server endpoint (LM Studio, Ollama, llama.cpp, vLLM).
   - Dynamic discovery and selection of installed models.
@@ -204,26 +213,38 @@ agent/
         ├── config.py     # Configuration and capabilities paths
         ├── sync.py       # Python sync script
         ├── exmekh_bridge/
-        │   ├── __init__.py
-        │   ├── agent_runner.py  # Asynchronous exmekh_lib runner (Client and DeepAgent)
-        │   ├── image_input.py    # Image/PDF decoding and multimodal history
-        │   └── models.py        # Pydantic models for messages and sessions
-        ├── state/
-        │   ├── __init__.py
-        │   ├── json_store.py      # Atomic JSON storage
-        │   ├── temp_storage.py    # Scoped attachment storage and cleanup
-        │   └── session_manager.py # Projects, chat state, and migration
+        │   ├── agents/        # Execution, collection, restoration and steering
+        │   ├── capabilities/  # Capability catalog and design compilation
+        │   ├── history/       # Recorded invocations, attachments and edits
+        │   ├── providers/     # Provider integration and token accounting
+        │   ├── tools/         # Tool events and command approval
+        │   ├── resources/     # Packaged model instructions
+        │   └── models.py      # Pydantic models shared across the bridge
+        ├── state/             # Managed sessions, persistence and active turns
         └── ui/
-            ├── __init__.py
-            ├── page_controller.py # Page coordination, async tasks, and active session
-            ├── styles.py         # LM Studio obsidian theme CSS
-            ├── header.py         # Branding, sidebar toggle, and global settings
-            ├── sidebar.py        # Projects and Quick Chats sidebar
-            ├── chat_view.py      # Chat timeline with thinking and tool blocks
-            ├── image_preview.py   # Shared thumbnails and modal preview
-            ├── input_bar.py      # Input bar with send and stop buttons
-            └── settings_drawer.py # Advanced settings drawer
+            ├── agents/        # Agent board, selector and capability editor
+            ├── chat/          # Timeline, input, message editor and controller
+            ├── graph/         # Execution graph data, geometry and view
+            ├── history/       # Raw inspector and JSON highlighting
+            ├── navigation/    # Header, sidebar and new project dialog
+            ├── settings/      # Application and project settings
+            ├── shared/        # Disclosure, attachments, Markdown and outputs
+            ├── resources/
+            │   ├── config/    # Presentation settings and Markdown policy (JSON)
+            │   ├── text/      # Static and parameterized UI text catalogs (JSON)
+            │   ├── templates/ # Escaped HTML and SVG templates
+            │   ├── css/       # Stylesheets
+            │   └── js/        # Browser interactions
+            └── styles.py      # Style injection
 ```
+
+UI text is resolved through `ui_text`, presentation configuration through
+`presentation_config`, and HTML/SVG through `render_html`. Resource paths are
+relative to the installed package. Templates escape dynamic values by default;
+only sanitized or already rendered fragments are marked safe. Model instructions
+are separate from UI presentation in `exmekh_bridge/resources/prompts`.
+
+See [architecture and responsibilities](docs/architecture.md) for the public APIs.
 
 ## DS4 integration
 
@@ -259,3 +280,9 @@ and `DS4_KV_DISK_DIR` can override the profile. An empty vision path disables
 vision; an empty KV directory disables the shared launcher's KV disk arguments.
 See [Flash pipeline qualification](../docs/performance/qwen38-flash-pipeline-20261004.md)
 for measured scenarios and remaining limits.
+
+## Architecture
+
+[Component responsibilities](docs/architecture.md) documents the public APIs for
+agent designs, capability storage, profile selection, message editing, and output
+expansion, together with the regression checks performed during the review.

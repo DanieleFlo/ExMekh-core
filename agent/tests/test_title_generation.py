@@ -16,7 +16,7 @@ from nicegui.page import page
 from pydantic import ValidationError
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     generate_chat_title,
     generate_chat_title_sync,
 )
@@ -60,7 +60,7 @@ def test_generate_chat_title_sync_with_mock_client() -> None:
 
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
@@ -83,7 +83,7 @@ def test_generate_chat_title_sync_with_mock_client() -> None:
 def test_generate_chat_title_sync_fallback_on_error() -> None:
     """Verifies that when the provider encounters an error, a clean fallback is returned."""
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
         side_effect=ConnectionError("Offline"),
     ):
         title = generate_chat_title_sync(
@@ -98,7 +98,7 @@ def test_generate_chat_title_sync_fallback_on_error() -> None:
 async def test_generate_chat_title_async_wrapper() -> None:
     """Verifies that generate_chat_title runs in executor and returns the structured title."""
     with patch(
-        "exmekh_agent.exmekh_bridge.agent_runner.generate_chat_title_sync",
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.generate_chat_title_sync",
         return_value="Titolo Asincrono",
     ):
         result = await generate_chat_title("Qualsiasi prompt")
@@ -113,11 +113,17 @@ async def test_handle_send_updates_session_title_structured(
     handlers = {}
 
     with (
-        patch("exmekh_agent.ui.page_controller.HeaderComponent") as mock_hdr_cls,
-        patch("exmekh_agent.ui.page_controller.SidebarComponent") as mock_sidebar_cls,
-        patch("exmekh_agent.ui.page_controller.InputBarComponent") as mock_input_cls,
-        patch("exmekh_agent.ui.page_controller.ChatViewComponent") as mock_cv_cls,
-        patch("exmekh_agent.ui.page_controller.SettingsDrawerComponent") as mock_sd_cls,
+        patch("exmekh_agent.ui.chat.page_controller.HeaderComponent") as mock_hdr_cls,
+        patch(
+            "exmekh_agent.ui.chat.page_controller.SidebarComponent"
+        ) as mock_sidebar_cls,
+        patch(
+            "exmekh_agent.ui.chat.page_controller.InputBarComponent"
+        ) as mock_input_cls,
+        patch("exmekh_agent.ui.chat.page_controller.ChatViewComponent") as mock_cv_cls,
+        patch(
+            "exmekh_agent.ui.chat.page_controller.SettingsDrawerComponent"
+        ) as mock_sd_cls,
     ):
 
         def capture_sidebar(**kwargs):
@@ -147,11 +153,11 @@ async def test_handle_send_updates_session_title_structured(
 
             with (
                 patch(
-                    "exmekh_agent.ui.page_controller.run_agent_turn",
+                    "exmekh_agent.ui.chat.page_controller.run_agent_turn",
                     side_effect=fake_run_turn,
                 ),
                 patch(
-                    "exmekh_agent.ui.page_controller.generate_chat_title",
+                    "exmekh_agent.ui.chat.page_controller.generate_chat_title",
                     side_effect=fake_generate_title,
                 ) as mock_gen,
             ):
@@ -189,7 +195,7 @@ def test_title_generation_disables_thinking_and_uses_api_token_budget(
 ):
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=MockProvider(),
         ),
         patch("exmekh_lib.core.models.client.Client.call_structured") as call,
@@ -209,7 +215,7 @@ def test_title_generation_disables_thinking_and_uses_api_token_budget(
 def test_title_generation_does_not_repeat_failed_request():
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=MockProvider(),
         ),
         patch(

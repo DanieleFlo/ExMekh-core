@@ -16,8 +16,8 @@ from exmekh_agent.exmekh_bridge.models import (
     ToolEvent,
 )
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.raw_history_view import (
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.history.raw_history_view import (
     RawHistoryComponent,
     build_raw_history_from_session,
     format_json_to_highlighted_html,
@@ -56,7 +56,8 @@ def test_format_json_primitives() -> None:
     # String with HTML escaping
     res_str = format_json_to_highlighted_html("<script>alert('xss')</script>")
     assert "&lt;script&gt;" in res_str
-    assert 'class="json-val-str">' in res_str
+    assert 'class="json-readable-string">' in res_str
+    assert "<script>" not in res_str
 
 
 def test_format_json_tool_keys_and_roles() -> None:
@@ -502,7 +503,7 @@ def test_raw_history_expansion_persistence_across_renders(ui_context: Client) ->
         assert rh.expansions[0].value is False
 
         # User expands my-skill
-        rh.expanded_skill_names.add("my-skill")
+        rh.expansions[0].value = True
 
         # Re-render session (e.g. after stream completion)
         rh.render_session(session)
@@ -530,3 +531,37 @@ def test_chat_view_streaming_integration_with_raw_history(ui_context: Client) ->
         # Finalize stream
         cv.finalize_stream()
         assert cv.raw_history_view.is_streaming is False
+
+
+def test_repeated_skill_disclosures_are_scoped_to_invocation_and_session(ui_context):
+    first = SkillNode(name="repeat", path="/repeat", status="completed")
+    nested = SkillNode(name="nested", path="/repeat/nested", status="completed")
+    second = SkillNode(
+        name="repeat", path="/repeat", status="error", sub_skills=[nested]
+    )
+    session = ChatSession(
+        messages=[ChatMessage(role="assistant", skills=[first, second])]
+    )
+    with ui_context:
+        view = RawHistoryComponent()
+        view.build()
+        view.render_session(session)
+        view.expansions[0].value = True
+        view.render_session(session)
+        assert [exp.value for exp in view.expansions] == [True, False, False]
+        labels = [
+            element.text
+            for element in ui_context.elements.values()
+            if isinstance(element, ui.label)
+        ]
+        assert "ERROR" in labels
+        view.toggle_all(True)
+        view.render_session(session)
+        assert all(exp.value for exp in view.expansions)
+        other_session = session.model_copy(update={"id": "another-chat"})
+        view.render_session(other_session)
+        assert not any(exp.value for exp in view.expansions)
+        view.render_session(session)
+        view.toggle_all(False)
+        view.render_session(session)
+        assert not any(exp.value for exp in view.expansions)

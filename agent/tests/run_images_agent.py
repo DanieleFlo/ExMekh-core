@@ -10,8 +10,8 @@ from nicegui import app
 from PIL import Image
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge import agent_runner
-from exmekh_agent.exmekh_bridge.converter import exmekh_message_to_raw_dict
+from exmekh_agent.exmekh_bridge.agents import agent_runner
+from exmekh_agent.exmekh_bridge.history.converter import exmekh_message_to_raw_dict
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
 from tests.mock_client import MockProvider

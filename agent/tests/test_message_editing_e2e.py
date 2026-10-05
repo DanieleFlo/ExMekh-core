@@ -382,3 +382,72 @@ async def test_text_upload_remains_available_after_edit_and_reload(
     await wait_saved_response(page, "Reply: After attachment edit")
     data = await state(page.url.rstrip("/"))
     assert data["calls"][-1]["history"][0] == edited["content"]
+
+
+@pytest.mark.parametrize("mode", ["quick_chat", "deep_agent"])
+async def test_edit_replaces_attachments_and_cancel_keeps_original(
+    edit_page: Page, mode: str
+):
+    page = edit_page
+    await new_conversation(page, mode)
+    await page.locator(".exmekh-file-picker").set_input_files(
+        {"name": "old.png", "mimeType": "image/png", "buffer": png_bytes()}
+    )
+    await expect(page.locator(".exmekh-attachment-chip")).to_have_count(1)
+    await send_command(page, "Original attachment")
+    await wait_turn_completion(page)
+    original = (await state(page.url.rstrip("/")))["session"]["messages"][0]
+    dialog = await open_editor(page)
+    await dialog.get_by_role("button", name="Remove", exact=False).first.click()
+    await dialog.get_by_role("button", name="Cancel", exact=True).click()
+    assert (await state(page.url.rstrip("/")))["session"]["messages"][0] == original
+    dialog = await open_editor(page)
+    await dialog.get_by_role("button", name="Remove", exact=False).first.click()
+    await dialog.locator(".message-edit-upload input[type=file]").set_input_files(
+        [
+            {"name": "replacement.png", "mimeType": "image/png", "buffer": png_bytes()},
+            {
+                "name": "replacement.txt",
+                "mimeType": "text/plain",
+                "buffer": b"New attachment content",
+            },
+        ]
+    )
+    await expect(dialog.locator(".message-edit-attachments")).to_contain_text(
+        "replacement.txt"
+    )
+    await dialog.get_by_label("Message", exact=True).fill("Updated attachments")
+    await page.screenshot(
+        path=f"screenshots/attachment-edit-{mode}.png", full_page=True
+    )
+    await dialog.get_by_role("button", name="Save & regenerate").click()
+    await expect(dialog).not_to_be_visible()
+    await wait_turn_completion(page)
+    data = await state(page.url.rstrip("/"))
+    edited = data["session"]["messages"][0]
+    assert len(edited["attachment_paths"]) == 2
+    assert original["attachment_paths"][0] not in edited["attachment_paths"]
+    assert data["calls"][-1]["image_count"] == 1
+    assert "old.png" not in data["calls"][-1]["prompt"]
+    if mode == "quick_chat":
+        assert "New attachment content" in data["calls"][-1]["prompt"]
+    await page.reload(wait_until="networkidle")
+    await expect(page.locator(".chat-message-user")).to_contain_text(
+        "Updated attachments"
+    )
+    await expect(
+        page.locator(".exmekh-message-images .exmekh-image-thumbnail")
+    ).to_have_count(1)
+    dialog = await open_editor(page)
+    for _ in range(2):
+        await dialog.get_by_role("button", name="Remove", exact=False).first.click()
+    await dialog.get_by_label("Message", exact=True).fill("")
+    await expect(
+        dialog.get_by_role("button", name="Save & regenerate")
+    ).to_be_disabled()
+    await dialog.get_by_label("Message", exact=True).fill("Text only")
+    await dialog.get_by_role("button", name="Save & regenerate").click()
+    await wait_saved_response(page, "Reply: Text only")
+    data = await state(page.url.rstrip("/"))
+    assert data["session"]["messages"][0]["attachment_paths"] == []
+    assert data["calls"][-1]["image_count"] == 0

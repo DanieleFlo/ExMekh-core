@@ -10,7 +10,7 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     QueuedMessage,
@@ -22,22 +22,24 @@ from exmekh_agent.exmekh_bridge.models import (
 )
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui.chat_view import (
+from exmekh_agent.ui.chat.chat_view import (
     CHAT_SCROLL_JS_PATH,
     ChatViewComponent,
     get_chat_scroll_js,
     load_chat_scroll_js,
 )
-from exmekh_agent.ui.header import HeaderComponent
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.new_project_dialog import (
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.chat.page_controller import ChatPageController
+from exmekh_agent.ui.navigation.header import HeaderComponent
+from exmekh_agent.ui.navigation.new_project_dialog import (
     NewProjectDialogComponent,
     pick_folder_dialog,
 )
-from exmekh_agent.ui.page_controller import ChatPageController
-from exmekh_agent.ui.project_settings_dialog import ProjectSettingsDialogComponent
-from exmekh_agent.ui.settings_drawer import SettingsDrawerComponent
-from exmekh_agent.ui.sidebar import SidebarComponent
+from exmekh_agent.ui.navigation.sidebar import SidebarComponent
+from exmekh_agent.ui.settings.project_settings_dialog import (
+    ProjectSettingsDialogComponent,
+)
+from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 
 
 @pytest.fixture
@@ -201,7 +203,7 @@ async def test_settings_drawer_component(ui_context: Client) -> None:
         assert drawer.select_reasoning.options == ["none", "low", "medium", "xhigh"]
 
         with patch(
-            "exmekh_agent.ui.settings_drawer.check_provider_health",
+            "exmekh_agent.ui.settings.settings_drawer.check_provider_health",
             new_callable=AsyncMock,
         ) as mock_health:
             mock_health.return_value = (True, ["alpha-model", "beta-model"])
@@ -219,7 +221,7 @@ async def test_settings_drawer_component(ui_context: Client) -> None:
         assert saved is True
 
 
-def test_project_settings_update_all_chats_and_keep_local_approvals(
+async def test_project_settings_update_all_chats_and_keep_local_approvals(
     ui_context: Client, tmp_path: Path
 ) -> None:
     project = session_manager.create_project(tmp_path)
@@ -233,7 +235,7 @@ def test_project_settings_update_all_chats_and_keep_local_approvals(
         dialog.input_hds.value = "shared-prompt"
         dialog.switch_coding_history.value = False
         dialog.approval_select.value = "Approve via LLM"
-        dialog._save_settings()
+        await dialog._save_settings()
         assert dialog.root_label.text == str(tmp_path)
         assert not hasattr(dialog, "input_work_root")
     assert first.settings.name_hds == second.settings.name_hds == "shared-prompt"
@@ -593,8 +595,9 @@ def test_chat_view_edge_cases(ui_context: Client) -> None:
                     for listener in child._event_listeners.values():
                         if getattr(listener, "type", "") == "click":
                             listener.handler()
-                            assert node.is_collapsed is False
+                            assert child._props["aria-expanded"] == "true"
                             listener.handler()
+                            assert child._props["aria-expanded"] == "false"
                             assert node.is_collapsed is True
 
 
@@ -605,10 +608,11 @@ def test_chat_scroll_js_and_reset_scroll(ui_context: Client) -> None:
     assert "chat-scroll-container" in js_code
 
     with patch(
-        "exmekh_agent.ui.chat_view.CHAT_SCROLL_JS_PATH", Path("nonexistent_scroll.js")
+        "exmekh_agent.ui.chat.chat_view.CHAT_SCROLL_JS_PATH",
+        Path("nonexistent_scroll.js"),
     ):
         assert get_chat_scroll_js() == ""
-        with patch("exmekh_agent.ui.chat_view.ui.add_head_html") as mock_add_head:
+        with patch("exmekh_agent.ui.chat.chat_view.ui.add_head_html") as mock_add_head:
             load_chat_scroll_js()
             mock_add_head.assert_not_called()
 
@@ -726,7 +730,7 @@ def test_chat_view_timers_rendering_and_live_updates(ui_context: Client) -> None
 
         assert cv.stream_started_at is not None
         cv.stream_started_at = 930.0
-        with patch("exmekh_agent.ui.chat_view.time") as clock:
+        with patch("exmekh_agent.ui.chat.chat_view.time") as clock:
             clock.time.return_value = wall_time
             clock.monotonic.return_value = 1000.0
             cv._update_stream_duration()
@@ -843,9 +847,9 @@ async def test_pick_folder_dialog_and_browse(
     folder.mkdir()
 
     with (
-        patch("exmekh_agent.ui.new_project_dialog.tkinter.Tk") as tk,
+        patch("exmekh_agent.ui.navigation.new_project_dialog.tkinter.Tk") as tk,
         patch(
-            "exmekh_agent.ui.new_project_dialog.filedialog.askdirectory",
+            "exmekh_agent.ui.navigation.new_project_dialog.filedialog.askdirectory",
             return_value=str(folder),
         ),
     ):
@@ -853,9 +857,9 @@ async def test_pick_folder_dialog_and_browse(
         tk.return_value.destroy.assert_called_once()
 
     with (
-        patch("exmekh_agent.ui.new_project_dialog.tkinter.Tk") as tk,
+        patch("exmekh_agent.ui.navigation.new_project_dialog.tkinter.Tk") as tk,
         patch(
-            "exmekh_agent.ui.new_project_dialog.filedialog.askdirectory",
+            "exmekh_agent.ui.navigation.new_project_dialog.filedialog.askdirectory",
             side_effect=OSError("picker failed"),
         ),
     ):
@@ -872,7 +876,7 @@ async def test_pick_folder_dialog_and_browse(
         dialog.folder_input.value = "initial"
 
         with patch(
-            "exmekh_agent.ui.new_project_dialog.pick_folder_dialog",
+            "exmekh_agent.ui.navigation.new_project_dialog.pick_folder_dialog",
             return_value=str(folder),
         ):
             await dialog.browse()

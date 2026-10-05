@@ -7,7 +7,7 @@ from exmekh_lib.core.agents.exit_tool.data import ExitToolData
 from exmekh_lib.core.agents.exit_tool.exit_tool import ExitTool
 from exmekh_lib.core.models.tool import Tool
 
-from exmekh_agent.exmekh_bridge.tool_approval import (
+from exmekh_agent.exmekh_bridge.tools.tool_approval import (
     TOOL_APPROVAL_ALL,
     CommandApprovalHook,
 )

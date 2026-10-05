@@ -1,0 +1,1 @@
+<span class="tool-argument-separator">—</span> {% for name, value in arguments %}<span class="tool-argument-name">{{ name }}</span><span class="tool-argument-value">{{ value }}</span>{% if not loop.last %} · {% endif %}{% endfor %}

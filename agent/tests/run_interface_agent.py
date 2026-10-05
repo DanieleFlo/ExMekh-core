@@ -5,10 +5,10 @@ import os
 
 from nicegui import ui
 
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from exmekh_agent.ui.styles import load_css
 from tests.interface_sample import interface_session
 

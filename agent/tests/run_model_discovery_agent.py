@@ -7,7 +7,7 @@ from typing import Any
 from nicegui import app
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge import agent_runner
+from exmekh_agent.exmekh_bridge.agents import agent_runner
 from exmekh_agent.main import main
 
 loaded = {"model": "qwen3.8-flash-next", "context_length": 16384}

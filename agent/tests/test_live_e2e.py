@@ -6,17 +6,17 @@ import pytest
 from dotenv import load_dotenv
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge.agent_runner import (
+from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     check_provider_health,
     run_agent_turn,
 )
 from exmekh_agent.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
 from exmekh_agent.state.session_manager import SessionManager
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.header import HeaderComponent
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.settings_drawer import SettingsDrawerComponent
-from exmekh_agent.ui.sidebar import SidebarComponent
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.navigation.header import HeaderComponent
+from exmekh_agent.ui.navigation.sidebar import SidebarComponent
+from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 
 load_dotenv()
 pytestmark = pytest.mark.live

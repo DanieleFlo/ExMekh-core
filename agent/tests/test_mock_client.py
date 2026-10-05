@@ -10,7 +10,7 @@ from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.interfaces.event_handler import ProviderEventHandler
 from exmekh_lib.interfaces.provider import Provider
 
-import exmekh_agent.exmekh_bridge.agent_runner as ar
+import exmekh_agent.exmekh_bridge.agents.agent_runner as ar
 from exmekh_agent.exmekh_bridge.models import ToolEvent
 from tests.mock_client import (
     MockClient,

@@ -1,0 +1,104 @@
+/* ========================================================================= */
+/* Raw History JSON Syntax Highlighting & Badges                             */
+/* ========================================================================= */
+
+.raw-history-container {
+    font-family: 'JetBrains Mono', Consolas, Menlo, monospace;
+}
+
+.raw-json-block {
+    tab-size: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #e4e4e7;
+    background-color: #09090b !important;
+}
+
+/* Syntax Highlighting Tokens */
+.json-key {
+    color: #93c5fd; /* Sky blue */
+    font-weight: 500;
+}
+
+.json-key-tool {
+    color: #fbbf24; /* Amber yellow for tool calls */
+    font-weight: 600;
+}
+
+.json-key-role {
+    color: #38bdf8; /* Vibrant cyan */
+    font-weight: 600;
+}
+
+.json-tool-badge {
+    background: rgba(245, 158, 11, 0.18);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+    margin-left: 2px;
+}
+
+.json-val-str {
+    color: #86efac; /* Mint / Emerald green */
+}
+
+.json-val-num {
+    color: #f472b6; /* Magenta / Pink */
+}
+
+.json-val-bool {
+    color: #fde047; /* Bright Yellow */
+    font-weight: 600;
+}
+
+.json-val-null {
+    color: #f87171; /* Coral Red */
+    font-style: italic;
+}
+
+.json-punct {
+    color: #71717a; /* Muted zinc */
+}
+
+/* Role Badges inside JSON */
+.role-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    vertical-align: middle;
+}
+
+.role-badge-user {
+    background: rgba(14, 165, 233, 0.2);
+    color: #38bdf8;
+    border: 1px solid rgba(14, 165, 233, 0.4);
+}
+
+.role-badge-assistant {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.role-badge-tool {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.role-badge-system {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.json-readable-string { display: block; white-space: normal; border-left: 2px solid #3f3f46; padding: 8px 10px; margin: 6px 0 6px 16px; background: #111114; border-radius: 4px; max-height: 320px; overflow: auto; }
+.raw-json-block { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+.raw-history-container .nicegui-column { min-width: 0; max-width: 100%; }

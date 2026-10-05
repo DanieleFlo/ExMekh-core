@@ -36,8 +36,8 @@ def agent_scroll_server(tmp_path_factory):
             from nicegui import app, ui
             from exmekh_agent.config import config
             from exmekh_agent.state.session_manager import session_manager
-            import exmekh_agent.ui.page_controller as pc_mod
-            from exmekh_agent.ui.page_controller import ChatPageController
+            import exmekh_agent.ui.chat.page_controller as pc_mod
+            from exmekh_agent.ui.chat.page_controller import ChatPageController
             from exmekh_agent.ui.styles import load_css
 
             phase2_event = asyncio.Event()

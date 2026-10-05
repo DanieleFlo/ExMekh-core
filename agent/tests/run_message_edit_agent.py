@@ -22,12 +22,12 @@ from exmekh_lib.core.models.provider_stream_event import (
 from nicegui import app
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge import agent_runner
-from exmekh_agent.exmekh_bridge.converter import exmekh_message_to_raw_dict
-from exmekh_agent.exmekh_bridge.image_input import content_text
+from exmekh_agent.exmekh_bridge.agents import agent_runner
+from exmekh_agent.exmekh_bridge.history.converter import exmekh_message_to_raw_dict
+from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui import settings_drawer
+from exmekh_agent.ui.settings import settings_drawer
 from tests.mock_client import MockClient, MockProvider
 
 
@@ -69,6 +69,24 @@ class MessageEditProvider(MockProvider):
                                 arguments={
                                     "command": "echo edit_approval",
                                     "wait_seconds": 60,
+                                },
+                            ),
+                        )
+                    ],
+                )
+            )
+        if prompt == "Delegate custom agent" and messages[-1]["role"] == "user":
+            return ProviderResponse(
+                AssistantMessage(
+                    None,
+                    tool_calls=[
+                        ToolCall(
+                            id="design-delegation",
+                            function=FunctionCall(
+                                name="call_sub_agent",
+                                arguments={
+                                    "sub_agent": "reviewer",
+                                    "text": "Say the delegated marker",
                                 },
                             ),
                         )

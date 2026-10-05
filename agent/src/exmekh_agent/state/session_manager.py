@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from collections.abc import Iterator
@@ -15,6 +16,7 @@ from exmekh_agent.exmekh_bridge.models import (
     ProjectSettings,
 )
 from exmekh_agent.state.active_turns import active_turns
+from exmekh_agent.state.agent_design import AgentDesign, AgentProfile
 from exmekh_agent.state.json_store import JsonRecordStore
 from exmekh_agent.state.temp_storage import TempStorage
 
@@ -100,9 +102,50 @@ class SessionManager:
             update={"settings": settings.model_copy(deep=True)}
         )
         self.save_project(updated)
-        project.settings = updated.settings
-        for session in self.list_sessions(project_id):
+        self._apply_project_settings(project, updated.settings)
+        return True
+
+    async def save_project_settings_async(
+        self, project_id: str, settings: ProjectSettings
+    ) -> bool:
+        """Offload persistence, then resolve chats from their latest state on the caller's loop."""
+        project = self.get_project(project_id)
+        if project is None:
+            return False
+        updated = project.model_copy(
+            update={"settings": settings.model_copy(deep=True)}
+        )
+        await asyncio.get_running_loop().run_in_executor(
+            None, self.save_project, updated
+        )
+        project = self.get_project(project_id)
+        if project is None:
+            # A concurrent deletion must not leave a recreated project record.
+            await asyncio.get_running_loop().run_in_executor(
+                None, self._project_store.delete, project_id
+            )
+            return False
+        self._apply_project_settings(project, updated.settings)
+        return True
+
+    def _apply_project_settings(
+        self, project: Project, settings: ProjectSettings
+    ) -> None:
+        project.settings = settings
+        for session in self.list_sessions(project.id):
             session.settings = self.execution_settings(session)
+
+    def save_chat_agent(
+        self, session_id: str, profile: AgentProfile, design: AgentDesign | None = None
+    ) -> bool:
+        session = self.get_session(session_id)
+        if session is None:
+            return False
+        settings = session.settings.with_agent_override(profile, design)
+        updated = session.model_copy(update={"settings": settings})
+        if not self.save_session(updated):
+            return False
+        session.settings = settings
         return True
 
     def execution_settings(self, session: ChatSession) -> ChatSettings:

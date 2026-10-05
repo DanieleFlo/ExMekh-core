@@ -15,17 +15,17 @@ from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEventType,
 )
 
-from exmekh_agent.exmekh_bridge.agent_runner import execute_agent_turn_sync
+from exmekh_agent.exmekh_bridge.agents.agent_runner import execute_agent_turn_sync
+from exmekh_agent.exmekh_bridge.agents.sub_agents import (
+    ObservedNode,
+    SubAgentEvent,
+    SubAgentEventRouter,
+)
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     SubAgentConversation,
     ToolEvent,
-)
-from exmekh_agent.exmekh_bridge.sub_agents import (
-    ObservedNode,
-    SubAgentEvent,
-    SubAgentEventRouter,
 )
 from exmekh_agent.state.sub_agent_conversations import apply_sub_agent_event
 from tests.mock_client import MockProvider
@@ -262,11 +262,11 @@ def test_live_child_calls_follow_history_policy(
     events: list[SubAgentEvent] = []
     with (
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
             return_value=provider,
         ),
         patch(
-            "exmekh_agent.exmekh_bridge.agent_runner.config.coding_agent_persistent_history",
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.config.coding_agent_persistent_history",
             persistent,
         ),
     ):
@@ -311,11 +311,11 @@ def test_live_persistent_child_reuses_block_and_history_across_root_turns(
         raw_history: list[dict] = []
         with (
             patch(
-                "exmekh_agent.exmekh_bridge.agent_runner.LocalProvider",
+                "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
                 return_value=provider,
             ),
             patch(
-                "exmekh_agent.exmekh_bridge.agent_runner.config.coding_agent_persistent_history",
+                "exmekh_agent.exmekh_bridge.agents.agent_runner.config.coding_agent_persistent_history",
                 True,
             ),
         ):

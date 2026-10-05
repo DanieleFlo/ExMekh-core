@@ -13,9 +13,8 @@ from nicegui.page import page
 from starlette.testclient import TestClient
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.models import ChatMessage
-from exmekh_agent.exmekh_bridge.pasted_input import (
+from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.history.pasted_input import (
     StagedAttachment,
     create_input_markdown_file,
     create_staged_attachment,
@@ -30,6 +29,7 @@ from exmekh_agent.exmekh_bridge.pasted_input import (
     resolve_attached_file_path,
     strip_user_input_file_xml,
 )
+from exmekh_agent.exmekh_bridge.models import ChatMessage
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.state.temp_storage import (
@@ -39,12 +39,12 @@ from exmekh_agent.state.temp_storage import (
     TempStorageStats,
     sanitize_attachment_filename,
 )
-from exmekh_agent.ui.chat_view import ChatViewComponent
-from exmekh_agent.ui.file_icons import format_file_size, get_file_icon
-from exmekh_agent.ui.file_upload import upload_router
-from exmekh_agent.ui.input_bar import InputBarComponent
-from exmekh_agent.ui.page_controller import ChatPageController
-from exmekh_agent.ui.settings_drawer import SettingsDrawerComponent
+from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.chat.page_controller import ChatPageController
+from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
+from exmekh_agent.ui.shared.file_icons import format_file_size, get_file_icon
+from exmekh_agent.ui.shared.file_upload import upload_router
 from tests.image_samples import png_bytes
 
 
@@ -1055,7 +1055,7 @@ def test_upload_endpoint_reports_staging_errors_and_deleted_chats(
         return attachment
 
     with patch(
-        "exmekh_agent.ui.file_upload.create_staged_attachment_from_file",
+        "exmekh_agent.ui.shared.file_upload.create_staged_attachment_from_file",
         side_effect=stage,
     ):
         response = TestClient(upload_app).post(
@@ -1097,7 +1097,7 @@ async def test_chat_drafts_preserve_text_and_slow_uploads(
         bar.set_session_id("first")
         bar.set_text("First draft")
         with patch(
-            "exmekh_agent.ui.input_bar.create_staged_attachment_from_file",
+            "exmekh_agent.ui.chat.input_bar.create_staged_attachment_from_file",
             side_effect=stage,
         ):
             task = asyncio.create_task(upload(bar))

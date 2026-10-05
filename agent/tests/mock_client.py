@@ -30,7 +30,7 @@ from exmekh_lib.interfaces.tokenizer import Tokenizer
 from exmekh_lib.tokenizers.qwen import QwenTokenizer
 from pydantic import BaseModel
 
-from exmekh_agent.exmekh_bridge import agent_runner as ar
+from exmekh_agent.exmekh_bridge.agents import agent_runner as ar
 from exmekh_agent.exmekh_bridge.models import ChatTitle, SkillNode, ToolEvent
 
 logger = logging.getLogger(__name__)
@@ -648,7 +648,7 @@ _ORIG_TITLE = getattr(ar, "generate_chat_title_sync", None)
 
 
 def uninstall_mock_provider() -> None:
-    """Restores exmekh_agent.exmekh_bridge.agent_runner to original production implementations."""
+    """Restores exmekh_agent.exmekh_bridge.agents.agent_runner to original production implementations."""
     if _ORIG_LOCAL_PROVIDER:
         ar.LocalProvider = _ORIG_LOCAL_PROVIDER
     if _ORIG_HEALTH:
@@ -660,7 +660,7 @@ def uninstall_mock_provider() -> None:
 
 
 def install_mock_provider(mock_provider: MockProvider | None = None) -> MockProvider:
-    """Installs the MockProvider into exmekh_agent.exmekh_bridge.agent_runner at test runtime."""
+    """Installs the MockProvider into exmekh_agent.exmekh_bridge.agents.agent_runner at test runtime."""
     provider = mock_provider or get_global_mock_provider()
 
     def mock_local_provider(*args: Any, **kwargs: Any) -> MockProvider:
