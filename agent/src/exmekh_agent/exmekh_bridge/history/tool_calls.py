@@ -81,11 +81,22 @@ def tool_result_for_call(
     return None
 
 
+def _matches_cached_output(call: ToolCall, output: RecordedToolOutput) -> bool:
+    """A cache read returns the original tool's header, including its output ID."""
+    arguments = call.get_arguments()
+    return (
+        call.get_name() == "read_tool_output"
+        and arguments.get("output_id") == output.id
+        and (arguments.get("summary_mode") or "none") == (output.summary_mode or "none")
+    )
+
+
 def restore_tool_call_ids(history: list[dict[str, Any]]) -> None:
     """Recover IDs omitted by ToolMessage.message_dump in execution snapshots.
 
     Preserve explicit identities and match named XML results within the pending
-    batch. Unnamed legacy replies follow invocation order.
+    batch. Cached reads retain the original tool name, so match their output ID
+    and summary mode. Unnamed legacy replies follow invocation order.
     """
     pending: list[ToolCall] = []
     for message in history:
@@ -106,7 +117,15 @@ def restore_tool_call_ids(history: list[dict[str, Any]]) -> None:
                     if (
                         call.get_id() == call_id
                         if call_id
-                        else not name or call.get_name() == name
+                        else (
+                            not name
+                            or call.get_name() == name
+                            or (
+                                not message.get("name")
+                                and recorded is not None
+                                and _matches_cached_output(call, recorded)
+                            )
+                        )
                     )
                 ),
                 None,

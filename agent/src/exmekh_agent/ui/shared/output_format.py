@@ -50,3 +50,19 @@ def format_output_html(text: str | None) -> str:
     return render_html(
         "shared/output.html", unavailable=unavailable, recorded=recorded, body=body
     )
+
+
+def format_raw_output_text(text: str) -> str:
+    """Preserve the recorded XML header, formatting it independently of its body."""
+    header, separator, body = text.partition("</header>")
+    if text.lstrip().startswith("<header>") and separator:
+        try:
+            header = _format_xml(header + separator)
+        except ET.ParseError:
+            return text
+        return header + "\n" + format_output_text(body.lstrip("\r\n"))
+    return format_output_text(text)
+
+
+def format_raw_output_html(text: str) -> str:
+    return render_html("shared/raw_output.html", body=format_raw_output_text(text))

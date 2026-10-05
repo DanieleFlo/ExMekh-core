@@ -10,7 +10,7 @@ from markupsafe import Markup
 
 from exmekh_agent.exmekh_bridge.history.recorded_output import RecordedToolOutput
 from exmekh_agent.ui.resources import render_html
-from exmekh_agent.ui.shared.output_format import format_output_html
+from exmekh_agent.ui.shared.output_format import format_raw_output_html
 
 
 def _span(css_class: str, content: str | Markup) -> str:
@@ -43,7 +43,7 @@ def format_json_to_highlighted_html(data: Any, indent_level: int = 0) -> str:
             except ValueError:
                 pass
         if "\n" in data or trimmed.startswith("<") or RecordedToolOutput.parse(data):
-            return _span("json-readable-string", Markup(format_output_html(data)))
+            return _span("json-readable-string", Markup(format_raw_output_html(data)))
         return _span("json-val-str", _quoted(data))
     if isinstance(data, (list, dict)):
         opening, closing = ("[", "]") if isinstance(data, list) else ("{", "}")

@@ -7,7 +7,7 @@ comportamenti incoerenti verificabili con test.
 
 | Componente | Responsabilità | API da usare |
 | --- | --- | --- |
-| `AgentDesign` | Struttura della lavagna e invarianti di nodi/collegamenti | `add_node`, `replace_node`, `move_node`, `connect`, `disconnect`, `remove_node`, `set_root`, `set_persistent_history`, `consolidate_capabilities`, `capability`, `children`, `connections` |
+| `AgentDesign` | Struttura della lavagna e invarianti di nodi/collegamenti | `add_node`, `replace_node`, `move_node`, `connect`, `disconnect`, `remove_node`, `set_root`, `set_persistent_history`, `consolidate_capabilities`, `capability`, `children`, `connections`, `connection_targets` |
 | `CapabilityRepository` | Catalogo, copie e configurazioni su disco per ExMekh-Lib | `catalog`, `default_design`, `expand_skill_connections`, `add_to_design`, `editable_values`, `copy_for_design`, `copy_capability`, `compile` |
 | `CompiledAgentDesign` | Accesso alla configurazione generata | `capabilities_for`, `default_names_for`; i chiamanti non devono conoscere i file interni |
 | `ProjectSettings` / `ChatSettings` | Configurazione e risoluzione dei default/override | `with_agent`, `with_agent_override`, `with_project` |
@@ -16,6 +16,7 @@ comportamenti incoerenti verificabili con test.
 | `ContextUsageUpdater` | Snapshot del conteggio, coalescenza e consegna nel contesto del client | `request`, `schedule`, `wait_idle`, `close` |
 | Risorse UI | Cataloghi dei testi, configurazioni e template HTML/SVG | `ui_text`, `presentation_config`, `render_html`; escaping automatico, frammenti sanitizzati espliciti |
 | `ChatMessage` | Ricerca di argomenti e risultati nelle history registrate | `arguments_for_tool`, `output_for_call`; i chiamanti non devono attraversare le history per correlare invocazioni |
+| `DesignHistory` / `DesignSnapshot` | Snapshot indipendenti e annullamento delle modifiche locali alla lavagna | `capture`, `record`, `undo`, `can_undo`, `clear` |
 | `AgentDesigner` | Lavagna, selezione e applicazione delle modifiche | `build`, `open`; controlli e stato interno restano privati |
 | `CapabilityEditor` | Form di modifica di una capability su uno snapshot indipendente | `open`, callback tipizzata; interpreta e salva tramite `CapabilityRepository` |
 | `validate_agent_design` | Validazione delle capabilities reali al confine con ExMekh-Lib | Costruzione e caricamento tramite le API pubbliche di `Node` |
@@ -78,6 +79,24 @@ Le risorse vengono risolte dal pacchetto e sono incluse nella wheel.
   `function`. L’apertura di righe e risultati appartiene alla vista: non modifica
   il modello dell’esecuzione e sopravvive ai suoi ridisegni. Ogni skill completata,
   incluse quelle annidate, resta compatta fino al clic dell’utente.
+- Il raw inspector conserva l'header XML nel content originale e ne formatta
+  l'indentazione; la vista chat usa invece i metadati grafici dell'output. La copia
+  del JSON mantiene sempre il contenuto registrato. I risultati di `read_tool_output`
+  mantengono il nome del tool originario nell'header: la correlazione considera
+  output ID e modalità di sintesi, senza riscrivere le conversazioni salvate.
+- Le opzioni Connect to appartengono al modello: sono verificabili con le stesse
+  regole di validazione dei collegamenti e non includono archi già presenti.
+  Skill e tool condivisi restano collegabili; HDS già assegnati e cicli sono esclusi.
+- L'annullamento conserva design, catalogo locale e selezione prima di ogni modifica
+  riuscita. Ctrl+Z / Cmd+Z e il pulsante Undo ripristinano gli snapshot in ordine
+  inverso; modifiche senza effetto e navigazione non aggiungono passi. Il testo
+  nei form conserva l'undo del browser. Alla riapertura dell'editor la cronologia
+  riparte da zero; le copie su disco restano nella cache, gli originali intatti.
+- Durante il trascinamento la geometria delle linee viene aggiornata nel browser
+  a ogni movimento. Lo spostamento viene registrato al rilascio; l'annullamento
+  durante il drag ripristina nodo e linee senza modificare il modello. Le frecce
+  usano un passo configurabile di 48 px e scorrimento animato, rispettando la
+  preferenza di sistema per la riduzione delle animazioni.
 - Il salvataggio della lavagna valida e restituisce uno snapshot indipendente.
   Durante la validazione i controlli sono bloccati; richieste ripetute vengono
   ignorate e gli errori restituiscono una lavagna ancora modificabile.
@@ -114,7 +133,7 @@ in produzione ora usano i metodi del modello invece di ricostruirne le invariant
 
 ## Verifica
 
-`uv run pytest -n 4`: **839 passed, 40 skipped**.
+`uv run pytest -n 4`: **858 passed, 40 skipped**.
 Copertura configurata di istruzioni e rami: **100.00%**. I test con provider reale
 richiedono opt-in; i test e2e con mock sono stati eseguiti.
 `uv run ruff check src tests`, `uv run ruff format --check src tests` e
@@ -143,5 +162,13 @@ La riorganizzazione verifica inoltre il conteggio su snapshot indipendenti, la
 coalescenza senza risultati obsoleti, il recupero dopo errori di conteggio e la
 chiusura dei client durante un worker attivo. I cataloghi vengono controllati
 per chiavi e parametri mancanti; i template verificano escaping, frammenti
-sanitizzati e variabili obbligatorie. La wheel contiene tutte le 60 risorse UI
+sanitizzati e variabili obbligatorie. La wheel contiene tutte le 61 risorse UI
 e dei prompt; la dipendenza installata corrisponde alla wheel versionata.
+
+Le regressioni della lavagna coprono Connect to per HDS, skill e tool, dipendenze
+condivise, cicli, connessioni esistenti e nessun target disponibile; verificano
+l'annullamento di spostamenti, collegamenti, rimozioni, root, flag di history,
+aggiunte e copie. Playwright controlla le linee prima del rilascio, l'annullamento
+del drag in corso, i menu con focus e i dialoghi in chiusura. Le history legacy
+verificano tre modalità di lettura dello stesso output e risultati fuori ordine,
+conservando i dati salvati; il raw inspector mantiene l'XML anche se incompleto.

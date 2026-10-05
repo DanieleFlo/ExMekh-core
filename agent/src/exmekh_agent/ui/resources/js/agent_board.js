@@ -29,6 +29,26 @@
         const scope = scopeFor(element);
         if (scope && typeof emitEvent === 'function') emitEvent('agent_board_action', {scope, action, ...data});
     };
+    const updateConnections = node => {
+        const board = node.closest('.agent-board');
+        if (!board) return;
+        const nodes = new Map(Array.from(board.querySelectorAll('.agent-board-node'),
+            item => [item.dataset.node, item]));
+        const width = Number(board.dataset.nodeWidth);
+        const halfHeight = Number(board.dataset.nodeHeight) / 2;
+        const offset = Number(board.dataset.curveOffset);
+        for (const path of board.querySelectorAll('.agent-board-links path')) {
+            if (path.dataset.parent !== node.dataset.node && path.dataset.child !== node.dataset.node) continue;
+            const parent = nodes.get(path.dataset.parent), child = nodes.get(path.dataset.child);
+            if (!parent || !child) continue;
+            const startX = parseFloat(parent.style.left) + width;
+            const startY = parseFloat(parent.style.top) + halfHeight;
+            const endX = parseFloat(child.style.left);
+            const endY = parseFloat(child.style.top) + halfHeight;
+            path.setAttribute('d', ['M', startX, startY, 'C',
+                startX + offset, startY, endX - offset, endY, endX, endY].join(' '));
+        }
+    };
     let drag = null;
     let suppressClick = false;
     document.addEventListener('pointerdown', event => {
@@ -59,6 +79,7 @@
         if (drag.node) {
             drag.node.style.left = Math.max(0, drag.left + dx) + 'px';
             drag.node.style.top = Math.max(0, drag.top + dy) + 'px';
+            updateConnections(drag.node);
         } else {
             drag.viewport.scrollLeft = drag.left - dx;
             drag.viewport.scrollTop = drag.top - dy;
@@ -80,6 +101,7 @@
             } else {
                 completed.node.style.left = completed.left + 'px';
                 completed.node.style.top = completed.top + 'px';
+                updateConnections(completed.node);
             }
         }
     };
@@ -87,13 +109,32 @@
     document.addEventListener('pointercancel', finishDrag);
     document.addEventListener('lostpointercapture', finishDrag);
     const pan = (viewport, direction) => {
-        const amount = Math.max(100, viewport.clientWidth * 0.6);
+        const amount = Number(viewport.querySelector('.agent-board').dataset.panStep);
         viewport.scrollBy({
             left: direction === 'left' ? -amount : direction === 'right' ? amount : 0,
-            top: direction === 'up' ? -160 : direction === 'down' ? 160 : 0,
+            top: direction === 'up' ? -amount : direction === 'down' ? amount : 0,
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
         });
     };
     document.addEventListener('keydown', event => {
+        if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'z') {
+            const textEditor = event.target.closest('input, textarea, [contenteditable="true"]');
+            if (textEditor && !textEditor.closest('.q-select')) return;
+            const boards = Array.from(document.querySelectorAll('.agent-workbench'))
+                .filter(board => board.getBoundingClientRect().width > 0);
+            const board = boards.at(-1);
+            if (!board) return;
+            const activeDialog = Array.from(document.querySelectorAll('.q-dialog[aria-modal="true"]'))
+                .filter(dialog => dialog.getBoundingClientRect().width > 0).at(-1);
+            if (activeDialog && !activeDialog.contains(board)) return;
+            event.preventDefault();
+            if (drag) {
+                finishDrag({pointerId: drag.pointer, type: 'pointercancel'});
+            } else {
+                send(board, 'undo', {});
+            }
+            return;
+        }
         if (!event.target.matches('.agent-board-viewport')) return;
         const directions = {ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down'};
         if (directions[event.key]) {

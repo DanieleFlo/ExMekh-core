@@ -15,6 +15,7 @@ from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
 )
 from exmekh_agent.state.agent_design import AgentDesign, AgentProfile, DesignNode
+from exmekh_agent.state.design_history import DesignHistory, DesignSnapshot
 from exmekh_agent.ui.agents.capability_editor import CapabilityEditor
 from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 
@@ -32,6 +33,8 @@ class AgentDesigner:
         self._details: ui.column | None = None
         self._scope = uuid4().hex
         self._saving = False
+        self._history = DesignHistory()
+        self._undo_button: ui.button | None = None
         self._shell: ui.card | None = None
         self._save_button: ui.button | None = None
 
@@ -54,6 +57,16 @@ class AgentDesigner:
                         "text-lg font-semibold"
                     )
                     with ui.row().classes("gap-2"):
+                        self._undo_button = (
+                            ui.button(
+                                ui_text("agents.agent_designer.undo"),
+                                icon="undo",
+                                on_click=self._undo,
+                            )
+                            .props("flat")
+                            .tooltip(ui_text("agents.agent_designer.undo_shortcut"))
+                        )
+                        self._undo_button.disable()
                         ui.button(
                             ui_text("agents.agent_designer.new_hds"),
                             icon="add",
@@ -123,16 +136,41 @@ class AgentDesigner:
         self._on_saved = on_saved
         self._on_cancelled = on_cancelled
         self._selected_id = self._design.root_id
+        self._history.clear()
         with client:
             self._render()
             self._dialog.open()
 
     def _render(self) -> None:
+        if self._undo_button:
+            self._undo_button.set_enabled(self._history.can_undo)
         self._render_board()
         self._details.clear()
         if self._selected_id:
             with self._details:
                 self._render_details(self._design.node(self._selected_id))
+
+    def _change_design(self, change: Callable[[], None]) -> None:
+        before = DesignSnapshot.capture(self._design, self._catalog, self._selected_id)
+        change()
+        self._history.record(before, self._design, self._catalog)
+        if (
+            before.design != self._design
+            or before.catalog != self._catalog
+            or before.selected_id != self._selected_id
+        ):
+            self._render()
+
+    def _undo(self) -> None:
+        if self._saving:
+            return
+        snapshot = self._history.undo()
+        if snapshot is None:
+            return
+        self._design = snapshot.design
+        self._catalog = snapshot.catalog
+        self._selected_id = snapshot.selected_id
+        self._render()
 
     def _render_board(self) -> None:
         layout = presentation_config("agent_board")
@@ -161,7 +199,13 @@ class AgentDesigner:
             directions=[("left", "←"), ("right", "→"), ("up", "↑"), ("down", "↓")],
             **{
                 key: layout[key]
-                for key in ("colors", "node_width", "node_height", "curve_offset")
+                for key in (
+                    "colors",
+                    "node_width",
+                    "node_height",
+                    "curve_offset",
+                    "pan_step",
+                )
             },
         )
 
@@ -177,8 +221,8 @@ class AgentDesigner:
             ui.switch(
                 ui_text("agents.agent_designer.preserve_sub_agent_history"),
                 value=node.persistent_history,
-                on_change=lambda event: self._design.set_persistent_history(
-                    node.id, event.value
+                on_change=lambda event: self._change_design(
+                    partial(self._design.set_persistent_history, node.id, event.value)
                 ),
             ).props("dense")
             if node.id != self._design.root_id:
@@ -189,21 +233,24 @@ class AgentDesigner:
         if node.kind in {"hds", "skill"}:
             targets = {
                 item.id: f"{item.kind.upper()} · {item.name}"
-                for item in self._design.nodes
-                if item.id != node.id
-                and item.id != self._design.root_id
-                and (node.kind == "hds" or item.kind != "hds")
+                for item in self._design.connection_targets(node.id)
             }
             target = (
                 ui.select(targets, label=ui_text("agents.agent_designer.connect_to"))
                 .props("outlined dense")
                 .classes("w-full")
             )
-            ui.button(
+            connect_button = ui.button(
                 ui_text("agents.agent_designer.connect"),
                 icon="add_link",
                 on_click=lambda: self._connect(node.id, target.value),
             ).props("flat no-caps")
+            if not targets:
+                target.disable()
+                connect_button.disable()
+                ui.label(
+                    ui_text("agents.agent_designer.no_connection_targets")
+                ).classes("text-xs text-zinc-400")
         if node.kind == "skill":
             ui.label(
                 ui_text(
@@ -238,7 +285,11 @@ class AgentDesigner:
         data = event.args
         if self._saving or data.get("scope") != self._scope or not self._dialog.value:
             return
-        try:
+        if data["action"] == "undo":
+            self._undo()
+            return
+
+        def apply_action() -> None:
             if data["action"] == "add":
                 original = next(node for node in self._catalog if node.id == data["id"])
                 node = original.model_copy(
@@ -274,7 +325,13 @@ class AgentDesigner:
                 self._design.move_node(data["id"], float(data["x"]), float(data["y"]))
             elif data["action"] == "select":
                 self._selected_id = self._design.node(data["id"]).id
-            self._render()
+
+        try:
+            if data["action"] == "select":
+                apply_action()
+                self._render()
+            else:
+                self._change_design(apply_action)
         except (ValueError, StopIteration, KeyError) as error:
             ui.notify(str(error), type="warning")
 
@@ -282,23 +339,22 @@ class AgentDesigner:
         if not child:
             return
         try:
-            self._design.connect(parent, child)
+            self._change_design(partial(self._design.connect, parent, child))
         except ValueError as error:
             ui.notify(str(error), type="warning")
-        self._render()
 
     def _disconnect(self, link) -> None:
-        self._design.disconnect(link)
-        self._render()
+        self._change_design(partial(self._design.disconnect, link))
 
     def _set_root(self, node_id: str) -> None:
-        self._design.set_root(node_id)
-        self._render()
+        self._change_design(partial(self._design.set_root, node_id))
 
     def _remove_node(self, node_id: str) -> None:
-        self._design.remove_node(node_id)
-        self._selected_id = self._design.root_id
-        self._render()
+        def remove() -> None:
+            self._design.remove_node(node_id)
+            self._selected_id = self._design.root_id
+
+        self._change_design(remove)
 
     def _new_hds(self) -> None:
         with (
@@ -331,12 +387,15 @@ class AgentDesigner:
                     y=650,
                 )
                 try:
-                    self._design.add_node(node, self._design.root_id)
+
+                    def add_node() -> None:
+                        self._design.add_node(node, self._design.root_id)
+                        self._selected_id = node.id
+
+                    self._change_design(add_node)
                 except ValueError as error:
                     ui.notify(str(error), type="warning")
                     return
-                self._selected_id = node.id
-                self._render()
                 dialog.close()
 
             ui.button(ui_text("agents.agent_designer.add_sub_agent"), on_click=add)
@@ -348,11 +407,13 @@ class AgentDesigner:
         )
 
     def _apply_capability_copy(self, node_id: str, replacement: DesignNode) -> None:
-        self._design.replace_node(node_id, replacement)
-        self._catalog.append(
-            replacement.model_copy(update={"id": uuid4().hex}, deep=True)
-        )
-        self._render()
+        def replace() -> None:
+            self._design.replace_node(node_id, replacement)
+            self._catalog.append(
+                replacement.model_copy(update={"id": uuid4().hex}, deep=True)
+            )
+
+        self._change_design(replace)
 
     def _set_saving(self, saving: bool) -> None:
         self._saving = saving

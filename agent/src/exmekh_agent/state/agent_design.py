@@ -61,6 +61,24 @@ class AgentDesign(BaseModel):
     def connections(self, node_id: str) -> list[DesignLink]:
         return [link for link in self.links if node_id in {link.parent, link.child}]
 
+    def connection_targets(self, parent_id: str) -> list[DesignNode]:
+        """Offer only new connections accepted by the same graph invariants as connect."""
+        parent = self.node(parent_id)
+        if parent.kind == "tool":
+            return []
+        connected = {node.id for node in self.children(parent_id)}
+        targets = []
+        for node in self.nodes:
+            if node.id == parent_id or node.id in connected:
+                continue
+            candidate = self.model_copy(deep=True)
+            try:
+                candidate.connect(parent_id, node.id)
+            except ValueError:
+                continue
+            targets.append(node)
+        return targets
+
     def consolidate_capabilities(self) -> None:
         """Migrate repeated legacy cards to shared nodes without losing connections."""
         unique: list[DesignNode] = []

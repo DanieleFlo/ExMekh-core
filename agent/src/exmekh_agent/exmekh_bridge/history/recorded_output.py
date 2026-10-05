@@ -16,6 +16,7 @@ class RecordedToolOutput:
     body: str
     used_tools: tuple[ToolOutputReference, ...] | None
     thinking: str = ""
+    summary_mode: str | None = None
 
     @classmethod
     def parse(cls, text: object) -> RecordedToolOutput | None:
@@ -38,6 +39,7 @@ class RecordedToolOutput:
             body=body.lstrip("\r\n"),
             used_tools=cls._references(root),
             thinking=root.findtext("thinking") or "",
+            summary_mode=root.findtext("summary-mode"),
         )
 
     @staticmethod

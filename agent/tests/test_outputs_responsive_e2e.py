@@ -114,9 +114,12 @@ async def test_raw_history_multiline_and_json_output_are_readable_and_copy_stays
             await expect(readable).to_contain_text(
                 "Log line 001: completed\nLog line 002: completed"
             )
+            await expect(readable).to_contain_text(
+                "<header>\n  <name>bash</name>\n  <type>Tool</type>"
+            )
             await expect(
-                page.locator(".raw-history-container:visible .output-header").first
-            ).to_be_visible()
+                page.locator(".raw-history-container:visible .output-header")
+            ).to_have_count(0)
             await readable.scroll_into_view_if_needed()
             await page.screenshot(
                 path="screenshots/raw-history-desktop.png",

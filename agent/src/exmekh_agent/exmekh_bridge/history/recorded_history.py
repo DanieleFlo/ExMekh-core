@@ -38,7 +38,11 @@ class RecordedHistory:
         if call_id is None:
             return None
         for scope in self.scopes():
-            for message in scope:
+            # Saved legacy transcripts may omit call IDs. Correlate an owned copy
+            # so reading an output never rewrites the retained transcript.
+            correlated = deepcopy(scope)
+            restore_tool_call_ids(correlated)
+            for message in correlated:
                 if str(message.get("role", "")).lower() not in {"tool", "function"}:
                     continue
                 if message.get("tool_call_id") != call_id:

@@ -17,7 +17,8 @@
       <span>Drag empty space to pan</span>
     </div>
     <div class="agent-board-viewport" tabindex="0" role="region" aria-label="Agent board">
-      <div class="agent-board" style="width:{{ width }}px;height:{{ height }}px">
+      <div class="agent-board" data-node-width="{{ node_width }}" data-node-height="{{ node_height }}"
+           data-curve-offset="{{ curve_offset }}" data-pan-step="{{ pan_step }}" style="width:{{ width }}px;height:{{ height }}px">
         <svg class="agent-board-links" width="{{ width }}" height="{{ height }}">
           {% for parent, child in connections %}
           <path data-parent="{{ parent.id }}" data-child="{{ child.id }}"
