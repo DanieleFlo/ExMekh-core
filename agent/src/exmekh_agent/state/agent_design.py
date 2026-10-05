@@ -8,12 +8,12 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
-AGENT_PROFILES = {
-    "generic": "Generic",
-    "programmer": "Programmer",
-    "creative": "Creative",
-    "custom": "Custom",
-}
+from exmekh_agent.config.agents import AGENT_PROFILES as AGENT_PROFILES
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.catalogs import presentation_settings
+
+BOARD_DEFAULTS = presentation_settings("agent_board")
+
 AgentProfile = Literal["generic", "programmer", "creative", "custom"]
 
 
@@ -23,8 +23,8 @@ class DesignNode(BaseModel):
     name: str
     source: str = ""
     content: str = ""
-    x: float = 40
-    y: float = 40
+    x: float = BOARD_DEFAULTS["initial_node_x"]
+    y: float = BOARD_DEFAULTS["initial_node_y"]
     persistent_history: bool = True
 
 
@@ -44,7 +44,9 @@ class AgentDesign(BaseModel):
         for node in self.nodes:
             if node.id == node_id:
                 return node
-        raise ValueError(f"Unknown agent node: {node_id}")
+        raise ValueError(
+            app_text("errors_state.agent_design.unknown_agent_node", value_1=node_id)
+        )
 
     def children(self, node_id: str, *, kind: str | None = None) -> list[DesignNode]:
         children = [
@@ -93,7 +95,10 @@ class AgentDesign(BaseModel):
             else:
                 if node.source != previous.source or node.content != previous.content:
                     raise ValueError(
-                        f"Conflicting definitions for capability: {node.name}"
+                        app_text(
+                            "errors_state.agent_design.conflicting_definitions_for_capability",
+                            value_1=node.name,
+                        )
                     )
                 aliases[node.id] = previous.id
         connections: list[DesignLink] = []
@@ -145,7 +150,11 @@ class AgentDesign(BaseModel):
 
     def remove_node(self, node_id: str) -> None:
         if node_id == self.root_id:
-            raise ValueError("Choose another root before removing this HDS")
+            raise ValueError(
+                app_text(
+                    "errors_state.agent_design.choose_another_root_before_removing_this_hds"
+                )
+            )
         node = self.node(node_id)
         self.nodes.remove(node)
         self.links = [
@@ -154,7 +163,9 @@ class AgentDesign(BaseModel):
 
     def set_root(self, node_id: str) -> None:
         if self.node(node_id).kind != "hds":
-            raise ValueError("Choose an HDS as the root agent")
+            raise ValueError(
+                app_text("errors_state.agent_design.choose_an_hds_as_the_root_agent")
+            )
         previous_root, previous_links = self.root_id, self.links
         self.root_id = node_id
         self.links = [link for link in self.links if link.child != node_id]
@@ -167,7 +178,11 @@ class AgentDesign(BaseModel):
     def set_persistent_history(self, node_id: str, enabled: bool) -> None:
         node = self.node(node_id)
         if node.kind != "hds":
-            raise ValueError("Only HDS nodes have persistent history")
+            raise ValueError(
+                app_text(
+                    "errors_state.agent_design.only_hds_nodes_have_persistent_history"
+                )
+            )
         node.persistent_history = enabled
 
     def connect(self, parent: str, child: str) -> None:
@@ -186,16 +201,26 @@ class AgentDesign(BaseModel):
         names = [(node.kind, node.name) for node in self.nodes]
         if len(ids) != len(set(ids)) or len(names) != len(set(names)):
             raise ValueError(
-                "Agent nodes must have unique IDs and capability names per kind"
+                app_text(
+                    "errors_state.agent_design.agent_nodes_must_have_unique_ids_and_capability_names_per_kind"
+                )
             )
         if self.root_id not in ids or self.node(self.root_id).kind != "hds":
-            raise ValueError("Choose an HDS as the root agent")
+            raise ValueError(
+                app_text("errors_state.agent_design.choose_an_hds_as_the_root_agent")
+            )
         for node in self.nodes:
             if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", node.id):
-                raise ValueError("Use safe node IDs without path separators")
+                raise ValueError(
+                    app_text(
+                        "errors_state.agent_design.use_safe_node_ids_without_path_separators"
+                    )
+                )
             if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", node.name):
                 raise ValueError(
-                    "Use letters, numbers, underscores or hyphens for names"
+                    app_text(
+                        "errors_state.agent_design.use_letters_numbers_underscores_or_hyphens_for_names"
+                    )
                 )
         for link in self.links:
             if (
@@ -203,25 +228,49 @@ class AgentDesign(BaseModel):
                 or link.child not in ids
                 or link.parent == link.child
             ):
-                raise ValueError("A connection must join two different existing nodes")
+                raise ValueError(
+                    app_text(
+                        "errors_state.agent_design.a_connection_must_join_two_different_existing_nodes"
+                    )
+                )
             parent = self.node(link.parent)
             child = self.node(link.child)
             if parent.kind == "tool":
-                raise ValueError("Start connections from an HDS or skill")
+                raise ValueError(
+                    app_text(
+                        "errors_state.agent_design.start_connections_from_an_hds_or_skill"
+                    )
+                )
             if parent.kind == "skill" and child.kind == "hds":
-                raise ValueError("Skills can only connect to sub-skills and tools")
+                raise ValueError(
+                    app_text(
+                        "errors_state.agent_design.skills_can_only_connect_to_sub_skills_and_tools"
+                    )
+                )
             if link.child == self.root_id:
-                raise ValueError("The root HDS cannot be a sub-agent")
+                raise ValueError(
+                    app_text(
+                        "errors_state.agent_design.the_root_hds_cannot_be_a_sub_agent"
+                    )
+                )
         for node in self.nodes:
             if (
                 node.kind == "hds"
                 and sum(link.child == node.id for link in self.links) > 1
             ):
-                raise ValueError("Each sub-agent must have a single parent")
+                raise ValueError(
+                    app_text(
+                        "errors_state.agent_design.each_sub_agent_must_have_a_single_parent"
+                    )
+                )
 
         def visit(node_id: str, ancestors: set[str]) -> None:
             if node_id in ancestors:
-                raise ValueError("Agent and skill connections cannot contain cycles")
+                raise ValueError(
+                    app_text(
+                        "errors_state.agent_design.agent_and_skill_connections_cannot_contain_cycles"
+                    )
+                )
             for link in self.links:
                 if link.parent == node_id:
                     visit(link.child, ancestors | {node_id})
@@ -242,5 +291,7 @@ class AgentDesign(BaseModel):
             attached = expanded
         if any(node.id not in attached for node in self.nodes):
             raise ValueError(
-                "Connect every board node to the root, or remove unused nodes"
+                app_text(
+                    "errors_state.agent_design.connect_every_board_node_to_the_root_or_remove_unused_nodes"
+                )
             )

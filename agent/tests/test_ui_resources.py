@@ -9,9 +9,9 @@ import pytest
 from jinja2 import TemplateNotFound, UndefinedError
 from markupsafe import Markup
 
+from exmekh_agent.config.catalogs import CONFIG_DIR
 from exmekh_agent.ui.history.json_format import format_json_to_highlighted_html
 from exmekh_agent.ui.resources import (
-    RESOURCE_DIR,
     presentation_config,
     render_html,
     ui_text,
@@ -49,17 +49,18 @@ def test_templates_escape_values_and_require_explicit_safe_fragments():
 def test_all_literal_text_keys_and_json_resources_are_valid():
     catalogs = {
         path.stem: json.loads(path.read_text(encoding="utf-8"))
-        for path in (RESOURCE_DIR / "text").glob("*.json")
+        for path in (CONFIG_DIR / "texts").glob("*.json")
     }
-    for path in (RESOURCE_DIR / "config").glob("*.json"):
+    for path in (CONFIG_DIR / "presentation").rglob("*.json"):
         assert isinstance(json.loads(path.read_text(encoding="utf-8")), dict)
-    for path in RESOURCE_DIR.parent.rglob("*.py"):
+    for path in CONFIG_DIR.parent.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if (
                 isinstance(node, ast.Call)
                 and isinstance(node.func, ast.Name)
-                and node.func.id == "ui_text"
+                and node.func.id in {"ui_text", "app_text"}
+                and isinstance(node.args[0], ast.Constant)
             ):
                 key = ast.literal_eval(node.args[0])
                 catalog, entry = key.split(".", 1)

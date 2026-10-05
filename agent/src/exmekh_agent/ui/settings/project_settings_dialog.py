@@ -12,7 +12,9 @@ from exmekh_agent.exmekh_bridge.tools.tool_approval import (
 )
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.agents.agent_selector import AgentSelector
-from exmekh_agent.ui.resources import ui_text
+from exmekh_agent.ui.resources import presentation_config, ui_text
+
+UI_PRESENTATION = presentation_config("controls/project_settings_dialog")
 
 
 class ProjectSettingsDialogComponent:
@@ -38,25 +40,35 @@ class ProjectSettingsDialogComponent:
         with (
             ui.dialog() as dialog,
             ui.card().classes(
-                "bg-zinc-900 text-zinc-100 p-4 w-[min(90vw,440px)]"
+                UI_PRESENTATION[
+                    "build.classes.bg_zinc_900_text_zinc_100_p_4_w_min_90vw_440p"
+                ]
             ) as self._card,
         ):
             self.dialog = dialog
-            with ui.row().classes("items-center justify-between w-full"):
+            with ui.row().classes(
+                UI_PRESENTATION["build.classes.items_center_justify_between_w_full"]
+            ):
                 ui.label(
                     ui_text("settings.project_settings_dialog.project_settings")
-                ).classes("font-bold text-sm")
-                ui.button(icon="close", on_click=self.close).props("flat round dense")
-            self.root_label = ui.label().classes("text-xs text-zinc-400 break-all")
+                ).classes(UI_PRESENTATION["build.classes.font_bold_text_sm"])
+                ui.button(
+                    icon=UI_PRESENTATION["build.icon.close"], on_click=self.close
+                ).props(UI_PRESENTATION["build.props.flat_round_dense"])
+            self.root_label = ui.label().classes(
+                UI_PRESENTATION["build.classes.text_xs_text_zinc_400_break_all"]
+            )
             self.input_hds = (
-                ui.input("System HDS Prompt Name")
-                .props("outlined dense dark")
-                .classes("w-full")
+                ui.input(
+                    ui_text("settings.project_settings_dialog.system_hds_prompt_name")
+                )
+                .props(UI_PRESENTATION["build.props.outlined_dense_dark"])
+                .classes(UI_PRESENTATION["build.classes.w_full"])
             )
             self.input_capabilities = (
-                ui.input("Capabilities Path")
-                .props("outlined dense dark")
-                .classes("w-full")
+                ui.input(ui_text("settings.project_settings_dialog.capabilities_path"))
+                .props(UI_PRESENTATION["build.props.outlined_dense_dark"])
+                .classes(UI_PRESENTATION["build.classes.w_full"])
             )
             self.agent_selector.build()
             self.switch_coding_history = ui.switch(
@@ -71,18 +83,20 @@ class ProjectSettingsDialogComponent:
                         "settings.project_settings_dialog.default_bash_approval"
                     ),
                 )
-                .props("outlined dense dark")
-                .classes("w-full")
+                .props(UI_PRESENTATION["build.props.outlined_dense_dark"])
+                .classes(UI_PRESENTATION["build.classes.w_full"])
             )
             ui.label(
                 ui_text(
                     "settings.project_settings_dialog.the_approval_default_applies_to_new_chats"
                 )
-            ).classes("text-xs text-zinc-400")
+            ).classes(UI_PRESENTATION["build.classes.text_xs_text_zinc_400"])
             ui.button(
                 ui_text("settings.project_settings_dialog.save_project_settings"),
                 on_click=self._save_settings,
-            ).props("no-caps icon=check").classes("w-full")
+            ).props(UI_PRESENTATION["build.props.no_caps_icon_check"]).classes(
+                UI_PRESENTATION["build.classes.w_full"]
+            )
         return dialog
 
     def open(self, project_id: str) -> None:
@@ -138,8 +152,8 @@ class ProjectSettingsDialogComponent:
         )
         settings = self.agent_selector.apply_to(settings)
         self._saving = True
-        self.dialog.props("persistent")
-        self._card.props("inert")
+        self.dialog.props(UI_PRESENTATION["save_settings.props.persistent"])
+        self._card.props(UI_PRESENTATION["save_settings.props.inert"])
         try:
             if self.draft_saved:
                 self.draft_saved(settings)

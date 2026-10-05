@@ -6,6 +6,8 @@ from typing import Any
 from markupsafe import Markup
 from nicegui import ui
 
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
 from exmekh_agent.exmekh_bridge.models import ChatMessage, ChatSession
 from exmekh_agent.ui.graph.graph_data import (
     NODE_COLORS,
@@ -15,7 +17,11 @@ from exmekh_agent.ui.graph.graph_data import (
 )
 from exmekh_agent.ui.graph.graph_svg import render_star_svg_html
 from exmekh_agent.ui.history.json_format import format_json_to_highlighted_html
-from exmekh_agent.ui.resources import render_html, ui_text
+from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
+
+UI_PRESENTATION = presentation_config("controls/graph_view")
+
+DRAWING_DEFAULTS = presentation_config("graph_view_drawing")
 
 
 class GraphViewComponent:
@@ -44,52 +50,86 @@ class GraphViewComponent:
 
     def build(self) -> ui.column:
         with ui.column().classes(
-            "w-full h-full flex-1 min-h-0 flex-grow px-4 py-3 gap-3 overflow-y-auto graph-view-container"
+            UI_PRESENTATION[
+                "build.classes.w_full_h_full_flex_1_min_h_0_flex_grow_px_4_p"
+            ]
         ) as col:
             self.container = col
             self._render_toolbar()
             self.stage_container = ui.element("div").classes(
-                "graph-stage relative w-full h-[340px] min-h-[290px] shrink-0 "
-                "bg-[#0b0b0e] border border-zinc-800/90 rounded-xl overflow-x-auto overflow-y-auto shadow-inner"
+                UI_PRESENTATION[
+                    "build.classes.graph_stage_relative_w_full_h_340px_min_h_290"
+                ]
             )
             self.bottom_menu_container = ui.column().classes(
-                "graph-bottom-menu w-full shrink-0 gap-2"
+                UI_PRESENTATION["build.classes.graph_bottom_menu_w_full_shrink_0_gap_2"]
             )
         return col
 
     def _render_toolbar(self) -> None:
         with ui.row().classes(
-            "w-full items-center justify-between pb-2 border-b border-zinc-800/80 flex-wrap gap-2"
+            UI_PRESENTATION[
+                "render_toolbar.classes.w_full_items_center_justify_between_pb_2_bord"
+            ]
         ):
-            with ui.row().classes("items-center gap-2"):
-                ui.icon("account_tree", size="sm").classes("text-sky-400")
+            with ui.row().classes(
+                UI_PRESENTATION["render_toolbar.classes.items_center_gap_2"]
+            ):
+                ui.icon(
+                    UI_PRESENTATION["render_toolbar.icon.account_tree"],
+                    size=UI_PRESENTATION["render_toolbar.size.sm"],
+                ).classes(UI_PRESENTATION["render_toolbar.classes.text_sky_400"])
                 ui.label(ui_text("graph.graph_view.graph_view")).classes(
-                    "text-sm font-semibold tracking-tight text-zinc-100"
+                    UI_PRESENTATION[
+                        "render_toolbar.classes.text_sm_font_semibold_tracking_tight_text_zin"
+                    ]
                 )
                 self.status_label = ui.label(
                     ui_text("graph.graph_view.0_histories_0_nodes")
                 ).classes(
-                    "font-mono text-xs text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded border border-zinc-800"
+                    UI_PRESENTATION[
+                        "render_toolbar.classes.font_mono_text_xs_text_zinc_400_bg_zinc_900_8"
+                    ]
                 )
 
-            with ui.row().classes("items-center gap-3 flex-wrap text-[11px] font-mono"):
+            with ui.row().classes(
+                UI_PRESENTATION[
+                    "render_toolbar.classes.items_center_gap_3_flex_wrap_text_11px_font_m"
+                ]
+            ):
                 legend_items = [
-                    ("System Prompt", NODE_COLORS["system"]),
-                    ("User", NODE_COLORS["user"]),
-                    ("Tool (Call+Exec+Resp)", NODE_COLORS["tool_bundle"]),
-                    ("Skill (Offset ↺ downward)", NODE_COLORS["skill_bundle"]),
+                    (app_text("graph.graph_data.system_prompt"), NODE_COLORS["system"]),
+                    (app_text("graph.graph_data.user_31"), NODE_COLORS["user"]),
                     (
-                        "Sub-Agent Interaction (Constellation)",
+                        app_text("graph.graph_view.tool_call_exec_resp"),
+                        NODE_COLORS["tool_bundle"],
+                    ),
+                    (
+                        app_text("graph.graph_view.skill_offset_downward"),
+                        NODE_COLORS["skill_bundle"],
+                    ),
+                    (
+                        app_text(
+                            "graph.graph_view.sub_agent_interaction_constellation"
+                        ),
                         NODE_COLORS["sub_agent_bundle"],
                     ),
-                    ("Assistant", NODE_COLORS["assistant"]),
+                    (app_text("graph.graph_view.assistant"), NODE_COLORS["assistant"]),
                 ]
                 for lbl, color in legend_items:
-                    with ui.row().classes("items-center gap-1.5"):
+                    with ui.row().classes(
+                        UI_PRESENTATION["render_toolbar.classes.items_center_gap_1_5"]
+                    ):
                         ui.html(
-                            render_html("shared/color_dot.html", size=9, color=color)
+                            render_html(
+                                "shared/color_dot.html",
+                                size=DRAWING_DEFAULTS["toolbar_text_size"],
+                                color=color,
+                            )
                         )
-                        ui.label(lbl).classes("text-zinc-400")
+                        ui.label(lbl).classes(
+                            UI_PRESENTATION["render_toolbar.classes.text_zinc_400"]
+                        )
 
     def get_selected_node_id(self, session_id: str) -> str | None:
         return self.selected_node_by_session.get(session_id)
@@ -123,7 +163,9 @@ class GraphViewComponent:
             if self.status_label:
                 self.status_label.text = ui_text(
                     "graph.graph_view.chat_generating_response",
-                    session_title_22=session.title[:22],
+                    session_title_22=session.title[
+                        : DRAWING_DEFAULTS["selected_label_length"]
+                    ],
                 )
             self._render_loading_animation(session)
             return
@@ -139,7 +181,9 @@ class GraphViewComponent:
             n_count = self.current_graph_data.total_nodes
             self.status_label.text = ui_text(
                 "graph.graph_view.chat_histories_nodes",
-                session_title_22=session.title[:22],
+                session_title_22=session.title[
+                    : DRAWING_DEFAULTS["selected_label_length"]
+                ],
                 h_count=h_count,
                 n_count=n_count,
             )
@@ -155,33 +199,58 @@ class GraphViewComponent:
         with self.stage_container:
             loading_svg = render_html("graph/loading.svg")
             ui.html(loading_svg).classes(
-                "w-full h-full absolute inset-0 pointer-events-none"
+                UI_PRESENTATION[
+                    "render_loading_animation.classes.w_full_h_full_absolute_inset_0_pointer_events"
+                ]
             )
             with ui.column().classes(
-                "graph-loading-state absolute inset-0 items-center justify-center text-center gap-3 px-6 bg-zinc-950/65 backdrop-blur-[1px]"
+                UI_PRESENTATION[
+                    "render_loading_animation.classes.graph_loading_state_absolute_inset_0_items_ce"
+                ]
             ):
-                ui.spinner("rings", size="xl", color="sky-4")
+                ui.spinner(
+                    UI_PRESENTATION["render_loading_animation.spinner.rings"],
+                    size=UI_PRESENTATION["render_loading_animation.size.xl"],
+                    color=UI_PRESENTATION["render_loading_animation.color.sky_4"],
+                )
                 ui.label(ui_text("graph.graph_view.generating_response")).classes(
-                    "text-sm font-mono font-semibold text-sky-300 tracking-tight"
+                    UI_PRESENTATION[
+                        "render_loading_animation.classes.text_sm_font_mono_font_semibold_text_sky_300_"
+                    ]
                 )
                 ui.label(
                     ui_text(
                         "graph.graph_view.the_constellation_graph_is_automatically_generated_once"
                     )
-                ).classes("text-xs font-mono text-zinc-400 max-w-lg")
+                ).classes(
+                    UI_PRESENTATION[
+                        "render_loading_animation.classes.text_xs_font_mono_text_zinc_400_max_w_lg"
+                    ]
+                )
 
         self.bottom_menu_container.clear()
         with self.bottom_menu_container:
             with ui.row().classes(
-                "graph-bottom-menu-loading w-full items-center justify-between "
-                "px-3.5 py-2.5 rounded-lg bg-[#111114] border border-zinc-800/80 text-xs font-mono text-zinc-400"
+                UI_PRESENTATION[
+                    "render_loading_animation.classes.graph_bottom_menu_loading_w_full_items_center"
+                ]
             ):
-                with ui.row().classes("items-center gap-2"):
-                    ui.spinner("dots", size="xs", color="sky-4")
+                with ui.row().classes(
+                    UI_PRESENTATION[
+                        "render_loading_animation.classes.items_center_gap_2"
+                    ]
+                ):
+                    ui.spinner(
+                        UI_PRESENTATION["render_loading_animation.spinner.dots"],
+                        size=UI_PRESENTATION["render_loading_animation.size.xs"],
+                        color=UI_PRESENTATION["render_loading_animation.color.sky_4"],
+                    )
                     ui.label(
                         ui_text(
                             "graph.graph_view.waiting_for_response_completion_for_to_build",
-                            session_title_28=session.title[:28],
+                            session_title_28=session.title[
+                                : DRAWING_DEFAULTS["loading_circle_radius"]
+                            ],
                         )
                     )
 
@@ -201,9 +270,15 @@ class GraphViewComponent:
         with self.stage_container:
             canvas = (
                 ui.element("div")
-                .classes("graph-canvas relative shrink-0 mx-auto")
+                .classes(
+                    UI_PRESENTATION[
+                        "render_stage_and_menu.classes.graph_canvas_relative_shrink_0_mx_auto"
+                    ]
+                )
                 .style(
-                    f"width:{int(graph_data.width)}px;height:{int(graph_data.height)}px;min-height:100%;"
+                    UI_PRESENTATION["canvas.style"].format(
+                        state_1=int(graph_data.width), state_2=int(graph_data.height)
+                    )
                 )
             )
             canvas.props["data-canvas-width"] = str(int(graph_data.width))
@@ -215,38 +290,52 @@ class GraphViewComponent:
                     highlighted_history_id=self.highlighted_sub_agent_id,
                 )
                 ui.html(svg_markup).classes(
-                    "w-full h-full absolute inset-0 pointer-events-none"
+                    UI_PRESENTATION[
+                        "render_stage_and_menu.classes.w_full_h_full_absolute_inset_0_pointer_events"
+                    ]
                 )
 
                 if graph_data.total_nodes == 0:
                     with ui.column().classes(
-                        "absolute inset-0 items-center justify-center text-center pointer-events-none gap-1"
+                        UI_PRESENTATION[
+                            "render_stage_and_menu.classes.absolute_inset_0_items_center_justify_center_"
+                        ]
                     ):
                         ui.label(
                             ui_text(
                                 "graph.graph_view.main_horizontal_line_ready_send_a_message"
                             )
                         ).classes(
-                            "text-xs font-mono text-zinc-400 bg-zinc-950/85 px-3 py-1.5 rounded-lg border border-zinc-800"
+                            UI_PRESENTATION[
+                                "render_stage_and_menu.classes.text_xs_font_mono_text_zinc_400_bg_zinc_950_8"
+                            ]
                         )
 
                 for history in graph_data.histories:
                     for node in history.nodes:
                         is_selected = node.id == selected_id
                         offset_cls = (
-                            "graph-node-skill-offset"
+                            UI_PRESENTATION["node.skill.offset"]
                             if node.depth > 0
-                            else "graph-node-main-line"
+                            else UI_PRESENTATION["node.main.offset"]
                         )
-                        sel_cls = "graph-node-selected" if is_selected else ""
+                        sel_cls = (
+                            UI_PRESENTATION["node.selected"] if is_selected else ""
+                        )
 
                         node_btn = (
                             ui.element("button")
                             .classes(
-                                f"graph-node graph-node-{node.kind} {offset_cls} {sel_cls}"
+                                UI_PRESENTATION["node.classes"].format(
+                                    kind=node.kind,
+                                    offset_cls=offset_cls,
+                                    sel_cls=sel_cls,
+                                )
                             )
                             .style(
-                                f"left:{node.x:.2f}px;top:{node.y:.2f}px;background-color:{node.color};color:{node.color};"
+                                UI_PRESENTATION["node.style"].format(
+                                    x=node.x, y=node.y, color=node.color
+                                )
                             )
                             .on("click", lambda _, nid=node.id: self.select_node(nid))
                         )
@@ -262,13 +351,19 @@ class GraphViewComponent:
                         )
                         with node_btn:
                             ui.label(str(node.step_index + 1)).classes(
-                                "text-[10px] font-mono font-bold text-zinc-950 pointer-events-none select-none"
+                                UI_PRESENTATION[
+                                    "render_stage_and_menu.classes.text_10px_font_mono_font_bold_text_zinc_950_p"
+                                ]
                             )
-                            caption_pos = "top-6" if node.depth > 0 else "-top-5"
+                            caption_pos = (
+                                UI_PRESENTATION["node.skill.caption"]
+                                if node.depth > 0
+                                else "-top-5"
+                            )
                             ui.label(node.short_label).classes(
-                                f"absolute {caption_pos} left-1/2 -translate-x-1/2 whitespace-nowrap "
-                                "text-[10px] font-mono text-zinc-300 bg-zinc-950/85 px-1.5 py-0.2 "
-                                "rounded border border-zinc-800/80 pointer-events-none select-none"
+                                UI_PRESENTATION["node.caption"].format(
+                                    caption_pos=caption_pos
+                                )
                             )
 
         self._render_bottom_horizontal_menu(graph_data.find_node(selected_id))
@@ -281,27 +376,51 @@ class GraphViewComponent:
         with self.bottom_menu_container:
             if selected_node is None:
                 with ui.row().classes(
-                    "graph-bottom-menu-placeholder w-full items-center justify-between "
-                    "px-3.5 py-2.5 rounded-lg bg-[#111114] border border-zinc-800/80 text-xs font-mono text-zinc-400"
+                    UI_PRESENTATION[
+                        "render_bottom_horizontal_menu.classes.graph_bottom_menu_placeholder_w_full_items_ce"
+                    ]
                 ):
-                    with ui.row().classes("items-center gap-2"):
-                        ui.icon("touch_app", size="xs").classes("text-sky-400")
+                    with ui.row().classes(
+                        UI_PRESENTATION[
+                            "render_bottom_horizontal_menu.classes.items_center_gap_2"
+                        ]
+                    ):
+                        ui.icon(
+                            UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.icon.touch_app"
+                            ],
+                            size=UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.size.xs"
+                            ],
+                        ).classes(
+                            UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.classes.text_sky_400"
+                            ]
+                        )
                         ui.label(
                             ui_text("graph.graph_view.click_a_node_on_the_graph_to")
                         )
                 return
 
             with ui.column().classes(
-                "graph-bottom-menu-open w-full bg-[#0e0e12] border border-zinc-700/80 rounded-xl p-3 gap-2.5 shadow-xl"
+                UI_PRESENTATION[
+                    "render_bottom_horizontal_menu.classes.graph_bottom_menu_open_w_full_bg_0e0e12_borde"
+                ]
             ):
                 with ui.row().classes(
-                    "w-full items-center justify-between pb-2 border-b border-zinc-800/80 flex-wrap gap-2"
+                    UI_PRESENTATION[
+                        "render_bottom_horizontal_menu.classes.w_full_items_center_justify_between_pb_2_bord"
+                    ]
                 ):
-                    with ui.row().classes("items-center gap-2 flex-wrap"):
+                    with ui.row().classes(
+                        UI_PRESENTATION[
+                            "render_bottom_horizontal_menu.classes.items_center_gap_2_flex_wrap"
+                        ]
+                    ):
                         ui.html(
                             render_html(
                                 "shared/color_dot.html",
-                                size=12,
+                                size=DRAWING_DEFAULTS["history_label_length"],
                                 color=selected_node.color,
                             )
                         )
@@ -311,9 +430,15 @@ class GraphViewComponent:
                                 selected_node_step_index_1=selected_node.step_index + 1,
                                 selected_node_label=selected_node.label,
                             )
-                        ).classes("text-xs font-mono font-semibold text-zinc-100")
+                        ).classes(
+                            UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.classes.text_xs_font_mono_font_semibold_text_zinc_100"
+                            ]
+                        )
                         ui.label(selected_node.history_label).classes(
-                            "text-[11px] font-mono text-sky-300 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50"
+                            UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.classes.text_11px_font_mono_text_sky_300_bg_sky_950_6"
+                            ]
                         )
                         if selected_node.depth > 0:
                             ui.label(
@@ -323,7 +448,9 @@ class GraphViewComponent:
                                     selected_node_skill_path=selected_node.skill_path,
                                 )
                             ).classes(
-                                "text-[11px] font-mono text-purple-300 bg-purple-950/60 px-2 py-0.5 rounded border border-purple-800/50"
+                                UI_PRESENTATION[
+                                    "render_bottom_horizontal_menu.classes.text_11px_font_mono_text_purple_300_bg_purple"
+                                ]
                             )
                         ui.label(
                             ui_text(
@@ -331,31 +458,51 @@ class GraphViewComponent:
                                 len_selected_node_events=len(selected_node.events),
                             )
                         ).classes(
-                            "text-[11px] font-mono text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/50"
+                            UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.classes.text_11px_font_mono_text_amber_300_bg_amber_9"
+                            ]
                         )
 
-                    with ui.row().classes("items-center gap-1.5"):
+                    with ui.row().classes(
+                        UI_PRESENTATION[
+                            "render_bottom_horizontal_menu.classes.items_center_gap_1_5"
+                        ]
+                    ):
                         all_events_json = json.dumps(
                             selected_node.events, indent=2, ensure_ascii=False
                         )
                         ui.button(
                             ui_text("graph.graph_view.copy_node_events"),
-                            icon="content_copy",
+                            icon=UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.icon.content_copy"
+                            ],
                             on_click=lambda _, t=all_events_json: self._copy_json(
-                                t, "Node events copied"
+                                t, app_text("graph.graph_view.node_events_copied")
                             ),
-                        ).props("flat dense no-caps size=xs text-color=grey-3").classes(
-                            "text-[11px] px-2.5 py-0.5 bg-zinc-900 hover:bg-zinc-800 rounded border border-zinc-700"
+                        ).props(
+                            UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.props.flat_dense_no_caps_size_xs_text_color_grey_3"
+                            ]
+                        ).classes(
+                            UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.classes.text_11px_px_2_5_py_0_5_bg_zinc_900_hover_bg_"
+                            ]
                         )
                         ui.button(
-                            icon="close",
+                            icon=UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.icon.close"
+                            ],
                             on_click=lambda: self.select_node(None),
                         ).props(
-                            "flat round dense size=xs text-color=grey-4 aria-label='Close node menu'"
+                            UI_PRESENTATION[
+                                "render_bottom_horizontal_menu.props.flat_round_dense_size_xs_text_color_grey_4_ar"
+                            ]
                         )
 
                 with ui.row().classes(
-                    "graph-horizontal-events-row w-full flex-row flex-nowrap overflow-x-auto gap-3 pb-1 items-stretch"
+                    UI_PRESENTATION[
+                        "render_bottom_horizontal_menu.classes.graph_horizontal_events_row_w_full_flex_row_f"
+                    ]
                 ):
                     for idx, ev in enumerate(selected_node.events):
                         self._render_horizontal_event_card(ev, index=idx + 1)
@@ -367,55 +514,82 @@ class GraphViewComponent:
         )
 
         if role in ("system", "developer"):
-            border_cls = "border-pink-800/60"
-            badge_cls = "bg-pink-950/80 text-pink-300 border-pink-700/60"
-            icon_name = "terminal"
+            border_cls = UI_PRESENTATION["event.system.border"]
+            badge_cls = UI_PRESENTATION["event.system.badge"]
+            icon_name = UI_PRESENTATION["render_horizontal_event_card.icon.terminal"]
         elif ev.get("event_stage") == "steering_message":
-            border_cls = "border-orange-700/50"
-            badge_cls = "bg-orange-950/80 text-orange-300 border-orange-700/60"
-            icon_name = "alt_route"
+            border_cls = UI_PRESENTATION["event.steering.border"]
+            badge_cls = UI_PRESENTATION["event.steering.badge"]
+            icon_name = UI_PRESENTATION["render_horizontal_event_card.icon.alt_route"]
         elif role == "user":
-            border_cls = "border-sky-800/50"
-            badge_cls = "bg-sky-950/80 text-sky-300 border-sky-700/60"
-            icon_name = "person"
+            border_cls = UI_PRESENTATION["event.user.border"]
+            badge_cls = UI_PRESENTATION["event.user.badge"]
+            icon_name = UI_PRESENTATION["render_horizontal_event_card.icon.person"]
         elif role == "tool":
-            border_cls = "border-amber-700/50"
-            badge_cls = "bg-amber-950/80 text-amber-300 border-amber-700/60"
-            icon_name = "output"
+            border_cls = UI_PRESENTATION["event.tool.border"]
+            badge_cls = UI_PRESENTATION["event.tool.badge"]
+            icon_name = UI_PRESENTATION["render_horizontal_event_card.icon.output"]
         elif role == "execution":
-            border_cls = "border-purple-700/50"
-            badge_cls = "bg-purple-950/80 text-purple-300 border-purple-700/60"
-            icon_name = "play_circle"
+            border_cls = UI_PRESENTATION["event.execution.border"]
+            badge_cls = UI_PRESENTATION["event.execution.badge"]
+            icon_name = UI_PRESENTATION["render_horizontal_event_card.icon.play_circle"]
         else:
-            border_cls = "border-emerald-800/50"
-            badge_cls = "bg-emerald-950/80 text-emerald-300 border-emerald-700/60"
-            icon_name = "smart_toy"
+            border_cls = UI_PRESENTATION["event.assistant.border"]
+            badge_cls = UI_PRESENTATION["event.assistant.badge"]
+            icon_name = UI_PRESENTATION["render_horizontal_event_card.icon.smart_toy"]
 
         with ui.column().classes(
-            f"graph-event-card min-w-[330px] flex-1 shrink-0 bg-[#111114] border {border_cls} rounded-lg p-3 gap-2"
+            UI_PRESENTATION["event.card"].format(border_cls=border_cls)
         ):
-            with ui.row().classes("w-full items-center justify-between"):
-                with ui.row().classes("items-center gap-1.5 flex-wrap"):
-                    ui.icon(icon_name, size="xs").classes("text-zinc-400")
+            with ui.row().classes(
+                UI_PRESENTATION[
+                    "render_horizontal_event_card.classes.w_full_items_center_justify_between"
+                ]
+            ):
+                with ui.row().classes(
+                    UI_PRESENTATION[
+                        "render_horizontal_event_card.classes.items_center_gap_1_5_flex_wrap"
+                    ]
+                ):
+                    ui.icon(
+                        icon_name,
+                        size=UI_PRESENTATION["render_horizontal_event_card.size.xs"],
+                    ).classes(
+                        UI_PRESENTATION[
+                            "render_horizontal_event_card.classes.text_zinc_400"
+                        ]
+                    )
                     with ui.row().classes(
-                        f"items-center px-1.5 py-0.5 rounded text-[10px] font-mono border {badge_cls}"
+                        UI_PRESENTATION["event.badge"].format(badge_cls=badge_cls)
                     ):
                         ui.label(stage_label)
                         if ev.get("pending"):
                             ui.label(ui_text("graph.graph_view.pending")).classes(
-                                "text-orange-300"
+                                UI_PRESENTATION[
+                                    "render_horizontal_event_card.classes.text_orange_300"
+                                ]
                             )
                     ui.label(ui_text("graph.graph_view.event", index=index)).classes(
-                        "font-mono text-[10px] text-zinc-500"
+                        UI_PRESENTATION[
+                            "render_horizontal_event_card.classes.font_mono_text_10px_text_zinc_500"
+                        ]
                     )
                 ev_json = json.dumps(ev, indent=2, ensure_ascii=False)
                 ui.button(
-                    icon="content_copy",
+                    icon=UI_PRESENTATION[
+                        "render_horizontal_event_card.icon.content_copy"
+                    ],
                     on_click=lambda _, text=ev_json: self._copy_json(
-                        text, "Event copied"
+                        text, app_text("graph.graph_view.event_copied")
                     ),
-                ).props("flat round dense size=xs").classes(
-                    "text-zinc-600 hover:text-zinc-300"
+                ).props(
+                    UI_PRESENTATION[
+                        "render_horizontal_event_card.props.flat_round_dense_size_xs"
+                    ]
+                ).classes(
+                    UI_PRESENTATION[
+                        "render_horizontal_event_card.classes.text_zinc_600_hover_text_zinc_300"
+                    ]
                 )
 
             highlighted_html = format_json_to_highlighted_html(ev)
@@ -425,9 +599,14 @@ class GraphViewComponent:
                     content=Markup(highlighted_html),
                     extra_classes="max-h-[220px] overflow-y-auto",
                 )
-            ).classes("w-full")
+            ).classes(UI_PRESENTATION["render_horizontal_event_card.classes.w_full"])
 
     @staticmethod
     def _copy_json(text: str, notification: str) -> None:
         ui.clipboard.write(text)
-        ui.notify(notification, type="positive", position="top", timeout=1500)
+        ui.notify(
+            notification,
+            type="positive",
+            position="top",
+            timeout=EXECUTION_DEFAULTS["graph_notification_timeout_ms"],
+        )

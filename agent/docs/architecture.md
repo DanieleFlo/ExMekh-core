@@ -14,7 +14,10 @@ comportamenti incoerenti verificabili con test.
 | `SessionManager` | Persistenza e aggiornamento dello stato gestito | `save_chat_agent`, `save_project_settings`, `save_project_settings_async`, `execution_settings`, `edit_message` |
 | `RecordedHistory` | Attraversamento, correlazione e ripristino delle history registrate | `scopes`, `arguments_for_call`, `output_for_call`, `restored_snapshot` |
 | `ContextUsageUpdater` | Snapshot del conteggio, coalescenza e consegna nel contesto del client | `request`, `schedule`, `wait_idle`, `close` |
-| Risorse UI | Cataloghi dei testi, configurazioni e template HTML/SVG | `ui_text`, `presentation_config`, `render_html`; escaping automatico, frammenti sanitizzati espliciti |
+| `AppConfig` | Configurazione runtime e override di ambiente | `update`, `save_to_env`, `select_available_model`; mantiene l'API pubblica del precedente modulo |
+| `config.catalogs` | Caricamento delle impostazioni e dei testi suddivisi per competenza | `settings`, `presentation_settings`, `message`; snapshot indipendenti delle configurazioni |
+| Risorse UI | Accesso alla presentazione e rendering dei template HTML/SVG | `ui_text`, `presentation_config`, `render_html`; delega ai cataloghi, escaping automatico |
+| `utils` | Operazioni generiche condivise | `atomic_write_text`, normalizzazione dei nomi, formatter, catene di eccezioni, lettori di risorse e parser Markdown/YAML |
 | `ChatMessage` | Ricerca di argomenti e risultati nelle history registrate | `arguments_for_tool`, `output_for_call`; i chiamanti non devono attraversare le history per correlare invocazioni |
 | `DesignHistory` / `DesignSnapshot` | Snapshot indipendenti e annullamento delle modifiche locali alla lavagna | `capture`, `record`, `undo`, `can_undo`, `clear` |
 | `AgentDesigner` | Lavagna, selezione e applicazione delle modifiche | `build`, `open`; controlli e stato interno restano privati |
@@ -34,13 +37,32 @@ e `tools`; i modelli condivisi rimangono nel suo livello principale.
 `state` resta una cartella coesa per stato e persistenza, senza aggiungere
 sottopacchetti che conterrebbero un solo modulo.
 
-I testi della UI risiedono in `ui/resources/text`, suddivisi per funzionalità.
-I valori dinamici sono parametri nominati. Icone dei file, colori del grafo,
-geometria della lavagna, ordine dei fogli CSS e policy di sanitizzazione Markdown
-risiedono in `ui/resources/config`. HTML e SVG appartengono ai template;
-CSS e JavaScript hanno le proprie cartelle. Le istruzioni DS4, della quick chat
-e della generazione dei titoli sono in `exmekh_bridge/resources/prompts`.
-Le risorse vengono risolte dal pacchetto e sono incluse nella wheel.
+`config` è un pacchetto con moduli separati per provider, server, agenti, storage,
+allegati, esecuzione, formattazione, ambiente, percorsi e approvazioni.
+`application.py` compone i default e mantiene `AppConfig` e l'istanza `config`,
+con gli stessi import pubblici e la stessa persistenza degli override di ambiente.
+
+`config/resources` contiene i valori modificabili divisi per competenza.
+`config/texts` raccoglie etichette, suggerimenti, messaggi di errore e di log,
+approvazioni e testi con parametri nominati. `config/presentation` contiene
+geometria del grafo e della lavagna, icone, ordine dei fogli CSS e sanitizzazione
+Markdown; `controls` separa gli stili dei componenti. Gli identificatori dei
+protocolli, i campi degli schemi e le operazioni matematiche restano nel codice.
+
+HTML, SVG e il template JavaScript per il testo incollato appartengono a
+`ui/resources/templates`; CSS e JavaScript hanno le proprie cartelle.
+Le istruzioni DS4, della quick chat, dei profili, delle approvazioni e della
+generazione dei titoli sono in `exmekh_bridge/resources/prompts`.
+Il fallback della quick chat usa lo stesso prompt della chiamata al modello e
+del conteggio del contesto. Le risorse sono risolte dal pacchetto e incluse nella wheel.
+
+`utils` è divisa in `files`, `filenames`, `formatting`, `exceptions`, `markdown`
+e `resources`. La UI importa i formatter dal loro modulo proprietario; il bridge
+e lo storage conservano gli alias pubblici precedenti per compatibilità.
+I lettori condividono la cache, mentre i cataloghi restituiscono copie indipendenti
+delle impostazioni. Il parser Markdown/YAML non dipende dal repository delle
+capability. Stato e configurazione usano la stessa utility di scrittura atomica:
+i file temporanei predefiniti sono univoci e vengono rimossi anche in caso di errore.
 
 ## Regole per le modifiche successive
 
@@ -133,7 +155,7 @@ in produzione ora usano i metodi del modello invece di ricostruirne le invariant
 
 ## Verifica
 
-`uv run pytest -n 4`: **864 passed, 40 skipped**.
+`uv run pytest -n 4`: **873 passed, 40 skipped**.
 Copertura configurata di istruzioni e rami: **100.00%**. I test con provider reale
 richiedono opt-in; i test e2e con mock sono stati eseguiti.
 `uv run ruff check src tests`, `uv run ruff format --check src tests` e
@@ -162,8 +184,9 @@ La riorganizzazione verifica inoltre il conteggio su snapshot indipendenti, la
 coalescenza senza risultati obsoleti, il recupero dopo errori di conteggio e la
 chiusura dei client durante un worker attivo. I cataloghi vengono controllati
 per chiavi e parametri mancanti; i template verificano escaping, frammenti
-sanitizzati e variabili obbligatorie. La wheel contiene tutte le 61 risorse UI
-e dei prompt; la dipendenza installata corrisponde alla wheel versionata.
+sanitizzati e variabili obbligatorie. La wheel contiene le risorse di configurazione, UI e prompt; la verifica confronta
+ogni file con il sorgente e importa il pacchetto estratto da una directory diversa.
+La dipendenza installata corrisponde alla wheel versionata.
 
 Le regressioni della lavagna coprono Connect to per HDS, skill e tool, dipendenze
 condivise, cicli, connessioni esistenti e nessun target disponibile; verificano
@@ -185,3 +208,11 @@ cronologia vuota non modifica il grafo. Le azioni sono eventi reali del browser;
 gli helper leggono il DOM senza cambiare il modello o invocare callback private.
 Meta viene verificato su Chromium nel runner disponibile, senza simulare una
 validazione nativa macOS.
+
+La configurazione verifica inoltre l'assenza di chiavi JSON duplicate, gli override
+di ambiente, la conservazione di commenti e variabili estranee durante il
+salvataggio, le copie indipendenti e i riferimenti ai testi e agli stili.
+I template di presentazione devono ricevere esattamente i parametri dichiarati.
+Un controllo AST impedisce di reintrodurre testi, icone e stili letterali nei
+controlli NiceGUI. Le utility verificano scritture concorrenti con file temporanei
+distinti e la conservazione della destinazione quando scrittura o sostituzione falliscono.

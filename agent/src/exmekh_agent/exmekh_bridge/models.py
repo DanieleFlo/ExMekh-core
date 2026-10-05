@@ -10,37 +10,17 @@ from typing import Any, Literal, Self
 from exmekh_lib.core.models.assistant_message import ToolCall
 from pydantic import BaseModel, Field
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 from exmekh_agent.exmekh_bridge.history.tool_calls import (
     parse_tool_calls,
 )
 from exmekh_agent.exmekh_bridge.tools.tool_approval import normalize_tool_approval_mode
 from exmekh_agent.state.agent_design import AgentDesign, AgentProfile
+from exmekh_agent.utils.formatting import format_duration as format_duration
 
 MessageRole = Literal["user", "assistant", "system"]
 TerminalStatus = Literal["completed", "error"]
-
-
-def format_duration(seconds: float | int | None) -> str:
-    """Format a duration in seconds into 'Xs', 'Ym Xs', or 'Zh Ym Xs'.
-
-    Examples:
-        0 -> '0s'
-        30 -> '30s'
-        59 -> '59s'
-        70 -> '1m 10s'
-        7460 -> '2h 4m 20s'
-    """
-    if seconds is None:
-        return "0s"
-    total_seconds = max(0, int(seconds))
-    hours, remainder = divmod(total_seconds, 3600)
-    minutes, secs = divmod(remainder, 60)
-    if hours > 0:
-        return f"{hours}h {minutes}m {secs}s"
-    if minutes > 0:
-        return f"{minutes}m {secs}s"
-    return f"{secs}s"
 
 
 class ToolEvent(BaseModel):
@@ -802,7 +782,12 @@ class SubAgentConversation(BaseModel):
 
     def start_call(self, user_message: str) -> None:
         if self.messages and self.messages[-1].is_streaming:
-            raise ValueError(f"Sub-agent conversation {self.id} is already active")
+            raise ValueError(
+                app_text(
+                    "errors_exmekh_bridge.models.sub_agent_conversation_is_already_active",
+                    value_1=self.id,
+                )
+            )
         self.status = "active"
         self.messages.append(ChatMessage(role="user", content=user_message))
         self.messages.append(ChatMessage(role="assistant", is_streaming=True))
@@ -839,7 +824,12 @@ class SubAgentConversation(BaseModel):
 
     def _active_assistant(self) -> ChatMessage:
         if not self.messages or not self.messages[-1].is_streaming:
-            raise ValueError(f"Sub-agent conversation {self.id} has no active call")
+            raise ValueError(
+                app_text(
+                    "errors_exmekh_bridge.models.sub_agent_conversation_has_no_active_call",
+                    value_1=self.id,
+                )
+            )
         return self.messages[-1]
 
 
@@ -934,7 +924,7 @@ class ChatSettings(ProjectSettings):
 
 class ChatSession(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    title: str = "New Conversation"
+    title: str = app_text("defaults.conversation_title")
     project_id: str | None = None
     created_at: float = Field(default_factory=time.time)
     updated_at: float = Field(default_factory=time.time)
@@ -1046,7 +1036,11 @@ class ChatSession(BaseModel):
     def apply_revision(self, revised: ChatSession) -> None:
         """Publish a persisted branch while retaining this managed instance."""
         if revised.id != self.id:
-            raise ValueError("Revision belongs to another conversation")
+            raise ValueError(
+                app_text(
+                    "errors_exmekh_bridge.models.revision_belongs_to_another_conversation"
+                )
+            )
         self.messages = revised.messages
         self.sub_agent_conversations = revised.sub_agent_conversations
         self.queued_messages = revised.queued_messages
@@ -1087,7 +1081,10 @@ class ChatSession(BaseModel):
             or conversation.persistent_history != persistent_history
         ):
             raise ValueError(
-                f"Sub-agent conversation {conversation_id} changed identity"
+                app_text(
+                    "errors_exmekh_bridge.models.sub_agent_conversation_changed_identity",
+                    value_1=conversation_id,
+                )
             )
         conversation.start_call(user_message)
         return conversation

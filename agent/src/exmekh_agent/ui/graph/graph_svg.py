@@ -5,7 +5,9 @@ import math
 from markupsafe import Markup
 
 from exmekh_agent.ui.graph.graph_data import SessionGraphData
-from exmekh_agent.ui.resources import render_html, ui_text
+from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
+
+DRAWING_DEFAULTS = presentation_config("graph_svg_drawing")
 
 
 def _build_svg_arrow_polygon(
@@ -19,8 +21,8 @@ def _build_svg_arrow_polygon(
     opacity: str,
 ) -> str:
     """Build an SVG stealth arrowhead polygon at (tip_x, tip_y) pointing along unit vector (dir_x, dir_y)."""
-    arrow_len = 10.0
-    half_w = 4.6
+    arrow_len = DRAWING_DEFAULTS["arrow_length"]
+    half_w = DRAWING_DEFAULTS["arrow_half_width"]
     perp_x = -dir_y
     perp_y = dir_x
 
@@ -87,7 +89,7 @@ def render_star_svg_html(
             # Unit perpendicular normal
             nx = -uy
             ny = ux
-            sep = 11.0
+            sep = DRAWING_DEFAULTS["parallel_line_separation"]
             stroke_w = "1.35" if is_highlighted else "1.15"
 
             # 1) Outgoing parallel line (+sep * normal): message enters sub-history from attachment point A -> B
@@ -134,8 +136,12 @@ def render_star_svg_html(
                     "graph/turnaround.svg",
                     bx_out=bx_out,
                     by_out=by_out,
-                    control_x=round(bx + 12.0 * ux, 2),
-                    control_y=round(by + 12.0 * uy, 2),
+                    control_x=round(
+                        bx + DRAWING_DEFAULTS["curve_control_offset"] * ux, 2
+                    ),
+                    control_y=round(
+                        by + DRAWING_DEFAULTS["curve_control_offset"] * uy, 2
+                    ),
                     bx_in=bx_in,
                     by_in=by_in,
                     history_line_color=history.line_color,
@@ -186,15 +192,29 @@ def render_star_svg_html(
 
         # Endpoint labels for the history straight line
         if history.is_main:
-            lbl_x = history.x1 + 6.0
-            lbl_y = history.y1 - 10.0
+            lbl_x = history.x1 + DRAWING_DEFAULTS["minimum_history_length"]
+            lbl_y = history.y1 - DRAWING_DEFAULTS["label_offset_y"]
             angle_label = ui_text("graph.graph_svg.main_history")
         else:
             lbl_x = max(
-                24.0, min(max(24.0, graph_data.width - 190.0), history.x2 - 45.0)
+                DRAWING_DEFAULTS["label_minimum_x"],
+                min(
+                    max(
+                        DRAWING_DEFAULTS["label_minimum_x"],
+                        graph_data.width - DRAWING_DEFAULTS["label_right_margin"],
+                    ),
+                    history.x2 - DRAWING_DEFAULTS["history_label_offset_x"],
+                ),
             )
             lbl_y = max(
-                18.0, min(max(18.0, graph_data.height - 15.0), history.y2 - 10.0)
+                DRAWING_DEFAULTS["label_minimum_y"],
+                min(
+                    max(
+                        DRAWING_DEFAULTS["label_minimum_y"],
+                        graph_data.height - DRAWING_DEFAULTS["label_bottom_margin"],
+                    ),
+                    history.y2 - DRAWING_DEFAULTS["label_offset_y"],
+                ),
             )
             angle_label = f"{history.label} ({int(history.angle_deg)}°)"
 
@@ -224,7 +244,8 @@ def render_star_svg_html(
                     render_html(
                         "graph/skill_label.svg",
                         branch_label_x=branch.label_x,
-                        label_y=branch.label_y + 14.0,
+                        label_y=branch.label_y
+                        + DRAWING_DEFAULTS["skill_label_offset_y"],
                         branch_color=branch.color,
                         branch_skill_name=branch.skill_name,
                         branch_depth=branch.depth,

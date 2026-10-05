@@ -22,6 +22,7 @@ from exmekh_lib.interfaces.event_handler import (
     ProviderEventHandler,
 )
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
 from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter
 from exmekh_agent.exmekh_bridge.models import SkillNode, TerminalStatus, ToolEvent
@@ -59,7 +60,10 @@ def publish_raw_history(
     try:
         callback(history, tree)
     except Exception as error:  # noqa: BLE001 - observers are best-effort
-        logger.warning("Unable to publish raw history: %s", error)
+        logger.warning(
+            app_text("errors_agents.event_handlers.unable_to_publish_raw_history_s"),
+            error,
+        )
 
 
 class QuickChatEventHandler(ProviderEventHandler):

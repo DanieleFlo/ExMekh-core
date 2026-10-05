@@ -9,6 +9,8 @@ from typing import Any
 import httpx
 
 from exmekh_agent.config import config
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.provider import DEFAULTS as PROVIDER_DEFAULTS
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +48,9 @@ async def check_provider_health(
     models_url = f"{url}/models"
 
     try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
+        async with httpx.AsyncClient(
+            timeout=PROVIDER_DEFAULTS["health_timeout_seconds"]
+        ) as client:
             resp = await client.get(models_url, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
@@ -69,5 +73,8 @@ async def check_provider_health(
                 return True, sorted(set(models))
             return False, []
     except Exception as e:  # noqa: BLE001 - health probe converts failures to status
-        logger.debug("Provider health check failed: %s", e)
+        logger.debug(
+            app_text("errors_providers.provider_health.provider_health_check_failed_s"),
+            e,
+        )
         return False, []

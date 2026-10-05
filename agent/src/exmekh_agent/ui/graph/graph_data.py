@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.exmekh_bridge.history.skill_history import (
@@ -23,7 +24,9 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from exmekh_agent.ui.resources import presentation_config
+from exmekh_agent.ui.resources import presentation_config, ui_text
+
+DRAWING_DEFAULTS = presentation_config("graph_data_drawing")
 
 GraphNodeKind = Literal[
     "system",
@@ -35,6 +38,8 @@ GraphNodeKind = Literal[
     "assistant",
     "error",
 ]
+
+GRAPH_LAYOUT = presentation_config("graph_layout")
 
 NODE_COLORS: dict[GraphNodeKind, str] = presentation_config("graph")["node_colors"]
 
@@ -55,10 +60,10 @@ class GraphNode(BaseModel):
     skill_name: str | None = None
     sub_agent_target_id: str | None = None
     events: list[dict[str, Any]] = Field(default_factory=list)
-    x: float = 500.0
-    y: float = 215.0
-    base_x: float = 500.0
-    base_y: float = 215.0
+    x: float = DRAWING_DEFAULTS["initial_center_x"]
+    y: float = DRAWING_DEFAULTS["initial_center_y"]
+    base_x: float = DRAWING_DEFAULTS["initial_center_x"]
+    base_y: float = DRAWING_DEFAULTS["initial_center_y"]
 
 
 class GraphSkillBranch(BaseModel):
@@ -69,8 +74,8 @@ class GraphSkillBranch(BaseModel):
     depth: int
     color: str
     points: list[tuple[float, float]] = Field(default_factory=list)
-    label_x: float = 500.0
-    label_y: float = 260.0
+    label_x: float = DRAWING_DEFAULTS["initial_center_x"]
+    label_y: float = DRAWING_DEFAULTS["initial_label_y"]
 
 
 class GraphInteractionLink(BaseModel):
@@ -92,14 +97,14 @@ class GraphHistoryLine(BaseModel):
     label: str
     is_main: bool = False
     parent_history_id: str | None = None
-    interaction_x: float = 500.0
-    interaction_y: float = 215.0
+    interaction_x: float = DRAWING_DEFAULTS["initial_center_x"]
+    interaction_y: float = DRAWING_DEFAULTS["initial_center_y"]
     angle_rad: float = 0.0
     angle_deg: float = 0.0
-    x1: float = 110.0
-    y1: float = 215.0
-    x2: float = 890.0
-    y2: float = 215.0
+    x1: float = DRAWING_DEFAULTS["initial_history_start_x"]
+    y1: float = DRAWING_DEFAULTS["initial_center_y"]
+    x2: float = DRAWING_DEFAULTS["initial_history_end_x"]
+    y2: float = DRAWING_DEFAULTS["initial_center_y"]
     line_color: str = "#a1a1aa"
     nodes: list[GraphNode] = Field(default_factory=list)
     skill_branches: list[GraphSkillBranch] = Field(default_factory=list)
@@ -110,10 +115,10 @@ class SessionGraphData(BaseModel):
 
     session_id: str
     session_title: str
-    width: float = 1000.0
-    height: float = 500.0
-    center_x: float = 500.0
-    center_y: float = 215.0
+    width: float = DRAWING_DEFAULTS["initial_canvas_width"]
+    height: float = DRAWING_DEFAULTS["initial_center_x"]
+    center_x: float = DRAWING_DEFAULTS["initial_center_x"]
+    center_y: float = DRAWING_DEFAULTS["initial_center_y"]
     histories: list[GraphHistoryLine] = Field(default_factory=list)
     interaction_links: list[GraphInteractionLink] = Field(default_factory=list)
 
@@ -131,7 +136,9 @@ class SessionGraphData(BaseModel):
         return sum(len(h.nodes) for h in self.histories)
 
 
-def _truncate_label(text: str, max_len: int = 18) -> str:
+def _truncate_label(
+    text: str, max_len: int = DRAWING_DEFAULTS["default_label_length"]
+) -> str:
     clean = text.strip()
     if len(clean) <= max_len:
         return clean
@@ -164,7 +171,7 @@ def _append_steering_node(
     event: dict[str, Any] = {
         "role": "user",
         "event_stage": "steering_message",
-        "stage_label": "Steering Message",
+        "stage_label": ui_text("graph.graph_data.steering_message"),
         "content": content,
         "pending": pending,
     }
@@ -183,8 +190,15 @@ def _append_steering_node(
             history_label=history_label,
             step_index=step_index,
             kind="steering",
-            label=f"Steering: {_truncate_label(content, 24)}",
-            short_label="Pending steering" if pending else "Steering",
+            label=ui_text(
+                "graph.graph_data.steering",
+                value_1=_truncate_label(
+                    content, DRAWING_DEFAULTS["steering_label_length"]
+                ),
+            ),
+            short_label=ui_text("graph.graph_data.pending_steering")
+            if pending
+            else ui_text("graph.graph_data.steering_29"),
             color=NODE_COLORS["steering"],
             depth=depth,
             skill_path=skill_path,
@@ -250,7 +264,12 @@ def _build_tool_triplet_events(
     exec_status = tool_event.execution_status if tool_event is not None else "completed"
     exec_type = tool_event.event_type if tool_event is not None else "tool_end"
     exec_duration = (
-        round(tool_event.elapsed_seconds(), 4) if tool_event is not None else 0.0
+        round(
+            tool_event.elapsed_seconds(),
+            DRAWING_DEFAULTS["tool_preview_count"],
+        )
+        if tool_event is not None
+        else 0.0
     )
     execution_event: dict[str, Any] = {
         "role": "execution",
@@ -297,7 +316,11 @@ def _append_tool_node(
         arguments=event.arguments or {"skill_path": skill_path, "depth": depth},
         assistant_content="",
         tool_event=event,
-        tool_response_content=f"Tool '{event.tool_name}': {event.execution_status}",
+        tool_response_content=ui_text(
+            "graph.graph_data.tool",
+            value_1=event.tool_name,
+            value_2=event.execution_status,
+        ),
         skill_path=skill_path,
         depth=depth,
     )
@@ -308,8 +331,10 @@ def _append_tool_node(
             history_label=history_label,
             step_index=step_index,
             kind=kind,
-            label=f"Tool: {event.tool_name}",
-            short_label=_truncate_label(event.tool_name, 14),
+            label=ui_text("graph.graph_data.tool_23", value_1=event.tool_name),
+            short_label=_truncate_label(
+                event.tool_name, DRAWING_DEFAULTS["tool_label_length"]
+            ),
             color=NODE_COLORS[kind],
             depth=depth,
             skill_path=skill_path,
@@ -347,7 +372,12 @@ def _extract_nodes_from_skill_node(
             skill_path=eff_path,
             duration_seconds=skill.elapsed_seconds(),
         ),
-        tool_response_content=f"Skill '{skill.name}' ({eff_path}) - status: {skill.status}",
+        tool_response_content=ui_text(
+            "graph.graph_data.skill_status",
+            value_1=skill.name,
+            value_2=eff_path,
+            value_3=skill.status,
+        ),
         skill_path=eff_path,
         depth=eff_depth,
     )
@@ -359,8 +389,10 @@ def _extract_nodes_from_skill_node(
             history_label=history_label,
             step_index=step_idx,
             kind="skill_bundle",
-            label=f"Skill: {skill.name}",
-            short_label=_truncate_label(skill.name, 14),
+            label=ui_text("graph.graph_data.skill", value_1=skill.name),
+            short_label=_truncate_label(
+                skill.name, DRAWING_DEFAULTS["skill_label_length"]
+            ),
             color="#a855f7" if eff_depth == 1 else "#818cf8",
             depth=eff_depth,
             skill_path=eff_path,
@@ -544,8 +576,10 @@ def _extract_nodes_from_raw_scope(
                         history_label=history_label,
                         step_index=step_idx,
                         kind="skill_bundle",
-                        label=f"Skill: {tc_name}",
-                        short_label=_truncate_label(tc_name, 14),
+                        label=ui_text("graph.graph_data.skill", value_1=tc_name),
+                        short_label=_truncate_label(
+                            tc_name, DRAWING_DEFAULTS["raw_label_length"]
+                        ),
                         color="#a855f7" if child_depth == 1 else "#818cf8",
                         depth=child_depth,
                         skill_path=child_path,
@@ -597,7 +631,11 @@ def _extract_nodes_from_raw_scope(
                     if isinstance(tc_args, dict) and is_sub_agent_call
                     else tc_name
                 )
-                label_prefix = "Sub-Agent" if is_sub_agent_call else "Tool"
+                label_prefix = (
+                    ui_text("graph.graph_data.sub_agent")
+                    if is_sub_agent_call
+                    else ui_text("graph.graph_data.tool_33")
+                )
                 triplet = _build_tool_triplet_events(
                     tool_name=tc_name,
                     tool_call_id=tc_id,
@@ -617,7 +655,10 @@ def _extract_nodes_from_raw_scope(
                         step_index=step_idx,
                         kind=kind,
                         label=f"{label_prefix}: {sub_target}",
-                        short_label=_truncate_label(str(sub_target), 14),
+                        short_label=_truncate_label(
+                            str(sub_target),
+                            DRAWING_DEFAULTS["raw_label_length"],
+                        ),
                         color=color,
                         depth=scope_depth,
                         skill_path=norm_scope_path,
@@ -647,7 +688,7 @@ def _extract_real_system_prompt_event(
                 ev = dict(rm)
                 ev["role"] = role
                 ev["event_stage"] = "system_prompt"
-                ev["stage_label"] = "System Prompt"
+                ev["stage_label"] = ui_text("graph.graph_data.system_prompt")
                 return ev
 
     if fallback_raw_history:
@@ -658,7 +699,7 @@ def _extract_real_system_prompt_event(
                 ev = dict(rm)
                 ev["role"] = role
                 ev["event_stage"] = "system_prompt"
-                ev["stage_label"] = "System Prompt"
+                ev["stage_label"] = ui_text("graph.graph_data.system_prompt")
                 return ev
 
     for msg in messages:
@@ -666,7 +707,7 @@ def _extract_real_system_prompt_event(
             return {
                 "role": "system",
                 "event_stage": "system_prompt",
-                "stage_label": "System Prompt",
+                "stage_label": ui_text("graph.graph_data.system_prompt"),
                 "content": msg.content,
             }
 
@@ -674,7 +715,7 @@ def _extract_real_system_prompt_event(
         return {
             "role": "system",
             "event_stage": "system_prompt",
-            "stage_label": "System Prompt",
+            "stage_label": ui_text("graph.graph_data.system_prompt"),
             "content": explicit_system_prompt,
         }
 
@@ -687,7 +728,7 @@ def _extract_real_system_prompt_event(
         return {
             "role": "system",
             "event_stage": "system_prompt",
-            "stage_label": "System Prompt",
+            "stage_label": ui_text("graph.graph_data.system_prompt"),
             "name_hds": (name_hds or "main").strip("/").split("/")[-1] or "main",
             "content": real_hds_prompt,
         }
@@ -732,8 +773,10 @@ def _build_nodes_for_messages(
                     history_label=history_label,
                     step_index=step_idx,
                     kind="system",
-                    label=f"System Prompt ({hds_short})",
-                    short_label="System",
+                    label=ui_text(
+                        "graph.graph_data.system_prompt_34", value_1=hds_short
+                    ),
+                    short_label=ui_text("graph.graph_data.system"),
                     color=NODE_COLORS["system"],
                     depth=0,
                     skill_path="/",
@@ -753,7 +796,9 @@ def _build_nodes_for_messages(
                     break
         if not raw_user_content:
             raw_user_content = (
-                messages[0].content if messages else f"Task for {history_label}"
+                messages[0].content
+                if messages
+                else ui_text("graph.graph_data.task_for", value_1=history_label)
             )
         step_idx = len(nodes)
         nodes.append(
@@ -763,8 +808,13 @@ def _build_nodes_for_messages(
                 history_label=history_label,
                 step_index=step_idx,
                 kind="user",
-                label=f"User: {_truncate_label(raw_user_content, 24)}",
-                short_label="User",
+                label=ui_text(
+                    "graph.graph_data.user",
+                    value_1=_truncate_label(
+                        raw_user_content, DRAWING_DEFAULTS["user_label_length"]
+                    ),
+                ),
+                short_label=ui_text("graph.graph_data.user_31"),
                 color=NODE_COLORS["user"],
                 depth=0,
                 skill_path="/",
@@ -772,7 +822,7 @@ def _build_nodes_for_messages(
                     {
                         "role": "user",
                         "event_stage": "user_message",
-                        "stage_label": "User Message",
+                        "stage_label": ui_text("graph.graph_data.user_message"),
                         "content": raw_user_content,
                     }
                 ],
@@ -789,8 +839,13 @@ def _build_nodes_for_messages(
                     history_label=history_label,
                     step_index=step_idx,
                     kind="user",
-                    label=f"User: {_truncate_label(msg.content, 24)}",
-                    short_label="User",
+                    label=ui_text(
+                        "graph.graph_data.user",
+                        value_1=_truncate_label(
+                            msg.content, DRAWING_DEFAULTS["user_label_length"]
+                        ),
+                    ),
+                    short_label=ui_text("graph.graph_data.user_36"),
                     color=NODE_COLORS["user"],
                     depth=0,
                     skill_path="/",
@@ -798,7 +853,7 @@ def _build_nodes_for_messages(
                         {
                             "role": "user",
                             "event_stage": "user_message",
-                            "stage_label": "User Message",
+                            "stage_label": ui_text("graph.graph_data.user_message"),
                             "content": msg.content,
                         }
                     ],
@@ -893,7 +948,7 @@ def _build_nodes_for_messages(
             {
                 "role": "assistant",
                 "event_stage": "final_response",
-                "stage_label": "Final Assistant Response",
+                "stage_label": ui_text("graph.graph_data.final_assistant_response"),
                 "content": msg.content,
                 **({"error": msg.error} if msg.error else {}),
             }
@@ -907,10 +962,18 @@ def _build_nodes_for_messages(
                 history_label=history_label,
                 step_index=step_idx,
                 kind=resp_kind,
-                label="Execution Error"
+                label=ui_text("graph.graph_data.execution_error")
                 if msg.error
-                else f"Assistant: {_truncate_label(msg.content or 'Response', 22)}",
-                short_label="Error" if msg.error else "Response",
+                else ui_text(
+                    "graph.graph_data.assistant",
+                    value_1=_truncate_label(
+                        msg.content or app_text("graph.graph_data.response"),
+                        DRAWING_DEFAULTS["assistant_label_length"],
+                    ),
+                ),
+                short_label=ui_text("graph.graph_data.error")
+                if msg.error
+                else ui_text("graph.graph_data.response"),
                 color=NODE_COLORS[resp_kind],
                 depth=0,
                 skill_path="/",
@@ -944,7 +1007,7 @@ def _ensure_interaction_nodes_on_main(
         sub_summary = (
             sub_conv.messages[-1].content
             if sub_conv.messages
-            else f"Interaction with {sub_label}"
+            else ui_text("graph.graph_data.interaction_with", value_1=sub_label)
         )
         call_id = f"call_sub_agent_{sub_conv.id}"
         triplet = _build_tool_triplet_events(
@@ -969,11 +1032,14 @@ def _ensure_interaction_nodes_on_main(
         inter_node = GraphNode(
             id=f"main_inter_{sub_conv.id}",
             history_id="main",
-            history_label="Main History",
+            history_label=ui_text("graph.graph_data.main_history"),
             step_index=insert_pos,
             kind="sub_agent_bundle",
-            label=f"Interaction: {sub_label}",
-            short_label=_truncate_label(sub_conv.path.split("/")[-1], 12),
+            label=ui_text("graph.graph_data.interaction", value_1=sub_label),
+            short_label=_truncate_label(
+                sub_conv.path.split("/")[-1],
+                DRAWING_DEFAULTS["interaction_label_length"],
+            ),
             color=NODE_COLORS["sub_agent_bundle"],
             depth=0,
             skill_path="/",
@@ -1048,8 +1114,16 @@ def _apply_skill_offsets_and_branches(
                     depth=max(sn.depth for sn in segment_nodes),
                     color=first_skill_node.color,
                     points=pts,
-                    label_x=round(mid_node.x + 18.0 * ccw_x, 2),
-                    label_y=round(mid_node.y + 18.0 * ccw_y, 2),
+                    label_x=round(
+                        mid_node.x
+                        + DRAWING_DEFAULTS["skill_branch_label_offset"] * ccw_x,
+                        2,
+                    ),
+                    label_y=round(
+                        mid_node.y
+                        + DRAWING_DEFAULTS["skill_branch_label_offset"] * ccw_y,
+                        2,
+                    ),
                 )
             )
             i = j
@@ -1059,12 +1133,12 @@ def _apply_skill_offsets_and_branches(
     history.skill_branches = branches
 
 
-FIXED_NODE_SPACING_X: float = 110.0
-FIXED_SUB_AGENT_NODE_SPACING: float = 48.0
-GRAPH_HORIZONTAL_PADDING: float = 120.0
-LINE_HORIZONTAL_EXTENSION: float = 55.0
-MIN_GRAPH_WIDTH: float = 360.0
-MIN_GRAPH_HEIGHT: float = 500.0
+FIXED_NODE_SPACING_X: float = GRAPH_LAYOUT["fixed_node_spacing_x"]
+FIXED_SUB_AGENT_NODE_SPACING: float = GRAPH_LAYOUT["fixed_sub_agent_node_spacing"]
+GRAPH_HORIZONTAL_PADDING: float = GRAPH_LAYOUT["graph_horizontal_padding"]
+LINE_HORIZONTAL_EXTENSION: float = GRAPH_LAYOUT["line_horizontal_extension"]
+MIN_GRAPH_WIDTH: float = GRAPH_LAYOUT["min_graph_width"]
+MIN_GRAPH_HEIGHT: float = GRAPH_LAYOUT["min_graph_height"]
 
 
 def _segments_cross(
@@ -1134,7 +1208,7 @@ def _ensure_sub_agent_branches_do_not_cross(
     if len(sub_lines) <= 1:
         return
 
-    for _ in range(3):
+    for _ in range(DRAWING_DEFAULTS["branch_adjustment_passes"]):
         crossings = check_sub_agent_branches_do_not_cross(histories)
         if not crossings:
             break
@@ -1147,10 +1221,16 @@ def _ensure_sub_agent_branches_do_not_cross(
                 ),
                 next(h for h in sub_lines if h.id == id_b),
             )
-            if h_target.angle_deg >= 90.0:
-                new_angle = min(155.0, h_target.angle_deg + 16.0)
+            if h_target.angle_deg >= DRAWING_DEFAULTS["branch_vertical_threshold"]:
+                new_angle = min(
+                    DRAWING_DEFAULTS["branch_maximum_angle"],
+                    h_target.angle_deg + DRAWING_DEFAULTS["branch_angle_adjustment"],
+                )
             else:
-                new_angle = max(25.0, h_target.angle_deg - 16.0)
+                new_angle = max(
+                    DRAWING_DEFAULTS["branch_minimum_angle"],
+                    h_target.angle_deg - DRAWING_DEFAULTS["branch_angle_adjustment"],
+                )
             _layout_sub_agent_constellation_line(
                 h_target,
                 anchor_x=h_target.interaction_x,
@@ -1164,8 +1244,8 @@ def _layout_main_horizontal_history(
     history: GraphHistoryLine,
     *,
     center_x: float | None = None,
-    main_y: float = 225.0,
-    offset_step: float = 48.0,
+    main_y: float = DRAWING_DEFAULTS["main_history_y"],
+    offset_step: float = DRAWING_DEFAULTS["main_history_offset_step"],
     node_spacing: float = FIXED_NODE_SPACING_X,
 ) -> float:
     """Position the horizontal main history line with a fixed horizontal distance between nodes
@@ -1179,20 +1259,31 @@ def _layout_main_horizontal_history(
 
     n = len(history.nodes)
     if n == 0:
-        canvas_width = 520.0
+        canvas_width = DRAWING_DEFAULTS["empty_canvas_width"]
         eff_center_x = (
             center_x if center_x is not None else round(canvas_width / 2.0, 2)
         )
         history.interaction_x = eff_center_x
-        history.x1 = round(eff_center_x - 160.0, 2)
-        history.x2 = round(eff_center_x + 160.0, 2)
+        history.x1 = round(
+            eff_center_x - DRAWING_DEFAULTS["empty_history_half_length"], 2
+        )
+        history.x2 = round(
+            eff_center_x + DRAWING_DEFAULTS["empty_history_half_length"], 2
+        )
         return canvas_width
 
     if n == 1:
         canvas_width = max(
-            MIN_GRAPH_WIDTH, round(2.0 * GRAPH_HORIZONTAL_PADDING + 120.0, 2)
+            MIN_GRAPH_WIDTH,
+            round(
+                2.0 * GRAPH_HORIZONTAL_PADDING
+                + DRAWING_DEFAULTS["history_right_padding"],
+                2,
+            ),
         )
-        eff_center_x = center_x if center_x is not None else 500.0
+        eff_center_x = (
+            center_x if center_x is not None else DRAWING_DEFAULTS["empty_center_x"]
+        )
         x_values = [eff_center_x]
         history.interaction_x = eff_center_x
         history.x1 = round(eff_center_x - LINE_HORIZONTAL_EXTENSION, 2)
@@ -1236,7 +1327,7 @@ def _layout_sub_agent_constellation_line(
     anchor_x: float,
     anchor_y: float,
     angle_deg: float,
-    offset_step: float = 40.0,
+    offset_step: float = DRAWING_DEFAULTS["sub_agent_offset_step"],
     node_spacing: float = FIXED_SUB_AGENT_NODE_SPACING,
 ) -> None:
     """Position a sub-agent straight line so that it intersects its parent history
@@ -1256,20 +1347,20 @@ def _layout_sub_agent_constellation_line(
 
     n = len(history.nodes)
     if n == 0:
-        forward_len = 160.0
+        forward_len = DRAWING_DEFAULTS["empty_branch_length"]
         history.x1 = round(anchor_x, 2)
         history.y1 = round(anchor_y, 2)
         history.x2 = round(anchor_x + forward_len * ux, 2)
         history.y2 = round(anchor_y + forward_len * uy, 2)
         return
 
-    start_t = 48.0
+    start_t = DRAWING_DEFAULTS["sub_agent_start_offset"]
     if n == 1:
-        t_values = [start_t + 16.0]
-        forward_len = t_values[0] + 36.0
+        t_values = [start_t + DRAWING_DEFAULTS["minimum_branch_spacing"]]
+        forward_len = t_values[0] + DRAWING_DEFAULTS["branch_end_extension"]
     else:
         t_values = [start_t + i * node_spacing for i in range(n)]
-        forward_len = t_values[-1] + 36.0
+        forward_len = t_values[-1] + DRAWING_DEFAULTS["branch_end_extension"]
 
     history.x1 = round(anchor_x, 2)
     history.y1 = round(anchor_y, 2)
@@ -1313,7 +1404,7 @@ def build_graph_data_from_session(
     main_nodes = _build_nodes_for_messages(
         main_messages,
         history_id="main",
-        history_label="Main History",
+        history_label=ui_text("graph.graph_data.main_history"),
         system_prompt=session.system_prompt,
         capabilities_path_str=session.settings.capabilities_path,
         name_hds=session.settings.name_hds or "main",
@@ -1323,12 +1414,14 @@ def build_graph_data_from_session(
 
     main_line = GraphHistoryLine(
         id="main",
-        label="Main History",
+        label=ui_text("graph.graph_data.main_history"),
         is_main=True,
         line_color="#a1a1aa",
         nodes=main_nodes,
     )
-    canvas_width = _layout_main_horizontal_history(main_line, main_y=225.0)
+    canvas_width = _layout_main_horizontal_history(
+        main_line, main_y=DRAWING_DEFAULTS["session_main_history_y"]
+    )
 
     histories: list[GraphHistoryLine] = [main_line]
     interaction_links: list[GraphInteractionLink] = []
@@ -1353,8 +1446,17 @@ def build_graph_data_from_session(
             is_sub_agent=True,
         )
         inter_node = interaction_map.get(sub_conv.id)
-        anchor_x = inter_node.x if inter_node is not None else 500.0 + idx * 60.0
-        anchor_y = inter_node.y if inter_node is not None else 225.0
+        anchor_x = (
+            inter_node.x
+            if inter_node is not None
+            else DRAWING_DEFAULTS["initial_interaction_x"]
+            + idx * DRAWING_DEFAULTS["fallback_interaction_spacing"]
+        )
+        anchor_y = (
+            inter_node.y
+            if inter_node is not None
+            else DRAWING_DEFAULTS["session_main_history_y"]
+        )
         pending_subs.append(
             {
                 "idx": idx,
@@ -1372,11 +1474,15 @@ def build_graph_data_from_session(
     angle_by_sub_id: dict[str, float] = {}
     for rank, item in enumerate(sorted_by_x):
         if m_total == 1:
-            angle_by_sub_id[item["sub_conv"].id] = 82.0
+            angle_by_sub_id[item["sub_conv"].id] = DRAWING_DEFAULTS[
+                "initial_branch_angle"
+            ]
         else:
             # Strictly decreasing from 108° (leftmost, tilts up-left) to 58° (rightmost, tilts up-right)
             angle_by_sub_id[item["sub_conv"].id] = round(
-                108.0 - rank * (50.0 / (m_total - 1)), 1
+                DRAWING_DEFAULTS["lower_branch_initial_angle"]
+                - rank * (DRAWING_DEFAULTS["branch_minimum_angle"] / (m_total - 1)),
+                1,
             )
 
     for item in pending_subs:
@@ -1398,9 +1504,16 @@ def build_graph_data_from_session(
                 pivot = parent_line.nodes[min(1, len(parent_line.nodes) - 1)]
                 anchor_x, anchor_y = pivot.x, pivot.y
                 angle_deg = (
-                    min(142.0, parent_line.angle_deg + 22.0)
-                    if parent_line.angle_deg >= 90.0
-                    else max(38.0, parent_line.angle_deg - 22.0)
+                    min(
+                        DRAWING_DEFAULTS["branch_angle_upper_bound"],
+                        parent_line.angle_deg + DRAWING_DEFAULTS["branch_angle_step"],
+                    )
+                    if parent_line.angle_deg
+                    >= DRAWING_DEFAULTS["branch_angle_threshold"]
+                    else max(
+                        DRAWING_DEFAULTS["branch_angle_lower_bound"],
+                        parent_line.angle_deg - DRAWING_DEFAULTS["branch_angle_step"],
+                    )
                 )
 
         color = ray_palette[idx % len(ray_palette)]
@@ -1440,29 +1553,47 @@ def build_graph_data_from_session(
     for h in histories:
         all_x_coords.extend([h.x1, h.x2, h.interaction_x])
         for n_item in h.nodes:
-            all_x_coords.extend([n_item.x - 45.0, n_item.x + 45.0])
+            all_x_coords.extend(
+                [
+                    n_item.x - DRAWING_DEFAULTS["node_horizontal_margin"],
+                    n_item.x + DRAWING_DEFAULTS["node_horizontal_margin"],
+                ]
+            )
         for br in h.skill_branches:
-            all_x_coords.append(br.label_x + 110.0)
+            all_x_coords.append(br.label_x + DRAWING_DEFAULTS["branch_label_width"])
             for pt in br.points:
                 all_x_coords.append(pt[0])
 
     max_x = max(all_x_coords)
-    canvas_width = max(canvas_width, round(max_x + 65.0, 2))
+    canvas_width = max(
+        canvas_width,
+        round(max_x + DRAWING_DEFAULTS["right_margin"], 2),
+    )
     center_x = round((main_line.x1 + main_line.x2) / 2.0, 2)
 
     all_y_coords: list[float] = [main_line.y1, main_line.y2]
     for h in histories:
         all_y_coords.extend([h.y1, h.y2, h.interaction_y])
         for n_item in h.nodes:
-            all_y_coords.extend([n_item.y - 30.0, n_item.y + 30.0])
+            all_y_coords.extend(
+                [
+                    n_item.y - DRAWING_DEFAULTS["node_vertical_margin"],
+                    n_item.y + DRAWING_DEFAULTS["node_vertical_margin"],
+                ]
+            )
         for br in h.skill_branches:
-            all_y_coords.extend([br.label_y - 20.0, br.label_y + 30.0])
+            all_y_coords.extend(
+                [
+                    br.label_y - DRAWING_DEFAULTS["branch_label_top_margin"],
+                    br.label_y + DRAWING_DEFAULTS["node_vertical_margin"],
+                ]
+            )
             for pt in br.points:
                 all_y_coords.append(pt[1])
 
     min_y = min(all_y_coords)
-    if min_y < 35.0:
-        shift_y = round(35.0 - min_y, 2)
+    if min_y < DRAWING_DEFAULTS["top_margin"]:
+        shift_y = round(DRAWING_DEFAULTS["top_margin"] - min_y, 2)
         for h in histories:
             h.y1 = round(h.y1 + shift_y, 2)
             h.y2 = round(h.y2 + shift_y, 2)
@@ -1479,7 +1610,10 @@ def build_graph_data_from_session(
         all_y_coords = [y + shift_y for y in all_y_coords]
 
     max_y = max(all_y_coords)
-    canvas_height = max(MIN_GRAPH_HEIGHT, round(max_y + 45.0, 2))
+    canvas_height = max(
+        MIN_GRAPH_HEIGHT,
+        round(max_y + DRAWING_DEFAULTS["node_horizontal_margin"], 2),
+    )
     center_y = round((main_line.y1 + main_line.y2) / 2.0, 2)
 
     return SessionGraphData(

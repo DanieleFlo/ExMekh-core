@@ -8,6 +8,7 @@ from typing import Any, Literal
 
 from exmekh_agent.exmekh_bridge.models import ChatMessage, ChatSession
 from exmekh_agent.ui.chat.message_text import message_display_text
+from exmekh_agent.ui.resources import ui_text
 
 ExportFormat = Literal["json", "markdown"]
 
@@ -71,7 +72,11 @@ def export_chat(
             indent=2,
         )
     if export_format != "markdown":
-        raise ValueError(f"Unsupported chat export format: {export_format}")
+        raise ValueError(
+            ui_text(
+                "chat.chat_export.unsupported_chat_export_format", value_1=export_format
+            )
+        )
 
     sections = [f"# {session.title}"]
     if session.system_prompt:

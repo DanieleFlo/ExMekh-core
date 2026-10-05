@@ -4,7 +4,9 @@ from collections.abc import Callable
 
 from nicegui import ui
 
-from exmekh_agent.ui.resources import ui_text
+from exmekh_agent.ui.resources import presentation_config, ui_text
+
+UI_PRESENTATION = presentation_config("controls/header")
 
 
 class HeaderComponent:
@@ -18,24 +20,45 @@ class HeaderComponent:
 
     def build(self) -> None:
         with ui.header().classes(
-            "lm-header items-center justify-between px-4 py-2 z-10 min-h-16"
+            UI_PRESENTATION[
+                "build.classes.lm_header_items_center_justify_between_px_4_p"
+            ]
         ):
             # Left: App branding
-            with ui.row().classes("items-center gap-3"):
-                ui.button(icon="menu", on_click=self.on_toggle_sidebar).props(
-                    "flat round dense aria-label='Open projects menu'"
-                ).classes("text-zinc-300")
-                ui.icon("terminal", size="sm").classes("text-zinc-300")
-                with ui.column().classes("gap-0"):
+            with ui.row().classes(UI_PRESENTATION["build.classes.items_center_gap_3"]):
+                ui.button(
+                    icon=UI_PRESENTATION["build.icon.menu"],
+                    on_click=self.on_toggle_sidebar,
+                ).props(
+                    UI_PRESENTATION[
+                        "build.props.flat_round_dense_aria_label_open_projects_men"
+                    ]
+                ).classes(UI_PRESENTATION["build.classes.text_zinc_300"])
+                ui.icon(
+                    UI_PRESENTATION["build.icon.terminal"],
+                    size=UI_PRESENTATION["build.size.sm"],
+                ).classes(UI_PRESENTATION["build.classes.text_zinc_300"])
+                with ui.column().classes(UI_PRESENTATION["build.classes.gap_0"]):
                     ui.label(ui_text("navigation.header.exmekh_agent")).classes(
-                        "font-bold text-base tracking-wider text-zinc-100"
+                        UI_PRESENTATION[
+                            "build.classes.font_bold_text_base_tracking_wider_text_zinc_"
+                        ]
                     )
                     ui.label(
                         ui_text("navigation.header.hierarchical_agent_engine")
-                    ).classes("text-[10px] text-zinc-400 font-mono")
+                    ).classes(
+                        UI_PRESENTATION[
+                            "build.classes.text_10px_text_zinc_400_font_mono"
+                        ]
+                    )
 
             # Global provider settings
-            with ui.row().classes("header-actions items-center gap-3"):
-                ui.button(icon="tune", on_click=self.on_toggle_drawer).props(
-                    "flat round dense"
-                ).classes("text-zinc-400 hover:text-zinc-200")
+            with ui.row().classes(
+                UI_PRESENTATION["build.classes.header_actions_items_center_gap_3"]
+            ):
+                ui.button(
+                    icon=UI_PRESENTATION["build.icon.tune"],
+                    on_click=self.on_toggle_drawer,
+                ).props(UI_PRESENTATION["build.props.flat_round_dense"]).classes(
+                    UI_PRESENTATION["build.classes.text_zinc_400_hover_text_zinc_200"]
+                )

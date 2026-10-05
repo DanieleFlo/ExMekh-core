@@ -1,0 +1,17 @@
+{
+  "command_approval.evaluator_description": "Autonomous evaluator for bash command execution safety.",
+  "command_approval.approved_description": "Whether the requested shell command is approved to execute.",
+  "command_approval.reason_description": "Explanation for why the command was approved or declined.",
+  "tool_approval.approved_in_session": "Approved in session",
+  "tool_approval.please_evaluate_whether_this_bash_command_should_be_approved_for_execu": "Please evaluate whether this bash command should be approved for execution:\n\n```bash\n{command}\n```",
+  "tool_approval.command_was_not_approved_by_the_evaluation_model": "Command was not approved by the evaluation model.",
+  "tool_approval.approval_request_was_not_handled": "Approval request was not handled.",
+  "tool_approval.evaluate_proposed_command_bash_cmd_str": "Evaluate proposed command:\n```bash\n{cmd_str}\n```",
+  "tool_approval.evaluate_proposed_command_bash_command": "Evaluate proposed command:\n```bash\n{command}\n```",
+  "tool_approval.approved_automatically_approve_all": "Approved automatically (Approve All)",
+  "tool_approval.command_declined_by_evaluation_model_reason": "Command declined by evaluation model: {reason}",
+  "tool_approval.command_declined_by_user": "Command declined by user.",
+  "tool_approval.error_during_llm_approval_evaluation_error": "Error during LLM approval evaluation: {error}",
+  "tool_approval.approved_manually_by_user": "Approved manually by user",
+  "tool_approval.command_approved_in_session": "Command approved in session"
+}

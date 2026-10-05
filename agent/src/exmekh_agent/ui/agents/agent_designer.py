@@ -19,6 +19,10 @@ from exmekh_agent.state.design_history import DesignHistory, DesignSnapshot
 from exmekh_agent.ui.agents.capability_editor import CapabilityEditor
 from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 
+BOARD_DEFAULTS = presentation_config("agent_board")
+
+UI_PRESENTATION = presentation_config("controls/agent_designer")
+
 
 class AgentDesigner:
     def __init__(self) -> None:
@@ -46,50 +50,62 @@ class AgentDesigner:
         ui.on("agent_board_action", self._handle_action)
         with (
             ui.dialog()
-            .props("maximized")
-            .classes("agent-designer-dialog") as self._dialog
+            .props(UI_PRESENTATION["build.props.maximized"])
+            .classes(
+                UI_PRESENTATION["build.classes.agent_designer_dialog"]
+            ) as self._dialog
         ):
             with ui.card().classes(
-                "agent-designer-shell w-full h-full bg-zinc-950 gap-3"
+                UI_PRESENTATION[
+                    "build.classes.agent_designer_shell_w_full_h_full_bg_zinc_95"
+                ]
             ) as self._shell:
-                with ui.row().classes("w-full items-center justify-between"):
+                with ui.row().classes(
+                    UI_PRESENTATION["build.classes.w_full_items_center_justify_between"]
+                ):
                     ui.label(ui_text("agents.agent_designer.customize_agent")).classes(
-                        "text-lg font-semibold"
+                        UI_PRESENTATION["build.classes.text_lg_font_semibold"]
                     )
-                    with ui.row().classes("gap-2"):
+                    with ui.row().classes(UI_PRESENTATION["build.classes.gap_2"]):
                         self._undo_button = (
                             ui.button(
                                 ui_text("agents.agent_designer.undo"),
-                                icon="undo",
+                                icon=UI_PRESENTATION["build.icon.undo"],
                                 on_click=self._undo,
                             )
-                            .props("flat")
+                            .props(UI_PRESENTATION["build.props.flat"])
                             .tooltip(ui_text("agents.agent_designer.undo_shortcut"))
                         )
                         self._undo_button.disable()
                         ui.button(
                             ui_text("agents.agent_designer.new_hds"),
-                            icon="add",
+                            icon=UI_PRESENTATION["build.icon.add"],
                             on_click=self._new_hds,
-                        ).props("flat")
+                        ).props(UI_PRESENTATION["build.props.flat"])
                         ui.button(
                             ui_text("agents.agent_designer.cancel"),
                             on_click=self._dialog.close,
-                        ).props("flat")
+                        ).props(UI_PRESENTATION["build.props.flat"])
                         self._save_button = ui.button(
                             ui_text("agents.agent_designer.save_agent"),
                             on_click=self._save,
-                        ).props("unelevated")
+                        ).props(UI_PRESENTATION["build.props.unelevated"])
                 ui.label(
                     ui_text("agents.agent_designer.select_an_hds_or_skill_to_connect")
-                ).classes("text-xs text-zinc-400")
+                ).classes(UI_PRESENTATION["build.classes.text_xs_text_zinc_400"])
                 with ui.row().classes(
-                    "agent-designer-layout w-full flex-1 min-h-0 flex-nowrap"
+                    UI_PRESENTATION[
+                        "build.classes.agent_designer_layout_w_full_flex_1_min_h_0_f"
+                    ]
                 ):
                     self._board = ui.html("").classes(
-                        "agent-board-html flex-1 min-w-0 h-full"
+                        UI_PRESENTATION[
+                            "build.classes.agent_board_html_flex_1_min_w_0_h_full"
+                        ]
                     )
-                    self._details = ui.column().classes("agent-node-details gap-3")
+                    self._details = ui.column().classes(
+                        UI_PRESENTATION["build.classes.agent_node_details_gap_3"]
+                    )
 
         self._dialog.on("hide", self._cancelled)
 
@@ -210,13 +226,15 @@ class AgentDesigner:
         )
 
     def _render_details(self, node: DesignNode) -> None:
-        ui.label(node.name).classes("text-sm font-semibold break-all")
+        ui.label(node.name).classes(
+            UI_PRESENTATION["render_details.classes.text_sm_font_semibold_break_all"]
+        )
         ui.label(
             ui_text(
                 "agents.agent_designer.select_a_card_to_edit_its_properties",
                 node_kind_upper=node.kind.upper(),
             )
-        ).classes("text-xs text-zinc-400")
+        ).classes(UI_PRESENTATION["render_details.classes.text_xs_text_zinc_400"])
         if node.kind == "hds":
             ui.switch(
                 ui_text("agents.agent_designer.preserve_sub_agent_history"),
@@ -224,12 +242,12 @@ class AgentDesigner:
                 on_change=lambda event: self._change_design(
                     partial(self._design.set_persistent_history, node.id, event.value)
                 ),
-            ).props("dense")
+            ).props(UI_PRESENTATION["render_details.props.dense"])
             if node.id != self._design.root_id:
                 ui.button(
                     ui_text("agents.agent_designer.use_as_root"),
                     on_click=lambda: self._set_root(node.id),
-                ).props("flat no-caps")
+                ).props(UI_PRESENTATION["render_details.props.flat_no_caps"])
         if node.kind in {"hds", "skill"}:
             targets = {
                 item.id: f"{item.kind.upper()} · {item.name}"
@@ -237,49 +255,57 @@ class AgentDesigner:
             }
             target = (
                 ui.select(targets, label=ui_text("agents.agent_designer.connect_to"))
-                .props("outlined dense")
-                .classes("w-full")
+                .props(UI_PRESENTATION["render_details.props.outlined_dense"])
+                .classes(UI_PRESENTATION["render_details.classes.w_full"])
             )
             connect_button = ui.button(
                 ui_text("agents.agent_designer.connect"),
-                icon="add_link",
+                icon=UI_PRESENTATION["render_details.icon.add_link"],
                 on_click=lambda: self._connect(node.id, target.value),
-            ).props("flat no-caps")
+            ).props(UI_PRESENTATION["render_details.props.flat_no_caps"])
             if not targets:
                 target.disable()
                 connect_button.disable()
                 ui.label(
                     ui_text("agents.agent_designer.no_connection_targets")
-                ).classes("text-xs text-zinc-400")
+                ).classes(
+                    UI_PRESENTATION["render_details.classes.text_xs_text_zinc_400"]
+                )
         if node.kind == "skill":
             ui.label(
                 ui_text(
                     "agents.agent_designer.edit_description_and_instructions_separately_sub_skills"
                 )
-            ).classes("text-xs text-zinc-400")
+            ).classes(UI_PRESENTATION["render_details.classes.text_xs_text_zinc_400"])
             if node.name == "deep-thinking":
                 ui.label(
                     ui_text(
                         "agents.agent_designer.deep_thinking_keeps_provider_thinking_in_direct"
                     )
-                ).classes("text-xs text-sky-300")
+                ).classes(
+                    UI_PRESENTATION["render_details.classes.text_xs_text_sky_300"]
+                )
         if node.source or node.kind == "hds":
             ui.button(
                 ui_text("agents.agent_designer.edit_a_copy"),
-                icon="edit",
+                icon=UI_PRESENTATION["render_details.icon.edit"],
                 on_click=lambda: self._edit_copy(node),
-            ).props("flat no-caps")
+            ).props(UI_PRESENTATION["render_details.props.flat_no_caps"])
         for link in self._design.connections(node.id):
             label = f"{self._design.node(link.parent).name} → {self._design.node(link.child).name}"
             ui.button(
-                label, icon="link_off", on_click=partial(self._disconnect, link)
-            ).props("flat no-caps").classes("w-full text-xs")
+                label,
+                icon=UI_PRESENTATION["render_details.icon.link_off"],
+                on_click=partial(self._disconnect, link),
+            ).props(UI_PRESENTATION["render_details.props.flat_no_caps"]).classes(
+                UI_PRESENTATION["render_details.classes.w_full_text_xs"]
+            )
         if node.id != self._design.root_id:
             ui.button(
                 ui_text("agents.agent_designer.remove_from_board"),
-                icon="delete_outline",
+                icon=UI_PRESENTATION["render_details.icon.delete_outline"],
                 on_click=lambda: self._remove_node(node.id),
-            ).props("flat no-caps color=negative")
+            ).props(UI_PRESENTATION["render_details.props.flat_no_caps_color_negative"])
 
     def _handle_action(self, event) -> None:
         data = event.args
@@ -294,7 +320,9 @@ class AgentDesigner:
                 original = next(node for node in self._catalog if node.id == data["id"])
                 node = original.model_copy(
                     update={
-                        "x": max(0, float(data.get("x", 50))),
+                        "x": max(
+                            0, float(data.get("x", BOARD_DEFAULTS["palette_node_x"]))
+                        ),
                         "y": max(
                             0,
                             float(
@@ -304,7 +332,7 @@ class AgentDesigner:
                                         (item.y for item in self._design.nodes),
                                         default=0,
                                     )
-                                    + 120,
+                                    + BOARD_DEFAULTS["palette_vertical_gap"],
                                 )
                             ),
                         ),
@@ -359,23 +387,31 @@ class AgentDesigner:
     def _new_hds(self) -> None:
         with (
             ui.dialog() as dialog,
-            ui.card().classes("w-[560px] max-w-[94vw] bg-zinc-900"),
+            ui.card().classes(
+                UI_PRESENTATION["new_hds.classes.w_560px_max_w_94vw_bg_zinc_900"]
+            ),
         ):
             ui.label(ui_text("agents.agent_designer.new_sub_agent_hds")).classes(
-                "text-lg"
+                UI_PRESENTATION["new_hds.classes.text_lg"]
             )
             name = (
-                ui.input("HDS name", value=f"worker-{uuid4().hex[:4]}")
-                .props("outlined")
-                .classes("w-full")
+                ui.input(
+                    ui_text("agents.agent_designer.hds_name"),
+                    value=BOARD_DEFAULTS["worker_name_prefix"]
+                    + uuid4().hex[: BOARD_DEFAULTS["worker_name_id_length"]],
+                )
+                .props(UI_PRESENTATION["new_hds.props.outlined"])
+                .classes(UI_PRESENTATION["new_hds.classes.w_full"])
             )
             instructions = (
                 ui.textarea(
-                    "Instructions",
-                    value="You are a specialist assistant. Complete the delegated task and respond in the user's language.",
+                    ui_text("agents.agent_designer.instructions"),
+                    value=ui_text(
+                        "agents.agent_designer.you_are_a_specialist_assistant_complete_the_delegated_task_and_r"
+                    ),
                 )
-                .props("outlined autogrow")
-                .classes("w-full")
+                .props(UI_PRESENTATION["new_hds.props.outlined_autogrow"])
+                .classes(UI_PRESENTATION["new_hds.classes.w_full"])
             )
 
             def add() -> None:
@@ -383,8 +419,8 @@ class AgentDesigner:
                     kind="hds",
                     name=name.value.strip(),
                     content=instructions.value,
-                    x=50,
-                    y=650,
+                    x=BOARD_DEFAULTS["new_hds_x"],
+                    y=BOARD_DEFAULTS["new_hds_y"],
                 )
                 try:
 
@@ -418,9 +454,9 @@ class AgentDesigner:
     def _set_saving(self, saving: bool) -> None:
         self._saving = saving
         if saving:
-            self._dialog.props("persistent")
-            self._shell.props("inert")
-            self._save_button.props("loading")
+            self._dialog.props(UI_PRESENTATION["set_saving.props.persistent"])
+            self._shell.props(UI_PRESENTATION["set_saving.props.inert"])
+            self._save_button.props(UI_PRESENTATION["set_saving.props.loading"])
         else:
             self._dialog.props(remove="persistent")
             self._shell.props(remove="inert")

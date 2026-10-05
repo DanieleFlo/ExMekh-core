@@ -12,6 +12,8 @@ from nicegui import ui
 from nicegui.client import Client
 
 from exmekh_agent.config import config
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     generate_chat_title,
     run_agent_turn,
@@ -47,12 +49,14 @@ from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.navigation.header import HeaderComponent
 from exmekh_agent.ui.navigation.new_project_dialog import NewProjectDialogComponent
 from exmekh_agent.ui.navigation.sidebar import SidebarComponent
-from exmekh_agent.ui.resources import ui_text
+from exmekh_agent.ui.resources import presentation_config, ui_text
 from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
 )
 from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
-from exmekh_agent.ui.shared.file_icons import format_file_size
+from exmekh_agent.utils.formatting import format_file_size
+
+UI_PRESENTATION = presentation_config("controls/page_controller")
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +136,9 @@ class ChatPageController:
         load_file_drop_js()
         ui.on("exmekh_queue_reorder", self._handle_queue_reorder_event)
 
-        with ui.column().classes("chat-page-layout w-full justify-between"):
+        with ui.column().classes(
+            UI_PRESENTATION["build.classes.chat_page_layout_w_full_justify_between"]
+        ):
             self.chat_view = ChatViewComponent(
                 on_suggested_prompt=self.use_suggested_prompt,
                 on_edit_message=self.edit_message,
@@ -159,8 +165,14 @@ class ChatPageController:
         self._render_queue_ui()
         self.update_context_usage()
         self._sync_active_turn()
-        ui.timer(0.25, self._sync_active_turn)
-        ui.timer(1.0, self._check_temp_storage_alert, once=True)
+        ui.timer(
+            EXECUTION_DEFAULTS["turn_sync_interval_seconds"], self._sync_active_turn
+        )
+        ui.timer(
+            EXECUTION_DEFAULTS["storage_check_delay_seconds"],
+            self._check_temp_storage_alert,
+            once=True,
+        )
 
     @staticmethod
     def _get_temp_storage(session_id: str | None = None) -> TempStorage:
@@ -170,7 +182,9 @@ class ChatPageController:
             else session_manager.get_current_session()
         )
         if session is None:
-            raise ValueError("Upload conversation was not found")
+            raise ValueError(
+                ui_text("chat.page_controller.upload_conversation_was_not_found")
+            )
         return session_manager.temp_storage(session)
 
     async def _check_temp_storage_alert(self) -> None:
@@ -188,11 +202,13 @@ class ChatPageController:
                         size_str=size_str,
                         stats_total_files=stats.total_files,
                     ),
-                    caption="You can free space in global settings.",
+                    caption=app_text(
+                        "chat.page_controller.you_can_free_space_in_global_settings"
+                    ),
                     type="warning",
                     position="bottom-right",
                     close_button=True,
-                    timeout=8000,
+                    timeout=EXECUTION_DEFAULTS["storage_alert_timeout_ms"],
                 )
 
     def _sync_active_turn(self) -> None:
@@ -397,10 +413,14 @@ class ChatPageController:
         settings = session_manager.execution_settings(session)
         with (
             ui.dialog() as dialog,
-            ui.card().classes("w-[440px] max-w-[94vw] bg-zinc-900"),
+            ui.card().classes(
+                UI_PRESENTATION[
+                    "open_chat_agent_settings.classes.w_440px_max_w_94vw_bg_zinc_900"
+                ]
+            ),
         ):
             ui.label(ui_text("chat.page_controller.chat_agent_settings")).classes(
-                "text-lg"
+                UI_PRESENTATION["open_chat_agent_settings.classes.text_lg"]
             )
             selector = AgentSelector(
                 lambda: [settings.capabilities_path or config.capabilities_path]
@@ -409,7 +429,11 @@ class ChatPageController:
             selector.set_value(settings.agent_profile, settings.agent_design)
             ui.label(
                 ui_text("chat.page_controller.applies_to_the_next_response_in_this")
-            ).classes("text-xs text-zinc-400")
+            ).classes(
+                UI_PRESENTATION[
+                    "open_chat_agent_settings.classes.text_xs_text_zinc_400"
+                ]
+            )
 
             async def save_agent() -> None:
                 if active_turns.is_running(session.id):
@@ -437,10 +461,12 @@ class ChatPageController:
                             type="positive",
                         )
 
-            with ui.row().classes("w-full justify-end"):
+            with ui.row().classes(
+                UI_PRESENTATION["open_chat_agent_settings.classes.w_full_justify_end"]
+            ):
                 ui.button(
                     ui_text("chat.page_controller.cancel"), on_click=dialog.close
-                ).props("flat")
+                ).props(UI_PRESENTATION["open_chat_agent_settings.props.flat"])
                 ui.button(
                     ui_text("chat.page_controller.save_chat_agent"), on_click=save_agent
                 )
@@ -899,14 +925,18 @@ class ChatPageController:
                     on_steering_added=on_steering_added,
                 )
             except asyncio.CancelledError:
-                logger.info("Agent execution cancelled by user")
+                logger.info(
+                    app_text("chat.page_controller.agent_execution_cancelled_by_user")
+                )
                 cancelled = True
                 session.cleanup_active_sub_agents()
                 response_text = "[Generation stopped by user]"
                 message_error = "cancelled"
             except Exception as error:  # noqa: BLE001 - UI execution boundary
                 session.cleanup_active_sub_agents()
-                logger.exception("Agent execution failed")
+                logger.exception(
+                    app_text("chat.page_controller.agent_execution_failed")
+                )
                 response_text = build_execution_error_message(
                     error,
                     base_url=config.base_url,
@@ -1020,7 +1050,12 @@ class ChatPageController:
                     if self.sidebar and not self._client.is_deleted:
                         self.sidebar.render_sessions()
             except Exception as error:  # noqa: BLE001 - optional background task
-                logger.debug("Structured title generation skipped or failed: %s", error)
+                logger.debug(
+                    app_text(
+                        "chat.page_controller.structured_title_generation_skipped_or_failed_s"
+                    ),
+                    error,
+                )
 
     def _show_manual_approval(
         self,

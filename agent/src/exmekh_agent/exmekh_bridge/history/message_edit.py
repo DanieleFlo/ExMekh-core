@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.image_input import IMAGE_SUFFIXES
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     PreparedUserInput,
@@ -45,7 +46,11 @@ def prepare_message_edit(
         allowed = retained_attachment_paths(message)
         selected_paths = allowed if attachment_paths is None else attachment_paths
         if any(path not in allowed for path in selected_paths):
-            raise ValueError("An edited message can only retain its own attachments")
+            raise ValueError(
+                app_text(
+                    "errors_history.message_edit.an_edited_message_can_only_retain_its_own_attachments"
+                )
+            )
         retained = [
             StagedAttachment.from_saved_file(path, storage=storage)
             for path in selected_paths
@@ -96,7 +101,7 @@ def prepare_message_edit(
     return PreparedUserInput(
         prompt=prompt,
         display_content=text if paths or images else prepared.display_content,
-        title_text=text or "Attached file",
+        title_text=text or app_text("execution.pasted_input.attached_file"),
         image_urls=images,
         image_paths=list(dict.fromkeys([*vision_paths, *prepared.image_paths])),
         attachment_paths=list(dict.fromkeys([*paths, *prepared.attachment_paths])),

@@ -1,0 +1,24 @@
+{
+  "base_url": "http://localhost:8080/v1",
+  "api_key": "prova",
+  "default_model": "Qwen3.8-27B-UD-Q4_K_S",
+  "context_length": 22000,
+  "api_type": "responses",
+  "reasoning_effort": "xhigh",
+  "health_timeout_seconds": 3.0,
+  "token_cache_size": 4096,
+  "fallback_characters_per_token": 4,
+  "ds4_owner": "ds4.c",
+  "qwen_name_fragment": "qwen",
+  "api_types": [
+    "responses",
+    "chat_completions"
+  ],
+  "connection_error_names": [
+    "APIConnectionError",
+    "ConnectError",
+    "ConnectionError",
+    "ReadTimeout",
+    "TimeoutError"
+  ]
+}

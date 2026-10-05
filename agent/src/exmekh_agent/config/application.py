@@ -9,6 +9,15 @@ from pathlib import Path
 from dotenv import load_dotenv
 from exmekh_lib.core.agents.node import DefaultCapabilities
 
+from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.environment import ENVIRONMENT_FIELDS, PERSISTED_FIELDS
+from exmekh_agent.config.paths import DEFAULT_DATA_DIR, DEFAULT_ENV_PATH
+from exmekh_agent.config.provider import DEFAULTS as PROVIDER_DEFAULTS
+from exmekh_agent.config.server import DEFAULTS as SERVER_DEFAULTS
+from exmekh_agent.config.storage import DEFAULTS as STORAGE_DEFAULTS
+from exmekh_agent.utils.files import atomic_write_text
+
 # Load .env if present in the current working directory or ExMekh Agent root
 load_dotenv()
 
@@ -19,77 +28,95 @@ logger = logging.getLogger(__name__)
 class AppConfig:
     # Server / LLM Provider settings
     base_url: str = field(
-        default_factory=lambda: os.getenv("BASE_URL", "http://localhost:8080/v1")
+        default_factory=lambda: os.getenv(
+            ENVIRONMENT_FIELDS["base_url"], PROVIDER_DEFAULTS["base_url"]
+        )
     )
-    api_key: str = field(default_factory=lambda: os.getenv("API_KEY", "prova"))
+    api_key: str = field(
+        default_factory=lambda: os.getenv(
+            ENVIRONMENT_FIELDS["api_key"], PROVIDER_DEFAULTS["api_key"]
+        )
+    )
     default_model: str = field(
-        default_factory=lambda: os.getenv("DEFAULT_MODEL", "Qwen3.8-27B-UD-Q4_K_S")
+        default_factory=lambda: os.getenv(
+            ENVIRONMENT_FIELDS["default_model"], PROVIDER_DEFAULTS["default_model"]
+        )
     )
     context_length: int = field(
-        default_factory=lambda: int(os.getenv("CONTEXT_LENGTH", "22000"))
+        default_factory=lambda: int(
+            os.getenv(
+                ENVIRONMENT_FIELDS["context_length"],
+                str(PROVIDER_DEFAULTS["context_length"]),
+            )
+        )
     )
     model_context_lengths: dict[str, int] = field(default_factory=dict)
     model_owners: dict[tuple[str, str], str] = field(default_factory=dict)
     api_type: str = field(
-        default_factory=lambda: os.getenv("API_TYPE", "responses")
+        default_factory=lambda: os.getenv(
+            ENVIRONMENT_FIELDS["api_type"], PROVIDER_DEFAULTS["api_type"]
+        )
     )  # "chat_completions" or "responses"
     reasoning_effort: str = field(
-        default_factory=lambda: os.getenv("REASONING_EFFORT", "xhigh")
+        default_factory=lambda: os.getenv(
+            ENVIRONMENT_FIELDS["reasoning_effort"],
+            PROVIDER_DEFAULTS["reasoning_effort"],
+        )
     )  # none, low, medium, xhigh
 
     # Agent settings
-    name_hds: str = "main"
+    name_hds: str = AGENT_DEFAULTS["name_hds"]
     capabilities_path: str = field(
         default_factory=lambda: str(DefaultCapabilities().capabilities_path)
     )
     work_root: str = field(default_factory=lambda: str(Path.cwd()))
-    agent_mode: str = "deep_agent"  # "deep_agent" or "quick_chat"
+    agent_mode: str = AGENT_DEFAULTS["agent_mode"]  # "deep_agent" or "quick_chat"
     coding_agent_persistent_history: bool = field(
         default_factory=lambda: (
-            os.getenv("CODING_AGENT_PERSISTENT_HISTORY", "true").lower()
+            os.getenv(
+                ENVIRONMENT_FIELDS["coding_agent_persistent_history"],
+                str(AGENT_DEFAULTS["coding_agent_persistent_history"]).lower(),
+            ).lower()
             in {"1", "true", "yes"}
         )
     )
 
     # Web UI settings
     host: str = field(
-        default_factory=lambda: os.getenv("EXMEKH_AGENT_HOST", "127.0.0.1")
+        default_factory=lambda: os.getenv(
+            ENVIRONMENT_FIELDS["host"], SERVER_DEFAULTS["host"]
+        )
     )
     port: int = field(
-        default_factory=lambda: int(os.getenv("EXMEKH_AGENT_PORT", "8000"))
+        default_factory=lambda: int(
+            os.getenv(ENVIRONMENT_FIELDS["port"], str(SERVER_DEFAULTS["port"]))
+        )
     )
     app_title: str = field(
-        default_factory=lambda: os.getenv("EXMEKH_AGENT_TITLE", "ExMekh Agent")
+        default_factory=lambda: os.getenv(
+            ENVIRONMENT_FIELDS["app_title"], SERVER_DEFAULTS["app_title"]
+        )
     )
-    data_dir: Path = field(
-        default_factory=lambda: Path(__file__).resolve().parents[2] / "data"
-    )
+    data_dir: Path = field(default_factory=lambda: DEFAULT_DATA_DIR)
 
     def save_to_env(self, env_path: Path | None = None) -> None:
         """Persist current configuration to .env file in ExMekh Agent directory."""
-        env_path = env_path or Path(__file__).resolve().parents[2] / ".env"
+        env_path = env_path or DEFAULT_ENV_PATH
         lines: list[str] = []
         if env_path.exists():
             try:
                 lines = env_path.read_text(encoding="utf-8").splitlines()
             except OSError as error:
-                logger.warning(
-                    "Could not read existing settings from %s: %s", env_path, error
-                )
+                logger.warning(app_text("configuration.read_error"), env_path, error)
                 lines = []
 
         env_vars = {
-            "BASE_URL": self.base_url,
-            "API_KEY": self.api_key,
-            "DEFAULT_MODEL": self.default_model,
-            "REASONING_EFFORT": str(self.reasoning_effort),
-            "API_TYPE": self.api_type,
-            "EXMEKH_AGENT_HOST": self.host,
-            "EXMEKH_AGENT_PORT": str(self.port),
-            "EXMEKH_AGENT_TITLE": self.app_title,
-            "CODING_AGENT_PERSISTENT_HISTORY": str(
-                self.coding_agent_persistent_history
-            ).lower(),
+            ENVIRONMENT_FIELDS[name]: (
+                str(getattr(self, name)).lower()
+                if isinstance(getattr(self, name), bool)
+                else str(getattr(self, name))
+            )
+            for name in PERSISTED_FIELDS
         }
 
         updated_keys: set[str] = set()
@@ -108,16 +135,13 @@ class AppConfig:
             if k not in updated_keys:
                 new_lines.append(f"{k}={v}")
 
-        temporary_path = env_path.with_suffix(".env.tmp")
+        temporary_path = env_path.with_suffix(STORAGE_DEFAULTS["env_temporary_suffix"])
         try:
-            temporary_path.write_text(
-                "\n".join(new_lines) + "\n",
-                encoding="utf-8",
+            atomic_write_text(
+                env_path, "\n".join(new_lines) + "\n", temporary_path=temporary_path
             )
-            temporary_path.replace(env_path)
         except OSError as error:
-            logger.warning("Could not persist settings to %s: %s", env_path, error)
-            temporary_path.unlink(missing_ok=True)
+            logger.warning(app_text("configuration.persist_error"), env_path, error)
 
     def set_model_context_length(self, model: str, length: int) -> None:
         if model and isinstance(length, int) and length > 0:
@@ -134,8 +158,9 @@ class AppConfig:
 
     def uses_ds4_qwen_prompt(self, model: str, base_url: str) -> bool:
         return (
-            self.model_owners.get(self._model_endpoint_key(model, base_url)) == "ds4.c"
-            and "qwen" in model.lower()
+            self.model_owners.get(self._model_endpoint_key(model, base_url))
+            == PROVIDER_DEFAULTS["ds4_owner"]
+            and PROVIDER_DEFAULTS["qwen_name_fragment"] in model.lower()
         )
 
     def get_context_length(self, model: str | None = None) -> int:

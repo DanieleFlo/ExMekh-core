@@ -8,6 +8,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
+from exmekh_agent.config.formatting import DEFAULTS as FORMAT_DEFAULTS
 from exmekh_agent.exmekh_bridge.history.tool_calls import (
     extract_tool_arguments,
     restore_tool_call_ids,
@@ -52,7 +53,11 @@ class RecordedHistory:
                     return (
                         content
                         if isinstance(content, str)
-                        else json.dumps(content, ensure_ascii=False, indent=2)
+                        else json.dumps(
+                            content,
+                            ensure_ascii=False,
+                            indent=FORMAT_DEFAULTS["indent_spaces"],
+                        )
                     )
         return None
 

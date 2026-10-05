@@ -10,6 +10,8 @@ from dataclasses import dataclass
 
 from nicegui.client import Client
 
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import ChatSession, SubAgentConversation
 from exmekh_agent.exmekh_bridge.providers.context_usage import (
@@ -92,7 +94,11 @@ class ContextUsageUpdater:
         if self._closed:
             return
         now = time.monotonic()
-        if not force and now - self._last_scheduled < 0.15:
+        if (
+            not force
+            and now - self._last_scheduled
+            < EXECUTION_DEFAULTS["context_update_interval_seconds"]
+        ):
             return
         self._last_scheduled = now
 
@@ -118,7 +124,9 @@ class ContextUsageUpdater:
             try:
                 result = await loop.run_in_executor(None, request.calculate)
             except Exception:
-                logger.exception("Unable to count context tokens")
+                logger.exception(
+                    app_text("chat.context_updates.unable_to_count_context_tokens")
+                )
                 if self._pending is request:
                     self._pending = None
                 continue

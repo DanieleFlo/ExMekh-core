@@ -17,24 +17,23 @@ from exmekh_lib.core.models.user_message import (
 )
 from PIL import Image, ImageOps, UnidentifiedImageError
 
+from exmekh_agent.config.attachments import (
+    DEFAULTS as ATTACHMENTS_DEFAULTS,
+)
+from exmekh_agent.config.attachments import (
+    IMAGE_SUFFIXES as IMAGE_SUFFIXES,
+)
+from exmekh_agent.config.attachments import (
+    MAX_IMAGE_SIDE as MAX_IMAGE_SIDE,
+)
+from exmekh_agent.config.attachments import (
+    MAX_PDF_PAGES as MAX_PDF_PAGES,
+)
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 
 # PDFium is not thread-safe; uploads run in the shared executor.
 _pdf_render_lock = Lock()
-
-MAX_PDF_PAGES = 10
-MAX_IMAGE_SIDE = 2048
-IMAGE_SUFFIXES = {
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".webp",
-    ".bmp",
-    ".tif",
-    ".tiff",
-    ".ico",
-}
 
 
 def image_data_url(image: Image.Image) -> str:
@@ -47,7 +46,9 @@ def image_data_url(image: Image.Image) -> str:
 
 def image_from_url(url: str) -> Image.Image:
     if not url.startswith("data:image/png;base64,"):
-        raise ValueError("Saved images must be PNG data URLs")
+        raise ValueError(
+            app_text("errors_history.image_input.saved_images_must_be_png_data_urls")
+        )
     data = base64.b64decode(url.split(",", 1)[1], validate=True)
     with Image.open(BytesIO(data)) as source:
         return source.copy()
@@ -55,7 +56,7 @@ def image_from_url(url: str) -> Image.Image:
 
 def _normalized_url(source: Image.Image) -> str:
     oriented = ImageOps.exif_transpose(source).convert("RGBA")
-    image = Image.new("RGB", oriented.size, "white")
+    image = Image.new("RGB", oriented.size, ATTACHMENTS_DEFAULTS["image_background"])
     image.paste(oriented, mask=oriented.getchannel("A"))
     image.thumbnail((MAX_IMAGE_SIDE, MAX_IMAGE_SIDE))
     return image_data_url(image)
@@ -69,28 +70,39 @@ def attachment_images(filename: str, data: bytes) -> tuple[list[str], int]:
             with _pdf_render_lock, pdfium.PdfDocument(data) as document:
                 total = len(document)
                 if total == 0:
-                    raise ValueError("PDF has no pages")
+                    raise ValueError(
+                        app_text("errors_history.image_input.pdf_has_no_pages")
+                    )
                 urls = []
                 for index in range(min(total, MAX_PDF_PAGES)):
                     with closing(document[index]) as page:
                         width, height = page.get_size()
-                        scale = min(2.0, MAX_IMAGE_SIDE / max(width, height))
+                        scale = min(
+                            ATTACHMENTS_DEFAULTS["pdf_render_scale"],
+                            MAX_IMAGE_SIDE / max(width, height),
+                        )
                         with closing(page.render(scale=scale)) as bitmap:
                             urls.append(_normalized_url(bitmap.to_pil()))
                 return urls, total
         except pdfium.PdfiumError as error:
             raise ValueError(
-                "Unable to read PDF; it may be damaged or password protected"
+                app_text(
+                    "errors_history.image_input.unable_to_read_pdf_it_may_be_damaged_or_password_protected"
+                )
             ) from error
     try:
         with Image.open(BytesIO(data)) as source:
             return [_normalized_url(source)], 0
     except UnidentifiedImageError as error:
         if suffix in IMAGE_SUFFIXES:
-            raise ValueError("Unable to read image") from error
+            raise ValueError(
+                app_text("errors_history.image_input.unable_to_read_image")
+            ) from error
         return [], 0
     except Image.DecompressionBombError as error:
-        raise ValueError("Image dimensions are too large") from error
+        raise ValueError(
+            app_text("errors_history.image_input.image_dimensions_are_too_large")
+        ) from error
 
 
 def user_content(text: str, image_urls: list[str]) -> UserMessageContent:
@@ -114,7 +126,9 @@ def serialize_user_content(message: UserMessage) -> str | list[dict[str, Any]]:
             )
         else:
             raise ValueError(
-                "ExMekh Agent converts documents to images before inference"
+                app_text(
+                    "errors_history.image_input.exmekh_agent_converts_documents_to_images_before_inference"
+                )
             )
     return parts
 
@@ -129,7 +143,11 @@ def deserialize_user_content(content: Any) -> UserMessageContent:
         elif part["type"] == "image_url":
             parts.append(ImagesUserMessage([image_from_url(part["image_url"]["url"])]))
         else:
-            raise ValueError("Unsupported saved user content part")
+            raise ValueError(
+                app_text(
+                    "errors_history.image_input.unsupported_saved_user_content_part"
+                )
+            )
     return parts
 
 

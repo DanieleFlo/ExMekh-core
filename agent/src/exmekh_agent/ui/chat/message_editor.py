@@ -19,7 +19,9 @@ from exmekh_agent.exmekh_bridge.history.pasted_input import (
 from exmekh_agent.exmekh_bridge.models import ChatMessage
 from exmekh_agent.state.temp_storage import TempStorage
 from exmekh_agent.ui.chat.message_text import message_display_text
-from exmekh_agent.ui.resources import ui_text
+from exmekh_agent.ui.resources import presentation_config, ui_text
+
+UI_PRESENTATION = presentation_config("controls/message_editor")
 
 EditMessageCallback: TypeAlias = Callable[
     [str, str, str, list[str], list[StagedAttachment]], Awaitable[bool]
@@ -40,25 +42,31 @@ class MessageEditor:
         self._paths = retained_attachment_paths(message)
         self._storage = storage
         self._client = ui.context.client
-        with ui.dialog().classes("message-edit-dialog") as self._dialog:
-            with ui.card().classes("w-[640px] max-w-[94vw] bg-zinc-900 gap-4"):
+        with ui.dialog().classes(
+            UI_PRESENTATION["open.classes.message_edit_dialog"]
+        ) as self._dialog:
+            with ui.card().classes(
+                UI_PRESENTATION["open.classes.w_640px_max_w_94vw_bg_zinc_900_gap_4"]
+            ):
                 ui.label(ui_text("chat.message_editor.edit_message")).classes(
-                    "text-lg text-zinc-100"
+                    UI_PRESENTATION["open.classes.text_lg_text_zinc_100"]
                 )
                 self._editor = (
                     ui.textarea(
                         label=ui_text("chat.message_editor.message"),
                         value=message_display_text(message),
                     )
-                    .props("outlined autogrow autofocus")
-                    .classes("w-full")
+                    .props(UI_PRESENTATION["open.props.outlined_autogrow_autofocus"])
+                    .classes(UI_PRESENTATION["open.classes.w_full"])
                 )
                 ui.label(
                     ui_text(
                         "chat.message_editor.saving_restarts_the_response_and_removes_the"
                     )
-                ).classes("text-xs text-zinc-400")
-                attachment_list = ui.column().classes("w-full gap-2")
+                ).classes(UI_PRESENTATION["open.classes.text_xs_text_zinc_400"])
+                attachment_list = ui.column().classes(
+                    UI_PRESENTATION["open.classes.w_full_gap_2"]
+                )
                 self._uploader = (
                     ui.upload(
                         label=ui_text("chat.message_editor.add_attachments"),
@@ -67,18 +75,20 @@ class MessageEditor:
                         on_begin_upload=self._begin_upload,
                         on_multi_upload=self._upload,
                     )
-                    .classes("message-edit-upload w-full")
-                    .props("flat bordered dark")
+                    .classes(UI_PRESENTATION["open.classes.message_edit_upload_w_full"])
+                    .props(UI_PRESENTATION["open.props.flat_bordered_dark"])
                 )
-                with ui.row().classes("w-full justify-end gap-2"):
+                with ui.row().classes(
+                    UI_PRESENTATION["open.classes.w_full_justify_end_gap_2"]
+                ):
                     self._cancel_button = ui.button(
                         ui_text("chat.message_editor.cancel"),
                         on_click=self._dialog.close,
-                    ).props("flat")
+                    ).props(UI_PRESENTATION["open.props.flat"])
                     self._save_button = ui.button(
                         ui_text("chat.message_editor.save_regenerate"),
                         on_click=self._save,
-                    ).props("unelevated")
+                    ).props(UI_PRESENTATION["open.props.unelevated"])
                 self._editor.on_value_change(self._update_enabled)
                 with attachment_list:
                     self._render_attachments()
@@ -108,7 +118,11 @@ class MessageEditor:
 
     @ui.refreshable
     def _render_attachments(self) -> None:
-        with ui.row().classes("w-full flex-wrap gap-2 message-edit-attachments"):
+        with ui.row().classes(
+            UI_PRESENTATION[
+                "render_attachments.classes.w_full_flex_wrap_gap_2_message_edit_attachmen"
+            ]
+        ):
             for path in self._paths:
                 self._render_attachment(
                     Path(path).name, partial(self._remove_path, path)
@@ -120,10 +134,18 @@ class MessageEditor:
         self._update_enabled()
 
     def _render_attachment(self, name: str, on_remove: Callable[[], None]) -> None:
-        with ui.row().classes("items-center gap-1 rounded bg-zinc-800 px-2 min-w-0"):
-            ui.label(name).classes("text-xs truncate max-w-60")
-            ui.button(icon="close", on_click=on_remove).props(
-                f'flat round dense aria-label="Remove {name}"'
+        with ui.row().classes(
+            UI_PRESENTATION[
+                "render_attachment.classes.items_center_gap_1_rounded_bg_zinc_800_px_2_m"
+            ]
+        ):
+            ui.label(name).classes(
+                UI_PRESENTATION["render_attachment.classes.text_xs_truncate_max_w_60"]
+            )
+            ui.button(
+                icon=UI_PRESENTATION["render_attachment.icon.close"], on_click=on_remove
+            ).props(
+                UI_PRESENTATION["render_attachment.props_template"].format(name=name)
             )
 
     def _refresh_attachments(self) -> None:
@@ -181,7 +203,7 @@ class MessageEditor:
         self._uploader.set_enabled(not saving)
         self._cancel_button.set_enabled(not saving)
         if saving:
-            self._dialog.props("persistent")
+            self._dialog.props(UI_PRESENTATION["set_saving.props.persistent"])
         else:
             self._dialog.props(remove="persistent")
         self._update_enabled()

@@ -19,6 +19,7 @@ from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
 from exmekh_lib.interfaces.message import Message
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.execution_restore import ExecutionHistoryRestorer
 from exmekh_agent.exmekh_bridge.history.image_input import (
     deserialize_user_content,
@@ -33,6 +34,7 @@ from exmekh_agent.exmekh_bridge.models import (
     SkillNode,
     ToolEvent,
 )
+from exmekh_agent.exmekh_bridge.resources import load_prompt
 
 logger = logging.getLogger(__name__)
 AGENT_METADATA_KEYS = (
@@ -526,10 +528,7 @@ def exmekh_messages_to_chat_messages(
 def session_to_exmekh_messages(session: ChatSession) -> list[Message[Any]]:
     """Bidirectional conversion: ChatSession -> list[exmekh_lib.interfaces.message.Message]."""
     exmekh_messages: list[Message[Any]] = []
-    sys_prompt = (
-        session.system_prompt
-        or "You are a friendly, accurate, and professional AI assistant."
-    )
+    sys_prompt = session.system_prompt or load_prompt("quick_chat")
     sys_msg = SystemMessage(content=sys_prompt)
     sys_msg.set_metadata(
         "_fe_session_metadata",
@@ -557,7 +556,7 @@ def session_to_exmekh_messages(session: ChatSession) -> list[Message[Any]]:
 def exmekh_messages_to_session(
     exmekh_messages: Sequence[Message[Any]],
     session_id: str | None = None,
-    title: str = "New Conversation",
+    title: str = app_text("execution.agent_runner.new_conversation"),
     model: str = "Qwen3.8-27B-UD-Q4_K_S",
     agent_mode: str = "deep_agent",
 ) -> ChatSession:
@@ -635,9 +634,19 @@ def restore_node_history(
                 history, execution_history, node_cache
             )
         except Exception as error:  # noqa: BLE001 - legacy history is best-effort
-            logger.warning("Failed to restore node execution history: %s", error)
+            logger.warning(
+                app_text(
+                    "errors_history.converter.failed_to_restore_node_execution_history_s"
+                ),
+                error,
+            )
 
     try:
         node.restore_history(prior_exmekh, restore_execution_state)
     except Exception as error:  # noqa: BLE001 - legacy history is best-effort
-        logger.warning("Failed to restore node message history: %s", error)
+        logger.warning(
+            app_text(
+                "errors_history.converter.failed_to_restore_node_message_history_s"
+            ),
+            error,
+        )

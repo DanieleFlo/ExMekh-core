@@ -9,6 +9,8 @@ from typing import Any
 from exmekh_lib.tokenizers.qwen import QwenTokenizer
 
 from exmekh_agent.config import config
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.provider import DEFAULTS as PROVIDER_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
@@ -17,6 +19,11 @@ from exmekh_agent.exmekh_bridge.models import (
     ChatSession,
     SkillNode,
     SubAgentConversation,
+)
+from exmekh_agent.exmekh_bridge.resources import load_prompt
+from exmekh_agent.utils.formatting import format_compact_tokens as format_compact_tokens
+from exmekh_agent.utils.formatting import (
+    format_context_percentage as format_context_percentage,
 )
 
 logger = logging.getLogger(__name__)
@@ -32,7 +39,7 @@ def get_qwen_tokenizer() -> QwenTokenizer:
     return _tokenizer_instance
 
 
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=PROVIDER_DEFAULTS["token_cache_size"])
 def count_text_tokens(text: str) -> int:
     """Count tokens in a string using the QwenTokenizer exposed by the exmekh_lib package."""
     if not text:
@@ -40,26 +47,13 @@ def count_text_tokens(text: str) -> int:
     try:
         return get_qwen_tokenizer().count_tokens(text)
     except Exception as error:  # noqa: BLE001 - safe fallback if tokenizer cache is offline
-        logger.debug("Fallback token estimation due to tokenizer error: %s", error)
-        return max(1, len(text) // 4)
-
-
-def format_compact_tokens(count: int) -> str:
-    """Format a token count using compact 'k' notation (e.g. 1.4k, 22.0k, 32.8k)."""
-    safe_count = max(0, int(count))
-    if safe_count == 0:
-        return "0"
-    if safe_count < 100:
-        return str(safe_count)
-    return f"{safe_count / 1000.0:.1f}k"
-
-
-def format_context_percentage(used_tokens: int, context_length: int) -> str:
-    """Format the percentage of context consumed (e.g. '4.2%')."""
-    if context_length <= 0:
-        return "0.0%"
-    pct = max(0.0, (max(0, int(used_tokens)) / float(context_length)) * 100.0)
-    return f"{pct:.1f}%"
+        logger.debug(
+            app_text(
+                "errors_providers.context_usage.fallback_token_estimation_due_to_tokenizer_error_s"
+            ),
+            error,
+        )
+        return max(1, len(text) // PROVIDER_DEFAULTS["fallback_characters_per_token"])
 
 
 def _serialize_tool_calls_for_counting(tool_calls: Any) -> str:
@@ -261,7 +255,13 @@ def _apply_skill_compaction_to_scope(
                 compacted_tool_msg: dict[str, Any] = {
                     "role": "tool",
                     "name": skill_name,
-                    "content": str(sk.get("output") or f"Completed {skill_name}"),
+                    "content": str(
+                        sk.get("output")
+                        or app_text(
+                            "execution.context_usage.completed_skill_name",
+                            skill_name=skill_name,
+                        )
+                    ),
                 }
                 if call_id:
                     compacted_tool_msg["tool_call_id"] = call_id
@@ -380,7 +380,7 @@ def _resolve_system_prompt_for_session(
         if hds_prompt:
             return hds_prompt
 
-    return "You are a friendly, accurate, and professional AI assistant."
+    return load_prompt("quick_chat")
 
 
 def build_compacted_context_messages(

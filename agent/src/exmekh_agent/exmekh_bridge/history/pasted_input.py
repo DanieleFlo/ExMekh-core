@@ -8,13 +8,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from exmekh_agent.config.attachments import (
+    PASTE_TOKEN_THRESHOLD as PASTE_TOKEN_THRESHOLD,
+)
+from exmekh_agent.config.attachments import XML_TAG_NAME as XML_TAG_NAME
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.image_input import attachment_images
 from exmekh_agent.exmekh_bridge.models import ChatMessage
 from exmekh_agent.exmekh_bridge.providers.context_usage import count_text_tokens
-from exmekh_agent.state.temp_storage import TempStorage, clean_attachment_filename
-
-PASTE_TOKEN_THRESHOLD: int = 300
-XML_TAG_NAME: str = "user_input_file"
+from exmekh_agent.state.temp_storage import TempStorage
+from exmekh_agent.utils.filenames import clean_attachment_filename
 
 
 @dataclass
@@ -55,7 +58,10 @@ class StagedAttachment:
             if data is None:
                 if self.is_binary:
                     raise FileNotFoundError(
-                        f"Attachment is no longer available: {self.filename}"
+                        app_text(
+                            "errors_history.pasted_input.attachment_is_no_longer_available",
+                            value_1=self.filename,
+                        )
                     )
                 data = self.content.encode("utf-8")
             self.file_path, self.relative_path = storage.write_file(
@@ -96,7 +102,11 @@ class StagedAttachment:
             if isinstance(data, str):
                 data = base64.b64decode(data.split(",", 1)[-1], validate=True)
             if not isinstance(data, bytes):
-                raise ValueError("Uploaded file data must contain bytes or base64 text")
+                raise ValueError(
+                    app_text(
+                        "errors_history.pasted_input.uploaded_file_data_must_contain_bytes_or_base64_text"
+                    )
+                )
             return create_staged_attachment_from_file(
                 payload.get("filename", payload.get("name", "uploaded_file")),
                 data,
@@ -105,7 +115,11 @@ class StagedAttachment:
             )
         relative_path = str(payload.get("relative_path", ""))
         if not relative_path:
-            raise ValueError("Uploaded file descriptor has no relative path")
+            raise ValueError(
+                app_text(
+                    "errors_history.pasted_input.uploaded_file_descriptor_has_no_relative_path"
+                )
+            )
         file_path = storage.resolve_attachment(relative_path)
         return cls(
             id=str(payload.get("id") or uuid.uuid4().hex[:6]),
@@ -354,7 +368,9 @@ def prepare_user_input(
             for attachment in attachments or []
         ):
             raise ValueError(
-                "Quick Chat supports text attachments; use a project for other files"
+                app_text(
+                    "errors_history.pasted_input.quick_chat_supports_text_attachments_use_a_project_for_other_fil"
+                )
             )
         parts = [
             text,
@@ -378,7 +394,11 @@ def prepare_user_input(
         ]
         prompt = "\n\n".join(part for part in [text, *references] if part)
         display_content = text if attachments else None
-    title_text = text or (attachments[0].preview if attachments else "Attached file")
+    title_text = text or (
+        attachments[0].preview
+        if attachments
+        else app_text("execution.pasted_input.attached_file")
+    )
     image_urls = [
         url for attachment in attachments or [] for url in attachment.image_urls
     ]

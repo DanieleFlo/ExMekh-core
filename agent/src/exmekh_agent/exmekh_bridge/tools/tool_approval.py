@@ -28,40 +28,29 @@ from exmekh_lib.providers.local import LocalProvider
 from pydantic import BaseModel, Field, ValidationError
 
 from exmekh_agent.config import config
+from exmekh_agent.config.approvals import (
+    DEFAULT_TOOL_APPROVAL_MODE as DEFAULT_TOOL_APPROVAL_MODE,
+)
+from exmekh_agent.config.approvals import (
+    LEGACY_TOOL_APPROVAL_MODES as LEGACY_TOOL_APPROVAL_MODES,
+)
+from exmekh_agent.config.approvals import TOOL_APPROVAL_ALL as TOOL_APPROVAL_ALL
+from exmekh_agent.config.approvals import TOOL_APPROVAL_LLM as TOOL_APPROVAL_LLM
+from exmekh_agent.config.approvals import TOOL_APPROVAL_MANUAL as TOOL_APPROVAL_MANUAL
+from exmekh_agent.config.approvals import TOOL_APPROVAL_MODES as TOOL_APPROVAL_MODES
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.paths import BUNDLED_CAPABILITIES_DIR
+from exmekh_agent.exmekh_bridge.resources import load_prompt
 
 logger = logging.getLogger(__name__)
 
-TOOL_APPROVAL_MANUAL = "Manual"
-TOOL_APPROVAL_ALL = "Approve All"
-TOOL_APPROVAL_LLM = "Approve via LLM"
-TOOL_APPROVAL_MODES: list[str] = [
-    TOOL_APPROVAL_MANUAL,
-    TOOL_APPROVAL_ALL,
-    TOOL_APPROVAL_LLM,
-]
-DEFAULT_TOOL_APPROVAL_MODE = TOOL_APPROVAL_MANUAL
 
 type CommandApprovedCallback = Callable[[str, list[dict[str, str]]], None]
 
-LEGACY_TOOL_APPROVAL_MODES: dict[str, str] = {
-    "Manuale": TOOL_APPROVAL_MANUAL,
-    "Approva tutto": TOOL_APPROVAL_ALL,
-    "Approva da un LLM": TOOL_APPROVAL_LLM,
-}
 
-COMMAND_APPROVAL_SYSTEM_PROMPT = (
-    "You are a command security and safety evaluator in an autonomous development system. "
-    "Your sole purpose is to evaluate whether a proposed bash/shell command should be approved for execution or declined. "
-    "Carefully analyze if the command is safe, constructive, and appropriate for the user's task. "
-    "Decline commands that are destructive, harmful, malicious, or unauthorized. "
-    "Maintain the history of approved commands across the session to maintain context. "
-    "Respond with approved=True if the command is safe to execute, or approved=False and provide a concise explanation in reason. "
-    "Write explanations in the user's conversation language."
-)
+COMMAND_APPROVAL_SYSTEM_PROMPT = load_prompt("command_approval")
 
-COMMAND_APPROVAL_HDS_PATH = (
-    Path(__file__).resolve().parents[2] / "capabilities" / "hds" / "command-approval.md"
-)
+COMMAND_APPROVAL_HDS_PATH = BUNDLED_CAPABILITIES_DIR / "hds" / "command-approval.md"
 
 
 def load_command_approval_hds() -> HDS:
@@ -81,7 +70,7 @@ def load_command_approval_hds() -> HDS:
         name="command-approval",
         markdown_path=Path("command-approval.md"),
         metadata=HDSMetadata(
-            description="Autonomous evaluator for bash command execution safety.",
+            description=app_text("approvals.command_approval.evaluator_description"),
             sub_skills=(),
             sub_tools=(),
             exit_tool="exit_agent",
@@ -108,11 +97,11 @@ class CommandApprovalDecision(BaseModel):
 
     approved: bool = Field(
         ...,
-        description="Whether the requested shell command is approved to execute.",
+        description=app_text("approvals.command_approval.approved_description"),
     )
     reason: str = Field(
         default="",
-        description="Explanation for why the command was approved or declined.",
+        description=app_text("approvals.command_approval.reason_description"),
     )
 
 
@@ -161,17 +150,30 @@ def build_approval_message_history(
             restored.check_history()
             return restored
         except (TypeError, ValueError) as error:
-            logger.warning("Could not restore command approval history: %s", error)
+            logger.warning(
+                app_text(
+                    "errors_tools.tool_approval.could_not_restore_command_approval_history_s"
+                ),
+                error,
+            )
             return base_history
 
     for cmd in history:
         cmd_str = str(cmd)
         base_history.add(
             [
-                UserMessage(f"Evaluate proposed command:\n```bash\n{cmd_str}\n```"),
+                UserMessage(
+                    app_text(
+                        "approvals.tool_approval.evaluate_proposed_command_bash_cmd_str",
+                        cmd_str=cmd_str,
+                    )
+                ),
                 StructuredAssistantMessage(
                     CommandApprovalDecision(
-                        approved=True, reason="Command approved in session"
+                        approved=True,
+                        reason=app_text(
+                            "approvals.tool_approval.command_approved_in_session"
+                        ),
                     )
                 ),
             ]
@@ -221,14 +223,21 @@ class CommandApprovalEvaluator:
         return commands
 
     def record_approved_command(
-        self, command: str, reason: str = "Approved in session"
+        self,
+        command: str,
+        reason: str = app_text("approvals.tool_approval.approved_in_session"),
     ) -> None:
         """Add an approved command to the MessageHistory so future evaluations retain context."""
         if command in self.approved_commands():
             return
         self._history.add(
             [
-                UserMessage(f"Evaluate proposed command:\n```bash\n{command}\n```"),
+                UserMessage(
+                    app_text(
+                        "approvals.tool_approval.evaluate_proposed_command_bash_command",
+                        command=command,
+                    )
+                ),
                 StructuredAssistantMessage(
                     CommandApprovalDecision(approved=True, reason=reason)
                 ),
@@ -262,7 +271,10 @@ class CommandApprovalEvaluator:
             client.replace_history_from(0, self._history.get_history())
 
             prompt_parts = [
-                f"Please evaluate whether this bash command should be approved for execution:\n\n```bash\n{command}\n```"
+                app_text(
+                    "approvals.tool_approval.please_evaluate_whether_this_bash_command_should_be_approved_for_execu",
+                    command=command,
+                )
             ]
             if context and context.work_root:
                 prompt_parts.append(f"\nWorking directory: `{context.work_root}`")
@@ -289,10 +301,18 @@ class CommandApprovalEvaluator:
 
             return decision
         except Exception as error:  # noqa: BLE001 - fallback on LLM evaluation failure
-            logger.warning("Error during LLM command approval evaluation: %s", error)
+            logger.warning(
+                app_text(
+                    "errors_tools.tool_approval.error_during_llm_command_approval_evaluation_s"
+                ),
+                error,
+            )
             return CommandApprovalDecision(
                 approved=False,
-                reason=f"Error during LLM approval evaluation: {error}",
+                reason=app_text(
+                    "approvals.tool_approval.error_during_llm_approval_evaluation_error",
+                    error=error,
+                ),
             )
 
 
@@ -359,7 +379,10 @@ class CommandApprovalHook(BeforeTool):
 
         if self.mode == TOOL_APPROVAL_ALL:
             self._record_approval(
-                command_str, reason="Approved automatically (Approve All)"
+                command_str,
+                reason=app_text(
+                    "approvals.tool_approval.approved_automatically_approve_all"
+                ),
             )
             return None
 
@@ -368,31 +391,48 @@ class CommandApprovalHook(BeforeTool):
             if decision.approved:
                 self._record_approval(command_str, reason=decision.reason)
                 return None
-            reason = (
-                decision.reason or "Command was not approved by the evaluation model."
+            reason = decision.reason or app_text(
+                "approvals.tool_approval.command_was_not_approved_by_the_evaluation_model"
             )
             return ToolResponse(
-                result=f"Command declined by evaluation model: {reason}"
+                result=app_text(
+                    "approvals.tool_approval.command_declined_by_evaluation_model_reason",
+                    reason=reason,
+                )
             )
 
         # Default mode: "Manual"
         if self.request_manual_approval:
             approved = self.request_manual_approval(command_str)
             if approved:
-                self._record_approval(command_str, reason="Approved manually by user")
+                self._record_approval(
+                    command_str,
+                    reason=app_text(
+                        "approvals.tool_approval.approved_manually_by_user"
+                    ),
+                )
                 return None
-            return ToolResponse(result="Command declined by user.")
+            return ToolResponse(
+                result=app_text("approvals.tool_approval.command_declined_by_user")
+            )
 
-        return ToolResponse(result="Approval request was not handled.")
+        return ToolResponse(
+            result=app_text("approvals.tool_approval.approval_request_was_not_handled")
+        )
 
     def _record_approval(
         self,
         command: str,
-        reason: str = "Approved in session",
+        reason: str = app_text("approvals.tool_approval.approved_in_session"),
     ) -> None:
         self.evaluator.record_approved_command(command, reason=reason)
         if self.on_command_approved:
             try:
                 self.on_command_approved(command, self.evaluator.dump_history())
             except Exception as error:  # noqa: BLE001 - optional persistence observer
-                logger.warning("Error in on_command_approved callback: %s", error)
+                logger.warning(
+                    app_text(
+                        "errors_tools.tool_approval.error_in_on_command_approved_callback_s"
+                    ),
+                    error,
+                )

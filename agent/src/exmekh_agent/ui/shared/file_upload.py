@@ -8,6 +8,7 @@ from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     create_staged_attachment_from_file,
 )
@@ -24,7 +25,12 @@ async def upload_files(request: Request) -> JSONResponse:
         session = session_manager.get_session(str(session_id or ""))
         if session is None:
             return JSONResponse(
-                {"error": "Upload conversation was not found"}, status_code=404
+                {
+                    "error": app_text(
+                        "shared.file_upload.upload_conversation_was_not_found"
+                    )
+                },
+                status_code=404,
             )
         storage = session_manager.temp_storage(session)
         files = form.getlist("files") or form.getlist("file")
@@ -48,13 +54,23 @@ async def upload_files(request: Request) -> JSONResponse:
                 for previous in staged:
                     previous.delete_file()
                 return JSONResponse(
-                    {"error": f"Upload failed: {error}"}, status_code=400
+                    {
+                        "error": app_text(
+                            "shared.file_upload.upload_failed_error", error=error
+                        )
+                    },
+                    status_code=400,
                 )
             if not session_manager.owns_session(session):
                 for previous in [*staged, attachment]:
                     previous.delete_file()
                 return JSONResponse(
-                    {"error": "Upload conversation was deleted"}, status_code=404
+                    {
+                        "error": app_text(
+                            "shared.file_upload.upload_conversation_was_deleted"
+                        )
+                    },
+                    status_code=404,
                 )
             staged.append(attachment)
         return JSONResponse([attachment.upload_payload() for attachment in staged])

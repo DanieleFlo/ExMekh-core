@@ -7,12 +7,15 @@ from typing import TypeVar
 
 from nicegui import ui
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.models import ProjectSettings
 from exmekh_agent.state.agent_design import AGENT_PROFILES, AgentDesign, AgentProfile
 from exmekh_agent.ui.agents.agent_designer import AgentDesigner
-from exmekh_agent.ui.resources import ui_text
+from exmekh_agent.ui.resources import presentation_config, ui_text
 
-Settings = TypeVar("Settings", bound=ProjectSettings)
+UI_PRESENTATION = presentation_config("controls/agent_selector")
+
+Settings = TypeVar(app_text("agents.agent_selector.settings"), bound=ProjectSettings)
 
 
 class AgentSelector:
@@ -43,14 +46,16 @@ class AgentSelector:
                 label=ui_text("agents.agent_selector.agent_type"),
                 on_change=self._changed,
             )
-            .props("outlined dense dark")
-            .classes("w-full")
+            .props(UI_PRESENTATION["build.props.outlined_dense_dark"])
+            .classes(UI_PRESENTATION["build.classes.w_full"])
         )
         ui.button(
             ui_text("agents.agent_selector.customize_agent"),
-            icon="account_tree",
+            icon=UI_PRESENTATION["build.icon.account_tree"],
             on_click=self.customize,
-        ).props("flat no-caps").classes("w-full")
+        ).props(UI_PRESENTATION["build.props.flat_no_caps"]).classes(
+            UI_PRESENTATION["build.classes.w_full"]
+        )
 
     def set_value(self, profile: AgentProfile, design: AgentDesign | None) -> None:
         self._profile = profile

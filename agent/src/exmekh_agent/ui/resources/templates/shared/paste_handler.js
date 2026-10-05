@@ -1,0 +1,1 @@
+(e) => { if (e.clipboardData?.files?.length) {   e.preventDefault(); window.__exmekhUploadFiles(e.clipboardData.files); return; } const text = (e.clipboardData || window.clipboardData)?.getData('text') || ''; if (text.length > {{ paste_char_threshold }}) {   e.preventDefault();   emit({text: text, prevented: true}); } else {   emit({text: text, prevented: false}); }}

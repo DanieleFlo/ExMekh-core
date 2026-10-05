@@ -23,6 +23,7 @@ from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.providers.local import LocalProvider
 
 from exmekh_agent.config import config
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.cancellation import (
     CancellableProvider,
     raise_if_cancelled,
@@ -388,7 +389,12 @@ def _execute_agent_turn_sync_unlocked(
             try:
                 client.replace_history_from(1, prior_exmekh)
             except Exception as e:  # noqa: BLE001 - legacy history is best-effort
-                logger.warning(f"Failed to seed history into Client: {e}")
+                logger.warning(
+                    app_text(
+                        "errors_agents.agent_runner.failed_to_seed_history_into_client",
+                        value_1=e,
+                    )
+                )
 
         event_handler = QuickChatEventHandler(on_token, on_reasoning)
 
@@ -532,7 +538,7 @@ def _generate_chat_title_sync_unlocked(
 ) -> str:
     """Generate a concise chat title from the user's first prompt."""
     if not user_prompt or not user_prompt.strip():
-        return "New Conversation"
+        return app_text("execution.agent_runner.new_conversation")
 
     clean_prompt = user_prompt.strip().replace("\n", " ")
     fallback_title = clean_prompt[:30] + ("..." if len(clean_prompt) > 30 else "")
@@ -575,7 +581,10 @@ def _generate_chat_title_sync_unlocked(
             return title
     except Exception as e:  # noqa: BLE001 - title generation intentionally falls back
         logger.warning(
-            f"Error during structured title generation via agentic client: {e}"
+            app_text(
+                "errors_agents.agent_runner.error_during_structured_title_generation_via_agentic_client",
+                value_1=e,
+            )
         )
 
     return fallback_title

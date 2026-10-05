@@ -210,7 +210,14 @@ agent/
     └── exmekh_agent/
         ├── __init__.py
         ├── main.py       # NiceGUI entry point
-        ├── config.py     # Configuration and capabilities paths
+        ├── config/
+        │   ├── application.py # AppConfig and environment persistence
+        │   ├── catalogs.py    # Owned settings and parameterized messages
+        │   ├── resources/     # Provider, server, agents, storage, attachments,
+        │   │                  # execution and formatting defaults (JSON)
+        │   ├── presentation/  # Graph geometry, board policy, sanitization,
+        │   │   └── controls/  # Control styles and icons by UI component (JSON)
+        │   └── texts/         # UI, errors, logs and approval text by domain (JSON)
         ├── sync.py       # Python sync script
         ├── exmekh_bridge/
         │   ├── agents/        # Execution, collection, restoration and steering
@@ -220,6 +227,13 @@ agent/
         │   ├── tools/         # Tool events and command approval
         │   ├── resources/     # Packaged model instructions
         │   └── models.py      # Pydantic models shared across the bridge
+        ├── utils/             # Shared functions, divided by responsibility
+        │   ├── files.py        # Atomic writes and temporary-file cleanup
+        │   ├── filenames.py    # Attachment filename normalization
+        │   ├── formatting.py   # Bytes, tokens, percentages and durations
+        │   ├── exceptions.py   # Exception-chain traversal and rendering
+        │   ├── markdown.py     # Markdown/YAML front-matter parsing
+        │   └── resources.py    # Cached JSON and text reads
         ├── state/             # Managed sessions, persistence and active turns
         └── ui/
             ├── agents/        # Agent board, selector and capability editor
@@ -230,19 +244,26 @@ agent/
             ├── settings/      # Application and project settings
             ├── shared/        # Disclosure, attachments, Markdown and outputs
             ├── resources/
-            │   ├── config/    # Presentation settings and Markdown policy (JSON)
-            │   ├── text/      # Static and parameterized UI text catalogs (JSON)
             │   ├── templates/ # Escaped HTML and SVG templates
             │   ├── css/       # Stylesheets
             │   └── js/        # Browser interactions
             └── styles.py      # Style injection
 ```
 
+Application defaults are divided by responsibility in `config/resources`;
+`config/texts` contains static and parameterized copy, and
+`config/presentation` contains layout, styles, icons and rendering policies.
+`AppConfig` keeps its public API and environment overrides. Shared functions live
+in `utils`; callers import them from the module that owns their responsibility.
+
 UI text is resolved through `ui_text`, presentation configuration through
-`presentation_config`, and HTML/SVG through `render_html`. Resource paths are
-relative to the installed package. Templates escape dynamic values by default;
-only sanitized or already rendered fragments are marked safe. Model instructions
-are separate from UI presentation in `exmekh_bridge/resources/prompts`.
+`presentation_config`, and HTML/SVG through `render_html`. The UI delegates catalog
+and settings lookups to `config.catalogs`. Resource paths are relative to the
+installed package. Templates escape dynamic values by default; only sanitized
+or already rendered fragments are marked safe. Model instructions remain in
+`exmekh_bridge/resources/prompts`. Protocol identifiers, model schema keys and
+algorithmic operations belong to code; adjustable defaults and presentation belong
+to the configuration resources.
 
 See [architecture and responsibilities](docs/architecture.md) for the public APIs.
 

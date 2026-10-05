@@ -9,6 +9,8 @@ from markupsafe import Markup
 from nicegui import ui
 
 import exmekh_agent.exmekh_bridge.providers.context_usage as context_usage
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
 from exmekh_agent.exmekh_bridge.history.skill_history import (
     skill_opening_call_id,
@@ -23,8 +25,10 @@ from exmekh_agent.exmekh_bridge.models import (
 )
 from exmekh_agent.exmekh_bridge.resources import load_prompt
 from exmekh_agent.ui.history.json_format import format_json_to_highlighted_html
-from exmekh_agent.ui.resources import render_html, ui_text
+from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 from exmekh_agent.ui.shared.disclosure import DisclosureState
+
+UI_PRESENTATION = presentation_config("controls/raw_history_view")
 
 
 @dataclass
@@ -218,53 +222,90 @@ class RawHistoryComponent:
 
     def build(self) -> ui.column:
         with ui.column().classes(
-            "w-full h-full flex-grow px-4 py-4 gap-4 overflow-y-auto raw-history-container"
+            UI_PRESENTATION[
+                "build.classes.w_full_h_full_flex_grow_px_4_py_4_gap_4_overf"
+            ]
         ) as col:
             self.container = col
             self._render_toolbar()
-            with ui.column().classes("w-full gap-3") as content:
+            with ui.column().classes(
+                UI_PRESENTATION["build.classes.w_full_gap_3"]
+            ) as content:
                 self.content_container = content
 
         return col
 
     def _render_toolbar(self) -> None:
         with ui.row().classes(
-            "raw-history-toolbar w-full items-center justify-between pb-3 border-b border-zinc-800/80"
+            UI_PRESENTATION[
+                "render_toolbar.classes.raw_history_toolbar_w_full_items_center_justi"
+            ]
         ):
-            with ui.row().classes("items-center gap-2"):
-                ui.icon("data_object", size="sm").classes("text-zinc-400")
+            with ui.row().classes(
+                UI_PRESENTATION["render_toolbar.classes.items_center_gap_2"]
+            ):
+                ui.icon(
+                    UI_PRESENTATION["render_toolbar.icon.data_object"],
+                    size=UI_PRESENTATION["render_toolbar.size.sm"],
+                ).classes(UI_PRESENTATION["render_toolbar.classes.text_zinc_400"])
                 ui.label(
                     ui_text("history.raw_history_view.raw_history_json_inspector")
-                ).classes("text-sm font-semibold tracking-tight text-zinc-200")
+                ).classes(
+                    UI_PRESENTATION[
+                        "render_toolbar.classes.text_sm_font_semibold_tracking_tight_text_zin"
+                    ]
+                )
                 self.status_label = ui.label(
                     ui_text("history.raw_history_view.0_messages")
                 ).classes(
-                    "font-mono text-xs text-zinc-400 bg-zinc-900/80 px-2 py-0.5 rounded border border-zinc-800"
+                    UI_PRESENTATION[
+                        "render_toolbar.classes.font_mono_text_xs_text_zinc_400_bg_zinc_900_8"
+                    ]
                 )
 
-            with ui.row().classes("items-center gap-2"):
+            with ui.row().classes(
+                UI_PRESENTATION["render_toolbar.classes.items_center_gap_2"]
+            ):
                 ui.button(
                     ui_text("history.raw_history_view.expand_all"),
-                    icon="unfold_more",
+                    icon=UI_PRESENTATION["render_toolbar.icon.unfold_more"],
                     on_click=lambda: self.toggle_all(True),
-                ).props("flat dense no-caps text-color=grey-4").classes(
-                    "text-xs px-2.5 py-1 bg-zinc-900/60 hover:bg-zinc-800 rounded border border-zinc-800/80"
+                ).props(
+                    UI_PRESENTATION[
+                        "render_toolbar.props.flat_dense_no_caps_text_color_grey_4"
+                    ]
+                ).classes(
+                    UI_PRESENTATION[
+                        "render_toolbar.classes.text_xs_px_2_5_py_1_bg_zinc_900_60_hover_bg_z"
+                    ]
                 )
 
                 ui.button(
                     ui_text("history.raw_history_view.collapse_all"),
-                    icon="unfold_less",
+                    icon=UI_PRESENTATION["render_toolbar.icon.unfold_less"],
                     on_click=lambda: self.toggle_all(False),
-                ).props("flat dense no-caps text-color=grey-4").classes(
-                    "text-xs px-2.5 py-1 bg-zinc-900/60 hover:bg-zinc-800 rounded border border-zinc-800/80"
+                ).props(
+                    UI_PRESENTATION[
+                        "render_toolbar.props.flat_dense_no_caps_text_color_grey_4"
+                    ]
+                ).classes(
+                    UI_PRESENTATION[
+                        "render_toolbar.classes.text_xs_px_2_5_py_1_bg_zinc_900_60_hover_bg_z"
+                    ]
                 )
 
                 ui.button(
                     ui_text("history.raw_history_view.copy_full_json"),
-                    icon="content_copy",
+                    icon=UI_PRESENTATION["render_toolbar.icon.content_copy"],
                     on_click=self._handle_copy_full_json,
-                ).props("flat dense no-caps text-color=white").classes(
-                    "text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded border border-zinc-700"
+                ).props(
+                    UI_PRESENTATION[
+                        "render_toolbar.props.flat_dense_no_caps_text_color_white"
+                    ]
+                ).classes(
+                    UI_PRESENTATION[
+                        "render_toolbar.classes.text_xs_px_3_py_1_bg_zinc_800_hover_bg_zinc_7"
+                    ]
                 )
 
     def render_session(self, session: ChatSession) -> None:
@@ -298,17 +339,30 @@ class RawHistoryComponent:
         with self.content_container:
             if not raw_messages:
                 with ui.column().classes(
-                    "w-full py-16 items-center justify-center text-center gap-2"
+                    UI_PRESENTATION[
+                        "render_session.classes.w_full_py_16_items_center_justify_center_text"
+                    ]
                 ):
-                    ui.icon("terminal", size="md").classes("text-zinc-600")
+                    ui.icon(
+                        UI_PRESENTATION["render_session.icon.terminal"],
+                        size=UI_PRESENTATION["render_session.size.md"],
+                    ).classes(UI_PRESENTATION["render_session.classes.text_zinc_600"])
                     ui.label(
                         ui_text("history.raw_history_view.no_history_available")
-                    ).classes("text-sm text-zinc-400 font-mono")
+                    ).classes(
+                        UI_PRESENTATION[
+                            "render_session.classes.text_sm_text_zinc_400_font_mono"
+                        ]
+                    )
                     ui.label(
                         ui_text(
                             "history.raw_history_view.send_a_message_in_chat_to_generate"
                         )
-                    ).classes("text-xs text-zinc-600 max-w-sm")
+                    ).classes(
+                        UI_PRESENTATION[
+                            "render_session.classes.text_xs_text_zinc_600_max_w_sm"
+                        ]
+                    )
                 return
 
             self._render_message_sequence(raw_messages, skill_tree, depth=0)
@@ -359,36 +413,59 @@ class RawHistoryComponent:
 
         # Border accent based on role
         if role == "user":
-            border_cls = "border-sky-800/40 hover:border-sky-700/60"
-            role_badge_cls = "bg-sky-950/80 text-sky-400 border-sky-800/60"
-            icon_name = "person"
+            border_cls = UI_PRESENTATION["message.user.border"]
+            role_badge_cls = UI_PRESENTATION["message.user.badge"]
+            icon_name = UI_PRESENTATION["render_single_raw_message.icon.person"]
         elif role in {"tool", "function"}:
-            border_cls = "border-amber-700/50 hover:border-amber-600/70"
-            role_badge_cls = "bg-amber-950/80 text-amber-400 border-amber-700/60"
-            icon_name = "build"
+            border_cls = UI_PRESENTATION["message.tool.border"]
+            role_badge_cls = UI_PRESENTATION["message.tool.badge"]
+            icon_name = UI_PRESENTATION["render_single_raw_message.icon.build"]
         elif role == "system":
-            border_cls = "border-zinc-800/60 hover:border-zinc-700/60"
-            role_badge_cls = "bg-zinc-900 text-zinc-400 border-zinc-700"
-            icon_name = "settings"
+            border_cls = UI_PRESENTATION["message.system.border"]
+            role_badge_cls = UI_PRESENTATION["message.system.badge"]
+            icon_name = UI_PRESENTATION["render_single_raw_message.icon.settings"]
         else:
-            border_cls = "border-emerald-800/40 hover:border-emerald-700/60"
-            role_badge_cls = "bg-emerald-950/80 text-emerald-400 border-emerald-800/60"
-            icon_name = "smart_toy"
+            border_cls = UI_PRESENTATION["message.assistant.border"]
+            role_badge_cls = UI_PRESENTATION["message.assistant.badge"]
+            icon_name = UI_PRESENTATION["render_single_raw_message.icon.smart_toy"]
 
         with ui.column().classes(
-            f"w-full bg-[#111114] border {border_cls} rounded-lg p-3 gap-2 transition-colors duration-150"
+            UI_PRESENTATION["render_single_raw_message.classes_template"].format(
+                border_cls=border_cls
+            )
         ):
             # Header row with role, index, and copy button
-            with ui.row().classes("w-full items-center justify-between"):
-                with ui.row().classes("items-center gap-2"):
-                    ui.icon(icon_name, size="xs").classes("text-zinc-400")
+            with ui.row().classes(
+                UI_PRESENTATION[
+                    "render_single_raw_message.classes.w_full_items_center_justify_between"
+                ]
+            ):
+                with ui.row().classes(
+                    UI_PRESENTATION[
+                        "render_single_raw_message.classes.items_center_gap_2"
+                    ]
+                ):
+                    ui.icon(
+                        icon_name,
+                        size=UI_PRESENTATION["render_single_raw_message.size.xs"],
+                    ).classes(
+                        UI_PRESENTATION[
+                            "render_single_raw_message.classes.text_zinc_400"
+                        ]
+                    )
                     with ui.row().classes(
-                        f"items-center px-1.5 py-0.5 rounded text-[11px] font-mono border {role_badge_cls}"
+                        UI_PRESENTATION[
+                            "render_single_raw_message.classes_template_2"
+                        ].format(role_badge_cls=role_badge_cls)
                     ):
                         ui.label(role.upper())
                     ui.label(
                         ui_text("history.raw_history_view.message", index=index)
-                    ).classes("font-mono text-[11px] text-zinc-500")
+                    ).classes(
+                        UI_PRESENTATION[
+                            "render_single_raw_message.classes.font_mono_text_11px_text_zinc_500"
+                        ]
+                    )
 
                     # If this message is a tool response or contains tool calls, add helper pills
                     if role in {"tool", "function"} and msg.get("name"):
@@ -397,28 +474,42 @@ class RawHistoryComponent:
                                 "history.raw_history_view.tool", msg_name=msg["name"]
                             )
                         ).classes(
-                            "font-mono text-[11px] text-amber-400/90 bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-800/40"
+                            UI_PRESENTATION[
+                                "render_single_raw_message.classes.font_mono_text_11px_text_amber_400_90_bg_ambe"
+                            ]
                         )
                     elif msg.get("tool_calls"):
                         ui.label(ui_text("history.raw_history_view.tool_call")).classes(
-                            "font-mono text-[10px] text-amber-300 bg-amber-900/60 px-1.5 py-0.2 rounded font-bold tracking-wider"
+                            UI_PRESENTATION[
+                                "render_single_raw_message.classes.font_mono_text_10px_text_amber_300_bg_amber_9"
+                            ]
                         )
                     if msg.get("source") == "session_summary":
                         ui.label(
                             ui_text(
                                 "history.raw_history_view.summary_raw_trace_not_available"
                             )
-                        ).classes("font-mono text-[10px] text-zinc-400")
+                        ).classes(
+                            UI_PRESENTATION[
+                                "render_single_raw_message.classes.font_mono_text_10px_text_zinc_400"
+                            ]
+                        )
 
                 # Copy message button
                 msg_json = json.dumps(msg, indent=2, ensure_ascii=False)
                 ui.button(
-                    icon="content_copy",
+                    icon=UI_PRESENTATION["render_single_raw_message.icon.content_copy"],
                     on_click=lambda _, text=msg_json: self._copy_text(
-                        text, "Message copied"
+                        text, app_text("history.raw_history_view.message_copied")
                     ),
-                ).props("flat round dense size=xs").classes(
-                    "text-zinc-600 hover:text-zinc-300"
+                ).props(
+                    UI_PRESENTATION[
+                        "render_single_raw_message.props.flat_round_dense_size_xs"
+                    ]
+                ).classes(
+                    UI_PRESENTATION[
+                        "render_single_raw_message.classes.text_zinc_600_hover_text_zinc_300"
+                    ]
                 )
 
             # Formatted and syntax highlighted JSON code block
@@ -429,7 +520,7 @@ class RawHistoryComponent:
                     content=Markup(highlighted_html),
                     extra_classes="",
                 )
-            ).classes("w-full")
+            ).classes(UI_PRESENTATION["render_single_raw_message.classes.w_full"])
 
     def _render_skill_compaction(
         self,
@@ -450,22 +541,28 @@ class RawHistoryComponent:
 
         # Depth guideline colors: depth 1 = emerald, depth 2 = purple, depth 3+ = amber
         if depth == 1:
-            depth_color_border = "border-emerald-500/50"
-            badge_color = "bg-emerald-950/80 text-emerald-300 border-emerald-700/60"
-            depth_label = "Depth 1"
+            depth_color_border = UI_PRESENTATION["skill.depth.first.border"]
+            badge_color = UI_PRESENTATION["skill.depth.first.badge"]
+            depth_label = app_text("history.raw_history_view.depth_1")
         elif depth == 2:
-            depth_color_border = "border-purple-500/50"
-            badge_color = "bg-purple-950/80 text-purple-300 border-purple-700/60"
-            depth_label = "Depth 2 (Matryoshka)"
+            depth_color_border = UI_PRESENTATION["skill.depth.second.border"]
+            badge_color = UI_PRESENTATION["skill.depth.second.badge"]
+            depth_label = app_text("history.raw_history_view.depth_2_matryoshka")
         else:
-            depth_color_border = "border-amber-500/50"
-            badge_color = "bg-amber-950/80 text-amber-300 border-amber-700/60"
-            depth_label = f"Depth {depth} (Matryoshka)"
+            depth_color_border = UI_PRESENTATION["skill.depth.deeper.border"]
+            badge_color = UI_PRESENTATION["skill.depth.deeper.badge"]
+            depth_label = app_text(
+                "history.raw_history_view.depth_depth_matryoshka", depth=depth
+            )
 
         # Vertical compaction wrapper
-        with ui.column().classes("w-full my-1"):
+        with ui.column().classes(
+            UI_PRESENTATION["render_skill_compaction.classes.w_full_my_1"]
+        ):
             with ui.expansion("").classes(
-                "w-full subskill-compaction rounded-lg border border-zinc-800 bg-[#0e0e11] text-xs"
+                UI_PRESENTATION[
+                    "render_skill_compaction.classes.w_full_subskill_compaction_rounded_lg_border_"
+                ]
             ) as exp:
                 # Restore previous expansion state or default to collapsed
                 invocation_id = (
@@ -485,18 +582,37 @@ class RawHistoryComponent:
                 # Custom compact header
                 with exp.add_slot("header"):
                     with ui.row().classes(
-                        "items-center justify-between w-full py-1.5 pr-2 cursor-pointer"
+                        UI_PRESENTATION[
+                            "render_skill_compaction.classes.items_center_justify_between_w_full_py_1_5_pr"
+                        ]
                     ):
-                        with ui.row().classes("items-center gap-2.5"):
-                            ui.icon("hub", size="xs").classes("text-zinc-400")
+                        with ui.row().classes(
+                            UI_PRESENTATION[
+                                "render_skill_compaction.classes.items_center_gap_2_5"
+                            ]
+                        ):
+                            ui.icon(
+                                UI_PRESENTATION["render_skill_compaction.icon.hub"],
+                                size=UI_PRESENTATION["render_skill_compaction.size.xs"],
+                            ).classes(
+                                UI_PRESENTATION[
+                                    "render_skill_compaction.classes.text_zinc_400"
+                                ]
+                            )
                             ui.label(
                                 ui_text(
                                     "history.raw_history_view.sub_skill",
                                     skill_name=skill_name,
                                 )
-                            ).classes("font-mono font-medium text-zinc-200 text-xs")
+                            ).classes(
+                                UI_PRESENTATION[
+                                    "render_skill_compaction.classes.font_mono_font_medium_text_zinc_200_text_xs"
+                                ]
+                            )
                             with ui.row().classes(
-                                f"items-center px-1.5 py-0.5 rounded text-[10px] font-mono border {badge_color}"
+                                UI_PRESENTATION[
+                                    "render_skill_compaction.classes_template_2"
+                                ].format(badge_color=badge_color)
                             ):
                                 ui.label(depth_label)
                             ui.label(
@@ -505,26 +621,52 @@ class RawHistoryComponent:
                                     msg_count=msg_count,
                                 )
                             ).classes(
-                                "font-mono text-[11px] text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800"
+                                UI_PRESENTATION[
+                                    "render_skill_compaction.classes.font_mono_text_11px_text_zinc_400_bg_zinc_900"
+                                ]
                             )
 
-                        with ui.row().classes("items-center gap-2"):
+                        with ui.row().classes(
+                            UI_PRESENTATION[
+                                "render_skill_compaction.classes.items_center_gap_2"
+                            ]
+                        ):
                             if is_live:
                                 with ui.row().classes(
-                                    "items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-mono border border-emerald-500/40 bg-emerald-950/40 text-emerald-300 animate-pulse"
+                                    UI_PRESENTATION[
+                                        "render_skill_compaction.classes.items_center_gap_1_5_px_1_5_py_0_5_rounded_te"
+                                    ]
                                 ):
-                                    ui.spinner("dots", size="xs", color="emerald-4")
+                                    ui.spinner(
+                                        UI_PRESENTATION[
+                                            "render_skill_compaction.spinner.dots"
+                                        ],
+                                        size=UI_PRESENTATION[
+                                            "render_skill_compaction.size.xs"
+                                        ],
+                                        color=UI_PRESENTATION[
+                                            "render_skill_compaction.color.emerald_4"
+                                        ],
+                                    )
                                     ui.label(
                                         ui_text("history.raw_history_view.running")
                                     )
                             elif skill_data.get("status") == "error":
                                 ui.label(
                                     ui_text("history.raw_history_view.error")
-                                ).classes("font-mono text-[10px] text-red-400")
+                                ).classes(
+                                    UI_PRESENTATION[
+                                        "render_skill_compaction.classes.font_mono_text_10px_text_red_400"
+                                    ]
+                                )
                             elif skill_data.get("tokens_pending"):
                                 ui.label(
                                     ui_text("history.raw_history_view.completed")
-                                ).classes("font-mono text-[10px] text-emerald-400")
+                                ).classes(
+                                    UI_PRESENTATION[
+                                        "render_skill_compaction.classes.font_mono_text_10px_text_emerald_400"
+                                    ]
+                                )
                             else:
                                 before_tok, after_tok = (
                                     context_usage.compute_raw_skill_compaction_tokens(
@@ -534,14 +676,25 @@ class RawHistoryComponent:
                                 with (
                                     ui.row()
                                     .classes(
-                                        "raw-skill-closure-tokens items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-950/40 border border-emerald-800/40 text-[10px] font-mono text-emerald-300"
+                                        UI_PRESENTATION[
+                                            "render_skill_compaction.classes.raw_skill_closure_tokens_items_center_gap_1_p"
+                                        ]
                                     )
                                     .props(
                                         f'title="Context tokens before closing: {before_tok:,} • after closing: {after_tok:,}"'
                                     )
                                 ):
-                                    ui.icon("compress", size="12px").classes(
-                                        "text-emerald-400"
+                                    ui.icon(
+                                        UI_PRESENTATION[
+                                            "render_skill_compaction.icon.compress"
+                                        ],
+                                        size=UI_PRESENTATION[
+                                            "render_skill_compaction.size.12px"
+                                        ],
+                                    ).classes(
+                                        UI_PRESENTATION[
+                                            "render_skill_compaction.classes.text_emerald_400"
+                                        ]
                                     )
                                     ui.label(
                                         context_usage.format_skill_closure_tokens(
@@ -551,40 +704,66 @@ class RawHistoryComponent:
                                 ui.label(
                                     ui_text("history.raw_history_view.completed")
                                 ).classes(
-                                    "font-mono text-[10px] text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800/40"
+                                    UI_PRESENTATION[
+                                        "render_skill_compaction.classes.font_mono_text_10px_text_emerald_400_bg_emera"
+                                    ]
                                 )
                             ui.label(
                                 ui_text("history.raw_history_view.nested_history")
-                            ).classes("font-mono text-[11px] text-zinc-500")
+                            ).classes(
+                                UI_PRESENTATION[
+                                    "render_skill_compaction.classes.font_mono_text_11px_text_zinc_500"
+                                ]
+                            )
 
                 # Expanded contents: Indented vertical container with color-coded guideline
                 with exp:
                     with ui.column().classes(
-                        f"w-full ml-3 pl-3.5 my-2 border-l-2 {depth_color_border} gap-3"
+                        UI_PRESENTATION[
+                            "render_skill_compaction.classes_template"
+                        ].format(depth_color_border=depth_color_border)
                     ):
                         with ui.row().classes(
-                            "items-center justify-between w-full pb-1 border-b border-zinc-800/60"
+                            UI_PRESENTATION[
+                                "render_skill_compaction.classes.items_center_justify_between_w_full_pb_1_bord"
+                            ]
                         ):
                             ui.label(
                                 ui_text(
                                     "history.raw_history_view.internal_history_of_excluded_from_main_history",
                                     skill_name=skill_name,
                                 )
-                            ).classes("font-mono text-[11px] text-zinc-400 italic")
+                            ).classes(
+                                UI_PRESENTATION[
+                                    "render_skill_compaction.classes.font_mono_text_11px_text_zinc_400_italic"
+                                ]
+                            )
                             # Copy sub-skill json button
                             sub_json = json.dumps(
                                 sub_messages, indent=2, ensure_ascii=False
                             )
                             ui.button(
                                 ui_text("history.raw_history_view.copy_sub_history"),
-                                icon="content_copy",
+                                icon=UI_PRESENTATION[
+                                    "render_skill_compaction.icon.content_copy"
+                                ],
                                 on_click=lambda _, text=sub_json, name=skill_name: (
-                                    self._copy_text(text, f"History of {name} copied")
+                                    self._copy_text(
+                                        text,
+                                        app_text(
+                                            "history.raw_history_view.history_of_name_copied",
+                                            name=name,
+                                        ),
+                                    )
                                 ),
                             ).props(
-                                "flat dense no-caps text-color=grey-4 size=xs"
+                                UI_PRESENTATION[
+                                    "render_skill_compaction.props.flat_dense_no_caps_text_color_grey_4_size_xs"
+                                ]
                             ).classes(
-                                "text-[10px] px-2 py-0.5 bg-zinc-900 rounded border border-zinc-800"
+                                UI_PRESENTATION[
+                                    "render_skill_compaction.classes.text_10px_px_2_py_0_5_bg_zinc_900_rounded_bor"
+                                ]
                             )
 
                         # Recursive rendering: matryoshka style for sub-sub-skills!
@@ -635,22 +814,47 @@ class RawHistoryComponent:
 
         # Append dedicated live streaming container
         with self.content_container:
-            with ui.column().classes("w-full gap-3 live-stream-wrapper") as live_box:
+            with ui.column().classes(
+                UI_PRESENTATION[
+                    "start_live_turn.classes.w_full_gap_3_live_stream_wrapper"
+                ]
+            ) as live_box:
                 self.live_container = live_box
 
                 # Container for live tools and skills that execute during this turn
-                self.live_events_container = ui.column().classes("w-full gap-3")
+                self.live_events_container = ui.column().classes(
+                    UI_PRESENTATION["start_live_turn.classes.w_full_gap_3"]
+                )
 
                 # Live assistant response card
                 with ui.column().classes(
-                    "w-full bg-[#111114] border border-emerald-500/50 rounded-lg p-3 gap-2 transition-all duration-150 live-assistant-card shadow-lg shadow-emerald-950/10"
+                    UI_PRESENTATION[
+                        "start_live_turn.classes.w_full_bg_111114_border_border_emerald_500_50"
+                    ]
                 ) as card:
                     self.live_assistant_card = card
-                    with ui.row().classes("w-full items-center justify-between"):
-                        with ui.row().classes("items-center gap-2"):
-                            ui.icon("smart_toy", size="xs").classes("text-emerald-400")
+                    with ui.row().classes(
+                        UI_PRESENTATION[
+                            "start_live_turn.classes.w_full_items_center_justify_between"
+                        ]
+                    ):
+                        with ui.row().classes(
+                            UI_PRESENTATION[
+                                "start_live_turn.classes.items_center_gap_2"
+                            ]
+                        ):
+                            ui.icon(
+                                UI_PRESENTATION["start_live_turn.icon.smart_toy"],
+                                size=UI_PRESENTATION["start_live_turn.size.xs"],
+                            ).classes(
+                                UI_PRESENTATION[
+                                    "start_live_turn.classes.text_emerald_400"
+                                ]
+                            )
                             with ui.row().classes(
-                                "items-center px-1.5 py-0.5 rounded text-[11px] font-mono border bg-emerald-950/80 text-emerald-400 border-emerald-800/60"
+                                UI_PRESENTATION[
+                                    "start_live_turn.classes.items_center_px_1_5_py_0_5_rounded_text_11px_"
+                                ]
                             ):
                                 ui.label(ui_text("history.raw_history_view.assistant"))
                             ui.label(
@@ -658,12 +862,24 @@ class RawHistoryComponent:
                                     "history.raw_history_view.message_formatted",
                                     self_live_turn_index=self.live_turn_index,
                                 )
-                            ).classes("font-mono text-[11px] text-zinc-500")
+                            ).classes(
+                                UI_PRESENTATION[
+                                    "start_live_turn.classes.font_mono_text_11px_text_zinc_500"
+                                ]
+                            )
                             with ui.row().classes(
-                                "items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono border border-emerald-500/40 bg-emerald-950/40 text-emerald-300 animate-pulse"
+                                UI_PRESENTATION[
+                                    "start_live_turn.classes.items_center_gap_1_5_px_2_py_0_5_rounded_text"
+                                ]
                             ) as badge:
                                 self.live_status_badge = badge
-                                ui.spinner("dots", size="xs", color="emerald-4")
+                                ui.spinner(
+                                    UI_PRESENTATION["start_live_turn.spinner.dots"],
+                                    size=UI_PRESENTATION["start_live_turn.size.xs"],
+                                    color=UI_PRESENTATION[
+                                        "start_live_turn.color.emerald_4"
+                                    ],
+                                )
                                 ui.label(
                                     ui_text(
                                         "history.raw_history_view.streaming_in_progress"
@@ -672,17 +888,25 @@ class RawHistoryComponent:
 
                         # Copy button for current partial live json
                         ui.button(
-                            icon="content_copy",
+                            icon=UI_PRESENTATION["start_live_turn.icon.content_copy"],
                             on_click=lambda _: self._copy_text(
                                 json.dumps(
                                     self._build_current_live_assistant_dict(),
                                     indent=2,
                                     ensure_ascii=False,
                                 ),
-                                "Partial JSON copied",
+                                app_text(
+                                    "history.raw_history_view.partial_json_copied"
+                                ),
                             ),
-                        ).props("flat round dense size=xs").classes(
-                            "text-zinc-600 hover:text-zinc-300"
+                        ).props(
+                            UI_PRESENTATION[
+                                "start_live_turn.props.flat_round_dense_size_xs"
+                            ]
+                        ).classes(
+                            UI_PRESENTATION[
+                                "start_live_turn.classes.text_zinc_600_hover_text_zinc_300"
+                            ]
                         )
 
                     # Live syntax-highlighted pre/code element
@@ -694,7 +918,7 @@ class RawHistoryComponent:
                             content=Markup(initial_html),
                             extra_classes="",
                         )
-                    ).classes("w-full")
+                    ).classes(UI_PRESENTATION["start_live_turn.classes.w_full"])
 
         if self.status_label:
             self.status_label.text = ui_text(
@@ -733,7 +957,9 @@ class RawHistoryComponent:
         if card is None:
             self.raw_json_data.append(event_summary)
             with self.live_events_container:
-                container = ui.column().classes("w-full gap-0")
+                container = ui.column().classes(
+                    UI_PRESENTATION["add_tool_event.classes.w_full_gap_0"]
+                )
             card = _LiveToolCard(event_summary, container, len(self.raw_json_data))
             self._live_tool_cards[recorded.id] = card
         else:
@@ -782,7 +1008,10 @@ class RawHistoryComponent:
             return
 
         now = time.monotonic()
-        if not force and (now - self._last_token_render_time < 0.08):
+        if not force and (
+            now - self._last_token_render_time
+            < EXECUTION_DEFAULTS["raw_token_update_interval_seconds"]
+        ):
             return
 
         self._last_token_render_time = now
@@ -821,4 +1050,7 @@ class RawHistoryComponent:
             )
             return
         full_json = json.dumps(self.raw_json_data, indent=2, ensure_ascii=False)
-        self._copy_text(full_json, "Full Raw History copied to clipboard")
+        self._copy_text(
+            full_json,
+            app_text("history.raw_history_view.full_raw_history_copied_to_clipboard"),
+        )

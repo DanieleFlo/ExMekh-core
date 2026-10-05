@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from xml.etree import ElementTree as ET
 
+from exmekh_agent.config.formatting import DEFAULTS as FORMAT_DEFAULTS
 from exmekh_agent.exmekh_bridge.history.recorded_output import RecordedToolOutput
 from exmekh_agent.ui.resources import render_html, ui_text
 
@@ -17,7 +18,7 @@ def _format_xml(body: str) -> str:
     except ET.ParseError:
         root = ET.fromstring("<output>" + body + "</output>")
     for child in root:
-        ET.indent(child, space="  ")
+        ET.indent(child, space=" " * FORMAT_DEFAULTS["indent_spaces"])
     return (root.text or "") + "\n".join(
         ET.tostring(child, encoding="unicode").rstrip() for child in root
     )
@@ -26,7 +27,11 @@ def _format_xml(body: str) -> str:
 def format_output_text(body: str) -> str:
     """Indent JSON and XML when valid, preserving unstructured output verbatim."""
     try:
-        return json.dumps(json.loads(body), ensure_ascii=False, indent=2)
+        return json.dumps(
+            json.loads(body),
+            ensure_ascii=False,
+            indent=FORMAT_DEFAULTS["indent_spaces"],
+        )
     except (ValueError, TypeError):
         if body.lstrip().startswith("<"):
             try:

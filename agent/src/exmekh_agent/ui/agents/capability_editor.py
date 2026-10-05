@@ -13,7 +13,9 @@ from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
 )
 from exmekh_agent.state.agent_design import AgentDesign, DesignNode
-from exmekh_agent.ui.resources import ui_text
+from exmekh_agent.ui.resources import presentation_config, ui_text
+
+UI_PRESENTATION = presentation_config("controls/capability_editor")
 
 
 class CapabilityEditor:
@@ -33,11 +35,13 @@ class CapabilityEditor:
         with (
             ui.dialog() as self._dialog,
             ui.card().classes(
-                "w-[760px] max-w-[96vw] max-h-[92vh] overflow-y-auto bg-zinc-900"
+                UI_PRESENTATION[
+                    "open.classes.w_760px_max_w_96vw_max_h_92vh_overflow_y_auto"
+                ]
             ),
         ):
             ui.label(ui_text("agents.capability_editor.edit_capability_copy")).classes(
-                "text-lg"
+                UI_PRESENTATION["open.classes.text_lg"]
             )
             self._build_fields()
             if self._node.kind != "tool":
@@ -46,12 +50,12 @@ class CapabilityEditor:
                 ui_text(
                     "agents.capability_editor.the_original_remains_available_in_capabilities_the"
                 )
-            ).classes("text-xs text-zinc-400")
-            with ui.row().classes("justify-end w-full"):
+            ).classes(UI_PRESENTATION["open.classes.text_xs_text_zinc_400"])
+            with ui.row().classes(UI_PRESENTATION["open.classes.justify_end_w_full"]):
                 self._cancel_button = ui.button(
                     ui_text("agents.capability_editor.cancel"),
                     on_click=self._dialog.close,
-                ).props("flat")
+                ).props(UI_PRESENTATION["open.props.flat"])
                 self._save_button = ui.button(
                     ui_text("agents.capability_editor.save_copy"), on_click=self._save
                 )
@@ -65,45 +69,57 @@ class CapabilityEditor:
         )
         self._name = (
             ui.input(
-                "New capability name",
+                ui_text("agents.capability_editor.new_capability_name"),
                 value=f"{self._node.name}-custom-{uuid4().hex[:4]}",
             )
-            .props("outlined dense")
-            .classes("w-full")
+            .props(UI_PRESENTATION["build_fields.props.outlined_dense"])
+            .classes(UI_PRESENTATION["build_fields.classes.w_full"])
         )
         self._description = (
-            ui.textarea("Description", value=values.description)
-            .props("outlined autogrow")
-            .classes("w-full")
+            ui.textarea(
+                ui_text("agents.capability_editor.description"),
+                value=values.description,
+            )
+            .props(UI_PRESENTATION["build_fields.props.outlined_autogrow"])
+            .classes(UI_PRESENTATION["build_fields.classes.w_full"])
             if values
             else None
         )
         self._instructions = (
             ui.textarea(
-                "Instructions" if values else "Source code",
+                ui_text("agents.capability_editor.instructions")
+                if values
+                else ui_text("agents.capability_editor.source_code"),
                 value=values.instructions if values else self._node.content,
             )
-            .props("outlined autogrow")
-            .classes("w-full font-mono text-xs")
+            .props(UI_PRESENTATION["build_fields.props.outlined_autogrow"])
+            .classes(UI_PRESENTATION["build_fields.classes.w_full_font_mono_text_xs"])
         )
 
     def _render_dependencies(self) -> None:
-        for kind, label in (("skill", "Sub-skills"), ("tool", "Sub-tools")):
-            dependencies = (
-                ", ".join(
-                    item.name
-                    for item in self._design.children(self._node.id, kind=kind)
+        for kind, label in (
+            ("skill", ui_text("agents.capability_editor.sub_skills")),
+            ("tool", ui_text("agents.capability_editor.sub_tools")),
+        ):
+            dependencies = ", ".join(
+                item.name for item in self._design.children(self._node.id, kind=kind)
+            ) or ui_text("agents.capability_editor.no_dependencies")
+            ui.label(
+                ui_text(
+                    "agents.capability_editor.value",
+                    value_1=label,
+                    value_2=dependencies,
                 )
-                or "None"
-            )
-            ui.label(f"{label}: {dependencies}").classes(
-                "text-xs text-zinc-300 break-all"
+            ).classes(
+                UI_PRESENTATION[
+                    "render_dependencies.classes.text_xs_text_zinc_300_break_all"
+                ]
             )
         ui.label(
             ui_text(
                 "agents.capability_editor.dependencies_are_controlled_by_board_connections_change"
             )
-        ).classes("text-xs text-sky-300")
+        ).classes(UI_PRESENTATION["render_dependencies.classes.text_xs_text_sky_300"])
 
     def _set_saving(self, saving: bool) -> None:
         self._saving = saving
@@ -117,7 +133,7 @@ class CapabilityEditor:
             if control is not None:
                 control.set_enabled(not saving)
         if saving:
-            self._dialog.props("persistent")
+            self._dialog.props(UI_PRESENTATION["set_saving.props.persistent"])
         else:
             self._dialog.props(remove="persistent")
 

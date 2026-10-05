@@ -1,0 +1,26 @@
+{
+  "name_hds": "main",
+  "agent_mode": "deep_agent",
+  "coding_agent_persistent_history": true,
+  "profiles": {
+    "generic": "Generic",
+    "programmer": "Programmer",
+    "creative": "Creative",
+    "custom": "Custom"
+  },
+  "root_name": "agent-root",
+  "standard_capabilities": [
+    "deep-thinking",
+    "get_execution_history",
+    "search_tool_outputs",
+    "read_tool_output",
+    "control_tool_execution"
+  ],
+  "coding_profiles": [
+    "generic",
+    "programmer",
+    "custom"
+  ],
+  "coding_capability": "coding-agent",
+  "shell_tool": "bash"
+}

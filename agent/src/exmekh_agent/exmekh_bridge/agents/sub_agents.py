@@ -16,6 +16,7 @@ from exmekh_lib.core.agents.node import Node
 from exmekh_lib.core.models.provider_stream_event import ProviderStreamEventType
 from exmekh_lib.interfaces.message import Message
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.converter import restore_node_history
 from exmekh_agent.exmekh_bridge.models import SubAgentConversation, ToolEvent
 from exmekh_agent.exmekh_bridge.tools.tool_events import tool_event_from_execution
@@ -48,7 +49,11 @@ class SubAgentEventRouter:
 
     def leave(self, node: ObservedNode) -> None:
         if not self._active_nodes or self._active_nodes[-1] is not node:
-            raise RuntimeError("Sub-agent call stack is out of order")
+            raise RuntimeError(
+                app_text(
+                    "errors_agents.sub_agents.sub_agent_call_stack_is_out_of_order"
+                )
+            )
         self._active_nodes.pop()
 
     def publish(self, event: SubAgentEvent) -> None:

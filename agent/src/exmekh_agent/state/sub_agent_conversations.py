@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEvent
 from exmekh_agent.exmekh_bridge.models import ChatSession, SubAgentConversation
 
@@ -19,7 +20,12 @@ def apply_sub_agent_event(
 
     conversation = session.find_sub_agent_conversation(event.id)
     if conversation is None:
-        raise ValueError(f"Unknown sub-agent conversation: {event.id}")
+        raise ValueError(
+            app_text(
+                "errors_state.sub_agent_conversations.unknown_sub_agent_conversation",
+                value_1=event.id,
+            )
+        )
 
     if event.action == "token":
         conversation.append_token(event.token)

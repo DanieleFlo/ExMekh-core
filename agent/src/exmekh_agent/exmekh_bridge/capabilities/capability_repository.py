@@ -18,7 +18,15 @@ from exmekh_lib.core.agents.capabilities.defaults import (
 from exmekh_lib.core.agents.node import DefaultCapabilities
 
 from exmekh_agent.config import config
+from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.catalogs import presentation_settings
+from exmekh_agent.config.paths import BUNDLED_CAPABILITIES_DIR
+from exmekh_agent.exmekh_bridge.resources import load_prompt
 from exmekh_agent.state.agent_design import AgentDesign, AgentProfile, DesignNode
+from exmekh_agent.utils.markdown import markdown_parts as markdown_parts
+
+BOARD_DEFAULTS = presentation_settings("agent_board")
 
 RUNTIME_TOOLS = RUNTIME_NAMES
 
@@ -46,22 +54,6 @@ class CapabilityEditorValues:
     instructions: str
 
 
-def markdown_parts(text: str) -> tuple[dict, str]:
-    if text.startswith("---\n"):
-        header, separator, body = text[4:].partition("\n---")
-        if separator:
-            try:
-                metadata = yaml.safe_load(header)
-                if metadata is None:
-                    metadata = {}
-            except yaml.YAMLError as error:
-                raise ValueError("Invalid capability metadata") from error
-            if not isinstance(metadata, dict):
-                raise ValueError("Capability metadata must be a mapping")
-            return metadata, body.strip()
-    return {}, text.strip()
-
-
 class CapabilityRepository:
     def __init__(self, data_dir: Path | None = None) -> None:
         self._data_dir = data_dir or config.data_dir
@@ -70,7 +62,7 @@ class CapabilityRepository:
     def catalog(self, paths: list[str] | None = None) -> list[DesignNode]:
         roots = [
             self._library_path,
-            Path(__file__).resolve().parents[2] / "capabilities",
+            BUNDLED_CAPABILITIES_DIR,
         ]
         roots.extend(Path(path).expanduser() for path in paths or [] if path)
         roots.append(self._data_dir / "agent-capabilities")
@@ -107,44 +99,45 @@ class CapabilityRepository:
         self, profile: AgentProfile = "generic", paths: list[str] | None = None
     ) -> AgentDesign:
         catalog = self.catalog(paths)
-        instructions = {
-            "generic": "You are a clear, accurate and collaborative assistant. Use the available capabilities when useful.",
-            "programmer": "You are a programming assistant. Inspect project instructions, write clear maintainable code, and verify changes with tests.",
-            "creative": "You are a creative assistant. Explore original ideas, adapt tone and style to the user's goals, and refine drafts with concrete examples.",
-            "custom": "You are a clear, accurate and collaborative assistant. Use the available capabilities when useful.",
-        }
         root = DesignNode(
             kind="hds",
-            name="agent-root",
-            content=instructions[profile] + "\nRespond in the user's language.",
-            x=50,
-            y=170,
+            name=AGENT_DEFAULTS["root_name"],
+            content=load_prompt(f"profile_{profile}"),
+            x=BOARD_DEFAULTS["root_x"],
+            y=BOARD_DEFAULTS["root_y"],
         )
         design = AgentDesign(
             nodes=[root], root_id=root.id, capability_paths=paths or []
         )
-        selected = [
-            "deep-thinking",
-            "get_execution_history",
-            "search_tool_outputs",
-            "read_tool_output",
-            "control_tool_execution",
-        ]
-        if profile in {"generic", "programmer", "custom"}:
-            selected.append("bash")
+        selected = list(AGENT_DEFAULTS["standard_capabilities"])
+        if profile in AGENT_DEFAULTS["coding_profiles"]:
+            selected.append(AGENT_DEFAULTS["shell_tool"])
         for index, name in enumerate(selected):
             item = next(
                 node for node in catalog if node.name == name and node.kind != "hds"
             ).model_copy(deep=True)
-            item.x, item.y = 390, 30 + index * 90
+            item.x, item.y = (
+                BOARD_DEFAULTS["profile_node_x"],
+                BOARD_DEFAULTS["profile_node_y"]
+                + index * BOARD_DEFAULTS["profile_node_vertical_gap"],
+            )
             design.add_node(item, root.id)
-        if profile in {"generic", "programmer", "custom"}:
+        if profile in AGENT_DEFAULTS["coding_profiles"]:
             child = next(
-                node for node in catalog if node.name == "coding-agent"
+                node
+                for node in catalog
+                if node.name == AGENT_DEFAULTS["coding_capability"]
             ).model_copy(deep=True)
-            child.x, child.y = 50, 420
+            child.x, child.y = (
+                BOARD_DEFAULTS["sub_agent_x"],
+                BOARD_DEFAULTS["sub_agent_y"],
+            )
             design.add_node(child, root.id)
-            bash = next(node for node in design.nodes if node.name == "bash")
+            bash = next(
+                node
+                for node in design.nodes
+                if node.name == AGENT_DEFAULTS["shell_tool"]
+            )
             design.connect(child.id, bash.id)
         return self.expand_skill_connections(design)
 
@@ -212,21 +205,31 @@ class CapabilityRepository:
                 if not isinstance(names, list) or any(
                     not isinstance(name, str) for name in names
                 ):
-                    raise ValueError(f"{key} must be a list of capability names")
+                    raise ValueError(
+                        app_text(
+                            "errors_capabilities.capability_repository.must_be_a_list_of_capability_names",
+                            value_1=key,
+                        )
+                    )
                 for name in names:
                     child = design.capability(kind, name)
                     if child is None:
                         source = catalog.get((kind, name))
                         if source is None:
                             raise ValueError(
-                                f"Missing capability required by {skill.name}: {name}"
+                                app_text(
+                                    "errors_capabilities.capability_repository.missing_capability_required_by",
+                                    value_1=skill.name,
+                                    value_2=name,
+                                )
                             )
                         child = source.model_copy(
                             deep=True,
                             update={
                                 "id": uuid4().hex,
-                                "x": skill.x + 300,
-                                "y": skill.y + index * 90,
+                                "x": skill.x + BOARD_DEFAULTS["skill_child_x_offset"],
+                                "y": skill.y
+                                + index * BOARD_DEFAULTS["skill_child_vertical_gap"],
                             },
                         )
                         design.add_node(child, skill.id)
@@ -252,7 +255,11 @@ class CapabilityRepository:
     ) -> DesignNode:
         """Edit prose while deriving dependency metadata from board connections."""
         if not description.strip():
-            raise ValueError("Enter a capability description")
+            raise ValueError(
+                app_text(
+                    "errors_capabilities.capability_repository.enter_a_capability_description"
+                )
+            )
         node = design.node(node_id)
         metadata, _ = markdown_parts(node.content)
         metadata["description"] = description.strip()
@@ -287,7 +294,9 @@ class CapabilityRepository:
         """Copy and rename a resource; never write into the library or source path."""
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", name) or name == node.name:
             raise ValueError(
-                "Choose a new capability name using letters, numbers, _ or -"
+                app_text(
+                    "errors_capabilities.capability_repository.choose_a_new_capability_name_using_letters_numbers_or"
+                )
             )
         root = self._data_dir / "agent-capabilities"
         folder = {"hds": "hds", "skill": "deep-skill", "tool": "tools"}[node.kind]
@@ -297,11 +306,17 @@ class CapabilityRepository:
         if destination.exists() or any(
             item.kind == node.kind and item.name == name for item in self.catalog()
         ):
-            raise ValueError("A capability with this name already exists")
+            raise ValueError(
+                app_text(
+                    "errors_capabilities.capability_repository.a_capability_with_this_name_already_exists"
+                )
+            )
         if node.kind == "tool":
             if node.name in RUNTIME_TOOLS:
                 raise ValueError(
-                    "Runtime tools are configured by connections; their implementation is managed by the library"
+                    app_text(
+                        "errors_capabilities.capability_repository.runtime_tools_are_configured_by_connections_their_implementation"
+                    )
                 )
             content = self._rename_tool(content, name)
             shutil.copytree(

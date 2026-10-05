@@ -1,11 +1,9 @@
 """Packaged instructions used at the model integration boundary."""
 
-from functools import cache
 from pathlib import Path
 
+from exmekh_agent.utils.resources import read_text
 
-@cache
+
 def load_prompt(name: str) -> str:
-    return (Path(__file__).parent / "prompts" / f"{name}.md").read_text(
-        encoding="utf-8"
-    )
+    return read_text(Path(__file__).parent / "prompts" / f"{name}.md")

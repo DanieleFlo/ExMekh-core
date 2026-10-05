@@ -8,6 +8,9 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from exmekh_agent.config import config
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.paths import APPLICATION_ROOT
+from exmekh_agent.config.storage import DEFAULTS as STORAGE_DEFAULTS
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -21,16 +24,20 @@ from exmekh_agent.state.json_store import JsonRecordStore
 from exmekh_agent.state.temp_storage import TempStorage
 
 logger = logging.getLogger(__name__)
-CODE_WORK_ROOT = Path(__file__).resolve().parents[3]
+CODE_WORK_ROOT = APPLICATION_ROOT
 
 
 class SessionManager:
     def __init__(self, storage_dir: Path | None = None) -> None:
-        self._initialize_storage(storage_dir or config.data_dir / "chats")
+        self._initialize_storage(
+            storage_dir or config.data_dir / STORAGE_DEFAULTS["chats_directory"]
+        )
 
     def _initialize_storage(self, storage_dir: Path) -> None:
         self.storage_dir = storage_dir
-        self.projects_dir = self.storage_dir.parent / "projects"
+        self.projects_dir = (
+            self.storage_dir.parent / STORAGE_DEFAULTS["projects_directory"]
+        )
         self._session_store = JsonRecordStore(self.storage_dir, ChatSession)
         self._project_store = JsonRecordStore(self.projects_dir, Project)
         self.projects: dict[str, Project] = {}
@@ -72,9 +79,17 @@ class SessionManager:
     ) -> Project:
         root = Path(work_root).expanduser().resolve()
         if not root.is_dir():
-            raise ValueError("Select an existing project folder")
+            raise ValueError(
+                app_text(
+                    "errors_state.session_manager.select_an_existing_project_folder"
+                )
+            )
         if any(Path(project.work_root) == root for project in self.projects.values()):
-            raise ValueError("A project already uses this folder")
+            raise ValueError(
+                app_text(
+                    "errors_state.session_manager.a_project_already_uses_this_folder"
+                )
+            )
         project = Project(
             work_root=str(root),
             settings=(settings or ProjectSettings()).model_copy(deep=True),
@@ -183,11 +198,15 @@ class SessionManager:
         )
 
     def create_session(
-        self, title: str = "New Conversation", project_id: str | None = None
+        self,
+        title: str = app_text("state.session_manager.new_conversation"),
+        project_id: str | None = None,
     ) -> ChatSession:
         project = self.get_project(project_id)
         if project_id is not None and project is None:
-            raise ValueError("Project was not found")
+            raise ValueError(
+                app_text("errors_state.session_manager.project_was_not_found")
+            )
         session = ChatSession(
             title=title,
             project_id=project_id,
@@ -341,7 +360,11 @@ class SessionManager:
         try:
             self._session_store.save(session.id, updated)
         except (OSError, ValueError) as error:
-            logger.error("Failed to save session %s: %s", session.id, error)
+            logger.error(
+                app_text("errors_state.session_manager.failed_to_save_session_s_s"),
+                session.id,
+                error,
+            )
             return False
         session.updated_at = updated.updated_at
         return True
@@ -366,7 +389,9 @@ class SessionManager:
                         store.save(record.id, record)
                     except (OSError, ValueError) as error:
                         logger.warning(
-                            "Could not persist capabilities migration for %s: %s",
+                            app_text(
+                                "errors_state.session_manager.could_not_persist_capabilities_migration_for_s_s"
+                            ),
                             record.id,
                             error,
                         )
@@ -408,7 +433,11 @@ class SessionManager:
             self._session_store.save(session.id, session)
         except (OSError, ValueError) as error:
             logger.warning(
-                "Could not persist project migration for %s: %s", session.id, error
+                app_text(
+                    "errors_state.session_manager.could_not_persist_project_migration_for_s_s"
+                ),
+                session.id,
+                error,
             )
 
     def list_sessions(self, project_id: str | None) -> list[ChatSession]:

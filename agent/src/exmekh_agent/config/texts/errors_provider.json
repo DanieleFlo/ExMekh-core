@@ -1,0 +1,5 @@
+{
+  "execution.connection_guidance": "Verify that the provider responds at `{base_url}` and that the model `{model}` is available. If the server is running, check the logs to see if the connection was closed during a long request.",
+  "execution.general_guidance": "The server may still be running: check the technical cause and request logs before restarting it.",
+  "execution.failure": "⚠️ **Error during model execution**:\n\n`{diagnostics}`\n\n{guidance}"
+}

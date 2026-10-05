@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from exmekh_agent.config.catalogs import message as app_text
+
 
 def sync_wheel() -> int:
     agent_dir = Path(__file__).resolve().parents[2]
@@ -23,7 +25,13 @@ def sync_wheel() -> int:
         return 1
 
     try:
-        print(f"Building ExMekh-Lib from {exmekh_dir}...", flush=True)
+        print(
+            app_text(
+                "configuration.sync.building_exmekh_lib_from_exmekh_dir",
+                exmekh_dir=exmekh_dir,
+            ),
+            flush=True,
+        )
         with TemporaryDirectory(prefix="exmekh-wheel-") as build_dir:
             subprocess.run(
                 [uv, "build", "--wheel", "--out-dir", build_dir],
@@ -33,13 +41,22 @@ def sync_wheel() -> int:
             wheels = list(Path(build_dir).glob("exmekh_lib-*.whl"))
             if len(wheels) != 1:
                 raise RuntimeError(
-                    "ExMekh-Lib build must produce exactly one exmekh_lib wheel"
+                    app_text(
+                        "errors_exmekh_agent.sync.exmekh_lib_build_must_produce_exactly_one_exmekh_lib_wheel"
+                    )
                 )
 
             wheels_dir.mkdir(parents=True, exist_ok=True)
             target = wheels_dir / wheels[0].name
             shutil.copy2(wheels[0], target)
-            print(f"Installing {target.name} in {agent_dir}...", flush=True)
+            print(
+                app_text(
+                    "configuration.sync.installing_name_in_agent_dir",
+                    name=target.name,
+                    agent_dir=agent_dir,
+                ),
+                flush=True,
+            )
             subprocess.run(
                 [
                     uv,

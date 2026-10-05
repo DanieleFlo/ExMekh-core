@@ -1,14 +1,24 @@
 from __future__ import annotations
 
-import re
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
 from exmekh_agent.config import config
-
-TEMP_STORAGE_ALERT_THRESHOLD_BYTES = 1024 * 1024 * 1024
+from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.storage import (
+    DEFAULTS as STORAGE_DEFAULTS,
+)
+from exmekh_agent.config.storage import (
+    TEMP_STORAGE_ALERT_THRESHOLD_BYTES as TEMP_STORAGE_ALERT_THRESHOLD_BYTES,
+)
+from exmekh_agent.utils.filenames import (
+    clean_attachment_filename as clean_attachment_filename,
+)
+from exmekh_agent.utils.filenames import (
+    sanitize_attachment_filename as sanitize_attachment_filename,
+)
 
 
 @dataclass(frozen=True)
@@ -30,34 +40,24 @@ class TempStorageStats:
         return self.total_size >= TEMP_STORAGE_ALERT_THRESHOLD_BYTES
 
 
-def clean_attachment_filename(filename: str) -> str:
-    """Keep a display name that can also be used safely on disk."""
-    name = Path(filename).name.strip()
-    name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", name)
-    return name if name.replace(".", "").strip() else "uploaded_file"
-
-
-def sanitize_attachment_filename(
-    filename: str, max_stem_len: int = 60
-) -> tuple[str, str]:
-    """Return a bounded stem and suffix for the stored file name."""
-    path = Path(clean_attachment_filename(filename))
-    stem = path.stem[:max_stem_len].rstrip(". ") or "file"
-    return stem, path.suffix[:15]
-
-
 class TempStorage:
     """Own the naming, writing, inspection, and cleanup of staged files."""
 
     def __init__(
-        self, work_root: Path | str | None = None, temp_dirname: str = "tmp"
+        self,
+        work_root: Path | str | None = None,
+        temp_dirname: str = STORAGE_DEFAULTS["temp_directory"],
     ) -> None:
         self._root = Path(work_root or config.work_root).resolve()
         self._directory = (self._root / temp_dirname).resolve()
         if self._directory == self._root or not self._directory.is_relative_to(
             self._root
         ):
-            raise ValueError("Temporary storage must be a folder inside the work root")
+            raise ValueError(
+                app_text(
+                    "errors_state.temp_storage.temporary_storage_must_be_a_folder_inside_the_work_root"
+                )
+            )
 
     def contains(self, file_path: Path) -> bool:
         return file_path.resolve().is_relative_to(self._directory)
@@ -71,17 +71,25 @@ class TempStorage:
     ) -> Path:
         """Resolve an attachment only within this storage folder."""
         path = (self._root / relative_path).resolve()
-        legacy_file = allow_legacy and path.parent == self._root / "tmp"
+        legacy_file = (
+            allow_legacy
+            and path.parent == self._root / STORAGE_DEFAULTS["temp_directory"]
+        )
         if not self.contains(path) and not legacy_file:
-            raise ValueError("Attachment path is outside the staging folder")
+            raise ValueError(
+                app_text(
+                    "errors_state.temp_storage.attachment_path_is_outside_the_staging_folder"
+                )
+            )
         return path
 
     def write_file(self, filename: str, data: bytes) -> tuple[Path, str]:
         self._directory.mkdir(parents=True, exist_ok=True)
         stem, suffix = sanitize_attachment_filename(filename)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime(STORAGE_DEFAULTS["timestamp_format"])
         file_path = (
-            self._directory / f"{stem}_{timestamp}_{uuid.uuid4().hex[:8]}{suffix}"
+            self._directory
+            / f"{stem}_{timestamp}_{uuid.uuid4().hex[: STORAGE_DEFAULTS['file_id_length']]}{suffix}"
         )
         file_path.write_bytes(data)
         return file_path, file_path.relative_to(self._root).as_posix()

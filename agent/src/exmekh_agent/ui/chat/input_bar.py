@@ -8,39 +8,34 @@ from functools import partial
 from nicegui import ui
 
 from exmekh_agent.config import config
+from exmekh_agent.config.attachments import DEFAULTS as ATTACHMENT_DEFAULTS
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
     create_staged_attachments_from_text,
 )
 from exmekh_agent.exmekh_bridge.models import QueuedMessage
-from exmekh_agent.exmekh_bridge.providers.context_usage import (
-    format_compact_tokens,
-    format_context_percentage,
-)
 from exmekh_agent.exmekh_bridge.tools.tool_approval import (
     DEFAULT_TOOL_APPROVAL_MODE,
     TOOL_APPROVAL_MODES,
     normalize_tool_approval_mode,
 )
 from exmekh_agent.state.temp_storage import TempStorage
-from exmekh_agent.ui.resources import ui_text
-from exmekh_agent.ui.shared.file_icons import format_file_size, get_file_icon
+from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
+from exmekh_agent.ui.shared.file_icons import get_file_icon
 from exmekh_agent.ui.shared.image_preview import render_image_thumbnail
+from exmekh_agent.utils.formatting import (
+    format_compact_tokens,
+    format_context_percentage,
+    format_file_size,
+)
 
-PASTE_JS_HANDLER = (
-    "(e) => {"
-    " if (e.clipboardData?.files?.length) {"
-    "   e.preventDefault(); window.__exmekhUploadFiles(e.clipboardData.files); return;"
-    " }"
-    " const text = (e.clipboardData || window.clipboardData)?.getData('text') || '';"
-    " if (text.length > 400) {"
-    "   e.preventDefault();"
-    "   emit({text: text, prevented: true});"
-    " } else {"
-    "   emit({text: text, prevented: false});"
-    " }"
-    "}"
+UI_PRESENTATION = presentation_config("controls/input_bar")
+
+PASTE_JS_HANDLER = render_html(
+    "shared/paste_handler.js",
+    paste_char_threshold=ATTACHMENT_DEFAULTS["paste_char_threshold"],
 )
 
 
@@ -122,7 +117,9 @@ class InputBarComponent:
         ui.on("exmekh_files_dropped_error", self._handle_files_dropped_error)
 
         with ui.column().classes(
-            "chat-composer w-full max-w-4xl mx-auto mb-4 items-center gap-0 relative"
+            UI_PRESENTATION[
+                "build.classes.chat_composer_w_full_max_w_4xl_mx_auto_mb_4_i"
+            ]
         ) as root:
             self.root_container = root
 
@@ -130,41 +127,64 @@ class InputBarComponent:
             # Queue Box (peeks out partially above the input box)
             # -------------------------------------------------------------
             with ui.column().classes(
-                "exmekh-queue-box w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
-                "border border-b-0 border-zinc-800 rounded-t-xl overflow-hidden shadow-2xl "
-                "transition-all duration-200 z-0 -mb-1 px-3 pt-2 pb-1.5 gap-1.5"
+                UI_PRESENTATION[
+                    "build.classes.exmekh_queue_box_w_calc_100_1_25rem_mx_auto_b"
+                ]
             ) as q_box:
                 self.queue_container = q_box
 
                 with ui.row().classes(
-                    "w-full items-center justify-between text-xs text-zinc-400 select-none pb-1 border-b border-zinc-800/60"
+                    UI_PRESENTATION[
+                        "build.classes.w_full_items_center_justify_between_text_xs_t"
+                    ]
                 ):
-                    with ui.row().classes("items-center gap-1.5"):
-                        ui.icon("hourglass_top", size="14px").classes("text-amber-400")
+                    with ui.row().classes(
+                        UI_PRESENTATION["build.classes.items_center_gap_1_5"]
+                    ):
+                        ui.icon(
+                            UI_PRESENTATION["build.icon.hourglass_top"],
+                            size=UI_PRESENTATION["build.size.14px"],
+                        ).classes(UI_PRESENTATION["build.classes.text_amber_400"])
                         self.queue_count_label = ui.label(
                             ui_text("chat.input_bar.queued_messages_0")
-                        ).classes("font-semibold text-zinc-300 text-[11px]")
-                    with ui.row().classes("items-center gap-2"):
+                        ).classes(
+                            UI_PRESENTATION[
+                                "build.classes.font_semibold_text_zinc_300_text_11px"
+                            ]
+                        )
+                    with ui.row().classes(
+                        UI_PRESENTATION["build.classes.items_center_gap_2"]
+                    ):
                         self.resume_queue_btn = (
                             ui.button(
                                 ui_text("chat.input_bar.send_queue"),
-                                icon="play_arrow",
+                                icon=UI_PRESENTATION["build.icon.play_arrow"],
                                 on_click=self._trigger_resume_queue,
                             )
-                            .props("dense flat size=xs text-color=emerald-400 no-caps")
+                            .props(
+                                UI_PRESENTATION[
+                                    "build.props.dense_flat_size_xs_text_color_emerald_400_no_"
+                                ]
+                            )
                             .classes(
-                                "text-[11px] px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-800/50 hover:bg-emerald-900/50"
+                                UI_PRESENTATION[
+                                    "build.classes.text_11px_px_2_py_0_5_rounded_bg_emerald_950_"
+                                ]
                             )
                         )
                         self.resume_queue_btn.set_visibility(False)
                         ui.label(
                             ui_text("chat.input_bar.automatic_sequential_sending")
                         ).classes(
-                            "text-[10px] text-zinc-500 font-mono hidden sm:inline"
+                            UI_PRESENTATION[
+                                "build.classes.text_10px_text_zinc_500_font_mono_hidden_sm_i"
+                            ]
                         )
 
                 self.queue_list = ui.column().classes(
-                    "w-full max-h-40 overflow-y-auto gap-1 pr-0.5"
+                    UI_PRESENTATION[
+                        "build.classes.w_full_max_h_40_overflow_y_auto_gap_1_pr_0_5"
+                    ]
                 )
 
             self.queue_container.set_visibility(False)
@@ -173,8 +193,9 @@ class InputBarComponent:
             # Attachments Container (peeks out / sits above the input box)
             # -------------------------------------------------------------
             with ui.row().classes(
-                "exmekh-attachments-bar w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
-                "border border-b-0 border-zinc-800 rounded-t-xl px-2.5 py-1.5 gap-2 items-center flex-wrap z-0 -mb-1"
+                UI_PRESENTATION[
+                    "build.classes.exmekh_attachments_bar_w_calc_100_1_25rem_mx_"
+                ]
             ) as att_bar:
                 self.attachments_container = att_bar
 
@@ -186,34 +207,53 @@ class InputBarComponent:
             # Main Input Bar
             # -------------------------------------------------------------
             with ui.column().classes(
-                "exmekh-chat-input-box w-full px-2.5 pt-2 pb-1.5 items-center gap-1 bg-zinc-900/90 backdrop-blur-md rounded-xl border border-zinc-800 z-10 relative overflow-hidden"
+                UI_PRESENTATION[
+                    "build.classes.exmekh_chat_input_box_w_full_px_2_5_pt_2_pb_1"
+                ]
             ) as input_container:
                 self.input_container = input_container
-                with ui.element("div").classes("exmekh-drop-overlay") as drop_overlay:
+                with ui.element("div").classes(
+                    UI_PRESENTATION["build.classes.exmekh_drop_overlay"]
+                ) as drop_overlay:
                     self.drop_overlay = drop_overlay
                     with ui.element("div").classes(
-                        "w-11 h-11 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/40 flex items-center justify-center exmekh-drop-bounce-icon"
+                        UI_PRESENTATION[
+                            "build.classes.w_11_h_11_rounded_full_bg_sky_500_20_text_sky"
+                        ]
                     ):
-                        ui.icon("cloud_upload", size="26px")
+                        ui.icon(
+                            UI_PRESENTATION["build.icon.cloud_upload"],
+                            size=UI_PRESENTATION["build.size.26px"],
+                        )
                     ui.label(ui_text("chat.input_bar.drop_files_here")).classes(
-                        "text-sm font-semibold text-zinc-100 tracking-wide select-none leading-none"
+                        UI_PRESENTATION[
+                            "build.classes.text_sm_font_semibold_text_zinc_100_tracking_"
+                        ]
                     )
                     ui.label(
                         ui_text(
                             "chat.input_bar.files_will_be_added_to_temporary_storage"
                         )
                     ).classes(
-                        "text-[11px] text-sky-300 font-mono select-none leading-none"
+                        UI_PRESENTATION[
+                            "build.classes.text_11px_text_sky_300_font_mono_select_none_"
+                        ]
                     )
 
-                with ui.row().classes("w-full items-center gap-2 no-wrap"):
-                    ui.element("input").props("type=file multiple").classes(
-                        "hidden exmekh-file-picker"
+                with ui.row().classes(
+                    UI_PRESENTATION["build.classes.w_full_items_center_gap_2_no_wrap"]
+                ):
+                    ui.element("input").props(
+                        UI_PRESENTATION["build.props.type_file_multiple"]
+                    ).classes(
+                        UI_PRESENTATION["build.classes.hidden_exmekh_file_picker"]
                     ).on(
                         "change",
                         js_handler="(e) => { window.__exmekhUploadFiles(e.target.files); e.target.value = ''; }",
                     )
-                    ui.button(icon="attach_file").props("flat round dense").on(
+                    ui.button(icon=UI_PRESENTATION["build.icon.attach_file"]).props(
+                        UI_PRESENTATION["build.props.flat_round_dense"]
+                    ).on(
                         "click",
                         js_handler="() => document.querySelector('.exmekh-file-picker').click()",
                     ).tooltip(ui_text("chat.input_bar.attach_files_images_or_pdfs"))
@@ -223,9 +263,15 @@ class InputBarComponent:
                                 "chat.input_bar.send_a_message_to_exmekh_agent_enter"
                             )
                         )
-                        .props("autogrow borderless dark rows=1")
+                        .props(
+                            UI_PRESENTATION[
+                                "build.props.autogrow_borderless_dark_rows_1"
+                            ]
+                        )
                         .classes(
-                            "chat-input-textarea flex-grow text-sm px-2 py-1 text-zinc-100"
+                            UI_PRESENTATION[
+                                "build.classes.chat_input_textarea_flex_grow_text_sm_px_2_py"
+                            ]
                         )
                     )
 
@@ -237,19 +283,35 @@ class InputBarComponent:
 
                     # Stop Button (visible while generating)
                     self.stop_button = (
-                        ui.button(icon="stop", on_click=self.on_stop)
-                        .props("round dense color=red-9 text-color=white")
-                        .classes("self-center w-9 h-9")
+                        ui.button(
+                            icon=UI_PRESENTATION["build.icon.stop"],
+                            on_click=self.on_stop,
+                        )
+                        .props(
+                            UI_PRESENTATION[
+                                "build.props.round_dense_color_red_9_text_color_white"
+                            ]
+                        )
+                        .classes(UI_PRESENTATION["build.classes.self_center_w_9_h_9"])
                     )
                     self.stop_button.tooltip(ui_text("chat.input_bar.stop_generation"))
                     self.stop_button.set_visibility(False)
 
                     # Send / Queue Button (always accessible)
                     self.send_button = (
-                        ui.button(icon="arrow_upward", on_click=self._trigger_send)
-                        .props("round dense color=dark text-color=white")
+                        ui.button(
+                            icon=UI_PRESENTATION["build.icon.arrow_upward"],
+                            on_click=self._trigger_send,
+                        )
+                        .props(
+                            UI_PRESENTATION[
+                                "build.props.round_dense_color_dark_text_color_white"
+                            ]
+                        )
                         .classes(
-                            "self-center border border-zinc-700/80 w-9 h-9 bg-zinc-800 hover:bg-zinc-700"
+                            UI_PRESENTATION[
+                                "build.classes.self_center_border_border_zinc_700_80_w_9_h_9"
+                            ]
                         )
                     )
                     self.send_tooltip = ui.tooltip(
@@ -259,26 +321,43 @@ class InputBarComponent:
                 # Bottom bar: left shows model name, context percentage, and tokens/context_length;
                 # right shows command approval mode selector with clear spacing from context info
                 with ui.row().classes(
-                    "w-full items-center justify-between px-2 pt-2 pb-0.5 border-t border-zinc-800/60 gap-3"
+                    UI_PRESENTATION[
+                        "build.classes.w_full_items_center_justify_between_px_2_pt_2"
+                    ]
                 ):
                     pct_str = format_context_percentage(
                         self.used_tokens, self.context_length
                     )
                     tokens_str = f"{format_compact_tokens(self.used_tokens)}/{format_compact_tokens(self.context_length)}"
                     with ui.row().classes(
-                        "input-bar-context-info items-center gap-1.5 text-[11px] font-mono text-zinc-400 select-none flex-wrap"
+                        UI_PRESENTATION[
+                            "build.classes.input_bar_context_info_items_center_gap_1_5_t"
+                        ]
                     ):
-                        ui.icon("memory", size="14px").classes("text-zinc-500")
+                        ui.icon(
+                            UI_PRESENTATION["build.icon.memory"],
+                            size=UI_PRESENTATION["build.size.14px"],
+                        ).classes(UI_PRESENTATION["build.classes.text_zinc_500"])
                         self.model_label = ui.label(self.model_name).classes(
-                            "input-bar-model-name font-medium text-zinc-300 truncate max-w-[200px]"
+                            UI_PRESENTATION[
+                                "build.classes.input_bar_model_name_font_medium_text_zinc_30"
+                            ]
                         )
-                        ui.label("·").classes("text-zinc-600")
+                        ui.label(ui_text("chat.input_bar.value")).classes(
+                            UI_PRESENTATION["build.classes.text_zinc_600"]
+                        )
                         self.context_percent_label = ui.label(pct_str).classes(
-                            "input-bar-context-percent font-semibold text-emerald-400"
+                            UI_PRESENTATION[
+                                "build.classes.input_bar_context_percent_font_semibold_text_"
+                            ]
                         )
-                        ui.label("·").classes("text-zinc-600")
+                        ui.label(ui_text("chat.input_bar.value")).classes(
+                            UI_PRESENTATION["build.classes.text_zinc_600"]
+                        )
                         self.context_tokens_label = ui.label(tokens_str).classes(
-                            "input-bar-context-tokens text-zinc-400"
+                            UI_PRESENTATION[
+                                "build.classes.input_bar_context_tokens_text_zinc_400"
+                            ]
                         )
                         self.context_tooltip = ui.tooltip(
                             ui_text(
@@ -291,7 +370,9 @@ class InputBarComponent:
                         )
 
                     with ui.row().classes(
-                        "input-bar-approval-container items-center gap-1.5 ml-auto flex-shrink-0"
+                        UI_PRESENTATION[
+                            "build.classes.input_bar_approval_container_items_center_gap"
+                        ]
                     ):
                         self.approval_select = (
                             ui.select(
@@ -300,12 +381,14 @@ class InputBarComponent:
                                 on_change=self._handle_approval_mode_change,
                             )
                             .props(
-                                "dense options-dense dark borderless "
-                                "popup-content-class=input-bar-approval-menu "
-                                'menu-anchor="top right" menu-self="bottom right"'
+                                UI_PRESENTATION[
+                                    "build.props.dense_options_dense_dark_borderless_popup_con"
+                                ]
                             )
                             .classes(
-                                "input-bar-approval-select text-[10.5px] font-sans text-zinc-300 bg-zinc-800/80 rounded px-1.5 py-0 border border-zinc-700/60"
+                                UI_PRESENTATION[
+                                    "build.classes.input_bar_approval_select_text_10_5px_font_sa"
+                                ]
                             )
                         )
                         self.approval_select.tooltip(
@@ -318,10 +401,12 @@ class InputBarComponent:
             # Linear Generation Progress Bar (below the input box)
             # -------------------------------------------------------------
             with ui.element("div").classes(
-                "input-progress-container w-full"
+                UI_PRESENTATION["build.classes.input_progress_container_w_full"]
             ) as prog_container:
                 self.progress_container = prog_container
-                ui.element("div").classes("input-linear-progress")
+                ui.element("div").classes(
+                    UI_PRESENTATION["build.classes.input_linear_progress"]
+                )
 
             self.progress_container.set_visibility(False)
 
@@ -329,48 +414,82 @@ class InputBarComponent:
 
     def _build_approval_prompt(self) -> None:
         with ui.column().classes(
-            "exmekh-approval-box w-[calc(100%-1.25rem)] mx-auto bg-zinc-900/95 backdrop-blur-md "
-            "border border-b-0 border-amber-500/60 rounded-t-xl px-3 py-2 gap-2 shadow-2xl z-0 -mb-1"
+            UI_PRESENTATION[
+                "build_approval_prompt.classes.exmekh_approval_box_w_calc_100_1_25rem_mx_aut"
+            ]
         ) as app_box:
             self.approval_container = app_box
 
-            with ui.row().classes("w-full items-center justify-between"):
+            with ui.row().classes(
+                UI_PRESENTATION[
+                    "build_approval_prompt.classes.w_full_items_center_justify_between"
+                ]
+            ):
                 with ui.row().classes(
-                    "items-center gap-1.5 text-xs font-semibold text-amber-400"
+                    UI_PRESENTATION[
+                        "build_approval_prompt.classes.items_center_gap_1_5_text_xs_font_semibold_te"
+                    ]
                 ):
-                    ui.icon("terminal", size="16px").classes("text-amber-400")
+                    ui.icon(
+                        UI_PRESENTATION["build_approval_prompt.icon.terminal"],
+                        size=UI_PRESENTATION["build_approval_prompt.size.16px"],
+                    ).classes(
+                        UI_PRESENTATION["build_approval_prompt.classes.text_amber_400"]
+                    )
                     ui.label(
                         ui_text("chat.input_bar.command_approval_request")
-                    ).classes("tracking-wide")
+                    ).classes(
+                        UI_PRESENTATION["build_approval_prompt.classes.tracking_wide"]
+                    )
                 ui.label(ui_text("chat.input_bar.awaiting_confirmation")).classes(
-                    "text-[10px] font-mono text-zinc-400 uppercase tracking-wider"
+                    UI_PRESENTATION[
+                        "build_approval_prompt.classes.text_10px_font_mono_text_zinc_400_uppercase_t"
+                    ]
                 )
 
             self.approval_command_label = ui.label("").classes(
-                "exmekh-approval-command text-xs font-mono text-zinc-200 bg-zinc-950/80 px-2.5 py-1.5 rounded border border-zinc-800 break-all select-text max-h-32 overflow-y-auto w-full"
+                UI_PRESENTATION[
+                    "build_approval_prompt.classes.exmekh_approval_command_text_xs_font_mono_tex"
+                ]
             )
 
-            with ui.row().classes("w-full items-center justify-end gap-2 pt-0.5"):
+            with ui.row().classes(
+                UI_PRESENTATION[
+                    "build_approval_prompt.classes.w_full_items_center_justify_end_gap_2_pt_0_5"
+                ]
+            ):
                 self.approval_decline_btn = (
                     ui.button(
                         ui_text("chat.input_bar.decline"),
-                        icon="close",
+                        icon=UI_PRESENTATION["build_approval_prompt.icon.close"],
                         on_click=self._handle_approval_decline,
                     )
-                    .props("dense size=sm no-caps")
+                    .props(
+                        UI_PRESENTATION[
+                            "build_approval_prompt.props.dense_size_sm_no_caps"
+                        ]
+                    )
                     .classes(
-                        "bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/60 px-3 py-1 text-xs rounded-lg transition-colors cursor-pointer"
+                        UI_PRESENTATION[
+                            "build_approval_prompt.classes.bg_rose_950_80_hover_bg_rose_900_text_rose_30"
+                        ]
                     )
                 )
                 self.approval_approve_btn = (
                     ui.button(
                         ui_text("chat.input_bar.approve"),
-                        icon="check",
+                        icon=UI_PRESENTATION["build_approval_prompt.icon.check"],
                         on_click=self._handle_approval_accept,
                     )
-                    .props("dense size=sm no-caps")
+                    .props(
+                        UI_PRESENTATION[
+                            "build_approval_prompt.props.dense_size_sm_no_caps"
+                        ]
+                    )
                     .classes(
-                        "bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/60 px-3 py-1 text-xs rounded-lg font-medium transition-colors cursor-pointer"
+                        UI_PRESENTATION[
+                            "build_approval_prompt.classes.bg_emerald_950_80_hover_bg_emerald_900_text_e"
+                        ]
                     )
                 )
 
@@ -416,42 +535,68 @@ class InputBarComponent:
                 with (
                     ui.row()
                     .classes(
-                        "exmekh-queue-item w-full items-center justify-between px-2.5 py-1.5 "
-                        "bg-zinc-800/50 hover:bg-zinc-800/80 rounded-lg border border-zinc-700/40 "
-                        "gap-2 select-none"
+                        UI_PRESENTATION[
+                            "render_queue.classes.exmekh_queue_item_w_full_items_center_justify"
+                        ]
                     )
                     .props(f'data-id="{msg.id}" data-index="{idx}"')
                 ):
                     # Left: Drag handle (if count > 1) + Order badge + 1st line of message (single line only)
-                    with ui.row().classes("items-center gap-1.5 flex-1 min-w-0"):
+                    with ui.row().classes(
+                        UI_PRESENTATION[
+                            "render_queue.classes.items_center_gap_1_5_flex_1_min_w_0"
+                        ]
+                    ):
                         # Drag handle button: MUST appear ONLY if more than 1 message
                         if count > 1:
-                            ui.button(icon="drag_indicator").props(
-                                "dense flat round size=xs text-color=zinc-500"
+                            ui.button(
+                                icon=UI_PRESENTATION["render_queue.icon.drag_indicator"]
+                            ).props(
+                                UI_PRESENTATION[
+                                    "render_queue.props.dense_flat_round_size_xs_text_color_zinc_500"
+                                ]
                             ).classes(
-                                "exmekh-queue-drag-handle cursor-grab active:cursor-grabbing hover:text-zinc-200 select-none shrink-0"
+                                UI_PRESENTATION[
+                                    "render_queue.classes.exmekh_queue_drag_handle_cursor_grab_active_c"
+                                ]
                             ).tooltip(ui_text("chat.input_bar.drag_to_reorder_queue"))
 
-                        ui.label(f"#{idx + 1}").classes(
-                            "text-[10px] font-mono font-bold text-amber-400/90 shrink-0 bg-amber-950/40 px-1 py-0.5 rounded border border-amber-800/40"
+                        ui.label(
+                            ui_text("chat.input_bar.value_2", value_1=idx + 1)
+                        ).classes(
+                            UI_PRESENTATION[
+                                "render_queue.classes.text_10px_font_mono_font_bold_text_amber_400_"
+                            ]
                         )
                         msg_label = ui.label(first_line).classes(
-                            "text-xs text-zinc-200 truncate flex-1 font-sans cursor-default"
+                            UI_PRESENTATION[
+                                "render_queue.classes.text_xs_text_zinc_200_truncate_flex_1_font_sa"
+                            ]
                         )
                         if len(visible_text) > len(first_line) or len(first_line) > 50:
                             msg_label.tooltip(visible_text)
 
                     # Right: Steering button, 3 dots menu
-                    with ui.row().classes("items-center gap-1 shrink-0"):
+                    with ui.row().classes(
+                        UI_PRESENTATION[
+                            "render_queue.classes.items_center_gap_1_shrink_0"
+                        ]
+                    ):
                         steering_button = (
                             ui.button(
                                 ui_text("chat.input_bar.steering"),
-                                icon="alt_route",
+                                icon=UI_PRESENTATION["render_queue.icon.alt_route"],
                                 on_click=lambda _, mid=msg.id: self._trigger_steer(mid),
                             )
-                            .props("dense flat size=xs text-color=zinc-400 no-caps")
+                            .props(
+                                UI_PRESENTATION[
+                                    "render_queue.props.dense_flat_size_xs_text_color_zinc_400_no_cap"
+                                ]
+                            )
                             .classes(
-                                "text-[11px] px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/50"
+                                UI_PRESENTATION[
+                                    "render_queue.classes.text_11px_px_1_5_py_0_5_rounded_bg_zinc_800_h"
+                                ]
                             )
                         )
                         steering_button.tooltip(
@@ -464,25 +609,46 @@ class InputBarComponent:
 
                         # 3-dots menu button (Edit, Delete, Move up/down)
                         with (
-                            ui.button(icon="more_vert")
-                            .props("dense flat round size=xs text-color=zinc-400")
-                            .classes("hover:text-zinc-200")
+                            ui.button(
+                                icon=UI_PRESENTATION["render_queue.icon.more_vert"]
+                            )
+                            .props(
+                                UI_PRESENTATION[
+                                    "render_queue.props.dense_flat_round_size_xs_text_color_zinc_400"
+                                ]
+                            )
+                            .classes(
+                                UI_PRESENTATION[
+                                    "render_queue.classes.hover_text_zinc_200"
+                                ]
+                            )
                         ):
                             with ui.menu().classes(
-                                "bg-zinc-900 border border-zinc-800 text-zinc-200 shadow-xl py-1"
+                                UI_PRESENTATION[
+                                    "render_queue.classes.bg_zinc_900_border_border_zinc_800_text_zinc_"
+                                ]
                             ):
                                 with ui.menu_item(
                                     on_click=lambda _, mid=msg.id: self._trigger_edit(
                                         mid
                                     ),
                                 ).classes(
-                                    "exmekh-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
+                                    UI_PRESENTATION[
+                                        "render_queue.classes.exmekh_queue_menu_item_flex_flex_row_items_ce"
+                                    ]
                                 ):
-                                    ui.icon("edit", size="14px").classes(
-                                        "exmekh-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
+                                    ui.icon(
+                                        UI_PRESENTATION["render_queue.icon.edit"],
+                                        size=UI_PRESENTATION["render_queue.size.14px"],
+                                    ).classes(
+                                        UI_PRESENTATION[
+                                            "render_queue.classes.exmekh_queue_menu_icon_flex_items_center_just"
+                                        ]
                                     )
                                     ui.label(ui_text("chat.input_bar.edit")).classes(
-                                        "self-center leading-none text-zinc-200"
+                                        UI_PRESENTATION[
+                                            "render_queue.classes.self_center_leading_none_text_zinc_200"
+                                        ]
                                     )
 
                                 with ui.menu_item(
@@ -490,13 +656,22 @@ class InputBarComponent:
                                         mid
                                     ),
                                 ).classes(
-                                    "exmekh-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer text-rose-400"
+                                    UI_PRESENTATION[
+                                        "render_queue.classes.exmekh_queue_menu_item_flex_flex_row_items_ce_2"
+                                    ]
                                 ):
-                                    ui.icon("delete", size="14px").classes(
-                                        "exmekh-queue-menu-icon flex items-center justify-center self-center text-rose-400 shrink-0"
+                                    ui.icon(
+                                        UI_PRESENTATION["render_queue.icon.delete"],
+                                        size=UI_PRESENTATION["render_queue.size.14px"],
+                                    ).classes(
+                                        UI_PRESENTATION[
+                                            "render_queue.classes.exmekh_queue_menu_icon_flex_items_center_just_2"
+                                        ]
                                     )
                                     ui.label(ui_text("chat.input_bar.delete")).classes(
-                                        "self-center leading-none text-rose-400"
+                                        UI_PRESENTATION[
+                                            "render_queue.classes.self_center_leading_none_text_rose_400"
+                                        ]
                                     )
 
                                 if count > 1:
@@ -509,17 +684,28 @@ class InputBarComponent:
                                                 )
                                             ),
                                         ).classes(
-                                            "exmekh-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
+                                            UI_PRESENTATION[
+                                                "render_queue.classes.exmekh_queue_menu_item_flex_flex_row_items_ce"
+                                            ]
                                         ):
                                             ui.icon(
-                                                "arrow_upward", size="14px"
+                                                UI_PRESENTATION[
+                                                    "render_queue.icon.arrow_upward"
+                                                ],
+                                                size=UI_PRESENTATION[
+                                                    "render_queue.size.14px"
+                                                ],
                                             ).classes(
-                                                "exmekh-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
+                                                UI_PRESENTATION[
+                                                    "render_queue.classes.exmekh_queue_menu_icon_flex_items_center_just"
+                                                ]
                                             )
                                             ui.label(
                                                 ui_text("chat.input_bar.move_up")
                                             ).classes(
-                                                "self-center leading-none text-zinc-200"
+                                                UI_PRESENTATION[
+                                                    "render_queue.classes.self_center_leading_none_text_zinc_200"
+                                                ]
                                             )
 
                                     if idx < count - 1:
@@ -529,17 +715,28 @@ class InputBarComponent:
                                                 self._trigger_reorder(mid, nid, "after")
                                             ),
                                         ).classes(
-                                            "exmekh-queue-menu-item flex flex-row items-center gap-2.5 px-3 py-1.5 min-h-0 text-xs hover:bg-zinc-800 cursor-pointer"
+                                            UI_PRESENTATION[
+                                                "render_queue.classes.exmekh_queue_menu_item_flex_flex_row_items_ce"
+                                            ]
                                         ):
                                             ui.icon(
-                                                "arrow_downward", size="14px"
+                                                UI_PRESENTATION[
+                                                    "render_queue.icon.arrow_downward"
+                                                ],
+                                                size=UI_PRESENTATION[
+                                                    "render_queue.size.14px"
+                                                ],
                                             ).classes(
-                                                "exmekh-queue-menu-icon flex items-center justify-center self-center text-zinc-400 shrink-0"
+                                                UI_PRESENTATION[
+                                                    "render_queue.classes.exmekh_queue_menu_icon_flex_items_center_just"
+                                                ]
                                             )
                                             ui.label(
                                                 ui_text("chat.input_bar.move_down")
                                             ).classes(
-                                                "self-center leading-none text-zinc-200"
+                                                UI_PRESENTATION[
+                                                    "render_queue.classes.self_center_leading_none_text_zinc_200"
+                                                ]
                                             )
 
     def _trigger_edit(self, message_id: str) -> None:
@@ -591,18 +788,28 @@ class InputBarComponent:
         if self.context_percent_label:
             self.context_percent_label.text = pct_str
             self.context_percent_label.classes(
-                remove="text-emerald-400 text-amber-400 text-rose-400"
+                remove=UI_PRESENTATION["update_context_info.state_classes"]
             )
             if pct_val >= 85.0:
-                self.context_percent_label.classes("text-rose-400")
+                self.context_percent_label.classes(
+                    UI_PRESENTATION["update_context_info.classes.text_rose_400"]
+                )
             elif pct_val >= 60.0:
-                self.context_percent_label.classes("text-amber-400")
+                self.context_percent_label.classes(
+                    UI_PRESENTATION["update_context_info.classes.text_amber_400"]
+                )
             else:
-                self.context_percent_label.classes("text-emerald-400")
+                self.context_percent_label.classes(
+                    UI_PRESENTATION["update_context_info.classes.text_emerald_400"]
+                )
         if self.context_tokens_label:
             self.context_tokens_label.text = tokens_str
         if self.context_tooltip:
-            count_label = "Estimated context tokens" if estimated else "Context tokens"
+            count_label = (
+                app_text("chat.input_bar.estimated_context_tokens")
+                if estimated
+                else app_text("chat.input_bar.context_tokens")
+            )
             self.context_tooltip.text = ui_text(
                 "chat.input_bar.model",
                 self_model_name=self.model_name,
@@ -654,61 +861,111 @@ class InputBarComponent:
     def _render_attachment_chip(self, att: StagedAttachment) -> None:
         icon_name, color_class, ext_label = get_file_icon(att.filename)
         with ui.row().classes(
-            "exmekh-attachment-chip items-center gap-1.5 px-2.5 py-1 bg-zinc-800/90 hover:bg-zinc-800 "
-            "border border-zinc-700/70 rounded-lg shadow-sm select-none max-w-[320px] transition-all"
+            UI_PRESENTATION[
+                "render_attachment_chip.classes.exmekh_attachment_chip_items_center_gap_1_5_p"
+            ]
         ):
             if att.image_urls:
-                with ui.row().classes("gap-1 flex-wrap"):
+                with ui.row().classes(
+                    UI_PRESENTATION["render_attachment_chip.classes.gap_1_flex_wrap"]
+                ):
                     for index, url in enumerate(att.image_urls):
                         label = att.filename
                         if att.pdf_pages:
                             label += f" · page {index + 1}"
                         render_image_thumbnail(url, label)
             else:
-                ui.icon(icon_name, size="16px").classes(f"{color_class} shrink-0")
-            with ui.column().classes("min-w-0 flex-1 gap-0"):
+                ui.icon(
+                    icon_name, size=UI_PRESENTATION["render_attachment_chip.size.16px"]
+                ).classes(
+                    UI_PRESENTATION["render_attachment_chip.classes_template"].format(
+                        color_class=color_class
+                    )
+                )
+            with ui.column().classes(
+                UI_PRESENTATION["render_attachment_chip.classes.min_w_0_flex_1_gap_0"]
+            ):
                 ui.label(att.filename or att.preview).classes(
-                    "text-xs font-mono text-zinc-200 truncate max-w-[140px] leading-tight"
+                    UI_PRESENTATION[
+                        "render_attachment_chip.classes.text_xs_font_mono_text_zinc_200_truncate_max_"
+                    ]
                 )
                 if att.is_binary or att.token_count == 0:
-                    info_text = f"{format_file_size(att.file_size)} • {ext_label}"
+                    info_text = app_text(
+                        "chat.input_bar.attachment_size",
+                        size=format_file_size(att.file_size),
+                        extension=ext_label,
+                    )
                 else:
-                    info_text = f"{att.token_count} tok • {ext_label}"
+                    info_text = app_text(
+                        "chat.input_bar.attachment_tokens",
+                        tokens=att.token_count,
+                        extension=ext_label,
+                    )
                 if att.pdf_pages:
-                    info_text = f"Pages 1–{len(att.image_urls)} of {att.pdf_pages}"
+                    info_text = app_text(
+                        "chat.input_bar.pages_1_value_1_of_pdf_pages",
+                        value_1=len(att.image_urls),
+                        pdf_pages=att.pdf_pages,
+                    )
                 ui.label(info_text).classes(
-                    "text-[10px] text-zinc-400 leading-tight font-mono"
+                    UI_PRESENTATION[
+                        "render_attachment_chip.classes.text_10px_text_zinc_400_leading_tight_font_mo"
+                    ]
                 )
 
             preview_snippet = (
-                att.content[:200] + ("..." if len(att.content) > 200 else "")
+                att.content[: ATTACHMENT_DEFAULTS["tooltip_preview_char_limit"]]
+                + (
+                    app_text("chat.input_bar.preview_ellipsis")
+                    if len(att.content)
+                    > ATTACHMENT_DEFAULTS["tooltip_preview_char_limit"]
+                    else ""
+                )
                 if not att.is_binary and att.content
                 else ""
             )
             ui.tooltip(
-                f"File: {att.filename}\n"
-                f"Size: {format_file_size(att.file_size)} • {att.token_count} tok\n"
-                f"Path: {att.relative_path or ''}\n\n"
-                + (f"Preview:\n{preview_snippet}\n\n" if preview_snippet else "")
-                + (
-                    "• Insert into the message as plain text\n"
+                app_text(
+                    "chat.input_bar.attachment_details",
+                    filename=att.filename,
+                    size=format_file_size(att.file_size),
+                    tokens=att.token_count,
+                    path=att.relative_path or "",
+                    preview=app_text(
+                        "chat.input_bar.attachment_preview", snippet=preview_snippet
+                    )
+                    if preview_snippet
+                    else "",
+                    insert_hint=app_text("chat.input_bar.attachment_insert_hint")
                     if not att.is_binary
-                    else ""
+                    else "",
                 )
-                + "• Remove attachment"
-            ).classes("whitespace-pre-line text-xs font-mono")
+            ).classes(
+                UI_PRESENTATION[
+                    "render_attachment_chip.classes.whitespace_pre_line_text_xs_font_mono"
+                ]
+            )
 
             # Insert text files into the message.
             if not att.is_binary:
                 (
                     ui.button(
-                        icon="text_fields",
+                        icon=UI_PRESENTATION["render_attachment_chip.icon.text_fields"],
                         on_click=lambda _, a=att: self._insert_attachment_into_message(
                             a
                         ),
                     )
-                    .props("dense flat round size=xs text-color=zinc-400")
-                    .classes("hover:text-zinc-100 hover:bg-zinc-700/60 shrink-0")
+                    .props(
+                        UI_PRESENTATION[
+                            "render_attachment_chip.props.dense_flat_round_size_xs_text_color_zinc_400"
+                        ]
+                    )
+                    .classes(
+                        UI_PRESENTATION[
+                            "render_attachment_chip.classes.hover_text_zinc_100_hover_bg_zinc_700_60_shri"
+                        ]
+                    )
                     .tooltip(
                         ui_text("chat.input_bar.insert_into_the_message_as_plain_text")
                     )
@@ -717,11 +974,19 @@ class InputBarComponent:
             # Remove attachment.
             (
                 ui.button(
-                    icon="close",
+                    icon=UI_PRESENTATION["render_attachment_chip.icon.close"],
                     on_click=lambda _, a=att: self._delete_attachment(a),
                 )
-                .props("dense flat round size=xs text-color=zinc-400")
-                .classes("hover:text-rose-400 hover:bg-rose-950/40 shrink-0")
+                .props(
+                    UI_PRESENTATION[
+                        "render_attachment_chip.props.dense_flat_round_size_xs_text_color_zinc_400"
+                    ]
+                )
+                .classes(
+                    UI_PRESENTATION[
+                        "render_attachment_chip.classes.hover_text_rose_400_hover_bg_rose_950_40_shri"
+                    ]
+                )
                 .tooltip(ui_text("chat.input_bar.remove_attachment"))
             )
 
@@ -846,7 +1111,7 @@ class InputBarComponent:
     def _handle_files_dropped_error(self, e: object) -> None:
         args = getattr(e, "args", {}) if hasattr(e, "args") else {}
         err_msg = (
-            args.get("error", "File upload failed")
+            args.get("error", app_text("chat.input_bar.file_upload_failed"))
             if isinstance(args, dict)
             else str(args)
         )
@@ -996,13 +1261,17 @@ class InputBarComponent:
             self.stop_button.set_visibility(busy)
         if self.send_button:
             if busy:
-                self.send_button.props("icon=schedule_send")
+                self.send_button.props(
+                    UI_PRESENTATION["set_busy.props.icon_schedule_send"]
+                )
                 if self.send_tooltip:
                     self.send_tooltip.text = ui_text(
                         "chat.input_bar.add_to_queue_enter"
                     )
             else:
-                self.send_button.props("icon=arrow_upward")
+                self.send_button.props(
+                    UI_PRESENTATION["set_busy.props.icon_arrow_upward"]
+                )
                 if self.send_tooltip:
                     self.send_tooltip.text = ui_text(
                         "chat.input_bar.send_message_enter"

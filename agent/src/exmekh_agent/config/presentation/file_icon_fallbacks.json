@@ -1,0 +1,57 @@
+{
+  "rules": [
+    {
+      "matches": [
+        "image/"
+      ],
+      "mode": "prefix",
+      "icon": "image",
+      "color": "text-purple-400",
+      "extension": ".img"
+    },
+    {
+      "matches": [
+        "audio/"
+      ],
+      "mode": "prefix",
+      "icon": "audiotrack",
+      "color": "text-pink-400",
+      "extension": ".audio"
+    },
+    {
+      "matches": [
+        "video/"
+      ],
+      "mode": "prefix",
+      "icon": "videocam",
+      "color": "text-red-400",
+      "extension": ".video"
+    },
+    {
+      "matches": [
+        "pdf"
+      ],
+      "mode": "contains",
+      "icon": "picture_as_pdf",
+      "color": "text-rose-400",
+      "extension": ".pdf",
+      "force_extension": true
+    },
+    {
+      "matches": [
+        "text/",
+        "json",
+        "xml"
+      ],
+      "mode": "contains",
+      "icon": "article",
+      "color": "text-sky-400",
+      "extension": ".txt"
+    }
+  ],
+  "default": {
+    "icon": "insert_drive_file",
+    "color": "text-zinc-400",
+    "extension": ".file"
+  }
+}
