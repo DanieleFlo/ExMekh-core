@@ -3,41 +3,13 @@ from __future__ import annotations
 import pytest
 from playwright.async_api import async_playwright, expect
 
+from tests.board_support import candidates, connect, open_board
 from tests.browser_support import get_edge_executable, start_mock_server
 
 
 @pytest.fixture(scope="module")
 def regression_server():
     yield from start_mock_server(0, "tests.run_board_agent")
-
-
-async def open_board(page, server):
-    await page.goto(server, wait_until="networkidle")
-    await page.get_by_role("button", name="Chat agent settings", exact=True).click()
-    settings = page.get_by_role("dialog").filter(has_text="Save chat agent").last
-    await settings.get_by_role("button", name="Customize agent", exact=True).click()
-    board = (
-        page.locator(".agent-designer-dialog")
-        .filter(has=page.locator(".agent-board-node"))
-        .last
-    )
-    await expect(board.locator(".agent-board-viewport")).to_be_visible()
-    await board.locator('[data-node="root"]').click(trial=True)
-    return board
-
-
-async def candidates(page, board):
-    await board.get_by_label("Connect to", exact=True).click()
-    await expect(page.get_by_role("option").first).to_be_visible()
-    labels = await page.get_by_role("option").all_text_contents()
-    await page.keyboard.press("Escape")
-    return {label.strip() for label in labels}
-
-
-async def connect(page, board, label):
-    await board.get_by_label("Connect to", exact=True).click()
-    await page.get_by_role("option", name=label, exact=True).click()
-    await board.get_by_role("button", name="Connect", exact=True).click()
 
 
 async def test_archived_read_outputs_and_xml_headers_are_visible(regression_server):

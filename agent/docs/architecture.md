@@ -133,7 +133,7 @@ in produzione ora usano i metodi del modello invece di ricostruirne le invariant
 
 ## Verifica
 
-`uv run pytest -n 4`: **858 passed, 40 skipped**.
+`uv run pytest -n 4`: **864 passed, 40 skipped**.
 Copertura configurata di istruzioni e rami: **100.00%**. I test con provider reale
 richiedono opt-in; i test e2e con mock sono stati eseguiti.
 `uv run ruff check src tests`, `uv run ruff format --check src tests` e
@@ -172,3 +172,16 @@ aggiunte e copie. Playwright controlla le linee prima del rilascio, l'annullamen
 del drag in corso, i menu con focus e i dialoghi in chiusura. Le history legacy
 verificano tre modalità di lettura dello stesso output e risultati fuori ordine,
 conservando i dati salvati; il raw inspector mantiene l'XML anche se incompleto.
+
+I test e2e delle sequenze di undo eseguono gli stessi tre percorsi con Control+Z
+e Meta+Z (Cmd+Z): sette modifiche miste annullate in ordine inverso, due undo
+seguiti da una nuova aggiunta con dipendenze condivise, e dialoghi con testo,
+focus sui pulsanti, modifiche rifiutate, menu aperti e riapertura dell'editor.
+Ogni checkpoint confronta nodi, posizioni, root, selezione, curve SVG e catalogo;
+il form verifica anche il ripristino delle istruzioni dopo la copia. Il drag
+annullato non consuma le modifiche precedenti. Lo scorrimento non aggiunge passi,
+Shift+Z con il modificatore di undo non viene interpretato come undo e l'undo a
+cronologia vuota non modifica il grafo. Le azioni sono eventi reali del browser;
+gli helper leggono il DOM senza cambiare il modello o invocare callback private.
+Meta viene verificato su Chromium nel runner disponibile, senza simulare una
+validazione nativa macOS.
