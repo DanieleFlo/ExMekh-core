@@ -100,6 +100,7 @@ async def test_edit_reconnected_stream_stops_old_turn_and_clears_queue(edit_serv
             page = await browser.new_page()
             await page.goto(edit_server, wait_until="networkidle")
             await page.get_by_role("button", name="New Quick Chat", exact=True).click()
+            await expect(page.locator(".msg-user")).to_have_count(0)
             await send_command(page, "Slow original")
             await expect(page.locator(".chat-message-streaming")).to_contain_text(
                 "Reply: Slow original"

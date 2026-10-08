@@ -41,6 +41,10 @@ class AgentDesigner:
         self._undo_button: ui.button | None = None
         self._shell: ui.card | None = None
         self._save_button: ui.button | None = None
+        self._refresh_timer: ui.timer | None = None
+        self._copied_sources: set[str] = set()
+        self._generation = 0
+        self._refreshing = False
 
     def build(self) -> None:
         script = (
@@ -108,8 +112,11 @@ class AgentDesigner:
                     )
 
         self._dialog.on("hide", self._cancelled)
+        self._refresh_timer = ui.timer(3, self._refresh_capabilities, active=False)
 
     def _cancelled(self) -> None:
+        self._generation += 1
+        self._refresh_timer.deactivate()
         if self._on_cancelled:
             self._on_cancelled()
             self._on_cancelled = None
@@ -124,11 +131,14 @@ class AgentDesigner:
         on_cancelled: Callable[[], None] | None = None,
     ) -> None:
         client = ui.context.client
+        self._generation += 1
+        generation = self._generation
+        self._refresh_timer.deactivate()
         try:
-            self._catalog = await asyncio.get_running_loop().run_in_executor(
+            catalog = await asyncio.get_running_loop().run_in_executor(
                 None, partial(self._capabilities.catalog, paths)
             )
-            self._design = (
+            updated_design = (
                 await asyncio.get_running_loop().run_in_executor(
                     None, partial(self._capabilities.expand_skill_connections, design)
                 )
@@ -137,7 +147,13 @@ class AgentDesigner:
                     None, partial(self._capabilities.default_design, profile, paths)
                 )
             )
+            updated_design = await asyncio.get_running_loop().run_in_executor(
+                None,
+                partial(self._capabilities.refresh_design, updated_design, catalog),
+            )
         except (OSError, ValueError, SyntaxError) as error:
+            if client.is_deleted or generation != self._generation:
+                return
             with client:
                 ui.notify(
                     ui_text(
@@ -149,13 +165,56 @@ class AgentDesigner:
                 if on_cancelled:
                     on_cancelled()
             return
+        if client.is_deleted or generation != self._generation:
+            return
+        self._catalog = catalog
+        self._design = updated_design
         self._on_saved = on_saved
         self._on_cancelled = on_cancelled
         self._selected_id = self._design.root_id
         self._history.clear()
+        self._copied_sources.clear()
         with client:
             self._render()
             self._dialog.open()
+            self._refresh_timer.activate()
+
+    async def _refresh_capabilities(self) -> None:
+        if self._saving or self._refreshing or not self._dialog.value:
+            return
+        client = self._dialog.client
+        generation = self._generation
+        before = self._design.model_copy(deep=True)
+        catalog = [item.model_copy(deep=True) for item in self._catalog]
+        copies = set(self._copied_sources)
+        self._refreshing = True
+        try:
+            refresh = await asyncio.get_running_loop().run_in_executor(
+                None,
+                partial(self._capabilities.refresh_from_disk, before, catalog, copies),
+            )
+        except (OSError, ValueError, SyntaxError, TypeError):
+            # Retry on the next timer tick if a file is currently being edited.
+            return
+        finally:
+            self._refreshing = False
+        if (
+            refresh is None
+            or client.is_deleted
+            or not self._dialog.value
+            or generation != self._generation
+            or self._saving
+            or self._design != before
+            or self._catalog != catalog
+        ):
+            return
+        with client:
+            self._catalog = refresh.catalog
+            self._design = refresh.design
+            if not self._design.has_node(self._selected_id):
+                self._selected_id = self._design.root_id
+            self._history.clear()
+            self._render()
 
     def _render(self) -> None:
         if self._undo_button:
@@ -204,10 +263,7 @@ class AgentDesigner:
             scope=self._scope,
             catalog=self._catalog,
             nodes=nodes,
-            connections=[
-                (self._design.node(link.parent), self._design.node(link.child))
-                for link in self._design.links
-            ],
+            connections=self._design.connected_nodes(),
             selected_id=self._selected_id,
             root_id=self._design.root_id,
             width=width,
@@ -443,6 +499,8 @@ class AgentDesigner:
         )
 
     def _apply_capability_copy(self, node_id: str, replacement: DesignNode) -> None:
+        self._copied_sources.add(replacement.source)
+
         def replace() -> None:
             self._design.replace_node(node_id, replacement)
             self._catalog.append(

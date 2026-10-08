@@ -59,13 +59,14 @@ def format_output_html(text: str | None) -> str:
 
 def format_raw_output_text(text: str) -> str:
     """Preserve the recorded XML header, formatting it independently of its body."""
-    header, separator, body = text.partition("</header>")
-    if text.lstrip().startswith("<header>") and separator:
+    parts = RecordedToolOutput.split_header(text)
+    if parts is not None:
+        header, body = parts
         try:
-            header = _format_xml(header + separator)
+            header = _format_xml(header)
         except ET.ParseError:
             return text
-        return header + "\n" + format_output_text(body.lstrip("\r\n"))
+        return header + "\n" + format_output_text(body)
     return format_output_text(text)
 
 

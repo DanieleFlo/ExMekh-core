@@ -336,13 +336,17 @@ async def test_skill_editor_separates_yaml_and_shows_nested_connections(
             )
             shared = canvas.locator(".agent-board-node").filter(has_text="shared-tool")
             await shared.scroll_into_view_if_needed()
+            position = await shared.evaluate(
+                "el => ({x: parseFloat(el.style.left), y: parseFloat(el.style.top)})"
+            )
             box = await shared.bounding_box()
             await page.mouse.move(box["x"] + 30, box["y"] + 20)
             await page.mouse.down()
             await page.mouse.move(box["x"] + 60, box["y"] + 30, steps=8)
             await page.mouse.up()
             await expect(shared).to_have_attribute(
-                "style", "left:380.0px;top:970.0px;--node-color:#34d399"
+                "style",
+                f"left:{position['x'] + 30:.1f}px;top:{position['y'] + 10:.1f}px;--node-color:#34d399",
             )
             viewport = canvas.locator(".agent-board-viewport")
             scroll_top = await viewport.evaluate("element => element.scrollTop")

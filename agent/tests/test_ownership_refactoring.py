@@ -124,10 +124,14 @@ async def test_capability_editor_preserves_the_board_and_recovers_from_invalid_d
     before = design.model_dump()
     saved = []
     with client:
-        editor = CapabilityEditor(
-            repository, lambda node_id, node: saved.append((node_id, node))
-        )
-        editor.open(design, design.root_id)
+        with ui.column() as details:
+
+            def apply_copy(node_id, node):
+                saved.append((node_id, node))
+                details.clear()
+
+            editor = CapabilityEditor(repository, apply_copy)
+            editor.open(design, design.root_id)
         editor._description.value = " "
         await editor._save()
         assert saved == []
@@ -138,6 +142,8 @@ async def test_capability_editor_preserves_the_board_and_recovers_from_invalid_d
         editor._instructions.value = "Clear instructions"
         await editor._save()
         assert not editor._dialog.value
+        assert editor._dialog.id in client.elements
+        assert editor._save_button.enabled
     assert design.model_dump() == before
     node_id, copied = saved[0]
     assert node_id == design.root_id

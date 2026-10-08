@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
-from exmekh_lib.core.agents.node import Node, ToolHooks
+from exmekh_lib.core.agents.node import DefaultCapabilities, Node, ToolHooks
 
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter
@@ -554,3 +554,97 @@ def test_adding_a_tool_does_not_import_unrelated_skill_dependencies(tmp_path: Pa
     assert design.model_dump() == before
     compiled = repository.compile(updated)
     assert tool.name in compiled.default_names_for(updated.root_id)
+
+
+def test_default_board_uses_current_harness_selection(tmp_path: Path):
+    repository = CapabilityRepository(tmp_path)
+    catalog = repository.catalog()
+    added = DesignNode(kind="tool", name="new-harness-tool")
+    names = DefaultCapabilities().selected_names | {added.name}
+    with (
+        patch.object(repository, "catalog", return_value=[*catalog, added]),
+        patch.object(
+            DefaultCapabilities,
+            "selected_names",
+            new_callable=PropertyMock,
+            return_value=names,
+        ),
+    ):
+        design = repository.default_design("creative")
+    assert design.capability("tool", added.name) in design.children(design.root_id)
+    assert design.capability("skill", "file-processing") is not None
+    assert design.capability("tool", "bash") is None
+
+
+def test_refresh_source_dependencies_preserves_manual_connections(tmp_path: Path):
+    repository = CapabilityRepository(tmp_path)
+    root = DesignNode(kind="hds", name="root", source="root.md", content="Old root")
+    skill = DesignNode(
+        kind="skill",
+        name="skill",
+        source="skill.md",
+        content="---\nsub-tools: [old, shared, removed-manually]\n---\nOld instructions",
+    )
+    old = DesignNode(kind="tool", name="old", source="old.py", content="old source")
+    shared = DesignNode(kind="tool", name="shared")
+    manual = DesignNode(kind="tool", name="manual")
+    design = AgentDesign(
+        nodes=[root, skill, old, shared, manual],
+        root_id=root.id,
+        skill_connections_explicit=True,
+    )
+    for child in [skill, shared]:
+        design.connect(root.id, child.id)
+    for child in [old, shared, manual]:
+        design.connect(skill.id, child.id)
+    latest_skill = skill.model_copy(
+        update={
+            "content": "---\nsub-tools: [new, removed-manually]\n---\nNew instructions"
+        }
+    )
+    added = DesignNode(kind="tool", name="new")
+    catalog = [
+        root.model_copy(update={"content": "New root"}),
+        latest_skill,
+        old.model_copy(update={"content": "new source"}),
+        added,
+    ]
+    before = design.model_dump()
+    updated = repository.refresh_design(design, catalog)
+    assert design.model_dump() == before
+    assert updated.node(root.id).content == "New root"
+    assert updated.node(skill.id).content == latest_skill.content
+    assert updated.capability("tool", "old") is None
+    assert updated.capability("tool", "shared") in updated.children(root.id)
+    assert {node.name for node in updated.children(skill.id)} == {"manual", "new"}
+    assert updated.capability("tool", "removed-manually") is None
+    assert updated.node(skill.id).id == skill.id
+    assert repository.refresh_design(updated, catalog) == updated
+
+
+def test_refresh_removes_obsolete_shared_dependency_subtree(tmp_path: Path):
+    repository = CapabilityRepository(tmp_path)
+    root = DesignNode(kind="hds", name="root")
+    parents = [
+        DesignNode(
+            kind="skill",
+            name=name,
+            source=f"{name}.md",
+            content="---\nsub-skills: [nested]\n---\nInstructions",
+        )
+        for name in ("first", "second")
+    ]
+    nested = DesignNode(kind="skill", name="nested")
+    leaf = DesignNode(kind="tool", name="leaf")
+    design = AgentDesign(nodes=[root, *parents, nested, leaf], root_id=root.id)
+    for parent in parents:
+        design.connect(root.id, parent.id)
+        design.connect(parent.id, nested.id)
+    design.connect(nested.id, leaf.id)
+    catalog = [
+        parent.model_copy(update={"content": "---\nsub-skills: []\n---\nUpdated"})
+        for parent in parents
+    ]
+    updated = repository.refresh_design(design, catalog)
+    assert {node.name for node in updated.nodes} == {"root", "first", "second"}
+    updated.validate_connected()

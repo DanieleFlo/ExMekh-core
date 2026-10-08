@@ -116,7 +116,7 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         self.on_steering_added = on_steering_added
         self._preceding_tool: tuple[str, str] | None = None
         self.skill_stack: list[SkillNode] = []
-        self.active_tools: dict[str, ToolEvent] = {}
+        self.active_tools: dict[tuple[str | None, str, str, int], ToolEvent] = {}
         self.pending_skill_open_times: dict[str, float] = {}
         self.pending_skill_call_ids: dict[str, str] = {}
 
@@ -221,29 +221,32 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         event_type = str(event.type)
         call_id = event.tool_call_id
         now = time.time()
+        tool_event = tool_event_from_execution(event, now=now)
         if event_type == "tool_start":
             self.pending_skill_open_times[event.tool_name] = now
             self.pending_skill_call_ids[event.tool_name] = call_id
-            tool_event = tool_event_from_execution(event, now=now)
             if call_id:
-                self.active_tools[call_id] = tool_event
+                recorded = self.active_tools.get(tool_event.invocation_key)
+                if recorded is None:
+                    self.active_tools[tool_event.invocation_key] = tool_event
+                else:
+                    recorded.merge_update(tool_event)
+                    tool_event = recorded
             self._publish_tool_event(tool_event, current_skill)
         elif event_type == "tool_end":
             self._preceding_tool = (call_id, event.tool_name)
-            started = self.active_tools.pop(call_id, None) if call_id else None
+            started = (
+                self.active_tools.pop(tool_event.invocation_key, None)
+                if call_id
+                else None
+            )
             if started is not None:
-                started.merge_update(tool_event_from_execution(event, now=now))
+                started.merge_update(tool_event)
                 self._publish_tool_event(started, current_skill)
             else:
-                self._publish_tool_event(
-                    tool_event_from_execution(event, now=now),
-                    current_skill,
-                )
+                self._publish_tool_event(tool_event, current_skill)
         else:
-            self._publish_tool_event(
-                tool_event_from_execution(event, now=now),
-                current_skill,
-            )
+            self._publish_tool_event(tool_event, current_skill)
 
     def _publish_tool_event(
         self, event: ToolEvent, current_skill: SkillNode | None

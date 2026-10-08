@@ -48,6 +48,13 @@ class AgentDesign(BaseModel):
             app_text("errors_state.agent_design.unknown_agent_node", value_1=node_id)
         )
 
+    def has_node(self, node_id: str) -> bool:
+        return any(node.id == node_id for node in self.nodes)
+
+    def connected_nodes(self) -> list[tuple[DesignNode, DesignNode]]:
+        """Expose endpoints for presentation without leaking link resolution."""
+        return [(self.node(link.parent), self.node(link.child)) for link in self.links]
+
     def children(self, node_id: str, *, kind: str | None = None) -> list[DesignNode]:
         children = [
             self.node(link.child) for link in self.links if link.parent == node_id
@@ -147,6 +154,26 @@ class AgentDesign(BaseModel):
 
     def disconnect(self, link: DesignLink) -> None:
         self.links.remove(link)
+
+    def remove_dependencies(
+        self, parent_id: str, capabilities: set[tuple[str, str]]
+    ) -> None:
+        """Remove obsolete dependencies, retaining cards still owned elsewhere."""
+        removed: set[str] = set()
+        for link in list(self.connections(parent_id)):
+            child = self.node(link.child)
+            if link.parent == parent_id and (child.kind, child.name) in capabilities:
+                self.disconnect(link)
+                removed.add(child.id)
+        self._remove_orphaned_nodes(removed)
+
+    def _remove_orphaned_nodes(self, candidates: set[str]) -> None:
+        while candidates:
+            node_id = candidates.pop()
+            if any(link.child == node_id for link in self.links):
+                continue
+            candidates.update(child.id for child in self.children(node_id))
+            self.remove_node(node_id)
 
     def remove_node(self, node_id: str) -> None:
         if node_id == self.root_id:

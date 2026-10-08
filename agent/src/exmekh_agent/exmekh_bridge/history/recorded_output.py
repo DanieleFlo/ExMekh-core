@@ -18,15 +18,24 @@ class RecordedToolOutput:
     thinking: str = ""
     summary_mode: str | None = None
 
-    @classmethod
-    def parse(cls, text: object) -> RecordedToolOutput | None:
+    @staticmethod
+    def split_header(text: object) -> tuple[str, str] | None:
+        """Separate the recorded envelope, leaving body interpretation to callers."""
         if not isinstance(text, str) or not text.lstrip().startswith("<header>"):
             return None
         header, separator, body = text.partition("</header>")
         if not separator:
             return None
+        return header + separator, body.lstrip("\r\n")
+
+    @classmethod
+    def parse(cls, text: object) -> RecordedToolOutput | None:
+        parts = cls.split_header(text)
+        if parts is None:
+            return None
+        header, body = parts
         try:
-            root = ET.fromstring(header + separator)
+            root = ET.fromstring(header)
         except ET.ParseError:
             return None
         output_id = (root.findtext("id") or "").strip()
@@ -36,7 +45,7 @@ class RecordedToolOutput:
             name=(root.findtext("name") or "").strip(),
             source=(root.findtext("type") or "Tool").strip(),
             id=output_id,
-            body=body.lstrip("\r\n"),
+            body=body,
             used_tools=cls._references(root),
             thinking=root.findtext("thinking") or "",
             summary_mode=root.findtext("summary-mode"),

@@ -99,7 +99,7 @@ def test_handler_failure_publishes_failed_skill_and_pending_root_tool() -> None:
     skill = SkillNode()
     tool = ToolEvent(tool_name="root", status="running")
     handler.skill_stack.append(skill)
-    handler.active_tools["call"] = tool
+    handler.active_tools[tool.invocation_key] = tool
     handler.finish("error")
     assert skills == [(skill, "error")]
     assert tools == [tool]
@@ -159,7 +159,7 @@ def test_handler_finish_updates_collected_tool_without_duplicating_it(
     )
     event = ToolEvent(tool_name="root", event_type="tool_start", status="running")
     collector.append_tool(event)
-    handler.active_tools["call"] = event
+    handler.active_tools[event.invocation_key] = event
     handler.finish(status)
     message = collector.build_message(error="failed" if status == "error" else None)
     assert len(message.tool_events) == 1

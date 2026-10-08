@@ -5,12 +5,14 @@ from __future__ import annotations
 import ast
 import re
 import shutil
+from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
 import yaml
 from exmekh_lib.config.capabilities import CAPABILITY_FORMAT
+from exmekh_lib.config.runtime import RUNTIME
 from exmekh_lib.core.agents.capabilities.defaults import (
     HARNESS_NAMES,
     MOCK_NAMES,
@@ -53,6 +55,12 @@ class CompiledAgentDesign:
 class CapabilityEditorValues:
     description: str
     instructions: str
+
+
+@dataclass(frozen=True)
+class CapabilityRefresh:
+    design: AgentDesign
+    catalog: list[DesignNode]
 
 
 class CapabilityRepository:
@@ -125,7 +133,16 @@ class CapabilityRepository:
         design = AgentDesign(
             nodes=[root], root_id=root.id, capability_paths=paths or []
         )
-        selected = list(AGENT_DEFAULTS["standard_capabilities"])
+        harness = DefaultCapabilities().selected_names - {
+            RUNTIME.exit_tool_name,
+            RUNTIME.bash_tool_name,
+            RUNTIME.sub_agent_tool_name,
+        }
+        dependencies = set()
+        for item in catalog:
+            if item.kind == "skill" and item.name in harness:
+                dependencies.update(name for _, name in self._skill_dependencies(item))
+        selected = sorted(harness - dependencies)
         if profile in AGENT_DEFAULTS["coding_profiles"]:
             selected.append(AGENT_DEFAULTS["shell_tool"])
         for index, name in enumerate(selected):
@@ -156,6 +173,62 @@ class CapabilityRepository:
             )
             design.connect(child.id, bash.id)
         return self.expand_skill_connections(design)
+
+    def refresh_from_disk(
+        self,
+        design: AgentDesign,
+        current_catalog: list[DesignNode],
+        local_copies: set[str],
+    ) -> CapabilityRefresh | None:
+        """Reload definitions, excluding local copies removed by an undo operation."""
+        visible_sources = {item.source for item in current_catalog}
+        hidden_sources = local_copies - visible_sources
+        catalog = [
+            item
+            for item in self.catalog(design.capability_paths)
+            if item.source not in hidden_sources
+        ]
+        if self._catalog_definitions(catalog) == self._catalog_definitions(
+            current_catalog
+        ):
+            return None
+        return CapabilityRefresh(self.refresh_design(design, catalog), catalog)
+
+    @staticmethod
+    def _catalog_definitions(
+        catalog: list[DesignNode],
+    ) -> set[tuple[str, str, str, str]]:
+        return {(item.kind, item.name, item.source, item.content) for item in catalog}
+
+    def refresh_design(
+        self, design: AgentDesign, catalog: list[DesignNode]
+    ) -> AgentDesign:
+        """Refresh source files and dependency changes while retaining board edits."""
+        updated = design.model_copy(deep=True)
+        sources = {(item.kind, item.source): item for item in catalog if item.source}
+        available = {(item.kind, item.name): item for item in catalog}
+        available.update({(item.kind, item.name): item for item in updated.nodes})
+        removed_dependencies: list[tuple[str, set[tuple[str, str]]]] = []
+        for node in list(updated.nodes):
+            source = sources.get((node.kind, node.source))
+            if source is None or source.content == node.content:
+                continue
+            previous = (
+                set(self._skill_dependencies(node)) if node.kind == "skill" else set()
+            )
+            node.content = source.content
+            if node.kind != "skill":
+                continue
+            dependencies = self._skill_dependencies(node)
+            additions = [item for item in dependencies if item not in previous]
+            children = self._connect_dependencies(updated, available, node, additions)
+            self._expand_dependencies(updated, available, children)
+            removed_dependencies.append((node.id, previous - set(dependencies)))
+        for parent_id, obsolete in removed_dependencies:
+            if updated.has_node(parent_id):
+                updated.remove_dependencies(parent_id, obsolete)
+        updated.validate_graph()
+        return updated
 
     def expand_skill_connections(self, design: AgentDesign) -> AgentDesign:
         """Migrate implicit YAML dependencies once, preserving later board edits."""
@@ -205,55 +278,69 @@ class CapabilityRepository:
         catalog: dict[tuple[str, str], DesignNode],
         skills: list[DesignNode],
     ) -> None:
-        processed: set[str] = set()
-        pending = list(skills)
+        pending = deque(skills)
         while pending:
-            skill = pending.pop(0)
-            if skill.id in processed:
+            skill = pending.popleft()
+            children = self._connect_dependencies(
+                design, catalog, skill, self._skill_dependencies(skill)
+            )
+            pending.extend(children)
+
+    @staticmethod
+    def _skill_dependencies(skill: DesignNode) -> list[tuple[str, str]]:
+        metadata, _ = markdown_parts(skill.content)
+        dependencies = []
+        for kind, key in (("skill", "sub-skills"), ("tool", "sub-tools")):
+            names = metadata.get(key)
+            if names is None:
                 continue
-            processed.add(skill.id)
-            metadata, _ = markdown_parts(skill.content)
-            index = 0
-            for kind, key in (("skill", "sub-skills"), ("tool", "sub-tools")):
-                names = metadata.get(key)
-                if names is None:
-                    names = []
-                if not isinstance(names, list) or any(
-                    not isinstance(name, str) for name in names
-                ):
+            if not isinstance(names, list) or any(
+                not isinstance(name, str) for name in names
+            ):
+                raise ValueError(
+                    app_text(
+                        "errors_capabilities.capability_repository.must_be_a_list_of_capability_names",
+                        value_1=key,
+                    )
+                )
+            dependencies.extend((kind, name) for name in names)
+        return dependencies
+
+    @staticmethod
+    def _connect_dependencies(
+        design: AgentDesign,
+        catalog: dict[tuple[str, str], DesignNode],
+        skill: DesignNode,
+        dependencies: list[tuple[str, str]],
+    ) -> list[DesignNode]:
+        child_skills = []
+        for index, (kind, name) in enumerate(dependencies):
+            child = design.capability(kind, name)
+            if child is None:
+                source = catalog.get((kind, name))
+                if source is None:
                     raise ValueError(
                         app_text(
-                            "errors_capabilities.capability_repository.must_be_a_list_of_capability_names",
-                            value_1=key,
+                            "errors_capabilities.capability_repository.missing_capability_required_by",
+                            value_1=skill.name,
+                            value_2=name,
                         )
                     )
-                for name in names:
-                    child = design.capability(kind, name)
-                    if child is None:
-                        source = catalog.get((kind, name))
-                        if source is None:
-                            raise ValueError(
-                                app_text(
-                                    "errors_capabilities.capability_repository.missing_capability_required_by",
-                                    value_1=skill.name,
-                                    value_2=name,
-                                )
-                            )
-                        child = source.model_copy(
-                            deep=True,
-                            update={
-                                "id": uuid4().hex,
-                                "x": skill.x + BOARD_DEFAULTS["skill_child_x_offset"],
-                                "y": skill.y
-                                + index * BOARD_DEFAULTS["skill_child_vertical_gap"],
-                            },
-                        )
-                        design.add_node(child, skill.id)
-                    else:
-                        design.connect(skill.id, child.id)
-                    if child.kind == "skill":
-                        pending.append(child)
-                    index += 1
+                child = source.model_copy(
+                    deep=True,
+                    update={
+                        "id": uuid4().hex,
+                        "x": skill.x + BOARD_DEFAULTS["skill_child_x_offset"],
+                        "y": skill.y
+                        + index * BOARD_DEFAULTS["skill_child_vertical_gap"],
+                    },
+                )
+                design.add_node(child, skill.id)
+                if child.kind == "skill":
+                    child_skills.append(child)
+            else:
+                design.connect(skill.id, child.id)
+        return child_skills
 
     def editable_values(self, node: DesignNode) -> CapabilityEditorValues:
         metadata, instructions = markdown_parts(node.content)

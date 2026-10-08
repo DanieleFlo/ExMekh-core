@@ -12,21 +12,17 @@
 }
 
 .user-message-footer {
-    position: relative;
+    flex-wrap: nowrap !important;
+    min-height: 24px;
+    gap: 4px !important;
 }
 
 .user-copy-btn,
 .user-edit-btn {
-    position: absolute !important;
-    right: 36px;
-    top: 50%;
-    transform: translateY(-50%);
+    flex-shrink: 0;
+    order: -1;
     opacity: 0;
     transition: opacity 150ms ease;
-}
-
-.user-edit-btn {
-    right: 68px;
 }
 
 .chat-message-user:hover .user-copy-btn,
@@ -176,6 +172,7 @@
     overflow-y: auto !important;
     overflow-anchor: none !important;
     scroll-behavior: auto !important;
+    padding-right: 48px !important;
 }
 
 .chat-scroll-container > * {
@@ -183,7 +180,7 @@
 }
 
 .chat-message-row {
-    max-width: 56rem;
+    max-width: min(56rem, 100%) !important;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
@@ -239,16 +236,14 @@
     display: none;
     flex-direction: column !important;
     align-items: center !important;
-    gap: 8px !important;
-    padding: 7px 4px !important;
-    background: rgba(18, 18, 22, 0.65) !important;
-    backdrop-filter: blur(8px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 9999px !important;
+    gap: 2px !important;
+    padding: 0 !important;
+    max-height: calc(100% - 80px);
+    overflow-y: auto;
+    scrollbar-width: none;
     z-index: 25 !important;
     opacity: 0;
     transition: opacity 180ms ease, transform 180ms ease !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
 }
 
 .chat-poi-track.visible {
@@ -257,74 +252,57 @@
 }
 
 .chat-poi-dot {
-    width: 6px !important;
-    height: 6px !important;
+    width: 20px !important;
+    height: 18px !important;
+    min-height: 18px;
+    padding: 0;
+    border: 0;
+    background: transparent !important;
     border-radius: 9999px !important;
     cursor: pointer !important;
     position: relative !important;
     transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease, opacity 150ms ease !important;
-    opacity: 0.85;
+    opacity: 0.6;
+}
+
+.chat-poi-dot::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 4px;
+    margin: auto;
+    border-radius: 50%;
+    background: currentColor;
 }
 
 .chat-poi-dot:hover {
-    transform: scale(1.4) !important;
     opacity: 1 !important;
 }
 
 .chat-poi-dot.active {
-    transform: scale(1.3) !important;
     opacity: 1 !important;
 }
 
-/* User Message: Minimalist Electric Blue */
+.chat-poi-dot.active::before { width: 6px; height: 6px; }
+
+/* Muted message markers with a small accent for the final response. */
 .chat-poi-dot.poi-user {
-    background-color: #38bdf8 !important;
+    color: #94a3b8;
 }
 
 .chat-poi-dot.poi-user:hover,
 .chat-poi-dot.poi-user.active {
-    background-color: #00f0ff !important;
+    color: #e2e8f0;
 }
 
-/* Final Response: Minimalist Violet / Purple (Slightly Different Accent) */
 .chat-poi-dot.poi-assistant-final {
-    background-color: #c084fc !important;
+    color: #a78bba;
 }
 
 .chat-poi-dot.poi-assistant-final:hover,
 .chat-poi-dot.poi-assistant-final.active {
-    background-color: #e879f9 !important;
+    color: #d8b4fe;
 }
-
-/* Tooltip on Hover */
-.chat-poi-tooltip {
-    position: absolute !important;
-    right: 16px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    background: rgba(18, 18, 22, 0.95) !important;
-    border: 1px solid #3f3f46 !important;
-    border-radius: 6px !important;
-    padding: 3px 8px !important;
-    font-size: 11px !important;
-    color: #e4e4e7 !important;
-    white-space: nowrap !important;
-    max-width: 240px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    pointer-events: none !important;
-    opacity: 0;
-    transition: opacity 150ms ease, transform 150ms ease !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
-    backdrop-filter: blur(8px) !important;
-    z-index: 28 !important;
-}
-
-.chat-poi-dot:hover .chat-poi-tooltip {
-    opacity: 1 !important;
-    transform: translateY(-50%) translateX(-4px) !important;
-}
-
 
 /* ========================================================================= */
 /* Linear Generation Progress Bar (Vibrant Minimalist Blue & Purple)         */

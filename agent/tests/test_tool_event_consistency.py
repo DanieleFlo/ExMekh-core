@@ -7,6 +7,8 @@ from exmekh_lib.core.agents.deep_agent import DeepAgentExecutionEvent
 from exmekh_lib.core.agents.deep_agent.stream_event import DeepAgentExecutionEventType
 
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.agents.event_handlers import DeepAgentTurnEventHandler
+from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter
 from exmekh_agent.exmekh_bridge.history.converter import (
     reconstruct_execution_history_and_cache,
 )
@@ -110,6 +112,87 @@ def test_legacy_callbacks_without_ids_match_their_execution_scope(
     assert len(collector.tools) == 2
     assert not collector.tools[0].is_running
     assert collector.tools[1].is_running
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"tool_name": "other"},
+        {"skill_path": "/other"},
+        {"depth": 2},
+        {"tool_call_id": "other-call"},
+    ],
+)
+@pytest.mark.parametrize("reuse_event_id", [False, True])
+def test_call_ids_and_event_ids_do_not_merge_unrelated_executions(
+    change, reuse_event_id
+):
+    start = ToolEvent(
+        tool_name="read",
+        tool_call_id="call",
+        event_type="tool_start",
+        skill_path="/worker",
+        depth=1,
+        timestamp=10,
+    )
+    update = {"event_type": "tool_end", "timestamp": 15, **change}
+    if not reuse_event_id:
+        update["id"] = "different-event"
+    other = start.model_copy(update=update)
+    collector = TurnStreamCollector()
+    child = SubAgentConversation(path="main/worker")
+    child.start_call("Work")
+    skill = SkillNode(path="/worker")
+    for record in [collector.append_tool, child.add_tool_event, skill.add_tool_event]:
+        record(start)
+        record(other)
+    for events in [
+        collector.tools,
+        child.message_history()[-1].tool_events,
+        skill.tool_events,
+    ]:
+        assert len(events) == 2
+        assert events[0].is_running and not events[1].is_running
+
+
+def test_handler_preserves_first_start_and_tracks_scoped_call_ids_independently():
+    collector = TurnStreamCollector()
+    handler = DeepAgentTurnEventHandler(
+        SubAgentEventRouter(None),
+        lambda _: None,
+        lambda *_: None,
+        collector.append_tool,
+        None,
+        None,
+    )
+
+    def event(kind, name):
+        return DeepAgentExecutionEvent(
+            type=kind,
+            depth=0,
+            skill_path="/",
+            history=[],
+            history_tree=[],
+            tool_name=name,
+            tool_call_id="reused-call",
+        )
+
+    with patch("exmekh_agent.exmekh_bridge.agents.event_handlers.time.time") as clock:
+        for timestamp, kind, name in [
+            (10, DeepAgentExecutionEventType.TOOL_START, "read"),
+            (12, DeepAgentExecutionEventType.TOOL_START, "read"),
+            (13, DeepAgentExecutionEventType.TOOL_START, "write"),
+            (15, DeepAgentExecutionEventType.TOOL_END, "read"),
+            (17, DeepAgentExecutionEventType.TOOL_END, "write"),
+        ]:
+            clock.return_value = timestamp
+            handler.handle(event(kind, name))
+    assert [
+        (tool.tool_name, tool.timestamp, tool.elapsed_seconds())
+        for tool in collector.tools
+    ] == [("read", 10, 5), ("write", 13, 4)]
+    assert all(not tool.is_running for tool in collector.tools)
+    assert not handler.active_tools
 
 
 def test_reconstruction_keeps_completed_invocation_ids_without_duplicate_records() -> (

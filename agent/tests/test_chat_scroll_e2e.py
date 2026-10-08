@@ -354,18 +354,20 @@ async def test_point_of_interest_targets_current_message_row(
 
                 const replacement = original.cloneNode(true);
                 original.replaceWith(replacement);
-                let target = null;
-                replacement.scrollIntoView = () => { target = 'replacement'; };
-                original.scrollIntoView = () => { target = 'original'; };
+                const expected = replacement.getBoundingClientRect().top - chat.getBoundingClientRect().top
+                    + chat.scrollTop - parseFloat(getComputedStyle(chat).paddingTop);
                 window.__exmekhChatScroll.refreshPointsOfInterest();
                 const newDot = track.querySelector('.chat-poi-dot');
                 newDot.click();
-                return { initialized: true, rebuilt: newDot !== oldDot, target };
+                return { initialized: true, rebuilt: newDot !== oldDot,
+                    reached: Math.abs(chat.scrollTop - expected) < 2,
+                    selected: chat.__exmekhScrollState.selectedPoi === replacement };
             }"""
         )
         assert result == {
             "initialized": True,
             "rebuilt": True,
-            "target": "replacement",
+            "reached": True,
+            "selected": True,
         }
         await browser.close()

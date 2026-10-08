@@ -46,13 +46,19 @@ class ToolEvent(BaseModel):
 
     def matches_call(self, incoming: ToolEvent) -> bool:
         """Use invocation IDs when available; otherwise match the execution scope."""
-        if incoming.tool_call_id is not None:
-            return self.tool_call_id == incoming.tool_call_id
-        return (
+        same_scope = (
             self.tool_name == incoming.tool_name
             and self.skill_path == incoming.skill_path
             and self.depth == incoming.depth
         )
+        return same_scope and (
+            incoming.tool_call_id is None or self.tool_call_id == incoming.tool_call_id
+        )
+
+    @property
+    def invocation_key(self) -> tuple[str | None, str, str, int]:
+        """Call IDs are unique only within a tool's execution scope."""
+        return self.tool_call_id, self.tool_name, self.skill_path, self.depth
 
     def complete_from(self, incoming: ToolEvent) -> None:
         """Apply a terminal update while retaining this invocation's opening time."""
@@ -71,11 +77,13 @@ class ToolEvent(BaseModel):
 
     def matches_update(self, incoming: ToolEvent) -> bool:
         """Correlate callbacks, including replayed legacy results without call IDs."""
-        if self.id == incoming.id:
-            return True
         if not self.matches_call(incoming):
             return False
-        if incoming.tool_call_id is not None or self.is_running:
+        if (
+            self.id == incoming.id
+            or incoming.tool_call_id is not None
+            or self.is_running
+        ):
             return True
         result_time = (
             incoming.end_time if incoming.end_time is not None else incoming.timestamp

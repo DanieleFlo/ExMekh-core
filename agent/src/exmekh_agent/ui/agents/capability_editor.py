@@ -33,6 +33,7 @@ class CapabilityEditor:
         self._node = self._design.node(node_id)
         self._client = ui.context.client
         with (
+            self._client,
             ui.dialog() as self._dialog,
             ui.card().classes(
                 UI_PRESENTATION[

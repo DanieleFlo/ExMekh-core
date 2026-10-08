@@ -54,23 +54,28 @@
         if (dots.length === 0 || !items || dots.length !== items.length) return;
 
         const containerRect = active.getBoundingClientRect();
-        const viewportCenter = containerRect.top + containerRect.height / 2;
+        const viewportTop = containerRect.top + parseFloat(getComputedStyle(active).paddingTop);
 
         let closestIdx = 0;
         let minDistance = Infinity;
 
         items.forEach((item, idx) => {
             const rect = item.el.getBoundingClientRect();
-            const elCenter = rect.top + rect.height / 2;
-            const dist = Math.abs(elCenter - viewportCenter);
+            const dist = Math.abs(rect.top - viewportTop);
             if (dist < minDistance) {
                 minDistance = dist;
                 closestIdx = idx;
             }
         });
 
+        const selected = active.__exmekhScrollState?.selectedPoi;
+        const selectedIdx = items.findIndex(item => item.el === selected);
+        if (selectedIdx !== -1) closestIdx = selectedIdx;
+
         dots.forEach((dot, idx) => {
-            dot.classList.toggle('active', idx === closestIdx);
+            const current = idx === closestIdx;
+            dot.classList.toggle('active', current);
+            dot.setAttribute('aria-current', current ? 'true' : 'false');
         });
     }
 
@@ -141,25 +146,24 @@
         track.innerHTML = '';
 
         items.forEach(item => {
-            const dot = document.createElement('div');
+            const dot = document.createElement('button');
+            dot.type = 'button';
             dot.className = `chat-poi-dot ${item.type === 'user' ? 'poi-user' : 'poi-assistant-final'}`;
-
-            const tooltip = document.createElement('div');
-            tooltip.className = 'chat-poi-tooltip';
-            tooltip.textContent = item.label;
-            dot.appendChild(tooltip);
+            dot.title = item.label;
+            dot.setAttribute('aria-label', item.label);
 
             dot.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (active.__exmekhScrollState) {
-                    if (item.type === 'assistant-final') {
-                        active.__exmekhScrollState.pinned = true;
-                        active.__exmekhScrollState.lastUserUpInputAt = 0;
-                    } else {
-                        active.__exmekhScrollState.pinned = false;
-                    }
-                }
-                item.el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                const state = active.__exmekhScrollState;
+                if (!state) return;
+                state.pinned = item.type === 'assistant-final';
+                state.selectedPoi = item.el;
+                const padding = parseFloat(getComputedStyle(active).paddingTop);
+                const target = item.type === 'assistant-final'
+                    ? active.scrollHeight - active.clientHeight
+                    : active.scrollTop + item.el.getBoundingClientRect().top - active.getBoundingClientRect().top - padding;
+                // Scroll only the transcript, keeping surrounding panels in place.
+                scrollToPosition(active, state, target);
             });
 
             track.appendChild(dot);
@@ -177,11 +181,9 @@
         refreshPointsOfInterest();
     }
 
-    function scrollToBottom(el, state) {
-        if (el.clientHeight === 0) return;
-        const targetTop = Math.max(0, el.scrollHeight - el.clientHeight);
+    function scrollToPosition(el, state, targetTop) {
         state.isProgrammatic = true;
-        el.scrollTop = targetTop;
+        el.scrollTop = Math.max(0, Math.min(targetTop, el.scrollHeight - el.clientHeight));
         state.lastScrollTop = el.scrollTop;
         state.lastScrollHeight = el.scrollHeight;
         state.lastClientHeight = el.clientHeight;
@@ -192,9 +194,15 @@
         });
     }
 
+    function scrollToBottom(el, state) {
+        if (el.clientHeight === 0) return;
+        scrollToPosition(el, state, el.scrollHeight - el.clientHeight);
+    }
+
     function syncOnContentOrLayoutChange(el, state, hasDirectChildRemoved) {
         const currentResetSeq = el.getAttribute('data-scroll-reset-seq') || '0';
         if (currentResetSeq !== state.lastResetSeq) {
+            state.selectedPoi = null;
             state.lastResetSeq = currentResetSeq;
             state.pinned = true;
             state.lastUserUpInputAt = 0;
@@ -217,16 +225,7 @@
             if (state.pinned) {
                 scrollToBottom(el, state);
             } else {
-                const maxTop = Math.max(0, el.scrollHeight - el.clientHeight);
-                state.isProgrammatic = true;
-                el.scrollTop = Math.min(state.savedScrollTop, maxTop);
-                state.lastScrollTop = el.scrollTop;
-                state.lastScrollHeight = el.scrollHeight;
-                state.lastClientHeight = el.clientHeight;
-                requestAnimationFrame(() => {
-                    state.isProgrammatic = false;
-                });
-                updatePinnedIndicators(el, state);
+                scrollToPosition(el, state, state.savedScrollTop);
             }
             return;
         }
@@ -287,7 +286,19 @@
         el.__exmekhScrollState = state;
         updatePinnedIndicators(el, state);
 
+        el.addEventListener('pointerdown', (e) => {
+            if (!e.target.closest('button, a, [role="button"]')) return;
+            // Expanding output or focusing a message action must not move it
+            // between pointerdown and click while content is being updated.
+            state.pinned = false;
+            state.selectedPoi = null;
+            state.lastUserUpInputAt = performance.now();
+            state.savedScrollTop = el.scrollTop;
+            updatePinnedIndicators(el, state);
+        });
+
         el.addEventListener('wheel', (e) => {
+            state.selectedPoi = null;
             if (el.scrollHeight <= el.clientHeight) return;
             if (e.deltaY < 0) {
                 state.lastUserUpInputAt = performance.now();
@@ -310,6 +321,7 @@
         }, { passive: true });
 
         el.addEventListener('touchmove', (e) => {
+            state.selectedPoi = null;
             if (!e.touches || e.touches.length === 0 || state.lastTouchY === null) return;
             const currentY = e.touches[0].clientY;
             const dy = currentY - state.lastTouchY;
@@ -323,6 +335,7 @@
         }, { passive: true });
 
         el.addEventListener('keydown', (e) => {
+            state.selectedPoi = null;
             if (['ArrowUp', 'PageUp', 'Home'].includes(e.key)) {
                 state.lastUserUpInputAt = performance.now();
                 state.pinned = false;
@@ -345,6 +358,7 @@
             const prevHeight = state.lastScrollHeight;
             const prevMaxTop = Math.max(0, prevHeight - state.lastClientHeight);
             const distFromPrevBottom = Math.max(0, prevMaxTop - currentTop);
+            if (!state.isProgrammatic) state.selectedPoi = null;
 
             const heightShrank = prevHeight > 0 && currentHeight < prevHeight - 2;
             if (heightShrank) {
@@ -526,6 +540,7 @@
             for (const el of containers) {
                 if (isContainerVisible(el) && el.__exmekhScrollState) {
                     el.__exmekhScrollState.pinned = true;
+                    el.__exmekhScrollState.selectedPoi = null;
                     el.__exmekhScrollState.lastUserUpInputAt = 0;
                     scrollToBottom(el, el.__exmekhScrollState);
                 }

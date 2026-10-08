@@ -19,6 +19,12 @@ async def open_board(page, server):
         .last
     )
     await expect(board.locator(".agent-board-viewport")).to_be_visible()
+    # The dialog takes focus after its entrance animation, which can close a
+    # select menu opened before that transition finishes.
+    await board.evaluate(
+        "async board => await Promise.all(board.closest('.q-dialog')"
+        ".getAnimations({subtree: true}).map(animation => animation.finished))"
+    )
     await board.locator('[data-node="root"]').click(trial=True)
     return board
 
