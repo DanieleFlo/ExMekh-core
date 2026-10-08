@@ -6,6 +6,7 @@
 #include "ds4_qwen4_vision.h"
 
 #include "ds4_qwen.h"
+#include "ds4_qwen4_runtime.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,6 +62,23 @@ int ds4_gpu_qwen4_cache_prepare(uint32_t ctx, uint32_t prefill,
 uint64_t ds4_gpu_qwen4_expert_state_bytes(void);
 int ds4_gpu_qwen4_expert_state_export(void *buffer, uint64_t bytes);
 int ds4_gpu_qwen4_expert_state_import(const void *buffer, uint64_t bytes);
+int ds4_gpu_qwen4_runtime_prepare(const void *model_map, uint64_t model_size,
+        const ds4_gpu_qwen4_expert_layout *layers, uint32_t count, uint32_t prefill,
+        uint32_t nextn_layers);
+int ds4_gpu_qwen4_prefill_finish(void);
+int ds4_gpu_qwen4_kv_alloc(ds4_gpu_tensor **key, ds4_gpu_tensor **value,
+        unsigned context, unsigned resident_cells, unsigned max_tokens,
+        unsigned max_selection, unsigned kv_heads, unsigned head_dim);
+int ds4_gpu_qwen4_kv_truncate(const ds4_gpu_tensor *key, unsigned rows);
+int ds4_gpu_qwen4_kv_prefetch(const ds4_gpu_tensor *key, unsigned position, unsigned tokens);
+/* Metadata snapshot: call under the engine's inference serialization guard. */
+int ds4_gpu_qwen4_tier_stats_get(ds4_gpu_qwen4_tier_stats *out);
+int ds4_gpu_qwen4_moe_hybrid_tensor(ds4_gpu_tensor *mid, ds4_gpu_tensor *part,
+        const ds4_gpu_tensor *x, const ds4_gpu_tensor *selected, const void *model_map, uint64_t model_size,
+        uint64_t gate_offset, uint64_t up_offset, uint64_t down_offset,
+        unsigned gu_type, unsigned down_type, unsigned n_expert, unsigned n_tokens,
+        unsigned n_slots, unsigned in_dim, unsigned ff_dim,
+        uint64_t shared_gate, uint64_t shared_up, uint64_t shared_down, unsigned shared_type);
 #endif
 
 ds4_gpu_tensor *ds4_gpu_tensor_alloc(uint64_t bytes);
@@ -3454,11 +3472,20 @@ typedef struct ds4_decode_graph_key {
     uint32_t il;
     uint32_t island;    /* 0: layer top; 1: FFN tail; 2: V4.1 TP attn-out */
     uint32_t variant;
-    uint32_t _pad;
+    uint32_t flags;     /* bit 0: replay on legacy default stream; capture stays separate */
     void    *cur_hc;
     void    *after_attn_hc;
     void    *after_ffn_hc;
     void    *attn_norm;
+    /* Captured recurrent consumers must follow MTP buffer swaps. NULL for
+     * islands without recurrent state or the corresponding snapshot. */
+    void    *linear_state;
+    void    *linear_history;
+    void    *snapshot_state;
+    void    *snapshot_history;
+    void    *snapshot2_state;
+    void    *snapshot2_history;
+    void    *residual_alt;
 } ds4_decode_graph_key;
 
 int  ds4_gpu_decode_graphs_supported(void);
@@ -3531,6 +3558,9 @@ int ds4_gpu_qwen4_gdn_prep_tensor(
 /* snap_state/snap2_state (optional) receive the state right after tokens
  * snap_tok/snap2_tok; two points serve the 3-row MTP verifier */
 void ds4_gpu_qwen4_set_verify_rows_exact(bool on);
+/* Engine serialization required. Return the previous workload for nesting;
+ * callers restore it after success, error or cancellation. */
+ds4_qwen4_workload ds4_gpu_qwen4_workload_scope(ds4_qwen4_workload workload);
 int ds4_gpu_qwen4_gdn_scan_tensor(
         ds4_gpu_tensor *out, ds4_gpu_tensor *state, const ds4_gpu_tensor *qkv,
         const ds4_gpu_tensor *a, const ds4_gpu_tensor *b,
@@ -3652,6 +3682,20 @@ int ds4_gpu_qwen4_moe_mm_down_tensor(
         const void *model_map, uint64_t model_size, uint64_t down_offset,
         uint32_t weight_type, uint32_t n_expert, uint32_t n_tokens, uint32_t n_slots, uint32_t n_out,
         uint32_t ff_dim, uint32_t out_dim, uint32_t list_cap);
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+/* Optional bounded prefill upload before routing; disabled paths are no-ops. */
+int ds4_gpu_qwen4_moe_prefill_ahead(const void *model_map, uint64_t model_size,
+        uint64_t gate_offset, uint64_t up_offset, uint64_t down_offset,
+        uint32_t gu_type, uint32_t down_type, uint32_t n_expert,
+        uint32_t n_tokens, uint32_t in_dim, uint32_t ff_dim);
+/* Experimental whole-expert prefill ring; -1 keeps the previous scheduler,
+ * 0 is an execution error, 1 produced both mid and original part slots. */
+int ds4_gpu_qwen4_moe_prefill_ring_tensor(ds4_gpu_tensor *mid, ds4_gpu_tensor *part,
+        const ds4_gpu_tensor *x, const ds4_gpu_tensor *lists, const ds4_gpu_tensor *counts,
+        const void *model_map, uint64_t model_size, uint64_t gate_offset, uint64_t up_offset,
+        uint64_t down_offset, uint32_t gu_type, uint32_t down_type, uint32_t n_expert,
+        uint32_t n_tokens, uint32_t n_slots, uint32_t in_dim, uint32_t ff_dim, uint32_t list_cap);
+#endif
 /* weight_type covers both the alpha and the beta projection */
 int ds4_gpu_qwen4_gdn_front_tensor(
         ds4_gpu_tensor *qkv, ds4_gpu_tensor *state, const ds4_gpu_tensor *mixed,

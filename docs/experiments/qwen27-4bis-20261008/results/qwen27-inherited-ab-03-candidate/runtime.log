@@ -1,0 +1,14 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging, direct I/O)
+ds4: CUDA model copy complete in 4.866s (pipelined, 14.30 GiB tensors)
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA startup model preparation covered 14.15 GiB of tensor spans in 0.000s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 0.25 GiB (raw 0.25 + compressed 0.00) + buffers 0.24 GiB + resident model 14.29 GiB = 14.78 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=2048 prefill_cap=256 raw_kv_rows=2048 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 499.56 MiB (ctx=2048, backend=cuda, prefill_chunk=256, raw_kv_rows=2048, compressed_kv_rows=0)
+ds4-bench: context buffers 499.56 MiB (ctx=2048, backend=cuda, prefill_chunk=256, raw_kv_rows=2048, compressed_kv_rows=0)
+ds4-bench: snapshot at 256 unavailable (Qwen state snapshots are deferred to task 10); replaying prefix
+ds4-bench: snapshot at 256 unavailable (Qwen state snapshots are deferred to task 10); replaying prefix
+ds4-bench: snapshot at 256 unavailable (Qwen state snapshots are deferred to task 10); replaying prefix

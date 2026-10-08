@@ -3,6 +3,10 @@
 #include "ds4_tool_text.h"
 #include "ds4_distributed.h"
 #include "ds4_gpu_args.h"
+#include "ds4_qwen4_runtime.h"
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+#include "ds4_gpu.h"
+#endif
 #include "ds4_help.h"
 #include "ds4_kvstore.h"
 #include "ds4_tp.h"
@@ -14895,6 +14899,73 @@ struct server {
     uint64_t agent_context_restore_count;
 };
 
+typedef struct {
+    ds4_gpu_qwen4_tier_stats exclusive, shared, memory;
+    uint64_t exclusive_spans, shared_batches;
+    bool invalid;
+} server_qwen_request_tiers;
+
+/* A batch can share one expert upload between several requests. Keep that
+ * cost explicitly shared rather than attribute the entire server interval
+ * to each request or divide physical bytes by the number of members. */
+static void DS4_SERVER_MAYBE_UNUSED server_qwen_tiers_add(server_qwen_request_tiers *request,
+        const ds4_gpu_qwen4_tier_stats *before,
+        const ds4_gpu_qwen4_tier_stats *after, bool shared) {
+    ds4_gpu_qwen4_tier_stats delta = {0};
+#define QWEN_COUNTER(name) do { \
+    if (after->name < before->name) { request->invalid = true; return; } \
+    delta.name = after->name - before->name; \
+} while (0)
+    QWEN_COUNTER(weight_hits); QWEN_COUNTER(cpu_pairs);
+    QWEN_COUNTER(gpu_pairs); QWEN_COUNTER(pcie_pairs);
+    QWEN_COUNTER(ssd_bytes); QWEN_COUNTER(ssd_reads); QWEN_COUNTER(expert_h2d_bytes);
+    QWEN_COUNTER(kv_h2d_bytes); QWEN_COUNTER(kv_hits); QWEN_COUNTER(kv_misses);
+    QWEN_COUNTER(cpu_h2d_bytes); QWEN_COUNTER(activation_d2h_bytes);
+    QWEN_COUNTER(cpu_wait_seconds); QWEN_COUNTER(cpu_stage_jobs);
+    QWEN_COUNTER(staging_wait_seconds); QWEN_COUNTER(victim_select_seconds);
+#undef QWEN_COUNTER
+    ds4_gpu_qwen4_tier_stats *total = shared ? &request->shared : &request->exclusive;
+#define QWEN_COUNTER(name) total->name += delta.name
+    QWEN_COUNTER(weight_hits); QWEN_COUNTER(cpu_pairs);
+    QWEN_COUNTER(gpu_pairs); QWEN_COUNTER(pcie_pairs);
+    QWEN_COUNTER(ssd_bytes); QWEN_COUNTER(ssd_reads); QWEN_COUNTER(expert_h2d_bytes);
+    QWEN_COUNTER(kv_h2d_bytes); QWEN_COUNTER(kv_hits); QWEN_COUNTER(kv_misses);
+    QWEN_COUNTER(cpu_h2d_bytes); QWEN_COUNTER(activation_d2h_bytes);
+    QWEN_COUNTER(cpu_wait_seconds); QWEN_COUNTER(cpu_stage_jobs);
+    QWEN_COUNTER(staging_wait_seconds); QWEN_COUNTER(victim_select_seconds);
+#undef QWEN_COUNTER
+    request->memory = *after;
+    if (shared) request->shared_batches++;
+    else request->exclusive_spans++;
+}
+
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+static __thread server_qwen_request_tiers *server_qwen_active_request;
+static __thread ds4_gpu_qwen4_tier_stats server_qwen_span_start;
+static __thread unsigned server_qwen_lock_depth;
+static __thread bool server_qwen_span_valid;
+#endif
+
+static void server_inference_lock(server *s) {
+    pthread_mutex_lock(&s->inference_mu);
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    if (server_qwen_lock_depth++ == 0 && server_qwen_active_request)
+        server_qwen_span_valid = ds4_gpu_qwen4_tier_stats_get(&server_qwen_span_start) != 0;
+#endif
+}
+
+static void server_inference_unlock(server *s) {
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    if (--server_qwen_lock_depth == 0 && server_qwen_active_request && server_qwen_span_valid) {
+        ds4_gpu_qwen4_tier_stats after = {0};
+        if (ds4_gpu_qwen4_tier_stats_get(&after))
+            server_qwen_tiers_add(server_qwen_active_request, &server_qwen_span_start, &after, false);
+        else server_qwen_active_request->invalid = true;
+    }
+#endif
+    pthread_mutex_unlock(&s->inference_mu);
+}
+
 static bool response_json_piece_is_string_interior(const char *piece,
                                                    size_t piece_len) {
     if (!piece || !piece_len) return false;
@@ -15393,14 +15464,6 @@ static bool skill_frames_consume_through_locked(server *s, server_slot *slot,
     return deleted;
 }
 
-static void server_inference_lock(server *s) {
-    pthread_mutex_lock(&s->inference_mu);
-}
-
-static void server_inference_unlock(server *s) {
-    pthread_mutex_unlock(&s->inference_mu);
-}
-
 /* The caller holds inference_mu across cache lookup and encoder execution. */
 static bool server_encode_image(server *s, const server_image_input *input,
                                 ds4_vision_embedding *out,
@@ -15436,6 +15499,7 @@ struct job {
     pthread_mutex_t mu;
     pthread_cond_t cv;
     job *next;
+    server_qwen_request_tiers qwen_tiers;
 };
 
 static bool job_cancelled(void *ud) {
@@ -16846,14 +16910,14 @@ static bool kv_cache_store_live_prefix_text(server *s, server_slot *slot,
         pthread_mutex_unlock(&s->tool_mu);
     }
     ds4_kvstore_trailer_hooks hooks = kv_cache_tool_map_hooks(s, NULL);
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     /* The payload contains image-conditioned KV rows, but the disk key and
      * trailer do not contain image fingerprints. Never let generic image
      * placeholder tokens become a cache hit for a different image.
      * sync_image_count covers progress-callback writes during prefill;
      * checkpoint_image_count covers completed sessions. */
     if (ds4_session_has_vision_state(slot->session)) {
-        pthread_mutex_unlock(&s->inference_mu);
+        server_inference_unlock(s);
         return false;
     }
     pthread_mutex_lock(&s->kv_mu);
@@ -16874,7 +16938,7 @@ static bool kv_cache_store_live_prefix_text(server *s, server_slot *slot,
     if (ok && reserved > 0)
         ds4_kvstore_evict(&s->kv, tokens, reserved, NULL);
     pthread_mutex_unlock(&s->kv_mu);
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     return ok;
 }
 
@@ -16997,9 +17061,9 @@ static void kv_cache_discard_failed_disk_entry(server *s, server_slot *slot,
     }
     pthread_mutex_unlock(&s->kv_mu);
     slot->continued_last_store_tokens = 0;
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     ds4_session_invalidate(slot->session);
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
 }
 
 static void kv_cache_maybe_store_continued(server *s, server_slot *slot) {
@@ -17035,7 +17099,7 @@ static int kv_cache_try_load_text(server *s, server_slot *slot,
     if (loaded_ext_flags_out) *loaded_ext_flags_out = 0;
     ds4_kvstore_load_result lr = {0};
     ds4_kvstore_trailer_hooks hooks = kv_cache_tool_map_hooks(s, NULL);
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     /* Disk payloads intentionally carry no image identity. If this slot held
      * vision state, discard it before restoring a text-only checkpoint so the
      * next sync does not reject the fresh payload as a stale image match. */
@@ -17053,7 +17117,7 @@ static int kv_cache_try_load_text(server *s, server_slot *slot,
                                            &hooks, responses_protocol,
                                            allowed_reasons);
     pthread_mutex_unlock(&s->kv_mu);
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     if (loaded > 0) {
         if (loaded_path_out && lr.path) *loaded_path_out = xstrdup(lr.path);
         if (loaded_ext_flags_out) *loaded_ext_flags_out = lr.ext_flags;
@@ -18052,9 +18116,9 @@ static int server_next_prefill_slot_locked(const server *s) {
 static bool server_prefill_enter(server *s, server_slot *slot) {
     if (!s || !slot || slot_job_cancelled(slot)) return false;
     if (!s->batched_mode) {
-        pthread_mutex_lock(&s->inference_mu);
+        server_inference_lock(s);
         if (slot_job_cancelled(slot)) {
-            pthread_mutex_unlock(&s->inference_mu);
+            server_inference_unlock(s);
             return false;
         }
         return true;
@@ -18078,13 +18142,13 @@ static bool server_prefill_enter(server *s, server_slot *slot) {
     s->last_prefill_slot = slot->id;
     s->model_busy = true;
     pthread_mutex_unlock(&s->model_mu);
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     return true;
 }
 
 static void server_prefill_leave(server *s) {
     if (!s) return;
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     if (!s->batched_mode) return;
     pthread_mutex_lock(&s->model_mu);
     s->model_busy = false;
@@ -18124,10 +18188,10 @@ static int server_session_sync(server *s, server_slot *slot,
         return rc;
     }
 
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     int live = ds4_session_pos(slot->session);
     int common = ds4_session_common_prefix(slot->session, prompt);
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     int done = common == live && prompt->len >= live ? live : 0;
     bool called = false;
 
@@ -18280,10 +18344,10 @@ static int server_session_sync_multimodal(server *s, server_slot *slot,
     /* Start at the exact live frontier when both tokens and image identities
      * match. Starting at zero made the first scheduling slice truncate a
      * perfectly reusable long checkpoint, forcing a complete refill. */
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     int done = server_multimodal_resume_pos(slot->session, prompt,
                                             images, image_count);
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     bool called = false;
     while (!g_stop_requested && !slot_job_cancelled(slot) &&
            (!called || done < prompt->len)) {
@@ -18938,7 +19002,7 @@ static int constrained_speculative_sample_target(
 static int server_generation_rewind(server *s, server_slot *slot,
                                      const request *r, int pos,
                                      char *err, size_t errlen) {
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     /* Qwen35 rewind invalidates and clears the timeline. Save the retained
      * prefix first so rebuilding cannot accidentally become an empty no-op. */
     ds4_tokens prefix = {0};
@@ -18946,7 +19010,7 @@ static int server_generation_rewind(server *s, server_slot *slot,
     ds4_session_rewind(slot->session, pos);
     bool rebuild = !ds4_session_checkpoint_valid(slot->session) ||
         ds4_session_common_prefix(slot->session, &prefix) != prefix.len;
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     int rc = rebuild ? server_session_sync_multimodal(s, slot, &prefix,
         r->images, r->image_count, err, errlen) : 0;
     ds4_tokens_free(&prefix);
@@ -19511,11 +19575,11 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
     }
 
     char err[160] = {0};
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     ds4_session_rewrite_result rr =
         ds4_session_rewrite_from_common(slot->session, &canonical, common,
                                         err, sizeof(err));
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     if (rr == DS4_SESSION_REWRITE_OK) {
         canonicalized = true;
         server_log(DS4_LOG_KVCACHE,
@@ -19547,9 +19611,9 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
                                              &effective, &path, NULL, false);
         }
         if (loaded == 0) {
-            pthread_mutex_lock(&s->inference_mu);
+            server_inference_lock(s);
             ds4_session_invalidate(slot->session);
-            pthread_mutex_unlock(&s->inference_mu);
+            server_inference_unlock(s);
         }
 
         char sync_err[160] = {0};
@@ -19710,9 +19774,9 @@ static int server_eval_tokens(server *s, server_slot *slot, int token,
                                                            "client disconnected");
             return DS4_SESSION_SYNC_INTERRUPTED;
         }
-        pthread_mutex_lock(&s->inference_mu);
+        server_inference_lock(s);
         int rc = ds4_session_eval(slot->session, token, err, errlen);
-        pthread_mutex_unlock(&s->inference_mu);
+        server_inference_unlock(s);
         if (rc == 0) { accepted[0] = token; *n_accepted = 1; }
         return rc;
     }
@@ -19852,7 +19916,12 @@ static void *decode_worker_main(void *arg) {
 
         char batch_err[160] = {0};
         const double batch_t0 = log_batches ? now_sec() : 0.0;
-        pthread_mutex_lock(&s->inference_mu);
+        server_inference_lock(s);
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+        ds4_gpu_qwen4_tier_stats batch_tiers_before = {0};
+        const bool batch_tiers = ds4_env_flag_enabled("DS4_CUDA_QWEN4_CACHE_STATS", 0) &&
+            ds4_gpu_qwen4_tier_stats_get(&batch_tiers_before);
+#endif
         int rc = plain_count ? ds4_sessions_eval_batch(items, plain_count,
                                          batch_err, sizeof(batch_err)) : 0;
         for (int i = 0; i < plain_count; i++) {
@@ -19864,7 +19933,16 @@ static void *decode_worker_main(void *arg) {
                     accepted + plain_count, n_accepted + plain_count, batch_err, sizeof(batch_err));
         if (rc != 0)
             for (int i = 0; i < count; i++) ds4_session_invalidate(items[i].session);
-        pthread_mutex_unlock(&s->inference_mu);
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+        if (batch_tiers) {
+            ds4_gpu_qwen4_tier_stats batch_tiers_after = {0};
+            if (ds4_gpu_qwen4_tier_stats_get(&batch_tiers_after))
+                for (int i = 0; i < count; ++i) if (members[i]->running)
+                    server_qwen_tiers_add(&members[i]->running->qwen_tiers,
+                        &batch_tiers_before, &batch_tiers_after, count > 1);
+        }
+#endif
+        server_inference_unlock(s);
         if (log_batches) {
             server_log(DS4_LOG_DEFAULT,
                        "ds4-server: decode batch count=%d elapsed=%.3f ms status=%s",
@@ -19969,9 +20047,9 @@ static bool agent_context_checkpoint_save(server *s, server_slot *slot,
     }
 
     const double t0 = now_sec();
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     int rc = ds4_session_save_payload(slot->session, fp, err, errlen);
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     if (rc == 0 && fflush(fp) != 0) {
         snprintf(err, errlen, "failed to flush agent context checkpoint: %s",
                  strerror(errno));
@@ -20048,10 +20126,10 @@ static bool agent_context_checkpoint_restore(
         return false;
     }
     const double t0 = now_sec();
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     int rc = ds4_session_load_payload(slot->session, fp,
                                       cp->checkpoint_bytes, err, errlen);
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     if (fclose(fp) != 0 && rc == 0) {
         snprintf(err, errlen, "failed to close agent context checkpoint: %s",
                  strerror(errno));
@@ -20169,13 +20247,13 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
     }
     ds4_tokens_free(&incoming_system);
     const bool multimodal = j->req.image_count != 0;
-    pthread_mutex_lock(&s->inference_mu);
+    server_inference_lock(s);
     const int old_pos = ds4_session_pos(slot->session);
     const int common = ds4_session_common_prefix(slot->session, &j->req.prompt);
     const bool live_vision_match =
         ds4_session_vision_prefix_matches(slot->session,
                                          j->req.images, j->req.image_count);
-    pthread_mutex_unlock(&s->inference_mu);
+    server_inference_unlock(s);
     trace_cache_diag cache_diag = {0};
     trace_cache_capture(&cache_diag, ds4_session_tokens(slot->session),
                         &j->req.prompt, old_pos, common);
@@ -20315,7 +20393,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         prompt_for_sync = &effective_prompt;
         break;
     case REUSE_MEMORY_REWIND: {
-        pthread_mutex_lock(&s->inference_mu);
+        server_inference_lock(s);
         ds4_session_rewind(slot->session, reuse.reuse_tokens);
         /* Rewinding mutates the session, so re-validate before trusting the
          * frontier: the common prefix must land exactly on the rewind target
@@ -20329,7 +20407,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
              ds4_session_vision_state_matches(slot->session,
                                               j->req.images,
                                               j->req.image_count));
-        pthread_mutex_unlock(&s->inference_mu);
+        server_inference_unlock(s);
         if (rewind_valid) {
             live_materialized = true;
             cache_source = "memory-rewind";
@@ -21504,9 +21582,9 @@ decode_again:
                 client_stop = true;
                 text.len = stop_pos;
                 text.ptr[text.len] = '\0';
-                pthread_mutex_lock(&s->inference_mu);
+                server_inference_lock(s);
                 ds4_session_invalidate(slot->session);
-                pthread_mutex_unlock(&s->inference_mu);
+                server_inference_unlock(s);
                 text_stop = true;
                 stop_decode = true;
                 break;
@@ -22244,6 +22322,12 @@ decode_again:
  * return in the large protocol/generation path. The callback is cleared before
  * the client thread can destroy its stack-owned job. */
 static void generate_job(server *s, server_slot *slot, job *j) {
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    ds4_gpu_qwen4_tier_stats tiers_before = {0};
+    const bool tiers = ds4_env_flag_enabled("DS4_CUDA_QWEN4_CACHE_STATS", 0);
+    j->qwen_tiers = (server_qwen_request_tiers){0};
+    server_qwen_active_request = tiers ? &j->qwen_tiers : NULL;
+#endif
     pthread_mutex_lock(&s->model_mu);
     slot->running = j;
     pthread_mutex_unlock(&s->model_mu);
@@ -22251,6 +22335,64 @@ static void generate_job(server *s, server_slot *slot, job *j) {
     ds4_session_set_cancel(slot->session, job_cancelled, j);
     if (!job_cancelled(j)) generate_job_inner(s, slot, j);
     ds4_session_set_cancel(slot->session, NULL, NULL);
+
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    server_qwen_active_request = NULL;
+    if (tiers) {
+        const ds4_gpu_qwen4_tier_stats after = j->qwen_tiers.exclusive;
+        const ds4_gpu_qwen4_tier_stats memory = j->qwen_tiers.memory;
+        const bool have = !j->qwen_tiers.invalid;
+        if (have && after.cpu_pairs >= tiers_before.cpu_pairs &&
+            after.gpu_pairs >= tiers_before.gpu_pairs && after.pcie_pairs >= tiers_before.pcie_pairs &&
+            after.ssd_bytes >= tiers_before.ssd_bytes && after.expert_h2d_bytes >= tiers_before.expert_h2d_bytes &&
+            after.kv_h2d_bytes >= tiers_before.kv_h2d_bytes && after.kv_hits >= tiers_before.kv_hits &&
+            after.kv_misses >= tiers_before.kv_misses && after.cpu_wait_seconds >= tiers_before.cpu_wait_seconds &&
+            after.cpu_h2d_bytes >= tiers_before.cpu_h2d_bytes && after.activation_d2h_bytes >= tiers_before.activation_d2h_bytes)
+            server_log(DS4_LOG_GENERATION,
+            "ds4-server: Qwen request tiers CPU_pairs=%llu GPU_hit_pairs=%llu PCIe_pairs=%llu "
+            "SSD_bytes=%llu SSD_projection_reads=%llu expert_H2D_bytes=%llu KV_H2D_bytes=%llu KV_hits=%llu KV_misses=%llu CPU_wait_ms=%.3f "
+            "expert_RAM_bytes=%llu KV_RAM_bytes=%llu staging_bytes=%llu expert_VRAM_bytes=%llu "
+            "streamed_KV_VRAM_bytes=%llu KV_workspace_bytes=%llu hybrid_workspace_bytes=%llu hybrid_host_bytes=%llu CPU_H2D_bytes=%llu activation_D2H_bytes=%llu "
+            "CPU_stage_jobs=%llu staging_wait_ms=%.3f victim_select_ms=%.3f",
+            (unsigned long long)(after.cpu_pairs - tiers_before.cpu_pairs),
+            (unsigned long long)(after.gpu_pairs - tiers_before.gpu_pairs),
+            (unsigned long long)(after.pcie_pairs - tiers_before.pcie_pairs),
+            (unsigned long long)(after.ssd_bytes - tiers_before.ssd_bytes),
+            (unsigned long long)(after.ssd_reads - tiers_before.ssd_reads),
+            (unsigned long long)(after.expert_h2d_bytes - tiers_before.expert_h2d_bytes),
+            (unsigned long long)(after.kv_h2d_bytes - tiers_before.kv_h2d_bytes),
+            (unsigned long long)(after.kv_hits - tiers_before.kv_hits),
+            (unsigned long long)(after.kv_misses - tiers_before.kv_misses),
+            (after.cpu_wait_seconds - tiers_before.cpu_wait_seconds) * 1000.0,
+            (unsigned long long)memory.host_weight_bytes, (unsigned long long)memory.kv_host_bytes,
+            (unsigned long long)memory.staging_bytes, (unsigned long long)memory.expert_vram_bytes,
+            (unsigned long long)memory.kv_resident_bytes, (unsigned long long)memory.kv_workspace_bytes,
+            (unsigned long long)memory.hybrid_workspace_bytes,
+            (unsigned long long)memory.hybrid_host_bytes,
+            (unsigned long long)(after.cpu_h2d_bytes - tiers_before.cpu_h2d_bytes),
+            (unsigned long long)(after.activation_d2h_bytes - tiers_before.activation_d2h_bytes),
+            (unsigned long long)after.cpu_stage_jobs, after.staging_wait_seconds * 1000.0,
+            after.victim_select_seconds * 1000.0);
+        if (j->qwen_tiers.shared_batches) {
+            const ds4_gpu_qwen4_tier_stats shared = j->qwen_tiers.shared;
+            server_log(DS4_LOG_GENERATION,
+                "ds4-server: Qwen request shared decode batches=%llu CPU_pairs=%llu GPU_hit_pairs=%llu PCIe_pairs=%llu "
+                "SSD_bytes=%llu SSD_projection_reads=%llu expert_H2D_bytes=%llu KV_H2D_bytes=%llu KV_hits=%llu KV_misses=%llu CPU_wait_ms=%.3f "
+                "CPU_H2D_bytes=%llu activation_D2H_bytes=%llu CPU_stage_jobs=%llu staging_wait_ms=%.3f victim_select_ms=%.3f "
+                "attribution=shared-do-not-sum-across-requests valid=%u",
+                (unsigned long long)j->qwen_tiers.shared_batches,
+                (unsigned long long)shared.cpu_pairs, (unsigned long long)shared.gpu_pairs,
+                (unsigned long long)shared.pcie_pairs, (unsigned long long)shared.ssd_bytes,
+                (unsigned long long)shared.ssd_reads,
+                (unsigned long long)shared.expert_h2d_bytes, (unsigned long long)shared.kv_h2d_bytes,
+                (unsigned long long)shared.kv_hits, (unsigned long long)shared.kv_misses,
+                shared.cpu_wait_seconds * 1000.0, (unsigned long long)shared.cpu_h2d_bytes,
+                (unsigned long long)shared.activation_d2h_bytes, (unsigned long long)shared.cpu_stage_jobs,
+                shared.staging_wait_seconds * 1000.0, shared.victim_select_seconds * 1000.0, have);
+        }
+        if (!have) server_log(DS4_LOG_GENERATION, "ds4-server: Qwen request tier counters incomplete after engine counter reset");
+    }
+#endif
 
     pthread_mutex_lock(&s->model_mu);
     if (slot->running == j) slot->running = NULL;
@@ -23137,6 +23279,7 @@ static server_config parse_options(int argc, char **argv) {
             .backend = default_server_backend(),
             .mtp_draft_tokens = 1,
             .mtp_margin = 3.0f,
+            .qwen4_mtp_auto = ds4_env_flag_enabled("DS4_QWEN4_MTP_AUTO", 0),
         },
         .host = "127.0.0.1",
         .port = 8000,
@@ -23195,6 +23338,13 @@ static server_config parse_options(int argc, char **argv) {
             c.engine.model_path = need_arg(&i, argc, argv, arg);
         } else if (!strcmp(arg, "--vision")) {
             c.engine.vision_path = need_arg(&i, argc, argv, arg);
+        } else if (!strcmp(arg, "--no-mtp")) {
+            c.engine.qwen4_mtp_auto = false;
+            c.engine.mtp_auto = false;
+            c.engine.mtp_path = NULL;
+            c.engine.glm_mtp = false;
+            c.engine.glm_mtp_timing = false;
+            c.engine.dspark = false;
         } else if (!strcmp(arg, "--mtp")) {
             if (i + 1 < argc && argv[i + 1][0] != '-') {
                 c.engine.mtp_auto = false;
@@ -33423,7 +33573,40 @@ static void test_deepseek41_live_result_order(void) {
     pthread_mutex_destroy(&s.tool_mu);
 }
 
+static void test_qwen_request_tier_attribution(void) {
+    server_qwen_request_tiers a = {0}, b = {0};
+    ds4_gpu_qwen4_tier_stats start = {.expert_h2d_bytes=100, .cpu_pairs=10, .cpu_wait_seconds=1.0};
+    ds4_gpu_qwen4_tier_stats first = start;
+    first.expert_h2d_bytes += 4; first.cpu_pairs += 2; first.cpu_wait_seconds += 0.25;
+    first.kv_host_bytes = 4096;
+    first.cpu_stage_jobs += 3; first.staging_wait_seconds += 0.125; first.victim_select_seconds += 0.0625;
+    server_qwen_tiers_add(&a, &start, &first, false);
+    ds4_gpu_qwen4_tier_stats second = first;
+    second.expert_h2d_bytes += 5; second.pcie_pairs += 3;
+    server_qwen_tiers_add(&b, &first, &second, false);
+    ds4_gpu_qwen4_tier_stats third = second;
+    third.expert_h2d_bytes += 7; third.cpu_wait_seconds += 0.5;
+    server_qwen_tiers_add(&a, &second, &third, false);
+    TEST_ASSERT(a.exclusive.expert_h2d_bytes == 11 && b.exclusive.expert_h2d_bytes == 5);
+    TEST_ASSERT(a.exclusive.cpu_pairs == 2 && a.exclusive.pcie_pairs == 0 && b.exclusive.pcie_pairs == 3);
+    TEST_ASSERT(a.exclusive.cpu_wait_seconds == 0.75 && b.exclusive.cpu_wait_seconds == 0);
+    TEST_ASSERT(a.exclusive.cpu_stage_jobs == 3 && b.exclusive.cpu_stage_jobs == 0);
+    TEST_ASSERT(a.exclusive.staging_wait_seconds == 0.125 && b.exclusive.staging_wait_seconds == 0);
+    TEST_ASSERT(a.exclusive.victim_select_seconds == 0.0625 && b.exclusive.victim_select_seconds == 0);
+    TEST_ASSERT(a.exclusive_spans == 2 && b.exclusive_spans == 1 && a.memory.kv_host_bytes == 4096);
+    ds4_gpu_qwen4_tier_stats batch = third;
+    batch.expert_h2d_bytes += 13; batch.kv_hits += 8;
+    server_qwen_tiers_add(&a, &third, &batch, true);
+    server_qwen_tiers_add(&b, &third, &batch, true);
+    TEST_ASSERT(a.shared.expert_h2d_bytes == 13 && b.shared.expert_h2d_bytes == 13);
+    TEST_ASSERT(a.shared.kv_hits == 8 && a.shared_batches == 1 && b.shared_batches == 1);
+    TEST_ASSERT(a.exclusive.expert_h2d_bytes == 11 && b.exclusive.expert_h2d_bytes == 5);
+    server_qwen_tiers_add(&a, &batch, &start, false);
+    TEST_ASSERT(a.invalid && a.exclusive_spans == 2 && a.exclusive.expert_h2d_bytes == 11);
+}
+
 static void ds4_server_unit_tests_run(void) {
+    test_qwen_request_tier_attribution();
     test_agentic_parser_and_registry_validation();
     test_agentic_name_filter_rejects_forbidden_capability();
     test_agentic_dsml_marker_guard();

@@ -11,7 +11,7 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-GROUPS = ("architecture", "agentic", "performance", "roadmaps", "hardware", "upstream")
+GROUPS = ("architecture", "agentic", "performance", "roadmaps", "hardware", "upstream", "experiments")
 
 
 class DocsWikiTests(unittest.TestCase):
@@ -52,7 +52,7 @@ class DocsWikiTests(unittest.TestCase):
         expected = {
             path.relative_to(ROOT).as_posix()
             for group in GROUPS
-            for path in (DOCS / group).glob("*.md")
+            for path in ((DOCS / group).rglob("*.md") if group == "experiments" else (DOCS / group).glob("*.md"))
             if path.name not in {"_INDEX.md", "INDEX.md"}
         }
         self.assertEqual(indexed, expected)

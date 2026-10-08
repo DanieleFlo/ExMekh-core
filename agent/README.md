@@ -84,6 +84,18 @@ set `UV_BIN=/path/to/uv` to choose another executable.
 
 ## Starting the Frontend
 
+For Qwen Flash CUDA, start `./agent/start-ds4-server-flash.sh` from the repository
+root. Its standard profile enables the qualified expert ring, explicit KV
+streaming with 32768 resident cells, CUDA decode graphs/ranking and prefill
+chunk 2048. The default context capacity is 64K; set `DS4_CTX` for an explicit
+capacity. Native Qwen MTP remains enabled.
+Dense projection columns retain the original 256-row arithmetic even for
+larger prefill chunks. Set `DS4_PREFILL_CHUNK` or the existing cache variables
+to override a setting; `DS4_FLASH_PROFILE=legacy` reproduces the previous
+256-row launch for comparisons. The Qwen27 launcher keeps its own profile.
+The [local qualification report](../docs/performance/qwen-flash-agent-launcher-20261008.md)
+records numerical, state, vision and real-agent A/B results.
+
 From the repository root in WSL:
 
 ```sh
@@ -298,7 +310,7 @@ From `agent/`, use a dedicated server launcher for each model:
 
 ```sh
 ./start-ds4-server.sh        # Qwen27B: MTP, context 28000
-./start-ds4-server-flash.sh  # Flash Next: MTP, context 131072, prefill chunk 256
+./start-ds4-server-flash.sh  # Flash Next: MTP, context 65536, prefill chunk 2048
 ```
 
 Start the frontend with `./run.sh` in another terminal. Each launcher selects

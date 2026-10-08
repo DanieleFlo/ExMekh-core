@@ -1,0 +1,33 @@
+{
+  "baseline_head": "1239542282ebcc724a94f754c181f530113ea993",
+  "baseline_sources": {
+    "ds4.c": "77383fdc1b842e61571b614956632b5743fa0057d3a75c97a3f586681e404301",
+    "ds4_cuda.cu": "61c5ec71d9b14b1de55bb5aaebade0b82a3be23c189dbec63e0487a9156d2a49",
+    "ds4_qwen4_cuda.cuh": "2b8f8a36182f6dc373fc6e591ab6ed378d40eeb8c7fed3cd407bc4090ab2cdfd",
+    "ds4_qwen4_expert_cache.h": "7acbb2d256fd6bc6e130503d8db8d56e7540e882a91f041ac663a5352732faf7",
+    "Makefile": "e41c7a52c29338672b1ea4baa378b3ccd24bd9e57facb59f24383af6b78f219a"
+  },
+  "baseline_binaries": {
+    "performance-results/flash-strata-20261006/baseline/qwen_numerics_probe": "39afe6649e0cd14257be8e9906e56047864ecb99a149891aea3fa5f1bb9c26eb",
+    "performance-results/flash-strata-20261006/baseline/ds4-bench": "17a3b2d6e22a4aa449dbb1dd78a3e3ddd394a642d00cd5e4abd3db559e518849",
+    "performance-results/flash-strata-20261006/baseline/ds4-server": "7039c8bd28ab8f04d0d32cfeb5c9fda125119b727ace3dd86b22cdad7f4e5e4a",
+    "performance-results/flash-strata-20261006/baseline/ds4-eval": "6a7933fba1c9b26f48ec5665c22fbe9a0d90eeb1da26031854e1ed7621637bb4",
+    "performance-results/flash-strata-20261006/baseline/test_qwen4_cuda": "dfc2a7ec74e456203d12fa1681a623002d2ef532bb5249e8d9a72ade3023fab5",
+    "performance-results/flash-strata-20261006/baseline/ds4": "35a7c57b51f725bfddce7943759b285ada0aa505eba1c55dd13dbe0b8d1199c2"
+  },
+  "model": {
+    "path": "/home/daniele/ds4/gguf/Qwen3.8-Flash-Next-Q2.gguf",
+    "bytes": 147207127040,
+    "mtime_ns": 1790872117015055196,
+    "sha256": "b1b93fa69aca5f187b0fb813aca8f3ec1beb5cf8cf0bd38cf041b93e0b6ccac9"
+  },
+  "gpu": "name, uuid, driver_version, memory.total [MiB], pcie.link.gen.current, pcie.link.width.current\nNVIDIA GeForce RTX 3090, GPU-6c05ae6f-42f1-6ff2-d201-f6db6ae0cde5, 610.88, 24576 MiB, 4, 2\n",
+  "strata_commit": "1735d6471df29b42c26170efaac1f1446a58640f",
+  "strata_license": "MIT; architectural reference, no copied implementation",
+  "strata_files": [
+    "https://github.com/Niko1221/Strata/blob/1735d6471df29b42c26170efaac1f1446a58640f/src/core/session.cpp",
+    "https://github.com/Niko1221/Strata/blob/1735d6471df29b42c26170efaac1f1446a58640f/src/core/expert_cache.cpp",
+    "https://github.com/Niko1221/Strata/blob/1735d6471df29b42c26170efaac1f1446a58640f/src/kernels/cuda/kv_stream.cu",
+    "https://github.com/Niko1221/Strata/blob/1735d6471df29b42c26170efaac1f1446a58640f/src/kernels/cpu/pool.cpp"
+  ]
+}

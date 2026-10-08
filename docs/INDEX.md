@@ -19,6 +19,7 @@ Accesso alternativo compatto: [indice degli indici](indexes/INDEX.md).
 - [roadmaps](roadmaps/_INDEX.md) — Piani operativi e TODO per decoding, server e kernel engineering.
 - [hardware](hardware/_INDEX.md) — Inventario RTX 3090, caratteristiche Ampere e numerica CUDA.
 - [upstream](upstream/_INDEX.md) — Guide DS4 originali su modelli, vision, server e backend importati.
+- [experiments](experiments/_INDEX.md) — Esperimenti ritirati: sorgenti inattivi, risultati e ragioni delle scelte.
 - [research](research/INDEX.md) — Paper, piattaforme, fork, guide e fonti CUDA con catalogo e lock di provenienza.
 
 ## Regole di costruzione della wiki

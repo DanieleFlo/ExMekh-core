@@ -1,0 +1,85 @@
+{
+  "command": [
+    "/home/daniele/ds4/ds4-bench",
+    "--cuda",
+    "-m",
+    "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--prompt-file",
+    "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+    "--ctx-start",
+    "256",
+    "--ctx-max",
+    "512",
+    "--ctx-alloc",
+    "2048",
+    "--step-incr",
+    "256",
+    "--gen-tokens",
+    "16",
+    "--teacher-forced-decode",
+    "--prefill-chunk",
+    "256",
+    "--repetitions",
+    "3",
+    "--csv",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-inherited-ab-00-candidate/speed.csv",
+    "--dump-frontier-logits-dir",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-inherited-ab-00-candidate/logits"
+  ],
+  "environment": {
+    "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+    "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "20",
+    "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+    "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+    "DS4_CUDA_QWEN4_PCIE_FRAC": "0.5"
+  },
+  "exit_code": 0,
+  "wall_seconds": 57.07182047599963,
+  "binary_sha256": "6252f31da9075f0ee3ed5f061bda3503176631341985d9098d85e4e73586563d",
+  "model": {
+    "path": "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024
+  },
+  "samples": 1,
+  "warmup": 2,
+  "frontiers": {
+    "256": {
+      "prefill": {
+        "samples": [
+          33.21
+        ],
+        "median": 33.21,
+        "mean": 33.21,
+        "cv": null
+      },
+      "decode": {
+        "samples": [
+          30.81
+        ],
+        "median": 30.81,
+        "mean": 30.81,
+        "cv": null
+      },
+      "first_prefill_tps": 33.53
+    },
+    "512": {
+      "prefill": {
+        "samples": [
+          388.46
+        ],
+        "median": 388.46,
+        "mean": 388.46,
+        "cv": null
+      },
+      "decode": {
+        "samples": [
+          29.7
+        ],
+        "median": 29.7,
+        "mean": 29.7,
+        "cv": null
+      },
+      "first_prefill_tps": 369.63
+    }
+  }
+}

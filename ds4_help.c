@@ -174,7 +174,8 @@ static void print_model_runtime(FILE *fp, const help_colors *c,
     opt(fp, c, "--prefill-chunk N", "Graph prefill chunk size. Default: CUDA TP 2048; PRO long prompts 8192; others 4096.");
     if (full) {
         if (tool == DS4_HELP_DS4 || tool == DS4_HELP_SERVER) {
-            opt(fp, c, "--mtp [FILE]", "Enable MTP/DSpark. Without FILE, select the audited 27B sidecar or the selected model embedded MTP.");
+            opt(fp, c, "--mtp [FILE]", "Enable MTP/DSpark. Without FILE, select the audited 27B sidecar or the selected model embedded MTP (NextN for Flash). Experimental Flash CUDA automatic activation: DS4_QWEN4_MTP_AUTO=1.");
+            opt(fp, c, "--no-mtp", "Disable speculative decode, including experimental Flash automatic activation, for target-only comparisons.");
             opt(fp, c, "--mtp-model FILE", "Explicit support GGUF (compatibility alias for --mtp FILE).");
         } else {
             opt(fp, c, "--mtp-model FILE", "External MTP or DSpark support GGUF.");
@@ -191,6 +192,8 @@ static void print_model_runtime(FILE *fp, const help_colors *c,
             opt(fp, c, "--mtp-exact-sampling", "Preserve the ordinary temperature distribution instead of accepting target-matching greedy drafts directly.");
             opt(fp, c, "--dspark-strict", "Load DSpark support but keep target-only decode.");
         } else if (tool == DS4_HELP_BENCH) {
+            opt(fp, c, "--mtp [FILE]", "Benchmark greedy MTP. Without FILE, select the audited Qwen sidecar or embedded MTP.");
+            opt(fp, c, "--mtp-draft N", "Maximum MTP proposals per target verification; the selected backend applies its supported limit.");
             opt(fp, c, "--dspark", "Benchmark greedy DSpark using the support GGUF passed with --mtp-model.");
             opt(fp, c, "--dspark-confidence F", "DSpark confidence pruning threshold 0..1.");
         }

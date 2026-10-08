@@ -1,0 +1,53 @@
+{
+  "status": "INTERRUPTED_MEMORY_PRESSURE",
+  "command": [
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/candidate-v60/ds4-bench",
+    "--cuda",
+    "-m",
+    "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--prompt-file",
+    "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+    "--ctx-start",
+    "65503",
+    "--ctx-max",
+    "65503",
+    "--ctx-alloc",
+    "65536",
+    "--step-incr",
+    "1",
+    "--gen-tokens",
+    "32",
+    "--prefill-chunk",
+    "1024",
+    "--repetitions",
+    "1",
+    "--csv",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/weights-v60-64k-resume1/sample-0-candidate/speed.csv",
+    "--dump-frontier-logits-dir",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/weights-v60-64k-resume1/sample-0-candidate/logits",
+    "--mtp",
+    "--mtp-draft",
+    "5"
+  ],
+  "environment": {
+    "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+    "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "20",
+    "DS4_QWEN_EXTENDED_DRAFT": "off",
+    "DS4_BENCH_DECODE_TIMES": "1",
+    "DS4_BENCH_PROGRESS": "1",
+    "DS4_QWEN_PREFILL_PHASES": "1",
+    "DS4_BENCH_DECODE_WARMUP": "16",
+    "DS4_CUDA_QWEN_WEIGHT_STREAMING": "1",
+    "DS4_CUDA_QWEN_WEIGHT_RESIDENT_MB": "11264",
+    "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+    "DS4_CUDA_QWEN_KV_RESIDENT": "64"
+  },
+  "binary_sha256": "4ec3a8ee36eddbfc24d249719cd13f8099385bb9d37af892ec1a0f03bbd3ae14",
+  "started_unix": 1791448658.2473505,
+  "timeout_seconds": 3600,
+  "reason": "Stopped by the agent after user reported slowdown; observed 24266 MiB used and 61 MiB free. Explicit resident weight budget bypassed automatic workspace reserve.",
+  "observed_gpu_memory_mib": {
+    "used": 24266,
+    "free": 61
+  }
+}

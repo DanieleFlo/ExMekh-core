@@ -1,0 +1,16 @@
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight plan resident=0.000 GiB host=0.000 GiB ring=0.000 GiB offloaded_layers=5/6; KV and recurrent state stay in VRAM
+ds4: dense weight session exceeds VRAM budget: free=22.746 GiB graph=0.000 GiB scratch_growth=17179869184.000 GiB minimum_free=1.000 GiB
+ds4: dense weight session exceeds VRAM budget: free=22.746 GiB graph=17179869184.000 GiB scratch_growth=0.000 GiB minimum_free=1.000 GiB
+ds4: CUDA memory report weight streaming before graph: free 23292.00 MiB total 24575.50 MiB scratch 0.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+ds4: CUDA memory report weight streaming after graph: free 23292.00 MiB total 24575.50 MiB scratch 0.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+ds4: dense weight access outside its layer: wanted=0 live=4294967295
+ds4: dense weight streaming forwards=12 H2D=0.000 GiB transfers=60 pending_waits=6 submit_wait=0.802ms resident=0.000 GiB host=0.000 GiB ring=0.000 GiB pinned=0.002 GiB
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight plan resident=0.000 GiB host=0.000 GiB ring=0.000 GiB offloaded_layers=0/6; KV and recurrent state stay in VRAM
+ds4: dense weight session exceeds VRAM budget: free=22.746 GiB graph=0.000 GiB scratch_growth=17179869184.000 GiB minimum_free=1.000 GiB
+ds4: dense weight session exceeds VRAM budget: free=22.746 GiB graph=17179869184.000 GiB scratch_growth=0.000 GiB minimum_free=1.000 GiB
+ds4: CUDA memory report weight streaming before graph: free 23292.00 MiB total 24575.50 MiB scratch 0.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+ds4: CUDA memory report weight streaming after graph: free 23292.00 MiB total 24575.50 MiB scratch 0.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+ds4: dense weight streaming forwards=12 H2D=0.000 GiB transfers=0 pending_waits=0 submit_wait=0.000ms resident=0.000 GiB host=0.000 GiB ring=0.000 GiB pinned=0.002 GiB
+dense weight streaming ordered oracle: PASS

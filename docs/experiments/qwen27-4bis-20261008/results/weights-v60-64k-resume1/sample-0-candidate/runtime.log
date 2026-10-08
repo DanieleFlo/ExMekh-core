@@ -1,0 +1,49 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight plan resident=10.986 GiB host=3.307 GiB ring=0.469 GiB offloaded_layers=17/64; KV and recurrent state stay in VRAM
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.539s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 8.50 GiB (raw 8.50 + compressed 0.00) + buffers 1.42 GiB + resident model 12.72 GiB = 22.64 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=65536 prefill_cap=1024 raw_kv_rows=65536 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 8708.85 MiB (ctx=65536, backend=cuda, prefill_chunk=1024, raw_kv_rows=65536, compressed_kv_rows=0)
+ds4-bench: context buffers 8708.85 MiB (ctx=65536, backend=cuda, prefill_chunk=1024, raw_kv_rows=65536, compressed_kv_rows=0)
+ds4-bench: speculative decoding enabled with draft width 5; frontier restoration uses session snapshots
+QWEN_PREFILL_PHASE start=0 rows=1024 target_ms=17459.036 draft_prepare_ms=1375.122
+ds4-bench: prefill progress current=1024 total=65503 elapsed=18.846s
+QWEN_PREFILL_PHASE start=1024 rows=1024 target_ms=13983.521 draft_prepare_ms=178.161
+ds4-bench: prefill progress current=2048 total=65503 elapsed=33.008s
+QWEN_PREFILL_PHASE start=2048 rows=1024 target_ms=14803.994 draft_prepare_ms=236.071
+ds4-bench: prefill progress current=3072 total=65503 elapsed=48.048s
+QWEN_PREFILL_PHASE start=3072 rows=1024 target_ms=15203.472 draft_prepare_ms=402.633
+ds4-bench: prefill progress current=4096 total=65503 elapsed=63.654s
+QWEN_PREFILL_PHASE start=4096 rows=1024 target_ms=16399.262 draft_prepare_ms=615.415
+ds4-bench: prefill progress current=5120 total=65503 elapsed=80.669s
+QWEN_PREFILL_PHASE start=5120 rows=1024 target_ms=14488.617 draft_prepare_ms=423.132
+ds4-bench: prefill progress current=6144 total=65503 elapsed=95.581s
+QWEN_PREFILL_PHASE start=6144 rows=1024 target_ms=16573.062 draft_prepare_ms=164.123
+ds4-bench: prefill progress current=7168 total=65503 elapsed=112.318s
+QWEN_PREFILL_PHASE start=7168 rows=1024 target_ms=18076.315 draft_prepare_ms=434.944
+ds4-bench: prefill progress current=8192 total=65503 elapsed=130.829s
+QWEN_PREFILL_PHASE start=8192 rows=1024 target_ms=16521.630 draft_prepare_ms=459.507
+ds4-bench: prefill progress current=9216 total=65503 elapsed=147.810s
+QWEN_PREFILL_PHASE start=9216 rows=1024 target_ms=13412.484 draft_prepare_ms=1347.877
+ds4-bench: prefill progress current=10240 total=65503 elapsed=162.571s
+QWEN_PREFILL_PHASE start=10240 rows=1024 target_ms=13385.001 draft_prepare_ms=226.013
+ds4-bench: prefill progress current=11264 total=65503 elapsed=176.182s
+QWEN_PREFILL_PHASE start=11264 rows=1024 target_ms=18733.304 draft_prepare_ms=1899.217
+ds4-bench: prefill progress current=12288 total=65503 elapsed=196.814s
+QWEN_PREFILL_PHASE start=12288 rows=1024 target_ms=16445.241 draft_prepare_ms=118.974
+ds4-bench: prefill progress current=13312 total=65503 elapsed=213.379s
+QWEN_PREFILL_PHASE start=13312 rows=1024 target_ms=16153.478 draft_prepare_ms=525.247
+ds4-bench: prefill progress current=14336 total=65503 elapsed=230.057s
+QWEN_PREFILL_PHASE start=14336 rows=1024 target_ms=16542.306 draft_prepare_ms=2778.676
+ds4-bench: prefill progress current=15360 total=65503 elapsed=249.378s
+QWEN_PREFILL_PHASE start=15360 rows=1024 target_ms=17731.190 draft_prepare_ms=119.088
+ds4-bench: prefill progress current=16384 total=65503 elapsed=267.229s
+QWEN_PREFILL_PHASE start=16384 rows=1024 target_ms=17536.518 draft_prepare_ms=640.829
+ds4-bench: prefill progress current=17408 total=65503 elapsed=285.406s
+QWEN_PREFILL_PHASE start=17408 rows=1024 target_ms=18285.543 draft_prepare_ms=1466.952
+ds4-bench: prefill progress current=18432 total=65503 elapsed=305.159s

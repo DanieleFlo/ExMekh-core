@@ -1,0 +1,40 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging, direct I/O)
+ds4: CUDA model copy complete in 5.120s (pipelined, 14.30 GiB tensors)
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA startup model preparation covered 14.15 GiB of tensor spans in 0.000s
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.454s
+ds4: cuda backend initialized for graph diagnostics
+ds4: Qwen verifier host snapshots=0.740 GiB
+ds4: memory: KV 8.50 GiB (raw 8.50 + compressed 0.00) + buffers 0.69 GiB + resident model 15.56 GiB = 24.75 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=65536 prefill_cap=1024 raw_kv_rows=65536 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 8708.85 MiB (ctx=65536, backend=cuda, prefill_chunk=1024, raw_kv_rows=65536, compressed_kv_rows=0)
+ds4: NextN KV placement=auto resident_cells=32768 context=65536 reuse_prefill_stage=1
+ds4-bench: context buffers 8708.85 MiB (ctx=65536, backend=cuda, prefill_chunk=1024, raw_kv_rows=65536, compressed_kv_rows=0)
+ds4-bench: speculative decoding enabled with draft width 5; frontier restoration uses session snapshots
+QWEN_PREFILL_PHASE start=0 rows=1024 target_ms=1691.042 draft_prepare_ms=121.836
+ds4-bench: prefill progress current=1024 total=4096 elapsed=2.242s
+QWEN_PREFILL_PHASE start=1024 rows=1024 target_ms=1387.557 draft_prepare_ms=119.403
+ds4-bench: prefill progress current=2048 total=4096 elapsed=3.750s
+QWEN_PREFILL_PHASE start=2048 rows=1024 target_ms=1419.501 draft_prepare_ms=118.806
+ds4-bench: prefill progress current=3072 total=4096 elapsed=5.288s
+QWEN_PREFILL_PHASE start=3072 rows=1024 target_ms=1478.976 draft_prepare_ms=128.950
+ds4-bench: prefill progress current=4096 total=4096 elapsed=6.896s
+ds4: NextN returned 0.332 GiB prefill scratch before decode
+ds4: NextN decode rollback arena=0.592 GiB rows=4/5 (released before prefill; remaining rows in RAM)
+ds4-bench: decode cycle ctx=4096 completed=1 rows=1 ms=331.089
+ds4-bench: decode cycle ctx=4096 completed=2 rows=1 ms=251.287
+ds4-bench: decode cycle ctx=4096 completed=5 rows=3 ms=247.369
+ds4-bench: decode cycle ctx=4096 completed=6 rows=1 ms=251.154
+ds4-bench: decode cycle ctx=4096 completed=8 rows=2 ms=252.168
+ds4-bench: decode cycle ctx=4096 completed=9 rows=1 ms=249.432
+ds4-bench: decode cycle ctx=4096 completed=10 rows=1 ms=254.191
+ds4-bench: decode cycle ctx=4096 completed=12 rows=2 ms=252.676
+ds4-bench: decode cycle ctx=4096 completed=14 rows=2 ms=132.763
+ds4-bench: decode cycle ctx=4096 completed=15 rows=1 ms=70.113
+ds4-bench: decode cycle ctx=4096 completed=16 rows=1 ms=38.588
+ds4: dense KV capacity frontier=4112 peak_host=8.500 GiB peak_resident=1.078 GiB peak_stage=0.625 GiB growths=68 spills=0 H2D=0.000 GiB D2H=0.538 GiB NextN_stage_reuses=0

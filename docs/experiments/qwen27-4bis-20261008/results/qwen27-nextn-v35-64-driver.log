@@ -1,0 +1,9 @@
+actual context 65536, NextN=0, sample=0
+actual context 65536, NextN=7, sample=0
+Traceback (most recent call last):
+  File "/home/daniele/ds4/tools/qualify_qwen27_speculative.py", line 84, in <module>
+    if __name__ == '__main__': main()
+                               ^^^^^^
+  File "/home/daniele/ds4/tools/qualify_qwen27_speculative.py", line 65, in main
+    raise RuntimeError('decode failed; retained log')
+RuntimeError: decode failed; retained log

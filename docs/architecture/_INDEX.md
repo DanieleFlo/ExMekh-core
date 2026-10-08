@@ -11,6 +11,15 @@ Revisione delle modifiche pendenti sul branch `codex/qwen-flash-3090`, a partire
 - righe 47–82: **Verifiche della revisione** — Le prove HTTP usano il server compilato con la correzione degli schemi nativi.
 - righe 83–98: **Riproduzione dei gate statici** — (cd agent && .venv/bin/ruff check src tests && .venv/bin/python -m pytest)
 
+## [Revisione del codice e delle responsabilità — 8 ottobre 2026](clean-code-review-20261008.md)
+
+Revisione delle modifiche Flash pendenti e dei confini fra engine, backend,
+
+- righe 3–10: **Perimetro** — Revisione delle modifiche Flash pendenti e dei confini fra engine, backend,
+- righe 11–28: **Responsabilità corrette** — Il test del launcher è allineato al default attuale di 64K, senza modificare
+- righe 29–63: **Verifiche** — Risultati e comandi sono conservati in `performance-results/clean-code-20261008/`.
+- righe 64–71: **Limiti** — La revisione applica principi di responsabilità unica, incapsulamento, coerenza
+
 ## [Accettazione merge DS4 e exmekh-lib — 2 ottobre 2026](ds4-merge-acceptance-20261002.md)
 
 **PASS per Qwen3.8-27B sulla RTX 3090.** Sono concluse le prove residue:
@@ -35,6 +44,19 @@ Branch `codex/merge-ds4-upstream-2026-10-01`, creato da
 - righe 174–211: **Matrice di verifica** — Il 27B supera i gate locali di accettazione.
 - righe 212–249: **Tentativo Flash Next** — È usato il Q2 originale, circa 137.10 GiB su disco: circa 41.73 GiB di pesi
 - righe 250–267: **Riproduzione** — make -j4 ds4 ds4-server ds4-bench ds4-eval CUDA_ARCH=sm_86
+
+## [Qwen Flash: esperti ibridi, PCIe e KV paginato](qwen-flash-hybrid-kv-20261006.md)
+
+Richiedono `DS4_CUDA_QWEN4_TIERED_CACHE=1`; il modello deve essere Flash.
+
+- righe 8–80: **Controlli** — Richiedono `DS4_CUDA_QWEN4_TIERED_CACHE=1`; il modello deve essere Flash.
+- righe 81–186: **Piano di placement e lifetime** — La policy `stable` riprende le quote per layer di Strata.
+- righe 187–240: **KV per sessione** — Per il prefill con policy stabile, il workspace identico al layout originale
+- righe 241–305: **Profili e misure** — Si conta ogni scelta una volta per layer/riga, al gate, e si salva un payload
+- righe 306–360: **Provenienza e 4 BIS** — Riferimento architetturale: Strata commit
+- righe 361–382: **Liste compatte del prefill — incremento successivo al ritiro 4 BIS** — `DS4_CUDA_QWEN4_COMPACT_LISTS=1` è una variante sperimentale, disattivata
+- righe 383–404: **Copie anticipate bounded nel prefill** — `DS4_CUDA_QWEN4_PREFILL_AHEAD=1`, con policy `stable` e ring attivo,
+- righe 405–476: **NextN e selezione per fase** — La v68 ha provato NextN embedded di default per Flash CUDA.
 
 ## [Qwen27 vision e checkpoint completi — 1 ottobre 2026](qwen27-vision-checkpoint-20261001.md)
 

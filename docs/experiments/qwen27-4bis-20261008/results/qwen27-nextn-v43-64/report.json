@@ -1,0 +1,658 @@
+{
+  "records": [
+    {
+      "sample": 0,
+      "drafter": "target-only",
+      "proposals": 0,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-0/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-0/logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "e02a2b6c2467e282e2a4eb8d20447f910d10dc3874e95d5ff2c226b2c570c68c",
+      "exit_code": 0,
+      "wall_seconds": 219.2952418040004,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              402.3
+            ],
+            "median": 402.3,
+            "mean": 402.3,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.67
+            ],
+            "median": 0.67,
+            "mean": 0.67,
+            "cv": null
+          },
+          "first_prefill_tps": 402.3
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-0",
+      "actual_cycles": 0,
+      "actual_verifier_cycles": 0,
+      "confidence_bypasses": 0,
+      "cycle_summary": {
+        "measured_calls": 32,
+        "multi_token_calls": 0,
+        "committed_tokens": 32,
+        "decode_ms": 47550.013,
+        "verifier_cycles": 0,
+        "tokens_per_second": 0.6729756309425194
+      }
+    },
+    {
+      "sample": 0,
+      "drafter": "nextn",
+      "proposals": 7,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-7/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-7/logits",
+        "--mtp",
+        "--mtp-model",
+        "/home/daniele/ds4/gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+        "--mtp-draft",
+        "7"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "e02a2b6c2467e282e2a4eb8d20447f910d10dc3874e95d5ff2c226b2c570c68c",
+      "exit_code": 0,
+      "wall_seconds": 209.02225123899916,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              371.13
+            ],
+            "median": 371.13,
+            "mean": 371.13,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              1.38
+            ],
+            "median": 1.38,
+            "mean": 1.38,
+            "cv": null
+          },
+          "first_prefill_tps": 371.13
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-7",
+      "actual_cycles": 8,
+      "actual_verifier_cycles": 8,
+      "confidence_bypasses": 0,
+      "cycle_summary": {
+        "measured_calls": 9,
+        "multi_token_calls": 8,
+        "committed_tokens": 32,
+        "decode_ms": 22430.193,
+        "verifier_cycles": 8,
+        "tokens_per_second": 1.4266484465826932,
+        "proposed_tokens": 50,
+        "accepted_draft_tokens": 23,
+        "acceptance_fraction": 0.46,
+        "mean_tokens_per_verifier_cycle": 3.875,
+        "full_accept_cycles": 0.0,
+        "cost_ms": {
+          "draft_propose_ms": {
+            "total": 4635.173,
+            "mean": 579.396625
+          },
+          "target_verify_ms": {
+            "total": 15852.275,
+            "mean": 1981.534375
+          },
+          "snapshot_ms": {
+            "total": 3.616,
+            "mean": 0.452
+          },
+          "rollback_ms": {
+            "total": 444.128,
+            "mean": 55.516
+          },
+          "replay_ms": {
+            "total": 0.0,
+            "mean": 0.0
+          },
+          "sidecar_catchup_ms": {
+            "total": 6.808,
+            "mean": 0.851
+          },
+          "total_ms": {
+            "total": 20942.857,
+            "mean": 2617.857125
+          }
+        },
+        "cycles": [
+          {
+            "cycle": 1.0,
+            "requested_depth": 7.0,
+            "drafted_tokens": 7.0,
+            "accepted_tokens": 4.0,
+            "rejected_at": 5.0,
+            "committed_tokens": 5.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 648.342,
+            "target_verify_ms": 2159.977,
+            "snapshot_ms": 0.986,
+            "rollback_ms": 55.736,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.969,
+            "commit_ms": 0.017,
+            "total_ms": 2866.127
+          },
+          {
+            "cycle": 2.0,
+            "requested_depth": 7.0,
+            "drafted_tokens": 7.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 651.942,
+            "target_verify_ms": 2017.608,
+            "snapshot_ms": 0.341,
+            "rollback_ms": 55.217,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.978,
+            "commit_ms": 0.0,
+            "total_ms": 2726.175
+          },
+          {
+            "cycle": 3.0,
+            "requested_depth": 7.0,
+            "drafted_tokens": 7.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 647.987,
+            "target_verify_ms": 2038.756,
+            "snapshot_ms": 0.407,
+            "rollback_ms": 54.982,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.733,
+            "commit_ms": 0.0,
+            "total_ms": 2742.952
+          },
+          {
+            "cycle": 4.0,
+            "requested_depth": 7.0,
+            "drafted_tokens": 7.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 648.276,
+            "target_verify_ms": 2014.108,
+            "snapshot_ms": 0.401,
+            "rollback_ms": 55.224,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.948,
+            "commit_ms": 0.0,
+            "total_ms": 2719.041
+          },
+          {
+            "cycle": 5.0,
+            "requested_depth": 7.0,
+            "drafted_tokens": 7.0,
+            "accepted_tokens": 2.0,
+            "rejected_at": 3.0,
+            "committed_tokens": 3.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 648.07,
+            "target_verify_ms": 2019.798,
+            "snapshot_ms": 0.382,
+            "rollback_ms": 55.726,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.559,
+            "commit_ms": 0.0,
+            "total_ms": 2724.643
+          },
+          {
+            "cycle": 6.0,
+            "requested_depth": 7.0,
+            "drafted_tokens": 7.0,
+            "accepted_tokens": 4.0,
+            "rejected_at": 5.0,
+            "committed_tokens": 5.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 647.133,
+            "target_verify_ms": 2013.684,
+            "snapshot_ms": 0.395,
+            "rollback_ms": 55.523,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.936,
+            "commit_ms": 0.0,
+            "total_ms": 2717.755
+          },
+          {
+            "cycle": 7.0,
+            "requested_depth": 6.0,
+            "drafted_tokens": 6.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 558.522,
+            "target_verify_ms": 1942.855,
+            "snapshot_ms": 0.37,
+            "rollback_ms": 56.126,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.88,
+            "commit_ms": 0.0,
+            "total_ms": 2558.955
+          },
+          {
+            "cycle": 8.0,
+            "requested_depth": 2.0,
+            "drafted_tokens": 2.0,
+            "accepted_tokens": 1.0,
+            "rejected_at": 2.0,
+            "committed_tokens": 2.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 184.901,
+            "target_verify_ms": 1645.489,
+            "snapshot_ms": 0.334,
+            "rollback_ms": 55.594,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.805,
+            "commit_ms": 0.0,
+            "total_ms": 1887.209
+          }
+        ]
+      }
+    },
+    {
+      "sample": 0,
+      "drafter": "nextn",
+      "proposals": 15,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-15/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-15/logits",
+        "--mtp",
+        "--mtp-model",
+        "/home/daniele/ds4/gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+        "--mtp-draft",
+        "15"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "e02a2b6c2467e282e2a4eb8d20447f910d10dc3874e95d5ff2c226b2c570c68c",
+      "exit_code": 0,
+      "wall_seconds": 216.93801801000154,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              370.13
+            ],
+            "median": 370.13,
+            "mean": 370.13,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              1.06
+            ],
+            "median": 1.06,
+            "mean": 1.06,
+            "cv": null
+          },
+          "first_prefill_tps": 370.13
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v43-64/sample-0-nextn-15",
+      "actual_cycles": 8,
+      "actual_verifier_cycles": 8,
+      "confidence_bypasses": 0,
+      "cycle_summary": {
+        "measured_calls": 9,
+        "multi_token_calls": 8,
+        "committed_tokens": 32,
+        "decode_ms": 29797.538,
+        "verifier_cycles": 8,
+        "tokens_per_second": 1.0739142274103317,
+        "proposed_tokens": 93,
+        "accepted_draft_tokens": 23,
+        "acceptance_fraction": 0.24731182795698925,
+        "mean_tokens_per_verifier_cycle": 3.875,
+        "full_accept_cycles": 0.0,
+        "cost_ms": {
+          "draft_propose_ms": {
+            "total": 8602.555,
+            "mean": 1075.319375
+          },
+          "target_verify_ms": {
+            "total": 19246.425,
+            "mean": 2405.803125
+          },
+          "snapshot_ms": {
+            "total": 6.538,
+            "mean": 0.81725
+          },
+          "rollback_ms": {
+            "total": 447.941,
+            "mean": 55.992625
+          },
+          "replay_ms": {
+            "total": 0.0,
+            "mean": 0.0
+          },
+          "sidecar_catchup_ms": {
+            "total": 7.789,
+            "mean": 0.973625
+          },
+          "total_ms": {
+            "total": 28312.362,
+            "mean": 3539.04525
+          }
+        },
+        "cycles": [
+          {
+            "cycle": 1.0,
+            "requested_depth": 15.0,
+            "drafted_tokens": 15.0,
+            "accepted_tokens": 4.0,
+            "rejected_at": 5.0,
+            "committed_tokens": 5.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 1385.488,
+            "target_verify_ms": 2915.393,
+            "snapshot_ms": 0.931,
+            "rollback_ms": 55.195,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 1.243,
+            "commit_ms": 0.015,
+            "total_ms": 4358.363
+          },
+          {
+            "cycle": 2.0,
+            "requested_depth": 15.0,
+            "drafted_tokens": 15.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 1385.414,
+            "target_verify_ms": 2625.794,
+            "snapshot_ms": 0.382,
+            "rollback_ms": 56.411,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 1.357,
+            "commit_ms": 0.0,
+            "total_ms": 4069.449
+          },
+          {
+            "cycle": 3.0,
+            "requested_depth": 15.0,
+            "drafted_tokens": 15.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 1385.261,
+            "target_verify_ms": 2627.523,
+            "snapshot_ms": 0.518,
+            "rollback_ms": 56.186,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.838,
+            "commit_ms": 0.0,
+            "total_ms": 4070.42
+          },
+          {
+            "cycle": 4.0,
+            "requested_depth": 15.0,
+            "drafted_tokens": 15.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 1386.074,
+            "target_verify_ms": 2632.386,
+            "snapshot_ms": 0.595,
+            "rollback_ms": 57.266,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.959,
+            "commit_ms": 0.0,
+            "total_ms": 4077.369
+          },
+          {
+            "cycle": 5.0,
+            "requested_depth": 14.0,
+            "drafted_tokens": 14.0,
+            "accepted_tokens": 2.0,
+            "rejected_at": 3.0,
+            "committed_tokens": 3.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 1297.79,
+            "target_verify_ms": 2544.665,
+            "snapshot_ms": 0.427,
+            "rollback_ms": 55.698,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.694,
+            "commit_ms": 0.0,
+            "total_ms": 3899.75
+          },
+          {
+            "cycle": 6.0,
+            "requested_depth": 11.0,
+            "drafted_tokens": 11.0,
+            "accepted_tokens": 4.0,
+            "rejected_at": 5.0,
+            "committed_tokens": 5.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 1019.924,
+            "target_verify_ms": 2324.11,
+            "snapshot_ms": 1.261,
+            "rollback_ms": 56.056,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 1.064,
+            "commit_ms": 0.0,
+            "total_ms": 3402.496
+          },
+          {
+            "cycle": 7.0,
+            "requested_depth": 6.0,
+            "drafted_tokens": 6.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 557.575,
+            "target_verify_ms": 1942.502,
+            "snapshot_ms": 1.25,
+            "rollback_ms": 54.818,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 1.11,
+            "commit_ms": 0.0,
+            "total_ms": 2557.337
+          },
+          {
+            "cycle": 8.0,
+            "requested_depth": 2.0,
+            "drafted_tokens": 2.0,
+            "accepted_tokens": 1.0,
+            "rejected_at": 2.0,
+            "committed_tokens": 2.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 185.029,
+            "target_verify_ms": 1634.052,
+            "snapshot_ms": 1.174,
+            "rollback_ms": 56.311,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.524,
+            "commit_ms": 0.0,
+            "total_ms": 1877.178
+          }
+        ]
+      }
+    }
+  ],
+  "pairs": [
+    {
+      "sample": 0,
+      "drafter": "nextn",
+      "proposals": 7,
+      "same_generated_tokens": true,
+      "actual_final_position": 65568,
+      "quality": [
+        {
+          "file": "frontier_065536.decode.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        },
+        {
+          "file": "frontier_065536.logits.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        }
+      ]
+    },
+    {
+      "sample": 0,
+      "drafter": "nextn",
+      "proposals": 15,
+      "same_generated_tokens": true,
+      "actual_final_position": 65568,
+      "quality": [
+        {
+          "file": "frontier_065536.decode.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        },
+        {
+          "file": "frontier_065536.logits.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        }
+      ]
+    }
+  ],
+  "status": "COMPLETE",
+  "scope": "diagnostic",
+  "all_pass": true
+}

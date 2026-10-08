@@ -1027,7 +1027,8 @@ static inline cublasHandle_t cuda_cublas_for_tier(int logical_tier) {
  * DS4_CUDA_DECODE_GRAPHS=0 (or off/no/false) disables everything. */
 #define CUDA_DECODE_GRAPH_LAYERS   64u
 #define CUDA_DECODE_GRAPH_ISLANDS   3u
-#define CUDA_DECODE_GRAPH_VARIANTS  4u
+/* Two recurrent banks for each of the 1/2/3-row Flash verifier shapes. */
+#define CUDA_DECODE_GRAPH_VARIANTS  8u
 
 /* Mirrors the public `struct ds4_decode_graph_key` decl in ds4_gpu.h
  * byte-for-byte (ds4_cuda.cu does not include that header; it carries
@@ -1037,14 +1038,21 @@ struct ds4_decode_graph_key {
     uint32_t il;
     uint32_t island;
     uint32_t variant;
-    uint32_t _pad;
+    uint32_t flags;     /* bit 0: graph launch on legacy default stream */
     void    *cur_hc;
     void    *after_attn_hc;
     void    *after_ffn_hc;
     void    *attn_norm;
+    void    *linear_state;
+    void    *linear_history;
+    void    *snapshot_state;
+    void    *snapshot_history;
+    void    *snapshot2_state;
+    void    *snapshot2_history;
+    void    *residual_alt;
 };
 typedef struct ds4_decode_graph_key ds4_decode_graph_key;
-static_assert(sizeof(ds4_decode_graph_key) == 48u,
+static_assert(sizeof(ds4_decode_graph_key) == 104u,
               "ds4_decode_graph_key must match the ds4_gpu.h decl");
 
 struct cuda_decode_graph_entry {
@@ -1172,7 +1180,7 @@ extern "C" int ds4_gpu_decode_graph_begin(const ds4_decode_graph_key *key) {
         return -1;
     }
     if (e->state == 2) {
-        cudaError_t err = cudaGraphLaunch(e->exec, g_decode_graph_stream);
+        cudaError_t err = cudaGraphLaunch(e->exec, key->flags & 1u ? (cudaStream_t)0 : g_decode_graph_stream);
         if (err != cudaSuccess) {
             fprintf(stderr, "ds4: decode graph replay failed (il=%u island=%u): %s\n",
                     key->il, key->island, cudaGetErrorString(err));
@@ -1238,7 +1246,7 @@ extern "C" int ds4_gpu_decode_graph_end(const ds4_decode_graph_key *key) {
     }
     /* Capture recorded the work without executing it: launch now so this
      * token's island actually runs. */
-    err = cudaGraphLaunch(exec, g_decode_graph_stream);
+    err = cudaGraphLaunch(exec, key->flags & 1u ? (cudaStream_t)0 : g_decode_graph_stream);
     if (err != cudaSuccess) {
         fprintf(stderr, "ds4: decode graph first launch failed (il=%u island=%u): %s\n",
                 key->il, key->island, cudaGetErrorString(err));
@@ -2808,9 +2816,15 @@ copy_failed:
 }
 
 namespace qwen4_cuda {
+    static bool kv_streamed(const void *ptr);
+    static int kv_io(const void *ptr, uint64_t offset, void *data, uint64_t bytes, bool write);
+    static void kv_release(const void *ptr);
+    static uint64_t kv_host_reserved;
     static void expert_cache_reset(void);
     static void expert_reads_reset(void);
     static void route_invalidate(const void *ptr, uint64_t bytes);
+    static int transfer_upload(void *dst, const void *src, uint64_t bytes, cudaStream_t stream);
+    static int transfer_download(void *dst, const void *src, uint64_t bytes, cudaStream_t stream);
 }
 
 static void cuda_model_range_release_all(void) {
@@ -3222,6 +3236,7 @@ extern "C" int ds4_gpu_tensor_copy_async(ds4_gpu_tensor *dst,
                                          const ds4_gpu_tensor *src,
                                          uint64_t bytes) {
     if (!dst || !src || bytes > dst->bytes || bytes > src->bytes) return 0;
+    if (qwen4_cuda::kv_streamed(dst->ptr) || qwen4_cuda::kv_streamed(src->ptr)) return 0;
     if (bytes == 0) return 1;
     return cuda_ok(cudaMemcpyAsync(dst->ptr, src->ptr, (size_t)bytes,
                                    cudaMemcpyDeviceToDevice, 0),
@@ -3232,6 +3247,7 @@ extern "C" void ds4_gpu_tensor_free_in_place(ds4_gpu_tensor *t) {
     if (!t) return;
     int d = ds4_tensor_device_idx(t);
     if (t->owner && t->ptr) {
+        qwen4_cuda::kv_release(t->ptr);
         WITH_DEVICE(g_gpu[d].device_id) {
             (void)cudaFree(t->ptr);
         }
@@ -3372,6 +3388,7 @@ extern "C" int ds4_gpu_should_use_managed_kv_cache(uint64_t kv_cache_bytes, uint
 
 extern "C" ds4_gpu_tensor *ds4_gpu_tensor_view(const ds4_gpu_tensor *base, uint64_t offset, uint64_t bytes) {
     if (!base || offset > base->bytes || bytes > base->bytes - offset) return NULL;
+    if (qwen4_cuda::kv_streamed(base->ptr)) return NULL; /* no contiguous device view of logical KV */
     ds4_gpu_tensor *t = (ds4_gpu_tensor *)calloc(1, sizeof(*t));
     if (!t) return NULL;
     t->ptr = (char *)base->ptr + offset;
@@ -3383,6 +3400,7 @@ extern "C" ds4_gpu_tensor *ds4_gpu_tensor_view(const ds4_gpu_tensor *base, uint6
 
 extern "C" void ds4_gpu_tensor_free(ds4_gpu_tensor *tensor) {
     if (!tensor) return;
+    if (tensor->owner) qwen4_cuda::kv_release(tensor->ptr);
     qwen4_cuda::route_invalidate(tensor->ptr, tensor->bytes);
     int d = ds4_tensor_device_idx(tensor);
     if (tensor->owner && tensor->ptr) {
@@ -3399,6 +3417,7 @@ extern "C" uint64_t ds4_gpu_tensor_bytes(const ds4_gpu_tensor *tensor) {
 
 extern "C" void *ds4_gpu_tensor_contents(ds4_gpu_tensor *tensor) {
     if (!tensor) return NULL;
+    if (qwen4_cuda::kv_streamed(tensor->ptr)) return NULL;
     qwen4_cuda::route_invalidate(tensor->ptr, tensor->bytes);
     /* Full-device sync preserves legacy semantics. */
     (void)cudaDeviceSynchronize();
@@ -3407,6 +3426,7 @@ extern "C" void *ds4_gpu_tensor_contents(ds4_gpu_tensor *tensor) {
 
 extern "C" int ds4_gpu_tensor_fill_f32(ds4_gpu_tensor *tensor, float value, uint64_t count) {
     if (!tensor || count > tensor->bytes / sizeof(float)) return 0;
+    if (qwen4_cuda::kv_streamed(tensor->ptr)) return 0;
     if (count == 0) return 1;
     qwen4_cuda::route_invalidate(tensor->ptr, count * sizeof(float));
     int d = ds4_tensor_device_idx(tensor);
@@ -3420,6 +3440,8 @@ extern "C" int ds4_gpu_tensor_fill_f32(ds4_gpu_tensor *tensor, float value, uint
 
 extern "C" int ds4_gpu_tensor_write(ds4_gpu_tensor *tensor, uint64_t offset, const void *data, uint64_t bytes) {
     if (!tensor || !data || offset > tensor->bytes || bytes > tensor->bytes - offset) return 0;
+    const int kv = qwen4_cuda::kv_io(tensor->ptr, offset, (void *)data, bytes, true);
+    if (kv >= 0) return kv;
     qwen4_cuda::route_invalidate(tensor->ptr, tensor->bytes);
     int d = ds4_tensor_device_idx(tensor);
     int ok = 0;
@@ -3433,6 +3455,8 @@ extern "C" int ds4_gpu_tensor_write(ds4_gpu_tensor *tensor, uint64_t offset, con
 
 extern "C" int ds4_gpu_tensor_read(const ds4_gpu_tensor *tensor, uint64_t offset, void *data, uint64_t bytes) {
     if (!tensor || !data || offset > tensor->bytes || bytes > tensor->bytes - offset) return 0;
+    const int kv = qwen4_cuda::kv_io(tensor->ptr, offset, data, bytes, false);
+    if (kv >= 0) return kv;
     int d = ds4_tensor_device_idx(tensor);
     int ok = 0;
     WITH_DEVICE(g_gpu[d].device_id) {
@@ -3451,6 +3475,21 @@ extern "C" int ds4_gpu_tensor_copy(ds4_gpu_tensor *dst, uint64_t dst_offset,
         return 0;
     }
     if (bytes == 0) return 1;
+    if (qwen4_cuda::kv_streamed(dst->ptr) || qwen4_cuda::kv_streamed(src->ptr)) {
+        /* Logical KV has no contiguous device representation. Snapshot copies
+         * use bounded host chunks; async/cross-device APIs reject it explicitly. */
+        if (g_decode_graph_capturing) return 0;
+        std::vector<char> scratch((size_t)std::min<uint64_t>(bytes, 1048576u));
+        const bool backwards = dst == src && dst_offset > src_offset && dst_offset - src_offset < bytes;
+        for (uint64_t done = 0; done < bytes;) {
+            const uint64_t n = std::min<uint64_t>(scratch.size(), bytes - done);
+            const uint64_t at = backwards ? bytes - done - n : done;
+            if (!ds4_gpu_tensor_read(src, src_offset + at, scratch.data(), n) ||
+                !ds4_gpu_tensor_write(dst, dst_offset + at, scratch.data(), n)) return 0;
+            done += n;
+        }
+        return 1;
+    }
     qwen4_cuda::route_invalidate(dst->ptr, dst->bytes);
     /* Same-device fast path; for cross-device, callers should use
      * ds4_gpu_tensor_copy_xdev. We still tolerate cross-device callers
@@ -3537,6 +3576,7 @@ static int ds4_gpu_tensor_copy_xdev_impl(ds4_gpu_tensor *dst,
                                          uint64_t bytes,
                                          bool order_dst_before_write) {
     if (!dst || !src) return 0;
+    if (qwen4_cuda::kv_streamed(dst->ptr) || qwen4_cuda::kv_streamed(src->ptr)) return 0;
     if (bytes == 0) return 1;
     if (bytes > dst->bytes || bytes > src->bytes) return 0;
     int sd = ds4_tensor_device_idx(src);
@@ -3636,6 +3676,7 @@ static int ds4_gpu_tensor_copy_xdev_default_impl(ds4_gpu_tensor *dst,
                                                   const ds4_gpu_tensor *src,
                                                   uint64_t bytes) {
     if (!dst || !src || bytes > dst->bytes || bytes > src->bytes) return 0;
+    if (qwen4_cuda::kv_streamed(dst->ptr) || qwen4_cuda::kv_streamed(src->ptr)) return 0;
     if (bytes == 0u) return 1;
     const int sd = ds4_tensor_device_idx(src);
     const int dd = ds4_tensor_device_idx(dst);
@@ -3728,6 +3769,7 @@ extern "C" int ds4_gpu_tensor_copy_xdev3_default_dst(
             return 0;
         }
         const int this_sd = ds4_tensor_device_idx(srcs[i]);
+        if (qwen4_cuda::kv_streamed(dsts[i]->ptr) || qwen4_cuda::kv_streamed(srcs[i]->ptr)) return 0;
         const int this_dd = ds4_tensor_device_idx(dsts[i]);
         if (sd < 0) {
             sd = this_sd;
@@ -3808,6 +3850,7 @@ extern "C" int ds4_gpu_tensor_copy_xdev3(ds4_gpu_tensor       *dst0,
             return 0;
         }
         if (first < 0) first = i;
+        if (qwen4_cuda::kv_streamed(dsts[i]->ptr) || qwen4_cuda::kv_streamed(srcs[i]->ptr)) return 0;
     }
     if (first < 0) return 1;
 
@@ -4973,8 +5016,11 @@ extern "C" int ds4_gpu_cache_q8_f16_range(const void *model_map, uint64_t model_
 extern "C" void ds4_gpu_print_memory_report(const char *label) {
     size_t free_b = 0, total_b = 0;
     (void)cudaMemGetInfo(&free_b, &total_b);
-    fprintf(stderr, "ds4: CUDA memory report %s: free %.2f MiB total %.2f MiB\n",
-            label ? label : "", (double)free_b / 1048576.0, (double)total_b / 1048576.0);
+    fprintf(stderr, "ds4: CUDA memory report %s: free %.2f MiB total %.2f MiB "
+            "scratch %.2f MiB token_tile %.2f MiB q8_f16 %.2f MiB q8_f32 %.2f MiB\n",
+            label ? label : "", (double)free_b / 1048576.0, (double)total_b / 1048576.0,
+            g_cuda_tmp_bytes / 1048576.0, g_tt_scratch_bytes / 1048576.0,
+            g_q8_f16_bytes / 1048576.0, g_q8_f32_bytes / 1048576.0);
 }
 
 extern "C" void ds4_gpu_set_quality(bool quality) {
@@ -38597,6 +38643,7 @@ extern "C" int ds4_gpu_tensor_copy_f32_to_f16(ds4_gpu_tensor *dst, uint64_t dst_
                                    const ds4_gpu_tensor *src, uint64_t src_offset,
                                    uint64_t count) {
     if (!dst || !src) return 0;
+    if (qwen4_cuda::kv_streamed(dst->ptr) || qwen4_cuda::kv_streamed(src->ptr)) return 0;
     if (count == 0) return 1;
     if (count > UINT64_MAX / sizeof(float) ||
         count > UINT64_MAX / sizeof(__half)) {
@@ -38635,6 +38682,8 @@ extern "C" int ds4_gpu_tensor_read_after_selected_event(const ds4_gpu_tensor *te
                  label ? label : "selected readback wait")) {
         return 0;
     }
+    const int kv = qwen4_cuda::kv_io(tensor->ptr, offset, data, bytes, false);
+    if (kv >= 0) return kv;
     return cuda_ok(cudaMemcpy(data, (const char *)tensor->ptr + offset,
                               (size_t)bytes, cudaMemcpyDeviceToHost),
                    "selected tensor read");

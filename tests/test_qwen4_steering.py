@@ -40,7 +40,7 @@ def main():
     for component in ["ffn", "attn"]:
         flags = ["--dir-steering-file", str(path), "--dir-steering-ffn", "0",
                  f"--dir-steering-{component}", "0.1", "-n", "48"]
-        plain = run(component, flags)
+        plain = run(component, flags + ["--no-mtp"])
         mtp = run(component + "-mtp", flags + ["--mtp", "--mtp-exact-sampling", "--mtp-timing"])
         for result in (plain, mtp):
             assert b"Qwen3.8 directional steering enabled:" in result.stderr, result.stderr.decode()

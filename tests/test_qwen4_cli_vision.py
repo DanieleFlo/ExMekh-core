@@ -37,7 +37,7 @@ def main():
             "--vision", args.vision, "--ctx", "8192",
             "--temp", "0", "--nothink", "-n", "180"]
     print(f"Logs: {out}", flush=True)
-    for mode, extra in [("ordinary", []), ("mtp", ["--mtp"])]:
+    for mode, extra in [("ordinary", ["--no-mtp"]), ("mtp", ["--mtp"])]:
         result = subprocess.run(base + extra, input=commands, text=True,
                                 capture_output=True, timeout=600)
         (out / f"{mode}.stdout").write_text(result.stdout)

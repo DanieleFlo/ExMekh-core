@@ -16,6 +16,12 @@
 
 #include "ds4.h"
 #include "ds4_gpu.h"
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+extern int ds4_gpu_qwen4_transfer_selftest(void);
+#endif
+#ifndef __APPLE__
+#include "ds4_gpu_mgpu.h"
+#endif
 
 bool ds4_log_is_tty(FILE *fp) {
     (void)fp;
@@ -865,6 +871,36 @@ static void test_idx_select(uint32_t T, uint32_t n, uint32_t k, uint32_t visible
     printf("  %-44s ok\n", name);
     free(order); free(got); ds4_gpu_tensor_free(gsel); ds4_gpu_tensor_free(gs); free(sc);
 }
+
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+static void test_idx_register_keys(void) {
+    const unsigned sizes[] = {4095, 8192, 16384, 32768, 33792, 33793};
+    const unsigned rows[] = {1, 3, 8, 9};
+    for (unsigned ti = 0; ti < 4; ++ti) for (unsigned ni = 0; ni < 6; ++ni)
+        for (unsigned pattern = 0; pattern < 3; ++pattern) {
+            const unsigned T = rows[ti], N = sizes[ni], K = 512;
+            float *scores = rand_vec((uint64_t)T * N, 4.0f);
+            for (unsigned t = 0; t < T; ++t) for (unsigned i = 0; i < N; ++i) {
+                if (pattern == 1) scores[(uint64_t)t * N + i] = (float)(i % 7u);
+                if (pattern == 2) scores[(uint64_t)t * N + i] = 0;
+                if (i >= N - t - 4u) scores[(uint64_t)t * N + i] = -3e38f;
+            }
+            ds4_gpu_tensor *gs = upload(scores, (uint64_t)T * N);
+            ds4_gpu_tensor *sel = ds4_gpu_tensor_alloc((uint64_t)T * K * 4u);
+            int *ref = malloc((uint64_t)T * K * 4u), *got = malloc((uint64_t)T * K * 4u);
+            setenv("DS4_CUDA_QWEN4_QSA_REGISTER_KEYS", "0", 1);
+            require_ok(gs && sel && ds4_gpu_qwen4_idx_select_tensor(sel, gs, NULL, N, T, K) &&
+                ds4_gpu_tensor_read(sel, 0, ref, (uint64_t)T * K * 4u), "original ordered QSA IDs");
+            setenv("DS4_CUDA_QWEN4_QSA_REGISTER_KEYS", "1", 1);
+            require_ok(ds4_gpu_qwen4_idx_select_tensor(sel, gs, NULL, N, T, K) &&
+                ds4_gpu_tensor_read(sel, 0, got, (uint64_t)T * K * 4u) && !memcmp(ref, got, (uint64_t)T * K * 4u),
+                "register QSA IDs preserve greater/tie order and bounded fallbacks");
+            ds4_gpu_tensor_free(gs); ds4_gpu_tensor_free(sel); free(ref); free(got); free(scores);
+        }
+    unsetenv("DS4_CUDA_QWEN4_QSA_REGISTER_KEYS");
+    puts("Qwen register QSA: 72 ordered-ID comparisons including exact ties and dispatch boundaries: PASS");
+}
+#endif
 
 /* Prefill and split attention against scalar attention on the same inputs. */
 static void test_attn_mm_keys(uint32_t T, uint32_t pos0, bool sparse, uint32_t k_blocks, uint32_t H, bool split) {
@@ -1716,6 +1752,81 @@ static void test_moe_types(arena_t *a, uint32_t NE, uint32_t slots, uint32_t E, 
     ds4_gpu_tensor *gsg = upload(sgate, T);
     ds4_gpu_tensor *gout = upload(NULL, (uint64_t)T * E);
     const uint32_t shared_type = q8 ? 8u : 0u;
+#ifndef __APPLE__
+    if (getenv("DS4_TEST_QWEN4_HYBRID") && wtype == 16u && dtype == 10u) {
+        const char *fractions[] = {"0", "0.5", "1", "0"};
+        ds4_gpu_tensor *prior_sel = NULL, *prior_lists = NULL, *prior_counts = NULL;
+        const uint32_t prior_rows = 37;
+        if (T <= 8) {
+            int *prior_ids = malloc((uint64_t)prior_rows * slots * sizeof(int));
+            for (unsigned p = 0; p < prior_rows * slots; ++p) prior_ids[p] = p % NE;
+            prior_sel = ds4_gpu_tensor_alloc((uint64_t)prior_rows * slots * sizeof(int));
+            prior_lists = ds4_gpu_tensor_alloc((uint64_t)NE * prior_rows * sizeof(int));
+            prior_counts = ds4_gpu_tensor_alloc((uint64_t)NE * sizeof(int));
+            require_ok(prior_sel && prior_lists && prior_counts &&
+                ds4_gpu_tensor_write(prior_sel, 0, prior_ids, (uint64_t)prior_rows * slots * sizeof(int)),
+                "prior prefill router buffers");
+            free(prior_ids);
+        }
+        for (unsigned mode = 0; mode < 4; mode++) {
+            setenv("DS4_CUDA_QWEN4_PCIE_FRAC", fractions[mode], 1);
+            /* A previous native prefill leaves its router metadata alive.
+             * Decode/MTP staging must use its own current workload, including
+             * all-miss and mixed placements; counts expose worker dispatch. */
+            if (T <= 8) require_ok(ds4_gpu_qwen4_moe_build_lists_tensor(prior_lists, prior_counts,
+                prior_sel, prior_rows, slots, NE, prior_rows), "previous native prefill route");
+            ds4_gpu_qwen4_tier_stats before = {0}, after = {0};
+            require_ok(ds4_gpu_qwen4_tier_stats_get(&before), "hybrid traffic counters before");
+            require_ok(ds4_gpu_qwen4_moe_hybrid_tensor(gmid, gpart, gx, gsel, a->base, a->size,
+                gate_off, up_off, down_off, wtype, dtype, NE, T, slots, E, F,
+                sg_off, su_off, sd_off, shared_type) == 1, "hybrid full expert execution");
+            require_ok(ds4_gpu_qwen4_tier_stats_get(&after), "hybrid traffic counters after");
+            if (T <= 8) require_ok(after.cpu_stage_jobs == before.cpu_stage_jobs,
+                "decode/MTP tiny uploads stay inline after a large native prefill");
+            require_ok(after.cpu_h2d_bytes - before.cpu_h2d_bytes ==
+                (after.cpu_pairs - before.cpu_pairs) * (E + 2u * F) * 4u,
+                "CPU contributions plus original FP32 activation boundary cross H2D");
+            require_ok(after.activation_d2h_bytes - before.activation_d2h_bytes ==
+                (after.cpu_pairs == before.cpu_pairs ? 0 : (uint64_t)T * E * 4u) +
+                (after.cpu_pairs - before.cpu_pairs) * F * 4u,
+                "GPU-only placement avoids both CPU activation transfers");
+            char label[128];
+            snprintf(label, sizeof(label), "hybrid fraction=%s E=%u F=%u T=%u", fractions[mode], E, F, T);
+            check_tensor(label, gpart, part, (uint64_t)T * n_out * E, T <= 8 ? 2e-5 : 3e-3);
+        }
+        if (T > 8 && getenv("DS4_TEST_QWEN4_COMPACT_LISTS")) {
+            /* Duplicates within a token exceed the compact router bound.
+             * Compare every contribution with the old full-capacity layout;
+             * a truncated list or wrong physical stride fails byte equality. */
+            const uint64_t nm = (uint64_t)T * n_out * F, np = (uint64_t)T * n_out * E;
+            float *before_mid = malloc(nm * sizeof(float)), *after_mid = malloc(nm * sizeof(float));
+            float *before_part = malloc(np * sizeof(float)), *after_part = malloc(np * sizeof(float));
+            int32_t *duplicate = malloc((uint64_t)T * slots * sizeof(int32_t));
+            require_ok(before_mid && after_mid && before_part && after_part && duplicate, "compact duplicate oracle allocations");
+            for (uint32_t t = 0; t < T; ++t)
+                for (uint32_t s = 0; s < slots; ++s) duplicate[t * slots + s] = (int32_t)(t % 3u);
+            require_ok(ds4_gpu_tensor_write(gsel, 0, duplicate, (uint64_t)T * slots * 4), "compact duplicate routes");
+            setenv("DS4_CUDA_QWEN4_PCIE_FRAC", "1", 1);
+            const char *saved_compact_value = getenv("DS4_CUDA_QWEN4_COMPACT_LISTS");
+            char *saved_compact = saved_compact_value ? strdup(saved_compact_value) : NULL;
+            for (unsigned compact = 0; compact < 2; ++compact) {
+                setenv("DS4_CUDA_QWEN4_COMPACT_LISTS", compact ? "1" : "0", 1);
+                require_ok(ds4_gpu_qwen4_moe_hybrid_tensor(gmid, gpart, gx, gsel, a->base, a->size,
+                    gate_off, up_off, down_off, wtype, dtype, NE, T, slots, E, F,
+                    sg_off, su_off, sd_off, shared_type) == 1, "compact duplicate full expert execution");
+                require_ok(ds4_gpu_tensor_read(gmid, 0, compact ? after_mid : before_mid, nm * sizeof(float)) &&
+                    ds4_gpu_tensor_read(gpart, 0, compact ? after_part : before_part, np * sizeof(float)), "compact duplicate contributions read");
+            }
+            check_exact_f32("compact duplicate gate/up and SwiGLU", after_mid, before_mid, nm);
+            check_exact_f32("compact duplicate padded down and shared", after_part, before_part, np);
+            if (saved_compact) { setenv("DS4_CUDA_QWEN4_COMPACT_LISTS", saved_compact, 1); free(saved_compact); }
+            else unsetenv("DS4_CUDA_QWEN4_COMPACT_LISTS");
+            require_ok(ds4_gpu_tensor_write(gsel, 0, sel, (uint64_t)T * slots * 4), "original routes restored after compact oracle");
+            free(before_mid); free(after_mid); free(before_part); free(after_part); free(duplicate);
+        }
+        ds4_gpu_tensor_free(prior_sel); ds4_gpu_tensor_free(prior_lists); ds4_gpu_tensor_free(prior_counts);
+    }
+#endif
     require_ok(ds4_gpu_qwen4_moe_mid_tensor(gmid, gx, gsel, a->base, a->size, gate_off, up_off, wtype, NE, T, slots, E, F,
                                             sg_off, su_off, shared_type), "moe mid");
     require_ok(ds4_gpu_qwen4_moe_down_tensor(gpart, gmid, gsel, a->base, a->size, down_off, dtype, NE, T, slots, F, E,
@@ -3073,6 +3184,96 @@ static int bench_p_attn_sparse(void *ud) {
                                             1024, 24, 2, 256, 262144 - 1024, true, 2052, 0.0625f);
 }
 static int bench_p_gdn_r4(void *ud) { bench_ctx *c = ud; return ds4_gpu_qwen4_gdn_scan_tensor(c->t[15], c->t[1], c->t[11], c->t[13], c->t[14], 1024, 16, 48, 128, NULL, 0u, NULL, 0u); }
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+static void test_prefill_ring(arena_t *a) {
+    const unsigned E = 256, F = 640, DF = 768, NE = 17, T = 513, NS = 3;
+    const uint64_t mid_n = (uint64_t)T*NS*F, part_n = (uint64_t)T*NS*E;
+    setenv("DS4_CUDA_QWEN4_EXPERT_POLICY", "stable", 1);
+    setenv("DS4_CUDA_QWEN4_PREFILL_RING_MB", "1", 1);
+    const char *budgets[] = {"0", "1", "4"};
+    for (unsigned mode = 0; mode < 3; ++mode) {
+        setenv("DS4_CUDA_QWEN4_EXPERT_CACHE_MB", budgets[mode], 1);
+        double *w = NULL;
+        const uint64_t go = arena_tier(a, 16, (uint64_t)NE*F, E, &w); free(w);
+        const uint64_t uo = arena_tier(a, 16, (uint64_t)NE*F, E, &w); free(w);
+        const uint64_t d = arena_tier(a, 10, (uint64_t)NE*E, DF, &w); free(w);
+        float *x = rand_vec((uint64_t)T*E, 0.5f);
+        int32_t *selected = malloc((uint64_t)T*NS*4);
+        require_ok(selected != NULL, "whole expert routes");
+        for (unsigned t = 0; t < T; ++t) {
+            selected[t*NS] = t%15u;
+            selected[t*NS+1] = (t*7u+3u)%15u;
+            for (unsigned s = 0; s < 2; ++s) if (selected[t*NS+s] == 2) selected[t*NS+s] = 16;
+            selected[t*NS+2] = 15; /* Hot expert; prefetched expert 2 stays empty. */
+        }
+        ds4_gpu_tensor *gx = upload(x, (uint64_t)T*E);
+        ds4_gpu_tensor *ids = ds4_gpu_tensor_alloc((uint64_t)T*NS*4);
+        ds4_gpu_tensor *lists = ds4_gpu_tensor_alloc((uint64_t)NE*T*4);
+        ds4_gpu_tensor *counts = ds4_gpu_tensor_alloc(NE*4);
+        ds4_gpu_tensor *mid = upload(NULL, mid_n+16), *part = upload(NULL, part_n+16);
+        require_ok(ids && lists && counts && mid && part &&
+            ds4_gpu_tensor_write(ids, 0, selected, (uint64_t)T*NS*4), "whole expert inputs");
+        setenv("DS4_CUDA_QWEN4_PREFILL_RING", "0", 1);
+        require_ok(ds4_gpu_tensor_fill_f32(mid, -1234.5f, mid_n+16) &&
+            ds4_gpu_tensor_fill_f32(part, -1234.5f, part_n+16) &&
+            ds4_gpu_qwen4_moe_build_lists_tensor(lists,counts,ids,T,NS,NE,T) &&
+            ds4_gpu_qwen4_moe_mm_mid_tensor(mid,gx,lists,counts,a->base,a->size,go,uo,16,NE,T,NS,NS,E,F,T) &&
+            ds4_gpu_qwen4_moe_mm_down_tensor(part,mid,lists,counts,a->base,a->size,d,10,NE,T,NS,NS,F,E,T),
+            "whole expert serial reference");
+        float *ref_mid = download(mid, mid_n+16), *ref_part = download(part, part_n+16);
+        setenv("DS4_CUDA_QWEN4_PREFILL_RING", "1", 1);
+        for (unsigned round = 0; round < 3; ++round) {
+            if (round == 2) {
+                /* New domain: expert 2 was absent from the previous chunk.
+                 * A separate serial oracle must still match every new slot. */
+                for (unsigned t = 0; t < T; ++t) selected[t*NS] = 2;
+                setenv("DS4_CUDA_QWEN4_PREFILL_RING", "0", 1);
+                require_ok(ds4_gpu_tensor_write(ids,0,selected,(uint64_t)T*NS*4) &&
+                    ds4_gpu_tensor_fill_f32(mid,-1234.5f,mid_n+16) &&
+                    ds4_gpu_tensor_fill_f32(part,-1234.5f,part_n+16) &&
+                    ds4_gpu_qwen4_moe_build_lists_tensor(lists,counts,ids,T,NS,NE,T) &&
+                    ds4_gpu_qwen4_moe_mm_mid_tensor(mid,gx,lists,counts,a->base,a->size,go,uo,16,NE,T,NS,NS,E,F,T) &&
+                    ds4_gpu_qwen4_moe_mm_down_tensor(part,mid,lists,counts,a->base,a->size,d,10,NE,T,NS,NS,F,E,T),
+                    "whole expert new domain serial oracle");
+                free(ref_mid); free(ref_part);
+                ref_mid = download(mid,mid_n+16); ref_part = download(part,part_n+16);
+                setenv("DS4_CUDA_QWEN4_PREFILL_RING", "1", 1);
+            }
+            setenv("DS4_CUDA_QWEN4_PREFILL_AHEAD", round ? "1" : "0", 1);
+            setenv("DS4_CUDA_QWEN4_PREFILL_AHEAD_ALL", round == 1 ? "1" : "0", 1);
+            setenv("DS4_CUDA_QWEN4_PREFILL_AHEAD_MIN", "9", 1);
+            require_ok(ds4_gpu_qwen4_moe_prefill_ahead(a->base,a->size,go,uo,d,16,10,NE,T,E,F),
+                       "whole expert upload before route selection");
+            if (round == 2) {
+                /* An abandoned request must drain before its physical ring
+                 * is reused; no router consumes the first upload. */
+                require_ok(ds4_gpu_qwen4_prefill_finish() &&
+                    ds4_gpu_qwen4_moe_prefill_ahead(a->base,a->size,go,uo,d,16,10,NE,T,E,F),
+                    "whole expert abandoned upload and reuse");
+            }
+            require_ok(ds4_gpu_tensor_fill_f32(mid, -1234.5f, mid_n+16) &&
+                ds4_gpu_tensor_fill_f32(part, -1234.5f, part_n+16) &&
+                ds4_gpu_qwen4_moe_build_lists_tensor(lists,counts,ids,T,NS,NE,T), "whole expert frozen routes");
+            require_ok(ds4_gpu_qwen4_moe_prefill_ring_tensor(mid,part,gx,lists,counts,
+                a->base,a->size,go,uo,d,16,10,NE,T,NS,E,F,T) == 1, "whole expert streamed dispatch");
+            float *got_mid = download(mid,mid_n+16), *got_part = download(part,part_n+16);
+            check_exact_f32("whole expert GU/SwiGLU and tail guards",got_mid,ref_mid,mid_n+16);
+            check_exact_f32("whole expert Q2_K padded down and tail guards",got_part,ref_part,part_n+16);
+            free(got_mid); free(got_part);
+        }
+        require_ok(ds4_gpu_qwen4_moe_prefill_ring_tensor(mid,part,gx,lists,counts,
+            a->base,a->size,go,uo,d,16,10,NE,T,NS,E,F,T) == -1, "whole expert external lists keep legacy API");
+        free(x);free(selected);free(ref_mid);free(ref_part);
+        ds4_gpu_tensor_free(gx);ds4_gpu_tensor_free(ids);ds4_gpu_tensor_free(lists);ds4_gpu_tensor_free(counts);
+        ds4_gpu_tensor_free(mid);ds4_gpu_tensor_free(part);
+    }
+    unsetenv("DS4_CUDA_QWEN4_PREFILL_RING"); unsetenv("DS4_CUDA_QWEN4_PREFILL_RING_MB");
+    unsetenv("DS4_CUDA_QWEN4_PREFILL_AHEAD"); unsetenv("DS4_CUDA_QWEN4_PREFILL_AHEAD_MIN");
+    unsetenv("DS4_CUDA_QWEN4_PREFILL_AHEAD_ALL");
+    unsetenv("DS4_CUDA_QWEN4_EXPERT_CACHE_MB"); unsetenv("DS4_CUDA_QWEN4_EXPERT_POLICY");
+}
+#endif
+
 static int bench_p_moe_mm(void *ud) {
     bench_ctx *c = ud;
     return ds4_gpu_qwen4_moe_build_lists_tensor(c->t[20], c->t[21], c->t[16], 256, 10, 16, 256) &&
@@ -3504,6 +3705,33 @@ static void test_dense_mm(arena_t *a, uint32_t in_dim, uint32_t rows, uint32_t T
 }
 
 #ifndef __APPLE__
+static void test_dense_token_tiles(arena_t *a, uint32_t type) {
+    const uint32_t K = 640, M = 129, T = 529;
+    double *weights;
+    const uint64_t off = type == 8u ? arena_q8_0(a,M,K,&weights,0.05f) :
+        type == 1u ? arena_f16(a,(uint64_t)M*K,&weights,0.05f) :
+                     arena_f32(a,(uint64_t)M*K,&weights,-0.05f,0.05f);
+    float *x = rand_vec((uint64_t)T*K,1.0f);
+    float *got = malloc((uint64_t)T*M*4), *ref = malloc((uint64_t)T*M*4);
+    require_ok(got && ref, "column tile host buffers");
+    ds4_gpu_tensor *gx = upload(x,(uint64_t)T*K);
+    ds4_gpu_tensor *out = upload(NULL,(uint64_t)T*M), *reference = upload(NULL,(uint64_t)T*M);
+    require_ok(ds4_gpu_qwen4_dense_mm_tensor(out,gx,a->base,a->size,off,type,T,K,M),"column-tiled dense");
+    for (unsigned t=0; t<T; t+=256u) {
+        const unsigned rows = T-t < 256u ? T-t : 256u;
+        ds4_gpu_tensor *xx = ds4_gpu_tensor_view(gx,(uint64_t)t*K*4,(uint64_t)rows*K*4);
+        ds4_gpu_tensor *yy = ds4_gpu_tensor_view(reference,(uint64_t)t*M*4,(uint64_t)rows*M*4);
+        require_ok(xx && yy && ds4_gpu_qwen4_dense_mm_tensor(yy,xx,a->base,a->size,off,type,rows,K,M),"256-row oracle and short tail");
+        ds4_gpu_tensor_free(xx); ds4_gpu_tensor_free(yy);
+    }
+    require_ok(ds4_gpu_tensor_read(out,0,got,(uint64_t)T*M*4) &&
+               ds4_gpu_tensor_read(reference,0,ref,(uint64_t)T*M*4),"column tile output read");
+    require_ok(!memcmp(got,ref,(uint64_t)T*M*4),"column tiling preserves independent 256-row arithmetic");
+    ds4_gpu_tensor_free(reference); ds4_gpu_tensor_free(out); ds4_gpu_tensor_free(gx);
+    free(got); free(ref); free(x); free(weights);
+    fprintf(stderr,"PASS dense token columns type=%u full=529 tile=256 tail=17 bit-exact\n",type);
+}
+
 static void test_fixed_cache_prepare(arena_t *a) {
     const uint32_t K = 64, M = 4;
     double *weights;
@@ -3576,6 +3804,233 @@ static void test_dense_mm_large(arena_t *a, uint32_t wtype) {
 }
 #endif
 
+#ifndef __APPLE__
+static void test_kv_prefill_stage(void) {
+    const unsigned ctx = 512, T = 64, H = 32, Hkv = 2, D = 256, stride = 16, pos = 200;
+    const uint64_t elements = (uint64_t)ctx * Hkv * D, output = (uint64_t)T * H * D;
+    const char *previous = getenv("DS4_CUDA_QWEN4_KV_PREFILL_STAGE");
+    char *saved_env = previous ? strdup(previous) : NULL;
+    const char *prefetch_env = getenv("DS4_CUDA_QWEN4_KV_PREFETCH");
+    char *saved_prefetch = prefetch_env ? strdup(prefetch_env) : NULL;
+    const char *buffers_env = getenv("DS4_CUDA_QWEN4_KV_PREFETCH_BUFFERS");
+    char *saved_buffers = buffers_env ? strdup(buffers_env) : NULL;
+    setenv("DS4_CUDA_QWEN4_KV_PREFILL_STAGE", "1", 1);
+    setenv("DS4_CUDA_QWEN4_KV_PREFETCH", "1", 1);
+    setenv("DS4_CUDA_QWEN4_KV_PREFETCH_BUFFERS", "2", 1);
+    uint16_t *kh = malloc(elements * 2u), *vh = malloc(elements * 2u);
+    for (uint64_t i = 0; i < elements; i++) { kh[i] = f32_to_f16(frand()); vh[i] = f32_to_f16(frand()); }
+    ds4_gpu_tensor *k = ds4_gpu_tensor_alloc(elements * 2u), *v = ds4_gpu_tensor_alloc(elements * 2u);
+    ds4_gpu_tensor *sk = NULL, *sv = NULL;
+    require_ok(ds4_gpu_qwen4_kv_alloc(&sk, &sv, ctx, 64, T, stride, Hkv, D), "prefill KV staging allocation");
+    require_ok(ds4_gpu_tensor_write(k, 0, kh, elements * 2u) && ds4_gpu_tensor_write(v, 0, vh, elements * 2u) &&
+               ds4_gpu_tensor_write(sk, 0, kh, elements * 2u) && ds4_gpu_tensor_write(sv, 0, vh, elements * 2u), "prefill FP16 history");
+    ds4_gpu_qwen4_tier_stats before;
+    require_ok(ds4_gpu_qwen4_tier_stats_get(&before) && before.kv_workspace_bytes >= elements * 4u,
+               "prefill staging charged to workspace");
+    float *queries = rand_vec(output, 1), *gates = rand_vec(output, 1);
+    float *a = malloc(output * 4), *b = malloc(output * 4);
+    ds4_gpu_tensor *q = upload(queries, output), *gate = upload(gates, output);
+    ds4_gpu_tensor *sel = ds4_gpu_tensor_alloc(T * stride * 4), *count = ds4_gpu_tensor_alloc(T * 4);
+    ds4_gpu_tensor *oa = upload(NULL, output), *ob = upload(NULL, output);
+    ds4_gpu_tensor *partial = ds4_gpu_tensor_alloc((uint64_t)T * H * 64 * (D + 2) * 4);
+    for (unsigned round = 0; round < 4; round++) {
+        int ids[T * stride]; unsigned counts[T];
+        for (unsigned t = 0; t < T; t++) {
+            counts[t] = stride;
+            for (unsigned j = 0; j < stride; j++) ids[t * stride + j] = (int)((t * 71u + j * 13u + round * 19u) % 200u);
+            ids[t * stride + stride - 1] = (int)(pos + t + 7u);
+        }
+        require_ok(ds4_gpu_tensor_write(sel, 0, ids, sizeof(ids)) && ds4_gpu_tensor_write(count, 0, counts, sizeof(counts)), "prefill sparse causal selection");
+        ds4_gpu_tensor *p = round & 1u ? partial : NULL;
+        require_ok(ds4_gpu_qwen4_attn_decode_tensor(oa, q, gate, k, v, sel, count, p,
+                   T, H, Hkv, D, pos, true, stride, 0.0625f), "prefill resident oracle");
+        for (unsigned mode = 0; mode < 3; mode++) {
+            setenv("DS4_CUDA_QWEN4_KV_PREFILL_STAGE", mode ? "1" : "0", 1);
+            if (mode == 2) require_ok(ds4_gpu_qwen4_kv_prefetch(sk, pos, T), "prefill next-layer historical prefix");
+            require_ok(ds4_gpu_qwen4_attn_decode_tensor(ob, q, gate, sk, sv, sel, count, p,
+                       T, H, Hkv, D, pos, true, stride, 0.0625f), "prefill paged/staged attention");
+            require_ok(ds4_gpu_tensor_read(oa, 0, a, output * 4) && ds4_gpu_tensor_read(ob, 0, b, output * 4), "prefill staged outputs");
+            check_exact_f32("KV prefill identity staging and bounded query groups", a, b, output);
+        }
+        /* Restore different logical bytes; the shared workspace cannot retain
+         * a prior session/frontier's history between attention consumers. */
+        require_ok(ds4_gpu_qwen4_kv_prefetch(sk, pos, T), "in-flight prefill invalidation fixture");
+        for (uint64_t i = 0; i < elements; i++) vh[i] = f32_to_f16(frand());
+        require_ok(ds4_gpu_qwen4_kv_truncate(sk, 0) && ds4_gpu_tensor_write(sk, 0, kh, elements * 2u) &&
+                   ds4_gpu_tensor_write(sv, 0, vh, elements * 2u) && ds4_gpu_tensor_write(v, 0, vh, elements * 2u), "prefill rollback/restore identity bytes");
+    }
+    ds4_gpu_tensor_free(k); ds4_gpu_tensor_free(v); ds4_gpu_tensor_free(sk); ds4_gpu_tensor_free(sv);
+    ds4_gpu_tensor_free(q); ds4_gpu_tensor_free(gate); ds4_gpu_tensor_free(sel); ds4_gpu_tensor_free(count);
+    ds4_gpu_tensor_free(oa); ds4_gpu_tensor_free(ob); ds4_gpu_tensor_free(partial);
+    free(kh); free(vh); free(queries); free(gates); free(a); free(b);
+    if (saved_env) { setenv("DS4_CUDA_QWEN4_KV_PREFILL_STAGE", saved_env, 1); free(saved_env); }
+    else unsetenv("DS4_CUDA_QWEN4_KV_PREFILL_STAGE");
+    if (saved_prefetch) { setenv("DS4_CUDA_QWEN4_KV_PREFETCH", saved_prefetch, 1); free(saved_prefetch); }
+    else unsetenv("DS4_CUDA_QWEN4_KV_PREFETCH");
+    if (saved_buffers) { setenv("DS4_CUDA_QWEN4_KV_PREFETCH_BUFFERS", saved_buffers, 1); free(saved_buffers); }
+    else unsetenv("DS4_CUDA_QWEN4_KV_PREFETCH_BUFFERS");
+    puts("Qwen KV prefill staging, paged fallback and restored bytes: PASS");
+}
+
+static void test_kv_streaming(arena_t *arena) {
+    const unsigned ctx = 512, T = 4, H = 4, Hkv = 2, D = 32, stride = 16, pos = 200;
+    const uint64_t elements = (uint64_t)ctx * Hkv * D, output = (uint64_t)T * H * D;
+    uint16_t *kh = malloc(elements * 2u), *vh = malloc(elements * 2u), *saved = malloc(elements * 2u);
+    for (uint64_t i = 0; i < elements; i++) { kh[i] = f32_to_f16(frand()); vh[i] = f32_to_f16(frand()); }
+    ds4_gpu_tensor *k = ds4_gpu_tensor_alloc(elements * 2u), *v = ds4_gpu_tensor_alloc(elements * 2u);
+    ds4_gpu_tensor *sk = NULL, *sv = NULL, *rk = NULL, *rv = NULL;
+    require_ok(ds4_gpu_qwen4_kv_alloc(&sk, &sv, ctx, 64, T, stride, Hkv, D), "streamed KV allocation");
+    require_ok(ds4_gpu_qwen4_kv_alloc(&rk, &rv, ctx, 96, T, stride, Hkv, D), "independent KV allocation");
+    require_ok(ds4_gpu_tensor_write(k, 0, kh, elements * 2u) && ds4_gpu_tensor_write(v, 0, vh, elements * 2u) &&
+               ds4_gpu_tensor_write(sk, 0, kh, elements * 2u) && ds4_gpu_tensor_write(sv, 0, vh, elements * 2u), "canonical FP16 KV");
+    require_ok(ds4_gpu_tensor_read(sk, 0, saved, elements * 2u) && !memcmp(saved, kh, elements * 2u), "logical KV snapshot bytes");
+    require_ok(ds4_gpu_tensor_contents(sk) == NULL && ds4_gpu_tensor_view(sk, 0, 2) == NULL,
+               "paged KV has no contiguous device view");
+    require_ok(!ds4_gpu_tensor_copy_async(rk, sk, 2) && !ds4_gpu_tensor_copy_xdev(rk, sk, 2),
+               "physical async copies reject logical KV");
+    require_ok(ds4_gpu_tensor_copy(rk, 0, sk, 0, elements * 2u) &&
+               ds4_gpu_tensor_read(rk, 0, saved, elements * 2u) && !memcmp(saved, kh, elements * 2u),
+               "bounded logical KV copy");
+    require_ok(ds4_gpu_tensor_copy(rk, 6, rk, 0, 100) && ds4_gpu_tensor_read(rk, 6, saved, 100) &&
+               !memcmp(saved, kh, 100), "overlapping logical KV copy");
+    ds4_gpu_tensor *q = upload(NULL, output), *gate = upload(NULL, output);
+    float *queries = rand_vec(output, 1), *gates = rand_vec(output, 1), *a = malloc(output * 4), *b = malloc(output * 4);
+    require_ok(ds4_gpu_tensor_write(q, 0, queries, output * 4) && ds4_gpu_tensor_write(gate, 0, gates, output * 4), "stream queries");
+    ds4_gpu_tensor *sel = ds4_gpu_tensor_alloc(T * stride * 4), *count = ds4_gpu_tensor_alloc(T * 4);
+    ds4_gpu_tensor *oa = upload(NULL, output), *ob = upload(NULL, output);
+    ds4_gpu_tensor *partial = ds4_gpu_tensor_alloc((uint64_t)T * H * 64 * (D + 2) * 4);
+    for (unsigned round = 0; round < 4; round++) {
+        int ids[T * stride]; unsigned counts[T];
+        for (unsigned t = 0; t < T; t++) {
+            counts[t] = stride;
+            for (unsigned j = 0; j < stride; j++) ids[t * stride + j] = (int)((t * 71u + j * 13u + round * 19u) % 200u);
+            ids[t * stride + stride - 1] = (int)(pos + t + 7u); /* causal mask */
+        }
+        require_ok(ds4_gpu_tensor_write(sel, 0, ids, sizeof(ids)) && ds4_gpu_tensor_write(count, 0, counts, sizeof(counts)), "paged sparse selection");
+        ds4_gpu_tensor *p = round & 1u ? partial : NULL;
+        require_ok(ds4_gpu_qwen4_attn_decode_tensor(oa, q, gate, k, v, sel, count, p, T, H, Hkv, D, pos, true, stride, 0.176776695f), "resident attention");
+        require_ok(ds4_gpu_qwen4_attn_decode_tensor(ob, q, gate, sk, sv, sel, count, p, T, H, Hkv, D, pos, true, stride, 0.176776695f), "paged attention under pressure");
+        require_ok(ds4_gpu_tensor_read(oa, 0, a, output * 4) && ds4_gpu_tensor_read(ob, 0, b, output * 4), "paged outputs");
+        check_exact_f32("streaming KV selected pages, bounded row groups", a, b, output);
+    }
+    require_ok(ds4_gpu_qwen4_kv_truncate(sk, 256), "KV rollback");
+    require_ok(!ds4_gpu_tensor_read(sk, (uint64_t)256 * Hkv * D * 2u, saved, 2), "tentative KV is invalidated");
+    const uint64_t prefix = (uint64_t)256 * Hkv * D * 2u;
+    require_ok(ds4_gpu_tensor_read(sk, 0, saved, prefix) && ds4_gpu_tensor_write(rk, 0, saved, prefix), "restore K to another resident budget");
+    require_ok(ds4_gpu_tensor_read(sv, 0, saved, prefix) && ds4_gpu_tensor_write(rv, 0, saved, prefix), "restore V to another resident budget");
+    require_ok(ds4_gpu_qwen4_attn_decode_tensor(ob, q, gate, rk, rv, sel, count, partial, T, H, Hkv, D, pos, true, stride, 0.176776695f), "restored sparse attention");
+    require_ok(ds4_gpu_tensor_read(ob, 0, b, output * 4), "restored outputs");
+    check_exact_f32("streaming KV restore and session isolation", a, b, output);
+    /* Identity slots, first spill selecting only old hits, remote pages, and
+     * rewind into a partially occupied page exercise both physical layouts. */
+    ds4_gpu_tensor *dk = NULL, *dv = NULL;
+    require_ok(ds4_gpu_qwen4_kv_alloc(&dk, &dv, ctx, 16, T, stride, Hkv, D), "direct KV allocation");
+    float norm[D]; for (unsigned i = 0; i < D; i++) norm[i] = 1;
+    const uint64_t nq = arena_alloc(arena, sizeof(norm)), nk = arena_alloc(arena, sizeof(norm)), ni = arena_alloc(arena, sizeof(norm));
+    memcpy((char *)arena->base + nq, norm, sizeof(norm)); memcpy((char *)arena->base + nk, norm, sizeof(norm)); memcpy((char *)arena->base + ni, norm, sizeof(norm));
+    const unsigned Hi = H, Di = D;
+    float inputs[output * 2u]; for (uint64_t i = 0; i < output * 2u; i++) inputs[i] = frand();
+    ds4_gpu_tensor *qg = upload(inputs, output * 2u), *kp = upload(inputs, (uint64_t)T * Hkv * D);
+    for (uint64_t i = 0; i < output * 2u; i++) inputs[i] = frand();
+    ds4_gpu_tensor *vp = upload(inputs, (uint64_t)T * Hkv * D), *iq = upload(inputs, (uint64_t)T * Hi * Di);
+    ds4_gpu_tensor *ik = upload(inputs, (uint64_t)T * Di);
+    ds4_gpu_tensor *iqout = upload(NULL, (uint64_t)T * Hi * Di), *ikc = upload(NULL, (uint64_t)ctx * Di);
+    uint32_t positions[ctx * 4];
+    for (unsigned p = 0; p < ctx; p++) { positions[4u*p] = positions[4u*p+1] = positions[4u*p+2] = p; positions[4u*p+3] = 0; }
+    ds4_gpu_tensor *pos3 = ds4_gpu_tensor_alloc(sizeof(positions));
+    require_ok(ds4_gpu_tensor_write(pos3, 0, positions, sizeof(positions)), "direct KV positions");
+    const unsigned frontiers[] = {0, 4, 8, 12, 16, 20, 7, 0, 4, 8, 12, 16, 20};
+    for (unsigned step = 0; step < sizeof(frontiers)/sizeof(frontiers[0]); step++) {
+        const unsigned p = frontiers[step];
+        if (step && p < frontiers[step - 1])
+            require_ok(ds4_gpu_qwen4_kv_truncate(dk, p), "direct transition rollback/reset");
+        ds4_gpu_tensor *planes[][2] = {{k, v}, {dk, dv}};
+        for (unsigned variant = 0; variant < 2; variant++)
+            require_ok(ds4_gpu_qwen4_attn_prep_tensor(q, gate, planes[variant][0], planes[variant][1], iqout, ikc,
+                qg, kp, vp, iq, ik, pos3, arena->base, arena->size, nq, nk, ni,
+                T, H, Hkv, D, 16, Hi, Di, p, ctx, 10000, 1e-6f), "identity/spilled KV append");
+        int ids[T * stride]; unsigned counts[T];
+        for (unsigned t = 0; t < T; t++) {
+            counts[t] = stride;
+            for (unsigned j = 0; j < stride; j++) ids[t*stride+j] = step == 5 ?
+                (int)((j/4u == 0 ? 0 : j/4u == 1 ? 8 : j/4u == 2 ? 16 : 20) + j%4u) : (int)j;
+        }
+        require_ok(ds4_gpu_tensor_write(sel, 0, ids, sizeof(ids)) && ds4_gpu_tensor_write(count, 0, counts, sizeof(counts)), "transition KV selection");
+        require_ok(ds4_gpu_qwen4_attn_decode_tensor(oa, q, gate, k, v, sel, count, partial, T, H, Hkv, D, p, true, stride, 0.176776695f) &&
+                   ds4_gpu_qwen4_attn_decode_tensor(ob, q, gate, dk, dv, sel, count, partial, T, H, Hkv, D, p, true, stride, 0.176776695f), "transition KV attention");
+        require_ok(ds4_gpu_tensor_read(oa, 0, a, output*4u) && ds4_gpu_tensor_read(ob, 0, b, output*4u), "transition KV outputs");
+        check_exact_f32("KV identity, spill, remote pages, rewind and fresh append after reset", a, b, output);
+    }
+    /* A deferred append must also publish when no attention follows: logical
+     * checkpoint reads, rollback and session destruction are independent
+     * consumers. Compare checkpoint bytes with the original resident path. */
+    for (unsigned pass = 0; pass < 3; ++pass) {
+        const unsigned p = 24u + (pass != 0u ? 4u : 0u);
+        ds4_gpu_tensor *planes[][2] = {{k, v}, {dk, dv}};
+        for (unsigned variant = 0; variant < 2; variant++)
+            require_ok(ds4_gpu_qwen4_attn_prep_tensor(q, gate, planes[variant][0], planes[variant][1], iqout, ikc,
+                qg, kp, vp, iq, ik, pos3, arena->base, arena->size, nq, nk, ni,
+                T, H, Hkv, D, 16, Hi, Di, p, ctx, 10000, 1e-6f), "append without following attention");
+        if (pass == 0) for (unsigned plane = 0; plane < 2; ++plane) {
+            const uint64_t offset = (uint64_t)p * Hkv * D * 2u, bytes = (uint64_t)T * Hkv * D * 2u;
+            require_ok(ds4_gpu_tensor_read(planes[0][plane], offset, kh, bytes) &&
+                ds4_gpu_tensor_read(planes[1][plane], offset, saved, bytes) && !memcmp(kh, saved, bytes),
+                "pending append checkpoint has original FP16 bytes");
+        }
+        if (pass == 1) {
+            require_ok(ds4_gpu_qwen4_kv_truncate(dk, p), "pending append rollback publishes before invalidating");
+            require_ok(!ds4_gpu_tensor_read(dk, (uint64_t)p * Hkv * D * 2u, saved, 2), "pending speculative row invalidated");
+        }
+        /* Pass 2 intentionally leaves the append pending at release. */
+    }
+    ds4_gpu_tensor_free(dk); ds4_gpu_tensor_free(dv); ds4_gpu_tensor_free(qg); ds4_gpu_tensor_free(kp); ds4_gpu_tensor_free(vp);
+    ds4_gpu_tensor_free(iq); ds4_gpu_tensor_free(ik); ds4_gpu_tensor_free(iqout); ds4_gpu_tensor_free(ikc); ds4_gpu_tensor_free(pos3);
+    ds4_gpu_tensor_free(rk); ds4_gpu_tensor_free(rv); ds4_gpu_tensor_free(sk); ds4_gpu_tensor_free(sv);
+    ds4_gpu_tensor_free(k); ds4_gpu_tensor_free(v); ds4_gpu_tensor_free(q); ds4_gpu_tensor_free(gate);
+    ds4_gpu_tensor_free(sel); ds4_gpu_tensor_free(count); ds4_gpu_tensor_free(oa); ds4_gpu_tensor_free(ob); ds4_gpu_tensor_free(partial);
+    free(kh); free(vh); free(saved); free(queries); free(gates); free(a); free(b);
+    puts("Qwen explicit-DMA KV paging, rollback and logical checkpoints: PASS");
+}
+#endif
+
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+/* A rejected speculative block changes which physical bank is live. Keep
+ * all other key fields fixed so a stale replay updates the wrong counter. */
+static void test_decode_graph_state_banks(void) {
+    require_ok(ds4_gpu_decode_graphs_supported(), "decode graph capability");
+    ds4_gpu_decode_graphs_invalidate();
+    ds4_gpu_tensor *bank[2] = {upload(NULL, 4u), upload(NULL, 4u)};
+    const float ones[4] = {1, 1, 1, 1};
+    ds4_gpu_tensor *increment = upload(ones, 4u);
+    unsigned counts[2] = {0, 0}, replays = 0;
+    for (unsigned i = 0; i < 8u; ++i) {
+        const unsigned live = i & 1u;
+        ds4_decode_graph_key key = {0};
+        key.il = 0; key.island = 0; key.flags = 1;
+        key.cur_hc = increment; key.attn_norm = increment;
+        key.linear_state = bank[live]; key.snapshot_state = bank[1u - live];
+        const int state = ds4_gpu_decode_graph_begin(&key);
+        if (state == 1) ++replays;
+        else {
+            require_ok(ds4_gpu_add_tensor(bank[live], bank[live], increment, 4u), "bank increment");
+            if (state == 0) require_ok(ds4_gpu_decode_graph_end(&key) == 0, "bank capture");
+        }
+        counts[live]++;
+        for (unsigned b = 0; b < 2u; ++b) {
+            float got[4];
+            require_ok(ds4_gpu_tensor_read(bank[b], 0, got, sizeof(got)), "bank counter read");
+            for (unsigned j = 0; j < 4u; ++j)
+                require_ok(got[j] == (float)counts[b], "replay updates the live bank only");
+        }
+    }
+    require_ok(replays >= 2u, "bank test exercised cached replay");
+    ds4_gpu_decode_graphs_invalidate();
+    ds4_gpu_tensor_free(bank[0]); ds4_gpu_tensor_free(bank[1]);
+    ds4_gpu_tensor_free(increment);
+    puts("Qwen CUDA graph alternating recurrent banks: PASS");
+}
+#endif
+
 int main(void) {
     arena_t arena;
     arena.size = (uint64_t)1536 << 20;
@@ -3596,6 +4051,22 @@ int main(void) {
     if (arena.base == MAP_FAILED) { perror("mmap"); return 1; }
     setenv("DS4_QWEN4_ATTN_SPLIT_KEYS", "8", 1);
     require_ok(ds4_gpu_init(), "GPU initialization");
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    if (getenv("DS4_TEST_QWEN4_GRAPH_BANKS")) {
+        test_decode_graph_state_banks();
+        ds4_gpu_cleanup();
+        munmap(arena.base, arena.size);
+        if (tiered_file) fclose(tiered_file);
+        return 0;
+    }
+#endif
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    if (getenv("DS4_TEST_QWEN4_QSA_REGISTER_KEYS")) {
+        test_idx_register_keys(); ds4_gpu_cleanup(); munmap(arena.base, arena.size);
+        if (tiered_file) fclose(tiered_file);
+        return 0;
+    }
+#endif
     if (tiered_file) {
         require_ok(ds4_gpu_qwen4_set_tiered_cache(true), "Flash tiered capability");
         const uint64_t offset = 0;
@@ -3603,9 +4074,78 @@ int main(void) {
         require_ok(ds4_gpu_set_model_fd(fileno(tiered_file)), "tiered model file");
     } else require_ok(ds4_gpu_set_model_map(arena.base, arena.size), "model map registration");
 
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    if (getenv("DS4_TEST_QWEN4_PREFILL_RING")) {
+        require_ok(tiered_file != NULL, "whole expert ring needs the tiered fixture");
+        test_prefill_ring(&arena);
+        {
+            const uint64_t go = arena.used + 1048576u;
+            setenv("DS4_CUDA_QWEN4_EXPERT_POLICY", "stable", 1);
+            setenv("DS4_CUDA_QWEN4_EXPERT_CACHE_MB", "0", 1);
+            setenv("DS4_CUDA_QWEN4_PREFILL_RING", "1", 1);
+            setenv("DS4_CUDA_QWEN4_PREFILL_AHEAD", "1", 1);
+            setenv("DS4_CUDA_QWEN4_PREFILL_AHEAD_ALL", "1", 1);
+            setenv("DS4_CUDA_QWEN4_PREFILL_AHEAD_MIN", "9", 1);
+            require_ok(ftruncate(fileno(tiered_file), 0) == 0, "truncate ahead cold source");
+            require_ok(!ds4_gpu_qwen4_moe_prefill_ahead(arena.base,arena.size,
+                go,go+81920u,go+163840u,16,10,2,513,256,640),
+                "ahead cold read fails closed and drains uploads");
+        }
+        ds4_gpu_cleanup(); munmap(arena.base, arena.size); fclose(tiered_file);
+        puts("Whole expert prefill ring: PASS"); return 0;
+    }
+#endif
+
 #ifndef __APPLE__
+    if (getenv("DS4_TEST_QWEN4_KV_STREAMING")) {
+        test_kv_streaming(&arena); test_kv_prefill_stage(); ds4_gpu_cleanup(); munmap(arena.base, arena.size);
+        if (tiered_file) fclose(tiered_file);
+        return 0;
+    }
+    if (getenv("DS4_TEST_QWEN4_HYBRID")) {
+#if !defined(DS4_ROCM_BUILD)
+        require_ok(ds4_gpu_qwen4_transfer_selftest(), "batched H2D/D2H publication and buffer lifetime");
+#endif
+        setenv("DS4_CUDA_QWEN4_EXPERT_CACHE_MB", "4", 1);
+        setenv("DS4_CUDA_QWEN4_CHECK_VICTIMS", "1", 1);
+        test_moe_types(&arena, 8, 6, 256, 256, 1, 16u, 10u);
+        test_moe_types(&arena, 8, 6, 256, 672, 3, 16u, 10u);
+        test_moe_types(&arena, 8, 6, 2560, 640, 2, 16u, 10u);
+        /* Upper boundary of the decode/MTP pointer layout, with padded down
+         * rows and duplicate expert contributions across eight input rows. */
+        test_moe_types(&arena, 8, 6, 256, 672, 8, 16u, 10u);
+        test_moe_types(&arena, 8, 6, 256, 256, 16, 16u, 10u);
+        /* The former 256-row scheduler limit silently selected the old path.
+         * Exercise a genuine prefill above it, including duplicate routes. */
+        test_moe_types(&arena, 64, 6, 256, 672, 512, 16u, 10u);
+        /* Three transient groups force both device-buffer and pinned-table
+         * reuse, with heterogeneous triplet reads and no new VRAM admission. */
+        setenv("DS4_CUDA_QWEN4_EXPERT_CACHE_MB", "0", 1);
+        test_moe_types(&arena, 192, 6, 256, 256, 128, 16u, 10u);
+        unsetenv("DS4_CUDA_QWEN4_EXPERT_CACHE_MB");
+        require_ok(ftruncate(fileno(tiered_file), 0) == 0, "truncate hybrid cold source");
+        const int zero = 0;
+        ds4_gpu_tensor *ids = ds4_gpu_tensor_alloc(4), *x = upload(NULL, 256);
+        ds4_gpu_tensor *mid = upload(NULL, 256), *part = upload(NULL, 256);
+        require_ok(ids && ds4_gpu_tensor_write(ids, 0, &zero, 4), "hybrid failure route");
+        for (unsigned i = 0; i < 2; i++) {
+            setenv("DS4_CUDA_QWEN4_PCIE_FRAC", i ? "1" : "0", 1);
+            require_ok(ds4_gpu_qwen4_moe_hybrid_tensor(mid, part, x, ids, arena.base, arena.size,
+                arena.used + 4096, arena.used + 131072, arena.used + 262144,
+                16, 10, 2, 1, 1, 256, 256, 0, 0, 0, UINT32_MAX) == 0,
+                "hybrid CPU/PCIe cold read fails closed");
+        }
+        ds4_gpu_tensor_free(ids); ds4_gpu_tensor_free(x); ds4_gpu_tensor_free(mid); ds4_gpu_tensor_free(part);
+        ds4_gpu_cleanup(); munmap(arena.base, arena.size);
+        if (tiered_file) fclose(tiered_file);
+        puts("Qwen hybrid CPU/GPU/PCIe, duplicate routes and padded down rows: PASS");
+        return 0;
+    }
     if (getenv("DS4_TEST_QWEN4_ATTN_GROUPS")) { test_attn_groups(); return 0; }
     if (getenv("DS4_TEST_QWEN4_DENSE_ONLY")) {
+        test_dense_token_tiles(&arena,0u);
+        test_dense_token_tiles(&arena,1u);
+        test_dense_token_tiles(&arena,8u);
         test_dense_mm_large(&arena, 1u);
         test_dense_mm_large(&arena, 8u);
         test_dense_mm(&arena, 10240, 1700, 32, 8u);
@@ -3802,6 +4342,14 @@ int main(void) {
         require_ok(state && state_bytes > 32 && ds4_gpu_qwen4_expert_state_export(state, state_bytes), "cache metadata export");
         require_ok(!ds4_gpu_qwen4_expert_state_import(state, state_bytes - 1), "truncated cache metadata rejected");
         require_ok(ds4_gpu_qwen4_expert_state_import(state, state_bytes), "cache metadata restore");
+        require_ok(ds4_gpu_qwen4_expert_state_bytes() == state_bytes, "restored logical metadata length");
+        void *again = malloc(state_bytes);
+        require_ok(again && ds4_gpu_qwen4_expert_state_export(again, state_bytes) &&
+                   memcmp(state, again, state_bytes) == 0, "restored logical metadata byte identity");
+        require_ok(!ds4_gpu_qwen4_expert_state_import(state, state_bytes - 1) &&
+                   ds4_gpu_qwen4_expert_state_export(again, state_bytes) &&
+                   memcmp(state, again, state_bytes) == 0, "invalid metadata leaves restored hints unchanged");
+        free(again);
         free(state);
         puts("Qwen recent expert metadata round trip: PASS");
         /* An unreadable cold expert must fail closed, never launch on zeros

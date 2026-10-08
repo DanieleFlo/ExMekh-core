@@ -54,6 +54,9 @@ NVCCFLAGS ?= -O3 -g -lineinfo --use_fast_math $(NVCC_ARCH_FLAGS) -Xcompiler $(NA
 # Vendored llama.cpp mmq prefill tier (cuda/mmq/, see cuda/mmq/VENDOR.md).
 MMQ_INCLUDES := -Icuda/mmq
 MMQ_OBJS := cuda/mmq/ds4_ggml_stubs.o cuda/mmq/ds4_mmq.o cuda/mmq/ds4_mmq_d2r.o cuda/mmq/quantize.o cuda/mmq/mmid.o cuda/mmq/mmvq.o cuda/mmq/ds4_repack.o
+# Standalone CUDA test links use this object group as well as production links.
+# Build AVX2 host arithmetic with the C compiler, not nvcc's intrinsic parser.
+MMQ_OBJS += ds4_qwen4_cpu.o
 CORE_OBJS = ds4.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_cuda.o ds4_layer_pack.o ds4_engram.o $(MMQ_OBJS)
 CPU_CORE_OBJS = ds4_cpu.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o
 CUDA_LDLIBS ?= -lm -Xcompiler -pthread -L$(CUDA_HOME)/targets/sbsa-linux/lib -L$(CUDA_HOME)/lib64 -lcudart -lcublas
@@ -488,7 +491,7 @@ tests/test_deepseek41_cuda: tests/test_deepseek41_cuda.o ds4_cuda.o ds4_image.o 
 test-deepseek41-cuda: tests/test_deepseek41_cuda
 	./tests/test_deepseek41_cuda
 
-tests/test_qwen4_cuda.o: tests/test_qwen4_kernels.c ds4_gpu.h ds4.h
+tests/test_qwen4_cuda.o: tests/test_qwen4_kernels.c ds4_gpu.h ds4_gpu_mgpu.h ds4_qwen4_runtime.h ds4.h
 	$(CC) $(QUALITY_CFLAGS) -D_GNU_SOURCE -I. -c -o $@ $<
 
 tests/test_qwen4_cuda: tests/test_qwen4_cuda.o ds4_cuda.o ds4_image.o $(MMQ_OBJS)
@@ -562,7 +565,7 @@ docs-index: research-index
 docs-check: docs-index
 	python3 -m unittest tests.test_research_corpus tests.test_docs_wiki -v
 
-ds4.o: ds4.c ds4.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_qwen.h ds4_env.h ds4_gpu_tp.h ds4_deepseek41_gpu.h ds4_linux_memory.h ds4_engram.h
+ds4.o: ds4.c ds4.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_qwen.h ds4_env.h ds4_qwen4_runtime.h ds4_gpu_tp.h ds4_deepseek41_gpu.h ds4_linux_memory.h ds4_engram.h ds4_read_queue.h
 	$(CC) $(CFLAGS) -c -o $@ ds4.c
 
 ds4_image.o: ds4_image.c ds4_image.h third_party/iris/jpeg.h third_party/iris/png.h
@@ -592,10 +595,10 @@ ds4_prompt_prefix.o: ds4_prompt_prefix.c ds4_prompt_prefix.h ds4.h
 ds4_gpu_args.o: ds4_gpu_args.c ds4_gpu_args.h ds4_gpu_mgpu.h ds4_qwen.h
 	$(CC) $(CFLAGS) -c -o $@ ds4_gpu_args.c
 
-ds4_server.o: ds4_server.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_kvstore.h rax.h ds4_env.h
+ds4_server.o: ds4_server.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_kvstore.h rax.h ds4_env.h ds4_qwen4_runtime.h
 	$(CC) $(CFLAGS) -c -o $@ ds4_server.c
 
-ds4_bench.o: ds4_bench.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h
+ds4_bench.o: ds4_bench.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_qwen4_runtime.h
 	$(CC) $(CFLAGS) -c -o $@ ds4_bench.c
 
 ds4_eval.o: ds4_eval.c ds4_eval_cases.h ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h
@@ -607,11 +610,11 @@ ds4_eval_cases.o: ds4_eval_cases.c ds4_eval_cases.h
 ds4_kvstore.o: ds4_kvstore.c ds4_kvstore.h ds4.h ds4_ssd.h
 	$(CC) $(CFLAGS) -c -o $@ ds4_kvstore.c
 
-ds4_test.o: tests/ds4_test.c ds4_server.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_kvstore.h rax.h ds4_env.h
+ds4_test.o: tests/ds4_test.c ds4_server.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_kvstore.h rax.h ds4_env.h ds4_qwen4_runtime.h
 	$(CC) $(CFLAGS) -Wno-unused-function -DDS4_TEST_HOOKS -c -o $@ tests/ds4_test.c
 
 
-ds4_server_test.o: ds4_server.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_kvstore.h rax.h ds4_env.h
+ds4_server_test.o: ds4_server.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_kvstore.h rax.h ds4_env.h ds4_qwen4_runtime.h
 	$(CC) $(CFLAGS) -Wno-unused-function -DDS4_SERVER_TEST -DDS4_NO_GPU -c -o $@ ds4_server.c
 
 tests/cuda_long_context_smoke.o: tests/cuda_long_context_smoke.c ds4_gpu.h ds4_qwen.h
@@ -626,8 +629,11 @@ tests/test_qwen_mtp_callback.o: tests/test_qwen_mtp_callback.c ds4.c ds4.h ds4_g
 tests/test_qwen_mtp_callback: tests/test_qwen_mtp_callback.o $(filter-out ds4.o,$(CORE_OBJS))
 	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
 
+tests/test_qwen4_tuning: tests/test_qwen4_tuning.cpp ds4_qwen4_tuning.cuh ds4_qwen4_runtime.h ds4_env.h
+	$(CXX) -O2 -Wall -Wextra -std=c++17 -o $@ $<
+
 tests/qwen_mtp_catchup_probe.o: tests/qwen_mtp_catchup_probe.c ds4.c ds4.h ds4_gpu.h ds4_qwen.h ds4_env.h
-	$(CC) $(CFLAGS) -I. -c -o $@ $<
+	$(CC) $(QUALITY_CFLAGS) -D_GNU_SOURCE -I. -c -o $@ $<
 
 ifneq ($(UNAME_S),Darwin)
 tests/qwen_iq4_dequant_probe.o: tests/qwen_iq4_dequant_probe.cu ds4_cuda.cu ds4_env.h
@@ -646,7 +652,7 @@ rax.o: rax.c rax.h rax_malloc.h
 linenoise.o: linenoise.c linenoise.h
 	$(CC) $(CFLAGS) -c -o $@ linenoise.c
 
-ds4_cpu.o: ds4.c ds4.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_gpu_tp.h ds4_qwen.h ds4_env.h
+ds4_cpu.o: ds4.c ds4.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_gpu_tp.h ds4_qwen.h ds4_env.h ds4_qwen4_runtime.h
 	$(CC) $(CFLAGS) -Wno-unused-function -DDS4_NO_GPU -c -o $@ ds4.c
 
 ds4_cli_cpu.o: ds4_cli.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_prompt_prefix.h linenoise.h
@@ -849,9 +855,17 @@ else
 endif
 
 ds4.o ds4_cpu.o ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o ds4_metal.o ds4_cuda.o ds4_rocm.o tests/test_qwen4_cuda.o tests/test_qwen4_kernels.o tests/test_qwen4_ngram_state.o: ds4_qwen4_vision.h
+ds4.o ds4_cpu.o ds4_server.o ds4_server_cpu.o ds4_server_test.o ds4_test.o ds4_tp.o ds4_cpu_test_hooks.o ds4_test_hooks.o ds4_cuda_test_hooks.o tests/test_server_agentic_payload.o tests/test_qwen4_cuda.o: ds4_qwen4_runtime.h
 
-ds4_cuda.o: ds4_cuda.cu ds4_read_queue.h ds4_qwen4_expert_cache.h ds4_qwen.h ds4_env.h ds4_gpu.h ds4_gpu_tp.h ds4_gpu_mgpu.h ds4_linux_memory.h ds4_deepseek41_gpu.h ds4_deepseek41_cuda.cuh ds4_glm53_vision_gpu.cuh ds4_deepseek4_vision_gpu.cuh ds4_qwen4_cuda.cuh ds4_image.h ds4_iq2_tables_cuda.inc cuda/mmq/ds4_mmq.h
+ds4_cuda.o: ds4_cuda.cu ds4_read_queue.h ds4_qwen4_expert_cache.h ds4_qwen4_cpu.h ds4_qwen4_hybrid.cuh ds4_qwen4_transfer.cuh ds4_qwen4_profile.cuh ds4_qwen4_residency.cuh ds4_qwen4_kv.cuh ds4_qwen4_runtime.h ds4_qwen4_tuning.cuh ds4_qwen.h ds4_env.h ds4_gpu.h ds4_gpu_tp.h ds4_gpu_mgpu.h ds4_linux_memory.h ds4_deepseek41_gpu.h ds4_deepseek41_cuda.cuh ds4_glm53_vision_gpu.cuh ds4_deepseek4_vision_gpu.cuh ds4_qwen4_cuda.cuh ds4_image.h ds4_iq2_tables_cuda.inc cuda/mmq/ds4_mmq.h
 	$(NVCC) $(NVCCFLAGS) -c -o $@ ds4_cuda.cu
+
+ds4_cuda.o: ds4_qwen4_ranks.cuh
+ds4_cuda.o: ds4_qwen4_ring.cuh
+
+
+ds4_qwen4_cpu.o: ds4_qwen4_cpu.c ds4_qwen4_cpu.h ds4_qwen4_cpu_internal.h ds4_qwen4_cpu_sign_masks.inc ds4_iq2_tables_cuda.inc
+	$(CC) $(QUALITY_CFLAGS) -ffp-contract=off -c -o $@ ds4_qwen4_cpu.c
 
 # Vendored mmq pieces (see cuda/mmq/VENDOR.md).  ds4_mmq.cu transitively
 # pulls in mmq.cuh which has heavy template instantiation -- each piece
@@ -924,6 +938,12 @@ tests/cuda_long_context_smoke: tests/cuda_long_context_smoke.o ds4_cuda.o ds4_im
 
 tests/qwen_numerics_probe: tests/qwen_numerics_probe.o ds4_cuda.o ds4_image.o $(MMQ_OBJS)
 	$(NVCC) $(NVCCFLAGS) -o $@ $^ $(CUDA_LDLIBS)
+
+tests/qwen_flash_quality_probe.o: tests/qwen_flash_quality_probe.c ds4.h
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -c -o $@ $<
+
+tests/qwen_flash_quality_probe: tests/qwen_flash_quality_probe.o $(CORE_OBJS)
+	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
 
 tests/test_layer_pack.o: tests/test_layer_pack.c ds4_layer_pack.h
 	$(CC) $(CFLAGS) -I. -c -o $@ $<
@@ -1164,7 +1184,7 @@ tests/test_qwen35_mrope: tests/test_qwen35_mrope.o $(CORE_OBJS)
 test-qwen35-mrope: tests/test_qwen35_mrope
 	./tests/test_qwen35_mrope
 
-tests/test_server_agentic_payload.o: tests/test_server_agentic_payload.c ds4_server.c ds4.h ds4_env.h
+tests/test_server_agentic_payload.o: tests/test_server_agentic_payload.c ds4_server.c ds4.h ds4_env.h ds4_qwen4_runtime.h
 	$(CC) $(CFLAGS) -Wno-unused-function -I. -c -o $@ $<
 
 tests/test_server_agentic_payload: tests/test_server_agentic_payload.o ds4_help.o ds4_gpu_args.o ds4_kvstore.o rax.o $(CORE_OBJS)
@@ -1205,6 +1225,9 @@ ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o tests/test_session_state.o \
 tests/test_session_state_gpu.o: ds4_tool_text.h
 
 clean:
+	rm -f tests/qwen_flash_quality_probe
+	rm -f tests/test_qwen4_tuning
+	rm -f tests/test_qwen4_ranks tests/test_qwen4_cpu
 	rm -f tests/test_qwen35_mrope tests/test_server_agentic_payload tests/test_qwen_mtp_callback tests/test_server_resident_frontier tests/test_agentic_checkpoint tests/qwen_numerics_probe tests/test_mmq_parity
 	rm -f tests/test_qwen4_ngrams
 	rm -f tests/test_qwen4_ngram_state
@@ -1249,6 +1272,16 @@ tests/test_qwen4_expert_cache: tests/test_qwen4_expert_cache.c ds4_qwen4_expert_
 	$(CC) $(QUALITY_CFLAGS) -I. -o $@ $<
 
 .PHONY: test-qwen4-expert-cache
+tests/test_qwen4_cpu: tests/test_qwen4_cpu.c ds4_qwen4_cpu.c ds4_qwen4_cpu.h ds4_qwen4_cpu_internal.h ds4_qwen4_cpu_sign_masks.inc ds4_iq2_tables_cuda.inc
+	$(CC) $(QUALITY_CFLAGS) -ffp-contract=off -o $@ tests/test_qwen4_cpu.c ds4_qwen4_cpu.c -lm
+
+.PHONY: test-qwen4-cpu
+test-qwen4-cpu: tests/test_qwen4_cpu
+	./tests/test_qwen4_cpu
+
+tests/test_qwen4_ranks: tests/test_qwen4_ranks.cpp ds4_qwen4_ranks.cuh ds4_qwen4_expert_cache.h
+	$(CXX) -O2 -std=c++17 -Wall -Wextra -I. -o $@ tests/test_qwen4_ranks.cpp
+
 test-qwen4-expert-cache: tests/test_qwen4_expert_cache
 	./tests/test_qwen4_expert_cache
 

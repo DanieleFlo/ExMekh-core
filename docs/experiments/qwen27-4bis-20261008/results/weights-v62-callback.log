@@ -1,0 +1,15 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight budget requested=14.188 GiB allowed=14.188 GiB graph=2.324 GiB scratch=0.332 GiB headroom=2.000 GiB sessions=1
+ds4: dense weight plan resident=14.101 GiB host=0.192 GiB ring=0.384 GiB offloaded_layers=1/64; KV and recurrent state stay in VRAM
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.536s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 0.53 GiB (raw 0.53 + compressed 0.00) + buffers 1.79 GiB + resident model 15.75 GiB = 18.07 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=4096 prefill_cap=2048 raw_kv_rows=4096 compressed_kv_rows=0 backend=cuda
+ds4: CUDA memory report weight streaming before graph: free 6818.00 MiB total 24575.50 MiB scratch 340.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+ds4: CUDA memory report weight streaming after graph: free 3621.57 MiB total 24575.50 MiB scratch 340.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+PASS: MTP callback cancellation preserves KV, MTP and RNG
+ds4: dense weight streaming forwards=20 H2D=3.837 GiB transfers=20 pending_waits=19 submit_wait=835.159ms resident=14.101 GiB host=0.192 GiB ring=0.384 GiB pinned=0.125 GiB

@@ -1,0 +1,52 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging, direct I/O)
+ds4: CUDA model copy complete in 5.124s (pipelined, 14.30 GiB tensors)
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA startup model preparation covered 14.29 GiB of tensor spans in 0.000s
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.453s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 0.07 GiB (raw 0.07 + compressed 0.00) + buffers 1.14 GiB + resident model 15.56 GiB = 16.76 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=512 prefill_cap=256 raw_kv_rows=512 compressed_kv_rows=0 backend=cuda
+PASS: quant type=8 shape=5120x48 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=11 shape=5120x17408 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=12 shape=5120x6144 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=13 shape=6144x5120 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=14 shape=5120x248320 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=17 shape=5120x17408 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=18 shape=5120x17408 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=20 shape=5120x17408 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=21 shape=5120x17408 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=22 shape=5120x17408 rows=6, every wide projection bit-exact with scalar decode
+PASS: quant type=23 shape=5120x12288 rows=6, every wide projection bit-exact with scalar decode
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging, direct I/O)
+ds4: CUDA model copy complete in 5.112s (pipelined, 14.30 GiB tensors)
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA startup model preparation covered 14.29 GiB of tensor spans in 0.000s
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.458s
+ds4: cuda backend initialized for graph diagnostics
+ds4: Qwen verifier host snapshots=0.740 GiB
+ds4: memory: KV 0.07 GiB (raw 0.07 + compressed 0.00) + buffers 0.41 GiB + resident model 15.56 GiB = 16.04 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=512 prefill_cap=256 raw_kv_rows=512 compressed_kv_rows=0 backend=cuda
+ds4: NextN KV placement=resident resident_cells=512 context=512 reuse_prefill_stage=0
+PASS: 5 proposals, every rollback state/logit/continuation bit-exact; lean V(2) GPU reuse exact; host=794296320 shared_GPU=16547840 bytes
+ds4: dense KV capacity frontier=262 peak_host=0.066 GiB peak_resident=0.012 GiB peak_stage=0.012 GiB growths=34 spills=6272 H2D=4.786 GiB D2H=0.068 GiB NextN_stage_reuses=0
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight budget requested=14.188 GiB allowed=14.188 GiB graph=1.203 GiB scratch=0.332 GiB headroom=2.000 GiB sessions=1
+ds4: dense weight plan resident=14.101 GiB host=0.192 GiB ring=0.384 GiB offloaded_layers=1/64; KV and recurrent state stay in VRAM
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.527s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 0.07 GiB (raw 0.07 + compressed 0.00) + buffers 1.14 GiB + resident model 15.75 GiB = 16.95 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=512 prefill_cap=256 raw_kv_rows=512 compressed_kv_rows=0 backend=cuda
+ds4: CUDA memory report weight streaming before graph: free 6818.00 MiB total 24575.50 MiB scratch 340.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+ds4: CUDA memory report weight streaming after graph: free 4731.95 MiB total 24575.50 MiB scratch 340.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB

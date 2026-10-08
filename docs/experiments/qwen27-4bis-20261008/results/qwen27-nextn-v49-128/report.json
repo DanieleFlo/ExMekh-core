@@ -1,0 +1,598 @@
+{
+  "records": [
+    {
+      "sample": 0,
+      "drafter": "target-only",
+      "proposals": 0,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/candidate-v49/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "131072",
+        "--ctx-max",
+        "131072",
+        "--ctx-alloc",
+        "131136",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v49-128/sample-0-nextn-0/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v49-128/sample-0-nextn-0/logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_CUDA_QWEN_MTP_KV_MODE": "auto",
+        "DS4_CUDA_QWEN_MTP_BATCH_CATCHUP": "1",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_BENCH_DECODE_WARMUP": "16"
+      },
+      "binary_sha256": "7164c27c77cc951c53dd878045c3b8c0439bb12be4e8612837cf140309cbc99d",
+      "exit_code": 0,
+      "wall_seconds": 801.126292650999,
+      "frontiers": {
+        "131072": {
+          "prefill": {
+            "samples": [
+              224.68
+            ],
+            "median": 224.68,
+            "mean": 224.68,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.23
+            ],
+            "median": 0.23,
+            "mean": 0.23,
+            "cv": null
+          },
+          "first_prefill_tps": 224.68,
+          "decode_total": {
+            "samples": [
+              0.23
+            ],
+            "median": 0.23,
+            "mean": 0.23,
+            "cv": null
+          }
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v49-128/sample-0-nextn-0",
+      "cycle_summary": {
+        "measured_calls": 32,
+        "multi_token_calls": 0,
+        "committed_tokens": 32,
+        "decode_ms": 137546.145,
+        "verifier_cycles": 0,
+        "tokens_per_second": 0.23264919565721018
+      },
+      "actual_cycles": 0,
+      "actual_verifier_cycles": 0,
+      "confidence_bypasses": 0
+    },
+    {
+      "sample": 0,
+      "drafter": "nextn",
+      "proposals": 5,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/candidate-v49/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "131072",
+        "--ctx-max",
+        "131072",
+        "--ctx-alloc",
+        "131136",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v49-128/sample-0-nextn-5/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v49-128/sample-0-nextn-5/logits",
+        "--mtp",
+        "--mtp-model",
+        "/home/daniele/ds4/gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+        "--mtp-draft",
+        "5"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_CUDA_QWEN_MTP_KV_MODE": "auto",
+        "DS4_CUDA_QWEN_MTP_BATCH_CATCHUP": "1",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_BENCH_DECODE_WARMUP": "16"
+      },
+      "binary_sha256": "7164c27c77cc951c53dd878045c3b8c0439bb12be4e8612837cf140309cbc99d",
+      "exit_code": 0,
+      "wall_seconds": 891.4132287400025,
+      "frontiers": {
+        "131072": {
+          "prefill": {
+            "samples": [
+              179.05
+            ],
+            "median": 179.05,
+            "mean": 179.05,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.36
+            ],
+            "median": 0.36,
+            "mean": 0.36,
+            "cv": null
+          },
+          "first_prefill_tps": 179.05,
+          "decode_total": {
+            "samples": [
+              0.35
+            ],
+            "median": 0.35,
+            "mean": 0.35,
+            "cv": null
+          }
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v49-128/sample-0-nextn-5",
+      "cycle_summary": {
+        "measured_calls": 18,
+        "multi_token_calls": 9,
+        "committed_tokens": 32,
+        "decode_ms": 91895.198,
+        "verifier_cycles": 17,
+        "tokens_per_second": 0.34822276567704874,
+        "proposed_tokens": 84,
+        "accepted_draft_tokens": 14,
+        "acceptance_fraction": 0.16666666666666666,
+        "mean_tokens_per_verifier_cycle": 1.8235294117647058,
+        "full_accept_cycles": 0.0,
+        "cost_ms": {
+          "draft_propose_ms": {
+            "total": 1622.149,
+            "mean": 95.4205294117647
+          },
+          "target_verify_ms": {
+            "total": 84999.826,
+            "mean": 4999.989764705882
+          },
+          "snapshot_ms": {
+            "total": 11.097999999999999,
+            "mean": 0.6528235294117647
+          },
+          "rollback_ms": {
+            "total": 941.882,
+            "mean": 55.404823529411765
+          },
+          "replay_ms": {
+            "total": 0.0,
+            "mean": 0.0
+          },
+          "sidecar_catchup_ms": {
+            "total": 7.702,
+            "mean": 0.4530588235294118
+          },
+          "total_ms": {
+            "total": 87600.17,
+            "mean": 5152.9511764705885
+          }
+        },
+        "cycles": [
+          {
+            "cycle": 10.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 0.0,
+            "rejected_at": 1.0,
+            "committed_tokens": 1.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 31.819,
+            "target_verify_ms": 4967.413,
+            "snapshot_ms": 0.317,
+            "rollback_ms": 55.655,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.384,
+            "commit_ms": 0.0,
+            "total_ms": 5056.139
+          },
+          {
+            "cycle": 11.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 1.0,
+            "rejected_at": 2.0,
+            "committed_tokens": 2.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 69.536,
+            "target_verify_ms": 4978.576,
+            "snapshot_ms": 0.415,
+            "rollback_ms": 54.85,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.411,
+            "commit_ms": 0.0,
+            "total_ms": 5105.937
+          },
+          {
+            "cycle": 12.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 2.0,
+            "rejected_at": 3.0,
+            "committed_tokens": 3.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 228.497,
+            "target_verify_ms": 5051.654,
+            "snapshot_ms": 0.346,
+            "rollback_ms": 56.305,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.516,
+            "commit_ms": 0.001,
+            "total_ms": 5339.014
+          },
+          {
+            "cycle": 13.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 0.0,
+            "rejected_at": 1.0,
+            "committed_tokens": 1.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 49.459,
+            "target_verify_ms": 5044.717,
+            "snapshot_ms": 0.385,
+            "rollback_ms": 57.909,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.343,
+            "commit_ms": 0.0,
+            "total_ms": 5153.335
+          },
+          {
+            "cycle": 14.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 1.0,
+            "rejected_at": 2.0,
+            "committed_tokens": 2.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 35.549,
+            "target_verify_ms": 5184.781,
+            "snapshot_ms": 1.297,
+            "rollback_ms": 55.793,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.422,
+            "commit_ms": 0.0,
+            "total_ms": 5278.894
+          },
+          {
+            "cycle": 15.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 0.0,
+            "rejected_at": 1.0,
+            "committed_tokens": 1.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 50.623,
+            "target_verify_ms": 5203.15,
+            "snapshot_ms": 1.305,
+            "rollback_ms": 58.166,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.325,
+            "commit_ms": 0.0,
+            "total_ms": 5314.126
+          },
+          {
+            "cycle": 16.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 0.0,
+            "rejected_at": 1.0,
+            "committed_tokens": 1.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 34.246,
+            "target_verify_ms": 5181.621,
+            "snapshot_ms": 0.401,
+            "rollback_ms": 55.823,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.452,
+            "commit_ms": 0.0,
+            "total_ms": 5273.051
+          },
+          {
+            "cycle": 17.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 1.0,
+            "rejected_at": 2.0,
+            "committed_tokens": 2.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 64.933,
+            "target_verify_ms": 4917.757,
+            "snapshot_ms": 1.264,
+            "rollback_ms": 54.49,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.503,
+            "commit_ms": 0.0,
+            "total_ms": 5039.94
+          },
+          {
+            "cycle": 18.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 1.0,
+            "rejected_at": 2.0,
+            "committed_tokens": 2.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 34.023,
+            "target_verify_ms": 4968.338,
+            "snapshot_ms": 0.398,
+            "rollback_ms": 54.842,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.415,
+            "commit_ms": 0.001,
+            "total_ms": 5059.019
+          },
+          {
+            "cycle": 19.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 2.0,
+            "rejected_at": 3.0,
+            "committed_tokens": 3.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 64.672,
+            "target_verify_ms": 4914.489,
+            "snapshot_ms": 0.358,
+            "rollback_ms": 54.61,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.515,
+            "commit_ms": 0.001,
+            "total_ms": 5036.318
+          },
+          {
+            "cycle": 20.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 1.0,
+            "rejected_at": 2.0,
+            "committed_tokens": 2.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 558.425,
+            "target_verify_ms": 4949.389,
+            "snapshot_ms": 1.158,
+            "rollback_ms": 55.141,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.501,
+            "commit_ms": 0.001,
+            "total_ms": 5565.708
+          },
+          {
+            "cycle": 21.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 2.0,
+            "rejected_at": 3.0,
+            "committed_tokens": 3.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 51.747,
+            "target_verify_ms": 4889.767,
+            "snapshot_ms": 0.406,
+            "rollback_ms": 53.884,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.526,
+            "commit_ms": 0.0,
+            "total_ms": 4997.907
+          },
+          {
+            "cycle": 22.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 0.0,
+            "rejected_at": 1.0,
+            "committed_tokens": 1.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 57.374,
+            "target_verify_ms": 4880.189,
+            "snapshot_ms": 0.322,
+            "rollback_ms": 55.698,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.326,
+            "commit_ms": 0.0,
+            "total_ms": 4994.459
+          },
+          {
+            "cycle": 23.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 0.0,
+            "rejected_at": 1.0,
+            "committed_tokens": 1.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 97.18,
+            "target_verify_ms": 4940.833,
+            "snapshot_ms": 0.361,
+            "rollback_ms": 54.683,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.36,
+            "commit_ms": 0.0,
+            "total_ms": 5093.914
+          },
+          {
+            "cycle": 24.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 0.0,
+            "rejected_at": 1.0,
+            "committed_tokens": 1.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 96.827,
+            "target_verify_ms": 4874.714,
+            "snapshot_ms": 0.386,
+            "rollback_ms": 54.352,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.372,
+            "commit_ms": 0.0,
+            "total_ms": 5027.153
+          },
+          {
+            "cycle": 25.0,
+            "requested_depth": 5.0,
+            "drafted_tokens": 5.0,
+            "accepted_tokens": 0.0,
+            "rejected_at": 1.0,
+            "committed_tokens": 1.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 72.642,
+            "target_verify_ms": 4916.965,
+            "snapshot_ms": 0.841,
+            "rollback_ms": 54.633,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 0.279,
+            "commit_ms": 0.0,
+            "total_ms": 5045.909
+          },
+          {
+            "cycle": 26.0,
+            "requested_depth": 4.0,
+            "drafted_tokens": 4.0,
+            "accepted_tokens": 3.0,
+            "rejected_at": 4.0,
+            "committed_tokens": 4.0,
+            "full_accept": 0.0,
+            "target_seed_ms": 0.0,
+            "draft_propose_ms": 24.597,
+            "target_verify_ms": 5135.473,
+            "snapshot_ms": 1.138,
+            "rollback_ms": 55.048,
+            "replay_ms": 0.0,
+            "sidecar_catchup_ms": 1.052,
+            "commit_ms": 0.0,
+            "total_ms": 5219.347
+          }
+        ]
+      },
+      "actual_cycles": 26,
+      "actual_verifier_cycles": 26,
+      "confidence_bypasses": 0
+    }
+  ],
+  "pairs": [
+    {
+      "sample": 0,
+      "drafter": "nextn",
+      "proposals": 5,
+      "same_generated_tokens": true,
+      "actual_final_position": 131104,
+      "quality": [
+        {
+          "file": "frontier_131072.decode.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        },
+        {
+          "file": "frontier_131072.logits.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        }
+      ]
+    }
+  ],
+  "summary": [
+    {
+      "proposals": 5,
+      "samples": 1,
+      "prefill": {
+        "samples": [
+          179.05
+        ],
+        "median": 179.05,
+        "paired_change_percent": [
+          -20.308883745771766
+        ],
+        "median_change_percent": -20.308883745771766,
+        "min_change_percent": -20.308883745771766,
+        "cv": null
+      },
+      "decode": {
+        "samples": [
+          0.36
+        ],
+        "median": 0.36,
+        "paired_change_percent": [
+          56.52173913043477
+        ],
+        "median_change_percent": 56.52173913043477,
+        "min_change_percent": 56.52173913043477,
+        "cv": null
+      },
+      "decode_total": {
+        "samples": [
+          0.35
+        ],
+        "median": 0.35,
+        "paired_change_percent": [
+          52.17391304347825
+        ],
+        "median_change_percent": 52.17391304347825,
+        "min_change_percent": 52.17391304347825,
+        "cv": null
+      }
+    }
+  ],
+  "status": "COMPLETE",
+  "scope": "diagnostic",
+  "all_pass": true
+}

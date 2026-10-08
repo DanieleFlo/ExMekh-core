@@ -23,12 +23,15 @@ comportamenti incoerenti verificabili con test.
 | `AgentDesigner` | Lavagna, selezione e applicazione delle modifiche | `build`, `open`; controlli e stato interno restano privati |
 | `CapabilityEditor` | Form di modifica di una capability su uno snapshot indipendente | `open`, callback tipizzata; interpreta e salva tramite `CapabilityRepository` |
 | `validate_agent_design` | Validazione delle capabilities reali al confine con ExMekh-Lib | Costruzione e caricamento tramite le API pubbliche di `Node` |
+| Costruttori della gerarchia | Nodi, figli, capability bundled e identità dell'agente | `build_generic_agent`, `build_designed_agent`; il runner coordina i turni senza costruire direttamente i nodi |
 | `AgentSelector` | Scelta e personalizzazione del profilo nella UI | `set_value`, `profile`, `design_snapshot`, `apply_to`; i controlli NiceGUI restano privati |
 | `CapabilityPathsEditor` | Cartella predefinita immutabile, riferimenti aggiuntivi e navigazione fuori dal thread UI | `build`, `set_paths`, `all_paths`, `additional_paths`, `browse` |
 | `MessageEditor` | Dialog di modifica e durata degli upload temporanei | `open`, callback di salvataggio tipizzata; la chat non gestisce il ciclo di vita del form |
 | `Disclosure` / `DisclosureState` | Interazione coerente e scelte di apertura locali alla vista | Clic, Enter e Spazio, visibilità, chevron e `aria-expanded` |
 | `RecordedToolOutput` | Interpretazione dei metadati degli output registrati | `parse`; include corpo, riferimenti e thinking già interpretati |
 | `ToolEvent` | Identità, stato e durata di una chiamata | `execution_status`, `matches_update`, `merge_update`, `normalized_copy`; `record_tool_event` mantiene una sola voce per invocazione |
+| `TurnStreamCollector` | Accumulo e snapshot del turno, compreso lo steering | `can_steer`, `steer`, `snapshot_message`, `build_message`; il registro non attraversa lo steering interno |
+| `ActiveTurnRegistry` | Task attivi, revisioni, cancellazione e passaggio delle code | `start`, `finish`, `snapshot`, `can_steer`, `steer`, `stop_and_wait`; delega al raccoglitore la consegna della guida |
 
 ## Organizzazione dei moduli e delle risorse
 

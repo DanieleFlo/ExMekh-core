@@ -4,6 +4,10 @@
 #include "ds4_qwen4_vision.h"
 #include "ds4_qwen4_expert_cache.h"
 #include "ds4_read_queue.h"
+#include "ds4_qwen4_cpu.h"
+#include "ds4_qwen4_runtime.h"
+
+static bool qwen4_group_attention_arch_ok(void);
 
 namespace qwen4_cuda {
 
@@ -45,7 +49,7 @@ __global__ void attn_prep(float *qout, float *gate, __half *kc, __half *vc,
         const float *iq, const float *ik, const uint32_t *pos3,
         const float *gq, const float *gk, const float *giq,
         unsigned H, unsigned Hkv, unsigned D, unsigned Hi, unsigned Di,
-        unsigned pos0, float eps, rope_args rp) {
+        unsigned pos0, unsigned kv_pos0, float eps, rope_args rp) {
     const unsigned slot = blockIdx.x, t = blockIdx.y, pos = pos0 + t, lane = threadIdx.x;
     __shared__ float row[256];
     if (slot == H + Hkv + Hi) {
@@ -70,8 +74,8 @@ __global__ void attn_prep(float *qout, float *gate, __half *kc, __half *vc,
             qout[((uint64_t)t * H + h) * D + i] = row[i];
             gate[((uint64_t)t * H + h) * D + i] = src[D + i];
         } else if (isk) {
-            kc[((uint64_t)pos * Hkv + h) * D + i] = __float2half_rn(row[i]);
-            vc[((uint64_t)pos * Hkv + h) * D + i] = __float2half_rn(vp[((uint64_t)t * Hkv + h) * D + i]);
+            kc[((uint64_t)(pos - kv_pos0) * Hkv + h) * D + i] = __float2half_rn(row[i]);
+            vc[((uint64_t)(pos - kv_pos0) * Hkv + h) * D + i] = __float2half_rn(vp[((uint64_t)t * Hkv + h) * D + i]);
         } else iqout[((uint64_t)t * Hi + h) * Di + i] = row[i];
     }
 }
@@ -165,6 +169,69 @@ __global__ void idx_select(int *out, const float *score, unsigned N, unsigned K)
     }
 }
 
+/* Read every score once. Warp-private radix histograms avoid contention
+ * between warps; integer scans preserve the original greater-then-equal
+ * ordering, including causal sentinels and exact zero-score ties. */
+template<unsigned NT, unsigned PER>
+__global__ __launch_bounds__(NT) void idx_select_cached(int *out, const float *score, unsigned N, unsigned K) {
+    const unsigned tid = threadIdx.x, t = blockIdx.x, lane = tid & 31u, warp = tid / 32u;
+    __shared__ unsigned hist[NT / 32][256], gt[NT / 32], eq[NT / 32], threshold, need;
+    const unsigned chunk = (N + NT - 1u) / NT, begin = min(N, tid * chunk), end = min(N, begin + chunk);
+    unsigned keys[PER];
+#pragma unroll
+    for (unsigned j = 0; j < PER; ++j)
+        keys[j] = begin + j < end ? __float_as_uint(fmaxf(score[(uint64_t)t * N + begin + j], 0)) : 0;
+    if (!tid) { threshold = 0; need = K; }
+    __syncthreads();
+    for (unsigned pass = 0; pass < 4; ++pass) {
+        const unsigned shift = 24 - 8 * pass, mask = pass ? (0xffffffffu << (shift + 8)) : 0;
+        for (unsigned i = tid; i < (NT / 32) * 256; i += NT) ((unsigned *)hist)[i] = 0;
+        __syncthreads();
+#pragma unroll
+        for (unsigned j = 0; j < PER; ++j)
+            if (begin + j < end && (keys[j] & mask) == threshold)
+                atomicAdd(&hist[warp][(keys[j] >> shift) & 255], 1u);
+        __syncthreads();
+        if (tid < 256) {
+            unsigned total = 0;
+            for (unsigned w = 0; w < NT / 32; ++w) total += hist[w][tid];
+            hist[0][tid] = total;
+        }
+        __syncthreads();
+        if (!tid) for (int d = 255; d >= 0; --d) {
+            if (hist[0][d] >= need) { threshold |= (unsigned)d << shift; break; }
+            need -= hist[0][d];
+        }
+        __syncthreads();
+    }
+    unsigned ng = 0, ne = 0;
+#pragma unroll
+    for (unsigned j = 0; j < PER; ++j) if (begin + j < end) { ng += keys[j] > threshold; ne += keys[j] == threshold; }
+    unsigned pg = ng, pe = ne;
+    for (unsigned off = 1; off < 32; off *= 2) {
+        const unsigned g = __shfl_up_sync(0xffffffffu, pg, off), e = __shfl_up_sync(0xffffffffu, pe, off);
+        if (lane >= off) { pg += g; pe += e; }
+    }
+    if (lane == 31) { gt[warp] = pg; eq[warp] = pe; }
+    __syncthreads();
+    if (tid < 32) {
+        unsigned g = tid < NT / 32 ? gt[tid] : 0, e = tid < NT / 32 ? eq[tid] : 0;
+        const unsigned oldg = g, olde = e;
+        for (unsigned off = 1; off < 32; off *= 2) {
+            const unsigned a = __shfl_up_sync(0xffffffffu, g, off), b = __shfl_up_sync(0xffffffffu, e, off);
+            if (lane >= off) { g += a; e += b; }
+        }
+        if (tid < NT / 32) { gt[tid] = g - oldg; eq[tid] = e - olde; }
+    }
+    __syncthreads();
+    unsigned g = gt[warp] + pg - ng, e = eq[warp] + pe - ne;
+#pragma unroll
+    for (unsigned j = 0; j < PER; ++j) if (begin + j < end) {
+        if (keys[j] > threshold) out[(uint64_t)t * K + g++] = begin + j;
+        else if (keys[j] == threshold) { if (e < need) out[(uint64_t)t * K + K - need + e] = begin + j; ++e; }
+    }
+}
+
 __global__ void idx_expand(int *out, unsigned *count, const int *blocks,
         unsigned K, unsigned ratio, unsigned pos0, unsigned stride) {
     const unsigned t = blockIdx.x, pos = pos0 + t, tail = (pos + 1) / ratio * ratio;
@@ -179,15 +246,16 @@ template<unsigned D>
 __global__ void attention(float *out, float *partial, const float *q, const float *gate,
         const __half *kc, const __half *vc, const int *sel, const unsigned *counts,
         unsigned H, unsigned Hkv, unsigned pos0, unsigned stride, bool sparse,
-        unsigned splits, unsigned per, float scale) {
+        unsigned splits, unsigned per, float scale, const int *page_table) {
     const unsigned h = blockIdx.x * 4 + threadIdx.x / 32, t = blockIdx.y, split = blockIdx.z;
     if (h >= H) return;
     const unsigned lane = threadIdx.x & 31, kh = h / (H / Hkv), n = sparse ? counts[t] : pos0 + t + 1;
     float qv[D / 32], acc[D / 32] = {}, m = -3e38f, denom = 0;
     for (unsigned i = 0; i < D / 32; i++) qv[i] = q[((uint64_t)t * H + h) * D + lane + 32 * i] * scale;
     for (unsigned j = split * per; j < min(n, (split + 1) * per); j++) {
-        const unsigned p = sparse ? (unsigned)sel[(uint64_t)t * stride + j] : j;
-        if (p > pos0 + t) continue;
+        const unsigned logical = sparse ? (unsigned)sel[(uint64_t)t * stride + j] : j;
+        if (logical > pos0 + t) continue;
+        const unsigned p = page_table ? (unsigned)page_table[logical / 4u] * 4u + logical % 4u : logical;
         float score = 0;
         for (unsigned i = 0; i < D / 32; i++) score += qv[i] * __half2float(kc[((uint64_t)p * Hkv + kh) * D + lane + 32 * i]);
         score = sum(score);
@@ -230,7 +298,7 @@ __global__ void attn_merge(float *out, const float *partial, const float *gate,
  * K and V are already half, so neither requires further rounding. */
 __global__ void attention_group(float *out, const float *q, const float *gate,
         const __half *kc, const __half *vc, const int *sel, const unsigned *counts,
-        unsigned H, unsigned Hkv, unsigned pos0, unsigned stride, bool sparse, float scale) {
+        unsigned H, unsigned Hkv, unsigned pos0, unsigned stride, bool sparse, float scale, const int *page_table) {
 #if __CUDA_ARCH__ >= 800
     const unsigned D = 256, tid = threadIdx.x, lane = tid&31, warp = tid/32;
     const unsigned t = blockIdx.y, kh = blockIdx.x, group = H/Hkv;
@@ -259,7 +327,8 @@ __global__ void attention_group(float *out, const float *q, const float *gate,
         if (tid < 32) {
             const unsigned j = j0+tid;
             const unsigned p = j < n ? (sparse ? (unsigned)sel[(uint64_t)t*stride+j] : j) : UINT_MAX;
-            positions[tid] = p <= pos0+t ? p : UINT_MAX;
+            positions[tid] = p <= pos0+t ?
+                (page_table ? (unsigned)page_table[p / 4u] * 4u + p % 4u : p) : UINT_MAX;
         }
         __syncthreads();
         for (unsigned i = tid*8; i < 32*D; i += 256*8) {
@@ -674,7 +743,7 @@ template<unsigned TYPE, bool DOWN>
 __global__ void moe_mv(float *out, const float *x, const int *selected,
         const char *w0, const char *w1, const char *sh0, const char *sh1,
         unsigned shared_type, unsigned NE, unsigned NS, unsigned K, unsigned M,
-        uint64_t rb, uint64_t srb, const char *const *routed0, const char *const *routed1) {
+        uint64_t rb, uint64_t srb, const char *const *routed0, const char *const *routed1, unsigned skip_mode) {
     const unsigned row = blockIdx.x * 4 + threadIdx.x / 32, slot = blockIdx.y, t = blockIdx.z;
     __shared__ uint64_t grid_table[TYPE == 16 ? 256 : 1];
     __shared__ uint8_t sign_table[TYPE == 16 ? 128 : 1];
@@ -685,6 +754,8 @@ __global__ void moe_mv(float *out, const float *x, const int *selected,
     }
     if (row >= M) return;
     const bool shared = slot == NS;
+    if ((!shared && (skip_mode & 2u)) || (shared && (skip_mode & 4u)) ||
+        ((skip_mode & 1u) && !shared && selected[(uint64_t)t * NS + slot] < 0)) return;
     const unsigned stride = NS + (shared_type != UINT_MAX);
     const uint64_t pair = (uint64_t)t * stride + slot;
     const float *xt = x + (DOWN ? pair : t) * K;
@@ -731,11 +802,13 @@ static uint64_t expert_epoch, expert_reserved, expert_hits, expert_misses, exper
 static std::vector<ds4_qwen4_expert_slot> ram_slots;
 static std::vector<void *> ram_raw; /* slot starts, owned by ram_slabs */
 static std::vector<void *> ram_slabs;
+static std::vector<bool> ram_slab_pinned;
+static bool ram_pageable;
 static uint64_t ram_allocated, ram_slab_used, ram_slab_capacity, ram_budget;
 static bool ram_budget_set;
 static std::vector<uint64_t> ram_bytes;
 static std::unordered_map<uint64_t, size_t> ram_slot_by_offset;
-static uint64_t ram_reserved, ram_hits, ram_misses, ram_evictions, expert_disk_bytes, expert_demotions, expert_h2d_bytes;
+static uint64_t ram_reserved, ram_hits, ram_misses, ram_evictions, expert_disk_bytes, expert_disk_reads, expert_demotions, expert_h2d_bytes;
 static FILE *expert_trace;
 static bool expert_trace_opened;
 /* The list builder gives a new generation even when a session reuses the same
@@ -751,12 +824,34 @@ static cudaEvent_t expert_group_consumed[2];
 static int *expert_group_counts;
 static char *expert_group_host;
 static uint64_t expert_group_capacity, expert_group_counts_capacity;
-static uint64_t expert_copy_groups;
+static uint64_t expert_copy_groups, expert_ring_groups;
 static double expert_read_seconds;
-static std::vector<size_t> gpu_victims, ram_gpu_victims, ram_other_victims;
-static uint64_t gpu_victim_epoch = UINT64_MAX, ram_victim_epoch = UINT64_MAX;
-static uint64_t gpu_victim_bytes, ram_victim_bytes;
+struct gpu_victim_entry { size_t index; uint64_t frequency, last_used; };
+struct gpu_victim_heap { uint64_t epoch = UINT64_MAX; std::vector<gpu_victim_entry> entries; };
+static std::unordered_map<uint64_t, gpu_victim_heap> gpu_victim_heaps;
+struct ram_victim_heap {
+    uint64_t epoch = UINT64_MAX;
+    std::vector<gpu_victim_entry> gpu, other;
+};
+static std::unordered_map<uint64_t, ram_victim_heap> ram_victim_heaps;
 static double victim_cpu_seconds;
+/* Restoring logical hints must not serialize unrelated physical slots that
+ * accumulated after the snapshot. Retain the validated payload until the
+ * next forward; current physical residency and budgets remain independent. */
+static std::vector<char> expert_restored_payload;
+
+#include "ds4_qwen4_transfer.cuh"
+#include "ds4_qwen4_kv.cuh"
+#include "ds4_qwen4_ranks.cuh"
+static void hybrid_reset(void);
+static void profile_reset(void);
+static int ring_ahead_clear(void);
+static void ring_ahead_reset(void);
+static void profile_observe(uint64_t gate, unsigned T, unsigned NS, const int *ids);
+static uint64_t profile_frequency(uint64_t offset, uint64_t recent, unsigned rows);
+static ds4_qwen4_workload tuning_phase(unsigned T);
+
+#include "ds4_qwen4_residency.cuh"
 
 /* Exact-router read-ahead. Only the inference thread reserves/publishes RAM
  * slots. Workers own duplicated descriptors and write reserved, epoch-pinned
@@ -776,6 +871,7 @@ static expert_read_request expert_read_requests[DS4_READ_QUEUE_DEPTH];
 static int expert_read_fd[DS4_READ_QUEUE_WORKERS], expert_read_direct_fd[DS4_READ_QUEUE_WORKERS];
 static uint64_t expert_read_align, expert_read_file_size;
 static std::vector<uint64_t> expert_read_offsets;
+static std::vector<uint64_t> expert_read_sizes;
 static size_t expert_read_cursor;
 static uint64_t expert_read_bytes, expert_async_reads;
 static double expert_read_wait_seconds;
@@ -805,14 +901,14 @@ static int expert_read_publish(expert_read_request *r) {
         return 0;
     }
     ram_slots[r->slot].device_ptr = (char *)r->payload;
-    expert_disk_bytes += r->bytes; expert_async_reads++;
+    expert_disk_bytes += r->bytes; expert_disk_reads++; expert_async_reads++;
     return 1;
 }
 
 static int expert_reads_finish(void) {
     int ok = 1;
     for (auto &r : expert_read_requests) if (r.active && !expert_read_publish(&r)) ok = 0;
-    expert_read_offsets.clear(); expert_read_cursor = 0;
+    expert_read_offsets.clear(); expert_read_sizes.clear(); expert_read_cursor = 0;
     return ok;
 }
 
@@ -870,27 +966,65 @@ static size_t expert_gpu_victim(uint64_t bytes) {
         victim_cpu_seconds += cuda_wall_sec() - start;
         return i;
     }
-    auto worse = [](size_t a, size_t b) {
-        return ds4_qwen4_expert_rank_before(expert_slots.data(), b, a);
+    if (decode_rank_active) {
+        const size_t i = decode_rank_victim(false, bytes);
+        if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_CHECK_VICTIMS", 0) &&
+            i != ds4_qwen4_expert_victim(expert_slots.data(), expert_slots.size(), bytes, expert_epoch)) {
+            fprintf(stderr, "ds4: Qwen persistent GPU rank differs from linear oracle\n"); abort();
+        }
+        victim_cpu_seconds += cuda_wall_sec() - start;
+        return i;
+    }
+    auto worse = [](const gpu_victim_entry &a, const gpu_victim_entry &b) {
+        if (a.frequency != b.frequency) return a.frequency > b.frequency;
+        if (a.last_used != b.last_used) return a.last_used > b.last_used;
+        return a.index > b.index;
     };
-    if (gpu_victim_epoch != expert_epoch || gpu_victim_bytes != bytes) {
-        gpu_victims.clear();
+    auto &heap = gpu_victim_heaps[bytes]; auto &victims = heap.entries;
+    if (heap.epoch != expert_epoch) {
+        victims.clear();
         for (size_t i = 0; i < expert_slots.size(); i++)
-            if (expert_slots[i].capacity >= bytes && expert_slots[i].pinned_epoch != expert_epoch)
-                gpu_victims.push_back(i);
-        std::make_heap(gpu_victims.begin(), gpu_victims.end(), worse);
-        gpu_victim_epoch = expert_epoch; gpu_victim_bytes = bytes;
+            if (expert_slots[i].capacity >= bytes && expert_slots[i].pinned_epoch != expert_epoch && !expert_slots[i].permanent)
+                victims.push_back({i, expert_slots[i].frequency, expert_slots[i].last_used});
+        std::make_heap(victims.begin(), victims.end(), worse);
+        heap.epoch = expert_epoch;
     }
-    while (!gpu_victims.empty() && expert_slots[gpu_victims.front()].pinned_epoch == expert_epoch) {
-        std::pop_heap(gpu_victims.begin(), gpu_victims.end(), worse); gpu_victims.pop_back();
+    /* Keys are immutable snapshots. Admission can pin/change an entry also
+     * present in another size's heap without corrupting that heap's order. */
+    while (!victims.empty() && (expert_slots[victims.front().index].pinned_epoch == expert_epoch ||
+                               expert_slots[victims.front().index].permanent)) {
+        std::pop_heap(victims.begin(), victims.end(), worse); victims.pop_back();
     }
-    const size_t i = gpu_victims.empty() ? SIZE_MAX : gpu_victims.front();
+    const size_t i = victims.empty() ? SIZE_MAX : victims.front().index;
+    if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_CHECK_VICTIMS", 0)) {
+        const size_t expected = ds4_qwen4_expert_victim(expert_slots.data(), expert_slots.size(), bytes, expert_epoch);
+        if (i != expected) {
+            fprintf(stderr, "ds4: Qwen size-specific victim differs from linear oracle (%zu != %zu)\n", i, expected);
+            abort();
+        }
+    }
     victim_cpu_seconds += cuda_wall_sec() - start;
     return i; /* a low-frequency admission may reject it without consuming it */
 }
 
 static size_t expert_ram_victim(uint64_t capacity) {
     const double start = cuda_wall_sec();
+    if (decode_rank_active && !ds4_env_flag_enabled("DS4_CUDA_QWEN4_LINEAR_VICTIMS", 0)) {
+        const size_t i = decode_rank_victim(true, capacity);
+        if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_CHECK_VICTIMS", 0)) {
+            size_t expected = SIZE_MAX;
+            for (unsigned pass = 0; pass < 2 && expected == SIZE_MAX; ++pass)
+                for (size_t j = 0; j < ram_slots.size(); ++j) {
+                    const auto &s = ram_slots[j];
+                    if (s.capacity < capacity || s.pinned_epoch == expert_epoch ||
+                        (!pass && !expert_slot_by_offset.count(s.offset))) continue;
+                    if (expected == SIZE_MAX || ds4_qwen4_expert_rank_before(ram_slots.data(), j, expected)) expected = j;
+                }
+            if (i != expected) { fprintf(stderr, "ds4: Qwen persistent RAM rank differs from linear oracle\n"); abort(); }
+        }
+        victim_cpu_seconds += cuda_wall_sec() - start;
+        return i;
+    }
     if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_LINEAR_VICTIMS", 0)) {
         size_t index = SIZE_MAX;
         for (unsigned pass = 0; pass < 2 && index == SIZE_MAX; pass++)
@@ -903,34 +1037,48 @@ static size_t expert_ram_victim(uint64_t capacity) {
         victim_cpu_seconds += cuda_wall_sec() - start;
         return index;
     }
-    auto worse = [](size_t a, size_t b) {
-        return ds4_qwen4_expert_rank_before(ram_slots.data(), b, a);
+    auto worse = [](const gpu_victim_entry &a, const gpu_victim_entry &b) {
+        if (a.frequency != b.frequency) return a.frequency > b.frequency;
+        if (a.last_used != b.last_used) return a.last_used > b.last_used;
+        return a.index > b.index;
     };
-    if (ram_victim_epoch != expert_epoch || ram_victim_bytes != capacity) {
-        ram_gpu_victims.clear(); ram_other_victims.clear();
+    auto &heap = ram_victim_heaps[capacity];
+    if (heap.epoch != expert_epoch) {
+        heap.gpu.clear(); heap.other.clear();
         for (size_t i = 0; i < ram_slots.size(); i++) {
             const auto &s = ram_slots[i];
             if (s.capacity < capacity || s.pinned_epoch == expert_epoch) continue;
-            auto &v = expert_slot_by_offset.count(s.offset) ? ram_gpu_victims : ram_other_victims;
-            v.push_back(i);
+            auto &v = expert_slot_by_offset.count(s.offset) ? heap.gpu : heap.other;
+            v.push_back({i, s.frequency, s.last_used});
         }
-        std::make_heap(ram_gpu_victims.begin(), ram_gpu_victims.end(), worse);
-        std::make_heap(ram_other_victims.begin(), ram_other_victims.end(), worse);
-        ram_victim_epoch = expert_epoch; ram_victim_bytes = capacity;
+        std::make_heap(heap.gpu.begin(), heap.gpu.end(), worse);
+        std::make_heap(heap.other.begin(), heap.other.end(), worse);
+        heap.epoch = expert_epoch;
     }
     /* Demoting a GPU victim can change its RAM preference during a projection.
      * Reclassify lazily before selecting; the frequency/recency order remains. */
     for (unsigned pass = 0; pass < 2; pass++) {
-        auto &v = pass ? ram_other_victims : ram_gpu_victims;
+        auto &v = pass ? heap.other : heap.gpu;
         while (!v.empty()) {
-            const size_t i = v.front();
+            const gpu_victim_entry entry = v.front(); const size_t i = entry.index;
             std::pop_heap(v.begin(), v.end(), worse); v.pop_back();
             const auto &s = ram_slots[i];
             if (s.pinned_epoch == expert_epoch) continue;
             if (!pass && !expert_slot_by_offset.count(s.offset)) {
-                ram_other_victims.push_back(i);
-                std::push_heap(ram_other_victims.begin(), ram_other_victims.end(), worse);
+                heap.other.push_back(entry);
+                std::push_heap(heap.other.begin(), heap.other.end(), worse);
                 continue;
+            }
+            if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_CHECK_VICTIMS", 0)) {
+                size_t expected = SIZE_MAX;
+                for (unsigned tier = 0; tier < 2 && expected == SIZE_MAX; tier++)
+                    for (size_t j = 0; j < ram_slots.size(); j++) {
+                        const auto &candidate = ram_slots[j];
+                        if (candidate.capacity < capacity || candidate.pinned_epoch == expert_epoch ||
+                            (!tier && !expert_slot_by_offset.count(candidate.offset))) continue;
+                        if (expected == SIZE_MAX || ds4_qwen4_expert_rank_before(ram_slots.data(), j, expected)) expected = j;
+                    }
+                if (i != expected) { fprintf(stderr, "ds4: Qwen RAM victim differs from linear oracle (%zu != %zu)\n", i, expected); abort(); }
             }
             victim_cpu_seconds += cuda_wall_sec() - start;
             return i;
@@ -958,10 +1106,10 @@ static void route_invalidate(const void *ptr, uint64_t bytes) {
 
 /* Metadata lives beyond an async launch. The next route readback drains all
  * preceding groups before this storage or a cache victim can be reused. */
-static int expert_group_ensure(unsigned NE, unsigned groups) {
+static int expert_group_ensure(unsigned NE, unsigned groups, unsigned projections = 2) {
     const uint64_t count_bytes = (uint64_t)NE * groups * sizeof(int);
     const uint64_t pointer_offset = (count_bytes + sizeof(char *) - 1u) & ~(uint64_t)(sizeof(char *) - 1u);
-    const uint64_t bytes = pointer_offset + (uint64_t)NE * 2u * sizeof(char *);
+    const uint64_t bytes = pointer_offset + (uint64_t)NE * projections * sizeof(char *);
     if (!expert_copy_stream && !cuda_ok(cudaStreamCreateWithFlags(&expert_copy_stream,
                      cudaStreamNonBlocking), "Qwen expert copy stream")) return 0;
     if (!expert_copy_ready && !cuda_ok(cudaEventCreateWithFlags(&expert_copy_ready,
@@ -1011,6 +1159,13 @@ static std::unordered_map<uint64_t, expert_usage_window> expert_windows;
 
 
 static void expert_cache_reset(void) {
+    /* Host staging jobs and DMA descriptors still refer to cache sources and
+     * copy streams. Drain them before either owner can be released. */
+    ring_ahead_reset();
+    transfer_reset();
+    hybrid_reset();
+    profile_reset();
+    kv_total_hits = kv_total_misses = kv_total_uploaded = 0;
     expert_reads_reset();
     if (!ram_slots.empty() || route_host || expert_copy_stream) (void)cudaDeviceSynchronize();
     if (expert_copy_ready) (void)cudaEventDestroy(expert_copy_ready);
@@ -1028,16 +1183,18 @@ static void expert_cache_reset(void) {
     route_host = NULL; route_host_capacity = 0;
     route_reset();
     if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_CACHE_STATS", 0))
-        fprintf(stderr, "ds4: Qwen routing readbacks=%llu bytes=%llu copy_groups=%llu expert_read_ms=%.3f victim_select_ms=%.3f\n",
+        fprintf(stderr, "ds4: Qwen routing readbacks=%llu bytes=%llu copy_groups=%llu ring_groups=%llu expert_read_ms=%.3f victim_select_ms=%.3f\n",
                 (unsigned long long)route_readbacks, (unsigned long long)route_readback_bytes,
-                (unsigned long long)expert_copy_groups, expert_read_seconds * 1000.0, victim_cpu_seconds * 1000.0);
+                (unsigned long long)expert_copy_groups, (unsigned long long)expert_ring_groups,
+                expert_read_seconds * 1000.0, victim_cpu_seconds * 1000.0);
     if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_CACHE_STATS", 0))
         fprintf(stderr, "ds4: Qwen async reads=%llu host_wait_ms=%.3f workers=%u\n",
                 (unsigned long long)expert_async_reads, expert_read_wait_seconds * 1000.0, expert_read_workers);
     expert_async_reads = 0; expert_read_wait_seconds = 0; expert_read_workers = 0;
-    route_readbacks = route_readback_bytes = expert_copy_groups = 0; expert_read_seconds = victim_cpu_seconds = 0;
-    gpu_victims.clear(); ram_gpu_victims.clear(); ram_other_victims.clear();
-    gpu_victim_epoch = ram_victim_epoch = UINT64_MAX;
+    route_readbacks = route_readback_bytes = expert_copy_groups = expert_ring_groups = 0; expert_read_seconds = victim_cpu_seconds = 0;
+    gpu_victim_heaps.clear(); ram_victim_heaps.clear();
+    decode_rank_reset();
+    stable_reset();
     if (expert_trace) fclose(expert_trace);
     expert_trace = NULL; expert_trace_opened = false;
     if (!ram_slots.empty() && (ds4_env_flag_enabled("DS4_CUDA_QWEN4_EXPERT_CACHE_VERBOSE", 0) || ds4_env_flag_enabled("DS4_CUDA_QWEN4_CACHE_STATS", 0)))
@@ -1045,17 +1202,22 @@ static void expert_cache_reset(void) {
             ram_slots.size(), (unsigned long long)ram_reserved, (unsigned long long)ram_allocated, (unsigned long long)ram_hits,
             (unsigned long long)ram_misses, (unsigned long long)ram_evictions,
             (unsigned long long)expert_disk_bytes, (unsigned long long)expert_demotions, (unsigned long long)expert_h2d_bytes, g_model_direct_fd >= 0);
-    for (void *raw : ram_slabs) (void)cudaFreeHost(raw);
+    for (size_t i = 0; i < ram_slabs.size(); i++) {
+        if (ram_slab_pinned[i]) (void)cudaFreeHost(ram_slabs[i]);
+        else free(ram_slabs[i]);
+    }
+    ram_slab_pinned.clear(); ram_pageable = false;
     ram_slabs.clear(); ram_allocated = ram_slab_used = ram_slab_capacity = ram_budget = 0;
     ram_budget_set = false;
     ram_slots.clear(); ram_raw.clear(); ram_bytes.clear(); ram_slot_by_offset.clear();
-    ram_reserved = ram_hits = ram_misses = ram_evictions = expert_disk_bytes = expert_demotions = expert_h2d_bytes = 0;
+    ram_reserved = ram_hits = ram_misses = ram_evictions = expert_disk_bytes = expert_disk_reads = expert_demotions = expert_h2d_bytes = 0;
     if (!expert_slots.empty() && (ds4_env_flag_enabled("DS4_CUDA_QWEN4_EXPERT_CACHE_VERBOSE", 0) || ds4_env_flag_enabled("DS4_CUDA_QWEN4_CACHE_STATS", 0)))
         fprintf(stderr, "ds4: Qwen expert cache slots=%zu reserved=%llu hits=%llu misses=%llu evictions=%llu\n",
                 expert_slots.size(), (unsigned long long)expert_reserved,
                 (unsigned long long)expert_hits, (unsigned long long)expert_misses,
                 (unsigned long long)expert_evictions);
     expert_slots.clear(); expert_slot_by_offset.clear(); expert_frequency.clear(); expert_windows.clear();
+    expert_restored_payload.clear();
     expert_epoch = expert_reserved = expert_hits = expert_misses = expert_evictions = dense_reserved = 0;
     dense_required = 4ull * 1073741824ull;
     expert_min_bytes = expert_max_bytes = 0;
@@ -1070,12 +1232,16 @@ static bool expert_cache_enabled(const void *map) {
 }
 
 static void expert_cache_next_epoch(void) {
+    expert_restored_payload.clear();
     if (++expert_epoch == 0) {
         expert_epoch = 1;
+        decode_rank_reset();
+        for (auto &entry : gpu_victim_heaps) entry.second.epoch = UINT64_MAX;
+        for (auto &entry : ram_victim_heaps) entry.second.epoch = UINT64_MAX;
         for (auto &slot : expert_slots) slot.last_used = slot.pinned_epoch = 0;
         for (auto &slot : ram_slots) slot.last_used = slot.pinned_epoch = 0;
     }
-
+    decode_rank_next_epoch();
 }
 
 static void expert_cache_touch(uint64_t off, uint64_t uses) {
@@ -1084,17 +1250,22 @@ static void expert_cache_touch(uint64_t off, uint64_t uses) {
     auto ram = ram_slot_by_offset.find(off);
     if (ram != ram_slot_by_offset.end()) {
         auto &slot = ram_slots[ram->second];
+        const bool newly_pinned = slot.pinned_epoch != expert_epoch;
         slot.frequency = frequency; slot.last_used = slot.pinned_epoch = expert_epoch;
+        decode_rank_changed(true, ram->second, newly_pinned);
     }
     auto hit = expert_slot_by_offset.find(off);
     if (hit != expert_slot_by_offset.end()) {
         auto &slot = expert_slots[hit->second];
+        const bool newly_pinned = slot.pinned_epoch != expert_epoch;
         slot.frequency = frequency; slot.last_used = slot.pinned_epoch = expert_epoch;
+        decode_rank_changed(false, hit->second, newly_pinned);
     }
 }
 
 static void expert_cache_observe(uint64_t base, uint64_t bytes, unsigned NE,
         unsigned T, unsigned NS, const int *ids) {
+    stable_observe(base, NE, T, NS, ids);
     if (!expert_trace_opened) {
         expert_trace_opened = true;
         const char *path = getenv("DS4_CUDA_QWEN4_EXPERT_TRACE");
@@ -1128,12 +1299,19 @@ static void expert_cache_observe(uint64_t base, uint64_t bytes, unsigned NE,
     const bool lru = policy && !strcmp(policy, "lru");
     for (unsigned e = 0; e < NE; e++) {
         const uint64_t off = base + (uint64_t)e * bytes;
-        const uint64_t frequency = lru ? 0 : ((uint64_t)window.counts[index * NE + e] << 20) / divisor;
+        const uint64_t frequency = lru ? 0 : profile_frequency(off,
+            ((uint64_t)window.counts[index * NE + e] << 20) / divisor, window.rows);
         expert_frequency[off] = frequency;
         auto hit = expert_slot_by_offset.find(off);
-        if (hit != expert_slot_by_offset.end()) expert_slots[hit->second].frequency = frequency;
+        if (hit != expert_slot_by_offset.end() && expert_slots[hit->second].frequency != frequency) {
+            expert_slots[hit->second].frequency = frequency;
+            decode_rank_changed(false, hit->second);
+        }
         auto ram = ram_slot_by_offset.find(off);
-        if (ram != ram_slot_by_offset.end()) ram_slots[ram->second].frequency = frequency;
+        if (ram != ram_slot_by_offset.end() && ram_slots[ram->second].frequency != frequency) {
+            ram_slots[ram->second].frequency = frequency;
+            decode_rank_changed(true, ram->second);
+        }
     }
 }
 
@@ -1145,13 +1323,16 @@ static size_t expert_ram_slot(uint64_t off, uint64_t bytes) {
     const uint64_t align = std::max<uint64_t>(g_model_direct_align, 1);
     const uint64_t capacity = bytes + 3 * align;
     if (!ram_budget_set) {
+        ram_pageable = g_qwen4_tiered_cache &&
+            (ds4_env_flag_enabled("DS4_CUDA_QWEN4_HYBRID_MOE", 0) ||
+             ds4_env_flag_enabled("DS4_CUDA_QWEN4_KV_STREAMING", 0));
         ram_budget = 16ull * 1073741824ull; /* fallback when host memory is unknown */
         uint64_t available = 0;
         /* A fixed 16 GiB ceiling thrashes on Flash even when host RAM is free.
          * Allocate slabs lazily within the available-memory reserve, so smaller
          * hosts remain bounded without stranding RAM on larger machines. */
         if (ds4_linux_nonmovable_memory(&available))
-            ram_budget = ds4_qwen4_ram_auto_budget(available, UINT64_MAX);
+            ram_budget = ds4_qwen4_ram_auto_budget(available > kv_host_reserved ? available - kv_host_reserved : 0, UINT64_MAX);
         const char *env = getenv("DS4_CUDA_QWEN4_RAM_CACHE_MB");
         if (env && *env && strcmp(env, "auto")) {
             char *end = NULL; const uint64_t mb = strtoull(env, &end, 10);
@@ -1160,8 +1341,8 @@ static size_t expert_ram_slot(uint64_t off, uint64_t bytes) {
             else fprintf(stderr, "ds4: invalid DS4_CUDA_QWEN4_RAM_CACHE_MB; using auto budget\n");
         }
         ram_budget_set = true;
-        fprintf(stderr, "ds4: Qwen pinned RAM budget %.2f GiB (available %.2f GiB; 64 MiB slabs)\n",
-                (double)ram_budget / 1073741824.0, (double)available / 1073741824.0);
+        fprintf(stderr, "ds4: Qwen %s RAM budget %.2f GiB (available %.2f GiB; 64 MiB slabs)\n",
+                ram_pageable ? "pageable" : "pinned", (double)ram_budget / 1073741824.0, (double)available / 1073741824.0);
     }
     void *raw = NULL;
     size_t index = SIZE_MAX;
@@ -1174,14 +1355,16 @@ static size_t expert_ram_slot(uint64_t off, uint64_t bytes) {
     } else if (ram_allocated <= ram_budget && allocation <= ram_budget - ram_allocated) {
         const uint64_t slab = std::min<uint64_t>(std::max<uint64_t>(allocation, 64ull * 1048576ull), ram_budget - ram_allocated);
         void *storage = NULL;
-        if (cudaMallocHost(&storage, slab) == cudaSuccess) {
+        const bool allocated = ram_pageable ? (storage = malloc(slab)) != NULL : cudaMallocHost(&storage, slab) == cudaSuccess;
+        if (allocated) {
             ram_slabs.push_back(storage); ram_allocated += slab;
+            ram_slab_pinned.push_back(!ram_pageable);
             ram_slab_capacity = slab; ram_slab_used = allocation; raw = storage;
-        } else (void)cudaGetLastError();
+        } else if (!ram_pageable) (void)cudaGetLastError();
     }
     if (raw) {
         index = ram_slots.size();
-        ram_slots.push_back({off, capacity, expert_frequency[off], expert_epoch, expert_epoch, NULL});
+        ram_slots.push_back({off, capacity, expert_frequency[off], expert_epoch, expert_epoch, NULL, 0});
         ram_raw.push_back(raw); ram_bytes.push_back(bytes); ram_reserved += capacity;
     } else {
         index = expert_ram_victim(capacity);
@@ -1193,6 +1376,7 @@ static size_t expert_ram_slot(uint64_t off, uint64_t bytes) {
     slot.frequency = expert_frequency[off]; slot.last_used = slot.pinned_epoch = expert_epoch;
     slot.device_ptr = (char *)cuda_align_ptr(ram_raw[index], align);
     ram_slot_by_offset[off] = index;
+    decode_rank_changed(true, index, true);
     return index;
 }
 
@@ -1202,11 +1386,12 @@ static void expert_reads_pump(void) {
     for (auto &r : expert_read_requests) {
         if (r.active) continue;
         while (expert_read_cursor < expert_read_offsets.size()) {
+            const uint64_t bytes = expert_read_sizes.empty() ? expert_read_bytes : expert_read_sizes[expert_read_cursor];
             const uint64_t off = expert_read_offsets[expert_read_cursor++];
             if (expert_slot_by_offset.count(off) || ram_slot_by_offset.count(off)) continue;
-            const size_t slot = expert_ram_slot(off, expert_read_bytes);
+            const size_t slot = expert_ram_slot(off, bytes);
             if (slot == SIZE_MAX) continue;
-            r.offset = off; r.bytes = expert_read_bytes; r.slot = slot;
+            r.offset = off; r.bytes = bytes; r.slot = slot;
             r.destination = ram_slots[slot].device_ptr;
             r.capacity = ram_slots[slot].capacity - g_model_direct_align;
             r.payload = NULL; r.elapsed = 0; r.error = 0;
@@ -1223,7 +1408,7 @@ static void expert_reads_begin(uint64_t o0, uint64_t o1, uint64_t bytes,
                                unsigned NE, unsigned width, const int *uses, bool down) {
     if (!expert_reads_start()) return;
     expert_read_bytes = bytes; expert_read_cursor = 0;
-    expert_read_offsets.clear();
+    expert_read_offsets.clear(); expert_read_sizes.clear();
     for (unsigned first = 0; first < NE; first += width)
         for (unsigned w = 0; w < (down ? 1u : 2u); w++)
             for (unsigned e = first; e < std::min(first + width, NE); e++)
@@ -1242,7 +1427,9 @@ static int expert_ram_source(uint64_t off, uint64_t bytes, const char **ptr) {
             expert_reads_pump();
             return 1;
         }
-        ram_hits++; *ptr = ram_slots[hit->second].device_ptr; return 1;
+        *ptr = ram_slots[hit->second].device_ptr;
+        if (!transfer_source_ready(*ptr, bytes)) return 0;
+        ram_hits++; return 1;
     }
     ram_misses++;
     const size_t index = expert_ram_slot(off, bytes);
@@ -1258,7 +1445,7 @@ static int expert_ram_source(uint64_t off, uint64_t bytes, const char **ptr) {
         fprintf(stderr, "ds4: Qwen expert disk read failed offset=%llu: %s\n", (unsigned long long)off, strerror(errno));
         return 0;
     }
-    slot.device_ptr = (char *)payload; expert_disk_bytes += bytes;
+    slot.device_ptr = (char *)payload; expert_disk_bytes += bytes; expert_disk_reads++;
     *ptr = payload; return 1;
 }
 
@@ -1269,7 +1456,8 @@ static int expert_transfer(const void *map, uint64_t off, uint64_t bytes,
                                             bytes, cudaMemcpyHostToDevice, stream), "Qwen expert transfer");
     const char *src = NULL;
     if (!expert_ram_source(off, bytes, &src)) return 0;
-    if (src) return cuda_ok(cudaMemcpyAsync(dst, src, bytes, cudaMemcpyHostToDevice, stream), "Qwen RAM expert transfer");
+    if (src) return ram_pageable ? transfer_upload(dst, src, bytes, stream) :
+        cuda_ok(cudaMemcpyAsync(dst, src, bytes, cudaMemcpyHostToDevice, stream), "Qwen RAM expert transfer");
     /* No RAM victim is safe (or RAM disabled). A synchronized transient source
      * handles the miss without dropping experts or stealing an active source. */
     if (!cuda_ok(cudaStreamSynchronize(stream), "Qwen transient source drain") ||
@@ -1278,7 +1466,7 @@ static int expert_transfer(const void *map, uint64_t off, uint64_t bytes,
     const int read_ok = cuda_model_stage_read(g_model_stage[0], g_model_stage_bytes - g_model_direct_align, off, bytes, &src);
     expert_read_seconds += cuda_wall_sec() - read_start;
     if (!read_ok) return 0;
-    expert_disk_bytes += bytes;
+    expert_disk_bytes += bytes; expert_disk_reads++;
     return cuda_ok(cudaMemcpyAsync(dst, src, bytes, cudaMemcpyHostToDevice, stream), "Qwen disk expert transfer") &&
            cuda_ok(cudaStreamSynchronize(stream), "Qwen transient source ready");
 }
@@ -1289,6 +1477,7 @@ static int expert_demote(const void *map, const ds4_qwen4_expert_slot &slot,
     const size_t index = expert_ram_slot(slot.offset, bytes);
     if (index == SIZE_MAX) return 1; /* capacity pressure leaves the expert on disk */
     expert_demotions++;
+    if (ram_pageable) return transfer_download(ram_slots[index].device_ptr, slot.device_ptr, bytes, stream);
     return cuda_ok(cudaMemcpyAsync(ram_slots[index].device_ptr, slot.device_ptr, bytes,
                                   cudaMemcpyDeviceToHost, stream), "Qwen expert demotion") &&
            cuda_ok(cudaStreamSynchronize(stream), "Qwen expert demotion ready");
@@ -1304,13 +1493,17 @@ static int expert_cache_get(const void *map, uint64_t off, uint64_t bytes,
         return 1;
     }
     expert_misses++;
+    /* Stable residents own their complete triplets for the engine lifetime.
+     * Misses stream through bounded staging without changing the RAM/VRAM
+     * complement. An allocation failure also preserves this ownership. */
+    if (stable_prefill && !stable_layers.empty() && !stable_offsets.count(off)) return 1;
     const uint64_t limit = cuda_model_cache_limit_bytes(), reserve = dense_required;
     uint64_t budget = limit > reserve ? limit - reserve : 0;
     const char *env = getenv("DS4_CUDA_QWEN4_EXPERT_CACHE_MB");
     if (env && env[0]) {
         char *end = NULL;
         const uint64_t mb = strtoull(env, &end, 10);
-        if (end != env && mb && mb <= UINT64_MAX / 1048576ull)
+        if (end != env && !*end && *env != '-' && mb <= UINT64_MAX / 1048576ull)
             budget = std::min<uint64_t>(budget, mb * 1048576ull);
     }
     if (!cache_budget_logged && cache_ctx) {
@@ -1328,6 +1521,7 @@ static int expert_cache_get(const void *map, uint64_t off, uint64_t bytes,
                 (unsigned long long)(expert_max_bytes ? available / expert_max_bytes : 0),
                 (unsigned long long)(expert_min_bytes ? available / expert_min_bytes : 0));
     }
+    if (bytes > budget) return 1;
     char *dst = NULL;
     size_t slot_index = SIZE_MAX, range_index = SIZE_MAX;
     /* expert_reserved excludes dense tensors. Reserve them once in the
@@ -1343,6 +1537,7 @@ static int expert_cache_get(const void *map, uint64_t off, uint64_t bytes,
                                     reserve > dense_reserved ? reserve - dense_reserved : 0);
     }
     if (!dst) {
+        if (stable_prefill && !stable_layers.empty()) return 1;
         slot_index = expert_gpu_victim(bytes);
         if (slot_index == SIZE_MAX) return 1; /* all eligible slots active: stage the miss */
         const auto &slot = expert_slots[slot_index];
@@ -1364,23 +1559,17 @@ static int expert_cache_get(const void *map, uint64_t off, uint64_t bytes,
         g_model_range_bytes += bytes;
         expert_reserved += bytes;
         slot_index = expert_slots.size();
-        expert_slots.push_back({off, bytes, expert_frequency[off], expert_epoch, expert_epoch, dst});
+        expert_slots.push_back({off, bytes, expert_frequency[off], expert_epoch, expert_epoch, dst, 0});
     } else {
-        /* Remove the victim while its old ranking key is still intact.
-         * Updating a pinned node inside the heap would break its ordering. */
-        if (!gpu_victims.empty() && gpu_victims.front() == slot_index &&
-            !ds4_env_flag_enabled("DS4_CUDA_QWEN4_LINEAR_VICTIMS", 0)) {
-            auto worse = [](size_t a, size_t b) {
-                return ds4_qwen4_expert_rank_before(expert_slots.data(), b, a);
-            };
-            std::pop_heap(gpu_victims.begin(), gpu_victims.end(), worse); gpu_victims.pop_back();
-        }
+        /* All size-specific heaps discard this newly pinned entry lazily;
+         * their immutable ranking keys do not change under an in-flight heap. */
         auto &slot = expert_slots[slot_index];
         if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_EXPERT_CACHE_VERBOSE", 0))
             fprintf(stderr, "ds4: Qwen expert eviction old=%llu new=%llu old_frequency=%llu bytes=%llu\n",
                     (unsigned long long)slot.offset, (unsigned long long)off,
                     (unsigned long long)slot.frequency, (unsigned long long)bytes);
         expert_slot_by_offset.erase(slot.offset);
+        decode_rank_ram_residency(slot.offset);
         g_model_range_by_offset.erase(slot.offset);
         slot.offset = off; slot.frequency = expert_frequency[off];
         slot.last_used = slot.pinned_epoch = expert_epoch;
@@ -1392,13 +1581,31 @@ static int expert_cache_get(const void *map, uint64_t off, uint64_t bytes,
     }
     g_model_range_by_offset[off] = range_index;
     expert_slot_by_offset[off] = slot_index;
+    decode_rank_changed(false, slot_index, true);
+    decode_rank_ram_residency(off);
     *ptr = dst;
     return 1;
 }
 
+/* A preloaded draft can be dormant at a checkpoint taken after prefill.
+ * Its physical weights are engine-owned, not fake routing history. Keep
+ * the legacy logical format and include its residency hints only once the
+ * corresponding projection has an actual router window. */
+static bool expert_state_hint_ready(const ds4_qwen4_expert_slot &slot) {
+    for (const auto &entry : expert_windows) {
+        const auto &w = entry.second;
+        if (w.rows && slot.offset >= entry.first && slot.offset < entry.first + w.bytes * w.experts &&
+            (slot.offset - entry.first) % w.bytes == 0) return true;
+    }
+    return false;
+}
+
 static uint64_t expert_state_bytes(void) {
+    if (!expert_restored_payload.empty()) return expert_restored_payload.size();
     if (expert_windows.empty()) return 0;
-    uint64_t n = 32 + 24ull * (expert_slots.size() + ram_slots.size());
+    uint64_t n = 32;
+    for (const auto &slot : expert_slots) if (expert_state_hint_ready(slot)) n += 24u;
+    for (const auto &slot : ram_slots) if (expert_state_hint_ready(slot)) n += 24u;
     for (const auto &entry : expert_windows) n += 32 + 4ull * entry.second.rows * entry.second.selected;
     return n;
 }
@@ -1414,11 +1621,18 @@ static uint64_t cache_get64(const char **p) { uint64_t v = cache_get32(p); retur
 
 static int expert_state_export(void *buffer, uint64_t size) {
     if (!buffer || size != expert_state_bytes()) return 0;
+    if (!expert_restored_payload.empty()) {
+        memcpy(buffer, expert_restored_payload.data(), size);
+        return 1;
+    }
     char *p = (char *)buffer;
     cache_put32(&p, 0x31434551u); cache_put32(&p, 2);
     cache_put64(&p, g_model_registered_size);
-    cache_put32(&p, expert_windows.size()); cache_put32(&p, expert_slots.size());
-    cache_put32(&p, ram_slots.size()); cache_put32(&p, 0);
+    uint32_t gpu_hints = 0, ram_hints = 0;
+    for (const auto &slot : expert_slots) gpu_hints += expert_state_hint_ready(slot);
+    for (const auto &slot : ram_slots) ram_hints += expert_state_hint_ready(slot);
+    cache_put32(&p, expert_windows.size()); cache_put32(&p, gpu_hints);
+    cache_put32(&p, ram_hints); cache_put32(&p, 0);
     /* Sorting makes snapshots deterministic; the ring is stored chronologically. */
     std::vector<uint64_t> bases;
     for (const auto &entry : expert_windows) bases.push_back(entry.first);
@@ -1433,6 +1647,7 @@ static int expert_state_export(void *buffer, uint64_t size) {
     for (unsigned tier = 0; tier < 2; tier++) {
         const auto &slots = tier ? ram_slots : expert_slots;
         for (const auto &slot : slots) {
+            if (!expert_state_hint_ready(slot)) continue;
             cache_put64(&p, slot.offset); cache_put64(&p, expert_epoch - slot.last_used);
             cache_put32(&p, tier); cache_put32(&p, 0);
         }
@@ -1477,7 +1692,9 @@ static int expert_state_import(const void *buffer, uint64_t size) {
     /* Complete validation precedes mutation. Physical residency is rebuilt on
      * demand under CURRENT budgets; child/cache pointers cannot enter a parent. */
     expert_windows.clear(); expert_frequency.clear();
-    gpu_victim_epoch = ram_victim_epoch = UINT64_MAX;
+    decode_rank_reset();
+    for (auto &entry : gpu_victim_heaps) entry.second.epoch = UINT64_MAX;
+    for (auto &entry : ram_victim_heaps) entry.second.epoch = UINT64_MAX;
     route_reset();
     expert_epoch = max_age + 1;
     for (auto &slot : expert_slots) { slot.frequency = 0; slot.last_used = slot.pinned_epoch = 0; }
@@ -1493,6 +1710,7 @@ static int expert_state_import(const void *buffer, uint64_t size) {
     FILE *trace = expert_trace; expert_trace = NULL; const bool opened = expert_trace_opened; expert_trace_opened = true;
     for (const auto &w : saved) expert_cache_observe(w.base, w.bytes, w.NE, w.rows, w.NS, w.ids.data());
     expert_trace = trace; expert_trace_opened = opened;
+    expert_restored_payload.assign((const char *)buffer, (const char *)buffer + size);
     if (ds4_env_flag_enabled("DS4_CUDA_QWEN4_EXPERT_CACHE_VERBOSE", 0))
         fprintf(stderr, "ds4: Qwen expert checkpoint restored windows=%u GPU_hints=%u RAM_hints=%u (lazy residency, current budgets)\n", count, gpu, ram);
     return 1;
@@ -1504,6 +1722,7 @@ static int expert_state_import(const void *buffer, uint64_t size) {
 static int stage_experts(const void *map, uint64_t size, uint64_t o0, uint64_t o1,
         uint64_t bytes, const int *selected, unsigned NE, unsigned T, unsigned NS,
         bool pair, const char *const **p0, const char *const **p1) {
+    transfer_workload_rows = T;
     *p0 = NULL; *p1 = NULL;
     if ((!tiered_cache(map) && (!ds4_env_flag_enabled("DS4_CUDA_QWEN4_STAGE_EXPERTS", 0) || T > 8)) || g_n_gpus > 1) return 1;
     const uint64_t n = (uint64_t)T * NS;
@@ -1514,6 +1733,7 @@ static int stage_experts(const void *map, uint64_t size, uint64_t o0, uint64_t o
     if (!cuda_ok(cudaMemcpyAsync(ids.data(), selected, n * sizeof(int),
                                 cudaMemcpyDeviceToHost, stream), "Qwen selected expert IDs") ||
         !cuda_ok(cudaStreamSynchronize(stream), "Qwen selected expert IDs ready")) return 0;
+    if (pair) profile_observe(o0, T, NS, ids.data());
     const uint64_t data_bytes = n * bytes * (pair ? 2u : 1u);
     const uint64_t table_off = (data_bytes + 255u) & ~255ull;
     char *tmp = (char *)cuda_tmp_alloc_on(0, table_off + n * sizeof(char *) * 2u,
@@ -1556,12 +1776,12 @@ static int stage_experts(const void *map, uint64_t size, uint64_t o0, uint64_t o
 static int moe_mv_dispatch(float *out, const float *x, const int *sel,
         const char *w0, const char *w1, const char *s0, const char *s1,
         unsigned type, unsigned st, unsigned NE, unsigned T, unsigned NS, unsigned K, unsigned M, bool down,
-        const char *const *routed0 = NULL, const char *const *routed1 = NULL) {
+        const char *const *routed0 = NULL, const char *const *routed1 = NULL, unsigned skip_mode = 0) {
     const uint64_t rb = expert_row_bytes(type, K), srb = row_bytes(st, K);
     const dim3 grid((M + 3) / 4, NS + (st != UINT_MAX), T);
 #define QWEN_MOE(TYPE) case TYPE: \
-    if (down) moe_mv<TYPE, true><<<grid,128,0,cuda_decode_stream()>>>(out,x,sel,w0,w1,s0,s1,st,NE,NS,K,M,rb,srb,routed0,routed1); \
-    else moe_mv<TYPE, false><<<grid,128,0,cuda_decode_stream()>>>(out,x,sel,w0,w1,s0,s1,st,NE,NS,K,M,rb,srb,routed0,routed1); break
+    if (down) moe_mv<TYPE, true><<<grid,128,0,cuda_decode_stream()>>>(out,x,sel,w0,w1,s0,s1,st,NE,NS,K,M,rb,srb,routed0,routed1,skip_mode); \
+    else moe_mv<TYPE, false><<<grid,128,0,cuda_decode_stream()>>>(out,x,sel,w0,w1,s0,s1,st,NE,NS,K,M,rb,srb,routed0,routed1,skip_mode); break
     switch (type) {
     QWEN_MOE(0); QWEN_MOE(1); QWEN_MOE(2); QWEN_MOE(8); QWEN_MOE(10);
     QWEN_MOE(12); QWEN_MOE(16); QWEN_MOE(30); QWEN_MOE(39);
@@ -2290,6 +2510,29 @@ static int dense_blas(float *out, const float *x, const char *w,
     return 1;
 }
 
+/* cuBLAS may choose a different reduction when its column dimension grows.
+ * Preserve the qualified 256-row projection geometry while routed MoE still
+ * reuses expert transfers over the complete forward batch. */
+static int dense_project(float *out, const float *x, const char *w,
+        unsigned type, unsigned T, unsigned K, unsigned M) {
+    if (T > 256u) {
+        for (unsigned t = 0; t < T; t += 256u)
+            if (!dense_project(out+(uint64_t)t*M, x+(uint64_t)t*K, w, type,
+                               std::min(256u,T-t), K, M)) return 0;
+        return 1;
+    }
+    if (T <= 8u) return matvec_dispatch(out,w,x,type,T,K,M);
+    if (type == 1 && T >= 32 && T <= INT_MAX && K <= INT_MAX && M <= INT_MAX &&
+        g_cublas_ready && !g_quality_mode && !getenv("DS4_CUDA_NO_TF32"))
+        return dense_f16_blas(out,x,(const __half *)w,T,K,M);
+    if (type == 8 && T >= 32 && T <= INT_MAX && K <= INT_MAX && M <= INT_MAX &&
+        g_cublas_ready && !g_quality_mode && !getenv("DS4_CUDA_NO_TF32"))
+        return dense_q8_blas(out,x,w,T,K,M);
+    if (g_cublas_ready && T >= 32 && K <= INT_MAX && M <= INT_MAX && T <= INT_MAX)
+        return dense_blas(out,x,w,type,T,K,M);
+    return matrix_dispatch(out,x,w,NULL,NULL,NULL,type,1,T,1,1,K,M,0,false);
+}
+
 __global__ void mtp_stage(float *cat, const float *e, const float *R,
         const float *ge, const float *gh, unsigned E, unsigned hc, float eps) {
     const unsigned row = blockIdx.x, tid = threadIdx.x;
@@ -2864,12 +3107,15 @@ extern "C" int ds4_gpu_qwen4_attn_prep_tensor(ds4_gpu_tensor *q, ds4_gpu_tensor 
         !tensor(pos3, (uint64_t)cap * 16)) return 0;
     const char *gq = weight(map, size, qo, D * 4), *gk = weight(map, size, ko, D * 4), *giq = weight(map, size, io, Di * 4);
     if (!gq || !gk || !giq) return 0;
+    kv_cache *cache = kv_lookup(kc->ptr);
+    if (cache && (kv_lookup(vc->ptr) != cache || cache->Hkv != Hkv || cache->D != D || T > cache->max_tokens)) return 0;
     attn_prep<<<dim3(H + Hkv + Hi + 1, T), 32, 0, cuda_decode_stream()>>>((float *)q->ptr,
-        (float *)gate->ptr, (__half *)kc->ptr, (__half *)vc->ptr, (float *)iqout->ptr, (float *)ikc->ptr,
+        (float *)gate->ptr, (__half *)(cache ? cache->append_k->ptr : kc->ptr),
+        (__half *)(cache ? cache->append_v->ptr : vc->ptr), (float *)iqout->ptr, (float *)ikc->ptr,
         (const float *)qg->ptr, (const float *)kp->ptr, (const float *)vp->ptr, (const float *)iq->ptr,
         (const float *)ik->ptr, (const uint32_t *)pos3->ptr, (const float *)gq, (const float *)gk, (const float *)giq,
-        H, Hkv, D, Hi, Di, pos0, eps, rope(nrot, base));
-    return launched();
+        H, Hkv, D, Hi, Di, pos0, cache ? pos0 : 0u, eps, rope(nrot, base));
+    return launched() && (!cache || kv_append(cache, pos0, T));
 }
 
 extern "C" int ds4_gpu_qwen4_idx_block_key_tensor(ds4_gpu_tensor *out,
@@ -2908,7 +3154,10 @@ extern "C" int ds4_gpu_qwen4_idx_select_tensor(ds4_gpu_tensor *out, const ds4_gp
     using namespace qwen4_cuda;
     (void)tiles;
     if (!T || !K || K > N || !tensor(out, (uint64_t)T * K * 4) || !tensor(score, (uint64_t)T * N * 4)) return 0;
-    idx_select<<<T, 256, 0, cuda_decode_stream()>>>((int *)out->ptr, (const float *)score->ptr, N, K);
+    if (g_n_gpus == 1 && T <= 8u && N >= 8192u && N <= 1024u * 33u &&
+        ds4_env_flag_enabled("DS4_CUDA_QWEN4_QSA_REGISTER_KEYS", 0))
+        idx_select_cached<1024,33><<<T,1024,0,cuda_decode_stream()>>>((int *)out->ptr, (const float *)score->ptr, N, K);
+    else idx_select<<<T, 256, 0, cuda_decode_stream()>>>((int *)out->ptr, (const float *)score->ptr, N, K);
     return launched();
 }
 
@@ -2934,17 +3183,7 @@ extern "C" int ds4_gpu_qwen4_dense_mm_tensor(ds4_gpu_tensor *out, const ds4_gpu_
     if (!rb) return 0;
     const char *w = weight(map, size, off, rb*M);
     if (!w) return 0;
-    if (T <= 8) return matvec_dispatch((float *)out->ptr, w, (const float *)x->ptr, type, T, K, M);
-    if (type == 1 && T >= 32 && T <= INT_MAX && K <= INT_MAX && M <= INT_MAX &&
-        g_cublas_ready && !g_quality_mode && !getenv("DS4_CUDA_NO_TF32"))
-        return dense_f16_blas((float *)out->ptr,(const float *)x->ptr,(const __half *)w,T,K,M);
-    if (type == 8 && T >= 32 && T <= INT_MAX && K <= INT_MAX && M <= INT_MAX &&
-        g_cublas_ready && !g_quality_mode && !getenv("DS4_CUDA_NO_TF32"))
-        return dense_q8_blas((float *)out->ptr,(const float *)x->ptr,w,T,K,M);
-    if (g_cublas_ready && T >= 32 && K <= INT_MAX && M <= INT_MAX && T <= INT_MAX)
-        return dense_blas((float *)out->ptr,(const float *)x->ptr,w,type,T,K,M);
-    return matrix_dispatch((float *)out->ptr, (const float *)x->ptr, w, NULL, NULL, NULL,
-                           type, 1, T, 1, 1, K, M, 0, false);
+    return dense_project((float *)out->ptr,(const float *)x->ptr,w,type,T,K,M);
 }
 
 extern "C" int ds4_gpu_qwen4_matmul_q8_0_tensor(ds4_gpu_tensor *out, const void *map,
@@ -3062,6 +3301,7 @@ static int qwen4_moe_mm(ds4_gpu_tensor *out, const ds4_gpu_tensor *x,
         uint64_t o0, uint64_t o1, uint32_t type, uint32_t NE, uint32_t T, uint32_t NS,
         uint32_t NO, uint32_t K, uint32_t M, uint32_t cap, bool down) {
     using namespace qwen4_cuda;
+    transfer_workload_rows = T;
     if (!T || !NE || !NS || NS > NE || NO < NS || !K || !M || cap < T ||
         !tensor(out,(uint64_t)T*NO*M*4) || !tensor(x,(uint64_t)T*(down ? NO : 1)*K*4) ||
         !tensor(lists,(uint64_t)NE*cap*4) || !tensor(counts,(uint64_t)NE*4)) return 0;
@@ -3097,6 +3337,7 @@ static int qwen4_moe_mm(ds4_gpu_tensor *out, const ds4_gpu_tensor *x,
         if (down && !cuda_ok(cudaStreamSynchronize(stream), "Qwen prior experts consumed")) return 0;
         expert_cache_next_epoch();
         expert_cache_observe(o0, bytes / NE, NE, T, NS, ids);
+        if (!down) profile_observe(o0, T, NS, ids);
         if (!down) expert_cache_observe(o1, bytes / NE, NE, T, NS, ids);
         for (unsigned e = 0; e < NE; e++) if (uses[e] > 0) {
             expert_cache_touch(o0 + e * (bytes / NE), 1);
@@ -3158,6 +3399,10 @@ static int qwen4_moe_mm(ds4_gpu_tensor *out, const ds4_gpu_tensor *x,
                  * complete by CUDA's contract. */
                 if (overlap && group >= buffers && !cuda_ok(cudaStreamWaitEvent(copy,
                         expert_group_consumed[buffer], 0), "Qwen staging reuse")) goto prefill_reads_done;
+                /* The hybrid/KV arena is ordinary RAM. Aggregate small
+                 * projection copies here as in the hybrid scheduler, so the
+                 * fallback does not wait for each pair of pinned buffers. */
+                if (ram_pageable && !transfer_batch_begin(copy)) goto prefill_reads_done;
                 char *group_weights = cache.prefill_ptr + buffer * group_bytes;
                 for (unsigned w = 0; w < (down ? 1u : 2u); w++) for (unsigned e = first; e < last; e++) {
                     if (uses[e] <= 0) continue;
@@ -3168,6 +3413,7 @@ static int qwen4_moe_mm(ds4_gpu_tensor *out, const ds4_gpu_tensor *x,
                     if (!cached && !expert_transfer(map, off, bytes / NE, dst, copy)) goto prefill_reads_done;
                     ptrs[w * NE + e] = cached ? cached : dst;
                 }
+                if (ram_pageable && !transfer_batch_end()) goto prefill_reads_done;
                 int *group_counts = expert_group_counts + (uint64_t)group * NE;
                 if (!cuda_ok(cudaMemcpyAsync(group_counts, host_counts + (uint64_t)group * NE,
                              NE * sizeof(int), cudaMemcpyHostToDevice, copy), "Qwen group counts")) goto prefill_reads_done;
@@ -3191,8 +3437,9 @@ static int qwen4_moe_mm(ds4_gpu_tensor *out, const ds4_gpu_tensor *x,
             }
             ok = 1;
 prefill_reads_done:
+            const int transfer_ok = transfer_batch_end();
             const int read_ok = expert_reads_finish();
-            return ok && read_ok;
+            return ok && transfer_ok && read_ok;
         } else {
             if (!cuda_stream_selected_ensure_bytes(&cache.prefill_ptr, &cache.prefill_capacity,
                              bytes * (down ? 1u : 2u), "Qwen prefill weights")) return 0;
@@ -3225,6 +3472,8 @@ extern "C" int ds4_gpu_qwen4_moe_mm_down_tensor(ds4_gpu_tensor *out, const ds4_g
     qwen4_cuda::route_reset();
     return ok;
 }
+
+#include "ds4_qwen4_ring.cuh"
 
 extern "C" int ds4_gpu_qwen4_gdn_front_tensor(ds4_gpu_tensor *qkv, ds4_gpu_tensor *state,
         const ds4_gpu_tensor *mixed, ds4_gpu_tensor *ga, ds4_gpu_tensor *gb,
@@ -3383,6 +3632,9 @@ extern "C" int ds4_gpu_qwen4_attn_decode_tensor(ds4_gpu_tensor *out, const ds4_g
     if (!T || !H || !Hkv || H % Hkv || (D != 32 && D != 128 && D != 256) ||
         !tensor(out, n) || !tensor(q, n) || !tensor(gate, n) || !tensor(kc, cb) || !tensor(vc, cb) ||
         (sparse && (!stride || !tensor(sel, (uint64_t)T * stride * 4) || !tensor(count, (uint64_t)T * 4)))) return 0;
+    kv_cache *cache = kv_lookup(kc->ptr);
+    if (cache) return kv_lookup(vc->ptr) == cache &&
+        kv_attention(cache, out, q, gate, sel, count, partial, T, H, Hkv, D, pos0, sparse, stride, scale);
     const unsigned keys = sparse ? stride : pos0 + T;
     if (!partial && T >= 32 && D == 256 && H/Hkv <= 16 &&
         !((uintptr_t)kc->ptr&15) && !((uintptr_t)vc->ptr&15) &&
@@ -3391,7 +3643,7 @@ extern "C" int ds4_gpu_qwen4_attn_decode_tensor(ds4_gpu_tensor *out, const ds4_g
         attention_group<<<dim3(Hkv,T),256,0,cuda_decode_stream()>>>((float *)out->ptr,
             (const float *)q->ptr,(const float *)gate->ptr,(const __half *)kc->ptr,(const __half *)vc->ptr,
             sparse ? (const int *)sel->ptr : NULL,sparse ? (const unsigned *)count->ptr : NULL,
-            H,Hkv,pos0,stride,sparse,scale);
+            H,Hkv,pos0,stride,sparse,scale,NULL);
         return launched();
     }
     const unsigned splits = partial ? std::min(64u, (keys + 31) / 32) : 1;
@@ -3400,7 +3652,7 @@ extern "C" int ds4_gpu_qwen4_attn_decode_tensor(ds4_gpu_tensor *out, const ds4_g
 #define QWEN_ATTN(DIM) attention<DIM><<<grid, 128, 0, cuda_decode_stream()>>>((float *)out->ptr, \
         partial ? (float *)partial->ptr : NULL, (const float *)q->ptr, (const float *)gate->ptr, \
         (const __half *)kc->ptr, (const __half *)vc->ptr, sparse ? (const int *)sel->ptr : NULL, \
-        sparse ? (const unsigned *)count->ptr : NULL, H, Hkv, pos0, stride, sparse, splits, (keys + splits - 1) / splits, scale)
+        sparse ? (const unsigned *)count->ptr : NULL, H, Hkv, pos0, stride, sparse, splits, (keys + splits - 1) / splits, scale,NULL)
     if (D == 32) { QWEN_ATTN(32); }
     else if (D == 128) { QWEN_ATTN(128); }
     else { QWEN_ATTN(256); }
@@ -3440,3 +3692,82 @@ extern "C" int ds4_gpu_qwen4_cache_prepare(uint32_t ctx, uint32_t prefill,
 extern "C" uint64_t ds4_gpu_qwen4_expert_state_bytes(void) { return qwen4_cuda::expert_state_bytes(); }
 extern "C" int ds4_gpu_qwen4_expert_state_export(void *buffer, uint64_t bytes) { return qwen4_cuda::expert_state_export(buffer, bytes); }
 extern "C" int ds4_gpu_qwen4_expert_state_import(const void *buffer, uint64_t bytes) { return qwen4_cuda::expert_state_import(buffer, bytes); }
+
+#include "ds4_qwen4_tuning.cuh"
+#include "ds4_qwen4_hybrid.cuh"
+#include "ds4_qwen4_profile.cuh"
+
+/* Low-level diagnostic used by the CUDA primitive gate. Exercise mixed
+ * DMA, publication inside a batch and reuse beyond both 64 MiB buffers. */
+extern "C" int ds4_gpu_qwen4_transfer_selftest(void) {
+    using namespace qwen4_cuda;
+    const uint64_t block = 1048576u; const unsigned count = 180;
+    std::vector<unsigned char> input(block * 2u), output(block * count, 0);
+    for (uint64_t i = 0; i < block; i++) {
+        input[i] = (unsigned char)(i * 31u + 17u); input[block + i] = (unsigned char)(i * 13u + 91u);
+    }
+    ds4_gpu_tensor *device = ds4_gpu_tensor_alloc(block * 4u);
+    cudaStream_t copy = NULL;
+    if (!device || !cuda_ok(cudaStreamCreateWithFlags(&copy, cudaStreamNonBlocking), "Qwen test DMA stream")) {
+        ds4_gpu_tensor_free(device); return 0;
+    }
+    unsigned state[4] = {}, expected[count]; bool ok = true;
+    for (unsigned i = 0; i < 4 && ok; i++)
+        ok = transfer_upload((char *)device->ptr + i * block, input.data(), block, copy) != 0;
+    ok = ok && transfer_batch_begin(copy);
+    for (unsigned i = 0; i < count && ok; i++) {
+        const unsigned slot = i % 4u; expected[i] = state[slot]; state[slot] ^= 1u;
+        ok = transfer_download(output.data() + i * block, (char *)device->ptr + slot * block, block, copy) &&
+             transfer_upload((char *)device->ptr + slot * block, input.data() + state[slot] * block, block, copy);
+        if (i == 5u && ok) {
+            ok = transfer_source_ready(output.data() + i * block, block) &&
+                 !memcmp(output.data() + i * block, input.data() + expected[i] * block, block);
+            if (ok) ok = transfer_upload((char *)device->ptr + slot * block, output.data() + i * block, block, copy);
+            if (ok) state[slot] = expected[i];
+        }
+    }
+    const int finished = transfer_batch_end();
+    ok = finished && ok;
+    for (unsigned i = 0; i < count && ok; i++)
+        ok = !memcmp(output.data() + i * block, input.data() + expected[i] * block, block);
+    (void)cudaStreamSynchronize(copy); (void)cudaStreamDestroy(copy); ds4_gpu_tensor_free(device);
+    return ok;
+}
+
+extern "C" int ds4_gpu_qwen4_tier_stats_get(ds4_gpu_qwen4_tier_stats *out) {
+    using namespace qwen4_cuda;
+    if (!out) return 0;
+    memset(out, 0, sizeof(*out));
+    if (!g_qwen4_tiered_cache) return 0;
+    out->weight_hits = expert_hits; out->cpu_pairs = hybrid_cpu_pairs;
+    out->gpu_pairs = hybrid_gpu_hits; out->pcie_pairs = hybrid_pcie_pairs;
+    out->ssd_bytes = expert_disk_bytes; out->ssd_reads = expert_disk_reads;
+    out->expert_h2d_bytes = expert_h2d_bytes;
+    out->kv_h2d_bytes = kv_total_uploaded; out->kv_hits = kv_total_hits; out->kv_misses = kv_total_misses;
+    out->host_weight_bytes = ram_allocated; out->kv_host_bytes = kv_host_reserved;
+    out->staging_bytes = (transfer_host[0] != NULL) * transfer_capacity + (transfer_host[1] != NULL) * transfer_capacity;
+    out->staging_bytes += expert_group_capacity;
+    out->hybrid_workspace_bytes += g_stream_selected_cache.prefill_capacity + expert_group_counts_capacity;
+    for (const auto &pair : kv_prefill_stage) for (const auto *t : pair) if (t) out->kv_workspace_bytes += t->bytes;
+    out->expert_vram_bytes = expert_reserved; out->cpu_wait_seconds = hybrid_cpu_seconds;
+    out->cpu_h2d_bytes = hybrid_cpu_h2d_bytes; out->activation_d2h_bytes = hybrid_activation_d2h_bytes;
+    out->cpu_stage_jobs = transfer_stage_jobs;
+    out->hybrid_host_bytes += decode_rank_bytes();
+    out->staging_wait_seconds = transfer_stage_wait; out->victim_select_seconds = victim_cpu_seconds;
+    for (const auto &entry : kv_caches) {
+        const kv_cache *c = entry.second;
+        if (entry.first != c->device[0]) continue;
+        out->kv_resident_bytes += (uint64_t)c->resident * c->row_bytes * 2u;
+        out->kv_workspace_bytes += c->append_k->bytes + c->append_v->bytes + c->table->bytes;
+    }
+    for (const auto &h : hybrid_states) if (h.capacity) {
+        const ds4_gpu_tensor *tensors[] = {h.lists, h.counts, h.d_cpu_pairs, h.d_output, h.d_raw_gu, h.d_cpu_mid, h.staging,
+            h.d_mask[0], h.d_mask[1], h.d_mask[2], h.d_ptrs[0], h.d_ptrs[1], h.d_ptrs[2]};
+        for (const auto *t : tensors) if (t) out->hybrid_workspace_bytes += t->bytes;
+        out->hybrid_host_bytes += h.capacity * (8u + 3u * sizeof(int)) +
+            9u * std::max(h.capacity, (uint64_t)h.uses.size()) * sizeof(char *);
+        if (h.cpu_buffers) out->hybrid_host_bytes +=
+            (h.capacity / h.NS) * h.E * sizeof(float) + h.capacity * (h.E + 3ull * h.F) * sizeof(float);
+    }
+    return 1;
+}

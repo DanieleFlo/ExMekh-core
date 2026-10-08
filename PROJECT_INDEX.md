@@ -188,7 +188,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `STRIXHALO.md` — note operative per build ed esecuzione ROCm su Strix Halo.
 - `PROJECT_INDEX.md` — questo indice e ordine della spiegazione tecnica.
 - `.gitattributes` — fine riga LF per i launcher WSL e i fixture Qwen verificati
-  tramite checksum; gestione dei diff per le continuazioni del modello.
+  tramite checksum; gestione dei diff per le continuazioni del modello e
+  conservazione dei byte originali dei report e della patch 27B archiviati.
 - `docs/INDEX.md` — indice madre della wiki tecnica, con tassonomia, regole di
   costruzione e accesso agli indici semantici di ogni macro-argomento.
 - `docs/performance/qwen36-drift-hypotheses.md` — registro vivo delle ipotesi sul drift
@@ -280,7 +281,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `start-ds4-server.sh`, `agent/start-ds4-server.sh`,
   `agent/start-ds4-server-flash.sh`, `agent/run.sh` —
   launcher eseguibili nativi per server CUDA e frontend ExMekh Agent dalla copia WSL2
-  `/home/daniele/ds4`; il launcher principale mantiene Qwen27 come default e aggiunge il profilo Flash esplicito; i due launcher in `agent/` selezionano rispettivamente Qwen27B e Flash Next, con proiettore corretto e `--print-command`, MTP attivo per entrambi e contesto Flash 128K; il progetto non modifica proxy o firewall Windows.
+  `/home/daniele/ds4`; il launcher principale mantiene Qwen27 come default e aggiunge il profilo Flash esplicito; i due launcher in `agent/` selezionano rispettivamente Qwen27B e Flash Next, con proiettore corretto e `--print-command`, MTP attivo per entrambi e contesto Flash 64K; il progetto non modifica proxy o firewall Windows.
 - `ds4_cli.c` — eseguibile `ds4`: parsing opzioni, modalità one-shot e REPL,
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
   argomento seleziona il sidecar Qwen auditato; `--mtp FILE` e l'alias
@@ -314,33 +315,39 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   Il converter usa l'API pubblica dei metadati Message, senza esporre snapshot
   al provider; l'adapter dei tool conserva lo stato di errore emesso da ExMekh-Lib per
   root, conversazioni figlie e UI.
-- `agent/src/exmekh_agent/config.py`, `agent/src/exmekh_agent/exmekh_bridge/provider_health.py`,
-  `agent/src/exmekh_agent/ui/settings_drawer.py` — discovery del modello attivo e del
+- `agent/src/exmekh_agent/config/application.py`, `agent/src/exmekh_agent/exmekh_bridge/providers/provider_health.py`,
+  `agent/src/exmekh_agent/ui/settings/settings_drawer.py` — discovery del modello attivo e del
   contesto allocato: il probe legge e valida i metadati, AppConfig sceglie il
   modello in memoria e la UI aggiorna i controlli dopo riavvii Flash/27B, senza
   salvare preferenze durante i health check.
   `agent/tests/test_model_discovery_e2e.py` e `agent/tests/run_model_discovery_agent.py`
   verificano barra modello/contesto, tooltip e modello delle richieste nella stessa pagina.
-- `agent/src/exmekh_agent/exmekh_bridge/converter.py` — serializzazione delle skill, conversione della history e
+- `agent/src/exmekh_agent/exmekh_bridge/history/converter.py` — serializzazione delle skill, conversione della history e
   deduplicazione del prompt corrente tramite le API pubbliche Message;
   `agent_runner.py` coordina l'esecuzione e mantiene gli import di compatibilità.
-- `agent/src/exmekh_agent/exmekh_bridge/provider_context.py` — osservazione uniforme
+- `agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py` — osservazione uniforme
   delle richieste normali e strutturate, isolamento dei contesti figli e
   conservazione dei token totali dichiarati dal provider.
-- `agent/src/exmekh_agent/exmekh_bridge/models.py`,
-  `agent/src/exmekh_agent/exmekh_bridge/event_handlers.py` — ChatMessage gestisce
+- `agent/src/exmekh_agent/exmekh_bridge/capabilities/agent_design.py` — costruisce
+  gerarchie generiche e personalizzate tramite le API Node; il runner riceve
+  la gerarchia senza conoscere figli bundled o layout delle capability.
+- `agent/src/exmekh_agent/exmekh_bridge/agents/collector.py`,
+  `agent/src/exmekh_agent/state/active_turns.py` — il raccoglitore possiede
+  accumulo e steering; il registro gestisce i task attraverso la sua API pubblica.
+- `agent/src/exmekh_agent/exmekh_bridge/models/messages.py`,
+  `agent/src/exmekh_agent/exmekh_bridge/agents/event_handlers.py` — ChatMessage gestisce
   contenuto e segmenti reasoning; gli handler adattano una volta i callback legacy
   e pubblicano lo stesso scope per Quick Chat e DeepAgent.
 - `agent/tests/test_clean_review_contracts.py` — regressioni sui confini pubblici,
   metadati invalidi, callback reasoning e osservazione delle richieste strutturate.
-- `agent/src/exmekh_agent/exmekh_bridge/execution_restore.py` — ricostruisce history e cache
+- `agent/src/exmekh_agent/exmekh_bridge/agents/execution_restore.py` — ricostruisce history e cache
   tramite le API pubbliche ExMekh-Lib, mantenendo identità e metadati degli output
   riletti e lo scope dei messaggi di steering dopo la compattazione.
-- `agent/src/exmekh_agent/exmekh_bridge/recorded_output.py` — parser unico degli header XML
+- `agent/src/exmekh_agent/exmekh_bridge/history/recorded_output.py` — parser unico degli header XML
   persistiti; conserva corpo e riferimenti degli output, con fallback legacy.
-- `agent/src/exmekh_agent/exmekh_bridge/steering_history.py` — seleziona gli ID di steering
+- `agent/src/exmekh_agent/exmekh_bridge/history/steering_history.py` — seleziona gli ID di steering
   del livello corrente, escludendo quelli delle skill discendenti.
-- `agent/src/exmekh_agent/exmekh_bridge/message_edit.py` — prepara il testo modificato,
+- `agent/src/exmekh_agent/exmekh_bridge/history/message_edit.py` — prepara il testo modificato,
   conservando gli upload espliciti e rigenerando i file del testo incollato.
   Il controller ferma e attende il turno precedente prima di salvare il ramo
   aggiornato. ChatSession gestisce il ramo, ChatSettings le approvazioni e
@@ -352,10 +359,10 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   annullamento, approvazioni pendenti, testi/immagini/PDF e persistenza in
   Quick Chat e progetto. `agent/tests/run_message_edit_agent.py` usa un provider
   deterministico con il client mock e il ciclo di esecuzione ExMekh-Lib reale.
-- `agent/src/exmekh_agent/exmekh_bridge/image_input.py` — decodifica immagini, orientamento,
+- `agent/src/exmekh_agent/exmekh_bridge/history/image_input.py` — decodifica immagini, orientamento,
   rendering PDF locale (prime 10 pagine), parti native ExMekh-Lib e serializzazione
   PNG della cronologia; i payload base64 non vengono contati come testo.
-- `agent/src/exmekh_agent/ui/image_preview.py` — miniature e anteprima modale condivise
+- `agent/src/exmekh_agent/ui/shared/image_preview.py` — miniature e anteprima modale condivise
   fra compositore e chat; gli allegati visivi non hanno un secondo chip file.
 - `agent/tests/test_image_input.py`, `agent/tests/test_images_e2e.py`,
   `agent/tests/test_images_live.py` — regressioni multimodali, browser e prove
@@ -367,6 +374,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   test live e raggruppamento dei test seriali con `--dist=loadgroup`.
   Le regressioni distinguono errori di esecuzione da risultati applicativi
   negativi e verificano le due piattaforme di cancellazione dei processi.
+- `exmekh_lib/old_agent/` — archivio storico Agent Wiki: launcher presenti ad agosto 2026, wheel `agent-wiki` 0.1.0 versionata a settembre e sorgenti estratti integralmente; provenienza e hash in `provenance.json`, guida in `README.md`.
 - `exmekh_lib/` — repository Git locale dei sorgenti ExMekh-Lib, con cronologia propria,
   esclusa dal Git di DS4.
 - `agent/sync_exmekh_lib.sh` e `agent/src/exmekh_agent/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
@@ -390,6 +398,28 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   del server.
   Il comparatore richiede campioni, warm-up e identità compatibili prima di
   promuovere; il calcolo statico dei costi supporta UD e separa NextN dal target.
+- `tools/bench_qwen_flash_agent.py` — riproduce prefill e decode dal runner
+  ExMekh reale avviando `agent/start-ds4-server-flash.sh`, con stato isolato,
+  fronti riusati, log per richiesta e memoria GPU; confronta configurazioni
+  del launcher a sampling fisso senza caricare conversazioni utente.
+- `tools/qualify_qwen_flash_launcher.py`, `tests/qwen_flash_quality_probe.c` —
+  confronto full-vocabulary e loss teacher-forced tramite sessioni di produzione
+  a capacità/chunk espliciti, incluso un prompt con gli schemi tool dell'agente.
+  La qualifica numerica resta distinta dai benchmark e dai gate di stato/vision.
+- `tests/test_flash_launcher.py` — esamina i comandi reali dei launcher senza
+  modelli: profilo Flash standard/legacy, override, errori di configurazione
+  e isolamento del launcher 27B.
+- `tools/qwen_flash_launcher.py` — legge i default dal dry-run del launcher;
+  benchmark e qualifica non mantengono copie della configurazione Flash.
+- `tools/qwen_flash_metrics.py`, `tests/test_qwen_flash_tools.py` — confronto
+  teacher-forced condiviso, validazione dei dump e regressioni su lifecycle
+  del server, isolamento dei provider e completezza delle coppie A/B.
+- `ds4_qwen4_runtime.h` — vocabolario tipizzato dei workload Flash e metadata
+  pubblici; `ds4_qwen4_tuning.cuh` possiede scope, selezione e reset delle preferenze.
+- `ds4_qwen4_cpu.h`, `ds4_qwen4_cpu_internal.h` — API delle proiezioni CPU
+  separata da dequantizzazione, tabelle e SIMD privati dell'implementazione.
+- `docs/architecture/clean-code-review-20261008.md` — revisione dei confini
+  Flash, benchmark e stato dell'agente; verifiche e limiti dei refactoring.
 - `tools/import_jsonschemabench_subset.py` e
   `performance/jsonschemabench-subset.json` — sparse-fetch riproducibile e
   pinned dell'intero corpus esterno, classificazione fail-closed delle 9.558

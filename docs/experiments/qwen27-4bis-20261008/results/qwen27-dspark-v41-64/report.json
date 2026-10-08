@@ -1,0 +1,361 @@
+{
+  "records": [
+    {
+      "sample": 0,
+      "drafter": "target-only",
+      "proposals": 0,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-0/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-0/logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "3e30713e3f0a3d0c8132a44d0f48265932828f3d7a27ec107234485cdc9d5810",
+      "exit_code": 0,
+      "wall_seconds": 223.0937391059997,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              393.73
+            ],
+            "median": 393.73,
+            "mean": 393.73,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.67
+            ],
+            "median": 0.67,
+            "mean": 0.67,
+            "cv": null
+          },
+          "first_prefill_tps": 393.73
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-0",
+      "actual_cycles": 0
+    },
+    {
+      "sample": 0,
+      "drafter": "dspark",
+      "proposals": 7,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-7/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-7/logits",
+        "--mtp",
+        "--mtp-model",
+        "/home/daniele/ds4/gguf/drafts/Qwen3.8-27B-DSpark-v2-Q8_0.gguf",
+        "--mtp-draft",
+        "7"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "3e30713e3f0a3d0c8132a44d0f48265932828f3d7a27ec107234485cdc9d5810",
+      "exit_code": 0,
+      "wall_seconds": 406.738165458999,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              189.62
+            ],
+            "median": 189.62,
+            "mean": 189.62,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.67
+            ],
+            "median": 0.67,
+            "mean": 0.67,
+            "cv": null
+          },
+          "first_prefill_tps": 189.62
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-7",
+      "actual_cycles": 17
+    },
+    {
+      "sample": 0,
+      "drafter": "dspark",
+      "proposals": 14,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-14/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-14/logits",
+        "--mtp",
+        "--mtp-model",
+        "/home/daniele/ds4/gguf/drafts/Qwen3.8-27B-DSpark-v2-Q8_0.gguf",
+        "--mtp-draft",
+        "14"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "3e30713e3f0a3d0c8132a44d0f48265932828f3d7a27ec107234485cdc9d5810",
+      "exit_code": 0,
+      "wall_seconds": 388.7379540139991,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              200.51
+            ],
+            "median": 200.51,
+            "mean": 200.51,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.65
+            ],
+            "median": 0.65,
+            "mean": 0.65,
+            "cv": null
+          },
+          "first_prefill_tps": 200.51
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-14",
+      "actual_cycles": 15
+    },
+    {
+      "sample": 0,
+      "drafter": "dspark",
+      "proposals": 15,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-15/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-15/logits",
+        "--mtp",
+        "--mtp-model",
+        "/home/daniele/ds4/gguf/drafts/Qwen3.8-27B-DSpark-v2-Q8_0.gguf",
+        "--mtp-draft",
+        "15"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "3e30713e3f0a3d0c8132a44d0f48265932828f3d7a27ec107234485cdc9d5810",
+      "exit_code": 0,
+      "wall_seconds": 329.48697457800154,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              245.61
+            ],
+            "median": 245.61,
+            "mean": 245.61,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.64
+            ],
+            "median": 0.64,
+            "mean": 0.64,
+            "cv": null
+          },
+          "first_prefill_tps": 245.61
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-v41-64/sample-0-dspark-15",
+      "actual_cycles": 15
+    }
+  ],
+  "pairs": [
+    {
+      "sample": 0,
+      "drafter": "dspark",
+      "proposals": 7,
+      "same_generated_tokens": true,
+      "actual_final_position": 65568,
+      "quality": [
+        {
+          "file": "frontier_065536.decode.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        },
+        {
+          "file": "frontier_065536.logits.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        }
+      ]
+    },
+    {
+      "sample": 0,
+      "drafter": "dspark",
+      "proposals": 14,
+      "same_generated_tokens": true,
+      "actual_final_position": 65568,
+      "quality": [
+        {
+          "file": "frontier_065536.decode.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        },
+        {
+          "file": "frontier_065536.logits.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        }
+      ]
+    },
+    {
+      "sample": 0,
+      "drafter": "dspark",
+      "proposals": 15,
+      "same_generated_tokens": true,
+      "actual_final_position": 65568,
+      "quality": [
+        {
+          "file": "frontier_065536.decode.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        },
+        {
+          "file": "frontier_065536.logits.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        }
+      ]
+    }
+  ],
+  "status": "COMPLETE",
+  "scope": "diagnostic",
+  "all_pass": true
+}

@@ -1,0 +1,36 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight budget requested=11.000 GiB allowed=8.738 GiB graph=9.918 GiB scratch=0.332 GiB headroom=2.000 GiB sessions=1 (clamped to memory limit)
+ds4: dense weight plan resident=8.644 GiB host=5.649 GiB ring=0.469 GiB offloaded_layers=29/64; KV and recurrent state stay in VRAM
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.533s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 8.50 GiB (raw 8.50 + compressed 0.00) + buffers 1.42 GiB + resident model 10.38 GiB = 20.30 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=65536 prefill_cap=1024 raw_kv_rows=65536 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 8708.85 MiB (ctx=65536, backend=cuda, prefill_chunk=1024, raw_kv_rows=65536, compressed_kv_rows=0)
+ds4: CUDA memory report weight streaming before graph: free 12318.00 MiB total 24575.50 MiB scratch 340.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+ds4: CUDA memory report weight streaming after graph: free 1598.07 MiB total 24575.50 MiB scratch 340.00 MiB token_tile 0.00 MiB q8_f16 0.00 MiB q8_f32 0.00 MiB
+ds4-bench: context buffers 8708.85 MiB (ctx=65536, backend=cuda, prefill_chunk=1024, raw_kv_rows=65536, compressed_kv_rows=0)
+ds4-bench: speculative decoding enabled with draft width 5; frontier restoration uses session snapshots
+QWEN_PREFILL_PHASE start=0 rows=1024 target_ms=2076.812 draft_prepare_ms=116.064
+ds4-bench: prefill progress current=1024 total=4096 elapsed=2.205s
+QWEN_PREFILL_PHASE start=1024 rows=1024 target_ms=1944.784 draft_prepare_ms=114.893
+ds4-bench: prefill progress current=2048 total=4096 elapsed=4.264s
+QWEN_PREFILL_PHASE start=2048 rows=1024 target_ms=1950.108 draft_prepare_ms=115.330
+ds4-bench: prefill progress current=3072 total=4096 elapsed=6.330s
+QWEN_PREFILL_PHASE start=3072 rows=1024 target_ms=1952.440 draft_prepare_ms=115.560
+ds4-bench: prefill progress current=4096 total=4096 elapsed=8.398s
+ds4-bench: decode cycle ctx=4096 completed=1 rows=1 ms=1933.339
+ds4-bench: decode cycle ctx=4096 completed=2 rows=1 ms=1923.922
+ds4-bench: decode cycle ctx=4096 completed=5 rows=3 ms=1917.657
+ds4-bench: decode cycle ctx=4096 completed=6 rows=1 ms=1921.151
+ds4-bench: decode cycle ctx=4096 completed=8 rows=2 ms=1917.849
+ds4-bench: decode cycle ctx=4096 completed=9 rows=1 ms=1918.848
+ds4-bench: decode cycle ctx=4096 completed=10 rows=1 ms=1920.008
+ds4-bench: decode cycle ctx=4096 completed=12 rows=2 ms=1920.725
+ds4-bench: decode cycle ctx=4096 completed=14 rows=2 ms=1913.545
+ds4-bench: decode cycle ctx=4096 completed=15 rows=1 ms=1904.109
+ds4-bench: decode cycle ctx=4096 completed=16 rows=1 ms=1908.755
+ds4: dense weight streaming forwards=15 H2D=84.735 GiB transfers=435 pending_waits=433 submit_wait=27755.127ms resident=8.644 GiB host=5.649 GiB ring=0.469 GiB pinned=0.125 GiB

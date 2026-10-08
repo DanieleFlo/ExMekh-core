@@ -1,0 +1,1585 @@
+{
+  "status": "RETIRED_AT_USER_REQUEST",
+  "date": "2026-10-08",
+  "head": "1239542282ebcc724a94f754c181f530113ea993",
+  "exclusive_files": {
+    "ds4_qwen35_kv.cuh": "6cc45b8caed24b607b36a5142265eb38ce3bdd51bc3c7c59b3ae141d2f143fe3",
+    "ds4_qwen35_weights.cuh": "7d3e2c901c5d05176b4dee0402ffd04ae13e06fbf345603ef44087b3a3d78910",
+    "ds4_qwen35_weights.h": "de77bf3ba60ffee4d0ca8b096fe138ebc7fac6f0d49d34b6526f78aadbbf01e6",
+    "ds4_qwen_dspark.cuh": "562119c5ed5d310b2a3cf4c377586a6311fd8d3d779eca62f6c35b8aba92579b",
+    "ds4_qwen_dspark_graph.h": "bc80a940ebe981a8654f1dbae5bfa5d8d1aeddd580a6e72b2c39bf5311d88a73",
+    "ds4_qwen_dspark_runtime.h": "2f3522eda24fe7298ba6da57968dfc264949a77b435e18749b36762704778bdb",
+    "ds4_qwen_dspark_weights.h": "3583c80f93af1636a0b5c71e7d7605b69992e12176091037912ac5e9d2a4c4cc",
+    "gguf-tools/qwen_dspark_convert.py": "5044c46f54c4bd752932408b9f00f39d79e6cef955184d754d53b04ce3cceab4",
+    "tests/test_qwen35_kv_capacity.c": "f3fbfffedf3ddbfd0a9500a1c60b0b2f5e10a033515f376444b84efc0b6c73b1",
+    "tests/test_qwen35_weight_stream.c": "515d4cd63aef8c609b97851d01498a4fc2bcc2d8420d4fbe9fed66fb2a68f5d7",
+    "tests/test_qwen_dspark_primitives.c": "b95d0ebc64f8746d8ec9abfd35a874826d347d520ddeed403982a9b5c8733ea4",
+    "tests/test_qwen_dspark_state.c": "c06cf2d163b562d386ae99b260fe197bc25c1df2e0b9ad9808369aacbef9b6c5",
+    "tests/test_qwen_mtp_wide.c": "33fc9d8f47fe1dc60932f91447ebe4776757edc78beb0f033cdea2f62d16cd67",
+    "tools/qualify_qwen27_capacity.py": "cec98d06a932991a8d40f3cb9d2cb916c9d84bcaee5053a3fdf86506faa470b9",
+    "tools/qualify_qwen27_speculative.py": "c5a780b010745504efe0a45e11fdbb6e5689528f53553af19299703097968913",
+    "tools/qualify_qwen27_weights.py": "a1e8e5525cb52334802ed58a866e236bd30df38827d8e739354104e2cfd908e1"
+  },
+  "shared_before_sha256": {
+    "ds4.c": "a67bc0eadf2f9526f887e47d3a4234664a79bf80103654e18ad52897c68b9117",
+    "ds4_cuda.cu": "0b1665065de4f112ab2862f12f53065007ec4b1464830c7505e154a9a9176b70",
+    "ds4_cli.c": "0db649b72a019d28c6f321f18fa49e15d091635bf47ac2a841a1371f4b73d209",
+    "ds4_server.c": "b3da1ba72974e017519e2f845ccecb4731733822242a825689a3aadee4072220",
+    "ds4_help.c": "a4698223c1874cc22e0592d6dd5dedd38d18ed7ac718fe281dbb52dd4b93d11a",
+    "ds4_bench.c": "771c68f7d29740040c4f17b5207cfae8ba7fea102c6cffb1ba50dcfdf935ed64",
+    "ds4_env.h": "e466d2cacdf2ee294808ea1a2c0adf4a3d313668801bed6f089649271c248865",
+    "ds4_gpu.h": "bcdafc689311e859a8ac990d54c2189c94ded179c933b729cf4c4f75895f6f9a",
+    "tests/test_qwen_mtp_callback.c": "dde7a97d547908cd6ff72475f79e0846eca0dd31171943e9355ae0d21edb0331",
+    "tests/qwen_mtp_catchup_probe.c": "72cca3d017fd01e4657729307db26d7161acf4f9856d4c3662145499afca2cdc",
+    "Makefile": "9832da2776f9c441606f37f06b5317c5cf7958b3f31f9be66235a4d98a21efef",
+    ".gitignore": "4d33f9d0f4930a4cca993955eb1beaead8d9ec609f879ad848e8bf6a1f35839c",
+    "tools/qualify_qwen_flash_strata.py": "3db481866d3bb4b7e4e589b7d7ff64b7ce22323e37b2da70b065ab6f73d36c2b",
+    "tools/perf_qwen_flash_strata.py": "206ba40c75e4c2625cbe88f77ae84646d1af0c043b4f093484098cf99525a7cc"
+  },
+  "restored_hunks": {
+    "ds4.c": [
+      [
+        3033,
+        0,
+        3037,
+        2,
+        " static void print_size(uint64_t bytes) {"
+      ],
+      [
+        3082,
+        0,
+        3088,
+        1,
+        " typedef enum {"
+      ],
+      [
+        3374,
+        0,
+        3381,
+        1,
+        " static const char *support_kind_name(ds4_support_kind kind) {"
+      ],
+      [
+        3388,
+        0,
+        3396,
+        7,
+        " static ds4_support_kind support_model_detect("
+      ],
+      [
+        4928,
+        0,
+        4946,
+        2,
+        " typedef struct {"
+      ],
+      [
+        43140,
+        0,
+        43167,
+        1,
+        " struct ds4_engine {"
+      ],
+      [
+        43155,
+        0,
+        43183,
+        1,
+        " struct ds4_engine {"
+      ],
+      [
+        43233,
+        0,
+        43262,
+        1,
+        " struct ds4_engine {"
+      ],
+      [
+        43235,
+        0,
+        43265,
+        28,
+        " struct ds4_engine {"
+      ],
+      [
+        43317,
+        1,
+        43374,
+        1,
+        " static void ds4_engine_print_startup_memory("
+      ],
+      [
+        43323,
+        1,
+        43380,
+        2,
+        " static void ds4_engine_print_startup_memory("
+      ],
+      [
+        43331,
+        2,
+        43389,
+        8,
+        " static void ds4_engine_print_startup_memory("
+      ],
+      [
+        43338,
+        2,
+        43402,
+        11,
+        " static void ds4_engine_print_startup_memory("
+      ],
+      [
+        43353,
+        0,
+        43427,
+        6,
+        " static void ds4_engine_print_startup_memory("
+      ],
+      [
+        46155,
+        2,
+        46233,
+        0,
+        " static uint64_t glm_graph_host_memory_bytes(void) {"
+      ],
+      [
+        61442,
+        0,
+        61908,
+        1,
+        " typedef struct ds4_dspark_spec_stats {"
+      ],
+      [
+        61446,
+        0,
+        61913,
+        1,
+        " typedef struct {"
+      ],
+      [
+        61489,
+        0,
+        61957,
+        5,
+        " typedef struct {"
+      ],
+      [
+        61495,
+        0,
+        61968,
+        17,
+        " typedef struct {"
+      ],
+      [
+        61503,
+        0,
+        61993,
+        46,
+        " typedef struct {"
+      ],
+      [
+        61505,
+        0,
+        62041,
+        8,
+        " static void qwen_graph_free(ds4_qwen_gpu_graph *g) {"
+      ],
+      [
+        61535,
+        0,
+        62079,
+        2,
+        " static void qwen_graph_free(ds4_qwen_gpu_graph *g) {"
+      ],
+      [
+        61536,
+        0,
+        62082,
+        2,
+        " static void qwen_graph_free(ds4_qwen_gpu_graph *g) {"
+      ],
+      [
+        61542,
+        0,
+        62090,
+        4,
+        " static bool qwen_graph_reset(ds4_qwen_gpu_graph *g) {"
+      ],
+      [
+        61561,
+        1,
+        62112,
+        1,
+        " static bool qwen_graph_reset(ds4_qwen_gpu_graph *g) {"
+      ],
+      [
+        61579,
+        0,
+        62131,
+        6,
+        " static bool qwen_graph_enable_mtp(ds4_qwen_gpu_graph *g,"
+      ],
+      [
+        61591,
+        0,
+        62149,
+        12,
+        " static bool qwen_graph_enable_mtp(ds4_qwen_gpu_graph *g,"
+      ],
+      [
+        61606,
+        9,
+        62175,
+        21,
+        " static bool qwen_graph_enable_mtp(ds4_qwen_gpu_graph *g,"
+      ],
+      [
+        61615,
+        0,
+        62197,
+        3,
+        " static bool qwen_graph_enable_mtp(ds4_qwen_gpu_graph *g,"
+      ],
+      [
+        61619,
+        0,
+        62204,
+        1,
+        " static bool qwen_graph_enable_mtp(ds4_qwen_gpu_graph *g,"
+      ],
+      [
+        61671,
+        0,
+        62257,
+        30,
+        " static bool qwen_graph_mtp_restore_recurrent_row(ds4_qwen_gpu_graph *g,"
+      ],
+      [
+        61780,
+        0,
+        62396,
+        3,
+        " static bool qwen_graph_alloc(ds4_qwen_gpu_graph *g, uint32_t ctx_cap,"
+      ],
+      [
+        61784,
+        0,
+        62403,
+        1,
+        " static bool qwen_graph_alloc(ds4_qwen_gpu_graph *g, uint32_t ctx_cap,"
+      ],
+      [
+        62939,
+        0,
+        63559,
+        2,
+        " static bool qwen_graph_matmul("
+      ],
+      [
+        62994,
+        1,
+        63615,
+        11,
+        " static bool qwen_graph_attention(ds4_qwen_gpu_graph *g, const ds4_model *m,"
+      ],
+      [
+        63021,
+        0,
+        63653,
+        2,
+        " static bool qwen_graph_forward_token_plan("
+      ],
+      [
+        63045,
+        0,
+        63679,
+        3,
+        " static bool qwen_graph_forward_token_plan("
+      ],
+      [
+        63063,
+        0,
+        63700,
+        4,
+        " static bool qwen_graph_forward_token_plan("
+      ],
+      [
+        63138,
+        1,
+        63778,
+        1,
+        " static bool qwen_graph_forward_token_plan("
+      ],
+      [
+        63239,
+        0,
+        63880,
+        4,
+        " static bool qwen_graph_forward_token_plan("
+      ],
+      [
+        63240,
+        0,
+        63885,
+        1,
+        " static bool qwen_graph_forward_token_plan("
+      ],
+      [
+        63330,
+        0,
+        63976,
+        2,
+        " static bool qwen_graph_recurrent_attention_rows("
+      ],
+      [
+        63347,
+        1,
+        63994,
+        2,
+        " static bool qwen_graph_recurrent_attention_rows("
+      ],
+      [
+        63349,
+        1,
+        63997,
+        2,
+        " static bool qwen_graph_recurrent_attention_rows("
+      ],
+      [
+        63353,
+        0,
+        64003,
+        30,
+        " static bool qwen_graph_recurrent_attention_rows("
+      ],
+      [
+        63377,
+        1,
+        64056,
+        2,
+        " static bool qwen_graph_full_attention_rows("
+      ],
+      [
+        63458,
+        0,
+        64139,
+        7,
+        " static bool qwen_graph_forward_rows("
+      ],
+      [
+        63462,
+        0,
+        64150,
+        3,
+        " static bool qwen_graph_forward_rows("
+      ],
+      [
+        63475,
+        0,
+        64166,
+        4,
+        " static bool qwen_graph_forward_rows("
+      ],
+      [
+        63489,
+        0,
+        64184,
+        4,
+        " static bool qwen_graph_forward_rows("
+      ],
+      [
+        63542,
+        0,
+        64241,
+        1,
+        " static bool qwen_graph_forward_rows("
+      ],
+      [
+        63549,
+        0,
+        64249,
+        2,
+        " static bool qwen_graph_forward_rows("
+      ],
+      [
+        63602,
+        0,
+        64304,
+        5,
+        " static bool qwen_graph_mtp_step("
+      ],
+      [
+        63610,
+        1,
+        64316,
+        1,
+        " static bool qwen_graph_mtp_step("
+      ],
+      [
+        63636,
+        1,
+        64342,
+        1,
+        " static bool qwen_graph_mtp_step("
+      ],
+      [
+        63640,
+        1,
+        64346,
+        1,
+        " static bool qwen_graph_mtp_step("
+      ],
+      [
+        63643,
+        1,
+        64349,
+        1,
+        " static bool qwen_graph_mtp_step("
+      ],
+      [
+        63655,
+        2,
+        64361,
+        2,
+        " static bool qwen_graph_mtp_step("
+      ],
+      [
+        63698,
+        2,
+        64404,
+        3,
+        " static bool qwen_graph_mtp_step("
+      ],
+      [
+        63734,
+        0,
+        64442,
+        1,
+        " static bool qwen_graph_mtp_catchup("
+      ],
+      [
+        63752,
+        0,
+        64461,
+        1,
+        " static bool qwen_graph_mtp_commit_saved_target("
+      ],
+      [
+        63769,
+        0,
+        64479,
+        1,
+        " static bool qwen_graph_mtp_catchup_rows("
+      ],
+      [
+        63772,
+        1,
+        64482,
+        2,
+        " static bool qwen_graph_mtp_catchup_rows("
+      ],
+      [
+        63785,
+        10,
+        64496,
+        12,
+        " static bool qwen_graph_mtp_catchup_rows("
+      ],
+      [
+        63799,
+        2,
+        64511,
+        0,
+        " static bool qwen_graph_mtp_catchup_rows("
+      ],
+      [
+        63801,
+        0,
+        64513,
+        17,
+        " static bool qwen_graph_mtp_catchup_rows("
+      ],
+      [
+        64916,
+        0,
+        65645,
+        1,
+        " static void session_greedy_splitkv_reset(ds4_session *s) {"
+      ],
+      [
+        64921,
+        1,
+        65650,
+        1,
+        " static uint64_t qwen_session_payload_bytes_for(ds4_session *s,"
+      ],
+      [
+        64923,
+        1,
+        65652,
+        1,
+        " static uint64_t qwen_session_payload_bytes_for(ds4_session *s,"
+      ],
+      [
+        64956,
+        0,
+        65686,
+        4,
+        " static uint64_t qwen_session_payload_bytes_for(ds4_session *s,"
+      ],
+      [
+        64975,
+        2,
+        65708,
+        4,
+        " static int qwen_session_save_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        64978,
+        1,
+        65713,
+        1,
+        " static int qwen_session_save_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        64988,
+        1,
+        65723,
+        2,
+        " static int qwen_session_save_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        65064,
+        0,
+        65801,
+        9,
+        " static int qwen_session_save_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        65096,
+        1,
+        65841,
+        3,
+        " static int qwen_session_load_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        65106,
+        1,
+        65853,
+        1,
+        " static int qwen_session_load_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        65108,
+        1,
+        65855,
+        1,
+        " static int qwen_session_load_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        65115,
+        1,
+        65862,
+        1,
+        " static int qwen_session_load_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        65190,
+        0,
+        65938,
+        12,
+        " static int qwen_session_load_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        65220,
+        1,
+        65979,
+        2,
+        " static int qwen_session_load_payload(ds4_session *s, FILE *fp,"
+      ],
+      [
+        65364,
+        1,
+        66124,
+        2,
+        " static uint64_t ds4_session_payload_body_bytes(ds4_session *s) {"
+      ],
+      [
+        65367,
+        1,
+        66128,
+        2,
+        " static uint64_t ds4_session_payload_body_bytes(ds4_session *s) {"
+      ],
+      [
+        66955,
+        0,
+        67717,
+        1,
+        " void ds4_session_snapshot_free(ds4_session_snapshot *snap) {"
+      ],
+      [
+        66997,
+        0,
+        67760,
+        1,
+        " uint64_t ds4_session_skill_state_bytes(ds4_session *s) {"
+      ],
+      [
+        67086,
+        0,
+        67850,
+        7,
+        " int ds4_session_save_skill_state(ds4_session *s, FILE *fp,"
+      ],
+      [
+        67176,
+        0,
+        67947,
+        1,
+        " int ds4_session_load_skill_state(ds4_session *s, FILE *fp,"
+      ],
+      [
+        67178,
+        1,
+        67949,
+        1,
+        " int ds4_session_load_skill_state(ds4_session *s, FILE *fp,"
+      ],
+      [
+        67186,
+        1,
+        67957,
+        6,
+        " int ds4_session_load_skill_state(ds4_session *s, FILE *fp,"
+      ],
+      [
+        67214,
+        0,
+        67991,
+        6,
+        " int ds4_session_load_skill_state(ds4_session *s, FILE *fp,"
+      ],
+      [
+        67255,
+        0,
+        68038,
+        1,
+        " int ds4_session_load_skill_state(ds4_session *s, FILE *fp,"
+      ],
+      [
+        67275,
+        0,
+        68059,
+        1,
+        " int ds4_session_load_skill_state(ds4_session *s, FILE *fp,"
+      ],
+      [
+        67291,
+        0,
+        68076,
+        2,
+        " struct ds4_session_device_frontier {"
+      ],
+      [
+        67436,
+        0,
+        68223,
+        2,
+        " int ds4_session_capture_device_frontier("
+      ],
+      [
+        67464,
+        1,
+        68252,
+        6,
+        " int ds4_session_restore_device_frontier("
+      ],
+      [
+        67509,
+        0,
+        68303,
+        1,
+        " int ds4_session_restore_device_frontier("
+      ],
+      [
+        74128,
+        1,
+        74927,
+        6,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        74149,
+        0,
+        74954,
+        2,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        74191,
+        0,
+        74998,
+        11,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        74193,
+        1,
+        75010,
+        26,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        74272,
+        1,
+        75114,
+        1,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        74274,
+        1,
+        75116,
+        1,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        74888,
+        1,
+        75730,
+        2,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        74894,
+        0,
+        75738,
+        18,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        75184,
+        1,
+        76045,
+        2,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        75381,
+        0,
+        76244,
+        62,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        75410,
+        1,
+        76334,
+        2,
+        " static int ds4_engine_open_internal(ds4_engine **out,"
+      ],
+      [
+        76722,
+        0,
+        77648,
+        4,
+        " static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx"
+      ],
+      [
+        76729,
+        0,
+        77659,
+        3,
+        " static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx"
+      ],
+      [
+        76732,
+        0,
+        77665,
+        11,
+        " static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx"
+      ],
+      [
+        76740,
+        1,
+        77683,
+        1,
+        " static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx"
+      ],
+      [
+        76747,
+        0,
+        77691,
+        11,
+        " static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx"
+      ],
+      [
+        76753,
+        1,
+        77707,
+        1,
+        " static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx"
+      ],
+      [
+        79476,
+        0,
+        80468,
+        1,
+        " static int ds4_session_sync_internal(ds4_session *s, const ds4_tokens *prompt, c"
+      ],
+      [
+        79511,
+        0,
+        80504,
+        1,
+        " static int ds4_session_sync_internal(ds4_session *s, const ds4_tokens *prompt, c"
+      ],
+      [
+        79516,
+        0,
+        80510,
+        3,
+        " static int ds4_session_sync_internal(ds4_session *s, const ds4_tokens *prompt, c"
+      ],
+      [
+        79529,
+        0,
+        80526,
+        5,
+        " static int ds4_session_sync_internal(ds4_session *s, const ds4_tokens *prompt, c"
+      ],
+      [
+        89283,
+        1,
+        90289,
+        2,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89307,
+        1,
+        90314,
+        1,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89342,
+        1,
+        90349,
+        5,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89344,
+        1,
+        90355,
+        1,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89383,
+        1,
+        90394,
+        8,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89403,
+        0,
+        90422,
+        1,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89426,
+        1,
+        90445,
+        1,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89442,
+        2,
+        90461,
+        15,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89461,
+        1,
+        90493,
+        1,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89469,
+        0,
+        90502,
+        1,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ],
+      [
+        89777,
+        0,
+        90811,
+        1,
+        " static int ds4_session_qwen_mtp_spec_cycle("
+      ]
+    ],
+    "ds4_cuda.cu": [
+      [
+        25,
+        0,
+        26,
+        4,
+        ""
+      ],
+      [
+        27,
+        0,
+        32,
+        1,
+        ""
+      ],
+      [
+        200,
+        0,
+        206,
+        3,
+        " static int g_model_cache_full;"
+      ],
+      [
+        853,
+        0,
+        862,
+        2,
+        " static const char *cuda_model_range_ptr(const void *model_map, uint64_t offset,"
+      ],
+      [
+        1499,
+        0,
+        1518,
+        2,
+        " static int cuda_model_range_is_cached(const void *model_map, uint64_t offset, ui"
+      ],
+      [
+        1805,
+        0,
+        1826,
+        1,
+        " static const __half *cuda_q8_f16_ptr("
+      ],
+      [
+        1920,
+        0,
+        1942,
+        1,
+        " static float *cuda_q8_f32_ptr("
+      ],
+      [
+        3138,
+        0,
+        3174,
+        1,
+        " extern \"C\" void ds4_gpu_cleanup(void) {"
+      ],
+      [
+        3478,
+        0,
+        3552,
+        2,
+        " extern \"C\" int ds4_gpu_tensor_copy(ds4_gpu_tensor *dst, uint64_t dst_offset,"
+      ],
+      [
+        3997,
+        0,
+        4077,
+        1,
+        " extern \"C\" int ds4_gpu_set_model_map(const void *model_map, uint64_t model_size)"
+      ],
+      [
+        4210,
+        0,
+        4291,
+        1,
+        " static int cuda_register_model_map(const void *model_map, uint64_t model_size,"
+      ],
+      [
+        4281,
+        0,
+        4363,
+        2,
+        " extern \"C\" int ds4_gpu_register_model_map_no_copy(const void *model_map, uint64_"
+      ],
+      [
+        28411,
+        0,
+        28498,
+        9,
+        " __global__ static void qwen38_embed_tokens_q3_K_kernel("
+      ],
+      [
+        28425,
+        1,
+        28520,
+        1,
+        " extern \"C\" int ds4_gpu_embed_token_quant_tensor("
+      ],
+      [
+        28431,
+        1,
+        28526,
+        2,
+        " extern \"C\" int ds4_gpu_embed_token_quant_tensor("
+      ],
+      [
+        28449,
+        0,
+        28546,
+        5,
+        " extern \"C\" int ds4_gpu_embed_token_quant_tensor("
+      ],
+      [
+        34089,
+        1,
+        34190,
+        2,
+        " static int qwen38_ud_matmul("
+      ],
+      [
+        34117,
+        1,
+        34219,
+        3,
+        " static int qwen38_ud_matmul("
+      ],
+      [
+        35045,
+        1,
+        35149,
+        1,
+        " __global__ static void qwen35_qk_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35049,
+        0,
+        35154,
+        1,
+        " __global__ static void qwen35_qk_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35060,
+        0,
+        35166,
+        1,
+        " __global__ static void qwen35_qk_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35063,
+        2,
+        35169,
+        2,
+        " __global__ static void qwen35_qk_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35068,
+        2,
+        35174,
+        2,
+        " __global__ static void qwen35_qk_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35100,
+        2,
+        35206,
+        2,
+        " __global__ static void qwen35_qk_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35472,
+        1,
+        35578,
+        1,
+        " __global__ static void qwen38_ud_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35476,
+        0,
+        35583,
+        1,
+        " __global__ static void qwen38_ud_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35493,
+        0,
+        35601,
+        1,
+        " __global__ static void qwen38_ud_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35495,
+        1,
+        35603,
+        1,
+        " __global__ static void qwen38_ud_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35497,
+        1,
+        35605,
+        1,
+        " __global__ static void qwen38_ud_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35525,
+        2,
+        35633,
+        2,
+        " __global__ static void qwen38_ud_q8_1_r8_verify_rows2_mmvq_kernel("
+      ],
+      [
+        35543,
+        1,
+        35651,
+        1,
+        " static int qwen38_ud_q8_1_matmul("
+      ],
+      [
+        35581,
+        0,
+        35690,
+        6,
+        " static int qwen38_ud_q8_1_matmul("
+      ],
+      [
+        36779,
+        0,
+        36894,
+        41,
+        " static int qwen35_quant_k_matmul("
+      ],
+      [
+        36894,
+        1,
+        37049,
+        3,
+        " static int qwen35_quant_k_matmul("
+      ],
+      [
+        36897,
+        1,
+        37054,
+        1,
+        " static int qwen35_quant_k_matmul("
+      ],
+      [
+        37253,
+        1,
+        37410,
+        1,
+        " __global__ static void qwen35_attention_split_k_partials_kernel("
+      ],
+      [
+        37255,
+        1,
+        37412,
+        1,
+        " __global__ static void qwen35_attention_split_k_partials_kernel("
+      ],
+      [
+        37274,
+        1,
+        37431,
+        1,
+        " __global__ static void qwen35_attention_split_k_partials_kernel("
+      ],
+      [
+        37304,
+        1,
+        37461,
+        1,
+        " __global__ static void qwen35_attention_split_k_gqa_partials_kernel("
+      ],
+      [
+        37306,
+        1,
+        37463,
+        1,
+        " __global__ static void qwen35_attention_split_k_gqa_partials_kernel("
+      ],
+      [
+        37327,
+        1,
+        37484,
+        1,
+        " __global__ static void qwen35_attention_split_k_gqa_partials_kernel("
+      ],
+      [
+        37468,
+        0,
+        37626,
+        70,
+        " static int qwen35_attention_split_k_launch("
+      ],
+      [
+        37505,
+        1,
+        37732,
+        2,
+        " __global__ static void qwen35_prepare_kv_rows_kernel("
+      ],
+      [
+        37528,
+        1,
+        37756,
+        2,
+        " __global__ static void qwen35_prepare_kv_rows_kernel("
+      ],
+      [
+        37675,
+        0,
+        37905,
+        17,
+        " static int qwen35_attention_gemm_rows_launch("
+      ],
+      [
+        37698,
+        0,
+        37945,
+        3,
+        " static int ds4_gpu_qwen35_store_kv_rows_tensor_impl("
+      ],
+      [
+        37744,
+        1,
+        37993,
+        1,
+        " static int ds4_gpu_qwen35_full_attention_rows_tensor_impl("
+      ],
+      [
+        37777,
+        1,
+        38026,
+        17,
+        " static int ds4_gpu_qwen35_full_attention_rows_tensor_impl("
+      ],
+      [
+        37808,
+        1,
+        38073,
+        1,
+        " static int ds4_gpu_qwen35_full_attention_rows_tensor_impl("
+      ],
+      [
+        37838,
+        1,
+        38103,
+        1,
+        " extern \"C\" int ds4_gpu_qwen35_full_attention_rows_tensor("
+      ],
+      [
+        37852,
+        1,
+        38117,
+        15,
+        " extern \"C\" int ds4_gpu_qwen35_full_attention_mrope_rows_tensor("
+      ],
+      [
+        38148,
+        0,
+        38428,
+        15,
+        " extern \"C\" int ds4_gpu_qwen_matmul_tensor("
+      ],
+      [
+        38179,
+        1,
+        38473,
+        1,
+        " extern \"C\" int ds4_gpu_qwen_matmul_tensor("
+      ],
+      [
+        39070,
+        0,
+        39371,
+        1,
+        " extern \"C\" int ds4_gpu_tp_big_gate_wait(uint64_t seq) {"
+      ]
+    ],
+    "ds4_cli.c": [
+      [
+        1926,
+        1,
+        1927,
+        1,
+        " static cli_config parse_options(int argc, char **argv) {"
+      ],
+      [
+        2101,
+        0,
+        2103,
+        13,
+        " static cli_config parse_options(int argc, char **argv) {"
+      ]
+    ],
+    "ds4_server.c": [
+      [
+        23138,
+        1,
+        23280,
+        1,
+        " static server_config parse_options(int argc, char **argv) {"
+      ],
+      [
+        23308,
+        0,
+        23451,
+        13,
+        " static server_config parse_options(int argc, char **argv) {"
+      ]
+    ],
+    "ds4_help.c": [
+      [
+        174,
+        0,
+        175,
+        5,
+        " static void print_model_runtime(FILE *fp, const help_colors *c,"
+      ],
+      [
+        185,
+        1,
+        190,
+        1,
+        " static void print_model_runtime(FILE *fp, const help_colors *c,"
+      ]
+    ]
+  },
+  "reports": {
+    "weights-v61-64k-driver.log": "73ebeb001d41e064efaf79c52c3afe2a12c4383913e4d59a7058ae242cff0052",
+    "qwen27-inherited-ab-02-baseline/speed.csv": "654f7579edecaf749e30cb2d1b696e0fdd557a3e8f069e30d6b2f264f2e0a37f",
+    "qwen27-inherited-ab-02-baseline/runtime.log": "d2bdbce08185ee173234a4bdd8541a152a73775cfb442d0c972935493b58a034",
+    "qwen27-inherited-ab-02-baseline/run.json": "004d9dbedc6038ac02921faea6b4e52c16ab0325dc0b7b0eb351e2d3db741b23",
+    "weights-v60-short-mtp/report.json": "db5c2b2932b484c28493e563d97951f098cb3819d4eb0da203726680fee560e2",
+    "weights-v60-short-mtp/sample-0-baseline/speed.csv": "95cae7e64754e9460c5c5453e54cff03886f8180481c5725257cd76569742a8f",
+    "weights-v60-short-mtp/sample-0-baseline/runtime.log": "1781f2ba7a1b7390257cef068284078d33ea27bf7f2c3b8dd6150261d5897af8",
+    "weights-v60-short-mtp/sample-0-baseline/run.json": "d5403a8be65e3c1f01273a28f4825ad2c493c68f71be16f33186b71490deb552",
+    "weights-v60-short-mtp/sample-0-candidate/speed.csv": "a461e0306df497c9aac9b1083aebba17f563dc2c13d0b223cd1196cb1d1f75ed",
+    "weights-v60-short-mtp/sample-0-candidate/runtime.log": "0d37ca639c589d3f746547480e4e79210e3e33c0baf16d2256bedd7ac3687ed0",
+    "weights-v60-short-mtp/sample-0-candidate/run.json": "7a13a6a87e3dbd4e1958ad1e343b401cb2050a8a4ea3849a093607dbabbe0e28",
+    "qwen27-inherited-ab-01-candidate/speed.csv": "ead5454b6e80697e4a1d4c5320ac2d041024eec1f658b8358188f9f220f37374",
+    "qwen27-inherited-ab-01-candidate/runtime.log": "40e7e914fd94d883b08b7363d27693e59d69c40d22048ededfdef80d190faf7f",
+    "qwen27-inherited-ab-01-candidate/run.json": "eaa841381a640f5af725ebbaa9d369f4c3babc0ca708ea6420a4829966eb2668",
+    "qwen27-dspark-q4-v43-64/report.json": "09b04c239ee9d05107f1854a711d908509c040bed7af29b6b5db04f4c1b96d40",
+    "qwen27-dspark-q4-v43-64/sample-0-dspark-0/speed.csv": "d36c13c58b514b6af538be3e8fb68939471485ec947855bd1ef021c93bf22b01",
+    "qwen27-dspark-q4-v43-64/sample-0-dspark-0/runtime.log": "5f6523863a33b8602ed1dc5336fdf047260b78f8e97124f53264b129a6b086db",
+    "qwen27-dspark-q4-v43-64/sample-0-dspark-7/speed.csv": "c20eea38b08782df04370037b86c132fe58a6520310d466106467eff2e64882d",
+    "qwen27-dspark-q4-v43-64/sample-0-dspark-7/runtime.log": "3772e11826893cd1de08d8e17f536ff16c42b44f8641fe8d500cb150485e2d0a",
+    "weights-v58-short-mtp/report.json": "3f9b0abcc0887f8333c40f8f0d01eeb640237ef4837fc343cd4ccf84a5801ef4",
+    "weights-v58-short-mtp/sample-0-baseline/speed.csv": "d1e0295daa43fa4c8de64f447dc41f73aea7c926c7709bebb48b775702db908d",
+    "weights-v58-short-mtp/sample-0-baseline/runtime.log": "aaa3c506ad90d5b62c1db6bd4e425919d3c690f7ee2be0ac0e06862c41c8832a",
+    "weights-v58-short-mtp/sample-0-baseline/run.json": "66e4b05bab83a7e4609507af0400f9917431a6c694f8d634ad67e3e2f1695a61",
+    "weights-v58-short-mtp/sample-0-candidate/speed.csv": "24277d3b658d81bbe49bbee01f9f2a6a7e5e41c6a3dadfcab951725dc9b6561d",
+    "weights-v58-short-mtp/sample-0-candidate/runtime.log": "2b37b2324f40bd4466c1c05cb2ab819aaa64c851bc3931e118f6451a1e324a76",
+    "weights-v58-short-mtp/sample-0-candidate/run.json": "be85cb712c15f0a1c40f1afab178babea9c19edb029adc9d1ec3e77c2163ae9a",
+    "weights-v61-64k-allocation-probe-driver.log": "de46cee1f6ee82f5814331f64805bdec8a2cd4a0c62301cf6c16a89965250e81",
+    "qwen27-inherited-ab-00-candidate/speed.csv": "e96da4b4b5189634e1164c021287b2ae9ccf3333f8a15cb9d875f2f07fb1fdd9",
+    "qwen27-inherited-ab-00-candidate/runtime.log": "d2bdbce08185ee173234a4bdd8541a152a73775cfb442d0c972935493b58a034",
+    "qwen27-inherited-ab-00-candidate/run.json": "9f958b841a49f959c09065744bc39232e0762c4c7498f2fbfe72d7d90eb0f7d6",
+    "qwen27-inherited-ab-03-candidate/speed.csv": "f82ade129c92c3b5af710f819008441b303cbd60c3125ad638af4ace9c3d5e3b",
+    "qwen27-inherited-ab-03-candidate/runtime.log": "b2ea7659d87592e62ea7502c15325cd4e535a8b6ae79d10ac2de82309e53ac5c",
+    "qwen27-inherited-ab-03-candidate/run.json": "1d27b2e62d04c48119e01eb4b5dfcc48fa8e06988200520d13f006331b5da49e",
+    "weights-v62-final-wide-state.log": "63ae0dcfe2a0e4f48f4d0404f64c1868a2e41a715fc5157fb6933448e0f8cc8d",
+    "weights-v58-prefill-diagnostic.log": "a9659db63d3f0e882590c3b135c6a7601e21e829b08ceaa9327fde39a2e3b7df",
+    "qwen27-inherited-ab-04-candidate/speed.csv": "98ec0663d30cd4de00efdf86e069c788197529e5355d49736b48532983252d3a",
+    "qwen27-inherited-ab-04-candidate/runtime.log": "40e7e914fd94d883b08b7363d27693e59d69c40d22048ededfdef80d190faf7f",
+    "qwen27-inherited-ab-04-candidate/run.json": "1e2ca1d1c58084532dd07323bab4015aa8f549b0249fb59872622001ac41d88d",
+    "qwen27-mtp-inherited.log": "9f6a87b6773352b211e2ee4cbed8c271269c894dd9e3a4e2fb0d6e185b9a8ef0",
+    "qwen27-nextn-v49-128/report.json": "aff6a22b1fee49d2ebd659785b22193bc845da1177e53cdb34326455c71e105b",
+    "qwen27-nextn-v49-128/sample-0-nextn-0/speed.csv": "2dbe8a9a2a1362d187b30f1310f33e19e31aee4945f1c5082099bca6e76f694f",
+    "qwen27-nextn-v49-128/sample-0-nextn-0/runtime.log": "57882e1909ba9ed977a0de70cd1441e1d77766b5aa41e6c492755fcd26519681",
+    "qwen27-nextn-v49-128/sample-0-nextn-5/speed.csv": "0a289778851d60ab89e23d19bef40c605daa609cf60ea24fc9d55128a1e68dd6",
+    "qwen27-nextn-v49-128/sample-0-nextn-5/runtime.log": "fd401a3c08ea6603ad79684fa53bc388d934972e9705be2abeedeb70ae219db8",
+    "qwen27-dspark-q4-v42-64/report.json": "c4062d6ba6020f6a6e75f7d9174256b8c09ad0079697de5f912f11090c442395",
+    "qwen27-dspark-q4-v42-64/sample-0-dspark-0/speed.csv": "4ddebe42010bdded11325195a9518ba428cf8fccd3aac1ee2ac45af4863f59ac",
+    "qwen27-dspark-q4-v42-64/sample-0-dspark-0/runtime.log": "747fb66c1c08ad5e84e8155ea47071c4ec8a9d1a5608cae6430bf102f4725cc7",
+    "qwen27-dspark-q4-v42-64/sample-0-dspark-15/speed.csv": "c6909a5e43b61b7e4f1f0378e8c0b35583ed966bc985a5e000d919d57ca48f4a",
+    "qwen27-dspark-q4-v42-64/sample-0-dspark-15/runtime.log": "a218d78bc8bf25a562c20926e22099a9f1c88b78166de8819aac2427949ee9d3",
+    "qwen27-capacity-v24-64-hybrid/report.json": "9beef747ab69839a23ac01d35fa6b106fbc085bf7c2c6dc1ace1110629ec1061",
+    "qwen27-capacity-v24-64-hybrid/context-65536-hybrid-attention/speed.csv": "64b826685c2fb839f307eaca99d41873c3ee3b640c1b44f8192e297e8105a9aa",
+    "qwen27-capacity-v24-64-hybrid/context-65536-hybrid-attention/runtime.log": "9e3fbdafcdf934ad3b1a0f7c7fe85d46791ec63c8673aa0b072a5866a051a437",
+    "qwen27-capacity-v24-64-hybrid/context-65536-hybrid-attention/run.json": "bb25430ef9f8d72058a69f54f0089306c281907727f1dd82d771e0a0fc610c02",
+    "weights-v62-flash-hybrid-configured.log": "b56369aaf838fb70191c75a5539cca8c03f4d8a1af5e76932925a378d18f0bbd",
+    "weights-v60-64k-resume1/report.json": "a31fc4968ff9d11b225e32149faf73b0d2dc29536fcd610d88cfc553859d0099",
+    "weights-v60-64k-resume1/sample-0-baseline/speed.csv": "a695eb7b009269da985d142d6ec94d7603ceefecc6d702b9d2dc36393a76f973",
+    "weights-v60-64k-resume1/sample-0-baseline/runtime.log": "938225a7b1e88f999fc98384533cc48fbf5362ee3e9e4bf09ece1f3bed737096",
+    "weights-v60-64k-resume1/sample-0-baseline/run.json": "5a07f9886154f63c2d5aec2df2b8c9034880598664cd247df65260fe8dbffcc9",
+    "weights-v60-64k-resume1/sample-0-candidate/speed.csv": "24277d3b658d81bbe49bbee01f9f2a6a7e5e41c6a3dadfcab951725dc9b6561d",
+    "weights-v60-64k-resume1/sample-0-candidate/runtime.log": "7cfb15f70f4eb21c908a4661a5a654b4ad4ba1016f094eaa52aa16476fe28fcf",
+    "weights-v60-64k-resume1/sample-0-candidate/run.json": "09cf15896ee46c3ea4aa4dac3460b9840802484ed7955047c9f6488d14a27cd0",
+    "qwen27-speed-v57-driver.log": "02b4cf412f2c99758b5d8b33fb40538ac54993df2defa47fb4f79ef9cb0449f4",
+    "qwen27-inherited-ab-01-baseline/speed.csv": "2647dafabf194fdfaea5ac36ae7a9efb0a419613ee71d042c453f7bb5e18a02d",
+    "qwen27-inherited-ab-01-baseline/runtime.log": "1964826b2ab31110723b5d5454bbc68143ede2b570b00e47372b0d89339fbc31",
+    "qwen27-inherited-ab-01-baseline/run.json": "3fde8cfa4483b5de87e79894eaab50aa9b468eab7786d6adcc269041b44c4771",
+    "qwen27-nextn-v36-64/report.json": "3933f7ddc0adf27a80b47255868f4062cfeae53e8667a5b4946d0a5bc826b61e",
+    "qwen27-nextn-v36-64/sample-0-nextn-7/speed.csv": "85ba61fabe5707c2e13b9c1e115cbdaf369b8777a2b6967a3c3832a9729a5e05",
+    "qwen27-nextn-v36-64/sample-0-nextn-7/runtime.log": "3b57822a7f29714a9c0e820eaca36fe35e2ec39d7ffe69ac70ece323b24a7c88",
+    "qwen27-nextn-v36-64/sample-0-nextn-0/speed.csv": "7d83fafdec14b28a097523b2ff56b107e47d37ab72b1c870eb4a99b6736d0a11",
+    "qwen27-nextn-v36-64/sample-0-nextn-0/runtime.log": "7e490201c7370aaf03601f4894f5feb90eba5e20265d0487c9db3466d6abb981",
+    "qwen27-nextn-v36-64/sample-0-nextn-15/speed.csv": "ec8102a250872bf8a48d303268dbc6fe052add6582969b9579acc7b57c1efce8",
+    "qwen27-nextn-v36-64/sample-0-nextn-15/runtime.log": "12f8d136f151894cdd1e97178125913064c360730804db5036988438fceb0744",
+    "qwen27-nextn-v35-64/report.json": "1e8a0c3139a5ae93e69acb97de405823294161a49e0dae0d687a182a6b786e54",
+    "qwen27-nextn-v35-64/sample-0-nextn-7/runtime.log": "18d5361dbb56db79837c675f4cd40c801a1332f7bb086b3a223b1199df5cf7db",
+    "qwen27-nextn-v35-64/sample-0-nextn-0/speed.csv": "59f533cee354f470fe227e75ec97c3e346fcfbdb7c70ee94d9155eff00f72e15",
+    "qwen27-nextn-v35-64/sample-0-nextn-0/runtime.log": "b8ca9c49e916aa6593d04dfa6541b44c4b3b88bb7a7ae184c556b8dcc6fc7b26",
+    "weights-v62-callback.log": "aa12e381f0ee6234e582b269b979ab73e662f5fb432e16d7fc79ae4326c62b77",
+    "weights-v61-storage.log": "32aa18bbd90faba300473b798c8f28e59327348b6770c6ed936f58f61aa54681",
+    "weights-v61-64k-allocation-probe/report.json": "0bfe4ced897cee34c59ae243d620331440e6cb1047e2a87aa1cfec3f3c8074ec",
+    "weights-v61-64k-allocation-probe/sample-0-baseline/speed.csv": "ecb7c05607bd17c2e9d09332323d87ba020b9ebf5d8cb7fe5900c0f42f569651",
+    "weights-v61-64k-allocation-probe/sample-0-baseline/runtime.log": "363fbecdfb98654542a17f419da465164e11e6cac93d6a015964368360f7dbc8",
+    "weights-v61-64k-allocation-probe/sample-0-baseline/run.json": "602c75a6d985d08b9dd271059623f384f79e58b559ce34f2637ea0c4cca7790b",
+    "weights-v61-64k-allocation-probe/sample-0-candidate/speed.csv": "95a3facf0777bca2c0f638afb2bbffef2e01543e2ddf186a1a4c601f5146982d",
+    "weights-v61-64k-allocation-probe/sample-0-candidate/runtime.log": "783e0e4331dbae340369a94cba14fe59b9a9b0b8973d4d536cf16b44ac47c1e2",
+    "weights-v61-64k-allocation-probe/sample-0-candidate/run.json": "4396053af3b3f6fb49127d9f5b3226ace6479c725a75a94de308c1623d6e7fa9",
+    "qwen27-inherited-ab-03-baseline/speed.csv": "26cebbd5f0e993a363b2c60e6edc23c95355ec6a67520ef906b6d13b19990d36",
+    "qwen27-inherited-ab-03-baseline/runtime.log": "f4e84c97216705c74dcc8ebcfda1e49b91cb2336ff416542384fb15efa78e072",
+    "qwen27-inherited-ab-03-baseline/run.json": "f9a05532c060e008038daf037774356d1e3e59bfffb160b3d43da60e248af1c5",
+    "qwen27-inherited-ab-paired.json": "e72decdb20348fbfb9fbceafa09c505ceda8f60efbe8ea8546239dab31d138b6",
+    "weights-v62-wide-state.log": "9ce02be37e00c7c924048daf32a063bc7975d4d545bbc560ff732f33f5c8d462",
+    "qwen27-capacity-v23-64/report.json": "fca1226f3076f6c940ff32a963abdad9fb0fda35e670ff75c3d163dab01d29f2",
+    "qwen27-capacity-v23-64/context-65536-off/speed.csv": "24277d3b658d81bbe49bbee01f9f2a6a7e5e41c6a3dadfcab951725dc9b6561d",
+    "qwen27-capacity-v23-64/context-65536-off/runtime.log": "289762d780ea2583ab511306770ec2ab9232d5dd30f1fb14ac797f54185f19b5",
+    "weights-v62-flash-hybrid.log": "01e9f7bc05e1da6a4abc42cbe11930644820756bd3326e46a0249c6484582032",
+    "weights-v61-64k/report.json": "bbdbc3cda42ae03d31e2311f7584d84391a932e94dfd0f5d0d776c83f17f2ce7",
+    "weights-v61-64k/sample-0-candidate/speed.csv": "d3f5718459c07e1504eaa58aaa27f8ab2431d343bc59fefbbe080de7e22c2704",
+    "weights-v61-64k/sample-0-candidate/runtime.log": "42c5e056fbe6e8d2a2b94d8eac552bc02f73d3124e63def14f27b619733861ee",
+    "weights-v61-64k/sample-0-candidate/run.json": "bb7bebe08195ebbf65ec3988826fce5196159d134f415c22eafefab4825eca47",
+    "qwen27-inherited-ab-00-baseline/speed.csv": "70a792f97597656153fadd65b757ce268e4cb6e70778d2dc3c05e44a85f383b7",
+    "qwen27-inherited-ab-00-baseline/runtime.log": "b2e0d9d27fe73dca4370d0e40c2b5d7c60bebe5dfc791af0218edb69680f1b88",
+    "qwen27-inherited-ab-00-baseline/run.json": "2756efc4611e33d1f46375fe3a5a947d703b24b330e217d3edac8d6c4f0639b8",
+    "weights-v59-scalar-diagnostic.log": "ffb7879bc0c36e703efcec1a7826a64bfb4b11358e250d8fc6539ea4af92de79",
+    "qwen27-nextn-v48-phases-64-on/report.json": "e002dd25bc591cad0ad1064ebef9fb323e780646ff658c9f5ade8634543af788",
+    "qwen27-nextn-v48-phases-64-on/sample-0-nextn-0/speed.csv": "85e755d049ed0fbcbca809786a21c0c833debefa93b52385ef02f186099633bf",
+    "qwen27-nextn-v48-phases-64-on/sample-0-nextn-0/runtime.log": "05ea58c3834ad8394cbf5b70321f7d1f63fa71b854818aadf3a922d90503c9d2",
+    "qwen27-nextn-v48-phases-64-on/sample-0-nextn-5/speed.csv": "ce49fc57b2fbf2c553d1e9f26d97d5865a2f1ce5c699b75bf3072d849f66cf24",
+    "qwen27-nextn-v48-phases-64-on/sample-0-nextn-5/runtime.log": "c6e06b2ab4306e60532aafe675c7d797ac05897f7f8dc33384d43db16427485e",
+    "qwen27-inherited-ab-04-baseline/speed.csv": "69fd7c526635446fd653ddf64074e93edcf23078cb2684455890b51273f590dd",
+    "qwen27-inherited-ab-04-baseline/runtime.log": "599cb700cf198a4ba3eb06e2f3cf76a6bf72cf1a4e4efe960c31a7b395f2d4a7",
+    "qwen27-inherited-ab-04-baseline/run.json": "3a61f4fa7fedddaede058d80ad13a1061ebfead714edf9843cd9b78cfd32aa3f",
+    "qwen27-nextn-v43-64/nextn-7-quality.json": "b84d21fdc41d8c6bc114be0a91ecc53fd2ddec04edb4e7ccfa8b77af9938361a",
+    "qwen27-nextn-v43-64/report.json": "d0244ed60e997f9a331027a1812198ffc0a53c8a64ef0d1cd65333be0e30aa2b",
+    "qwen27-nextn-v43-64/sample-0-nextn-7/speed.csv": "44973e44c9792c04473771aac6956785f398754859cf02e05b13879628213fbf",
+    "qwen27-nextn-v43-64/sample-0-nextn-7/runtime.log": "beaac0b53940657e63d53c96d3f06904028a753c35a459339b3e57c2ed632a8e",
+    "qwen27-nextn-v43-64/sample-0-nextn-0/speed.csv": "ec8e000d61879d5ce0bc8d10a3771985d4072b1d97fc0fd4d7d8dc06647e8664",
+    "qwen27-nextn-v43-64/sample-0-nextn-0/runtime.log": "40d8e15b5c5d588946ac6f7b86c4649e8c6f820325238b9d57a09f7919b48a78",
+    "qwen27-nextn-v43-64/sample-0-nextn-15/speed.csv": "730e25d7251600058d0855cb5b169dd5f70be3d80db4420b0612ee40a48d84ff",
+    "qwen27-nextn-v43-64/sample-0-nextn-15/runtime.log": "299195130252dc8374d767a7d9f5ae03d24811b2f1369f92a5573417cb9decc1",
+    "qwen27-dspark-v41-64-driver.log": "c5136d74352c38346bde47ac01e7e5f7007d6ad26a775dbf50a38968b9e031e4",
+    "qwen27-nextn-v49-128-driver.log": "56fc5660556c5f957932d6796952d6213bd1050e871a0d44d565f3220c623ddb",
+    "qwen27-nextn-v48-phases-64-off/report.json": "d871f68d34e4601c95fbc0352b14d3d621d4f75ae963aeca6aef707c8abd14df",
+    "qwen27-nextn-v48-phases-64-off/sample-0-nextn-0/speed.csv": "9477a9c2a3ab4d00b862c1c68e7b5d8340052436657bcdbd40ac51fca33b6cf0",
+    "qwen27-nextn-v48-phases-64-off/sample-0-nextn-0/runtime.log": "7a3012c3291efc85947b1bb158c4c29f7aecd3d73bdc86dfc2191933ade357ea",
+    "qwen27-nextn-v48-phases-64-off/sample-0-nextn-5/speed.csv": "09f6cc8b1f14df631ccd4f42c3a40ac57195ddb72475fa905a7dd9987e7df791",
+    "qwen27-nextn-v48-phases-64-off/sample-0-nextn-5/runtime.log": "bf30a2dbeb26c89af2377fcc9ed8f50a3113cadb813e478dfc6dda36d28a4612",
+    "weights-v61-primitive.log": "f9f9348b303ca7a8cb1d4123cb7248622afcada1de174a630d08105fcf7febdd",
+    "weights-v60-64k/sample-0-baseline/runtime.log": "ed884bcc0456596f2a1c181bad21f1fb75de6fef703fce7a9f908e97c48cf8cc",
+    "weights-v60-64k/sample-0-baseline/run.json": "bd53c511cf4d26c82b5647ddf6f91b8fd5a66bba93b26994aa54eacedbd04239",
+    "qwen27-speed-v57/protected-paired.json": "746cc6dc4dd1db09e147af2f53425875bada22f241e154f33850a1b0d8194324",
+    "qwen27-speed-v57/protected-01-candidate/speed.csv": "90baaf7cb44fbcb942721d9713a2accc52c4e645b7d0c0d81ce4ce0e9ff3333d",
+    "qwen27-speed-v57/protected-01-candidate/runtime.log": "dd10f42116a8a37f7429c638c80877267c30639cfdc36a701cec9a57188982fc",
+    "qwen27-speed-v57/protected-01-candidate/run.json": "08dbe19b51ae1c216cf70273f695d770981408371b218e5a4ab43144828c642f",
+    "qwen27-speed-v57/protected-02-candidate/speed.csv": "24b30f0645a3ebb7a2208181741133cd5727888cdf0e798fbbc9bb242b715cee",
+    "qwen27-speed-v57/protected-02-candidate/runtime.log": "cb6f7034584138b9d9a7d9508afeec5a68491595bb88fa9a2240a861e24a977e",
+    "qwen27-speed-v57/protected-02-candidate/run.json": "55764e3d8ba0111043f76937bf7cf60a44fe09257f16832152fedb82fb67fa41",
+    "qwen27-speed-v57/protected-01-baseline/speed.csv": "e32b16279e5f32c7ab6c0740e5a9d50a47c333dba6012c9c13bce685f8d8d461",
+    "qwen27-speed-v57/protected-01-baseline/runtime.log": "acb113f2d88fccc6bc8917f740a6f271ebbf61b61acd7a6df51b9cfa924520bc",
+    "qwen27-speed-v57/protected-01-baseline/run.json": "e57e748b9778bcad654826c59a03d0d683eb9cf921760f5ba988890c1d6f4bca",
+    "qwen27-speed-v57/protected-03-baseline/speed.csv": "251a8a9069499909fe84819ade2270ff6dbf706790fac668c5baf73d0cf20fcf",
+    "qwen27-speed-v57/protected-03-baseline/runtime.log": "2462026de77b20907d56c723a85f9f11525fa6ec0e791fe2f4fbba932124d86a",
+    "qwen27-speed-v57/protected-03-baseline/run.json": "67a9569b7b2cfca57b9b7001f0ab66e5ea5a1f1fb2fdebe2bc77c41c2a68e70c",
+    "qwen27-speed-v57/protected-04-candidate/speed.csv": "3b2ec18f1b888294a6245b18c215739fc411d868e52e0eaa0bbb73f4b142facf",
+    "qwen27-speed-v57/protected-04-candidate/runtime.log": "4b885b7d87cdae9bc7546d221ff853ed05845953e2100cc89bbc4b09b715af8a",
+    "qwen27-speed-v57/protected-04-candidate/run.json": "16b94f90a2632f35e3912b8db421ea1ce79bee5b9e29781d16a1c21ed5f2038f",
+    "qwen27-speed-v57/protected-03-candidate/speed.csv": "648620902131d84184841e5206685690dcaa79b2c015cbb1e4adef8df57ac53f",
+    "qwen27-speed-v57/protected-03-candidate/runtime.log": "37acb14ef6bfa574560c9d0a006e42c0ff704c256d45ec728b12639bdf63798b",
+    "qwen27-speed-v57/protected-03-candidate/run.json": "2f35d1f4f969843614f72e87cbe07db9fca0fb2ae60e88115f3cf43dc90b6564",
+    "qwen27-speed-v57/protected-00-candidate/speed.csv": "ae881cc239f6c3c68d33f7f0fa86e9495a621f983ba859eb592d0e6922b0abcc",
+    "qwen27-speed-v57/protected-00-candidate/runtime.log": "8a9980fe0b9847043e3462a64f7e0ce7a32af9ea0b17bbc6f9a7ea5f7f11fd34",
+    "qwen27-speed-v57/protected-00-candidate/run.json": "a3ab002a7c5584aba37dfc44cd3ec98ccfa66528afdd8c4092923b7e640e690f",
+    "qwen27-speed-v57/protected-00-baseline/speed.csv": "f393cec7cf58997fdfcee3e4822b33fae832f563e154f0fc87f15c0cdd0c2899",
+    "qwen27-speed-v57/protected-00-baseline/runtime.log": "21d07cf3999d4d7e52db5274d8c2602c439e1d8876c463af2c317617a57969b2",
+    "qwen27-speed-v57/protected-00-baseline/run.json": "2266201bdf12b7c33fabff5532e2e7316c5436029f3d394a02aed135730089b9",
+    "qwen27-speed-v57/protected-02-baseline/speed.csv": "80c2b692207654dd75cb3dd4600000c4c87c541e530bcb2613bdc715d3db070d",
+    "qwen27-speed-v57/protected-02-baseline/runtime.log": "96545275f4c405a8e7dcf5177dc3cd2fdc2e1211b43b888bd818e7d76ef13516",
+    "qwen27-speed-v57/protected-02-baseline/run.json": "41dfe019108569b07e10a9441e182ef3c0f6cf28cf526048c7a09a44712a416e",
+    "qwen27-speed-v57/protected-04-baseline/speed.csv": "a58d695e061ca3df6c04fe88e7e4bdbdf6a3bd39b1b18aea05126358d26f6872",
+    "qwen27-speed-v57/protected-04-baseline/runtime.log": "5aa27bffa1af3899e89a1b4e03ef1a87dbff02d5eef095ef7f33433fa6ed99cf",
+    "qwen27-speed-v57/protected-04-baseline/run.json": "113e7fa82132bc5453fc20152fa1c218e91de4ff3cb00641d98d60dea6df1b8f",
+    "weights-v58-primitive.log": "4288bb0bfcdbc2ea8b7741aae6334efe96b7e58debeed0aa57a66569f8bdddb2",
+    "weights-v58-primitive.json": "4078c6f0e9a045a30f4d9dc2caa948a4bf83cc73e619aee096472d7c618ceeef",
+    "qwen27-inherited-ab-02-candidate/speed.csv": "12f479abfc1aac2c0edbd547de88ff96afa874b0a99815926aaea272c50bc4ba",
+    "qwen27-inherited-ab-02-candidate/runtime.log": "b2ea7659d87592e62ea7502c15325cd4e535a8b6ae79d10ac2de82309e53ac5c",
+    "qwen27-inherited-ab-02-candidate/run.json": "5b90c19d3db407f7add73dd83689427b98679c3aad991ddb512cbc234ef12b59",
+    "weights-v62-primitive.log": "d87fd9bc01edd9f3382beac733fe82d826c11aedba7d738afcd1f62f55fbc303",
+    "weights-v62-diff-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "weights-v62-flash-graphs.log": "6a38710bd9f13827bbf335b1f43dbcd2b21b1ef87d0978a1aad7dfcf7a3490b3",
+    "qwen27-nextn-v45-depth-sweep-64/report.json": "54182edb73747097c6e8733ab84ce922b9dc50180935018cc5a25605a0a6fea7",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-7/speed.csv": "a1c4bb87fd97cfcd67cb0f5f90c9153fc0a94bc5af4f9dc0049fff0feaf60a3b",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-7/runtime.log": "2d4690590b5ebeca33196664c658eac3d31566114346e0d38582eec486f47bfb",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-0/speed.csv": "dedd7f5118532350c1e238cf074623e7e10abfbb52d42f53d168f9961213eded",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-0/runtime.log": "7acb43306c259f98d41d3c26d2e4fcce2b11205cd3a1637c3e4e1883b6409ce6",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-5/speed.csv": "57b0d053b9c9ed3ebb0b77a5d31e816d885580e99c72e8204a9106f7ba439711",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-5/runtime.log": "34dd42238b3061bb55124873d1cd017fa7a3607ff013e6a4930c3ca3b9c58c58",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-3/speed.csv": "059009453be90ea6d49ee2a11b87574c4acae94ef0249395b8c19ccb7838bc81",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-3/runtime.log": "4e31f9694cdeccfbee13b65eb99c2cf93a0bb8a3f4c4ed6017fe2fb3bd03c4ec",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-11/speed.csv": "bd9e1ed13958e734abaa550f458b4ba865005e36527a78f2f06c846cc44fc51c",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-11/runtime.log": "4eeb84c6407460e26f55e5f4a4be09de94757b0291660f6d40fdd819a763e2f8",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-9/speed.csv": "4d67affcdc020bed778353ceba3f9da8a4d272d97e396094ff1ab8ec8e811c8d",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-9/runtime.log": "2f39c7c6d1db2c426a691c0991fc2503949439f7736cb13c263dfd8b0b3255bf",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-13/speed.csv": "24277d3b658d81bbe49bbee01f9f2a6a7e5e41c6a3dadfcab951725dc9b6561d",
+    "qwen27-nextn-v45-depth-sweep-64/sample-0-nextn-13/runtime.log": "cf851b151555405a6b67c81bd8c8405681ed1e3bd576c932505d225f7ef98211",
+    "qwen27-nextn-v48-phases-64-on-control2/speed.csv": "15f733da20c7a1c59307c2b3694ee4761453132ee71027274ee9bf887756b1bc",
+    "qwen27-nextn-v48-phases-64-on-control2/runtime.log": "a3379e2be13d15025eb49ed631c4d73f4074ed751e1dc33719fd0635676d83dd",
+    "qwen27-nextn-v48-phases-64-on-control2/report.json": "1d4acdc03d65a8eb463b832d5eec668e43a0fd2b70f6955eb056e5d8a42e2a9c",
+    "qwen27-kv-v46.log": "a223f758196bd867d9a96bf7bba498a9b3d6927b75ded5354e29a27497a2dc05",
+    "qwen27-capacity-v27-reference64/report.json": "e3f8ddadff6afc3db97014bdbc6e2c4af2bd9f352f373ab0178be140a13e2993",
+    "qwen27-capacity-v27-reference64/context-65536-hybrid-attention/speed.csv": "7553747817f80b63d8d9ff6029f1a5bac04991800fe4dddaa2f89963a2a98df4",
+    "qwen27-capacity-v27-reference64/context-65536-hybrid-attention/runtime.log": "1a655242804cbf4a2f65f2b3c15a2a93779796c666bb7741d6cca38fd4466fb3",
+    "qwen27-capacity-v27-reference64/context-65536-hybrid-attention/run.json": "1f1ad70bf8b1b1df43cb538c93d980d12ea2158ecddf34ffa503ab92e897cb20",
+    "qwen27-capacity-v27-reference64/context-65536-reference-attention/speed.csv": "94ca151bfc9efea1c6ffc11d40ebde8929bbeb7e58474117c8e3c9051e3041b6",
+    "qwen27-capacity-v27-reference64/context-65536-reference-attention/runtime.log": "29ba28761222e3eae8c834ef1880b5676f1da0251ec333d08504e84267a95e66",
+    "qwen27-capacity-v27-reference64/context-65536-reference-attention/run.json": "69e9c45d7ff23cc140105b3e9f559019911ef655f80de3a2b6e48f99d24076c2",
+    "qwen27-nextn-v36-64-driver.log": "532f38acaaad6f05b1d4b2336b6f65a4d885e0a324284d12b701d40581dd6003",
+    "qwen27-dspark-v41-64/report.json": "3203bf6e37d6234f12378d2c93ee8e445a063232d0fd571b95a3783a8c521fad",
+    "qwen27-dspark-v41-64/sample-0-dspark-0/speed.csv": "8454541f09755172b5dc3f84c5ee0a8fc0ab870eedc14230a30d2d95f8bd2b12",
+    "qwen27-dspark-v41-64/sample-0-dspark-0/runtime.log": "f1d15c278ce20f423ff5a20a28bcf929e95f595a0749aac29b558877ac629ce4",
+    "qwen27-dspark-v41-64/sample-0-dspark-15/speed.csv": "4901bb415dbba14b376c566f9af89aa3bec46360b846cd5be77325597d07601b",
+    "qwen27-dspark-v41-64/sample-0-dspark-15/runtime.log": "eb60f1103df6c0511dcf423a96fab358f1f18b3810021f72b5525ba25aedb0e9",
+    "qwen27-dspark-v41-64/sample-0-dspark-14/speed.csv": "f6fe1d0c453ff06a7c8a5f3605f397a47fdac3694e63ae98a479fc2c0adb42be",
+    "qwen27-dspark-v41-64/sample-0-dspark-14/runtime.log": "e84078e89f1e76938700a2133c6930d671e02ea808a14cab040b186851a681de",
+    "qwen27-dspark-v41-64/sample-0-dspark-7/speed.csv": "eaa2b0d304941381d636eced45e509d3edd137556c8d07d5fb8d7052d960e245",
+    "qwen27-dspark-v41-64/sample-0-dspark-7/runtime.log": "965a2d7d7ffb8c19f84f3c5fae8e37e02083ad16d47759f3a904c59ab44d10a0",
+    "qwen27-mtp-inherited-final.log": "eaccc48d346574daf36b017230e0247f1b265a6fa16c9d026e522a2b00cd37d4",
+    "qwen27-nextn-v35-64-driver.log": "cac10f3c8ba8f95cc71f63f084d4aa4fb06a483f470b1c7d5da07cdc03561093",
+    "qwen27-nextn-v46-depth-sweep-64/report.json": "617c071e360d9b0be162d5d0b51f0c8c23a981891c55763bf9b2ec148119fec1",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-7/speed.csv": "b406355254efb99864664bfc3d8d5fde80cf345c09f7cf1dd1672c0ba95c4c33",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-7/runtime.log": "2334815f4d8a75de0053d2b22465d5a1d84c65203fb6ff723dea4f84d6bcc80d",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-0/speed.csv": "4d6ea3630ee9a940e6b30e4409e056899455513fbde848ebca9ab0eb74b61715",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-0/runtime.log": "d049419c6b24f97112facd5c6eba376175e93192831552ef5380edbd30170e3c",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-5/speed.csv": "09fc4916644f1cde3d701ad6a26198879d15678812315e3a4a79ea280bdb5037",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-5/runtime.log": "aa9aed6f91af0c4c7a0619542fd4a0c65be33e3124d6cb242f7897d7aacdcdef",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-15/speed.csv": "52d6fc786f0ef99c0cddefc94bbe43b4ce627493413fe3d3c55bc44b847c60f7",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-15/runtime.log": "c81e3aabd4ff1b7c019c75e39b55ace9f72b1dedcf499046c6b3b35e21e886b2",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-3/speed.csv": "ead8b46c47a11363825f1ca4c7ea93d422057d2ce1c15ac4bccc2549d432be7c",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-3/runtime.log": "024cd81dec12e8d7d895ca657b82d7d47f0bae0199d14b3c455c00ef7d2c9d7a",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-11/speed.csv": "71db9b741ee46d27e41601d65fb06a21f011e27d6d4013bf6b459cf985d95c4e",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-11/runtime.log": "2e02a3680bd4e852735bb4e0c9b84ac85009677aa7cebb7084619e275bded9a9",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-9/speed.csv": "15dd5fb98edabc086aaa9f117eefcadec49860e4b10b5398f241c04722d33fb5",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-9/runtime.log": "d72da8d9b5febcd8840bf3bc24930c5d7fb5caceb82e592143fa9d1728086d19",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-13/speed.csv": "634fe1360a21e631c73cfbfa9a6b07bab68031ead2c18907f9381f6f768f8843",
+    "qwen27-nextn-v46-depth-sweep-64/sample-0-nextn-13/runtime.log": "c061883ed84cdc4daa7636da81cf45f21aa63c4d3162797719065edf069a9e7b",
+    "qwen27-inherited-ab-driver.log": "cf8fe0462df17987c6de4d0ce5858381bed8651d05b5844373d7cc214fb0e936"
+  }
+}

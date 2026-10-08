@@ -1,0 +1,177 @@
+{
+  "records": [
+    {
+      "sample": 0,
+      "drafter": "target-only",
+      "proposals": 0,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-q4-v42-64/sample-0-dspark-0/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-q4-v42-64/sample-0-dspark-0/logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "9009b1169c6a05d02fff31dc697bd9c6e8a3673c8e22446e8d4b136e9d0a1ed5",
+      "exit_code": 0,
+      "wall_seconds": 219.36016682900117,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              401.99
+            ],
+            "median": 401.99,
+            "mean": 401.99,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.67
+            ],
+            "median": 0.67,
+            "mean": 0.67,
+            "cv": null
+          },
+          "first_prefill_tps": 401.99
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-q4-v42-64/sample-0-dspark-0",
+      "actual_cycles": 0,
+      "actual_verifier_cycles": 0,
+      "confidence_bypasses": 0
+    },
+    {
+      "sample": 0,
+      "drafter": "dspark",
+      "proposals": 15,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-q4-v42-64/sample-0-dspark-15/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-q4-v42-64/sample-0-dspark-15/logits",
+        "--mtp",
+        "--mtp-model",
+        "/home/daniele/ds4/gguf/drafts/Qwen3.8-27B-DSpark-v2-Q4_K.gguf",
+        "--mtp-draft",
+        "15",
+        "--dspark-confidence",
+        "0.5"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1",
+        "DS4_MTP_CYCLE_TRACE": "1",
+        "DS4_QWEN_EXTENDED_DRAFT": "off"
+      },
+      "binary_sha256": "9009b1169c6a05d02fff31dc697bd9c6e8a3673c8e22446e8d4b136e9d0a1ed5",
+      "exit_code": 0,
+      "wall_seconds": 223.14481610599978,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              396.71
+            ],
+            "median": 396.71,
+            "mean": 396.71,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.69
+            ],
+            "median": 0.69,
+            "mean": 0.69,
+            "cv": null
+          },
+          "first_prefill_tps": 396.71
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-dspark-q4-v42-64/sample-0-dspark-15",
+      "actual_cycles": 21,
+      "actual_verifier_cycles": 9,
+      "confidence_bypasses": 12
+    }
+  ],
+  "pairs": [
+    {
+      "sample": 0,
+      "drafter": "dspark",
+      "proposals": 15,
+      "same_generated_tokens": true,
+      "actual_final_position": 65568,
+      "quality": [
+        {
+          "file": "frontier_065536.decode.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        },
+        {
+          "file": "frontier_065536.logits.json",
+          "bit_exact": true,
+          "max_abs": 0.0,
+          "kl": 0.0,
+          "argmax_match": true
+        }
+      ]
+    }
+  ],
+  "status": "COMPLETE",
+  "scope": "diagnostic",
+  "all_pass": true
+}

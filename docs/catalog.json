@@ -46,6 +46,46 @@
           ]
         },
         {
+          "path": "docs/architecture/clean-code-review-20261008.md",
+          "sections": [
+            {
+              "title": "Revisione del codice e delle responsabilità — 8 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 71,
+              "summary": "Revisione delle modifiche Flash pendenti e dei confini fra engine, backend,"
+            },
+            {
+              "title": "Perimetro",
+              "level": 2,
+              "start": 3,
+              "end": 10,
+              "summary": "Revisione delle modifiche Flash pendenti e dei confini fra engine, backend,"
+            },
+            {
+              "title": "Responsabilità corrette",
+              "level": 2,
+              "start": 11,
+              "end": 28,
+              "summary": "Il test del launcher è allineato al default attuale di 64K, senza modificare"
+            },
+            {
+              "title": "Verifiche",
+              "level": 2,
+              "start": 29,
+              "end": 63,
+              "summary": "Risultati e comandi sono conservati in `performance-results/clean-code-20261008/`."
+            },
+            {
+              "title": "Limiti",
+              "level": 2,
+              "start": 64,
+              "end": 71,
+              "summary": "La revisione applica principi di responsabilità unica, incapsulamento, coerenza"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/ds4-merge-acceptance-20261002.md",
           "sections": [
             {
@@ -171,6 +211,74 @@
               "start": 250,
               "end": 267,
               "summary": "make -j4 ds4 ds4-server ds4-bench ds4-eval CUDA_ARCH=sm_86"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/qwen-flash-hybrid-kv-20261006.md",
+          "sections": [
+            {
+              "title": "Qwen Flash: esperti ibridi, PCIe e KV paginato",
+              "level": 1,
+              "start": 1,
+              "end": 476,
+              "summary": "Backend Flash CUDA su una GPU."
+            },
+            {
+              "title": "Controlli",
+              "level": 2,
+              "start": 8,
+              "end": 80,
+              "summary": "Richiedono `DS4_CUDA_QWEN4_TIERED_CACHE=1`; il modello deve essere Flash."
+            },
+            {
+              "title": "Piano di placement e lifetime",
+              "level": 2,
+              "start": 81,
+              "end": 186,
+              "summary": "La policy `stable` riprende le quote per layer di Strata."
+            },
+            {
+              "title": "KV per sessione",
+              "level": 2,
+              "start": 187,
+              "end": 240,
+              "summary": "Per il prefill con policy stabile, il workspace identico al layout originale"
+            },
+            {
+              "title": "Profili e misure",
+              "level": 2,
+              "start": 241,
+              "end": 305,
+              "summary": "Si conta ogni scelta una volta per layer/riga, al gate, e si salva un payload"
+            },
+            {
+              "title": "Provenienza e 4 BIS",
+              "level": 2,
+              "start": 306,
+              "end": 360,
+              "summary": "Riferimento architetturale: Strata commit"
+            },
+            {
+              "title": "Liste compatte del prefill — incremento successivo al ritiro 4 BIS",
+              "level": 2,
+              "start": 361,
+              "end": 382,
+              "summary": "`DS4_CUDA_QWEN4_COMPACT_LISTS=1` è una variante sperimentale, disattivata"
+            },
+            {
+              "title": "Copie anticipate bounded nel prefill",
+              "level": 2,
+              "start": 383,
+              "end": 404,
+              "summary": "`DS4_CUDA_QWEN4_PREFILL_AHEAD=1`, con policy `stable` e ring attivo,"
+            },
+            {
+              "title": "NextN e selezione per fase",
+              "level": 2,
+              "start": 405,
+              "end": 476,
+              "summary": "La v68 ha provato NextN embedded di default per Flash CUDA."
             }
           ]
         },
@@ -1420,6 +1528,381 @@
               "start": 67,
               "end": 74,
               "summary": "I tempi finali vengono dal percorso sincronizzato di ds4-bench."
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/qwen-flash-agent-launcher-20261008.md",
+          "sections": [
+            {
+              "title": "Qwen Flash: prefill reale dall'agente e dal launcher, 8 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 249,
+              "summary": "La qualifica successiva v74 corregge il drift causato dalla geometria delle"
+            },
+            {
+              "title": "Riproduzione e isolamento",
+              "level": 2,
+              "start": 28,
+              "end": 52,
+              "summary": "L'harness bench_qwen_flash_agent.py"
+            },
+            {
+              "title": "Diagnosi iniziale",
+              "level": 2,
+              "start": 53,
+              "end": 88,
+              "summary": "Screen `agent-launcher-v71-screen-r2`: un campione per configurazione, con sampling"
+            },
+            {
+              "title": "Isolamento del chunk e generazioni reali",
+              "level": 2,
+              "start": 89,
+              "end": 107,
+              "summary": "`agent-launcher-v71-isolate` usa sampling greedy, stesso prompt e quattro turni"
+            },
+            {
+              "title": "Launcher originale contro bundle 2048",
+              "level": 2,
+              "start": 108,
+              "end": 141,
+              "summary": "`agent-launcher-v71-balanced` ripete la configurazione originale con sampling"
+            },
+            {
+              "title": "Stato della qualifica",
+              "level": 2,
+              "start": 142,
+              "end": 150,
+              "summary": "Le prove descrivono l'avvio reale e identificano la differenza rispetto al"
+            },
+            {
+              "title": "Correzione numerica e profilo standard v74",
+              "level": 2,
+              "start": 151,
+              "end": 212,
+              "summary": "Il primo gate v72 a capacità 131072 e prompt da 4758 token trova KL massimo"
+            },
+            {
+              "title": "Promozione finale e uso",
+              "level": 2,
+              "start": 213,
+              "end": 249,
+              "summary": "Verdetto **KEEP / profilo standard promosso** per il launcher Flash CUDA sul"
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/qwen-flash-prefill-strata-20261008.md",
+          "sections": [
+            {
+              "title": "Qwen Flash: nuova verifica del prefill Strata, 8 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 464,
+              "summary": "Aggiornamento: la riproduzione attraverso l'agente e il launcher reale"
+            },
+            {
+              "title": "Fonte ricontrollata",
+              "level": 2,
+              "start": 21,
+              "end": 35,
+              "summary": "La testa `main` verificata durante questa sessione è"
+            },
+            {
+              "title": "Liste compatte, v64",
+              "level": 2,
+              "start": 36,
+              "end": 63,
+              "summary": "L'ibrido può riservare `esperti × token` interi anziché `esperti × token × slot`."
+            },
+            {
+              "title": "Anticipare le copie rispetto al router",
+              "level": 2,
+              "start": 64,
+              "end": 158,
+              "summary": "Strata, dai chunk di 1024 righe, trasferisce tutti gli esperti non residenti"
+            },
+            {
+              "title": "Confronto ripetuto degli hint v66",
+              "level": 3,
+              "start": 105,
+              "end": 143,
+              "summary": "Cinque coppie alternate a 4096 token effettivi, capacità 8192, chunk 4096,"
+            },
+            {
+              "title": "Soglia prestazionale dell'1%",
+              "level": 3,
+              "start": 144,
+              "end": 158,
+              "summary": "Su richiesta dell'utente, il tuner usa `--min-gain 0.01` come default,"
+            },
+            {
+              "title": "Contesto effettivo 64K: pipeline completa v67",
+              "level": 2,
+              "start": 159,
+              "end": 210,
+              "summary": "Due confronti diagnostici separano l'anticipo dal percorso decode qualificato."
+            },
+            {
+              "title": "Contesto effettivo 128K",
+              "level": 3,
+              "start": 189,
+              "end": 210,
+              "summary": "Stesso confronto integrato, 131072 token effettivi, capacità 131104,"
+            },
+            {
+              "title": "Richiesta DSpark v2 predefinito per Flash",
+              "level": 2,
+              "start": 211,
+              "end": 432,
+              "summary": "Verifica del catalogo pubblico del 2026-10-08: 389 modelli trovati dalla"
+            },
+            {
+              "title": "v68: NextN predefinito per Flash CUDA",
+              "level": 3,
+              "start": 256,
+              "end": 287,
+              "summary": "CLI e server attivano NextN embedded dopo la validazione del target Flash"
+            },
+            {
+              "title": "Confronto per fase e costo del NextN v68",
+              "level": 3,
+              "start": 288,
+              "end": 322,
+              "summary": "Cinque coppie CLI alternate per dominio, dopo una coppia di warm-up,"
+            },
+            {
+              "title": "v69: residenza degli esperti NextN entro la quota esistente",
+              "level": 3,
+              "start": 323,
+              "end": 373,
+              "summary": "L'ispezione di `src/core/mtp.cpp` al commit Strata"
+            },
+            {
+              "title": "v70: decisione corrente per prefill e decode",
+              "level": 3,
+              "start": 374,
+              "end": 403,
+              "summary": "La richiesta finale è «usa NextN se funziona meglio», separando prefill"
+            },
+            {
+              "title": "v71: fase esplicita, compresi i prefill brevi",
+              "level": 3,
+              "start": 404,
+              "end": 432,
+              "summary": "Il numero di righe non identifica da solo il workload."
+            },
+            {
+              "title": "Altri punti Strata da verificare",
+              "level": 2,
+              "start": 433,
+              "end": 464,
+              "summary": "Strata prepara anche lo storico KV del NextN durante il prefill del target:"
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/qwen-flash-strata-20261006.md",
+          "sections": [
+            {
+              "title": "Qwen Flash — pipeline ispirata a Strata, RTX 3090 / WSL",
+              "level": 1,
+              "start": 1,
+              "end": 353,
+              "summary": "Misure del 6–7 ottobre 2026."
+            },
+            {
+              "title": "Identità e condizioni",
+              "level": 2,
+              "start": 104,
+              "end": 122,
+              "summary": "`codex/qwen-flash-strata-20261006`; la modifica preesistente a"
+            },
+            {
+              "title": "Correzioni della pipeline",
+              "level": 2,
+              "start": 123,
+              "end": 154,
+              "summary": "Lo scheduler esegue triplette complete: prima gli hit GPU, poi CPU e gruppi"
+            },
+            {
+              "title": "A/B alternati: incremento v5",
+              "level": 2,
+              "start": 155,
+              "end": 178,
+              "summary": "Cinque coppie A/B e B/A, processi freschi, due warm-up per processo, un"
+            },
+            {
+              "title": "A/B finale v10, scelta automatica",
+              "level": 2,
+              "start": 179,
+              "end": 205,
+              "summary": "Stesse condizioni e cinque coppie alternatamente A/B e B/A."
+            },
+            {
+              "title": "KV e profilo",
+              "level": 2,
+              "start": 206,
+              "end": 241,
+              "summary": "Primo attraversamento reale: 16384 token, 12288 celle residenti per layer,"
+            },
+            {
+              "title": "Correttezza e stato di promozione",
+              "level": 2,
+              "start": 242,
+              "end": 310,
+              "summary": "Vision finale v12: pass tutti i 16 gate Flash/27B, target/MTP."
+            },
+            {
+              "title": "HTTP agentico a 128K allocati, 4395/4401 token effettivi",
+              "level": 2,
+              "start": 311,
+              "end": 329,
+              "summary": "Una richiesta per condizione, quindi diagnostico e non promozione A/B."
+            },
+            {
+              "title": "HTTP con MTP effettivo, cinque coppie A/B",
+              "level": 2,
+              "start": 330,
+              "end": 353,
+              "summary": "Fixture senza tool, reasoning `none`, 34/40 token input effettivi, 32 output,"
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/qwen-flash-strata-audit-20261006.md",
+          "sections": [
+            {
+              "title": "Seconda ispezione delle pipeline Strata",
+              "level": 1,
+              "start": 1,
+              "end": 301,
+              "summary": "Su richiesta dell'utente il prefill qualificato diventa il punto di partenza;"
+            },
+            {
+              "title": "Decode: nuova ispezione del 6 ottobre",
+              "level": 2,
+              "start": 3,
+              "end": 165,
+              "summary": "Su richiesta dell'utente il prefill qualificato diventa il punto di partenza;"
+            },
+            {
+              "title": "Selezione QSA e pubblicazione del KV nel decode",
+              "level": 3,
+              "start": 56,
+              "end": 165,
+              "summary": "Riletto anche `src/kernels/cuda/qsa_select.cu` di Strata: il kernel"
+            },
+            {
+              "title": "Diagnosi a 64K",
+              "level": 2,
+              "start": 166,
+              "end": 200,
+              "summary": "La v12 conserva logits bit-identici al percorso iniziale, ma scende da"
+            },
+            {
+              "title": "Controlli della nuova policy",
+              "level": 2,
+              "start": 201,
+              "end": 301,
+              "summary": "La nuova ispezione ha inoltre rilevato un errore di integrazione: il riordino"
+            },
+            {
+              "title": "Diagnosi del decode dopo 64K",
+              "level": 3,
+              "start": 255,
+              "end": 301,
+              "summary": "L'ispezione aggiuntiva di `ExpertCache::admit` conferma che Strata conserva"
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/qwen-flash-strata-audit-20261007.md",
+          "sections": [
+            {
+              "title": "Riesame Strata: Flash prefill e 27B decode, 7 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 415,
+              "summary": "**Aggiornamento 8 ottobre:** su richiesta dell'utente, il 4 BIS è ritirato."
+            },
+            {
+              "title": "Fonte fissata",
+              "level": 2,
+              "start": 9,
+              "end": 40,
+              "summary": "Aggiornamento dell'8 ottobre: la nuova verifica del prefill"
+            },
+            {
+              "title": "Stato rispetto al piano iniziale",
+              "level": 2,
+              "start": 41,
+              "end": 57,
+              "summary": "La v32 Flash misura a 64K 226,08 token/s di prefill e 16,64 di decode"
+            },
+            {
+              "title": "Flash: ottimizzazioni estratte e omissioni concrete",
+              "level": 2,
+              "start": 58,
+              "end": 90,
+              "summary": "`prefill.cpp` avvia per chunk grandi uno stream in ordine fisso di tutti"
+            },
+            {
+              "title": "27B: cosa si può riutilizzare dal decode Strata",
+              "level": 2,
+              "start": 91,
+              "end": 123,
+              "summary": "La verifica Strata conserva grafi di finestre, consuma residenti e miss in"
+            },
+            {
+              "title": "Preparazione NextN per chunk: controllo v48",
+              "level": 2,
+              "start": 124,
+              "end": 143,
+              "summary": "Le primitive v47 confrontano KV e carry completi con il percorso seriale"
+            },
+            {
+              "title": "Incremento successivo al riesame",
+              "level": 2,
+              "start": 144,
+              "end": 177,
+              "summary": "`ds4_qwen4_ring.cuh` aggiunge un ring sperimentale di esperti completi:"
+            },
+            {
+              "title": "27B: arena di rollback dopo il prefill",
+              "level": 2,
+              "start": 178,
+              "end": 233,
+              "summary": "Le cinque righe di verifica conservate per i 48 layer ricorrenti occupano"
+            },
+            {
+              "title": "Correzione della calibrazione MTP",
+              "level": 2,
+              "start": 234,
+              "end": 268,
+              "summary": "Il riesame ha trovato una lacuna nel tuner locale: una sola famiglia per"
+            },
+            {
+              "title": "Profilo persistente sul candidato finale",
+              "level": 2,
+              "start": 269,
+              "end": 283,
+              "summary": "`profile-v53/report.json` registra `all_pass=true`: policy recente, LRU,"
+            },
+            {
+              "title": "Gate vision e correzione del replay dopo rollback",
+              "level": 2,
+              "start": 284,
+              "end": 323,
+              "summary": "La qualificazione finale v53 conserva un fallimento: `vision-v53/report.json`,"
+            },
+            {
+              "title": "Chiusura Flash breve e nuovo target 27B, 8 ottobre",
+              "level": 2,
+              "start": 324,
+              "end": 415,
+              "summary": "La v57 corregge due costi dell'integrazione: lo scope MTP comprende anche"
             }
           ]
         },
@@ -7226,6 +7709,146 @@
               "start": 52,
               "end": 66,
               "summary": "calibration corpus"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "group": "experiments",
+      "index": "docs/experiments/_INDEX.md",
+      "documents": [
+        {
+          "path": "docs/experiments/qwen27-4bis-20261008/README.md",
+          "sections": [
+            {
+              "title": "Qwen 27B — esperimento 4 BIS archiviato",
+              "level": 1,
+              "start": 1,
+              "end": 85,
+              "summary": "Il lavoro è stato ritirato l'8 ottobre 2026 su richiesta dell'utente, per"
+            },
+            {
+              "title": "Idee provate",
+              "level": 2,
+              "start": 8,
+              "end": 33,
+              "summary": "1."
+            },
+            {
+              "title": "Risultati e motivi del ritiro",
+              "level": 2,
+              "start": 34,
+              "end": 63,
+              "summary": "La macchina locale aveva RTX 3090, WSL e PCIe Gen4 x2, storicamente circa"
+            },
+            {
+              "title": "Contenuto e recupero",
+              "level": 2,
+              "start": 64,
+              "end": 85,
+              "summary": "da engine, CUDA, header, frontend, build e strumenti condivisi."
+            }
+          ]
+        },
+        {
+          "path": "docs/experiments/qwen27-4bis-20261008/documentation/qwen27-kv-capacity-4bis-20261006.md",
+          "sections": [
+            {
+              "title": "4 BIS — Modalità di contesto esteso per Qwen3.8 27B",
+              "level": 1,
+              "start": 1,
+              "end": 406,
+              "summary": "Implementazione esplicita per Qwen3.8 27B, 6 ottobre 2026."
+            },
+            {
+              "title": "Vincoli verificati nel checkout",
+              "level": 2,
+              "start": 9,
+              "end": 38,
+              "summary": "`qwen35`: 64 layer target, attenzione completa ogni quattro layer, 4 KV head,"
+            },
+            {
+              "title": "Percorsi implementati",
+              "level": 2,
+              "start": 39,
+              "end": 64,
+              "summary": "1."
+            },
+            {
+              "title": "Parametri e lifetime",
+              "level": 2,
+              "start": 65,
+              "end": 98,
+              "summary": "ridotta silenziosamente."
+            },
+            {
+              "title": "Esperimenti e decisione",
+              "level": 2,
+              "start": 99,
+              "end": 165,
+              "summary": "`tests/test_qwen35_kv_capacity` confronta off, grow e hybrid-attention"
+            },
+            {
+              "title": "Speculazione nel contesto esteso — aggiornamento 7 ottobre",
+              "level": 2,
+              "start": 166,
+              "end": 356,
+              "summary": "Richiesta: scegliere il drafter affidabile più veloce sul GGUF/3090 locale e"
+            },
+            {
+              "title": "Backbone DSpark e qualificazione numerica (7 ottobre)",
+              "level": 3,
+              "start": 197,
+              "end": 230,
+              "summary": "Il backbone DSpark è ora implementato, riusando embedding, GEMM, RMSNorm,"
+            },
+            {
+              "title": "NextN e DSpark a 64K effettivi (7 ottobre)",
+              "level": 3,
+              "start": 231,
+              "end": 315,
+              "summary": "I confronti v41–v43 generano 32 token dopo 65.536 token reali, mantenendo"
+            },
+            {
+              "title": "Perché NextN può aggiungere tempo al prefill",
+              "level": 3,
+              "start": 316,
+              "end": 356,
+              "summary": "La profondità di proposta appartiene al decode."
+            },
+            {
+              "title": "Riesame Strata del 7 ottobre e prova 128K",
+              "level": 2,
+              "start": 357,
+              "end": 406,
+              "summary": "Il checkout Strata esaminato è `e8ca9afd03d839d4f8dbbe82dffce7f8a3bafd7a`."
+            }
+          ]
+        },
+        {
+          "path": "docs/experiments/qwen27-4bis-20261008/documentation/qwen27-weight-streaming-20261008.md",
+          "sections": [
+            {
+              "title": "Qwen 27B: KV residente e streaming dei pesi, 8 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 77,
+              "summary": "Su richiesta dell'utente, il nuovo obiettivo sostituisce il KV offloaded del"
+            },
+            {
+              "title": "Percorso sperimentale",
+              "level": 2,
+              "start": 8,
+              "end": 51,
+              "summary": "`--qwen-weight-streaming on` richiede Qwen denso 27B, CUDA e una sola GPU."
+            },
+            {
+              "title": "Provenienza e qualificazione",
+              "level": 2,
+              "start": 52,
+              "end": 77,
+              "summary": "Da Strata si riprendono ordine di consumo noto, residenti separati da"
             }
           ]
         }

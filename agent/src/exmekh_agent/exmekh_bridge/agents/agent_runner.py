@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any
 
 from exmekh_lib.core.agents.deep_agent.deep_agent import DeepAgent
-from exmekh_lib.core.agents.node import DefaultCapabilities, Node
 from exmekh_lib.core.models.client import Client
 from exmekh_lib.core.models.client_request import ClientRequest
 from exmekh_lib.core.models.reasoning_effort import (
@@ -35,11 +34,13 @@ from exmekh_agent.exmekh_bridge.agents.event_handlers import (
 )
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
 from exmekh_agent.exmekh_bridge.agents.sub_agents import (
-    ObservedNode,
     SubAgentEvent,
     SubAgentEventRouter,
 )
-from exmekh_agent.exmekh_bridge.capabilities.agent_design import build_designed_agent
+from exmekh_agent.exmekh_bridge.capabilities.agent_design import (
+    build_designed_agent,
+    build_generic_agent,
+)
 from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
 )
@@ -269,42 +270,15 @@ def _execute_agent_turn_sync_unlocked(
                 design, event_router, approval_tool_hooks, agent_context_id
             )
         else:
-            default_caps = DefaultCapabilities(
-                mocks=True, tool_hooks=approval_tool_hooks
-            )
-            root_name = name_hds or "main"
-            children: list[ObservedNode] = []
-            if default_caps.capabilities_path.resolve() in {
-                path.resolve() for path in cap_paths
-            }:
-                children.append(
-                    ObservedNode(
-                        name_hds="mock-sub-agent",
-                        path=f"{root_name}/mock-sub-agent",
-                        event_router=event_router,
-                        default_capabilities=default_caps,
-                    )
-                )
-            children.append(
-                ObservedNode(
-                    capabilities_paths=[
-                        Path(__file__).resolve().parents[2] / "capabilities"
-                    ],
-                    default_capabilities=default_caps,
-                    name_hds="coding-agent",
-                    path=f"{root_name}/coding-agent",
-                    event_router=event_router,
-                    persistent_history=config.coding_agent_persistent_history
-                    if coding_agent_persistent_history is None
-                    else coding_agent_persistent_history,
-                )
-            )
-            root_node = Node(
-                capabilities_paths=cap_paths,
-                children=children,
-                name_hds=root_name,
+            root_node, children = build_generic_agent(
+                cap_paths,
+                event_router,
+                approval_tool_hooks,
+                root_name=name_hds or "main",
+                coding_persistent_history=config.coding_agent_persistent_history
+                if coding_agent_persistent_history is None
+                else coding_agent_persistent_history,
                 agent_context_id=agent_context_id,
-                default_capabilities=default_caps,
             )
 
         prior_exmekh = convert_to_exmekh_messages(

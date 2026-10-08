@@ -50,10 +50,11 @@ static uint64_t expert_history_hash(void) {
 int main(int argc, char **argv) {
 
     bool mtp = false, embedded_mtp = false;
-    const char *vision = NULL, *image = NULL;
+    const char *vision = NULL, *image = NULL, *support = NULL;
     if (argc < 2) return 2;
     for (int i = 2; i < argc; i++) {
         if (!strcmp(argv[i], "--mtp")) mtp = true;
+        else if (!strcmp(argv[i], "--mtp-model") && i+1<argc) { support=argv[++i];mtp=true; }
         else if (!strcmp(argv[i], "--embedded-mtp")) mtp = embedded_mtp = true;
         else if (!strcmp(argv[i], "--vision") && i + 1 < argc) vision = argv[++i];
         else if (!strcmp(argv[i], "--image") && i + 1 < argc) image = argv[++i];
@@ -62,18 +63,20 @@ int main(int argc, char **argv) {
     if ((vision != NULL) != (image != NULL)) return 2;
     const char *ctx_env = getenv("DS4_TEST_CTX");
     int ctx = ctx_env ? parse_int_arg(ctx_env, "DS4_TEST_CTX") : 2048;
+    const char *chunk_env = getenv("DS4_TEST_PREFILL_CHUNK");
+    const int prefill_chunk = chunk_env ? parse_int_arg(chunk_env, "DS4_TEST_PREFILL_CHUNK") : 256;
     const char *prefix_env = getenv("DS4_TEST_PREFIX_TOKENS");
     int warm_prefix = prefix_env ? parse_int_arg(prefix_env, "DS4_TEST_PREFIX_TOKENS") : 0;
     ds4_engine *engine = NULL;
     ds4_session *session = NULL;
     ds4_engine_options options = {
-        .model_path = argv[1], .mtp_auto = mtp && !embedded_mtp, .glm_mtp = embedded_mtp, .vision_path = vision,
+        .model_path = argv[1], .mtp_path = support, .mtp_auto = mtp && !embedded_mtp && !support, .glm_mtp = embedded_mtp, .vision_path = vision,
 #ifdef __APPLE__
         .backend = DS4_BACKEND_METAL,
 #else
         .backend = DS4_BACKEND_CUDA,
 #endif
-        .prefill_chunk = 256,
+        .prefill_chunk = (uint32_t)prefill_chunk,
     };
     server srv = {0}; server_slot slot = {0};
     pthread_mutex_init(&srv.tool_mu, NULL);
@@ -96,7 +99,7 @@ int main(int argc, char **argv) {
     REQUIRE((ds4_engine_mtp_draft_tokens(engine) > 0) == mtp);
     REQUIRE(ds4_session_create(&session, engine, ctx) == 0);
     slot.session = session;
-    if (ds4_engine_is_qwen4(engine)) REQUIRE(ds4_session_prefill_cap(session) == 256);
+    if (ds4_engine_is_qwen4(engine)) REQUIRE(ds4_session_prefill_cap(session) == prefill_chunk);
     REQUIRE(mkdtemp(dir) != NULL); dir_created = true; srv.skill_dir = dir;
     ds4_chat_append_message(engine, &prefix, "system", "Keep the parent memory: amber.");
     if (image) {
@@ -137,6 +140,20 @@ int main(int argc, char **argv) {
     expected = xmalloc((size_t)vocab * sizeof(float));
     actual = xmalloc((size_t)vocab * sizeof(float));
     REQUIRE(ds4_session_copy_logits(session, expected, vocab) == vocab);
+    /* Optional complete multimodal frontier for matched ordinary/experimental
+     * runs. Include token IDs so a different MTP frontier cannot pass by
+     * comparing distributions belonging to different histories. */
+    const char *logits_path = getenv("DS4_TEST_FRONTIER_LOGITS_PATH");
+    if (logits_path && *logits_path) {
+        FILE *dump = fopen(logits_path, "wb");
+        REQUIRE(dump != NULL);
+        uint32_t header[] = {UINT32_C(0x31465651), (uint32_t)vocab, (uint32_t)prefix.len};
+        bool written = fwrite(header, sizeof(header), 1, dump) == 1 &&
+            fwrite(prefix.v, sizeof(int), (size_t)prefix.len, dump) == (size_t)prefix.len &&
+            fwrite(expected, sizeof(float), (size_t)vocab, dump) == (size_t)vocab;
+        if (fclose(dump)) written = false;
+        REQUIRE(written);
+    }
     if (image) {
         /* Encoding another image must preserve the parent graph and identity.
          * Repeat pixels exercise cached decoder state, not the HTTP image cache. */
@@ -189,7 +206,7 @@ int main(int argc, char **argv) {
         REQUIRE(fclose(legacy) == 0);
         REQUIRE(same_frontier(session, &prefix, expected, actual, vocab));
         REQUIRE(expert_history_hash() == parent_history);
-        REQUIRE(ds4_session_prefill_cap(session) == 256);
+        REQUIRE(ds4_session_prefill_cap(session) == prefill_chunk);
         fprintf(stderr, "PASS legacy Flash prefill-cap header: logits and expert history bit-exact\n");
     }
     resident_kv_frontier_clear(&request_frontier);

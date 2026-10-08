@@ -15,6 +15,7 @@ from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     MessageRole,
     ProviderContextUsage,
+    QueuedMessage,
     ReasoningBlock,
     SkillNode,
     ToolEvent,
@@ -108,6 +109,15 @@ class TurnStreamCollector:
         return extract_turn_raw_history(
             self.raw_history, start=self.steering.history_start
         )
+
+    @property
+    def can_steer(self) -> bool:
+        """Whether the current execution accepts guidance."""
+        return self.steering.available
+
+    def steer(self, message: QueuedMessage) -> bool:
+        """Submit guidance through the turn's owned steering state."""
+        return self.steering.send(message)
 
     def append_skill(self, node: SkillNode, action: str = "opened") -> None:
         """Record or update a skill node, preserving opening start_time and computing duration."""

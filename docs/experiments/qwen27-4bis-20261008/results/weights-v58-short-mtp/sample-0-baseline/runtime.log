@@ -1,0 +1,45 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging, direct I/O)
+ds4: CUDA model copy complete in 5.195s (pipelined, 14.30 GiB tensors)
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA startup model preparation covered 14.15 GiB of tensor spans in 0.000s
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.463s
+ds4: cuda backend initialized for graph diagnostics
+ds4: Qwen verifier host snapshots=0.740 GiB
+ds4: memory: KV 0.27 GiB (raw 0.27 + compressed 0.00) + buffers 0.41 GiB + resident model 15.56 GiB = 16.24 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=2048 prefill_cap=256 raw_kv_rows=2048 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 499.56 MiB (ctx=2048, backend=cuda, prefill_chunk=256, raw_kv_rows=2048, compressed_kv_rows=0)
+ds4-bench: context buffers 499.56 MiB (ctx=2048, backend=cuda, prefill_chunk=256, raw_kv_rows=2048, compressed_kv_rows=0)
+ds4-bench: speculative decoding enabled with draft width 5; frontier restoration uses session snapshots
+ds4-bench: prefill progress current=256 total=256 elapsed=8.118s
+ds4-bench: decode cycle ctx=256 completed=1 rows=1 ms=560.258
+ds4-bench: decode cycle ctx=256 completed=3 rows=2 ms=482.596
+ds4-bench: decode cycle ctx=256 completed=5 rows=2 ms=487.707
+ds4-bench: decode cycle ctx=256 completed=6 rows=1 ms=481.133
+ds4-bench: decode cycle ctx=256 completed=8 rows=2 ms=486.333
+ds4-bench: decode cycle ctx=256 completed=11 rows=3 ms=484.542
+ds4-bench: decode cycle ctx=256 completed=15 rows=4 ms=486.492
+ds4-bench: decode cycle ctx=256 completed=17 rows=2 ms=485.257
+ds4-bench: decode cycle ctx=256 completed=20 rows=3 ms=489.062
+ds4-bench: decode cycle ctx=256 completed=23 rows=3 ms=487.942
+ds4-bench: decode cycle ctx=256 completed=27 rows=4 ms=485.089
+ds4-bench: decode cycle ctx=256 completed=28 rows=1 ms=409.011
+ds4-bench: decode cycle ctx=256 completed=32 rows=4 ms=272.733
+ds4-bench: prefill progress current=256 total=256 elapsed=8.062s
+ds4-bench: decode cycle ctx=256 completed=1 rows=1 ms=479.220
+ds4-bench: decode cycle ctx=256 completed=3 rows=2 ms=481.712
+ds4-bench: decode cycle ctx=256 completed=5 rows=2 ms=484.895
+ds4-bench: decode cycle ctx=256 completed=6 rows=1 ms=480.673
+ds4-bench: decode cycle ctx=256 completed=8 rows=2 ms=488.950
+ds4-bench: decode cycle ctx=256 completed=11 rows=3 ms=485.270
+ds4-bench: decode cycle ctx=256 completed=15 rows=4 ms=485.851
+ds4-bench: decode cycle ctx=256 completed=17 rows=2 ms=482.783
+ds4-bench: decode cycle ctx=256 completed=20 rows=3 ms=481.689
+ds4-bench: decode cycle ctx=256 completed=23 rows=3 ms=483.020
+ds4-bench: decode cycle ctx=256 completed=27 rows=4 ms=481.646
+ds4-bench: decode cycle ctx=256 completed=28 rows=1 ms=404.352
+ds4-bench: decode cycle ctx=256 completed=32 rows=4 ms=276.643

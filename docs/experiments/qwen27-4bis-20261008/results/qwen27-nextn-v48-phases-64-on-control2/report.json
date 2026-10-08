@@ -1,0 +1,60 @@
+{
+  "command": [
+    "/home/daniele/ds4/ds4-bench",
+    "--cuda",
+    "-m",
+    "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--prompt-file",
+    "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+    "--ctx-start",
+    "65536",
+    "--ctx-max",
+    "65536",
+    "--ctx-alloc",
+    "65600",
+    "--step-incr",
+    "1",
+    "--gen-tokens",
+    "32",
+    "--prefill-chunk",
+    "1024",
+    "--repetitions",
+    "1",
+    "--csv",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v48-phases-64-on-control2/speed.csv",
+    "--dump-frontier-logits-dir",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v48-phases-64-on-control2/logits"
+  ],
+  "environment": {
+    "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+    "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+    "DS4_CUDA_QWEN_MTP_KV_MODE": "auto",
+    "DS4_CUDA_QWEN_MTP_BATCH_CATCHUP": "1",
+    "DS4_BENCH_PROGRESS": "1",
+    "DS4_BENCH_DECODE_TIMES": "1",
+    "DS4_QWEN_EXTENDED_DRAFT": "off",
+    "DS4_BENCH_SPEC_TRACE": "1",
+    "DS4_MTP_CYCLE_TRACE": "1",
+    "DS4_BENCH_DECODE_WARMUP": "16",
+    "DS4_QWEN_PREFILL_PHASES": "1"
+  },
+  "exit_code": 0,
+  "binary_sha256": "bacfd59344c204d7016d89041d40632c0bcbb6b2b577d1f9689eb1ecf5a38c07",
+  "quality": [
+    {
+      "file": "frontier_065536.decode.json",
+      "bit_exact": true,
+      "max_abs": 0.0,
+      "kl": 0.0,
+      "argmax_match": true
+    },
+    {
+      "file": "frontier_065536.logits.json",
+      "bit_exact": true,
+      "max_abs": 0.0,
+      "kl": 0.0,
+      "argmax_match": true
+    }
+  ],
+  "all_pass": true
+}

@@ -197,6 +197,10 @@ typedef struct {
     bool warm_weights;
     bool quality;
     bool mtp_auto;
+    /* CLI/server opt-in to experimental Flash CUDA automatic activation
+     * after target validation (DS4_QWEN4_MTP_AUTO=1).
+     * Zero-initialized library, bench and eval options remain target-only. */
+    bool qwen4_mtp_auto;
     bool glm_mtp;
     bool glm_mtp_timing;
     bool dspark;
@@ -696,6 +700,7 @@ int ds4_test_argmax_excluding_logits(const float *logits, uint32_t n_vocab,
                                      int excluded_id);
 uint64_t ds4_test_mixed_native_count(void);
 int ds4_test_qwen35_layer_is_recurrent(uint32_t layer);
+uint64_t ds4_test_tensor_storage_bytes(uint32_t type, uint64_t elements);
 bool ds4_test_constraint_trie_mask(void);
 uint64_t ds4_test_ds41_batch_count(void);
 #endif

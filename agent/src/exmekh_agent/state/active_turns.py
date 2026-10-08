@@ -109,14 +109,14 @@ class ActiveTurnRegistry:
             turn is not None
             and not turn.task.done()
             and not turn.task.cancelling()
-            and turn.collector.steering.available
+            and turn.collector.can_steer
         )
 
     def steer(self, session_id: str, message: QueuedMessage) -> bool:
         if not self.can_steer(session_id):
             return False
         turn = self._turns[session_id]
-        if not turn.collector.steering.send(message):
+        if not turn.collector.steer(message):
             return False
         turn.revision += 1
         return True

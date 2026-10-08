@@ -1,0 +1,86 @@
+{
+  "status": "COMPLETE",
+  "command": [
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/candidate-v57-final/ds4-bench",
+    "--cuda",
+    "-m",
+    "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--prompt-file",
+    "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+    "--ctx-start",
+    "4096",
+    "--ctx-max",
+    "4096",
+    "--ctx-alloc",
+    "65536",
+    "--step-incr",
+    "1",
+    "--gen-tokens",
+    "16",
+    "--prefill-chunk",
+    "1024",
+    "--repetitions",
+    "1",
+    "--csv",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/weights-v61-64k-allocation-probe/sample-0-baseline/speed.csv",
+    "--dump-frontier-logits-dir",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/weights-v61-64k-allocation-probe/sample-0-baseline/logits",
+    "--mtp",
+    "--mtp-draft",
+    "5"
+  ],
+  "environment": {
+    "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+    "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "20",
+    "DS4_QWEN_EXTENDED_DRAFT": "off",
+    "DS4_BENCH_DECODE_TIMES": "1",
+    "DS4_BENCH_PROGRESS": "1",
+    "DS4_QWEN_PREFILL_PHASES": "1",
+    "DS4_CUDA_QWEN_WEIGHT_STREAMING": "0",
+    "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+    "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+    "DS4_CUDA_QWEN_MTP_KV_MODE": "auto",
+    "DS4_CUDA_QWEN_MTP_BATCH_CATCHUP": "1",
+    "DS4_CUDA_QWEN_MTP_DECODE_ROWS": "1"
+  },
+  "exit_code": 0,
+  "wall_seconds": 19.322244949999913,
+  "binary_sha256": "9f6299b01b898f1ea5b9e3aa34ffa7f8c0d2169993951947afa7a6d0dd2e0486",
+  "model": {
+    "path": "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024
+  },
+  "samples": 1,
+  "warmup": 0,
+  "frontiers": {
+    "4096": {
+      "prefill": {
+        "samples": [
+          593.98
+        ],
+        "median": 593.98,
+        "mean": 593.98,
+        "cv": null
+      },
+      "decode": {
+        "samples": [
+          7.5
+        ],
+        "median": 7.5,
+        "mean": 7.5,
+        "cv": null
+      },
+      "first_prefill_tps": 593.98,
+      "decode_total": {
+        "samples": [
+          6.86
+        ],
+        "median": 6.86,
+        "mean": 6.86,
+        "cv": null
+      }
+    }
+  },
+  "mtp_calls": 11,
+  "mtp_multi_token_calls": 4
+}

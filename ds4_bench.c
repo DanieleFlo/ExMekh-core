@@ -1,4 +1,5 @@
 #include "ds4.h"
+#include "ds4_env.h"
 #include "ds4_distributed.h"
 #include "ds4_gpu_args.h"
 #include "ds4_help.h"
@@ -28,6 +29,8 @@
  * remain independent of CUDA headers and libraries. */
 #if defined(__GNUC__) && !defined(__APPLE__)
 #define DS4_BENCH_HAVE_CUDA_PROFILER 1
+#include "ds4_qwen4_runtime.h"
+extern int ds4_gpu_qwen4_tier_stats_get(ds4_gpu_qwen4_tier_stats *) __attribute__((weak));
 extern int cudaProfilerStart(void) __attribute__((weak));
 extern int cudaProfilerStop(void) __attribute__((weak));
 #endif
@@ -71,6 +74,9 @@ typedef struct {
     bool cuda_tensor_parallel;
     bool show_output;
     bool teacher_forced_decode;
+    bool mtp;
+    bool mtp_auto;
+    int mtp_draft_tokens;
     bool dspark;
     bool dspark_confidence_threshold_set;
     float dspark_confidence_threshold;
@@ -80,6 +86,27 @@ static double bench_now_sec(void) {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (double)ts.tv_sec + (double)ts.tv_nsec / 1000000000.0;
+}
+
+static int bench_qwen_non_eos(void *ud, const float *logits, int vocab,
+        const int *prefix, int len, uint64_t *rng) {
+    (void)prefix; (void)len; (void)rng;
+    const int excluded = *(const int *)ud;
+    int best = -1; float value = -INFINITY;
+    for (int i = 0; i < vocab; ++i) if (i != excluded && (best < 0 || logits[i] > value)) {
+        best = i; value = logits[i];
+    }
+    return best;
+}
+
+/* Optional long-context diagnostics: the session already completed this
+ * chunk. Do not add CUDA synchronization or read back tensors for progress. */
+static void bench_prefill_progress(void *ud, const char *event, int current, int total) {
+    if (strcmp(event, "prefill_chunk")) return;
+    const double *started = ud;
+    fprintf(stderr, "ds4-bench: prefill progress current=%d total=%d elapsed=%.3fs\n",
+        current, total, bench_now_sec() - *started);
+    fflush(stderr);
 }
 
 static uint64_t bench_snapshot_max_bytes(void) {
@@ -270,8 +297,22 @@ static bench_config parse_options(int argc, char **argv) {
 
         if (!strcmp(arg, "-m") || !strcmp(arg, "--model")) {
             c.model_path = need_arg(&i, argc, argv, arg);
+        } else if (!strcmp(arg, "--mtp")) {
+            c.mtp = true;
+            c.mtp_auto = true;
+            if (i + 1 < argc && argv[i + 1][0] != '-') {
+                c.mtp_path = argv[++i];
+                c.mtp_auto = false;
+            }
+        } else if (!strcmp(arg, "--mtp-draft")) {
+            c.mtp_draft_tokens = parse_int(need_arg(&i, argc, argv, arg), arg);
+            if (c.mtp_draft_tokens > 16) {
+                fprintf(stderr, "ds4-bench: --mtp-draft must be in 1..16\n");
+                exit(2);
+            }
         } else if (!strcmp(arg, "--mtp-model")) {
             c.mtp_path = need_arg(&i, argc, argv, arg);
+            c.mtp_auto = false;
         } else if (!strcmp(arg, "--dspark")) {
             c.dspark = true;
         } else if (!strcmp(arg, "--dspark-confidence")) {
@@ -394,9 +435,9 @@ static bench_config parse_options(int argc, char **argv) {
         fprintf(stderr, "ds4-bench: --dspark requires --mtp-model FILE\n");
         exit(2);
     }
-    if (c.dspark && c.teacher_forced_decode) {
+    if ((c.dspark || c.mtp) && c.teacher_forced_decode) {
         fprintf(stderr,
-                "ds4-bench: --dspark cannot be combined with "
+                "ds4-bench: speculative decoding cannot be combined with "
                 "--teacher-forced-decode\n");
         exit(2);
     }
@@ -737,6 +778,8 @@ int main(int argc, char **argv) {
     ds4_engine_options opt = {
         .model_path = cfg.model_path,
         .mtp_path = cfg.mtp_path,
+        .mtp_auto = cfg.mtp_auto,
+        .mtp_draft_tokens = cfg.mtp_draft_tokens,
         .backend = cfg.backend,
         .n_threads = cfg.threads,
         .context_size = cfg.ctx_alloc,
@@ -851,6 +894,9 @@ int main(int argc, char **argv) {
                        cfg.ctx_alloc,
                        (uint32_t)ds4_session_prefill_cap(session),
                        cfg.ssd_streaming);
+    double progress_started = bench_now_sec();
+    if (ds4_env_flag_enabled("DS4_BENCH_PROGRESS", 0))
+        ds4_session_set_progress(session, bench_prefill_progress, &progress_started);
     if (cfg.dist.role == DS4_DISTRIBUTED_COORDINATOR &&
         wait_distributed_route(session) != 0)
     {
@@ -879,9 +925,10 @@ int main(int argc, char **argv) {
     const bool distributed =
         cfg.dist.role == DS4_DISTRIBUTED_COORDINATOR ||
         cfg.tp.role == DS4_TP_LEADER;
-    const bool speculative = cfg.dspark && ds4_engine_mtp_draft_tokens(engine) > 1;
-    if (cfg.dspark && !speculative) {
-        fprintf(stderr, "ds4-bench: DSpark support model did not enable speculative decoding\n");
+    const bool qwen_support = ds4_engine_is_qwen38_ud_q4_k_s(engine) && ds4_engine_has_mtp(engine);
+    const bool speculative = (cfg.dspark || cfg.mtp || qwen_support) && ds4_engine_mtp_draft_tokens(engine) > 1;
+    if ((cfg.dspark || cfg.mtp) && !speculative) {
+        fprintf(stderr, "ds4-bench: requested support model did not enable speculative decoding\n");
         if (out != stdout) fclose(out);
         ds4_session_free(session);
         ds4_tokens_free(&prompt);
@@ -890,7 +937,7 @@ int main(int argc, char **argv) {
     }
     if (speculative) {
         fprintf(stderr,
-                "ds4-bench: DSpark enabled with draft width %d; frontier restoration uses session snapshots\n",
+                "ds4-bench: speculative decoding enabled with draft width %d; frontier restoration uses session snapshots\n",
                 ds4_engine_mtp_draft_tokens(engine));
     }
     ds4_session_snapshot snap = {0};
@@ -908,6 +955,7 @@ int main(int argc, char **argv) {
         };
 
         const double prefill_t0 = bench_now_sec();
+        progress_started = prefill_t0;
 #if defined(DS4_BENCH_HAVE_CUDA_PROFILER)
         const bool cuda_profile_prefill =
             getenv("DS4_BENCH_CUDA_PROFILE_PREFILL") != NULL &&
@@ -966,6 +1014,11 @@ int main(int argc, char **argv) {
             }
         }
 
+#if defined(DS4_BENCH_HAVE_CUDA_PROFILER)
+        ds4_gpu_qwen4_tier_stats decode_tiers_before = {0};
+        const bool tier_decode = getenv("DS4_BENCH_TIER_DECODE") && ds4_gpu_qwen4_tier_stats_get &&
+            ds4_gpu_qwen4_tier_stats_get(&decode_tiers_before);
+#endif
         const double gen_t0 = bench_now_sec();
         double gen_first_sec = 0.0;
         double gen_steady_sec = 0.0;
@@ -1022,10 +1075,23 @@ int main(int argc, char **argv) {
             int ntok = 1;
             if (speculative) {
                 const double spec_t0 = bench_now_sec();
-                ntok = ds4_session_eval_speculative_argmax(
-                    session, token, cfg.gen_tokens - gen_done, eos,
-                    toks, (int)(sizeof(toks) / sizeof(toks[0])),
-                    err, sizeof(err));
+                /* The ordinary benchmark excludes EOS. Use the same target
+                 * policy for NextN so throughput and generated-token parity
+                 * compare the same workload. Keep DSpark's existing policy. */
+                if (qwen_support) {
+                    uint64_t rng = 0; int next_token = -1;
+                    ntok = ds4_session_eval_speculative_constrained_sample(
+                        session, token, 0, 0, 1, 0, &rng, cfg.gen_tokens - gen_done, -1,
+                        toks, (int)(sizeof(toks)/sizeof(toks[0])), &next_token,
+                        bench_qwen_non_eos, (void *)&eos, err, sizeof(err));
+                } else if (cfg.mtp)
+                    ntok = ds4_session_eval_speculative_argmax_ignoring_eos(
+                        session, token, cfg.gen_tokens - gen_done, eos, DS4_THINK_HIGH,
+                        toks, (int)(sizeof(toks) / sizeof(toks[0])), err, sizeof(err));
+                else
+                    ntok = ds4_session_eval_speculative_argmax(
+                        session, token, cfg.gen_tokens - gen_done, eos,
+                        toks, (int)(sizeof(toks) / sizeof(toks[0])), err, sizeof(err));
                 if (getenv("DS4_BENCH_SPEC_TRACE") && ntok > 0 && ntok < 17) {
                     static double call_ms[17];
                     static unsigned call_n[17];
@@ -1041,12 +1107,12 @@ int main(int argc, char **argv) {
                     }
                 }
                 if (ntok < 0) {
-                    fprintf(stderr, "ds4-bench: DSpark decode at frontier %d failed: %s\n", frontier, err);
+                    fprintf(stderr, "ds4-bench: speculative decode at frontier %d failed: %s\n", frontier, err);
                     rc = 1;
                     break;
                 }
                 if (ntok == 0) {
-                    fprintf(stderr, "ds4-bench: DSpark decode at frontier %d accepted no tokens\n", frontier);
+                    fprintf(stderr, "ds4-bench: speculative decode at frontier %d accepted no tokens\n", frontier);
                     rc = 1;
                     break;
                 }
@@ -1083,8 +1149,29 @@ int main(int argc, char **argv) {
             } else {
                 gen_steady_sec += token_t1 - token_t0;
             }
+            /* Diagnostics only: reuse the existing timing boundaries, with
+             * no additional GPU readback or synchronization. Logging is
+             * outside the measured forward and disabled for promotion A/B. */
+            if (getenv("DS4_BENCH_DECODE_TIMES"))
+                fprintf(stderr, "ds4-bench: decode cycle ctx=%d completed=%d rows=%d ms=%.3f\n",
+                        frontier, gen_done, cycle_tokens, 1000.0 * (token_t1 - token_t0));
         }
         const double gen_t1 = bench_now_sec();
+#if defined(DS4_BENCH_HAVE_CUDA_PROFILER)
+        if (tier_decode) {
+            ds4_gpu_qwen4_tier_stats after;
+            if (ds4_gpu_qwen4_tier_stats_get(&after))
+                fprintf(stderr, "ds4-bench: decode tiers ctx=%d tokens=%d SSD_bytes=%llu expert_H2D=%llu KV_H2D=%llu "
+                    "CPU_stage_jobs=%llu staging_wait_ms=%.3f victim_select_ms=%.3f expert_VRAM=%llu\n",
+                    frontier, gen_done, (unsigned long long)(after.ssd_bytes - decode_tiers_before.ssd_bytes),
+                    (unsigned long long)(after.expert_h2d_bytes - decode_tiers_before.expert_h2d_bytes),
+                    (unsigned long long)(after.kv_h2d_bytes - decode_tiers_before.kv_h2d_bytes),
+                    (unsigned long long)(after.cpu_stage_jobs - decode_tiers_before.cpu_stage_jobs),
+                    1000.0 * (after.staging_wait_seconds - decode_tiers_before.staging_wait_seconds),
+                    1000.0 * (after.victim_select_seconds - decode_tiers_before.victim_select_seconds),
+                    (unsigned long long)after.expert_vram_bytes);
+        }
+#endif
         if (cfg.show_output && gen_token_buf && gen_token_count > 0) {
             fprintf(stderr, "ds4-bench: gen[ctx=%d] decoded text: \"", frontier);
             for (int i = 0; i < gen_token_count; i++) {

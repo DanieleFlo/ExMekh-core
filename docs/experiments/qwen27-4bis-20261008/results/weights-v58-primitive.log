@@ -1,0 +1,8 @@
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight plan resident=0.000 GiB host=0.000 GiB ring=0.000 GiB offloaded_layers=5/6; KV and recurrent state stay in VRAM
+ds4: dense weight access outside its layer: wanted=0 live=4294967295
+ds4: dense weight streaming forwards=12 H2D=0.000 GiB transfers=60 pending_waits=5 submit_wait=0.734ms resident=0.000 GiB host=0.000 GiB ring=0.000 GiB pinned=0.002 GiB
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight plan resident=0.000 GiB host=0.000 GiB ring=0.000 GiB offloaded_layers=0/6; KV and recurrent state stay in VRAM
+ds4: dense weight streaming forwards=12 H2D=0.000 GiB transfers=0 pending_waits=0 submit_wait=0.000ms resident=0.000 GiB host=0.000 GiB ring=0.000 GiB pinned=0.002 GiB
+dense weight streaming ordered oracle: PASS

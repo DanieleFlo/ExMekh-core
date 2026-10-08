@@ -1,0 +1,83 @@
+{
+  "status": "COMPLETE",
+  "command": [
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/candidate-v57-final/ds4-bench",
+    "--cuda",
+    "-m",
+    "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--prompt-file",
+    "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+    "--ctx-start",
+    "256",
+    "--ctx-max",
+    "256",
+    "--ctx-alloc",
+    "2048",
+    "--step-incr",
+    "1",
+    "--gen-tokens",
+    "64",
+    "--teacher-forced-decode",
+    "--prefill-chunk",
+    "256",
+    "--repetitions",
+    "3",
+    "--csv",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-speed-v57/protected-03-candidate/speed.csv",
+    "--dump-frontier-logits-dir",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-speed-v57/protected-03-candidate/logits"
+  ],
+  "environment": {
+    "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+    "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "20",
+    "DS4_CUDA_QWEN4_DECODE_GRAPHS": "1",
+    "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+    "DS4_CUDA_QWEN4_KV_DECODE_BATCH": "1",
+    "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS": "1",
+    "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+    "DS4_CUDA_QWEN4_PCIE_FRAC": "0.5",
+    "DS4_CUDA_QWEN4_EXPERT_POLICY": "stable",
+    "DS4_CUDA_QWEN4_PREFILL_RING": "1",
+    "DS4_CUDA_QWEN_MTP_DECODE_ROWS": "1",
+    "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "off",
+    "DS4_QWEN_EXTENDED_DRAFT": "off"
+  },
+  "exit_code": 0,
+  "wall_seconds": 37.41217808900001,
+  "binary_sha256": "9f6299b01b898f1ea5b9e3aa34ffa7f8c0d2169993951947afa7a6d0dd2e0486",
+  "model": {
+    "path": "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024
+  },
+  "samples": 1,
+  "warmup": 2,
+  "frontiers": {
+    "256": {
+      "prefill": {
+        "samples": [
+          30.25
+        ],
+        "median": 30.25,
+        "mean": 30.25,
+        "cv": null
+      },
+      "decode": {
+        "samples": [
+          29.3
+        ],
+        "median": 29.3,
+        "mean": 29.3,
+        "cv": null
+      },
+      "first_prefill_tps": 31.18,
+      "decode_total": {
+        "samples": [
+          29.32
+        ],
+        "median": 29.32,
+        "mean": 29.32,
+        "cv": null
+      }
+    }
+  }
+}

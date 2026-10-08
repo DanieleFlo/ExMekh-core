@@ -1,0 +1,32 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight plan resident=9.802 GiB host=4.491 GiB ring=0.469 GiB offloaded_layers=23/64; KV and recurrent state stay in VRAM
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.535s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 0.27 GiB (raw 0.27 + compressed 0.00) + buffers 1.14 GiB + resident model 11.54 GiB = 12.94 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=2048 prefill_cap=256 raw_kv_rows=2048 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 499.56 MiB (ctx=2048, backend=cuda, prefill_chunk=256, raw_kv_rows=2048, compressed_kv_rows=0)
+ds4-bench: context buffers 499.56 MiB (ctx=2048, backend=cuda, prefill_chunk=256, raw_kv_rows=2048, compressed_kv_rows=0)
+ds4-bench: speculative decoding enabled with draft width 5; frontier restoration uses session snapshots
+QWEN_PREFILL_PHASE start=0 rows=256 target_ms=1658.826 draft_prepare_ms=28.723
+ds4-bench: prefill progress current=256 total=512 elapsed=1.689s
+QWEN_PREFILL_PHASE start=256 rows=256 target_ms=1530.273 draft_prepare_ms=28.475
+ds4-bench: prefill progress current=512 total=512 elapsed=3.247s
+ds4-bench: decode cycle ctx=512 completed=2 rows=2 ms=1537.190
+ds4-bench: decode cycle ctx=512 completed=3 rows=1 ms=1529.586
+ds4-bench: decode cycle ctx=512 completed=5 rows=2 ms=1531.881
+ds4-bench: decode cycle ctx=512 completed=10 rows=5 ms=1533.036
+ds4-bench: decode cycle ctx=512 completed=12 rows=2 ms=1539.493
+ds4-bench: decode cycle ctx=512 completed=13 rows=1 ms=1538.569
+ds4-bench: decode cycle ctx=512 completed=14 rows=1 ms=1537.808
+ds4-bench: decode cycle ctx=512 completed=16 rows=2 ms=1538.571
+ds4-bench: decode cycle ctx=512 completed=19 rows=3 ms=1540.506
+ds4-bench: decode cycle ctx=512 completed=22 rows=3 ms=1541.203
+ds4-bench: decode cycle ctx=512 completed=25 rows=3 ms=1538.318
+ds4-bench: decode cycle ctx=512 completed=26 rows=1 ms=1577.815
+ds4-bench: decode cycle ctx=512 completed=30 rows=4 ms=1541.899
+ds4-bench: decode cycle ctx=512 completed=32 rows=2 ms=1523.036
+ds4: dense weight streaming forwards=16 H2D=71.852 GiB transfers=368 pending_waits=366 submit_wait=23377.429ms resident=9.802 GiB host=4.491 GiB ring=0.469 GiB pinned=0.125 GiB

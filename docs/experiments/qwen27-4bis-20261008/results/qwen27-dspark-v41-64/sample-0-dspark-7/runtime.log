@@ -1,0 +1,117 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen DSpark v2 loaded: /home/daniele/ds4/gguf/drafts/Qwen3.8-27B-DSpark-v2-Q8_0.gguf (5 GQA layers, proposals=7)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging, direct I/O)
+ds4: CUDA model copy complete in 5.344s (pipelined, 14.30 GiB tensors)
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA startup model preparation covered 14.15 GiB of tensor spans in 0.000s
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.89 GiB of tensor spans in 0.686s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 8.01 GiB (raw 8.01 + compressed 0.00) + buffers 0.50 GiB + resident model 16.19 GiB = 24.70 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=65600 prefill_cap=1024 raw_kv_rows=65600 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 8716.85 MiB (ctx=65600, backend=cuda, prefill_chunk=1024, raw_kv_rows=65600, compressed_kv_rows=0)
+ds4-bench: context buffers 8716.85 MiB (ctx=65600, backend=cuda, prefill_chunk=1024, raw_kv_rows=65600, compressed_kv_rows=0)
+ds4-bench: speculative decoding enabled with draft width 7; frontier restoration uses session snapshots
+ds4-bench: prefill progress current=1024 total=65536 elapsed=2.102s
+ds4-bench: prefill progress current=2048 total=65536 elapsed=3.520s
+ds4-bench: prefill progress current=3072 total=65536 elapsed=4.955s
+ds4-bench: prefill progress current=4096 total=65536 elapsed=6.480s
+ds4-bench: prefill progress current=5120 total=65536 elapsed=8.050s
+ds4-bench: prefill progress current=6144 total=65536 elapsed=9.609s
+ds4-bench: prefill progress current=7168 total=65536 elapsed=11.229s
+ds4-bench: prefill progress current=8192 total=65536 elapsed=12.873s
+ds4-bench: prefill progress current=9216 total=65536 elapsed=14.594s
+ds4-bench: prefill progress current=10240 total=65536 elapsed=16.262s
+ds4-bench: prefill progress current=11264 total=65536 elapsed=17.943s
+ds4-bench: prefill progress current=12288 total=65536 elapsed=19.690s
+ds4-bench: prefill progress current=13312 total=65536 elapsed=21.497s
+ds4-bench: prefill progress current=14336 total=65536 elapsed=23.301s
+ds4-bench: prefill progress current=15360 total=65536 elapsed=25.155s
+ds4-bench: prefill progress current=16384 total=65536 elapsed=27.170s
+ds4-bench: prefill progress current=17408 total=65536 elapsed=29.096s
+ds4-bench: prefill progress current=18432 total=65536 elapsed=30.988s
+ds4-bench: prefill progress current=19456 total=65536 elapsed=32.905s
+ds4-bench: prefill progress current=20480 total=65536 elapsed=34.854s
+ds4-bench: prefill progress current=21504 total=65536 elapsed=36.989s
+ds4-bench: prefill progress current=22528 total=65536 elapsed=38.984s
+ds4-bench: prefill progress current=23552 total=65536 elapsed=41.014s
+ds4-bench: prefill progress current=24576 total=65536 elapsed=43.147s
+ds4-bench: prefill progress current=25600 total=65536 elapsed=45.410s
+ds4-bench: prefill progress current=26624 total=65536 elapsed=47.494s
+ds4-bench: prefill progress current=27648 total=65536 elapsed=49.641s
+ds4-bench: prefill progress current=28672 total=65536 elapsed=51.790s
+ds4-bench: prefill progress current=29696 total=65536 elapsed=64.521s
+ds4-bench: prefill progress current=30720 total=65536 elapsed=73.223s
+ds4-bench: prefill progress current=31744 total=65536 elapsed=79.970s
+ds4-bench: prefill progress current=32768 total=65536 elapsed=87.042s
+ds4-bench: prefill progress current=33792 total=65536 elapsed=93.985s
+ds4-bench: prefill progress current=34816 total=65536 elapsed=101.044s
+ds4-bench: prefill progress current=35840 total=65536 elapsed=107.949s
+ds4-bench: prefill progress current=36864 total=65536 elapsed=115.068s
+ds4-bench: prefill progress current=37888 total=65536 elapsed=122.180s
+ds4-bench: prefill progress current=38912 total=65536 elapsed=129.297s
+ds4-bench: prefill progress current=39936 total=65536 elapsed=136.471s
+ds4-bench: prefill progress current=40960 total=65536 elapsed=143.824s
+ds4-bench: prefill progress current=41984 total=65536 elapsed=151.519s
+ds4-bench: prefill progress current=43008 total=65536 elapsed=159.077s
+ds4-bench: prefill progress current=44032 total=65536 elapsed=166.563s
+ds4-bench: prefill progress current=45056 total=65536 elapsed=174.180s
+ds4-bench: prefill progress current=46080 total=65536 elapsed=181.845s
+ds4-bench: prefill progress current=47104 total=65536 elapsed=189.740s
+ds4-bench: prefill progress current=48128 total=65536 elapsed=197.643s
+ds4-bench: prefill progress current=49152 total=65536 elapsed=206.853s
+ds4-bench: prefill progress current=50176 total=65536 elapsed=214.797s
+ds4-bench: prefill progress current=51200 total=65536 elapsed=222.950s
+ds4-bench: prefill progress current=52224 total=65536 elapsed=231.280s
+ds4-bench: prefill progress current=53248 total=65536 elapsed=239.565s
+ds4-bench: prefill progress current=54272 total=65536 elapsed=247.939s
+ds4-bench: prefill progress current=55296 total=65536 elapsed=256.132s
+ds4-bench: prefill progress current=56320 total=65536 elapsed=264.726s
+ds4-bench: prefill progress current=57344 total=65536 elapsed=274.176s
+ds4-bench: prefill progress current=58368 total=65536 elapsed=282.850s
+ds4-bench: prefill progress current=59392 total=65536 elapsed=291.516s
+ds4-bench: prefill progress current=60416 total=65536 elapsed=300.124s
+ds4-bench: prefill progress current=61440 total=65536 elapsed=308.849s
+ds4-bench: prefill progress current=62464 total=65536 elapsed=317.669s
+ds4-bench: prefill progress current=63488 total=65536 elapsed=327.209s
+ds4-bench: prefill progress current=64512 total=65536 elapsed=336.343s
+ds4-bench: prefill progress current=65536 total=65536 elapsed=345.613s
+QWEN_MTP_CYCLE cycle=1 requested_depth=7 drafted_tokens=7 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=629.374 target_verify_ms=2368.258 snapshot_ms=0.330 rollback_ms=55.265 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.022 total_ms=3053.333
+ds4-bench: decode cycle ctx=65536 completed=1 rows=1 ms=3053.358
+QWEN_MTP_CYCLE cycle=2 requested_depth=7 drafted_tokens=7 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=549.103 target_verify_ms=2276.569 snapshot_ms=0.356 rollback_ms=54.851 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2880.964
+ds4-bench: decode cycle ctx=65536 completed=2 rows=1 ms=2880.988
+QWEN_MTP_CYCLE cycle=3 requested_depth=7 drafted_tokens=7 accepted_tokens=2 rejected_at=3 committed_tokens=3 full_accept=0 target_seed_ms=0.000 draft_propose_ms=565.100 target_verify_ms=2232.422 snapshot_ms=0.435 rollback_ms=55.278 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2853.327
+ds4-bench: decode cycle ctx=65536 completed=5 rows=3 ms=2853.349
+QWEN_MTP_CYCLE cycle=4 requested_depth=7 drafted_tokens=7 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=631.958 target_verify_ms=2247.247 snapshot_ms=0.397 rollback_ms=54.761 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2934.449
+ds4-bench: decode cycle ctx=65536 completed=6 rows=1 ms=2934.471
+QWEN_MTP_CYCLE cycle=5 requested_depth=7 drafted_tokens=7 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=547.252 target_verify_ms=2263.139 snapshot_ms=0.424 rollback_ms=55.892 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2866.791
+ds4-bench: decode cycle ctx=65536 completed=7 rows=1 ms=2866.813
+QWEN_MTP_CYCLE cycle=6 requested_depth=7 drafted_tokens=7 accepted_tokens=1 rejected_at=2 committed_tokens=2 full_accept=0 target_seed_ms=0.000 draft_propose_ms=550.625 target_verify_ms=2133.148 snapshot_ms=0.339 rollback_ms=55.199 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2739.394
+ds4-bench: decode cycle ctx=65536 completed=9 rows=2 ms=2739.419
+QWEN_MTP_CYCLE cycle=7 requested_depth=7 drafted_tokens=7 accepted_tokens=2 rejected_at=3 committed_tokens=3 full_accept=0 target_seed_ms=0.000 draft_propose_ms=626.884 target_verify_ms=2209.845 snapshot_ms=0.387 rollback_ms=54.912 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2892.116
+ds4-bench: decode cycle ctx=65536 completed=12 rows=3 ms=2892.145
+QWEN_MTP_CYCLE cycle=8 requested_depth=7 drafted_tokens=7 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=549.127 target_verify_ms=2235.283 snapshot_ms=0.353 rollback_ms=55.314 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2840.182
+ds4-bench: decode cycle ctx=65536 completed=13 rows=1 ms=2840.216
+QWEN_MTP_CYCLE cycle=9 requested_depth=7 drafted_tokens=7 accepted_tokens=3 rejected_at=4 committed_tokens=4 full_accept=0 target_seed_ms=0.000 draft_propose_ms=541.793 target_verify_ms=2244.865 snapshot_ms=0.419 rollback_ms=55.051 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2842.213
+ds4-bench: decode cycle ctx=65536 completed=17 rows=4 ms=2842.239
+QWEN_MTP_CYCLE cycle=10 requested_depth=7 drafted_tokens=7 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=567.447 target_verify_ms=2231.082 snapshot_ms=0.453 rollback_ms=56.298 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2855.366
+ds4-bench: decode cycle ctx=65536 completed=18 rows=1 ms=2855.387
+QWEN_MTP_CYCLE cycle=11 requested_depth=7 drafted_tokens=7 accepted_tokens=1 rejected_at=2 committed_tokens=2 full_accept=0 target_seed_ms=0.000 draft_propose_ms=565.013 target_verify_ms=2316.733 snapshot_ms=0.530 rollback_ms=56.548 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2938.906
+ds4-bench: decode cycle ctx=65536 completed=20 rows=2 ms=2938.930
+QWEN_MTP_CYCLE cycle=12 requested_depth=7 drafted_tokens=7 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=565.653 target_verify_ms=2243.728 snapshot_ms=0.993 rollback_ms=56.779 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2867.236
+ds4-bench: decode cycle ctx=65536 completed=21 rows=1 ms=2867.257
+QWEN_MTP_CYCLE cycle=13 requested_depth=7 drafted_tokens=7 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=566.641 target_verify_ms=2197.160 snapshot_ms=0.342 rollback_ms=58.877 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2823.102
+ds4-bench: decode cycle ctx=65536 completed=22 rows=1 ms=2823.124
+QWEN_MTP_CYCLE cycle=14 requested_depth=7 drafted_tokens=7 accepted_tokens=2 rejected_at=3 committed_tokens=3 full_accept=0 target_seed_ms=0.000 draft_propose_ms=552.056 target_verify_ms=2453.844 snapshot_ms=0.397 rollback_ms=55.377 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=3061.759
+ds4-bench: decode cycle ctx=65536 completed=25 rows=3 ms=3061.780
+QWEN_MTP_CYCLE cycle=15 requested_depth=6 drafted_tokens=6 accepted_tokens=3 rejected_at=4 committed_tokens=4 full_accept=0 target_seed_ms=0.000 draft_propose_ms=549.045 target_verify_ms=2189.688 snapshot_ms=1.016 rollback_ms=56.932 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2796.766
+ds4-bench: decode cycle ctx=65536 completed=29 rows=4 ms=2796.799
+QWEN_MTP_CYCLE cycle=16 requested_depth=2 drafted_tokens=2 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=469.617 target_verify_ms=1693.036 snapshot_ms=0.383 rollback_ms=55.524 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2218.644
+ds4-bench: decode cycle ctx=65536 completed=30 rows=1 ms=2218.666
+QWEN_MTP_CYCLE cycle=17 requested_depth=1 drafted_tokens=1 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=464.829 target_verify_ms=1651.371 snapshot_ms=0.000 rollback_ms=55.571 replay_ms=0.000 sidecar_catchup_ms=0.000 commit_ms=0.000 total_ms=2171.858
+ds4-bench: decode cycle ctx=65536 completed=31 rows=1 ms=2171.890
+ds4-bench: decode cycle ctx=65536 completed=32 rows=1 ms=1507.538
+ds4: Qwen DSpark draft KV H2D=21.255 GiB tile=32.000 MiB
+ds4: dense KV capacity frontier=65568 peak_host=8.508 GiB peak_resident=4.109 GiB peak_stage=0.625 GiB growths=256 spills=800 H2D=142.515 GiB D2H=8.015 GiB

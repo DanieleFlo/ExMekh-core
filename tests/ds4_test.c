@@ -132,10 +132,15 @@ static ds4_engine *test_open_engine(bool quality) {
         .prefill_chunk = test_env_u32("DS4_TEST_MTP_PREFILL_CHUNK"),
         .mtp_path = (mtp && mtp[0] && !quality) ? mtp : NULL,
         .mtp_draft_tokens = (mtp && mtp[0] && !quality) ? 2 : 0,
-        .glm_mtp = test_env_bool("DS4_TEST_GLM_MTP"),
-        .dspark_exact_sampling = test_env_bool("DS4_TEST_MTP_EXACT"),
+        .qwen4_mtp_auto = test_env_bool("DS4_TEST_QWEN4_MTP_AUTO"),
+        .glm_mtp = test_env_bool("DS4_TEST_GLM_MTP") && !test_env_bool("DS4_TEST_QWEN4_MTP_AUTO"),
+        .dspark_exact_sampling = test_env_bool("DS4_TEST_MTP_EXACT") && !test_env_bool("DS4_TEST_QWEN4_MTP_AUTO"),
     };
     TEST_ASSERT(ds4_engine_open(&engine, &opt) == 0);
+    if (engine && opt.qwen4_mtp_auto && ds4_engine_is_qwen4(engine) && opt.backend == DS4_BACKEND_CUDA) {
+        TEST_ASSERT(ds4_engine_mtp_draft_tokens(engine) > 1);
+        TEST_ASSERT(ds4_engine_mtp_exact_sampling(engine));
+    }
     return engine;
 }
 
@@ -7484,6 +7489,16 @@ static void test_constraint_trie_group(void) {
     TEST_ASSERT(ds4_test_constraint_trie_mask());
 }
 
+static void test_quant_storage_layout(void) {
+    /* One GGUF IQ4_NL block: FP16 scale and 16 bytes holding 32 nibbles. */
+    TEST_ASSERT(ds4_test_tensor_storage_bytes(20u, 32u) == sizeof(uint16_t) + 16u);
+    TEST_ASSERT(ds4_test_tensor_storage_bytes(20u, 64u) == 36u);
+    TEST_ASSERT(ds4_test_tensor_storage_bytes(20u, 5120ull * 12288u) == 35389440u);
+    TEST_ASSERT(ds4_test_tensor_storage_bytes(8u, 32u) == 34u);
+    TEST_ASSERT(ds4_test_tensor_storage_bytes(16u, 256u) == 66u);
+    TEST_ASSERT(ds4_test_tensor_storage_bytes(10u, 256u) == 84u);
+}
+
 typedef void (*test_fn)(void);
 
 typedef struct {
@@ -7515,6 +7530,7 @@ static const ds4_test_entry test_entries[] = {
     {"--dspark-verify-depth", "dspark-verify-depth", "DSpark speculative verify commits autoregressive-identical tokens at draft depth > 2", test_dspark_verify_depth},
 #endif
     {"--qwen35-layer-pattern", "qwen35-layer-pattern", "Qwen hybrid recurrent/full-attention layer pattern", test_qwen35_layer_pattern},
+    {"--quant-storage-layout", "quant-storage-layout", "GGUF quantization block bytes for bounded tensor copies", test_quant_storage_layout},
     {"--constraint-trie", "constraint-trie", "byte-level vocabulary trie mask matches exhaustive oracle", test_constraint_trie_group},
     {"--server", "server", "server parser/rendering/cache unit tests", test_server_unit_group},
 };

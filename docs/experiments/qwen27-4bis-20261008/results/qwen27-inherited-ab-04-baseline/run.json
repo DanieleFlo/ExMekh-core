@@ -1,0 +1,82 @@
+{
+  "command": [
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/baseline/ds4-bench",
+    "--cuda",
+    "-m",
+    "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--prompt-file",
+    "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+    "--ctx-start",
+    "256",
+    "--ctx-max",
+    "512",
+    "--ctx-alloc",
+    "2048",
+    "--step-incr",
+    "256",
+    "--gen-tokens",
+    "16",
+    "--teacher-forced-decode",
+    "--prefill-chunk",
+    "256",
+    "--repetitions",
+    "3",
+    "--csv",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-inherited-ab-04-baseline/speed.csv",
+    "--dump-frontier-logits-dir",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-inherited-ab-04-baseline/logits"
+  ],
+  "environment": {
+    "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+    "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "20"
+  },
+  "exit_code": 0,
+  "wall_seconds": 57.1680734140009,
+  "binary_sha256": "17a3b2d6e22a4aa449dbb1dd78a3e3ddd394a642d00cd5e4abd3db559e518849",
+  "model": {
+    "path": "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024
+  },
+  "samples": 1,
+  "warmup": 2,
+  "frontiers": {
+    "256": {
+      "prefill": {
+        "samples": [
+          32.95
+        ],
+        "median": 32.95,
+        "mean": 32.95,
+        "cv": null
+      },
+      "decode": {
+        "samples": [
+          31.81
+        ],
+        "median": 31.81,
+        "mean": 31.81,
+        "cv": null
+      },
+      "first_prefill_tps": 33.41
+    },
+    "512": {
+      "prefill": {
+        "samples": [
+          429.64
+        ],
+        "median": 429.64,
+        "mean": 429.64,
+        "cv": null
+      },
+      "decode": {
+        "samples": [
+          31.31
+        ],
+        "median": 31.31,
+        "mean": 31.31,
+        "cv": null
+      },
+      "first_prefill_tps": 357.06
+    }
+  }
+}

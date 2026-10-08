@@ -11,7 +11,7 @@ from build_research_indexes import outline
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
-GROUPS = ("architecture", "agentic", "performance", "roadmaps", "hardware", "upstream")
+GROUPS = ("architecture", "agentic", "performance", "roadmaps", "hardware", "upstream", "experiments")
 DESCRIPTIONS = {
     "upstream": "Guide DS4 originali su modelli, vision, server e backend importati.",
     "architecture": "Architettura dei modelli, MTP e contratti di compatibilità.",
@@ -19,6 +19,7 @@ DESCRIPTIONS = {
     "performance": "Contratti, misure, drift numerico e progressione delle ottimizzazioni.",
     "roadmaps": "Piani operativi e TODO per decoding, server e kernel engineering.",
     "hardware": "Inventario RTX 3090, caratteristiche Ampere e numerica CUDA.",
+    "experiments": "Esperimenti ritirati: sorgenti inattivi, risultati e ragioni delle scelte.",
 }
 
 
@@ -26,7 +27,7 @@ def group_index(relative: str) -> dict[str, object]:
     directory = DOCS / relative
     files = sorted(
         path
-        for path in directory.glob("*.md")
+        for path in (directory.rglob("*.md") if relative == "experiments" else directory.glob("*.md"))
         if path.name not in {"_INDEX.md", "INDEX.md"}
     )
     lines = [f"# Indice: {relative}", "", "Indice generato; non modificare a mano.", ""]
@@ -44,7 +45,7 @@ def group_index(relative: str) -> dict[str, object]:
                 ),
                 str(rows[0]["summary"]),
             )
-        lines.extend([f"## [{title}]({path.name})", "", str(summary), ""])
+        lines.extend([f"## [{title}]({path.relative_to(directory).as_posix()})", "", str(summary), ""])
         for row in rows[1:]:
             indent = "  " * max(0, int(row["level"]) - 2)
             lines.append(

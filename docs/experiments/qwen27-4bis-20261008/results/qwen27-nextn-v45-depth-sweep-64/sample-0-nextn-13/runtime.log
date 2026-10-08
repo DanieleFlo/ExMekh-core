@@ -1,0 +1,46 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: /home/daniele/ds4/gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=13)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging, direct I/O)
+ds4: CUDA model copy complete in 5.122s (pipelined, 14.30 GiB tensors)
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA startup model preparation covered 14.15 GiB of tensor spans in 0.000s
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.454s
+ds4: cuda backend initialized for graph diagnostics
+ds4: Qwen verifier host snapshots=1.923 GiB
+ds4: memory: KV 8.51 GiB (raw 8.51 + compressed 0.00) + buffers 0.73 GiB + resident model 15.56 GiB = 24.79 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=65600 prefill_cap=1024 raw_kv_rows=65600 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 8716.85 MiB (ctx=65600, backend=cuda, prefill_chunk=1024, raw_kv_rows=65600, compressed_kv_rows=0)
+ds4-bench: context buffers 8716.85 MiB (ctx=65600, backend=cuda, prefill_chunk=1024, raw_kv_rows=65600, compressed_kv_rows=0)
+ds4-bench: speculative decoding enabled with draft width 13; frontier restoration uses session snapshots
+ds4-bench: prefill progress current=1024 total=65536 elapsed=2.448s
+ds4-bench: prefill progress current=2048 total=65536 elapsed=3.999s
+ds4-bench: prefill progress current=3072 total=65536 elapsed=5.592s
+ds4-bench: prefill progress current=4096 total=65536 elapsed=7.253s
+ds4-bench: prefill progress current=5120 total=65536 elapsed=8.949s
+ds4-bench: prefill progress current=6144 total=65536 elapsed=10.696s
+ds4-bench: prefill progress current=7168 total=65536 elapsed=12.449s
+ds4-bench: prefill progress current=8192 total=65536 elapsed=14.266s
+ds4-bench: prefill progress current=9216 total=65536 elapsed=16.145s
+ds4-bench: prefill progress current=10240 total=65536 elapsed=17.956s
+ds4-bench: prefill progress current=11264 total=65536 elapsed=19.784s
+ds4-bench: prefill progress current=12288 total=65536 elapsed=21.707s
+ds4-bench: prefill progress current=13312 total=65536 elapsed=23.732s
+ds4-bench: prefill progress current=14336 total=65536 elapsed=25.700s
+ds4-bench: prefill progress current=15360 total=65536 elapsed=27.747s
+ds4-bench: prefill progress current=16384 total=65536 elapsed=29.787s
+ds4-bench: prefill progress current=17408 total=65536 elapsed=31.891s
+ds4-bench: prefill progress current=18432 total=65536 elapsed=34.220s
+ds4-bench: prefill progress current=19456 total=65536 elapsed=36.309s
+ds4-bench: prefill progress current=20480 total=65536 elapsed=38.437s
+ds4-bench: prefill progress current=21504 total=65536 elapsed=40.665s
+ds4-bench: prefill progress current=22528 total=65536 elapsed=42.857s
+ds4-bench: prefill progress current=23552 total=65536 elapsed=45.058s
+ds4-bench: prefill progress current=24576 total=65536 elapsed=47.345s
+ds4-bench: prefill progress current=25600 total=65536 elapsed=49.666s
+ds4-bench: prefill progress current=26624 total=65536 elapsed=51.939s
+ds4-bench: prefill progress current=27648 total=65536 elapsed=54.206s
+ds4-bench: prefill progress current=28672 total=65536 elapsed=56.497s
+ds4-bench: prefill progress current=29696 total=65536 elapsed=58.949s

@@ -9,6 +9,8 @@
 typedef struct {
     uint64_t offset, capacity, frequency, last_used, pinned_epoch;
     char *device_ptr;
+    /* Engine-owned draft weights may stay resident across routing epochs. */
+    unsigned permanent;
 } ds4_qwen4_expert_slot;
 
 static inline uint64_t ds4_qwen4_expert_frequency_add(uint64_t old, uint64_t uses) {
@@ -99,7 +101,7 @@ static inline size_t ds4_qwen4_expert_victim(const ds4_qwen4_expert_slot *slots,
     size_t victim = SIZE_MAX;
     for (size_t i = 0; i < count; i++) {
         const ds4_qwen4_expert_slot *s = slots + i;
-        if (s->capacity < bytes || s->pinned_epoch == epoch) continue;
+        if (s->capacity < bytes || s->pinned_epoch == epoch || s->permanent) continue;
         if (victim == SIZE_MAX || ds4_qwen4_expert_rank_before(slots, i, victim)) {
             victim = i;
         }

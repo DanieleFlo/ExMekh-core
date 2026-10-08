@@ -1,0 +1,53 @@
+{
+  "status": "FAILED",
+  "command": [
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/candidate-v58/ds4-bench",
+    "--cuda",
+    "-m",
+    "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--prompt-file",
+    "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+    "--ctx-start",
+    "256",
+    "--ctx-max",
+    "256",
+    "--ctx-alloc",
+    "2048",
+    "--step-incr",
+    "1",
+    "--gen-tokens",
+    "32",
+    "--prefill-chunk",
+    "256",
+    "--repetitions",
+    "2",
+    "--csv",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/weights-v58-short-mtp/sample-0-candidate/speed.csv",
+    "--dump-frontier-logits-dir",
+    "/home/daniele/ds4/performance-results/flash-strata-20261006/weights-v58-short-mtp/sample-0-candidate/logits",
+    "--mtp",
+    "--mtp-draft",
+    "5"
+  ],
+  "environment": {
+    "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+    "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "20",
+    "DS4_QWEN_EXTENDED_DRAFT": "off",
+    "DS4_BENCH_DECODE_TIMES": "1",
+    "DS4_BENCH_PROGRESS": "1",
+    "DS4_QWEN_PREFILL_PHASES": "1",
+    "DS4_CUDA_QWEN_WEIGHT_STREAMING": "1",
+    "DS4_CUDA_QWEN_WEIGHT_RESIDENT_MB": "10240",
+    "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+    "DS4_CUDA_QWEN_KV_RESIDENT": "64"
+  },
+  "exit_code": 1,
+  "wall_seconds": 10.783730894999735,
+  "binary_sha256": "d16903530eafb5d6e4a8efb8f8a9ca61985a62d07d0add2081eff697fb7924f3",
+  "model": {
+    "path": "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024
+  },
+  "samples": 1,
+  "warmup": 1
+}

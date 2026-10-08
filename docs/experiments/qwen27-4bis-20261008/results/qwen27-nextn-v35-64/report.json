@@ -1,0 +1,114 @@
+{
+  "records": [
+    {
+      "sample": 0,
+      "nextn_proposals": 0,
+      "status": "COMPLETE",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/candidate-v35/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v35-64/sample-0-nextn-0/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v35-64/sample-0-nextn-0/logits"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1"
+      },
+      "binary_sha256": "023f1c4c6520c456f7e68ae3164033c2d53e0c7c4bd33bd26adfda316b532a91",
+      "exit_code": 0,
+      "wall_seconds": 223.84363935599958,
+      "frontiers": {
+        "65536": {
+          "prefill": {
+            "samples": [
+              392.16
+            ],
+            "median": 392.16,
+            "mean": 392.16,
+            "cv": null
+          },
+          "decode": {
+            "samples": [
+              0.67
+            ],
+            "median": 0.67,
+            "mean": 0.67,
+            "cv": null
+          },
+          "first_prefill_tps": 392.16
+        }
+      },
+      "output": "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v35-64/sample-0-nextn-0"
+    },
+    {
+      "sample": 0,
+      "nextn_proposals": 7,
+      "status": "FAILED",
+      "command": [
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/candidate-v35/ds4-bench",
+        "--cuda",
+        "-m",
+        "/home/daniele/ds4/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--prompt-file",
+        "/home/daniele/ds4/speed-bench/promessi_sposi.txt",
+        "--ctx-start",
+        "65536",
+        "--ctx-max",
+        "65536",
+        "--ctx-alloc",
+        "65600",
+        "--step-incr",
+        "1",
+        "--gen-tokens",
+        "32",
+        "--prefill-chunk",
+        "1024",
+        "--repetitions",
+        "1",
+        "--csv",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v35-64/sample-0-nextn-7/speed.csv",
+        "--dump-frontier-logits-dir",
+        "/home/daniele/ds4/performance-results/flash-strata-20261006/qwen27-nextn-v35-64/sample-0-nextn-7/logits",
+        "--mtp",
+        "--mtp-model",
+        "/home/daniele/ds4/gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+        "--mtp-draft",
+        "7"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN_KV_CAPACITY_MODE": "hybrid-attention",
+        "DS4_CUDA_QWEN_KV_RESIDENT": "32768",
+        "DS4_BENCH_PROGRESS": "1",
+        "DS4_BENCH_DECODE_TIMES": "1",
+        "DS4_BENCH_SPEC_TRACE": "1"
+      },
+      "binary_sha256": "023f1c4c6520c456f7e68ae3164033c2d53e0c7c4bd33bd26adfda316b532a91",
+      "exit_code": 1,
+      "wall_seconds": 0.1642981659997531
+    }
+  ],
+  "pairs": []
+}

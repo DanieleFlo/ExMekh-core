@@ -1,0 +1,15 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: Qwen35 NextN MTP support model loaded: gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=5)
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: dense weight plan resident=9.936 GiB host=4.217 GiB ring=0.469 GiB offloaded_layers=22/64; KV and recurrent state stay in VRAM
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA loading model tensors into device cache
+ds4: CUDA startup model preparation covered 1.27 GiB of tensor spans in 0.549s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 0.27 GiB (raw 0.27 + compressed 0.00) + buffers 1.14 GiB + resident model 11.67 GiB = 13.07 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=2048 prefill_cap=256 raw_kv_rows=2048 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 499.56 MiB (ctx=2048, backend=cuda, prefill_chunk=256, raw_kv_rows=2048, compressed_kv_rows=0)
+ds4-bench: context buffers 499.56 MiB (ctx=2048, backend=cuda, prefill_chunk=256, raw_kv_rows=2048, compressed_kv_rows=0)
+ds4-bench: speculative decoding enabled with draft width 5; frontier restoration uses session snapshots
+ds4-bench: prefill to 256 failed: cuda Qwen prefill failed at chunk 0:256
+ds4: dense weight streaming forwards=1 H2D=0.547 GiB transfers=3 pending_waits=1 submit_wait=24.868ms resident=9.936 GiB host=4.217 GiB ring=0.469 GiB pinned=0.125 GiB

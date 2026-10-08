@@ -12,6 +12,76 @@ Una modifica è utile soltanto se migliora il workload dichiarato di DS4 senza
 - righe 56–66: **Correttezza** — Il harness non sostituisce gli scorer Qwen già presenti in
 - righe 67–74: **Misurazione hardware** — I tempi finali vengono dal percorso sincronizzato di ds4-bench.
 
+## [Qwen Flash: prefill reale dall'agente e dal launcher, 8 ottobre 2026](qwen-flash-agent-launcher-20261008.md)
+
+L'harness bench_qwen_flash_agent.py
+
+- righe 28–52: **Riproduzione e isolamento** — L'harness bench_qwen_flash_agent.py
+- righe 53–88: **Diagnosi iniziale** — Screen `agent-launcher-v71-screen-r2`: un campione per configurazione, con sampling
+- righe 89–107: **Isolamento del chunk e generazioni reali** — `agent-launcher-v71-isolate` usa sampling greedy, stesso prompt e quattro turni
+- righe 108–141: **Launcher originale contro bundle 2048** — `agent-launcher-v71-balanced` ripete la configurazione originale con sampling
+- righe 142–150: **Stato della qualifica** — Le prove descrivono l'avvio reale e identificano la differenza rispetto al
+- righe 151–212: **Correzione numerica e profilo standard v74** — Il primo gate v72 a capacità 131072 e prompt da 4758 token trova KL massimo
+- righe 213–249: **Promozione finale e uso** — Verdetto **KEEP / profilo standard promosso** per il launcher Flash CUDA sul
+
+## [Qwen Flash: nuova verifica del prefill Strata, 8 ottobre 2026](qwen-flash-prefill-strata-20261008.md)
+
+La testa `main` verificata durante questa sessione è
+
+- righe 21–35: **Fonte ricontrollata** — La testa `main` verificata durante questa sessione è
+- righe 36–63: **Liste compatte, v64** — L'ibrido può riservare `esperti × token` interi anziché `esperti × token × slot`.
+- righe 64–158: **Anticipare le copie rispetto al router** — Strata, dai chunk di 1024 righe, trasferisce tutti gli esperti non residenti
+  - righe 105–143: **Confronto ripetuto degli hint v66** — Cinque coppie alternate a 4096 token effettivi, capacità 8192, chunk 4096,
+  - righe 144–158: **Soglia prestazionale dell'1%** — Su richiesta dell'utente, il tuner usa `--min-gain 0.01` come default,
+- righe 159–210: **Contesto effettivo 64K: pipeline completa v67** — Due confronti diagnostici separano l'anticipo dal percorso decode qualificato.
+  - righe 189–210: **Contesto effettivo 128K** — Stesso confronto integrato, 131072 token effettivi, capacità 131104,
+- righe 211–432: **Richiesta DSpark v2 predefinito per Flash** — Verifica del catalogo pubblico del 2026-10-08: 389 modelli trovati dalla
+  - righe 256–287: **v68: NextN predefinito per Flash CUDA** — CLI e server attivano NextN embedded dopo la validazione del target Flash
+  - righe 288–322: **Confronto per fase e costo del NextN v68** — Cinque coppie CLI alternate per dominio, dopo una coppia di warm-up,
+  - righe 323–373: **v69: residenza degli esperti NextN entro la quota esistente** — L'ispezione di `src/core/mtp.cpp` al commit Strata
+  - righe 374–403: **v70: decisione corrente per prefill e decode** — La richiesta finale è «usa NextN se funziona meglio», separando prefill
+  - righe 404–432: **v71: fase esplicita, compresi i prefill brevi** — Il numero di righe non identifica da solo il workload.
+- righe 433–464: **Altri punti Strata da verificare** — Strata prepara anche lo storico KV del NextN durante il prefill del target:
+
+## [Qwen Flash — pipeline ispirata a Strata, RTX 3090 / WSL](qwen-flash-strata-20261006.md)
+
+`codex/qwen-flash-strata-20261006`; la modifica preesistente a
+
+- righe 104–122: **Identità e condizioni** — `codex/qwen-flash-strata-20261006`; la modifica preesistente a
+- righe 123–154: **Correzioni della pipeline** — Lo scheduler esegue triplette complete: prima gli hit GPU, poi CPU e gruppi
+- righe 155–178: **A/B alternati: incremento v5** — Cinque coppie A/B e B/A, processi freschi, due warm-up per processo, un
+- righe 179–205: **A/B finale v10, scelta automatica** — Stesse condizioni e cinque coppie alternatamente A/B e B/A.
+- righe 206–241: **KV e profilo** — Primo attraversamento reale: 16384 token, 12288 celle residenti per layer,
+- righe 242–310: **Correttezza e stato di promozione** — Vision finale v12: pass tutti i 16 gate Flash/27B, target/MTP.
+- righe 311–329: **HTTP agentico a 128K allocati, 4395/4401 token effettivi** — Una richiesta per condizione, quindi diagnostico e non promozione A/B.
+- righe 330–353: **HTTP con MTP effettivo, cinque coppie A/B** — Fixture senza tool, reasoning `none`, 34/40 token input effettivi, 32 output,
+
+## [Seconda ispezione delle pipeline Strata](qwen-flash-strata-audit-20261006.md)
+
+Su richiesta dell'utente il prefill qualificato diventa il punto di partenza;
+
+- righe 3–165: **Decode: nuova ispezione del 6 ottobre** — Su richiesta dell'utente il prefill qualificato diventa il punto di partenza;
+  - righe 56–165: **Selezione QSA e pubblicazione del KV nel decode** — Riletto anche `src/kernels/cuda/qsa_select.cu` di Strata: il kernel
+- righe 166–200: **Diagnosi a 64K** — La v12 conserva logits bit-identici al percorso iniziale, ma scende da
+- righe 201–301: **Controlli della nuova policy** — La nuova ispezione ha inoltre rilevato un errore di integrazione: il riordino
+  - righe 255–301: **Diagnosi del decode dopo 64K** — L'ispezione aggiuntiva di `ExpertCache::admit` conferma che Strata conserva
+
+## [Riesame Strata: Flash prefill e 27B decode, 7 ottobre 2026](qwen-flash-strata-audit-20261007.md)
+
+Aggiornamento dell'8 ottobre: la nuova verifica del prefill
+
+- righe 9–40: **Fonte fissata** — Aggiornamento dell'8 ottobre: la nuova verifica del prefill
+- righe 41–57: **Stato rispetto al piano iniziale** — La v32 Flash misura a 64K 226,08 token/s di prefill e 16,64 di decode
+- righe 58–90: **Flash: ottimizzazioni estratte e omissioni concrete** — `prefill.cpp` avvia per chunk grandi uno stream in ordine fisso di tutti
+- righe 91–123: **27B: cosa si può riutilizzare dal decode Strata** — La verifica Strata conserva grafi di finestre, consuma residenti e miss in
+- righe 124–143: **Preparazione NextN per chunk: controllo v48** — Le primitive v47 confrontano KV e carry completi con il percorso seriale
+- righe 144–177: **Incremento successivo al riesame** — `ds4_qwen4_ring.cuh` aggiunge un ring sperimentale di esperti completi:
+- righe 178–233: **27B: arena di rollback dopo il prefill** — Le cinque righe di verifica conservate per i 48 layer ricorrenti occupano
+- righe 234–268: **Correzione della calibrazione MTP** — Il riesame ha trovato una lacuna nel tuner locale: una sola famiglia per
+- righe 269–283: **Profilo persistente sul candidato finale** — `profile-v53/report.json` registra `all_pass=true`: policy recente, LRU,
+- righe 284–323: **Gate vision e correzione del replay dopo rollback** — La qualificazione finale v53 conserva un fallimento: `vision-v53/report.json`,
+- righe 324–415: **Chiusura Flash breve e nuovo target 27B, 8 ottobre** — La v57 corregge due costi dell'integrazione: lo scope MTP comprende anche
+
 ## [Audit dell'inferenza Qwen: interventi e risultati](qwen-inference-audit-2026-09-09.md)
 
 Il piano è stato esaminato fino ai punti A–E.

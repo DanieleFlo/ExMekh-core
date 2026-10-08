@@ -6,6 +6,7 @@ from pathlib import Path
 
 from exmekh_lib.core.agents.node import DefaultCapabilities, Node, ToolHooks
 
+from exmekh_agent.config.paths import BUNDLED_CAPABILITIES_DIR
 from exmekh_agent.exmekh_bridge.agents.sub_agents import (
     ObservedNode,
     SubAgentEventRouter,
@@ -14,6 +15,49 @@ from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
 )
 from exmekh_agent.state.agent_design import AgentDesign
+
+
+def build_generic_agent(
+    capabilities_paths: list[Path],
+    router: SubAgentEventRouter,
+    approval_hooks: dict[str, ToolHooks],
+    *,
+    root_name: str,
+    coding_persistent_history: bool,
+    agent_context_id: str | None = None,
+) -> tuple[Node, list[ObservedNode]]:
+    """Build the bundled hierarchy through the same boundary as custom designs."""
+    defaults = DefaultCapabilities(mocks=True, tool_hooks=approval_hooks)
+    children: list[ObservedNode] = []
+    if defaults.capabilities_path.resolve() in {
+        path.resolve() for path in capabilities_paths
+    }:
+        children.append(
+            ObservedNode(
+                name_hds="mock-sub-agent",
+                path=f"{root_name}/mock-sub-agent",
+                event_router=router,
+                default_capabilities=defaults,
+            )
+        )
+    children.append(
+        ObservedNode(
+            capabilities_paths=[BUNDLED_CAPABILITIES_DIR],
+            default_capabilities=defaults,
+            name_hds="coding-agent",
+            path=f"{root_name}/coding-agent",
+            event_router=router,
+            persistent_history=coding_persistent_history,
+        )
+    )
+    root = Node(
+        capabilities_paths=capabilities_paths,
+        children=children,
+        name_hds=root_name,
+        agent_context_id=agent_context_id,
+        default_capabilities=defaults,
+    )
+    return root, children
 
 
 def build_designed_agent(

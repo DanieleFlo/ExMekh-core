@@ -444,7 +444,7 @@ def test_execute_agent_turn_sync_uses_distinct_agent_context_id(
 
     with (
         patch("exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider"),
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.Node") as node_class,
+        patch("exmekh_agent.exmekh_bridge.capabilities.agent_design.Node") as node_class,
         patch(
             "exmekh_agent.exmekh_bridge.agents.agent_runner.DeepAgent"
         ) as agent_class,
@@ -482,7 +482,7 @@ def test_deep_agent_adds_bundled_mock_sub_agent() -> None:
 
     with (
         patch("exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider"),
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.Node") as node_class,
+        patch("exmekh_agent.exmekh_bridge.capabilities.agent_design.Node") as node_class,
         patch(
             "exmekh_agent.exmekh_bridge.agents.agent_runner.DeepAgent"
         ) as agent_class,

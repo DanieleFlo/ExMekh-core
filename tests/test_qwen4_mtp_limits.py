@@ -29,7 +29,7 @@ def main():
         else:
             env.pop("DS4_QWEN4_NO_FUSE", None)
         outputs = []
-        for mode, extra in [("plain", []), ("mtp", ["--mtp"])]:
+        for mode, extra in [("plain", ["--no-mtp"]), ("mtp", ["--mtp"])]:
             result = subprocess.run(base + ["--prefill-chunk", str(chunk)] + extra,
                                     cwd=root, env=env, capture_output=True, timeout=180)
             (out / f"{name}-{mode}.stdout").write_bytes(result.stdout)

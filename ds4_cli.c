@@ -1,4 +1,5 @@
 #include "ds4.h"
+#include "ds4_env.h"
 #include "ds4_distributed.h"
 #include "ds4_gpu_args.h"
 #include "ds4_tp.h"
@@ -1925,6 +1926,7 @@ static cli_config parse_options(int argc, char **argv) {
             .backend = default_backend(),
             .mtp_draft_tokens = 1,
             .mtp_margin = 3.0f,
+            .qwen4_mtp_auto = ds4_env_flag_enabled("DS4_QWEN4_MTP_AUTO", 0),
         },
         .gen = {
             .prompt = NULL,
@@ -2016,6 +2018,13 @@ static cli_config parse_options(int argc, char **argv) {
             c.engine.model_path = need_arg(&i, argc, argv, arg);
         } else if (!strcmp(arg, "--vision")) {
             c.engine.vision_path = need_arg(&i, argc, argv, arg);
+        } else if (!strcmp(arg, "--no-mtp")) {
+            c.engine.qwen4_mtp_auto = false;
+            c.engine.mtp_auto = false;
+            c.engine.mtp_path = NULL;
+            c.engine.glm_mtp = false;
+            c.engine.glm_mtp_timing = false;
+            c.engine.dspark = false;
         } else if (!strcmp(arg, "--mtp")) {
             if (i + 1 < argc && argv[i + 1][0] != '-') {
                 c.engine.mtp_auto = false;

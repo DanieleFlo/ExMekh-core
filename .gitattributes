@@ -11,6 +11,7 @@ gguf-tools/quality-testing/data/qwen38-metadata/*.json text eol=lf
 
 # Source and build files stay readable and executable across Windows/WSL.
 # Model fixtures retain their existing byte-level rules above.
+.gitattributes text eol=lf
 *.c text eol=lf
 *.h text eol=lf
 *.cu text eol=lf
@@ -20,3 +21,7 @@ gguf-tools/quality-testing/data/qwen38-metadata/*.json text eol=lf
 *.ps1 text eol=lf
 Makefile text eol=lf
 *.mk text eol=lf
+
+# Archived measurements and recovery patches retain their original bytes.
+docs/experiments/qwen27-4bis-20261008/results/** -text whitespace=cr-at-eol
+docs/experiments/qwen27-4bis-20261008/shared-integration.patch -text -whitespace

@@ -1,0 +1,173 @@
+ds4: Linux cuda backend set oom_score_adj=1000
+ds4: CUDA backend initialized on NVIDIA GeForce RTX 3090 (sm_86) dev=0
+ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging, direct I/O)
+ds4: CUDA model copy complete in 5.073s (pipelined, 14.30 GiB tensors)
+ds4: CUDA preparing model tensor mappings
+ds4: CUDA startup model preparation covered 14.15 GiB of tensor spans in 0.000s
+ds4: cuda backend initialized for graph diagnostics
+ds4: memory: KV 16.01 GiB (raw 16.01 + compressed 0.00) + buffers 0.50 GiB + resident model 14.29 GiB = 30.81 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=131136 prefill_cap=1024 raw_kv_rows=131136 compressed_kv_rows=0 backend=cuda
+ds4-bench: context buffers 16908.85 MiB (ctx=131136, backend=cuda, prefill_chunk=1024, raw_kv_rows=131136, compressed_kv_rows=0)
+ds4-bench: context buffers 16908.85 MiB (ctx=131136, backend=cuda, prefill_chunk=1024, raw_kv_rows=131136, compressed_kv_rows=0)
+ds4-bench: prefill progress current=1024 total=131072 elapsed=2.851s
+ds4-bench: prefill progress current=2048 total=131072 elapsed=4.243s
+ds4-bench: prefill progress current=3072 total=131072 elapsed=5.680s
+ds4-bench: prefill progress current=4096 total=131072 elapsed=7.159s
+ds4-bench: prefill progress current=5120 total=131072 elapsed=8.701s
+ds4-bench: prefill progress current=6144 total=131072 elapsed=10.250s
+ds4-bench: prefill progress current=7168 total=131072 elapsed=11.828s
+ds4-bench: prefill progress current=8192 total=131072 elapsed=13.467s
+ds4-bench: prefill progress current=9216 total=131072 elapsed=15.227s
+ds4-bench: prefill progress current=10240 total=131072 elapsed=16.869s
+ds4-bench: prefill progress current=11264 total=131072 elapsed=18.523s
+ds4-bench: prefill progress current=12288 total=131072 elapsed=20.210s
+ds4-bench: prefill progress current=13312 total=131072 elapsed=22.051s
+ds4-bench: prefill progress current=14336 total=131072 elapsed=23.785s
+ds4-bench: prefill progress current=15360 total=131072 elapsed=25.568s
+ds4-bench: prefill progress current=16384 total=131072 elapsed=27.355s
+ds4-bench: prefill progress current=17408 total=131072 elapsed=29.318s
+ds4-bench: prefill progress current=18432 total=131072 elapsed=31.219s
+ds4-bench: prefill progress current=19456 total=131072 elapsed=33.161s
+ds4-bench: prefill progress current=20480 total=131072 elapsed=35.088s
+ds4-bench: prefill progress current=21504 total=131072 elapsed=37.154s
+ds4-bench: prefill progress current=22528 total=131072 elapsed=39.134s
+ds4-bench: prefill progress current=23552 total=131072 elapsed=41.134s
+ds4-bench: prefill progress current=24576 total=131072 elapsed=43.182s
+ds4-bench: prefill progress current=25600 total=131072 elapsed=45.337s
+ds4-bench: prefill progress current=26624 total=131072 elapsed=47.401s
+ds4-bench: prefill progress current=27648 total=131072 elapsed=49.582s
+ds4-bench: prefill progress current=28672 total=131072 elapsed=51.752s
+ds4-bench: prefill progress current=29696 total=131072 elapsed=54.055s
+ds4-bench: prefill progress current=30720 total=131072 elapsed=56.204s
+ds4-bench: prefill progress current=31744 total=131072 elapsed=58.571s
+ds4-bench: prefill progress current=32768 total=131072 elapsed=60.812s
+ds4-bench: prefill progress current=33792 total=131072 elapsed=63.174s
+ds4-bench: prefill progress current=34816 total=131072 elapsed=65.605s
+ds4-bench: prefill progress current=35840 total=131072 elapsed=68.088s
+ds4-bench: prefill progress current=36864 total=131072 elapsed=70.597s
+ds4-bench: prefill progress current=37888 total=131072 elapsed=73.139s
+ds4-bench: prefill progress current=38912 total=131072 elapsed=75.724s
+ds4-bench: prefill progress current=39936 total=131072 elapsed=78.397s
+ds4-bench: prefill progress current=40960 total=131072 elapsed=81.139s
+ds4-bench: prefill progress current=41984 total=131072 elapsed=83.909s
+ds4-bench: prefill progress current=43008 total=131072 elapsed=86.768s
+ds4-bench: prefill progress current=44032 total=131072 elapsed=89.720s
+ds4-bench: prefill progress current=45056 total=131072 elapsed=92.775s
+ds4-bench: prefill progress current=46080 total=131072 elapsed=95.954s
+ds4-bench: prefill progress current=47104 total=131072 elapsed=99.169s
+ds4-bench: prefill progress current=48128 total=131072 elapsed=102.449s
+ds4-bench: prefill progress current=49152 total=131072 elapsed=105.821s
+ds4-bench: prefill progress current=50176 total=131072 elapsed=109.184s
+ds4-bench: prefill progress current=51200 total=131072 elapsed=112.624s
+ds4-bench: prefill progress current=52224 total=131072 elapsed=116.124s
+ds4-bench: prefill progress current=53248 total=131072 elapsed=119.988s
+ds4-bench: prefill progress current=54272 total=131072 elapsed=123.583s
+ds4-bench: prefill progress current=55296 total=131072 elapsed=127.503s
+ds4-bench: prefill progress current=56320 total=131072 elapsed=131.399s
+ds4-bench: prefill progress current=57344 total=131072 elapsed=135.263s
+ds4-bench: prefill progress current=58368 total=131072 elapsed=139.174s
+ds4-bench: prefill progress current=59392 total=131072 elapsed=143.151s
+ds4-bench: prefill progress current=60416 total=131072 elapsed=147.252s
+ds4-bench: prefill progress current=61440 total=131072 elapsed=151.337s
+ds4-bench: prefill progress current=62464 total=131072 elapsed=155.474s
+ds4-bench: prefill progress current=63488 total=131072 elapsed=159.848s
+ds4-bench: prefill progress current=64512 total=131072 elapsed=164.186s
+ds4-bench: prefill progress current=65536 total=131072 elapsed=168.539s
+ds4-bench: prefill progress current=66560 total=131072 elapsed=173.005s
+ds4-bench: prefill progress current=67584 total=131072 elapsed=177.576s
+ds4-bench: prefill progress current=68608 total=131072 elapsed=182.074s
+ds4-bench: prefill progress current=69632 total=131072 elapsed=186.695s
+ds4-bench: prefill progress current=70656 total=131072 elapsed=191.394s
+ds4-bench: prefill progress current=71680 total=131072 elapsed=196.202s
+ds4-bench: prefill progress current=72704 total=131072 elapsed=201.008s
+ds4-bench: prefill progress current=73728 total=131072 elapsed=205.922s
+ds4-bench: prefill progress current=74752 total=131072 elapsed=210.811s
+ds4-bench: prefill progress current=75776 total=131072 elapsed=215.719s
+ds4-bench: prefill progress current=76800 total=131072 elapsed=220.721s
+ds4-bench: prefill progress current=77824 total=131072 elapsed=225.992s
+ds4-bench: prefill progress current=78848 total=131072 elapsed=231.173s
+ds4-bench: prefill progress current=79872 total=131072 elapsed=236.426s
+ds4-bench: prefill progress current=80896 total=131072 elapsed=241.849s
+ds4-bench: prefill progress current=81920 total=131072 elapsed=247.154s
+ds4-bench: prefill progress current=82944 total=131072 elapsed=252.517s
+ds4-bench: prefill progress current=83968 total=131072 elapsed=258.112s
+ds4-bench: prefill progress current=84992 total=131072 elapsed=263.714s
+ds4-bench: prefill progress current=86016 total=131072 elapsed=269.366s
+ds4-bench: prefill progress current=87040 total=131072 elapsed=274.988s
+ds4-bench: prefill progress current=88064 total=131072 elapsed=280.697s
+ds4-bench: prefill progress current=89088 total=131072 elapsed=286.543s
+ds4-bench: prefill progress current=90112 total=131072 elapsed=292.569s
+ds4-bench: prefill progress current=91136 total=131072 elapsed=298.737s
+ds4-bench: prefill progress current=92160 total=131072 elapsed=304.779s
+ds4-bench: prefill progress current=93184 total=131072 elapsed=310.813s
+ds4-bench: prefill progress current=94208 total=131072 elapsed=316.894s
+ds4-bench: prefill progress current=95232 total=131072 elapsed=323.232s
+ds4-bench: prefill progress current=96256 total=131072 elapsed=329.544s
+ds4-bench: prefill progress current=97280 total=131072 elapsed=335.856s
+ds4-bench: prefill progress current=98304 total=131072 elapsed=342.290s
+ds4-bench: prefill progress current=99328 total=131072 elapsed=348.719s
+ds4-bench: prefill progress current=100352 total=131072 elapsed=355.392s
+ds4-bench: prefill progress current=101376 total=131072 elapsed=362.248s
+ds4-bench: prefill progress current=102400 total=131072 elapsed=368.896s
+ds4-bench: prefill progress current=103424 total=131072 elapsed=375.547s
+ds4-bench: prefill progress current=104448 total=131072 elapsed=382.376s
+ds4-bench: prefill progress current=105472 total=131072 elapsed=389.391s
+ds4-bench: prefill progress current=106496 total=131072 elapsed=396.498s
+ds4-bench: prefill progress current=107520 total=131072 elapsed=403.487s
+ds4-bench: prefill progress current=108544 total=131072 elapsed=410.486s
+ds4-bench: prefill progress current=109568 total=131072 elapsed=417.833s
+ds4-bench: prefill progress current=110592 total=131072 elapsed=425.122s
+ds4-bench: prefill progress current=111616 total=131072 elapsed=432.353s
+ds4-bench: prefill progress current=112640 total=131072 elapsed=439.604s
+ds4-bench: prefill progress current=113664 total=131072 elapsed=446.907s
+ds4-bench: prefill progress current=114688 total=131072 elapsed=454.604s
+ds4-bench: prefill progress current=115712 total=131072 elapsed=462.114s
+ds4-bench: prefill progress current=116736 total=131072 elapsed=469.654s
+ds4-bench: prefill progress current=117760 total=131072 elapsed=477.344s
+ds4-bench: prefill progress current=118784 total=131072 elapsed=485.193s
+ds4-bench: prefill progress current=119808 total=131072 elapsed=492.990s
+ds4-bench: prefill progress current=120832 total=131072 elapsed=500.794s
+ds4-bench: prefill progress current=121856 total=131072 elapsed=508.652s
+ds4-bench: prefill progress current=122880 total=131072 elapsed=516.840s
+ds4-bench: prefill progress current=123904 total=131072 elapsed=524.931s
+ds4-bench: prefill progress current=124928 total=131072 elapsed=532.980s
+ds4-bench: prefill progress current=125952 total=131072 elapsed=541.223s
+ds4-bench: prefill progress current=126976 total=131072 elapsed=549.552s
+ds4-bench: prefill progress current=128000 total=131072 elapsed=557.939s
+ds4-bench: prefill progress current=129024 total=131072 elapsed=566.362s
+ds4-bench: prefill progress current=130048 total=131072 elapsed=574.733s
+ds4-bench: prefill progress current=131072 total=131072 elapsed=583.383s
+ds4-bench: untimed decode warm-up completed=16 restored_frontier=131072
+ds4-bench: decode cycle ctx=131072 completed=1 rows=1 ms=4307.594
+ds4-bench: decode cycle ctx=131072 completed=2 rows=1 ms=4309.699
+ds4-bench: decode cycle ctx=131072 completed=3 rows=1 ms=4234.025
+ds4-bench: decode cycle ctx=131072 completed=4 rows=1 ms=4248.766
+ds4-bench: decode cycle ctx=131072 completed=5 rows=1 ms=4310.202
+ds4-bench: decode cycle ctx=131072 completed=6 rows=1 ms=4382.199
+ds4-bench: decode cycle ctx=131072 completed=7 rows=1 ms=4331.537
+ds4-bench: decode cycle ctx=131072 completed=8 rows=1 ms=4289.336
+ds4-bench: decode cycle ctx=131072 completed=9 rows=1 ms=4254.231
+ds4-bench: decode cycle ctx=131072 completed=10 rows=1 ms=4263.925
+ds4-bench: decode cycle ctx=131072 completed=11 rows=1 ms=4257.142
+ds4-bench: decode cycle ctx=131072 completed=12 rows=1 ms=4233.404
+ds4-bench: decode cycle ctx=131072 completed=13 rows=1 ms=4365.679
+ds4-bench: decode cycle ctx=131072 completed=14 rows=1 ms=4358.134
+ds4-bench: decode cycle ctx=131072 completed=15 rows=1 ms=4300.949
+ds4-bench: decode cycle ctx=131072 completed=16 rows=1 ms=4392.810
+ds4-bench: decode cycle ctx=131072 completed=17 rows=1 ms=4254.137
+ds4-bench: decode cycle ctx=131072 completed=18 rows=1 ms=4252.987
+ds4-bench: decode cycle ctx=131072 completed=19 rows=1 ms=4249.920
+ds4-bench: decode cycle ctx=131072 completed=20 rows=1 ms=4270.795
+ds4-bench: decode cycle ctx=131072 completed=21 rows=1 ms=4387.637
+ds4-bench: decode cycle ctx=131072 completed=22 rows=1 ms=4329.879
+ds4-bench: decode cycle ctx=131072 completed=23 rows=1 ms=4292.715
+ds4-bench: decode cycle ctx=131072 completed=24 rows=1 ms=4256.147
+ds4-bench: decode cycle ctx=131072 completed=25 rows=1 ms=4263.427
+ds4-bench: decode cycle ctx=131072 completed=26 rows=1 ms=4249.787
+ds4-bench: decode cycle ctx=131072 completed=27 rows=1 ms=4234.346
+ds4-bench: decode cycle ctx=131072 completed=28 rows=1 ms=4376.964
+ds4-bench: decode cycle ctx=131072 completed=29 rows=1 ms=4404.078
+ds4-bench: decode cycle ctx=131072 completed=30 rows=1 ms=4351.084
+ds4-bench: decode cycle ctx=131072 completed=31 rows=1 ms=4268.191
+ds4-bench: decode cycle ctx=131072 completed=32 rows=1 ms=4264.419
+ds4: dense KV capacity frontier=131104 peak_host=16.008 GiB peak_resident=4.109 GiB peak_stage=1.125 GiB growths=256 spills=2304 H2D=1182.040 GiB D2H=16.006 GiB NextN_stage_reuses=0

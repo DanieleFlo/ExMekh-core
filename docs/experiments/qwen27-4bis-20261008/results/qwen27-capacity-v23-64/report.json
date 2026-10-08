@@ -1,0 +1,18 @@
+{
+  "status": "INTERRUPTED_FOR_SCHEDULING",
+  "reason": "Resident reference still in prefill after about 58 minutes; prioritize the explicit capacity-mode test. This is not an OOM, completed capacity test, or measured throughput result.",
+  "actual_frontier_requested": 65536,
+  "resident": 32768,
+  "chunk": 1024,
+  "teacher_forced_tokens": 8,
+  "last_observed_elapsed_seconds": 3462,
+  "last_observed_gpu_memory_mib": 24240,
+  "baseline_binary_sha256": "17a3b2d6e22a4aa449dbb1dd78a3e3ddd394a642d00cd5e4abd3db559e518849",
+  "retained_runtime_log": "context-65536-off/runtime.log",
+  "retained_csv": "context-65536-off/speed.csv",
+  "numerics": "NOT_COMPLETED",
+  "modes_not_run": [
+    "grow",
+    "hybrid-attention"
+  ]
+}
