@@ -439,7 +439,7 @@ Stati ammessi:
 - Misurato un raddoppio stabile del throughput, con hash identici, checkpoint
   residenti e zero divergenze full-vocabulary.
 - Resi Qwen3.8 e 22.593 token i default operativi di launcher, harness,
-  JSONSchemaBench e runner agentici; Qwen3.6 resta uno smoke di compatibilità.
+  JSONSchemaBench e runner agentici, allineati al catalogo supportato.
 
 ### 2026-08-28 — Matrice sampling, thinking e MTP
 

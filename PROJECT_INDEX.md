@@ -10,9 +10,9 @@ metadata e costruisce percorsi di inferenza dedicati. La semantica del modello e
 lo scheduling principale vivono in C; Objective-C è usato solo per il runtime
 Metal, mentre CUDA e HIP contengono le implementazioni GPU specifiche.
 
-Qwen3.6 non è più un target supportato: catalogo, loader e downloader accettano
-solo Qwen3.8 per la famiglia GGUF `qwen35`. Kernel e strumenti numerici condivisi
-restano disponibili; documenti e fixture Qwen3.6 conservano evidenze storiche.
+Catalogo, loader e downloader accettano solo Qwen3.8 per la famiglia GGUF
+`qwen35`. Kernel e strumenti numerici condivisi restano disponibili;
+documenti e fixture dei modelli ritirati conservano evidenze storiche.
 Gli identificativi della shape e delle cache Qwen3.8 restano invariati.
 
 ## Integrazione upstream del 1 ottobre 2026
@@ -238,6 +238,15 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   SSD/GPU e copertura della suite HTTP agentica.
 - `docs/roadmaps/constrained-json-decoding-plan.md` — checklist e criteri di completamento
   per simulatore DSML, JSON Schema, masking dei logits e output strutturati.
+- `docs/roadmaps/interactive-edit-file-server-plan.md` — piano server per tool call
+  interattive: extra agentico, campi prioritari e dipendenze fra ruoli, checkpoint
+  delle chiamate parziali, retry/replay, masking di old_text da inizio riga e
+  marcatori, vitalità dei candidati, cache dinamiche, sampling locale e gate MTP;
+  le attività client restano in `exmekh_lib/todo.md`.
+- `docs/agentic/interactive-calls.md` — contratto wire interattivo v1 implementato.
+  `docs/performance/interactive-edit-file-qualification-20261009.json` conserva
+  qualifica CUDA/Qwen27, confronto greedy target/MTP, batch, costi degli indici
+  e combinazioni non verificate.
 - `docs/roadmaps/todo-agentic-server-performance.md` — diario misurabile degli interventi
   su sampling vincolato DSML/JSON, telemetria server e piccoli suffissi, senza
   modifiche ai kernel CUDA.
@@ -307,6 +316,18 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   canonicalizzazione accetta la riscrittura dell'ultimo token BPE Qwen solo se
   il KV live conserva l'intero prompt byte per byte; le continuazioni agentiche
   riconoscono il tail tool anche dopo lo scope di sistema sintetico.
+- `ds4_interactive_config.h`, `ds4_interactive_grammar.h`,
+  `ds4_interactive_runtime.h` — protocollo Responses interattivo v1: registro
+  dei comportamenti, policy dei campi, `fields`/`first_fields`, pause con KV,
+  ripresa della stessa chiamata, ricevute idempotenti e interruzioni/replay.
+  Il runtime possiede lifecycle, restore dello stato generato, budget e wire;
+  il dispatcher usa queste operazioni senza gestire gli internals della continuazione.
+- `ds4_interactive_edit.h` — comportamento `edit_file.v1`: ruoli edit, marcatori,
+  validazione dello snapshot e policy di sampling. Configurazione e stato sono
+  opachi per il protocollo e liberati dai callback del comportamento.
+- `ds4_edit_constraint.h` — vincolo dinamico di selezione da inizio riga,
+  unicità globale, marcatori e indice suffix array/LCP dello snapshot.
+  Il contratto wire è in `docs/agentic/interactive-calls.md`.
 - `agent/` — sorgenti, test e configurazione del frontend NiceGUI ExMekh Agent;
   `agent/src/exmekh_agent/exmekh_bridge/` integra Client e DeepAgent, `agent/src/exmekh_agent/state/`
   persiste chat e progetti e `agent/src/exmekh_agent/ui/` gestisce l'interfaccia.
@@ -716,6 +737,12 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   atomico dei checkpoint mancanti, corrotti o troncati; i casi che verificano
   un nome preciso usano `tool_choice=required` con un unico nome consentito,
   separando il protocollo dalla propensione del modello a chiamare un tool.
+- `tests/test_server_interactive.c` — fixture host per vincoli testuali e
+  oracolo indipendente, sintassi native/DSML, gruppi prioritari, retry,
+  batch, rifiuto e scadenza delle continuazioni.
+- `tests/test_interactive_api.py` — integrazione HTTP opt-in con modello reale:
+  creazione, modifica multilinea, restore dopo riuso dello slot, SSE,
+  call ID, ricevute, rifiuto/replay e annullamento.
 - `tests/test_exmekh_client_live.py` — accettazione opt-in con `uv run exmekh-lib`: esegue
   il prompt originale due volte sullo stesso server riavviando solo il client;
   verifica tool, skill e ritorno alla profondità zero, poi interrompe solo il client ExMekh-Lib

@@ -17,7 +17,9 @@ static char *test_read_file(const char *path);
 
 static const char *test_model_path(void) {
     const char *model_path = getenv("DS4_TEST_MODEL");
-    return (model_path && model_path[0]) ? model_path : "ds4flash.gguf";
+    if (model_path && model_path[0]) return model_path;
+    const char *qwen = "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf";
+    return access(qwen, R_OK) == 0 ? qwen : "ds4flash.gguf";
 }
 
 static bool test_env_bool(const char *name) {

@@ -501,13 +501,18 @@ class AgenticResponsesApiTests(unittest.TestCase):
         wait_for_checkpoint_delta(before, 1)
         history = [user_item("Call skill-A exactly.")]
         history.extend(output_items(outer_response))
-        history.append(user_item("Recursively call skill-A exactly."))
+        history.append(user_item("Open one nested instance of the same skill: call skill-A exactly once. "
+                                 "Do not call child tools or return the outer instance yet."))
         inner_response = post_response(
             response_payload(
                 history,
                 allowed_tools=[],
                 allowed_skills=["skill-A"],
                 tool_choice="required",
+                # This fixture checks recursive checkpoint identity, not a
+                # reasoning cutoff. Qwen3.8 can exceed the common 160-token
+                # budget before its second skill invocation.
+                max_output_tokens=512,
             )
         )
         inner = require_single_call(inner_response, "skill-A")

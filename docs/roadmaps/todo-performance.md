@@ -1,4 +1,4 @@
-# PROTOCOLLO DEFINITIVO — CUDA Q8_1 / MMVQ, PARITY LLAMA.CPP E OTTIMIZZAZIONE QWEN3.6 27B
+# PROTOCOLLO DEFINITIVO — CUDA Q8_1 / MMVQ, PARITY LLAMA.CPP E OTTIMIZZAZIONE QWEN3.8 27B
 
 ## RUOLO
 
@@ -34,7 +34,7 @@ Non partire dall'assunzione che Q8_1 sia necessariamente l'unica causa.
 
 Modello:
 
-**Qwen3.6 27B Q4_K_S**
+**Qwen3.8 27B UD-Q4_K_S**
 
 Nota:
 

@@ -201,6 +201,36 @@ Migliorare il tempo end-to-end a contesti diversi tramite scheduling, senza
   - righe 368–395: **6. Chiusura tecnica e altre idee** — Il callback post-submission e il readback realmente segmentato sono le due
   - righe 396–424: **6. Validazione finale completata (2026-09-18)** — Sorgenti di inferenza finali identici alla baseline iniziale.
 
+## [Piano server: tool call interattive e masking di edit-file](interactive-edit-file-server-plan.md)
+
+DS4 deve generare prima i campi dichiarati nella configurazione, sospendere la tool call quando sono tutti completi, ricevere dati di controllo dal runtime e completare la stessa chiamata con vincoli dinamici sugli argom…
+
+- righe 5–12: **1. Obiettivo e confini** — DS4 deve generare prima i campi dichiarati nella configurazione, sospendere la tool call quando sono tutti completi, ricevere dati di controllo dal runtime e completare la stessa chiamata con vincoli dinamici sugli argom…
+- righe 13–26: **2. Invarianti del comportamento** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 27–42: **3. Componenti da riutilizzare e responsabilità** — L'orchestrazione attuale vive soprattutto in ds4_server.c; filtri, analisi del vocabolario e snapshot della sessione sono esposti da ds4.h.
+- righe 43–150: **4. Contratto wire da congelare nella prima fase** — Il server implementa il contratto v1.
+  - righe 47–98: **4.1 Riutilizzo di extra_body.agentic, configurazione e negoziazione** — La struttura attuale è già adatta: `AgenticScope.build_extra()` costruisce `{"agentic": {...}}` con `agent_context_id`, `allowed_tools`, `allowed_skills` ed eventualmente `operation=return` e `skill_call_id`.
+  - righe 99–108: **4.1.1 Campi prioritari e sospensione generale** — Generare i campi di `first_fields` nell'ordine dichiarato.
+  - righe 109–140: **4.2 Sospensione e risposta del runtime** — {
+  - righe 141–150: **4.3 Completamento, contabilità e replay** — Al completamento produrre una normale function call con argomenti JSON completi e la call ID originaria.
+- righe 151–170: **5. Sospensione e vita della continuazione** — generating → awaiting_input → generating → completed
+- righe 171–178: **6. Confine esatto del gruppo prioritario** — Estendere il tracker della sintassi realmente generata da ciascun modello e la conversione in argomenti JSON.
+- righe 179–215: **7. Tipo dinamico di old_text** — Comporre tre rami nella grammatica dell'argomento: selezione letterale da inizio riga, all e line[N].
+  - righe 183–197: **7.1 Maschera del prossimo passo** — 1.
+  - righe 198–203: **7.2 Composizione con i percorsi ottimizzati esistenti** — Il vincolo dinamico deve intersecare ogni percorso di accettazione: maschere statiche, fast path delle stringhe libere, token dichiarati unconditional, sequenze forzate e verifier.
+  - righe 204–215: **7.3 Marcatori e new_text** — I marcatori devono occupare l'intero campo, senza spazi, ripetizioni o aggiunte.
+- righe 216–227: **8. Temperatura zero e MTP locale** — Per old usare temperatura effettiva 0 dopo il masking, selezionando il migliore token ammesso.
+- righe 228–273: **9. Ordine di realizzazione e criteri di completamento** — Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto.
+  - righe 230–237: **Fase 1 — Congelare il contratto** — Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto.
+  - righe 238–247: **Fase 2 — Protocollo e storage senza masking testuale** — Completamento: un runtime simulato può sospendere/riprendere/rifiutare senza argomenti anticipati né snapshot file nel prompt; il rifiuto lascia una history canonica riproducibile.
+  - righe 248–256: **Fase 3 — Vincoli dinamici e marcatori** — Completamento: nessun token accettato viola inizio riga, compatibilità letterale o regole di chiusura; il modello può continuare dopo l'unicità.
+  - righe 257–264: **Fase 4 — MTP e flussi multipli** — Completamento: parità greedy con MTP spento e corrispondenza esatta di stream, chiamate ed esiti.
+  - righe 265–273: **Fase 5 — Qualifica e documentazione finale** — L'integrazione con la libreria richiede il lavoro client del TODO e resta una verifica successiva; non fa parte di questa consegna server.
+- righe 274–290: **10. Matrice di verifica** — Usare come riferimento un filtro semplice della maschera corrente e confrontarlo con il percorso ottimizzato sul vocabolario intero; non scrivere test che si limitino a replicare l'implementazione.
+- righe 291–294: **11. Definizione di completamento** — Il lavoro server è completo quando tutte le fasi sono verificate per la matrice dichiarata, la libreria può usare il contratto senza fallback silenziosi e una chiamata può essere sospesa, rifiutata o completata con ident…
+- righe 295–328: **12. Qualifica locale del 9 ottobre 2026** — Implementazione disponibile in `ds4_server.c`, `ds4_interactive_config.h`, `ds4_interactive_grammar.h`, `ds4_interactive_runtime.h`, `ds4_interactive_edit.h` e `ds4_edit_constraint.h`.
+- righe 329–347: **13. Revisione delle responsabilità** — Il protocollo ora conserva configurazione e stato opachi del comportamento.
+
 ## [Piano di azione: Flash Next veloce, Qwen27 protetto](qwen-flash-performance-action-plan-20261004.md)
 
 L'audit indica che la gerarchia VRAM/RAM/SSD è una base valida, ma il percorso Flash CUDA non sfrutta ancora bene la sovrapposizione fra I/O, trasferimenti e calcolo.
@@ -276,7 +306,7 @@ Questo diario separa il lavoro sulle prestazioni del server agentico dal lavoro
   - righe 444–466: **2026-08-28 — Matrice sampling, thinking e MTP** — temperatura zero e non coprivano il prodotto cartesiano richiesto.
 - righe 467–474: **Prossima azione** — Il ciclo corrente è chiuso.
 
-## [TODO — GPU Kernel Engineering Harness per DS4 / Qwen 3.6 27B](todo-harness.md)
+## [TODO — GPU Kernel Engineering Harness per DS4 / Qwen 3.8 27B](todo-harness.md)
 
 I checkbox completati sotto indicano funzionalità presenti e testate; i
 
@@ -407,7 +437,7 @@ I checkbox completati sotto indicano funzionalità presenti e testate; i
 - righe 1837–1891: **[ ] 42. Definition of Done dell'intero progetto** — Il progetto è completo soltanto quando **tutte** le condizioni seguenti sono vere:
 - righe 1871–1891: **Condizione finale di successo** — Un agente che non possiede preventivamente una conoscenza profonda
 
-## [PROTOCOLLO DEFINITIVO — CUDA Q8_1 / MMVQ, PARITY LLAMA.CPP E OTTIMIZZAZIONE QWEN3.6 27B](todo-performance.md)
+## [PROTOCOLLO DEFINITIVO — CUDA Q8_1 / MMVQ, PARITY LLAMA.CPP E OTTIMIZZAZIONE QWEN3.8 27B](todo-performance.md)
 
 Agisci come un senior CUDA/LLM inference engineer con competenza specifica in:
 

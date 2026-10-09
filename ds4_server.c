@@ -2140,6 +2140,104 @@ static bool responses_live_has_call_id(server *s, const char *id);
 static bool anthropic_live_has_call_id(server *s, const char *id);
 static stop_list live_tool_call_order(server *s, api_style api, const stop_list *ids);
 
+#define INTERACTIVE_MAX_TOOLS 16
+#define INTERACTIVE_MAX_FIELDS 64
+#define INTERACTIVE_MAX_SNAPSHOT (1024 * 1024)
+#define INTERACTIVE_MAX_TEXT (1024 * 1024)
+#define INTERACTIVE_MAX_VALUES (16 * 1024)
+#define INTERACTIVE_MAX_RECORDS 64
+#define INTERACTIVE_MAX_ACTIVE 8
+#define INTERACTIVE_SNAPSHOT_BUDGET (8 * 1024 * 1024)
+#define INTERACTIVE_CHECKPOINT_BUDGET (UINT64_C(8) * 1024 * 1024 * 1024)
+#define INTERACTIVE_TTL 300
+#define INTERACTIVE_RECEIPT_TTL 600
+
+typedef struct interactive_entry interactive_entry;
+typedef struct interactive_receipt interactive_receipt;
+typedef struct interactive_behavior interactive_behavior;
+typedef struct interactive_tool interactive_tool;
+
+typedef enum {
+    INTERACTIVE_FIELD_AFTER_INPUT = 1 << 0,
+    INTERACTIVE_FIELD_CONSTRAINED = 1 << 1,
+    INTERACTIVE_FIELD_GREEDY = 1 << 2,
+    INTERACTIVE_FIELD_CLOSE_BOUNDARY = 1 << 3,
+    INTERACTIVE_FIELD_OPEN_BOUNDARY = 1 << 4
+} interactive_field_flag;
+
+typedef struct {
+    uint64_t requires;
+    unsigned flags;
+} interactive_field;
+
+/* The protocol owns call lifetimes; each behavior owns its configuration and
+ * control data. Grammar and scheduling only consume compiled field policies. */
+struct interactive_behavior {
+    const char *name;
+    const char *request_kind;
+    bool (*configure)(interactive_tool *, const schema_json_value *, const tool_schema_order *);
+    bool (*string_prefix)(const interactive_tool *, const void *, int,
+                          const schema_json_value *, const char *, size_t, bool);
+    bool (*sampling_body)(const interactive_tool *, const void *, int, const char *, size_t);
+    size_t (*reply_bytes)(const schema_json_value *);
+    bool (*prepare_reply)(void **, const schema_json_value *, const char *);
+    void (*free_state)(void *);
+    void (*free_config)(void *);
+};
+
+struct interactive_tool {
+    char *name;
+    const interactive_behavior *behavior;
+    int first[INTERACTIVE_MAX_FIELDS];
+    int first_count;
+    uint64_t first_mask;
+    uint64_t first_required_mask;
+    interactive_field field[INTERACTIVE_MAX_FIELDS];
+    void *behavior_config;
+};
+
+typedef struct interactive_call interactive_call;
+struct interactive_call {
+    size_t body_start;
+    size_t header_start;
+    const char *param_end, *wrapper_end;
+    int tool_index;
+    char call_id[40];
+    char exchange_id[40];
+    const interactive_tool *tool;
+    char *values;
+    bool authorized;
+    void *behavior_state;
+    interactive_call *next;
+};
+
+typedef struct {
+    schema_json_value *wire;
+    interactive_tool tools[INTERACTIVE_MAX_TOOLS];
+    int count;
+    interactive_call *calls;
+    interactive_entry *entry;
+    interactive_receipt *receipt; /* The operation owning this request, including after cancel. */
+    bool resumed;
+} interactive_request;
+
+static void interactive_request_free(interactive_request *ir) {
+    schema_json_free(ir->wire);
+    while (ir->calls) {
+        interactive_call *call = ir->calls;
+        ir->calls = call->next;
+        free(call->values);
+        call->tool->behavior->free_state(call->behavior_state);
+        free(call);
+    }
+    for (int i = 0; i < ir->count; i++) {
+        interactive_tool *tool = &ir->tools[i];
+        free(tool->name);
+        if (tool->behavior) tool->behavior->free_config(tool->behavior_config);
+    }
+    memset(ir, 0, sizeof(*ir));
+}
+
 typedef struct {
     req_kind kind;
     api_style api;
@@ -2191,6 +2289,7 @@ typedef struct {
     stop_list allowed_skills;
     char *agentic_skill_call_id;
     char agentic_registry_sha[41];
+    interactive_request interactive;
     /* Responses continuation contract:
      *
      * A live Responses tool loop is not a normal "new prompt with a long
@@ -2213,6 +2312,12 @@ typedef struct {
     char *anthropic_live_suffix_text;
     tool_replay_stats tool_replay;
 } request;
+
+static void interactive_record_response(const request *r, const char *body);
+static void interactive_append_acceptance(buf *b, const request *r);
+static bool interactive_utf8(const unsigned char *s);
+static const schema_json_value *tool_schema_order_property_schema(
+    const tool_schema_order *order, int prop);
 
 static void tool_call_free(tool_call *tc) {
     free(tc->id);
@@ -2435,6 +2540,7 @@ static bool request_validate_ignore_eos(const request *r,
 }
 
 static void request_free(request *r) {
+    interactive_request_free(&r->interactive);
     ds4_tokens_free(&r->prompt);
     for (size_t i = 0; i < r->image_count; i++)
         ds4_vision_embedding_free(&r->images[i].embedding);
@@ -2460,6 +2566,8 @@ static void request_free(request *r) {
     tool_schema_orders_free(&r->tool_orders);
     memset(r, 0, sizeof(*r));
 }
+
+#include "ds4_interactive_config.h"
 
 static bool request_set_response_schema(request *r, char *raw) {
     if (!r || !raw) {
@@ -3044,6 +3152,7 @@ static bool parse_agentic_value(const char **p, request *r,
     bool got_operation = false;
     bool got_call_id = false;
     bool got_context_id = false;
+    bool got_interactive = false;
     r->agentic_present = true;
     json_ws(p);
     while (**p && **p != '}') {
@@ -3103,6 +3212,15 @@ static bool parse_agentic_value(const char **p, request *r,
             free(r->agent_context_id);
             r->agent_context_id = id;
             got_context_id = true;
+        } else if (!strcmp(key, "interactive")) {
+            size_t nodes = 0;
+            if (got_interactive ||
+                !(r->interactive.wire = schema_json_parse_value(p, 0, &nodes))) {
+                snprintf(err, errlen, "invalid agentic.interactive object");
+                free(key);
+                return false;
+            }
+            got_interactive = true;
         } else {
             snprintf(err, errlen, "unsupported agentic field: %s", key);
             free(key);
@@ -6886,6 +7004,31 @@ static bool parse_responses_content_array_multimodal(
  *   - The client must replay response.output items before tool outputs.
  *   - Reasoning items are accepted but discarded. Visible messages and tool
  *     calls are the complete historical prompt surface. */
+static char *interactive_replay_text(const char *start, size_t length) {
+    char *raw = xstrndup(start, length);
+    schema_json_value *record = schema_json_parse(raw);
+    free(raw);
+    if (!record || !interactive_version(record)) { schema_json_free(record); return NULL; }
+    const char *keys[] = {"type", "call_id", "tool_name", "values", "code", "message"};
+    buf b = {0}; buf_puts(&b, "<interactive_call_interrupted>");
+    for (size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
+        const schema_json_value *v = schema_json_object_get(record, keys[i]);
+        if (!v) {
+            bool optional = i >= 1 && i <= 3 && !schema_json_object_get(record, "call_id");
+            if (optional) continue;
+            buf_free(&b); schema_json_free(record); return NULL;
+        }
+        buf encoded = {0}; schema_json_serialize_value(&encoded, v);
+        buf_printf(&b, "<%s>", keys[i]);
+        append_dsml_attr_escaped(&b, encoded.ptr);
+        buf_printf(&b, "</%s>", keys[i]);
+        buf_free(&encoded);
+    }
+    buf_puts(&b, "</interactive_call_interrupted>");
+    schema_json_free(record);
+    return buf_take(&b);
+}
+
 static bool parse_responses_input(const char **p, chat_msgs *msgs,
                                   buf *loaded_tool_schemas,
                                   tool_schema_orders *orders,
@@ -6899,6 +7042,7 @@ static bool parse_responses_input(const char **p, chat_msgs *msgs,
     json_ws(p);
     while (**p && **p != ']') {
         if (**p != '{') goto fail;
+        const char *item_start = *p;
         (*p)++;
         char *type = NULL;
         char *role = NULL;
@@ -7089,11 +7233,14 @@ item_fail:
         (*p)++;
 
         const char *t = type ? type : "message";
+        bool interactive_record = !strcmp(t, "interactive.rejected") ||
+            !strcmp(t, "interactive.cancelled") || !strcmp(t, "interactive.expired") ||
+            !strcmp(t, "interactive.failed");
         /* Replayed items must be in a terminal "completed" state. in_progress,
          * incomplete, and failed all represent partial model state the client
          * never confirmed — feeding them back as history would let DS4 continue
          * from a tool action that never finished. Reject explicitly. */
-        if (status_str && status_str[0] &&
+        if (!interactive_record && status_str && status_str[0] &&
             strcmp(status_str, "completed") != 0)
         {
             free(type);
@@ -7162,7 +7309,12 @@ item_fail:
             flush_msg.reasoning = buf_take(&pending_reasoning);
             chat_msgs_push(msgs, flush_msg);
         }
-        if (!strcmp(t, "message")) {
+        if (interactive_record) {
+            char *replay = interactive_replay_text(item_start, (size_t)(*p - item_start));
+            if (!replay) goto item_fail;
+            chat_msg msg = {.role = xstrdup("user"), .content = replay};
+            chat_msgs_push(msgs, msg);
+        } else if (!strcmp(t, "message")) {
             chat_msg msg = {0};
             msg.role = xstrdup(role ? role : "user");
             msg.content = content ? content : xstrdup("");
@@ -7737,6 +7889,18 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
         r->reasoning_summary_emit = true;
     }
     if (!agentic_validate_registry(r, err, errlen)) {
+        chat_msgs_free(&msgs);
+        buf_free(&combined_tool_schemas);
+        buf_free(&loaded_tool_schemas);
+        free(instructions);
+        free(tool_schemas);
+        request_free(r);
+        return false;
+    }
+    if (!interactive_compile(r, err, errlen) ||
+        (r->interactive.count && !interactive_request_options(body))) {
+        if (r->interactive.count && !err[0])
+            snprintf(err, errlen, "interactive v1 does not accept stop or ignore_eos");
         chat_msgs_free(&msgs);
         buf_free(&combined_tool_schemas);
         buf_free(&loaded_tool_schemas);
@@ -9749,7 +9913,9 @@ typedef struct {
     bool inside_invoke;
     bool active_string;
     size_t invoke_body_start;
+    size_t invoke_header_start;
     size_t param_value_start;
+    size_t param_header_start;
     bool saw_invoke;
     uint64_t seen_props;
     bool seen_props_exact;
@@ -11018,6 +11184,7 @@ static agentic_tag_result agentic_sim_param_header(
 static bool agentic_tracker_has_unbounded_string(
         const dsml_decode_tracker *tracker) {
     return tracker && tracker->mode == DSML_TRACK_STRING_BODY &&
+        (!tracker->req || !tracker->req->interactive.count) &&
         tracker->active_order && schema_json_is_unbounded_string(
             tool_schema_order_property_schema(
                 tracker->active_order, tracker->active_prop));
@@ -11343,6 +11510,8 @@ static bool agentic_invoke_has_available_prop(
     return false;
 }
 
+#include "ds4_interactive_grammar.h"
+
 static bool agentic_partial_param_header_has_available_prop(
     const dsml_decode_tracker *tracker, const char *raw,
     size_t invoke_start, size_t header_start, size_t end,
@@ -11351,6 +11520,7 @@ static bool agentic_partial_param_header_has_available_prop(
     if (!order || !raw || !syn || header_start > end) return false;
     size_t have = end - header_start;
     for (int i = 0; i < order->len; i++) {
+        if (!interactive_param_allowed(tracker->req, tracker, i)) continue;
         if (agentic_tracker_prop_seen(
                 tracker, raw, invoke_start, header_start, syn, i)) continue;
         if (syn == &qwen_tool_syntax) {
@@ -11365,6 +11535,7 @@ static bool agentic_partial_param_header_has_available_prop(
         }
         const char *tails[] = {"\" string=\"true\">", "\" string=\"false\">"};
         for (size_t t = 0; t < sizeof(tails) / sizeof(tails[0]); t++) {
+            if (!interactive_parameter_form(tracker->req, tracker, i, t == 0)) continue;
             const char *segments[] = {
                 syn->param_start, " name=\"", order->prop[i], tails[t]
             };
@@ -11474,22 +11645,17 @@ static bool agentic_simulate_candidate(const request *r,
         if (sim.mode == DSML_TRACK_STRING_BODY) {
             for (;;) {
                 if (sim.pos >= raw_len) {
-                    return agentic_string_parameter_prefix_possible(
-                        sim.active_order, sim.active_prop, raw,
-                        sim.param_value_start, raw_len, false, sim.syn);
+                    return interactive_string_possible(r, &sim, raw, raw_len, false);
                 }
                 if (raw_full_lit(raw, raw_len, sim.pos, sim.syn->param_end)) {
-                    if (!agentic_string_parameter_prefix_possible(
-                            sim.active_order, sim.active_prop, raw,
-                            sim.param_value_start, sim.pos, true, sim.syn)) return false;
-                    if (!agentic_validate_parameter_value(
-                            sim.active_order, sim.active_prop, true, raw,
-                            sim.param_value_start, sim.pos, sim.syn)) return false;
+                    if (!interactive_string_possible(r, &sim, raw, sim.pos, true)) return false;
+                    if (!interactive_value_valid(r, &sim, true, raw, sim.pos)) return false;
                     sim.pos += strlen(sim.syn->param_end);
                     if (sim.seen_props_exact && sim.active_prop >= 0 &&
                         sim.active_prop < 64) {
                         sim.seen_props |= UINT64_C(1) << sim.active_prop;
                     }
+                    if (!interactive_boundary(r, &sim, sim.active_prop, raw_len)) return false;
                     sim.active_prop = -1;
                     sim.mode = DSML_TRACK_STRUCTURAL;
                     break;
@@ -11498,12 +11664,8 @@ static bool agentic_simulate_candidate(const request *r,
                     /* Once '<' starts the closing tag it no longer extends the
                      * value.  Only admit that branch when the value at the tag
                      * boundary is already complete (important for const/enum). */
-                    return agentic_string_parameter_prefix_possible(
-                               sim.active_order, sim.active_prop, raw,
-                               sim.param_value_start, sim.pos, true, sim.syn) &&
-                           agentic_validate_parameter_value(
-                               sim.active_order, sim.active_prop, true, raw,
-                               sim.param_value_start, sim.pos, sim.syn);
+                    return interactive_string_possible(r, &sim, raw, sim.pos, true) &&
+                           interactive_value_valid(r, &sim, true, raw, sim.pos);
                 }
                 sim.pos++;
             }
@@ -11526,6 +11688,7 @@ static bool agentic_simulate_candidate(const request *r,
                         sim.active_prop < 64) {
                         sim.seen_props |= UINT64_C(1) << sim.active_prop;
                     }
+                    if (!interactive_boundary(r, &sim, sim.active_prop, raw_len)) return false;
                     sim.active_prop = -1;
                     sim.mode = DSML_TRACK_STRUCTURAL;
                     break;
@@ -11569,6 +11732,7 @@ static bool agentic_simulate_candidate(const request *r,
                         raw, raw_len, sim.pos, sim.syn->invoke_start);
                 }
                 if (raw_full_lit(raw, raw_len, sim.pos, sim.syn->invoke_start)) {
+                    sim.invoke_header_start = sim.pos;
                     size_t after = 0;
                     const tool_schema_order *order = NULL;
                     agentic_tag_result result = agentic_sim_invoke_header(
@@ -11590,9 +11754,7 @@ static bool agentic_simulate_candidate(const request *r,
             }
 
             if (raw_full_lit(raw, raw_len, sim.pos, sim.syn->invoke_end)) {
-                if (!agentic_invoke_state_valid(
-                        &sim, raw, sim.invoke_body_start,
-                        sim.pos, sim.syn)) return false;
+                if (!interactive_invoke_valid(r, &sim, raw, sim.pos)) return false;
                 sim.pos += strlen(sim.syn->invoke_end);
                 sim.inside_invoke = false;
                 sim.active_order = NULL;
@@ -11604,9 +11766,7 @@ static bool agentic_simulate_candidate(const request *r,
                  * already satisfies its schema.  The first '<' byte is also
                  * a prefix of a parameter tag, so preserve that alternative
                  * while required properties are still missing. */
-                if (agentic_invoke_state_valid(
-                        &sim, raw, sim.invoke_body_start,
-                        sim.pos, sim.syn)) return true;
+                if (interactive_invoke_valid(r, &sim, raw, sim.pos)) return true;
                 if (raw_partial_lit(raw, raw_len, sim.pos,
                                     sim.syn->param_start) &&
                     agentic_tracker_has_available_prop(
@@ -11615,6 +11775,7 @@ static bool agentic_simulate_candidate(const request *r,
                 return false;
             }
             if (raw_full_lit(raw, raw_len, sim.pos, sim.syn->param_start)) {
+                sim.param_header_start = sim.pos;
                 /* A property-less schema can only produce an empty invoke.
                  * Reject the parameter marker before accepting its fixed
                  * ` name="` header; otherwise sampling reaches a dead end at
@@ -11634,6 +11795,12 @@ static bool agentic_simulate_candidate(const request *r,
                         sim.pos, raw_len, sim.syn);
                 }
                 if (result == AGENTIC_TAG_INVALID) return false;
+                if (!interactive_param_allowed(r, &sim, prop)) return false;
+                if (!interactive_parameter_form(r, &sim, prop, is_string)) return false;
+                const interactive_tool *interactive = interactive_tool_for(r, sim.active_order);
+                if (interactive_field_has(interactive, prop, INTERACTIVE_FIELD_OPEN_BOUNDARY) &&
+                    after != raw_len)
+                    return false; /* Payload starts on a separately sampled token. */
                 if (agentic_tracker_prop_seen(
                         &sim, raw, sim.invoke_body_start,
                         sim.pos, sim.syn, prop)) return false;
@@ -11660,6 +11827,8 @@ static bool agentic_filter_token(void *ud, int token,
                                   const char *piece, size_t piece_len) {
     agentic_token_filter *f = ud;
     if (!f || !f->req || !piece) return false;
+    if (f->req->interactive.count && (memchr(piece, 0, piece_len) ||
+        f->raw_len > INTERACTIVE_MAX_TEXT || piece_len > INTERACTIVE_MAX_TEXT - f->raw_len)) return false;
 
     dsml_decode_tracker reconstructed;
     const dsml_decode_tracker *tracker = f->tracker;
@@ -11688,7 +11857,7 @@ static bool agentic_filter_token(void *ud, int token,
         if (f->req->tool_choice_required) return false;
         return tracker->mode == DSML_TRACK_SEARCH;
     }
-    if (f->use_incremental_string && f->incremental_free_string &&
+    if (!f->req->interactive.count && f->use_incremental_string && f->incremental_free_string &&
         tracker->mode == DSML_TRACK_STRING_BODY &&
         tracker->pos == f->raw_len &&
         !memchr(piece, '<', piece_len)) {
@@ -11701,6 +11870,7 @@ static bool agentic_filter_token(void *ud, int token,
         return true;
     }
     size_t history_base = tracker->pos;
+    size_t assistant_surface = 0;
     if (f->req->tool_choice_required && tracker->mode == DSML_TRACK_SEARCH) {
         /* Generated text includes the model's reasoning body and its closing
          * </think>.  Required tool grammar starts on the assistant surface
@@ -11709,6 +11879,7 @@ static bool agentic_filter_token(void *ud, int token,
         const char *think_end = find_last_substr(f->raw, "</think>");
         if (think_end) {
             size_t surface = (size_t)(think_end - f->raw) + strlen("</think>");
+            assistant_surface = surface;
             if (surface > history_base) history_base = surface;
         }
     }
@@ -11735,6 +11906,7 @@ static bool agentic_filter_token(void *ud, int token,
     }
     if (history_base > f->raw_len ||
         piece_len > SIZE_MAX - (f->raw_len - history_base)) return false;
+    if (f->req->interactive.count) history_base = 0;
     size_t history_len = f->raw_len - history_base;
     size_t combined_len = history_len + piece_len;
     if (!f->scratch_ready || f->scratch_raw != f->raw ||
@@ -11759,10 +11931,14 @@ static bool agentic_filter_token(void *ud, int token,
     relative.pos = structural_ws_start != SIZE_MAX ?
         structural_ws_start - history_base :
         (relative.pos >= history_base ? relative.pos - history_base : 0);
+    if (f->req->interactive.count && relative.mode == DSML_TRACK_SEARCH &&
+        relative.pos < assistant_surface) relative.pos = assistant_surface;
     if (relative.invoke_body_start >= history_base)
         relative.invoke_body_start -= history_base;
     if (relative.param_value_start >= history_base)
         relative.param_value_start -= history_base;
+    if (relative.param_header_start >= history_base)
+        relative.param_header_start -= history_base;
     if (f->metrics) {
         f->metrics->checkpoint_count++;
         f->metrics->parser_transition_count += combined_len;
@@ -12170,6 +12346,7 @@ structural:
                 continue;
             }
             if (raw_full_lit(raw, raw_len, dt->pos, dt->syn->invoke_start)) {
+                dt->invoke_header_start = dt->pos;
                 const char *tag_end = memchr(raw + dt->pos, '>', raw_len - dt->pos);
                 if (!tag_end) {
                     dt->decode = DSML_DECODE_STRUCTURAL;
@@ -12198,6 +12375,7 @@ structural:
                 continue;
             }
             if (raw_full_lit(raw, raw_len, dt->pos, dt->syn->param_start)) {
+                dt->param_header_start = dt->pos;
                 size_t tag_start = dt->pos;
                 const char *tag_end = memchr(raw + dt->pos, '>', raw_len - dt->pos);
                 if (!tag_end) {
@@ -13236,9 +13414,11 @@ static bool responses_sse_completed(int fd, const request *r,
         }
     }
     buf_putc(&b, ']');
+    interactive_append_acceptance(&b, r);
     buf_puts(&b, ",\"usage\":");
     append_responses_usage_json(&b, r, prompt_tokens, completion_tokens);
     buf_puts(&b, "}}");
+    interactive_record_response(r, b.ptr);
     bool ok = responses_sse_emit_event(fd, st, b.ptr);
     buf_free(&b);
     return ok;
@@ -13507,7 +13687,9 @@ static bool responses_final_response(int fd, bool enable_cors,
     buf_putc(&b, ']');
     buf_puts(&b, ",\"usage\":");
     append_responses_usage_json(&b, r, prompt_tokens, completion_tokens);
+    interactive_append_acceptance(&b, r);
     buf_putc(&b, '}');
+    interactive_record_response(r, b.ptr);
     bool ok = http_response(fd, enable_cors, 200, "application/json", b.ptr);
     buf_free(&b);
     free(items);
@@ -14847,6 +15029,7 @@ typedef struct {
 } constraint_token_partition;
 
 struct server {
+    interactive_entry *interactive_entries; /* Protected by tool_mu. */
     ds4_engine *engine;
     ds4_tp *tp_leader;
     server_slot *slots;
@@ -15501,6 +15684,12 @@ struct job {
     job *next;
     server_qwen_request_tiers qwen_tiers;
 };
+
+typedef struct {
+    bool inside;
+    char tail[8]; /* Long enough for "</think>". */
+    int tail_len;
+} thinking_state;
 
 static bool job_cancelled(void *ud) {
     job *j = ud;
@@ -17874,12 +18063,6 @@ static void log_decode_progress(req_kind kind, int prompt_tokens, int completion
     *last_completion = completion;
 }
 
-typedef struct {
-    bool inside;
-    char tail[8]; /* Long enough for "</think>". */
-    int tail_len;
-} thinking_state;
-
 static bool thinking_tail_ends_with(const thinking_state *st, const char *s) {
     int n = (int)strlen(s);
     return st->tail_len >= n && !memcmp(st->tail + st->tail_len - n, s, (size_t)n);
@@ -17915,6 +18098,12 @@ static void generation_protocol_feed(const request *r, thinking_state *thinking,
         if (was_thinking) {
             const char *end = find_last_substr(raw, "</think>");
             tracker->pos = end ? (size_t)(end + 8 - raw) : raw_len;
+        }
+        if (r->interactive.count && tracker->mode == DSML_TRACK_SEARCH &&
+            r->think_mode != DS4_THINK_NONE) {
+            const char *end = find_lit_bounded(raw, raw_len, "</think>");
+            if (end && tracker->pos < (size_t)(end + 8 - raw))
+                tracker->pos = (size_t)(end + 8 - raw);
         }
         dsml_decode_tracker_update(tracker, raw, raw_len);
     }
@@ -18920,7 +19109,16 @@ static int constrained_speculative_sample_target(
     const bool constraint_active =
         ctx->req->response_schema != NULL ||
         agentic_should_constrain_sample(ctx->req, state, thinking.inside);
-    if (constraint_active && ctx->req->tool_choice_required) {
+    if (ctx->req->interactive.count &&
+        (tracker.invoke_body_start != ctx->tracker.invoke_body_start ||
+         tracker.active_prop != ctx->tracker.active_prop ||
+         !interactive_sampling_body(ctx->req, &tracker, shadow.ptr, shadow.len))) {
+        /* Returning -1 declines this verifier window. The engine rolls back
+         * speculative rows/RNG and commits only the sampled first target row. */
+        buf_free(&shadow);
+        return -1;
+    }
+    if (constraint_active && ctx->req->tool_choice_required && !ctx->req->interactive.count) {
         /* Required DSML is dominated by singleton/structural frontiers.  Live
          * sweeps show that verifier masking there costs more than the saved
          * target rows.  Stop a reasoning-window cycle exactly at this boundary
@@ -18971,7 +19169,8 @@ static int constrained_speculative_sample_target(
     } else if (step.ready) {
         token = ds4_session_sample_constraint_analysis_logits(
             ctx->session, target_logits,
-            ctx->temperature, ctx->top_k,
+            ctx->req->interactive.count ? interactive_temperature(ctx->req, &tracker, ctx->temperature) :
+                ctx->temperature, ctx->top_k,
             ctx->top_p, ctx->min_p, rng,
             &step.analysis, ctx->profile ? &step.metrics : NULL);
         constrained_row = true;
@@ -20005,6 +20204,9 @@ static bool agent_context_request_matches_saved(
                               &cp->system_prefix, cp->system_prefix.len);
 }
 
+static bool interactive_checkpoint_reserve_locked(server *s, int slot_id,
+    const char *context_id, uint64_t bytes, bool *pending);
+
 static bool agent_context_checkpoint_save(server *s, server_slot *slot,
                                           const char *context_id,
                                           char *err, size_t errlen) {
@@ -20085,7 +20287,15 @@ static bool agent_context_checkpoint_save(server *s, server_slot *slot,
 
     pthread_mutex_lock(&s->tool_mu);
     live_tool_state_copy_locked(&cp->responses_live, &slot->responses_live);
-    if (!cp->responses_live.valid || cp->responses_live.call_ids.len == 0) {
+    bool interactive_pending = false;
+    if (!interactive_checkpoint_reserve_locked(s, slot->id, context_id, expected, &interactive_pending)) {
+        pthread_mutex_unlock(&s->tool_mu);
+        agent_context_checkpoint_free(cp, true);
+        snprintf(err, errlen, "interactive checkpoint byte budget exceeded");
+        return false;
+    }
+    if ((!cp->responses_live.valid || cp->responses_live.call_ids.len == 0) &&
+        !interactive_pending) {
         pthread_mutex_unlock(&s->tool_mu);
         agent_context_checkpoint_free(cp, true);
         snprintf(err, errlen, "agent context has no live tool call");
@@ -20154,6 +20364,8 @@ static bool agent_context_has_pending_tool_call(server *s,
 
 
 
+#include "ds4_interactive_runtime.h"
+
 static void generate_job_inner(server *s, server_slot *slot, job *j) {
     char err[160];
     err[0] = '\0';
@@ -20188,6 +20400,15 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
             http_error(j->fd, s->enable_cors, 409,
                        "Agent context system prompt or tool registry changed");
             return;
+        }
+
+        if (j->req.interactive.resumed) {
+            if (!saved) {
+                ds4_tokens_free(&incoming_system);
+                http_error(j->fd, s->enable_cors, 409, "interactive checkpoint is unavailable");
+                return;
+            }
+            ds4_tokens_copy(&j->req.prompt, &saved->frontier);
         }
 
         if (!same_context && slot->active_agent_context_id &&
@@ -20541,12 +20762,14 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         responses_protocol &&
         j->req.responses_requires_live_reasoning &&
         !responses_reasoning_state_preserved;
-    const int prompt_tokens = prompt_for_sync->len;
+    const int prompt_tokens = interactive_prompt_tokens(&j->req, prompt_for_sync->len);
     /* OpenAI usage details: the reusable prefix is a cache read, while the
      * effective prompt suffix evaluated by ds4_session_sync() is written into
      * the live KV cache and can be reused by the next request. */
-    j->req.cache_read_tokens = cached;
-    j->req.cache_write_tokens = prompt_tokens > cached ? prompt_tokens - cached : 0;
+    if (!j->req.interactive.resumed) {
+        j->req.cache_read_tokens = cached;
+        j->req.cache_write_tokens = prompt_tokens > cached ? prompt_tokens - cached : 0;
+    }
 
     const double t0 = now_sec();
     uint64_t trace_id = trace_begin(s, j, cached, prompt_tokens, &cache_diag,
@@ -20900,6 +21123,12 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
                 ds4_tokens_free(&effective_prompt);
                 return;
             }
+            if (j->req.interactive.entry) {
+                char *accepted = interactive_acceptance_body(&j->req);
+                bool sent = responses_sse_emit_event(j->fd, &responses_live, accepted);
+                free(accepted);
+                if (!sent) job_mark_cancelled(j);
+            }
         }
     }
 
@@ -20913,13 +21142,21 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
 decode_again:
     ;
     buf text = {0};
+    interactive_call *interactive_pause = NULL;
+    interactive_generation_state generation = {
+        .rng = rng, .thinking = thinking_state_from_prompt(&j->req),
+    };
+    interactive_resume_generation(&j->req, &text, &responses_live, &generation);
+    rng = generation.rng;
     size_t plain_stream_pos = 0;
     size_t stop_scan_from = 0;
     const char *finish = "length";
-    int completion = 0;
+    int completion = generation.generated;
     int room = ds4_session_ctx(slot->session) - ds4_session_pos(slot->session);
     int max_tokens = server_decode_budget(j->req.max_tokens,
                                           recovery_completion, room);
+    if (j->req.interactive.resumed)
+        max_tokens = completion + server_decode_budget(j->req.max_tokens - completion, 0, room);
     bool saw_tool_start = false;
     bool saw_tool_end = false;
     bool saw_orphan_tool_end = false;
@@ -20938,13 +21175,22 @@ decode_again:
     phase.grammar_compile_ms = j->req.grammar_compile_ms;
     double last_decode_log_t = decode_t0;
     int last_decode_log_completion = 0;
-    thinking_state thinking = thinking_state_from_prompt(&j->req);
+    thinking_state thinking = generation.thinking;
     const bool thinking_gates_tool_markers = ds4_think_mode_enabled(j->req.think_mode);
     bool tool_scan_waiting_for_think_close =
         thinking_gates_tool_markers && thinking.inside;
     size_t think_recovery_scan_from = 0;
     dsml_decode_tracker dsml_tracker;
     dsml_decode_tracker_init(&dsml_tracker, &j->req);
+    if (j->req.interactive.resumed) {
+        if (j->req.think_mode != DS4_THINK_NONE) {
+            const char *close = strstr(text.ptr, "</think>");
+            if (close) dsml_tracker.pos = (size_t)(close - text.ptr) + strlen("</think>");
+        }
+        dsml_decode_tracker_update(&dsml_tracker, text.ptr, text.len);
+        saw_tool_start = dsml_tracker.syn != NULL;
+        tool_scan_from = text.len;
+    }
     response_json_lex_state response_json_state = {0};
     if (j->req.response_schema) {
         (void)response_json_lex_sync(
@@ -20989,6 +21235,8 @@ decode_again:
         if (greedy_tool_syntax) {
             temperature = 0.0f;
         }
+        if (j->req.interactive.count)
+            temperature = interactive_temperature(&j->req, &dsml_tracker, temperature);
         const bool agentic_constrained_sample =
             agentic_should_constrain_sample(&j->req, dsml_state, thinking.inside);
         const bool response_constrained_sample = j->req.response_schema != NULL;
@@ -21048,14 +21296,18 @@ decode_again:
          * turning structural prefill into one speculative row per token. */
         const bool analyze_forced = constrained_sample &&
             (!consume_speculative_next || j->req.response_schema != NULL);
+        /* Reuse the native trie/mask analysis, but interactive frontiers only
+         * analyze the current logit. Never prefill a forced multi-token suffix
+         * across authorization or sampling-policy boundaries. */
+        const int forced_cap = j->req.interactive.count ? 1 :
+            (int)(sizeof(toks) / sizeof(toks[0]));
         int ntok = analyze_forced ?
             build_constrained_forced_tokens(
             s, slot->session, s->engine, &j->req,
             text.ptr ? text.ptr : "", text.len,
             &thinking, &dsml_tracker, &response_json_state, constraint_mode,
             &constraint_step, phase_profile, toks,
-            (int)(sizeof(toks) / sizeof(toks[0])) < max_tokens - completion ?
-                (int)(sizeof(toks) / sizeof(toks[0])) : max_tokens - completion) :
+            forced_cap < max_tokens - completion ? forced_cap : max_tokens - completion) :
             0;
         if (phase_profile && analyze_forced) {
             const double forced_wall_ms =
@@ -21174,6 +21426,10 @@ decode_again:
                     constraint_step.oracle_parser_metrics.rollback_count;
             }
         }
+        /* A one-row sync can still use a different Qwen arithmetic path from
+         * decode. Interactive requests reuse the analyzed mask, then commit
+         * even singleton tokens through ordinary eval to preserve logits. */
+        if (j->req.interactive.count) ntok = 0;
         int token = -1;
         if (ntok > 0) {
             /* The forced batch commits the cached boundary token as well. */
@@ -21266,14 +21522,15 @@ decode_again:
         }
 
         const bool speculative_base_available =
-            ntok == 0 && !s->batched_mode &&
+            (!j->req.interactive.count || interactive_sampling_body(&j->req, &dsml_tracker,
+                text.ptr ? text.ptr : "", text.len)) && ntok == 0 && !s->batched_mode &&
             ds4_engine_mtp_draft_tokens(s->engine) > 1 &&
             !ds4_env_flag_enabled("DS4_MTP_SPEC_DISABLE", 0);
         const bool grammar_aware_speculative =
             speculative_base_available &&
             (constrained_sample || j->req.response_schema != NULL ||
              (j->req.kind == REQ_CHAT && j->req.has_tools)) &&
-            !(j->req.tool_choice_required && constrained_sample);
+            !(j->req.tool_choice_required && constrained_sample && !j->req.interactive.count);
         const bool speculative_available =
             speculative_base_available && !grammar_aware_speculative &&
             !constrained_sample &&
@@ -21292,7 +21549,7 @@ decode_again:
                 .json_state = response_json_state,
                 .mode = constraint_mode,
                 .phase = phase_profile ? &phase : NULL,
-                .temperature = temperature,
+                .temperature = j->req.interactive.count ? payload_temperature : temperature,
                 .top_k = top_k,
                 .top_p = top_p,
                 .min_p = min_p,
@@ -21358,7 +21615,7 @@ decode_again:
                 finish = "error";
                 break;
             }
-        } else if (s->batched_mode && s->qwen4_batch_mtp &&
+        } else if (!j->req.interactive.count && s->batched_mode && s->qwen4_batch_mtp &&
                    max_tokens - completion >= 2 && !j->req.ignore_eos &&
                    (!ds4_engine_mtp_exact_sampling(s->engine) || temperature == 0.0f) &&
                    getenv("DS4_MTP_SPEC_DISABLE") == NULL) {
@@ -21409,6 +21666,13 @@ decode_again:
             char *piece = ds4_token_text(s->engine, token, &piece_len);
             completion++;
             kept++;
+
+            if (j->req.interactive.count && (memchr(piece, 0, piece_len) ||
+                text.len > INTERACTIVE_MAX_TEXT || piece_len > INTERACTIVE_MAX_TEXT - text.len)) {
+                free(piece); finish = "error";
+                snprintf(err, sizeof(err), "interactive generated text exceeds its byte limit or contains NUL");
+                stop_decode = true; break;
+            }
 
             trace_piece(s, trace_id, piece, piece_len);
             buf_append(&text, piece, piece_len);
@@ -21484,6 +21748,14 @@ decode_again:
             }
             free(piece);
 
+            if (j->req.interactive.count && !thinking.inside) {
+                interactive_pause = interactive_observe(&j->req, &dsml_tracker, text.ptr, text.len);
+                if (interactive_pause) {
+                    stop_decode = true;
+                    break;
+                }
+            }
+
             if (j->req.response_schema &&
                 response_json_generation_complete(
                     j->req.response_schema, text.ptr, text.len,
@@ -21499,7 +21771,7 @@ decode_again:
                      * protocol text. A complete block is unambiguous enough to
                      * recover without asking the model to restart it after an
                      * injected close marker. */
-                    if (complete_tool_call_inside_thinking(
+                    if (!j->req.interactive.count && complete_tool_call_inside_thinking(
                             j->req.model_syntax, text.ptr, text.len, &think_recovery_scan_from)) {
                         saw_tool_start = true;
                         saw_tool_end = true;
@@ -21625,6 +21897,20 @@ decode_again:
     }
     server_generation_leave(s);
 
+    if (interactive_pause) {
+        bool suspended = interactive_suspend(s, slot, j, interactive_pause, &text,
+            rng, completion, prompt_tokens, thinking, &responses_live, err, sizeof(err));
+        if (!suspended && !job_cancelled(j)) {
+            interactive_fail_job(s, j, interactive_pause, "checkpoint_failed", err,
+                                 prompt_tokens, completion);
+        }
+        anthropic_stream_free(&anthropic_live);
+        openai_stream_free(&openai_live);
+        responses_stream_free(&responses_live);
+        buf_free(&text); ds4_tokens_free(&effective_prompt);
+        return;
+    }
+
     if (phase_profile) {
         const double decode_wall_ms = (now_sec() - decode_t0) * 1000.0;
         const double constraint_cpu_ms =
@@ -21727,6 +22013,19 @@ decode_again:
     if (g_stop_requested && strcmp(finish, "error") != 0) {
         finish = "error";
         snprintf(err, sizeof(err), "shutdown requested");
+    }
+
+    if (j->req.interactive.count &&
+        (!strcmp(finish, "error") || !strcmp(finish, "length") ||
+         (saw_tool_start && !saw_tool_end))) {
+        interactive_fail_job(s, j, NULL, "incomplete_generation",
+                             err[0] ? err : "interactive generation ended before completion",
+                             prompt_tokens, completion);
+        request_live_state_clear(s, slot);
+        anthropic_stream_free(&anthropic_live); openai_stream_free(&openai_live);
+        responses_stream_free(&responses_live); buf_free(&text);
+        ds4_tokens_free(&effective_prompt);
+        return;
     }
 
     if (j->req.response_schema && strcmp(finish, "error") != 0 &&
@@ -21865,7 +22164,9 @@ decode_again:
     const char *final_finish = finish;
     bool recovered_tool_parse_failure = false;
     if (j->req.kind == REQ_CHAT) {
-        bool parsed_ok = parse_generated_message_for_response_for_syntax(
+        bool parsed_ok = j->req.interactive.count ?
+            interactive_parse_message(&j->req, text.ptr, &parsed_content, &parsed_reasoning, &parsed_calls) :
+            parse_generated_message_for_response_for_syntax(
             j->req.model_syntax,
             text.ptr ? text.ptr : "",
             j->req.has_tools,
@@ -21879,6 +22180,11 @@ decode_again:
             &parsed_calls,
             &recovered_tool_parse_failure,
             &j->req.tool_orders);
+        if (!parsed_ok && j->req.interactive.count) {
+            final_finish = "error";
+            tool_calls_free(&parsed_calls);
+            snprintf(err, sizeof(err), "interactive native argument extraction failed");
+        }
         if (!parsed_ok && recovered_tool_parse_failure && j->req.has_tools && saw_tool_start) {
             /* parse_generated_message failed even though DSML was present.
              * Semantic repair is intentionally avoided: if the parser cannot
@@ -21971,11 +22277,17 @@ decode_again:
             return;
         }
         if (parsed_calls.len) {
+            if (j->req.interactive.count &&
+                !interactive_apply_call_ids(&j->req, text.ptr, &parsed_calls)) {
+                tool_calls_free(&parsed_calls);
+                snprintf(err, sizeof(err), "interactive argument extraction failed");
+                final_finish = "error";
+            }
             if (openai_live_chat) apply_openai_stream_tool_ids(&parsed_calls, &openai_live);
             if (j->req.api == API_ANTHROPIC && j->req.stream)
                 apply_anthropic_stream_tool_ids(&parsed_calls, &anthropic_live);
             assign_tool_call_ids(s, &parsed_calls, j->req.api);
-            bool agentic_ok = true;
+            bool agentic_ok = strcmp(final_finish, "error") != 0;
             pthread_mutex_lock(&s->tool_mu);
             skill_frame *skill_head_before = slot->skills;
             pthread_mutex_unlock(&s->tool_mu);
@@ -22322,6 +22634,8 @@ decode_again:
  * return in the large protocol/generation path. The callback is cleared before
  * the client thread can destroy its stack-owned job. */
 static void generate_job(server *s, server_slot *slot, job *j) {
+    bool interactive_allowed;
+    interactive_entry *interactive = interactive_job_begin(s, slot, j, &interactive_allowed);
 #if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
     ds4_gpu_qwen4_tier_stats tiers_before = {0};
     const bool tiers = ds4_env_flag_enabled("DS4_CUDA_QWEN4_CACHE_STATS", 0);
@@ -22333,8 +22647,11 @@ static void generate_job(server *s, server_slot *slot, job *j) {
     pthread_mutex_unlock(&s->model_mu);
 
     ds4_session_set_cancel(slot->session, job_cancelled, j);
-    if (!job_cancelled(j)) generate_job_inner(s, slot, j);
+    if (!job_cancelled(j) && interactive_allowed) generate_job_inner(s, slot, j);
+    else if (interactive && !job_cancelled(j))
+        http_error(j->fd, s->enable_cors, 409, "interactive operation was cancelled before dispatch");
     ds4_session_set_cancel(slot->session, NULL, NULL);
+    interactive_job_end(s, j, interactive);
 
 #if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
     server_qwen_active_request = NULL;
@@ -22429,6 +22746,8 @@ static int agent_context_slot_locked(server *s,
 static int job_required_slot_locked(server *s, const job *j) {
     if (!s || !j) return -1;
     const request *r = &j->req;
+    int interactive_slot = interactive_request_slot(r);
+    if (interactive_slot >= 0) return interactive_slot;
     if (r->agentic_return) {
         return skill_frame_slot_locked(s, r->agentic_skill_call_id);
     }
@@ -22931,7 +23250,10 @@ static void server_cancel_job(server *s, job *j) {
     pthread_cond_broadcast(&s->model_cv);
     pthread_mutex_unlock(&s->model_mu);
 
-    if (detached) job_complete(j);
+    if (detached) {
+        interactive_finish_request(s, &j->req, true);
+        job_complete(j);
+    }
 }
 
 static void wait_for_job_or_disconnect(server *s, job *j) {
@@ -22974,6 +23296,14 @@ static void *client_main(void *arg) {
         http_request_free(&hr);
         goto done;
     }
+    if (!strcmp(hr.method, "GET") && !strcmp(hr.path, "/v1/agentic/capabilities")) {
+        server_model_syntax syntax = server_model_syntax_for_engine(s->engine);
+        char *capability = interactive_capabilities_body(syntax);
+        http_response(fd, s->enable_cors, 200, "application/json", capability);
+        free(capability);
+        http_request_free(&hr);
+        goto done;
+    }
     const char *model_path_prefix = "/v1/models/";
     const size_t model_path_prefix_len = strlen(model_path_prefix);
     if (!strcmp(hr.method, "GET") &&
@@ -22988,7 +23318,19 @@ static void *client_main(void *arg) {
     request req;
     char err[160];
     bool ok = false;
+    bool interactive_resume = false;
     const int ctx_size = s->ctx_size;
+    if (!strcmp(hr.method, "POST") && strcmp(hr.path, "/v1/responses")) {
+        schema_json_value *root = schema_json_parse(hr.body);
+        const schema_json_value *extension = schema_json_object_get(
+            schema_json_object_get(root, "agentic"), "interactive");
+        bool interactive_requested = extension != NULL;
+        schema_json_free(root);
+        if (interactive_requested) {
+            http_error(fd, s->enable_cors, 400, "interactive v1 requires /v1/responses");
+            http_request_free(&hr); goto done;
+        }
+    }
     if (!strcmp(hr.method, "POST") && !strcmp(hr.path, "/v1/messages")) {
         ok = parse_anthropic_request(s->engine, s, hr.body, s->default_tokens,
                                      ctx_size, &req, err, sizeof(err));
@@ -22996,8 +23338,12 @@ static void *client_main(void *arg) {
         ok = parse_chat_request(s->engine, s, hr.body, s->default_tokens,
                                 ctx_size, &req, err, sizeof(err));
     } else if (!strcmp(hr.method, "POST") && !strcmp(hr.path, "/v1/responses")) {
-        ok = parse_responses_request(s->engine, s, hr.body, s->default_tokens,
-                                     ctx_size, &req, err, sizeof(err));
+        int control = interactive_control(s, fd, hr.body, &req);
+        if (control == 1) { http_request_free(&hr); goto done; }
+        interactive_resume = control == 2;
+        if (interactive_resume) ok = true;
+        else ok = parse_responses_request(s->engine, s, hr.body, s->default_tokens,
+                                          ctx_size, &req, err, sizeof(err));
     } else if (!strcmp(hr.method, "POST") && !strcmp(hr.path, "/v1/completions")) {
         ok = parse_completion_request(s->engine, hr.body, s->default_tokens,
                                       ctx_size, &req, err, sizeof(err));
@@ -23006,7 +23352,7 @@ static void *client_main(void *arg) {
         http_request_free(&hr);
         goto done;
     }
-    if (ok) req.raw_body = xstrndup(hr.body, hr.body_len);
+    if (ok && !interactive_resume) req.raw_body = xstrndup(hr.body, hr.body_len);
     http_request_free(&hr);
     if (!ok) {
         http_error(fd, s->enable_cors, 400, err);
@@ -23018,6 +23364,12 @@ static void *client_main(void *arg) {
     }
     if (request_exceeds_context(&req, ctx_size)) {
         http_error_context_length_exceeded(fd, s->enable_cors, &req, req.prompt.len, ctx_size);
+        interactive_finish_request(s, &req, false);
+        request_free(&req);
+        goto done;
+    }
+
+    if (!interactive_resume && interactive_admit(s, fd, &req)) {
         request_free(&req);
         goto done;
     }
@@ -23032,6 +23384,7 @@ static void *client_main(void *arg) {
 
     if (!enqueue(s, &j)) {
         http_error(fd, s->enable_cors, 503, "server shutting down");
+        interactive_finish_request(s, &j.req, false);
         pthread_cond_destroy(&j.cv);
         pthread_mutex_destroy(&j.mu);
         request_free(&j.req);
@@ -23184,6 +23537,7 @@ static void log_context_memory(ds4_backend backend, int ctx_size,
     }
 }
 static void server_close_resources(server *s) {
+    interactive_close(s);
     if (s->trace) {
         fclose(s->trace);
         s->trace = NULL;
@@ -23848,7 +24202,22 @@ int main(int argc, char **argv) {
     g_listen_fd = lfd;
     server_log(DS4_LOG_DEFAULT, "ds4-server: listening on http://%s:%d", cfg.host, cfg.port);
 
+    time_t interactive_maintenance = 0;
     while (!g_stop_requested) {
+        time_t now = time(NULL);
+        if (now != interactive_maintenance) {
+            pthread_mutex_lock(&s.tool_mu);
+            interactive_sweep_locked(&s);
+            pthread_mutex_unlock(&s.tool_mu);
+            interactive_maintenance = now;
+        }
+        struct pollfd incoming = {.fd = lfd, .events = POLLIN};
+        int ready = poll(&incoming, 1, 1000);
+        if (ready <= 0) {
+            if (ready < 0 && errno != EINTR && !g_stop_requested)
+                server_log(DS4_LOG_DEFAULT, "ds4-server: listen poll failed: %s", strerror(errno));
+            continue;
+        }
         int fd = accept(lfd, NULL, NULL);
         if (fd < 0) {
             if (g_stop_requested) break;

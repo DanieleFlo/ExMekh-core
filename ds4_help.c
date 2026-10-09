@@ -322,6 +322,7 @@ static void print_server_api(FILE *fp, const help_colors *c) {
     opt(fp, c, "--batched-session N", "Keep N resident sessions and batch decode-ready requests.");
     opt(fp, c, "--mixed-prefill-quantum N", "Prefill chunk while generations are active. Default: 128; GLM-5.3 minimum: 1024");
     para(fp, c, "Endpoints: /v1/chat/completions, /v1/responses, /v1/completions, and /v1/messages.");
+    para(fp, c, "Interactive calls: GET /v1/agentic/capabilities, then agentic.interactive v1 on /v1/responses. Pauses preserve the logical call and resume through a new HTTP request.");
     para(fp, c, "DeepSeek endpoint aliases remain available; Qwen uses an extension-free API ID: Qwen3.8-27B-UD-Q4_K_S. Legacy .gguf IDs remain accepted.");
     fputc('\n', fp);
 }

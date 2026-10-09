@@ -1,4 +1,4 @@
-# TODO — GPU Kernel Engineering Harness per DS4 / Qwen 3.6 27B
+# TODO — GPU Kernel Engineering Harness per DS4 / Qwen 3.8 27B
 
 > Current runtime: Qwen3.8 only for the `qwen35` family. Qwen3.6 support
 > was removed on 2026-10-01; its regression results and shared-kernel evidence

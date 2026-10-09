@@ -19,7 +19,7 @@ QUALITY_CFLAGS ?= -O3 $(DEBUG_FLAGS) $(NATIVE_CPU_FLAG) -Wall -Wextra -std=c11
 LDLIBS ?= -lm -pthread
 METAL_SRCS := $(wildcard metal/*.metal)
 ROCM_SRCS := $(wildcard rocm/*.cuh)
-DS4_TEST_MODEL ?= ds4flash.gguf
+DS4_TEST_MODEL ?= $(if $(wildcard gguf/Qwen3.8-27B-UD-Q4_K_S.gguf),gguf/Qwen3.8-27B-UD-Q4_K_S.gguf,ds4flash.gguf)
 DS4_TEST_MTP ?= gguf/DeepSeek-V4-Flash-MTP-Q4K-Q8_0-F32.gguf
 DS4_DSPARK_MODEL ?= $(DS4_TEST_MODEL)
 DS4_DSPARK_SUPPORT ?= gguf/DeepSeek-V4-Flash-DSpark-support-0731.gguf
@@ -88,6 +88,8 @@ help:
 	@echo "  make test         Build and run tests"
 	@echo "  make test-qwen38-perf  Run the opt-in Qwen3.8 CLI/server MTP VRAM-safe context gate"
 	@echo "  make test-constrained-json-live  Run opt-in live DSML/JSON Schema adversarial API tests"
+	@echo "  make test-server-interactive  Run interactive protocol and text-constraint fixtures"
+	@echo "  make test-interactive-api-live Run interactive HTTP tests (DS4_INTERACTIVE_BASE_URL)"
 	@echo "  make test-server-sampling-matrix-static  Check the temperature/thinking/MTP server matrix fixtures"
 	@echo "  make test-jsonschemabench-safety  Run the pinned external candidate-vs-oracle safety gate"
 	@echo "  make metal-decode-schedule-bench  Build the balanced Metal decode schedule benchmark"
@@ -299,6 +301,8 @@ help:
 	@echo "  make test                Build and run tests"
 	@echo "  make test-qwen38-perf    Run the opt-in Qwen3.8 CLI/server MTP VRAM-safe context gate"
 	@echo "  make test-constrained-json-live  Run opt-in live DSML/JSON Schema adversarial API tests"
+	@echo "  make test-server-interactive  Run interactive protocol and text-constraint fixtures"
+	@echo "  make test-interactive-api-live Run interactive HTTP tests (DS4_INTERACTIVE_BASE_URL)"
 	@echo "  make test-server-sampling-matrix-static  Check the temperature/thinking/MTP server matrix fixtures"
 	@echo "  make test-jsonschemabench-safety  Run the pinned external candidate-vs-oracle safety gate"
 	@echo "  make dspark-verify-depth Run DSpark speculative verification smoke if support GGUF is present"
@@ -342,7 +346,7 @@ test-rocm:
 		DS4_LINK="$(HIPCC) $(ROCM_CFLAGS)" \
 		DS4_LINK_LIBS="$(ROCM_LDLIBS)"
 	./ds4-eval --self-test-extractors
-	./ds4_test
+	DS4_TEST_MODEL="$(DS4_TEST_MODEL)" ./ds4_test
 	./tests/test_layer_pack
 	./tests/test_engine_mgpu_placement
 	./tests/test_gpu_args
@@ -1100,6 +1104,25 @@ endif
 ds4_server_test: ds4_server_test.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
+INTERACTIVE_HEADERS = ds4_edit_constraint.h ds4_interactive_edit.h ds4_interactive_config.h ds4_interactive_grammar.h ds4_interactive_runtime.h
+ds4_server.o ds4_server_cpu.o ds4_server_test.o: $(INTERACTIVE_HEADERS)
+ds4_test.o tests/test_server_agentic_payload.o tests/test_server_resident_frontier.o: $(INTERACTIVE_HEADERS)
+
+tests/test_server_interactive.o: tests/test_server_interactive.c ds4_server.c $(INTERACTIVE_HEADERS)
+	$(CC) $(CFLAGS) -Wno-unused-function -DDS4_NO_GPU -c -o $@ $<
+
+tests/test_server_interactive: tests/test_server_interactive.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
+.PHONY: test-server-interactive
+test-server-interactive: tests/test_server_interactive
+	./tests/test_server_interactive
+
+.PHONY: test-interactive-api-live
+test-interactive-api-live:
+	@test -n "$$DS4_INTERACTIVE_BASE_URL" || (echo "set DS4_INTERACTIVE_BASE_URL to a running server"; exit 2)
+	python3 -m unittest tests.test_interactive_api -v
+
 tests/test_prompt_prefix.o: tests/test_prompt_prefix.c ds4_prompt_prefix.h
 	$(CC) $(CFLAGS) -I. -c -o $@ $<
 
@@ -1112,10 +1135,11 @@ test-frontends: ds4_test
 
 test: ds4_test ds4_server_test ds4-eval q4k-dot-test mxfp4-dot-test test-session-state test-linux-memory test-read-queue test-engram \
 	tests/test_layer_pack tests/test_engine_mgpu_placement tests/test_gpu_args \
-	tests/test_deepseek4_vision_image tests/test_image_decode tests/test_prompt_prefix $(SAMPLING_TEST) ds4 ds4-server ds4-bench
+	tests/test_deepseek4_vision_image tests/test_image_decode tests/test_prompt_prefix tests/test_server_interactive $(SAMPLING_TEST) ds4 ds4-server ds4-bench
 	./ds4-eval --validate-cases
 	./ds4-eval --self-test-extractors
 	./ds4_server_test
+	./tests/test_server_interactive
 	python3 -m unittest tests.test_qwen38_compatibility tests.test_server_sampling_matrix.SamplingMatrixFixtureTests -v
 	./ds4_test
 	./tests/test_layer_pack
@@ -1225,6 +1249,7 @@ ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o tests/test_session_state.o \
 tests/test_session_state_gpu.o: ds4_tool_text.h
 
 clean:
+	rm -f tests/test_server_interactive
 	rm -f tests/qwen_flash_quality_probe
 	rm -f tests/test_qwen4_tuning
 	rm -f tests/test_qwen4_ranks tests/test_qwen4_cpu

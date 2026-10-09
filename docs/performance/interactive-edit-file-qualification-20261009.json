@@ -1,0 +1,100 @@
+{
+  "format": "ds4-interactive-qualification-v1",
+  "date": "2026-10-09",
+  "environment": {
+    "os": "Ubuntu 24.04 WSL2",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "backend": "cuda",
+    "model": "Qwen3.8-27B-UD-Q4_K_S",
+    "mtp": "mtp-Qwen3.8-27B-Q4_0.gguf",
+    "single_session_context": 22593,
+    "batched_sessions": 2,
+    "batched_session_context": 4096
+  },
+  "checks": {
+    "production_build": "PASS",
+    "cpu_frontend_build": "PASS",
+    "make_test": "PASS",
+    "interactive_host": "PASS",
+    "asan_ubsan": "PASS",
+    "python_discovery": {"status": "PASS", "tests": 267, "skipped": 57},
+    "qwen38_all_local_gates": {"status": "PASS", "tests": 20, "skipped": 0},
+    "interactive_target": {"status": "PASS", "tests": 10},
+    "interactive_mtp": {"status": "PASS", "tests": 10, "greedy_protocol_tests": 9, "positive_temperature_test": "PASS"},
+    "interactive_batched": {"status": "PASS", "tests": 10, "interactive_speculation": false},
+    "constrained_http": {"status": "PASS", "tests": 20},
+    "agentic_http": {"status": "PASS", "applicable_tests": 17, "extreme_report_gate": "PASS"},
+    "cuda_mtp_checkpoint_fast": {"status": "PASS", "bit_exact": true, "parent_tokens": 128},
+    "cuda_checkpoint_full": {
+      "status": "PASS", "bit_exact": true, "parent_tokens": 10000,
+      "instruction_prefill_tokens": 500, "result_prefill_tokens": 200,
+      "discarded_child_tokens": 2000, "checkpoint_bytes": 159852624,
+      "checkpoint_stage_ms": 199.099, "checkpoint_write_ms": 48.892,
+      "checkpoint_read_ms": 144.675, "checkpoint_restore_ms": 56.131,
+      "nested_three_levels_bit_exact": true,
+      "portable_session_continuation_bit_exact": true,
+      "context_boundary_bit_exact": true
+    },
+    "cuda_mtp_resident_frontier": {"status": "PASS", "bit_exact": true},
+    "sampling_matrix_mtp": {"status": "PASS", "scenarios": 12},
+    "docs_wiki": "PASS"
+  },
+  "clean_code_review": {
+    "status": "PASS",
+    "make_test_final": "PASS",
+    "cuda_and_cpu_frontend_build": "PASS",
+    "asan_ubsan_final": "PASS",
+    "combined_target_http": {"status": "PASS", "tests": 47, "skipped": 0},
+    "interactive_mtp_http": {"status": "PASS", "tests": 10},
+    "interactive_batched_http": {"status": "PASS", "tests": 10},
+    "ordinary_mtp_sampling_matrix": {"status": "PASS", "scenarios": 12},
+    "target_mtp_greedy_cases_equal": 3,
+    "mask_divergences": {"target": 0, "mtp": 0, "batched": 0},
+    "regressions": [
+      "frozen priority JSON objects accept reordered keys and reject changed values",
+      "an invalid snapshot reply preserves the previous behavior state",
+      "all empty interruption outputs use output:[] and share the metadata renderer"
+    ],
+    "ownership": [
+      "edit configuration and state are opaque to the protocol",
+      "behaviors define field policies through the protocol API",
+      "continuation layout, job lifecycle and generation restoration belong to the runtime",
+      "behavior state is destroyed before its configuration"
+    ]
+  },
+  "mask_comparison": {
+    "mode": "compare_new_vs_oracle",
+    "target_divergences": 0,
+    "mtp_divergences": 0,
+    "batched_divergences": 0,
+    "independent_text_oracle_snapshots": 400,
+    "forced_prefill_interactive_tokens": 0
+  },
+  "greedy_comparison": [
+    {"case": "create", "same_arguments": true, "target_resume_seconds": 5.885, "mtp_resume_seconds": 6.221,
+     "arguments": {"target": "src.py", "before": "@ex_meckh_all", "after": "hello\n"}},
+    {"case": "insert_eof", "same_arguments": true, "target_resume_seconds": 6.205, "mtp_resume_seconds": 7.559,
+     "arguments": {"target": "src.py", "before": "@ex_meckh_line[4]", "after": "tail\n"}},
+    {"case": "multiline_literal_slot_switch", "same_arguments": true, "target_resume_seconds": 8.685, "mtp_resume_seconds": 8.945,
+     "arguments": {"target": "src.py", "before": "foo\np", "after": "changed"}}
+  ],
+  "snapshot_benchmark": {
+    "bytes": 1048520,
+    "physical_lines": 18590,
+    "index_ms_range": [67, 87],
+    "lookup_microseconds_range": [1.4, 1.9],
+    "index_allocated_bytes": 11195721,
+    "construction_arrays_peak_bytes_estimate": 32167149,
+    "memory_measurement": "allocation sizes; allocator overhead and server RSS excluded"
+  },
+  "not_verified": [
+    "Metal", "ROCm", "distributed inference", "routed-expert SSD streaming",
+    "other model families with real inference", "ExMekh interactive client/filesystem/hooks"
+  ],
+  "limits": [
+    "MTP old-text gate requires a single starting line and a globally unique literal prefix",
+    "interactive singleton tokens use ordinary decode, never one-token forced prefill",
+    "resume latency includes generation, checkpoint restore and transcript canonicalization with diagnostic oracle enabled",
+    "make test and Python discovery keep unavailable hardware and opt-in gates explicitly skipped"
+  ]
+}
