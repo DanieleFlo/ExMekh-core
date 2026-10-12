@@ -1118,6 +1118,16 @@ tests/test_server_interactive: tests/test_server_interactive.o ds4_help.o ds4_kv
 test-server-interactive: tests/test_server_interactive
 	./tests/test_server_interactive
 
+tests/bench_interactive_edit.o: tests/bench_interactive_edit.c ds4_server.c $(INTERACTIVE_HEADERS)
+	$(CC) $(CFLAGS) -Wno-unused-function -DDS4_NO_GPU -c -o $@ $<
+
+tests/bench_interactive_edit: tests/bench_interactive_edit.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
+.PHONY: bench-interactive-edit
+bench-interactive-edit: tests/bench_interactive_edit
+	./tests/bench_interactive_edit
+
 .PHONY: test-interactive-api-live
 test-interactive-api-live:
 	@test -n "$$DS4_INTERACTIVE_BASE_URL" || (echo "set DS4_INTERACTIVE_BASE_URL to a running server"; exit 2)
@@ -1249,7 +1259,7 @@ ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o tests/test_session_state.o \
 tests/test_session_state_gpu.o: ds4_tool_text.h
 
 clean:
-	rm -f tests/test_server_interactive
+	rm -f tests/test_server_interactive tests/bench_interactive_edit
 	rm -f tests/qwen_flash_quality_probe
 	rm -f tests/test_qwen4_tuning
 	rm -f tests/test_qwen4_ranks tests/test_qwen4_cpu

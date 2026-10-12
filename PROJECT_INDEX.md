@@ -338,11 +338,13 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   opachi per il protocollo e liberati dai callback del comportamento.
 - `ds4_edit_document.h` — riconoscitore del dialetto XML edit, entità/CDATA,
   ownership dei percorsi e snapshot condivisi, chiusura finale new_text senza code
-  e frontiere interne. Le prove del masking non
-  modificano autorizzazioni o stato del runtime.
+  e checkpoint incrementali sui prefissi accettati, ai confini di scalar UTF-8.
+  Le prove del masking leggono i checkpoint senza modificare autorizzazioni o stato.
 - `ds4_edit_constraint.h` — vincolo dinamico sui byte logici da inizio riga,
   unicità globale e indice suffix array/LCP dello snapshot, esposto tramite API
   di matching e candidati senza accesso agli indici interni.
+  La frontiera delle selezioni letterali conserva i candidati dello snapshot e
+  confronta soltanto i nuovi byte logici; avanza dopo l'accettazione del token.
   Il contratto wire è in `docs/agentic/interactive-calls.md`.
 - `agent/` — sorgenti, test e configurazione del frontend NiceGUI ExMekh Agent;
   `agent/src/exmekh_agent/exmekh_bridge/` integra Client e DeepAgent, `agent/src/exmekh_agent/state/`
@@ -783,6 +785,13 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   oracolo indipendente, XML/entità/CDATA, chiusure letterali e finali, sintassi native,
   frontiere di sampling, prefissi ]/]] coerenti con lo snapshot, retry, batch,
   rifiuto e scadenza delle continuazioni.
+- `tests/bench_interactive_edit.c` — benchmark ripetibile del costo del parser per
+  old_text/new_text, testo semplice, HTML/CDATA, Unicode ed entità; warm-up e cinque
+  campioni per dimensione, con parser completo conservato come confronto.
+- `tests/bench_interactive_edit_live.py` — benchmark client contro un server già
+  attivo: HTML, Unicode e selezioni letterali, controllo esatto dei byte e
+  conservazione di messaggi/scambi per distinguere intenti falliti da prestazioni.
+  Il report è in `docs/performance/interactive-edit-speed-20261012.md`.
 - `agent/tests/mock_client.py`, `agent/tests/test_mock_client.py` — provider di
   test e contesti di installazione che ripristinano lo stato precedente anche
   dopo errori o nesting, evitando contaminazioni dei test di steering.

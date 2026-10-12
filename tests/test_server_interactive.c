@@ -43,7 +43,11 @@ static bool candidate(request *r, const char *raw, const char *piece) {
     dsml_decode_tracker_init(&dt, r);
     dsml_decode_tracker_update(&dt, raw, strlen(raw));
     agentic_token_filter filter = {.req=r, .tracker=&dt, .raw=raw, .raw_len=strlen(raw)};
+    bool oracle = agentic_filter_token(&filter, 0, piece, strlen(piece));
+    filter.use_incremental_string = true;
+    filter.incremental_free_string = agentic_tracker_has_unbounded_string(&dt);
     bool valid = agentic_filter_token(&filter, 0, piece, strlen(piece));
+    CHECK(valid == oracle);
     buf_free(&filter.scratch);
     return valid;
 }
@@ -719,11 +723,224 @@ static void test_large_snapshot(void) {
     edit_constraint_free(&snapshot); free(text);
 }
 
+static void compare_incremental_view(const void *state, const char *value, size_t n,
+                                     size_t committed, bool complete) {
+    const char *end = "</parameter>";
+    edit_document_checkpoint before = edit_document_restart(state, SIZE_MAX, SIZE_MAX);
+    edit_document_view oracle = interactive_edit_probe(state, value, n, end, committed, complete, false, NULL);
+    edit_document_view actual = interactive_edit_view(state, value, n, end, committed, complete);
+    CHECK(actual.valid == oracle.valid);
+    if (actual.valid) {
+        CHECK(actual.phase == oracle.phase && actual.index == oracle.index);
+        CHECK(actual.speculative == oracle.speculative);
+        CHECK(actual.payload_start == oracle.payload_start);
+        CHECK(actual.native_escape == oracle.native_escape);
+        CHECK((actual.path == NULL) == (oracle.path == NULL));
+        if (actual.path) CHECK(!strcmp(actual.path, oracle.path));
+    }
+    edit_document_checkpoint after = edit_document_restart(state, SIZE_MAX, SIZE_MAX);
+    CHECK(before.offset == after.offset && before.index == after.index &&
+          before.characters == after.characters && before.cdata == after.cdata);
+    char *decoded = xstrndup(value, n); ds4_tool_text_unescape(decoded, end);
+    size_t characters = 0;
+    for (const unsigned char *p = (const unsigned char *)decoded; *p; p++)
+        if ((*p & 0xc0) != 0x80) characters++;
+    CHECK(interactive_edit_characters(state, value, n, end) == characters);
+    free(decoded); free(actual.path); free(oracle.path);
+}
+
+static void test_incremental_document_restarts(void) {
+    const char *bodies[] = {
+        "plain ] and ]] text &amp; end",
+        "<![CDATA[<html><body>A & B ] x ]] x</body></html>]]>",
+        "<![CDATA[]]><![CDATA[</new_text></edit><delete/>]]>",
+        "before </new_text>   literal </new_text>\n<![CDATA[x]]>",
+        "utf8 α中🙂 &#x1f600; &#000000000000000000000097;\r\n",
+        "<![CDATA[&lt;/parameter> &amp;lt;/parameter> α中🙂]]>",
+        "<delete/>", "",
+    };
+    const char *pieces[] = {"a", "<", "&", "]", "]]>", "\x01", "\xc0",
+        "</new_text>", "</new_text></edit>", "<![CDATA[", "<delete/>",
+        "&#x110000;", "&lt;/parameter>", "\r\n", "α", "🙂"};
+    for (size_t test = 0; test < sizeof(bodies)/sizeof(bodies[0]); test++) {
+        request r; fixture(&r);
+        interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
+        provide_snapshot(call, "OLD\n", false);
+        buf value = {0};
+        buf_puts(&value, "<edit path=\"src.py\"><old_text><all/></old_text><new_text>");
+        buf_puts(&value, bodies[test]); buf_puts(&value, "</new_text></edit>");
+        for (size_t n = 0; n <= value.len; n++) {
+            compare_incremental_view(call->behavior_state, value.ptr, n, n, false);
+            compare_incremental_view(call->behavior_state, value.ptr, n, n, true);
+            for (size_t piece = 0; piece < sizeof(pieces)/sizeof(pieces[0]); piece++) {
+                buf candidate = {0}; buf_append(&candidate, value.ptr, n);
+                buf_puts(&candidate, pieces[piece]);
+                compare_incremental_view(call->behavior_state, candidate.ptr, candidate.len, n, false);
+                buf_free(&candidate);
+            }
+            interactive_edit_commit_string(call->behavior_state, value.ptr, n, "</parameter>");
+        }
+        buf_free(&value); request_free(&r);
+    }
+}
+
+static void test_incremental_selection_restarts(void) {
+    const char *snapshot = "same α中🙂 & < ] \r\nunique </parameter>\rnext\nlast";
+    const char *selections[] = {
+        "same α中🙂 &amp; &lt; ] \r\nunique &lt;/parameter>",
+        "<![CDATA[same α中🙂 & < ] \r\nunique &lt;/parameter>]]>",
+        "same &#x3b1;&#20013;&#x1f642; &amp; &lt; ] \r\nunique &lt;/parameter>",
+        "unique &lt;/parameter>", "next\nlast", "<all/>", "<line number=\"5\"/>",
+    };
+    const char *pieces[] = {"x", "α中🙂", "\x80", "&", "&#x", "]", "]]>",
+        "</old_text>", "</old_text><new_text>", "<![CDATA[", "&lt;/parameter>", "\r\n"};
+    for (size_t test = 0; test < sizeof(selections)/sizeof(selections[0]); test++) {
+        edit_document *state = edit_document_new("</parameter>");
+        CHECK(edit_document_begin_input(state, "a"));
+        CHECK(edit_document_provide(state, snapshot, false));
+        CHECK(edit_document_begin_input(state, "a"));
+        CHECK(edit_document_provide(state, snapshot, false));
+        buf value = {0};
+        buf_puts(&value, "<edit path=\"a\"><old_text>"); buf_puts(&value, selections[test]);
+        buf_puts(&value, "</old_text><new_text>α&amp;<![CDATA[🙂<x/>]]></new_text></edit>\r\n");
+        buf_puts(&value, "<edit path=\"a\"><old_text start_line=\"1\" end_line=\"999999999999999999999\"></old_text><new_text></new_text></edit>");
+        for (size_t n = 0; n <= value.len; n++) {
+            compare_incremental_view(state, value.ptr, n, n, false);
+            compare_incremental_view(state, value.ptr, n, n, true);
+            for (size_t p = 0; p < sizeof(pieces)/sizeof(pieces[0]); p++) {
+                buf candidate = {0}; buf_append(&candidate, value.ptr, n); buf_puts(&candidate, pieces[p]);
+                compare_incremental_view(state, candidate.ptr, candidate.len, n, false);
+                buf_free(&candidate);
+            }
+            interactive_edit_commit_string(state, value.ptr, n, "</parameter>");
+        }
+        buf_free(&value); edit_document_free(state);
+    }
+}
+
+static void test_selection_frontier_equivalence(void) {
+    const char *snapshots[] = {"", "a", "same\nsame\nsame-tail", "b\ra\r\nb\na-end",
+        "αx\nαy\n🙂x\n🙂y", "repeat 1\nrepeat 2\nrepeat 11\nrepeat 12\nlast"};
+    const char *pieces[] = {"", "a", "same", "repeat ", "\r\n", "α", "🙂", "\xf0", "&", "last"};
+    for (size_t s = 0; s < sizeof(snapshots)/sizeof(snapshots[0]); s++) {
+        edit_constraint snapshot; edit_constraint_init(&snapshot, snapshots[s], false);
+        for (size_t start = 0; start <= strlen(snapshots[s]); start++) {
+            if (start && snapshots[s][start - 1] != '\n' && snapshots[s][start - 1] != '\r') continue;
+            const char *line = snapshots[s] + start;
+            for (size_t committed = 0; committed <= strlen(line); committed++) {
+                edit_selection_frontier frontier = {0}; edit_selection_frontier_init(&frontier, &snapshot);
+                edit_selection_frontier_advance(&frontier, line, committed);
+                for (size_t p = 0; p < sizeof(pieces)/sizeof(pieces[0]); p++) {
+                    buf value = {0}; buf_append(&value, line, committed); buf_puts(&value, pieces[p]);
+                    for (int complete = 0; complete < 2; complete++) {
+                        size_t expected_count = 0, actual_count = 0;
+                        bool expected = edit_selection_prefix(&snapshot, value.ptr, value.len, complete, &expected_count);
+                        bool actual = edit_selection_frontier_prefix(&frontier, pieces[p], strlen(pieces[p]), complete, &actual_count);
+                        CHECK(expected == actual && expected_count == actual_count);
+                    }
+                    buf_free(&value);
+                }
+                edit_selection_frontier_free(&frontier);
+            }
+        }
+        edit_constraint_free(&snapshot);
+    }
+}
+
+static void test_xml_static_frontier(void) {
+    const char *safe[] = {"text", "α中🙂", "\r\n", "\"' > [ /", "<"};
+    for (size_t i = 0; i + 1 < sizeof(safe)/sizeof(safe[0]); i++)
+        CHECK(edit_document_plain_piece(safe[i], strlen(safe[i])));
+    const char *dynamic[] = {"", "<", "&", "]", "]]>", "\xc0", "\x80", "\xef\xbf\xbe", "\x01", "\xf0\x9f"};
+    for (size_t i = 0; i < sizeof(dynamic)/sizeof(dynamic[0]); i++)
+        CHECK(!edit_document_plain_piece(dynamic[i], strlen(dynamic[i])));
+    CHECK(!edit_document_plain_piece("a\0b", 3));
+    request r; fixture(&r);
+    interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
+    provide_snapshot(call, "OLD\n", false);
+    const char *tails[] = {
+        "><old_text><all/></old_text><new_text>",
+        "><old_text><all/></old_text><new_text>α中🙂",
+        "><old_text><all/></old_text><new_text><![CDATA[<html>]]>",
+        "><old_text><all/></old_text><new_text><![CDATA[<html>",
+        "><old_text><all/></old_text><new_text>&am",
+        "><old_text><all/></old_text><new_text><![CDATA[x]]",
+        "><old_text><all/></old_text><new_text>\xf0\x9f",
+        "><old_text><all/></old_text><new_text></new_text>  ",
+    };
+    for (size_t i = 0; i < sizeof(tails)/sizeof(tails[0]); i++) {
+        buf raw = {0}; buf_puts(&raw, paused_prefix); buf_puts(&raw, tails[i]);
+        /* Each branch is an independent transcript. */
+        edit_document *state = edit_document_new("</parameter>");
+        CHECK(edit_document_begin_input(state, "src.py")); CHECK(edit_document_provide(state, "OLD\n", false));
+        interactive_edit_commit_string(state, raw.ptr + strlen(parameter_prefix),
+            raw.len - strlen(parameter_prefix), "</parameter>");
+        CHECK(edit_document_plain_replacement(state, raw.len - strlen(parameter_prefix)) == (i < 4));
+        for (size_t p = 0; p + 1 < sizeof(safe)/sizeof(safe[0]); p++) {
+            buf candidate = {0}; buf_puts(&candidate, raw.ptr + strlen(parameter_prefix)); buf_puts(&candidate, safe[p]);
+            compare_incremental_view(state, candidate.ptr, candidate.len,
+                raw.len - strlen(parameter_prefix), false);
+            edit_document_checkpoint before = edit_document_restart(state, SIZE_MAX, SIZE_MAX);
+            bool plain = interactive_edit_plain_replacement(state, candidate.ptr, candidate.len, "</parameter>");
+            edit_document_checkpoint after = edit_document_restart(state, SIZE_MAX, SIZE_MAX);
+            CHECK(before.offset == after.offset);
+            if (plain) {
+                for (size_t next = 0; next + 1 < sizeof(safe)/sizeof(safe[0]); next++) {
+                    buf extension = {0}; buf_puts(&extension, candidate.ptr); buf_puts(&extension, safe[next]);
+                    edit_document_view view = interactive_edit_probe(state, extension.ptr, extension.len,
+                        "</parameter>", candidate.len, false, false, NULL);
+                    CHECK(view.valid); free(view.path); buf_free(&extension);
+                }
+            }
+            if (i < 4) {
+                edit_document_view view = interactive_edit_view(state, candidate.ptr, candidate.len,
+                    "</parameter>", raw.len - strlen(parameter_prefix), false);
+                CHECK(view.valid); free(view.path);
+            }
+            buf_free(&candidate);
+        }
+        edit_document_free(state); buf_free(&raw);
+    }
+    /* Configuring an interactive edit does not constrain other tool strings. */
+    tool_schema_orders_add_json(&r.tool_orders,
+        "{\"name\":\"plain\",\"parameters\":{\"type\":\"object\",\"properties\":{\"body\":{\"type\":\"string\"}},\"required\":[\"body\"]}}");
+    const char *ordinary = "<tool_call><function=plain><parameter=body>hello";
+    dsml_decode_tracker dt; dsml_decode_tracker_init(&dt, &r);
+    dsml_decode_tracker_update(&dt, ordinary, strlen(ordinary));
+    CHECK(agentic_tracker_has_unbounded_string(&dt));
+    agentic_token_filter filter = {.req=&r, .tracker=&dt, .raw=ordinary,
+        .raw_len=strlen(ordinary), .use_incremental_string=true, .incremental_free_string=true};
+    CHECK(!agentic_xml_partition_eligible(&filter));
+    CHECK(agentic_filter_token(&filter, 0, "ordinary α", strlen("ordinary α")));
+    buf_free(&filter.scratch); request_free(&r);
+}
+
+static void test_resumed_progress_counters(void) {
+    FILE *output = tmpfile(); CHECK(output);
+    int saved = dup(STDERR_FILENO); CHECK(saved >= 0);
+    CHECK(dup2(fileno(output), STDERR_FILENO) >= 0);
+    double start = now_sec() - 1, last = start;
+    int completion = 115;
+    log_decode_progress(REQ_CHAT, 1000, 115, true, true, false, true, false,
+        start, 115, &last, &completion);
+    fflush(stderr);
+    CHECK(dup2(saved, STDERR_FILENO) >= 0); close(saved);
+    rewind(output); char line[1024] = {0}; CHECK(fgets(line, sizeof(line), output)); fclose(output);
+    CHECK(strstr(line, "ctx=1115..1115:0 gen=115"));
+    CHECK(strstr(line, "chunk=0.00 t/s avg=0.00 t/s"));
+    CHECK(completion == 115 && last > start);
+}
+
 int main(void) {
     test_text_oracle(); test_document_constraints(); test_special_operations();
     test_multiple_elements_and_ranges(); test_entities_cdata_and_native_delimiters();
     test_configuration_and_description(); test_escape_frontiers(); test_native_syntaxes_and_reasoning();
     test_cdata_end_prefix_matches_snapshot();
+    test_incremental_document_restarts();
+    test_incremental_selection_restarts();
+    test_selection_frontier_equivalence();
+    test_xml_static_frontier();
+    test_resumed_progress_counters();
     test_response_metadata(); test_runtime();
     test_concurrent_resume_and_queued_cancel(); test_disconnected_queued_request();
     test_reject_second_element(); test_expiry_and_memory_budget(); test_large_snapshot();

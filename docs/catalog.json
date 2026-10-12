@@ -1591,7 +1591,7 @@
               "title": "Chiamate interattive v2: edit document con chiusura finale",
               "level": 1,
               "start": 1,
-              "end": 257,
+              "end": 262,
               "summary": "Contratto server aggiornato al 12 ottobre 2026."
             },
             {
@@ -1626,8 +1626,8 @@
               "title": "Esecuzione dei test",
               "level": 2,
               "start": 221,
-              "end": 257,
-              "summary": "`make test` esegue la suite C, i test del server e i gate disponibili del motore."
+              "end": 262,
+              "summary": "Il report delle prestazioni XML"
             }
           ]
         }
@@ -1681,6 +1681,53 @@
               "start": 67,
               "end": 74,
               "summary": "I tempi finali vengono dal percorso sincronizzato di ds4-bench."
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/interactive-edit-speed-20261012.md",
+          "sections": [
+            {
+              "title": "Decoding dei documenti edit XML — 12 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 85,
+              "summary": "Il problema era il costo crescente del masking: ogni candidato ripercorreva la"
+            },
+            {
+              "title": "Responsabilità e percorso predefinito",
+              "level": 2,
+              "start": 10,
+              "end": 39,
+              "summary": "entità complete e delimitatori risolti."
+            },
+            {
+              "title": "Misure e riproduzione",
+              "level": 2,
+              "start": 40,
+              "end": 85,
+              "summary": "Hardware: RTX 3090, driver 610.88, WSL Ubuntu 24.04."
+            },
+            {
+              "title": "Un solo server già attivo; il driver non avvia un altro modello.",
+              "level": 1,
+              "start": 86,
+              "end": 151,
+              "summary": "exmekh_lib/.venv/bin/python tests/bench_interactive_edit_live.py \\"
+            },
+            {
+              "title": "Correttezza e intenti del modello",
+              "level": 2,
+              "start": 101,
+              "end": 123,
+              "summary": "Passano le fixture native del server e del protocollo, i confronti a ogni"
+            },
+            {
+              "title": "Limiti e prosecuzione sui chunk",
+              "level": 2,
+              "start": 124,
+              "end": 151,
+              "summary": "Un token che lascia aperta un'entità, uno scalar UTF-8 o una chiusura ambigua"
             }
           ]
         },

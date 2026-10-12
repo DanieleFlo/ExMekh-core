@@ -96,32 +96,102 @@ static bool interactive_edit_reply(void **opaque, const schema_json_value *reply
     return edit_document_provide(*opaque, text, create);
 }
 
-static edit_document_view interactive_edit_view(const void *opaque, const char *raw,
-        size_t n, const char *end, size_t committed, bool complete) {
+/* Translate a decoded restart back to the native transport representation. */
+static size_t interactive_edit_native_offset(const char *raw, size_t decoded,
+                                              const char *end) {
+    const char *start = raw;
+    while (decoded--) {
+        if (ds4_tool_text_escaped_close(raw, end))
+            raw += !strncmp(raw, "&amp;", 5) ? 5 : 4;
+        else raw++;
+    }
+    return (size_t)(raw - start);
+}
+
+static size_t interactive_edit_characters(const void *opaque, const char *raw,
+                                          size_t n, const char *end) {
+    edit_document_checkpoint restart = edit_document_restart(opaque, n, n);
+    char *tail = xstrndup(raw + restart.offset, n - restart.offset);
+    ds4_tool_text_unescape(tail, end);
+    size_t count = restart.characters;
+    for (const unsigned char *p = (const unsigned char *)tail; *p; p++)
+        if ((*p & 0xc0) != 0x80) count++;
+    free(tail);
+    return count;
+}
+
+static edit_document_view interactive_edit_probe(const void *opaque, const char *raw,
+        size_t n, const char *end, size_t committed, bool complete, bool incremental, buf *selected) {
+    edit_document_checkpoint restart = incremental ? edit_document_restart(opaque, n, committed) :
+        (edit_document_checkpoint){0};
+    size_t base = restart.offset;
+    raw += base;
+    n -= base;
+    committed -= base;
     size_t safe = n;
     for (size_t i = n; i > 0; i--) {
         if (raw[i-1] == '&' && ds4_tool_text_partial_escape(raw+i-1, n-i+1, end)) {
             safe = i-1; break;
         }
     }
-    char *value = xstrndup(raw, n);
+    char *encoded = xstrndup(raw, n);
+    char *value = xstrdup(encoded);
     char *prefix = xstrndup(raw, committed < n ? committed : n);
     /* Native delimiter escapes are one transport layer, not XML entities. */
     ds4_tool_text_unescape(value, end);
     ds4_tool_text_unescape(prefix, end);
-    edit_document_view view = edit_document_scan(opaque, value, strlen(value), strlen(prefix), complete);
-    if (safe != n && !view.valid && !complete) {
-        free(view.path);
-        free(value); value=xstrndup(raw,safe); ds4_tool_text_unescape(value,end);
-        view=edit_document_scan(opaque,value,strlen(value),strlen(prefix),false);
-        view.valid=view.valid && view.native_escape;
+    edit_document_view view = edit_document_scan_from(opaque, value, strlen(value), strlen(prefix), complete, restart, selected);
+    if (safe != n) {
+        if (selected) selected->len = 0;
+        free(value); value = xstrndup(raw, safe); ds4_tool_text_unescape(value, end);
+        edit_document_view before_escape = edit_document_scan_from(opaque, value,
+            strlen(value), strlen(prefix), false, restart, selected);
+        if (!view.valid && !complete) {
+            free(view.path);
+            view = before_escape;
+            view.valid = view.valid && view.native_escape;
+        } else {
+            view.checkpoint = before_escape.checkpoint;
+            free(before_escape.path);
+        }
     }
     if (safe != n) {
         view.speculative = false;
         view.payload_start = false;
     }
-    free(prefix); free(value);
+    size_t characters = restart.characters;
+    for (size_t i = 0; i < view.checkpoint.offset; i++)
+        if (((unsigned char)value[i] & 0xc0) != 0x80) characters++;
+    view.checkpoint.characters = characters;
+    view.checkpoint.offset = base + interactive_edit_native_offset(encoded, view.checkpoint.offset, end);
+    free(encoded); free(prefix); free(value);
     return view;
+}
+
+static edit_document_view interactive_edit_view(const void *opaque, const char *raw,
+        size_t n, const char *end, size_t committed, bool complete) {
+    return interactive_edit_probe(opaque, raw, n, end, committed, complete, true, NULL);
+}
+
+static bool interactive_edit_plain_replacement(const void *state, const char *raw,
+                                               size_t n, const char *end) {
+    if (edit_document_plain_replacement(state, n)) return true;
+    /* MTP's accepted shadow prefix may extend the real checkpoint. Validate
+     * its tail without publishing a checkpoint or changing authorizations. */
+    edit_document_view view = interactive_edit_view(state, raw, n, end, n, false);
+    bool plain = view.valid && view.checkpoint.new_body && view.checkpoint.offset == n;
+    free(view.path);
+    return plain;
+}
+
+static void interactive_edit_commit_string(void *opaque, const char *raw,
+                                            size_t n, const char *end) {
+    if (!opaque) return;
+    buf selected = {0};
+    edit_document_view view = interactive_edit_probe(opaque, raw, n, end, n, false, true, &selected);
+    if (view.valid) edit_document_commit_restart(opaque, view.checkpoint, &selected);
+    buf_free(&selected);
+    free(view.path);
 }
 
 static bool interactive_edit_string_prefix(const interactive_tool *tool, const void *state,
@@ -130,6 +200,16 @@ static bool interactive_edit_string_prefix(const interactive_tool *tool, const v
     const interactive_edit_fields *fields = interactive_tool_config(tool);
     if (prop != fields->document) return false;
     edit_document_view view = interactive_edit_view(state, value, n, end, committed, complete);
+    bool valid = view.valid;
+    free(view.path);
+    return valid;
+}
+
+static bool interactive_edit_string_prefix_oracle(const interactive_tool *tool, const void *state,
+        int prop, const char *value, size_t n, bool complete, size_t committed, const char *end) {
+    const interactive_edit_fields *fields = interactive_tool_config(tool);
+    if (prop != fields->document) return false;
+    edit_document_view view = interactive_edit_probe(state, value, n, end, committed, complete, false, NULL);
     bool valid = view.valid;
     free(view.path);
     return valid;

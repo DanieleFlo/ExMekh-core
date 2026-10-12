@@ -9,12 +9,21 @@ typedef struct {
     edit_constraint *snapshot;
 } edit_document_item;
 
+/* The runtime only appends to the accepted transcript. Pending delimiters and
+ * UTF-8 scalars stay after this validated restart; probes never advance it. */
+typedef struct {
+    size_t offset, index, characters, logical_bytes;
+    bool old_body, new_body, cdata, all, started;
+} edit_document_checkpoint;
+
 typedef struct {
     edit_document_item item[INTERACTIVE_MAX_RECORDS];
     size_t count;
     edit_constraint *snapshots[INTERACTIVE_MAX_RECORDS];
     size_t snapshot_count;
     const char *native_end;
+    edit_document_checkpoint checkpoint;
+    edit_selection_frontier selection;
 } edit_document;
 
 static edit_document *edit_document_new(const char *native_end) {
@@ -26,6 +35,7 @@ static edit_document *edit_document_new(const char *native_end) {
 
 static void edit_document_free(edit_document *document) {
     if (!document) return;
+    edit_selection_frontier_free(&document->selection);
     for (size_t i = 0; i < document->count; i++) free(document->item[i].path);
     /* Items borrow snapshots; the document owns each unique allocation. */
     for (size_t i = 0; i < document->snapshot_count; i++) {
@@ -37,6 +47,31 @@ static void edit_document_free(edit_document *document) {
 
 static const char *edit_document_native_end(const edit_document *document) {
     return document->native_end;
+}
+
+static edit_document_checkpoint edit_document_restart(const edit_document *document,
+                                                       size_t n, size_t committed) {
+    if (!document || document->checkpoint.offset > n ||
+        document->checkpoint.offset > committed) return (edit_document_checkpoint){0};
+    return document->checkpoint;
+}
+
+/* Safe tokens cannot complete XML/native delimiters or a pending UTF-8 scalar. */
+static bool edit_document_plain_replacement(const void *opaque, size_t n) {
+    const edit_document *document = opaque;
+    return document && document->checkpoint.new_body && document->checkpoint.offset == n;
+}
+
+static void edit_document_commit_restart(edit_document *document,
+        edit_document_checkpoint checkpoint, const buf *selected) {
+    if (checkpoint.old_body) {
+        if (!document->checkpoint.old_body || document->checkpoint.index != checkpoint.index)
+            edit_selection_frontier_init(&document->selection,
+                document->item[checkpoint.index].snapshot);
+        edit_selection_frontier_advance(&document->selection,
+            selected->ptr ? selected->ptr : "", selected->len);
+    } else edit_selection_frontier_free(&document->selection);
+    document->checkpoint = checkpoint;
 }
 
 static bool edit_document_begin_input(edit_document *document, const char *path) {
@@ -89,6 +124,7 @@ typedef struct {
     edit_document_phase phase;
     size_t index;
     char *path;
+    edit_document_checkpoint checkpoint;
 } edit_document_view;
 
 typedef struct {
@@ -124,6 +160,13 @@ static bool edit_xml_unicode(const char *text, bool complete) {
         if (!edit_xml_character(value)) return false;
     }
     return true;
+}
+
+/* Context-independent tokens safe in both XML text and CDATA. */
+static bool edit_document_plain_piece(const char *piece, size_t n) {
+    if (!piece || !n || memchr(piece, 0, n) || memchr(piece, '<', n) ||
+        memchr(piece, '&', n) || memchr(piece, ']', n)) return false;
+    return strlen(piece) == n && edit_xml_unicode(piece, true);
 }
 
 /* 1: consumed, 0: viable fragment, -1: incompatible. */
@@ -196,17 +239,60 @@ static int edit_xml_text_byte(edit_xml_cursor *c, buf *out) {
     return 1;
 }
 
-/* Preserve physical CR/LF bytes, unlike a general XML parser. */
-static int edit_xml_cdata(edit_xml_cursor *c, buf *out) {
-    int result = edit_xml_take(c, "<![CDATA[");
-    if (result != 1) return result;
-    while (c->pos < c->length) {
-        if (edit_xml_prefix(c, "]]>") ) return edit_xml_take(c, "]]>");
-        unsigned char ch = (unsigned char)c->text[c->pos];
-        if (ch < 0x80 && !edit_xml_character(ch)) return -1;
+/* Checkpoint whole scalars, keeping a fragmented UTF-8 scalar in the tail.
+ * Entity decoding also produces whole scalars. Physical CR/LF are preserved. */
+static int edit_xml_scalar(edit_xml_cursor *c, buf *out) {
+    unsigned char lead = (unsigned char)c->text[c->pos];
+    if (lead < 0x80) {
+        if (!edit_xml_character(lead)) return -1;
         buf_putc(out, c->text[c->pos++]);
+        return 1;
+    }
+    size_t need = lead < 0xe0 ? 2 : lead < 0xf0 ? 3 : 4;
+    size_t left = c->length - c->pos, n = left < need ? left : need;
+    if (!interactive_utf8_valid((const unsigned char *)c->text + c->pos, n, left >= need)) return -1;
+    buf_append(out, c->text + c->pos, n);
+    c->pos += n;
+    if (left < need) return 0;
+    /* UTF-8 validation alone admits XML-forbidden noncharacters. */
+    unsigned value = lead & (need == 2 ? 31 : need == 3 ? 15 : 7);
+    for (size_t i = 1; i < n; i++) value = (value << 6) | ((unsigned char)c->text[c->pos - n + i] & 63);
+    return edit_xml_character(value) ? 1 : -1;
+}
+
+/* Preserve physical CR/LF bytes, unlike a general XML parser. */
+static void edit_document_body_restart(edit_document_view *view, size_t offset,
+                                       bool cdata, size_t logical_bytes) {
+    if (!view || (view->phase != EDIT_DOCUMENT_NEW && view->phase != EDIT_DOCUMENT_OLD)) return;
+    view->checkpoint.offset = offset;
+    view->checkpoint.index = view->index;
+    view->checkpoint.old_body = view->phase == EDIT_DOCUMENT_OLD;
+    view->checkpoint.new_body = view->phase == EDIT_DOCUMENT_NEW;
+    view->checkpoint.started = true;
+    view->checkpoint.logical_bytes = view->checkpoint.old_body ? logical_bytes : 0;
+    view->checkpoint.cdata = cdata;
+}
+
+static int edit_xml_cdata_content(edit_xml_cursor *c, buf *out,
+                                  edit_document_view *view) {
+    while (c->pos < c->length) {
+        if (edit_xml_prefix(c, "]]>") ) {
+            int result = edit_xml_take(c, "]]>");
+            if (result == 1) edit_document_body_restart(view, c->pos, false, out->len);
+            return result;
+        }
+        int result = edit_xml_scalar(c, out);
+        if (result != 1) return result;
+        edit_document_body_restart(view, c->pos, true, out->len);
     }
     return 0;
+}
+
+static int edit_xml_cdata(edit_xml_cursor *c, buf *out, edit_document_view *view) {
+    int result = edit_xml_take(c, "<![CDATA[");
+    if (result != 1) return result;
+    edit_document_body_restart(view, c->pos, true, out->len);
+    return edit_xml_cdata_content(c, out, view);
 }
 
 /* Ranges are lexical strings: no integer conversion or file-range policy. */
@@ -228,13 +314,15 @@ static bool edit_document_barrier(const edit_xml_cursor *c) {
 }
 
 static bool edit_document_literal(const edit_document_item *item, const buf *text,
-                                   bool complete, bool *speculative) {
+        bool complete, bool *speculative, const edit_selection_frontier *frontier) {
     size_t candidates = 0;
     if (!item || !item->snapshot) return false;
-    bool valid = edit_selection_prefix(item->snapshot, text->ptr ? text->ptr : "",
-                                        text->len, complete, &candidates);
-    if (speculative) *speculative = candidates == 1 &&
-        edit_selection_prefix(item->snapshot, text->ptr ? text->ptr : "", text->len, true, NULL);
+    const char *value = text->ptr ? text->ptr : "";
+    bool valid = frontier ? edit_selection_frontier_prefix(frontier, value, text->len, complete, &candidates) :
+        edit_selection_prefix(item->snapshot, value, text->len, complete, &candidates);
+    if (speculative) *speculative = candidates == 1 && (frontier ?
+        edit_selection_frontier_prefix(frontier, value, text->len, true, NULL) :
+        edit_selection_prefix(item->snapshot, value, text->len, true, NULL));
     return valid;
 }
 
@@ -274,11 +362,12 @@ static bool edit_document_entity_scalar(unsigned scalar, const char *raw, size_t
  * In particular an escape cannot be appended at EOF, or inside a closing
  * delimiter. This tests snapshot bytes, never future tokenizer paths. */
 static bool edit_document_escape_candidate(const edit_document_item *item, const buf *logical,
-        const char *entity, size_t n, const char *native_end) {
+        const char *entity, size_t n, const char *native_end, const edit_selection_frontier *frontier) {
     size_t cursor = 0;
     const char *next;
-    while ((next = edit_selection_candidate(item->snapshot,
-            logical->ptr ? logical->ptr : "", logical->len, &cursor, NULL))) {
+    const char *value = logical->ptr ? logical->ptr : "";
+    while ((next = frontier ? edit_selection_frontier_candidate(frontier, value, logical->len, &cursor, NULL) :
+            edit_selection_candidate(item->snapshot, value, logical->len, &cursor, NULL))) {
         if (!*next) continue;
         if (entity ? edit_document_entity_scalar(edit_document_next_scalar(next),entity,n) :
                      ds4_tool_text_needs_escape(next,native_end)) return true;
@@ -289,17 +378,25 @@ static bool edit_document_escape_candidate(const edit_document_item *item, const
 /* Body parser returns at its end delimiter. Text inside CDATA never has
  * command semantics, including a byte-exact closing delimiter. */
 static int edit_document_body(edit_xml_cursor *c, const edit_document_item *item,
-                               bool old, bool *all, edit_document_view *view, const char *native_end) {
+                               bool old, bool *all, edit_document_view *view, const char *native_end,
+        const edit_document_checkpoint *restart, const edit_selection_frontier *frontier, buf *selected) {
     const char *closing = old ? "</old_text>" : "</new_text>";
     buf logical = {0};
     int result = 0;
     bool command = false, unfinished_markup = false;
-    if (old && edit_xml_prefix(c, "<all/>")) {
+    /* Content is owned by the transcript. The sentinel only preserves the
+     * rule that a delete command must be the entire original body. */
+    if (!old && restart && restart->started) buf_putc(&logical, 'x');
+    if (restart && restart->cdata) {
+        result = edit_xml_cdata_content(c, &logical, view);
+        if (result != 1) goto done;
+    }
+    if (old && (!restart || !restart->started) && edit_xml_prefix(c, "<all/>")) {
         command = true; view->phase = EDIT_DOCUMENT_STRUCTURE;
         result = edit_xml_take(c, "<all/>");
         if (result != 1) goto done;
         *all = true;
-    } else if (old && edit_xml_prefix(c, "<line number=\"")) {
+    } else if (old && (!restart || !restart->started) && edit_xml_prefix(c, "<line number=\"")) {
         command = true; view->phase = EDIT_DOCUMENT_STRUCTURE;
         result = edit_xml_take(c, "<line number=\"");
         if (result != 1) goto done;
@@ -307,7 +404,8 @@ static int edit_document_body(edit_xml_cursor *c, const edit_document_item *item
         if (result != 1) goto done;
         result = edit_xml_take(c, "\"/>");
         if (result != 1) goto done;
-    } else if (!old && c->length - c->pos >= 2 && edit_xml_prefix(c, "<delete/>")) {
+    } else if (!old && (!restart || !restart->started) &&
+               c->length - c->pos >= 2 && edit_xml_prefix(c, "<delete/>")) {
         if (!*all || edit_constraint_is_creation(item->snapshot)) { result = -1; goto done; }
         command = true; view->phase = EDIT_DOCUMENT_STRUCTURE;
         result = edit_xml_take(c, "<delete/>");
@@ -336,7 +434,7 @@ static int edit_document_body(edit_xml_cursor *c, const edit_document_item *item
                 unfinished_markup = true;
                 result = 0; goto done;
             }
-            if (old && !command && !edit_document_literal(item, &logical, true, NULL)) {
+            if (old && !command && !edit_document_literal(item, &logical, true, NULL, frontier)) {
                 result = -1; goto done;
             }
             if (!command && !edit_xml_unicode(logical.ptr ? logical.ptr : "", true)) {
@@ -350,7 +448,7 @@ static int edit_document_body(edit_xml_cursor *c, const edit_document_item *item
         if (c->text[c->pos] == '<') {
             if (edit_xml_prefix(c, "<![CDATA[")) {
                 size_t opening = c->pos;
-                result = edit_xml_cdata(c, &logical);
+                result = edit_xml_cdata(c, &logical, view);
                 unfinished_markup = !result && c->pos == opening;
             } else if (!old && edit_xml_prefix(c, "</new_text>")) {
                 result = edit_xml_take(c, "</new_text>");
@@ -368,45 +466,54 @@ static int edit_document_body(edit_xml_cursor *c, const edit_document_item *item
                     buf_append(&logical, c->text + c->pos, c->length - c->pos);
                 goto done;
             }
-            if (old && c->text[c->pos] == '&') {
-                size_t entity_start=c->pos;
-                result = edit_xml_entity(c,&logical);
-                if (!result && !edit_document_escape_candidate(item,&logical,
-                        c->text+entity_start,c->length-entity_start,NULL)) result = -1;
-                unfinished_markup = !result;
-            } else {
-                bool entity = c->text[c->pos] == '&';
-                result = edit_xml_text_byte(c, &logical);
-                unfinished_markup = entity && !result;
-            }
+            bool entity = c->text[c->pos] == '&';
+            size_t entity_start = c->pos;
+            result = entity ? edit_xml_entity(c, &logical) : edit_xml_scalar(c, &logical);
+            if (old && entity && !result && !edit_document_escape_candidate(item, &logical,
+                    c->text + entity_start, c->length - entity_start, NULL, frontier)) result = -1;
+            unfinished_markup = entity && !result;
+            if (result == 1) edit_document_body_restart(view, c->pos, false, logical.len);
         }
         if (result < 0) goto done;
         if (!result) goto done;
     }
     result = 0;
-    if (old && !command && !edit_document_literal(item, &logical, false, &view->speculative)) result = -1;
 done:
     if (!edit_xml_unicode(logical.ptr ? logical.ptr : "", false)) result = -1;
     if (!result && old && !command && view->phase == EDIT_DOCUMENT_OLD &&
-        !edit_document_literal(item, &logical, false, &view->speculative)) result = -1;
+        !edit_document_literal(item, &logical, false, &view->speculative, frontier)) result = -1;
     if (!result && !command && view->phase != EDIT_DOCUMENT_STRUCTURE)
         /* A transport escape cannot finish an XML opener/entity or UTF-8
          * scalar. Accepting it there leaves no possible next token. */
         view->native_escape = !unfinished_markup &&
             edit_xml_unicode(logical.ptr ? logical.ptr : "", true) &&
-            (!old || edit_document_escape_candidate(item,&logical,NULL,0,native_end));
+            (!old || edit_document_escape_candidate(item,&logical,NULL,0,native_end,frontier));
+    if (selected && old && view->checkpoint.old_body && view->checkpoint.logical_bytes)
+        buf_append(selected, logical.ptr, view->checkpoint.logical_bytes);
     buf_free(&logical);
     return result;
 }
 
-static edit_document_view edit_document_scan(const edit_document *state,
-        const char *text, size_t n, size_t committed, bool complete) {
-    edit_document_view view = {.valid = true, .phase = EDIT_DOCUMENT_STRUCTURE};
+static edit_document_view edit_document_scan_from(const edit_document *state,
+        const char *text, size_t n, size_t committed, bool complete,
+        edit_document_checkpoint restart, buf *selected) {
+    edit_document_view view = {.valid = true, .phase = EDIT_DOCUMENT_STRUCTURE,
+        .index = restart.index, .checkpoint = restart};
+    view.checkpoint.offset = 0;
+    view.checkpoint.logical_bytes = 0;
     edit_xml_cursor cursor = {.text = text, .length = n, .committed = committed};
     edit_xml_cursor *c = &cursor;
     buf path = {0};
     int result;
+    bool all = restart.all;
+    const edit_document_item *item = NULL;
 #define EDIT_TAKE(s) do { result = edit_xml_take(c, (s)); if (result != 1) goto stop; } while (0)
+    if (restart.new_body || restart.old_body) {
+        item = state && view.index < state->count ? &state->item[view.index] : NULL;
+        if (!item || !item->snapshot) { view.valid = false; goto done; }
+        if (restart.old_body) goto selection;
+        goto replacement;
+    }
     for (;;) {
         edit_xml_skip_space(c);
         if (c->pos == n) {
@@ -433,7 +540,7 @@ static edit_document_view edit_document_scan(const edit_document *state,
         c->pos++;
         view.native_escape = false;
         if (!path.len || !edit_xml_unicode(path.ptr, true)) { result = -1; goto stop; }
-        const edit_document_item *item = state && view.index < state->count ? &state->item[view.index] : NULL;
+        item = state && view.index < state->count ? &state->item[view.index] : NULL;
         if (!item) {
             view.phase = EDIT_DOCUMENT_AWAIT;
             view.path = xstrdup(path.ptr);
@@ -447,7 +554,8 @@ static edit_document_view edit_document_scan(const edit_document *state,
             break;
         }
         EDIT_TAKE(">");
-        bool range = false, all = false;
+        bool range = false;
+        all = false;
         if (edit_xml_prefix(c, "<old_text>")) {
             EDIT_TAKE("<old_text>");
         } else {
@@ -462,18 +570,29 @@ static edit_document_view edit_document_scan(const edit_document *state,
         if (range) {
             EDIT_TAKE("</old_text>");
         } else {
-            result = edit_document_body(c, item, true, &all, &view,state->native_end);
+            view.checkpoint = (edit_document_checkpoint){.offset = c->pos,
+                .index = view.index, .old_body = true};
+selection:
+            view.phase = EDIT_DOCUMENT_OLD;
+            result = edit_document_body(c, item, true, &all, &view,state->native_end,
+                restart.old_body ? &restart : NULL, restart.old_body ? &state->selection : NULL, selected);
             if (result != 1) goto stop;
+            restart = (edit_document_checkpoint){0};
         }
         view.phase = EDIT_DOCUMENT_STRUCTURE;
         view.native_escape = false;
         if (edit_document_barrier(c)) { result = -1; goto stop; }
         EDIT_TAKE("<new_text>");
+        view.checkpoint = (edit_document_checkpoint){.offset = c->pos,
+            .index = view.index, .new_body = true, .all = all};
+replacement:
         view.phase = EDIT_DOCUMENT_NEW;
         view.speculative = true;
-        view.payload_start = c->pos == n;
+        view.payload_start = !restart.started && c->pos == n;
         if (edit_document_barrier(c)) { result = -1; goto stop; }
-        result = edit_document_body(c, item, false, &all, &view,state->native_end);
+        result = edit_document_body(c, item, false, &all, &view,state->native_end,
+            restart.new_body ? &restart : NULL, NULL, NULL);
+        restart = (edit_document_checkpoint){0};
         if (result != 1) goto stop;
         view.phase = EDIT_DOCUMENT_STRUCTURE;
         view.native_escape = false;
@@ -483,6 +602,7 @@ static edit_document_view edit_document_scan(const edit_document *state,
         edit_xml_skip_space(c);
         EDIT_TAKE("</edit>");
         view.index++;
+        view.checkpoint = (edit_document_checkpoint){.offset = c->pos, .index = view.index};
     }
     goto done;
 stop:
@@ -494,6 +614,12 @@ done:
     buf_free(&path);
     return view;
 #undef EDIT_TAKE
+}
+
+static edit_document_view edit_document_scan(const edit_document *state,
+        const char *text, size_t n, size_t committed, bool complete) {
+    return edit_document_scan_from(state, text, n, committed, complete,
+        (edit_document_checkpoint){0}, NULL);
 }
 
 #endif

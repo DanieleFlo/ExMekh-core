@@ -436,6 +436,9 @@ static interactive_call *interactive_observe(request *r,
         dt->mode != DSML_TRACK_STRING_BODY || dt->pos != n) return NULL;
     interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
     if (call && !call->authorized) return call;
+    if (call && tool->behavior->commit_string)
+        tool->behavior->commit_string(call->behavior_state,
+            raw + dt->param_value_start, n - dt->param_value_start, dt->syn->param_end);
     buf values = {0};
     size_t input_index = 0;
     if (!tool->behavior->await_input(tool, call ? call->behavior_state : NULL,

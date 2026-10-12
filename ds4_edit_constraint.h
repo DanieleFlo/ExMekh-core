@@ -9,6 +9,7 @@ typedef struct {
     size_t *unique_after;
     size_t lines;
     size_t *candidate_line;
+    size_t *selection_line;
     size_t bucket[257];
     bool create;
 } edit_constraint;
@@ -33,8 +34,10 @@ static bool edit_constraint_matches(const edit_constraint *c, const char *text, 
 }
 
 static size_t edit_constraint_memory_bound(size_t length) {
-    /* Retained indexes plus radix-sort construction scratch. */
-    return 64 * (length + 1) + sizeof(edit_constraint);
+    /* Retained indexes plus radix-sort scratch, including fixed count bins
+     * and the initial line allocation even for very small snapshots. */
+    return 64 * (length + 1) + sizeof(edit_constraint) +
+        257 * sizeof(int) + 32 * sizeof(size_t);
 }
 
 static void edit_constraint_free(edit_constraint *c) {
@@ -42,6 +45,7 @@ static void edit_constraint_free(edit_constraint *c) {
     free(c->line_start);
     free(c->unique_after);
     free(c->candidate_line);
+    free(c->selection_line);
     memset(c, 0, sizeof(*c));
 }
 
@@ -102,6 +106,21 @@ static void edit_index_unique(edit_constraint *c) {
         int left = next[position], right = position + 1 < n ? next[position+1] : 0;
         c->unique_after[line] = (size_t)(left > right ? left : right) + 1;
     }
+    /* Keep physical-line candidates in suffix order. Removing a common
+     * accepted prefix preserves this order, so later probes use binary search. */
+    size_t candidates = 0;
+    for (size_t i = 0; i < n; i++) {
+        size_t start = (size_t)sa[i];
+        if (start && c->text[start - 1] != '\n' &&
+            !(c->text[start - 1] == '\r' && c->text[start] != '\n')) continue;
+        size_t low = 0, high = c->lines;
+        while (low < high) {
+            size_t mid = low + (high - low) / 2;
+            if (c->line_start[mid] < start) low = mid + 1;
+            else high = mid;
+        }
+        if (c->unique_after[low] <= n - start) c->selection_line[candidates++] = low;
+    }
     free(sa); free(tmp); free(rank); free(next); free(count);
 }
 
@@ -122,10 +141,11 @@ static void edit_constraint_init(edit_constraint *c, const char *text, bool crea
         }
     }
     c->unique_after = xmalloc((c->lines ? c->lines : 1) * sizeof(size_t));
+    c->candidate_line = xmalloc((c->lines ? c->lines : 1) * sizeof(size_t));
+    c->selection_line = xmalloc((c->lines ? c->lines : 1) * sizeof(size_t));
     edit_index_unique(c);
     /* First-byte buckets discard impossible token families without scanning
      * every physical line. Only branches capable of a unique closure enter. */
-    c->candidate_line = xmalloc((c->lines ? c->lines : 1) * sizeof(size_t));
     for (size_t line = 0; line < c->lines; line++) {
         size_t start = c->line_start[line];
         if (c->unique_after[line] <= c->length - start)
@@ -172,6 +192,76 @@ static bool edit_selection_prefix(const edit_constraint *c, const char *value,
         if (literal && !candidate_count) return true;
     }
     return literal;
+}
+
+/* Only accepted logical bytes advance this frontier. Vocabulary and MTP
+ * probes compare their suffix with the remaining snapshot candidates. */
+typedef struct {
+    const edit_constraint *snapshot;
+    size_t first, last, length;
+} edit_selection_frontier;
+
+static void edit_selection_frontier_free(edit_selection_frontier *f) {
+    memset(f, 0, sizeof(*f));
+}
+
+static void edit_selection_frontier_init(edit_selection_frontier *f,
+                                          const edit_constraint *snapshot) {
+    edit_selection_frontier_free(f);
+    f->snapshot = snapshot;
+    f->last = snapshot->bucket[256];
+}
+
+static size_t edit_selection_frontier_bound(const edit_selection_frontier *f,
+        const char *value, size_t n, bool upper) {
+    const edit_constraint *c = f->snapshot;
+    size_t low = f->first, high = f->last;
+    while (low < high) {
+        size_t mid = low + (high - low) / 2;
+        size_t start = c->line_start[c->selection_line[mid]] + f->length;
+        size_t left = c->length - start;
+        int comparison = memcmp(c->text + start, value, left < n ? left : n);
+        if (!comparison && left < n) comparison = -1;
+        if (comparison < 0 || (!comparison && upper)) low = mid + 1;
+        else high = mid;
+    }
+    return low;
+}
+
+static const char *edit_selection_frontier_candidate(const edit_selection_frontier *f,
+        const char *value, size_t n, size_t *cursor, bool *unique) {
+    const edit_constraint *c = f->snapshot;
+    size_t first = edit_selection_frontier_bound(f, value, n, false);
+    size_t last = edit_selection_frontier_bound(f, value, n, true);
+    if (*cursor < last - first) {
+        size_t line = c->selection_line[first + (*cursor)++], start = c->line_start[line];
+        if (unique) *unique = f->length + n >= c->unique_after[line];
+        return c->text + start + f->length + n;
+    }
+    return NULL;
+}
+
+static bool edit_selection_frontier_prefix(const edit_selection_frontier *f,
+        const char *value, size_t n, bool complete, size_t *candidate_count) {
+    if (candidate_count) *candidate_count = 0;
+    size_t first = edit_selection_frontier_bound(f, value, n, false);
+    size_t last = edit_selection_frontier_bound(f, value, n, true);
+    if (candidate_count) *candidate_count = last - first;
+    if (first == last) return false;
+    if (!complete) return true;
+    if (last - first != 1) return false;
+    const edit_constraint *c = f->snapshot;
+    size_t line = c->selection_line[first], length = f->length + n;
+    const char *next = c->text + c->line_start[line] + length;
+    return length >= c->unique_after[line] && (!*next || ((unsigned char)*next & 0xc0) != 0x80);
+}
+
+static void edit_selection_frontier_advance(edit_selection_frontier *f,
+                                            const char *value, size_t n) {
+    size_t first = edit_selection_frontier_bound(f, value, n, false);
+    f->last = edit_selection_frontier_bound(f, value, n, true);
+    f->first = first;
+    f->length += n;
 }
 
 #endif

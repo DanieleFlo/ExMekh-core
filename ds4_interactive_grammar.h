@@ -86,12 +86,28 @@ static bool interactive_parameter_form(const request *r, const dsml_decode_track
 }
 
 static bool interactive_string_possible(const request *r,
-        const dsml_decode_tracker *dt, const char *raw, size_t end, bool complete, size_t new_from) {
+        const dsml_decode_tracker *dt, const char *raw, size_t end, bool complete,
+        size_t new_from, bool incremental) {
     const interactive_tool *t = interactive_tool_for(r, dt->active_order);
     if (!t) return agentic_string_parameter_prefix_possible(dt->active_order,
         dt->active_prop, raw, dt->param_value_start, end, complete, dt->syn);
     const schema_json_value *schema = tool_schema_order_property_schema(dt->active_order, dt->active_prop);
     const schema_json_value *maximum = schema_json_object_get(schema, "maxLength");
+    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
+    const char *value = raw + dt->param_value_start;
+    size_t n = end - dt->param_value_start;
+    size_t committed = new_from > dt->param_value_start ? new_from - dt->param_value_start : 0;
+    if (committed > n) committed = n;
+    bool constrained = interactive_field_has(t, dt->active_prop, INTERACTIVE_FIELD_CONSTRAINED);
+    interactive_string_probe_fn probe = incremental ? t->behavior->string_prefix : t->behavior->string_prefix_oracle;
+    /* A native-close trie prefix cannot end an unfinished XML body. Reject it
+     * from the checkpoint before decoding/scanning the entire JSON string. */
+    if (constrained && !probe(t, call ? call->behavior_state : NULL,
+        dt->active_prop, value, n, complete, committed, dt->syn->param_end)) return false;
+    if (!complete && constrained && t->behavior->string_characters) {
+        return !maximum || (double)t->behavior->string_characters(
+            call ? call->behavior_state : NULL, value, n, dt->syn->param_end) <= maximum->number;
+    }
     schema_json_value *decoded = interactive_parameter_value(dt->active_order, dt->active_prop,
         true, raw, dt->param_value_start, end, dt->syn);
     bool valid = interactive_utf8_valid((const unsigned char *)decoded->string,
@@ -103,22 +119,16 @@ static bool interactive_string_possible(const request *r,
     if (complete && valid) valid = schema_json_validate(schema, decoded, 0);
     schema_json_free(decoded);
     if (!valid) return false;
-    if (!interactive_field_has(t, dt->active_prop, INTERACTIVE_FIELD_CONSTRAINED))
+    if (!constrained)
         return agentic_string_parameter_prefix_possible(dt->active_order,
             dt->active_prop, raw, dt->param_value_start, end, complete, dt->syn);
-    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
-    const char *value = raw + dt->param_value_start;
-    size_t n = end - dt->param_value_start;
-    size_t committed = new_from > dt->param_value_start ? new_from - dt->param_value_start : 0;
-    if (committed > n) committed = n;
-    return t->behavior->string_prefix(t, call ? call->behavior_state : NULL, dt->active_prop,
-        value, n, complete, committed, dt->syn->param_end);
+    return true;
 }
 
 static bool interactive_value_valid(const request *r, const dsml_decode_tracker *dt,
                                      bool string, const char *raw, size_t end) {
     if (string && interactive_tool_for(r, dt->active_order))
-        return interactive_string_possible(r, dt, raw, end, true, end);
+        return interactive_string_possible(r, dt, raw, end, true, end, false);
     return agentic_validate_parameter_value(dt->active_order, dt->active_prop,
         string, raw, dt->param_value_start, end, dt->syn);
 }

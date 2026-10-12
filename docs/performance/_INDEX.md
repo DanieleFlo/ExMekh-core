@@ -12,6 +12,16 @@ Una modifica è utile soltanto se migliora il workload dichiarato di DS4 senza
 - righe 56–66: **Correttezza** — Il harness non sostituisce gli scorer Qwen già presenti in
 - righe 67–74: **Misurazione hardware** — I tempi finali vengono dal percorso sincronizzato di ds4-bench.
 
+## [Decoding dei documenti edit XML — 12 ottobre 2026](interactive-edit-speed-20261012.md)
+
+entità complete e delimitatori risolti.
+
+- righe 10–39: **Responsabilità e percorso predefinito** — entità complete e delimitatori risolti.
+- righe 40–85: **Misure e riproduzione** — Hardware: RTX 3090, driver 610.88, WSL Ubuntu 24.04.
+- righe 86–151: **Un solo server già attivo; il driver non avvia un altro modello.** — exmekh_lib/.venv/bin/python tests/bench_interactive_edit_live.py \
+- righe 101–123: **Correttezza e intenti del modello** — Passano le fixture native del server e del protocollo, i confronti a ogni
+- righe 124–151: **Limiti e prosecuzione sui chunk** — Un token che lascia aperta un'entità, uno scalar UTF-8 o una chiusura ambigua
+
 ## [Test completi XML v2 del 11 ottobre 2026](interactive-edit-xml-v2-full-tests-20261011.md)
 
 Uno stream batch terminava con `incomplete_generation`: il parser ammetteva

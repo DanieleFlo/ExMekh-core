@@ -220,6 +220,11 @@ prefill GPU, prestazioni o integrazione filesystem.
 
 ## Esecuzione dei test
 
+Il [report delle prestazioni XML](../performance/interactive-edit-speed-20261012.md)
+descrive checkpoint del parser, frontiere dello snapshot, maschere riusabili e
+benchmark del decoding. I probe leggono lo stato; solo i token accettati lo
+aggiornano. La validazione finale e le responsabilità del client restano complete.
+
 `make test` esegue la suite C, i test del server e i gate disponibili del motore.
 Per le fixture Python usare l'ambiente con tokenizers, Torch, Pillow e SDK:
 

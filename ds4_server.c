@@ -2157,6 +2157,8 @@ typedef struct interactive_entry interactive_entry;
 typedef struct interactive_receipt interactive_receipt;
 typedef struct interactive_behavior interactive_behavior;
 typedef struct interactive_tool interactive_tool;
+typedef bool (*interactive_string_probe_fn)(const interactive_tool *, const void *, int,
+                                           const char *, size_t, bool, size_t, const char *);
 
 typedef enum {
     INTERACTIVE_FIELD_CONSTRAINED = 1
@@ -2179,8 +2181,10 @@ struct interactive_behavior {
     const char *description;
     const char *diagnostic_probe;
     bool (*configure)(interactive_tool *, const schema_json_value *, const tool_schema_order *);
-    bool (*string_prefix)(const interactive_tool *, const void *, int,
-                          const char *, size_t, bool, size_t, const char *);
+    interactive_string_probe_fn string_prefix, string_prefix_oracle;
+    void (*commit_string)(void *, const char *, size_t, const char *);
+    size_t (*string_characters)(const void *, const char *, size_t, const char *);
+    bool (*plain_replacement)(const void *, const char *, size_t, const char *);
     interactive_sampling_policy (*sampling)(const interactive_tool *, const void *, int, const char *, size_t);
     bool (*await_input)(const interactive_tool *, const void *, int, const char *, size_t, buf *, size_t *, const char *);
     bool (*begin_input)(void **, const char *, const char *);
@@ -11193,7 +11197,7 @@ static agentic_tag_result agentic_sim_param_header(
 static bool agentic_tracker_has_unbounded_string(
         const dsml_decode_tracker *tracker) {
     return tracker && tracker->mode == DSML_TRACK_STRING_BODY &&
-        (!tracker->req || !tracker->req->interactive.count) &&
+        (!tracker->req || !interactive_tool_for(tracker->req, tracker->active_order)) &&
         tracker->active_order && schema_json_is_unbounded_string(
             tool_schema_order_property_schema(
                 tracker->active_order, tracker->active_prop));
@@ -11572,10 +11576,10 @@ static bool agentic_partial_param_header_has_available_prop(
 /* Validate one vocabulary candidate by simulating every state transition it
  * causes.  The persistent tracker remains a forgiving recognizer; this copy is
  * the fail-closed grammar used only for logit masking. */
-static bool agentic_simulate_candidate(const request *r,
+static bool agentic_simulate_candidate_mode(const request *r,
                                        const dsml_decode_tracker *tracker,
                                        const char *raw, size_t raw_len,
-                                       size_t new_from) {
+                                       size_t new_from, bool incremental) {
     if (!r || !tracker || !raw || new_from > raw_len) return false;
     dsml_decode_tracker sim = *tracker;
     const bool native = r->model_syntax == SERVER_MODEL_SYNTAX_QWEN4;
@@ -11654,10 +11658,10 @@ static bool agentic_simulate_candidate(const request *r,
         if (sim.mode == DSML_TRACK_STRING_BODY) {
             for (;;) {
                 if (sim.pos >= raw_len) {
-                    return interactive_string_possible(r, &sim, raw, raw_len, false, new_from);
+                    return interactive_string_possible(r, &sim, raw, raw_len, false, new_from, incremental);
                 }
                 if (raw_full_lit(raw, raw_len, sim.pos, sim.syn->param_end)) {
-                    if (!interactive_string_possible(r, &sim, raw, sim.pos, true, new_from)) return false;
+                    if (!interactive_string_possible(r, &sim, raw, sim.pos, true, new_from, incremental)) return false;
                     if (!interactive_value_valid(r, &sim, true, raw, sim.pos)) return false;
                     sim.pos += strlen(sim.syn->param_end);
                     if (sim.seen_props_exact && sim.active_prop >= 0 &&
@@ -11672,14 +11676,14 @@ static bool agentic_simulate_candidate(const request *r,
                     /* Once '<' starts the closing tag it no longer extends the
                      * value.  Only admit that branch when the value at the tag
                      * boundary is already complete (important for const/enum). */
-                    bool close = interactive_string_possible(r, &sim, raw, sim.pos, true, new_from) &&
+                    bool close = interactive_string_possible(r, &sim, raw, sim.pos, true, new_from, incremental) &&
                                  interactive_value_valid(r, &sim, true, raw, sim.pos);
                     /* '<' is also the first byte of an XML fragment. Until
                      * the native delimiter is unambiguous, keep the document
                      * body branch visible to the token trie. */
                     const interactive_tool *tool = interactive_tool_for(r, sim.active_order);
                     return close || (tool && tool->behavior->await_input &&
-                        interactive_string_possible(r, &sim, raw, raw_len, false, new_from));
+                        interactive_string_possible(r, &sim, raw, raw_len, false, new_from, incremental));
                 }
                 sim.pos++;
             }
@@ -11832,6 +11836,13 @@ static bool agentic_simulate_candidate(const request *r,
     }
 }
 
+#ifdef DS4_SERVER_TEST
+static bool agentic_simulate_candidate(const request *r, const dsml_decode_tracker *tracker,
+        const char *raw, size_t raw_len, size_t new_from) {
+    return agentic_simulate_candidate_mode(r, tracker, raw, raw_len, new_from, true);
+}
+#endif
+
 static bool agentic_filter_token(void *ud, int token,
                                   const char *piece, size_t piece_len) {
     agentic_token_filter *f = ud;
@@ -11866,7 +11877,7 @@ static bool agentic_filter_token(void *ud, int token,
         if (f->req->tool_choice_required) return false;
         return tracker->mode == DSML_TRACK_SEARCH;
     }
-    if (!f->req->interactive.count && f->use_incremental_string && f->incremental_free_string &&
+    if (f->use_incremental_string && f->incremental_free_string &&
         tracker->mode == DSML_TRACK_STRING_BODY &&
         tracker->pos == f->raw_len &&
         !memchr(piece, '<', piece_len)) {
@@ -11915,6 +11926,8 @@ static bool agentic_filter_token(void *ud, int token,
     }
     if (history_base > f->raw_len ||
         piece_len > SIZE_MAX - (f->raw_len - history_base)) return false;
+    /* Structural pieces can open a later interactive call; its call lookup
+     * needs transcript offsets even when the current tool is ordinary. */
     if (f->req->interactive.count) history_base = 0;
     size_t history_len = f->raw_len - history_base;
     size_t combined_len = history_len + piece_len;
@@ -11953,8 +11966,8 @@ static bool agentic_filter_token(void *ud, int token,
         f->metrics->parser_transition_count += combined_len;
         f->metrics->parser_bytes_visited += combined_len;
     }
-    bool valid = agentic_simulate_candidate(
-        f->req, &relative, combined, combined_len, history_len);
+    bool valid = agentic_simulate_candidate_mode(
+        f->req, &relative, combined, combined_len, history_len, f->use_incremental_string);
     if (f->metrics) f->metrics->rollback_count++;
     return valid;
 }
@@ -15051,6 +15064,7 @@ typedef struct {
     uint8_t *base_allowed;
     int *dynamic_tokens;
     uint32_t dynamic_count;
+    size_t max_piece_bytes;
 } constraint_token_partition;
 
 struct server {
@@ -15075,6 +15089,7 @@ struct server {
     pthread_mutex_t constraint_cache_mu;
     constraint_token_partition dsml_string_partition;
     constraint_token_partition json_string_partition;
+    constraint_token_partition xml_body_partition;
     bool constraint_partitions_ready;
     double constraint_partitions_compile_ms;
     uint64_t constraint_partitions_memory_bytes;
@@ -15188,6 +15203,22 @@ static bool response_json_piece_is_string_interior(const char *piece,
         state.string_epoch == 1;
 }
 
+static bool agentic_xml_partition_eligible(const agentic_token_filter *filter) {
+    if (!filter || !filter->tracker || !filter->req || !filter->raw) return false;
+    const dsml_decode_tracker *dt = filter->tracker;
+    if (!dt->syn || dt->mode != DSML_TRACK_STRING_BODY || dt->pos != filter->raw_len ||
+        dt->param_value_start > filter->raw_len) return false;
+    const interactive_tool *tool = interactive_tool_for(filter->req, dt->active_order);
+    if (!tool || !tool->behavior->plain_replacement ||
+        !interactive_field_has(tool, dt->active_prop, INTERACTIVE_FIELD_CONSTRAINED) ||
+        schema_json_object_get(tool_schema_order_property_schema(dt->active_order, dt->active_prop), "maxLength"))
+        return false;
+    interactive_call *call = interactive_call_for(filter->req, dt->invoke_body_start);
+    return call && tool->behavior->plain_replacement(call->behavior_state,
+        filter->raw + dt->param_value_start, filter->raw_len - dt->param_value_start,
+        dt->syn->param_end);
+}
+
 /* Optional DSML SEARCH accepts ordinary assistant text, but it must retain the
  * exact dynamic filter at any tokenizer boundary that could continue a tool
  * marker.  The tracker deliberately keeps a suffix window in SEARCH; requiring
@@ -15236,25 +15267,35 @@ static bool server_constraint_partitions_ensure(server *s,
         .base_allowed = xmalloc((size_t)vocab * sizeof(uint8_t)),
         .dynamic_tokens = xmalloc((size_t)vocab * sizeof(int)),
     };
+    constraint_token_partition xml = {
+        .base_allowed = xmalloc((size_t)vocab * sizeof(uint8_t)),
+        .dynamic_tokens = xmalloc((size_t)vocab * sizeof(int)),
+    };
     memset(dsml.base_allowed, 0, (size_t)vocab * sizeof(uint8_t));
     memset(json.base_allowed, 0, (size_t)vocab * sizeof(uint8_t));
+    memset(xml.base_allowed, 0, (size_t)vocab * sizeof(uint8_t));
     for (int token = 0; token < vocab; token++) {
         size_t piece_len = 0;
         char *piece = ds4_token_text(s->engine, token, &piece_len);
         const bool identity_sensitive = ds4_token_is_stop(s->engine, token) ||
             ds4_token_is_thinking_control(s->engine, token);
         const bool dsml_base = !identity_sensitive && piece_len &&
-            !memchr(piece, '<', piece_len);
+            !memchr(piece, '<', piece_len) && !memchr(piece, 0, piece_len);
         const bool json_base = !identity_sensitive &&
             response_json_piece_is_string_interior(piece, piece_len);
+        const bool xml_base = !identity_sensitive && edit_document_plain_piece(piece, piece_len);
         dsml.base_allowed[token] = dsml_base ? 1u : 0u;
         json.base_allowed[token] = json_base ? 1u : 0u;
+        xml.base_allowed[token] = xml_base ? 1u : 0u;
+        if (piece_len > dsml.max_piece_bytes) dsml.max_piece_bytes = piece_len;
+        if (piece_len > xml.max_piece_bytes) xml.max_piece_bytes = piece_len;
         if (!dsml_base) {
             dsml.dynamic_tokens[dsml.dynamic_count++] = token;
         }
         if (!json_base) {
             json.dynamic_tokens[json.dynamic_count++] = token;
         }
+        if (!xml_base) xml.dynamic_tokens[xml.dynamic_count++] = token;
         free(piece);
     }
     dsml.dynamic_tokens = xrealloc(
@@ -15263,12 +15304,15 @@ static bool server_constraint_partitions_ensure(server *s,
     json.dynamic_tokens = xrealloc(
         json.dynamic_tokens,
         (size_t)(json.dynamic_count ? json.dynamic_count : 1) * sizeof(int));
+    xml.dynamic_tokens = xrealloc(xml.dynamic_tokens,
+        (size_t)(xml.dynamic_count ? xml.dynamic_count : 1) * sizeof(int));
     s->dsml_string_partition = dsml;
     s->json_string_partition = json;
+    s->xml_body_partition = xml;
     s->constraint_partitions_compile_ms = (now_sec() - t0) * 1000.0;
     s->constraint_partitions_memory_bytes =
-        (uint64_t)vocab * 2u * sizeof(uint8_t) +
-        (uint64_t)(dsml.dynamic_count + json.dynamic_count) * sizeof(int);
+        (uint64_t)vocab * 3u * sizeof(uint8_t) +
+        (uint64_t)(dsml.dynamic_count + json.dynamic_count + xml.dynamic_count) * sizeof(int);
     s->constraint_partitions_ready = true;
     if (compiled_now) *compiled_now = true;
     pthread_mutex_unlock(&s->constraint_cache_mu);
@@ -18059,14 +18103,14 @@ static void log_decode_progress(req_kind kind, int prompt_tokens, int completion
                                 bool responses_protocol,
                                 bool tools, bool thinking,
                                 bool dsml_start, bool dsml_end,
-                                double decode_t0,
+                                double decode_t0, int resumed_completion,
                                 double *last_t, int *last_completion) {
     const double now = now_sec();
     const double elapsed = now - decode_t0;
     const double interval_s = now - *last_t;
     const int interval_tokens = completion - *last_completion;
     const double chunk_tps = interval_s > 0.0 ? (double)interval_tokens / interval_s : 0.0;
-    const double avg_tps = elapsed > 0.0 ? (double)completion / elapsed : 0.0;
+    const double avg_tps = elapsed > 0.0 ? (double)(completion - resumed_completion) / elapsed : 0.0;
     char ctx[48];
     request_ctx_span(ctx, sizeof(ctx),
                      prompt_tokens + *last_completion,
@@ -18815,6 +18859,7 @@ static int build_constrained_forced_tokens(
              shadow_tracker.mode != DSML_TRACK_DONE &&
              !(shadow_tracker.mode == DSML_TRACK_STRING_BODY &&
                tool_filter.incremental_free_string));
+        const bool xml_partition_eligible = !response_constrained && agentic_xml_partition_eligible(&tool_filter);
         const bool partition_eligible =
             (mode == SERVER_CONSTRAINT_TRIE ||
              mode == SERVER_CONSTRAINT_COMPARE_ORACLE) &&
@@ -18825,7 +18870,7 @@ static int build_constrained_forced_tokens(
              ((tool_filter.incremental_free_string &&
                shadow_tracker.mode == DSML_TRACK_STRING_BODY &&
                shadow_tracker.pos == shadow.len) ||
-              agentic_search_partition_eligible(&tool_filter)));
+              agentic_search_partition_eligible(&tool_filter) || xml_partition_eligible));
         const bool optional_search_state = !response_constrained &&
             !r->tool_choice_required &&
             shadow_tracker.mode == DSML_TRACK_SEARCH;
@@ -18848,7 +18893,14 @@ static int build_constrained_forced_tokens(
             if (server_constraint_partitions_ensure(srv, &compiled_now)) {
                 partition = response_constrained ?
                     &srv->json_string_partition :
-                    &srv->dsml_string_partition;
+                    xml_partition_eligible ? &srv->xml_body_partition : &srv->dsml_string_partition;
+                /* Every token, including static ones, must fit the interactive
+                 * transcript budget. Near the limit use the ordinary filter. */
+                if (!response_constrained && r->interactive.count &&
+                    (shadow.len > INTERACTIVE_MAX_TEXT ||
+                     partition->max_piece_bytes > INTERACTIVE_MAX_TEXT - shadow.len)) partition = NULL;
+            }
+            if (partition) {
                 step->used_static_mask = true;
                 step->dynamic_frontier_size += partition->dynamic_count;
                 step->static_mask_memory_bytes =
@@ -21190,7 +21242,8 @@ decode_again:
     bool client_stop = false;
     size_t tool_scan_from = 0;
     int next_tool_progress = 128;
-    int next_decode_log = 50;
+    const int resumed_completion = completion;
+    int next_decode_log = (completion / 50 + 1) * 50;
     const char *stop_detail = max_tokens == room ? "context limit" : "output limit";
     int stop_token = -1;
     trace_event(s, trace_id, "prefill done; decode_max=%d ctx_room=%d", max_tokens, room);
@@ -21201,7 +21254,7 @@ decode_again:
     server_decode_phase_metrics phase = {0};
     phase.grammar_compile_ms = j->req.grammar_compile_ms;
     double last_decode_log_t = decode_t0;
-    int last_decode_log_completion = 0;
+    int last_decode_log_completion = resumed_completion;
     thinking_state thinking = generation.thinking;
     const bool thinking_gates_tool_markers = ds4_think_mode_enabled(j->req.think_mode);
     bool tool_scan_waiting_for_think_close =
@@ -21871,6 +21924,7 @@ decode_again:
                                     saw_tool_start,
                                     saw_tool_end,
                                     decode_t0,
+                                    resumed_completion,
                                     &last_decode_log_t,
                                     &last_decode_log_completion);
                 next_decode_log += 50;
@@ -22164,6 +22218,7 @@ decode_again:
                             saw_tool_start,
                             saw_tool_end,
                             decode_t0,
+                            resumed_completion,
                             &last_decode_log_t,
                             &last_decode_log_completion);
     }
@@ -23597,6 +23652,8 @@ static void server_close_resources(server *s) {
     free(s->slots);
     free(s->dsml_string_partition.base_allowed);
     free(s->dsml_string_partition.dynamic_tokens);
+    free(s->xml_body_partition.base_allowed);
+    free(s->xml_body_partition.dynamic_tokens);
     free(s->json_string_partition.base_allowed);
     free(s->json_string_partition.dynamic_tokens);
     pthread_mutex_destroy(&s->tool_mu);
