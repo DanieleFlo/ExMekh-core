@@ -1,0 +1,201 @@
+{
+  "cases": [
+    {
+      "name": "test_live_model_applies_xml_file_operations[new]",
+      "outcome": "passed",
+      "seconds": 40.971
+    },
+    {
+      "name": "test_live_one_xml_call_edits_multiple_resources_with_initial_snapshots[True]",
+      "outcome": "passed",
+      "seconds": 74.982
+    },
+    {
+      "name": "test_live_rejection_of_second_edit_prevents_entire_call[False]",
+      "outcome": "passed",
+      "seconds": 9.373
+    },
+    {
+      "name": "test_live_rejection_of_second_edit_prevents_entire_call[True]",
+      "outcome": "passed",
+      "seconds": 7.002
+    }
+  ],
+  "logical_calls": [
+    {
+      "test_directory": "test_live_model_applies_xml_fi0",
+      "requests": [
+        {
+          "calls": [
+            {
+              "id": "call_165b96b1f704b30e79af84ae",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>created value</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_66255f647a2d37d548315fcb",
+                "exchange_id": "exchange_88e93cff1932a7825c3b93ee",
+                "call_id": "call_165b96b1f704b30e79af84ae",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 4144,
+                  "input_tokens_details": {
+                    "cached_tokens": 1677,
+                    "cache_write_tokens": 2467
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 4186
+                }
+              },
+              {
+                "status": "create"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "test_directory": "test_live_one_xml_call_edits_m0",
+      "requests": [
+        {
+          "calls": [
+            {
+              "id": "call_96908a5d9d3f76fca37220bb",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text>FIRST</old_text><new_text>UPDATED FIRST</new_text></edit><edit path=\"other.txt\"><old_text>SECOND</old_text><new_text>UPDATED SECOND</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c523fbde1018559b32c24b84",
+                "exchange_id": "exchange_7064c041b16cb3fd843b4ee0",
+                "call_id": "call_96908a5d9d3f76fca37220bb",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5659,
+                  "input_tokens_details": {
+                    "cached_tokens": 5280,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 5701
+                }
+              },
+              {
+                "status": "provide",
+                "text": "FIRST\r\nSECOND\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c523fbde1018559b32c24b84",
+                "exchange_id": "exchange_19c95214ac828e06a2c3ed5c",
+                "call_id": "call_96908a5d9d3f76fca37220bb",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 2,
+                  "values": {
+                    "path": "other.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5659,
+                  "input_tokens_details": {
+                    "cached_tokens": 5280,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 69,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 5728
+                }
+              },
+              {
+                "status": "provide",
+                "text": "FIRST\r\nSECOND\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "mtp_cycles": [
+    "QWEN_MTP_CYCLE cycle=1 requested_depth=1 drafted_tokens=1 accepted_tokens=1 rejected_at=0 committed_tokens=2 full_accept=1 target_seed_ms=0.000 draft_propose_ms=2.026 target_verify_ms=42.634 snapshot_ms=0.000 rollback_ms=0.000 replay_ms=0.000 sidecar_catchup_ms=0.510 commit_ms=0.000 total_ms=376.409",
+    "QWEN_MTP_CYCLE cycle=2 requested_depth=1 drafted_tokens=1 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=2.288 target_verify_ms=42.690 snapshot_ms=0.000 rollback_ms=1.125 replay_ms=0.000 sidecar_catchup_ms=0.191 commit_ms=0.000 total_ms=46.701",
+    "QWEN_MTP_CYCLE cycle=3 requested_depth=1 drafted_tokens=1 accepted_tokens=1 rejected_at=0 committed_tokens=2 full_accept=1 target_seed_ms=0.000 draft_propose_ms=1.791 target_verify_ms=40.680 snapshot_ms=0.000 rollback_ms=0.000 replay_ms=0.000 sidecar_catchup_ms=0.408 commit_ms=0.000 total_ms=43.828",
+    "QWEN_MTP_CYCLE cycle=4 requested_depth=1 drafted_tokens=1 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=2.755 target_verify_ms=46.264 snapshot_ms=0.000 rollback_ms=1.237 replay_ms=0.000 sidecar_catchup_ms=0.212 commit_ms=0.000 total_ms=51.900",
+    "QWEN_MTP_CYCLE cycle=5 requested_depth=1 drafted_tokens=1 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=1.960 target_verify_ms=47.145 snapshot_ms=0.000 rollback_ms=1.150 replay_ms=0.000 sidecar_catchup_ms=0.243 commit_ms=0.000 total_ms=50.972",
+    "QWEN_MTP_CYCLE cycle=6 requested_depth=1 drafted_tokens=1 accepted_tokens=1 rejected_at=0 committed_tokens=2 full_accept=1 target_seed_ms=0.000 draft_propose_ms=2.473 target_verify_ms=44.946 snapshot_ms=0.000 rollback_ms=0.000 replay_ms=0.000 sidecar_catchup_ms=0.809 commit_ms=0.000 total_ms=410.799",
+    "QWEN_MTP_CYCLE cycle=7 requested_depth=1 drafted_tokens=1 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=1.784 target_verify_ms=44.259 snapshot_ms=0.000 rollback_ms=1.541 replay_ms=0.000 sidecar_catchup_ms=0.643 commit_ms=0.000 total_ms=48.638",
+    "QWEN_MTP_CYCLE cycle=8 requested_depth=1 drafted_tokens=1 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=1.980 target_verify_ms=46.597 snapshot_ms=0.000 rollback_ms=1.160 replay_ms=0.000 sidecar_catchup_ms=0.198 commit_ms=0.000 total_ms=50.402",
+    "QWEN_MTP_CYCLE cycle=9 requested_depth=1 drafted_tokens=1 accepted_tokens=1 rejected_at=0 committed_tokens=2 full_accept=1 target_seed_ms=0.000 draft_propose_ms=2.955 target_verify_ms=45.864 snapshot_ms=0.000 rollback_ms=0.000 replay_ms=0.000 sidecar_catchup_ms=0.718 commit_ms=0.000 total_ms=669.352",
+    "QWEN_MTP_CYCLE cycle=10 requested_depth=1 drafted_tokens=1 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=1.960 target_verify_ms=44.113 snapshot_ms=0.000 rollback_ms=1.258 replay_ms=0.000 sidecar_catchup_ms=0.195 commit_ms=0.000 total_ms=48.152",
+    "QWEN_MTP_CYCLE cycle=11 requested_depth=1 drafted_tokens=1 accepted_tokens=1 rejected_at=0 committed_tokens=2 full_accept=1 target_seed_ms=0.000 draft_propose_ms=1.791 target_verify_ms=39.771 snapshot_ms=0.000 rollback_ms=0.000 replay_ms=0.000 sidecar_catchup_ms=0.591 commit_ms=0.000 total_ms=43.150",
+    "QWEN_MTP_CYCLE cycle=12 requested_depth=4 drafted_tokens=4 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=8.121 target_verify_ms=756.845 snapshot_ms=0.413 rollback_ms=1.272 replay_ms=0.000 sidecar_catchup_ms=0.594 commit_ms=0.000 total_ms=907.411",
+    "QWEN_MTP_CYCLE cycle=13 requested_depth=4 drafted_tokens=4 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=8.310 target_verify_ms=760.813 snapshot_ms=0.404 rollback_ms=1.128 replay_ms=0.000 sidecar_catchup_ms=0.315 commit_ms=0.000 total_ms=771.445",
+    "QWEN_MTP_CYCLE cycle=14 requested_depth=4 drafted_tokens=4 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=8.961 target_verify_ms=747.812 snapshot_ms=0.374 rollback_ms=1.201 replay_ms=0.000 sidecar_catchup_ms=0.206 commit_ms=0.000 total_ms=896.470",
+    "QWEN_MTP_CYCLE cycle=15 requested_depth=4 drafted_tokens=4 accepted_tokens=0 rejected_at=1 committed_tokens=1 full_accept=0 target_seed_ms=0.000 draft_propose_ms=7.710 target_verify_ms=748.876 snapshot_ms=0.372 rollback_ms=1.168 replay_ms=0.000 sidecar_catchup_ms=0.631 commit_ms=0.000 total_ms=759.214"
+  ],
+  "mtp_stats": [
+    "ds4: Qwen MTP stats cycles=15 proposed=27 verified=8 accepted=5 acceptance=0.185185 full=5 partial=0 rejected=10 fallbacks=0 committed=20 target_ms=0.000 propose_ms=56.866 snapshot_ms=1.564 batch_ms=3499.309 rollback_ms=12.241 replay_ms=0.000 catchup_ms=6.463 commit_ms=0.003 verify_ms=5117.964 cycle_ms=5174.838 net_tok_s=3.865"
+  ]
+}

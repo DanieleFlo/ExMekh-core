@@ -28,6 +28,14 @@ I quattro callback di sampling sono riuniti in un'unica policy.
 - righe 28–65: **Coerenza dei comportamenti** — Il formato predefinito è v2 senza code: pausa dopo il path, autorizzazione,
 - righe 66–77: **Verifica** — Gli esiti e i limiti delle verifiche sono conservati nel
 
+## [Client XML edit v2 — 12 ottobre 2026](client-xml-edit-v2-20261012.md)
+
+Il documento dopo gli hook deve contenere gli stessi path nello stesso ordine
+
+- righe 7–30: **Responsabilità** — Il documento dopo gli hook deve contenere gli stessi path nello stesso ordine
+- righe 31–69: **Verifiche** — La suite completa ExMekh-Lib sul client aggiornato passa: **2.588 PASS,
+- righe 70–90: **Limiti** — Il masking garantisce vincoli del documento, non l'intento dell'utente:
+
 ## [Accettazione merge DS4 e exmekh-lib — 2 ottobre 2026](ds4-merge-acceptance-20261002.md)
 
 **PASS per Qwen3.8-27B sulla RTX 3090.** Sono concluse le prove residue:

@@ -119,6 +119,39 @@
           ]
         },
         {
+          "path": "docs/architecture/client-xml-edit-v2-20261012.md",
+          "sections": [
+            {
+              "title": "Client XML edit v2 — 12 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 90,
+              "summary": "ExMekh-Lib usa `edit-file(edits)` e negozia soltanto v2."
+            },
+            {
+              "title": "Responsabilità",
+              "level": 2,
+              "start": 7,
+              "end": 30,
+              "summary": "Il documento dopo gli hook deve contenere gli stessi path nello stesso ordine"
+            },
+            {
+              "title": "Verifiche",
+              "level": 2,
+              "start": 31,
+              "end": 69,
+              "summary": "La suite completa ExMekh-Lib sul client aggiornato passa: **2.588 PASS,"
+            },
+            {
+              "title": "Limiti",
+              "level": 2,
+              "start": 70,
+              "end": 90,
+              "summary": "Il masking garantisce vincoli del documento, non l'intento dell'utente:"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/ds4-merge-acceptance-20261002.md",
           "sections": [
             {
@@ -1518,7 +1551,7 @@
               "title": "Chiamate interattive v2: edit document con chiusura finale",
               "level": 1,
               "start": 1,
-              "end": 254,
+              "end": 257,
               "summary": "Contratto server aggiornato al 12 ottobre 2026."
             },
             {
@@ -1546,14 +1579,14 @@
               "title": "Responsabilità e limiti",
               "level": 2,
               "start": 187,
-              "end": 218,
+              "end": 220,
               "summary": "**Server:** grammatica, masking, unicità della selezione letterale, combinazioni"
             },
             {
               "title": "Esecuzione dei test",
               "level": 2,
-              "start": 219,
-              "end": 254,
+              "start": 221,
+              "end": 257,
               "summary": "`make test` esegue la suite C, i test del server e i gate disponibili del motore."
             }
           ]

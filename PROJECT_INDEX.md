@@ -414,6 +414,17 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `exmekh_lib/old_agent/` — archivio storico Agent Wiki: launcher presenti ad agosto 2026, wheel `agent-wiki` 0.1.0 versionata a settembre e sorgenti estratti integralmente; provenienza e hash in `provenance.json`, guida in `README.md`.
 - `exmekh_lib/` — repository Git locale dei sorgenti ExMekh-Lib, con cronologia propria,
   esclusa dal Git di DS4.
+- `exmekh_lib/src/exmekh_lib/core/models/edit_document.py` — parser del dialetto XML v2,
+  preserva corpi/entità/CDATA e chiusura finale per elemento; nessun accesso al filesystem.
+- `exmekh_lib/src/exmekh_lib/core/file_inspection/edit_selection.py`, `editing.py`,
+  `interactive.py` e `edit_filesystem.py` — selezioni/intervalli e conflitti sullo snapshot
+  iniziale, autorizzazioni per call ID/indice, raggruppamento alias, verifica dopo hook e
+  commit per file. Filesystem/evidenze/permessi restano del client; masking/KV del server.
+- `exmekh_lib/tests/core/file_inspection/test_xml_edit_document.py` e
+  `exmekh_lib/tests/live/test_file_editing_live.py` — regressioni XML del client e
+  prove live di scritture esatte, alias e rifiuto dell'intera chiamata.
+- `docs/architecture/client-xml-edit-v2-20261012.md` — qualifica client XML v2 e
+  aggiornamento della wheel predefinita; esiti live distinti dai test deterministici.
 - `agent/sync_exmekh_lib.sh` e `agent/src/exmekh_agent/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
   locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
   La distribuzione e la CLI sono `exmekh-lib`, il namespace Python è

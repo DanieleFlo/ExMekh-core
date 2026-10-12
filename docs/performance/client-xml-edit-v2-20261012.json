@@ -1,0 +1,101 @@
+{
+  "status": "implemented_with_live_model_intent_failures",
+  "wheel": {
+    "name": "exmekh_lib-0.1.0-py3-none-any.whl",
+    "sha256": "9b2cb185de2be192461ab2ef4d5075e9e8889e0b8a6249329150cccade8500b0",
+    "checks": {
+      "single_xml_argument": true,
+      "v2_behavior": true,
+      "parser_present": true,
+      "legacy_marker_prompt_absent": true,
+      "legacy_marker_skill_absent": true
+    },
+    "matches_committed_source": true
+  },
+  "offline_library": {
+    "passed": 2588,
+    "skipped_live": 53,
+    "coverage_percent": 100,
+    "ruff": "passed",
+    "format_files": 411,
+    "pyright_errors": 0,
+    "pyright_warnings": 0,
+    "coverage_report": "/tmp/ds4-client-xml-v2-coverage.json"
+  },
+  "offline_frontend": {
+    "passed": 938,
+    "skipped_live": 40,
+    "coverage_percent": 100,
+    "playwright": "passed",
+    "junit": "/tmp/ds4-client-xml-final-agent-20261012.xml"
+  },
+  "historical_live": [
+    {
+      "attempt": "a1",
+      "passed": 7,
+      "failed": 7,
+      "skipped": 0,
+      "evidence": "docs/performance/client-xml-edit-v2-20261012-a1-wire.json"
+    },
+    {
+      "attempt": "a2",
+      "passed": 11,
+      "failed": 3,
+      "skipped": 0,
+      "evidence": "docs/performance/client-xml-edit-v2-20261012-a2-wire.json"
+    }
+  ],
+  "source_review": {
+    "legacy_behavior_or_priority_roles_in_source": false,
+    "server_source_changed_for_client_migration": false,
+    "post_hook_full_document_validation": true,
+    "shared_initial_snapshot_and_one_commit_per_canonical_file": true,
+    "whole_call_rejection_preserves_other_completed_calls": true,
+    "cross_file_rollback_guarantee": false,
+    "alias_authorization_public_api": "EditApproval.authorize_alias",
+    "scope_or_cancellation_rechecked_after_hooks_and_between_commits": true
+  },
+  "docs_check": {
+    "passed": 10,
+    "indexed_documents": 65
+  },
+  "live_target": {
+    "attempt": "a3",
+    "passed": 11,
+    "failed": 2,
+    "skipped": 0,
+    "cases": 13,
+    "duration_seconds": 995.821,
+    "failure_kind": "generated valid XML has wrong operation intent",
+    "failures": [
+      "remove",
+      "empty"
+    ],
+    "evidence": "docs/performance/client-xml-edit-v2-20261012-a3-wire.json",
+    "legacy_marker_case_retired_by_user": true
+  },
+  "date": "2026-10-12",
+  "model": "Qwen3.8-27B-UD-Q4_K_S",
+  "backend": "CUDA RTX 3090",
+  "context_tokens": 22593,
+  "server_git_head": "2ce5e401e3f001525c1cca1e9fad7521467d2ee0",
+  "live_mtp": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "cycles": 15,
+    "accepted_draft_tokens": 5,
+    "evidence": "docs/performance/client-xml-edit-v2-20261012-mtp-wire.json"
+  },
+  "default_wheel_installed": true,
+  "test_servers_stopped": true,
+  "server_sources_modified": false,
+  "client_git_commit": "312114efc74147fb1a1bdd557bb1ab1445614849",
+  "default_wheel_source_commit": "312114efc74147fb1a1bdd557bb1ab1445614849",
+  "owned_test_kv_caches_removed": [
+    "/tmp/ds4-client-xml-live-20261012-a1-kv",
+    "/tmp/ds4-client-xml-live-20261012-a2-kv",
+    "/tmp/ds4-client-xml-live-20261012-a3-kv",
+    "/tmp/ds4-client-xml-live-20261012-mtp-kv"
+  ]
+}

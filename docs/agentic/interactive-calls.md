@@ -212,7 +212,9 @@ per indici/scratch 128 MiB. Snapshot ripetuti identici non sono addebitati
 due volte. Checkpoint 8 GiB, pausa 300 s e ricevute terminali 600 s.
 La prenotazione degli indici include anche il picco della costruzione.
 
-La migrazione del client v1 resta necessaria prima dell'uso applicativo.
+Il client ExMekh-Lib e la wheel del frontend usano ora v2 senza fallback v1.
+La [qualifica applicativa](../architecture/client-xml-edit-v2-20261012.md) documenta
+parser, autorizzazioni per elemento, filesystem e prove SDK/live.
 Le verifiche deterministiche non qualificano automaticamente modello reale,
 prefill GPU, prestazioni o integrazione filesystem.
 
@@ -242,8 +244,9 @@ conserva i fallimenti dei sottocasi; timeout e skip non diventano successi.
 `DS4_INTERACTIVE_HTTP_TIMEOUT_SECONDS` configura il timeout HTTP (default 90 s).
 Il confronto esaustivo diagnostico può richiedere un valore maggiore; mantenere
 il primo timeout nel report e distinguere il tentativo diagnostico successivo.
-Le suite client v1 restano distinte dalla matrice server v2 finché la migrazione
-applicativa non è completata.
+La suite live del client v2 usa il runtime ExMekh-Lib e verifica i byte dei file,
+gli alias e il rifiuto dell'intera chiamata. Resta distinta dalla matrice dei vincoli
+server; un fallimento dell'intento del modello non dimostra un errore del masking.
 
 La [raccolta completa del 11 ottobre](../performance/interactive-edit-xml-v2-full-tests-20261011.md)
 conserva lo storico della variante con code, fallimenti, skip e responsabilità.
