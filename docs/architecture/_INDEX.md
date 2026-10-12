@@ -216,3 +216,11 @@ Modello:
 - righe 3181–3270: **58. Frase conclusiva tecnicamente precisa** — Qwen3.6-27B può essere descritto così:
 - righe 3271–3312: **59. Fonti primarie di riferimento** — I dati architetturali vanno verificati principalmente in:
 - righe 3290–3312: **Nota importante sulla certezza di Q4_K_S** — `Q4_K_S` definisce un preset di quantizzazione, non la lista
+
+## [Revisione delle responsabilità dei draft OLD — 12 ottobre 2026](snapshot-draft-clean-review-20261012.md)
+
+La policy dei batch ha operazioni distinte per entrare in una fase, leggere
+
+- righe 10–27: **Responsabilità e interfacce** — La policy dei batch ha operazioni distinte per entrare in una fase, leggere
+- righe 28–54: **Correzioni e uniformità** — la selezione completa con un delta.
+- righe 55–69: **Verifiche e limiti** — Le evidenze finali, gli hash e gli esiti delle prove sono nel

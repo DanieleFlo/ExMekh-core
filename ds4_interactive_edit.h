@@ -142,18 +142,24 @@ static edit_document_view interactive_edit_probe(const void *opaque, const char 
     ds4_tool_text_unescape(prefix, end);
     edit_document_view view = edit_document_scan_from(opaque, value, strlen(value), strlen(prefix), complete, restart, selected);
     if (safe != n) {
+        buf escape_selected = {0};
+        buf *escape_prefix = selected ? selected : &escape_selected;
         if (selected) selected->len = 0;
         free(value); value = xstrndup(raw, safe); ds4_tool_text_unescape(value, end);
         edit_document_view before_escape = edit_document_scan_from(opaque, value,
-            strlen(value), strlen(prefix), false, restart, selected);
+            strlen(value), strlen(prefix), false, restart, escape_prefix);
         if (!view.valid && !complete) {
             free(view.path);
             view = before_escape;
             view.valid = view.valid && view.native_escape;
+            if (view.valid && view.checkpoint.old_body)
+                view.valid = edit_document_native_escape_possible(opaque, view.checkpoint, restart,
+                    escape_prefix, raw + safe, n - safe, end);
         } else {
             view.checkpoint = before_escape.checkpoint;
             free(before_escape.path);
         }
+        buf_free(&escape_selected);
     }
     if (safe != n) {
         view.speculative = false;
@@ -166,6 +172,21 @@ static edit_document_view interactive_edit_probe(const void *opaque, const char 
     view.checkpoint.offset = base + interactive_edit_native_offset(encoded, view.checkpoint.offset, end);
     free(encoded); free(prefix); free(value);
     return view;
+}
+
+static void interactive_edit_draft_suffix(const interactive_tool *tool, const void *state,
+        int prop, const char *raw, size_t n, const char *end, buf *out, size_t limit) {
+    const interactive_edit_fields *fields = interactive_tool_config(tool);
+    if (prop != fields->document || !state) return;
+    buf selected = {0}, xml = {0};
+    edit_document_checkpoint restart = edit_document_restart(state, n, n);
+    edit_document_view view = interactive_edit_probe(state, raw, n, end, n, false, true, &selected);
+    if (view.valid && view.phase == EDIT_DOCUMENT_OLD && view.checkpoint.offset == n)
+        edit_document_draft_suffix(state, view.checkpoint, restart, &selected, &xml, limit);
+    /* XML entities and native tool escapes are distinct layers. Escaping the
+     * complete XML proposal also protects entity spellings of native closes. */
+    append_tool_body_text(out, xml.ptr, end);
+    free(view.path); buf_free(&selected); buf_free(&xml);
 }
 
 static edit_document_view interactive_edit_view(const void *opaque, const char *raw,

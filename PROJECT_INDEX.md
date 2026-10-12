@@ -306,6 +306,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
   argomento seleziona il sidecar Qwen auditato; `--mtp FILE` e l'alias
   `--mtp-model FILE` scelgono un support model esplicito, incluso DSpark.
+  CLI e server condividono la semantica dei flag booleani MTP.
 - `ds4_server.c` — eseguibile `ds4-server`: API HTTP compatibili, code, worker,
   vincoli dei tool nella sintassi nativa Flash condivisi con il replay MTP,
   confine di sistema condiviso fra cache residente e checkpoint SSD per evitare
@@ -327,6 +328,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   canonicalizzazione accetta la riscrittura dell'ultimo token BPE Qwen solo se
   il KV live conserva l'intero prompt byte per byte; le continuazioni agentiche
   riconoscono il tail tool anche dopo lo scope di sistema sintetico.
+  Possiede il writer comune del framing nativo e la policy dei batch OLD;
+  cambio di fase, query di capacità ed esito della verifica sono operazioni
+  distinte. I contatori dei draft da snapshot sono separati da quelli MTP.
 - `ds4_interactive_config.h`, `ds4_interactive_grammar.h`,
   `ds4_interactive_runtime.h` — protocollo Responses interattivo v2: registro
   dei comportamenti, policy del documento, pause interne alla stringa con KV,
@@ -340,6 +344,10 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   ownership dei percorsi e snapshot condivisi, chiusura finale new_text senza code
   e checkpoint incrementali sui prefissi accettati, ai confini di scalar UTF-8.
   Le prove del masking leggono i checkpoint senza modificare autorizzazioni o stato.
+  Per literal old_text globalmente univoci propone suffix XML dello snapshot;
+  il comportamento applica gli escape nativi e il motore verifica i token.
+  Il restart delle proposte è quello della scansione, anche per prove su un
+  prefisso precedente al checkpoint accettato.
 - `ds4_edit_constraint.h` — vincolo dinamico sui byte logici da inizio riga,
   unicità globale e indice suffix array/LCP dello snapshot, esposto tramite API
   di matching e candidati senza accesso agli indici interni.
@@ -792,6 +800,10 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   attivo: HTML, Unicode e selezioni letterali, controllo esatto dei byte e
   conservazione di messaggi/scambi per distinguere intenti falliti da prestazioni.
   Il report è in `docs/performance/interactive-edit-speed-20261012.md`.
+  Include selezioni lunghe plain text e HTML/Unicode in CDATA per i batch 32/64.
+  Con --server-log separa decoding ed end-to-end, escludendo i token ripristinati;
+  `tests/test_interactive_edit_benchmark.py` protegge questi contatori.
+  La qualifica dei draft è in `docs/performance/old-text-snapshot-chunks-20261012.md`.
 - `agent/tests/mock_client.py`, `agent/tests/test_mock_client.py` — provider di
   test e contesti di installazione che ripristinano lo stato precedente anche
   dopo errori o nesting, evitando contaminazioni dei test di steering.
@@ -822,6 +834,14 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   il callback può declinare una riga draft o bonus del verifier V(2); verifica
   ripristino bit-exact dell'intero payload e del generatore casuale, senza errore
   CUDA. Eseguire con target GGUF e sidecar MTP come argomenti.
+- `tests/test_qwen_snapshot_drafts.c` — gate CUDA dei draft esterni 32/64:
+  logits full-vocabulary e cache confrontati con decode seriale, mismatch,
+  cancellazione/callback invalidi e RNG, fine contesto e rewind/sync,
+  benchmark con cinque campioni.
+  Il sidecar MTP è opzionale; il motore possiede rollback e catch-up.
+- `docs/architecture/snapshot-draft-clean-review-20261012.md` — revisione dei
+  confini documento/protocollo/scheduler/motore/client, regressioni dei restart,
+  escaping comune, flag MTP e metriche distinte per origine dei draft.
 - `tests/test_server_resident_frontier.c` — regressione model-backed Qwen27/Flash della cache
   di sistema residente e dei checkpoint skill: conta i token del prefill cold
   per respingere rewind o doppie elaborazioni; dopo reset o riscrittura della

@@ -67,6 +67,6 @@ Usare GET /v1/agentic/capabilities e POST /v1/responses.
 
 - righe 8–47: **Configurazione e descrizione del tool** — Usare GET /v1/agentic/capabilities e POST /v1/responses.
 - righe 48–116: **Documento e chiusura finale** — Il modello genera soltanto il prefisso `<edit path="example1.txt"`.
-- righe 117–186: **Pausa, ripresa, rifiuto e campionamento** — La pausa avviene **dentro la stringa**, subito dopo il doppio apice che
-- righe 187–220: **Responsabilità e limiti** — **Server:** grammatica, masking, unicità della selezione letterale, combinazioni
-- righe 221–262: **Esecuzione dei test** — Il report delle prestazioni XML
+- righe 117–210: **Pausa, ripresa, rifiuto e campionamento** — La pausa avviene **dentro la stringa**, subito dopo il doppio apice che
+- righe 211–244: **Responsabilità e limiti** — **Server:** grammatica, masking, unicità della selezione letterale, combinazioni
+- righe 245–286: **Esecuzione dei test** — Il report delle prestazioni XML

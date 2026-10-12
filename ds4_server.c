@@ -2185,6 +2185,8 @@ struct interactive_behavior {
     void (*commit_string)(void *, const char *, size_t, const char *);
     size_t (*string_characters)(const void *, const char *, size_t, const char *);
     bool (*plain_replacement)(const void *, const char *, size_t, const char *);
+    void (*draft_suffix)(const interactive_tool *, const void *, int,
+                         const char *, size_t, const char *, buf *, size_t);
     interactive_sampling_policy (*sampling)(const interactive_tool *, const void *, int, const char *, size_t);
     bool (*await_input)(const interactive_tool *, const void *, int, const char *, size_t, buf *, size_t *, const char *);
     bool (*begin_input)(void **, const char *, const char *);
@@ -2573,6 +2575,14 @@ static void request_free(request *r) {
     free(r->agent_context_id);
     tool_schema_orders_free(&r->tool_orders);
     memset(r, 0, sizeof(*r));
+}
+
+/* Native tool framing has one escaping rule, independent of model syntax. */
+static void append_tool_body_text(buf *b, const char *s, const char *end) {
+    for (s = s ? s : ""; *s; s++) {
+        if (ds4_tool_text_needs_escape(s, end)) buf_puts(b, *s == '<' ? "&lt;" : "&amp;");
+        else buf_putc(b, *s);
+    }
 }
 
 #include "ds4_interactive_config.h"
@@ -4784,38 +4794,19 @@ static void append_dsml_attr_escaped(buf *b, const char *s) {
 }
 
 static void append_dsml_parameter_text(buf *b, const char *s, bool v41) {
-    const char *end = v41 ? DS41_PARAM_END : "</｜DSML｜parameter>";
-    for (s = s ? s : ""; *s;) {
-        if (ds4_tool_text_needs_escape(s, end)) {
-            buf_puts(b, *s == '<' ? "&lt;" : "&amp;");
-            s++;
-        } else {
-            buf_putc(b, *s++);
-        }
-    }
-}
-
-static void append_glm_tag_body_text(buf *b, const char *s, const char *end) {
-    for (s = s ? s : ""; *s;) {
-        if (ds4_tool_text_needs_escape(s, end)) {
-            buf_puts(b, *s == '<' ? "&lt;" : "&amp;");
-            s++;
-        } else {
-            buf_putc(b, *s++);
-        }
-    }
+    append_tool_body_text(b, s, v41 ? DS41_PARAM_END : "</｜DSML｜parameter>");
 }
 
 static void append_glm_arg_key_text(buf *b, const char *s) {
-    append_glm_tag_body_text(b, s, "</arg_key>");
+    append_tool_body_text(b, s, "</arg_key>");
 }
 
 static void append_glm_arg_value_text(buf *b, const char *s) {
-    append_glm_tag_body_text(b, s, "</arg_value>");
+    append_tool_body_text(b, s, "</arg_value>");
 }
 
 static void append_glm_tool_response_text(buf *b, const char *s) {
-    append_glm_tag_body_text(b, s, "</tool_response>");
+    append_tool_body_text(b, s, "</tool_response>");
 }
 
 static bool chat_msg_is_glm_tool_result(const chat_msg *m) {
@@ -4862,15 +4853,7 @@ static void append_tool_result_text(buf *b, const char *s) {
      * important for read-file tools and shell output.  The only delimiter we must
      * protect is the wrapper's own closing tag; otherwise a file containing that
      * exact sentinel would terminate the result early. */
-    const char *end = "</tool_result>";
-    for (s = s ? s : ""; *s;) {
-        if (ds4_tool_text_needs_escape(s, end)) {
-            buf_puts(b, *s == '<' ? "&lt;" : "&amp;");
-            s++;
-        } else {
-            buf_putc(b, *s++);
-        }
-    }
+    append_tool_body_text(b, s, "</tool_result>");
 }
 
 static void append_dsml_json_literal(buf *b, const char *s, bool v41) {
@@ -5046,13 +5029,13 @@ static void append_qwen4_tool_calls_text(buf *b, const tool_calls *calls, bool h
                     const json_arg *arg = &args.v[idx];
                     args.v[idx].used = true;
                     buf_puts(b, "<parameter=");
-                    append_glm_tag_body_text(b, arg->key, ">");
+                    append_tool_body_text(b, arg->key, ">");
                     buf_puts(b, ">\n");
                     if (arg->is_string) {
-                        append_glm_tag_body_text(b, arg->value, "</parameter>");
+                        append_tool_body_text(b, arg->value, "</parameter>");
                     } else {
                         char *min = json_minify_raw_value(arg->value ? arg->value : "null");
-                        append_glm_tag_body_text(b, min && min[0] ? min : "null", "</parameter>");
+                        append_tool_body_text(b, min && min[0] ? min : "null", "</parameter>");
                         free(min);
                     }
                     buf_puts(b, "\n</parameter>\n");
@@ -5061,7 +5044,7 @@ static void append_qwen4_tool_calls_text(buf *b, const tool_calls *calls, bool h
             json_args_free(&args);
         } else if (tc->arguments && tc->arguments[0]) {
             buf_puts(b, "<parameter=arguments>\n");
-            append_glm_tag_body_text(b, tc->arguments, "</parameter>");
+            append_tool_body_text(b, tc->arguments, "</parameter>");
             buf_puts(b, "\n</parameter>\n");
         }
         buf_puts(b, "</function>\n</tool_call>");
@@ -5596,7 +5579,7 @@ static void append_qwen4_tools_prompt_text(buf *b, const char *tool_schemas) {
 static void append_qwen4_tool_response(buf *b, const char *text, size_t len) {
     char *body = xstrndup(text ? text : "", len);
     buf_puts(b, "\n<tool_response>\n");
-    append_glm_tag_body_text(b, body, "</tool_response>");
+    append_tool_body_text(b, body, "</tool_response>");
     buf_puts(b, "\n</tool_response>");
     free(body);
 }
@@ -11232,7 +11215,7 @@ static bool agentic_string_parameter_prefix_possible(
         if (!value || value->kind != SCHEMA_JSON_STRING) continue;
         buf encoded = {0};
         if (syn == &qwen_tool_syntax) {
-            append_glm_tag_body_text(&encoded, value->string, syn->param_end);
+            append_tool_body_text(&encoded, value->string, syn->param_end);
             /* The native template permits one framing newline on either side. */
             for (unsigned frame = 0; frame < 4 && !viable; frame++) {
                 buf framed = {0};
@@ -14633,6 +14616,8 @@ typedef struct {
     uint64_t mtp_constrained_sampled_rows;
     uint64_t mtp_constrained_accepted_drafts;
     uint64_t mtp_constrained_fallbacks;
+    uint64_t old_text_draft_cycles, old_text_proposed, old_text_accepted;
+    uint64_t old_text_sampled_rows, old_text_fallbacks;
     double grammar_compile_ms;
     double grammar_jit_ms;
     double trie_compile_ms;
@@ -19064,12 +19049,20 @@ typedef struct {
     float top_p;
     float min_p;
     bool profile;
+    bool snapshot_drafts;
 } constrained_speculative_sampler;
 
+static void constrained_speculative_profile_fallback(const constrained_speculative_sampler *ctx) {
+    if (!ctx->profile || !ctx->phase) return;
+    if (ctx->snapshot_drafts) ctx->phase->old_text_fallbacks++;
+    else ctx->phase->mtp_constrained_fallbacks++;
+}
+
 static void constrained_speculative_profile_row(
-        server_decode_phase_metrics *phase,
+        const constrained_speculative_sampler *ctx,
         const server_constraint_step *step,
         double build_ms, bool sampled) {
+    server_decode_phase_metrics *phase = ctx->phase;
     if (!phase || !step) return;
     const ds4_filtered_sample_metrics *metrics = step->ready ?
         &step->metrics : &step->forced_metrics;
@@ -19126,14 +19119,105 @@ static void constrained_speculative_profile_row(
     phase->static_mask_compile_ms += step->static_mask_compile_ms;
     if (step->used_static_mask) phase->mask_cache_hit++;
     else phase->mask_cache_miss++;
-    phase->mtp_constrained_sampled_rows++;
+    if (ctx->snapshot_drafts) phase->old_text_sampled_rows++;
+    else phase->mtp_constrained_sampled_rows++;
 }
 
-/* Build the exact grammar state for one target-verifier row.  This mirrors the
- * structured-speculative implementations in vLLM and SGLang: draft tokens
+/* Request-local scheduling policy. The epoch is opaque: a new OLD selection
+ * restores eligibility without coupling the scheduler to document internals. */
+typedef struct {
+    uint64_t epoch;
+    int batch, cooldown, diagnostic_batch;
+    bool incompatible, disabled;
+} snapshot_draft_policy;
+
+static snapshot_draft_policy snapshot_draft_policy_init(void) {
+    const char *diagnostic = getenv("DS4_OLD_TEXT_DRAFT_BATCH");
+    return (snapshot_draft_policy){
+        .batch = 32,
+        .diagnostic_batch = diagnostic && !strcmp(diagnostic, "64") ? 64 :
+            diagnostic && !strcmp(diagnostic, "32") ? 32 : 0,
+        .disabled = ds4_env_flag_enabled("DS4_OLD_TEXT_DRAFT_DISABLE", 0),
+    };
+}
+
+static void snapshot_draft_policy_enter(snapshot_draft_policy *policy, uint64_t epoch) {
+    if (policy->epoch != epoch) {
+        policy->epoch = epoch;
+        policy->batch = 32;
+        policy->cooldown = 0;
+        policy->incompatible = false;
+    }
+}
+
+static int snapshot_draft_policy_capacity(const snapshot_draft_policy *policy,
+        int capacity, int budget) {
+    if (policy->disabled || policy->incompatible || policy->cooldown) return 0;
+    int batch = policy->diagnostic_batch ? policy->diagnostic_batch : policy->batch;
+    if (capacity > batch) capacity = batch;
+    if (capacity > budget) capacity = budget;
+    /* Short tails cannot amortize target dequantization. */
+    return capacity >= 32 ? capacity : 0;
+}
+
+static void snapshot_draft_policy_observe(snapshot_draft_policy *policy,
+        int proposed, int accepted) {
+    if (!proposed) {
+        policy->cooldown = policy->cooldown > accepted ? policy->cooldown - accepted : 0;
+        return;
+    }
+    int batch = policy->diagnostic_batch ? policy->diagnostic_batch : policy->batch;
+    policy->batch = accepted == proposed && proposed == batch ? 64 : 32;
+    /* A different encoding/tokenization may reject correct source bytes.
+     * Zero acceptances disable proposals until the next selection; partial
+     * low acceptance gives ordinary decoding 32 tokens before another try. */
+    if (accepted == 1) policy->incompatible = true;
+    else if (accepted * 2 < proposed) policy->cooldown = 32;
+}
+
+/* A behavior proposes native bytes; tokenization and execution stay with the
+ * scheduler/engine. The live parser and path authorization remain untouched. */
+static int interactive_draft_tokens(ds4_engine *engine, const request *req,
+        const char *raw, size_t n, thinking_state thinking, dsml_decode_tracker tracker,
+        int first_token, int *proposals, int capacity) {
+    if (capacity < 2 || !req->interactive.count) return 0;
+    uint64_t epoch = interactive_sampling_epoch(req, &tracker, raw, n);
+    buf shadow = {0}, suffix = {0};
+    buf_append(&shadow, raw, n);
+    size_t piece_len = 0;
+    char *piece = ds4_token_text(engine, first_token, &piece_len);
+    if (!piece || !piece_len) { free(piece); buf_free(&shadow); return 0; }
+    buf_append(&shadow, piece, piece_len);
+    generation_protocol_feed(req, &thinking, &tracker, shadow.ptr, shadow.len, piece, piece_len);
+    free(piece);
+    if (interactive_sampling_epoch(req, &tracker, shadow.ptr, shadow.len) == epoch)
+        interactive_draft_suffix(req, &tracker, shadow.ptr, shadow.len, &suffix, 16384);
+    ds4_tokens tokens = {0};
+    if (suffix.len) ds4_tokenize_text(engine, suffix.ptr, &tokens);
+    size_t offset = 0;
+    int count = 1;
+    proposals[0] = first_token;
+    for (int i = 0; i < tokens.len && count < capacity; i++) {
+        piece = ds4_token_text(engine, tokens.v[i], &piece_len);
+        /* A tokenizer draft is useful only when its decoded bytes are exactly
+         * the proposed continuation. Special/empty pieces use normal decode. */
+        bool valid = piece && piece_len && piece_len <= suffix.len - offset &&
+            !memcmp(piece, suffix.ptr + offset, piece_len) &&
+            !ds4_token_is_stop_for_think_mode(engine, tokens.v[i], req->think_mode);
+        free(piece);
+        if (!valid) break;
+        proposals[count++] = tokens.v[i];
+        offset += piece_len;
+    }
+    ds4_tokens_free(&tokens); buf_free(&suffix); buf_free(&shadow);
+    /* Dequantizing the target is not amortized by a short tail. Source EOF,
+     * context and output budgets below 32 rows keep ordinary/MTP decoding. */
+    return count >= 32 ? count : 0;
+}
+
+/* Build the exact grammar state for one target-verifier row. Draft tokens
  * advance only a temporary parser view, every row is masked in that view, and
- * the request-owned tracker is committed later only for tokens the target
- * actually accepted. */
+ * the live tracker is committed later only for tokens the target accepted. */
 static int constrained_speculative_sample_target(
         void *ud, const float *target_logits, int n_vocab,
         const int *prefix, int prefix_len, uint64_t *rng) {
@@ -19228,9 +19312,7 @@ static int constrained_speculative_sample_target(
             &thinking, &tracker, &json_state, SERVER_CONSTRAINT_OPTIMIZED,
             &exhaustive, ctx->profile, &ignored_forced, 1);
         step = exhaustive;
-        if (ctx->profile && ctx->phase) {
-            ctx->phase->mtp_constrained_fallbacks++;
-        }
+        constrained_speculative_profile_fallback(ctx);
     }
     const double build_ms = ctx->profile ?
         (now_sec() - build_t0) * 1000.0 : 0.0;
@@ -19257,7 +19339,7 @@ static int constrained_speculative_sample_target(
     }
     if (constrained_row && ctx->profile && ctx->phase) {
         constrained_speculative_profile_row(
-            ctx->phase, &step, build_ms, sampled_constraint);
+            ctx, &step, build_ms, sampled_constraint);
     } else if (!constraint_active) {
         const double sample_t0 = ctx->profile ? now_sec() : 0.0;
         token = ds4_session_sample_logits_row(
@@ -21278,6 +21360,7 @@ decode_again:
             j->req.think_mode != DS4_THINK_NONE);
     }
     bool have_speculative_next = false;
+    snapshot_draft_policy draft_policy = snapshot_draft_policy_init();
     int speculative_next = -1;
     dsml_tracker.model_syntax = j->req.model_syntax;
 
@@ -21618,7 +21701,16 @@ decode_again:
             !constrained_sample &&
             (!ds4_engine_is_qwen(s->engine) || temperature <= 0.0f ||
              (j->req.response_schema == NULL && !j->req.has_tools));
-        if (grammar_aware_speculative) {
+        int proposals[64];
+        uint64_t draft_epoch = interactive_sampling_epoch(&j->req, &dsml_tracker,
+            text.ptr ? text.ptr : "", text.len);
+        snapshot_draft_policy_enter(&draft_policy, draft_epoch);
+        int proposal_cap = snapshot_draft_policy_capacity(&draft_policy,
+            ds4_session_draft_capacity(slot->session), max_tokens - completion);
+        int proposal_count = ntok == 0 && proposal_cap && !s->batched_mode ?
+            interactive_draft_tokens(s->engine, &j->req, text.ptr ? text.ptr : "", text.len,
+                thinking, dsml_tracker, token, proposals, proposal_cap) : 0;
+        if (proposal_count || grammar_aware_speculative) {
             constrained_speculative_sampler spec_sampler = {
                 .srv = s,
                 .session = slot->session,
@@ -21636,9 +21728,13 @@ decode_again:
                 .top_p = top_p,
                 .min_p = min_p,
                 .profile = phase_profile,
+                .snapshot_drafts = proposal_count > 0,
             };
             const double eval_t0 = phase_profile ? now_sec() : 0.0;
-            ntok = ds4_session_eval_speculative_constrained_sample(
+            if (proposal_count) ntok = ds4_session_eval_draft_tokens(
+                slot->session, proposals, proposal_count, toks, &speculative_next, &rng,
+                constrained_speculative_sample_target, &spec_sampler, err, sizeof(err));
+            else ntok = ds4_session_eval_speculative_constrained_sample(
                 slot->session, token,
                 temperature, top_k, top_p, min_p, &rng,
                 max_tokens - completion, ds4_token_eos(s->engine),
@@ -21652,14 +21748,18 @@ decode_again:
             if (phase_profile) {
                 phase.eval_ms += (now_sec() - eval_t0) * 1000.0;
                 phase.eval_calls++;
-                phase.mtp_constrained_speculative_cycles++;
-                if (ntok > 1) {
+                if (proposal_count) {
+                    phase.old_text_draft_cycles++;
+                    phase.old_text_proposed += (uint64_t)(proposal_count - 1);
+                    if (ntok > 1) phase.old_text_accepted += (uint64_t)(ntok - 1);
+                } else phase.mtp_constrained_speculative_cycles++;
+                if (!proposal_count && ntok > 1) {
                     phase.mtp_constrained_accepted_drafts +=
                         (uint64_t)(ntok - 1);
-                } else {
+                } else if (!proposal_count) {
                     phase.mtp_constrained_target_only_steps++;
                 }
-                if (ntok < 0) phase.mtp_constrained_fallbacks++;
+                if (ntok < 0) constrained_speculative_profile_fallback(&spec_sampler);
             }
             if (ntok < 0) {
                 finish = "error";
@@ -21700,7 +21800,7 @@ decode_again:
         } else if (!j->req.interactive.count && s->batched_mode && s->qwen4_batch_mtp &&
                    max_tokens - completion >= 2 && !j->req.ignore_eos &&
                    (!ds4_engine_mtp_exact_sampling(s->engine) || temperature == 0.0f) &&
-                   getenv("DS4_MTP_SPEC_DISABLE") == NULL) {
+                   !ds4_env_flag_enabled("DS4_MTP_SPEC_DISABLE", 0)) {
             if (server_eval_tokens(s, slot, token, true, toks, &ntok, err, sizeof(err)) != 0) {
                 finish = "error";
                 break;
@@ -21724,6 +21824,7 @@ decode_again:
             snprintf(err, sizeof(err), "decode returned no tokens");
             break;
         }
+        snapshot_draft_policy_observe(&draft_policy, proposal_count, ntok);
         bool stop_decode = false;
         bool resample = false;
         bool text_stop = false;
@@ -21996,6 +22097,13 @@ decode_again:
 
     if (phase_profile) {
         const double decode_wall_ms = (now_sec() - decode_t0) * 1000.0;
+        if (phase.old_text_draft_cycles) server_log(DS4_LOG_GENERATION,
+            "ds4-server: old_text drafts cycles=%llu proposed=%llu accepted=%llu sampled_rows=%llu fallbacks=%llu batches=32/64\n",
+            (unsigned long long)phase.old_text_draft_cycles,
+            (unsigned long long)phase.old_text_proposed,
+            (unsigned long long)phase.old_text_accepted,
+            (unsigned long long)phase.old_text_sampled_rows,
+            (unsigned long long)phase.old_text_fallbacks);
         const double constraint_cpu_ms =
             phase.forced_prefix_probe_ms + phase.sampling_mask_build_ms +
             phase.oracle_compare_ms + phase.filtered_sample_ms;
@@ -29472,7 +29580,7 @@ static void test_tool_body_escape_round_trip(void) {
         buf input = {0}, encoded = {0}, streamed = {0};
         buf_printf(&input, "&amp; &lt; &gt; &quot; &apos; <html> %s &lt;%s &amp;lt;%s &amp;amp;lt;%s end",
                    ends[i], ends[i] + 1, ends[i] + 1, ends[i] + 1);
-        append_glm_tag_body_text(&encoded, input.ptr, ends[i]);
+        append_tool_body_text(&encoded, input.ptr, ends[i]);
         char *decoded = xstrdup(encoded.ptr);
         ds4_tool_text_unescape(decoded, ends[i]);
         TEST_ASSERT(!strcmp(input.ptr, decoded));

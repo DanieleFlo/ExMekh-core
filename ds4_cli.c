@@ -565,7 +565,7 @@ static int run_sampled_generation(ds4_engine *engine, const cli_config *cfg, con
     int generated = 0;
     const bool qwen_mtp_speculative = ds4_engine_is_qwen(engine) &&
         ds4_engine_mtp_draft_tokens(engine) > 1 &&
-        getenv("DS4_MTP_SPEC_DISABLE") == NULL;
+        !ds4_env_flag_enabled("DS4_MTP_SPEC_DISABLE", 0);
     bool have_speculative_next = false;
     int speculative_next = -1;
     const double t_decode0 = cli_now_sec();
@@ -602,7 +602,7 @@ static int run_sampled_generation(ds4_engine *engine, const cli_config *cfg, con
                 have_speculative_next = true;
             }
         } else if (ds4_engine_mtp_draft_tokens(engine) > 1 &&
-            getenv("DS4_MTP_SPEC_DISABLE") == NULL) {
+            !ds4_env_flag_enabled("DS4_MTP_SPEC_DISABLE", 0)) {
             cli_dist_busy_set(cfg, true);
             ntok = ds4_session_eval_speculative(
                 session, token, max_tokens - generated,
@@ -1583,7 +1583,7 @@ static int run_chat_turn(ds4_engine *engine, cli_config *cfg, repl_chat *chat,
     int generated = 0;
     const bool qwen_mtp_speculative = ds4_engine_is_qwen(engine) &&
         ds4_engine_mtp_draft_tokens(engine) > 1 &&
-        getenv("DS4_MTP_SPEC_DISABLE") == NULL;
+        !ds4_env_flag_enabled("DS4_MTP_SPEC_DISABLE", 0);
     bool have_speculative_next = false;
     int speculative_next = -1;
     const double t_decode0 = cli_now_sec();
@@ -1623,7 +1623,7 @@ static int run_chat_turn(ds4_engine *engine, cli_config *cfg, repl_chat *chat,
                 have_speculative_next = true;
             }
         } else if (ds4_engine_mtp_draft_tokens(engine) > 1 &&
-            getenv("DS4_MTP_SPEC_DISABLE") == NULL) {
+            !ds4_env_flag_enabled("DS4_MTP_SPEC_DISABLE", 0)) {
             cli_dist_busy_set(cfg, true);
             ntok = ds4_session_eval_speculative(
                 chat->session, token, max_tokens - generated,

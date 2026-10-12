@@ -455,6 +455,22 @@ class InteractiveAPI(unittest.TestCase):
         )
         self.assertEqual(edit["new"], "literal </new_text> data\n")
 
+    def test_long_snapshot_drafts_and_end_boundaries(self):
+        plain = "UNIQUE_BEGIN " + "known source text copied by target verification. " * 18
+        markup = "UNIQUE_MARKUP " + "<p>α中🙂 & </parameter> </old_text> literal</p> " * 8
+        cases = (
+            (plain, plain, plain),
+            (plain + "\r\nTAIL\n", plain[: plain.index("verification.") + len("verification.")],
+             plain[: plain.index("verification.") + len("verification.")]),
+            (markup, markup, f"<![CDATA[{markup}]]>"),
+        )
+        for text, old, encoded in cases:
+            with self.subTest(source_bytes=len(text.encode()), selection_bytes=len(old.encode())):
+                payload, pause = self.start(stream=text == markup, old=encoded, new="updated")
+                _, result, _ = self.resume(payload, pause, snapshot(text))
+                edit = self.assert_completed(result, pause)[0]
+                self.assertEqual((edit["old"], edit["new"]), (old, "updated"))
+
     def test_line_and_client_owned_invalid_range(self):
         payload, pause = self.start(old='<line number="4"/>', new="tail\n")
         _, result, _ = self.resume(payload, pause, snapshot("a\r\nb\rc\n"))

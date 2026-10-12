@@ -32,6 +32,16 @@ Uno stream batch terminava con `incomplete_generation`: il parser ammetteva
 - righe 101–122: **Responsabilità e controlli ancora aperti** — Una riscrittura valida o il mancato adempimento di una richiesta delete non
 - righe 123–137: **Tentativi e limiti conservati** — Il primo tentativo MTP usava `--batched-session 1`: il runtime disabilitava MTP.
 
+## [Draft dello snapshot old_text da 32/64 token — 12 ottobre 2026](old-text-snapshot-chunks-20261012.md)
+
+La policy parte da 32 e passa a 64 dopo un batch pieno.
+
+- righe 9–40: **Responsabilità e percorso di esecuzione** — La policy parte da 32 e passa a 64 dopo un batch pieno.
+- righe 41–75: **Misure di decoding** — RTX 3090, driver 610.88, Qwen3.8-27B UD-Q4_K_S.
+- righe 76–114: **Correttezza e limiti** — mismatch dopo 1/2/31/32/63 token, callback negativo/RNG, EOF, budget e rewind/sync.
+- righe 115–121: **Riproduzione** — make test-server-interactive ds4_server_test tests/test_qwen_snapshot_drafts
+- righe 122–128: **Un solo server, con DS4_SERVER_PHASE_PROFILE=1 e log diretto a un file:** — exmekh_lib/.venv/bin/python tests/bench_interactive_edit_live.py --base-url http://127.0.0.1:8080/v1 --case old_text_long --repeats 5 --server-log /tmp/server.log --work-dir /tmp/new-unique-workdir
+
 ## [Qwen Flash: prefill reale dall'agente e dal launcher, 8 ottobre 2026](qwen-flash-agent-launcher-20261008.md)
 
 L'harness bench_qwen_flash_agent.py

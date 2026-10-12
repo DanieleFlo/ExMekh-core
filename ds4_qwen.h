@@ -14,6 +14,7 @@ typedef enum {
     DS4_QWEN_STAGE_MTP_DRAFT,
     DS4_QWEN_STAGE_MTP_REPLAY,
     DS4_QWEN_STAGE_MTP_CATCHUP,
+    DS4_QWEN_STAGE_DRAFT_VERIFY,
 } ds4_qwen_execution_stage;
 
 /* Passed by value per projection. Neither field replaces shape/row checks;
@@ -49,6 +50,7 @@ static inline const char *ds4_qwen_execution_stage_name(
     case DS4_QWEN_STAGE_MTP_DRAFT: return "mtp-draft";
     case DS4_QWEN_STAGE_MTP_REPLAY: return "mtp-replay";
     case DS4_QWEN_STAGE_MTP_CATCHUP: return "mtp-catchup";
+    case DS4_QWEN_STAGE_DRAFT_VERIFY: return "draft-verify";
     }
     return "unknown";
 }

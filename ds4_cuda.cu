@@ -37014,10 +37014,14 @@ static int qwen35_quant_k_matmul(
      * one dequantization plus a real GEMM is substantially cheaper than
      * re-reading every Q4_K row once per token.  Keep smaller prompts on the
      * calibrated token-exact path selected by the graph scheduler. */
-    if (n_tok >= 128u && g_cublas_ready &&
+    const bool external_drafts = context.stage == DS4_QWEN_STAGE_DRAFT_VERIFY;
+    if ((n_tok >= 128u || (external_drafts && n_tok >= 5u)) && g_cublas_ready &&
         !ds4_env_flag_enabled("DS4_CUDA_QWEN_NO_DEQUANT_GEMM", 0)) {
         if (out_dim > UINT64_MAX / in_dim) return 0;
-        const uint64_t weight_elems = out_dim * in_dim;
+        /* External verifier heads project every row. Tile their vocabulary
+         * dimension so a 5-GiB dequantized head cannot exhaust a 24-GiB GPU. */
+        const uint64_t tile_rows = external_drafts && out_dim > 32768u ? 32768u : out_dim;
+        const uint64_t weight_elems = tile_rows * in_dim;
         if (weight_elems > UINT64_MAX / sizeof(float)) return 0;
         const char *f16_layers_env =
             getenv("DS4_CUDA_QWEN_PREFILL_F16_LAYERS");
@@ -37029,7 +37033,7 @@ static int qwen35_quant_k_matmul(
              in_dim == 5120u && out_dim == 17408u) ||
             (ds4_env_flag_enabled("DS4_CUDA_QWEN_PREFILL_F16_DOWN", 0) &&
              in_dim == 17408u && out_dim == 5120u);
-        const bool f16_gemm = f16_requested &&
+        const bool f16_gemm = !external_drafts && f16_requested &&
             context.layer < f16_layers;
         const uint64_t weight_tmp_bytes = weight_elems *
             (f16_gemm ? sizeof(__half) : sizeof(float));
@@ -37043,62 +37047,68 @@ static int qwen35_quant_k_matmul(
         __half *wh = (__half *)tmp;
         __half *xh = f16_gemm ? (__half *)((char *)tmp + xh_offset) : NULL;
         if (!tmp) return 0;
-        const uint64_t blocks = (weight_elems + 255u) / 256u;
-        if (blocks > UINT32_MAX) return 0;
-        if (f16_gemm && weight_type == 12u) {
-            qwen35_dequant_k_f16_kernel<cuda_block_q4_K, 12>
-                <<<(uint32_t)blocks, 256>>>(
-                    wh, (const cuda_block_q4_K *)w, weight_elems);
-        } else if (f16_gemm && weight_type == 13u) {
-            qwen35_dequant_k_f16_kernel<cuda_block_q5_K, 13>
-                <<<(uint32_t)blocks, 256>>>(
-                    wh, (const cuda_block_q5_K *)w, weight_elems);
-        } else if (f16_gemm) {
-            qwen35_dequant_k_f16_kernel<cuda_block_q6_K, 14>
-                <<<(uint32_t)blocks, 256>>>(
-                    wh, (const cuda_block_q6_K *)w, weight_elems);
-        } else if (weight_type == 12u) {
-            qwen35_dequant_k_f32_kernel<cuda_block_q4_K, 12>
-                <<<(uint32_t)blocks, 256>>>(
-                    wf, (const cuda_block_q4_K *)w, weight_elems);
-        } else if (weight_type == 13u) {
-            qwen35_dequant_k_f32_kernel<cuda_block_q5_K, 13>
-                <<<(uint32_t)blocks, 256>>>(
-                    wf, (const cuda_block_q5_K *)w, weight_elems);
-        } else {
-            qwen35_dequant_k_f32_kernel<cuda_block_q6_K, 14>
-                <<<(uint32_t)blocks, 256>>>(
-                    wf, (const cuda_block_q6_K *)w, weight_elems);
+        for (uint64_t first_row = 0; first_row < out_dim; first_row += tile_rows) {
+            const uint64_t rows = out_dim - first_row < tile_rows ? out_dim - first_row : tile_rows;
+            const uint64_t tile_elems = rows * in_dim;
+            const void *tile_weights = (const char *)w + first_row * (in_dim / CUDA_QK_K) * block_bytes;
+            const uint64_t blocks = (tile_elems + 255u) / 256u;
+            if (blocks > UINT32_MAX) return 0;
+            if (f16_gemm && weight_type == 12u) {
+                qwen35_dequant_k_f16_kernel<cuda_block_q4_K, 12>
+                    <<<(uint32_t)blocks, 256>>>(
+                        wh, (const cuda_block_q4_K *)tile_weights, tile_elems);
+            } else if (f16_gemm && weight_type == 13u) {
+                qwen35_dequant_k_f16_kernel<cuda_block_q5_K, 13>
+                    <<<(uint32_t)blocks, 256>>>(
+                        wh, (const cuda_block_q5_K *)tile_weights, tile_elems);
+            } else if (f16_gemm) {
+                qwen35_dequant_k_f16_kernel<cuda_block_q6_K, 14>
+                    <<<(uint32_t)blocks, 256>>>(
+                        wh, (const cuda_block_q6_K *)tile_weights, tile_elems);
+            } else if (weight_type == 12u) {
+                qwen35_dequant_k_f32_kernel<cuda_block_q4_K, 12>
+                    <<<(uint32_t)blocks, 256>>>(
+                        wf, (const cuda_block_q4_K *)tile_weights, tile_elems);
+            } else if (weight_type == 13u) {
+                qwen35_dequant_k_f32_kernel<cuda_block_q5_K, 13>
+                    <<<(uint32_t)blocks, 256>>>(
+                        wf, (const cuda_block_q5_K *)tile_weights, tile_elems);
+            } else {
+                qwen35_dequant_k_f32_kernel<cuda_block_q6_K, 14>
+                    <<<(uint32_t)blocks, 256>>>(
+                        wf, (const cuda_block_q6_K *)tile_weights, tile_elems);
+            }
+            if (!cuda_ok(cudaGetLastError(), "qwen35 prefill weight dequantize")) {
+                return 0;
+            }
+            if (f16_gemm) {
+                const uint64_t x_count = n_tok * in_dim;
+                f32_to_f16_kernel<<<(x_count + 255u) / 256u, 256>>>(
+                    xh, (const float *)x->ptr, x_count);
+                if (!cuda_ok(cudaGetLastError(),
+                             "qwen35 prefill activation convert")) return 0;
+            }
+            const float alpha = 1.0f;
+            const float beta = 0.0f;
+            const cublasComputeType_t compute =
+                f16_gemm ? CUBLAS_COMPUTE_32F :
+                (external_drafts || ds4_env_flag_enabled("DS4_CUDA_QWEN_PREFILL_PEDANTIC", 0)) ?
+                    CUBLAS_COMPUTE_32F_PEDANTIC : CUBLAS_COMPUTE_32F_FAST_TF32;
+            const cublasStatus_t st = cublasGemmEx(
+                    cuda_cublas_for_tier(cuda_current_tier()),
+                    CUBLAS_OP_T, CUBLAS_OP_N,
+                    (int)rows, (int)n_tok, (int)in_dim,
+                    &alpha,
+                    f16_gemm ? (const void *)wh : (const void *)wf,
+                    f16_gemm ? CUDA_R_16F : CUDA_R_32F, (int)in_dim,
+                    f16_gemm ? (const void *)xh : x->ptr,
+                    f16_gemm ? CUDA_R_16F : CUDA_R_32F, (int)in_dim,
+                    &beta,
+                    (float *)out->ptr + first_row, CUDA_R_32F, (int)out_dim,
+                    compute, CUBLAS_GEMM_DEFAULT);
+            if (!cublas_ok(st, "qwen35 prefill dequantized matmul")) return 0;
         }
-        if (!cuda_ok(cudaGetLastError(), "qwen35 prefill weight dequantize")) {
-            return 0;
-        }
-        if (f16_gemm) {
-            const uint64_t x_count = n_tok * in_dim;
-            f32_to_f16_kernel<<<(x_count + 255u) / 256u, 256>>>(
-                xh, (const float *)x->ptr, x_count);
-            if (!cuda_ok(cudaGetLastError(),
-                         "qwen35 prefill activation convert")) return 0;
-        }
-        const float alpha = 1.0f;
-        const float beta = 0.0f;
-        const cublasComputeType_t compute =
-            f16_gemm ? CUBLAS_COMPUTE_32F :
-            ds4_env_flag_enabled("DS4_CUDA_QWEN_PREFILL_PEDANTIC", 0) ?
-                CUBLAS_COMPUTE_32F_PEDANTIC : CUBLAS_COMPUTE_32F_FAST_TF32;
-        const cublasStatus_t st = cublasGemmEx(
-                cuda_cublas_for_tier(cuda_current_tier()),
-                CUBLAS_OP_T, CUBLAS_OP_N,
-                (int)out_dim, (int)n_tok, (int)in_dim,
-                &alpha,
-                f16_gemm ? (const void *)wh : (const void *)wf,
-                f16_gemm ? CUDA_R_16F : CUDA_R_32F, (int)in_dim,
-                f16_gemm ? (const void *)xh : x->ptr,
-                f16_gemm ? CUDA_R_16F : CUDA_R_32F, (int)in_dim,
-                &beta,
-                out->ptr, CUDA_R_32F, (int)out_dim,
-                compute, CUBLAS_GEMM_DEFAULT);
-        return cublas_ok(st, "qwen35 prefill dequantized matmul");
+        return 1;
     }
     const float *matvec_x = (const float *)x->ptr;
     float *q8_dequantized_x = NULL;

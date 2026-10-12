@@ -106,6 +106,7 @@ static const interactive_behavior interactive_behaviors[] = {
         .string_prefix_oracle = interactive_edit_string_prefix_oracle,
         .commit_string = interactive_edit_commit_string,
         .plain_replacement = interactive_edit_plain_replacement,
+        .draft_suffix = interactive_edit_draft_suffix,
         .string_characters = interactive_edit_characters,
         .sampling = interactive_edit_sampling,
         .await_input = interactive_edit_await,

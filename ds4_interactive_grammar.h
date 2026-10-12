@@ -168,6 +168,18 @@ static bool interactive_sampling_body(const request *r, const dsml_decode_tracke
     return interactive_sampling(r, dt, raw, n).body;
 }
 
+static void interactive_draft_suffix(const request *r, const dsml_decode_tracker *dt,
+        const char *raw, size_t n, buf *out, size_t limit) {
+    const interactive_tool *tool = interactive_tool_for(r, dt->active_order);
+    if (!tool || !tool->behavior->draft_suffix || dt->mode != DSML_TRACK_STRING_BODY ||
+        dt->param_value_start > n ||
+        !interactive_field_has(tool, dt->active_prop, INTERACTIVE_FIELD_CONSTRAINED)) return;
+    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
+    if (call && call->authorized)
+        tool->behavior->draft_suffix(tool, call->behavior_state, dt->active_prop,
+            raw + dt->param_value_start, n - dt->param_value_start, dt->syn->param_end, out, limit);
+}
+
 static uint64_t interactive_sampling_epoch(const request *r, const dsml_decode_tracker *dt,
                                            const char *raw, size_t n) {
     return interactive_sampling(r, dt, raw, n).epoch;

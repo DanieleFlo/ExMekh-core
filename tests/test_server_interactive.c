@@ -915,6 +915,186 @@ static void test_xml_static_frontier(void) {
     buf_free(&filter.scratch); request_free(&r);
 }
 
+static void test_old_cdata_progress_and_eof(void) {
+    request r; fixture(&r);
+    interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
+    const char *snapshot = "UNIQUE <p>α中🙂 & </old_text></p>";
+    provide_snapshot(call, snapshot, false);
+    buf value = {0}, raw = {0};
+    buf_printf(&value, "<edit path=\"src.py\"><old_text><![CDATA[%s]]>", snapshot);
+    for (size_t n = 0; n <= value.len; n++) {
+        compare_incremental_view(call->behavior_state, value.ptr, n, n, false);
+        interactive_edit_commit_string(call->behavior_state, value.ptr, n, "</parameter>");
+    }
+    buf_puts(&raw, parameter_prefix); buf_puts(&raw, value.ptr);
+    CHECK(candidate(&r, raw.ptr, "</old_text>"));
+    CHECK(!candidate(&r, raw.ptr, "<![CDATA["));
+    CHECK(!candidate(&r, raw.ptr, "<![CDATA[]]>"));
+    buf_free(&raw); buf_free(&value); request_free(&r);
+
+    fixture(&r); call = pause_call(&r, paused_prefix); CHECK(call);
+    provide_snapshot(call, "unique next", false);
+    buf_puts(&raw, paused_prefix); buf_puts(&raw, "><old_text>unique ");
+    CHECK(candidate(&r, raw.ptr, "<![CDATA[]]>"));
+    CHECK(candidate(&r, raw.ptr, "<![CDATA[n]]>"));
+    buf_free(&raw); request_free(&r);
+}
+
+static void test_old_native_escape_depth(void) {
+    const struct { const char *text, *opening, *encoding, *rejected; } cases[] = {
+        {"unique </parameter>", "<![CDATA[unique ", "&lt;/parameter>", "&a"},
+        {"unique </parameter>", "unique ", "&amp;lt;/parameter>", "&amp;a"},
+        {"unique &lt;/parameter>", "<![CDATA[unique ", "&amp;lt;/parameter>", "&amp;a"},
+        {"unique &lt;/parameter>", "unique ", "&amp;amp;lt;/parameter>", "&amp;amp;a"},
+        {"unique <p>", "<![CDATA[unique ", "<p>", "&l"},
+    };
+    for (size_t i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
+        request r; fixture(&r);
+        interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
+        provide_snapshot(call, cases[i].text, false);
+        buf raw = {0}; buf_puts(&raw, paused_prefix); buf_puts(&raw, "><old_text>");
+        buf_puts(&raw, cases[i].opening);
+        CHECK(!candidate(&r, raw.ptr, cases[i].rejected));
+        char *prefix = xstrdup(cases[i].encoding);
+        for (size_t n = 1; n <= strlen(cases[i].encoding); n++) {
+            prefix[n] = 0; CHECK(candidate(&r, raw.ptr, prefix));
+            prefix[n] = cases[i].encoding[n];
+        }
+        free(prefix); buf_free(&raw); request_free(&r);
+    }
+}
+
+static void test_snapshot_drafts(void) {
+    const struct { const char *snapshot, *prefix, *expected; } cases[] = {
+        {"unique first\r\nα🙂<&]\r\n", "unique ", "first\r\nα🙂&lt;&amp;&#93;\r\n"},
+        {"unique </parameter> &lt;/parameter>\n", "unique ",
+            "&amp;lt;/parameter> &amp;amp;lt;/parameter>\n"},
+        {"unique tail]]>after", "<![CDATA[unique ", "tail"},
+        {"unique </parameter>\r\n", "<![CDATA[unique ", "&lt;/parameter>\r\n"},
+        {"unique EOF", "unique EOF", ""},
+        {"same A\nsame B\n", "same ", ""},
+        {"line unique\nelse line unique\n", "line ", ""},
+        {"unique \001invalid", "unique ", ""},
+        {"unique α", "unique &", ""},
+        {"unique α", "unique &lt", ""},
+        {"unique α", "unique \xce", ""},
+        {"unique α", "<all/>", ""},
+        {"unique α", "<line number=\"1\"/>", ""},
+        {"unique α", "unique</old_text><new_text>replacement", ""},
+        {"", "", ""},
+    };
+    for (size_t i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
+        request r; fixture(&r);
+        interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
+        provide_snapshot(call, cases[i].snapshot, false);
+        buf raw = {0}, draft = {0}, again = {0};
+        buf_puts(&raw, paused_prefix); buf_puts(&raw, "><old_text>");
+        buf_puts(&raw, cases[i].prefix);
+        dsml_decode_tracker dt; dsml_decode_tracker_init(&dt, &r);
+        dsml_decode_tracker_update(&dt, raw.ptr, raw.len);
+        interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &draft, 4096);
+        CHECK(!strcmp(draft.ptr ? draft.ptr : "", cases[i].expected));
+        interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &again, 4096);
+        CHECK(draft.len == again.len && !memcmp(draft.ptr ? draft.ptr : "", again.ptr ? again.ptr : "", draft.len));
+        if (draft.len) CHECK(candidate(&r, raw.ptr, draft.ptr));
+        if (draft.len) {
+            buf small = {0};
+            interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &small, 2);
+            char *decoded = xstrdup(small.ptr ? small.ptr : "");
+            ds4_tool_text_unescape(decoded, dt.syn->param_end);
+            CHECK(edit_xml_unicode(decoded, true));
+            CHECK(!small.len || candidate(&r, raw.ptr, small.ptr));
+            free(decoded); buf_free(&small);
+        }
+        /* Committed restarts must produce the identical borrowed suffix. */
+        if (candidate(&r, raw.ptr, "")) {
+            (void)interactive_observe(&r, &dt, raw.ptr, raw.len);
+            again.len = 0; if (again.ptr) again.ptr[0] = 0;
+            interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &again, 4096);
+            CHECK(!strcmp(again.ptr ? again.ptr : "", cases[i].expected));
+        }
+        buf_free(&raw); buf_free(&draft); buf_free(&again); request_free(&r);
+    }
+}
+
+static void test_snapshot_draft_policy(void) {
+    const char *names[] = {"DS4_OLD_TEXT_DRAFT_BATCH", "DS4_OLD_TEXT_DRAFT_DISABLE"};
+    char *saved[2];
+    for (int i = 0; i < 2; i++) {
+        saved[i] = getenv(names[i]) ? xstrdup(getenv(names[i])) : NULL;
+        unsetenv(names[i]);
+    }
+    snapshot_draft_policy policy = snapshot_draft_policy_init();
+    snapshot_draft_policy_enter(&policy, 1);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 32);
+    snapshot_draft_policy_observe(&policy, 32, 32);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 64);
+    CHECK(snapshot_draft_policy_capacity(&policy, 35, 100) == 35);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 35) == 35);
+    CHECK(snapshot_draft_policy_capacity(&policy, 31, 100) == 0);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 31) == 0);
+    snapshot_draft_policy_observe(&policy, 64, 40);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 32);
+    snapshot_draft_policy_observe(&policy, 32, 5);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 0);
+    snapshot_draft_policy_observe(&policy, 0, 31);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 0);
+    snapshot_draft_policy_observe(&policy, 0, 1);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 32);
+    snapshot_draft_policy_observe(&policy, 32, 1);
+    snapshot_draft_policy_observe(&policy, 0, 64);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 0);
+    snapshot_draft_policy_enter(&policy, 2);
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 32);
+    setenv(names[0], "64", 1); policy = snapshot_draft_policy_init();
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 64);
+    setenv(names[0], "16", 1); policy = snapshot_draft_policy_init();
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 32);
+    setenv(names[1], "0", 1); policy = snapshot_draft_policy_init();
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 32);
+    setenv(names[1], "1", 1); policy = snapshot_draft_policy_init();
+    CHECK(snapshot_draft_policy_capacity(&policy, 64, 100) == 0);
+    for (int i = 0; i < 2; i++) {
+        if (saved[i]) { setenv(names[i], saved[i], 1); free(saved[i]); }
+        else unsetenv(names[i]);
+    }
+}
+
+static void test_speculative_metric_ownership(void) {
+    server_decode_phase_metrics phase = {0};
+    server_constraint_step step = {0};
+    constrained_speculative_sampler sampler = {.phase=&phase, .profile=true};
+    constrained_speculative_profile_row(&sampler, &step, 0, false);
+    constrained_speculative_profile_fallback(&sampler);
+    CHECK(phase.mtp_constrained_sampled_rows == 1 && phase.mtp_constrained_fallbacks == 1);
+    sampler.snapshot_drafts = true;
+    constrained_speculative_profile_row(&sampler, &step, 0, false);
+    constrained_speculative_profile_fallback(&sampler);
+    CHECK(phase.old_text_sampled_rows == 1 && phase.old_text_fallbacks == 1);
+    CHECK(phase.mtp_constrained_sampled_rows == 1 && phase.mtp_constrained_fallbacks == 1);
+}
+
+static void test_snapshot_draft_older_prefix(void) {
+    request r; fixture(&r);
+    interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
+    provide_snapshot(call, "unique first\r\nsecond", false);
+    buf raw = {0}, draft = {0};
+    buf_puts(&raw, paused_prefix); buf_puts(&raw, "><old_text>unique ");
+    size_t earlier = raw.len;
+    buf_puts(&raw, "first");
+    dsml_decode_tracker dt; dsml_decode_tracker_init(&dt, &r);
+    dsml_decode_tracker_update(&dt, raw.ptr, raw.len);
+    (void)interactive_observe(&r, &dt, raw.ptr, raw.len);
+    /* A read-only probe may precede the committed frontier. It must use its
+     * full selection rather than apply that selection as a frontier delta. */
+    interactive_draft_suffix(&r, &dt, raw.ptr, earlier, &draft, 4096);
+    CHECK(!strcmp(draft.ptr ? draft.ptr : "", "first\r\nsecond"));
+    draft.len = 0; if (draft.ptr) draft.ptr[0] = 0;
+    interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &draft, 4096);
+    CHECK(!strcmp(draft.ptr ? draft.ptr : "", "\r\nsecond"));
+    buf_free(&raw); buf_free(&draft); request_free(&r);
+}
+
 static void test_resumed_progress_counters(void) {
     FILE *output = tmpfile(); CHECK(output);
     int saved = dup(STDERR_FILENO); CHECK(saved >= 0);
@@ -940,6 +1120,12 @@ int main(void) {
     test_incremental_selection_restarts();
     test_selection_frontier_equivalence();
     test_xml_static_frontier();
+    test_snapshot_drafts();
+    test_snapshot_draft_older_prefix();
+    test_snapshot_draft_policy();
+    test_speculative_metric_ownership();
+    test_old_native_escape_depth();
+    test_old_cdata_progress_and_eof();
     test_resumed_progress_counters();
     test_response_metadata(); test_runtime();
     test_concurrent_resume_and_queued_cancel(); test_disconnected_queued_request();

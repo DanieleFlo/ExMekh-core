@@ -758,12 +758,27 @@ int ds4_session_eval_speculative_sample(
         char *err, size_t errlen);
 /* Target-row sampler for grammar-aware speculative verification.  prefix is
  * the already selected token sequence within this cycle: first_token followed
- * by every draft accepted up to the row being sampled.  Returning -1 rejects
+ * by every draft accepted up to the row being sampled. Returning an invalid
+ * token (negative or outside n_vocab) declines
  * the speculative row and makes the verifier fall back without broadening the
  * target distribution. */
 typedef int (*ds4_speculative_target_sample_fn)(
         void *ud, const float *target_logits, int n_vocab,
         const int *prefix, int prefix_len, uint64_t *rng);
+/* External proposals use the target verifier without an MTP drafter. Capacity
+ * includes the already sampled first token, and is zero on unsupported paths.
+ * proposals[0] has already been selected from the current target logits;
+ * accepted must have space for count tokens (1..64).
+ * The caller chooses 32/64 rows, truncated at source/context/budget boundaries.
+ * Every remaining proposal is checked by sample_target; a mismatch is returned
+ * unevaluated through next_token. A declined row restores RNG and keeps only
+ * the first token. No bonus row is sampled across application boundaries. */
+int ds4_session_draft_capacity(const ds4_session *s);
+int ds4_session_eval_draft_tokens(
+        ds4_session *s, const int *proposals, int count,
+        int *accepted, int *next_token, uint64_t *rng,
+        ds4_speculative_target_sample_fn sample_target, void *sample_target_ud,
+        char *err, size_t errlen);
 /* Qwen MTP variant whose target verifier delegates every draft and bonus row
  * to sample_target.  Draft proposals may remain unconstrained: an invalid
  * draft has zero probability under the masked target row and is rejected.

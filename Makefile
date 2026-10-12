@@ -633,6 +633,12 @@ tests/test_qwen_mtp_callback.o: tests/test_qwen_mtp_callback.c ds4.c ds4.h ds4_g
 tests/test_qwen_mtp_callback: tests/test_qwen_mtp_callback.o $(filter-out ds4.o,$(CORE_OBJS))
 	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
 
+tests/test_qwen_snapshot_drafts.o: tests/test_qwen_snapshot_drafts.c ds4.c ds4.h ds4_gpu.h ds4_qwen.h ds4_env.h
+	$(CC) $(CFLAGS) -I. -c -o $@ $<
+
+tests/test_qwen_snapshot_drafts: tests/test_qwen_snapshot_drafts.o $(filter-out ds4.o,$(CORE_OBJS))
+	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
+
 tests/test_qwen4_tuning: tests/test_qwen4_tuning.cpp ds4_qwen4_tuning.cuh ds4_qwen4_runtime.h ds4_env.h
 	$(CXX) -O2 -Wall -Wextra -std=c++17 -o $@ $<
 
@@ -1260,6 +1266,7 @@ tests/test_session_state_gpu.o: ds4_tool_text.h
 
 clean:
 	rm -f tests/test_server_interactive tests/bench_interactive_edit
+	rm -f tests/test_qwen_snapshot_drafts
 	rm -f tests/qwen_flash_quality_probe
 	rm -f tests/test_qwen4_tuning
 	rm -f tests/test_qwen4_ranks tests/test_qwen4_cpu

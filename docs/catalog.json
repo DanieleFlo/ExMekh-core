@@ -1233,6 +1233,39 @@
               "summary": "`Q4_K_S` definisce un preset di quantizzazione, non la lista"
             }
           ]
+        },
+        {
+          "path": "docs/architecture/snapshot-draft-clean-review-20261012.md",
+          "sections": [
+            {
+              "title": "Revisione delle responsabilità dei draft OLD — 12 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 69,
+              "summary": "La revisione conserva il default XML v2 e il verificatore CUDA Qwen27 da 32/64"
+            },
+            {
+              "title": "Responsabilità e interfacce",
+              "level": 2,
+              "start": 10,
+              "end": 27,
+              "summary": "La policy dei batch ha operazioni distinte per entrare in una fase, leggere"
+            },
+            {
+              "title": "Correzioni e uniformità",
+              "level": 2,
+              "start": 28,
+              "end": 54,
+              "summary": "la selezione completa con un delta."
+            },
+            {
+              "title": "Verifiche e limiti",
+              "level": 2,
+              "start": 55,
+              "end": 69,
+              "summary": "Le evidenze finali, gli hash e gli esiti delle prove sono nel"
+            }
+          ]
         }
       ]
     },
@@ -1591,7 +1624,7 @@
               "title": "Chiamate interattive v2: edit document con chiusura finale",
               "level": 1,
               "start": 1,
-              "end": 262,
+              "end": 286,
               "summary": "Contratto server aggiornato al 12 ottobre 2026."
             },
             {
@@ -1612,21 +1645,21 @@
               "title": "Pausa, ripresa, rifiuto e campionamento",
               "level": 2,
               "start": 117,
-              "end": 186,
+              "end": 210,
               "summary": "La pausa avviene **dentro la stringa**, subito dopo il doppio apice che"
             },
             {
               "title": "Responsabilità e limiti",
               "level": 2,
-              "start": 187,
-              "end": 220,
+              "start": 211,
+              "end": 244,
               "summary": "**Server:** grammatica, masking, unicità della selezione letterale, combinazioni"
             },
             {
               "title": "Esecuzione dei test",
               "level": 2,
-              "start": 221,
-              "end": 262,
+              "start": 245,
+              "end": 286,
               "summary": "Il report delle prestazioni XML"
             }
           ]
@@ -1775,6 +1808,53 @@
               "start": 123,
               "end": 137,
               "summary": "Il primo tentativo MTP usava `--batched-session 1`: il runtime disabilitava MTP."
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/old-text-snapshot-chunks-20261012.md",
+          "sections": [
+            {
+              "title": "Draft dello snapshot old_text da 32/64 token — 12 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 121,
+              "summary": "Il default CUDA Qwen27 verifica continuazioni dello snapshot quando la selezione"
+            },
+            {
+              "title": "Responsabilità e percorso di esecuzione",
+              "level": 2,
+              "start": 9,
+              "end": 40,
+              "summary": "La policy parte da 32 e passa a 64 dopo un batch pieno."
+            },
+            {
+              "title": "Misure di decoding",
+              "level": 2,
+              "start": 41,
+              "end": 75,
+              "summary": "RTX 3090, driver 610.88, Qwen3.8-27B UD-Q4_K_S."
+            },
+            {
+              "title": "Correttezza e limiti",
+              "level": 2,
+              "start": 76,
+              "end": 114,
+              "summary": "mismatch dopo 1/2/31/32/63 token, callback negativo/RNG, EOF, budget e rewind/sync."
+            },
+            {
+              "title": "Riproduzione",
+              "level": 2,
+              "start": 115,
+              "end": 121,
+              "summary": "make test-server-interactive ds4_server_test tests/test_qwen_snapshot_drafts"
+            },
+            {
+              "title": "Un solo server, con DS4_SERVER_PHASE_PROFILE=1 e log diretto a un file:",
+              "level": 1,
+              "start": 122,
+              "end": 128,
+              "summary": "exmekh_lib/.venv/bin/python tests/bench_interactive_edit_live.py --base-url http://127.0.0.1:8080/v1 --case old_text_long --repeats 5 --server-log /tmp/server.log --work-dir /tmp/new-unique-workdir"
             }
           ]
         },

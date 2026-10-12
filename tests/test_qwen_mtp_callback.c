@@ -6,7 +6,7 @@
     fprintf(stderr, "FAIL line %d: %s (%s)\n", __LINE__, #c, err); exit(1); \
 } } while (0)
 
-typedef struct { int draft; int abort_row; int calls; } callback_state;
+typedef struct { int draft; int abort_row; int calls; bool invalid; } callback_state;
 static int sample_row(void *ud, const float *logits, int vocab,
                       const int *prefix, int len, uint64_t *rng) {
     (void)logits; (void)prefix;
@@ -14,7 +14,7 @@ static int sample_row(void *ud, const float *logits, int vocab,
     state->calls++;
     if (state->abort_row == 0) return (state->draft + 1) % vocab;
     *rng += 123; /* A declined row must also roll back sampling state. */
-    return len == state->abort_row ? -1 : state->draft;
+    return len == state->abort_row ? (state->invalid ? vocab : -1) : state->draft;
 }
 
 static int save_state(ds4_session *s, ds4_session_snapshot *snap,
@@ -66,9 +66,10 @@ int main(int argc, char **argv) {
           first, prompt.len, g->mtp_pending_h, g->mtp_draft_h[0], NULL,
           &draft, DS4_QWEN_STAGE_MTP_DRAFT));
     ds4_session_snapshot expected = {0};
-    for (int abort_row = 0; abort_row <= 2; abort_row++) {
+    for (int test = 0; test < 5; test++) {
+        int abort_row = test > 2 ? test - 2 : test;
         CHECK(load_state(s, &saved, err, sizeof(err)) == 0);
-        callback_state state = {.draft = draft, .abort_row = abort_row};
+        callback_state state = {.draft = draft, .abort_row = abort_row, .invalid = test > 2};
         uint64_t rng = 42;
         int accepted[3] = {0}, next = -1;
         int count = ds4_session_eval_speculative_constrained_sample(
@@ -95,7 +96,7 @@ int main(int argc, char **argv) {
             ds4_session_snapshot_free(&actual);
         }
     }
-    fprintf(stderr, "PASS: MTP callback cancellation preserves KV, MTP and RNG\n");
+    fprintf(stderr, "PASS: MTP callback cancellation/invalid tokens preserve KV, MTP and RNG\n");
     ds4_session_snapshot_free(&expected);
     ds4_session_snapshot_free(&saved);
     ds4_tokens_free(&prompt);

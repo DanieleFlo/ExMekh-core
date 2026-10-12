@@ -164,7 +164,31 @@ Temperatura zero vale per struttura e old_text; il sampling richiesto torna
 prima del primo token di contenuto di new_text. MTP può operare su old
 globalmente univoco e new, con maschera aggiornata per ogni verifier row.
 Il cambio di fase XML o indice dell'elemento interrompe la finestra e scarta
-draft/RNG obsoleti. Il batch interattivo resta target-only.
+draft/RNG obsoleti. Il batching fra sessioni interattive resta target-only.
+
+Nel percorso CUDA Qwen27 non distribuito, il server propone il suffix dello
+snapshot quando un old_text letterale è globalmente univoco. Il motore verifica
+batch da 32 o 64 token senza un drafter MTP, mantiene il prefisso accettato e
+restituisce il primo token diverso senza valutarlo. La chiusura resta una scelta
+del modello; tokenizzazioni o escape equivalenti restano validi. Una fine del
+testo, CDATA, entità, scalar UTF-8, contesto o budget delimita la proposta;
+le code sotto 32 token usano il decode ordinario/MTP. La policy parte da 32 e
+passa a 64 dopo un batch completo, tornando a 32 dopo un mismatch.
+Se nessun draft è accettato, la selezione torna al decode ordinario/MTP; se
+l'accettazione è bassa, attende 32 token prima di riprovare. Una nuova fase o
+selezione azzera questa decisione. A EOF di una selezione letterale non si può
+aprire un nuovo CDATA: non rimangono byte da selezionare e i segmenti vuoti
+creerebbero un ciclo senza avanzamento. Un CDATA già aperto può chiudersi;
+i segmenti vuoti restano ammessi prima di EOF e in new_text.
+
+Il documento possiede matching e serializzazione XML; il comportamento applica
+gli escape del protocollo nativo; il motore possiede logits, KV, stato ricorrente,
+rollback/replay e catch-up MTP. Le proposte non pubblicano checkpoint del parser
+né autorizzazioni. Il client conserva le responsabilità su evidenza di lettura,
+filesystem, righe, sovrapposizioni e applicazione atomica; il wire non cambia.
+I prefissi di escape nativi in old_text devono poter ricostruire una
+continuazione dello snapshot anche prima che il delimitatore sia completo;
+la presenza di ampersand ripetute non autorizza un prefisso incompatibile.
 
 Il completamento emette una normale function_call con la stringa completa,
 senza code. Il client verifica il framing finale, poi interpreta le operazioni.

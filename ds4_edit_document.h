@@ -162,6 +162,79 @@ static bool edit_xml_unicode(const char *text, bool complete) {
     return true;
 }
 
+static const char *edit_document_selection_candidate(const edit_document *document,
+        edit_document_checkpoint checkpoint, edit_document_checkpoint restart,
+        const buf *selected, size_t *cursor, bool *unique) {
+    const char *value = selected->ptr ? selected->ptr : "";
+    if (restart.old_body && restart.index == checkpoint.index)
+        return edit_selection_frontier_candidate(&document->selection, value, selected->len, cursor, unique);
+    return edit_selection_candidate(document->item[checkpoint.index].snapshot,
+        value, selected->len, cursor, unique);
+}
+
+/* A pending native escape cannot authorize arbitrary amp; repetition in OLD.
+ * Its eventual decoded spelling must still occur in an authorized snapshot.
+ * Ordinary XML/entity prefixes are handled by the document recognizer first. */
+static bool edit_document_native_escape_possible(const edit_document *document,
+        edit_document_checkpoint checkpoint, edit_document_checkpoint restart, const buf *selected,
+        const char *pending, size_t n, const char *end) {
+    if (!document || !checkpoint.old_body || checkpoint.index >= document->count) return false;
+    size_t cursor = 0;
+    const char *suffix;
+    while ((suffix = edit_document_selection_candidate(document, checkpoint, restart, selected, &cursor, NULL))) {
+        buf encoded = {0};
+        if (!strncmp(suffix, end, strlen(end))) {
+            buf_puts(&encoded, checkpoint.cdata ? "&lt;" : "&amp;lt;");
+            buf_puts(&encoded, end + 1);
+        } else if (ds4_tool_text_escaped_close(suffix, end)) {
+            buf_puts(&encoded, checkpoint.cdata ? "&amp;" : "&amp;amp;");
+            buf_append(&encoded, suffix + 1, strnlen(suffix + 1, n));
+        }
+        bool possible = encoded.len >= n && !memcmp(encoded.ptr, pending, n);
+        buf_free(&encoded);
+        if (possible) return true;
+    }
+    return false;
+}
+
+/* The document owns snapshot lookup and literal selection. Callers receive
+ * only an XML continuation; EOF and delimiters return control to the sampler. */
+static void edit_document_draft_suffix(const edit_document *document,
+        edit_document_checkpoint checkpoint, edit_document_checkpoint restart,
+        const buf *selected, buf *out, size_t limit) {
+    if (!document || !checkpoint.old_body || checkpoint.index >= document->count) return;
+    const char *value = selected->ptr ? selected->ptr : "", *suffix = NULL;
+    size_t cursor = 0;
+    bool unique = false;
+    if (restart.old_body && restart.index == checkpoint.index) {
+        if (!edit_selection_frontier_prefix(&document->selection, value, selected->len, true, NULL)) return;
+    } else {
+        const edit_constraint *snapshot = document->item[checkpoint.index].snapshot;
+        if (!edit_selection_prefix(snapshot, value, selected->len, true, NULL)) return;
+    }
+    suffix = edit_document_selection_candidate(document, checkpoint, restart, selected, &cursor, &unique);
+    if (!suffix || !unique || !checkpoint.started) return;
+    while (*suffix && out->len < limit) {
+        if (checkpoint.cdata && !strncmp(suffix, "]]>", 3)) break;
+        unsigned char ch = (unsigned char)*suffix;
+        size_t n = ch < 0x80 ? 1 : ch < 0xe0 ? 2 : ch < 0xf0 ? 3 : 4;
+        char scalar[5] = {0};
+        memcpy(scalar, suffix, n);
+        if (!edit_xml_unicode(scalar, true)) break;
+        const char *piece = scalar;
+        if (!checkpoint.cdata) {
+            if (ch == '<') piece = "&lt;";
+            else if (ch == '&') piece = "&amp;";
+            /* Escaping ']' also handles a preceding raw ']' at the boundary. */
+            else if (ch == ']') piece = "&#93;";
+        }
+        size_t bytes = strlen(piece);
+        if (bytes > limit - out->len) break;
+        buf_append(out, piece, bytes);
+        suffix += n;
+    }
+}
+
 /* Context-independent tokens safe in both XML text and CDATA. */
 static bool edit_document_plain_piece(const char *piece, size_t n) {
     if (!piece || !n || memchr(piece, 0, n) || memchr(piece, '<', n) ||
@@ -337,6 +410,16 @@ static unsigned edit_document_next_scalar(const char *text) {
     return value;
 }
 
+static bool edit_document_literal_has_next(const edit_document_item *item,
+        const buf *logical, const edit_selection_frontier *frontier) {
+    size_t cursor = 0;
+    const char *value = logical->ptr ? logical->ptr : "", *next;
+    while ((next = frontier ? edit_selection_frontier_candidate(frontier, value, logical->len, &cursor, NULL) :
+            edit_selection_candidate(item->snapshot, value, logical->len, &cursor, NULL)))
+        if (*next && edit_xml_character(edit_document_next_scalar(next))) return true;
+    return false;
+}
+
 static bool edit_document_entity_scalar(unsigned scalar, const char *raw, size_t n) {
     const char *names[] = {"&amp;", "&lt;", "&gt;", "&quot;", "&apos;"};
     const unsigned values[] = {'&', '<', '>', '"', '\''};
@@ -447,6 +530,11 @@ static int edit_document_body(edit_xml_cursor *c, const edit_document_item *item
         if (command) { result = -1; goto done; }
         if (c->text[c->pos] == '<') {
             if (edit_xml_prefix(c, "<![CDATA[")) {
+                /* At snapshot EOF only the OLD close can make progress.
+                 * Empty CDATA wrappers otherwise admit an unbounded loop. */
+                if (old && !edit_document_literal_has_next(item, &logical, frontier)) {
+                    result = -1; goto done;
+                }
                 size_t opening = c->pos;
                 result = edit_xml_cdata(c, &logical, view);
                 unfinished_markup = !result && c->pos == opening;
