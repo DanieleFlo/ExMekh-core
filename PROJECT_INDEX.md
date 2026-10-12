@@ -227,6 +227,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/architecture/clean-code-review-20261004.md` — revisione delle modifiche Flash e
   dei confini del frontend: responsabilità, contratti tool/provider, verifiche e
   limiti dell'audit; distingue qualifica prestazionale e refactoring successivo.
+- `docs/architecture/clean-code-review-20261012.md` — revisione del server XML,
+  ownership degli snapshot, API del documento e policy di sampling unica;
+  esiti e limiti sono in `docs/performance/interactive-edit-clean-review-20261012.json`.
 - `docs/architecture/qwen38-compatibility.md` — audit pinning del target
   Qwen3.8-27B-UD-Q4_K_S e del relativo MTP: shape, inventario quantizzato,
   integrazione CLI/server e formati CUDA ancora necessari.
@@ -239,14 +242,22 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/roadmaps/constrained-json-decoding-plan.md` — checklist e criteri di completamento
   per simulatore DSML, JSON Schema, masking dei logits e output strutturati.
 - `docs/roadmaps/interactive-edit-file-server-plan.md` — piano server per tool call
-  interattive: extra agentico, campi prioritari e dipendenze fra ruoli, checkpoint
-  delle chiamate parziali, retry/replay, masking di old_text da inizio riga e
-  marcatori, vitalità dei candidati, cache dinamiche, sampling locale e gate MTP;
+  interattive XML v2: autorizzazioni per elemento, chiusura finale senza code,
+  checkpoint delle chiamate parziali, retry/replay, masking di old_text da
+  inizio riga, vitalità dei prefissi, sampling locale e gate MTP;
   le attività client restano in `exmekh_lib/todo.md`.
-- `docs/agentic/interactive-calls.md` — contratto wire interattivo v1 implementato.
-  `docs/performance/interactive-edit-file-qualification-20261009.json` conserva
-  qualifica CUDA/Qwen27, confronto greedy target/MTP, batch, costi degli indici
-  e combinazioni non verificate.
+- `docs/agentic/interactive-calls.md` — contratto wire interattivo v2: documento
+  edit senza code, con ultimo new_text prima della chiusura del singolo edit.
+  `docs/performance/interactive-edit-xml-v2-qualification-20261011.json` registra
+  lo storico con code del 11 ottobre, prefill reale e confronto maschera/oracolo.
+  La qualifica del 9 ottobre conserva soltanto lo storico v1.
+- `docs/performance/interactive-edit-xml-plain-smoke-20261012.json` — verifiche
+  mirate del formato predefinito senza code/prefill, framing finale e lookahead;
+  esiti target/MTP, fallimenti di contenuto e wire sintetico separato.
+- `docs/performance/interactive-edit-xml-v2-full-tests-20261011.md` — esiti
+  della raccolta completa e delle prove live target/MTP/batch, con responsabilità
+  server/client, fallimenti conservati nel JSON e wire prima/dopo la correzione
+  dei prefissi XML che ammettevano escape nativi senza una prosecuzione valida.
 - `docs/roadmaps/todo-agentic-server-performance.md` — diario misurabile degli interventi
   su sampling vincolato DSML/JSON, telemetria server e piccoli suffissi, senza
   modifiche ai kernel CUDA.
@@ -317,16 +328,21 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   il KV live conserva l'intero prompt byte per byte; le continuazioni agentiche
   riconoscono il tail tool anche dopo lo scope di sistema sintetico.
 - `ds4_interactive_config.h`, `ds4_interactive_grammar.h`,
-  `ds4_interactive_runtime.h` — protocollo Responses interattivo v1: registro
-  dei comportamenti, policy dei campi, `fields`/`first_fields`, pause con KV,
+  `ds4_interactive_runtime.h` — protocollo Responses interattivo v2: registro
+  dei comportamenti, policy del documento, pause interne alla stringa con KV,
   ripresa della stessa chiamata, ricevute idempotenti e interruzioni/replay.
   Il runtime possiede lifecycle, restore dello stato generato, budget e wire;
   il dispatcher usa queste operazioni senza gestire gli internals della continuazione.
-- `ds4_interactive_edit.h` — comportamento `edit_file.v1`: ruoli edit, marcatori,
-  validazione dello snapshot e policy di sampling. Configurazione e stato sono
+- `ds4_interactive_edit.h` — comportamento `edit_file.v2`: snapshot per edit,
+  adattatore JSON, descrizione del tool e policy di sampling unica. Configurazione e stato sono
   opachi per il protocollo e liberati dai callback del comportamento.
-- `ds4_edit_constraint.h` — vincolo dinamico di selezione da inizio riga,
-  unicità globale, marcatori e indice suffix array/LCP dello snapshot.
+- `ds4_edit_document.h` — riconoscitore del dialetto XML edit, entità/CDATA,
+  ownership dei percorsi e snapshot condivisi, chiusura finale new_text senza code
+  e frontiere interne. Le prove del masking non
+  modificano autorizzazioni o stato del runtime.
+- `ds4_edit_constraint.h` — vincolo dinamico sui byte logici da inizio riga,
+  unicità globale e indice suffix array/LCP dello snapshot, esposto tramite API
+  di matching e candidati senza accesso agli indici interni.
   Il contratto wire è in `docs/agentic/interactive-calls.md`.
 - `agent/` — sorgenti, test e configurazione del frontend NiceGUI ExMekh Agent;
   `agent/src/exmekh_agent/exmekh_bridge/` integra Client e DeepAgent, `agent/src/exmekh_agent/state/`
@@ -706,7 +722,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   usa un'allocazione CUDA Qwen di 22.593 token per restare sotto il limite VRAM
   osservato oltre la frontiera effettiva di 22K.
 - `agent/tests/test_flash_structured_live.py` — matrice opt-in sul client ExMekh
-  installato, con Flash reale: Chat/Responses, streaming, thinking, temperatura,
+  installato, con Flash come default e modello esplicito selezionabile tramite
+  `DS4_FLASH_STRUCTURED_MODEL`: Chat/Responses, streaming, thinking, temperatura,
   schema Pydantic annidato/nullable, Unicode e rifiuto degli output troncati;
   eseguibile contro server target-only e MTP, senza dati di chat utente.
 - `tests/test_server_sampling_matrix.py` — fixture model-free incluse in
@@ -738,11 +755,19 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   un nome preciso usano `tool_choice=required` con un unico nome consentito,
   separando il protocollo dalla propensione del modello a chiamare un tool.
 - `tests/test_server_interactive.c` — fixture host per vincoli testuali e
-  oracolo indipendente, sintassi native/DSML, gruppi prioritari, retry,
-  batch, rifiuto e scadenza delle continuazioni.
+  oracolo indipendente, XML/entità/CDATA, chiusure letterali e finali, sintassi native,
+  frontiere di sampling, prefissi ]/]] coerenti con lo snapshot, retry, batch,
+  rifiuto e scadenza delle continuazioni.
+- `agent/tests/mock_client.py`, `agent/tests/test_mock_client.py` — provider di
+  test e contesti di installazione che ripristinano lo stato precedente anche
+  dopo errori o nesting, evitando contaminazioni dei test di steering.
 - `tests/test_interactive_api.py` — integrazione HTTP opt-in con modello reale:
   creazione, modifica multilinea, restore dopo riuso dello slot, SSE,
-  call ID, ricevute, rifiuto/replay e annullamento.
+  call ID, ricevute, rifiuto/replay e annullamento; vecchio code rifiutato,
+  ultima chiusura, CDATA e input vision, senza prefill per edit.
+- `tests/run_server_qualification.py`, `tests/test_server_qualification.py` —
+  esecuzione delle suite Python e report JSON con errori, sottocasi e skip;
+  impedisce di perdere le anomalie live nel riepilogo di qualifica.
 - `tests/test_exmekh_client_live.py` — accettazione opt-in con `uv run exmekh-lib`: esegue
   il prompt originale due volte sullo stesso server riavviando solo il client;
   verifica tool, skill e ritorno alla profondità zero, poi interrompe solo il client ExMekh-Lib

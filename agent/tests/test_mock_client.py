@@ -20,9 +20,9 @@ from tests.mock_client import (
     create_default_hierarchical_pipeline,
     create_quick_chat_pipeline,
     get_global_mock_provider,
-    install_mock_provider,
     reset_mock_provider,
     set_global_mock_provider,
+    using_mock_provider,
 )
 
 
@@ -230,27 +230,35 @@ def test_global_mock_provider_registry() -> None:
 async def test_agent_runner_installed_mock_provider() -> None:
     """Verifies that install_mock_provider bridges agent_runner without modifying production config."""
     provider = MockProvider()
-    install_mock_provider(provider)
+    with using_mock_provider(provider):
+        is_alive, models = await ar.check_provider_health()
+        assert is_alive is True
+        assert "mock-pipeline-model" in models
 
-    # 1. Health check with mock provider
-    is_alive, models = await ar.check_provider_health()
-    assert is_alive is True
-    assert "mock-pipeline-model" in models
+        streamed: list[str] = []
+        reasoning: list[tuple[str, str, int]] = []
+        tools: list[ToolEvent] = []
+        res = await ar.run_agent_turn(
+            user_prompt="Inizializza pipeline di diagnostica",
+            model="mock-pipeline-model",
+            on_token=lambda t: streamed.append(t),
+            on_reasoning=lambda c, p="/", d=0: reasoning.append((c, p, d)),
+            on_tool_event=lambda ev: tools.append(ev),
+        )
+        assert "Diagnostica di sistema completata" in res
+        assert "".join(streamed) != ""
+        assert len(tools) == 1
+        assert tools[0].tool_name == "mock-tool"
 
-    # 2. Run agent turn with installed mock provider
-    streamed: list[str] = []
-    reasoning: list[tuple[str, str, int]] = []
-    tools: list[ToolEvent] = []
 
-    res = await ar.run_agent_turn(
-        user_prompt="Inizializza pipeline di diagnostica",
-        model="mock-pipeline-model",
-        on_token=lambda t: streamed.append(t),
-        on_reasoning=lambda c, p="/", d=0: reasoning.append((c, p, d)),
-        on_tool_event=lambda ev: tools.append(ev),
-    )
-
-    assert "Diagnostica di sistema completata" in res
-    assert "".join(streamed) != ""
-    assert len(tools) == 1
-    assert tools[0].tool_name == "mock-tool"
+def test_mock_provider_context_restores_outer_provider_after_failure() -> None:
+    original = ar.LocalProvider
+    first, second = MockProvider(), MockProvider()
+    with using_mock_provider(first):
+        assert ar.LocalProvider() is first
+        with pytest.raises(RuntimeError, match="failed work"):
+            with using_mock_provider(second):
+                assert ar.LocalProvider() is second
+                raise RuntimeError("failed work")
+        assert ar.LocalProvider() is first
+    assert ar.LocalProvider is original

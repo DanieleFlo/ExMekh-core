@@ -26,6 +26,7 @@ struct interactive_entry {
     bool owns_request, streaming;
     bool queued, finalizing;
     size_t snapshot_bytes;
+    size_t behavior_bytes;
     uint64_t checkpoint_bytes;
     char *text;
     uint64_t rng;
@@ -50,7 +51,7 @@ static bool interactive_active(const interactive_entry *e) {
 
 static char *interactive_capabilities_body(server_model_syntax syntax) {
     buf body = {0};
-    buf_puts(&body, "{\"interactive\":{\"version\":1,\"apis\":[\"responses\"],\"behaviors\":[");
+    buf_puts(&body, "{\"interactive\":{\"version\":2,\"apis\":[\"responses\"],\"behaviors\":[");
     for (size_t i = 0; i < sizeof(interactive_behaviors)/sizeof(interactive_behaviors[0]); i++) {
         if (i) buf_putc(&body, ',');
         json_escape(&body, interactive_behaviors[i].name);
@@ -64,11 +65,13 @@ static char *interactive_capabilities_body(server_model_syntax syntax) {
     json_escape(&body, server_model_syntax_name(syntax));
     buf_printf(&body, ",\"model_supported\":%s,\"limits\":{\"snapshot_bytes\":%u,\"generated_text_bytes\":%u,\"first_values_bytes\":%u,"
         "\"tools\":%u,\"fields\":%u,\"records\":%u,\"active_continuations\":%u,\"exchanges\":%u,\"snapshot_budget_bytes\":%u,"
+        "\"state_budget_bytes\":%u,\"edits_per_call\":%u,"
         "\"checkpoint_budget_bytes\":%llu,\"continuation_ttl_seconds\":%u,\"receipt_ttl_seconds\":%u},"
         "\"mtp\":\"verified_parameter\",\"batched_mtp\":false,\"restart_resume\":false}}\n",
         interactive_syntax_supported(syntax) ? "true" : "false", INTERACTIVE_MAX_SNAPSHOT,
         INTERACTIVE_MAX_TEXT, INTERACTIVE_MAX_VALUES, INTERACTIVE_MAX_TOOLS, INTERACTIVE_MAX_FIELDS,
         INTERACTIVE_MAX_RECORDS, INTERACTIVE_MAX_ACTIVE, INTERACTIVE_MAX_RECORDS, INTERACTIVE_SNAPSHOT_BUDGET,
+        INTERACTIVE_STATE_BUDGET, INTERACTIVE_MAX_RECORDS,
         (unsigned long long)INTERACTIVE_CHECKPOINT_BUDGET, INTERACTIVE_TTL, INTERACTIVE_RECEIPT_TTL);
     return buf_take(&body);
 }
@@ -83,7 +86,7 @@ static int interactive_prompt_tokens(const request *r, int fallback) {
 
 static char *interactive_acceptance_body(const request *r) {
     buf body = {0};
-    buf_printf(&body, "{\"type\":\"interactive.accepted\",\"version\":1,\"continuation_id\":\"%s\"}",
+    buf_printf(&body, "{\"type\":\"interactive.accepted\",\"version\":2,\"continuation_id\":\"%s\"}",
                r->interactive.entry->id);
     return buf_take(&body);
 }
@@ -139,13 +142,13 @@ static bool interactive_checkpoint_reserve_locked(server *s, int slot_id,
 
 static void interactive_append_acceptance(buf *b, const request *r) {
     if (r->interactive.entry)
-        buf_printf(b, ",\"interactive\":{\"version\":1,\"continuation_id\":\"%s\"}", r->interactive.entry->id);
+        buf_printf(b, ",\"interactive\":{\"version\":2,\"continuation_id\":\"%s\"}", r->interactive.entry->id);
 }
 
 static void interactive_append_interruption(buf *body, const interactive_entry *e,
                                              const char *status, const char *code,
                                              const char *message) {
-    buf_printf(body, "{\"type\":\"interactive.%s\",\"version\":1,\"continuation_id\":\"%s\",\"status\":\"%s\",\"code\":",
+    buf_printf(body, "{\"type\":\"interactive.%s\",\"version\":2,\"continuation_id\":\"%s\",\"status\":\"%s\",\"code\":",
         status, e->id, status);
     json_escape(body, code);
     buf_puts(body, ",\"message\":");
@@ -154,6 +157,7 @@ static void interactive_append_interruption(buf *body, const interactive_entry *
         buf_printf(body, ",\"call_id\":\"%s\",\"exchange_id\":\"%s\",\"tool_name\":",
             e->pending->call_id, e->pending->exchange_id);
         json_escape(body, e->pending->tool->name);
+        buf_printf(body, ",\"edit_index\":%zu", e->pending->input_index);
         buf_puts(body, ",\"values\":");
         buf_puts(body, e->pending->values);
     }
@@ -183,6 +187,7 @@ static void interactive_release_payload(interactive_entry *e) {
     responses_stream_free(&e->stream);
     e->pending = NULL;
     e->snapshot_bytes = 0;
+    e->behavior_bytes = 0;
 }
 
 static void interactive_entry_free(interactive_entry *e) {
@@ -238,7 +243,7 @@ static bool interactive_scope_equal(const stop_list *a, const stop_list *b) {
     return true;
 }
 
-/* Sort object keys only; array order (first_fields, input items) is semantic. */
+/* Sort object keys only; array order (tool specs, input items) is semantic. */
 static int interactive_member_compare(const void *a, const void *b) {
     return strcmp(((const schema_json_member *)a)->key, ((const schema_json_member *)b)->key);
 }
@@ -352,7 +357,7 @@ static bool interactive_send(int fd, bool cors, bool stream, const char *body) {
 
 static char *interactive_status_body(const interactive_entry *e) {
     buf b = {0};
-    buf_printf(&b, "{\"type\":\"interactive.status\",\"version\":1,\"continuation_id\":\"%s\",\"status\":\"%s\",\"result\":",
+    buf_printf(&b, "{\"type\":\"interactive.status\",\"version\":2,\"continuation_id\":\"%s\",\"status\":\"%s\",\"result\":",
                e->id, interactive_status_name(e->status));
     buf_puts(&b, e->operation && e->operation->result ? e->operation->result : "null");
     buf_putc(&b, '}');
@@ -428,31 +433,72 @@ static interactive_call *interactive_observe(request *r,
         const dsml_decode_tracker *dt, const char *raw, size_t n) {
     const interactive_tool *tool = interactive_tool_for(r, dt->active_order);
     if (!tool || !dt->inside_invoke || !dt->seen_props_exact ||
-        !interactive_priority_complete(tool, dt->seen_props) ||
-        dt->mode != DSML_TRACK_STRUCTURAL || dt->pos != n) return NULL;
+        dt->mode != DSML_TRACK_STRING_BODY || dt->pos != n) return NULL;
     interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
-    if (call) return call->authorized ? NULL : call;
-    char *values = interactive_arguments(dt->active_order, raw,
-                                         dt->invoke_body_start, n, dt->syn);
-    if (!values) return NULL;
+    if (call && !call->authorized) return call;
+    buf values = {0};
+    size_t input_index = 0;
+    if (!tool->behavior->await_input(tool, call ? call->behavior_state : NULL,
+            dt->active_prop, raw + dt->param_value_start, n - dt->param_value_start,
+            &values, &input_index, dt->syn->param_end)) { buf_free(&values); return NULL; }
     size_t count = 0;
     for (interactive_call *c = r->interactive.calls; c; c = c->next) count++;
-    if (strlen(values) > INTERACTIVE_MAX_VALUES || count >= INTERACTIVE_MAX_RECORDS) {
-        free(values); return NULL;
+    if (values.len > INTERACTIVE_MAX_VALUES || (!call && count >= INTERACTIVE_MAX_RECORDS)) {
+        buf_free(&values); return NULL;
     }
-    call = xmalloc(sizeof(*call));
-    memset(call, 0, sizeof(*call));
-    call->body_start = dt->invoke_body_start;
-    call->header_start = dt->invoke_header_start;
-    call->param_end = dt->syn->param_end;
-    call->wrapper_end = dt->syn->tool_calls_end;
-    call->tool = tool;
-    call->tool_index = (int)(tool - r->interactive.tools);
-    call->values = values;
-    responses_random_id(call->call_id, sizeof(call->call_id), "call_");
+    if (!call) {
+        call = xmalloc(sizeof(*call)); memset(call, 0, sizeof(*call));
+        call->body_start = dt->invoke_body_start;
+        call->header_start = dt->invoke_header_start;
+        call->param_end = dt->syn->param_end;
+        call->wrapper_end = dt->syn->tool_calls_end;
+        call->tool = tool;
+        call->tool_index = (int)(tool - r->interactive.tools);
+        responses_random_id(call->call_id, sizeof(call->call_id), "call_");
+        call->next = r->interactive.calls; r->interactive.calls = call;
+    }
+    if (!tool->behavior->begin_input(&call->behavior_state, values.ptr, dt->syn->param_end)) {
+        buf_free(&values); return NULL;
+    }
+    free(call->values); call->values = buf_take(&values);
+    call->input_index = input_index;
+    call->authorized = false;
     responses_random_id(call->exchange_id, sizeof(call->exchange_id), "exchange_");
-    call->next = r->interactive.calls; r->interactive.calls = call;
     return call;
+}
+
+/* Existing phase profiling also audits the first payload distribution. No
+ * RNG or session state is sampled/changed: report the raw argmax and whether
+ * the grammar admits it, plus the behavior-owned operation probe. */
+static void interactive_profile_frontier(server *s, server_slot *slot,
+        const dsml_decode_tracker *dt, agentic_token_filter *filter, float temperature) {
+    const request *r = filter->req;
+    const interactive_tool *tool = interactive_tool_for(r, dt->active_order);
+    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
+    if (!tool || !call || !call->authorized || dt->mode != DSML_TRACK_STRING_BODY ||
+        !interactive_sampling(r, dt, filter->raw, filter->raw_len).payload_start) return;
+    int vocab = ds4_engine_vocab_size(s->engine);
+    if (vocab <= 0) return;
+    float *logits = xmalloc((size_t)vocab * sizeof(*logits));
+    int best = -1;
+    if (ds4_session_copy_logits(slot->session, logits, vocab) == vocab) {
+        for (int i = 0; i < vocab; i++)
+            if (isfinite(logits[i]) && (best < 0 || logits[i] > logits[best])) best = i;
+    }
+    free(logits);
+    if (best < 0) return;
+    size_t length = 0;
+    char *piece = ds4_token_text(s->engine, best, &length);
+    bool allowed = agentic_filter_token(filter, best, piece, length);
+    bool probe = tool->behavior->diagnostic_probe &&
+        agentic_filter_token(filter, -1, tool->behavior->diagnostic_probe, strlen(tool->behavior->diagnostic_probe));
+    buf encoded = {0}; json_escape(&encoded, piece);
+    server_log(DS4_LOG_GENERATION,
+        "ds4-server: interactive payload frontier call_id=%s input_index=%zu temperature=%.3f "
+        "unmasked_best=%d piece=%s raw_argmax_allowed=%s operation_probe_allowed=%s",
+        call->call_id, call->input_index, temperature, best, encoded.ptr,
+        allowed ? "true" : "false", probe ? "true" : "false");
+    free(piece); buf_free(&encoded);
 }
 
 static bool interactive_suspend(server *s, server_slot *slot, job *j,
@@ -462,11 +508,12 @@ static bool interactive_suspend(server *s, server_slot *slot, job *j,
     interactive_entry *e = j->req.interactive.entry;
     if (!e || !agent_context_checkpoint_save(s, slot, e->context_id, err, errlen)) return false;
     buf b = {0};
-    buf_printf(&b, "{\"type\":\"interactive.await_input\",\"version\":1,\"status\":\"awaiting_input\",\"continuation_id\":\"%s\",\"exchange_id\":\"%s\",\"call_id\":\"%s\",\"tool_name\":",
+    buf_printf(&b, "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"%s\",\"exchange_id\":\"%s\",\"call_id\":\"%s\",\"tool_name\":",
                e->id, call->exchange_id, call->call_id);
     json_escape(&b, call->tool->name);
     buf_puts(&b, ",\"behavior\":"); json_escape(&b, call->tool->behavior->name);
     buf_puts(&b, ",\"request\":{\"kind\":"); json_escape(&b, call->tool->behavior->request_kind);
+    buf_printf(&b, ",\"edit_index\":%zu", call->input_index);
     buf_puts(&b, ",\"values\":");
     buf_puts(&b, call->values);
     buf_puts(&b, "},\"usage\":");
@@ -506,20 +553,6 @@ static bool interactive_suspend(server *s, server_slot *slot, job *j,
     bool ok = interactive_send(j->fd, s->enable_cors, is_stream, b.ptr);
     if (ok) job_mark_response_published(j);
     buf_free(&b);
-    return true;
-}
-
-static bool interactive_utf8(const unsigned char *s) {
-    while (*s) {
-        unsigned c = *s++, need, min;
-        if (c < 0x80) continue;
-        if (c >= 0xc2 && c <= 0xdf) { need = 1; min = 0x80; c &= 31; }
-        else if (c >= 0xe0 && c <= 0xef) { need = 2; min = 0x800; c &= 15; }
-        else if (c >= 0xf0 && c <= 0xf4) { need = 3; min = 0x10000; c &= 7; }
-        else return false;
-        while (need--) { if ((*s & 0xc0) != 0x80) return false; c = (c << 6) | (*s++ & 63); }
-        if (c < min || c > 0x10ffff || (c >= 0xd800 && c <= 0xdfff)) return false;
-    }
     return true;
 }
 
@@ -563,14 +596,7 @@ static bool interactive_apply_call_ids(const request *r, const char *raw,
         char *args = interactive_arguments(dt.active_order, raw,
                                            dt.invoke_body_start, dt.pos, dt.syn);
         if (!args || !schema_json_validate_raw(dt.active_order->schema, args)) { free(args); return false; }
-        schema_json_value *all = schema_json_parse(args), *first = schema_json_parse(c->values);
-        bool frozen = all && first;
-        for (size_t i = 0; frozen && i < first->len; i++) {
-            const schema_json_value *actual = schema_json_object_get(all, first->member[i].key);
-            frozen = schema_json_equal(actual, first->member[i].value);
-        }
-        schema_json_free(all); schema_json_free(first);
-        if (!frozen) { free(args); return false; }
+        if (!interactive_invoke_valid(r, &dt, raw, dt.pos)) { free(args); return false; }
         free(calls->v[index].arguments); calls->v[index].arguments = args;
         free(calls->v[index].id); calls->v[index].id = xstrdup(c->call_id);
         /* Jump over the invocation close, avoiding a second rewrite while
@@ -818,10 +844,15 @@ static int interactive_control(server *s, int fd, const char *body, request *out
     }
     if (!cancel && !reject) {
         const interactive_behavior *behavior = e->pending->tool->behavior;
-        size_t bytes = behavior->reply_bytes(reply), used = 0;
-        for (interactive_entry *p = s->interactive_entries; p; p = p->next)
+        size_t bytes = behavior->reply_bytes(e->pending->behavior_state, reply);
+        size_t memory = behavior->reply_memory(e->pending->behavior_state, reply);
+        size_t used = 0, memory_used = 0;
+        for (interactive_entry *p = s->interactive_entries; p; p = p->next) {
             used += p->snapshot_bytes;
-        if (bytes > INTERACTIVE_SNAPSHOT_BUDGET - used) {
+            memory_used += p->behavior_bytes;
+        }
+        if (used > INTERACTIVE_SNAPSHOT_BUDGET || bytes > INTERACTIVE_SNAPSHOT_BUDGET - used ||
+            memory_used > INTERACTIVE_STATE_BUDGET || memory > INTERACTIVE_STATE_BUDGET - memory_used) {
             pthread_mutex_unlock(&s->tool_mu);
             http_error(fd, s->enable_cors, 429, "interactive snapshot memory budget exceeded");
             goto answered;
@@ -830,6 +861,7 @@ static int interactive_control(server *s, int fd, const char *body, request *out
             pthread_mutex_unlock(&s->tool_mu); goto invalid;
         }
         e->snapshot_bytes += bytes;
+        e->behavior_bytes += memory;
     }
     interactive_receipt *operation = interactive_receipt_add(e, id, hash);
     e->paused.interactive.receipt = operation;

@@ -69,11 +69,7 @@ static bool interactive_param_allowed(const request *r,
     const interactive_tool *t = interactive_tool_for(r, dt->active_order);
     if (!t) return true;
     if (prop < 0 || prop >= INTERACTIVE_MAX_FIELDS || !dt->seen_props_exact) return false;
-    int first = interactive_next_priority(t, dt->seen_props);
-    if (first >= 0) return prop == first;
-    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
-    if (!call || !call->authorized) return false;
-    return interactive_field_dependencies_met(t, prop, dt->seen_props);
+    return interactive_field_has(t, prop, INTERACTIVE_FIELD_CONSTRAINED);
 }
 
 static bool interactive_parameter_form(const request *r, const dsml_decode_tracker *dt,
@@ -90,57 +86,39 @@ static bool interactive_parameter_form(const request *r, const dsml_decode_track
 }
 
 static bool interactive_string_possible(const request *r,
-        const dsml_decode_tracker *dt, const char *raw, size_t end, bool complete) {
+        const dsml_decode_tracker *dt, const char *raw, size_t end, bool complete, size_t new_from) {
     const interactive_tool *t = interactive_tool_for(r, dt->active_order);
     if (!t) return agentic_string_parameter_prefix_possible(dt->active_order,
         dt->active_prop, raw, dt->param_value_start, end, complete, dt->syn);
     const schema_json_value *schema = tool_schema_order_property_schema(dt->active_order, dt->active_prop);
-    if (complete) {
-        schema_json_value *value = interactive_parameter_value(dt->active_order,
-            dt->active_prop, true, raw, dt->param_value_start, end, dt->syn);
-        bool valid = value && interactive_utf8((const unsigned char *)value->string) &&
-            schema_json_validate(schema, value, 0);
-        schema_json_free(value);
-        if (!valid) return false;
-    }
+    const schema_json_value *maximum = schema_json_object_get(schema, "maxLength");
+    schema_json_value *decoded = interactive_parameter_value(dt->active_order, dt->active_prop,
+        true, raw, dt->param_value_start, end, dt->syn);
+    bool valid = interactive_utf8_valid((const unsigned char *)decoded->string,
+        strlen(decoded->string), complete);
+    size_t length = 0;
+    for (const unsigned char *p = (const unsigned char *)decoded->string; *p; p++)
+        if ((*p & 0xc0) != 0x80) length++;
+    if (maximum && (double)length > maximum->number) valid = false;
+    if (complete && valid) valid = schema_json_validate(schema, decoded, 0);
+    schema_json_free(decoded);
+    if (!valid) return false;
     if (!interactive_field_has(t, dt->active_prop, INTERACTIVE_FIELD_CONSTRAINED))
         return agentic_string_parameter_prefix_possible(dt->active_order,
             dt->active_prop, raw, dt->param_value_start, end, complete, dt->syn);
     interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
-    if (!call || !call->authorized) return false;
     const char *value = raw + dt->param_value_start;
     size_t n = end - dt->param_value_start;
-    schema_json_value *previous = NULL;
-    if (interactive_field_needs_previous(t, dt->active_prop)) {
-        char *args = interactive_arguments(dt->active_order, raw,
-                                           dt->invoke_body_start,
-                                           dt->param_header_start, dt->syn);
-        previous = schema_json_parse(args);
-        free(args);
-        if (!previous) return false;
-    }
-    bool valid = t->behavior->string_prefix(t, call->behavior_state, dt->active_prop,
-                                            previous, value, n, complete);
-    schema_json_free(previous);
-    return valid;
-}
-
-static bool interactive_boundary(const request *r, const dsml_decode_tracker *dt,
-                                   int closed_prop, size_t raw_len) {
-    const interactive_tool *t = interactive_tool_for(r, dt->active_order);
-    if (!t) return true;
-    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
-    if ((!call || !call->authorized) &&
-        interactive_priority_complete(t, dt->seen_props)) return dt->pos == raw_len;
-    if (interactive_field_has(t, closed_prop, INTERACTIVE_FIELD_CLOSE_BOUNDARY))
-        return dt->pos == raw_len;
-    return true;
+    size_t committed = new_from > dt->param_value_start ? new_from - dt->param_value_start : 0;
+    if (committed > n) committed = n;
+    return t->behavior->string_prefix(t, call ? call->behavior_state : NULL, dt->active_prop,
+        value, n, complete, committed, dt->syn->param_end);
 }
 
 static bool interactive_value_valid(const request *r, const dsml_decode_tracker *dt,
                                      bool string, const char *raw, size_t end) {
     if (string && interactive_tool_for(r, dt->active_order))
-        return interactive_string_possible(r, dt, raw, end, true);
+        return interactive_string_possible(r, dt, raw, end, true, end);
     return agentic_validate_parameter_value(dt->active_order, dt->active_prop,
         string, raw, dt->param_value_start, end, dt->syn);
 }
@@ -150,26 +128,44 @@ static bool interactive_invoke_valid(const request *r, const dsml_decode_tracker
     if (!interactive_tool_for(r, dt->active_order))
         return agentic_invoke_state_valid(dt, raw, dt->invoke_body_start, end, dt->syn);
     char *args = interactive_arguments(dt->active_order, raw, dt->invoke_body_start, end, dt->syn);
-    bool valid = args && schema_json_validate_raw(dt->active_order->schema, args);
+    schema_json_value *parsed = args ? schema_json_parse(args) : NULL;
+    bool valid = parsed && schema_json_validate(dt->active_order->schema, parsed, 0);
+    const interactive_tool *tool = interactive_tool_for(r, dt->active_order);
+    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
+    if (valid && tool && tool->behavior->await_input) {
+        valid = call && call->authorized &&
+            tool->behavior->complete(tool, call->behavior_state, parsed);
+    }
+    schema_json_free(parsed);
     free(args);
     return valid;
 }
 
+static interactive_sampling_policy interactive_sampling(const request *r,
+        const dsml_decode_tracker *dt, const char *raw, size_t n) {
+    const interactive_tool *tool = interactive_tool_for(r, dt->active_order);
+    if (!tool || dt->mode != DSML_TRACK_STRING_BODY) return (interactive_sampling_policy){0};
+    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
+    interactive_sampling_policy policy = tool->behavior->sampling(tool,
+        call ? call->behavior_state : NULL, dt->active_prop,
+        raw + dt->param_value_start, n - dt->param_value_start);
+    if (!call || !call->authorized) policy.body = false;
+    return policy;
+}
+
 static bool interactive_sampling_body(const request *r, const dsml_decode_tracker *dt,
                                        const char *raw, size_t n) {
-    const interactive_tool *tool = interactive_tool_for(r, dt->active_order);
-    if (!tool || dt->mode != DSML_TRACK_STRING_BODY) return false;
-    interactive_call *call = interactive_call_for(r, dt->invoke_body_start);
-    if (!call || !call->authorized) return false;
-    return tool->behavior->sampling_body(tool, call->behavior_state, dt->active_prop,
-                                         raw + dt->param_value_start,
-                                         n - dt->param_value_start);
+    return interactive_sampling(r, dt, raw, n).body;
+}
+
+static uint64_t interactive_sampling_epoch(const request *r, const dsml_decode_tracker *dt,
+                                           const char *raw, size_t n) {
+    return interactive_sampling(r, dt, raw, n).epoch;
 }
 
 static float interactive_temperature(const request *r, const dsml_decode_tracker *dt,
-                                      float temperature) {
-    const interactive_tool *tool = interactive_tool_for(r, dt->active_order);
-    if (interactive_field_has(tool, dt->active_prop, INTERACTIVE_FIELD_GREEDY)) return 0.0f;
+                                      float temperature, const char *raw, size_t n) {
+    if (interactive_sampling(r, dt, raw, n).greedy) return 0.0f;
     if (r->interactive.count && dsml_decode_state_is_tool(dt->decode) &&
         !dsml_decode_state_uses_payload_sampling(dt->decode)) return 0.0f;
     return temperature;

@@ -86,6 +86,39 @@
           ]
         },
         {
+          "path": "docs/architecture/clean-code-review-20261012.md",
+          "sections": [
+            {
+              "title": "Revisione del server XML e dei contratti tool",
+              "level": 1,
+              "start": 1,
+              "end": 77,
+              "summary": "Data: 12 ottobre 2026."
+            },
+            {
+              "title": "Responsabilità e interfacce",
+              "level": 2,
+              "start": 7,
+              "end": 27,
+              "summary": "I quattro callback di sampling sono riuniti in un'unica policy."
+            },
+            {
+              "title": "Coerenza dei comportamenti",
+              "level": 2,
+              "start": 28,
+              "end": 65,
+              "summary": "Il formato predefinito è v2 senza code: pausa dopo il path, autorizzazione,"
+            },
+            {
+              "title": "Verifica",
+              "level": 2,
+              "start": 66,
+              "end": 77,
+              "summary": "Gli esiti e i limiti delle verifiche sono conservati nel"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/ds4-merge-acceptance-20261002.md",
           "sections": [
             {
@@ -1482,46 +1515,46 @@
           "path": "docs/agentic/interactive-calls.md",
           "sections": [
             {
-              "title": "Chiamate interattive v1",
+              "title": "Chiamate interattive v2: edit document con chiusura finale",
               "level": 1,
               "start": 1,
-              "end": 121,
-              "summary": "Contratto server implementato il 9 ottobre 2026."
+              "end": 254,
+              "summary": "Contratto server aggiornato al 12 ottobre 2026."
             },
             {
-              "title": "Trasporto e configurazione",
+              "title": "Configurazione e descrizione del tool",
               "level": 2,
-              "start": 5,
-              "end": 38,
-              "summary": "Interrogare `GET /v1/agentic/capabilities`, verificando anche `model_supported` e `model_syntax` del modello caricato."
+              "start": 8,
+              "end": 47,
+              "summary": "Usare GET /v1/agentic/capabilities e POST /v1/responses."
             },
             {
-              "title": "Pausa e ripresa",
+              "title": "Documento e chiusura finale",
               "level": 2,
-              "start": 39,
-              "end": 87,
-              "summary": "Dopo la chiusura dell'ultimo campo prioritario il server salva il checkpoint, pubblica questo evento e termina la connessione HTTP, liberando il worker:"
+              "start": 48,
+              "end": 116,
+              "summary": "Il modello genera soltanto il prefisso `<edit path=\"example1.txt\"`."
             },
             {
-              "title": "Vincoli edit e campionamento",
+              "title": "Pausa, ripresa, rifiuto e campionamento",
               "level": 2,
-              "start": 88,
-              "end": 102,
-              "summary": "La selezione letterale parte sempre da un inizio di riga fisico, inclusa l'indentazione."
+              "start": 117,
+              "end": 186,
+              "summary": "La pausa avviene **dentro la stringa**, subito dopo il doppio apice che"
             },
             {
-              "title": "Stato, retry e interruzioni",
+              "title": "Responsabilità e limiti",
               "level": 2,
-              "start": 103,
-              "end": 114,
-              "summary": "`request_id` è obbligatorio per configure/resume/cancel, non vuoto e lungo al massimo 128 byte."
+              "start": 187,
+              "end": 218,
+              "summary": "**Server:** grammatica, masking, unicità della selezione letterale, combinazioni"
             },
             {
-              "title": "Estensione e test",
+              "title": "Esecuzione dei test",
               "level": 2,
-              "start": 115,
-              "end": 121,
-              "summary": "`ds4_interactive_config.h` contiene il registro C dei comportamenti e compila lo schema e le policy dei campi."
+              "start": 219,
+              "end": 254,
+              "summary": "`make test` esegue la suite C, i test del server e i gate disponibili del motore."
             }
           ]
         }
@@ -1575,6 +1608,53 @@
               "start": 67,
               "end": 74,
               "summary": "I tempi finali vengono dal percorso sincronizzato di ds4-bench."
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/interactive-edit-xml-v2-full-tests-20261011.md",
+          "sections": [
+            {
+              "title": "Test completi XML v2 del 11 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 137,
+              "summary": "Le suite locali passano."
+            },
+            {
+              "title": "Correzione server trovata durante i test",
+              "level": 2,
+              "start": 14,
+              "end": 29,
+              "summary": "Uno stream batch terminava con `incomplete_generation`: il parser ammetteva"
+            },
+            {
+              "title": "Suite locali",
+              "level": 2,
+              "start": 30,
+              "end": 48,
+              "summary": "I controlli saltati restano elencati nel JSON."
+            },
+            {
+              "title": "Suite live",
+              "level": 2,
+              "start": 49,
+              "end": 100,
+              "summary": "Le prove usano CUDA, RTX 3090, Qwen3.8-27B Q4_K_S, mmproj F16 e sidecar MTP Q4_0."
+            },
+            {
+              "title": "Responsabilità e controlli ancora aperti",
+              "level": 2,
+              "start": 101,
+              "end": 122,
+              "summary": "Una riscrittura valida o il mancato adempimento di una richiesta delete non"
+            },
+            {
+              "title": "Tentativi e limiti conservati",
+              "level": 2,
+              "start": 123,
+              "end": 137,
+              "summary": "Il primo tentativo MTP usava `--batched-session 1`: il runtime disabilitava MTP."
             }
           ]
         },
@@ -4862,185 +4942,199 @@
           "path": "docs/roadmaps/interactive-edit-file-server-plan.md",
           "sections": [
             {
-              "title": "Piano server: tool call interattive e masking di edit-file",
+              "title": "Piano server: edit XML v2 e storico del masking v1",
               "level": 1,
               "start": 1,
-              "end": 347,
-              "summary": "Data: 2026-10-09."
+              "end": 413,
+              "summary": "Aggiornamento 2026-10-12: XML v2 senza code è il formato predefinito."
+            },
+            {
+              "title": "Implementazione v2",
+              "level": 2,
+              "start": 7,
+              "end": 64,
+              "summary": "dopo ogni path, una call ID e nuovi exchange ID/indici per i singoli edit."
+            },
+            {
+              "title": "Storico v1 del 9 ottobre 2026",
+              "level": 2,
+              "start": 65,
+              "end": 70,
+              "summary": "Le sezioni seguenti conservano il piano, il wire e la qualifica precedenti."
             },
             {
               "title": "1. Obiettivo e confini",
               "level": 2,
-              "start": 5,
-              "end": 12,
+              "start": 71,
+              "end": 78,
               "summary": "DS4 deve generare prima i campi dichiarati nella configurazione, sospendere la tool call quando sono tutti completi, ricevere dati di controllo dal runtime e completare la stessa chiamata con vincoli dinamici sugli argom…"
             },
             {
               "title": "2. Invarianti del comportamento",
               "level": 2,
-              "start": 13,
-              "end": 26,
+              "start": 79,
+              "end": 92,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "3. Componenti da riutilizzare e responsabilità",
               "level": 2,
-              "start": 27,
-              "end": 42,
+              "start": 93,
+              "end": 108,
               "summary": "L'orchestrazione attuale vive soprattutto in ds4_server.c; filtri, analisi del vocabolario e snapshot della sessione sono esposti da ds4.h."
             },
             {
               "title": "4. Contratto wire da congelare nella prima fase",
               "level": 2,
-              "start": 43,
-              "end": 150,
+              "start": 109,
+              "end": 216,
               "summary": "Il server implementa il contratto v1."
             },
             {
               "title": "4.1 Riutilizzo di extra_body.agentic, configurazione e negoziazione",
               "level": 3,
-              "start": 47,
-              "end": 98,
+              "start": 113,
+              "end": 164,
               "summary": "La struttura attuale è già adatta: `AgenticScope.build_extra()` costruisce `{\"agentic\": {...}}` con `agent_context_id`, `allowed_tools`, `allowed_skills` ed eventualmente `operation=return` e `skill_call_id`."
             },
             {
               "title": "4.1.1 Campi prioritari e sospensione generale",
               "level": 3,
-              "start": 99,
-              "end": 108,
+              "start": 165,
+              "end": 174,
               "summary": "Generare i campi di `first_fields` nell'ordine dichiarato."
             },
             {
               "title": "4.2 Sospensione e risposta del runtime",
               "level": 3,
-              "start": 109,
-              "end": 140,
+              "start": 175,
+              "end": 206,
               "summary": "{"
             },
             {
               "title": "4.3 Completamento, contabilità e replay",
               "level": 3,
-              "start": 141,
-              "end": 150,
+              "start": 207,
+              "end": 216,
               "summary": "Al completamento produrre una normale function call con argomenti JSON completi e la call ID originaria."
             },
             {
               "title": "5. Sospensione e vita della continuazione",
               "level": 2,
-              "start": 151,
-              "end": 170,
+              "start": 217,
+              "end": 236,
               "summary": "generating → awaiting_input → generating → completed"
             },
             {
               "title": "6. Confine esatto del gruppo prioritario",
               "level": 2,
-              "start": 171,
-              "end": 178,
+              "start": 237,
+              "end": 244,
               "summary": "Estendere il tracker della sintassi realmente generata da ciascun modello e la conversione in argomenti JSON."
             },
             {
               "title": "7. Tipo dinamico di old_text",
               "level": 2,
-              "start": 179,
-              "end": 215,
+              "start": 245,
+              "end": 281,
               "summary": "Comporre tre rami nella grammatica dell'argomento: selezione letterale da inizio riga, all e line[N]."
             },
             {
               "title": "7.1 Maschera del prossimo passo",
               "level": 3,
-              "start": 183,
-              "end": 197,
+              "start": 249,
+              "end": 263,
               "summary": "1."
             },
             {
               "title": "7.2 Composizione con i percorsi ottimizzati esistenti",
               "level": 3,
-              "start": 198,
-              "end": 203,
+              "start": 264,
+              "end": 269,
               "summary": "Il vincolo dinamico deve intersecare ogni percorso di accettazione: maschere statiche, fast path delle stringhe libere, token dichiarati unconditional, sequenze forzate e verifier."
             },
             {
               "title": "7.3 Marcatori e new_text",
               "level": 3,
-              "start": 204,
-              "end": 215,
+              "start": 270,
+              "end": 281,
               "summary": "I marcatori devono occupare l'intero campo, senza spazi, ripetizioni o aggiunte."
             },
             {
               "title": "8. Temperatura zero e MTP locale",
               "level": 2,
-              "start": 216,
-              "end": 227,
+              "start": 282,
+              "end": 293,
               "summary": "Per old usare temperatura effettiva 0 dopo il masking, selezionando il migliore token ammesso."
             },
             {
               "title": "9. Ordine di realizzazione e criteri di completamento",
               "level": 2,
-              "start": 228,
-              "end": 273,
+              "start": 294,
+              "end": 339,
               "summary": "Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto."
             },
             {
               "title": "Fase 1 — Congelare il contratto",
               "level": 3,
-              "start": 230,
-              "end": 237,
+              "start": 296,
+              "end": 303,
               "summary": "Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto."
             },
             {
               "title": "Fase 2 — Protocollo e storage senza masking testuale",
               "level": 3,
-              "start": 238,
-              "end": 247,
+              "start": 304,
+              "end": 313,
               "summary": "Completamento: un runtime simulato può sospendere/riprendere/rifiutare senza argomenti anticipati né snapshot file nel prompt; il rifiuto lascia una history canonica riproducibile."
             },
             {
               "title": "Fase 3 — Vincoli dinamici e marcatori",
               "level": 3,
-              "start": 248,
-              "end": 256,
+              "start": 314,
+              "end": 322,
               "summary": "Completamento: nessun token accettato viola inizio riga, compatibilità letterale o regole di chiusura; il modello può continuare dopo l'unicità."
             },
             {
               "title": "Fase 4 — MTP e flussi multipli",
               "level": 3,
-              "start": 257,
-              "end": 264,
+              "start": 323,
+              "end": 330,
               "summary": "Completamento: parità greedy con MTP spento e corrispondenza esatta di stream, chiamate ed esiti."
             },
             {
               "title": "Fase 5 — Qualifica e documentazione finale",
               "level": 3,
-              "start": 265,
-              "end": 273,
+              "start": 331,
+              "end": 339,
               "summary": "L'integrazione con la libreria richiede il lavoro client del TODO e resta una verifica successiva; non fa parte di questa consegna server."
             },
             {
               "title": "10. Matrice di verifica",
               "level": 2,
-              "start": 274,
-              "end": 290,
+              "start": 340,
+              "end": 356,
               "summary": "Usare come riferimento un filtro semplice della maschera corrente e confrontarlo con il percorso ottimizzato sul vocabolario intero; non scrivere test che si limitino a replicare l'implementazione."
             },
             {
               "title": "11. Definizione di completamento",
               "level": 2,
-              "start": 291,
-              "end": 294,
+              "start": 357,
+              "end": 360,
               "summary": "Il lavoro server è completo quando tutte le fasi sono verificate per la matrice dichiarata, la libreria può usare il contratto senza fallback silenziosi e una chiamata può essere sospesa, rifiutata o completata con ident…"
             },
             {
               "title": "12. Qualifica locale del 9 ottobre 2026",
               "level": 2,
-              "start": 295,
-              "end": 328,
+              "start": 361,
+              "end": 394,
               "summary": "Implementazione disponibile in `ds4_server.c`, `ds4_interactive_config.h`, `ds4_interactive_grammar.h`, `ds4_interactive_runtime.h`, `ds4_interactive_edit.h` e `ds4_edit_constraint.h`."
             },
             {
               "title": "13. Revisione delle responsabilità",
               "level": 2,
-              "start": 329,
-              "end": 347,
+              "start": 395,
+              "end": 413,
               "summary": "Il protocollo ora conserva configurazione e stato opachi del comportamento."
             }
           ]

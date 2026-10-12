@@ -20,6 +20,14 @@ Revisione delle modifiche Flash pendenti e dei confini fra engine, backend,
 - righe 29–63: **Verifiche** — Risultati e comandi sono conservati in `performance-results/clean-code-20261008/`.
 - righe 64–71: **Limiti** — La revisione applica principi di responsabilità unica, incapsulamento, coerenza
 
+## [Revisione del server XML e dei contratti tool](clean-code-review-20261012.md)
+
+I quattro callback di sampling sono riuniti in un'unica policy.
+
+- righe 7–27: **Responsabilità e interfacce** — I quattro callback di sampling sono riuniti in un'unica policy.
+- righe 28–65: **Coerenza dei comportamenti** — Il formato predefinito è v2 senza code: pausa dopo il path, autorizzazione,
+- righe 66–77: **Verifica** — Gli esiti e i limiti delle verifiche sono conservati nel
+
 ## [Accettazione merge DS4 e exmekh-lib — 2 ottobre 2026](ds4-merge-acceptance-20261002.md)
 
 **PASS per Qwen3.8-27B sulla RTX 3090.** Sono concluse le prove residue:

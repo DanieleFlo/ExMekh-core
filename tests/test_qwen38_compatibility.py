@@ -489,9 +489,9 @@ class Qwen38CompatibilityTests(unittest.TestCase):
                      if not k.startswith("DS4_")}
         cases = (
             ("start-ds4-server.sh", {}, "22593", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
-            ("agent/start-ds4-server.sh", {}, "28000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
+            ("agent/start-ds4-server.sh", {}, "26000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
             ("agent/start-ds4-server.sh", {"DS4_MODEL_PROFILE": "flash"},
-             "28000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
+             "26000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
             ("agent/start-ds4-server-flash.sh", {},
              "65536", "Qwen3.8-Flash-Next-Q2.gguf", True),
             ("agent/start-ds4-server-flash.sh", {"DS4_MODEL_PROFILE": "qwen27"},

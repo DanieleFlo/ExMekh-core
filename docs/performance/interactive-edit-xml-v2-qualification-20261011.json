@@ -1,0 +1,221 @@
+{
+  "date": "2026-10-11",
+  "protocol": {
+    "version": 2,
+    "behavior": "edit_file.v2",
+    "compatibility": "v1 configure, control and interrupted replay rejected"
+  },
+  "status": "SERVER_PROTOCOL_TESTED; LIVE_DELETION_UNQUALIFIED; CLIENT_MIGRATION_PENDING",
+  "backend": {
+    "device": "RTX 3090",
+    "backend": "CUDA",
+    "model": "Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "mtp": "mtp-Qwen3.8-27B-Q4_0.gguf",
+    "mtp_draft": 4,
+    "context_tokens": 22593,
+    "constraint_mode": "compare_new_vs_oracle",
+    "profile": "DS4_SERVER_PHASE_PROFILE=1"
+  },
+  "deterministic": {
+    "interactive_c": "PASS; 400 random snapshots checked with independent occurrence oracle and bytewise XML prefix regressions",
+    "ordinary_server_c": "PASS",
+    "asan_ubsan": "PASS; detect_leaks=1; interactive translation unit instrumented, linked CPU engine objects unchanged",
+    "production_cuda_link": "PASS",
+    "cpu_frontend_compile": "PASS",
+    "openai_sdk": "3.3.0; actual server Response validation and live create Response.model_validate PASS",
+    "python_reference_fixtures": "2 PASS",
+    "ruff": "lint and format PASS",
+    "docs_check": "PASS",
+    "snapshot_benchmark": {
+      "bytes": 1048520,
+      "lines": 18590,
+      "index_ms": 70.697,
+      "lookup_us": 1.532,
+      "scope": "single host fixture, not a model throughput qualification"
+    },
+    "sampling_matrix_static": "5 PASS"
+  },
+  "live_runs": [
+    {
+      "name": "release-compare",
+      "scope": "Full HTTP matrix; before the final XML scalar-prefix hardening, which does not change these valid text inputs.",
+      "binary_sha256": "0ac9af7197d2acd6670b6f23c4f3d092c7f31d58aa19b194a503bc4beaf89949",
+      "result": {
+        "tests_run": 13,
+        "failures": [
+          {
+            "test": "tests.test_interactive_api.InteractiveAPI.test_existing_delete_and_empty_existing (empty=True)",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/daniele/ds4/tests/test_interactive_api.py\", line 362, in test_existing_delete_and_empty_existing\n    self.assertEqual((edit[\"old\"], edit[\"new\"]), (\"<all/>\", \"<delete/>\"))\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Tuples differ: ('<all/>', '\\n\\nimport sys\\n\\ndef main():\\n    print([57 chars])\\n') != ('<all/>', '<delete/>')\n\nFirst differing element 1:\n'\\n\\nimport sys\\n\\ndef main():\\n    print([56 chars]()\\n'\n'<delete/>'\n\n+ ('<all/>', '<delete/>')\n- ('<all/>',\n-  '\\n'\n-  '\\n'\n-  'import sys\\n'\n-  '\\n'\n-  'def main():\\n'\n-  '    print(\"Hello, world!\")\\n'\n-  '\\n'\n-  'if __name__ == \"__main__\":\\n'\n-  '    main()\\n')\n"
+          },
+          {
+            "test": "tests.test_interactive_api.InteractiveAPI.test_existing_delete_and_empty_existing (empty=False)",
+            "traceback": "Traceback (most recent call last):\n  File \"/home/daniele/ds4/tests/test_interactive_api.py\", line 362, in test_existing_delete_and_empty_existing\n    self.assertEqual((edit[\"old\"], edit[\"new\"]), (\"<all/>\", \"<delete/>\"))\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Tuples differ: ('<all/>', '\\n\\nimport sys\\n\\ndef main():\\n    print([57 chars])\\n') != ('<all/>', '<delete/>')\n\nFirst differing element 1:\n'\\n\\nimport sys\\n\\ndef main():\\n    print([56 chars]()\\n'\n'<delete/>'\n\n+ ('<all/>', '<delete/>')\n- ('<all/>',\n-  '\\n'\n-  '\\n'\n-  'import sys\\n'\n-  '\\n'\n-  'def main():\\n'\n-  '    print(\"Hello, world!\")\\n'\n-  '\\n'\n-  'if __name__ == \"__main__\":\\n'\n-  '    main()\\n')\n"
+          }
+        ],
+        "errors": [],
+        "skipped": [],
+        "seconds": 243.369
+      },
+      "vocabulary_mask_comparisons": 486,
+      "mask_divergences": 0,
+      "mtp": {
+        "mtp_constrained_speculative_cycles": 49,
+        "mtp_constrained_sampled_rows": 91,
+        "mtp_constrained_accepted_drafts": 50
+      },
+      "profile_lines": [
+        "1011 17:43:24 ds4-server: interactive payload frontier call_id=call_a3eeac177733deebf1369a37 input_index=1 temperature=0.000 unmasked_best=3084 piece=\"unch\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:43:33 ds4-server: phase profile ctx=852..812:0 gen=109 mode=compare_new_vs_oracle wall=11833.712ms forced_build=6645.217ms/63 forced_sync=0.000ms/0/0_tok forced_prefix_probe=6.208ms sampling_mask_build=977.233ms oracle_compare=5751.504ms/48/0_div constraint_cpu=6741.126ms constraint_cpu_exposed=6741.126ms constraint_cpu_overlapped=0.000ms filter_setup=0.008ms filter=977.225ms filtered_sample=6.182ms/63 plain_sample=0.000ms/0 eval=5728.765ms/60 residual=0.000ms vocab=15644160 filter_calls=5232567 accepted=1486925 finite_allowed=1486925 piece_bytes=38798179 candidate_tokens_tested=16389843 parser_transition_count=3562025343 parser_bytes_visited=3562025343 trie_nodes_visited=17124 subtrees_pruned=14504 trie_leaf_tokens_emitted=723 mask_cache_hit=0 mask_cache_miss=63 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=4 mtp_constrained_speculative_cycles=4 mtp_constrained_sampled_rows=3 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=16406655 constraint_state_rollback=16406655 exhaustive_fallback_steps=0",
+        "1011 17:43:43 ds4-server: interactive payload frontier call_id=call_749f5d26bb6916c8fd9e878e input_index=1 temperature=0.000 unmasked_best=3084 piece=\"unch\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:43:47 ds4-server: phase profile ctx=852..812:0 gen=74 mode=compare_new_vs_oracle wall=7822.569ms forced_build=4036.470ms/29 forced_sync=0.000ms/0/0_tok forced_prefix_probe=3.835ms sampling_mask_build=934.345ms oracle_compare=3098.290ms/29/0_div constraint_cpu=4039.411ms constraint_cpu_exposed=4039.411ms constraint_cpu_overlapped=0.000ms filter_setup=0.005ms filter=934.340ms filtered_sample=2.941ms/29 plain_sample=0.000ms/0 eval=4451.537ms/25 residual=0.000ms vocab=7201280 filter_calls=1500671 accepted=1486117 finite_allowed=1486117 piece_bytes=11092897 candidate_tokens_tested=7946559 parser_transition_count=1431376574 parser_bytes_visited=1431376574 trie_nodes_visited=10432 subtrees_pruned=8419 trie_leaf_tokens_emitted=319 mask_cache_hit=0 mask_cache_miss=29 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=4 mtp_constrained_speculative_cycles=4 mtp_constrained_sampled_rows=3 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=7956834 constraint_state_rollback=7956834 exhaustive_fallback_steps=0",
+        "1011 17:43:48 ds4-server: phase profile ctx=0..16:16 gen=1 mode=compare_new_vs_oracle wall=575.310ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.088ms/1 eval=40.274ms/1 residual=534.948ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0",
+        "1011 17:43:49 ds4-server: phase profile ctx=623..796:173 gen=4 mode=compare_new_vs_oracle wall=181.684ms forced_build=44.471ms/4 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.483ms sampling_mask_build=0.565ms oracle_compare=43.423ms/4/0_div constraint_cpu=44.864ms constraint_cpu_exposed=44.864ms constraint_cpu_overlapped=0.000ms filter_setup=0.001ms filter=0.564ms filtered_sample=0.393ms/4 plain_sample=0.000ms/0 eval=136.748ms/4 residual=0.072ms vocab=993280 filter_calls=2734 accepted=442 finite_allowed=442 piece_bytes=25296 candidate_tokens_tested=993722 parser_transition_count=10144707 parser_bytes_visited=10144707 trie_nodes_visited=2292 subtrees_pruned=1504 trie_leaf_tokens_emitted=442 mask_cache_hit=0 mask_cache_miss=4 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=995994 constraint_state_rollback=995994 exhaustive_fallback_steps=0",
+        "1011 17:43:57 ds4-server: interactive payload frontier call_id=call_d45994cb29158ae3eebff350 input_index=1 temperature=0.000 unmasked_best=14556 piece=\"hello\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:44:05 ds4-server: phase profile ctx=836..796:0 gen=102 mode=compare_new_vs_oracle wall=9644.360ms forced_build=5175.899ms/56 forced_sync=0.000ms/0/0_tok forced_prefix_probe=5.033ms sampling_mask_build=863.207ms oracle_compare=4397.724ms/41/0_div constraint_cpu=5271.913ms constraint_cpu_exposed=5271.913ms constraint_cpu_overlapped=0.000ms filter_setup=0.007ms filter=863.200ms filtered_sample=5.949ms/56 plain_sample=0.000ms/0 eval=4873.297ms/53 residual=0.000ms vocab=13905920 filter_calls=5229717 accepted=1486862 finite_allowed=1486862 piece_bytes=38794181 candidate_tokens_tested=14651540 parser_transition_count=3124384031 parser_bytes_visited=3124384031 trie_nodes_visited=14337 subtrees_pruned=11789 trie_leaf_tokens_emitted=660 mask_cache_hit=0 mask_cache_miss=56 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=3 mtp_constrained_speculative_cycles=3 mtp_constrained_sampled_rows=3 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=14665600 constraint_state_rollback=14665600 exhaustive_fallback_steps=0",
+        "1011 17:44:13 ds4-server: interactive payload frontier call_id=call_932ed69735ea499742331199 input_index=1 temperature=0.000 unmasked_best=198 piece=\"\\n\" raw_argmax_allowed=true operation_probe_allowed=true",
+        "1011 17:44:44 ds4-server: phase profile ctx=879..839:0 gen=135 mode=compare_new_vs_oracle wall=32235.991ms forced_build=21184.246ms/89 forced_sync=0.000ms/0/0_tok forced_prefix_probe=9.416ms sampling_mask_build=7311.711ms oracle_compare=13955.674ms/74/0_div constraint_cpu=21285.347ms constraint_cpu_exposed=21285.347ms constraint_cpu_overlapped=0.000ms filter_setup=0.013ms filter=7311.697ms filtered_sample=8.547ms/89 plain_sample=0.000ms/0 eval=23981.960ms/61 residual=0.000ms vocab=22100480 filter_calls=12689689 accepted=8932619 finite_allowed=8932619 piece_bytes=94199758 candidate_tokens_tested=22101688 parser_transition_count=5957201920 parser_bytes_visited=5957201920 trie_nodes_visited=24161 subtrees_pruned=12805 trie_leaf_tokens_emitted=1208 mask_cache_hit=0 mask_cache_miss=89 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=3 mtp_constrained_speculative_cycles=11 mtp_constrained_sampled_rows=36 mtp_constrained_accepted_drafts=25 mtp_constrained_fallbacks=0 constraint_state_checkpoint=22125419 constraint_state_rollback=22125419 exhaustive_fallback_steps=0",
+        "1011 17:44:50 ds4-server: interactive payload frontier call_id=call_cfbf3987b455e6dd7080215b input_index=1 temperature=0.000 unmasked_best=198 piece=\"\\n\" raw_argmax_allowed=true operation_probe_allowed=true",
+        "1011 17:45:20 ds4-server: phase profile ctx=879..839:0 gen=135 mode=compare_new_vs_oracle wall=32120.038ms forced_build=21193.586ms/89 forced_sync=0.000ms/0/0_tok forced_prefix_probe=9.563ms sampling_mask_build=7303.584ms oracle_compare=13972.354ms/74/0_div constraint_cpu=21294.191ms constraint_cpu_exposed=21294.191ms constraint_cpu_overlapped=0.000ms filter_setup=0.014ms filter=7303.570ms filtered_sample=8.690ms/89 plain_sample=0.000ms/0 eval=23840.377ms/61 residual=0.000ms vocab=22100480 filter_calls=12689718 accepted=8932625 finite_allowed=8932625 piece_bytes=94199821 candidate_tokens_tested=22101694 parser_transition_count=5957206321 parser_bytes_visited=5957206321 trie_nodes_visited=24184 subtrees_pruned=12821 trie_leaf_tokens_emitted=1214 mask_cache_hit=0 mask_cache_miss=89 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=3 mtp_constrained_speculative_cycles=11 mtp_constrained_sampled_rows=36 mtp_constrained_accepted_drafts=25 mtp_constrained_fallbacks=0 constraint_state_checkpoint=22125448 constraint_state_rollback=22125448 exhaustive_fallback_steps=0",
+        "1011 17:45:26 ds4-server: interactive payload frontier call_id=call_821ee8be52effedd841dd282 input_index=1 temperature=0.000 unmasked_best=14166 piece=\"tail\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:45:34 ds4-server: phase profile ctx=839..799:0 gen=105 mode=compare_new_vs_oracle wall=10065.935ms forced_build=5670.488ms/59 forced_sync=0.000ms/0/0_tok forced_prefix_probe=5.480ms sampling_mask_build=900.302ms oracle_compare=4853.128ms/44/0_div constraint_cpu=5764.575ms constraint_cpu_exposed=5764.575ms constraint_cpu_overlapped=0.000ms filter_setup=0.007ms filter=900.295ms filtered_sample=5.664ms/59 plain_sample=0.000ms/0 eval=4833.020ms/56 residual=0.000ms vocab=14650880 filter_calls=5230807 accepted=1486883 finite_allowed=1486883 piece_bytes=38795765 candidate_tokens_tested=15396521 parser_transition_count=3398671076 parser_bytes_visited=3398671076 trie_nodes_visited=15406 subtrees_pruned=12835 trie_leaf_tokens_emitted=681 mask_cache_hit=0 mask_cache_miss=59 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=3 mtp_constrained_speculative_cycles=3 mtp_constrained_sampled_rows=3 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=15411635 constraint_state_rollback=15411635 exhaustive_fallback_steps=0",
+        "1011 17:45:43 ds4-server: interactive payload frontier call_id=call_2b84808003150d76761ecedb input_index=1 temperature=0.000 unmasked_best=9381 piece=\"range\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:45:50 ds4-server: phase profile ctx=797..757:0 gen=110 mode=compare_new_vs_oracle wall=9512.081ms forced_build=5504.417ms/62 forced_sync=0.000ms/0/0_tok forced_prefix_probe=6.015ms sampling_mask_build=497.061ms oracle_compare=5091.430ms/47/0_div constraint_cpu=5600.530ms constraint_cpu_exposed=5600.530ms constraint_cpu_overlapped=0.000ms filter_setup=0.008ms filter=497.053ms filtered_sample=6.023ms/62 plain_sample=0.000ms/0 eval=3907.617ms/61 residual=3.935ms vocab=15395840 filter_calls=4487055 accepted=744040 finite_allowed=744040 piece_bytes=33258908 candidate_tokens_tested=15893217 parser_transition_count=3614018605 parser_bytes_visited=3614018605 trie_nodes_visited=16558 subtrees_pruned=14700 trie_leaf_tokens_emitted=737 mask_cache_hit=0 mask_cache_miss=62 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=2 mtp_constrained_speculative_cycles=2 mtp_constrained_sampled_rows=1 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=15909472 constraint_state_rollback=15909472 exhaustive_fallback_steps=0",
+        "1011 17:45:58 ds4-server: phase profile ctx=0..14:14 gen=8 mode=compare_new_vs_oracle wall=1407.977ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.261ms/3 eval=1407.666ms/3 residual=0.050ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0",
+        "1011 17:46:01 ds4-server: interactive payload frontier call_id=call_159a2e5a1c82ac1079f0b01b input_index=1 temperature=0.000 unmasked_best=34600 piece=\"literal\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:46:13 ds4-server: phase profile ctx=843..803:0 gen=109 mode=compare_new_vs_oracle wall=14562.990ms forced_build=7921.323ms/64 forced_sync=0.000ms/0/0_tok forced_prefix_probe=5.977ms sampling_mask_build=1500.045ms oracle_compare=6504.452ms/49/0_div constraint_cpu=8016.862ms constraint_cpu_exposed=8016.862ms constraint_cpu_overlapped=0.000ms filter_setup=0.008ms filter=1500.037ms filtered_sample=6.388ms/64 plain_sample=0.000ms/0 eval=7556.897ms/60 residual=0.000ms vocab=15892480 filter_calls=5978329 accepted=2230016 finite_allowed=2230016 piece_bytes=44339241 candidate_tokens_tested=17134995 parser_transition_count=3786316132 parser_bytes_visited=3786316132 trie_nodes_visited=17734 subtrees_pruned=14009 trie_leaf_tokens_emitted=915 mask_cache_hit=0 mask_cache_miss=64 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=6 mtp_constrained_speculative_cycles=6 mtp_constrained_sampled_rows=4 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=17152404 constraint_state_rollback=17152404 exhaustive_fallback_steps=0",
+        "1011 17:46:21 ds4-server: interactive payload frontier call_id=call_ede4e3447a90eb2767091838 input_index=1 temperature=0.000 unmasked_best=588 piece=\"one\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:46:30 ds4-server: interactive payload frontier call_id=call_ede4e3447a90eb2767091838 input_index=2 temperature=0.000 unmasked_best=19186 piece=\"two\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:46:39 ds4-server: phase profile ctx=837..751:0 gen=147 mode=compare_new_vs_oracle wall=11890.871ms forced_build=7749.460ms/53 forced_sync=0.000ms/0/0_tok forced_prefix_probe=4.903ms sampling_mask_build=742.856ms oracle_compare=7092.944ms/38/0_div constraint_cpu=7845.804ms constraint_cpu_exposed=7845.804ms constraint_cpu_overlapped=0.000ms filter_setup=0.006ms filter=742.850ms filtered_sample=5.102ms/53 plain_sample=0.000ms/0 eval=4153.618ms/52 residual=0.000ms vocab=13160960 filter_calls=4483989 accepted=743963 finite_allowed=743963 piece_bytes=33254942 candidate_tokens_tested=13658260 parser_transition_count=4410878011 parser_bytes_visited=4410878011 trie_nodes_visited=13569 subtrees_pruned=11789 trie_leaf_tokens_emitted=660 mask_cache_hit=0 mask_cache_miss=53 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=2 mtp_constrained_speculative_cycles=2 mtp_constrained_sampled_rows=1 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=13671571 constraint_state_rollback=13671571 exhaustive_fallback_steps=0",
+        "1011 17:46:48 ds4-server: interactive payload frontier call_id=call_7aafdf5c2e8a1ab93699cd56 input_index=1 temperature=0.000 unmasked_best=588 piece=\"one\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:47:00 ds4-server: interactive payload frontier call_id=call_20cf9d83aaf2cd98d2a0914d input_index=1 temperature=0.000 unmasked_best=3765 piece=\"first\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:47:11 ds4-server: interactive payload frontier call_id=call_20cf9d83aaf2cd98d2a0914d input_index=2 temperature=0.000 unmasked_best=5394 piece=\"second\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:47:20 ds4-server: phase profile ctx=865..779:0 gen=147 mode=compare_new_vs_oracle wall=13628.442ms forced_build=8850.059ms/53 forced_sync=0.000ms/0/0_tok forced_prefix_probe=4.950ms sampling_mask_build=826.053ms oracle_compare=8111.537ms/38/0_div constraint_cpu=8947.621ms constraint_cpu_exposed=8947.621ms constraint_cpu_overlapped=0.000ms filter_setup=0.006ms filter=826.046ms filtered_sample=5.080ms/53 plain_sample=0.000ms/0 eval=4841.851ms/52 residual=0.000ms vocab=13160960 filter_calls=4484195 accepted=743984 finite_allowed=743984 piece_bytes=33255352 candidate_tokens_tested=13658281 parser_transition_count=4349035100 parser_bytes_visited=4349035100 trie_nodes_visited=13754 subtrees_pruned=11948 trie_leaf_tokens_emitted=681 mask_cache_hit=0 mask_cache_miss=53 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=3 mtp_constrained_speculative_cycles=3 mtp_constrained_sampled_rows=1 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=13671777 constraint_state_rollback=13671777 exhaustive_fallback_steps=0"
+      ]
+    },
+    {
+      "name": "qualified",
+      "scope": "Final source build after XML scalar-prefix hardening; creation, streaming collision and multiple-element smoke rerun.",
+      "binary_sha256": "b39b88dcf4f2a8555574bf6c11db99f2caafd0a668e8b5d2fc0c275393e9c50f",
+      "result": {
+        "tests_run": 3,
+        "failures": [],
+        "errors": [],
+        "skipped": [],
+        "seconds": 65.546
+      },
+      "vocabulary_mask_comparisons": 128,
+      "mask_divergences": 0,
+      "mtp": {
+        "mtp_constrained_speculative_cycles": 11,
+        "mtp_constrained_sampled_rows": 8,
+        "mtp_constrained_accepted_drafts": 0
+      },
+      "profile_lines": [
+        "1011 17:48:50 ds4-server: interactive payload frontier call_id=call_76801ccaa707d30343315a64 input_index=1 temperature=0.000 unmasked_best=14556 piece=\"hello\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:48:58 ds4-server: phase profile ctx=836..796:0 gen=102 mode=compare_new_vs_oracle wall=9864.392ms forced_build=5641.955ms/56 forced_sync=0.000ms/0/0_tok forced_prefix_probe=5.342ms sampling_mask_build=963.792ms oracle_compare=4764.281ms/41/0_div constraint_cpu=5738.804ms constraint_cpu_exposed=5738.804ms constraint_cpu_overlapped=0.000ms filter_setup=0.008ms filter=963.784ms filtered_sample=5.389ms/56 plain_sample=0.000ms/0 eval=4748.149ms/53 residual=0.000ms vocab=13905920 filter_calls=5229717 accepted=1486862 finite_allowed=1486862 piece_bytes=38794181 candidate_tokens_tested=14651540 parser_transition_count=3124384031 parser_bytes_visited=3124384031 trie_nodes_visited=14337 subtrees_pruned=11789 trie_leaf_tokens_emitted=660 mask_cache_hit=0 mask_cache_miss=56 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=3 mtp_constrained_speculative_cycles=3 mtp_constrained_sampled_rows=3 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=14665600 constraint_state_rollback=14665600 exhaustive_fallback_steps=0",
+        "1011 17:49:07 ds4-server: phase profile ctx=0..14:14 gen=8 mode=compare_new_vs_oracle wall=1411.004ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.270ms/3 eval=1410.680ms/3 residual=0.054ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0",
+        "1011 17:49:10 ds4-server: interactive payload frontier call_id=call_750f01f0e1c042e6fcf8740d input_index=1 temperature=0.000 unmasked_best=34600 piece=\"literal\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:49:22 ds4-server: phase profile ctx=843..803:0 gen=109 mode=compare_new_vs_oracle wall=15690.707ms forced_build=8959.945ms/64 forced_sync=0.000ms/0/0_tok forced_prefix_probe=6.699ms sampling_mask_build=1741.436ms oracle_compare=7301.739ms/49/0_div constraint_cpu=9056.113ms constraint_cpu_exposed=9056.113ms constraint_cpu_overlapped=0.000ms filter_setup=0.009ms filter=1741.427ms filtered_sample=6.238ms/64 plain_sample=0.000ms/0 eval=7842.137ms/60 residual=0.000ms vocab=15892480 filter_calls=5978329 accepted=2230016 finite_allowed=2230016 piece_bytes=44339241 candidate_tokens_tested=17134995 parser_transition_count=3786316132 parser_bytes_visited=3786316132 trie_nodes_visited=17734 subtrees_pruned=14009 trie_leaf_tokens_emitted=915 mask_cache_hit=0 mask_cache_miss=64 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=6 mtp_constrained_speculative_cycles=6 mtp_constrained_sampled_rows=4 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=17152404 constraint_state_rollback=17152404 exhaustive_fallback_steps=0",
+        "1011 17:49:31 ds4-server: interactive payload frontier call_id=call_c7da082ae4aa28923370b2a6 input_index=1 temperature=0.000 unmasked_best=588 piece=\"one\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:49:41 ds4-server: interactive payload frontier call_id=call_c7da082ae4aa28923370b2a6 input_index=2 temperature=0.000 unmasked_best=19186 piece=\"two\" raw_argmax_allowed=true operation_probe_allowed=false",
+        "1011 17:49:50 ds4-server: phase profile ctx=837..751:0 gen=147 mode=compare_new_vs_oracle wall=12894.427ms forced_build=8632.933ms/53 forced_sync=0.000ms/0/0_tok forced_prefix_probe=4.869ms sampling_mask_build=819.586ms oracle_compare=7903.284ms/38/0_div constraint_cpu=8732.678ms constraint_cpu_exposed=8732.678ms constraint_cpu_overlapped=0.000ms filter_setup=0.007ms filter=819.580ms filtered_sample=4.938ms/53 plain_sample=0.000ms/0 eval=4328.401ms/52 residual=0.000ms vocab=13160960 filter_calls=4483989 accepted=743963 finite_allowed=743963 piece_bytes=33254942 candidate_tokens_tested=13658260 parser_transition_count=4410878011 parser_bytes_visited=4410878011 trie_nodes_visited=13569 subtrees_pruned=11789 trie_leaf_tokens_emitted=660 mask_cache_hit=0 mask_cache_miss=53 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=2 mtp_constrained_speculative_cycles=2 mtp_constrained_sampled_rows=1 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=13671571 constraint_state_rollback=13671571 exhaustive_fallback_steps=0"
+      ]
+    }
+  ],
+  "capabilities": {
+    "interactive": {
+      "version": 2,
+      "apis": [
+        "responses"
+      ],
+      "behaviors": [
+        "edit_file.v2"
+      ],
+      "syntaxes": [
+        "qwen",
+        "qwen4",
+        "deepseek",
+        "deepseek41"
+      ],
+      "model_syntax": "qwen",
+      "model_supported": true,
+      "limits": {
+        "snapshot_bytes": 1048576,
+        "generated_text_bytes": 1048576,
+        "first_values_bytes": 16384,
+        "tools": 16,
+        "fields": 64,
+        "records": 64,
+        "active_continuations": 8,
+        "exchanges": 64,
+        "snapshot_budget_bytes": 8388608,
+        "state_budget_bytes": 134217728,
+        "edits_per_call": 64,
+        "checkpoint_budget_bytes": 8589934592,
+        "continuation_ttl_seconds": 300,
+        "receipt_ttl_seconds": 600
+      },
+      "mtp": "verified_parameter",
+      "batched_mtp": false,
+      "restart_resume": false
+    }
+  },
+  "source_sha256": {
+    "ds4_server.c": "fc8e6d4ece0419b5462b5f2bd2b8d29998c003e67edcd7150f53743d7783a86c",
+    "ds4_edit_constraint.h": "f72e8585c153328d2f0a6d5c339b8e24ff3b251f052559b6c00ee0f5a3e14f4b",
+    "ds4_edit_document.h": "ca77b77077f51789662a461b5e73f48928a7107a93eaac4530d124f77e39f692",
+    "ds4_interactive_edit.h": "4e213cacc11eaf1e4b03c11a95b341ade5675fbc804d5215c35aaa8514ff4408",
+    "ds4_interactive_config.h": "6416b78f149b50075d7441c47b9c6547f7ee74fb03fb9de21ffa27fe0b4a8744",
+    "ds4_interactive_grammar.h": "25f2eec0dc6f8b235984224cab666617bd7aa3b23b2bfe31bfe1af50336aee05",
+    "ds4_interactive_runtime.h": "39ee3b5ae8407d1b97dba3cf3b8011075a37afbd289d19738ad6d4a313242387",
+    "tests/test_server_interactive.c": "1b3fe39138102cead50cbcfba4f5d2735cd28a6a496e8d14c30f05046fb7255a",
+    "tests/test_interactive_api.py": "d5434d0c616c65427c924039cba9d4a8c6a2803c386a5671f85a1d59a0028ff6"
+  },
+  "wire_evidence": "interactive-edit-xml-v2-wire-20261011.json",
+  "findings": [
+    {
+      "kind": "fixed_server_defect",
+      "detail": "Partial all/line command prefixes were pruned on empty/create snapshots; complete-string tests missed this. Bytewise regressions now cover both branches."
+    },
+    {
+      "kind": "fixed_server_defect",
+      "detail": "Native partial escapes and old_text entities could admit impossible continuations at EOF or inside structural/coded delimiters. Prefix checks now require a viable next scalar and valid native escape position."
+    },
+    {
+      "kind": "fixed_server_defect",
+      "detail": "Invalid UTF-8 prefixes and completed non-XML scalars are rejected before committing them, including paths and CDATA."
+    },
+    {
+      "kind": "unqualified_intent",
+      "detail": "Both deletion requests yield valid ordinary Python replacements. At the first new_text frontier raw argmax is newline and is already allowed; delete operation probe is allowed too. This does not establish the full model/KV root cause and is not a masking bypass."
+    },
+    {
+      "kind": "bounded_attack",
+      "observations": [
+        {
+          "attempts": 2,
+          "independently_checked_calls": 1,
+          "deadline_timeouts": 1
+        }
+      ]
+    },
+    {
+      "kind": "client_owned",
+      "detail": "Numeric range positivity/order/bounds, canonical path aliases, conflicts, inspect/read evidence, concurrent file changes, permissions and filesystem effects remain client checks."
+    }
+  ],
+  "not_qualified": [
+    "End-to-end client filesystem migration",
+    "Live deletion intent fulfillment",
+    "Target/MTP numerical equivalence (mask oracle comparisons are not inference parity)",
+    "Metal/SSD/distributed live execution",
+    "Other model/backend combinations"
+  ],
+  "deployment": {
+    "root_ds4_server_replaced": false,
+    "test_port": 18091,
+    "test_instance": "stopped after evidence capture",
+    "test_runtime_data": "temporary continuations/checkpoints released; shared production cache not deleted"
+  },
+  "source_provenance_note": "Final source hashes include a comment-only cleanup of the obsolete first_fields reference after the qualified binary was built."
+}

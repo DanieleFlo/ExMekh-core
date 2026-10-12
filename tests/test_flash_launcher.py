@@ -54,7 +54,7 @@ class FlashLauncherTests(unittest.TestCase):
         result = subprocess.run(["bash", str(ROOT / "agent/start-ds4-server.sh"), "--print-command"],
                                 cwd=ROOT, env=env, text=True, capture_output=True, check=True)
         args = shlex.split(result.stdout)
-        self.assertEqual(args[args.index("--ctx")+1], "28000")
+        self.assertEqual(args[args.index("--ctx")+1], "26000")
         self.assertNotIn("--prefill-chunk", args)
         self.assertFalse(any("DS4_CUDA_QWEN4" in value for value in args))
 

@@ -1,6 +1,32 @@
 #ifndef DS4_INTERACTIVE_CONFIG_H
 #define DS4_INTERACTIVE_CONFIG_H
 
+/* Shared string validation belongs to the grammar/configuration boundary,
+ * independent of continuation storage and HTTP lifecycle. */
+static bool interactive_utf8_valid(const unsigned char *text, size_t n, bool complete) {
+    size_t pos = 0;
+    while (pos < n) {
+        unsigned first = text[pos++], need;
+        if (first < 0x80) continue;
+        if (first >= 0xc2 && first <= 0xdf) need = 1;
+        else if (first >= 0xe0 && first <= 0xef) need = 2;
+        else if (first >= 0xf0 && first <= 0xf4) need = 3;
+        else return false;
+        for (unsigned i = 0; i < need; i++) {
+            if (pos == n) return !complete;
+            unsigned next = text[pos++];
+            if ((next & 0xc0) != 0x80 || (!i && ((first == 0xe0 && next < 0xa0) ||
+                (first == 0xed && next >= 0xa0) || (first == 0xf0 && next < 0x90) ||
+                (first == 0xf4 && next >= 0x90)))) return false;
+        }
+    }
+    return true;
+}
+
+static bool interactive_utf8(const unsigned char *text) {
+    return interactive_utf8_valid(text, strlen((const char *)text), true);
+}
+
 static const char *interactive_string(const schema_json_value *obj, const char *key) {
     const schema_json_value *v = schema_json_object_get(obj, key);
     return v && v->kind == SCHEMA_JSON_STRING ? v->string : NULL;
@@ -26,7 +52,7 @@ static bool interactive_keys(const schema_json_value *v, const char *const *keys
 
 static bool interactive_version(const schema_json_value *v) {
     const schema_json_value *version = schema_json_object_get(v, "version");
-    return version && version->kind == SCHEMA_JSON_NUMBER && version->number == 1;
+    return version && version->kind == SCHEMA_JSON_NUMBER && version->number == 2;
 }
 
 static bool interactive_request_options(const char *body) {
@@ -62,36 +88,27 @@ static const void *interactive_tool_config(const interactive_tool *tool) {
     return tool->behavior_config;
 }
 
-static void interactive_tool_require_priority(interactive_tool *tool, int prop) {
-    tool->first_required_mask |= UINT64_C(1) << prop;
-}
-
 static void interactive_tool_define_field(interactive_tool *tool, int prop,
-                                          unsigned flags, uint64_t requires) {
-    tool->field[prop] = (interactive_field){.flags = flags, .requires = requires};
-}
-
-static int interactive_next_priority(const interactive_tool *tool, uint64_t seen) {
-    for (int i = 0; i < tool->first_count; i++) {
-        if (!(seen & (UINT64_C(1) << tool->first[i]))) return tool->first[i];
-    }
-    return -1;
-}
-
-static bool interactive_priority_complete(const interactive_tool *tool, uint64_t seen) {
-    return (seen & tool->first_mask) == tool->first_mask;
+                                          unsigned flags) {
+    tool->field[prop] = (interactive_field){.flags = flags};
 }
 
 #include "ds4_interactive_edit.h"
 
 static const interactive_behavior interactive_behaviors[] = {
     {
-        .name = "edit_file.v1",
+        .name = "edit_file.v2",
         .request_kind = "file_snapshot",
+        .description = interactive_edit_description,
+        .diagnostic_probe = "<delete/>",
         .configure = interactive_edit_config,
         .string_prefix = interactive_edit_string_prefix,
-        .sampling_body = interactive_edit_sampling_body,
+        .sampling = interactive_edit_sampling,
+        .await_input = interactive_edit_await,
+        .begin_input = interactive_edit_begin_input,
+        .complete = interactive_edit_complete,
         .reply_bytes = interactive_edit_reply_bytes,
+        .reply_memory = interactive_edit_reply_memory,
         .prepare_reply = interactive_edit_reply,
         .free_state = interactive_edit_free_state,
         .free_config = interactive_edit_free_config,
@@ -102,17 +119,6 @@ static bool interactive_field_has(const interactive_tool *tool, int prop,
                                   interactive_field_flag flag) {
     return tool && prop >= 0 && prop < INTERACTIVE_MAX_FIELDS &&
         (tool->field[prop].flags & flag) != 0;
-}
-
-static bool interactive_field_dependencies_met(const interactive_tool *tool, int prop,
-                                               uint64_t seen) {
-    if (!tool || prop < 0 || prop >= INTERACTIVE_MAX_FIELDS) return false;
-    uint64_t required = tool->field[prop].requires;
-    return (seen & required) == required;
-}
-
-static bool interactive_field_needs_previous(const interactive_tool *tool, int prop) {
-    return tool && prop >= 0 && prop < INTERACTIVE_MAX_FIELDS && tool->field[prop].requires != 0;
 }
 
 static bool interactive_call_prepare_reply(interactive_call *call,
@@ -155,35 +161,21 @@ static bool interactive_compile(request *r, char *err, size_t errlen) {
         const schema_json_value *spec = tools->item[i];
         const char *name = interactive_string(spec, "name");
         const char *behavior = interactive_string(spec, "behavior");
-        if (!INTERACTIVE_KEYS(spec, "name", "behavior", "fields", "first_fields", "markers") ||
+        if (!INTERACTIVE_KEYS(spec, "name", "behavior", "fields") ||
             !name || !interactive_behavior_find(behavior) ||
             !id_list_contains(&r->allowed_tools, name)) goto invalid;
         for (int j = 0; j < ir->count; j++)
             if (!strcmp(ir->tools[j].name, name)) goto invalid;
         const tool_schema_order *order = tool_schema_orders_find(&r->tool_orders, name);
         if (!order || !order->schema || order->len > INTERACTIVE_MAX_FIELDS) goto invalid;
-        const schema_json_value *first = schema_json_object_get(spec, "first_fields");
-        if (!first || first->kind != SCHEMA_JSON_ARRAY || !first->len ||
-            first->len > INTERACTIVE_MAX_FIELDS) goto invalid;
         interactive_tool *t = &ir->tools[ir->count++];
         t->name = xstrdup(name);
         t->behavior = interactive_behavior_find(behavior);
         if (!t->behavior->configure(t, spec, order)) goto invalid;
-        for (size_t j = 0; j < first->len; j++) {
-            if (first->item[j]->kind != SCHEMA_JSON_STRING) goto invalid;
-            const char *field = first->item[j]->string;
-            int prop = interactive_property(order, field);
-            if (prop < 0 || !interactive_required(order, field) ||
-                interactive_field_has(t, prop, INTERACTIVE_FIELD_AFTER_INPUT) ||
-                (t->first_mask & (UINT64_C(1) << prop))) goto invalid;
-            t->first[t->first_count++] = prop;
-            t->first_mask |= UINT64_C(1) << prop;
-        }
-        if ((t->first_mask & t->first_required_mask) != t->first_required_mask) goto invalid;
     }
     return true;
 invalid:
-    snprintf(err, errlen, "invalid or unsupported interactive v1 configuration");
+    snprintf(err, errlen, "invalid or unsupported interactive v2 configuration (document must be one required string without enum/const)");
     return false;
 }
 
@@ -200,6 +192,47 @@ static interactive_call *interactive_call_for(const request *r, size_t body_star
     for (interactive_call *c = r->interactive.calls; c; c = c->next)
         if (c->body_start == body_start) return c;
     return NULL;
+}
+
+/* Add the server-owned framing contract to the actual model-facing tool
+ * description. The client's static registry hash remains the source identity. */
+static void interactive_tool_descriptions(buf *schemas, const request *r) {
+    if (!r->interactive.count) return;
+    buf rendered = {0};
+    const char *p = schemas->ptr;
+    while (p && *p) {
+        json_ws(&p);
+        if (!*p) break;
+        size_t nodes = 0;
+        schema_json_value *tool = schema_json_parse_value(&p, 0, &nodes);
+        if (!tool) { buf_free(&rendered); return; }
+        const char *name = interactive_string(tool, "name");
+        const char *guidance = NULL;
+        for (int i = 0; name && i < r->interactive.count; i++)
+            if (!strcmp(name, r->interactive.tools[i].name)) guidance = r->interactive.tools[i].behavior->description;
+        if (guidance) {
+            schema_json_value *description = (schema_json_value *)schema_json_object_get(tool, "description");
+            if (!description) {
+                description = xmalloc(sizeof(*description)); memset(description, 0, sizeof(*description));
+                description->kind = SCHEMA_JSON_STRING;
+                tool->member = xrealloc(tool->member, (tool->len + 1) * sizeof(*tool->member));
+                tool->member[tool->len++] = (schema_json_member){.key = xstrdup("description"), .value = description};
+            }
+            if (description->kind == SCHEMA_JSON_STRING &&
+                (!description->string || !strstr(description->string, guidance))) {
+                buf text = {0};
+                if (description->string && description->string[0]) {
+                    buf_puts(&text, description->string); buf_putc(&text, ' ');
+                }
+                buf_puts(&text, guidance);
+                free(description->string); description->string = buf_take(&text);
+            }
+        }
+        if (rendered.len) buf_putc(&rendered, '\n');
+        schema_json_serialize_value(&rendered, tool);
+        schema_json_free(tool);
+    }
+    buf_free(schemas); *schemas = rendered;
 }
 
 #endif

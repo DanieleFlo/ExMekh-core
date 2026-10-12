@@ -1,29 +1,46 @@
 #ifndef DS4_EDIT_CONSTRAINT_H
 #define DS4_EDIT_CONSTRAINT_H
 
-/* File snapshots are control data. This recognizer knows neither paths nor
- * tokenizer IDs: it accepts prefixes of the native parameter representation. */
+/* Match logical UTF-8 bytes, independently of XML/native transport escapes. */
 typedef struct {
     char *text;
     size_t length;
-    buf wire;
-    size_t *wire_offset;
     size_t *line_start;
     size_t *unique_after;
-    size_t *literal_end;
     size_t lines;
     size_t *candidate_line;
     size_t bucket[257];
     bool create;
 } edit_constraint;
 
+static size_t edit_constraint_count_lines(const char *text) {
+    size_t lines = 0;
+    for (size_t i = 0; text[i]; i++)
+        if (!i || text[i-1] == '\n' || (text[i-1] == '\r' && text[i] != '\n')) lines++;
+    return lines;
+}
+
+static size_t edit_constraint_line_count(const edit_constraint *c) {
+    return c->lines;
+}
+
+static bool edit_constraint_is_creation(const edit_constraint *c) {
+    return c->create;
+}
+
+static bool edit_constraint_matches(const edit_constraint *c, const char *text, bool create) {
+    return c->create == create && !strcmp(c->text, text);
+}
+
+static size_t edit_constraint_memory_bound(size_t length) {
+    /* Retained indexes plus radix-sort construction scratch. */
+    return 64 * (length + 1) + sizeof(edit_constraint);
+}
+
 static void edit_constraint_free(edit_constraint *c) {
     free(c->text);
-    buf_free(&c->wire);
-    free(c->wire_offset);
     free(c->line_start);
     free(c->unique_after);
-    free(c->literal_end);
     free(c->candidate_line);
     memset(c, 0, sizeof(*c));
 }
@@ -85,28 +102,16 @@ static void edit_index_unique(edit_constraint *c) {
         int left = next[position], right = position + 1 < n ? next[position+1] : 0;
         c->unique_after[line] = (size_t)(left > right ? left : right) + 1;
     }
-    size_t end = n, line = c->lines;
-    for (size_t i = n; i > 0;) {
-        i--;
-        if (n - i >= strlen("@ex_meckh_") && !memcmp(c->text + i, "@ex_meckh_", strlen("@ex_meckh_"))) end = i;
-        if (line && i == c->line_start[line-1]) c->literal_end[--line] = end;
-    }
     free(sa); free(tmp); free(rank); free(next); free(count);
 }
 
-static void edit_constraint_init(edit_constraint *c, const char *text,
-                                 bool create, const char *end) {
+static void edit_constraint_init(edit_constraint *c, const char *text, bool create) {
     memset(c, 0, sizeof(*c));
     c->text = xstrdup(text);
     c->length = strlen(text);
     c->create = create;
-    c->wire_offset = xmalloc((c->length + 1) * sizeof(size_t));
     size_t line_capacity = 0;
     for (size_t i = 0; i < c->length; i++) {
-        c->wire_offset[i] = c->wire.len;
-        if (ds4_tool_text_needs_escape(text + i, end))
-            buf_puts(&c->wire, text[i] == '<' ? "&lt;" : "&amp;");
-        else buf_putc(&c->wire, text[i]);
         if (i == 0 || (text[i-1] == '\n') ||
             (text[i-1] == '\r' && text[i] != '\n')) {
             if (c->lines == line_capacity) {
@@ -116,99 +121,57 @@ static void edit_constraint_init(edit_constraint *c, const char *text,
             c->line_start[c->lines++] = i;
         }
     }
-    c->wire_offset[c->length] = c->wire.len;
     c->unique_after = xmalloc((c->lines ? c->lines : 1) * sizeof(size_t));
-    c->literal_end = xmalloc((c->lines ? c->lines : 1) * sizeof(size_t));
     edit_index_unique(c);
     /* First-byte buckets discard impossible token families without scanning
      * every physical line. Only branches capable of a unique closure enter. */
     c->candidate_line = xmalloc((c->lines ? c->lines : 1) * sizeof(size_t));
     for (size_t line = 0; line < c->lines; line++) {
         size_t start = c->line_start[line];
-        if (c->unique_after[line] <= c->literal_end[line] - start)
-            c->bucket[(unsigned char)c->wire.ptr[c->wire_offset[start]] + 1]++;
+        if (c->unique_after[line] <= c->length - start)
+            c->bucket[(unsigned char)c->text[start] + 1]++;
     }
     for (size_t i = 1; i < 257; i++) c->bucket[i] += c->bucket[i-1];
     size_t cursor[256]; memcpy(cursor, c->bucket, sizeof(cursor));
     for (size_t line = 0; line < c->lines; line++) {
         size_t start = c->line_start[line];
-        if (c->unique_after[line] <= c->literal_end[line] - start)
-            c->candidate_line[cursor[(unsigned char)c->wire.ptr[c->wire_offset[start]]]++] = line;
+        if (c->unique_after[line] <= c->length - start)
+            c->candidate_line[cursor[(unsigned char)c->text[start]]++] = line;
     }
 }
 
-static bool edit_marker_prefix(const char *value, size_t n,
-                                const char *marker, bool complete) {
-    size_t len = strlen(marker);
-    return n <= len && (!complete || n == len) && !memcmp(value, marker, n);
-}
-
-static bool edit_line_marker_prefix(const char *value, size_t n,
-                                     size_t max_line, bool complete) {
-    const char *head = "@ex_meckh_line[";
-    size_t h = strlen(head);
-    if (n <= h) return !complete && !memcmp(value, head, n);
-    if (memcmp(value, head, h) || value[h] < '1' || value[h] > '9') return false;
-    size_t number = 0, i = h;
-    while (i < n && value[i] >= '0' && value[i] <= '9') {
-        unsigned digit = (unsigned)(value[i++] - '0');
-        if (number > max_line / 10 ||
-            (number == max_line / 10 && digit > max_line % 10))
-            return false;
-        number = number * 10 + digit;
+/* Enumerate matching line starts without exposing the suffix index. Cursor
+ * starts at zero; the returned suffix may be empty at snapshot EOF. */
+static const char *edit_selection_candidate(const edit_constraint *c,
+        const char *value, size_t n, size_t *cursor, bool *unique) {
+    size_t first = n ? c->bucket[(unsigned char)value[0]] : 0;
+    size_t last = n ? c->bucket[(unsigned char)value[0] + 1] : c->bucket[256];
+    while (*cursor < last - first) {
+        size_t line = c->candidate_line[first + (*cursor)++];
+        size_t start = c->line_start[line];
+        if (n > c->length - start || memcmp(value, c->text + start, n)) continue;
+        if (unique) *unique = n && n >= c->unique_after[line];
+        return c->text + start + n;
     }
-    if (i == n) return !complete;
-    return i + 1 == n && value[i] == ']';
+    return NULL;
 }
 
-/* Closure is tested on logical bytes. A wire prefix ending in an escape or
- * UTF-8 fragment may remain viable, but cannot close the argument. */
+/* UTF-8 fragments may remain viable, but cannot close a selection. */
 static bool edit_selection_prefix(const edit_constraint *c, const char *value,
                                    size_t n, bool complete,
                                    size_t *candidate_count) {
     if (candidate_count) *candidate_count = 0;
-    bool marker = edit_marker_prefix(value, n, "@ex_meckh_all", complete) ||
-        edit_line_marker_prefix(value, n, c->lines + 1, complete);
-    if (marker && !candidate_count) return true;
     bool literal = false;
-    size_t first = n ? c->bucket[(unsigned char)value[0]] : 0;
-    size_t last = n ? c->bucket[(unsigned char)value[0] + 1] : c->bucket[256];
-    for (size_t candidate = first; candidate < last; candidate++) {
-        size_t line = c->candidate_line[candidate];
-        size_t start = c->line_start[line], wire = c->wire_offset[start];
-        if (n > c->wire.len - wire || memcmp(value, c->wire.ptr + wire, n)) continue;
-        size_t lo = start, hi = c->length + 1;
-        while (lo < hi) {
-            size_t mid = lo + (hi - lo) / 2;
-            if (c->wire_offset[mid] < wire + n) lo = mid + 1;
-            else hi = mid;
-        }
-        size_t logical = lo - start;
-        if (lo > c->literal_end[line]) continue;
+    size_t cursor = 0;
+    bool unique = false;
+    const char *next;
+    while ((next = edit_selection_candidate(c, value, n, &cursor, &unique))) {
         if (candidate_count) (*candidate_count)++;
         if (!complete) literal = true;
-        else if (n && lo <= c->length && c->wire_offset[lo] == wire + n &&
-                 (lo == c->length || ((unsigned char)c->text[lo] & 0xc0) != 0x80) &&
-                 logical >= c->unique_after[line]) literal = true;
+        else if (unique && (!*next || ((unsigned char)*next & 0xc0) != 0x80)) literal = true;
         if (literal && !candidate_count) return true;
     }
-    return marker || literal;
-}
-
-static size_t edit_constraint_line_count(const edit_constraint *c) {
-    return c->lines;
-}
-
-static bool edit_replacement_prefix(const edit_constraint *c, bool all,
-                                     const char *value, size_t n, bool complete) {
-    if (all && !c->create &&
-        edit_marker_prefix(value, n, "@ex_meckh_delete", complete)) return true;
-    /* Once the reserved family is complete it cannot become ordinary data. */
-    const char *reserved = "@ex_meckh_";
-    size_t r = strlen(reserved);
-    for (size_t i = 0; i + r <= n; i++)
-        if (!memcmp(value + i, reserved, r)) return false;
-    return true;
+    return literal;
 }
 
 #endif

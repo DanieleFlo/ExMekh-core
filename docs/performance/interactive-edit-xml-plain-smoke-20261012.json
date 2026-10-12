@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-12",
+  "version": 2,
+  "behavior": "edit_file.v2",
+  "default_framing": "Last new_text close in each edit before edit close; optional framing whitespace; earlier bare closes are literal, complete literal end sequence requires CDATA/entities.",
+  "server_code_and_prefill": false,
+  "status": "FRAME_CHECKS_PASS; CONTENT_FAILURES_RETAINED",
+  "native_and_build": {
+    "ds4-xml-plain-build-20261012.log": {
+      "sha256": "6e8f8007cb60ec0ae5dcf6fb03786daf816d01cf229e1beba3e5f714f0e87fce",
+      "tail": "_kvstore.o rax.o ds4_gpu_args.o ds4.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_cuda.o ds4_layer_pack.o ds4_engram.o cuda/mmq/ds4_ggml_stubs.o cuda/mmq/ds4_mmq.o cuda/mmq/ds4_mmq_d2r.o cuda/mmq/quantize.o cuda/mmq/mmid.o cuda/mmq/mmvq.o cuda/mmq/ds4_repack.o ds4_qwen4_cpu.o -lm -Xcompiler -pthread -L/usr/local/cuda/targets/sbsa-linux/lib -L/usr/local/cuda/lib64 -lcudart -lcublas\ncc -O3 -ffast-math -g -march=native -Wall -Wextra -std=c99 -D_GNU_SOURCE -fno-finite-math-only -Wno-unused-function -DDS4_SERVER_TEST -DDS4_NO_GPU -c -o ds4_server_test.o ds4_server.c\ncc -O3 -ffast-math -g -march=native -Wall -Wextra -std=c99 -D_GNU_SOURCE -fno-finite-math-only -o ds4_server_test ds4_server_test.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread\ncc -O3 -ffast-math -g -march=native -Wall -Wextra -std=c99 -D_GNU_SOURCE -fno-finite-math-only -Wno-unused-function -DDS4_NO_GPU -c -o tests/test_server_interactive.o tests/test_server_interactive.c\ncc -O3 -ffast-math -g -march=native -Wall -Wextra -std=c99 -D_GNU_SOURCE -fno-finite-math-only -o tests/test_server_interactive tests/test_server_interactive.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread\n./tests/test_server_interactive\ninteractive snapshot benchmark bytes=1048520 lines=18590 index_ms=61.339 lookup_us=1.542\ninteractive XML server tests: ok\n"
+    },
+    "ds4-xml-plain-native-20261012.log": {
+      "sha256": "04a810f4a58625b7487a223bf21df01e4fdc6d7a21290931f0d2b039e1f13a2e",
+      "tail": "cc -O3 -ffast-math -g -march=native -Wall -Wextra -std=c99 -D_GNU_SOURCE -fno-finite-math-only -Wno-unused-function -DDS4_NO_GPU -c -o tests/test_server_interactive.o tests/test_server_interactive.c\ncc -O3 -ffast-math -g -march=native -Wall -Wextra -std=c99 -D_GNU_SOURCE -fno-finite-math-only -o tests/test_server_interactive tests/test_server_interactive.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread\n./tests/test_server_interactive\ninteractive snapshot benchmark bytes=1048520 lines=18590 index_ms=61.685 lookup_us=1.397\ninteractive XML server tests: ok\n"
+    },
+    "ds4-xml-plain-server-unit-20261012.log": {
+      "sha256": "617c2cec72fcdd5ef66e1f9f0c71dc394d2b8ddab8de10ff2bdbbcbcef84ad44",
+      "tail": "1012 10:20:04 ds4-server: removed orphan agentic checkpoints files=1 bytes=5\nds4-server: thinking not closed, ignoring incomplete Qwen tool calls in reasoning\n1012 10:20:04 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen\n1012 10:20:04 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen\n1012 10:20:04 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4\n1012 10:20:04 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4\nds4-server tests: ok\n"
+    },
+    "ds4-xml-plain-docs-20261012.log": {
+      "sha256": "17845b9ecf199589a35ed279710110d59ae7e026cfd0a05b674b2f0a7b135ac6",
+      "tail": "olve) ... ok\ntest_catalog_ranges_point_to_the_declared_headings (tests.test_research_corpus.ResearchCorpusTests.test_catalog_ranges_point_to_the_declared_headings) ... ok\ntest_every_authored_repository_card_has_at_most_one_external_link (tests.test_research_corpus.ResearchCorpusTests.test_every_authored_repository_card_has_at_most_one_external_link) ... ok\ntest_manifest_lock_and_downloaded_hashes_are_complete (tests.test_research_corpus.ResearchCorpusTests.test_manifest_lock_and_downloaded_hashes_are_complete) ... ok\ntest_master_and_index_of_indexes_reach_every_group (tests.test_research_corpus.ResearchCorpusTests.test_master_and_index_of_indexes_reach_every_group) ... ok\ntest_repository_lock_uses_full_commits_and_evidence_classes (tests.test_research_corpus.ResearchCorpusTests.test_repository_lock_uses_full_commits_and_evidence_classes) ... ok\ntest_all_local_markdown_links_resolve (tests.test_docs_wiki.DocsWikiTests.test_all_local_markdown_links_resolve) ... ok\ntest_catalog_ranges_point_to_declared_headings (tests.test_docs_wiki.DocsWikiTests.test_catalog_ranges_point_to_declared_headings) ... ok\ntest_no_markdown_is_orphaned_or_flat_at_docs_root (tests.test_docs_wiki.DocsWikiTests.test_no_markdown_is_orphaned_or_flat_at_docs_root) ... ok\ntest_root_and_index_of_indexes_reach_every_group (tests.test_docs_wiki.DocsWikiTests.test_root_and_index_of_indexes_reach_every_group) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.051s\n\nOK\n"
+    }
+  },
+  "source_sha256": {
+    "ds4-server": "79635010b0ede95330b3919894ccd9c407b264376e86c7d3e57aaeb16a777d2a",
+    "ds4_edit_document.h": "dd1d7e218fea15d830ee83fe528a916f170a102ba9da7649fb5d7a83b102a370",
+    "ds4_interactive_edit.h": "1cad0131c447a33bcdd2bcf5888ddab7adb6efa44e009f9dc5bc9ee3603215af",
+    "ds4_interactive_config.h": "85e5702272944feaab9a078f1670d295a7ba2af39f150a37a95c05524702268f",
+    "tests/test_server_interactive.c": "2dab9c07449302576394dbaf36bde82aba91435c681dfeecc97ee02b57814e36",
+    "tests/test_interactive_api.py": "e8bb40a242aefea3b886db6242a091c2509b1b300e23b3b65ab2b6b59f4734c1"
+  },
+  "python_reference": "3 PASS",
+  "live": {
+    "target": {
+      "successful": false,
+      "tests_run": 9,
+      "failures": 3,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "seconds": 88.907,
+      "tests": [
+        {
+          "test": "tests.test_interactive_api.ReferenceFixtureTests.test_cdata_literal_close_and_physical_newlines",
+          "status": "passed",
+          "seconds": 0.0
+        },
+        {
+          "test": "tests.test_interactive_api.ReferenceFixtureTests.test_last_bare_close_and_multiple_edits",
+          "status": "passed",
+          "seconds": 0.0
+        },
+        {
+          "test": "tests.test_interactive_api.ReferenceFixtureTests.test_obsolete_code_attribute_rejected",
+          "status": "passed",
+          "seconds": 0.0
+        },
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_create_retry_status",
+          "status": "passed",
+          "seconds": 10.215
+        },
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_literal_streaming_restore_and_collision",
+          "status": "passed",
+          "seconds": 16.838
+        },
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_multiple_elements_one_call",
+          "status": "passed",
+          "seconds": 18.404
+        },
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_cdata_preserves_literal_edit_close",
+          "status": "failed",
+          "seconds": 11.566,
+          "traceback": "Traceback (most recent call last):\n  File \"/home/daniele/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/unittest/case.py\", line 58, in testPartExecutor\n    yield\n  File \"/home/daniele/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/unittest/case.py\", line 651, in run\n    self._callTestMethod(testMethod)\n    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^\n  File \"/home/daniele/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/unittest/case.py\", line 606, in _callTestMethod\n    if method() is not None:\n       ~~~~~~^^\n  File \"/home/daniele/ds4/tests/test_interactive_api.py\", line 417, in test_cdata_preserves_literal_edit_close\n    self.assertEqual(edit[\"new\"], \"</new_text></edit>\")\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: ']]>' != '</new_text></edit>'\n- ]]>\n+ </new_text></edit>\n\n"
+        },
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_obsolete_snapshot_code_rejected",
+          "status": "passed",
+          "seconds": 11.19
+        },
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_existing_delete_and_empty_existing (empty=True)",
+          "status": "failed",
+          "seconds": 10.361,
+          "traceback": "Traceback (most recent call last):\n  File \"/home/daniele/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/unittest/case.py\", line 58, in testPartExecutor\n    yield\n  File \"/home/daniele/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/unittest/case.py\", line 556, in subTest\n    yield\n  File \"/home/daniele/ds4/tests/test_interactive_api.py\", line 382, in test_existing_delete_and_empty_existing\n    self.assertEqual((edit[\"old\"], edit[\"new\"]), (\"<all/>\", \"<delete/>\"))\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Tuples differ: ('<all/>', '\\n') != ('<all/>', '<delete/>')\n\nFirst differing element 1:\n'\\n'\n'<delete/>'\n\n- ('<all/>', '\\n')\n+ ('<all/>', '<delete/>')\n"
+        },
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_existing_delete_and_empty_existing (empty=False)",
+          "status": "failed",
+          "seconds": 20.689,
+          "traceback": "Traceback (most recent call last):\n  File \"/home/daniele/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/unittest/case.py\", line 58, in testPartExecutor\n    yield\n  File \"/home/daniele/.local/share/uv/python/cpython-3.13.15-linux-x86_64-gnu/lib/python3.13/unittest/case.py\", line 556, in subTest\n    yield\n  File \"/home/daniele/ds4/tests/test_interactive_api.py\", line 382, in test_existing_delete_and_empty_existing\n    self.assertEqual((edit[\"old\"], edit[\"new\"]), (\"<all/>\", \"<delete/>\"))\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Tuples differ: ('<all/>', '\\n') != ('<all/>', '<delete/>')\n\nFirst differing element 1:\n'\\n'\n'<delete/>'\n\n- ('<all/>', '\\n')\n+ ('<all/>', '<delete/>')\n"
+        }
+      ]
+    },
+    "mtp": {
+      "successful": true,
+      "tests_run": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "expected_failures": 0,
+      "unexpected_successes": 0,
+      "seconds": 34.527,
+      "tests": [
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_create_retry_status",
+          "status": "passed",
+          "seconds": 12.828
+        },
+        {
+          "test": "tests.test_interactive_api.InteractiveAPI.test_literal_streaming_restore_and_collision",
+          "status": "passed",
+          "seconds": 21.696
+        }
+      ]
+    }
+  },
+  "profiles": {
+    "target": {
+      "mask_comparisons": 208,
+      "mask_divergences": 0,
+      "mtp_constrained_speculative_cycles": 0,
+      "mtp_constrained_sampled_rows": 0,
+      "mtp_constrained_accepted_drafts": 0
+    },
+    "mtp": {
+      "mask_comparisons": 70,
+      "mask_divergences": 0,
+      "mtp_constrained_speculative_cycles": 8,
+      "mtp_constrained_sampled_rows": 5,
+      "mtp_constrained_accepted_drafts": 0
+    }
+  },
+  "preliminary_attempt": {
+    "status": "INTERRUPTED_FOR_FIX",
+    "constraint_divergence_lines": 89,
+    "cause": "old barrier after new_text rejected combined closers and provisional lookahead prefixes; fixed and repeated with fresh caches"
+  },
+  "remaining_failures": "target CDATA intent and two deletion subcases; valid generated documents differ from requested content",
+  "client_responsibilities": "same framing per element, filesystem/read/hash/ranges/conflicts/hooks/writes; migration remains pending",
+  "scope": "C server and XML fixtures; targeted CUDA/Qwen27 HTTP target and MTP; no full suites or other backends repeated",
+  "sampling_regression": "Pending bare close keeps body temperature and disables speculative sampling; fixed-boundary token prefixes stay viable.",
+  "mtp_coverage": "MTP support loaded; constrained cycles/verifier rows exercised; no accepted constrained drafts in these short smoke cases.",
+  "temporary_instances": "stopped; owned test caches removed"
+}

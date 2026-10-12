@@ -33,8 +33,7 @@ from tests.mock_client import (
     MockProvider,
     PipelineStep,
     ScenarioPipeline,
-    install_mock_provider,
-    uninstall_mock_provider,
+    using_mock_provider,
 )
 
 pytestmark = [pytest.mark.live, pytest.mark.mock]
@@ -44,9 +43,8 @@ pytestmark = [pytest.mark.live, pytest.mark.mock]
 def live_mock_env() -> Generator[MockProvider]:
     """Install a fresh mock provider for live testing and clean up afterwards."""
     provider = MockProvider()
-    install_mock_provider(provider)
-    yield provider
-    uninstall_mock_provider()
+    with using_mock_provider(provider):
+        yield provider
 
 
 @pytest.fixture

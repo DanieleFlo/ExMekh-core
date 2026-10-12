@@ -585,12 +585,19 @@ class SamplingMatrixLiveTests(unittest.TestCase):
                         "phase_counters": counters,
                     })
 
+        expected_ids = {
+            f"{sampling['id']}::{scenario}"
+            for sampling in SAMPLING_CASES
+            for scenario in SCENARIOS
+        }
+        failed_case_ids = sorted(expected_ids - {case["id"] for case in results})
         record = {
             "schema_version": 1,
             "variant": VARIANT,
             "model": MODEL,
             "seed": SEED,
-            "status": "PASS",
+            "status": "FAIL" if failed_case_ids else "PASS",
+            "failed_case_ids": failed_case_ids,
             "cases": results,
         }
         OUTPUT.parent.mkdir(parents=True, exist_ok=True)

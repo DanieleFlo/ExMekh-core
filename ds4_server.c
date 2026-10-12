@@ -2148,6 +2148,7 @@ static stop_list live_tool_call_order(server *s, api_style api, const stop_list 
 #define INTERACTIVE_MAX_RECORDS 64
 #define INTERACTIVE_MAX_ACTIVE 8
 #define INTERACTIVE_SNAPSHOT_BUDGET (8 * 1024 * 1024)
+#define INTERACTIVE_STATE_BUDGET (128 * 1024 * 1024)
 #define INTERACTIVE_CHECKPOINT_BUDGET (UINT64_C(8) * 1024 * 1024 * 1024)
 #define INTERACTIVE_TTL 300
 #define INTERACTIVE_RECEIPT_TTL 600
@@ -2158,28 +2159,34 @@ typedef struct interactive_behavior interactive_behavior;
 typedef struct interactive_tool interactive_tool;
 
 typedef enum {
-    INTERACTIVE_FIELD_AFTER_INPUT = 1 << 0,
-    INTERACTIVE_FIELD_CONSTRAINED = 1 << 1,
-    INTERACTIVE_FIELD_GREEDY = 1 << 2,
-    INTERACTIVE_FIELD_CLOSE_BOUNDARY = 1 << 3,
-    INTERACTIVE_FIELD_OPEN_BOUNDARY = 1 << 4
+    INTERACTIVE_FIELD_CONSTRAINED = 1
 } interactive_field_flag;
 
 typedef struct {
-    uint64_t requires;
     unsigned flags;
 } interactive_field;
+
+typedef struct {
+    uint64_t epoch;
+    bool body, greedy, payload_start;
+} interactive_sampling_policy;
 
 /* The protocol owns call lifetimes; each behavior owns its configuration and
  * control data. Grammar and scheduling only consume compiled field policies. */
 struct interactive_behavior {
     const char *name;
     const char *request_kind;
+    const char *description;
+    const char *diagnostic_probe;
     bool (*configure)(interactive_tool *, const schema_json_value *, const tool_schema_order *);
     bool (*string_prefix)(const interactive_tool *, const void *, int,
-                          const schema_json_value *, const char *, size_t, bool);
-    bool (*sampling_body)(const interactive_tool *, const void *, int, const char *, size_t);
-    size_t (*reply_bytes)(const schema_json_value *);
+                          const char *, size_t, bool, size_t, const char *);
+    interactive_sampling_policy (*sampling)(const interactive_tool *, const void *, int, const char *, size_t);
+    bool (*await_input)(const interactive_tool *, const void *, int, const char *, size_t, buf *, size_t *, const char *);
+    bool (*begin_input)(void **, const char *, const char *);
+    bool (*complete)(const interactive_tool *, const void *, const schema_json_value *);
+    size_t (*reply_bytes)(const void *, const schema_json_value *);
+    size_t (*reply_memory)(const void *, const schema_json_value *);
     bool (*prepare_reply)(void **, const schema_json_value *, const char *);
     void (*free_state)(void *);
     void (*free_config)(void *);
@@ -2188,10 +2195,6 @@ struct interactive_behavior {
 struct interactive_tool {
     char *name;
     const interactive_behavior *behavior;
-    int first[INTERACTIVE_MAX_FIELDS];
-    int first_count;
-    uint64_t first_mask;
-    uint64_t first_required_mask;
     interactive_field field[INTERACTIVE_MAX_FIELDS];
     void *behavior_config;
 };
@@ -2206,6 +2209,7 @@ struct interactive_call {
     char exchange_id[40];
     const interactive_tool *tool;
     char *values;
+    size_t input_index;
     bool authorized;
     void *behavior_state;
     interactive_call *next;
@@ -2315,7 +2319,7 @@ typedef struct {
 
 static void interactive_record_response(const request *r, const char *body);
 static void interactive_append_acceptance(buf *b, const request *r);
-static bool interactive_utf8(const unsigned char *s);
+static void json_escape(buf *b, const char *s);
 static const schema_json_value *tool_schema_order_property_schema(
     const tool_schema_order *order, int prop);
 
@@ -7008,13 +7012,16 @@ static char *interactive_replay_text(const char *start, size_t length) {
     char *raw = xstrndup(start, length);
     schema_json_value *record = schema_json_parse(raw);
     free(raw);
-    if (!record || !interactive_version(record)) { schema_json_free(record); return NULL; }
-    const char *keys[] = {"type", "call_id", "tool_name", "values", "code", "message"};
+    const schema_json_value *version = schema_json_object_get(record, "version");
+    if (!record || !version || version->kind != SCHEMA_JSON_NUMBER ||
+        version->number != 2) { schema_json_free(record); return NULL; }
+    const char *keys[] = {"type", "call_id", "tool_name", "values", "code", "message", "edit_index"};
     buf b = {0}; buf_puts(&b, "<interactive_call_interrupted>");
     for (size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
         const schema_json_value *v = schema_json_object_get(record, keys[i]);
         if (!v) {
-            bool optional = i >= 1 && i <= 3 && !schema_json_object_get(record, "call_id");
+            bool optional = (i >= 1 && i <= 3 && !schema_json_object_get(record, "call_id")) ||
+                            (i == 6 && !schema_json_object_get(record, "call_id"));
             if (optional) continue;
             buf_free(&b); schema_json_free(record); return NULL;
         }
@@ -7900,7 +7907,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
     if (!interactive_compile(r, err, errlen) ||
         (r->interactive.count && !interactive_request_options(body))) {
         if (r->interactive.count && !err[0])
-            snprintf(err, errlen, "interactive v1 does not accept stop or ignore_eos");
+            snprintf(err, errlen, "interactive v2 does not accept stop or ignore_eos");
         chat_msgs_free(&msgs);
         buf_free(&combined_tool_schemas);
         buf_free(&loaded_tool_schemas);
@@ -7909,6 +7916,8 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
         request_free(r);
         return false;
     }
+    interactive_tool_descriptions(&combined_tool_schemas, r);
+    active_tool_schemas = (!tool_choice_none && combined_tool_schemas.len) ? combined_tool_schemas.ptr : NULL;
     append_qwen_agentic_scope_instruction(&msgs, r);
     if (!responses_validate_tool_outputs(s, &msgs, r->think_mode,
                                          &r->responses_requires_live_tool_state,
@@ -11645,17 +11654,16 @@ static bool agentic_simulate_candidate(const request *r,
         if (sim.mode == DSML_TRACK_STRING_BODY) {
             for (;;) {
                 if (sim.pos >= raw_len) {
-                    return interactive_string_possible(r, &sim, raw, raw_len, false);
+                    return interactive_string_possible(r, &sim, raw, raw_len, false, new_from);
                 }
                 if (raw_full_lit(raw, raw_len, sim.pos, sim.syn->param_end)) {
-                    if (!interactive_string_possible(r, &sim, raw, sim.pos, true)) return false;
+                    if (!interactive_string_possible(r, &sim, raw, sim.pos, true, new_from)) return false;
                     if (!interactive_value_valid(r, &sim, true, raw, sim.pos)) return false;
                     sim.pos += strlen(sim.syn->param_end);
                     if (sim.seen_props_exact && sim.active_prop >= 0 &&
                         sim.active_prop < 64) {
                         sim.seen_props |= UINT64_C(1) << sim.active_prop;
                     }
-                    if (!interactive_boundary(r, &sim, sim.active_prop, raw_len)) return false;
                     sim.active_prop = -1;
                     sim.mode = DSML_TRACK_STRUCTURAL;
                     break;
@@ -11664,8 +11672,14 @@ static bool agentic_simulate_candidate(const request *r,
                     /* Once '<' starts the closing tag it no longer extends the
                      * value.  Only admit that branch when the value at the tag
                      * boundary is already complete (important for const/enum). */
-                    return interactive_string_possible(r, &sim, raw, sim.pos, true) &&
-                           interactive_value_valid(r, &sim, true, raw, sim.pos);
+                    bool close = interactive_string_possible(r, &sim, raw, sim.pos, true, new_from) &&
+                                 interactive_value_valid(r, &sim, true, raw, sim.pos);
+                    /* '<' is also the first byte of an XML fragment. Until
+                     * the native delimiter is unambiguous, keep the document
+                     * body branch visible to the token trie. */
+                    const interactive_tool *tool = interactive_tool_for(r, sim.active_order);
+                    return close || (tool && tool->behavior->await_input &&
+                        interactive_string_possible(r, &sim, raw, raw_len, false, new_from));
                 }
                 sim.pos++;
             }
@@ -11688,7 +11702,6 @@ static bool agentic_simulate_candidate(const request *r,
                         sim.active_prop < 64) {
                         sim.seen_props |= UINT64_C(1) << sim.active_prop;
                     }
-                    if (!interactive_boundary(r, &sim, sim.active_prop, raw_len)) return false;
                     sim.active_prop = -1;
                     sim.mode = DSML_TRACK_STRUCTURAL;
                     break;
@@ -11797,10 +11810,6 @@ static bool agentic_simulate_candidate(const request *r,
                 if (result == AGENTIC_TAG_INVALID) return false;
                 if (!interactive_param_allowed(r, &sim, prop)) return false;
                 if (!interactive_parameter_form(r, &sim, prop, is_string)) return false;
-                const interactive_tool *interactive = interactive_tool_for(r, sim.active_order);
-                if (interactive_field_has(interactive, prop, INTERACTIVE_FIELD_OPEN_BOUNDARY) &&
-                    after != raw_len)
-                    return false; /* Payload starts on a separately sampled token. */
                 if (agentic_tracker_prop_seen(
                         &sim, raw, sim.invoke_body_start,
                         sim.pos, sim.syn, prop)) return false;
@@ -13346,6 +13355,20 @@ static void append_responses_usage_json(buf *b, const request *r,
         input_tokens + output_tokens);
 }
 
+static void append_interactive_response_metadata(buf *b, const request *r) {
+    if (!r->interactive.count) return;
+    schema_json_value *original = schema_json_parse(r->raw_body);
+    const schema_json_value *tools = schema_json_object_get(original, "tools");
+    const schema_json_value *choice = schema_json_object_get(original, "tool_choice");
+    buf_puts(b, ",\"parallel_tool_calls\":false,\"tool_choice\":");
+    if (choice) schema_json_serialize_value(b, choice);
+    else json_escape(b, r->tool_choice_required ? "required" : "auto");
+    buf_puts(b, ",\"tools\":");
+    if (tools) schema_json_serialize_value(b, tools);
+    else buf_puts(b, "[]");
+    schema_json_free(original);
+}
+
 static bool responses_sse_completed(int fd, const request *r,
                                     responses_stream *st,
                                     const tool_calls *calls,
@@ -13367,6 +13390,7 @@ static bool responses_sse_completed(int fd, const request *r,
         "\"object\":\"response\",\"created_at\":%ld,\"status\":\"%s\",\"model\":",
         event_type, st->response_id, created_at, status);
     json_escape(&b, r->model);
+    append_interactive_response_metadata(&b, r);
     if (!strcmp(event_type, "response.failed")) {
         buf_puts(&b, ",\"error\":{\"code\":\"server_error\","
                      "\"message\":\"generation failed\"}");
@@ -13643,6 +13667,7 @@ static bool responses_final_response(int fd, bool enable_cors,
         "\"model\":",
         response_id, now, status);
     json_escape(&b, r->model);
+    append_interactive_response_metadata(&b, r);
     if (finish && !strcmp(finish, "error")) {
         buf_puts(&b, ",\"error\":{\"code\":\"server_error\","
                      "\"message\":\"generation failed\"}");
@@ -19112,6 +19137,8 @@ static int constrained_speculative_sample_target(
     if (ctx->req->interactive.count &&
         (tracker.invoke_body_start != ctx->tracker.invoke_body_start ||
          tracker.active_prop != ctx->tracker.active_prop ||
+         interactive_sampling_epoch(ctx->req, &tracker, shadow.ptr, shadow.len) !=
+             interactive_sampling_epoch(ctx->req, &ctx->tracker, ctx->raw, ctx->raw_len) ||
          !interactive_sampling_body(ctx->req, &tracker, shadow.ptr, shadow.len))) {
         /* Returning -1 declines this verifier window. The engine rolls back
          * speculative rows/RNG and commits only the sampled first target row. */
@@ -19169,7 +19196,7 @@ static int constrained_speculative_sample_target(
     } else if (step.ready) {
         token = ds4_session_sample_constraint_analysis_logits(
             ctx->session, target_logits,
-            ctx->req->interactive.count ? interactive_temperature(ctx->req, &tracker, ctx->temperature) :
+            ctx->req->interactive.count ? interactive_temperature(ctx->req, &tracker, ctx->temperature, shadow.ptr, shadow.len) :
                 ctx->temperature, ctx->top_k,
             ctx->top_p, ctx->min_p, rng,
             &step.analysis, ctx->profile ? &step.metrics : NULL);
@@ -21236,7 +21263,7 @@ decode_again:
             temperature = 0.0f;
         }
         if (j->req.interactive.count)
-            temperature = interactive_temperature(&j->req, &dsml_tracker, temperature);
+            temperature = interactive_temperature(&j->req, &dsml_tracker, temperature, text.ptr ? text.ptr : "", text.len);
         const bool agentic_constrained_sample =
             agentic_should_constrain_sample(&j->req, dsml_state, thinking.inside);
         const bool response_constrained_sample = j->req.response_schema != NULL;
@@ -21258,6 +21285,8 @@ decode_again:
                 agentic_tracker_has_unbounded_string(&dsml_tracker),
             .metrics = phase_profile ? &sample_parser_metrics : NULL,
         };
+        if (phase_profile && j->req.interactive.count)
+            interactive_profile_frontier(s, slot, &dsml_tracker, &token_filter, temperature);
         bool incremental_free_string =
             constraint_mode != SERVER_CONSTRAINT_ORACLE_ONLY &&
             response_json_incremental_free_string(
@@ -22018,7 +22047,7 @@ decode_again:
     if (j->req.interactive.count &&
         (!strcmp(finish, "error") || !strcmp(finish, "length") ||
          (saw_tool_start && !saw_tool_end))) {
-        interactive_fail_job(s, j, NULL, "incomplete_generation",
+        interactive_fail_job(s, j, interactive_call_for(&j->req,dsml_tracker.invoke_body_start), "incomplete_generation",
                              err[0] ? err : "interactive generation ended before completion",
                              prompt_tokens, completion);
         request_live_state_clear(s, slot);
@@ -23327,7 +23356,7 @@ static void *client_main(void *arg) {
         bool interactive_requested = extension != NULL;
         schema_json_free(root);
         if (interactive_requested) {
-            http_error(fd, s->enable_cors, 400, "interactive v1 requires /v1/responses");
+            http_error(fd, s->enable_cors, 400, "interactive v2 requires /v1/responses");
             http_request_free(&hr); goto done;
         }
     }

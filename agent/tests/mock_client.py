@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -641,22 +642,35 @@ def reset_mock_provider() -> MockProvider:
     return _GLOBAL_MOCK_PROVIDER
 
 
-_ORIG_LOCAL_PROVIDER = getattr(ar, "LocalProvider", None)
-_ORIG_HEALTH = getattr(ar, "check_provider_health", None)
-_ORIG_EXECUTE = getattr(ar, "execute_agent_turn_sync", None)
-_ORIG_TITLE = getattr(ar, "generate_chat_title_sync", None)
+_RUNNER_METHODS = (
+    "LocalProvider",
+    "check_provider_health",
+    "execute_agent_turn_sync",
+    "generate_chat_title_sync",
+)
+_ORIGINAL_RUNNER_METHODS = {name: getattr(ar, name) for name in _RUNNER_METHODS}
+
+
+def _restore_runner(methods: dict[str, Any]) -> None:
+    for name, method in methods.items():
+        setattr(ar, name, method)
 
 
 def uninstall_mock_provider() -> None:
     """Restores exmekh_agent.exmekh_bridge.agents.agent_runner to original production implementations."""
-    if _ORIG_LOCAL_PROVIDER:
-        ar.LocalProvider = _ORIG_LOCAL_PROVIDER
-    if _ORIG_HEALTH:
-        ar.check_provider_health = _ORIG_HEALTH
-    if _ORIG_EXECUTE:
-        ar.execute_agent_turn_sync = _ORIG_EXECUTE
-    if _ORIG_TITLE:
-        ar.generate_chat_title_sync = _ORIG_TITLE
+    _restore_runner(_ORIGINAL_RUNNER_METHODS)
+
+
+@contextmanager
+def using_mock_provider(
+    provider: MockProvider | None = None,
+) -> Generator[MockProvider]:
+    """Restore the previous runner even after failure or nested mock contexts."""
+    previous = {name: getattr(ar, name) for name in _RUNNER_METHODS}
+    try:
+        yield install_mock_provider(provider)
+    finally:
+        _restore_runner(previous)
 
 
 def install_mock_provider(mock_provider: MockProvider | None = None) -> MockProvider:

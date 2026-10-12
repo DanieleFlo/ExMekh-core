@@ -2,7 +2,9 @@
 
 Start one Flash server, then run with ``--run-live`` and
 ``DS4_FLASH_STRUCTURED_BASE_URL=http://127.0.0.1:PORT/v1``. The same matrix
-can be run against target-only and MTP servers. No user chat is loaded.
+can be run against target-only and MTP servers. Set
+``DS4_FLASH_STRUCTURED_MODEL`` explicitly to reuse the typed SDK checks with
+another model; results qualify only that model. No user chat is loaded.
 """
 
 import os
@@ -17,7 +19,7 @@ from exmekh_lib.providers.local import LocalProvider
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 BASE_URL = os.environ.get("DS4_FLASH_STRUCTURED_BASE_URL", "")
-MODEL = "qwen3.8-flash-next"
+MODEL = os.environ.get("DS4_FLASH_STRUCTURED_MODEL", "qwen3.8-flash-next")
 GUARD = 'città ☃ 😀 "}\\n<not-a-tag>'
 
 pytestmark = [

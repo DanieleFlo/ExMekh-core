@@ -1,121 +1,254 @@
-# Chiamate interattive v1
+# Chiamate interattive v2: edit document con chiusura finale
 
-Contratto server implementato il 9 ottobre 2026. Il [piano e la matrice di verifica](../roadmaps/interactive-edit-file-server-plan.md) descrivono obiettivi e qualifica. Le attività client restano in [exmekh_lib/todo.md](../../exmekh_lib/todo.md). Il server genera argomenti: non apre, sanifica, scrive o cancella file.
+Contratto server aggiornato al 12 ottobre 2026. Sostituisce v1; le configurazioni
+`edit_file.v1` sono rifiutate. Il [piano e lo storico di qualifica](../roadmaps/interactive-edit-file-server-plan.md)
+e il [TODO client](../../exmekh_lib/todo.md) distinguono i due componenti.
+Il server genera argomenti: non apre, sanifica, scrive o cancella file.
 
-## Trasporto e configurazione
+## Configurazione e descrizione del tool
 
-Interrogare `GET /v1/agentic/capabilities`, verificando anche `model_supported` e `model_syntax` del modello caricato. L'estensione usa esclusivamente `POST /v1/responses`; sulle altre API è rifiutata. Le grammatiche implementate sono Qwen27 DSML, Qwen4 nativa e DSML DeepSeek 4/4.1; GLM è rifiutato. La qualifica con modello reale riguarda Qwen3.8-27B Q4_K_S su CUDA RTX 3090, con e senza MTP Q4_0. Gli altri modelli/backend restano **NOT_VERIFIED**.
+Usare GET /v1/agentic/capabilities e POST /v1/responses. Verificare versione 2,
+`model_supported`, sintassi e comportamento `edit_file.v2`. Sono supportate
+le grammatiche Qwen27, Qwen4 e DeepSeek 4/4.1; GLM resta rifiutato.
+Il JSON Schema espone una sola stringa obbligatoria, chiamata `edits` per
+default; tool e campo possono essere rinominati.
 
-Il client OpenAI passa questa configurazione in `extra_body`. Sul wire `agentic` è una proprietà del body della normale richiesta Responses, insieme a `model`, `input`, `tools`, sampling e budget:
-
-```json
+~~~json
 {
   "agentic": {
     "agent_context_id": "run:root",
     "allowed_tools": ["edit-file"],
     "allowed_skills": [],
     "interactive": {
-      "version": 1,
+      "version": 2,
       "operation": "configure",
       "request_id": "turn-1",
       "tools": [{
         "name": "edit-file",
-        "behavior": "edit_file.v1",
-        "fields": {"resource": "path", "selection": "old_text", "replacement": "new_text"},
-        "first_fields": ["path"],
-        "markers": {"line": "@ex_meckh_line[<N>]", "all": "@ex_meckh_all", "delete": "@ex_meckh_delete"}
+        "behavior": "edit_file.v2",
+        "fields": {"document": "edits"}
       }]
     }
   }
 }
-```
+~~~
 
-I nomi del tool e degli argomenti sono quelli effettivamente registrati, inclusi gli override. Non sono fissati nel loop di inferenza. `first_fields` è ordinato, non vuoto, senza duplicati e composto da proprietà obbligatorie dello schema. Può includere più campi e tipi standard, per esempio `target` stringa seguito da `format` booleano. I ruoli edit devono riferirsi a tre stringhe obbligatorie distinte; resource deve appartenere al gruppo prioritario, selection/replacement devono seguirlo. La grammatica impone selection prima di replacement anche con proprietà schema riordinate.
+Non inviare `markers`, `first_fields` o tre ruoli separati. Il documento
+supporta tipo stringa, limiti di lunghezza e le annotazioni standard; enum/const
+e combinazioni di schema sul campo sono rifiutati prima dell'inferenza:
+le alternative statiche non possono in generale adattarsi allo snapshot autorizzato.
+`stop` e `ignore_eos` restano incompatibili. Il ritorno dalle skill conserva
+`agentic.operation=return`, distinto dai controlli interattivi.
 
-La configurazione non modifica il registro o il prompt. `agentic.operation=return` conserva la semantica delle skill e può accompagnare una configurazione ordinaria valida. Non può accompagnare operazioni di controllo di una continuazione. `stop` e `ignore_eos` sono incompatibili con v1.
+Il server aggiunge alla descrizione del tool inviata al modello le istruzioni
+per la grammatica. Non modifica la firma del tool o l'identità
+del registro statico del client. La libreria deve riportare la stessa
+descrizione nelle proprie istruzioni quando migra a v2.
 
-In streaming il server conferma con `interactive.accepted` dopo `response.created`. Le risposte finali normali includono `interactive.version` e `interactive.continuation_id`; una pausa conferma esplicitamente la versione nel suo involucro. Il client deve interpretare questi eventi tramite trasporto raw/custom, non aspettarsi che i tipi standard dell'SDK riconoscano l'estensione.
+## Documento e chiusura finale
 
-## Pausa e ripresa
+Il modello genera soltanto il prefisso `<edit path="example1.txt"`.
+Dopo l'autorizzazione dello snapshot il modello prosegue con `>` e i corpi.
+Non esistono attributi code, codici casuali o prefill del server per edit.
+Questo è il formato predefinito, senza flag o compatibilità con la forma codificata.
 
-Dopo la chiusura dell'ultimo campo prioritario il server salva il checkpoint, pubblica questo evento e termina la connessione HTTP, liberando il worker:
+Esempio della stringa finale:
 
-```json
+~~~text
+<edit path="example1.txt"><old_text><![CDATA[vecchio testo]]></old_text><new_text>nuovo testo con </new_text> letterale</new_text></edit>
+<edit path="example2.md"><old_text><all/></old_text><new_text><delete/></new_text></edit>
+~~~
+
+Il riconoscitore usa l'ultimo `</new_text>` del singolo edit, prima di `</edit>`
+con eventuale whitespace di framing fra le due chiusure. Le occorrenze precedenti
+sono contenuto letterale. Il whitespace prima del tag new_text finale resta testo.
+Questa estensione richiede il parser del protocollo quando contiene chiusure
+letterali: un parser XML standard non le interpreta allo stesso modo.
+La forma generata usa doppi apici, il solo attributo path e ordine old/new.
+Whitespace è consentito fra edit consecutivi e fra le due chiusure finali,
+non fra old_text e new_text.
+
+- Ogni apertura richiede il solo path non vuoto. Gli attributi code sono rifiutati.
+- `</new_text></edit>` (anche con whitespace intermedio) termina l'elemento;
+  non si cerca l'ultimo tag dell'intera
+  chiamata, che può contenere più edit con autorizzazioni distinte.
+- Per la sequenza completa `</new_text></edit>` letterale, o per altri tag,
+  usare CDATA oppure entità XML. I delimitatori dentro CDATA non chiudono il corpo.
+
+Old_text è seguito esattamente da new_text. Non ammettere DTD, entità
+esterne, dichiarazioni, commenti, namespace, attributi o comandi sconosciuti.
+Le entità ammesse sono amp, lt, gt, quot, apos e riferimenti numerici a
+caratteri XML validi. NUL è rifiutato; UTF-8 deve essere valido alla chiusura.
+
+Testo escapato e CDATA possono alternarsi. Spazi, indentazione, CR/LF/CRLF
+sono byte logici preservati, senza normalizzazione XML. Rappresentare `]]>`
+in CDATA dividendo il contenuto in sezioni adiacenti.
+Gli escape del delimitatore nativo del modello sono uno strato separato:
+un delimitatore nativo letterale dentro CDATA va escapato per il trasporto
+nativo; all'esterno occorre preservare anche lo strato di entità XML.
+Il parser dei risultati rimuove lo strato nativo una sola volta.
+
+| Contenuto | Semantica |
+| --- | --- |
+| old_text letterale | Blocco non vuoto da un inizio di riga fisico, globalmente univoco |
+| old_text con solo all/ | Riscrittura completa o creazione |
+| old_text con solo line number="N"/ | Inserimento prima della riga N, 1..L+1 |
+| new_text con solo delete/ | Cancellazione del file, solo con all e file esistente |
+| new_text vuoto | Testo sostituito con vuoto, senza cancellazione del file |
+| old_text con start_line/end_line e corpo vuoto | Righe inclusive, validazione semantica del client |
+
+I comandi sono tag completi, per esempio `<all/>`, `<line number="4"/>`
+e `<delete/>`, e devono occupare tutto il corpo. Le stesse stringhe dentro
+CDATA o escapate sono testo. Una newline prima di delete non viene eliminata
+e non può trasformare testo in un comando. Le stringhe `@ex_meckh…` non
+hanno più semantica riservata.
+
+Per intervalli molto lunghi:
+
+~~~text
+<old_text start_line="120" end_line="900"></old_text>
+~~~
+
+Il server controlla esclusivamente forma, ordine degli attributi e cifre.
+Non converte i numeri e non verifica positività, ordine, limiti, righe
+esistenti o corrispondenza con lo snapshot. Un intervallo come 999..0 può
+arrivare al client e deve ottenere un errore del tool senza scritture.
+
+## Pausa, ripresa, rifiuto e campionamento
+
+La pausa avviene **dentro la stringa**, subito dopo il doppio apice che
+chiude path e prima di `>`. Ogni elemento genera uno scambio,
+anche se ripete un path:
+
+~~~json
 {
   "type": "interactive.await_input",
-  "version": 1,
+  "version": 2,
   "status": "awaiting_input",
   "continuation_id": "cont_...",
   "exchange_id": "exchange_...",
   "call_id": "call_...",
   "tool_name": "edit-file",
-  "behavior": "edit_file.v1",
-  "request": {"kind": "file_snapshot", "values": {"path": "src.py"}},
+  "behavior": "edit_file.v2",
+  "request": {
+    "kind": "file_snapshot",
+    "edit_index": 1,
+    "values": {"path": "example1.txt"}
+  },
   "usage": {"input_tokens": 420, "output_tokens": 60, "total_tokens": 480}
 }
+~~~
+
+L'esempio abbrevia usage. La call ID è unica per l'intera chiamata,
+l'exchange ID è nuovo a ogni pausa, l'indice parte da 1.
+Una pausa non abilita il dispatch degli elementi precedenti.
+
+Resume porta soltanto agentic ed eventualmente stream, con versione 2,
+request ID nuovo, continuation ID, exchange ID e reply:
+
+- provide: `{"status":"provide","text":"testo","encoding":"utf-8","line_count":1}`;
+- create: `{"status":"create"}`, distinto dal file esistente vuoto;
+- reject: `{"status":"reject","code":"unread","message":"Read the current file"}`.
+
+Il server verifica line_count: CRLF conta una volta, CR e LF sono terminatori
+fisici, un terminatore finale non crea un'altra riga; il vuoto conta zero.
+Lo snapshot è controllo per il masking e non viene aggiunto al prompt.
+Path identici nella stessa chiamata condividono lo snapshot iniziale;
+un provide diverso o create incompatibile viene rifiutato. Gli alias
+canonici sono responsabilità del client.
+
+Durante selezione letterale ogni prefisso deve proseguire una riga candidata.
+La chiusura richiede una sola occorrenza globale, anche contando quelle
+interne e sovrapposte; dopo l'unicità è possibile continuare.
+Temperatura zero vale per struttura e old_text; il sampling richiesto torna
+prima del primo token di contenuto di new_text. MTP può operare su old
+globalmente univoco e new, con maschera aggiornata per ogni verifier row.
+Il cambio di fase XML o indice dell'elemento interrompe la finestra e scarta
+draft/RNG obsoleti. Il batch interattivo resta target-only.
+
+Il completamento emette una normale function_call con la stringa completa,
+senza code. Il client verifica il framing finale, poi interpreta le operazioni.
+Budget e usage sono cumulativi; non sommare pause e risultato finale.
+
+Un reject al secondo edit rende **non eseguibile l'intera chiamata**.
+L'interruzione include call ID, exchange ID, edit_index, values e motivo.
+Altre tool call già complete nello stesso turno possono essere preservate;
+i figli della chiamata interrotta non diventano chiamate indipendenti.
+
+Retry idempotenti, scope congelato, stream ereditato, cancel, status, scadenza
+e ripristino KV seguono il lifecycle già esistente. Request ID riutilizzato
+con payload diverso, scambi consumati e scope diverso producono 409.
+Dopo un riavvio le continuazioni non sono riprendibili.
+Replay proietta l'interruzione come record runtime non eseguibile, senza
+inventare function_call o tool result orfani.
+Anche il replay richiede record v2; configurazioni, continuazioni e record
+di interruzione v1 sono rifiutati. Il passaggio server/client è coordinato.
+
+## Responsabilità e limiti
+
+**Server:** grammatica, masking, unicità della selezione letterale, combinazioni
+dei comandi, chiusura finale, frontiere di sampling/MTP, congelamento
+dei path, IDs, checkpoint, retry e limiti del protocollo.
+
+**Client:** filesystem/workroot, path canonici, permessi, parent, inspect/read
+nella history visibile, hash e modifiche concorrenti, intervalli start/end,
+conflitti, hook, encoding/BOM, scritture/cancellazioni e risultati per file.
+Il masking non sostituisce la validazione client prima di qualunque effetto.
+
+Più edit sullo stesso file si riferiscono allo snapshot iniziale. Il client
+rifiuta sovrapposizioni, inserimenti interni a sostituzioni e due inserimenti
+nella stessa posizione. All/delete devono essere l'unica modifica del file.
+Non è promessa una transazione filesystem con rollback tra file distinti.
+
+Il server non può riconoscere dal solo snapshot che l'utente volesse delete:
+una riscrittura valida resta un risultato generato valido, ma fallisce il
+test applicativo della richiesta. Non convertire stringhe simili a comandi,
+riparare chiusure o nascondere errori con fallback.
+
+Capabilities: snapshot 1 MiB, generazione 1 MiB, valori risorsa 16 KiB,
+16 tool, 64 campi, 64 edit per chiamata, 64 scambi per continuazione,
+8 continuazioni attive; testo snapshot globale 8 MiB e budget conservativo
+per indici/scratch 128 MiB. Snapshot ripetuti identici non sono addebitati
+due volte. Checkpoint 8 GiB, pausa 300 s e ricevute terminali 600 s.
+La prenotazione degli indici include anche il picco della costruzione.
+
+La migrazione del client v1 resta necessaria prima dell'uso applicativo.
+Le verifiche deterministiche non qualificano automaticamente modello reale,
+prefill GPU, prestazioni o integrazione filesystem.
+
+## Esecuzione dei test
+
+`make test` esegue la suite C, i test del server e i gate disponibili del motore.
+Per le fixture Python usare l'ambiente con tokenizers, Torch, Pillow e SDK:
+
+```bash
+exmekh_lib/.venv/bin/python -m tests.run_server_qualification --report /tmp/server-fixtures.json
 ```
 
-L'esempio abbrevia i dettagli di usage. Con `stream=false` lo stesso JSON è il body della risposta. Con SSE l'evento è `interactive.await_input`; non viene emesso `response.completed`. Le chiamate precedenti nello stesso turno rimangono accumulate: la pausa non autorizza il dispatch dei tool.
+Per una build v2 attiva con contesto 22593, eseguire la matrice HTTP completa:
 
-Inviare una nuova richiesta contenente soltanto `agentic` ed eventualmente `stream`:
-
-```json
-{
-  "agentic": {
-    "agent_context_id": "run:root",
-    "allowed_tools": ["edit-file"],
-    "allowed_skills": [],
-    "interactive": {
-      "version": 1,
-      "operation": "resume",
-      "request_id": "turn-1-snapshot",
-      "continuation_id": "cont_...",
-      "exchange_id": "exchange_...",
-      "reply": {"status": "provide", "text": "foo\nprefix foo\nbar", "encoding": "utf-8", "line_count": 3}
-    }
-  }
-}
+```bash
+DS4_INTERACTIVE_BASE_URL=http://127.0.0.1:18091 \
+DS4_INTERACTIVE_REPORT=/tmp/edit-wire.json \
+exmekh_lib/.venv/bin/python -m tests.run_server_qualification \
+  tests.test_interactive_api --report /tmp/edit-live.json
 ```
 
-Il testo è Unicode esatto in JSON/UTF-8. `encoding` è una stringa non vuota che descrive l'encoding originario al client; il server non ricodifica il file. NUL e UTF-8 invalido sono rifiutati. Il conteggio delle righe viene ricavato e verificato: CRLF conta una volta, CR/LF sono terminatori fisici, il terminatore finale non inventa una riga aggiuntiva. Un file vuoto ha `line_count=0`.
+Ripetere con target-only e MTP, avviando un solo processo modello alla volta.
+Per MTP omettere `--batched-session`, anche il valore `1`: il batching nativo
+disabilita la speculazione. Verificare i contatori MTP del run effettivo.
+Con encoder vision impostare anche `DS4_INTERACTIVE_VISION=1`. Il report
+conserva i fallimenti dei sottocasi; timeout e skip non diventano successi.
+`DS4_INTERACTIVE_HTTP_TIMEOUT_SECONDS` configura il timeout HTTP (default 90 s).
+Il confronto esaustivo diagnostico può richiedere un valore maggiore; mantenere
+il primo timeout nel report e distinguere il tentativo diagnostico successivo.
+Le suite client v1 restano distinte dalla matrice server v2 finché la migrazione
+applicativa non è completata.
 
-Gli altri payload edit sono `{"status":"create"}` per un path inesistente e `{"status":"reject","code":"unread","message":"Read the current file first"}`. Nessuno dei due invia contenuto. Un file esistente vuoto usa provide con testo vuoto; resta distinto da create.
-
-La ripresa eredita modello, schema, scope, valori prioritari, immagini, sampling, RNG, budget e modalità streaming. Se `stream` è indicato deve coincidere con il turno originale; se omesso viene ereditato anche nei retry. Non inviare nuova history o nuove impostazioni. Lo snapshot alimenta soltanto il riconoscitore e non viene tokenizzato/inserito nel prompt. La KV viene ripristinata anche dopo il riuso dello slot da parte di un altro contesto.
-
-Il completamento produce normali `function_call` con argomenti completi e le call ID pubblicate nelle pause. Le risposte HTTP hanno ID propri. Il percorso Responses esistente sopprime i delta parziali degli argomenti: emette gli item completi alla fine; i cursori di testo/reasoning preservati impediscono di duplicare il prefisso. Usage e `max_output_tokens` sono cumulativi, non si azzerano alla ripresa; non sommare la usage delle pause a quella finale.
-
-## Vincoli edit e campionamento
-
-La selezione letterale parte sempre da un inizio di riga fisico, inclusa l'indentazione. Ogni token deve proseguire almeno una riga candidata compatibile. La chiusura richiede un blocco non vuoto con una sola occorrenza nell'intero snapshot, contando anche occorrenze sovrapposte e interne alle righe. Queste ultime non diventano partenze. Dopo l'unicità il modello può continuare attraverso altre righe.
-
-I marcatori sono disponibili fin dal primo token:
-
-| Campo | Valori speciali |
-| --- | --- |
-| selection | `@ex_meckh_all`, `@ex_meckh_line[N]` con N decimale senza zeri iniziali, 1 ≤ N ≤ L+1 |
-| replacement | `@ex_meckh_delete` soltanto con selection all e file esistente |
-
-La famiglia `@ex_meckh_` è riservata e non può essere inserita nel testo ordinario. Vuoto/create consentono selection all o line[1]; replacement può essere vuoto. Gli escape dei delimitatori nativi sono reversibili: il controllo globale usa i byte logici del testo, preservando newline e spazi. DSML `string=false` non può aggirare i vincoli dei campi stringa.
-
-Durante selection la temperatura effettiva è zero. MTP resta disabilitato finché manca una sola riga candidata **o** il prefisso è ancora globalmente ambiguo; può ripartire dopo entrambe le condizioni e nel corpo replacement, usando una maschera aggiornata per ogni riga del verifier. Questo gate conservativo preserva la parità greedy nei casi verificati: anticipare la riattivazione alla sola riga candidata aveva prodotto una diversa estensione ammessa del blocco. Il cambio di parametro/interruzione della finestra provoca rollback dei draft e del relativo RNG. Token che oltrepassano la pausa o attraversano selection/replacement sono vietati prima del commit. Anche l'apertura di replacement deve chiudersi prima del suo primo token di contenuto, per applicare il sampling ordinario al nuovo testo. Nelle sessioni batch le chiamate interattive usano il decode target-only. Gli override sono locali al turno e non modificano l'engine o l'ambiente.
-
-## Stato, retry e interruzioni
-
-`request_id` è obbligatorio per configure/resume/cancel, non vuoto e lungo al massimo 128 byte. Lo stesso ID con payload JSON canonico identico restituisce il risultato conservato o lo stato in corso; un payload differente produce HTTP 409. L'ordine delle chiavi degli oggetti è irrilevante; l'ordine degli array rimane significativo. Ogni nuova operazione usa un nuovo ID.
-
-Per interrogare lo stato usare lo stesso scope e `interactive={"version":1,"operation":"status","continuation_id":"cont_..."}`. La risposta `interactive.status` contiene `status` e `result`, anche dopo il cleanup della KV. Un retry della configure ritrova la continuazione se l'evento di pausa è andato perso. Una continuazione di un altro contesto/scope, già consumata o sconosciuta produce 409. Non è riprendibile dopo il riavvio.
-
-Per annullare usare `operation=cancel`, continuation ID e un nuovo request ID. Il rifiuto emette `interactive.rejected`, conserva gli item precedenti completi in `output` e include call ID, nome, valori prioritari e motivo. L'annullamento non autorizza l'esecuzione delle chiamate accumulate. Scadenza ed errori producono rispettivamente `interactive.expired` e `interactive.failed`. Gli errori anteriori al riconoscimento della chiamata possono non avere metadati di call.
-
-Questi record si possono includere nell'input della successiva inferenza ordinaria. Il renderer li proietta come messaggi runtime non eseguibili `<interactive_call_interrupted>`, con valori JSON escapati; non inventa old/new, una function call completa o un tool result orfano. Per un reject con item precedenti il client aggiunge separatamente quegli item e i loro risultati alla history. La frontiera interrotta viene invalidata; il prossimo turno riusa soltanto il prefisso comune con la history canonica.
-
-Limiti v1 pubblicati nelle capabilities: snapshot 1 MiB, testo generato per turno 1 MiB, valori prioritari serializzati 16 KiB, 16 tool configurati, 64 proprietà/campi, 8 continuazioni attive, 64 record e 64 scambi oltre alla configure per continuazione; budget globale snapshot 8 MiB e checkpoint 8 GiB. I reject ammettono codice di massimo 128 byte e messaggio di massimo 16 KiB. Un cancel resta possibile al limite degli scambi. Una pausa scade dopo 300 secondi; le ricevute terminali restano 600 secondi. Il listener esegue manutenzione periodica anche senza nuove richieste. I limiti di testo, numero e TTL rendono bounded anche le ricevute e gli indici derivati. Capacità esaurita: HTTP 429; formato/configurazione invalida: 400; conflitto di stato/ID/scope: 409; errore di generazione/checkpoint: record terminale esplicito.
-
-## Estensione e test
-
-`ds4_interactive_config.h` contiene il registro C dei comportamenti e compila lo schema e le policy dei campi. `ds4_interactive_grammar.h` applica queste policy e i callback pubblicati dal comportamento; non interpreta ruoli edit o marcatori. `ds4_interactive_edit.h` possiede ruoli, snapshot, marcatori e gate di sampling di `edit_file.v1`. Configurazione e stato del comportamento sono opachi per il protocollo; i rispettivi distruttori accettano anche NULL e preservano l'ordine delle ownership. Una risposta di controllo invalida lascia intatto lo stato precedente. `ds4_interactive_runtime.h` possiede lifecycle delle continuazioni, restore del testo/RNG/stream, budget, capabilities, ricevute e rendering delle interruzioni.
-
-`ds4_edit_constraint.h` indicizza le partenze e l'unicità tramite suffix array/LCP e seleziona candidati per byte iniziale; non enumera tutte le selezioni o le traiettorie future di token. L'analisi del trie esistente è limitata al logit corrente; anche i token singleton sono committati attraverso decode ordinario, perché un prefill di un singolo token può modificare i logits di Qwen. Un nuovo comportamento deve registrare handler, dipendenze, policy dei campi e dati propri con fixture dedicate; v1 non introduce uno script nel payload né implementazioni fittizie di altri comportamenti. Il confronto dei valori prioritari congelati usa l'uguaglianza strutturale JSON: l'ordine delle chiavi di un oggetto non altera il valore, mentre ordine degli array e contenuto rimangono vincolanti.
-
-`make test-server-interactive` esegue le fixture host e l'oracolo indipendente; `make test-interactive-api-live` usa il server indicato da `DS4_INTERACTIVE_BASE_URL`. La matrice di esecuzione è nel piano. L'integrazione ExMekh rimane da svolgere dopo l'implementazione client.
+La [raccolta completa del 11 ottobre](../performance/interactive-edit-xml-v2-full-tests-20261011.md)
+conserva lo storico della variante con code, fallimenti, skip e responsabilità.
+Non qualifica automaticamente il nuovo formato senza code.
+Le regressioni native verificano anche che un escape del trasporto non possa
+proseguire da un opener XML, un'entità o uno scalar UTF-8 incompleto. Il confronto
+maschera/oracolo controlla l'accordo tra i filtri; da solo non dimostra che ogni
+prefisso ammesso abbia una prosecuzione completa.

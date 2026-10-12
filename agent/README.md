@@ -190,6 +190,10 @@ DS4_FLASH_STRUCTURED_BASE_URL=http://127.0.0.1:8080/v1 \
   uv run pytest --no-cov --run-live -n 0 tests/test_flash_structured_live.py
 ```
 
+Set `DS4_FLASH_STRUCTURED_MODEL` to the actual model served by that endpoint to
+reuse this SDK matrix with Qwen27 or another supported model. The default is
+`qwen3.8-flash-next`; each run qualifies only the model actually loaded.
+
 With the provider configured in `.env` available, run all tests with a real model (conversation, streaming, tools, persistence, title generation, and adversarial cases of `exit_agent`):
 ```shell
 uv run pytest --no-cov --run-live -m "live and not mock" -s -v

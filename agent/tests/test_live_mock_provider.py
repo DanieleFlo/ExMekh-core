@@ -26,8 +26,7 @@ from tests.mock_client import (
     ScenarioPipeline,
     create_default_hierarchical_pipeline,
     create_quick_chat_pipeline,
-    install_mock_provider,
-    uninstall_mock_provider,
+    using_mock_provider,
 )
 
 pytestmark = [pytest.mark.live, pytest.mark.mock, pytest.mark.asyncio]
@@ -37,9 +36,8 @@ pytestmark = [pytest.mark.live, pytest.mark.mock, pytest.mark.asyncio]
 def live_mock_environment():
     """Installs MockProvider into agent_runner for all live mock tests and cleans up afterwards."""
     provider = MockProvider(pipeline=create_default_hierarchical_pipeline())
-    install_mock_provider(provider)
-    yield provider
-    uninstall_mock_provider()
+    with using_mock_provider(provider):
+        yield provider
 
 
 @pytest.fixture

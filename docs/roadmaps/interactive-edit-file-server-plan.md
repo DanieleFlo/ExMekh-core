@@ -1,6 +1,72 @@
-# Piano server: tool call interattive e masking di edit-file
+# Piano server: edit XML v2 e storico del masking v1
 
-Data: 2026-10-09. Stato: implementazione server v1 disponibile. Il [contratto implementato](../agentic/interactive-calls.md) fissa il wire; la matrice locale e le verifiche non eseguite sono riportate in fondo. L'integrazione nella libreria resta da realizzare.
+Aggiornamento 2026-10-12: XML v2 senza code è il formato predefinito. Il
+[contratto attuale](../agentic/interactive-calls.md) sostituisce v1.
+La migrazione della libreria è un task distinto e resta aperta nel TODO client.
+
+## Implementazione v2
+
+- Un argomento stringa associato da `fields.document`; pause dentro il documento
+  dopo ogni path, una call ID e nuovi exchange ID/indici per i singoli edit.
+- Dopo provide/create il modello completa l'apertura con `>` senza prefill
+  o attributo code. L'ultimo `</new_text>` prima di `</edit>` chiude il singolo
+  elemento; i precedenti sono testo. La sequenza completa letterale richiede
+  CDATA/entità. La forma con code non è più accettata e non esiste un flag.
+- Riconoscimento ristretto con entità/CDATA e CR/LF preservati. I comandi
+  all/line/delete sostituiscono i marcatori @. Snapshot ripetuti identici sono
+  condivisi; un rifiuto invalida tutta la chiamata XML.
+- La selezione letterale mantiene inizio riga e unicità globale. Gli intervalli
+  start_line/end_line hanno corpo vuoto: il server controlla solo la sintassi,
+  il client controlla i numeri e il file.
+- I callback del comportamento governano frontiere e fase/indice MTP;
+  il protocollo possiede lifecycle, KV, budget e ricevute. La descrizione del
+  tool resa al modello viene integrata dal server con il contratto di chiusura.
+- Enumerazioni/const/combinazioni sul documento sono rifiutate alla configure,
+  perché le alternative statiche non si adattano in generale allo snapshot autorizzato.
+- Il client conserva filesystem, workroot, autorizzazioni, inspect/read, hash,
+  alias, intervalli, conflitti, hook e commit. Non è implementato sul server
+  alcun controllo di sovrapposizione tra edit né una transazione filesystem.
+
+I report del 11 ottobre qui sotto conservano lo storico della variante con code;
+non qualificano automaticamente il formato aggiornato. Le
+[verifiche mirate del 12 ottobre](../performance/interactive-edit-xml-plain-smoke-20261012.json)
+registrano solo build, fixture server/XML, estrazione indipendente e smoke HTTP
+target/MTP pertinenti alla modifica. Creazione, stream con chiusure letterali e
+edit multipli passano; le asserzioni delete/CDATA di contenuto rimangono fallite.
+Il lookahead mantiene validi anche i prefissi intermedi dei token combinati;
+le chiusure ancora ambigue conservano la temperatura del corpo e sospendono MTP.
+Il client mantiene le responsabilità elencate sopra.
+
+La [qualifica v2 con code](../performance/interactive-edit-xml-v2-qualification-20261011.json)
+registra suite C XML con oracolo indipendente su 400 snapshot, test server
+ordinari, ASan/UBSan, SDK OpenAI e build di produzione CUDA/frontend CPU.
+Le prove HTTP aggiornate sono opt-in e non eseguono scritture filesystem.
+Il prefill reale e la chiusura codificata sono verificati su CUDA/Qwen27;
+la cancellazione resta non qualificata perché il modello genera una riscrittura
+valida. La maschera ammette anche il comando delete alla frontiera del corpo.
+Il confronto completo maschera/oracolo non dimostra parità numerica delle
+inferenze target/MTP, né qualifica backend diversi. La matrice v1 sotto è storica.
+
+La configurazione e il replay delle interruzioni accettano soltanto v2.
+I test di prefisso procedono byte per byte anche con snapshot vuoto/create:
+le forme complete da sole non rilevavano la potatura prematura di all/line.
+Entità, escape nativi e Unicode sono controllati prima di ammettere prefissi
+che non potrebbero più chiudersi validamente.
+
+La [raccolta completa aggiornata](../performance/interactive-edit-xml-v2-full-tests-20261011.md)
+include anche tutte le suite client live disponibili e distingue gli errori di
+protocollo dagli esiti di contenuto. Il batch ha trovato un ulteriore prefisso
+senza prosecuzione: un opener XML incompleto seguito dall'escape nativo del
+delimitatore del tool. Il server ora lo rifiuta prima del commit, insieme ai
+casi analoghi di entità e scalar UTF-8 incompleti. Le regressioni native e le
+ripetizioni target/MTP/batch conservano separatamente gli esiti prima e dopo
+la correzione. La migrazione client v1 rimane aperta.
+
+## Storico v1 del 9 ottobre 2026
+
+Le sezioni seguenti conservano il piano, il wire e la qualifica precedenti.
+I marcatori, first_fields e tre ruoli descritti sotto non sono più accettati
+dal server v2.
 
 ## 1. Obiettivo e confini
 

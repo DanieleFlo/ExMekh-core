@@ -61,12 +61,12 @@ Da root, avviare il server in un terminale:
 - righe 97–148: **Dipendenza ExMekh-Lib** — `agent/pyproject.toml` installa ExMekh-Lib dalla wheel versionata in `agent/wheels/`.
 - righe 149–176: **Verifica** — Da `agent/`:
 
-## [Chiamate interattive v1](interactive-calls.md)
+## [Chiamate interattive v2: edit document con chiusura finale](interactive-calls.md)
 
-Interrogare `GET /v1/agentic/capabilities`, verificando anche `model_supported` e `model_syntax` del modello caricato.
+Usare GET /v1/agentic/capabilities e POST /v1/responses.
 
-- righe 5–38: **Trasporto e configurazione** — Interrogare `GET /v1/agentic/capabilities`, verificando anche `model_supported` e `model_syntax` del modello caricato.
-- righe 39–87: **Pausa e ripresa** — Dopo la chiusura dell'ultimo campo prioritario il server salva il checkpoint, pubblica questo evento e termina la connessione HTTP, liberando il worker:
-- righe 88–102: **Vincoli edit e campionamento** — La selezione letterale parte sempre da un inizio di riga fisico, inclusa l'indentazione.
-- righe 103–114: **Stato, retry e interruzioni** — `request_id` è obbligatorio per configure/resume/cancel, non vuoto e lungo al massimo 128 byte.
-- righe 115–121: **Estensione e test** — `ds4_interactive_config.h` contiene il registro C dei comportamenti e compila lo schema e le policy dei campi.
+- righe 8–47: **Configurazione e descrizione del tool** — Usare GET /v1/agentic/capabilities e POST /v1/responses.
+- righe 48–116: **Documento e chiusura finale** — Il modello genera soltanto il prefisso `<edit path="example1.txt"`.
+- righe 117–186: **Pausa, ripresa, rifiuto e campionamento** — La pausa avviene **dentro la stringa**, subito dopo il doppio apice che
+- righe 187–218: **Responsabilità e limiti** — **Server:** grammatica, masking, unicità della selezione letterale, combinazioni
+- righe 219–254: **Esecuzione dei test** — `make test` esegue la suite C, i test del server e i gate disponibili del motore.

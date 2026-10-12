@@ -12,6 +12,16 @@ Una modifica è utile soltanto se migliora il workload dichiarato di DS4 senza
 - righe 56–66: **Correttezza** — Il harness non sostituisce gli scorer Qwen già presenti in
 - righe 67–74: **Misurazione hardware** — I tempi finali vengono dal percorso sincronizzato di ds4-bench.
 
+## [Test completi XML v2 del 11 ottobre 2026](interactive-edit-xml-v2-full-tests-20261011.md)
+
+Uno stream batch terminava con `incomplete_generation`: il parser ammetteva
+
+- righe 14–29: **Correzione server trovata durante i test** — Uno stream batch terminava con `incomplete_generation`: il parser ammetteva
+- righe 30–48: **Suite locali** — I controlli saltati restano elencati nel JSON.
+- righe 49–100: **Suite live** — Le prove usano CUDA, RTX 3090, Qwen3.8-27B Q4_K_S, mmproj F16 e sidecar MTP Q4_0.
+- righe 101–122: **Responsabilità e controlli ancora aperti** — Una riscrittura valida o il mancato adempimento di una richiesta delete non
+- righe 123–137: **Tentativi e limiti conservati** — Il primo tentativo MTP usava `--batched-session 1`: il runtime disabilitava MTP.
+
 ## [Qwen Flash: prefill reale dall'agente e dal launcher, 8 ottobre 2026](qwen-flash-agent-launcher-20261008.md)
 
 L'harness bench_qwen_flash_agent.py

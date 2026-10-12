@@ -1,0 +1,2064 @@
+{
+  "target": {
+    "test_create_retry_status": [
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "interactive:7cd64ee1d00c47b5aa696f6da41410a3",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "step",
+              "continuation_id": "cont_ddb5e027deefa092aed42906",
+              "exchange_id": "exchange_967fe2e385133b8f704c9305",
+              "reply": {
+                "status": "create"
+              }
+            }
+          },
+          "stream": false
+        },
+        "raw_events_or_response": {
+          "id": "resp_97aee8f8047c134568ac7b06",
+          "object": "response",
+          "created_at": 1791793345,
+          "status": "completed",
+          "model": "Qwen3.8-27B-UD-Q4_K_S",
+          "parallel_tool_calls": false,
+          "tool_choice": "required",
+          "tools": [
+            {
+              "type": "function",
+              "name": "patch",
+              "description": "Edit text files",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "payload"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "output": [
+            {
+              "id": "fc_e4123a1f544aedc02fedf320",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_daf131bf23cea337b252b628",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text><all/></old_text><new_text>hello\\n</new_text></edit>\"}"
+            }
+          ],
+          "usage": {
+            "input_tokens": 761,
+            "input_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 761
+            },
+            "output_tokens": 84,
+            "output_tokens_details": {
+              "reasoning_tokens": 0,
+              "constrained_prefill_tokens": 0
+            },
+            "total_tokens": 845
+          },
+          "interactive": {
+            "version": 2,
+            "continuation_id": "cont_ddb5e027deefa092aed42906"
+          }
+        },
+        "seconds": 5.29
+      },
+      {
+        "wire": [
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text><all/></old_text>, with no old_text attributes. Emit <new_text>hello\n</new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "interactive:7cd64ee1d00c47b5aa696f6da41410a3",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_ddb5e027deefa092aed42906\",\"exchange_id\":\"exchange_967fe2e385133b8f704c9305\",\"call_id\":\"call_daf131bf23cea337b252b628\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":801}}"
+          },
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text><all/></old_text>, with no old_text attributes. Emit <new_text>hello\n</new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "interactive:7cd64ee1d00c47b5aa696f6da41410a3",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_ddb5e027deefa092aed42906\",\"exchange_id\":\"exchange_967fe2e385133b8f704c9305\",\"call_id\":\"call_daf131bf23cea337b252b628\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":801}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:7cd64ee1d00c47b5aa696f6da41410a3",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_ddb5e027deefa092aed42906",
+                  "exchange_id": "exchange_967fe2e385133b8f704c9305",
+                  "reply": {
+                    "status": "create"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_97aee8f8047c134568ac7b06\",\"object\":\"response\",\"created_at\":1791793345,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_e4123a1f544aedc02fedf320\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_daf131bf23cea337b252b628\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>hello\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":84,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":845},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_ddb5e027deefa092aed42906\"}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:7cd64ee1d00c47b5aa696f6da41410a3",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_ddb5e027deefa092aed42906",
+                  "exchange_id": "exchange_967fe2e385133b8f704c9305",
+                  "reply": {
+                    "status": "create"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_97aee8f8047c134568ac7b06\",\"object\":\"response\",\"created_at\":1791793345,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_e4123a1f544aedc02fedf320\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_daf131bf23cea337b252b628\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>hello\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":84,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":845},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_ddb5e027deefa092aed42906\"}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:7cd64ee1d00c47b5aa696f6da41410a3",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "status",
+                  "request_id": "step",
+                  "continuation_id": "cont_ddb5e027deefa092aed42906"
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.status\",\"version\":2,\"continuation_id\":\"cont_ddb5e027deefa092aed42906\",\"status\":\"completed\",\"result\":{\"id\":\"resp_97aee8f8047c134568ac7b06\",\"object\":\"response\",\"created_at\":1791793345,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_e4123a1f544aedc02fedf320\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_daf131bf23cea337b252b628\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>hello\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":84,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":845},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_ddb5e027deefa092aed42906\"}}}"
+          }
+        ]
+      }
+    ],
+    "test_literal_streaming_restore_and_collision": [
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "interactive:462570ea7e724052b6faab4a9805f1af",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "step",
+              "continuation_id": "cont_cf716f813baea7734291aa24",
+              "exchange_id": "exchange_e38d5124781f764a578b61cb",
+              "reply": {
+                "status": "provide",
+                "text": "foo\nprefix foo\nbar",
+                "encoding": "utf-8",
+                "line_count": 3
+              }
+            }
+          },
+          "stream": true
+        },
+        "raw_events_or_response": [
+          {
+            "type": "response.created",
+            "sequence_number": 0,
+            "response": {
+              "id": "resp_e79431f479cd0cb4913c8a75",
+              "object": "response",
+              "created_at": 1791793352,
+              "status": "in_progress",
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "output": []
+            }
+          },
+          {
+            "type": "interactive.accepted",
+            "sequence_number": 1,
+            "version": 2,
+            "continuation_id": "cont_cf716f813baea7734291aa24"
+          },
+          {
+            "type": "response.output_item.added",
+            "sequence_number": 2,
+            "output_index": 0,
+            "item": {
+              "id": "fc_e209c334f9e15cdf5d762eac",
+              "type": "function_call",
+              "status": "in_progress",
+              "name": "patch",
+              "call_id": "call_1a74d10f7170ad136549508b",
+              "arguments": ""
+            }
+          },
+          {
+            "type": "response.function_call_arguments.delta",
+            "sequence_number": 3,
+            "item_id": "fc_e209c334f9e15cdf5d762eac",
+            "output_index": 0,
+            "delta": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text>foo\\np</old_text><new_text>literal </new_text> data\\n</new_text></edit>\"}"
+          },
+          {
+            "type": "response.function_call_arguments.done",
+            "sequence_number": 4,
+            "item_id": "fc_e209c334f9e15cdf5d762eac",
+            "output_index": 0,
+            "name": "patch",
+            "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text>foo\\np</old_text><new_text>literal </new_text> data\\n</new_text></edit>\"}"
+          },
+          {
+            "type": "response.output_item.done",
+            "sequence_number": 5,
+            "output_index": 0,
+            "item": {
+              "id": "fc_e209c334f9e15cdf5d762eac",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_1a74d10f7170ad136549508b",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text>foo\\np</old_text><new_text>literal </new_text> data\\n</new_text></edit>\"}"
+            }
+          },
+          {
+            "type": "response.completed",
+            "sequence_number": 6,
+            "response": {
+              "id": "resp_e79431f479cd0cb4913c8a75",
+              "object": "response",
+              "created_at": 1791793352,
+              "status": "completed",
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "parallel_tool_calls": false,
+              "tool_choice": "required",
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "output": [
+                {
+                  "id": "fc_e209c334f9e15cdf5d762eac",
+                  "type": "function_call",
+                  "status": "completed",
+                  "name": "patch",
+                  "call_id": "call_1a74d10f7170ad136549508b",
+                  "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text>foo\\np</old_text><new_text>literal </new_text> data\\n</new_text></edit>\"}"
+                }
+              ],
+              "interactive": {
+                "version": 2,
+                "continuation_id": "cont_cf716f813baea7734291aa24"
+              },
+              "usage": {
+                "input_tokens": 768,
+                "input_tokens_details": {
+                  "cached_tokens": 596,
+                  "cache_write_tokens": 172
+                },
+                "output_tokens": 91,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0,
+                  "constrained_prefill_tokens": 0
+                },
+                "total_tokens": 859
+              }
+            }
+          }
+        ],
+        "seconds": 10.89
+      },
+      {
+        "wire": [
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": true,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text>foo\np</old_text>, with no old_text attributes. Emit <new_text>literal </new_text> data\n</new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "interactive:462570ea7e724052b6faab4a9805f1af",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "data: {\"type\":\"response.created\",\"sequence_number\":0,\"response\":{\"id\":\"resp_6153bb40f5eeb6dbad021e23\",\"object\":\"response\",\"created_at\":1791793349,\"status\":\"in_progress\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"output\":[]}}\n\ndata: {\"type\":\"interactive.accepted\",\"sequence_number\":1,\"version\":2,\"continuation_id\":\"cont_cf716f813baea7734291aa24\"}\n\nevent: interactive.await_input\ndata: {\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_cf716f813baea7734291aa24\",\"exchange_id\":\"exchange_e38d5124781f764a578b61cb\",\"call_id\":\"call_1a74d10f7170ad136549508b\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":768,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":172},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":808}}\n\n"
+          },
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "input": "Say OK only.",
+              "max_output_tokens": 8,
+              "temperature": 0
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_7b84d1deadd97bb3a8783e5f\",\"object\":\"response\",\"created_at\":1791793352,\"status\":\"incomplete\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"incomplete_details\":{\"reason\":\"max_tokens\"},\"output\":[],\"usage\":{\"input_tokens\":14,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":14},\"output_tokens\":8,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":22}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:462570ea7e724052b6faab4a9805f1af",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_cf716f813baea7734291aa24",
+                  "exchange_id": "exchange_e38d5124781f764a578b61cb",
+                  "reply": {
+                    "status": "provide",
+                    "text": "foo\nprefix foo\nbar",
+                    "encoding": "utf-8",
+                    "line_count": 3
+                  }
+                }
+              },
+              "stream": true
+            },
+            "status": 200,
+            "body": "data: {\"type\":\"response.created\",\"sequence_number\":0,\"response\":{\"id\":\"resp_e79431f479cd0cb4913c8a75\",\"object\":\"response\",\"created_at\":1791793352,\"status\":\"in_progress\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"output\":[]}}\n\ndata: {\"type\":\"interactive.accepted\",\"sequence_number\":1,\"version\":2,\"continuation_id\":\"cont_cf716f813baea7734291aa24\"}\n\ndata: {\"type\":\"response.output_item.added\",\"sequence_number\":2,\"output_index\":0,\"item\":{\"id\":\"fc_e209c334f9e15cdf5d762eac\",\"type\":\"function_call\",\"status\":\"in_progress\",\"name\":\"patch\",\"call_id\":\"call_1a74d10f7170ad136549508b\",\"arguments\":\"\"}}\n\ndata: {\"type\":\"response.function_call_arguments.delta\",\"sequence_number\":3,\"item_id\":\"fc_e209c334f9e15cdf5d762eac\",\"output_index\":0,\"delta\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text>foo\\\\np</old_text><new_text>literal </new_text> data\\\\n</new_text></edit>\\\"}\"}\n\ndata: {\"type\":\"response.function_call_arguments.done\",\"sequence_number\":4,\"item_id\":\"fc_e209c334f9e15cdf5d762eac\",\"output_index\":0,\"name\":\"patch\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text>foo\\\\np</old_text><new_text>literal </new_text> data\\\\n</new_text></edit>\\\"}\"}\n\ndata: {\"type\":\"response.output_item.done\",\"sequence_number\":5,\"output_index\":0,\"item\":{\"id\":\"fc_e209c334f9e15cdf5d762eac\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_1a74d10f7170ad136549508b\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text>foo\\\\np</old_text><new_text>literal </new_text> data\\\\n</new_text></edit>\\\"}\"}}\n\ndata: {\"type\":\"response.completed\",\"sequence_number\":6,\"response\":{\"id\":\"resp_e79431f479cd0cb4913c8a75\",\"object\":\"response\",\"created_at\":1791793352,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_e209c334f9e15cdf5d762eac\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_1a74d10f7170ad136549508b\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text>foo\\\\np</old_text><new_text>literal </new_text> data\\\\n</new_text></edit>\\\"}\"}],\"interactive\":{\"version\":2,\"continuation_id\":\"cont_cf716f813baea7734291aa24\"},\"usage\":{\"input_tokens\":768,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":172},\"output_tokens\":91,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":859}}}\n\n"
+          }
+        ]
+      }
+    ],
+    "test_multiple_elements_one_call": [
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "batch:fcb015255c134d6f9e4d907cceca864c",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "first",
+              "continuation_id": "cont_3655b404c95b72c09c5e7719",
+              "exchange_id": "exchange_31f9f4fae156c822ee4d7cd1",
+              "reply": {
+                "status": "create"
+              }
+            }
+          },
+          "stream": false
+        },
+        "raw_events_or_response": {
+          "type": "interactive.await_input",
+          "version": 2,
+          "status": "awaiting_input",
+          "continuation_id": "cont_3655b404c95b72c09c5e7719",
+          "exchange_id": "exchange_7f07d3807205bbde69214cc0",
+          "call_id": "call_64ccc16416340fd8ec0b91f4",
+          "tool_name": "patch",
+          "behavior": "edit_file.v2",
+          "request": {
+            "kind": "file_snapshot",
+            "edit_index": 2,
+            "values": {
+              "path": "second.py"
+            }
+          },
+          "usage": {
+            "input_tokens": 723,
+            "input_tokens_details": {
+              "cached_tokens": 596,
+              "cache_write_tokens": 127
+            },
+            "output_tokens": 66,
+            "output_tokens_details": {
+              "reasoning_tokens": 0,
+              "constrained_prefill_tokens": 0
+            },
+            "total_tokens": 789
+          }
+        },
+        "seconds": 4.708
+      },
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "batch:fcb015255c134d6f9e4d907cceca864c",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "second",
+              "continuation_id": "cont_3655b404c95b72c09c5e7719",
+              "exchange_id": "exchange_7f07d3807205bbde69214cc0",
+              "reply": {
+                "status": "create"
+              }
+            }
+          },
+          "stream": false
+        },
+        "raw_events_or_response": {
+          "id": "resp_3b38f78d64f871a860f44a4c",
+          "object": "response",
+          "created_at": 1791793381,
+          "status": "completed",
+          "model": "Qwen3.8-27B-UD-Q4_K_S",
+          "parallel_tool_calls": false,
+          "tool_choice": "required",
+          "tools": [
+            {
+              "type": "function",
+              "name": "patch",
+              "description": "Edit text files",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "payload"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "output": [
+            {
+              "id": "fc_592f1e859059fcab065fca61",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_64ccc16416340fd8ec0b91f4",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text><all/></old_text><new_text>one</new_text></edit><edit path=\\\"second.py\\\"><old_text><all/></old_text><new_text>two</new_text></edit>\"}"
+            }
+          ],
+          "usage": {
+            "input_tokens": 723,
+            "input_tokens_details": {
+              "cached_tokens": 596,
+              "cache_write_tokens": 127
+            },
+            "output_tokens": 109,
+            "output_tokens_details": {
+              "reasoning_tokens": 0,
+              "constrained_prefill_tokens": 0
+            },
+            "total_tokens": 832
+          },
+          "interactive": {
+            "version": 2,
+            "continuation_id": "cont_3655b404c95b72c09c5e7719"
+          }
+        },
+        "seconds": 7.16
+      },
+      {
+        "wire": [
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 768,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with two consecutive edit elements. First src.py, all -> one. Second second.py, all -> two. Use only the path attribute."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "batch:fcb015255c134d6f9e4d907cceca864c",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_3655b404c95b72c09c5e7719\",\"exchange_id\":\"exchange_31f9f4fae156c822ee4d7cd1\",\"call_id\":\"call_64ccc16416340fd8ec0b91f4\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":723,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":127},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":763}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "batch:fcb015255c134d6f9e4d907cceca864c",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "first",
+                  "continuation_id": "cont_3655b404c95b72c09c5e7719",
+                  "exchange_id": "exchange_31f9f4fae156c822ee4d7cd1",
+                  "reply": {
+                    "status": "create"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_3655b404c95b72c09c5e7719\",\"exchange_id\":\"exchange_7f07d3807205bbde69214cc0\",\"call_id\":\"call_64ccc16416340fd8ec0b91f4\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":2,\"values\":{\"path\":\"second.py\"}},\"usage\":{\"input_tokens\":723,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":127},\"output_tokens\":66,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":789}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "batch:fcb015255c134d6f9e4d907cceca864c",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "second",
+                  "continuation_id": "cont_3655b404c95b72c09c5e7719",
+                  "exchange_id": "exchange_7f07d3807205bbde69214cc0",
+                  "reply": {
+                    "status": "create"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_3b38f78d64f871a860f44a4c\",\"object\":\"response\",\"created_at\":1791793381,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_592f1e859059fcab065fca61\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_64ccc16416340fd8ec0b91f4\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>one</new_text></edit><edit path=\\\\\\\"second.py\\\\\\\"><old_text><all/></old_text><new_text>two</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":723,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":127},\"output_tokens\":109,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":832},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_3655b404c95b72c09c5e7719\"}}"
+          }
+        ]
+      }
+    ],
+    "test_cdata_preserves_literal_edit_close": [
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "edit-close-literal:49c9a5c671b943feb3ed59c0e3ab1a89",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "step",
+              "continuation_id": "cont_6f552912408de9f46028da38",
+              "exchange_id": "exchange_ee2b95b913613ff4daf77bcb",
+              "reply": {
+                "status": "create"
+              }
+            }
+          },
+          "stream": false
+        },
+        "raw_events_or_response": {
+          "id": "resp_a142ce81c8cbf5f3d51e8a58",
+          "object": "response",
+          "created_at": 1791793393,
+          "status": "completed",
+          "model": "Qwen3.8-27B-UD-Q4_K_S",
+          "parallel_tool_calls": false,
+          "tool_choice": "required",
+          "tools": [
+            {
+              "type": "function",
+              "name": "patch",
+              "description": "Edit text files",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "payload"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "output": [
+            {
+              "id": "fc_58db23750f4c99b4f57c80df",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_c3b77ed265e87d1d13b0fb93",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text><all/></old_text><new_text>]]&gt;</new_text></edit>\"}"
+            }
+          ],
+          "usage": {
+            "input_tokens": 791,
+            "input_tokens_details": {
+              "cached_tokens": 596,
+              "cache_write_tokens": 195
+            },
+            "output_tokens": 85,
+            "output_tokens_details": {
+              "reasoning_tokens": 0,
+              "constrained_prefill_tokens": 0
+            },
+            "total_tokens": 876
+          },
+          "interactive": {
+            "version": 2,
+            "continuation_id": "cont_6f552912408de9f46028da38"
+          }
+        },
+        "seconds": 5.034
+      },
+      {
+        "wire": [
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch once for src.py. Begin <edit path=\"src.py\" and let the server authorize the path. Continue with > and <old_text><all/></old_text>. The new_text body must consist ONLY of a CDATA section containing the exact literal </new_text></edit>. After ]]>, emit </new_text></edit> to close the edit. Do not add whitespace outside the CDATA section. This deliberately puts the actual closing delimiter in file content; CDATA must preserve it."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "edit-close-literal:49c9a5c671b943feb3ed59c0e3ab1a89",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_6f552912408de9f46028da38\",\"exchange_id\":\"exchange_ee2b95b913613ff4daf77bcb\",\"call_id\":\"call_c3b77ed265e87d1d13b0fb93\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":791,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":195},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":831}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "edit-close-literal:49c9a5c671b943feb3ed59c0e3ab1a89",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_6f552912408de9f46028da38",
+                  "exchange_id": "exchange_ee2b95b913613ff4daf77bcb",
+                  "reply": {
+                    "status": "create"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_a142ce81c8cbf5f3d51e8a58\",\"object\":\"response\",\"created_at\":1791793393,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_58db23750f4c99b4f57c80df\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_c3b77ed265e87d1d13b0fb93\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>]]&gt;</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":791,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":195},\"output_tokens\":85,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":876},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_6f552912408de9f46028da38\"}}"
+          }
+        ]
+      }
+    ],
+    "test_obsolete_snapshot_code_rejected": [
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "interactive:4d7f90c585b24453b6af942f2f63662f",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "step",
+              "continuation_id": "cont_273cfe6331a6081e59f4c7a8",
+              "exchange_id": "exchange_8cf9ae3d7aed9e2fee116756",
+              "reply": {
+                "status": "create"
+              }
+            }
+          },
+          "stream": false
+        },
+        "raw_events_or_response": {
+          "id": "resp_8020098440479a8f0f13b5c9",
+          "object": "response",
+          "created_at": 1791793404,
+          "status": "completed",
+          "model": "Qwen3.8-27B-UD-Q4_K_S",
+          "parallel_tool_calls": false,
+          "tool_choice": "required",
+          "tools": [
+            {
+              "type": "function",
+              "name": "patch",
+              "description": "Edit text files",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "payload"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "output": [
+            {
+              "id": "fc_a9346254a3a6696c5bc3432a",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_5884ad1dbd2435f4251b7e9b",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text><all/></old_text><new_text>hello\\n</new_text></edit>\"}"
+            }
+          ],
+          "usage": {
+            "input_tokens": 761,
+            "input_tokens_details": {
+              "cached_tokens": 596,
+              "cache_write_tokens": 165
+            },
+            "output_tokens": 84,
+            "output_tokens_details": {
+              "reasoning_tokens": 0,
+              "constrained_prefill_tokens": 0
+            },
+            "total_tokens": 845
+          },
+          "interactive": {
+            "version": 2,
+            "continuation_id": "cont_273cfe6331a6081e59f4c7a8"
+          }
+        },
+        "seconds": 5.284
+      },
+      {
+        "wire": [
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text><all/></old_text>, with no old_text attributes. Emit <new_text>hello\n</new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "interactive:4d7f90c585b24453b6af942f2f63662f",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_273cfe6331a6081e59f4c7a8\",\"exchange_id\":\"exchange_8cf9ae3d7aed9e2fee116756\",\"call_id\":\"call_5884ad1dbd2435f4251b7e9b\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":165},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":801}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:4d7f90c585b24453b6af942f2f63662f",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "fe3484ff181347dd9d1625bbe8c10844",
+                  "continuation_id": "cont_273cfe6331a6081e59f4c7a8",
+                  "exchange_id": "exchange_8cf9ae3d7aed9e2fee116756",
+                  "reply": {
+                    "status": "create",
+                    "code": "123456"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 400,
+            "body": "{\"error\":{\"message\":\"invalid interactive control payload\",\"type\":\"invalid_request_error\"}}\n"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:4d7f90c585b24453b6af942f2f63662f",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "status",
+                  "request_id": "step",
+                  "continuation_id": "cont_273cfe6331a6081e59f4c7a8"
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.status\",\"version\":2,\"continuation_id\":\"cont_273cfe6331a6081e59f4c7a8\",\"status\":\"awaiting_input\",\"result\":{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_273cfe6331a6081e59f4c7a8\",\"exchange_id\":\"exchange_8cf9ae3d7aed9e2fee116756\",\"call_id\":\"call_5884ad1dbd2435f4251b7e9b\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":165},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":801}}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:4d7f90c585b24453b6af942f2f63662f",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "646b54e6e42e45e8b25843bb27f1a8d6",
+                  "continuation_id": "cont_273cfe6331a6081e59f4c7a8",
+                  "exchange_id": "exchange_8cf9ae3d7aed9e2fee116756",
+                  "reply": {
+                    "status": "provide",
+                    "text": "old",
+                    "encoding": "utf-8",
+                    "line_count": 1,
+                    "code": "123456"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 400,
+            "body": "{\"error\":{\"message\":\"invalid interactive control payload\",\"type\":\"invalid_request_error\"}}\n"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:4d7f90c585b24453b6af942f2f63662f",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "status",
+                  "request_id": "step",
+                  "continuation_id": "cont_273cfe6331a6081e59f4c7a8"
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.status\",\"version\":2,\"continuation_id\":\"cont_273cfe6331a6081e59f4c7a8\",\"status\":\"awaiting_input\",\"result\":{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_273cfe6331a6081e59f4c7a8\",\"exchange_id\":\"exchange_8cf9ae3d7aed9e2fee116756\",\"call_id\":\"call_5884ad1dbd2435f4251b7e9b\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":165},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":801}}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:4d7f90c585b24453b6af942f2f63662f",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_273cfe6331a6081e59f4c7a8",
+                  "exchange_id": "exchange_8cf9ae3d7aed9e2fee116756",
+                  "reply": {
+                    "status": "create"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_8020098440479a8f0f13b5c9\",\"object\":\"response\",\"created_at\":1791793404,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_a9346254a3a6696c5bc3432a\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_5884ad1dbd2435f4251b7e9b\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>hello\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":165},\"output_tokens\":84,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":845},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_273cfe6331a6081e59f4c7a8\"}}"
+          }
+        ]
+      }
+    ],
+    "test_existing_delete_and_empty_existing": [
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "delete:e47c3c20d1b04eff92ee36c05710252d",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "step",
+              "continuation_id": "cont_712c15d1b06a5168198601fd",
+              "exchange_id": "exchange_b9d9abf46f95d78d4a1eb689",
+              "reply": {
+                "status": "provide",
+                "text": "",
+                "encoding": "utf-8",
+                "line_count": 0
+              }
+            }
+          },
+          "stream": false
+        },
+        "raw_events_or_response": {
+          "id": "resp_c1bfd23b80c5d202e7cd041f",
+          "object": "response",
+          "created_at": 1791793414,
+          "status": "completed",
+          "model": "Qwen3.8-27B-UD-Q4_K_S",
+          "parallel_tool_calls": false,
+          "tool_choice": "required",
+          "tools": [
+            {
+              "type": "function",
+              "name": "patch",
+              "description": "Edit text files",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "payload"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "output": [
+            {
+              "id": "fc_60f6d75de6f4da4733bcd2c3",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_7bd7f6c87ad31258cfbd6c01",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text><all/></old_text><new_text>\\n</new_text></edit>\"}"
+            }
+          ],
+          "usage": {
+            "input_tokens": 803,
+            "input_tokens_details": {
+              "cached_tokens": 596,
+              "cache_write_tokens": 207
+            },
+            "output_tokens": 83,
+            "output_tokens_details": {
+              "reasoning_tokens": 0,
+              "constrained_prefill_tokens": 0
+            },
+            "total_tokens": 886
+          },
+          "interactive": {
+            "version": 2,
+            "continuation_id": "cont_712c15d1b06a5168198601fd"
+          }
+        },
+        "seconds": 4.508
+      },
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "delete:0b03b72e0e5d40beb695f6d7f3f2e66d",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "step",
+              "continuation_id": "cont_301f09252643aa089f49dda0",
+              "exchange_id": "exchange_c819ccad1f15ba08f6961da8",
+              "reply": {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            }
+          },
+          "stream": false
+        },
+        "raw_events_or_response": {
+          "id": "resp_77738e8f9fccb5961b6a3cc8",
+          "object": "response",
+          "created_at": 1791793425,
+          "status": "completed",
+          "model": "Qwen3.8-27B-UD-Q4_K_S",
+          "parallel_tool_calls": false,
+          "tool_choice": "required",
+          "tools": [
+            {
+              "type": "function",
+              "name": "patch",
+              "description": "Edit text files",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "payload"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "output": [
+            {
+              "id": "fc_3d61decbe3a89a31d17aea64",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_5567d60208981920384bf3b5",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text><all/></old_text><new_text>\\n</new_text></edit>\"}"
+            }
+          ],
+          "usage": {
+            "input_tokens": 803,
+            "input_tokens_details": {
+              "cached_tokens": 596,
+              "cache_write_tokens": 207
+            },
+            "output_tokens": 83,
+            "output_tokens_details": {
+              "reasoning_tokens": 0,
+              "constrained_prefill_tokens": 0
+            },
+            "total_tokens": 886
+          },
+          "interactive": {
+            "version": 2,
+            "continuation_id": "cont_301f09252643aa089f49dda0"
+          }
+        },
+        "seconds": 4.484
+      },
+      {
+        "wire": [
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text><all/></old_text>, with no old_text attributes. Emit <new_text><delete/></new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only. Delete the existing src.py file from the filesystem. It has already been inspected and read, even when empty. Emit <delete/> as the entire new_text body, inline with no newline before or after the command."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "delete:e47c3c20d1b04eff92ee36c05710252d",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_712c15d1b06a5168198601fd\",\"exchange_id\":\"exchange_b9d9abf46f95d78d4a1eb689\",\"call_id\":\"call_7bd7f6c87ad31258cfbd6c01\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":803,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":207},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":843}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "delete:e47c3c20d1b04eff92ee36c05710252d",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_712c15d1b06a5168198601fd",
+                  "exchange_id": "exchange_b9d9abf46f95d78d4a1eb689",
+                  "reply": {
+                    "status": "provide",
+                    "text": "",
+                    "encoding": "utf-8",
+                    "line_count": 0
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_c1bfd23b80c5d202e7cd041f\",\"object\":\"response\",\"created_at\":1791793414,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_60f6d75de6f4da4733bcd2c3\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_7bd7f6c87ad31258cfbd6c01\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":803,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":207},\"output_tokens\":83,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":886},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_712c15d1b06a5168198601fd\"}}"
+          },
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text><all/></old_text>, with no old_text attributes. Emit <new_text><delete/></new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only. Delete the existing src.py file from the filesystem. It has already been inspected and read, even when empty. Emit <delete/> as the entire new_text body, inline with no newline before or after the command."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "delete:0b03b72e0e5d40beb695f6d7f3f2e66d",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_301f09252643aa089f49dda0\",\"exchange_id\":\"exchange_c819ccad1f15ba08f6961da8\",\"call_id\":\"call_5567d60208981920384bf3b5\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":803,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":207},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":843}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "delete:0b03b72e0e5d40beb695f6d7f3f2e66d",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_301f09252643aa089f49dda0",
+                  "exchange_id": "exchange_c819ccad1f15ba08f6961da8",
+                  "reply": {
+                    "status": "provide",
+                    "text": "  old value\r\nKEEP\n",
+                    "encoding": "utf-8",
+                    "line_count": 2
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_77738e8f9fccb5961b6a3cc8\",\"object\":\"response\",\"created_at\":1791793425,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_3d61decbe3a89a31d17aea64\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_5567d60208981920384bf3b5\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":803,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":207},\"output_tokens\":83,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":886},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_301f09252643aa089f49dda0\"}}"
+          }
+        ]
+      }
+    ]
+  },
+  "mtp": {
+    "test_create_retry_status": [
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "interactive:51150ce217c44eb6834cef77253c7b68",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "step",
+              "continuation_id": "cont_3ae1c2c70ee9cfb857b88769",
+              "exchange_id": "exchange_44524db8f6ccdc66719d1957",
+              "reply": {
+                "status": "create"
+              }
+            }
+          },
+          "stream": false
+        },
+        "raw_events_or_response": {
+          "id": "resp_29211e088ae750f83c459669",
+          "object": "response",
+          "created_at": 1791793446,
+          "status": "completed",
+          "model": "Qwen3.8-27B-UD-Q4_K_S",
+          "parallel_tool_calls": false,
+          "tool_choice": "required",
+          "tools": [
+            {
+              "type": "function",
+              "name": "patch",
+              "description": "Edit text files",
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "payload": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "payload"
+                ],
+                "additionalProperties": false
+              }
+            }
+          ],
+          "output": [
+            {
+              "id": "fc_d97224ab930fbf698a4bf8b2",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_70e029ac30dd371e838916a6",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text><all/></old_text><new_text>hello\\n</new_text></edit>\"}"
+            }
+          ],
+          "usage": {
+            "input_tokens": 761,
+            "input_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 761
+            },
+            "output_tokens": 84,
+            "output_tokens_details": {
+              "reasoning_tokens": 0,
+              "constrained_prefill_tokens": 0
+            },
+            "total_tokens": 845
+          },
+          "interactive": {
+            "version": 2,
+            "continuation_id": "cont_3ae1c2c70ee9cfb857b88769"
+          }
+        },
+        "seconds": 7.955
+      },
+      {
+        "wire": [
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text><all/></old_text>, with no old_text attributes. Emit <new_text>hello\n</new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "interactive:51150ce217c44eb6834cef77253c7b68",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_3ae1c2c70ee9cfb857b88769\",\"exchange_id\":\"exchange_44524db8f6ccdc66719d1957\",\"call_id\":\"call_70e029ac30dd371e838916a6\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":801}}"
+          },
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": false,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text><all/></old_text>, with no old_text attributes. Emit <new_text>hello\n</new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "interactive:51150ce217c44eb6834cef77253c7b68",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_3ae1c2c70ee9cfb857b88769\",\"exchange_id\":\"exchange_44524db8f6ccdc66719d1957\",\"call_id\":\"call_70e029ac30dd371e838916a6\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":801}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:51150ce217c44eb6834cef77253c7b68",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_3ae1c2c70ee9cfb857b88769",
+                  "exchange_id": "exchange_44524db8f6ccdc66719d1957",
+                  "reply": {
+                    "status": "create"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_29211e088ae750f83c459669\",\"object\":\"response\",\"created_at\":1791793446,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_d97224ab930fbf698a4bf8b2\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_70e029ac30dd371e838916a6\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>hello\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":84,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":845},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_3ae1c2c70ee9cfb857b88769\"}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:51150ce217c44eb6834cef77253c7b68",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_3ae1c2c70ee9cfb857b88769",
+                  "exchange_id": "exchange_44524db8f6ccdc66719d1957",
+                  "reply": {
+                    "status": "create"
+                  }
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_29211e088ae750f83c459669\",\"object\":\"response\",\"created_at\":1791793446,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_d97224ab930fbf698a4bf8b2\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_70e029ac30dd371e838916a6\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>hello\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":84,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":845},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_3ae1c2c70ee9cfb857b88769\"}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:51150ce217c44eb6834cef77253c7b68",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "status",
+                  "request_id": "step",
+                  "continuation_id": "cont_3ae1c2c70ee9cfb857b88769"
+                }
+              },
+              "stream": false
+            },
+            "status": 200,
+            "body": "{\"type\":\"interactive.status\",\"version\":2,\"continuation_id\":\"cont_3ae1c2c70ee9cfb857b88769\",\"status\":\"completed\",\"result\":{\"id\":\"resp_29211e088ae750f83c459669\",\"object\":\"response\",\"created_at\":1791793446,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_d97224ab930fbf698a4bf8b2\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_70e029ac30dd371e838916a6\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text><all/></old_text><new_text>hello\\\\n</new_text></edit>\\\"}\"}],\"usage\":{\"input_tokens\":761,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":761},\"output_tokens\":84,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":845},\"interactive\":{\"version\":2,\"continuation_id\":\"cont_3ae1c2c70ee9cfb857b88769\"}}}"
+          }
+        ]
+      }
+    ],
+    "test_literal_streaming_restore_and_collision": [
+      {
+        "request": {
+          "agentic": {
+            "agent_context_id": "interactive:4a13ddd674134f5c9ec0be8632f89551",
+            "allowed_tools": [
+              "patch"
+            ],
+            "allowed_skills": [],
+            "interactive": {
+              "version": 2,
+              "operation": "resume",
+              "request_id": "step",
+              "continuation_id": "cont_d61f563288ced621c128393c",
+              "exchange_id": "exchange_f05c9a66e5ed42e35a5356d7",
+              "reply": {
+                "status": "provide",
+                "text": "foo\nprefix foo\nbar",
+                "encoding": "utf-8",
+                "line_count": 3
+              }
+            }
+          },
+          "stream": true
+        },
+        "raw_events_or_response": [
+          {
+            "type": "response.created",
+            "sequence_number": 0,
+            "response": {
+              "id": "resp_4a87f4fefcd59fad0201822d",
+              "object": "response",
+              "created_at": 1791793454,
+              "status": "in_progress",
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "output": []
+            }
+          },
+          {
+            "type": "interactive.accepted",
+            "sequence_number": 1,
+            "version": 2,
+            "continuation_id": "cont_d61f563288ced621c128393c"
+          },
+          {
+            "type": "response.output_item.added",
+            "sequence_number": 2,
+            "output_index": 0,
+            "item": {
+              "id": "fc_edc6a8b19510b423b29cdc31",
+              "type": "function_call",
+              "status": "in_progress",
+              "name": "patch",
+              "call_id": "call_da2961091e6e757e416125ec",
+              "arguments": ""
+            }
+          },
+          {
+            "type": "response.function_call_arguments.delta",
+            "sequence_number": 3,
+            "item_id": "fc_edc6a8b19510b423b29cdc31",
+            "output_index": 0,
+            "delta": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text>foo\\np</old_text><new_text>literal </new_text> data\\n</new_text></edit>\"}"
+          },
+          {
+            "type": "response.function_call_arguments.done",
+            "sequence_number": 4,
+            "item_id": "fc_edc6a8b19510b423b29cdc31",
+            "output_index": 0,
+            "name": "patch",
+            "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text>foo\\np</old_text><new_text>literal </new_text> data\\n</new_text></edit>\"}"
+          },
+          {
+            "type": "response.output_item.done",
+            "sequence_number": 5,
+            "output_index": 0,
+            "item": {
+              "id": "fc_edc6a8b19510b423b29cdc31",
+              "type": "function_call",
+              "status": "completed",
+              "name": "patch",
+              "call_id": "call_da2961091e6e757e416125ec",
+              "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text>foo\\np</old_text><new_text>literal </new_text> data\\n</new_text></edit>\"}"
+            }
+          },
+          {
+            "type": "response.completed",
+            "sequence_number": 6,
+            "response": {
+              "id": "resp_4a87f4fefcd59fad0201822d",
+              "object": "response",
+              "created_at": 1791793454,
+              "status": "completed",
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "parallel_tool_calls": false,
+              "tool_choice": "required",
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "output": [
+                {
+                  "id": "fc_edc6a8b19510b423b29cdc31",
+                  "type": "function_call",
+                  "status": "completed",
+                  "name": "patch",
+                  "call_id": "call_da2961091e6e757e416125ec",
+                  "arguments": "{\"payload\":\"<edit path=\\\"src.py\\\"><old_text>foo\\np</old_text><new_text>literal </new_text> data\\n</new_text></edit>\"}"
+                }
+              ],
+              "interactive": {
+                "version": 2,
+                "continuation_id": "cont_d61f563288ced621c128393c"
+              },
+              "usage": {
+                "input_tokens": 768,
+                "input_tokens_details": {
+                  "cached_tokens": 596,
+                  "cache_write_tokens": 172
+                },
+                "output_tokens": 91,
+                "output_tokens_details": {
+                  "reasoning_tokens": 0,
+                  "constrained_prefill_tokens": 0
+                },
+                "total_tokens": 859
+              }
+            }
+          }
+        ],
+        "seconds": 14.325
+      },
+      {
+        "wire": [
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "stream": true,
+              "temperature": 0,
+              "reasoning": {
+                "effort": "none"
+              },
+              "max_output_tokens": 512,
+              "tool_choice": "required",
+              "input": [
+                {
+                  "role": "user",
+                  "content": "Call patch exactly once with a single edit for src.py. Emit exactly <old_text>foo\np</old_text>, with no old_text attributes. Emit <new_text>literal </new_text> data\n</new_text></edit>. Begin <edit path=\"src.py\" and wait for authorization before emitting >. Use only the path attribute. Return the tool call only."
+                }
+              ],
+              "tools": [
+                {
+                  "type": "function",
+                  "name": "patch",
+                  "description": "Edit text files",
+                  "parameters": {
+                    "type": "object",
+                    "properties": {
+                      "payload": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "payload"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              ],
+              "agentic": {
+                "agent_context_id": "interactive:4a13ddd674134f5c9ec0be8632f89551",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "configure",
+                  "request_id": "initial",
+                  "tools": [
+                    {
+                      "name": "patch",
+                      "behavior": "edit_file.v2",
+                      "fields": {
+                        "document": "payload"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "status": 200,
+            "body": "data: {\"type\":\"response.created\",\"sequence_number\":0,\"response\":{\"id\":\"resp_e8d8b644b1993f122d174740\",\"object\":\"response\",\"created_at\":1791793450,\"status\":\"in_progress\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"output\":[]}}\n\ndata: {\"type\":\"interactive.accepted\",\"sequence_number\":1,\"version\":2,\"continuation_id\":\"cont_d61f563288ced621c128393c\"}\n\nevent: interactive.await_input\ndata: {\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"cont_d61f563288ced621c128393c\",\"exchange_id\":\"exchange_f05c9a66e5ed42e35a5356d7\",\"call_id\":\"call_da2961091e6e757e416125ec\",\"tool_name\":\"patch\",\"behavior\":\"edit_file.v2\",\"request\":{\"kind\":\"file_snapshot\",\"edit_index\":1,\"values\":{\"path\":\"src.py\"}},\"usage\":{\"input_tokens\":768,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":172},\"output_tokens\":40,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":808}}\n\n"
+          },
+          {
+            "request": {
+              "model": "Qwen3.8-27B-UD-Q4_K_S",
+              "input": "Say OK only.",
+              "max_output_tokens": 8,
+              "temperature": 0
+            },
+            "status": 200,
+            "body": "{\"id\":\"resp_94ba5054b346c1bccad8b17d\",\"object\":\"response\",\"created_at\":1791793454,\"status\":\"incomplete\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"incomplete_details\":{\"reason\":\"max_tokens\"},\"output\":[],\"usage\":{\"input_tokens\":14,\"input_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":14},\"output_tokens\":8,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":22}}"
+          },
+          {
+            "request": {
+              "agentic": {
+                "agent_context_id": "interactive:4a13ddd674134f5c9ec0be8632f89551",
+                "allowed_tools": [
+                  "patch"
+                ],
+                "allowed_skills": [],
+                "interactive": {
+                  "version": 2,
+                  "operation": "resume",
+                  "request_id": "step",
+                  "continuation_id": "cont_d61f563288ced621c128393c",
+                  "exchange_id": "exchange_f05c9a66e5ed42e35a5356d7",
+                  "reply": {
+                    "status": "provide",
+                    "text": "foo\nprefix foo\nbar",
+                    "encoding": "utf-8",
+                    "line_count": 3
+                  }
+                }
+              },
+              "stream": true
+            },
+            "status": 200,
+            "body": "data: {\"type\":\"response.created\",\"sequence_number\":0,\"response\":{\"id\":\"resp_4a87f4fefcd59fad0201822d\",\"object\":\"response\",\"created_at\":1791793454,\"status\":\"in_progress\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"output\":[]}}\n\ndata: {\"type\":\"interactive.accepted\",\"sequence_number\":1,\"version\":2,\"continuation_id\":\"cont_d61f563288ced621c128393c\"}\n\ndata: {\"type\":\"response.output_item.added\",\"sequence_number\":2,\"output_index\":0,\"item\":{\"id\":\"fc_edc6a8b19510b423b29cdc31\",\"type\":\"function_call\",\"status\":\"in_progress\",\"name\":\"patch\",\"call_id\":\"call_da2961091e6e757e416125ec\",\"arguments\":\"\"}}\n\ndata: {\"type\":\"response.function_call_arguments.delta\",\"sequence_number\":3,\"item_id\":\"fc_edc6a8b19510b423b29cdc31\",\"output_index\":0,\"delta\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text>foo\\\\np</old_text><new_text>literal </new_text> data\\\\n</new_text></edit>\\\"}\"}\n\ndata: {\"type\":\"response.function_call_arguments.done\",\"sequence_number\":4,\"item_id\":\"fc_edc6a8b19510b423b29cdc31\",\"output_index\":0,\"name\":\"patch\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text>foo\\\\np</old_text><new_text>literal </new_text> data\\\\n</new_text></edit>\\\"}\"}\n\ndata: {\"type\":\"response.output_item.done\",\"sequence_number\":5,\"output_index\":0,\"item\":{\"id\":\"fc_edc6a8b19510b423b29cdc31\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_da2961091e6e757e416125ec\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text>foo\\\\np</old_text><new_text>literal </new_text> data\\\\n</new_text></edit>\\\"}\"}}\n\ndata: {\"type\":\"response.completed\",\"sequence_number\":6,\"response\":{\"id\":\"resp_4a87f4fefcd59fad0201822d\",\"object\":\"response\",\"created_at\":1791793454,\"status\":\"completed\",\"model\":\"Qwen3.8-27B-UD-Q4_K_S\",\"parallel_tool_calls\":false,\"tool_choice\":\"required\",\"tools\":[{\"type\":\"function\",\"name\":\"patch\",\"description\":\"Edit text files\",\"parameters\":{\"type\":\"object\",\"properties\":{\"payload\":{\"type\":\"string\"}},\"required\":[\"payload\"],\"additionalProperties\":false}}],\"output\":[{\"id\":\"fc_edc6a8b19510b423b29cdc31\",\"type\":\"function_call\",\"status\":\"completed\",\"name\":\"patch\",\"call_id\":\"call_da2961091e6e757e416125ec\",\"arguments\":\"{\\\"payload\\\":\\\"<edit path=\\\\\\\"src.py\\\\\\\"><old_text>foo\\\\np</old_text><new_text>literal </new_text> data\\\\n</new_text></edit>\\\"}\"}],\"interactive\":{\"version\":2,\"continuation_id\":\"cont_d61f563288ced621c128393c\"},\"usage\":{\"input_tokens\":768,\"input_tokens_details\":{\"cached_tokens\":596,\"cache_write_tokens\":172},\"output_tokens\":91,\"output_tokens_details\":{\"reasoning_tokens\":0,\"constrained_prefill_tokens\":0},\"total_tokens\":859}}}\n\n"
+          }
+        ]
+      }
+    ]
+  }
+}
