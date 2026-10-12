@@ -205,33 +205,33 @@ Migliorare il tempo end-to-end a contesti diversi tramite scheduling, senza
 
 dopo ogni path, una call ID e nuovi exchange ID/indici per i singoli edit.
 
-- righe 7–64: **Implementazione v2** — dopo ogni path, una call ID e nuovi exchange ID/indici per i singoli edit.
-- righe 65–70: **Storico v1 del 9 ottobre 2026** — Le sezioni seguenti conservano il piano, il wire e la qualifica precedenti.
-- righe 71–78: **1. Obiettivo e confini** — DS4 deve generare prima i campi dichiarati nella configurazione, sospendere la tool call quando sono tutti completi, ricevere dati di controllo dal runtime e completare la stessa chiamata con vincoli dinamici sugli argom…
-- righe 79–92: **2. Invarianti del comportamento** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 93–108: **3. Componenti da riutilizzare e responsabilità** — L'orchestrazione attuale vive soprattutto in ds4_server.c; filtri, analisi del vocabolario e snapshot della sessione sono esposti da ds4.h.
-- righe 109–216: **4. Contratto wire da congelare nella prima fase** — Il server implementa il contratto v1.
-  - righe 113–164: **4.1 Riutilizzo di extra_body.agentic, configurazione e negoziazione** — La struttura attuale è già adatta: `AgenticScope.build_extra()` costruisce `{"agentic": {...}}` con `agent_context_id`, `allowed_tools`, `allowed_skills` ed eventualmente `operation=return` e `skill_call_id`.
-  - righe 165–174: **4.1.1 Campi prioritari e sospensione generale** — Generare i campi di `first_fields` nell'ordine dichiarato.
-  - righe 175–206: **4.2 Sospensione e risposta del runtime** — {
-  - righe 207–216: **4.3 Completamento, contabilità e replay** — Al completamento produrre una normale function call con argomenti JSON completi e la call ID originaria.
-- righe 217–236: **5. Sospensione e vita della continuazione** — generating → awaiting_input → generating → completed
-- righe 237–244: **6. Confine esatto del gruppo prioritario** — Estendere il tracker della sintassi realmente generata da ciascun modello e la conversione in argomenti JSON.
-- righe 245–281: **7. Tipo dinamico di old_text** — Comporre tre rami nella grammatica dell'argomento: selezione letterale da inizio riga, all e line[N].
-  - righe 249–263: **7.1 Maschera del prossimo passo** — 1.
-  - righe 264–269: **7.2 Composizione con i percorsi ottimizzati esistenti** — Il vincolo dinamico deve intersecare ogni percorso di accettazione: maschere statiche, fast path delle stringhe libere, token dichiarati unconditional, sequenze forzate e verifier.
-  - righe 270–281: **7.3 Marcatori e new_text** — I marcatori devono occupare l'intero campo, senza spazi, ripetizioni o aggiunte.
-- righe 282–293: **8. Temperatura zero e MTP locale** — Per old usare temperatura effettiva 0 dopo il masking, selezionando il migliore token ammesso.
-- righe 294–339: **9. Ordine di realizzazione e criteri di completamento** — Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto.
-  - righe 296–303: **Fase 1 — Congelare il contratto** — Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto.
-  - righe 304–313: **Fase 2 — Protocollo e storage senza masking testuale** — Completamento: un runtime simulato può sospendere/riprendere/rifiutare senza argomenti anticipati né snapshot file nel prompt; il rifiuto lascia una history canonica riproducibile.
-  - righe 314–322: **Fase 3 — Vincoli dinamici e marcatori** — Completamento: nessun token accettato viola inizio riga, compatibilità letterale o regole di chiusura; il modello può continuare dopo l'unicità.
-  - righe 323–330: **Fase 4 — MTP e flussi multipli** — Completamento: parità greedy con MTP spento e corrispondenza esatta di stream, chiamate ed esiti.
-  - righe 331–339: **Fase 5 — Qualifica e documentazione finale** — L'integrazione con la libreria richiede il lavoro client del TODO e resta una verifica successiva; non fa parte di questa consegna server.
-- righe 340–356: **10. Matrice di verifica** — Usare come riferimento un filtro semplice della maschera corrente e confrontarlo con il percorso ottimizzato sul vocabolario intero; non scrivere test che si limitino a replicare l'implementazione.
-- righe 357–360: **11. Definizione di completamento** — Il lavoro server è completo quando tutte le fasi sono verificate per la matrice dichiarata, la libreria può usare il contratto senza fallback silenziosi e una chiamata può essere sospesa, rifiutata o completata con ident…
-- righe 361–394: **12. Qualifica locale del 9 ottobre 2026** — Implementazione disponibile in `ds4_server.c`, `ds4_interactive_config.h`, `ds4_interactive_grammar.h`, `ds4_interactive_runtime.h`, `ds4_interactive_edit.h` e `ds4_edit_constraint.h`.
-- righe 395–413: **13. Revisione delle responsabilità** — Il protocollo ora conserva configurazione e stato opachi del comportamento.
+- righe 11–69: **Implementazione v2** — dopo ogni path, una call ID e nuovi exchange ID/indici per i singoli edit.
+- righe 70–75: **Storico v1 del 9 ottobre 2026** — Le sezioni seguenti conservano il piano, il wire e la qualifica precedenti.
+- righe 76–83: **1. Obiettivo e confini** — DS4 deve generare prima i campi dichiarati nella configurazione, sospendere la tool call quando sono tutti completi, ricevere dati di controllo dal runtime e completare la stessa chiamata con vincoli dinamici sugli argom…
+- righe 84–97: **2. Invarianti del comportamento** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 98–113: **3. Componenti da riutilizzare e responsabilità** — L'orchestrazione attuale vive soprattutto in ds4_server.c; filtri, analisi del vocabolario e snapshot della sessione sono esposti da ds4.h.
+- righe 114–221: **4. Contratto wire da congelare nella prima fase** — Il server implementa il contratto v1.
+  - righe 118–169: **4.1 Riutilizzo di extra_body.agentic, configurazione e negoziazione** — La struttura attuale è già adatta: `AgenticScope.build_extra()` costruisce `{"agentic": {...}}` con `agent_context_id`, `allowed_tools`, `allowed_skills` ed eventualmente `operation=return` e `skill_call_id`.
+  - righe 170–179: **4.1.1 Campi prioritari e sospensione generale** — Generare i campi di `first_fields` nell'ordine dichiarato.
+  - righe 180–211: **4.2 Sospensione e risposta del runtime** — {
+  - righe 212–221: **4.3 Completamento, contabilità e replay** — Al completamento produrre una normale function call con argomenti JSON completi e la call ID originaria.
+- righe 222–241: **5. Sospensione e vita della continuazione** — generating → awaiting_input → generating → completed
+- righe 242–249: **6. Confine esatto del gruppo prioritario** — Estendere il tracker della sintassi realmente generata da ciascun modello e la conversione in argomenti JSON.
+- righe 250–286: **7. Tipo dinamico di old_text** — Comporre tre rami nella grammatica dell'argomento: selezione letterale da inizio riga, all e line[N].
+  - righe 254–268: **7.1 Maschera del prossimo passo** — 1.
+  - righe 269–274: **7.2 Composizione con i percorsi ottimizzati esistenti** — Il vincolo dinamico deve intersecare ogni percorso di accettazione: maschere statiche, fast path delle stringhe libere, token dichiarati unconditional, sequenze forzate e verifier.
+  - righe 275–286: **7.3 Marcatori e new_text** — I marcatori devono occupare l'intero campo, senza spazi, ripetizioni o aggiunte.
+- righe 287–298: **8. Temperatura zero e MTP locale** — Per old usare temperatura effettiva 0 dopo il masking, selezionando il migliore token ammesso.
+- righe 299–344: **9. Ordine di realizzazione e criteri di completamento** — Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto.
+  - righe 301–308: **Fase 1 — Congelare il contratto** — Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto.
+  - righe 309–318: **Fase 2 — Protocollo e storage senza masking testuale** — Completamento: un runtime simulato può sospendere/riprendere/rifiutare senza argomenti anticipati né snapshot file nel prompt; il rifiuto lascia una history canonica riproducibile.
+  - righe 319–327: **Fase 3 — Vincoli dinamici e marcatori** — Completamento: nessun token accettato viola inizio riga, compatibilità letterale o regole di chiusura; il modello può continuare dopo l'unicità.
+  - righe 328–335: **Fase 4 — MTP e flussi multipli** — Completamento: parità greedy con MTP spento e corrispondenza esatta di stream, chiamate ed esiti.
+  - righe 336–344: **Fase 5 — Qualifica e documentazione finale** — L'integrazione con la libreria richiede il lavoro client del TODO e resta una verifica successiva; non fa parte di questa consegna server.
+- righe 345–361: **10. Matrice di verifica** — Usare come riferimento un filtro semplice della maschera corrente e confrontarlo con il percorso ottimizzato sul vocabolario intero; non scrivere test che si limitino a replicare l'implementazione.
+- righe 362–365: **11. Definizione di completamento** — Il lavoro server è completo quando tutte le fasi sono verificate per la matrice dichiarata, la libreria può usare il contratto senza fallback silenziosi e una chiamata può essere sospesa, rifiutata o completata con ident…
+- righe 366–399: **12. Qualifica locale del 9 ottobre 2026** — Implementazione disponibile in `ds4_server.c`, `ds4_interactive_config.h`, `ds4_interactive_grammar.h`, `ds4_interactive_runtime.h`, `ds4_interactive_edit.h` e `ds4_edit_constraint.h`.
+- righe 400–418: **13. Revisione delle responsabilità** — Il protocollo ora conserva configurazione e stato opachi del comportamento.
 
 ## [Piano di azione: Flash Next veloce, Qwen27 protetto](qwen-flash-performance-action-plan-20261004.md)
 

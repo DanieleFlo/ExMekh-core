@@ -2,7 +2,11 @@
 
 Aggiornamento 2026-10-12: XML v2 senza code è il formato predefinito. Il
 [contratto attuale](../agentic/interactive-calls.md) sostituisce v1.
-La migrazione della libreria è un task distinto e resta aperta nel TODO client.
+La migrazione ExMekh-Lib è implementata e installata nel frontend come wheel
+predefinita. La [qualifica client](../architecture/client-xml-edit-v2-20261012.md)
+conserva gli esiti di intento del modello; la
+[revisione successiva](../architecture/client-xml-clean-review-20261012.md)
+documenta responsabilità, refactoring e regressioni di cancellazione.
 
 ## Implementazione v2
 
@@ -60,7 +64,8 @@ senza prosecuzione: un opener XML incompleto seguito dall'escape nativo del
 delimitatore del tool. Il server ora lo rifiuta prima del commit, insieme ai
 casi analoghi di entità e scalar UTF-8 incompleti. Le regressioni native e le
 ripetizioni target/MTP/batch conservano separatamente gli esiti prima e dopo
-la correzione. La migrazione client v1 rimane aperta.
+la correzione. Alla data di quella raccolta la migrazione client era ancora
+pendente; è stata completata con il contratto XML v2 il 12 ottobre.
 
 ## Storico v1 del 9 ottobre 2026
 

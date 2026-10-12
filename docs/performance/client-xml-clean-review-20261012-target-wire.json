@@ -1,0 +1,2852 @@
+{
+  "date": "2026-10-12",
+  "run": "target",
+  "cases": [
+    {
+      "name": "test_live_model_applies_xml_file_operations[edit]",
+      "outcome": "passed",
+      "seconds": 74.72
+    },
+    {
+      "name": "test_live_model_applies_xml_file_operations[new]",
+      "outcome": "passed",
+      "seconds": 33.119
+    },
+    {
+      "name": "test_live_model_applies_xml_file_operations[remove]",
+      "outcome": "failed",
+      "seconds": 310.446,
+      "error_excerpt": "tests/live/test_file_editing_live.py:210: in test_live_model_applies_xml_file_operations\n    result = node.run(\nsrc/exmekh_lib/core/agents/node/node.py:172: in run\n    return self._runtime.run(user_message)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/agents/node/node_runtime.py:162: in run\n    return self._run_turn(user_message)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/agents/node/node_runtime.py:234: in _run_turn\n    response = self._route_until_complete(response)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/agents/node/node_runtime.py:283: in _route_until_complete\n    response = self._continue_after_tools()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/agents/node/node_runtime.py:186: in _continue_after_tools\n    return self._client.continue_after_tools(\nsrc/exmekh_lib/core/models/client.py:152: in continue_after_tools\n    return self._call_provider(provider_request)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/conftest.py:35: in call_with_valid_history\n    return original_call(client, request)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/models/client.py:117: in _call_provider\n    response = self._provider.call(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/live/test_file_editing_live.py:74: in call\n    assert len(self.requests) < 20, \"Model exceeded the file editing turn budget\"\nE   AssertionError: Model exceeded the file editing turn budget\nE   assert 20 < 20\nE    +  where 20 = len([<exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09760>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09a30>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09d90>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09ac0>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09880>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09fd0>, ...])\nE    +    where [<exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09760>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09a30>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09d90>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09ac0>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1c09880>, <exmekh_lib.core.mod",
+      "error_sha256": "73747ed30a30b8c6d4dce730ded6693b460ddf740da45f0e819c3d4ba3513ef1"
+    },
+    {
+      "name": "test_live_model_applies_xml_file_operations[empty]",
+      "outcome": "failed",
+      "seconds": 298.758,
+      "error_excerpt": "tests/live/test_file_editing_live.py:210: in test_live_model_applies_xml_file_operations\n    result = node.run(\nsrc/exmekh_lib/core/agents/node/node.py:172: in run\n    return self._runtime.run(user_message)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/agents/node/node_runtime.py:162: in run\n    return self._run_turn(user_message)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/agents/node/node_runtime.py:234: in _run_turn\n    response = self._route_until_complete(response)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/agents/node/node_runtime.py:283: in _route_until_complete\n    response = self._continue_after_tools()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/agents/node/node_runtime.py:186: in _continue_after_tools\n    return self._client.continue_after_tools(\nsrc/exmekh_lib/core/models/client.py:152: in continue_after_tools\n    return self._call_provider(provider_request)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/conftest.py:35: in call_with_valid_history\n    return original_call(client, request)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nsrc/exmekh_lib/core/models/client.py:117: in _call_provider\n    response = self._provider.call(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntests/live/test_file_editing_live.py:74: in call\n    assert len(self.requests) < 20, \"Model exceeded the file editing turn budget\"\nE   AssertionError: Model exceeded the file editing turn budget\nE   assert 20 < 20\nE    +  where 20 = len([<exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b60e60>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b60f80>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b61010>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b60dd0>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b61400>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b61640>, ...])\nE    +    where [<exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b60e60>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b60f80>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b61010>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b60dd0>, <exmekh_lib.core.models.provider_request.ProviderRequest object at 0x773ef1b61400>, <exmekh_lib.core.mod",
+      "error_sha256": "f50950dfd0bb78c7dfe2333ddd25f7bbb1ce753eb1e65797b5a0f77c49480582"
+    },
+    {
+      "name": "test_live_model_applies_xml_file_operations[insert]",
+      "outcome": "passed",
+      "seconds": 77.546
+    },
+    {
+      "name": "test_live_model_applies_xml_file_operations[range]",
+      "outcome": "passed",
+      "seconds": 75.987
+    },
+    {
+      "name": "test_live_model_applies_xml_file_operations[literal_xml]",
+      "outcome": "passed",
+      "seconds": 37.216
+    },
+    {
+      "name": "test_live_one_xml_call_edits_multiple_resources_with_initial_snapshots[False]",
+      "outcome": "passed",
+      "seconds": 76.968
+    },
+    {
+      "name": "test_live_one_xml_call_edits_multiple_resources_with_initial_snapshots[True]",
+      "outcome": "passed",
+      "seconds": 64.545
+    },
+    {
+      "name": "test_live_adversarial_literal_selection_cannot_escape_for_30_seconds",
+      "outcome": "passed",
+      "seconds": 31.187,
+      "properties": {
+        "adversarial_seconds": "31.171182591000616",
+        "attempts": "4",
+        "validated_calls": "3"
+      }
+    },
+    {
+      "name": "test_live_rejection_of_second_edit_prevents_entire_call[False]",
+      "outcome": "passed",
+      "seconds": 7.254
+    },
+    {
+      "name": "test_live_rejection_of_second_edit_prevents_entire_call[True]",
+      "outcome": "passed",
+      "seconds": 5.167
+    },
+    {
+      "name": "test_live_scope_change_at_pause_cancels_without_authorizing_a_resource[False]",
+      "outcome": "passed",
+      "seconds": 3.108,
+      "properties": {
+        "cancelled_pauses": "1"
+      }
+    },
+    {
+      "name": "test_live_scope_change_at_pause_cancels_without_authorizing_a_resource[True]",
+      "outcome": "passed",
+      "seconds": 3.102,
+      "properties": {
+        "cancelled_pauses": "1"
+      }
+    },
+    {
+      "name": "test_live_client_reads_files_and_identifies_their_contents[text]",
+      "outcome": "passed",
+      "seconds": 54.661
+    }
+  ],
+  "logical_calls": [
+    {
+      "test_directory": "test_live_model_applies_xml_fi0",
+      "records": [
+        {
+          "request": "live-request-05.json",
+          "calls": [
+            {
+              "id": "call_e9d252c63c02be2b30234c50",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text>  old value</old_text><new_text>  updated value</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_b208f63da3a44f8bdcf23ecd",
+                "exchange_id": "exchange_5fa1401b161ebcd5ce035374",
+                "call_id": "call_e9d252c63c02be2b30234c50",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6072,
+                  "input_tokens_details": {
+                    "cached_tokens": 5731,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6114
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "2020757064617465642076616c75650d0a4b4545500a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_model_applies_xml_fi1",
+      "records": [
+        {
+          "request": "live-request-02.json",
+          "calls": [
+            {
+              "id": "call_87187c5971195e2507fbb6a4",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>created value</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_d5118e0604fb97bc686c1b52",
+                "exchange_id": "exchange_8bfe451dde33e3b57e52a02e",
+                "call_id": "call_87187c5971195e2507fbb6a4",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 4144,
+                  "input_tokens_details": {
+                    "cached_tokens": 1677,
+                    "cache_write_tokens": 2467
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 4186
+                }
+              },
+              {
+                "status": "create"
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "637265617465642076616c7565",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_model_applies_xml_fi2",
+      "records": [
+        {
+          "request": "live-request-05.json",
+          "calls": [
+            {
+              "id": "call_51250dc4df8c043120a801a7",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n<![CDATA[<delete/>]]>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_bb17a878be4031a00485e82e",
+                "exchange_id": "exchange_34cc0b70b5b6ba035e7bea83",
+                "call_id": "call_51250dc4df8c043120a801a7",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6077,
+                  "input_tokens_details": {
+                    "cached_tokens": 5736,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6119
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-08.json",
+          "calls": [
+            {
+              "id": "call_b0e4416b53a1e2c3b0b54c78",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n<![CDATA[<delete/>]]>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_bb17a878be4031a00485e82e",
+                "exchange_id": "exchange_34cc0b70b5b6ba035e7bea83",
+                "call_id": "call_51250dc4df8c043120a801a7",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6077,
+                  "input_tokens_details": {
+                    "cached_tokens": 5736,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6119
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c232300274b27879232d98ed",
+                "exchange_id": "exchange_c2bf95835c2190c721c82eba",
+                "call_id": "call_b0e4416b53a1e2c3b0b54c78",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 8007,
+                  "input_tokens_details": {
+                    "cached_tokens": 7628,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 8049
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-11.json",
+          "calls": [
+            {
+              "id": "call_5689260bc226f478bce0f9b6",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n<![CDATA[<delete/>]]>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_bb17a878be4031a00485e82e",
+                "exchange_id": "exchange_34cc0b70b5b6ba035e7bea83",
+                "call_id": "call_51250dc4df8c043120a801a7",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6077,
+                  "input_tokens_details": {
+                    "cached_tokens": 5736,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6119
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c232300274b27879232d98ed",
+                "exchange_id": "exchange_c2bf95835c2190c721c82eba",
+                "call_id": "call_b0e4416b53a1e2c3b0b54c78",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 8007,
+                  "input_tokens_details": {
+                    "cached_tokens": 7628,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 8049
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_b70ae4b1e3f55d2ceba6736b",
+                "exchange_id": "exchange_017901d9db98ff326d2182b8",
+                "call_id": "call_5689260bc226f478bce0f9b6",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 9933,
+                  "input_tokens_details": {
+                    "cached_tokens": 9554,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 9975
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-14.json",
+          "calls": [
+            {
+              "id": "call_973d0929dcde33b95c0ea662",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n<![CDATA[<delete/>]]>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_bb17a878be4031a00485e82e",
+                "exchange_id": "exchange_34cc0b70b5b6ba035e7bea83",
+                "call_id": "call_51250dc4df8c043120a801a7",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6077,
+                  "input_tokens_details": {
+                    "cached_tokens": 5736,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6119
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c232300274b27879232d98ed",
+                "exchange_id": "exchange_c2bf95835c2190c721c82eba",
+                "call_id": "call_b0e4416b53a1e2c3b0b54c78",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 8007,
+                  "input_tokens_details": {
+                    "cached_tokens": 7628,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 8049
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_b70ae4b1e3f55d2ceba6736b",
+                "exchange_id": "exchange_017901d9db98ff326d2182b8",
+                "call_id": "call_5689260bc226f478bce0f9b6",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 9933,
+                  "input_tokens_details": {
+                    "cached_tokens": 9554,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 9975
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_6444b232af9b9fbd4f91a73a",
+                "exchange_id": "exchange_9df82a4640145381a14ec39b",
+                "call_id": "call_973d0929dcde33b95c0ea662",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 11859,
+                  "input_tokens_details": {
+                    "cached_tokens": 11480,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 11901
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-17.json",
+          "calls": [
+            {
+              "id": "call_43fb9cdf3dc343a2fd24013c",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n<![CDATA[<delete/>]]>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_bb17a878be4031a00485e82e",
+                "exchange_id": "exchange_34cc0b70b5b6ba035e7bea83",
+                "call_id": "call_51250dc4df8c043120a801a7",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6077,
+                  "input_tokens_details": {
+                    "cached_tokens": 5736,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6119
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c232300274b27879232d98ed",
+                "exchange_id": "exchange_c2bf95835c2190c721c82eba",
+                "call_id": "call_b0e4416b53a1e2c3b0b54c78",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 8007,
+                  "input_tokens_details": {
+                    "cached_tokens": 7628,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 8049
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_b70ae4b1e3f55d2ceba6736b",
+                "exchange_id": "exchange_017901d9db98ff326d2182b8",
+                "call_id": "call_5689260bc226f478bce0f9b6",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 9933,
+                  "input_tokens_details": {
+                    "cached_tokens": 9554,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 9975
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_6444b232af9b9fbd4f91a73a",
+                "exchange_id": "exchange_9df82a4640145381a14ec39b",
+                "call_id": "call_973d0929dcde33b95c0ea662",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 11859,
+                  "input_tokens_details": {
+                    "cached_tokens": 11480,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 11901
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_b280337cfdb8dbcebf8a5e8c",
+                "exchange_id": "exchange_f4ada623f9b6960fc1300ded",
+                "call_id": "call_43fb9cdf3dc343a2fd24013c",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 13785,
+                  "input_tokens_details": {
+                    "cached_tokens": 13407,
+                    "cache_write_tokens": 378
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 13827
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-20.json",
+          "calls": [
+            {
+              "id": "call_adba045dad7e63932e383d3f",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n<![CDATA[<delete/>]]>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_bb17a878be4031a00485e82e",
+                "exchange_id": "exchange_34cc0b70b5b6ba035e7bea83",
+                "call_id": "call_51250dc4df8c043120a801a7",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6077,
+                  "input_tokens_details": {
+                    "cached_tokens": 5736,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6119
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c232300274b27879232d98ed",
+                "exchange_id": "exchange_c2bf95835c2190c721c82eba",
+                "call_id": "call_b0e4416b53a1e2c3b0b54c78",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 8007,
+                  "input_tokens_details": {
+                    "cached_tokens": 7628,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 8049
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_b70ae4b1e3f55d2ceba6736b",
+                "exchange_id": "exchange_017901d9db98ff326d2182b8",
+                "call_id": "call_5689260bc226f478bce0f9b6",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 9933,
+                  "input_tokens_details": {
+                    "cached_tokens": 9554,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 9975
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_6444b232af9b9fbd4f91a73a",
+                "exchange_id": "exchange_9df82a4640145381a14ec39b",
+                "call_id": "call_973d0929dcde33b95c0ea662",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 11859,
+                  "input_tokens_details": {
+                    "cached_tokens": 11480,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 11901
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_b280337cfdb8dbcebf8a5e8c",
+                "exchange_id": "exchange_f4ada623f9b6960fc1300ded",
+                "call_id": "call_43fb9cdf3dc343a2fd24013c",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 13785,
+                  "input_tokens_details": {
+                    "cached_tokens": 13407,
+                    "cache_write_tokens": 378
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 13827
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_6eee4a81aab12cb64caf79f0",
+                "exchange_id": "exchange_7de1aea6028d2a445d9ae9c6",
+                "call_id": "call_adba045dad7e63932e383d3f",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 15710,
+                  "input_tokens_details": {
+                    "cached_tokens": 15331,
+                    "cache_write_tokens": 379
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 15752
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n<delete/>\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "0a3c64656c6574652f3e0a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_model_applies_xml_fi3",
+      "records": [
+        {
+          "request": "live-request-05.json",
+          "calls": [
+            {
+              "id": "call_6cd6ae7434c84dcdef09a668",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_1774df140c8fad69f47d8e9d",
+                "exchange_id": "exchange_e02aaa11e4c40747f3e37483",
+                "call_id": "call_6cd6ae7434c84dcdef09a668",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6069,
+                  "input_tokens_details": {
+                    "cached_tokens": 5728,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6111
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-08.json",
+          "calls": [
+            {
+              "id": "call_dcdd0d55d4fa15349a03e900",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_1774df140c8fad69f47d8e9d",
+                "exchange_id": "exchange_e02aaa11e4c40747f3e37483",
+                "call_id": "call_6cd6ae7434c84dcdef09a668",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6069,
+                  "input_tokens_details": {
+                    "cached_tokens": 5728,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6111
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c8e8709fc3e7807ecd4194b8",
+                "exchange_id": "exchange_a0ef3d5ee8a30f7dc5b375fb",
+                "call_id": "call_dcdd0d55d4fa15349a03e900",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 7944,
+                  "input_tokens_details": {
+                    "cached_tokens": 7606,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 7986
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-11.json",
+          "calls": [
+            {
+              "id": "call_fb882514c2b8f2b2157f20ed",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_1774df140c8fad69f47d8e9d",
+                "exchange_id": "exchange_e02aaa11e4c40747f3e37483",
+                "call_id": "call_6cd6ae7434c84dcdef09a668",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6069,
+                  "input_tokens_details": {
+                    "cached_tokens": 5728,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6111
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c8e8709fc3e7807ecd4194b8",
+                "exchange_id": "exchange_a0ef3d5ee8a30f7dc5b375fb",
+                "call_id": "call_dcdd0d55d4fa15349a03e900",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 7944,
+                  "input_tokens_details": {
+                    "cached_tokens": 7606,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 7986
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_7fac9dce4d050611169a980a",
+                "exchange_id": "exchange_93dfb955f56edebaadfc9997",
+                "call_id": "call_fb882514c2b8f2b2157f20ed",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 9812,
+                  "input_tokens_details": {
+                    "cached_tokens": 9474,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 9854
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-14.json",
+          "calls": [
+            {
+              "id": "call_3da5d39d37d8dc2464ca15a8",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_1774df140c8fad69f47d8e9d",
+                "exchange_id": "exchange_e02aaa11e4c40747f3e37483",
+                "call_id": "call_6cd6ae7434c84dcdef09a668",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6069,
+                  "input_tokens_details": {
+                    "cached_tokens": 5728,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6111
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c8e8709fc3e7807ecd4194b8",
+                "exchange_id": "exchange_a0ef3d5ee8a30f7dc5b375fb",
+                "call_id": "call_dcdd0d55d4fa15349a03e900",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 7944,
+                  "input_tokens_details": {
+                    "cached_tokens": 7606,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 7986
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_7fac9dce4d050611169a980a",
+                "exchange_id": "exchange_93dfb955f56edebaadfc9997",
+                "call_id": "call_fb882514c2b8f2b2157f20ed",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 9812,
+                  "input_tokens_details": {
+                    "cached_tokens": 9474,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 9854
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_8e60785be1645b4d8b602e0d",
+                "exchange_id": "exchange_f1794d4da174cce660d22a80",
+                "call_id": "call_3da5d39d37d8dc2464ca15a8",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 11687,
+                  "input_tokens_details": {
+                    "cached_tokens": 11349,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 11729
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-17.json",
+          "calls": [
+            {
+              "id": "call_20e740866939d54afe0c88eb",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_1774df140c8fad69f47d8e9d",
+                "exchange_id": "exchange_e02aaa11e4c40747f3e37483",
+                "call_id": "call_6cd6ae7434c84dcdef09a668",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6069,
+                  "input_tokens_details": {
+                    "cached_tokens": 5728,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6111
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c8e8709fc3e7807ecd4194b8",
+                "exchange_id": "exchange_a0ef3d5ee8a30f7dc5b375fb",
+                "call_id": "call_dcdd0d55d4fa15349a03e900",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 7944,
+                  "input_tokens_details": {
+                    "cached_tokens": 7606,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 7986
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_7fac9dce4d050611169a980a",
+                "exchange_id": "exchange_93dfb955f56edebaadfc9997",
+                "call_id": "call_fb882514c2b8f2b2157f20ed",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 9812,
+                  "input_tokens_details": {
+                    "cached_tokens": 9474,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 9854
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_8e60785be1645b4d8b602e0d",
+                "exchange_id": "exchange_f1794d4da174cce660d22a80",
+                "call_id": "call_3da5d39d37d8dc2464ca15a8",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 11687,
+                  "input_tokens_details": {
+                    "cached_tokens": 11349,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 11729
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_1eb7f16bce4a85a465d61a10",
+                "exchange_id": "exchange_6d96055d8d942c34c62649ed",
+                "call_id": "call_20e740866939d54afe0c88eb",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 13559,
+                  "input_tokens_details": {
+                    "cached_tokens": 13221,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 13601
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ]
+          ]
+        },
+        {
+          "request": "live-request-20.json",
+          "calls": [
+            {
+              "id": "call_dfe6ccc139246f072dd9d696",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>\n</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_1774df140c8fad69f47d8e9d",
+                "exchange_id": "exchange_e02aaa11e4c40747f3e37483",
+                "call_id": "call_6cd6ae7434c84dcdef09a668",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6069,
+                  "input_tokens_details": {
+                    "cached_tokens": 5728,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6111
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c8e8709fc3e7807ecd4194b8",
+                "exchange_id": "exchange_a0ef3d5ee8a30f7dc5b375fb",
+                "call_id": "call_dcdd0d55d4fa15349a03e900",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 7944,
+                  "input_tokens_details": {
+                    "cached_tokens": 7606,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 7986
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_7fac9dce4d050611169a980a",
+                "exchange_id": "exchange_93dfb955f56edebaadfc9997",
+                "call_id": "call_fb882514c2b8f2b2157f20ed",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 9812,
+                  "input_tokens_details": {
+                    "cached_tokens": 9474,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 9854
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_8e60785be1645b4d8b602e0d",
+                "exchange_id": "exchange_f1794d4da174cce660d22a80",
+                "call_id": "call_3da5d39d37d8dc2464ca15a8",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 11687,
+                  "input_tokens_details": {
+                    "cached_tokens": 11349,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 11729
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_1eb7f16bce4a85a465d61a10",
+                "exchange_id": "exchange_6d96055d8d942c34c62649ed",
+                "call_id": "call_20e740866939d54afe0c88eb",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 13559,
+                  "input_tokens_details": {
+                    "cached_tokens": 13221,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 13601
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_65d5b08ca82c3c4a3473f3ac",
+                "exchange_id": "exchange_6f9c324fb9a0d52e91feeb9e",
+                "call_id": "call_dfe6ccc139246f072dd9d696",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 15431,
+                  "input_tokens_details": {
+                    "cached_tokens": 15093,
+                    "cache_write_tokens": 338
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 15473
+                }
+              },
+              {
+                "status": "provide",
+                "text": "\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "0a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_model_applies_xml_fi4",
+      "records": [
+        {
+          "request": "live-request-05.json",
+          "calls": [
+            {
+              "id": "call_626615be0ade8803c04f8b65",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><line number=\"2\"/></old_text><new_text>INSERT&#13;&#10;</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_aa88ce488f854e8769cfe072",
+                "exchange_id": "exchange_ce568bcc98e4bdf8e0834544",
+                "call_id": "call_626615be0ade8803c04f8b65",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6090,
+                  "input_tokens_details": {
+                    "cached_tokens": 5749,
+                    "cache_write_tokens": 341
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6132
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "20206f6c642076616c75650d0a494e534552540d0a4b4545500a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_model_applies_xml_fi5",
+      "records": [
+        {
+          "request": "live-request-05.json",
+          "calls": [
+            {
+              "id": "call_0936b8bcc14346578cd6d724",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text start_line=\"1\" end_line=\"1\"></old_text><new_text>REPLACED&#13;&#10;</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_adc5c84a23a0ff0092427b34",
+                "exchange_id": "exchange_c09c507544a0a60e3ea9066a",
+                "call_id": "call_0936b8bcc14346578cd6d724",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6913,
+                  "input_tokens_details": {
+                    "cached_tokens": 6571,
+                    "cache_write_tokens": 342
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6955
+                }
+              },
+              {
+                "status": "provide",
+                "text": "  old value\r\nKEEP\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "5245504c414345440d0a4b4545500a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_model_applies_xml_fi6",
+      "records": [
+        {
+          "request": "live-request-02.json",
+          "calls": [
+            {
+              "id": "call_f47a10e157fed3bb84fb75db",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>before &lt;/new_text&gt; middle &lt;/new_text&gt;&lt;/edit&gt; &lt;delete/&gt;&#13;&#10;</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_0e173ecc47369621f5a02461",
+                "exchange_id": "exchange_5c4961f9526191347b6dc0e2",
+                "call_id": "call_f47a10e157fed3bb84fb75db",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 4193,
+                  "input_tokens_details": {
+                    "cached_tokens": 1726,
+                    "cache_write_tokens": 2467
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 4235
+                }
+              },
+              {
+                "status": "create"
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "6265666f7265203c2f6e65775f746578743e206d6964646c65203c2f6e65775f746578743e3c2f656469743e203c64656c6574652f3e0d0a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_one_xml_call_edits_m0",
+      "records": [
+        {
+          "request": "live-request-04.json",
+          "calls": [
+            {
+              "id": "call_ba2eaf78ccf85a2cd0bf57cd",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text>FIRST</old_text><new_text>UPDATED FIRST</new_text></edit><edit path=\"other.txt\"><old_text>OTHER</old_text><new_text>UPDATED OTHER</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_2fab8766be0dcc16ee615149",
+                "exchange_id": "exchange_0f5388640d58ab4cbe8a0c7c",
+                "call_id": "call_ba2eaf78ccf85a2cd0bf57cd",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6885,
+                  "input_tokens_details": {
+                    "cached_tokens": 6271,
+                    "cache_write_tokens": 614
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6927
+                }
+              },
+              {
+                "status": "provide",
+                "text": "FIRST\r\nSECOND\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_2fab8766be0dcc16ee615149",
+                "exchange_id": "exchange_7afece06b10530d663d8dfe2",
+                "call_id": "call_ba2eaf78ccf85a2cd0bf57cd",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 2,
+                  "values": {
+                    "path": "other.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 6885,
+                  "input_tokens_details": {
+                    "cached_tokens": 6271,
+                    "cache_write_tokens": 614
+                  },
+                  "output_tokens": 69,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 6954
+                }
+              },
+              {
+                "status": "provide",
+                "text": "OTHER\n",
+                "encoding": "utf-8",
+                "line_count": 1
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "555044415445442046495253540d0a5345434f4e440a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": true,
+          "bytes_hex": "55504441544544204f544845520a",
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_one_xml_call_edits_m1",
+      "records": [
+        {
+          "request": "live-request-04.json",
+          "calls": [
+            {
+              "id": "call_44956bf295b3ebf47d92b75b",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text>FIRST</old_text><new_text>UPDATED FIRST</new_text></edit><edit path=\"other.txt\"><old_text>SECOND</old_text><new_text>UPDATED SECOND</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_222cd2a39a64f6ef773599b3",
+                "exchange_id": "exchange_d453fceb1c94ad589a585e00",
+                "call_id": "call_44956bf295b3ebf47d92b75b",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5659,
+                  "input_tokens_details": {
+                    "cached_tokens": 5282,
+                    "cache_write_tokens": 377
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 5701
+                }
+              },
+              {
+                "status": "provide",
+                "text": "FIRST\r\nSECOND\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_222cd2a39a64f6ef773599b3",
+                "exchange_id": "exchange_029ad35225f8c5fc61cd9b12",
+                "call_id": "call_44956bf295b3ebf47d92b75b",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 2,
+                  "values": {
+                    "path": "other.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5659,
+                  "input_tokens_details": {
+                    "cached_tokens": 5282,
+                    "cache_write_tokens": 377
+                  },
+                  "output_tokens": 69,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 5728
+                }
+              },
+              {
+                "status": "provide",
+                "text": "FIRST\r\nSECOND\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "555044415445442046495253540d0a55504441544544205345434f4e440a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": true,
+          "bytes_hex": "555044415445442046495253540d0a55504441544544205345434f4e440a",
+          "symlink": true
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_scope_change_at_paus0",
+      "records": [
+        {
+          "scope_cancellation": {
+            "requested": {
+              "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>BAD</new_text></edit>"
+            },
+            "pauses": [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c35dc874b3cbaff451f51826",
+                "exchange_id": "exchange_76f5c217a0d39dd60455f564",
+                "call_id": "call_02567621d13ac1e453455d35",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 1290,
+                  "input_tokens_details": {
+                    "cached_tokens": 1156,
+                    "cache_write_tokens": 134
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 1332
+                }
+              }
+            ],
+            "exchanges": [],
+            "interruptions": [
+              {
+                "type": "interactive.cancelled",
+                "version": 2,
+                "continuation_id": "cont_c35dc874b3cbaff451f51826",
+                "status": "cancelled",
+                "code": "cancelled",
+                "message": "interactive turn cancelled",
+                "call_id": "call_02567621d13ac1e453455d35",
+                "exchange_id": "exchange_76f5c217a0d39dd60455f564",
+                "tool_name": "edit-file",
+                "edit_index": 1,
+                "values": {
+                  "path": "notes.txt"
+                }
+              },
+              {
+                "type": "interactive.cancelled",
+                "version": 2,
+                "continuation_id": "cont_c35dc874b3cbaff451f51826",
+                "code": "steered",
+                "message": "Steering invalidated this inference before dispatch"
+              }
+            ]
+          }
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_scope_change_at_paus1",
+      "records": [
+        {
+          "scope_cancellation": {
+            "requested": {
+              "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>BAD</new_text></edit>"
+            },
+            "pauses": [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c1923ba09408ae4dfc2536e2",
+                "exchange_id": "exchange_5e54a3f92dfab0835ddd8c35",
+                "call_id": "call_cda5dbdc6fd7b4c79865f0ad",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 1290,
+                  "input_tokens_details": {
+                    "cached_tokens": 1156,
+                    "cache_write_tokens": 134
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 1332
+                }
+              }
+            ],
+            "exchanges": [],
+            "interruptions": [
+              {
+                "type": "interactive.cancelled",
+                "version": 2,
+                "continuation_id": "cont_c1923ba09408ae4dfc2536e2",
+                "status": "cancelled",
+                "code": "cancelled",
+                "message": "interactive turn cancelled",
+                "call_id": "call_cda5dbdc6fd7b4c79865f0ad",
+                "exchange_id": "exchange_5e54a3f92dfab0835ddd8c35",
+                "tool_name": "edit-file",
+                "edit_index": 1,
+                "values": {
+                  "path": "notes.txt"
+                }
+              },
+              {
+                "type": "interactive.cancelled",
+                "version": 2,
+                "continuation_id": "cont_c1923ba09408ae4dfc2536e2",
+                "code": "steered",
+                "message": "Steering invalidated this inference before dispatch"
+              }
+            ]
+          }
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    }
+  ]
+}

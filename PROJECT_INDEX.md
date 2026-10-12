@@ -419,12 +419,26 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `exmekh_lib/src/exmekh_lib/core/file_inspection/edit_selection.py`, `editing.py`,
   `interactive.py` e `edit_filesystem.py` — selezioni/intervalli e conflitti sullo snapshot
   iniziale, autorizzazioni per call ID/indice, raggruppamento alias, verifica dopo hook e
-  commit per file. Filesystem/evidenze/permessi restano del client; masking/KV del server.
+  commit per file. L'edit preparato possiede preflight e commit, l'approvazione verifica
+  le evidenze; il runtime annulla anche cambi di scope durante una pausa.
+  Filesystem/evidenze/permessi restano del client; masking/KV del server.
+- `exmekh_lib/src/exmekh_lib/core/file_inspection/lines.py` e
+  `exmekh_lib/tests/core/file_inspection/test_lines.py` — API comune per righe fisiche,
+  offset e inserimento a EOF; lettura e selezioni usano le stesse regole CR/LF.
+- `exmekh_lib/src/exmekh_lib/core/models/tool.py` — il tool possiede la copia della
+  politica di esecuzione; i compositori usano la sua API per mantenere contratto
+  interattivo e obbligo di esecuzione sincrona negli override.
+- `exmekh_lib/src/exmekh_lib/core/providers/interactive_contract.py` e
+  `interactive_transport.py` — autorizzazioni wire immutabili per chiamata e
+  classificazione uniforme degli errori JSON/encoding di HTTP e SSE.
 - `exmekh_lib/tests/core/file_inspection/test_xml_edit_document.py` e
   `exmekh_lib/tests/live/test_file_editing_live.py` — regressioni XML del client e
   prove live di scritture esatte, alias e rifiuto dell'intera chiamata.
 - `docs/architecture/client-xml-edit-v2-20261012.md` — qualifica client XML v2 e
   aggiornamento della wheel predefinita; esiti live distinti dai test deterministici.
+- `docs/architecture/client-xml-clean-review-20261012.md` — revisione delle
+  responsabilità dei tool, refactoring del client e nuove regressioni di cancellazione,
+  con qualifica deterministica e live della wheel predefinita.
 - `agent/sync_exmekh_lib.sh` e `agent/src/exmekh_agent/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
   locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
   La distribuzione e la CLI sono `exmekh-lib`, il namespace Python è

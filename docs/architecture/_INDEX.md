@@ -28,6 +28,15 @@ I quattro callback di sampling sono riuniti in un'unica policy.
 - righe 28–65: **Coerenza dei comportamenti** — Il formato predefinito è v2 senza code: pausa dopo il path, autorizzazione,
 - righe 66–77: **Verifica** — Gli esiti e i limiti delle verifiche sono conservati nel
 
+## [Revisione del client XML e delle responsabilità — 12 ottobre 2026](client-xml-clean-review-20261012.md)
+
+Il bug sullo scope si manifestava quando una skill veniva chiusa e riaperta
+
+- righe 7–30: **Responsabilità e refactoring** — Il bug sullo scope si manifestava quando una skill veniva chiusa e riaperta
+- righe 31–49: **Criteri di leggibilità** — Le operazioni di copia mantengono sottoclasse e metadati senza modificare il tool
+- righe 50–90: **Verifiche** — La suite completa ExMekh-Lib passa **2.611 test**, con **55 SKIP live opt-in**
+- righe 91–104: **Contratto e limiti** — Il protocollo resta XML v2 senza attributo `code`.
+
 ## [Client XML edit v2 — 12 ottobre 2026](client-xml-edit-v2-20261012.md)
 
 Il documento dopo gli hook deve contenere gli stessi path nello stesso ordine

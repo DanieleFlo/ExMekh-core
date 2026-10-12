@@ -1,0 +1,447 @@
+{
+  "date": "2026-10-12",
+  "run": "mtp",
+  "cases": [
+    {
+      "name": "test_live_model_applies_xml_file_operations[new]",
+      "outcome": "passed",
+      "seconds": 39.951
+    },
+    {
+      "name": "test_live_one_xml_call_edits_multiple_resources_with_initial_snapshots[True]",
+      "outcome": "passed",
+      "seconds": 72.399
+    },
+    {
+      "name": "test_live_rejection_of_second_edit_prevents_entire_call[False]",
+      "outcome": "passed",
+      "seconds": 9.037
+    },
+    {
+      "name": "test_live_rejection_of_second_edit_prevents_entire_call[True]",
+      "outcome": "passed",
+      "seconds": 6.904
+    },
+    {
+      "name": "test_live_scope_change_at_pause_cancels_without_authorizing_a_resource[False]",
+      "outcome": "passed",
+      "seconds": 3.151,
+      "properties": {
+        "cancelled_pauses": "1"
+      }
+    },
+    {
+      "name": "test_live_scope_change_at_pause_cancels_without_authorizing_a_resource[True]",
+      "outcome": "passed",
+      "seconds": 3.146,
+      "properties": {
+        "cancelled_pauses": "1"
+      }
+    }
+  ],
+  "logical_calls": [
+    {
+      "test_directory": "test_live_model_applies_xml_fi0",
+      "records": [
+        {
+          "request": "live-request-02.json",
+          "calls": [
+            {
+              "id": "call_c6da6e9b979cd8fe8b056603",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>created value</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_17f0ff2c50fd1cd5f60d8a2a",
+                "exchange_id": "exchange_09d983352b3bc9a3f88be7ec",
+                "call_id": "call_c6da6e9b979cd8fe8b056603",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 4144,
+                  "input_tokens_details": {
+                    "cached_tokens": 1677,
+                    "cache_write_tokens": 2467
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 4186
+                }
+              },
+              {
+                "status": "create"
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "637265617465642076616c7565",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_one_xml_call_edits_m0",
+      "records": [
+        {
+          "request": "live-request-04.json",
+          "calls": [
+            {
+              "id": "call_aea7628a84ac44595b8519b7",
+              "function": {
+                "name": "edit-file",
+                "arguments": {
+                  "edits": "<edit path=\"notes.txt\"><old_text>FIRST</old_text><new_text>UPDATED FIRST</new_text></edit><edit path=\"other.txt\"><old_text>SECOND</old_text><new_text>UPDATED SECOND</new_text></edit>"
+                }
+              },
+              "type": "function"
+            }
+          ],
+          "interruptions": [],
+          "exchanges": [
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_7ec012cb235919dd53f59b65",
+                "exchange_id": "exchange_2628eb4eded798dbeef8b4c0",
+                "call_id": "call_aea7628a84ac44595b8519b7",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5658,
+                  "input_tokens_details": {
+                    "cached_tokens": 5280,
+                    "cache_write_tokens": 378
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 5700
+                }
+              },
+              {
+                "status": "provide",
+                "text": "FIRST\r\nSECOND\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ],
+            [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_7ec012cb235919dd53f59b65",
+                "exchange_id": "exchange_e59916b16e5bd4ca9e9fc023",
+                "call_id": "call_aea7628a84ac44595b8519b7",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 2,
+                  "values": {
+                    "path": "other.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 5658,
+                  "input_tokens_details": {
+                    "cached_tokens": 5280,
+                    "cache_write_tokens": 378
+                  },
+                  "output_tokens": 69,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 5727
+                }
+              },
+              {
+                "status": "provide",
+                "text": "FIRST\r\nSECOND\n",
+                "encoding": "utf-8",
+                "line_count": 2
+              }
+            ]
+          ]
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": true,
+          "bytes_hex": "555044415445442046495253540d0a55504441544544205345434f4e440a",
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": true,
+          "bytes_hex": "555044415445442046495253540d0a55504441544544205345434f4e440a",
+          "symlink": true
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_scope_change_at_paus0",
+      "records": [
+        {
+          "scope_cancellation": {
+            "requested": {
+              "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>BAD</new_text></edit>"
+            },
+            "pauses": [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_cb2c13576510e8e035f18902",
+                "exchange_id": "exchange_ca78a32e22df8d22900cdc24",
+                "call_id": "call_c52bef826bd468ae8994c759",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 1290,
+                  "input_tokens_details": {
+                    "cached_tokens": 1156,
+                    "cache_write_tokens": 134
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 1332
+                }
+              }
+            ],
+            "exchanges": [],
+            "interruptions": [
+              {
+                "type": "interactive.cancelled",
+                "version": 2,
+                "continuation_id": "cont_cb2c13576510e8e035f18902",
+                "status": "cancelled",
+                "code": "cancelled",
+                "message": "interactive turn cancelled",
+                "call_id": "call_c52bef826bd468ae8994c759",
+                "exchange_id": "exchange_ca78a32e22df8d22900cdc24",
+                "tool_name": "edit-file",
+                "edit_index": 1,
+                "values": {
+                  "path": "notes.txt"
+                }
+              },
+              {
+                "type": "interactive.cancelled",
+                "version": 2,
+                "continuation_id": "cont_cb2c13576510e8e035f18902",
+                "code": "steered",
+                "message": "Steering invalidated this inference before dispatch"
+              }
+            ]
+          }
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    },
+    {
+      "test_directory": "test_live_scope_change_at_paus1",
+      "records": [
+        {
+          "scope_cancellation": {
+            "requested": {
+              "edits": "<edit path=\"notes.txt\"><old_text><all/></old_text><new_text>BAD</new_text></edit>"
+            },
+            "pauses": [
+              {
+                "type": "interactive.await_input",
+                "version": 2,
+                "status": "awaiting_input",
+                "continuation_id": "cont_c8550a4963cab9ec09c75e6c",
+                "exchange_id": "exchange_4252ddcf4277964dbabe0900",
+                "call_id": "call_c00b9a9c3e96b4efff5fe36f",
+                "tool_name": "edit-file",
+                "behavior": "edit_file.v2",
+                "request": {
+                  "kind": "file_snapshot",
+                  "edit_index": 1,
+                  "values": {
+                    "path": "notes.txt"
+                  }
+                },
+                "usage": {
+                  "input_tokens": 1290,
+                  "input_tokens_details": {
+                    "cached_tokens": 1156,
+                    "cache_write_tokens": 134
+                  },
+                  "output_tokens": 42,
+                  "output_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "constrained_prefill_tokens": 0
+                  },
+                  "total_tokens": 1332
+                }
+              }
+            ],
+            "exchanges": [],
+            "interruptions": [
+              {
+                "type": "interactive.cancelled",
+                "version": 2,
+                "continuation_id": "cont_c8550a4963cab9ec09c75e6c",
+                "status": "cancelled",
+                "code": "cancelled",
+                "message": "interactive turn cancelled",
+                "call_id": "call_c00b9a9c3e96b4efff5fe36f",
+                "exchange_id": "exchange_4252ddcf4277964dbabe0900",
+                "tool_name": "edit-file",
+                "edit_index": 1,
+                "values": {
+                  "path": "notes.txt"
+                }
+              },
+              {
+                "type": "interactive.cancelled",
+                "version": 2,
+                "continuation_id": "cont_c8550a4963cab9ec09c75e6c",
+                "code": "steered",
+                "message": "Steering invalidated this inference before dispatch"
+              }
+            ]
+          }
+        }
+      ],
+      "files": {
+        "notes.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "other.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "new.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "existing.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        },
+        "attack.txt": {
+          "exists": false,
+          "bytes_hex": null,
+          "symlink": false
+        }
+      }
+    }
+  ]
+}

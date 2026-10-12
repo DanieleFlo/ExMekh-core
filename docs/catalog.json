@@ -119,6 +119,46 @@
           ]
         },
         {
+          "path": "docs/architecture/client-xml-clean-review-20261012.md",
+          "sections": [
+            {
+              "title": "Revisione del client XML e delle responsabilità — 12 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 104,
+              "summary": "La revisione riguarda le modifiche della chat, i compositori dei tool, il runtime"
+            },
+            {
+              "title": "Responsabilità e refactoring",
+              "level": 2,
+              "start": 7,
+              "end": 30,
+              "summary": "Il bug sullo scope si manifestava quando una skill veniva chiusa e riaperta"
+            },
+            {
+              "title": "Criteri di leggibilità",
+              "level": 2,
+              "start": 31,
+              "end": 49,
+              "summary": "Le operazioni di copia mantengono sottoclasse e metadati senza modificare il tool"
+            },
+            {
+              "title": "Verifiche",
+              "level": 2,
+              "start": 50,
+              "end": 90,
+              "summary": "La suite completa ExMekh-Lib passa **2.611 test**, con **55 SKIP live opt-in**"
+            },
+            {
+              "title": "Contratto e limiti",
+              "level": 2,
+              "start": 91,
+              "end": 104,
+              "summary": "Il protocollo resta XML v2 senza attributo `code`."
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/client-xml-edit-v2-20261012.md",
           "sections": [
             {
@@ -4978,196 +5018,196 @@
               "title": "Piano server: edit XML v2 e storico del masking v1",
               "level": 1,
               "start": 1,
-              "end": 413,
+              "end": 418,
               "summary": "Aggiornamento 2026-10-12: XML v2 senza code è il formato predefinito."
             },
             {
               "title": "Implementazione v2",
               "level": 2,
-              "start": 7,
-              "end": 64,
+              "start": 11,
+              "end": 69,
               "summary": "dopo ogni path, una call ID e nuovi exchange ID/indici per i singoli edit."
             },
             {
               "title": "Storico v1 del 9 ottobre 2026",
               "level": 2,
-              "start": 65,
-              "end": 70,
+              "start": 70,
+              "end": 75,
               "summary": "Le sezioni seguenti conservano il piano, il wire e la qualifica precedenti."
             },
             {
               "title": "1. Obiettivo e confini",
               "level": 2,
-              "start": 71,
-              "end": 78,
+              "start": 76,
+              "end": 83,
               "summary": "DS4 deve generare prima i campi dichiarati nella configurazione, sospendere la tool call quando sono tutti completi, ricevere dati di controllo dal runtime e completare la stessa chiamata con vincoli dinamici sugli argom…"
             },
             {
               "title": "2. Invarianti del comportamento",
               "level": 2,
-              "start": 79,
-              "end": 92,
+              "start": 84,
+              "end": 97,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "3. Componenti da riutilizzare e responsabilità",
               "level": 2,
-              "start": 93,
-              "end": 108,
+              "start": 98,
+              "end": 113,
               "summary": "L'orchestrazione attuale vive soprattutto in ds4_server.c; filtri, analisi del vocabolario e snapshot della sessione sono esposti da ds4.h."
             },
             {
               "title": "4. Contratto wire da congelare nella prima fase",
               "level": 2,
-              "start": 109,
-              "end": 216,
+              "start": 114,
+              "end": 221,
               "summary": "Il server implementa il contratto v1."
             },
             {
               "title": "4.1 Riutilizzo di extra_body.agentic, configurazione e negoziazione",
               "level": 3,
-              "start": 113,
-              "end": 164,
+              "start": 118,
+              "end": 169,
               "summary": "La struttura attuale è già adatta: `AgenticScope.build_extra()` costruisce `{\"agentic\": {...}}` con `agent_context_id`, `allowed_tools`, `allowed_skills` ed eventualmente `operation=return` e `skill_call_id`."
             },
             {
               "title": "4.1.1 Campi prioritari e sospensione generale",
               "level": 3,
-              "start": 165,
-              "end": 174,
+              "start": 170,
+              "end": 179,
               "summary": "Generare i campi di `first_fields` nell'ordine dichiarato."
             },
             {
               "title": "4.2 Sospensione e risposta del runtime",
               "level": 3,
-              "start": 175,
-              "end": 206,
+              "start": 180,
+              "end": 211,
               "summary": "{"
             },
             {
               "title": "4.3 Completamento, contabilità e replay",
               "level": 3,
-              "start": 207,
-              "end": 216,
+              "start": 212,
+              "end": 221,
               "summary": "Al completamento produrre una normale function call con argomenti JSON completi e la call ID originaria."
             },
             {
               "title": "5. Sospensione e vita della continuazione",
               "level": 2,
-              "start": 217,
-              "end": 236,
+              "start": 222,
+              "end": 241,
               "summary": "generating → awaiting_input → generating → completed"
             },
             {
               "title": "6. Confine esatto del gruppo prioritario",
               "level": 2,
-              "start": 237,
-              "end": 244,
+              "start": 242,
+              "end": 249,
               "summary": "Estendere il tracker della sintassi realmente generata da ciascun modello e la conversione in argomenti JSON."
             },
             {
               "title": "7. Tipo dinamico di old_text",
               "level": 2,
-              "start": 245,
-              "end": 281,
+              "start": 250,
+              "end": 286,
               "summary": "Comporre tre rami nella grammatica dell'argomento: selezione letterale da inizio riga, all e line[N]."
             },
             {
               "title": "7.1 Maschera del prossimo passo",
               "level": 3,
-              "start": 249,
-              "end": 263,
+              "start": 254,
+              "end": 268,
               "summary": "1."
             },
             {
               "title": "7.2 Composizione con i percorsi ottimizzati esistenti",
               "level": 3,
-              "start": 264,
-              "end": 269,
+              "start": 269,
+              "end": 274,
               "summary": "Il vincolo dinamico deve intersecare ogni percorso di accettazione: maschere statiche, fast path delle stringhe libere, token dichiarati unconditional, sequenze forzate e verifier."
             },
             {
               "title": "7.3 Marcatori e new_text",
               "level": 3,
-              "start": 270,
-              "end": 281,
+              "start": 275,
+              "end": 286,
               "summary": "I marcatori devono occupare l'intero campo, senza spazi, ripetizioni o aggiunte."
             },
             {
               "title": "8. Temperatura zero e MTP locale",
               "level": 2,
-              "start": 282,
-              "end": 293,
+              "start": 287,
+              "end": 298,
               "summary": "Per old usare temperatura effettiva 0 dopo il masking, selezionando il migliore token ammesso."
             },
             {
               "title": "9. Ordine di realizzazione e criteri di completamento",
               "level": 2,
-              "start": 294,
-              "end": 339,
+              "start": 299,
+              "end": 344,
               "summary": "Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto."
             },
             {
               "title": "Fase 1 — Congelare il contratto",
               "level": 3,
-              "start": 296,
-              "end": 303,
+              "start": 301,
+              "end": 308,
               "summary": "Completamento: le fixture descrivono ogni transizione e non esiste ambiguità fra tool completo, sospensione e rifiuto."
             },
             {
               "title": "Fase 2 — Protocollo e storage senza masking testuale",
               "level": 3,
-              "start": 304,
-              "end": 313,
+              "start": 309,
+              "end": 318,
               "summary": "Completamento: un runtime simulato può sospendere/riprendere/rifiutare senza argomenti anticipati né snapshot file nel prompt; il rifiuto lascia una history canonica riproducibile."
             },
             {
               "title": "Fase 3 — Vincoli dinamici e marcatori",
               "level": 3,
-              "start": 314,
-              "end": 322,
+              "start": 319,
+              "end": 327,
               "summary": "Completamento: nessun token accettato viola inizio riga, compatibilità letterale o regole di chiusura; il modello può continuare dopo l'unicità."
             },
             {
               "title": "Fase 4 — MTP e flussi multipli",
               "level": 3,
-              "start": 323,
-              "end": 330,
+              "start": 328,
+              "end": 335,
               "summary": "Completamento: parità greedy con MTP spento e corrispondenza esatta di stream, chiamate ed esiti."
             },
             {
               "title": "Fase 5 — Qualifica e documentazione finale",
               "level": 3,
-              "start": 331,
-              "end": 339,
+              "start": 336,
+              "end": 344,
               "summary": "L'integrazione con la libreria richiede il lavoro client del TODO e resta una verifica successiva; non fa parte di questa consegna server."
             },
             {
               "title": "10. Matrice di verifica",
               "level": 2,
-              "start": 340,
-              "end": 356,
+              "start": 345,
+              "end": 361,
               "summary": "Usare come riferimento un filtro semplice della maschera corrente e confrontarlo con il percorso ottimizzato sul vocabolario intero; non scrivere test che si limitino a replicare l'implementazione."
             },
             {
               "title": "11. Definizione di completamento",
               "level": 2,
-              "start": 357,
-              "end": 360,
+              "start": 362,
+              "end": 365,
               "summary": "Il lavoro server è completo quando tutte le fasi sono verificate per la matrice dichiarata, la libreria può usare il contratto senza fallback silenziosi e una chiamata può essere sospesa, rifiutata o completata con ident…"
             },
             {
               "title": "12. Qualifica locale del 9 ottobre 2026",
               "level": 2,
-              "start": 361,
-              "end": 394,
+              "start": 366,
+              "end": 399,
               "summary": "Implementazione disponibile in `ds4_server.c`, `ds4_interactive_config.h`, `ds4_interactive_grammar.h`, `ds4_interactive_runtime.h`, `ds4_interactive_edit.h` e `ds4_edit_constraint.h`."
             },
             {
               "title": "13. Revisione delle responsabilità",
               "level": 2,
-              "start": 395,
-              "end": 413,
+              "start": 400,
+              "end": 418,
               "summary": "Il protocollo ora conserva configurazione e stato opachi del comportamento."
             }
           ]
