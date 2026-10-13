@@ -25,6 +25,7 @@ from exmekh_agent.state.temp_storage import TempStorage
 from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 from exmekh_agent.ui.shared.file_icons import get_file_icon
 from exmekh_agent.ui.shared.image_preview import render_image_thumbnail
+from exmekh_agent.ui.shared.neural_loader import NeuralLoader
 from exmekh_agent.utils.formatting import (
     format_compact_tokens,
     format_context_percentage,
@@ -106,6 +107,7 @@ class InputBarComponent:
         self.context_tokens_label: ui.label | None = None
         self.context_tooltip: ui.tooltip | None = None
         self.progress_container: ui.element | None = None
+        self.neural_loader: NeuralLoader | None = None
         self.is_busy: bool = False
 
         self.model_name: str = config.default_model
@@ -398,15 +400,13 @@ class InputBarComponent:
                         )
 
             # -------------------------------------------------------------
-            # Linear Generation Progress Bar (below the input box)
+            # Neural generation indicator (below the input box)
             # -------------------------------------------------------------
             with ui.element("div").classes(
                 UI_PRESENTATION["build.classes.input_progress_container_w_full"]
             ) as prog_container:
                 self.progress_container = prog_container
-                ui.element("div").classes(
-                    UI_PRESENTATION["build.classes.input_linear_progress"]
-                )
+                self.neural_loader = NeuralLoader()
 
             self.progress_container.set_visibility(False)
 
@@ -1257,6 +1257,8 @@ class InputBarComponent:
             self.set_steering_enabled(False)
         if self.progress_container:
             self.progress_container.set_visibility(busy)
+        if self.neural_loader:
+            self.neural_loader.set_active(busy)
         if self.stop_button:
             self.stop_button.set_visibility(busy)
         if self.send_button:

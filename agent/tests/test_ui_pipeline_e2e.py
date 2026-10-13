@@ -501,7 +501,7 @@ async def test_refresh_restores_active_generation(
 
         await page.reload(wait_until="networkidle")
 
-        await expect(page.locator(".input-linear-progress:visible")).to_have_count(1)
+        await expect(page.locator(".input-neural-loader:visible")).to_have_count(1)
         await expect(page.locator(".chat-message-streaming:visible")).to_have_count(1)
         await expect(
             page.locator("button:has(i:has-text('stop')):visible")
@@ -510,7 +510,7 @@ async def test_refresh_restores_active_generation(
         await expect(page.locator(".msg-assistant:visible")).to_contain_text(
             "SYS_DIAG_OK"
         )
-        await expect(page.locator(".input-linear-progress:visible")).to_have_count(0)
+        await expect(page.locator(".input-neural-loader:visible")).to_have_count(0)
 
         await browser.close()
 
@@ -538,7 +538,7 @@ async def test_reopening_tab_restores_active_generation(
         await page.close()
         page = await browser.new_page(viewport={"width": 1360, "height": 860})
         await page.goto(agent_reopen_mock_server, wait_until="domcontentloaded")
-        await expect(page.locator(".input-linear-progress:visible")).to_have_count(1)
+        await expect(page.locator(".input-neural-loader:visible")).to_have_count(1)
         await expect(page.locator(".chat-message-streaming:visible")).to_have_count(1)
         await wait_turn_completion(page, timeout=40000)
         await expect(page.locator(".msg-assistant:visible")).to_contain_text(
