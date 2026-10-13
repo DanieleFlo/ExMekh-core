@@ -16138,7 +16138,9 @@ static FILE *resident_kv_frontier_open_write(
         return NULL;
     }
     const size_t stream_bytes = (size_t)payload_bytes + 1;
-    if (state->cap < (uint64_t)stream_bytes) {
+    /* Retain modest fluctuations, but release a large stale allocation when
+     * a new system prefix needs less than a quarter of its former storage. */
+    if (state->cap < (uint64_t)stream_bytes || state->cap / 4 > (uint64_t)stream_bytes) {
         uint8_t *ptr = realloc(state->ptr, stream_bytes);
         if (!ptr) {
             if (errlen) snprintf(err, errlen,
@@ -16172,6 +16174,8 @@ static bool resident_kv_frontier_capture(ds4_session *session,
         if (ds4_session_capture_device_frontier(session,
                                                 &frontier->device_state,
                                                 err, errlen) == 0) {
+            /* A successful device snapshot supersedes a previous host fallback. */
+            ds4_session_snapshot_free(&frontier->state);
             ds4_tokens_copy(&frontier->tokens, ds4_session_tokens(session));
             frontier->valid = true;
             return true;

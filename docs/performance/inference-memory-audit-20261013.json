@@ -1,0 +1,588 @@
+{
+  "date": "2026-10-13",
+  "base_commit": "3d814f0db7e4d61546bf0c8c2228d238fdfe34fa",
+  "verdict": "No continuous growth found after warm-up in the qualified CUDA/Qwen27 workload; three avoidable retentions corrected.",
+  "profile": {
+    "model": "Qwen3.8-27B-UD-Q4_K_S",
+    "mtp": "mtp-Qwen3.8-27B-Q4_0",
+    "hardware": "RTX 3090",
+    "backend": "CUDA/Linux/WSL",
+    "context": 4096,
+    "prompt": 2053,
+    "prefill": 2048,
+    "draft_batch": 64
+  },
+  "source_sha256": {
+    "ds4.c": "b5b18c21868e44803e932328f1a894de6eeff21c232b53c1b0094ddefe8b580f",
+    "ds4_server.c": "aeb4a4ee4982ab6ed240ef5e1d7d2060e14ab95a8dc99af1b94c97f787475415",
+    "tests/test_qwen_memory_lifetime.c": "21025f497350fb5dad5f2442c907e79a215a02cf4c101049fa87afba74f5ef38",
+    "tests/test_server_memory_lifetime.c": "5ffeb103d7b7795b4884a4f500299ae3f6dcc515fbce1568344f35dbc0b60fff",
+    "tests/test_server_resident_frontier.c": "54a7fd7604c27332281701801d10ad8169a2fa1efdeb29c90876502d9559fea2"
+  },
+  "server_binary_sha256": "954c29a3cfcf0a008212cc6b2f0452f77f48645b9746bd916f270346381bea28",
+  "changes": [
+    "Shrink host frontier storage when new size is less than one quarter of old capacity.",
+    "Release old host fallback after successful device frontier capture.",
+    "Release partial OLD allocations on failure and completed workspace after failed/declined verification, after rollback/catch-up."
+  ],
+  "memory": {
+    "status": "PASS",
+    "draft_windows": 32,
+    "session_lifecycles": 4,
+    "workspace_bytes": 223739904,
+    "workspace_mib": 213.375,
+    "gpu_measurement": "Whole GPU via cudaMemGetInfo, including other Windows/WSL clients.",
+    "gpu_global_slack_mib": 128,
+    "anonymous_ram_slack_mib": 32,
+    "draft_global_gpu_mib": {
+      "min": 20889.6875,
+      "median": 20910.96875,
+      "max": 20926.70703125
+    },
+    "draft_anonymous_mib": {
+      "min": 418.3671875,
+      "median": 419.36328125,
+      "max": 419.36328125
+    },
+    "session_freed": [
+      {
+        "stage": "session_freed",
+        "cycle": 0,
+        "gpu_global_used_bytes": 18741723136,
+        "rss_kib": 870156,
+        "anonymous_kib": 428408,
+        "draft_workspace_bytes": 0
+      },
+      {
+        "stage": "session_freed",
+        "cycle": 1,
+        "gpu_global_used_bytes": 18741723136,
+        "rss_kib": 871176,
+        "anonymous_kib": 429428,
+        "draft_workspace_bytes": 0
+      },
+      {
+        "stage": "session_freed",
+        "cycle": 2,
+        "gpu_global_used_bytes": 18741723136,
+        "rss_kib": 871176,
+        "anonymous_kib": 429428,
+        "draft_workspace_bytes": 0
+      },
+      {
+        "stage": "session_freed",
+        "cycle": 3,
+        "gpu_global_used_bytes": 18741723136,
+        "rss_kib": 871176,
+        "anonymous_kib": 429428,
+        "draft_workspace_bytes": 0
+      }
+    ],
+    "failed_or_declined": [
+      {
+        "stage": "allocation_failure_released",
+        "cycle": 0,
+        "gpu_global_used_bytes": 21333245952,
+        "rss_kib": 853228,
+        "anonymous_kib": 413100,
+        "draft_workspace_bytes": 0
+      },
+      {
+        "stage": "allocation_failure_released",
+        "cycle": 1,
+        "gpu_global_used_bytes": 21333245952,
+        "rss_kib": 853228,
+        "anonymous_kib": 413100,
+        "draft_workspace_bytes": 0
+      },
+      {
+        "stage": "allocation_failure_released",
+        "cycle": 10,
+        "gpu_global_used_bytes": 21333245952,
+        "rss_kib": 853232,
+        "anonymous_kib": 413104,
+        "draft_workspace_bytes": 0
+      },
+      {
+        "stage": "declined_window_released",
+        "cycle": 0,
+        "gpu_global_used_bytes": 21627600896,
+        "rss_kib": 861964,
+        "anonymous_kib": 420216,
+        "draft_workspace_bytes": 0
+      }
+    ],
+    "engine_closed_and_allocator_trimmed": [
+      {
+        "stage": "engine_closed",
+        "cycle": 0,
+        "gpu_global_used_bytes": 1339555840,
+        "rss_kib": 548924,
+        "anonymous_kib": 397224,
+        "draft_workspace_bytes": 0
+      },
+      {
+        "stage": "allocator_trimmed",
+        "cycle": 0,
+        "gpu_global_used_bytes": 1339555840,
+        "rss_kib": 533712,
+        "anonymous_kib": 382012,
+        "draft_workspace_bytes": 0
+      }
+    ],
+    "evidence": [
+      {
+        "path": "performance-results/inference-memory-audit-20261013/memory-release.jsonl",
+        "sha256": "da3f7de59b88d6846a8417414bf9a5a8bae07ee55c5e7e94dba0e481ad0b4a68"
+      },
+      {
+        "path": "performance-results/inference-memory-audit-20261013/memory-release.log",
+        "sha256": "f35d6a9c1fb9d27b861d5cf70ce3598ee6355290729d0fc76767b6e84d965ffe"
+      }
+    ]
+  },
+  "correctness": {
+    "allocation_failure_fallback": "PASS: 0/1/10 successful allocations before failure; first target logits and RNG bit-exact.",
+    "declined_verifier_fallback": "PASS: workspace freed after rollback; first target logits/RNG bit-exact.",
+    "host_to_device_frontier": "PASS: host state released; system/skill restoration logits bit-exact.",
+    "full_vocabulary_cases": [
+      {
+        "case": 0,
+        "rows": 32,
+        "kept": 32,
+        "calls": 31,
+        "numeric_failures": 0,
+        "logits_max_error": 0.00726413727,
+        "min_cosine": 0.999999929857,
+        "cache_relative_l2": 0.000109068299,
+        "cache_max_error": 0.0300490856
+      },
+      {
+        "case": 1,
+        "rows": 64,
+        "kept": 64,
+        "calls": 63,
+        "numeric_failures": 0,
+        "logits_max_error": 0.179640055,
+        "min_cosine": 0.999956903037,
+        "cache_relative_l2": 0.000812914478,
+        "cache_max_error": 0.371537924
+      },
+      {
+        "case": 2,
+        "rows": 64,
+        "kept": 1,
+        "calls": 1,
+        "numeric_failures": 0,
+        "logits_max_error": 0.00276041031,
+        "min_cosine": 0.99999999009,
+        "cache_relative_l2": 0,
+        "cache_max_error": 0
+      },
+      {
+        "case": 3,
+        "rows": 64,
+        "kept": 2,
+        "calls": 2,
+        "numeric_failures": 0,
+        "logits_max_error": 0.00578570366,
+        "min_cosine": 0.999999940093,
+        "cache_relative_l2": 7.75022131e-06,
+        "cache_max_error": 0.00727695227
+      },
+      {
+        "case": 4,
+        "rows": 64,
+        "kept": 31,
+        "calls": 31,
+        "numeric_failures": 0,
+        "logits_max_error": 0.0142439604,
+        "min_cosine": 0.999999688058,
+        "cache_relative_l2": 0.000107519643,
+        "cache_max_error": 0.0300490856
+      },
+      {
+        "case": 5,
+        "rows": 64,
+        "kept": 32,
+        "calls": 32,
+        "numeric_failures": 0,
+        "logits_max_error": 0.0142439604,
+        "min_cosine": 0.999999688058,
+        "cache_relative_l2": 0.000109068299,
+        "cache_max_error": 0.0300490856
+      },
+      {
+        "case": 6,
+        "rows": 64,
+        "kept": 63,
+        "calls": 63,
+        "numeric_failures": 0,
+        "logits_max_error": 0.179640055,
+        "min_cosine": 0.999956903037,
+        "cache_relative_l2": 0.000776539193,
+        "cache_max_error": 0.371537924
+      },
+      {
+        "case": 7,
+        "rows": 32,
+        "kept": 1,
+        "calls": 1,
+        "numeric_failures": 0,
+        "logits_max_error": 0.00285553932,
+        "min_cosine": 0.999999989854,
+        "cache_relative_l2": 0,
+        "cache_max_error": 0
+      },
+      {
+        "case": 8,
+        "rows": 64,
+        "kept": 1,
+        "calls": 31,
+        "numeric_failures": 0,
+        "logits_max_error": 0.0142439604,
+        "min_cosine": 0.999999688058,
+        "cache_relative_l2": 0,
+        "cache_max_error": 0
+      },
+      {
+        "case": 9,
+        "rows": 3,
+        "kept": 3,
+        "calls": 2,
+        "numeric_failures": 0,
+        "logits_max_error": 0.00097823143,
+        "min_cosine": 0.999999998238,
+        "cache_relative_l2": 1.04858703e-05,
+        "cache_max_error": 0.00746190548
+      },
+      {
+        "case": 10,
+        "rows": 2,
+        "kept": 1,
+        "calls": 1,
+        "numeric_failures": 0,
+        "logits_max_error": 0.000693321228,
+        "min_cosine": 0.999999999387,
+        "cache_relative_l2": 0,
+        "cache_max_error": 0
+      },
+      {
+        "case": 11,
+        "rows": 1,
+        "kept": 1,
+        "calls": 0,
+        "numeric_failures": 0,
+        "logits_max_error": 0,
+        "min_cosine": 1,
+        "cache_relative_l2": 0,
+        "cache_max_error": 0
+      },
+      {
+        "case": 12,
+        "rows": 32,
+        "kept": 1,
+        "calls": 1,
+        "numeric_failures": 0,
+        "logits_max_error": 0.00285553932,
+        "min_cosine": 0.999999989854,
+        "cache_relative_l2": 0,
+        "cache_max_error": 0
+      },
+      {
+        "case": 13,
+        "rows": 64,
+        "kept": 1,
+        "calls": 31,
+        "numeric_failures": 0,
+        "logits_max_error": 0.0142439604,
+        "min_cosine": 0.999999688058,
+        "cache_relative_l2": 0,
+        "cache_max_error": 0
+      }
+    ],
+    "evidence": [
+      {
+        "path": "performance-results/inference-memory-audit-20261013/frontier-live.log",
+        "sha256": "e1a8b12febf33fbf89ff7e6144290cd69adbc6cd8e0a2a60c70efa716cfb4cfe"
+      },
+      {
+        "path": "performance-results/inference-memory-audit-20261013/numeric-release.jsonl",
+        "sha256": "2a0cc362d56eb2622c017185530eaf055cbbff7cdb1e9927dbbe47e646366f4d"
+      },
+      {
+        "path": "performance-results/inference-memory-audit-20261013/numeric-release.log",
+        "sha256": "4f1393824b80be0432589b98bbf0ecb334427ff81da1d0b7f397f32489de830a"
+      }
+    ]
+  },
+  "local": {
+    "native": {
+      "status": "PASS",
+      "evidence": {
+        "path": "performance-results/inference-memory-audit-20261013/server-tests-final.log",
+        "sha256": "eda5dafe0766eedf0ce453d9a7bdf7b50afbd4242cb43ab7e6adafc9f9ddeedb"
+      }
+    },
+    "asan_ubsan": {
+      "status": "PASS",
+      "evidence": {
+        "path": "performance-results/inference-memory-audit-20261013/asan.log",
+        "sha256": "3211fb52a7dc487c2caa8c18841051bc2e8fe272130de9941de0f880b3ccb2c1"
+      }
+    },
+    "python": {
+      "status": "PASS",
+      "run": 279,
+      "passed": 217,
+      "skipped": 62,
+      "evidence": {
+        "path": "performance-results/inference-memory-audit-20261013/python.json",
+        "sha256": "19553b553158a993e9417f783fe465d24e0c19b2c3118add4b1ddc5b3f1154a8"
+      }
+    },
+    "docs": {
+      "status": "PASS",
+      "evidence": {
+        "path": "performance-results/inference-memory-audit-20261013/docs-final.log",
+        "sha256": "7c4a377c84fa9028800daa63f6135f2ef748a03541e5c4dbbb4cfdc99293a532"
+      }
+    }
+  },
+  "retained_failed_runs": {
+    "host_frontier_before_fix": {
+      "path": "performance-results/inference-memory-audit-20261013/host-frontier-red.log",
+      "sha256": "8e20b5b026de79a763b179750bc9ad3da11f65e8a986a67edc7e94a7d4e0f9eb"
+    },
+    "partial_gpu_allocation_before_fix": {
+      "path": "performance-results/inference-memory-audit-20261013/allocation-red.log",
+      "sha256": "1c79b29165497908ff3fe568aa8435128f6349c0017985d735c4c2340495417e"
+    },
+    "global_gpu_32mib_threshold": {
+      "evidence": {
+        "path": "performance-results/inference-memory-audit-20261013/engine-memory-global-noise.jsonl",
+        "sha256": "0d355d013250d4b76467fc1875275e98b6a71c368e49acaa6c81513a8d9e7c19"
+      },
+      "original_tool_failure": "FAIL 86: current.gpu_used <= steady.gpu_used + 32ull * 1048576 ()",
+      "note": "Original stderr file was reused by a later run; failed raw samples and tool failure text are retained here."
+    },
+    "initial_model_lock_rejection": {
+      "path": "performance-results/inference-memory-audit-20261013/engine-memory.log",
+      "sha256": "e7c947c5b381564948121f0c285b3cb90062b8e782cf50a4afe1a16371d60d69"
+    }
+  },
+  "non_qualified_source_finding": {
+    "family": "GLM CUDA",
+    "file": "ds4_cuda.cu",
+    "workspaces": [
+      "xq_scratch",
+      "midq_scratch",
+      "mid_local",
+      "out_local",
+      "map_scratch",
+      "down_terms_scratch",
+      "gu_scratch"
+    ],
+    "finding": "Function-local static workspaces are bounded/reused but not hooked into backend cleanup; dedicated lifetime cleanup/tests remain."
+  },
+  "not_verified": [
+    "Metal",
+    "SSD streaming",
+    "distributed",
+    "vision numerics",
+    "other model families",
+    "arbitrarily long/small leaks"
+  ],
+  "http": {
+    "status": "PASS",
+    "plain_cases": 12,
+    "traced_cases": 12,
+    "plain_samples": [
+      {
+        "stage": "ready",
+        "pid": 1951,
+        "gpu_global_mib": 19836,
+        "VmRSS_kib": 611248,
+        "RssAnon_kib": 182396,
+        "RssFile_kib": 82740,
+        "VmData_kib": 313788,
+        "VmSwap_kib": 0
+      },
+      {
+        "stage": "round_0",
+        "pid": 1951,
+        "gpu_global_mib": 20416,
+        "VmRSS_kib": 1110472,
+        "RssAnon_kib": 668020,
+        "RssFile_kib": 96340,
+        "VmData_kib": 854588,
+        "VmSwap_kib": 0
+      },
+      {
+        "stage": "round_1",
+        "pid": 1951,
+        "gpu_global_mib": 20418,
+        "VmRSS_kib": 1110604,
+        "RssAnon_kib": 668152,
+        "RssFile_kib": 96340,
+        "VmData_kib": 854588,
+        "VmSwap_kib": 0
+      },
+      {
+        "stage": "round_2",
+        "pid": 1951,
+        "gpu_global_mib": 20434,
+        "VmRSS_kib": 1110692,
+        "RssAnon_kib": 668240,
+        "RssFile_kib": 96340,
+        "VmData_kib": 854588,
+        "VmSwap_kib": 0
+      },
+      {
+        "stage": "round_3",
+        "pid": 1951,
+        "gpu_global_mib": 20486,
+        "VmRSS_kib": 1110768,
+        "RssAnon_kib": 668316,
+        "RssFile_kib": 96340,
+        "VmData_kib": 854604,
+        "VmSwap_kib": 0
+      }
+    ],
+    "traced_samples": [
+      {
+        "stage": "ready",
+        "pid": 16680,
+        "gpu_global_mib": 19750,
+        "VmRSS_kib": 611324,
+        "RssAnon_kib": 182420,
+        "RssFile_kib": 82792,
+        "VmData_kib": 313924,
+        "VmSwap_kib": 0,
+        "cuda_runtime_allocations": {
+          "event": "malloc",
+          "live_bytes": 18732938144,
+          "peak_bytes": 18732938144,
+          "allocations": 346,
+          "unmatched_free": 0
+        }
+      },
+      {
+        "stage": "round_0",
+        "pid": 16680,
+        "gpu_global_mib": 20505,
+        "VmRSS_kib": 1110292,
+        "RssAnon_kib": 668232,
+        "RssFile_kib": 95948,
+        "VmData_kib": 854672,
+        "VmSwap_kib": 0,
+        "cuda_runtime_allocations": {
+          "event": "free",
+          "live_bytes": 19404026784,
+          "peak_bytes": 19786646432,
+          "allocations": 347,
+          "unmatched_free": 0
+        }
+      },
+      {
+        "stage": "round_1",
+        "pid": 16680,
+        "gpu_global_mib": 20610,
+        "VmRSS_kib": 1110392,
+        "RssAnon_kib": 668332,
+        "RssFile_kib": 95948,
+        "VmData_kib": 854672,
+        "VmSwap_kib": 0,
+        "cuda_runtime_allocations": {
+          "event": "free",
+          "live_bytes": 19404026784,
+          "peak_bytes": 19786646432,
+          "allocations": 347,
+          "unmatched_free": 0
+        }
+      },
+      {
+        "stage": "round_2",
+        "pid": 16680,
+        "gpu_global_mib": 20562,
+        "VmRSS_kib": 1110476,
+        "RssAnon_kib": 668416,
+        "RssFile_kib": 95948,
+        "VmData_kib": 854672,
+        "VmSwap_kib": 0,
+        "cuda_runtime_allocations": {
+          "event": "free",
+          "live_bytes": 19404026784,
+          "peak_bytes": 19786646432,
+          "allocations": 347,
+          "unmatched_free": 0
+        }
+      },
+      {
+        "stage": "round_3",
+        "pid": 16680,
+        "gpu_global_mib": 20566,
+        "VmRSS_kib": 1110548,
+        "RssAnon_kib": 668488,
+        "RssFile_kib": 95948,
+        "VmData_kib": 854688,
+        "VmSwap_kib": 0,
+        "cuda_runtime_allocations": {
+          "event": "free",
+          "live_bytes": 19404026784,
+          "peak_bytes": 19786646432,
+          "allocations": 347,
+          "unmatched_free": 0
+        }
+      }
+    ],
+    "closed_runtime_allocations": {
+      "event": "free",
+      "live_bytes": 0,
+      "peak_bytes": 19786646432,
+      "allocations": 0,
+      "unmatched_free": 0
+    },
+    "trace_scope": "cudaMalloc/cudaMallocManaged/cudaFree in this process; excludes driver-private allocation and other processes.",
+    "evidence": [
+      {
+        "path": "performance-results/inference-memory-audit-20261013/http-memory.jsonl",
+        "sha256": "ea221391c58fd4214438ce1f4575fa7d78ddbc7800d1f8a60eef8d255cb2ce9c"
+      },
+      {
+        "path": "performance-results/inference-memory-audit-20261013/http-traced-memory.jsonl",
+        "sha256": "065a025bca4958a35312ff7afc6f8bf6d9822cf1fb9c621f1a106145fb9ff490"
+      },
+      {
+        "path": "performance-results/inference-memory-audit-20261013/cuda-allocations.jsonl",
+        "sha256": "2f58d7a65df95ddfc9d8f15294fdb2c6d1d597cc1a39fa81bc9038e3a0c12aef"
+      },
+      {
+        "path": "performance-results/inference-memory-audit-20261013/cuda_alloc_trace.c",
+        "sha256": "99746f43f0de24753a508a53906f6c8cb96554bd3ed0c55437ad846c6585284a"
+      }
+    ]
+  },
+  "restored_server": {
+    "pid": 32289,
+    "argv": [
+      "./ds4-server",
+      "--cuda",
+      "-m",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "--vision",
+      "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+      "--ctx",
+      "26000",
+      "--host",
+      "0.0.0.0",
+      "--mtp",
+      "--port",
+      "8080"
+    ],
+    "cwd": "/home/daniele/ds4",
+    "log": "/home/daniele/ds4/performance-results/inference-memory-audit-20261013/restored-server.log",
+    "ready_api": true,
+    "vision_numerics_verified": false
+  }
+}

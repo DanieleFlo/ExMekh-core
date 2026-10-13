@@ -61925,8 +61925,18 @@ typedef struct {
     ds4_gpu_tensor *draft_recurrent_snapshot[DS4_MAX_LAYER];
 } ds4_qwen_gpu_graph;
 
+static void qwen_graph_free_draft_workspace(ds4_qwen_gpu_graph *g) {
+    ds4_gpu_tensor_free(g->draft_hidden_rows); g->draft_hidden_rows = NULL;
+    ds4_gpu_tensor_free(g->draft_logits); g->draft_logits = NULL;
+    for (uint32_t il = 0; il < DS4_MAX_LAYER; il++) {
+        ds4_gpu_tensor_free(g->draft_conv_snapshot[il]); g->draft_conv_snapshot[il] = NULL;
+        ds4_gpu_tensor_free(g->draft_recurrent_snapshot[il]); g->draft_recurrent_snapshot[il] = NULL;
+    }
+}
+
 static void qwen_graph_free(ds4_qwen_gpu_graph *g) {
     if (!g) return;
+    qwen_graph_free_draft_workspace(g);
 #define DS4_QWEN_FREE(t_) do { ds4_gpu_tensor_free((t_)); (t_) = NULL; } while (0)
     DS4_QWEN_FREE(g->rope_rows);
     free(g->host_pos3);
@@ -61948,7 +61958,6 @@ static void qwen_graph_free(ds4_qwen_gpu_graph *g) {
     DS4_QWEN_FREE(g->mtp_draft_h[0]); DS4_QWEN_FREE(g->mtp_draft_h[1]);
     DS4_QWEN_FREE(g->mtp_verify_logits);
     DS4_QWEN_FREE(g->mtp_key_cache); DS4_QWEN_FREE(g->mtp_value_cache);
-    DS4_QWEN_FREE(g->draft_hidden_rows); DS4_QWEN_FREE(g->draft_logits);
     for (uint32_t il = 0; il < DS4_MAX_LAYER; il++) {
         DS4_QWEN_FREE(g->key_cache[il]);
         DS4_QWEN_FREE(g->value_cache[il]);
@@ -61958,8 +61967,6 @@ static void qwen_graph_free(ds4_qwen_gpu_graph *g) {
         DS4_QWEN_FREE(g->mtp_recurrent_snapshot[il]);
         DS4_QWEN_FREE(g->mtp_conv_row_snapshots[il]);
         DS4_QWEN_FREE(g->mtp_recurrent_row_snapshots[il]);
-        DS4_QWEN_FREE(g->draft_conv_snapshot[il]);
-        DS4_QWEN_FREE(g->draft_recurrent_snapshot[il]);
     }
 #undef DS4_QWEN_FREE
     memset(g, 0, sizeof(*g));
@@ -62090,14 +62097,14 @@ static bool qwen_graph_draft_checkpoint(ds4_qwen_gpu_graph *g, bool restore) {
         g->draft_hidden_rows = ds4_gpu_tensor_alloc(64ull * DS4_N_EMBD * sizeof(float));
     if (!restore && !g->draft_logits)
         g->draft_logits = ds4_gpu_tensor_alloc(64ull * DS4_N_VOCAB * sizeof(float));
-    if (!g->draft_hidden_rows || !g->draft_logits) return false;
+    if (!g->draft_hidden_rows || !g->draft_logits) goto allocation_failed;
     for (uint32_t il = 0; il < DS4_N_LAYER; il++) {
         if (!qwen_layer_is_recurrent(il)) continue;
         if (!restore && !g->draft_conv_snapshot[il])
             g->draft_conv_snapshot[il] = ds4_gpu_tensor_alloc(ds4_gpu_tensor_bytes(g->conv_state[il]));
         if (!restore && !g->draft_recurrent_snapshot[il])
             g->draft_recurrent_snapshot[il] = ds4_gpu_tensor_alloc(ds4_gpu_tensor_bytes(g->recurrent_state[il]));
-        if (!g->draft_conv_snapshot[il] || !g->draft_recurrent_snapshot[il]) return false;
+        if (!g->draft_conv_snapshot[il] || !g->draft_recurrent_snapshot[il]) goto allocation_failed;
         ds4_gpu_tensor *conv = g->conv_state[il], *rec = g->recurrent_state[il];
         if (!ds4_gpu_tensor_copy(restore ? conv : g->draft_conv_snapshot[il], 0,
                 restore ? g->draft_conv_snapshot[il] : conv, 0, ds4_gpu_tensor_bytes(conv)) ||
@@ -62105,6 +62112,11 @@ static bool qwen_graph_draft_checkpoint(ds4_qwen_gpu_graph *g, bool restore) {
                 restore ? g->draft_recurrent_snapshot[il] : rec, 0, ds4_gpu_tensor_bytes(rec))) return false;
     }
     return true;
+allocation_failed:
+    /* Partial workspace cannot verify a window. Release it before target-only
+     * fallback so an allocation failure does not worsen persistent VRAM pressure. */
+    if (!restore) qwen_graph_free_draft_workspace(g);
+    return false;
 }
 
 /* Restore the authoritative recurrent frontier produced after verifier row
@@ -91302,6 +91314,9 @@ int ds4_session_eval_draft_tokens(
         if (g->mtp_ready) g->mtp_cache_len = (uint32_t)s->checkpoint.len;
         s->mtp_draft_valid = false;
         s->checkpoint_valid = true;
+        /* A declined/failed window has already been rolled back. Its
+         * verifier storage can now go, especially after device memory pressure. */
+        if (!verified) qwen_graph_free_draft_workspace(g);
         return kept;
     }
 single:

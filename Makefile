@@ -639,6 +639,12 @@ tests/test_qwen_snapshot_drafts.o: tests/test_qwen_snapshot_drafts.c ds4.c ds4.h
 tests/test_qwen_snapshot_drafts: tests/test_qwen_snapshot_drafts.o $(filter-out ds4.o,$(CORE_OBJS))
 	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
 
+tests/test_qwen_memory_lifetime.o: tests/test_qwen_memory_lifetime.c ds4.c ds4.h ds4_gpu.h ds4_qwen.h ds4_env.h
+	$(CC) $(CFLAGS) -I. -c -o $@ $<
+
+tests/test_qwen_memory_lifetime: tests/test_qwen_memory_lifetime.o $(filter-out ds4.o,$(CORE_OBJS))
+	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
+
 tests/test_qwen4_tuning: tests/test_qwen4_tuning.cpp ds4_qwen4_tuning.cuh ds4_qwen4_runtime.h ds4_env.h
 	$(CXX) -O2 -Wall -Wextra -std=c++17 -o $@ $<
 
@@ -1124,6 +1130,12 @@ tests/test_server_interactive: tests/test_server_interactive.o ds4_help.o ds4_kv
 test-server-interactive: tests/test_server_interactive
 	./tests/test_server_interactive
 
+tests/test_server_memory_lifetime.o: tests/test_server_memory_lifetime.c ds4_server.c $(INTERACTIVE_HEADERS)
+	$(CC) $(CFLAGS) -Wno-unused-function -DDS4_NO_GPU -c -o $@ $<
+
+tests/test_server_memory_lifetime: tests/test_server_memory_lifetime.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+
 tests/bench_interactive_edit.o: tests/bench_interactive_edit.c ds4_server.c $(INTERACTIVE_HEADERS)
 	$(CC) $(CFLAGS) -Wno-unused-function -DDS4_NO_GPU -c -o $@ $<
 
@@ -1151,11 +1163,12 @@ test-frontends: ds4_test
 
 test: ds4_test ds4_server_test ds4-eval q4k-dot-test mxfp4-dot-test test-session-state test-linux-memory test-read-queue test-engram \
 	tests/test_layer_pack tests/test_engine_mgpu_placement tests/test_gpu_args \
-	tests/test_deepseek4_vision_image tests/test_image_decode tests/test_prompt_prefix tests/test_server_interactive $(SAMPLING_TEST) ds4 ds4-server ds4-bench
+	tests/test_deepseek4_vision_image tests/test_image_decode tests/test_prompt_prefix tests/test_server_interactive tests/test_server_memory_lifetime $(SAMPLING_TEST) ds4 ds4-server ds4-bench
 	./ds4-eval --validate-cases
 	./ds4-eval --self-test-extractors
 	./ds4_server_test
 	./tests/test_server_interactive
+	./tests/test_server_memory_lifetime
 	python3 -m unittest tests.test_qwen38_compatibility tests.test_server_sampling_matrix.SamplingMatrixFixtureTests -v
 	./ds4_test
 	./tests/test_layer_pack
@@ -1267,6 +1280,8 @@ tests/test_session_state_gpu.o: ds4_tool_text.h
 clean:
 	rm -f tests/test_server_interactive tests/bench_interactive_edit
 	rm -f tests/test_qwen_snapshot_drafts
+	rm -f tests/test_qwen_memory_lifetime
+	rm -f tests/test_server_memory_lifetime
 	rm -f tests/qwen_flash_quality_probe
 	rm -f tests/test_qwen4_tuning
 	rm -f tests/test_qwen4_ranks tests/test_qwen4_cpu

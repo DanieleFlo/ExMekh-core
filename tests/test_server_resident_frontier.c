@@ -141,7 +141,11 @@ int main(int argc, char **argv) {
     /* Qwen27 can use compact rollback; Flash uses the complete portable payload. */
     REQUIRE(resident_kv_frontier_restore(session, &frontier, err, sizeof(err)));
     const bool compact_rollback = ds4_session_skill_state_bytes(session) != 0;
+    /* A host fallback may precede a later successful device capture. */
+    REQUIRE(resident_kv_frontier_capture(session, &local, false, err, sizeof(err)));
+    REQUIRE(local.state.ptr != NULL && local.state.cap > 0);
     REQUIRE(resident_kv_frontier_capture(session, &local, true, err, sizeof(err)));
+    if (local.device_state) REQUIRE(local.state.ptr == NULL && local.state.cap == 0);
     REQUIRE(ds4_session_sync(session, &prompt, err, sizeof(err)) == 0);
     REQUIRE(resident_kv_frontier_restore(session, &local, err, sizeof(err)));
     REQUIRE(ds4_session_sync(session, &prompt, err, sizeof(err)) == 0);
