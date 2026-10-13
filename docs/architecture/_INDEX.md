@@ -70,6 +70,41 @@ Branch `codex/merge-ds4-upstream-2026-10-01`, creato da
 - righe 212–249: **Tentativo Flash Next** — È usato il Q2 originale, circa 137.10 GiB su disco: circa 41.73 GiB di pesi
 - righe 250–267: **Riproduzione** — make -j4 ds4 ds4-server ds4-bench ds4-eval CUDA_ARCH=sm_86
 
+## [Semplificare i tool di scrittura, modifica e cancellazione — 13 ottobre 2026](file-tool-simplification-research-20261013.md)
+
+Il punto fragile è l'accoppiamento fra operazione, selezione e rappresentazione del contenuto.
+
+- righe 5–39: **1. Risultato della lettura** — Il punto fragile è l'accoppiamento fra operazione, selezione e rappresentazione del contenuto.
+  - righe 13–21: **Codice e documentazione esaminati** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 22–39: **Evidenze locali** — La revisione client più recente riporta **13 PASS e 2 FAIL su 15 casi target-only**, senza skip.
+- righe 40–73: **2. Cosa fanno altri strumenti** — Le fonti esterne sono primarie e sono state consultate il 13 ottobre 2026.
+- righe 74–88: **3. Le protezioni da conservare** — La maggior parte della complessità del filesystem ha una responsabilità reale e può restare interna al runtime:
+- righe 89–142: **4. Contratto candidato: write, edit, delete** — Il primo candidato da confrontare con v2 usa tre strumenti con argomenti ordinari:
+  - righe 107–118: **Se new deve essere distinto da write** — Esiste un compromesso reale.
+  - righe 119–134: **Esempi delle operazioni** — Questi sono oggetti logici, non una nuova sintassi da copiare dentro una stringa XML:
+  - righe 135–142: **Un file per chiamata e gestione dei batch** — Una chiamata con tre campi piatti evita il documento di frammenti, i path ripetuti e le pause a metà XML.
+- righe 143–158: **5. Eliminare CDATA: distinguere dati e trasporto** — CDATA non cambia il valore logico dopo il parsing, ma cambia ciò che il modello deve generare.
+  - righe 153–158: **Perché non partire da un formato raw nuovo** — Un payload raw sarebbe più vicino al file, ma ha comunque bisogno di distinguere contenuto e confini.
+- righe 159–185: **6. Usare il controllo dell'inferenza senza ampliare l'API** — Il motore può seguire un flusso piccolo e distinto per operazione:
+- righe 186–205: **7. Una restrizione da riesaminare: unicità globale** — Il contratto impone contemporaneamente partenza da inizio riga e unicità globale, comprese occorrenze a metà riga.
+- righe 206–230: **8. Blocchi lunghi, inserimenti e file vuoti** — Per un file non vuoto una sostituzione che conserva l'ancora rappresenta già l'inserimento prima/dopo di essa.
+  - righe 208–213: **Inserimenti** — Per un file non vuoto una sostituzione che conserva l'ancora rappresenta già l'inserimento prima/dopo di essa.
+  - righe 214–219: **Intervalli numerici attuali** — Il ramo `start_line/end_line` viene controllato solo lessicalmente dal server: positività, ordine e limiti sono verificati dal client.
+  - righe 220–230: **Alternative da valutare solo se emerge il bisogno** — Fra queste, due ancore letterali potrebbero riutilizzare meglio il masking esistente; riferimenti a blocchi possono essere migliori se la lettura espone già unità adeguate.
+- righe 231–248: **9. Cosa togliere, cosa spostare, cosa rinviare** — La separazione di delete consente anche di riesaminare la dipendenza dalla lettura del contenuto: cancellare un file non richiede decodificarne il testo.
+- righe 249–260: **10. Alternative di formato e priorità** — L'XML standard dei **risultati** e dei metadati del runtime è un confine diverso.
+- righe 261–277: **11. Skill candidata più corta** — Una descrizione candidata dell'editing, da adattare alla semantica batch scelta, potrebbe essere:
+- righe 278–297: **12. Confronto sperimentale e migrazione** — Il prossimo lavoro dovrebbe confrontare v2 e un solo candidato minimale con richieste naturali, senza dettare nel prompt i tag o gli argomenti da emettere.
+- righe 298–300: **13. Stato delle verifiche di questa ricerca** — Sono stati letti codice, skill e report locali e confrontate fonti primarie esterne.
+
+## [Audit RAM e VRAM durante l'inferenza — 13 ottobre 2026](inference-memory-audit-20261013.md)
+
+1.
+
+- righe 8–28: **Correzioni** — 1.
+- righe 29–51: **Memoria che rimane intenzionalmente disponibile** — non più visibili possono restare nello spazio prenotato dal contesto e vengono
+- righe 52–94: **Verifica e limiti delle misure** — Qwen3.8-27B UD-Q4_K_S, sidecar MTP, RTX 3090, CUDA/Linux su WSL.
+
 ## [Qwen Flash: esperti ibridi, PCIe e KV paginato](qwen-flash-hybrid-kv-20261006.md)
 
 Richiedono `DS4_CUDA_QWEN4_TIERED_CACHE=1`; il modello deve essere Flash.

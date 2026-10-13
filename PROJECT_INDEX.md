@@ -375,6 +375,18 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py` — osservazione uniforme
   delle richieste normali e strutturate, isolamento dei contesti figli e
   conservazione dei token totali dichiarati dal provider.
+- `agent/src/exmekh_agent/exmekh_bridge/agents/cancellation.py` — inoltra richieste
+  normali/strutturate conservando handler interattivo e reasoning; interrompe
+  chiamate e stream dei turni cancellati.
+- `agent/src/exmekh_agent/ui/shared/neural_loader.py`,
+  `agent/src/exmekh_agent/ui/resources/js/neural_loader.js` — indicatore canvas
+  per client, con caricamento asincrono, pausa e cleanup dell'animazione.
+  `agent/src/exmekh_agent/exmekh_bridge/providers/loader_tokens.py` campiona
+  un pool bounded tramite l'API pubblica del tokenizer; test unitari e Playwright
+  in `agent/tests/test_neural_loader.py` e `test_neural_loader_e2e.py`.
+- `exmekh_lib/src/exmekh_lib/core/tokenizers/sequential_tokenizer.py` — possiede
+  vocabolario filtrato e ID sequenziali; `get_id_vocabulary` espone token immutabili
+  senza creare sessioni né consumare ID.
 - `agent/src/exmekh_agent/exmekh_bridge/capabilities/agent_design.py` — costruisce
   gerarchie generiche e personalizzate tramite le API Node; il runner riceve
   la gerarchia senza conoscere figli bundled o layout delle capability.
@@ -449,6 +461,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/architecture/client-xml-clean-review-20261012.md` — revisione delle
   responsabilità dei tool, refactoring del client e nuove regressioni di cancellazione,
   con qualifica deterministica e live della wheel predefinita.
+- `docs/architecture/file-tool-simplification-research-20261013.md` — ricerca sui
+  formati di editing e proposta write/edit/delete: rimozione di comandi nei corpi
+  e XML annidato, riuso del masking, selezioni lunghe e confronto sperimentale.
 - `agent/sync_exmekh_lib.sh` e `agent/src/exmekh_agent/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
   locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
   La distribuzione e la CLI sono `exmekh-lib`, il namespace Python è
@@ -842,6 +857,14 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/architecture/snapshot-draft-clean-review-20261012.md` — revisione dei
   confini documento/protocollo/scheduler/motore/client, regressioni dei restart,
   escaping comune, flag MTP e metriche distinte per origine dei draft.
+- `tests/test_qwen_memory_lifetime.c` — audit live CUDA/Linux: RAM anonima,
+  RSS e VRAM globale su 32 finestre OLD e quattro sessioni; fault injection
+  delle allocazioni, rilascio dopo declino e confronto bit-exact del fallback.
+- `tests/test_server_memory_lifetime.c` — regressione senza modello sul
+  ridimensionamento delle copie host dei checkpoint e sul framing binario.
+- `docs/architecture/inference-memory-audit-20261013.md` — durata delle
+  allocazioni durante inferenza, cache riutilizzabili, correzioni RAM/VRAM e
+  limiti della verifica; evidenze JSON in `docs/performance/`.
 - `tests/test_server_resident_frontier.c` — regressione model-backed Qwen27/Flash della cache
   di sistema residente e dei checkpoint skill: conta i token del prefill cold
   per respingere rewind o doppie elaborazioni; dopo reset o riscrittura della
