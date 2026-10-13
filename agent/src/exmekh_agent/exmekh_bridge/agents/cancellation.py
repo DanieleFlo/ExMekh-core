@@ -58,6 +58,7 @@ class CancellableProvider(Provider):
             ),
             reasoning_effort_override=request.get_reasoning_effort_override(),
         )
+        guarded_request.interactive_handler = request.interactive_handler
         response = self._provider.call(guarded_request)
         raise_if_cancelled(self._cancellation)
         return response
@@ -77,7 +78,9 @@ class CancellableProvider(Provider):
             on_event=CancellationEventHandler(
                 self._cancellation, request.execute_on_stream_event
             ),
+            reasoning_effort_override=request.get_reasoning_effort_override(),
         )
+        guarded_request.interactive_handler = request.interactive_handler
         response = self._provider.call_structured(guarded_request)
         raise_if_cancelled(self._cancellation)
         return response

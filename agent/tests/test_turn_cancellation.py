@@ -4,11 +4,18 @@ import asyncio
 from concurrent.futures import Future
 from pathlib import Path
 from threading import Event
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from exmekh_lib.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
+from exmekh_lib.core.models.interactive import InteractiveHandler
 from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.provider_response import ProviderResponse
 from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
@@ -31,7 +38,7 @@ from exmekh_agent.exmekh_bridge.agents.cancellation import (
 )
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.agents.event_handlers import QuickChatEventHandler
-from exmekh_agent.exmekh_bridge.models import ChatSession, ChatTitle
+from exmekh_agent.exmekh_bridge.models import ChatSession, ChatSettings, ChatTitle
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager
 from exmekh_agent.ui.chat.chat_view import ChatViewComponent
@@ -55,6 +62,7 @@ def test_cancellable_provider_preserves_public_request_options_and_streams() -> 
         on_event=handler,
         reasoning_effort_override="none",
     )
+    request.interactive_handler = Mock(spec=InteractiveHandler)
     assert guarded.call(request).get_message()
     forwarded = provider.last_request
     assert forwarded is not request
@@ -62,6 +70,7 @@ def test_cancellable_provider_preserves_public_request_options_and_streams() -> 
     assert forwarded.get_tool_choice() == "none"
     assert forwarded.get_tools() is request.get_tools()
     assert forwarded.get_reasoning_effort_override() == "none"
+    assert forwarded.require_interactive_handler() is request.interactive_handler
     assert forwarded.get_streaming()
     assert tokens
     assert request.on_event is handler
@@ -84,14 +93,20 @@ def test_structured_requests_keep_the_schema_and_stop_after_cancellation() -> No
     provider = MockProvider()
     guarded = CancellableProvider(provider, cancellation)
     request = StructuredProviderRequest(
-        [UserMessage("Choose a title")], ChatTitle, strict=False
+        [UserMessage("Choose a title")],
+        ChatTitle,
+        strict=False,
+        reasoning_effort_override="none",
     )
+    request.interactive_handler = Mock(spec=InteractiveHandler)
     original_call = provider.call_structured
 
     def respond(forwarded):
         assert forwarded.get_response_model() is ChatTitle
         assert forwarded.get_strict() is False
         assert forwarded.get_messages() == request.get_messages()
+        assert forwarded.get_reasoning_effort_override() == "none"
+        assert forwarded.require_interactive_handler() is request.interactive_handler
         return original_call(forwarded)
 
     with patch.object(provider, "call_structured", side_effect=respond):
@@ -103,6 +118,68 @@ def test_structured_requests_keep_the_schema_and_stop_after_cancellation() -> No
             guarded.call_structured(request)
     with pytest.raises(asyncio.CancelledError):
         guarded.call_structured(request)
+
+
+@pytest.mark.parametrize("track_context", [False, True])
+async def test_cancellable_deep_agent_keeps_runtime_handler_when_entering_file_skill(
+    tmp_path: Path, track_context: bool
+) -> None:
+    provider = MockProvider()
+    requests: list[ProviderRequest] = []
+
+    def respond(request: ProviderRequest) -> ProviderResponse:
+        requests.append(request)
+        if len(requests) == 1:
+            return ProviderResponse(
+                AssistantMessage(
+                    None,
+                    tool_calls=[
+                        ToolCall("open-files", FunctionCall("file-processing", {}))
+                    ],
+                )
+            )
+        if len(requests) == 2:
+            # Match the real LocalProvider boundary even when no edit is generated.
+            assert LocalProvider._has_interactive_tools(request)
+            handler = request.require_interactive_handler()
+            handler.begin()
+            assert not handler.cancellation_requested()
+            return ProviderResponse(
+                AssistantMessage(
+                    None,
+                    tool_calls=[
+                        ToolCall(
+                            "exit-files",
+                            FunctionCall(
+                                "exit_agent", {"text": "Files ready", "items": []}
+                            ),
+                        )
+                    ],
+                )
+            )
+        assert len(requests) == 3
+        return ProviderResponse(AssistantMessage("Files ready"))
+
+    with (
+        patch(
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
+            return_value=provider,
+        ),
+        patch.object(provider, "call", side_effect=respond),
+    ):
+        response = await run_agent_turn(
+            user_prompt="Open the file-processing skill",
+            model="mock-model",
+            agent_mode="deep_agent",
+            settings=ChatSettings(work_root=str(tmp_path)),
+            on_token=lambda _: None,
+            on_reasoning=lambda *_: None,
+            on_tool_event=lambda _: None,
+            on_context=(lambda _: None) if track_context else None,
+        )
+
+    assert response == "Files ready"
+    assert len(requests) == 3
 
 
 def test_non_streaming_response_is_discarded_when_cancelled() -> None:

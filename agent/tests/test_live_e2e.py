@@ -10,7 +10,12 @@ from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     check_provider_health,
     run_agent_turn,
 )
-from exmekh_agent.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
+from exmekh_agent.exmekh_bridge.models import (
+    ChatMessage,
+    ChatSettings,
+    SkillNode,
+    ToolEvent,
+)
 from exmekh_agent.state.session_manager import SessionManager
 from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from exmekh_agent.ui.chat.input_bar import InputBarComponent
@@ -173,6 +178,35 @@ async def test_live_e2e_deep_agent_tool_execution() -> None:
     full_response = "".join(streamed_tokens) or response_text
     safe_print(f"\n[LIVE Tool Execution Event]: {mock_ev}")
     safe_print(f"[LIVE Final Response]: {full_response}")
+
+
+@pytest.mark.asyncio
+async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
+    """Exercise the runtime handler through both frontend provider wrappers."""
+    tool_events: list[ToolEvent] = []
+    response = await run_agent_turn(
+        user_prompt=(
+            "Open the file-processing skill, then use edit-file to create the missing "
+            "file probe.txt with exactly the text FRONTEND_INTERACTIVE_OK. "
+            'Use edits=\'<edit path="probe.txt"><old_text><all/></old_text>'
+            "<new_text>FRONTEND_INTERACTIVE_OK</new_text></edit>'. "
+            "Do not use bash, delegate, or create other files. "
+            "Exit the skill and confirm completion."
+        ),
+        model=config.default_model,
+        agent_mode="deep_agent",
+        settings=ChatSettings(work_root=str(tmp_path)),
+        on_token=lambda _: None,
+        on_reasoning=lambda *_: None,
+        on_tool_event=tool_events.append,
+        on_context=lambda _: None,
+    )
+    assert (tmp_path / "probe.txt").read_text() == "FRONTEND_INTERACTIVE_OK"
+    assert any(
+        event.tool_name == "edit-file" and event.status == "completed"
+        for event in tool_events
+    ), tool_events
+    assert response.strip()
 
 
 @pytest.mark.asyncio
