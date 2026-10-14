@@ -5,11 +5,11 @@ from collections.abc import Callable
 from nicegui import ui
 
 from exmekh_agent.config import config
-from exmekh_agent.exmekh_bridge.models import ProjectSettings
-from exmekh_agent.exmekh_bridge.tools.tool_approval import (
+from exmekh_agent.config.approvals import (
     TOOL_APPROVAL_MODES,
     normalize_tool_approval_mode,
 )
+from exmekh_agent.exmekh_bridge.models import ProjectSettings
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.agents.agent_selector import AgentSelector
 from exmekh_agent.ui.resources import presentation_config, ui_text

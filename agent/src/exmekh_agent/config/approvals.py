@@ -18,3 +18,10 @@ LEGACY_TOOL_APPROVAL_MODES: dict[str, str] = {
     "Approva tutto": TOOL_APPROVAL_ALL,
     "Approva da un LLM": TOOL_APPROVAL_LLM,
 }
+
+
+def normalize_tool_approval_mode(mode: str | None) -> str:
+    """Resolve saved legacy identifiers and use the manual default for unknown modes."""
+    if mode in TOOL_APPROVAL_MODES:
+        return mode
+    return LEGACY_TOOL_APPROVAL_MODES.get(mode, DEFAULT_TOOL_APPROVAL_MODE)

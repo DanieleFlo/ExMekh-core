@@ -117,6 +117,24 @@ def test_approval_mode_save_failure_rolls_back_the_change(tmp_path: Path) -> Non
     )
 
 
+def test_live_approval_policy_changes_only_after_successful_persistence(
+    tmp_path: Path,
+) -> None:
+    manager = SessionManager(tmp_path / "data" / "chats")
+    chat = manager.get_current_session()
+    observations = []
+    save_session = manager.save_session
+
+    def persist(updated):
+        observations.append(chat.settings.tool_approval_mode)
+        return save_session(updated)
+
+    with patch.object(manager, "save_session", side_effect=persist):
+        assert manager.set_tool_approval_mode(chat.id, "Approve All")
+    assert observations == ["Manual"]
+    assert chat.settings.tool_approval_mode == "Approve All"
+
+
 def test_deleting_a_background_project_preserves_the_selected_quick_chat(
     tmp_path: Path,
 ) -> None:

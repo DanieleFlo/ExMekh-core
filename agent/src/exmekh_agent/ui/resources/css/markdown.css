@@ -160,3 +160,18 @@ math {
 .thinking-box p:last-child {
     margin-bottom: 0;
 }
+
+/* HTML block boundaries must not add preserved blank lines to reasoning. */
+.thinking-box p,
+.thinking-box ul,
+.thinking-box ol {
+    margin: 0.2rem 0;
+}
+
+.thinking-box li {
+    margin: 0.1rem 0;
+}
+
+.thinking-box pre {
+    white-space: pre-wrap;
+}

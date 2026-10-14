@@ -118,6 +118,7 @@ def execute_agent_turn_sync(
     on_request_manual_approval: Callable[[str], bool] | None = None,
     on_command_approved: CommandApprovedCallback | None = None,
     tool_approval_mode: str | None = None,
+    get_tool_approval_mode: Callable[[], str] | None = None,
     approved_commands_history: list[str] | None = None,
     tool_approval_raw_history: list[dict[str, Any]] | None = None,
     cancellation_event: threading.Event | None = None,
@@ -158,6 +159,7 @@ def execute_agent_turn_sync(
                 on_request_manual_approval=on_request_manual_approval,
                 on_command_approved=on_command_approved,
                 tool_approval_mode=tool_approval_mode,
+                get_tool_approval_mode=get_tool_approval_mode,
                 approved_commands_history=approved_commands_history,
                 tool_approval_raw_history=tool_approval_raw_history,
                 cancellation_event=cancellation_event,
@@ -220,6 +222,7 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
         )
         approval_hook = CommandApprovalHook(
             mode=effective_approval_mode,
+            get_mode=request.get_tool_approval_mode,
             history=request.tool_approval_raw_history
             or request.approved_commands_history
             or [],
@@ -403,6 +406,7 @@ async def run_agent_turn(
     steering: TurnSteering | None = None,
     on_steering_added: Callable[[], None] | None = None,
     image_urls: list[str] | None = None,
+    get_tool_approval_mode: Callable[[], str] | None = None,
 ) -> str:
     """Asynchronously runs the agent turn in a background worker thread."""
     loop = asyncio.get_running_loop()
@@ -459,6 +463,7 @@ async def run_agent_turn(
             else None,
             on_command_approved=on_command_approved,
             tool_approval_mode=settings.tool_approval_mode,
+            get_tool_approval_mode=get_tool_approval_mode,
             approved_commands_history=list(settings.approved_commands_history),
             tool_approval_raw_history=list(settings.tool_approval_raw_history),
             cancellation_event=cancellation_event,

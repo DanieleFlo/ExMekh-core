@@ -141,6 +141,31 @@ class AgentDesign(BaseModel):
         node.x = max(0, x)
         node.y = max(0, y)
 
+    def add_positioned_node(self, node: DesignNode, parent_id: str) -> None:
+        """Add an automatically arranged card, restoring the caller's card on failure."""
+        x, y = node.x, node.y
+        self._place_node(node)
+        try:
+            self.add_node(node, parent_id)
+        except ValueError:
+            node.x, node.y = x, y
+            raise
+
+    def _place_node(self, node: DesignNode) -> None:
+        """Find a free vertical slot without moving cards already on the board."""
+        width = BOARD_DEFAULTS["node_width"]
+        height = BOARD_DEFAULTS["node_height"]
+        gap = BOARD_DEFAULTS["node_gap"]
+        node.x, node.y = max(0, node.x), max(0, node.y)
+        for other in sorted(self.nodes, key=lambda item: item.y):
+            if (
+                node.id != other.id
+                and abs(node.x - other.x) < width + gap
+                and node.y < other.y + height + gap
+                and other.y < node.y + height + gap
+            ):
+                node.y = other.y + height + gap
+
     def replace_node(self, node_id: str, replacement: DesignNode) -> None:
         """Keep card identity and connections when editing a capability copy."""
         current = self.node(node_id)

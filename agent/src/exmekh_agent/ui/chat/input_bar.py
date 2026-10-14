@@ -8,6 +8,11 @@ from functools import partial
 from nicegui import ui
 
 from exmekh_agent.config import config
+from exmekh_agent.config.approvals import (
+    DEFAULT_TOOL_APPROVAL_MODE,
+    TOOL_APPROVAL_MODES,
+    normalize_tool_approval_mode,
+)
 from exmekh_agent.config.attachments import DEFAULTS as ATTACHMENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
@@ -16,11 +21,6 @@ from exmekh_agent.exmekh_bridge.history.pasted_input import (
     create_staged_attachments_from_text,
 )
 from exmekh_agent.exmekh_bridge.models import QueuedMessage
-from exmekh_agent.exmekh_bridge.tools.tool_approval import (
-    DEFAULT_TOOL_APPROVAL_MODE,
-    TOOL_APPROVAL_MODES,
-    normalize_tool_approval_mode,
-)
 from exmekh_agent.state.temp_storage import TempStorage
 from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 from exmekh_agent.ui.shared.file_icons import get_file_icon
@@ -1208,7 +1208,10 @@ class InputBarComponent:
 
     def _handle_approval_mode_change(self) -> None:
         if self.approval_select and self.approval_select.value:
-            self.approval_mode = str(self.approval_select.value)
+            mode = normalize_tool_approval_mode(str(self.approval_select.value))
+            if mode == self.approval_mode:
+                return
+            self.approval_mode = mode
             if self.on_approval_mode_changed:
                 self.on_approval_mode_changed(self.approval_mode)
 

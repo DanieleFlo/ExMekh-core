@@ -55,7 +55,10 @@ def test_evaluator_preserves_only_approved_turns_using_the_real_exmekh_client() 
         ),
         patch.object(provider, "call_structured", side_effect=respond),
     ):
-        assert evaluator.evaluate("git status").approved
+        decision = evaluator.evaluate("git status")
+        assert decision.approved
+        assert evaluator.approved_commands() == ["pwd"]
+        evaluator.record_approved_command("git status", reason=decision.reason)
         approved_history = evaluator.dump_history()
         assert evaluator.approved_commands() == ["pwd", "git status"]
         assert not evaluator.evaluate("rm -rf /").approved

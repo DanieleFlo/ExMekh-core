@@ -22,8 +22,10 @@ from exmekh_agent.exmekh_bridge.history.tool_calls import (
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
+    ExecutionTimeline,
     QueuedMessage,
     SkillNode,
+    SteeringInsertion,
     SubAgentConversation,
     ToolEvent,
 )
@@ -357,6 +359,8 @@ def _extract_nodes_from_skill_node(
     history_id: str,
     history_label: str,
     nodes: list[GraphNode],
+    timeline: ExecutionTimeline | None = None,
+    message: ChatMessage | None = None,
 ) -> None:
     """Recursively extract graph nodes from a structured SkillNode tree."""
     eff_path = _normalize_skill_path(skill.path or f"/{skill.name}")
@@ -410,13 +414,27 @@ def _extract_nodes_from_skill_node(
         )
     )
 
-    for activity in skill.ordered_activity():
+    activities = (
+        timeline.skill_activity(skill) if timeline else skill.ordered_activity()
+    )
+    for activity in activities:
+        if isinstance(activity, SteeringInsertion):
+            _append_timeline_steering(
+                message,
+                activity,
+                nodes=nodes,
+                history_id=history_id,
+                history_label=history_label,
+            )
+            continue
         if isinstance(activity, SkillNode):
             _extract_nodes_from_skill_node(
                 activity,
                 history_id=history_id,
                 history_label=history_label,
                 nodes=nodes,
+                timeline=timeline,
+                message=message,
             )
             continue
         tool_path = _normalize_skill_path(
@@ -431,6 +449,32 @@ def _extract_nodes_from_skill_node(
             depth=_path_step_depth(tool_path, max(eff_depth, activity.depth)),
             skill_name=skill.name,
         )
+
+
+def _append_timeline_steering(
+    message: ChatMessage | None,
+    insertion: SteeringInsertion,
+    *,
+    nodes: list[GraphNode],
+    history_id: str,
+    history_label: str,
+) -> None:
+    guidance = (
+        message.find_steering_message(message_id=insertion.message_id)
+        if message
+        else None
+    )
+    if guidance is None or insertion.message_id in _steering_message_ids(nodes):
+        return
+    _append_steering_node(
+        nodes,
+        content=guidance.text,
+        queued_message=guidance,
+        history_id=history_id,
+        history_label=history_label,
+        skill_path=insertion.skill_path,
+        depth=_path_step_depth(insertion.skill_path),
+    )
 
 
 def _extract_nodes_from_raw_scope(
@@ -914,13 +958,25 @@ def _build_nodes_for_messages(
                 for event in msg.tool_events
                 if _normalize_skill_path(event.skill_path) != "/"
             } | {_normalize_skill_path(skill.path) for skill in msg.skills}
-            for activity in msg.ordered_activity():
+            timeline = msg.execution_timeline()
+            for activity in timeline.root_activity():
+                if isinstance(activity, SteeringInsertion):
+                    _append_timeline_steering(
+                        msg,
+                        activity,
+                        nodes=nodes,
+                        history_id=history_id,
+                        history_label=history_label,
+                    )
+                    continue
                 if isinstance(activity, SkillNode):
                     _extract_nodes_from_skill_node(
                         activity,
                         history_id=history_id,
                         history_label=history_label,
                         nodes=nodes,
+                        timeline=timeline,
+                        message=msg,
                     )
                     continue
                 event_path = _normalize_skill_path(activity.skill_path)

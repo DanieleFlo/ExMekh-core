@@ -7,18 +7,20 @@ comportamenti incoerenti verificabili con test.
 
 | Componente | Responsabilità | API da usare |
 | --- | --- | --- |
-| `AgentDesign` | Struttura della lavagna e invarianti di nodi/collegamenti | `add_node`, `replace_node`, `move_node`, `connect`, `disconnect`, `remove_node`, `set_root`, `set_persistent_history`, `consolidate_capabilities`, `capability`, `children`, `connections`, `connection_targets` |
+| `AgentDesign` | Struttura della lavagna e invarianti di nodi/collegamenti | `add_node`, `add_positioned_node`, `replace_node`, `move_node`, `connect`, `disconnect`, `remove_node`, `set_root`, `set_persistent_history`, `consolidate_capabilities`, `capability`, `children`, `connections`, `connection_targets` |
 | `CapabilityRepository` | Catalogo, copie e configurazioni su disco per ExMekh-Lib | `folder_reference`, `catalog`, `default_design`, `expand_skill_connections`, `add_to_design`, `editable_values`, `copy_for_design`, `copy_capability`, `compile` |
 | `CompiledAgentDesign` | Accesso alla configurazione generata | `capabilities_for`, `default_names_for`; i chiamanti non devono conoscere i file interni |
 | `ProjectSettings` / `ChatSettings` | Configurazione e risoluzione dei default/override | `capability_paths`, `with_additional_capability_paths`, `with_agent`, `with_agent_override`, `with_project` |
-| `SessionManager` | Persistenza e aggiornamento dello stato gestito | `save_chat_agent`, `save_project_settings`, `save_project_settings_async`, `execution_settings`, `edit_message` |
-| `RecordedHistory` | Attraversamento, correlazione e ripristino delle history registrate | `scopes`, `arguments_for_call`, `output_for_call`, `restored_snapshot` |
+| `SessionManager` | Persistenza e aggiornamento dello stato gestito; selezione per pagina | `for_view`, `save_chat_agent`, `save_project_settings`, `save_project_settings_async`, `execution_settings`, `edit_message`, `update_title`, `record_command_approval` |
+| `RecordedHistory` | Attraversamento, correlazione e ripristino delle history registrate | `scopes`, `arguments_for_call`, `output_for_call`, `restored_snapshot`, `restore_user_content` |
 | `ContextUsageUpdater` | Snapshot del conteggio, coalescenza e consegna nel contesto del client | `request`, `schedule`, `wait_idle`, `close` |
 | `AppConfig` | Configurazione runtime, override di ambiente e persistenza | `update`, `update_async`, `save_to_env`, `select_available_model`; `save_to_env` e `update_async` restituiscono l'esito |
 | `config.catalogs` | Caricamento delle impostazioni e dei testi suddivisi per competenza | `settings`, `presentation_settings`, `message`; snapshot indipendenti delle configurazioni |
 | Risorse UI | Accesso alla presentazione e rendering dei template HTML/SVG | `ui_text`, `presentation_config`, `render_html`; delega ai cataloghi, escaping automatico |
 | `utils` | Operazioni generiche condivise | `atomic_write_text`, normalizzazione dei nomi, formatter, catene di eccezioni, lettori di risorse e parser Markdown/YAML |
-| `ChatMessage` | Ricerca di argomenti e risultati nelle history registrate | `arguments_for_tool`, `output_for_call`; i chiamanti non devono attraversare le history per correlare invocazioni |
+| `ChatMessage` | Ricerca di argomenti e risultati nelle history registrate | `arguments_for_tool`, `output_for_call`, `execution_timeline`; i chiamanti non devono attraversare le history per correlare invocazioni |
+| `ExecutionTimeline` | Ordine e collocazione delle conferme dello steering | `root_activity`, `skill_activity`; il modello risolve scope, call ID, tempi e invocazioni ripetute |
+| `CommandApprovalEvaluator` / `CommandApprovalHook` | Valutazione e accettazione della policy corrente | `evaluate` non modifica la history; `record_approved_command` registra solo la decisione accettata dal hook; `ApprovalModeChanged` riavvia la valutazione manuale |
 | `DesignHistory` / `DesignSnapshot` | Snapshot indipendenti e annullamento delle modifiche locali alla lavagna | `capture`, `record`, `undo`, `can_undo`, `clear` |
 | `AgentDesigner` | Lavagna, selezione e applicazione delle modifiche | `build`, `open`; controlli e stato interno restano privati |
 | `CapabilityEditor` | Form di modifica di una capability su uno snapshot indipendente | `open`, callback tipizzata; interpreta e salva tramite `CapabilityRepository` |
@@ -28,6 +30,7 @@ comportamenti incoerenti verificabili con test.
 | `CapabilityPathsEditor` | Cartella predefinita immutabile, riferimenti aggiuntivi e navigazione fuori dal thread UI | `build`, `set_paths`, `all_paths`, `additional_paths`, `browse` |
 | `MessageEditor` | Dialog di modifica e durata degli upload temporanei | `open`, callback di salvataggio tipizzata; la chat non gestisce il ciclo di vita del form |
 | `Disclosure` / `DisclosureState` | Interazione coerente e scelte di apertura locali alla vista | Clic, Enter e Spazio, visibilità, chevron e `aria-expanded` |
+| `ChatRoutes` | URL delle conversazioni e risoluzione dei bookmark | `path_for`, `resolve`; repository esplicito e ID stabile anche dopo rinomina, refresh e navigazione Indietro/Avanti |
 | `RecordedToolOutput` | Interpretazione dei metadati degli output registrati | `parse`; include corpo, riferimenti e thinking già interpretati |
 | `ToolEvent` | Identità, stato e durata di una chiamata | `execution_status`, `matches_update`, `merge_update`, `normalized_copy`; `record_tool_event` mantiene una sola voce per invocazione |
 | `TurnStreamCollector` | Accumulo e snapshot del turno, compreso lo steering | `can_steer`, `steer`, `snapshot_message`, `build_message`; il registro non attraversa lo steering interno |
@@ -171,6 +174,50 @@ la lettura delle history e il formatter JSON. Sono stati estratti il form di mod
 più dirette dalle strutture interne introdotte con la personalizzazione degli agenti.
 I modelli Pydantic espongono i dati per serializzazione; le mutazioni della lavagna
 in produzione ora usano i metodi del modello invece di ricostruirne le invarianti nella UI.
+
+## Revisione delle Correzioni 3, 14 ottobre 2026
+
+Ogni pagina riceve una vista di `SessionManager`: i record e gli store sono
+condivisi, mentre la selezione appartiene alla pagina. La pagina iniziale conserva
+l'ultima chat visitata. Aprire un bookmark in un'altra scheda non modifica la
+conversazione mostrata, il destinatario degli input o la cartella degli upload
+nella pagina già aperta. Il fallback dopo un'eliminazione usa l'ordine dei record.
+
+Chat e grafo consumano `ExecutionTimeline` per la history strutturata. Conferme
+senza un call ID disponibile usano il tempo di conferma; gli ID ripetuti sono
+risolti per scope e le invocazioni ripetute conservano identità distinta. Le
+conferme allo stesso confine mantengono l'ordine FIFO. `TurnSteering` delega il
+ripristino multimodale a `RecordedHistory`, senza conoscere la struttura dei
+transcript delle skill. Il ripristino completo visita ogni scope una sola volta.
+
+Titoli, profili, modalità e history delle approvazioni pubblicano lo snapshot
+solo dopo un salvataggio riuscito. Il hook gestisce tutte le modalità attraverso
+una decisione strutturata; una valutazione LLM obsoleta non entra nella history.
+Un cambio di modalità interrompe una richiesta manuale con un segnale esplicito
+di rivalutazione. La sincronizzazione del select della UI non simula una scelta
+dell'utente e non risalva le impostazioni. Normalizzazione e identificatori
+appartengono a `config.approvals`, senza dipendenza dal client LLM.
+
+La geometria resta responsabilità di `AgentDesign`: l'aggiunta automatica è
+atomica anche rispetto alle coordinate della scheda del chiamante e usa un gap
+esplicito. I nodi spostati manualmente conservano le loro posizioni.
+
+La lettura si è estesa alle API `CalledTool`, `ToolExecutionOperation` e
+`FileWriteTarget` della libreria e ai confini tra documento, parser e runtime
+interattivo del server. In quei percorsi non sono state introdotte riscritture
+senza un difetto dimostrato. Restano candidati a una revisione dedicata i grandi
+componenti UI e la decomposizione dei moduli C; non si certifica l'intero
+repository tramite la copertura del frontend. I kernel non sono stati modificati.
+
+Verifica conclusiva di questa revisione: `uv run pytest -n 4` nel frontend,
+**984 passed, 43 skipped**, copertura configurata di istruzioni e rami **100%**.
+La selezione deterministica sui contratti di tool, history, file e steering della
+libreria passa con **171 test**. Nel repository principale passano la build
+`ds4_server_test`, `test-server-interactive` e i **5 test** di
+`test-server-sampling-matrix-static`, senza caricare modelli. `ruff check src tests`,
+la verifica di formattazione dei sorgenti e dei test modificati e `git diff --check`
+non segnalano errori. Le modifiche preesistenti ai test live sono escluse dal commit;
+la formattazione preesistente di `test_live_e2e.py` rimane da uniformare nel suo lavoro.
 
 ## Verifica
 

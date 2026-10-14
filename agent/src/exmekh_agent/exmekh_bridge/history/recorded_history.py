@@ -81,15 +81,28 @@ class RecordedHistory:
         restored = deepcopy(self)
         for scope in restored.scopes():
             restore_tool_call_ids(scope)
-            for message in scope:
-                content = message.get("content")
-                if (
-                    message.get("role") == "user"
-                    and isinstance(content, str)
-                    and content in image_content
-                ):
-                    message["content"] = deepcopy(image_content[content])
+            self._restore_scope_user_content(scope, image_content)
         return restored.messages, restored.skills
+
+    def restore_user_content(
+        self, image_content: dict[str, list[dict[str, Any]]]
+    ) -> None:
+        """Restore serialized user payloads across all scopes of an owned transcript."""
+        for scope in self.scopes():
+            self._restore_scope_user_content(scope, image_content)
+
+    @staticmethod
+    def _restore_scope_user_content(
+        scope: list[dict[str, Any]], image_content: dict[str, list[dict[str, Any]]]
+    ) -> None:
+        for message in scope:
+            content = message.get("content")
+            if (
+                message.get("role") == "user"
+                and isinstance(content, str)
+                and content in image_content
+            ):
+                message["content"] = deepcopy(image_content[content])
 
 
 def extract_turn_raw_history(

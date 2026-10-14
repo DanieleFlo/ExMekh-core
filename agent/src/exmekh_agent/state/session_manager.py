@@ -5,6 +5,7 @@ import logging
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
+from copy import copy
 from pathlib import Path
 
 from exmekh_agent.config import config
@@ -29,9 +30,18 @@ CODE_WORK_ROOT = APPLICATION_ROOT
 
 class SessionManager:
     def __init__(self, storage_dir: Path | None = None) -> None:
+        self._default_view: SessionManager | None = None
         self._initialize_storage(
             storage_dir or config.data_dir / STORAGE_DEFAULTS["chats_directory"]
         )
+
+    def for_view(self, session_id: str | None = None) -> SessionManager:
+        """Share records and persistence, retaining selection in the caller's page."""
+        view = copy(self)
+        view._default_view = self._default_view or self
+        if session_id is not None:
+            view.switch_session(session_id)
+        return view
 
     def _initialize_storage(self, storage_dir: Path) -> None:
         self.storage_dir = storage_dir
@@ -157,11 +167,7 @@ class SessionManager:
         if session is None:
             return False
         settings = session.settings.with_agent_override(profile, design)
-        updated = session.model_copy(update={"settings": settings})
-        if not self.save_session(updated):
-            return False
-        session.settings = settings
-        return True
+        return self._save_chat_settings(session, settings)
 
     def execution_settings(self, session: ChatSession) -> ChatSettings:
         """Return an independent execution snapshot without mutating the conversation."""
@@ -182,12 +188,18 @@ class SessionManager:
         session = self.get_session(session_id)
         if session is None:
             return False
-        previous_mode = session.settings.tool_approval_mode
-        session.settings.set_tool_approval_mode(mode)
-        if self.save_session(session):
-            return True
-        session.settings.set_tool_approval_mode(previous_mode)
-        return False
+        settings = session.settings.model_copy(deep=True)
+        settings.set_tool_approval_mode(mode)
+        return self._save_chat_settings(session, settings)
+
+    def _save_chat_settings(self, session: ChatSession, settings: ChatSettings) -> bool:
+        """Publish a chat configuration only after persisting an independent snapshot."""
+        updated = session.model_copy(update={"settings": settings})
+        if not self.save_session(updated):
+            return False
+        session.settings = settings
+        session.updated_at = updated.updated_at
+        return True
 
     @staticmethod
     def temp_dirname(session: ChatSession) -> str:
@@ -219,7 +231,7 @@ class SessionManager:
             else ChatSettings(work_root=str(CODE_WORK_ROOT)),
         )
         self.sessions[session.id] = session
-        self.current_session_id = session.id
+        self.switch_session(session.id)
         self.save_session(session)
         return session
 
@@ -237,10 +249,7 @@ class SessionManager:
 
     def get_current_session(self) -> ChatSession:
         if not self.current_session_id or self.current_session_id not in self.sessions:
-            if self.sessions:
-                self.current_session_id = next(iter(self.sessions))
-            else:
-                return self.create_session()
+            self._select_fallback()
         return self.sessions[self.current_session_id]
 
     def get_session(self, session_id: str) -> ChatSession | None:
@@ -305,20 +314,29 @@ class SessionManager:
     def update_title(self, session: ChatSession, title: str) -> bool:
         if not title or not self.owns_session(session):
             return False
+        updated = session.model_copy(update={"title": title})
+        if not self.save_session(updated):
+            return False
         session.title = title
-        return self.save_session(session)
+        session.updated_at = updated.updated_at
+        return True
 
     def record_command_approval(
         self, session: ChatSession, command: str, raw_history: list[dict[str, str]]
     ) -> bool:
         if not self.owns_session(session):
             return False
-        session.settings.record_command_approval(command, raw_history)
-        return self.save_session(session)
+        settings = session.settings.model_copy(deep=True)
+        settings.record_command_approval(command, raw_history)
+        return self._save_chat_settings(session, settings)
 
     def switch_session(self, session_id: str) -> ChatSession | None:
         if session_id in self.sessions:
             self.current_session_id = session_id
+            if self._default_view is not None:
+                # The landing page remembers the last visited chat; existing pages
+                # keep their own selection and use the shared records by identity.
+                self._default_view.switch_session(session_id)
             return self.sessions[session_id]
         return None
 

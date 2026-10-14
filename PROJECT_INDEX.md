@@ -484,6 +484,17 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   confini DeepSeek/llguidance e proposta write/edit/delete con riuso del masking,
   rimozione di XML annidato, selezioni lunghe e confronto sperimentale.
 - `agent/src/exmekh_agent/config/packaging.py` — politica e percorsi della build del wheel; `sync.py` separa build, installazione e orchestrazione e usa i cataloghi per tutti i messaggi.
+- `agent/src/exmekh_agent/state/session_manager.py` — persistenza atomica dei record,
+  configurazioni pubblicate dopo il salvataggio e viste con selezione indipendente
+  per pagina; le viste condividono conversazioni, progetti e store.
+- `agent/src/exmekh_agent/exmekh_bridge/models/timeline.py` — ordine di tool, skill
+  e conferme dello steering, con identità delle invocazioni ripetute; chat e grafo
+  consumano la stessa API anche senza raw history.
+- `agent/src/exmekh_agent/ui/navigation/chat_routes.py` — URL leggibili e bookmark
+  risolti per identità tramite il repository fornito dalla pagina.
+- `agent/tests/test_clean_code_corrections_3.py` e `test_corrections_3_e2e.py` —
+  regressioni su persistenza fallita, decisioni obsolete, ordinamento dello steering,
+  schede indipendenti, bookmark e cronologia del browser.
 - `agent/sync_exmekh_lib.sh` e `agent/src/exmekh_agent/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
   locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
   La distribuzione e la CLI sono `exmekh-lib`, il namespace Python è

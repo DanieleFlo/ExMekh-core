@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator
+from urllib.parse import urlsplit
 
 import httpx
 import pytest
@@ -22,8 +23,10 @@ def edit_server():
 
 
 async def state(url: str) -> dict:
+    address = urlsplit(url)
+    origin = f"{address.scheme}://{address.netloc}"
     async with httpx.AsyncClient(trust_env=False) as client:
-        return (await client.get(url + "/test/state")).json()
+        return (await client.get(origin + "/test/state")).json()
 
 
 async def open_editor(page, index: int = 0):
@@ -258,7 +261,10 @@ async def test_cancel_editor_preserves_the_running_generation(edit_page: Page):
     await dialog.get_by_label("Message", exact=True).fill("Cancelled edit")
     await dialog.get_by_role("button", name="Cancel", exact=True).click()
     await expect(page.locator(".chat-message-streaming")).to_be_visible()
-    await page.request.post(page.url.rstrip("/") + "/test/release-inference")
+    address = urlsplit(page.url)
+    await page.request.post(
+        f"{address.scheme}://{address.netloc}/test/release-inference"
+    )
     data = await wait_saved_response(page, "Reply: Slow original")
     assert len(data["calls"]) == len(before["calls"])
     assert not data["calls"][-1]["cancelled"]

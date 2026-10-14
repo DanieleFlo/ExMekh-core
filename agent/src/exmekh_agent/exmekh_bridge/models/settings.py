@@ -9,8 +9,10 @@ from typing import Any, Self
 
 from pydantic import BaseModel, Field
 
-from exmekh_agent.config.approvals import DEFAULT_TOOL_APPROVAL_MODE
-from exmekh_agent.exmekh_bridge.tools.tool_approval import normalize_tool_approval_mode
+from exmekh_agent.config.approvals import (
+    DEFAULT_TOOL_APPROVAL_MODE,
+    normalize_tool_approval_mode,
+)
 from exmekh_agent.state.agent_design import AgentDesign, AgentProfile
 from exmekh_agent.utils.paths import normalize_paths
 

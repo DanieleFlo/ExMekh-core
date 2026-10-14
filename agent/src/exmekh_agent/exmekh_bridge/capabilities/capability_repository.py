@@ -154,7 +154,7 @@ class CapabilityRepository:
                 BOARD_DEFAULTS["profile_node_y"]
                 + index * BOARD_DEFAULTS["profile_node_vertical_gap"],
             )
-            design.add_node(item, root.id)
+            design.add_positioned_node(item, root.id)
         if profile in AGENT_DEFAULTS["coding_profiles"]:
             child = next(
                 node
@@ -165,7 +165,7 @@ class CapabilityRepository:
                 BOARD_DEFAULTS["sub_agent_x"],
                 BOARD_DEFAULTS["sub_agent_y"],
             )
-            design.add_node(child, root.id)
+            design.add_positioned_node(child, root.id)
             bash = next(
                 node
                 for node in design.nodes
@@ -261,7 +261,7 @@ class CapabilityRepository:
         node = updated.capability(capability.kind, capability.name)
         if node is None:
             node = capability.model_copy(deep=True, update={"id": uuid4().hex})
-            updated.add_node(node, parent_id)
+            updated.add_positioned_node(node, parent_id)
             if node.kind == "skill":
                 available = {(item.kind, item.name): item for item in catalog}
                 available.update(
@@ -335,7 +335,7 @@ class CapabilityRepository:
                         + index * BOARD_DEFAULTS["skill_child_vertical_gap"],
                     },
                 )
-                design.add_node(child, skill.id)
+                design.add_positioned_node(child, skill.id)
                 if child.kind == "skill":
                     child_skills.append(child)
             else:

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from copy import deepcopy
 from threading import Lock
+from time import time
+from typing import Any
 
 from exmekh_lib.core.models.user_message import UserMessage, UserMessageContent
 
@@ -12,6 +13,7 @@ from exmekh_agent.exmekh_bridge.history.image_input import (
     serialize_user_content,
     user_content,
 )
+from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     QueuedMessage,
@@ -29,7 +31,7 @@ class TurnSteering:
         self._messages: list[QueuedMessage] = []
         self._insertions: list[SteeringInsertion] = []
         self._closed = False
-        self._image_content: dict[str, object] = {}
+        self._image_content: dict[str, list[dict[str, Any]]] = {}
 
     def bind(
         self, handler: Callable[[UserMessageContent], None], *, history_start: int
@@ -95,6 +97,7 @@ class TurnSteering:
                     after_tool_call_id=after_tool_call_id,
                     tool_name=tool_name,
                     skill_path=skill_path,
+                    timestamp=time(),
                 )
             )
             return True
@@ -109,17 +112,6 @@ class TurnSteering:
                     item.model_copy(deep=True) for item in self._messages
                 ]
                 message.raw_history_start = self._history_start
-            histories = [message.raw_history]
-            pending = list(message.skill_history_tree)
-            for entry in pending:
-                histories.append(entry.get("history", []))
-                pending.extend(entry.get("children", []))
-            for history in histories:
-                for item in history:
-                    content = item.get("content")
-                    if (
-                        item.get("role") == "user"
-                        and isinstance(content, str)
-                        and content in self._image_content
-                    ):
-                        item["content"] = deepcopy(self._image_content[content])
+            RecordedHistory(
+                message.raw_history, message.skill_history_tree
+            ).restore_user_content(self._image_content)

@@ -38,6 +38,9 @@ from exmekh_agent.config.approvals import TOOL_APPROVAL_ALL as TOOL_APPROVAL_ALL
 from exmekh_agent.config.approvals import TOOL_APPROVAL_LLM as TOOL_APPROVAL_LLM
 from exmekh_agent.config.approvals import TOOL_APPROVAL_MANUAL as TOOL_APPROVAL_MANUAL
 from exmekh_agent.config.approvals import TOOL_APPROVAL_MODES as TOOL_APPROVAL_MODES
+from exmekh_agent.config.approvals import (
+    normalize_tool_approval_mode as normalize_tool_approval_mode,
+)
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.paths import BUNDLED_CAPABILITIES_DIR
 from exmekh_agent.exmekh_bridge.resources import load_prompt
@@ -81,17 +84,6 @@ def load_command_approval_hds() -> HDS:
     )
 
 
-def normalize_tool_approval_mode(mode: str | None) -> str:
-    """Normalize legacy Italian mode names or missing values to English standard modes."""
-    if not mode:
-        return DEFAULT_TOOL_APPROVAL_MODE
-    if mode in LEGACY_TOOL_APPROVAL_MODES:
-        return LEGACY_TOOL_APPROVAL_MODES[mode]
-    if mode in TOOL_APPROVAL_MODES:
-        return mode
-    return DEFAULT_TOOL_APPROVAL_MODE
-
-
 class CommandApprovalDecision(BaseModel):
     """Structured decision returned by the command approval LLM."""
 
@@ -103,6 +95,10 @@ class CommandApprovalDecision(BaseModel):
         default="",
         description=app_text("approvals.command_approval.reason_description"),
     )
+
+
+class ApprovalModeChanged(Exception):
+    """A pending manual request must be evaluated again under the current policy."""
 
 
 def create_initial_approval_history(system_prompt: str | None = None) -> MessageHistory:
@@ -299,12 +295,9 @@ class CommandApprovalEvaluator:
             response = client.call_structured(
                 request, CommandApprovalDecision, strict=True
             )
-            decision = response.get_message()
-
-            if decision.approved:
-                self._history = client.create_history_checkpoint()
-
-            return decision
+            # Evaluation can become obsolete while a user changes approval mode.
+            # Only record_approved_command commits a decision accepted by the hook.
+            return response.get_message()
         except Exception as error:  # noqa: BLE001 - fallback on LLM evaluation failure
             logger.warning(
                 app_text(
@@ -358,8 +351,10 @@ class CommandApprovalHook(BeforeTool):
         api_key: str | None = None,
         api_type: str | None = None,
         evaluator: CommandApprovalEvaluator | None = None,
+        get_mode: Callable[[], str] | None = None,
     ) -> None:
         self.mode = normalize_tool_approval_mode(mode)
+        self.get_mode = get_mode
         self.evaluator = evaluator or CommandApprovalEvaluator(
             history=history,
             model=model,
@@ -382,47 +377,63 @@ class CommandApprovalHook(BeforeTool):
 
         command_str = str(command)
 
-        if self.mode == TOOL_APPROVAL_ALL:
-            self._record_approval(
-                command_str,
+        while True:
+            mode = self._current_mode()
+            try:
+                decision = self._evaluate_command(command_str, context, mode)
+            except ApprovalModeChanged:
+                continue
+            if self._current_mode() != mode:
+                continue
+            if not decision.approved:
+                return ToolResponse(result=decision.reason)
+            self._record_approval(command_str, reason=decision.reason)
+            return None
+
+    def _evaluate_command(
+        self, command: str, context: ToolContext, mode: str
+    ) -> CommandApprovalDecision:
+        if mode == TOOL_APPROVAL_ALL:
+            return CommandApprovalDecision(
+                approved=True,
                 reason=app_text(
                     "approvals.tool_approval.approved_automatically_approve_all"
                 ),
             )
-            return None
-
-        if self.mode == TOOL_APPROVAL_LLM:
-            decision = self.evaluator.evaluate(command=command_str, context=context)
+        if mode == TOOL_APPROVAL_LLM:
+            decision = self.evaluator.evaluate(command=command, context=context)
             if decision.approved:
-                self._record_approval(command_str, reason=decision.reason)
-                return None
+                return decision
             reason = decision.reason or app_text(
                 "approvals.tool_approval.command_was_not_approved_by_the_evaluation_model"
             )
-            return ToolResponse(
-                result=app_text(
+            return CommandApprovalDecision(
+                approved=False,
+                reason=app_text(
                     "approvals.tool_approval.command_declined_by_evaluation_model_reason",
                     reason=reason,
-                )
+                ),
             )
-
-        # Default mode: "Manual"
-        if self.request_manual_approval:
-            approved = self.request_manual_approval(command_str)
-            if approved:
-                self._record_approval(
-                    command_str,
-                    reason=app_text(
-                        "approvals.tool_approval.approved_manually_by_user"
-                    ),
-                )
-                return None
-            return ToolResponse(
-                result=app_text("approvals.tool_approval.command_declined_by_user")
+        if self.request_manual_approval is None:
+            return CommandApprovalDecision(
+                approved=False,
+                reason=app_text(
+                    "approvals.tool_approval.approval_request_was_not_handled"
+                ),
             )
+        approved = self.request_manual_approval(command)
+        return CommandApprovalDecision(
+            approved=approved,
+            reason=app_text(
+                "approvals.tool_approval.approved_manually_by_user"
+                if approved
+                else "approvals.tool_approval.command_declined_by_user"
+            ),
+        )
 
-        return ToolResponse(
-            result=app_text("approvals.tool_approval.approval_request_was_not_handled")
+    def _current_mode(self) -> str:
+        return normalize_tool_approval_mode(
+            self.get_mode() if self.get_mode else self.mode
         )
 
     def _record_approval(

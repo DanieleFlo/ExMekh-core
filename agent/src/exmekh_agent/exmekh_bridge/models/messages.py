@@ -27,6 +27,10 @@ from exmekh_agent.exmekh_bridge.models.execution import (
     ordered_execution_activity,
     record_tool_event,
 )
+from exmekh_agent.exmekh_bridge.models.timeline import (
+    ExecutionTimeline,
+    SteeringInsertion,
+)
 
 MessageRole = Literal["user", "assistant", "system"]
 
@@ -59,15 +63,6 @@ class QueuedMessage(BaseModel):
             display_content=self.display_content,
             timestamp=self.created_at,
         )
-
-
-class SteeringInsertion(BaseModel):
-    """The execution boundary where ExMekh-Lib confirmed a queued message."""
-
-    message_id: str
-    after_tool_call_id: str | None
-    tool_name: str | None
-    skill_path: str
 
 
 class ChatMessage(BaseModel):
@@ -131,7 +126,7 @@ class ChatMessage(BaseModel):
 
     def find_steering_message(
         self,
-        content: str,
+        content: str | None = None,
         *,
         message_id: str | None = None,
         excluded_ids: set[str] | None = None,
@@ -247,6 +242,12 @@ class ChatMessage(BaseModel):
     def ordered_activity(self) -> list[SkillNode | ToolEvent]:
         """Expose root invocations through the same timeline used for child skills."""
         return ordered_execution_activity(self.skills, self.tool_events, scope_path="/")
+
+    def execution_timeline(self) -> ExecutionTimeline:
+        """Expose execution order without requiring views to correlate confirmations."""
+        return ExecutionTimeline(
+            self.ordered_activity(), self.confirmed_steering_insertions()
+        )
 
     def turn_raw_history(
         self,

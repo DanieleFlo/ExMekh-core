@@ -50,6 +50,7 @@ class AgentTurnRequest:
     on_request_manual_approval: Callable[[str], bool] | None = None
     on_command_approved: CommandApprovedCallback | None = None
     tool_approval_mode: str | None = None
+    get_tool_approval_mode: Callable[[], str] | None = None
     approved_commands_history: list[str] | None = None
     tool_approval_raw_history: list[dict[str, Any]] | None = None
     cancellation_event: threading.Event | None = None

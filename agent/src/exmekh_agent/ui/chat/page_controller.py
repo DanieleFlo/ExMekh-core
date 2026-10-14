@@ -12,6 +12,7 @@ from nicegui import ui
 from nicegui.client import Client
 
 from exmekh_agent.config import config
+from exmekh_agent.config.approvals import TOOL_APPROVAL_MANUAL
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.agent_runner import (
@@ -38,14 +39,16 @@ from exmekh_agent.exmekh_bridge.providers.context_usage import (
     ContextUsageSummary,
     populate_skill_closure_tokens,
 )
+from exmekh_agent.exmekh_bridge.tools.tool_approval import ApprovalModeChanged
 from exmekh_agent.state.active_turns import active_turns
-from exmekh_agent.state.session_manager import session_manager
+from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.state.sub_agent_conversations import apply_sub_agent_event
 from exmekh_agent.state.temp_storage import TempStorage
 from exmekh_agent.ui.agents.agent_selector import AgentSelector
 from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from exmekh_agent.ui.chat.context_updates import ContextUsageUpdater
 from exmekh_agent.ui.chat.input_bar import InputBarComponent
+from exmekh_agent.ui.navigation.chat_routes import ChatRoutes
 from exmekh_agent.ui.navigation.header import HeaderComponent
 from exmekh_agent.ui.navigation.new_project_dialog import NewProjectDialogComponent
 from exmekh_agent.ui.navigation.sidebar import SidebarComponent
@@ -66,6 +69,9 @@ QUEUE_DRAG_JS_PATH: Path = (
 FILE_DROP_JS_PATH: Path = (
     Path(__file__).parents[1] / "resources" / "js" / "file_drop.js"
 )
+CHAT_NAVIGATION_JS_PATH = (
+    Path(__file__).parents[1] / "resources" / "js" / "chat_navigation.js"
+)
 
 
 def load_queue_drag_js() -> None:
@@ -83,12 +89,14 @@ def load_file_drop_js() -> None:
 class ChatPageController:
     """Coordinate one NiceGUI page and its active model turn."""
 
-    def __init__(self, client: Client) -> None:
+    def __init__(self, client: Client, sessions: SessionManager | None = None) -> None:
+        self._sessions = sessions
         self._client = client
         self._active_task: asyncio.Task[None] | None = None
         self._followed_session_id: str | None = None
         self._snapshot_session_id: str | None = None
         self._followed_revision = -1
+        self._url_session_id: str | None = None
         self._background_tasks: set[asyncio.Task[None]] = set()
         self._context_updates = ContextUsageUpdater(client, self._apply_context_usage)
         self.header: HeaderComponent | None = None
@@ -102,6 +110,10 @@ class ChatPageController:
         self._pending_approval_session_id: str | None = None
         self._client.on_delete(lambda: self._cancel_pending_approval())
 
+    @property
+    def sessions(self) -> SessionManager:
+        return self._sessions if self._sessions is not None else session_manager
+
     def build(self) -> None:
         self.header = HeaderComponent(
             on_toggle_drawer=self.toggle_settings,
@@ -110,6 +122,7 @@ class ChatPageController:
         self.header.build()
         self.sidebar = SidebarComponent(
             on_session_switched=self.session_switched,
+            sessions=self.sessions,
             on_new_chat=self.new_chat,
             on_sub_agent_selected=self.sub_agent_selected,
             on_new_project=self.open_new_project,
@@ -134,13 +147,18 @@ class ChatPageController:
 
         load_queue_drag_js()
         load_file_drop_js()
+        ui.add_head_html(
+            f"<script>{CHAT_NAVIGATION_JS_PATH.read_text(encoding='utf-8')}</script>"
+        )
         ui.on("exmekh_queue_reorder", self._handle_queue_reorder_event)
+        ui.on("exmekh_chat_navigate", self._handle_chat_navigation)
 
         with ui.column().classes(
             UI_PRESENTATION["build.classes.chat_page_layout_w_full_justify_between"]
         ):
             self.chat_view = ChatViewComponent(
                 on_suggested_prompt=self.use_suggested_prompt,
+                sessions=self.sessions,
                 on_edit_message=self.edit_message,
                 on_agent_settings=self.open_chat_agent_settings,
             )
@@ -158,11 +176,12 @@ class ChatPageController:
                 on_approval_mode_changed=self.approval_mode_changed,
             )
             self.input_bar.build()
-            session = session_manager.get_current_session()
+            session = self.sessions.get_current_session()
             self.input_bar.set_session_id(session.id)
             self.input_bar.set_approval_mode(session.settings.tool_approval_mode)
             self.input_bar.set_agent_mode(session.agent_mode)
         self._render_queue_ui()
+        self._sync_chat_url(replace=True)
         self.update_context_usage()
         self._sync_active_turn()
         ui.timer(
@@ -174,18 +193,17 @@ class ChatPageController:
             once=True,
         )
 
-    @staticmethod
-    def _get_temp_storage(session_id: str | None = None) -> TempStorage:
+    def _get_temp_storage(self, session_id: str | None = None) -> TempStorage:
         session = (
-            session_manager.get_session(session_id)
+            self.sessions.get_session(session_id)
             if session_id
-            else session_manager.get_current_session()
+            else self.sessions.get_current_session()
         )
         if session is None:
             raise ValueError(
                 ui_text("chat.page_controller.upload_conversation_was_not_found")
             )
-        return session_manager.temp_storage(session)
+        return self.sessions.temp_storage(session)
 
     async def _check_temp_storage_alert(self) -> None:
         """Check if temporary storage exceeds 1GB and show a gentle alert on page open."""
@@ -215,7 +233,14 @@ class ChatPageController:
         """Reconnect this page to a turn started by an earlier page instance."""
         if self._client.is_deleted:
             return
-        session = session_manager.get_current_session()
+        self._sync_pending_approval()
+        session = self.sessions.get_current_session()
+        if self._url_session_id is not None and self._url_session_id != session.id:
+            # A different page may delete the selected chat. Refresh the display,
+            # upload scope and URL together before accepting new input.
+            self._url_session_id = session.id
+            self.session_switched(session.id)
+            return
         if self._snapshot_session_id != session.id:
             self._snapshot_session_id = session.id
             self._followed_revision = -1
@@ -284,7 +309,7 @@ class ChatPageController:
         """Update the bottom-left input bar with the active model and compacted context token count."""
         if not self.input_bar:
             return
-        active_session = session or session_manager.get_current_session()
+        active_session = session or self.sessions.get_current_session()
         if not self._is_session_visible(active_session):
             return
         sub_agent = None
@@ -308,7 +333,7 @@ class ChatPageController:
     def _apply_context_usage(
         self, session_id: str, result: ContextUsageSummary
     ) -> None:
-        if self.input_bar and session_manager.is_current_session(session_id):
+        if self.input_bar and self.sessions.is_current_session(session_id):
             self.input_bar.update_context_info(
                 model_name=result.model_name,
                 used_tokens=result.used_tokens,
@@ -349,8 +374,8 @@ class ChatPageController:
         self._prepare_conversation(project_id)
 
     def approval_mode_changed(self, new_mode: str) -> None:
-        session = session_manager.get_current_session()
-        if not session_manager.set_tool_approval_mode(session.id, new_mode):
+        session = self.sessions.get_current_session()
+        if not self.sessions.set_tool_approval_mode(session.id, new_mode):
             if self.input_bar:
                 self.input_bar.set_approval_mode(session.settings.tool_approval_mode)
             ui.notify(
@@ -358,16 +383,22 @@ class ChatPageController:
                 type="negative",
             )
             return
+        self._sync_pending_approval()
         ui.notify(
-            ui_text("chat.page_controller.approval_mode_set_to", new_mode=new_mode),
+            ui_text(
+                "chat.page_controller.approval_mode_set_to",
+                new_mode=session.settings.tool_approval_mode,
+            ),
             type="info",
         )
 
     def session_switched(self, session_id: str) -> None:
-        session = session_manager.get_session(session_id)
+        session = self.sessions.get_session(session_id)
         if session is None:
             return
         with self._client:
+            self.sessions.switch_session(session.id)
+            self._sync_chat_url()
             self._cancel_pending_approval()
             if self.chat_view:
                 self.chat_view.show_main()
@@ -379,6 +410,34 @@ class ChatPageController:
             self.update_context_usage(session=session)
             self._sync_active_turn()
 
+    def _sync_chat_url(self, *, replace: bool = False) -> None:
+        session = self.sessions.get_current_session()
+        path = ChatRoutes(self.sessions).path_for(session)
+        if replace or self._url_session_id == session.id:
+            ui.navigate.history.replace(path)
+        else:
+            ui.navigate.history.push(path)
+        self._url_session_id = session.id
+
+    def _handle_chat_navigation(self, event: object) -> None:
+        args = getattr(event, "args", {})
+        session = (
+            ChatRoutes(self.sessions).resolve(str(args.get("path", "")))
+            if isinstance(args, dict)
+            else None
+        )
+        if session is None:
+            self._sync_chat_url(replace=True)
+            return
+        self.sessions.switch_session(session.id)
+        self._url_session_id = session.id
+        if self.sidebar:
+            self.sidebar.clear_sub_agent_selection()
+            if session.project_id:
+                self.sidebar.expand_project(session.project_id)
+            self.sidebar.render_sessions()
+        self.session_switched(session.id)
+
     def new_chat(self) -> None:
         with self._client:
             self._prepare_conversation()
@@ -389,7 +448,7 @@ class ChatPageController:
     def _prepare_conversation(self, project_id: str | None = None) -> None:
         # The client context survives the sidebar replacing its button's parent.
         with self._client:
-            session = session_manager.get_or_create_empty_session(project_id)
+            session = self.sessions.get_or_create_empty_session(project_id)
             if self.sidebar:
                 self.sidebar.clear_sub_agent_selection()
             self.session_switched(session.id)
@@ -407,10 +466,10 @@ class ChatPageController:
             self.update_context_usage()
 
     def open_chat_agent_settings(self) -> None:
-        session = session_manager.get_current_session()
+        session = self.sessions.get_current_session()
         if session.agent_mode != "deep_agent":
             return
-        settings = session_manager.execution_settings(session)
+        settings = self.sessions.execution_settings(session)
         with (
             ui.dialog() as dialog,
             ui.card().classes(
@@ -447,7 +506,7 @@ class ChatPageController:
                 saved = await asyncio.get_running_loop().run_in_executor(
                     None,
                     partial(
-                        session_manager.save_chat_agent,
+                        self.sessions.save_chat_agent,
                         session.id,
                         selector.profile,
                         selector.design_snapshot(),
@@ -493,10 +552,10 @@ class ChatPageController:
         attachment_paths: list[str] | None = None,
         attachments: list[StagedAttachment] | None = None,
     ) -> bool:
-        session = session_manager.get_session(session_id)
+        session = self.sessions.get_session(session_id)
         if session is None:
             return False
-        message = session_manager.find_user_message(session, message_id)
+        message = self.sessions.find_user_message(session, message_id)
         if message is None:
             return False
         try:
@@ -506,7 +565,7 @@ class ChatPageController:
                     prepare_message_edit,
                     message,
                     text.strip(),
-                    storage=session_manager.temp_storage(session),
+                    storage=self.sessions.temp_storage(session),
                     use_file_references=session.agent_mode == "deep_agent",
                     attachment_paths=attachment_paths,
                     attachments=attachments,
@@ -524,11 +583,11 @@ class ChatPageController:
         if not prepared.prompt and not prepared.image_urls:
             return False
         await active_turns.stop_and_wait(session.id)
-        if not session_manager.owns_session(session):
+        if not self.sessions.owns_session(session):
             return False
         replacement = prepared.to_chat_message()
         with self._client:
-            if not session_manager.edit_message(session, message_id, replacement):
+            if not self.sessions.edit_message(session, message_id, replacement):
                 ui.notify(
                     ui_text("chat.page_controller.unable_to_save_edited_message"),
                     type="negative",
@@ -562,8 +621,8 @@ class ChatPageController:
         attachments: list[StagedAttachment] | None = None,
     ) -> None:
         with self._client:
-            session = session_manager.get_current_session()
-            storage = session_manager.temp_storage(session)
+            session = self.sessions.get_current_session()
+            storage = self.sessions.temp_storage(session)
         loop = asyncio.get_running_loop()
         try:
             prepared_input = await loop.run_in_executor(
@@ -592,7 +651,7 @@ class ChatPageController:
     def _send_prepared(
         self, session: ChatSession, prepared_input: PreparedUserInput
     ) -> None:
-        if not session_manager.owns_session(session):
+        if not self.sessions.owns_session(session):
             return
         with self._client:
             if active_turns.is_running(session.id):
@@ -603,7 +662,7 @@ class ChatPageController:
                     image_paths=prepared_input.image_paths,
                     attachment_paths=prepared_input.attachment_paths,
                 )
-                session_manager.save_session(session)
+                self.sessions.save_session(session)
                 self._render_queue_ui(session)
                 ui.notify(
                     ui_text("chat.page_controller.message_added_to_queue"),
@@ -619,9 +678,7 @@ class ChatPageController:
             if generate_title:
                 session.title = self._fallback_title(title_text)
 
-            if not session_manager.add_message(
-                session, prepared_input.to_chat_message()
-            ):
+            if not self.sessions.add_message(session, prepared_input.to_chat_message()):
                 ui.notify(
                     ui_text("chat.page_controller.unable_to_save_message"),
                     type="negative",
@@ -682,14 +739,14 @@ class ChatPageController:
         return clean_text[:30] + ("..." if len(clean_text) > 30 else "")
 
     def _render_session_lists(self) -> None:
+        self._sync_chat_url(replace=True)
         if self.sidebar:
             self.sidebar.render_sessions()
         if self.chat_view:
             self.chat_view.render_current_session()
 
-    @staticmethod
-    def _is_session_visible(session: ChatSession) -> bool:
-        return session_manager.is_current_session(session.id)
+    def _is_session_visible(self, session: ChatSession) -> bool:
+        return self.sessions.is_current_session(session.id)
 
     def _schedule_live_context_update(
         self,
@@ -917,9 +974,10 @@ class ChatPageController:
                         on_sub_agent, event
                     ),
                     sub_agent_history=list(session.sub_agent_conversations),
-                    settings=session_manager.execution_settings(session),
+                    settings=self.sessions.execution_settings(session),
                     on_context=on_context,
                     on_request_manual_approval=on_request_manual_approval,
+                    get_tool_approval_mode=lambda: session.settings.tool_approval_mode,
                     on_command_approved=on_command_approved,
                     steering=collector.steering,
                     on_steering_added=on_steering_added,
@@ -964,7 +1022,7 @@ class ChatPageController:
             assistant_message.duration_seconds = time.time() - started_at
 
             try:
-                if session_manager.add_message(session, assistant_message):
+                if self.sessions.add_message(session, assistant_message):
                     if not self._client.is_deleted:
                         self._finalize_turn(session)
                     if generate_title and not cancelled:
@@ -984,20 +1042,20 @@ class ChatPageController:
                             not cancelled
                             and self._client.is_deleted
                             and session.has_queued_messages
-                            and session_manager.owns_session(session)
+                            and self.sessions.owns_session(session)
                         ),
                     )
             if (
                 not cancelled
                 and not self._client.is_deleted
-                and session_manager.owns_session(session)
+                and self.sessions.owns_session(session)
             ):
                 self._check_and_dispatch_next_queued(session)
 
     def _on_sub_agent(self, session: ChatSession, event: SubAgentEvent) -> None:
         apply_sub_agent_event(session, event)
         if event.action in {"started", "completed", "error"}:
-            session_manager.save_session(session)
+            self.sessions.save_session(session)
         if self._client.is_deleted:
             return
         with self._client:
@@ -1046,7 +1104,12 @@ class ChatPageController:
                     user_prompt=user_text,
                     model=config.default_model,
                 )
-                if session_manager.update_title(session, title):
+                if self.sessions.update_title(session, title):
+                    if (
+                        self._is_session_visible(session)
+                        and not self._client.is_deleted
+                    ):
+                        self._sync_chat_url(replace=True)
                     if self.sidebar and not self._client.is_deleted:
                         self.sidebar.render_sessions()
             except Exception as error:  # noqa: BLE001 - optional background task
@@ -1066,6 +1129,9 @@ class ChatPageController:
     ) -> None:
         if not accepts_events():
             decision.set_exception(asyncio.CancelledError())
+            return
+        if session.settings.tool_approval_mode != TOOL_APPROVAL_MANUAL:
+            decision.set_exception(ApprovalModeChanged())
             return
         if (
             self._client.is_deleted
@@ -1094,6 +1160,18 @@ class ChatPageController:
                 with self._client:
                     self.input_bar.hide_approval_prompt()
 
+    def _sync_pending_approval(self) -> None:
+        if self._pending_approval is None:
+            return
+        session = self.sessions.get_session(self._pending_approval_session_id or "")
+        if (
+            session is not None
+            and session.settings.tool_approval_mode != TOOL_APPROVAL_MANUAL
+        ):
+            if not self._pending_approval.done():
+                self._pending_approval.set_exception(ApprovalModeChanged())
+            self._finish_manual_approval(self._pending_approval, False)
+
     def _cancel_pending_approval(
         self, *, session_id: str | None = None, interrupt_turn: bool = False
     ) -> None:
@@ -1104,15 +1182,14 @@ class ChatPageController:
                 self._pending_approval.set_exception(asyncio.CancelledError())
             self._finish_manual_approval(self._pending_approval, False)
 
-    @staticmethod
     def _record_command_approval(
-        session: ChatSession, command: str, raw_history: list[dict[str, str]]
+        self, session: ChatSession, command: str, raw_history: list[dict[str, str]]
     ) -> None:
-        session_manager.record_command_approval(session, command, raw_history)
+        self.sessions.record_command_approval(session, command, raw_history)
 
     def stop(self) -> None:
         with self._client:
-            session = session_manager.get_current_session()
+            session = self.sessions.get_current_session()
             stopped = active_turns.stop(session.id)
             self._cancel_pending_approval(session_id=session.id, interrupt_turn=stopped)
             if self.input_bar:
@@ -1132,7 +1209,7 @@ class ChatPageController:
                     self.input_bar.set_busy(False)
 
     def _render_queue_ui(self, session: ChatSession | None = None) -> None:
-        active_session = session or session_manager.get_current_session()
+        active_session = session or self.sessions.get_current_session()
         if self.input_bar and self._is_session_visible(active_session):
             self.input_bar.sync_queue(
                 active_session.queued_messages,
@@ -1141,7 +1218,7 @@ class ChatPageController:
 
     def steer_queued_message(self, message_id: str) -> None:
         with self._client:
-            session = session_manager.get_current_session()
+            session = self.sessions.get_current_session()
             message = session.find_queued_message(message_id)
             if message is None:
                 return
@@ -1155,7 +1232,7 @@ class ChatPageController:
                 )
                 return
             session.remove_queued_message(message_id)
-            session_manager.save_session(session)
+            self.sessions.save_session(session)
             self._render_queue_ui(session)
             self._sync_active_turn()
 
@@ -1163,7 +1240,7 @@ class ChatPageController:
         next_msg = session.pop_queued_message()
         if next_msg is None:
             return
-        session_manager.save_session(session)
+        self.sessions.save_session(session)
         self._render_queue_ui(session)
         prepared_input = PreparedUserInput(
             prompt=next_msg.text,
@@ -1177,10 +1254,10 @@ class ChatPageController:
 
     def edit_queued_message(self, message_id: str) -> None:
         with self._client:
-            session = session_manager.get_current_session()
+            session = self.sessions.get_current_session()
             removed = session.remove_queued_message(message_id)
             if removed:
-                session_manager.save_session(session)
+                self.sessions.save_session(session)
                 self._render_queue_ui(session)
                 if self.input_bar:
                     self.input_bar.set_text(removed.text)
@@ -1194,10 +1271,10 @@ class ChatPageController:
 
     def delete_queued_message(self, message_id: str) -> None:
         with self._client:
-            session = session_manager.get_current_session()
+            session = self.sessions.get_current_session()
             removed = session.remove_queued_message(message_id)
             if removed:
-                session_manager.save_session(session)
+                self.sessions.save_session(session)
                 self._render_queue_ui(session)
                 ui.notify(
                     ui_text("chat.page_controller.message_removed_from_queue"),
@@ -1208,14 +1285,14 @@ class ChatPageController:
         self, source_id: str, target_id: str, position: str = "before"
     ) -> None:
         with self._client:
-            session = session_manager.get_current_session()
+            session = self.sessions.get_current_session()
             if session.reorder_queued_message(source_id, target_id, position):
-                session_manager.save_session(session)
+                self.sessions.save_session(session)
                 self._render_queue_ui(session)
 
     def resume_queue(self) -> None:
         with self._client:
-            session = session_manager.get_current_session()
+            session = self.sessions.get_current_session()
             self._check_and_dispatch_next_queued(session)
 
     def _handle_queue_reorder_event(self, e: object) -> None:

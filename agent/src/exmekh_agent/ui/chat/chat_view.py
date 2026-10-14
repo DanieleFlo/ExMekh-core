@@ -21,6 +21,7 @@ from exmekh_agent.exmekh_bridge.history.pasted_input import (
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
+    ExecutionTimeline,
     QueuedMessage,
     ReasoningBlock,
     SkillNode,
@@ -34,7 +35,7 @@ from exmekh_agent.exmekh_bridge.providers.context_usage import (
     populate_skill_closure_tokens,
 )
 from exmekh_agent.state.active_turns import active_turns
-from exmekh_agent.state.session_manager import session_manager
+from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.ui.chat.chat_export import ExportFormat, export_chat
 from exmekh_agent.ui.chat.message_editor import EditMessageCallback, MessageEditor
 from exmekh_agent.ui.chat.message_text import message_display_text
@@ -97,7 +98,9 @@ class ChatViewComponent:
         on_suggested_prompt: Callable[[str], None],
         on_edit_message: EditMessageCallback | None = None,
         on_agent_settings: Callable[[], None] | None = None,
+        sessions: SessionManager | None = None,
     ) -> None:
+        self._sessions = sessions
         self.on_suggested_prompt = on_suggested_prompt
         self.on_edit_message = on_edit_message
         self.on_agent_settings = on_agent_settings
@@ -111,8 +114,7 @@ class ChatViewComponent:
         self.streaming_steering_ids: set[str] = set()
         self.streaming_steering_insertions: list[SteeringInsertion] = []
         self.streaming_steering_spinners: dict[str, ui.spinner] = {}
-        self._rendering_steering_insertions: list[SteeringInsertion] = []
-        self._rendered_insertion_ids: set[str] = set()
+        self._rendering_timeline: ExecutionTimeline | None = None
         self.current_html: ui.html | None = None
         self.current_response_text: str = ""
         self.stream_started_at: float | None = None
@@ -154,6 +156,10 @@ class ChatViewComponent:
         self._rendering_message: ChatMessage | None = None
         self._streaming_history: ChatMessage | None = None
         self._disclosures = DisclosureState()
+
+    @property
+    def sessions(self) -> SessionManager:
+        return self._sessions if self._sessions is not None else session_manager
 
     def build(self) -> ui.column:
         load_chat_scroll_js()
@@ -345,7 +351,7 @@ class ChatViewComponent:
 
     async def _copy_chat(self, export_format: ExportFormat) -> None:
         client = ui.context.client
-        session = session_manager.snapshot_current_session()
+        session = self.sessions.snapshot_current_session()
         include_history = bool(
             self.include_subskill_history and self.include_subskill_history.value
         )
@@ -399,7 +405,7 @@ class ChatViewComponent:
     def _render_selected_graph(self) -> None:
         if not self.graph_view:
             return
-        session = session_manager.get_current_session()
+        session = self.sessions.get_current_session()
         is_generating = self.is_streaming_session(session.id) or any(
             sub.status == "active" for sub in session.sub_agent_conversations
         )
@@ -410,7 +416,7 @@ class ChatViewComponent:
         )
 
     def render_current_session(self) -> None:
-        session = session_manager.get_current_session()
+        session = self.sessions.get_current_session()
         if self.agent_settings_button:
             self.agent_settings_button.set_visibility(
                 session.agent_mode == "deep_agent"
@@ -451,7 +457,7 @@ class ChatViewComponent:
                 self._render_message(msg)
 
     def _set_chat_visibility(self) -> None:
-        scope = self._display_scope(session_manager.get_current_session())
+        scope = self._display_scope(self.sessions.get_current_session())
         if self.chat_container:
             self.chat_container.set_visibility(
                 self.active_tab == "chat" and scope == "root"
@@ -473,7 +479,7 @@ class ChatViewComponent:
         return "root"
 
     def _raw_display_session(self) -> ChatSession:
-        session = session_manager.get_current_session()
+        session = self.sessions.get_current_session()
         child = session.find_sub_agent_conversation(self.selected_sub_agent_id)
         if child is None:
             return session
@@ -485,7 +491,7 @@ class ChatViewComponent:
         )
 
     def _render_selected_raw_history(self) -> None:
-        scope = self._display_scope(session_manager.get_current_session())
+        scope = self._display_scope(self.sessions.get_current_session())
         if self.root_raw_element:
             self.root_raw_element.set_visibility(scope == "root")
         if self.child_raw_element:
@@ -496,10 +502,10 @@ class ChatViewComponent:
             self.child_raw_history_view.render_session(self._raw_display_session())
         elif scope == "other":
             self.other_raw_history_view.render_session(
-                session_manager.get_current_session()
+                self.sessions.get_current_session()
             )
         elif not self.raw_history_view.is_streaming:
-            self.raw_history_view.render_session(session_manager.get_current_session())
+            self.raw_history_view.render_session(self.sessions.get_current_session())
 
     def is_streaming_session(self, session_id: str) -> bool:
         return (
@@ -512,7 +518,7 @@ class ChatViewComponent:
 
     def finalize_session_stream(self, session_id: str) -> None:
         """Close a session's live UI and refresh it when that session is visible."""
-        visible = session_manager.is_current_session(session_id)
+        visible = self.sessions.is_current_session(session_id)
         if self.is_streaming_session(session_id) or (
             visible and self.has_active_stream()
         ):
@@ -620,8 +626,8 @@ class ChatViewComponent:
 
     async def _show_attached_file_modal(self, file_path: str) -> None:
         filename = Path(file_path).name
-        session = session_manager.get_current_session()
-        storage = session_manager.temp_storage(session)
+        session = self.sessions.get_current_session()
+        storage = self.sessions.temp_storage(session)
         client = ui.context.client
         is_binary = False
         icon_name, color_class, _ = get_file_icon(filename)
@@ -747,10 +753,10 @@ class ChatViewComponent:
             dlg.open()
 
     def _open_message_editor(self, session_id: str, message: ChatMessage) -> None:
-        session = session_manager.get_session(session_id)
+        session = self.sessions.get_session(session_id)
         if session is not None and self.on_edit_message:
             MessageEditor(self.on_edit_message).open(
-                session_id, message, session_manager.temp_storage(session)
+                session_id, message, self.sessions.temp_storage(session)
             )
 
     def _render_message(self, msg: ChatMessage) -> None:
@@ -928,7 +934,7 @@ class ChatViewComponent:
                         )
                         self._render_copy_button(display_text, user=True)
                         if self.on_edit_message and self.selected_sub_agent_id is None:
-                            session_id = session_manager.get_current_session().id
+                            session_id = self.sessions.get_current_session().id
                             ui.button(
                                 icon=UI_PRESENTATION["render_message_body.icon.edit"],
                                 on_click=lambda: self._open_message_editor(
@@ -1427,12 +1433,26 @@ class ChatViewComponent:
                     chevron=chevron_ref,
                 )
 
-        self._render_insertions_after(node.opening_tool_call_id)
-
     def _render_skill_activity(self, node: SkillNode) -> None:
-        for activity in node.ordered_activity():
+        activities = (
+            self._rendering_timeline.skill_activity(node)
+            if self._rendering_timeline is not None
+            else node.ordered_activity()
+        )
+        self._render_scope_activity(activities, node=node)
+
+    def _render_scope_activity(
+        self,
+        activities: list[SkillNode | ToolEvent | SteeringInsertion],
+        *,
+        node: SkillNode | None = None,
+    ) -> None:
+        for activity in activities:
+            if isinstance(activity, SteeringInsertion):
+                self._render_steering_insertion(activity)
+                continue
             is_skill = isinstance(activity, SkillNode)
-            if node.status != "active":
+            if node is not None and node.status != "active":
                 ui.label(
                     app_text("chat.chat_view.nested_sub_skills")
                     if is_skill
@@ -1572,44 +1592,18 @@ class ChatViewComponent:
                 expanded=self._disclosures.is_expanded(expansion_key),
                 on_change=partial(self._disclosures.set_expanded, expansion_key),
             )
-        self._render_insertions_after(ev.tool_call_id)
 
-    def _render_turn_activity(
-        self,
-        message: ChatMessage,
-    ) -> None:
-        """Render live and saved invocations once, in their opening order."""
-        self._rendering_steering_insertions = message.confirmed_steering_insertions()
+    def _render_turn_activity(self, message: ChatMessage) -> None:
+        """Render the model's timeline identically during streaming and after reload."""
+        self._rendering_timeline = message.execution_timeline()
         self._rendering_message = message
-        self._rendered_insertion_ids.clear()
         try:
-            for activity in message.ordered_activity():
-                if isinstance(activity, SkillNode):
-                    self._render_skill_node(activity)
-                else:
-                    self._render_tool_event(activity)
-            self._render_unmatched_steering_insertions()
+            self._render_scope_activity(self._rendering_timeline.root_activity())
         finally:
-            self._rendering_steering_insertions = []
+            self._rendering_timeline = None
             self._rendering_message = None
 
-    def _render_insertions_after(self, call_id: str | None) -> None:
-        if call_id is None:
-            return
-        for insertion in self._rendering_steering_insertions:
-            if (
-                insertion.after_tool_call_id == call_id
-                and insertion.message_id not in self._rendered_insertion_ids
-            ):
-                self._render_steering_insertion(insertion)
-
-    def _render_unmatched_steering_insertions(self) -> None:
-        for insertion in self._rendering_steering_insertions:
-            if insertion.message_id not in self._rendered_insertion_ids:
-                self._render_steering_insertion(insertion)
-
     def _render_steering_insertion(self, insertion: SteeringInsertion) -> None:
-        self._rendered_insertion_ids.add(insertion.message_id)
         location = (
             ui_text("chat.chat_view.steering_after_tool", tool_name=insertion.tool_name)
             if insertion.tool_name
@@ -1643,7 +1637,7 @@ class ChatViewComponent:
             return
 
         self._streaming_history = None
-        self.stream_session_id = session_manager.get_current_session().id
+        self.stream_session_id = self.sessions.get_current_session().id
         self.stream_started_at = (
             started_at if started_at is not None else time.monotonic()
         )
@@ -1722,7 +1716,7 @@ class ChatViewComponent:
                     )
 
         if self.raw_history_view:
-            session = session_manager.get_current_session()
+            session = self.sessions.get_current_session()
             self.raw_history_view.start_live_turn(session)
         if self.graph_view:
             self._render_selected_graph()

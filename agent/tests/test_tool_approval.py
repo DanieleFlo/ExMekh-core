@@ -451,8 +451,7 @@ def test_page_controller_approval_mode_changed(tmp_path: Path) -> None:
         sm = SessionManager()
         session = sm.create_session("PageController Test")
 
-        controller = ChatPageController.__new__(ChatPageController)
-        controller._client = MagicMock()
+        controller = ChatPageController(MagicMock())
         controller._client.is_deleted = False
 
         with patch("exmekh_agent.ui.chat.page_controller.session_manager", sm):

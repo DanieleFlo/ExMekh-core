@@ -3,8 +3,10 @@ from __future__ import annotations
 import os
 from collections.abc import Generator
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
+from nicegui import ui
 
 from exmekh_agent.config import AppConfig, config
 from exmekh_agent.state.active_turns import active_turns
@@ -12,6 +14,15 @@ from exmekh_agent.state.session_manager import session_manager
 from tests.execution_policy import is_live_provider_test
 
 pytest_plugins = ["tests.parallel_execution"]
+
+
+@pytest.fixture(autouse=True)
+def browser_history(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Unit components have no browser; spawned E2E servers use real navigation."""
+    history = MagicMock()
+    monkeypatch.setattr(ui.navigate, "history", history)
+    return history
+
 
 _LIVE_TEST_ENV_VAR = "EXMEKH_AGENT_RUN_LIVE_TESTS"
 _TRUTHY_VALUES = {"1", "true", "yes", "on"}

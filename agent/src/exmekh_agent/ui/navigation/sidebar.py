@@ -8,7 +8,7 @@ from nicegui import ui
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.formatting import DEFAULTS as FORMAT_DEFAULTS
 from exmekh_agent.exmekh_bridge.models import ChatSession, Project
-from exmekh_agent.state.session_manager import session_manager
+from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.ui.resources import presentation_config, ui_text
 
 UI_PRESENTATION = presentation_config("controls/sidebar")
@@ -23,7 +23,9 @@ class SidebarComponent:
         on_new_project: Callable[[], None] | None = None,
         on_project_chat: Callable[[str], None] | None = None,
         on_project_settings: Callable[[str], None] | None = None,
+        sessions: SessionManager | None = None,
     ) -> None:
+        self._sessions = sessions
         self.on_session_switched = on_session_switched
         self.on_new_chat = on_new_chat
         self.on_sub_agent_selected = on_sub_agent_selected
@@ -34,6 +36,10 @@ class SidebarComponent:
         self.container: ui.column | None = None
         self.drawer: ui.left_drawer | None = None
         self._project_expansion: dict[str, bool] = {}
+
+    @property
+    def sessions(self) -> SessionManager:
+        return self._sessions if self._sessions is not None else session_manager
 
     def build(self) -> ui.left_drawer:
         with (
@@ -100,7 +106,7 @@ class SidebarComponent:
             return
 
         self.container.clear()
-        projects = session_manager.list_projects()
+        projects = self.sessions.list_projects()
 
         with self.container:
             # Projects section with scrollable list
@@ -137,7 +143,7 @@ class SidebarComponent:
                 ):
                     for project in projects:
                         self._render_project(
-                            project, session_manager.list_sessions(project.id)
+                            project, self.sessions.list_sessions(project.id)
                         )
                     if not projects:
                         ui.label(ui_text("navigation.sidebar.no_projects_yet")).classes(
@@ -183,7 +189,7 @@ class SidebarComponent:
                         "render_sessions.classes.sidebar_list_scroll_w_full_overflow_y_auto_fl"
                     ]
                 ):
-                    for session in session_manager.list_sessions(None):
+                    for session in self.sessions.list_sessions(None):
                         self._render_session(session)
 
     def _render_project(self, project: Project, sessions: list[ChatSession]) -> None:
@@ -363,7 +369,7 @@ class SidebarComponent:
         )
 
     def _render_session(self, session: ChatSession) -> None:
-        is_active = session_manager.is_current_session(session.id)
+        is_active = self.sessions.is_current_session(session.id)
         selected = (
             UI_PRESENTATION["render_session.state_classes"]
             if is_active and self.selected_sub_agent_id is None
@@ -476,17 +482,17 @@ class SidebarComponent:
 
     def is_project_expanded(self, project_id: str) -> bool:
         """Keep explicit user choices; expand the selected project by default."""
-        current = session_manager.get_current_session()
+        current = self.sessions.get_current_session()
         return self._project_expansion.get(project_id, current.project_id == project_id)
 
     def expand_project(self, project_id: str) -> None:
         self._project_expansion[project_id] = True
 
     def _select_session(self, session_id: str) -> None:
-        session = session_manager.get_session(session_id)
+        session = self.sessions.get_session(session_id)
         if session and session.project_id:
             self.expand_project(session.project_id)
-        session_manager.switch_session(session_id)
+        self.sessions.switch_session(session_id)
         self.clear_sub_agent_selection()
         self.render_sessions()
         self.on_session_switched(session_id)
@@ -506,7 +512,7 @@ class SidebarComponent:
 
     def _delete_session(self, session_id: str) -> None:
         try:
-            session_manager.delete_session(session_id)
+            self.sessions.delete_session(session_id)
         except (OSError, ValueError) as error:
             ui.notify(
                 ui_text("navigation.sidebar.unable_to_delete_chat", error=error),
@@ -515,7 +521,7 @@ class SidebarComponent:
             return
         self.clear_sub_agent_selection()
         self.render_sessions()
-        self.on_session_switched(session_manager.get_current_session().id)
+        self.on_session_switched(self.sessions.get_current_session().id)
 
     def _new_project_chat(self, project_id: str) -> None:
         self.expand_project(project_id)
@@ -527,10 +533,10 @@ class SidebarComponent:
             self.on_project_settings(project_id)
 
     async def _confirm_delete_project(self, project_id: str) -> None:
-        project = session_manager.get_project(project_id)
+        project = self.sessions.get_project(project_id)
         if project is None:
             return
-        count = len(session_manager.list_sessions(project_id))
+        count = len(self.sessions.list_sessions(project_id))
         if await self._confirm(
             app_text("navigation.sidebar.delete_this_project"),
             app_text(
@@ -540,7 +546,7 @@ class SidebarComponent:
             ),
         ):
             try:
-                session_manager.delete_project(project_id)
+                self.sessions.delete_project(project_id)
             except (OSError, ValueError) as error:
                 ui.notify(
                     ui_text("navigation.sidebar.unable_to_delete_project", error=error),
@@ -550,10 +556,10 @@ class SidebarComponent:
                 self._project_expansion.pop(project_id, None)
             self.clear_sub_agent_selection()
             self.render_sessions()
-            self.on_session_switched(session_manager.get_current_session().id)
+            self.on_session_switched(self.sessions.get_current_session().id)
 
     async def _confirm_delete(self, session_id: str) -> None:
-        session = session_manager.get_session(session_id)
+        session = self.sessions.get_session(session_id)
         if not session:
             return
         if await self._confirm(
