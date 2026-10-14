@@ -99,7 +99,6 @@ static const interactive_behavior interactive_behaviors[] = {
     {
         .name = EDIT_BEHAVIOR_NAME,
         .request_kind = EDIT_SNAPSHOT_KIND,
-        .description = interactive_edit_description,
         .diagnostic_probe = EDIT_DIAGNOSTIC_PROBE,
         .configure = interactive_edit_config,
         .string_prefix = interactive_edit_string_prefix,
@@ -197,47 +196,6 @@ static interactive_call *interactive_call_for(const request *r, size_t body_star
     for (interactive_call *c = r->interactive.calls; c; c = c->next)
         if (c->body_start == body_start) return c;
     return NULL;
-}
-
-/* Add the server-owned framing contract to the actual model-facing tool
- * description. The client's static registry hash remains the source identity. */
-static void interactive_tool_descriptions(buf *schemas, const request *r) {
-    if (!r->interactive.count) return;
-    buf rendered = {0};
-    const char *p = schemas->ptr;
-    while (p && *p) {
-        json_ws(&p);
-        if (!*p) break;
-        size_t nodes = 0;
-        schema_json_value *tool = schema_json_parse_value(&p, 0, &nodes);
-        if (!tool) { buf_free(&rendered); return; }
-        const char *name = interactive_string(tool, "name");
-        const char *guidance = NULL;
-        for (int i = 0; name && i < r->interactive.count; i++)
-            if (!strcmp(name, r->interactive.tools[i].name)) guidance = r->interactive.tools[i].behavior->description;
-        if (guidance) {
-            schema_json_value *description = (schema_json_value *)schema_json_object_get(tool, "description");
-            if (!description) {
-                description = xmalloc(sizeof(*description)); memset(description, 0, sizeof(*description));
-                description->kind = SCHEMA_JSON_STRING;
-                tool->member = xrealloc(tool->member, (tool->len + 1) * sizeof(*tool->member));
-                tool->member[tool->len++] = (schema_json_member){.key = xstrdup("description"), .value = description};
-            }
-            if (description->kind == SCHEMA_JSON_STRING &&
-                (!description->string || !strstr(description->string, guidance))) {
-                buf text = {0};
-                if (description->string && description->string[0]) {
-                    buf_puts(&text, description->string); buf_putc(&text, ' ');
-                }
-                buf_puts(&text, guidance);
-                free(description->string); description->string = buf_take(&text);
-            }
-        }
-        if (rendered.len) buf_putc(&rendered, '\n');
-        schema_json_serialize_value(&rendered, tool);
-        schema_json_free(tool);
-    }
-    buf_free(schemas); *schemas = rendered;
 }
 
 #endif

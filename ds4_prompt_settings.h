@@ -50,8 +50,6 @@
     "- Required parameters MUST be specified with their exact schema names\n" \
     "- String parameters use raw text and string=\"true\"; numbers, booleans, " \
     "arrays, and objects use JSON and string=\"false\"\n" \
-    "- When an instruction requires a listed function, call it instead of " \
-    "answering with prose\n" \
     "- If no function call is needed, answer normally and do not mention " \
     "function calls\n" \
     "</IMPORTANT>"
@@ -103,21 +101,5 @@
     "do not tell the user about function calls\n</IMPORTANT>"
 
 #define DS4_PROMPT_DEFAULT_SYSTEM_MESSAGE "You are a helpful assistant"
-
-#define DS4_PROMPT_INVALID_DSML_TOOL_GUIDANCE \
-    "\nThe previous assistant output was not executed because the DSML syntax was malformed. " \
-    "Emit a new valid DSML tool call, or answer normally if no tool is needed."
-
-#define DS4_PROMPT_SYSTEM_REMINDER "\n\nSystem prompt reminder:\n"
-
-#define DS4_PROMPT_INVALID_GLM_TOOL_GUIDANCE \
-    "\nThe previous assistant output was not executed because the " \
-    "<tool_call> syntax was malformed. Emit a new valid <tool_call>, " \
-    "or answer normally if no tool is needed."
-
-#define DS4_PROMPT_INVALID_QWEN_TOOL_GUIDANCE \
-    "\nThe previous assistant output was not executed because the " \
-    "<tool_call><function=...> syntax was malformed. Emit a new valid " \
-    "<tool_call>, or answer normally if no tool is needed."
 
 #endif

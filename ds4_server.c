@@ -2170,7 +2170,6 @@ typedef struct {
 struct interactive_behavior {
     const char *name;
     const char *request_kind;
-    const char *description;
     const char *diagnostic_probe;
     bool (*configure)(interactive_tool *, const schema_json_value *, const tool_schema_order *);
     interactive_string_probe_fn string_prefix, string_prefix_oracle;
@@ -5932,78 +5931,6 @@ static DS4_SERVER_MAYBE_UNUSED char *render_live_tool_tail(
                                             msgs, start, NULL, think_mode);
 }
 
-static bool qwen_requires_closed_zero_arg_tool(const request *r) {
-    if (!r || !r->tool_choice_required || r->tool_orders.len != 1) return false;
-    const tool_schema_order *order = &r->tool_orders.v[0];
-    const schema_json_value *properties =
-        schema_json_object_get(order->schema, "properties");
-    const schema_json_value *additional =
-        schema_json_object_get(order->schema, "additionalProperties");
-    return order->schema && order->schema->kind == SCHEMA_JSON_OBJECT &&
-           properties && properties->kind == SCHEMA_JSON_OBJECT &&
-           properties->len == 0 &&
-           additional && additional->kind == SCHEMA_JSON_BOOL &&
-           !additional->boolean;
-}
-
-static void append_qwen_agentic_scope_instruction(chat_msgs *msgs,
-                                                   const request *r) {
-    const bool zero_arg_required = qwen_requires_closed_zero_arg_tool(r);
-    if (!msgs || !r || r->model_syntax != SERVER_MODEL_SYNTAX_QWEN ||
-        (!r->agentic_present && !zero_arg_required)) return;
-    buf scope = {0};
-    buf_puts(&scope, agentic_scope_open);
-    if (r->agentic_present) {
-        buf_puts(&scope, agentic_allowed_tools);
-        if (r->allowed_tools.len == 0) buf_puts(&scope, agentic_no_capabilities);
-        for (int i = 0; i < r->allowed_tools.len; i++) {
-            if (i) buf_puts(&scope, agentic_list_separator);
-            buf_puts(&scope, r->allowed_tools.v[i]);
-        }
-        buf_puts(&scope, agentic_allowed_skills);
-        if (r->allowed_skills.len == 0) buf_puts(&scope, agentic_no_capabilities);
-        for (int i = 0; i < r->allowed_skills.len; i++) {
-            if (i) buf_puts(&scope, agentic_list_separator);
-            buf_puts(&scope, r->allowed_skills.v[i]);
-        }
-        buf_puts(&scope, agentic_capability_guidance);
-        if (r->agentic_return) {
-            buf_puts(&scope, agentic_skill_return_guidance);
-        }
-    }
-    if (zero_arg_required) {
-        buf_puts(&scope, agentic_required_tool_guidance);
-    }
-    buf_puts(&scope, agentic_scope_close);
-
-    /* Live continuations evaluate only the new tool-result tail. Put scope
-     * there (including returns), not in an old user message that is skipped
-     * by KV reuse. The registry stays in the stable system cache boundary. */
-    chat_msg *target = NULL;
-    for (int i = msgs->len - 1; i >= 0; i--) {
-        if (!strcmp(msgs->v[i].role, "user") ||
-            !strcmp(msgs->v[i].role, "tool") ||
-            !strcmp(msgs->v[i].role, "function")) {
-            target = &msgs->v[i];
-            break;
-        }
-    }
-    if (target) {
-        buf combined = {0};
-        buf_puts(&combined, target->content ? target->content : "");
-        if (combined.len) buf_puts(&combined, "\n\n");
-        buf_puts(&combined, scope.ptr ? scope.ptr : "");
-        free(target->content);
-        target->content = buf_take(&combined);
-    } else {
-        chat_msg control = {0};
-        control.role = xstrdup("system");
-        control.content = xstrdup(scope.ptr ? scope.ptr : "");
-        chat_msgs_push(msgs, control);
-    }
-    buf_free(&scope);
-
-}
 static char *render_request_live_tool_tail(server *s, const request *r,
                                            const chat_msgs *msgs, int start,
                                            const stop_list *ids) {
@@ -7798,9 +7725,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
         request_free(r);
         return false;
     }
-    interactive_tool_descriptions(&combined_tool_schemas, r);
     active_tool_schemas = (!tool_choice_none && combined_tool_schemas.len) ? combined_tool_schemas.ptr : NULL;
-    append_qwen_agentic_scope_instruction(&msgs, r);
     if (!responses_validate_tool_outputs(s, &msgs, r->think_mode,
                                          &r->responses_requires_live_tool_state,
                                          &r->responses_requires_live_reasoning,
@@ -9199,7 +9124,7 @@ static bool parse_generated_message_for_response_for_syntax(server_model_syntax 
 
     /* A malformed tool block is model output, not a server failure.  The
      * generation worker may hide this turn from the client, append a tool error
-     * plus protocol reminder to the live session, and let the model try again.
+     * to the live session, and let the model try again.
      * If that continuation is unavailable, parsed_content keeps the raw text as
      * a last-resort assistant fallback instead of crashing the request. */
     const char *finish = finish_io && *finish_io ? *finish_io : "stop";
@@ -18103,54 +18028,14 @@ static bool complete_tool_call_inside_thinking(server_model_syntax syntax,
 static int server_eval_token(server *s, server_slot *slot, int token,
                              char *err, size_t errlen);
 
-static char *rendered_chat_system_region(const request *r) {
-    const char *prompt_text = r ? r->prompt_text : NULL;
-    if (!prompt_text) return xstrdup("");
-    if (r->model_syntax == SERVER_MODEL_SYNTAX_QWEN) {
-        static const char start_marker[] = "<|im_start|>system\n";
-        static const char end_marker[] = "<|im_end|>";
-        if (strncmp(prompt_text, start_marker, sizeof(start_marker) - 1) != 0)
-            return xstrdup("");
-        const char *start = prompt_text + sizeof(start_marker) - 1;
-        const char *end = strstr(start, end_marker);
-        return end ? xstrndup(start, (size_t)(end - start)) : xstrdup("");
-    }
-    const char *p = prompt_text;
-    const char *bos = "<｜begin▁of▁sentence｜>";
-    const size_t bos_len = strlen(bos);
-    if (!strncmp(p, bos, bos_len)) p += bos_len;
-    const char *max_prefix = ds4_think_max_prefix();
-    const size_t max_prefix_len = strlen(max_prefix);
-    if (max_prefix_len && !strncmp(p, max_prefix, max_prefix_len)) {
-        p += max_prefix_len;
-    }
-    while (*p && isspace((unsigned char)*p)) p++;
-
-    const char *user = strstr(p, "<｜User｜>");
-    const char *assistant = strstr(p, "<｜Assistant｜>");
-    const char *end = NULL;
-    if (user && assistant) end = user < assistant ? user : assistant;
-    else end = user ? user : assistant;
-    if (!end) end = p + strlen(p);
-    while (end > p && isspace((unsigned char)end[-1])) end--;
-    return xstrndup(p, (size_t)(end - p));
-}
-
 static char *build_invalid_dsml_tool_error_suffix(const request *r,
                                                   const thinking_state *thinking,
                                                   const char *detail) {
-    char *system = rendered_chat_system_region(r);
     buf tool_error = {0};
     buf_puts(&tool_error, DS4_SERVER_TEXT_TOOL_ERROR_INVALID_DSML_TOOL_CALL);
     if (detail && detail[0]) {
         buf_puts(&tool_error, ": ");
         buf_puts(&tool_error, detail);
-    }
-    buf_puts(&tool_error,
-             DS4_PROMPT_INVALID_DSML_TOOL_GUIDANCE);
-    if (system && system[0]) {
-        buf_puts(&tool_error, DS4_PROMPT_SYSTEM_REMINDER);
-        buf_puts(&tool_error, system);
     }
 
     buf suffix = {0};
@@ -18176,7 +18061,6 @@ static char *build_invalid_dsml_tool_error_suffix(const request *r,
                  "<think>" : "</think>");
     }
 
-    free(system);
     buf_free(&tool_error);
     return buf_take(&suffix);
 }
@@ -18190,8 +18074,6 @@ static char *build_invalid_glm_tool_error_suffix(const request *r,
         buf_puts(&tool_error, ": ");
         buf_puts(&tool_error, detail);
     }
-    buf_puts(&tool_error,
-             DS4_PROMPT_INVALID_GLM_TOOL_GUIDANCE);
 
     buf suffix = {0};
     if (r && ds4_think_mode_enabled(r->think_mode) && thinking && thinking->inside) {
@@ -18217,8 +18099,6 @@ static char *build_invalid_qwen_tool_error_suffix(const request *r,
         buf_puts(&tool_error, ": ");
         buf_puts(&tool_error, detail);
     }
-    buf_puts(&tool_error,
-             DS4_PROMPT_INVALID_QWEN_TOOL_GUIDANCE);
     buf suffix = {0};
     if (r && ds4_think_mode_enabled(r->think_mode) && thinking && thinking->inside) {
         buf_puts(&suffix, "\n</think>\n\n");
@@ -22144,7 +22024,7 @@ decode_again:
     {
         /* Only repair a missing outer wrapper around complete invocations.
          * Otherwise let the model issue a fresh call within the same output
-         * budget, after a tool error and prompt reminder. */
+         * budget, after a tool error. */
         bool completed_truncation = false;
         buf repaired = {0};
         if (try_repair_dsml(text.ptr, text.len, &repaired)) {
@@ -22280,8 +22160,8 @@ decode_again:
         if (!parsed_ok && recovered_tool_parse_failure && j->req.has_tools && saw_tool_start) {
             /* parse_generated_message failed even though DSML was present.
              * Semantic repair is intentionally avoided: if the parser cannot
-             * execute the block, feed the model a tool error and the protocol
-             * reminder so it owns the corrected next action. */
+             * execute the block, report that error without adding instructions
+             * to the conversation. The model owns the corrected next action. */
             if (!j->req.stream && !dsml_recovery_attempted &&
                 strcmp(final_finish, "length") != 0 && !client_stop &&
                 completion < max_tokens) {
@@ -26795,99 +26675,32 @@ static void test_render_qwen_chatml_prompt_and_tool_history(void) {
     chat_msgs_free(&msgs);
 }
 
-static void test_qwen_agentic_scope_reaches_live_tool_tail(void) {
-    for (int returning = 0; returning < 2; returning++) {
-        chat_msgs msgs = {0};
-        chat_msgs_push(&msgs, (chat_msg){.role = xstrdup("user"),
-                                        .content = xstrdup("test capabilities")});
-        chat_msg assistant = {.role = xstrdup("assistant")};
-        tool_calls_push(&assistant.calls, (tool_call){
-            .id = xstrdup("call_skill"), .name = xstrdup("mock-skill"),
-            .arguments = xstrdup("{}")});
-        chat_msgs_push(&msgs, assistant);
-        chat_msgs_push(&msgs, (chat_msg){.role = xstrdup("tool"),
-            .content = xstrdup("skill result"), .tool_call_id = xstrdup("call_skill")});
-        request r;
-        request_init(&r, REQ_CHAT, 128);
-        r.api = API_RESPONSES;
-        r.model_syntax = SERVER_MODEL_SYNTAX_QWEN;
-        r.agentic_present = true;
-        r.agentic_return = returning != 0;
-        id_list_push_unique(&r.allowed_tools, returning ? "mock-tool" : "mock-sub-tool");
-        append_qwen_agentic_scope_instruction(&msgs, &r);
-        responses_prepare_live_continuation(NULL, &r, &msgs);
-        TEST_ASSERT(!strcmp(msgs.v[0].content, "test capabilities"));
-        TEST_ASSERT(r.responses_live_suffix_text != NULL);
-        TEST_ASSERT(r.responses_live_suffix_text &&
-                    strstr(r.responses_live_suffix_text, returning ?
-                        "Allowed ordinary tools: mock-tool" :
-                        "Allowed ordinary tools: mock-sub-tool"));
-        const bool has_compaction_notice = r.responses_live_suffix_text &&
-            strstr(r.responses_live_suffix_text,
-                   "Their absence is not evidence of unfinished work.");
-        TEST_ASSERT(has_compaction_notice == (returning != 0));
-        if (returning) {
-            TEST_ASSERT(strstr(r.responses_live_suffix_text,
-                               "result reports a failure or missing work") != NULL);
-        }
-        request_free(&r);
-        chat_msgs_free(&msgs);
-    }
-}
-
-static void test_qwen_agentic_scope_targets_latest_user_turn(void) {
+static void test_agentic_return_preserves_client_result(void) {
     chat_msgs msgs = {0};
-    chat_msg old_user = {0};
-    old_user.role = xstrdup("user");
-    old_user.content = xstrdup("archived request");
-    chat_msgs_push(&msgs, old_user);
-    chat_msg old_assistant = {0};
-    old_assistant.role = xstrdup("assistant");
-    old_assistant.content = xstrdup("archived answer");
-    chat_msgs_push(&msgs, old_assistant);
-    chat_msg latest_user = {0};
-    latest_user.role = xstrdup("user");
-    latest_user.content = xstrdup("activate the named capability");
-    chat_msgs_push(&msgs, latest_user);
-
+    chat_msgs_push(&msgs, (chat_msg){.role = xstrdup("user"),
+                                    .content = xstrdup("CALLER_USER")});
+    chat_msg assistant = {.role = xstrdup("assistant")};
+    tool_calls_push(&assistant.calls, (tool_call){
+        .id = xstrdup("call_skill"), .name = xstrdup("mock-skill"),
+        .arguments = xstrdup("{}")});
+    chat_msgs_push(&msgs, assistant);
+    chat_msgs_push(&msgs, (chat_msg){.role = xstrdup("tool"),
+        .content = xstrdup("CALLER_SKILL_RESULT"), .tool_call_id = xstrdup("call_skill")});
     request r;
     request_init(&r, REQ_CHAT, 128);
+    r.api = API_RESPONSES;
     r.model_syntax = SERVER_MODEL_SYNTAX_QWEN;
     r.agentic_present = true;
-    r.tool_choice_required = true;
-    id_list_push_unique(&r.allowed_tools, "read");
-    id_list_push_unique(&r.allowed_skills, "exit-with-info");
-    tool_schema_order zero = {
-        .name = xstrdup("exit-with-info"),
-        .schema_json = xstrdup(
-            "{\"type\":\"object\",\"properties\":{},"
-            "\"additionalProperties\":false}"),
-        .schema = schema_json_parse(
-            "{\"type\":\"object\",\"properties\":{},"
-            "\"additionalProperties\":false}"),
-    };
-    tool_schema_orders_push(&r.tool_orders, zero);
-
-    append_qwen_agentic_scope_instruction(&msgs, &r);
-    TEST_ASSERT(strstr(msgs.v[0].content, "<agent_runtime>") == NULL);
-    TEST_ASSERT(strstr(msgs.v[2].content,
-                       "Allowed ordinary tools: read") != NULL);
-    TEST_ASSERT(strstr(msgs.v[2].content,
-                       "Allowed skills: exit-with-info") != NULL);
-    TEST_ASSERT(strstr(msgs.v[2].content,
-                       "when needed for unfinished work") != NULL);
-    TEST_ASSERT(strstr(msgs.v[2].content,
-                       "single available zero-argument tool") != NULL);
-
-    char *prompt = render_chat_prompt_text_for_syntax(
-        SERVER_MODEL_SYNTAX_QWEN, &msgs, NULL, NULL, DS4_THINK_NONE);
-    const char *archived = strstr(prompt, "archived answer");
-    const char *scope = strstr(prompt, "<agent_runtime>");
-    const char *assistant = strstr(scope ? scope : "", "<|im_start|>assistant\n");
-    TEST_ASSERT(archived != NULL && scope != NULL && assistant != NULL);
-    TEST_ASSERT(archived < scope && scope < assistant);
-
-    free(prompt);
+    r.agentic_return = true;
+    responses_prepare_live_continuation(NULL, &r, &msgs);
+    TEST_ASSERT(!strcmp(msgs.v[0].content, "CALLER_USER"));
+    TEST_ASSERT(!strcmp(msgs.v[2].content, "CALLER_SKILL_RESULT"));
+    TEST_ASSERT(r.responses_live_suffix_text != NULL);
+    if (r.responses_live_suffix_text) {
+        TEST_ASSERT(strstr(r.responses_live_suffix_text,
+                           "<tool_response>\nCALLER_SKILL_RESULT\n</tool_response>") != NULL);
+        TEST_ASSERT(strstr(r.responses_live_suffix_text, "<agent_runtime>") == NULL);
+    }
     request_free(&r);
     chat_msgs_free(&msgs);
 }
@@ -28098,7 +27911,7 @@ static void test_empty_tool_block_returns_recoverable_finish(void) {
     tool_calls_free(&calls);
 }
 
-static void test_invalid_dsml_tool_error_suffix_includes_system_prompt(void) {
+static void test_invalid_dsml_tool_error_suffix_reports_only_error(void) {
     request r = {0};
     r.think_mode = DS4_THINK_HIGH;
     r.prompt_text = xstrdup(
@@ -28109,10 +27922,14 @@ static void test_invalid_dsml_tool_error_suffix_includes_system_prompt(void) {
 
     char *suffix = build_invalid_dsml_tool_error_suffix(&r, &st, "missing invoke name");
     TEST_ASSERT(suffix != NULL);
+    TEST_ASSERT(!strcmp(suffix,
+        "</think><｜end▁of▁sentence｜><｜User｜><tool_result>"
+        "Tool error: invalid DSML tool call: missing invoke name"
+        "</tool_result><｜Assistant｜><think>"));
     TEST_ASSERT(strstr(suffix, "</think><｜end▁of▁sentence｜><｜User｜><tool_result>") == suffix);
     TEST_ASSERT(strstr(suffix, "Tool error: invalid DSML tool call: missing invoke name") != NULL);
-    TEST_ASSERT(strstr(suffix, "The previous assistant output was not executed") != NULL);
-    TEST_ASSERT(strstr(suffix, "System prompt reminder:\n## Tools\nschema\n\nSystem rule") != NULL);
+    TEST_ASSERT(strstr(suffix, "The previous assistant output was not executed") == NULL);
+    TEST_ASSERT(strstr(suffix, "System rule") == NULL);
     TEST_ASSERT(strstr(suffix, "<｜User｜>Hi") == NULL);
     TEST_ASSERT(strstr(suffix, "</tool_result><｜Assistant｜><think>") != NULL);
 
@@ -28134,13 +27951,16 @@ static void test_invalid_qwen_dsml_tool_error_suffix_uses_chatml(void) {
     char *suffix = build_invalid_tool_call_error_suffix(
         &r, &st, "missing invoke name");
     TEST_ASSERT(suffix != NULL);
+    TEST_ASSERT(!strcmp(suffix,
+        "</think><|im_end|>\n<|im_start|>user\n<tool_response>\n"
+        "Tool error: invalid DSML tool call: missing invoke name"
+        "\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\n"));
     TEST_ASSERT(strstr(suffix,
                        "</think><|im_end|>\n<|im_start|>user\n"
                        "<tool_response>\n") == suffix);
     TEST_ASSERT(strstr(suffix,
                        "Tool error: invalid DSML tool call: missing invoke name") != NULL);
-    TEST_ASSERT(strstr(suffix,
-                       "System prompt reminder:\n# Tools\nschema\n\nSystem rule") != NULL);
+    TEST_ASSERT(strstr(suffix, "System rule") == NULL);
     TEST_ASSERT(strstr(suffix, "<|im_start|>user\nHi") == NULL);
     TEST_ASSERT(strstr(suffix,
                        "</tool_response><|im_end|>\n"
@@ -28161,6 +27981,10 @@ static void test_invalid_glm_tool_error_suffix(void) {
     char *suffix = build_invalid_tool_call_error_suffix(&r, &st,
                                                         "missing arg_value");
     TEST_ASSERT(suffix != NULL);
+    TEST_ASSERT(!strcmp(suffix,
+        "</think><|observation|><tool_response>"
+        "Tool error: invalid GLM tool call: missing arg_value"
+        "</tool_response><|assistant|><think>"));
     TEST_ASSERT(strstr(suffix, "</think><|observation|><tool_response>") == suffix);
     TEST_ASSERT(strstr(suffix,
                        "Tool error: invalid GLM tool call: missing arg_value") != NULL);
@@ -28225,9 +28049,13 @@ static void test_invalid_qwen_tool_error_suffix(void) {
 
     char *suffix = build_invalid_tool_call_error_suffix(&r, &st, "missing function name");
     TEST_ASSERT(suffix != NULL);
+    TEST_ASSERT(!strcmp(suffix,
+        "\n</think>\n\n<|im_end|>\n<|im_start|>user\n<tool_response>\n"
+        "Tool error: invalid Qwen tool call: missing function name"
+        "\n</tool_response><|im_end|>\n<|im_start|>assistant\n<think>\n"));
     TEST_ASSERT(strstr(suffix, "\n</think>\n\n<|im_end|>\n<|im_start|>user") == suffix);
     TEST_ASSERT(strstr(suffix, "Tool error: invalid Qwen tool call: missing function name") != NULL);
-    TEST_ASSERT(strstr(suffix, "The previous assistant output was not executed") != NULL);
+    TEST_ASSERT(strstr(suffix, "The previous assistant output was not executed") == NULL);
     TEST_ASSERT(strstr(suffix, "<|im_end|>\n<|im_start|>assistant\n<think>\n") != NULL);
     TEST_ASSERT(strstr(suffix, "DSML") == NULL);
     TEST_ASSERT(strstr(suffix, "<｜end▁of▁sentence｜>") == NULL);
@@ -34169,8 +33997,7 @@ static void ds4_server_unit_tests_run(void) {
     test_render_chat_prompt_text_renders_tools_before_system();
     test_render_qwen_chatml_prompt_and_tool_history();
     test_render_qwen_live_tool_tail();
-    test_qwen_agentic_scope_reaches_live_tool_tail();
-    test_qwen_agentic_scope_targets_latest_user_turn();
+    test_agentic_return_preserves_client_result();
     test_render_glm_chat_prompt_text();
     test_render_qwen4_chat_prompt_text();
     test_render_qwen_tool_round_trip();
@@ -34232,7 +34059,7 @@ static void ds4_server_unit_tests_run(void) {
     test_dsml_repair_produces_parseable_calls();
     test_tool_parse_failure_returns_recoverable_finish();
     test_empty_tool_block_returns_recoverable_finish();
-    test_invalid_dsml_tool_error_suffix_includes_system_prompt();
+    test_invalid_dsml_tool_error_suffix_reports_only_error();
     test_invalid_qwen_dsml_tool_error_suffix_uses_chatml();
     test_invalid_glm_tool_error_suffix();
     test_tool_recovery_output_budget();

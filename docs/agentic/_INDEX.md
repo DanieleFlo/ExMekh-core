@@ -65,8 +65,8 @@ Da root, avviare il server in un terminale:
 
 Il client conserva i controlli sul workroot, sui permessi, sulle identità dei
 
-- righe 8–20: **Tool e responsabilità** — Il client conserva i controlli sul workroot, sui permessi, sulle identità dei
-- righe 21–42: **Configurazione** — {
-- righe 43–69: **Due marcatori e corpi letterali** — <exmekh_edit path="notes.txt" id="427" />vecchio testo<exmekh_new_text id="427"/>nuovo testo
-- righe 70–90: **Selezione e ID omessi** — La selezione letterale deve partire da un confine di riga fisica, comprendere
-- righe 91–113: **Autorizzazione, applicazione e trasporto** — Ogni path richiede uno scambio `file_snapshot`, con call ID, exchange ID
+- righe 14–26: **Tool e responsabilità** — Il client conserva i controlli sul workroot, sui permessi, sulle identità dei
+- righe 27–48: **Configurazione** — {
+- righe 49–75: **Due marcatori e corpi letterali** — <exmekh_edit path="notes.txt" id="427" />vecchio testo<exmekh_new_text id="427"/>nuovo testo
+- righe 76–96: **Selezione e ID omessi** — La selezione letterale deve partire da un confine di riga fisica, comprendere
+- righe 97–119: **Autorizzazione, applicazione e trasporto** — Ogni path richiede uno scambio `file_snapshot`, con call ID, exchange ID

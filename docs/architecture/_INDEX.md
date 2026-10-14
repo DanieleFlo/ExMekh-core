@@ -308,6 +308,14 @@ Modello:
 - righe 3271–3312: **59. Fonti primarie di riferimento** — I dati architetturali vanno verificati principalmente in:
 - righe 3290–3312: **Nota importante sulla certezza di Q4_K_S** — `Q4_K_S` definisce un preset di quantizzazione, non la lista
 
+## [Istruzioni agentiche e diagnosi dei test live — 14 ottobre 2026](server-agent-guidance-removal-20261014.md)
+
+Eliminati il blocco `agent_runtime` aggiunto a user/tool message, le istruzioni
+
+- righe 7–19: **Rimozioni dal server** — Eliminati il blocco `agent_runtime` aggiunto a user/tool message, le istruzioni
+- righe 20–48: **Criteri delle prove** — Un test sul software confronta i byte scritti con gli argomenti realmente
+- righe 49–74: **Esecuzione e risultati** — Passano build CUDA, test nativi del server e del protocollo interattivo,
+
 ## [Revisione delle responsabilità dei draft OLD — 12 ottobre 2026](snapshot-draft-clean-review-20261012.md)
 
 La policy dei batch ha operazioni distinte per entrare in una fase, leggere

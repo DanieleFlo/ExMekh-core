@@ -1,52 +1,6 @@
-/* Model-facing agent scope instructions. Keep rendering separate from policy. */
+/* Agent scope validation and context persistence diagnostics. */
 #ifndef DS4_AGENTIC_SETTINGS_H
 #define DS4_AGENTIC_SETTINGS_H
-
-static const char agentic_scope_open[] =
-    "<agent_runtime>\n";
-
-static const char agentic_allowed_tools[] =
-    "Agent runtime scope for this turn. Allowed ordinary tools: ";
-
-static const char agentic_no_capabilities[] =
-    "(none)";
-
-static const char agentic_list_separator[] =
-    ", ";
-
-static const char agentic_allowed_skills[] =
-    ". Allowed skills: ";
-
-static const char agentic_capability_guidance[] =
-    ". These lists are permissions, not an unconditional request "
-    "to call a capability. Use DSML to invoke a permitted capability "
-    "when needed for unfinished work. Tool and skill results already "
-    "in the conversation represent completed work: do not repeat "
-    "successful calls just because the original request mentions them.\n";
-
-static const char agentic_skill_return_guidance[] =
-    "The invoked skill has already finished and EXITED. "
-    "You are now back in its caller, outside that skill. "
-    "Do not execute that completed skill's exit instructions "
-    "again: its exit has already produced the returned result. "
-    "Its internal conversation, tool calls and nested skills "
-    "have been removed from this context and replaced by this "
-    "result. Their absence is not evidence of unfinished work. "
-    "This is the result of executing the skill, not an instruction "
-    "to enter it. Resume the caller after that skill invocation; "
-    "do not reopen it to replay steps hidden by compaction. "
-    "If the result reports a failure or missing work, handle that "
-    "explicitly; otherwise continue with the next caller step "
-    "or answer the user when the requested work is complete.\n";
-
-static const char agentic_required_tool_guidance[] =
-    "This turn requires the single available zero-argument tool. "
-    "You MUST emit its valid DSML call before the output-token budget "
-    "ends. Keep reasoning brief; do not substitute a prose plan, "
-    "checklist, or promise for the actual call.\n";
-
-static const char agentic_scope_close[] =
-    "</agent_runtime>";
 
 /* Agent context persistence diagnostics. */
 static const char agentic_invalid_checkpoint_request[] = "invalid agent context checkpoint request";

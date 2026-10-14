@@ -1780,6 +1780,39 @@
           ]
         },
         {
+          "path": "docs/architecture/server-agent-guidance-removal-20261014.md",
+          "sections": [
+            {
+              "title": "Istruzioni agentiche e diagnosi dei test live — 14 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 74,
+              "summary": "Il server possiede il protocollo di inferenza, i vincoli sui token, il"
+            },
+            {
+              "title": "Rimozioni dal server",
+              "level": 2,
+              "start": 7,
+              "end": 19,
+              "summary": "Eliminati il blocco `agent_runtime` aggiunto a user/tool message, le istruzioni"
+            },
+            {
+              "title": "Criteri delle prove",
+              "level": 2,
+              "start": 20,
+              "end": 48,
+              "summary": "Un test sul software confronta i byte scritti con gli argomenti realmente"
+            },
+            {
+              "title": "Esecuzione e risultati",
+              "level": 2,
+              "start": 49,
+              "end": 74,
+              "summary": "Passano build CUDA, test nativi del server e del protocollo interattivo,"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/snapshot-draft-clean-review-20261012.md",
           "sections": [
             {
@@ -2249,42 +2282,42 @@
               "title": "Chiamate interattive: edit letterali v3",
               "level": 1,
               "start": 1,
-              "end": 113,
+              "end": 119,
               "summary": "Il comportamento attuale è `edit_file.v3`; il trasporto Responses resta alla"
             },
             {
               "title": "Tool e responsabilità",
               "level": 2,
-              "start": 8,
-              "end": 20,
+              "start": 14,
+              "end": 26,
               "summary": "Il client conserva i controlli sul workroot, sui permessi, sulle identità dei"
             },
             {
               "title": "Configurazione",
               "level": 2,
-              "start": 21,
-              "end": 42,
+              "start": 27,
+              "end": 48,
               "summary": "{"
             },
             {
               "title": "Due marcatori e corpi letterali",
               "level": 2,
-              "start": 43,
-              "end": 69,
+              "start": 49,
+              "end": 75,
               "summary": "<exmekh_edit path=\"notes.txt\" id=\"427\" />vecchio testo<exmekh_new_text id=\"427\"/>nuovo testo"
             },
             {
               "title": "Selezione e ID omessi",
               "level": 2,
-              "start": 70,
-              "end": 90,
+              "start": 76,
+              "end": 96,
               "summary": "La selezione letterale deve partire da un confine di riga fisica, comprendere"
             },
             {
               "title": "Autorizzazione, applicazione e trasporto",
               "level": 2,
-              "start": 91,
-              "end": 113,
+              "start": 97,
+              "end": 119,
               "summary": "Ogni path richiede uno scambio `file_snapshot`, con call ID, exchange ID"
             }
           ]

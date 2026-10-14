@@ -33,18 +33,6 @@
 #define EDIT_SEPARATOR_FORMAT "<exmekh_new_text id=\"%s\"/>"
 #define EDIT_DIAGNOSTIC_PROBE "<delete/>"
 
-static const char interactive_edit_description[] =
-    "Edit existing text files using one literal string. Generate <exmekh_edit path=\"relative/path\" "
-    "then wait for authorization; the server supplies a unique three-digit opening ID. "
-    "Continue with exact old text, <exmekh_new_text id=\"the supplied ID\"/>, and new text. "
-    "An omitted separator ID is accepted when unambiguous. New text ends at the end of the string "
-    "or the next exmekh_edit opening. Bodies are literal: preserve all whitespace, markup and entities; "
-    "no CDATA or entity escaping. Old text must start at a physical line boundary and occur exactly once. "
-    "Empty old text is allowed only for an existing empty file. To insert, retain an existing anchor "
-    "in new text and add content before or after it. Empty new text removes the selection and keeps "
-    "the file. No all, line, range, create or delete commands. Inspect and read first. "
-    "Use separate new-file and delete-file tools. Repeated paths use the initial snapshot.";
-
 static const char interactive_configuration_error[] = "invalid or unsupported interactive v2 configuration (document must be one required string without enum/const)";
 static const char interactive_expired_message[] = "interactive continuation expired";
 static const char interactive_active_context_error[] = "agent context has an active interactive turn";

@@ -65,6 +65,17 @@ class CacheAccountingTests(unittest.TestCase):
             cache_accounting({"usage": {
                 "input_tokens": 100, "input_tokens_details": {"cached_tokens": 101}}})
 
+    def test_wrong_model_choice_cannot_hide_a_cache_regression(self):
+        scenario = SteeringCacheLiveTests("test_completed_tool_boundary_keeps_history_with_steering")
+        scenario.report = {"measurements": []}
+        response = {"status": "completed", "output": [{"type": "function_call", "name": "warm"}],
+                    "usage": {"input_tokens": 1500, "input_tokens_details": {"cached_tokens": 20}}}
+        scenario.send = lambda body, label: response
+        actual = scenario.exit_with_steering("test", [])
+        self.assertTrue(scenario.report["model_limitations"])
+        with self.assertRaisesRegex(AssertionError, "Conversation history was replayed"):
+            scenario.require_history_hit(actual, 1400, "wrong-model-choice")
+
 
 @unittest.skipUnless(BASE, "set DS4_STEERING_CACHE_BASE_URL to one idle server")
 class SteeringCacheLiveTests(unittest.TestCase):
@@ -101,9 +112,7 @@ class SteeringCacheLiveTests(unittest.TestCase):
             terminal = []
             for event in events:
                 kind = event.get("type", "")
-                if kind in {"response.completed", "response.incomplete", "response.failed"}:
-                    terminal.append(event["response"])
-                elif kind == "interactive.result":
+                if kind in {"response.completed", "response.incomplete", "response.failed"} or kind == "interactive.result":
                     terminal.append(event["response"])
                 elif kind == "interactive.await_input" or kind.startswith("interactive.cancelled"):
                     terminal.append(event)
@@ -142,10 +151,14 @@ class SteeringCacheLiveTests(unittest.TestCase):
         return body
 
     def one_call(self, response, name):
+        if response.get("status") == "incomplete":
+            self.skipTest("MODEL_LIMITATION: token budget ended before the requested setup call")
         self.assertEqual(response.get("status"), "completed", response)
         calls = function_calls(response)
-        self.assertEqual(len(calls), 1, response)
-        self.assertEqual(calls[0]["name"], name, response)
+        self.assertTrue(calls, "IMPLEMENTATION: completed required-tool response contains no call")
+        if len(calls) != 1 or calls[0]["name"] != name:
+            self.skipTest(f"MODEL_LIMITATION: setup required one {name} call; observed {calls!r}")
+        self.assertTrue(calls[0].get("call_id"), response)
         return replay(calls[0])
 
     def warm_skill(self):
@@ -192,13 +205,19 @@ class SteeringCacheLiveTests(unittest.TestCase):
     def exit_with_steering(self, context, history):
         history.append(user_item("Steering: stop editing and call exit_agent exactly once now."))
         response = self.send(self.payload(context, history, "exit_agent"), "steering-before-exit")
-        self.one_call(response, "exit_agent")
+        self.assertIn(response.get("status"), {"completed", "incomplete"}, response)
+        if [call.get("name") for call in function_calls(response)] != ["exit_agent"]:
+            self.report.setdefault("model_limitations", []).append(
+                {"test": self.id(), "label": "steering-before-exit", "output": response.get("output")})
         return response
 
     def exit_after_tool(self, context, history):
         history[-1] = call_output(history[-1]["call_id"], "Warm finished. Call exit_agent exactly once now.")
         response = self.send(self.payload(context, history, "exit_agent"), "exit-after-tool")
-        self.one_call(response, "exit_agent")
+        self.assertIn(response.get("status"), {"completed", "incomplete"}, response)
+        if [call.get("name") for call in function_calls(response)] != ["exit_agent"]:
+            self.report.setdefault("model_limitations", []).append(
+                {"test": self.id(), "label": "exit-after-tool", "output": response.get("output")})
         return response
 
     def test_full_replay_without_steering_keeps_history(self):

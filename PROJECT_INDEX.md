@@ -332,11 +332,12 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   Possiede il writer comune del framing nativo e la policy dei batch OLD;
   cambio di fase, query di capacità ed esito della verifica sono operazioni
   distinte. I contatori dei draft da snapshot sono separati da quelli MTP.
-- `ds4_prompt_settings.h` — template completi di Qwen/Qwen4, DeepSeek/DeepSeek 4.1, GLM, output strutturato e recupero dei tool invalidi; nessuna istruzione del modello è costruita con prosa inline nel server.
+- `ds4_prompt_settings.h` — template del protocollo di Qwen/Qwen4, DeepSeek/DeepSeek 4.1, GLM e output strutturato; il server non aggiunge istruzioni agentiche o reminder ai messaggi del client.
 - `ds4_server_text.h` — diagnostica, errori API e formati dei log del server; prompt e testi agentici restano nei rispettivi config.
-- `ds4_agentic_settings.h` — testo del runtime agentico, istruzioni di ritorno dalla skill e diagnostica dei checkpoint; il rendering usa questi valori senza duplicare le istruzioni.
+- `ds4_agentic_settings.h` — messaggi di validazione dello scope agentico e diagnostica dei checkpoint; le istruzioni operative delle skill appartengono al client.
+- `docs/architecture/server-agent-guidance-removal-20261014.md` — rimozione delle istruzioni agentiche aggiunte dal server e criteri dei test live per distinguere bug da limiti del modello.
 - `ds4_interactive_checkpoint.h` — possiede cattura, staging, budget e pubblicazione dei rollback delle pause; un rollback pubblicato è protetto da richieste ausiliarie e finalizzazioni ripetute fino al ripristino sul worker.
-- `ds4_interactive_settings.h` — proprietario unico di limiti, versione wire, marcatori edit, descrizione del tool e messaggi del protocollo interattivo.
+- `ds4_interactive_settings.h` — proprietario unico di limiti, versione wire, marcatori edit e messaggi del protocollo interattivo; le descrizioni dei tool provengono dal client.
 - `ds4_interactive_config.h`, `ds4_interactive_grammar.h`,
   `ds4_interactive_runtime.h` — protocollo Responses interattivo v2: registro
   dei comportamenti, policy del documento, pause interne alla stringa con KV,

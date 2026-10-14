@@ -1,0 +1,149 @@
+{
+  "date": "2026-10-14",
+  "scope": "server; client/frontend live tests deferred at user request",
+  "baseline_commit": "2190c8a",
+  "model": "Qwen3.8-27B-UD-Q4_K_S",
+  "backend": "CUDA / RTX 3090",
+  "context_length": 26000,
+  "mtp": true,
+  "removed": [
+    "agent_runtime message augmentation",
+    "skill-return guidance",
+    "zero-argument required-tool guidance",
+    "edit schema description augmentation",
+    "malformed-tool correction guidance",
+    "repeated system prompt during recovery"
+  ],
+  "retained": [
+    "model wire templates",
+    "client schemas",
+    "token constraints",
+    "edit IDs",
+    "protocol error feedback",
+    "checkpoint ownership"
+  ],
+  "local": {
+    "cuda_build": "passed",
+    "server_native": "passed, including exact recovery-message assertions",
+    "interactive_native": "passed",
+    "host_frontier_lifetime": "passed",
+    "text_configuration": "4 passed",
+    "reference_and_cache_accounting": "6 passed",
+    "docs": "10 passed"
+  },
+  "live": {
+    "edit_http": {
+      "tests": 6,
+      "passed": 4,
+      "model_limited": 2,
+      "not_verified": {
+        "missing_separator_id": "model emitted a different replacement",
+        "second_resource_rejection": "model did not emit the second resource"
+      },
+      "includes": [
+        "streaming and nonstreaming",
+        "literal markup",
+        "existing empty file",
+        "retry receipt",
+        "creation reply rejection",
+        "repeated path and distinct IDs"
+      ]
+    },
+    "cache_http": {
+      "passed": 7,
+      "archive_lines": 96,
+      "reasoning": "none",
+      "measurements": [
+        {
+          "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_keeps_history_with_steering",
+          "scenario": "steering-after-cancelled-edit-pause",
+          "minimum_cached_tokens": 2265,
+          "input_tokens": 2519,
+          "cached_tokens": 2281,
+          "prefill_tokens": 238
+        },
+        {
+          "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+          "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+          "minimum_cached_tokens": 2265,
+          "input_tokens": 2523,
+          "cached_tokens": 2281,
+          "prefill_tokens": 242
+        },
+        {
+          "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_completed_tool_boundary_keeps_history_with_steering",
+          "scenario": "steering-after-completed-tool",
+          "minimum_cached_tokens": 2227,
+          "input_tokens": 2325,
+          "cached_tokens": 2281,
+          "prefill_tokens": 44
+        },
+        {
+          "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_full_replay_without_steering_keeps_history",
+          "scenario": "full-replay-with-trailing-tool-output",
+          "minimum_cached_tokens": 2227,
+          "input_tokens": 2309,
+          "cached_tokens": 2281,
+          "prefill_tokens": 28
+        },
+        {
+          "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_resumed_edit_keeps_history_with_steering",
+          "scenario": "steering-after-resumed-edit",
+          "minimum_cached_tokens": 2317,
+          "input_tokens": 2512,
+          "cached_tokens": 2469,
+          "prefill_tokens": 43
+        },
+        {
+          "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_scoped_auxiliary_keeps_agent_history",
+          "scenario": "auxiliary-with-independent-agent-context",
+          "minimum_cached_tokens": 2227,
+          "input_tokens": 2309,
+          "cached_tokens": 2281,
+          "prefill_tokens": 28
+        },
+        {
+          "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_stateless_auxiliary_keeps_agent_history",
+          "scenario": "auxiliary-without-agent-context",
+          "minimum_cached_tokens": 2227,
+          "input_tokens": 2309,
+          "cached_tokens": 2281,
+          "prefill_tokens": 28
+        }
+      ],
+      "model_limitations": []
+    },
+    "cache_sse": {
+      "passed": 1,
+      "archive_lines": 384,
+      "reasoning": "low",
+      "measurements": [
+        {
+          "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+          "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+          "minimum_cached_tokens": 7733,
+          "input_tokens": 7985,
+          "cached_tokens": 7749,
+          "prefill_tokens": 236
+        }
+      ],
+      "model_limitations": []
+    }
+  },
+  "source_sha256": {
+    "ds4_server.c": "1101aef8a457178e49a5fb436da2397c31f1f71618960da63515acd6ba9249cd",
+    "ds4_agentic_settings.h": "b8ebcddbda750d9aa5f7588ec62a3bac06eae214c81e70429841b7914823a8dd",
+    "ds4_interactive_settings.h": "be475b40c08c011e7a1d713cf3aeaefc8a86d974a0a20a9aaee6bb66b75d4a6c",
+    "ds4_interactive_config.h": "0d185c61b1f2068796871c1fd5507de84c8d09591e9777d92859014e541ac52a",
+    "ds4_prompt_settings.h": "dd76174f7583f834cb6759a47a92175ac0aa995d34bd48d4dc1d9cb932c9101e",
+    "tests/test_interactive_api.py": "cf827de9d58b2447329b6e5cef302b49ff9337a3c822e0db998c6cc1fb9bd0b2",
+    "tests/test_steering_cache_live.py": "327524efb2963abb5124eab28b8abee61bc7ba3bc7c11c9440be9ae65434aae7"
+  },
+  "binary_sha256": "1cf4baf0fe860ec6382f0831c9c198b11fa62464edf4d020fc64a845562e464c",
+  "raw_logs": "performance-results/agent-guidance-removal-20261014",
+  "limits": [
+    "other model families and backends not live-qualified",
+    "model-limited paths are not counted as passed",
+    "concurrent exmekh_lib source changes are outside this server qualification"
+  ]
+}

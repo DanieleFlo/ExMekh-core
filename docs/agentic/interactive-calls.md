@@ -5,6 +5,12 @@ versione 2. Server e client negoziano esplicitamente il comportamento: v1 e v2
 non sono fallback. Il server genera gli argomenti e non accede al filesystem
 del client. Creazione e cancellazione sono tool ordinari separati.
 
+Le descrizioni dei tool e le istruzioni delle skill sono responsabilità del
+client. Il server conserva gli schemi ricevuti, applica il protocollo e i
+vincoli di generazione, senza aggiungere prosa alla descrizione dell'edit,
+ai messaggi dell'utente o al risultato di ritorno da una skill. Il recupero
+di una chiamata malformata comunica l'errore, senza ripetere il system prompt.
+
 ## Tool e responsabilità
 
 | Tool | Argomenti | Requisiti |
