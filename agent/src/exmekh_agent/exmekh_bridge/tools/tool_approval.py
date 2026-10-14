@@ -277,7 +277,12 @@ class CommandApprovalEvaluator:
                 )
             ]
             if context and context.work_root:
-                prompt_parts.append(f"\nWorking directory: `{context.work_root}`")
+                prompt_parts.append(
+                    app_text(
+                        "approvals.tool_approval.working_directory",
+                        path=context.work_root,
+                    )
+                )
 
             request = ClientRequest(
                 message=UserMessage("\n".join(prompt_parts)),

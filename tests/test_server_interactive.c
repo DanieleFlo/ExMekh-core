@@ -23,7 +23,7 @@ static void fixture_schema(request *r, const char *schema) {
     buf_free(&registry);
     const char *configuration =
         "{\"version\":2,\"operation\":\"configure\",\"request_id\":\"initial\",\"tools\":[{"
-        "\"name\":\"patch\",\"behavior\":\"edit_file.v2\",\"fields\":{\"document\":\"payload\"}}]}";
+        "\"name\":\"patch\",\"behavior\":\"edit_file.v3\",\"fields\":{\"document\":\"payload\"}}]}";
     r->interactive.wire = schema_json_parse(configuration);
     buf raw = {0};
     buf_puts(&raw, "{\"agentic\":{\"agent_context_id\":\"test:root\",\"allowed_tools\":[\"patch\"],"
@@ -60,7 +60,7 @@ static interactive_call *pause_call(request *r, const char *raw) {
 }
 
 static const char *const parameter_prefix = "<tool_call><function=patch><parameter=payload>";
-static const char *const paused_prefix = "<tool_call><function=patch><parameter=payload><edit path=\"src.py\"";
+static const char *const paused_prefix = "<tool_call><function=patch><parameter=payload><exmekh_edit path=\"src.py\"";
 
 static void provide_snapshot(interactive_call *call, const char *text, bool create) {
     buf body = {0};
@@ -89,18 +89,24 @@ static void append_checked(request *r, buf *raw, const char *piece) {
 
 static void finish_opening(request *r, interactive_call *call, buf *raw) {
     CHECK(call->authorized);
-    append_checked(r, raw, ">");
+    edit_document *state = call->behavior_state;
+    buf opening = {0};
+    buf_printf(&opening, " id=\"%s\" />", state->item[call->input_index - 1].identifier);
+    append_checked(r, raw, opening.ptr); buf_free(&opening);
 }
 
 static void finish_element(request *r, interactive_call *call, buf *raw,
                            const char *old, const char *replacement) {
-    CHECK(call->authorized);
-    buf part = {0}; buf_printf(&part, "<old_text>%s</old_text>", old);
-    append_checked(r, raw, part.ptr); buf_free(&part);
-    append_checked(r, raw, "<new_text>");
-    buf_printf(&part, "%s</new_text>", replacement);
-    append_checked(r, raw, part.ptr); buf_free(&part);
-    append_checked(r, raw, "</edit>");
+    edit_document *state = call->behavior_state;
+    buf part = {0}; append_tool_body_text(&part, old, call->param_end);
+    if (part.len) append_checked(r, raw, part.ptr);
+    buf_free(&part);
+    buf_printf(&part, "<exmekh_new_text id=\"%s\"/>", state->item[call->input_index - 1].identifier);
+    if (part.len) append_checked(r, raw, part.ptr);
+    buf_free(&part);
+    append_tool_body_text(&part, replacement, call->param_end);
+    if (part.len) append_checked(r, raw, part.ptr);
+    buf_free(&part);
 }
 
 static unsigned occurrences(const char *text, size_t n, const char *value, size_t len) {
@@ -119,7 +125,7 @@ static void test_text_oracle(void) {
             seed = seed * 1664525 + 1013904223; text[i] = alphabet[(seed >> 16) % 5];
         }
         text[n] = 0;
-        edit_constraint snapshot; edit_constraint_init(&snapshot, text, false);
+        edit_constraint snapshot; edit_constraint_init(&snapshot, text);
         for (size_t start = 0; start < n; start++) {
             bool line = !start || text[start-1] == '\n' || (text[start-1] == '\r' && text[start] != '\n');
             for (size_t length = 1; length <= n-start; length++) {
@@ -131,360 +137,21 @@ static void test_text_oracle(void) {
     }
 }
 
-static void test_document_constraints(void) {
-    request r; fixture(&r);
-    CHECK(candidate(&r, parameter_prefix, "<edit path=\"src.py\""));
-    CHECK(!candidate(&r, parameter_prefix, "<edit path=\"src.py\">"));
-    CHECK(!candidate(&r, parameter_prefix, "<edit path=\"src.py\" code=\"123456\">"));
-    CHECK(!candidate(&r, parameter_prefix, "<edit path=\"src.py\"<old_text>"));
-    CHECK(!candidate(&r, parameter_prefix, "</parameter>"));
-    CHECK(!candidate(&r, "<tool_call><function=patch>", "<parameter=payload string=false>"));
-    buf raw = {0}; buf_puts(&raw, paused_prefix);
-    interactive_call *call = pause_call(&r, raw.ptr);
-    CHECK(call && call->input_index == 1 && !call->authorized);
-    CHECK(!candidate(&r, raw.ptr, "<old_text>"));
-    CHECK(pause_call(&r, raw.ptr) == call);
-    provide_snapshot(call, "foo\nprefix foo\nbar", false);
-    finish_opening(&r, call, &raw);
-    CHECK(!candidate(&r, raw.ptr, "<new_text>"));
-    append_checked(&r, &raw, "<old_text>");
-    CHECK(!candidate(&r, raw.ptr, "refix"));
-    append_checked(&r, &raw, "foo");
-    CHECK(!candidate(&r, raw.ptr, "</old_text>"));
-    CHECK(!candidate(&r, raw.ptr, "\np</old_text><new_text>bad"));
-    append_checked(&r, &raw, "\np");
-    dsml_decode_tracker dt; dsml_decode_tracker_init(&dt, &r);
-    dsml_decode_tracker_update(&dt, raw.ptr, raw.len);
-    CHECK(interactive_sampling_body(&r, &dt, raw.ptr, raw.len));
-    CHECK(interactive_temperature(&r, &dt, 0.7f, raw.ptr, raw.len) == 0);
-    uint64_t old_epoch = interactive_sampling_epoch(&r, &dt, raw.ptr, raw.len);
-    CHECK(candidate(&r, raw.ptr, "refix foo\nbar</old_text>"));
-    append_checked(&r, &raw, "</old_text>");
-    CHECK(!candidate(&r, raw.ptr, "<new_text>body"));
-    append_checked(&r, &raw, "<new_text>");
-    dsml_decode_tracker_update(&dt, raw.ptr, raw.len);
-    CHECK(interactive_temperature(&r, &dt, 0.7f, raw.ptr, raw.len) == 0.7f);
-    CHECK(interactive_sampling_body(&r, &dt, raw.ptr, raw.len));
-    uint64_t new_epoch = interactive_sampling_epoch(&r, &dt, raw.ptr, raw.len);
-    CHECK(new_epoch && new_epoch != old_epoch);
-    CHECK(!candidate(&r, raw.ptr, "<delete/>"));
-    CHECK(!candidate(&r, raw.ptr, "<delete"));
-    CHECK(!candidate(&r, raw.ptr, "<!DOCTYPE x>"));
-    CHECK(!candidate(&r, raw.ptr, "&unknown;"));
-    CHECK(!candidate(&r, raw.ptr, "&#0;"));
-    CHECK(!candidate(&r, raw.ptr, "&#xD800;"));
-    CHECK(candidate(&r, raw.ptr, "\nordinary\n"));
-    CHECK(candidate(&r, raw.ptr, "\n@ex_meckh\ndelete"));
-    CHECK(candidate(&r, raw.ptr, "ex_meckh_delete"));
-    CHECK(candidate(&r, raw.ptr, "literal </new_text> data"));
-    CHECK(candidate(&r, raw.ptr, "done</new_text></edit>"));
-    CHECK(candidate(&r, raw.ptr, "done</new_text>\r\n </edit>"));
-    CHECK(candidate(&r, raw.ptr, "literal </new_text><!["));
-    /* Trie probes grow a token with a fixed committed boundary. Every
-     * intermediate prefix must remain viable before its lookahead resolves. */
-    buf pending={0}; buf_puts(&pending,raw.ptr); buf_puts(&pending,"literal </new_text");
-    const char *lookaheads[]={"><![", "></edit>", ">\n</edit>"};
-    for (size_t i=0; i<sizeof(lookaheads)/sizeof(lookaheads[0]); i++) {
-        for (size_t j=1; j<=strlen(lookaheads[i]); j++) {
-            char *piece=xstrndup(lookaheads[i],j);
-            CHECK(candidate(&r,pending.ptr,piece)); free(piece);
-        }
-    }
-    buf_putc(&pending,'>');
-    dsml_decode_tracker_update(&dt,pending.ptr,pending.len);
-    CHECK(interactive_temperature(&r,&dt,0.7f,pending.ptr,pending.len)==0.7f);
-    CHECK(!interactive_sampling_body(&r,&dt,pending.ptr,pending.len));
-    CHECK(interactive_sampling_epoch(&r,&dt,pending.ptr,pending.len)==new_epoch);
-    buf_free(&pending);
-    CHECK(!candidate(&r, raw.ptr, "literal </new_text></parameter>"));
-    CHECK(!candidate(&r, raw.ptr, "</new_text code=\"123456\">"));
-    buf part = {0}; buf_puts(&part, "literal </new_text> data </new_text> again</new_text>");
-    CHECK(candidate(&r, raw.ptr, "</new_text>"));
-    /* The matching delimiter is available byte by byte, including its first '<'. */
-    for (size_t i = 0; i < part.len; i++) {
-        char byte[2] = {part.ptr[i], 0}; append_checked(&r, &raw, byte);
-    }
-    append_checked(&r, &raw, "</edit>");
-    append_checked(&r, &raw, "</parameter></function></tool_call>");
-    tool_calls calls = {0}; char *content = NULL, *reasoning = NULL;
-    CHECK(interactive_parse_message(&r, raw.ptr, &content, &reasoning, &calls));
-    CHECK(interactive_apply_call_ids(&r, raw.ptr, &calls));
-    CHECK(calls.len == 1 && !strcmp(calls.v[0].id, call->call_id));
-    schema_json_value *args = schema_json_parse(calls.v[0].arguments);
-    CHECK(strstr(interactive_string(args, "payload"), "literal </new_text> data"));
-    CHECK(strstr(interactive_string(args, "payload"), "data </new_text> again</new_text></edit>"));
-    CHECK(!strstr(interactive_string(args, "payload"), " code="));
-    schema_json_free(args);
-    /* Final validation independently refuses a changed frozen resource. */
-    buf changed = {0};
-    const char *path = strstr(raw.ptr, "src.py"); CHECK(path);
-    buf_append(&changed, raw.ptr, (size_t)(path - raw.ptr));
-    buf_puts(&changed, "different.py"); buf_puts(&changed, path + strlen("src.py"));
-    CHECK(!interactive_apply_call_ids(&r, changed.ptr, &calls));
-    buf_free(&changed);
-    tool_calls_free(&calls); free(content); free(reasoning);
-    buf_free(&part); buf_free(&raw); request_free(&r);
-}
 
-static void test_special_operations(void) {
-    for (int create = 0; create < 2; create++) {
-        request r; fixture(&r);
-        buf raw = {0}; buf_puts(&raw, paused_prefix);
-        interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
-        provide_snapshot(call, "", create != 0); finish_opening(&r, call, &raw);
-        buf head = {0}; buf_puts(&head, raw.ptr);
-        CHECK(candidate(&r, head.ptr, "<old_text><all/></old_text>"));
-        CHECK(candidate(&r, head.ptr, "<old_text><line number=\"1\"/></old_text>"));
-        CHECK(!candidate(&r, head.ptr, "<old_text></old_text>"));
-        CHECK(!candidate(&r, head.ptr, "<old_text><line number=\"0\"/></old_text>"));
-        CHECK(!candidate(&r, head.ptr, "<old_text><line number=\"2\"/></old_text>"));
-        CHECK(!candidate(&r, head.ptr, "<old_text><line number=\"01\"/></old_text>"));
-        const char *selection="<old_text><all/></old_text>";
-        for (size_t i=0; selection[i]; i++) {
-            char byte[2]={selection[i],0}; append_checked(&r,&raw,byte);
-        }
-        buf insertion={0}; buf_puts(&insertion,head.ptr);
-        const char *line="<old_text><line number=\"1\"/></old_text>";
-        for (size_t i=0; line[i]; i++) {
-            char byte[2]={line[i],0}; append_checked(&r,&insertion,byte);
-        }
-        buf_free(&insertion);
-        append_checked(&r, &raw, "<new_text>");
-        CHECK(candidate(&r, raw.ptr, "<delete/>") == !create);
-        CHECK(!candidate(&r, raw.ptr, "\n<delete"));
-        buf close = {0}; buf_printf(&close, "%s</new_text>", create ? "" : "<delete/>");
-        for (size_t i=0; i<close.len; i++) {
-            char byte[2]={close.ptr[i],0}; append_checked(&r,&raw,byte);
-        }
-        append_checked(&r, &raw, "</edit></parameter></function></tool_call>");
-        CHECK(!candidate(&r, head.ptr, "<old_text><all/>extra</old_text>"));
-        buf_free(&head); buf_free(&close); buf_free(&raw); request_free(&r);
-    }
-}
 
-static void test_multiple_elements_and_ranges(void) {
-    request r; fixture(&r);
-    buf raw = {0}; buf_puts(&raw, paused_prefix);
-    interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
-    provide_snapshot(call, "one\ntwo\nthree", false); finish_opening(&r, call, &raw);
-    char first_id[40], first_exchange[40];
-    strcpy(first_id, call->call_id); strcpy(first_exchange, call->exchange_id);
-    finish_element(&r, call, &raw, "one", "first");
-    append_checked(&r, &raw, "<edit path=\"src.py\"");
-    interactive_call *second = pause_call(&r, raw.ptr);
-    CHECK(second == call && second->input_index == 2 && !second->authorized);
-    CHECK(!strcmp(first_id, second->call_id) && strcmp(first_exchange, second->exchange_id));
-    CHECK(!candidate(&r, raw.ptr, " code=\"123456\">"));
-    schema_json_value *changed = schema_json_parse("{\"status\":\"create\"}");
-    CHECK(!interactive_call_prepare_reply(second, changed));
-    schema_json_free(changed);
-    changed = schema_json_parse("{\"status\":\"provide\",\"text\":\"changed\",\"encoding\":\"utf-8\",\"line_count\":1}");
-    CHECK(!interactive_call_prepare_reply(second, changed));
-    schema_json_free(changed);
-    CHECK(!candidate(&r, raw.ptr, ">"));
-    provide_snapshot(second, "one\ntwo\nthree", false);
-    const edit_document *document = second->behavior_state;
-    CHECK(edit_document_reuses_snapshot(document));
-    schema_json_value *same_reply=schema_json_parse("{\"status\":\"provide\",\"text\":\"one\\ntwo\\nthree\"}");
-    CHECK(!interactive_edit_reply_bytes(document,same_reply));
-    CHECK(!interactive_edit_reply_memory(document,same_reply)); schema_json_free(same_reply);
-    finish_opening(&r, second, &raw);
-    /* Semantically wrong ranges pass through the server; the client owns them. */
-    append_checked(&r, &raw, "<old_text start_line=\"999999999999999999999999999999\" end_line=\"0\"></old_text>");
-    CHECK(!candidate(&r, raw.ptr, "<new_text><delete/>"));
-    append_checked(&r, &raw, "<new_text>");
-    buf close = {0}; buf_puts(&close, "range</new_text>");
-    append_checked(&r, &raw, close.ptr); append_checked(&r, &raw, "</edit></parameter></function></tool_call>");
-    tool_calls calls = {0}; char *content=NULL, *reasoning=NULL;
-    CHECK(interactive_parse_message(&r, raw.ptr, &content, &reasoning, &calls));
-    CHECK(interactive_apply_call_ids(&r, raw.ptr, &calls) && calls.len == 1);
-    tool_calls_free(&calls); free(content); free(reasoning);
-    buf_free(&close); buf_free(&raw); request_free(&r);
-}
 
-static void test_entities_cdata_and_native_delimiters(void) {
-    const char *selections[] = {
-        "&lt;x&gt;&amp;&quot;&apos;\r\n",
-        "<![CDATA[<x>&\"'\r\n]]>",
-        "&#60;x&#62;&#38;&#34;&#39;&#13;&#10;"
-    };
-    for (size_t test=0; test < sizeof(selections)/sizeof(selections[0]); test++) {
-        request r; fixture(&r);
-        buf raw = {0}; buf_puts(&raw, paused_prefix);
-        interactive_call *call=pause_call(&r, raw.ptr); CHECK(call);
-        provide_snapshot(call, "<x>&\"'\r\nkeep", false); finish_opening(&r, call, &raw);
-        append_checked(&r, &raw, "<old_text>");
-        for (size_t i=0; selections[test][i]; i++) {
-            char byte[2]={selections[test][i], 0}; append_checked(&r, &raw, byte);
-        }
-        append_checked(&r, &raw, "</old_text>"); append_checked(&r, &raw, "<new_text>");
-        buf literal={0}; buf_puts(&literal, "<![CDATA[</new_text></edit>]]><![CDATA[ raw </new_text>]]>");
-        for (size_t i=0; i<literal.len; i++) {
-            char byte[2]={literal.ptr[i],0}; append_checked(&r,&raw,byte);
-        }
-        append_checked(&r,&raw,"</new_text>"); append_checked(&r,&raw,"</edit>");
-        buf_free(&literal); buf_free(&raw); request_free(&r);
-    }
-    request r; fixture(&r);
-    buf raw={0}; buf_puts(&raw, paused_prefix);
-    interactive_call *call=pause_call(&r, raw.ptr); CHECK(call);
-    provide_snapshot(call, "é</parameter>\n", false); finish_opening(&r, call, &raw);
-    const char *piece="<old_text><![CDATA[é&lt;/parameter>\n]]></old_text>";
-    for (size_t i=0; piece[i]; i++) {
-        char byte[2]={piece[i],0}; append_checked(&r, &raw, byte);
-    }
-    buf_free(&raw); request_free(&r);
-}
 
-static void test_configuration_and_description(void) {
-    request r; char error[256]={0};
-    fixture_schema(&r, "{\"type\":\"string\",\"enum\":[\"x\"]}");
-    CHECK(!interactive_compile(&r, error, sizeof(error))); request_free(&r);
-    fixture_schema(&r, "{\"type\":\"string\",\"const\":\"x\"}");
-    CHECK(!interactive_compile(&r, error, sizeof(error))); request_free(&r);
-    fixture(&r);
-    schema_json_value *version=(schema_json_value *)schema_json_object_get(r.interactive.wire,"version");
-    version->number=1; CHECK(!interactive_compile(&r,error,sizeof(error)));
-    request_free(&r);
-    fixture(&r);
-    buf registry={0}; buf_puts(&registry,"{\"name\":\"patch\",\"description\":\"User description\",\"parameters\":{}}\n"
-                                        "{\"name\":\"ordinary\",\"description\":\"untouched\"}");
-    interactive_tool_descriptions(&registry,&r);
-    CHECK(strstr(registry.ptr,"User description") && strstr(registry.ptr,"final </new_text>"));
-    CHECK(!strstr(registry.ptr,"six-digit"));
-    CHECK(strstr(registry.ptr,"untouched"));
-    char *before=xstrdup(registry.ptr); interactive_tool_descriptions(&registry,&r);
-    CHECK(!strcmp(before,registry.ptr)); free(before); buf_free(&registry);
-    char *capabilities=interactive_capabilities_body(SERVER_MODEL_SYNTAX_QWEN);
-    CHECK(strstr(capabilities,"edit_file.v2") && !strstr(capabilities,"edit_file.v1"));
-    CHECK(strstr(capabilities,"\"version\":2") && strstr(capabilities,"state_budget_bytes"));
-    free(capabilities); request_free(&r);
-}
 
-static void test_escape_frontiers(void) {
-    request r; fixture(&r);
-    buf raw={0}; buf_puts(&raw,paused_prefix);
-    interactive_call *call=pause_call(&r,raw.ptr); CHECK(call);
-    provide_snapshot(call,"x",false); finish_opening(&r,call,&raw);
-    CHECK(!candidate(&r,raw.ptr,"<old_text&"));
-    append_checked(&r,&raw,"<old_text>x");
-    CHECK(!candidate(&r,raw.ptr,"&"));
-    CHECK(!candidate(&r,raw.ptr,"&amp"));
-    CHECK(!candidate(&r,raw.ptr,"]"));
-    CHECK(!candidate(&r,raw.ptr,"]]"));
-    append_checked(&r,&raw,"</old_text>");
-    append_checked(&r,&raw,"<new_text>");
-    CHECK(!candidate(&r,raw.ptr,"\xef\xbf\xbe"));
-    CHECK(!candidate(&r,raw.ptr,"<![CDATA[\xef\xbf\xbe"));
-    CHECK(candidate(&r,raw.ptr,"\xf0\x9f"));
-    CHECK(candidate(&r,raw.ptr,"\xf0\x9f\x98\x80"));
-    CHECK(!candidate(&r,"<tool_call><function=patch><parameter=payload><edit path=\"","\xef\xbf\xbe"));
-    CHECK(!candidate(&r,"<tool_call><function=patch><parameter=payload><edit path=\"&#1",
-                     "&lt;/parameter"));
-    CHECK(!candidate(&r,"<tool_call><function=patch><parameter=payload><edit path=\"\xf0\x9f",
-                     "&lt;/parameter"));
-    buf partial={0}; buf_puts(&partial,raw.ptr); buf_puts(&partial,"</new_text></ed");
-    CHECK(!candidate(&r,partial.ptr,"&"));
-    CHECK(!candidate(&r,partial.ptr,"&amp;"));
-    CHECK(!candidate(&r,partial.ptr,"&lt;"));
-    const char *unfinished[] = {"<", "<![CDATA", "&#1", "\xf0\x9f"};
-    for (size_t i=0; i<sizeof(unfinished)/sizeof(unfinished[0]); i++) {
-        buf frontier={0}; buf_puts(&frontier,raw.ptr); buf_puts(&frontier,unfinished[i]);
-        CHECK(candidate(&r,raw.ptr,unfinished[i]));
-        CHECK(!candidate(&r,frontier.ptr,"&lt;/parameter"));
-        buf_free(&frontier);
-    }
-    /* The live DSML failure ended in <&lt;/｜DSML｜parameter. Test both
-     * transports directly; partial native escapes must remain extendable. */
-    const char *ends[] = {"</parameter>", "</｜DSML｜parameter>"};
-    const edit_document *document=call->behavior_state;
-    const char *value=strstr(raw.ptr,"<edit path=");
-    for (size_t i=0; i<sizeof(ends)/sizeof(ends[0]); i++) {
-        buf frontier={0}; buf_puts(&frontier,value); buf_putc(&frontier,'<');
-        buf_puts(&frontier,"&lt;"); buf_puts(&frontier,ends[i]+1);
-        frontier.ptr[--frontier.len]=0;
-        edit_document_view view=interactive_edit_view(document,frontier.ptr,frontier.len,
-                                                       ends[i],frontier.len,false);
-        CHECK(!view.valid); free(view.path); buf_free(&frontier);
-    }
-    CHECK(interactive_utf8_valid((const unsigned char *)"\xe0",1,false));
-    CHECK(!interactive_utf8_valid((const unsigned char *)"\xe0",1,true));
-    CHECK(!interactive_utf8_valid((const unsigned char *)"\xe0\x80",2,false));
-    CHECK(!interactive_utf8_valid((const unsigned char *)"\xc3<",2,false));
-    buf_free(&partial); buf_free(&raw); request_free(&r);
 
-    fixture(&r); buf_puts(&raw,paused_prefix);
-    call=pause_call(&r,raw.ptr); CHECK(call);
-    provide_snapshot(call," A",false); finish_opening(&r,call,&raw);
-    append_checked(&r,&raw,"<old_text>");
-    CHECK(candidate(&r,raw.ptr,"&"));
-    CHECK(candidate(&r,raw.ptr,"&#3"));
-    CHECK(!candidate(&r,raw.ptr,"&l"));
-    CHECK(!candidate(&r,raw.ptr,"&#1"));
-    CHECK(!candidate(&r,raw.ptr,"&#xA"));
-    append_checked(&r,&raw,"&#32;");
-    append_checked(&r,&raw,"A</old_text>");
-    buf_free(&raw); request_free(&r);
-}
 
-static void test_cdata_end_prefix_matches_snapshot(void) {
-    request r; fixture(&r);
-    buf raw = {0}; buf_puts(&raw, paused_prefix);
-    interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
-    provide_snapshot(call, "  value\nprefix value\naaa\nvalue", false);
-    finish_opening(&r, call, &raw);
-    append_checked(&r, &raw, "<old_text>aa<![CDATA[]]>");
-    CHECK(!candidate(&r, raw.ptr, "]"));
-    CHECK(!candidate(&r, raw.ptr, "]]"));
-    CHECK(candidate(&r, raw.ptr, "a</old_text>"));
-    buf_free(&raw); request_free(&r);
 
-    fixture(&r); buf_puts(&raw, paused_prefix);
-    call = pause_call(&r, raw.ptr); CHECK(call);
-    provide_snapshot(call, "]]x", false); finish_opening(&r, call, &raw);
-    append_checked(&r, &raw, "<old_text>");
-    append_checked(&r, &raw, "]"); append_checked(&r, &raw, "]");
-    CHECK(!candidate(&r, raw.ptr, ">"));
-    CHECK(candidate(&r, raw.ptr, "</old_text>"));
-    buf_free(&raw); request_free(&r);
-}
 
-static void test_native_syntaxes_and_reasoning(void) {
-    const server_model_syntax syntaxes[] = {SERVER_MODEL_SYNTAX_QWEN, SERVER_MODEL_SYNTAX_DEEPSEEK,
-                                          SERVER_MODEL_SYNTAX_DEEPSEEK41};
-    for (size_t i=0; i<sizeof(syntaxes)/sizeof(syntaxes[0]); i++) {
-        request r; fixture(&r); r.model_syntax=syntaxes[i]; r.think_mode=DS4_THINK_HIGH;
-        dsml_decode_tracker dt; dsml_decode_tracker_init(&dt,&r);
-        thinking_state thinking={.inside=true};
-        buf raw={0}; buf_puts(&raw,"Quoted <tool_call><function=patch>ignored");
-        generation_protocol_feed(&r,&thinking,&dt,raw.ptr,raw.len,raw.ptr,raw.len);
-        CHECK(!interactive_observe(&r,&dt,raw.ptr,raw.len));
-        buf_puts(&raw,"</think>");
-        generation_protocol_feed(&r,&thinking,&dt,raw.ptr,raw.len,"</think>",8);
-        const char *prefix="<｜DSML｜tool_calls><｜DSML｜invoke name=\"patch\">"
-                           "<｜DSML｜parameter name=\"payload\" string=\"true\"><edit path=\"src.py\"";
-        append_checked(&r,&raw,prefix);
-        generation_protocol_feed(&r,&thinking,&dt,raw.ptr,raw.len,prefix,strlen(prefix));
-        interactive_call *call=interactive_observe(&r,&dt,raw.ptr,raw.len); CHECK(call);
-        provide_snapshot(call,"",false); finish_opening(&r,call,&raw);
-        const char *selection="<old_text><all/></old_text>";
-        for (size_t j=0; selection[j]; j++) {
-            char byte[2]={selection[j],0}; append_checked(&r,&raw,byte);
-        }
-        append_checked(&r,&raw,"<new_text>");
-        buf operation={0}; buf_puts(&operation,"<delete/></new_text>");
-        for (size_t j=0; j<operation.len; j++) {
-            char byte[2]={operation.ptr[j],0}; append_checked(&r,&raw,byte);
-        }
-        buf_free(&operation); append_checked(&r,&raw,"</edit>");
-        append_checked(&r,&raw,"</｜DSML｜parameter></｜DSML｜invoke></｜DSML｜tool_calls>");
-        tool_calls calls={0}; char *content=NULL,*reasoning=NULL;
-        CHECK(interactive_parse_message(&r,raw.ptr,&content,&reasoning,&calls));
-        CHECK(interactive_apply_call_ids(&r,raw.ptr,&calls) && calls.len==1);
-        CHECK(reasoning && strstr(reasoning,"ignored"));
-        tool_calls_free(&calls); free(content); free(reasoning); buf_free(&raw); request_free(&r);
-    }
-}
+
+
+
+
+
+
 
 static void test_response_metadata(void) {
     request r; fixture(&r); free(r.model); r.model=xstrdup("Qwen3.8-27B-UD-Q4_K_S");
@@ -604,7 +271,7 @@ static void test_concurrent_resume_and_queued_cancel(void) {
     e->pending = pause_call(&r, paused_prefix); CHECK(e->pending);
     e->paused = r; memset(&r, 0, sizeof(r)); interactive_rebind(&e->paused);
     e->queued = false; e->owns_request = true; e->status = INTERACTIVE_AWAITING;
-    char *body = control_body(e, "resume", "resume", "{\"status\":\"create\"}");
+    char *body = control_body(e, "resume", "resume", "{\"status\":\"provide\",\"text\":\"\",\"encoding\":\"utf-8\",\"line_count\":0}");
     resume_probe probe[2] = {{.server=&s, .body=body, .fd=sockets[0][0]},
                              {.server=&s, .body=body, .fd=sockets[1][0]}};
     pthread_t thread[2];
@@ -658,9 +325,9 @@ static void test_reject_second_element(void) {
     interactive_entry *e=r.interactive.entry;
     buf raw={0}; buf_puts(&raw,paused_prefix);
     interactive_call *call=pause_call(&r,raw.ptr); CHECK(call);
-    provide_snapshot(call,"",true); finish_opening(&r,call,&raw);
-    finish_element(&r,call,&raw,"<all/>","first");
-    append_checked(&r,&raw,"<edit path=\"second.py\"");
+    provide_snapshot(call,"",false); finish_opening(&r,call,&raw);
+    finish_element(&r,call,&raw,"","first");
+    append_checked(&r,&raw,"<exmekh_edit path=\"second.py\"");
     CHECK(pause_call(&r,raw.ptr)==call && call->input_index==2);
     e->paused=r; memset(&r,0,sizeof(r)); interactive_rebind(&e->paused);
     e->pending=call; e->owns_request=true; e->queued=false;
@@ -710,7 +377,7 @@ static void test_large_snapshot(void) {
     for (int line=0; length+80<INTERACTIVE_MAX_SNAPSHOT; line++)
         length+=(size_t)snprintf(text+length,80,"repeated repeated repeated repeated repeated line %d\r\n",line);
     text[length]=0;
-    double start=now_sec(); edit_constraint snapshot; edit_constraint_init(&snapshot,text,false);
+    double start=now_sec(); edit_constraint snapshot; edit_constraint_init(&snapshot,text);
     double index_ms=(now_sec()-start)*1000;
     const char *selection="repeated repeated repeated repeated repeated line 999\r\n";
     CHECK(edit_selection_prefix(&snapshot,selection,strlen(selection),true,NULL));
@@ -719,111 +386,22 @@ static void test_large_snapshot(void) {
     for (int i=0;i<1000;i++) verified+=edit_selection_prefix(&snapshot,selection,strlen(selection),true,NULL);
     CHECK(verified==1000);
     printf("interactive snapshot benchmark bytes=%zu lines=%zu index_ms=%.3f lookup_us=%.3f\n",
-           length,edit_constraint_line_count(&snapshot),index_ms,(now_sec()-start)*1000);
+           length,snapshot.lines,index_ms,(now_sec()-start)*1000);
     edit_constraint_free(&snapshot); free(text);
 }
 
-static void compare_incremental_view(const void *state, const char *value, size_t n,
-                                     size_t committed, bool complete) {
-    const char *end = "</parameter>";
-    edit_document_checkpoint before = edit_document_restart(state, SIZE_MAX, SIZE_MAX);
-    edit_document_view oracle = interactive_edit_probe(state, value, n, end, committed, complete, false, NULL);
-    edit_document_view actual = interactive_edit_view(state, value, n, end, committed, complete);
-    CHECK(actual.valid == oracle.valid);
-    if (actual.valid) {
-        CHECK(actual.phase == oracle.phase && actual.index == oracle.index);
-        CHECK(actual.speculative == oracle.speculative);
-        CHECK(actual.payload_start == oracle.payload_start);
-        CHECK(actual.native_escape == oracle.native_escape);
-        CHECK((actual.path == NULL) == (oracle.path == NULL));
-        if (actual.path) CHECK(!strcmp(actual.path, oracle.path));
-    }
-    edit_document_checkpoint after = edit_document_restart(state, SIZE_MAX, SIZE_MAX);
-    CHECK(before.offset == after.offset && before.index == after.index &&
-          before.characters == after.characters && before.cdata == after.cdata);
-    char *decoded = xstrndup(value, n); ds4_tool_text_unescape(decoded, end);
-    size_t characters = 0;
-    for (const unsigned char *p = (const unsigned char *)decoded; *p; p++)
-        if ((*p & 0xc0) != 0x80) characters++;
-    CHECK(interactive_edit_characters(state, value, n, end) == characters);
-    free(decoded); free(actual.path); free(oracle.path);
-}
 
-static void test_incremental_document_restarts(void) {
-    const char *bodies[] = {
-        "plain ] and ]] text &amp; end",
-        "<![CDATA[<html><body>A & B ] x ]] x</body></html>]]>",
-        "<![CDATA[]]><![CDATA[</new_text></edit><delete/>]]>",
-        "before </new_text>   literal </new_text>\n<![CDATA[x]]>",
-        "utf8 α中🙂 &#x1f600; &#000000000000000000000097;\r\n",
-        "<![CDATA[&lt;/parameter> &amp;lt;/parameter> α中🙂]]>",
-        "<delete/>", "",
-    };
-    const char *pieces[] = {"a", "<", "&", "]", "]]>", "\x01", "\xc0",
-        "</new_text>", "</new_text></edit>", "<![CDATA[", "<delete/>",
-        "&#x110000;", "&lt;/parameter>", "\r\n", "α", "🙂"};
-    for (size_t test = 0; test < sizeof(bodies)/sizeof(bodies[0]); test++) {
-        request r; fixture(&r);
-        interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
-        provide_snapshot(call, "OLD\n", false);
-        buf value = {0};
-        buf_puts(&value, "<edit path=\"src.py\"><old_text><all/></old_text><new_text>");
-        buf_puts(&value, bodies[test]); buf_puts(&value, "</new_text></edit>");
-        for (size_t n = 0; n <= value.len; n++) {
-            compare_incremental_view(call->behavior_state, value.ptr, n, n, false);
-            compare_incremental_view(call->behavior_state, value.ptr, n, n, true);
-            for (size_t piece = 0; piece < sizeof(pieces)/sizeof(pieces[0]); piece++) {
-                buf candidate = {0}; buf_append(&candidate, value.ptr, n);
-                buf_puts(&candidate, pieces[piece]);
-                compare_incremental_view(call->behavior_state, candidate.ptr, candidate.len, n, false);
-                buf_free(&candidate);
-            }
-            interactive_edit_commit_string(call->behavior_state, value.ptr, n, "</parameter>");
-        }
-        buf_free(&value); request_free(&r);
-    }
-}
 
-static void test_incremental_selection_restarts(void) {
-    const char *snapshot = "same α中🙂 & < ] \r\nunique </parameter>\rnext\nlast";
-    const char *selections[] = {
-        "same α中🙂 &amp; &lt; ] \r\nunique &lt;/parameter>",
-        "<![CDATA[same α中🙂 & < ] \r\nunique &lt;/parameter>]]>",
-        "same &#x3b1;&#20013;&#x1f642; &amp; &lt; ] \r\nunique &lt;/parameter>",
-        "unique &lt;/parameter>", "next\nlast", "<all/>", "<line number=\"5\"/>",
-    };
-    const char *pieces[] = {"x", "α中🙂", "\x80", "&", "&#x", "]", "]]>",
-        "</old_text>", "</old_text><new_text>", "<![CDATA[", "&lt;/parameter>", "\r\n"};
-    for (size_t test = 0; test < sizeof(selections)/sizeof(selections[0]); test++) {
-        edit_document *state = edit_document_new("</parameter>");
-        CHECK(edit_document_begin_input(state, "a"));
-        CHECK(edit_document_provide(state, snapshot, false));
-        CHECK(edit_document_begin_input(state, "a"));
-        CHECK(edit_document_provide(state, snapshot, false));
-        buf value = {0};
-        buf_puts(&value, "<edit path=\"a\"><old_text>"); buf_puts(&value, selections[test]);
-        buf_puts(&value, "</old_text><new_text>α&amp;<![CDATA[🙂<x/>]]></new_text></edit>\r\n");
-        buf_puts(&value, "<edit path=\"a\"><old_text start_line=\"1\" end_line=\"999999999999999999999\"></old_text><new_text></new_text></edit>");
-        for (size_t n = 0; n <= value.len; n++) {
-            compare_incremental_view(state, value.ptr, n, n, false);
-            compare_incremental_view(state, value.ptr, n, n, true);
-            for (size_t p = 0; p < sizeof(pieces)/sizeof(pieces[0]); p++) {
-                buf candidate = {0}; buf_append(&candidate, value.ptr, n); buf_puts(&candidate, pieces[p]);
-                compare_incremental_view(state, candidate.ptr, candidate.len, n, false);
-                buf_free(&candidate);
-            }
-            interactive_edit_commit_string(state, value.ptr, n, "</parameter>");
-        }
-        buf_free(&value); edit_document_free(state);
-    }
-}
+
+
+
 
 static void test_selection_frontier_equivalence(void) {
     const char *snapshots[] = {"", "a", "same\nsame\nsame-tail", "b\ra\r\nb\na-end",
         "αx\nαy\n🙂x\n🙂y", "repeat 1\nrepeat 2\nrepeat 11\nrepeat 12\nlast"};
     const char *pieces[] = {"", "a", "same", "repeat ", "\r\n", "α", "🙂", "\xf0", "&", "last"};
     for (size_t s = 0; s < sizeof(snapshots)/sizeof(snapshots[0]); s++) {
-        edit_constraint snapshot; edit_constraint_init(&snapshot, snapshots[s], false);
+        edit_constraint snapshot; edit_constraint_init(&snapshot, snapshots[s]);
         for (size_t start = 0; start <= strlen(snapshots[s]); start++) {
             if (start && snapshots[s][start - 1] != '\n' && snapshots[s][start - 1] != '\r') continue;
             const char *line = snapshots[s] + start;
@@ -847,175 +425,13 @@ static void test_selection_frontier_equivalence(void) {
     }
 }
 
-static void test_xml_static_frontier(void) {
-    const char *safe[] = {"text", "α中🙂", "\r\n", "\"' > [ /", "<"};
-    for (size_t i = 0; i + 1 < sizeof(safe)/sizeof(safe[0]); i++)
-        CHECK(edit_document_plain_piece(safe[i], strlen(safe[i])));
-    const char *dynamic[] = {"", "<", "&", "]", "]]>", "\xc0", "\x80", "\xef\xbf\xbe", "\x01", "\xf0\x9f"};
-    for (size_t i = 0; i < sizeof(dynamic)/sizeof(dynamic[0]); i++)
-        CHECK(!edit_document_plain_piece(dynamic[i], strlen(dynamic[i])));
-    CHECK(!edit_document_plain_piece("a\0b", 3));
-    request r; fixture(&r);
-    interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
-    provide_snapshot(call, "OLD\n", false);
-    const char *tails[] = {
-        "><old_text><all/></old_text><new_text>",
-        "><old_text><all/></old_text><new_text>α中🙂",
-        "><old_text><all/></old_text><new_text><![CDATA[<html>]]>",
-        "><old_text><all/></old_text><new_text><![CDATA[<html>",
-        "><old_text><all/></old_text><new_text>&am",
-        "><old_text><all/></old_text><new_text><![CDATA[x]]",
-        "><old_text><all/></old_text><new_text>\xf0\x9f",
-        "><old_text><all/></old_text><new_text></new_text>  ",
-    };
-    for (size_t i = 0; i < sizeof(tails)/sizeof(tails[0]); i++) {
-        buf raw = {0}; buf_puts(&raw, paused_prefix); buf_puts(&raw, tails[i]);
-        /* Each branch is an independent transcript. */
-        edit_document *state = edit_document_new("</parameter>");
-        CHECK(edit_document_begin_input(state, "src.py")); CHECK(edit_document_provide(state, "OLD\n", false));
-        interactive_edit_commit_string(state, raw.ptr + strlen(parameter_prefix),
-            raw.len - strlen(parameter_prefix), "</parameter>");
-        CHECK(edit_document_plain_replacement(state, raw.len - strlen(parameter_prefix)) == (i < 4));
-        for (size_t p = 0; p + 1 < sizeof(safe)/sizeof(safe[0]); p++) {
-            buf candidate = {0}; buf_puts(&candidate, raw.ptr + strlen(parameter_prefix)); buf_puts(&candidate, safe[p]);
-            compare_incremental_view(state, candidate.ptr, candidate.len,
-                raw.len - strlen(parameter_prefix), false);
-            edit_document_checkpoint before = edit_document_restart(state, SIZE_MAX, SIZE_MAX);
-            bool plain = interactive_edit_plain_replacement(state, candidate.ptr, candidate.len, "</parameter>");
-            edit_document_checkpoint after = edit_document_restart(state, SIZE_MAX, SIZE_MAX);
-            CHECK(before.offset == after.offset);
-            if (plain) {
-                for (size_t next = 0; next + 1 < sizeof(safe)/sizeof(safe[0]); next++) {
-                    buf extension = {0}; buf_puts(&extension, candidate.ptr); buf_puts(&extension, safe[next]);
-                    edit_document_view view = interactive_edit_probe(state, extension.ptr, extension.len,
-                        "</parameter>", candidate.len, false, false, NULL);
-                    CHECK(view.valid); free(view.path); buf_free(&extension);
-                }
-            }
-            if (i < 4) {
-                edit_document_view view = interactive_edit_view(state, candidate.ptr, candidate.len,
-                    "</parameter>", raw.len - strlen(parameter_prefix), false);
-                CHECK(view.valid); free(view.path);
-            }
-            buf_free(&candidate);
-        }
-        edit_document_free(state); buf_free(&raw);
-    }
-    /* Configuring an interactive edit does not constrain other tool strings. */
-    tool_schema_orders_add_json(&r.tool_orders,
-        "{\"name\":\"plain\",\"parameters\":{\"type\":\"object\",\"properties\":{\"body\":{\"type\":\"string\"}},\"required\":[\"body\"]}}");
-    const char *ordinary = "<tool_call><function=plain><parameter=body>hello";
-    dsml_decode_tracker dt; dsml_decode_tracker_init(&dt, &r);
-    dsml_decode_tracker_update(&dt, ordinary, strlen(ordinary));
-    CHECK(agentic_tracker_has_unbounded_string(&dt));
-    agentic_token_filter filter = {.req=&r, .tracker=&dt, .raw=ordinary,
-        .raw_len=strlen(ordinary), .use_incremental_string=true, .incremental_free_string=true};
-    CHECK(!agentic_xml_partition_eligible(&filter));
-    CHECK(agentic_filter_token(&filter, 0, "ordinary α", strlen("ordinary α")));
-    buf_free(&filter.scratch); request_free(&r);
-}
 
-static void test_old_cdata_progress_and_eof(void) {
-    request r; fixture(&r);
-    interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
-    const char *snapshot = "UNIQUE <p>α中🙂 & </old_text></p>";
-    provide_snapshot(call, snapshot, false);
-    buf value = {0}, raw = {0};
-    buf_printf(&value, "<edit path=\"src.py\"><old_text><![CDATA[%s]]>", snapshot);
-    for (size_t n = 0; n <= value.len; n++) {
-        compare_incremental_view(call->behavior_state, value.ptr, n, n, false);
-        interactive_edit_commit_string(call->behavior_state, value.ptr, n, "</parameter>");
-    }
-    buf_puts(&raw, parameter_prefix); buf_puts(&raw, value.ptr);
-    CHECK(candidate(&r, raw.ptr, "</old_text>"));
-    CHECK(!candidate(&r, raw.ptr, "<![CDATA["));
-    CHECK(!candidate(&r, raw.ptr, "<![CDATA[]]>"));
-    buf_free(&raw); buf_free(&value); request_free(&r);
 
-    fixture(&r); call = pause_call(&r, paused_prefix); CHECK(call);
-    provide_snapshot(call, "unique next", false);
-    buf_puts(&raw, paused_prefix); buf_puts(&raw, "><old_text>unique ");
-    CHECK(candidate(&r, raw.ptr, "<![CDATA[]]>"));
-    CHECK(candidate(&r, raw.ptr, "<![CDATA[n]]>"));
-    buf_free(&raw); request_free(&r);
-}
 
-static void test_old_native_escape_depth(void) {
-    const struct { const char *text, *opening, *encoding, *rejected; } cases[] = {
-        {"unique </parameter>", "<![CDATA[unique ", "&lt;/parameter>", "&a"},
-        {"unique </parameter>", "unique ", "&amp;lt;/parameter>", "&amp;a"},
-        {"unique &lt;/parameter>", "<![CDATA[unique ", "&amp;lt;/parameter>", "&amp;a"},
-        {"unique &lt;/parameter>", "unique ", "&amp;amp;lt;/parameter>", "&amp;amp;a"},
-        {"unique <p>", "<![CDATA[unique ", "<p>", "&l"},
-    };
-    for (size_t i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
-        request r; fixture(&r);
-        interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
-        provide_snapshot(call, cases[i].text, false);
-        buf raw = {0}; buf_puts(&raw, paused_prefix); buf_puts(&raw, "><old_text>");
-        buf_puts(&raw, cases[i].opening);
-        CHECK(!candidate(&r, raw.ptr, cases[i].rejected));
-        char *prefix = xstrdup(cases[i].encoding);
-        for (size_t n = 1; n <= strlen(cases[i].encoding); n++) {
-            prefix[n] = 0; CHECK(candidate(&r, raw.ptr, prefix));
-            prefix[n] = cases[i].encoding[n];
-        }
-        free(prefix); buf_free(&raw); request_free(&r);
-    }
-}
 
-static void test_snapshot_drafts(void) {
-    const struct { const char *snapshot, *prefix, *expected; } cases[] = {
-        {"unique first\r\nα🙂<&]\r\n", "unique ", "first\r\nα🙂&lt;&amp;&#93;\r\n"},
-        {"unique </parameter> &lt;/parameter>\n", "unique ",
-            "&amp;lt;/parameter> &amp;amp;lt;/parameter>\n"},
-        {"unique tail]]>after", "<![CDATA[unique ", "tail"},
-        {"unique </parameter>\r\n", "<![CDATA[unique ", "&lt;/parameter>\r\n"},
-        {"unique EOF", "unique EOF", ""},
-        {"same A\nsame B\n", "same ", ""},
-        {"line unique\nelse line unique\n", "line ", ""},
-        {"unique \001invalid", "unique ", ""},
-        {"unique α", "unique &", ""},
-        {"unique α", "unique &lt", ""},
-        {"unique α", "unique \xce", ""},
-        {"unique α", "<all/>", ""},
-        {"unique α", "<line number=\"1\"/>", ""},
-        {"unique α", "unique</old_text><new_text>replacement", ""},
-        {"", "", ""},
-    };
-    for (size_t i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
-        request r; fixture(&r);
-        interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
-        provide_snapshot(call, cases[i].snapshot, false);
-        buf raw = {0}, draft = {0}, again = {0};
-        buf_puts(&raw, paused_prefix); buf_puts(&raw, "><old_text>");
-        buf_puts(&raw, cases[i].prefix);
-        dsml_decode_tracker dt; dsml_decode_tracker_init(&dt, &r);
-        dsml_decode_tracker_update(&dt, raw.ptr, raw.len);
-        interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &draft, 4096);
-        CHECK(!strcmp(draft.ptr ? draft.ptr : "", cases[i].expected));
-        interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &again, 4096);
-        CHECK(draft.len == again.len && !memcmp(draft.ptr ? draft.ptr : "", again.ptr ? again.ptr : "", draft.len));
-        if (draft.len) CHECK(candidate(&r, raw.ptr, draft.ptr));
-        if (draft.len) {
-            buf small = {0};
-            interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &small, 2);
-            char *decoded = xstrdup(small.ptr ? small.ptr : "");
-            ds4_tool_text_unescape(decoded, dt.syn->param_end);
-            CHECK(edit_xml_unicode(decoded, true));
-            CHECK(!small.len || candidate(&r, raw.ptr, small.ptr));
-            free(decoded); buf_free(&small);
-        }
-        /* Committed restarts must produce the identical borrowed suffix. */
-        if (candidate(&r, raw.ptr, "")) {
-            (void)interactive_observe(&r, &dt, raw.ptr, raw.len);
-            again.len = 0; if (again.ptr) again.ptr[0] = 0;
-            interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &again, 4096);
-            CHECK(!strcmp(again.ptr ? again.ptr : "", cases[i].expected));
-        }
-        buf_free(&raw); buf_free(&draft); buf_free(&again); request_free(&r);
-    }
-}
+
+
+
 
 static void test_snapshot_draft_policy(void) {
     const char *names[] = {"DS4_OLD_TEXT_DRAFT_BATCH", "DS4_OLD_TEXT_DRAFT_DISABLE"};
@@ -1074,26 +490,7 @@ static void test_speculative_metric_ownership(void) {
     CHECK(phase.mtp_constrained_sampled_rows == 1 && phase.mtp_constrained_fallbacks == 1);
 }
 
-static void test_snapshot_draft_older_prefix(void) {
-    request r; fixture(&r);
-    interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
-    provide_snapshot(call, "unique first\r\nsecond", false);
-    buf raw = {0}, draft = {0};
-    buf_puts(&raw, paused_prefix); buf_puts(&raw, "><old_text>unique ");
-    size_t earlier = raw.len;
-    buf_puts(&raw, "first");
-    dsml_decode_tracker dt; dsml_decode_tracker_init(&dt, &r);
-    dsml_decode_tracker_update(&dt, raw.ptr, raw.len);
-    (void)interactive_observe(&r, &dt, raw.ptr, raw.len);
-    /* A read-only probe may precede the committed frontier. It must use its
-     * full selection rather than apply that selection as a frontier delta. */
-    interactive_draft_suffix(&r, &dt, raw.ptr, earlier, &draft, 4096);
-    CHECK(!strcmp(draft.ptr ? draft.ptr : "", "first\r\nsecond"));
-    draft.len = 0; if (draft.ptr) draft.ptr[0] = 0;
-    interactive_draft_suffix(&r, &dt, raw.ptr, raw.len, &draft, 4096);
-    CHECK(!strcmp(draft.ptr ? draft.ptr : "", "\r\nsecond"));
-    buf_free(&raw); buf_free(&draft); request_free(&r);
-}
+
 
 static void test_resumed_progress_counters(void) {
     FILE *output = tmpfile(); CHECK(output);
@@ -1111,24 +508,296 @@ static void test_resumed_progress_counters(void) {
     CHECK(completion == 115 && last > start);
 }
 
+
+static void separator_text(interactive_call *call, buf *out) {
+    edit_document *state = call->behavior_state;
+    buf_printf(out, "<exmekh_new_text id=\"%s\"/>", state->item[call->input_index - 1].identifier);
+}
+
+static void test_literal_contract(void) {
+    request r; fixture(&r);
+    buf raw = {0}; buf_puts(&raw, paused_prefix);
+    CHECK(candidate(&r, parameter_prefix, "<exmekh_edit path=\"src.py\""));
+    CHECK(!candidate(&r, parameter_prefix, "<edit path=\"src.py\""));
+    interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
+    CHECK(!candidate(&r, raw.ptr, " />"));
+    provide_snapshot(call, "  old & <x/>\r\nold\nprefix old\n", false);
+    edit_document *state = call->behavior_state;
+    CHECK(strlen(state->item[0].identifier) == 3);
+    finish_opening(&r, call, &raw);
+    CHECK(!candidate(&r, raw.ptr, "old<exmekh_new_text/>"));
+    CHECK(!candidate(&r, raw.ptr, "<all/>"));
+    CHECK(!candidate(&r, raw.ptr, "<line number=\"1\"/>"));
+    append_checked(&r, &raw, "  old & <x/>");
+    buf separator = {0}; separator_text(call, &separator);
+    append_checked(&r, &raw, separator.ptr);
+
+    append_checked(&r, &raw, "<delete/><![CDATA[raw]]>&amp;\r\n ");
+    CHECK(candidate(&r, raw.ptr, "</parameter></function></tool_call>"));
+    CHECK(!candidate(&r, raw.ptr, separator.ptr));
+    append_checked(&r, &raw, "</parameter></function></tool_call>");
+    tool_calls calls = {0}; char *content = NULL, *reasoning = NULL;
+    CHECK(interactive_parse_message(&r, raw.ptr, &content, &reasoning, &calls));
+    CHECK(calls.len == 1);
+    schema_json_value *args = schema_json_parse(calls.v[0].arguments);
+    CHECK(strstr(interactive_string(args, "payload"), "<delete/><![CDATA[raw]]>&amp;\r\n "));
+    schema_json_free(args); tool_calls_free(&calls); free(content); free(reasoning);
+    buf_free(&separator); buf_free(&raw); request_free(&r);
+}
+
+static void test_empty_and_missing_id(void) {
+    for (int empty = 0; empty < 2; empty++) {
+        request r; fixture(&r);
+        buf raw = {0}; buf_puts(&raw, paused_prefix);
+        interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
+        provide_snapshot(call, empty ? "" : "KEEP", false);
+        finish_opening(&r, call, &raw);
+        if (!empty) append_checked(&r, &raw, "KEEP");
+        append_checked(&r, &raw, "<exmekh_new_text/>");
+        CHECK(candidate(&r, raw.ptr, "</parameter></function></tool_call>"));
+        CHECK(!candidate(&r, raw.ptr, "<exmekh_new_text/>"));
+        append_checked(&r, &raw, "FILLED");
+        CHECK(candidate(&r, raw.ptr, "</parameter></function></tool_call>"));
+        buf_free(&raw); request_free(&r);
+    }
+    request r; fixture(&r);
+    interactive_call *call = pause_call(&r, paused_prefix);
+    schema_json_value *create = schema_json_parse("{\"status\":\"create\"}");
+    CHECK(!interactive_call_prepare_reply(call, create));
+    schema_json_free(create);
+    provide_snapshot(call, "repeated\nprefix repeated", false);
+    buf raw = {0}; buf_puts(&raw, paused_prefix); finish_opening(&r, call, &raw);
+    append_checked(&r, &raw, "repeated");
+    CHECK(!candidate(&r, raw.ptr, "<exmekh_new_text/>"));
+    CHECK(!candidate(&r, raw.ptr, "</parameter>"));
+    buf_free(&raw); request_free(&r);
+}
+
+static void test_ids_and_multiple_edits(void) {
+    request r; fixture(&r);
+    buf raw = {0}; buf_puts(&raw, paused_prefix);
+    interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
+    provide_snapshot(call, "ONE\nTWO\n", false);
+    edit_document *state = call->behavior_state;
+    char first[4]; memcpy(first, state->item[0].identifier, 4);
+    finish_opening(&r, call, &raw); finish_element(&r, call, &raw, "ONE", "FIRST\r\n");
+    append_checked(&r, &raw, "<exmekh_edit path=\"src.py\"");
+    CHECK(pause_call(&r, raw.ptr) == call && call->input_index == 2);
+    provide_snapshot(call, "ONE\nTWO\n", false);
+    CHECK(strcmp(first, state->item[1].identifier));
+    CHECK(state->item[0].snapshot == state->item[1].snapshot);
+    finish_opening(&r, call, &raw); finish_element(&r, call, &raw, "TWO", "SECOND");
+    CHECK(candidate(&r, raw.ptr, "</parameter></function></tool_call>"));
+    buf_free(&raw); request_free(&r);
+
+    edit_document *document = edit_document_new("</parameter>");
+    buf snapshot = {0};
+    for (int i = 0; i < 999; i++) buf_printf(&snapshot, "id=\"%03d\"\n", i);
+    CHECK(edit_document_begin_input(document, "x"));
+    CHECK(edit_document_provide(document, snapshot.ptr));
+    CHECK(!strcmp(document->item[0].identifier, "999"));
+    CHECK(edit_document_begin_input(document, "x"));
+    CHECK(!edit_document_provide(document, snapshot.ptr));
+    buf_free(&snapshot); edit_document_free(document);
+}
+
+static void check_views(edit_document *state, const char *value, size_t n, size_t committed, bool complete) {
+    edit_document_checkpoint before = state->checkpoint;
+    edit_document_view full = interactive_edit_probe(state, &(interactive_edit_input){
+        .text = value, .length = n, .native_end = "</parameter>", .committed = committed,
+        .complete = complete, .incremental = false}, NULL);
+    edit_document_view fast = interactive_edit_probe(state, &(interactive_edit_input){
+        .text = value, .length = n, .native_end = "</parameter>", .committed = committed,
+        .complete = complete, .incremental = true}, NULL);
+    CHECK(full.valid == fast.valid);
+    if (full.valid) {
+        CHECK(full.phase == fast.phase && full.index == fast.index);
+        CHECK(full.checkpoint.offset == fast.checkpoint.offset);
+        CHECK(full.checkpoint.old_body == fast.checkpoint.old_body);
+        CHECK(full.checkpoint.new_body == fast.checkpoint.new_body);
+    }
+    CHECK(!memcmp(&before, &state->checkpoint, sizeof(before)));
+    free(full.path); free(fast.path);
+}
+
+static void test_literal_incremental_and_drafts(void) {
+    const char *snapshot = "UNIQUE <p>α中🙂 &amp; <![CDATA[raw]]>\r\nLAST";
+    edit_document *state = edit_document_new("</parameter>");
+    CHECK(edit_document_begin_input(state, "src.py"));
+    CHECK(edit_document_provide(state, snapshot));
+    buf value = {0};
+    buf_printf(&value, "<exmekh_edit path=\"src.py\" id=\"%s\" />", state->item[0].identifier);
+    size_t body_start = value.len;
+    buf_puts(&value, snapshot);
+    buf_printf(&value, "<exmekh_new_text id=\"%s\"/>", state->item[0].identifier);
+    buf_puts(&value, "<p>NEW &lt; <![CDATA[x]]> α中🙂\r\n <exmekh_ordinary/>");
+    for (size_t n = 0; n <= value.len; n++) {
+        check_views(state, value.ptr, n, n, false);
+        interactive_edit_commit_string(state, value.ptr, n, "</parameter>");
+        const char *pieces[] = {"<", "&", "x", "</parameter>", "<exmekh_new_text/>", "\xf0\x9f"};
+        for (size_t i = 0; i < sizeof(pieces)/sizeof(pieces[0]); i++) {
+            buf probe = {0}; buf_append(&probe, value.ptr, n); buf_puts(&probe, pieces[i]);
+            check_views(state, probe.ptr, probe.len, n, false);
+            buf_free(&probe);
+        }
+    }
+    check_views(state, value.ptr, value.len, value.len, true);
+    /* Rewind probes must not reuse a later committed frontier. */
+    buf draft = {0};
+    size_t selected = body_start + strlen("UNIQUE ");
+    edit_document_checkpoint restart = edit_document_restart(state, selected, selected);
+    buf logical = {0};
+    edit_document_view view = interactive_edit_probe(state, &(interactive_edit_input){
+        .text = value.ptr, .length = selected, .native_end = "</parameter>", .committed = selected,
+        .complete = false, .incremental = true}, &logical);
+    edit_document_draft_suffix(state, view.checkpoint, restart, &logical, &draft, 4096);
+    CHECK(!strcmp(draft.ptr ? draft.ptr : "", snapshot + strlen("UNIQUE ")));
+    free(view.path);
+    buf_free(&logical); buf_free(&draft); buf_free(&value); edit_document_free(state);
+}
+
+static void test_native_literal_escape(void) {
+    request r; fixture(&r);
+    buf raw = {0}; buf_puts(&raw, paused_prefix);
+    interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
+    provide_snapshot(call, "UNIQUE </parameter> &lt;/parameter>", false);
+    finish_opening(&r, call, &raw);
+    finish_element(&r, call, &raw, "UNIQUE </parameter> &lt;/parameter>", "</parameter> &lt;/parameter>");
+    append_checked(&r, &raw, "</parameter></function></tool_call>");
+    tool_calls calls={0}; char *content=NULL,*reasoning=NULL;
+    CHECK(interactive_parse_message(&r, raw.ptr, &content, &reasoning, &calls));
+    schema_json_value *args=schema_json_parse(calls.v[0].arguments);
+    CHECK(strstr(interactive_string(args,"payload"), "UNIQUE </parameter> &lt;/parameter>"));
+    schema_json_free(args); tool_calls_free(&calls); free(content); free(reasoning);
+    buf_free(&raw); request_free(&r);
+}
+
+static void test_all_native_syntaxes(void) {
+    const server_model_syntax models[] = {SERVER_MODEL_SYNTAX_QWEN, SERVER_MODEL_SYNTAX_QWEN4,
+        SERVER_MODEL_SYNTAX_DEEPSEEK, SERVER_MODEL_SYNTAX_DEEPSEEK41};
+    for (size_t i = 0; i < sizeof(models)/sizeof(models[0]); i++) {
+        request r; fixture(&r); r.model_syntax = models[i];
+        bool qwen = models[i] == SERVER_MODEL_SYNTAX_QWEN4;
+        const char *prefix = qwen ? paused_prefix :
+            "<｜DSML｜tool_calls><｜DSML｜invoke name=\"patch\">"
+            "<｜DSML｜parameter name=\"payload\" string=\"true\"><exmekh_edit path=\"src.py\"";
+        const char *close = qwen ? "</parameter></function></tool_call>" :
+            "</｜DSML｜parameter></｜DSML｜invoke></｜DSML｜tool_calls>";
+        buf raw = {0}; buf_puts(&raw, prefix);
+        interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
+        buf original = {0}; buf_puts(&original, "UNIQUE "); buf_puts(&original, call->param_end);
+        provide_snapshot(call, original.ptr, false);
+        finish_opening(&r, call, &raw);
+        finish_element(&r, call, &raw, original.ptr, original.ptr);
+        append_checked(&r, &raw, close);
+        tool_calls calls = {0}; char *content = NULL, *reasoning = NULL;
+        CHECK(interactive_parse_message(&r, raw.ptr, &content, &reasoning, &calls));
+        CHECK(calls.len == 1);
+        schema_json_value *args = schema_json_parse(calls.v[0].arguments);
+        CHECK(strstr(interactive_string(args, "payload"), original.ptr));
+        schema_json_free(args); tool_calls_free(&calls); free(content); free(reasoning);
+        buf_free(&original); buf_free(&raw); request_free(&r);
+    }
+}
+
+static void test_separator_literal_and_phase_integrity(void) {
+    request r; fixture(&r);
+    buf raw = {0}; buf_puts(&raw, paused_prefix);
+    interactive_call *call = pause_call(&r, raw.ptr); CHECK(call);
+    const char *source = "UNIQUE<exmekh_new_text/>TAIL";
+    provide_snapshot(call, source, false); finish_opening(&r, call, &raw);
+    CHECK(!candidate(&r, raw.ptr, "UNIQUE<exmekh_new_text/>FORGED"));
+    finish_element(&r, call, &raw, source, "NEW");
+    CHECK(candidate(&r, raw.ptr, "</parameter></function></tool_call>"));
+    buf_free(&raw); request_free(&r);
+
+    fixture(&r); buf_puts(&raw, paused_prefix);
+    call = pause_call(&r, raw.ptr); CHECK(call);
+    provide_snapshot(call, "KEEP", false); finish_opening(&r, call, &raw);
+    append_checked(&r, &raw, "KEEP<exmekh_new_text/>");
+    buf separator = {0}; separator_text(call, &separator);
+    CHECK(!candidate(&r, raw.ptr, separator.ptr));
+    buf_free(&separator); buf_free(&raw); request_free(&r);
+}
+
+static void test_rejected_snapshot_preserves_authorization(void) {
+    edit_document *document = edit_document_new("</parameter>");
+    CHECK(edit_document_begin_input(document, "same.py"));
+    CHECK(edit_document_provide(document, "ORIGINAL"));
+    CHECK(edit_document_begin_input(document, "same.py"));
+    edit_document_item pending = document->item[1];
+    CHECK(!edit_document_provide(document, "CONTRADICTORY"));
+    CHECK(!memcmp(&pending, &document->item[1], sizeof(pending)));
+    CHECK(document->snapshot_count == 1);
+    CHECK(edit_document_provide(document, "ORIGINAL"));
+    CHECK(document->item[0].snapshot == document->item[1].snapshot);
+    CHECK(strcmp(document->item[0].identifier, document->item[1].identifier));
+    edit_document_free(document);
+}
+
+static void test_completion_uses_configured_property(void) {
+    request r; fixture(&r);
+    interactive_call *call = pause_call(&r, paused_prefix); CHECK(call);
+    provide_snapshot(call, "KEEP", false);
+    edit_document *document = call->behavior_state;
+    buf literal = {0};
+    buf_printf(&literal, "<exmekh_edit path=\"src.py\" id=\"%s\" />KEEP", document->item[0].identifier);
+    buf_printf(&literal, "<exmekh_new_text id=\"%s\"/>CHANGED", document->item[0].identifier);
+    const char *keys[] = {"payload", "wrong_property"};
+    for (size_t i = 0; i < sizeof(keys)/sizeof(keys[0]); i++) {
+        buf body = {0}; buf_putc(&body, '{'); json_escape(&body, keys[i]); buf_putc(&body, ':');
+        json_escape(&body, literal.ptr); buf_putc(&body, '}');
+        schema_json_value *args = schema_json_parse(body.ptr);
+        CHECK(interactive_edit_complete(call->tool, document, args) == (i == 0));
+        schema_json_free(args); buf_free(&body);
+    }
+    buf_free(&literal); request_free(&r);
+}
+
+
+static void test_rollback_checkpoint_ownership_and_budget(void) {
+    server s = {0}; server_slot slot = {0}; s.slots = &slot; s.slot_count = 1;
+    pthread_mutex_init(&s.tool_mu, NULL);
+    interactive_entry entry = {.slot_id = 0, .context_id = "owner", .status = INTERACTIVE_AWAITING};
+    s.interactive_entries = &entry;
+    agent_context_checkpoint *paused = xmalloc(sizeof(*paused)); memset(paused, 0, sizeof(*paused));
+    paused->context_id = xstrdup("owner"); paused->checkpoint_bytes = 90;
+    slot.agent_contexts = paused; entry.checkpoint_bytes = 90;
+    agent_context_checkpoint *completed = xmalloc(sizeof(*completed)); memset(completed, 0, sizeof(*completed));
+    completed->context_id = xstrdup("owner"); completed->checkpoint_bytes = 80;
+    completed->responses_live.valid = true;
+    id_list_push_unique(&completed->responses_live.call_ids, "last-completed-call");
+    entry.rollback.checkpoint = completed; entry.rollback.reserved_bytes = 80;
+    bool pending = false;
+    CHECK(!interactive_checkpoint_reserve_locked(&s, 0, "owner", INTERACTIVE_CHECKPOINT_BUDGET - 79, &pending));
+    CHECK(pending && entry.checkpoint_bytes == 90);
+    CHECK(interactive_checkpoint_reserve_locked(&s, 0, "owner", 90, &pending));
+    interactive_publish_rollback_locked(&s, &entry);
+    CHECK(slot.agent_contexts == completed && !completed->next);
+    CHECK(completed->restore_pending);
+    char error[INTERACTIVE_ERROR_BYTES] = {0};
+    /* The resident session is still paused. Saving on auxiliary eviction must
+     * preserve the published rollback without reading that resident payload. */
+    CHECK(agent_context_checkpoint_save(&s, &slot, "owner", error, sizeof(error)));
+    CHECK(slot.agent_contexts == completed && completed->restore_pending);
+    interactive_publish_rollback_locked(&s, &entry);
+    CHECK(slot.agent_contexts == completed && completed->restore_pending);
+    CHECK(!entry.rollback.checkpoint && !entry.rollback.reserved_bytes && !entry.checkpoint_bytes);
+    CHECK(id_list_contains(&completed->responses_live.call_ids, "last-completed-call"));
+    interactive_release_payload(&entry);
+    CHECK(slot.agent_contexts == completed);
+    agent_context_checkpoints_clear(&slot, true);
+    pthread_mutex_destroy(&s.tool_mu);
+}
+
 int main(void) {
-    test_text_oracle(); test_document_constraints(); test_special_operations();
-    test_multiple_elements_and_ranges(); test_entities_cdata_and_native_delimiters();
-    test_configuration_and_description(); test_escape_frontiers(); test_native_syntaxes_and_reasoning();
-    test_cdata_end_prefix_matches_snapshot();
-    test_incremental_document_restarts();
-    test_incremental_selection_restarts();
-    test_selection_frontier_equivalence();
-    test_xml_static_frontier();
-    test_snapshot_drafts();
-    test_snapshot_draft_older_prefix();
-    test_snapshot_draft_policy();
-    test_speculative_metric_ownership();
-    test_old_native_escape_depth();
-    test_old_cdata_progress_and_eof();
-    test_resumed_progress_counters();
-    test_response_metadata(); test_runtime();
+    test_rollback_checkpoint_ownership_and_budget();
+    test_rejected_snapshot_preserves_authorization(); test_completion_uses_configured_property();
+    test_text_oracle(); test_literal_contract(); test_empty_and_missing_id();
+    test_ids_and_multiple_edits(); test_literal_incremental_and_drafts(); test_native_literal_escape(); test_all_native_syntaxes(); test_separator_literal_and_phase_integrity();
+    test_selection_frontier_equivalence(); test_snapshot_draft_policy(); test_speculative_metric_ownership();
+    test_resumed_progress_counters(); test_response_metadata(); test_runtime();
     test_concurrent_resume_and_queued_cancel(); test_disconnected_queued_request();
     test_reject_second_element(); test_expiry_and_memory_budget(); test_large_snapshot();
-    puts("interactive XML server tests: ok"); return 0;
+    puts("interactive literal server tests: ok"); return 0;
 }

@@ -31,6 +31,7 @@ where Metal requires it and Metal kernels under `metal/`.
 - Prefer comments beside the implementation over separate design documents.
 - Keep comments instructive and compact: explain why a shape, ordering, cache boundary, or memory choice exists.
 - Keep public APIs narrow. CLI/server code should not know tensor internals.
+- Keep user/model-facing text, descriptions, prompts, errors, logs and display labels in the configuration or packaged text resources owned by their domain. Production code reads those values; do not embed prose in control flow, schemas, f-strings or HTML attributes. Comments, protocol syntax and test fixtures are separate from product text.
 - Do not add permanent semantic variants behind flags. Diagnostic switches are fine when they validate the one release path.
 - Do not introduce C++.
 

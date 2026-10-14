@@ -6,6 +6,67 @@
       "index": "docs/architecture/_INDEX.md",
       "documents": [
         {
+          "path": "docs/architecture/clean-code-live-review-20261014.md",
+          "sections": [
+            {
+              "title": "Revisione del codice e qualifica live — 14 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 140,
+              "summary": "La revisione comprende server, libreria e agente."
+            },
+            {
+              "title": "Responsabilità, incapsulamento e argomenti",
+              "level": 2,
+              "start": 9,
+              "end": 38,
+              "summary": "`FileWriteTarget` raggruppa workspace, risorsa, path canonico e snapshot."
+            },
+            {
+              "title": "Principi controllati",
+              "level": 2,
+              "start": 39,
+              "end": 54,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
+            },
+            {
+              "title": "Configurazione e testo",
+              "level": 2,
+              "start": 55,
+              "end": 73,
+              "summary": "`config/interactive.py` è il proprietario della versione wire, del tipo di"
+            },
+            {
+              "title": "Difetto aggiuntivo trovato dai test live",
+              "level": 2,
+              "start": 74,
+              "end": 91,
+              "summary": "Dopo cancel, il checkpoint dell’ultimo turno completato era pubblicato, mentre"
+            },
+            {
+              "title": "Verifiche e distribuzione",
+              "level": 2,
+              "start": 92,
+              "end": 111,
+              "summary": "Passano 2767 test della libreria, 927 test paralleli dell’agente e 3 test UI"
+            },
+            {
+              "title": "Limiti e lavoro strutturale restante",
+              "level": 2,
+              "start": 112,
+              "end": 125,
+              "summary": "Il server C, alcuni moduli di inferenza e alcune funzioni di orchestrazione UI"
+            },
+            {
+              "title": "Verifica successiva della collocazione dei testi",
+              "level": 2,
+              "start": 126,
+              "end": 140,
+              "summary": "Il controllo è stato esteso oltre le sole eccezioni: restavano istruzioni del"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/clean-code-review-20261004.md",
           "sections": [
             {
@@ -327,7 +388,7 @@
               "title": "Semplificare i tool di scrittura, modifica e cancellazione — 13 ottobre 2026",
               "level": 1,
               "start": 1,
-              "end": 300,
+              "end": 675,
               "summary": "Ricerca sul contratto attuale DS4/ExMekh e sulle alternative per ridurre errori del modello e complessità del formato."
             },
             {
@@ -355,134 +416,419 @@
               "title": "2. Cosa fanno altri strumenti",
               "level": 2,
               "start": 40,
-              "end": 73,
-              "summary": "Le fonti esterne sono primarie e sono state consultate il 13 ottobre 2026."
+              "end": 448,
+              "summary": "Questa sezione segue il processamento dei file per agente: scoperta, ispezione, lettura, creazione, modifica, inserimento, rimozione, rinomina e verifica."
+            },
+            {
+              "title": "2.1 Codex: ricerca e lettura tramite strumenti disponibili, modifiche tramite patch",
+              "level": 3,
+              "start": 46,
+              "end": 111,
+              "summary": "Il catalogo di tool dipende dall'harness, non dal solo nome del modello."
+            },
+            {
+              "title": "Scoperta, ispezione e lettura",
+              "level": 4,
+              "start": 50,
+              "end": 74,
+              "summary": "Nel set di questa chat ricerca e lettura testuale passano soprattutto per `exec_command`: il modello genera un comando, il runtime avvia il processo e restituisce output, exit code o session ID se continua."
+            },
+            {
+              "title": "Creazione, edit, insert, rimozione e rename",
+              "level": 4,
+              "start": 75,
+              "end": 103,
+              "summary": "`apply_patch` separa l'operazione nell'intestazione dal corpo orientato alle righe."
+            },
+            {
+              "title": "Contratto API, risultati e garanzie",
+              "level": 4,
+              "start": 104,
+              "end": 111,
+              "summary": "Il tool **Responses API** `apply_patch` è distinto dalla forma freeform locale."
+            },
+            {
+              "title": "2.2 Claude Code: Read, Edit e Write, ricerca e shell",
+              "level": 3,
+              "start": 112,
+              "end": 164,
+              "summary": "Claude Code cerca, legge, modifica ed esegue verifiche nel proprio loop."
+            },
+            {
+              "title": "Tool e argomenti",
+              "level": 4,
+              "start": 116,
+              "end": 132,
+              "summary": "Le firme sono nella reference degli input degli hook, che documenta le chiamate reali."
+            },
+            {
+              "title": "Edit: sostituzione, inserimento e rimozione di testo",
+              "level": 4,
+              "start": 133,
+              "end": 144,
+              "summary": "{\"file_path\":\"/work/config.py\",\"old_string\":\"enabled = True\\n\",\"new_string\":\"enabled = True\\nverbose = False\\n\",\"replace_all\":false}"
+            },
+            {
+              "title": "Write: creazione, riscrittura e svuotamento",
+              "level": 4,
+              "start": 145,
+              "end": 150,
+              "summary": "Write crea o sovrascrive con il contenuto intero; non appende o fonde."
+            },
+            {
+              "title": "Delete, rename, notebook e ispezione strutturale",
+              "level": 4,
+              "start": 151,
+              "end": 158,
+              "summary": "Il catalogo pubblico non elenca un tool Delete filesystem: rimozioni e spostamenti passano dalla shell."
+            },
+            {
+              "title": "Controlli e risultati",
+              "level": 4,
+              "start": 159,
+              "end": 164,
+              "summary": "Permessi su file e shell, normalizzazione dei path e hook sono responsabilità del runtime."
+            },
+            {
+              "title": "2.3 Claude via Messages API: text editor con comandi espliciti",
+              "level": 3,
+              "start": 165,
+              "end": 183,
+              "summary": "L'editor API `str_replace_based_edit_tool` ha schema definito da Anthropic."
+            },
+            {
+              "title": "2.4 Aider: file nel contesto, repo map e coders di editing",
+              "level": 3,
+              "start": 184,
+              "end": 239,
+              "summary": "Il percorso ordinario di Aider organizza i file nel contesto e interpreta la risposta del modello."
+            },
+            {
+              "title": "Scoperta, ispezione e lettura",
+              "level": 4,
+              "start": 188,
+              "end": 207,
+              "summary": "La repo map presenta percorsi, simboli e firme pertinenti entro un budget."
+            },
+            {
+              "title": "SEARCH/REPLACE: edit, insert, append e creazione",
+              "level": 4,
+              "start": 208,
+              "end": 227,
+              "summary": "Il formato diff è percorso più fence e blocchi SEARCH/REPLACE."
+            },
+            {
+              "title": "Whole e udiff, delete e rename",
+              "level": 4,
+              "start": 228,
+              "end": 233,
+              "summary": "Il coder whole riceve il contenuto completo del file e lo riscrive."
+            },
+            {
+              "title": "Risultati e verifica",
+              "level": 4,
+              "start": 234,
+              "end": 239,
+              "summary": "L'integrazione Git offre diff, commit e undo, con auto-commit configurabile."
+            },
+            {
+              "title": "2.5 Pi: set piccolo ed edit strutturati sul file originale",
+              "level": 3,
+              "start": 240,
+              "end": 285,
+              "summary": "Pi è distinto dal fork oh-my-pi."
+            },
+            {
+              "title": "Lettura e ispezione",
+              "level": 4,
+              "start": 244,
+              "end": 261,
+              "summary": "`read(path, offset?, limit?)` accetta path relativo/assoluto e righe 1-based."
+            },
+            {
+              "title": "Edit, inserimento e rimozione di testo",
+              "level": 4,
+              "start": 262,
+              "end": 277,
+              "summary": "La firma corrente è `edit(path, edits=[{oldText,newText}, ...])`."
+            },
+            {
+              "title": "Write, delete, rename e verifica",
+              "level": 4,
+              "start": 278,
+              "end": 285,
+              "summary": "`write(path, content)` crea/sovrascrive, crea parent mancanti e scrive UTF-8."
+            },
+            {
+              "title": "2.6 Oh-my-pi: lettura unificata, snapshot e linguaggio hashline",
+              "level": 3,
+              "start": 286,
+              "end": 344,
+              "summary": "Il lavoro originale hashline proponeva brevi riferimenti per riga; l'API corrente usa anche un tag di snapshot per file e un linguaggio più ampio."
+            },
+            {
+              "title": "Read: ispezione e lettura",
+              "level": 4,
+              "start": 290,
+              "end": 295,
+              "summary": "`read(path)` può indirizzare file, directory, URL o risorse interne."
+            },
+            {
+              "title": "Grep e Find",
+              "level": 4,
+              "start": 296,
+              "end": 303,
+              "summary": "`grep(pattern, path?, case?, gitignore?, skip?)` cerca contenuti con regex, contesto e gruppi per file."
+            },
+            {
+              "title": "Edit hashline: replace, insert, cut, delete e move",
+              "level": 4,
+              "start": 304,
+              "end": 328,
+              "summary": "`edit(input)` usa sezioni `[PATH#TAG]` e numeri dello snapshot originale."
+            },
+            {
+              "title": "Write e risorse speciali",
+              "level": 4,
+              "start": 329,
+              "end": 334,
+              "summary": "`write(path, content)` crea/sovrascrive file e può delegare a handler per risorse interne, archivi, SQLite e conflitti."
+            },
+            {
+              "title": "AST, LSP e trasformazioni strutturali",
+              "level": 4,
+              "start": 335,
+              "end": 344,
+              "summary": "`ast_grep(pat, path?, lang?, skip?)` cerca nodi e catture sintattiche, usando linguaggio inferito o esplicito."
+            },
+            {
+              "title": "2.7 Qwen Code: lettori dedicati, write/edit e stato di lettura",
+              "level": 3,
+              "start": 345,
+              "end": 390,
+              "summary": "Qwen Code è un harness completo, distinto dall'utilizzo di un modello Qwen dentro DS4."
+            },
+            {
+              "title": "Scoperta e lettura",
+              "level": 4,
+              "start": 349,
+              "end": 366,
+              "summary": "Le prime quattro firme sono nella reference filesystem; la lettura multipla ha una reference propria."
+            },
+            {
+              "title": "Edit e inserimento",
+              "level": 4,
+              "start": 367,
+              "end": 378,
+              "summary": "`edit(file_path, old_string, new_string, replace_all?)` richiede un match univoco salvo sostituzione globale."
+            },
+            {
+              "title": "Write, notebook, delete e rename",
+              "level": 4,
+              "start": 379,
+              "end": 386,
+              "summary": "`write_file(file_path, content)` crea o sostituisce il contenuto completo."
+            },
+            {
+              "title": "Utilità per DS4",
+              "level": 4,
+              "start": 387,
+              "end": 390,
+              "summary": "Write/edit separati e stato di lettura sono precedenti pertinenti."
+            },
+            {
+              "title": "2.8 DeepSeek Tool Calls: protocollo di funzioni, non catalogo filesystem",
+              "level": 3,
+              "start": 391,
+              "end": 412,
+              "summary": "La guida DeepSeek definisce funzioni del chiamante con nome, descrizione e JSON Schema."
+            },
+            {
+              "title": "Cosa è definito e cosa no",
+              "level": 4,
+              "start": 395,
+              "end": 406,
+              "summary": "Non è corretto inventare un read_file universale di DeepSeek a partire da questo protocollo."
+            },
+            {
+              "title": "Schema e controllo dell'inferenza",
+              "level": 4,
+              "start": 407,
+              "end": 412,
+              "summary": "La modalità strict beta vincola la forma alla funzione definita dal client; richiede gli oggetti con campi required e additionalProperties false, con limitazioni sui tipi supportati."
+            },
+            {
+              "title": "2.9 Llguidance: controllo della generazione, non agente di file",
+              "level": 3,
+              "start": 413,
+              "end": 418,
+              "summary": "Llguidance non definisce Read/Edit/Write e non decide come leggere o cancellare."
+            },
+            {
+              "title": "2.10 Mappa comparativa delle operazioni",
+              "level": 3,
+              "start": 419,
+              "end": 448,
+              "summary": "La tabella sintetizza i paragrafi precedenti nel medesimo perimetro/versione; non introduce garanzie ulteriori."
             },
             {
               "title": "3. Le protezioni da conservare",
               "level": 2,
-              "start": 74,
-              "end": 88,
+              "start": 449,
+              "end": 463,
               "summary": "La maggior parte della complessità del filesystem ha una responsabilità reale e può restare interna al runtime:"
             },
             {
               "title": "4. Contratto candidato: write, edit, delete",
               "level": 2,
-              "start": 89,
-              "end": 142,
+              "start": 464,
+              "end": 517,
               "summary": "Il primo candidato da confrontare con v2 usa tre strumenti con argomenti ordinari:"
             },
             {
               "title": "Se new deve essere distinto da write",
               "level": 3,
-              "start": 107,
-              "end": 118,
+              "start": 482,
+              "end": 493,
               "summary": "Esiste un compromesso reale."
             },
             {
               "title": "Esempi delle operazioni",
               "level": 3,
-              "start": 119,
-              "end": 134,
+              "start": 494,
+              "end": 509,
               "summary": "Questi sono oggetti logici, non una nuova sintassi da copiare dentro una stringa XML:"
             },
             {
               "title": "Un file per chiamata e gestione dei batch",
               "level": 3,
-              "start": 135,
-              "end": 142,
+              "start": 510,
+              "end": 517,
               "summary": "Una chiamata con tre campi piatti evita il documento di frammenti, i path ripetuti e le pause a metà XML."
             },
             {
               "title": "5. Eliminare CDATA: distinguere dati e trasporto",
               "level": 2,
-              "start": 143,
-              "end": 158,
+              "start": 518,
+              "end": 533,
               "summary": "CDATA non cambia il valore logico dopo il parsing, ma cambia ciò che il modello deve generare."
             },
             {
               "title": "Perché non partire da un formato raw nuovo",
               "level": 3,
-              "start": 153,
-              "end": 158,
+              "start": 528,
+              "end": 533,
               "summary": "Un payload raw sarebbe più vicino al file, ma ha comunque bisogno di distinguere contenuto e confini."
             },
             {
               "title": "6. Usare il controllo dell'inferenza senza ampliare l'API",
               "level": 2,
-              "start": 159,
-              "end": 185,
+              "start": 534,
+              "end": 560,
               "summary": "Il motore può seguire un flusso piccolo e distinto per operazione:"
             },
             {
               "title": "7. Una restrizione da riesaminare: unicità globale",
               "level": 2,
-              "start": 186,
-              "end": 205,
+              "start": 561,
+              "end": 580,
               "summary": "Il contratto impone contemporaneamente partenza da inizio riga e unicità globale, comprese occorrenze a metà riga."
             },
             {
               "title": "8. Blocchi lunghi, inserimenti e file vuoti",
               "level": 2,
-              "start": 206,
-              "end": 230,
+              "start": 581,
+              "end": 605,
               "summary": "Per un file non vuoto una sostituzione che conserva l'ancora rappresenta già l'inserimento prima/dopo di essa."
             },
             {
               "title": "Inserimenti",
               "level": 3,
-              "start": 208,
-              "end": 213,
+              "start": 583,
+              "end": 588,
               "summary": "Per un file non vuoto una sostituzione che conserva l'ancora rappresenta già l'inserimento prima/dopo di essa."
             },
             {
               "title": "Intervalli numerici attuali",
               "level": 3,
-              "start": 214,
-              "end": 219,
+              "start": 589,
+              "end": 594,
               "summary": "Il ramo `start_line/end_line` viene controllato solo lessicalmente dal server: positività, ordine e limiti sono verificati dal client."
             },
             {
               "title": "Alternative da valutare solo se emerge il bisogno",
               "level": 3,
-              "start": 220,
-              "end": 230,
+              "start": 595,
+              "end": 605,
               "summary": "Fra queste, due ancore letterali potrebbero riutilizzare meglio il masking esistente; riferimenti a blocchi possono essere migliori se la lettura espone già unità adeguate."
             },
             {
               "title": "9. Cosa togliere, cosa spostare, cosa rinviare",
               "level": 2,
-              "start": 231,
-              "end": 248,
+              "start": 606,
+              "end": 623,
               "summary": "La separazione di delete consente anche di riesaminare la dipendenza dalla lettura del contenuto: cancellare un file non richiede decodificarne il testo."
             },
             {
               "title": "10. Alternative di formato e priorità",
               "level": 2,
-              "start": 249,
-              "end": 260,
+              "start": 624,
+              "end": 635,
               "summary": "L'XML standard dei **risultati** e dei metadati del runtime è un confine diverso."
             },
             {
               "title": "11. Skill candidata più corta",
               "level": 2,
-              "start": 261,
-              "end": 277,
+              "start": 636,
+              "end": 652,
               "summary": "Una descrizione candidata dell'editing, da adattare alla semantica batch scelta, potrebbe essere:"
             },
             {
               "title": "12. Confronto sperimentale e migrazione",
               "level": 2,
-              "start": 278,
-              "end": 297,
+              "start": 653,
+              "end": 672,
               "summary": "Il prossimo lavoro dovrebbe confrontare v2 e un solo candidato minimale con richieste naturali, senza dettare nel prompt i tag o gli argomenti da emettere."
             },
             {
               "title": "13. Stato delle verifiche di questa ricerca",
               "level": 2,
-              "start": 298,
-              "end": 300,
+              "start": 673,
+              "end": 675,
               "summary": "Sono stati letti codice, skill e report locali e confrontate fonti primarie esterne."
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/file-tools-literal-v3-20261013.md",
+          "sections": [
+            {
+              "title": "Tool file letterali v3 — 13 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 76,
+              "summary": "La migrazione separa creazione, modifica e cancellazione in ExMekh-Lib e nel"
+            },
+            {
+              "title": "Contratto implementato",
+              "level": 2,
+              "start": 8,
+              "end": 35,
+              "summary": "Edit usa soltanto due marcatori:"
+            },
+            {
+              "title": "Distribuzione",
+              "level": 2,
+              "start": 36,
+              "end": 44,
+              "summary": "La wheel `agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl` è stata ricostruita"
+            },
+            {
+              "title": "Verifiche e limiti osservati",
+              "level": 2,
+              "start": 45,
+              "end": 76,
+              "summary": "I tre fallimenti live sono svuotamento dell'intero file, inserimento con CRLF"
             }
           ]
         },
@@ -1465,6 +1811,86 @@
               "summary": "Le evidenze finali, gli hash e gli esiti delle prove sono nel"
             }
           ]
+        },
+        {
+          "path": "docs/architecture/steering-cache-fix-20261014.md",
+          "sections": [
+            {
+              "title": "Correzione del riuso KV dopo steering — 14 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 101,
+              "summary": "La correzione interviene sul riconoscimento della continuazione Responses e"
+            },
+            {
+              "title": "Cause e comportamento corretto",
+              "level": 2,
+              "start": 10,
+              "end": 37,
+              "summary": "`responses_prepare_live_continuation` cercava soltanto risultati di tool in"
+            },
+            {
+              "title": "Contratto delle prove",
+              "level": 2,
+              "start": 38,
+              "end": 56,
+              "summary": "Il test di cancellazione confronta la ripresa con i token già riusati prima"
+            },
+            {
+              "title": "Risultati verificati",
+              "level": 2,
+              "start": 57,
+              "end": 76,
+              "summary": "Tutte le 13 prove live della cache passano, senza errori HTTP nelle fixture."
+            },
+            {
+              "title": "Ripetibilità",
+              "level": 2,
+              "start": 77,
+              "end": 93,
+              "summary": "DS4_STEERING_CACHE_BASE_URL=http://127.0.0.1:8080 \\"
+            },
+            {
+              "title": "Verifica successiva: cancel seguito da richiesta ausiliaria",
+              "level": 2,
+              "start": 94,
+              "end": 101,
+              "summary": "La revisione con test live ha aggiunto un"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/steering-cache-reproduction-20261014.md",
+          "sections": [
+            {
+              "title": "Riproduzione del prefill dopo steering — 14 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 94,
+              "summary": "La perdita del riuso della conversazione è riprodotta su Qwen3.8-27B Q4_K_S,"
+            },
+            {
+              "title": "Risultati",
+              "level": 2,
+              "start": 12,
+              "end": 54,
+              "summary": "Ogni caso apre una skill sintetica, scalda una conversazione con un tool,"
+            },
+            {
+              "title": "Conseguenze per la diagnosi",
+              "level": 2,
+              "start": 55,
+              "end": 71,
+              "summary": "La diagnosi iniziale limitata alla cancellazione interattiva era incompleta:"
+            },
+            {
+              "title": "Comandi ripetibili",
+              "level": 2,
+              "start": 72,
+              "end": 94,
+              "summary": "Su una sola istanza server inattiva, dalla radice del repository:"
+            }
+          ]
         }
       ]
     },
@@ -1820,46 +2246,46 @@
           "path": "docs/agentic/interactive-calls.md",
           "sections": [
             {
-              "title": "Chiamate interattive v2: edit document con chiusura finale",
+              "title": "Chiamate interattive: edit letterali v3",
               "level": 1,
               "start": 1,
-              "end": 286,
-              "summary": "Contratto server aggiornato al 12 ottobre 2026."
+              "end": 113,
+              "summary": "Il comportamento attuale è `edit_file.v3`; il trasporto Responses resta alla"
             },
             {
-              "title": "Configurazione e descrizione del tool",
+              "title": "Tool e responsabilità",
               "level": 2,
               "start": 8,
-              "end": 47,
-              "summary": "Usare GET /v1/agentic/capabilities e POST /v1/responses."
+              "end": 20,
+              "summary": "Il client conserva i controlli sul workroot, sui permessi, sulle identità dei"
             },
             {
-              "title": "Documento e chiusura finale",
+              "title": "Configurazione",
               "level": 2,
-              "start": 48,
-              "end": 116,
-              "summary": "Il modello genera soltanto il prefisso `<edit path=\"example1.txt\"`."
+              "start": 21,
+              "end": 42,
+              "summary": "{"
             },
             {
-              "title": "Pausa, ripresa, rifiuto e campionamento",
+              "title": "Due marcatori e corpi letterali",
               "level": 2,
-              "start": 117,
-              "end": 210,
-              "summary": "La pausa avviene **dentro la stringa**, subito dopo il doppio apice che"
+              "start": 43,
+              "end": 69,
+              "summary": "<exmekh_edit path=\"notes.txt\" id=\"427\" />vecchio testo<exmekh_new_text id=\"427\"/>nuovo testo"
             },
             {
-              "title": "Responsabilità e limiti",
+              "title": "Selezione e ID omessi",
               "level": 2,
-              "start": 211,
-              "end": 244,
-              "summary": "**Server:** grammatica, masking, unicità della selezione letterale, combinazioni"
+              "start": 70,
+              "end": 90,
+              "summary": "La selezione letterale deve partire da un confine di riga fisica, comprendere"
             },
             {
-              "title": "Esecuzione dei test",
+              "title": "Autorizzazione, applicazione e trasporto",
               "level": 2,
-              "start": 245,
-              "end": 286,
-              "summary": "Il report delle prestazioni XML"
+              "start": 91,
+              "end": 113,
+              "summary": "Ogni path richiede uno scambio `file_snapshot`, con call ID, exchange ID"
             }
           ]
         }

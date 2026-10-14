@@ -29,34 +29,44 @@ def _markdown_messages(
     for message in messages:
         for guidance in message.steering_messages:
             sections.append(
-                "## User · Steering\n\n"
+                ui_text("chat.chat_export.steering_heading")
                 + message_display_text(guidance.to_chat_message())
                 + "".join(
-                    f"\n\n![Steering image]({url})" for url in guidance.image_urls
+                    ui_text("chat.chat_export.steering_image", url=url)
+                    for url in guidance.image_urls
                 )
             )
         sections.append(f"## {message.role.title()}\n\n{message_display_text(message)}")
         sections.extend(
-            f"![Attached image {index + 1}]({url})"
+            ui_text("chat.chat_export.attached_image", index=index + 1, url=url)
             for index, url in enumerate(message.image_urls)
         )
         data = message.export_data(include_history=include_history)
         if data["reasoning_blocks"]:
             sections.append(
-                "### Reasoning\n\n"
+                ui_text("chat.chat_export.reasoning_heading")
                 + "\n\n".join(block["content"] for block in data["reasoning_blocks"])
             )
         elif data["reasoning_content"]:
-            sections.append("### Reasoning\n\n" + data["reasoning_content"])
+            sections.append(
+                ui_text("chat.chat_export.reasoning_heading")
+                + data["reasoning_content"]
+            )
         if data["tool_events"]:
-            sections.append("### Tools\n\n" + _json_block(data["tool_events"]))
+            sections.append(
+                ui_text("chat.chat_export.tools_heading")
+                + _json_block(data["tool_events"])
+            )
         if data["skills"]:
-            sections.append("### Skills\n\n" + _json_block(data["skills"]))
+            sections.append(
+                ui_text("chat.chat_export.skills_heading") + _json_block(data["skills"])
+            )
         if message.error:
-            sections.append(f"Status: {message.error}")
+            sections.append(ui_text("chat.chat_export.status", error=message.error))
         if include_history and message.skill_history_tree:
             sections.append(
-                "### Subskill history\n\n" + _json_block(message.skill_history_tree)
+                ui_text("chat.chat_export.subskill_history_heading")
+                + _json_block(message.skill_history_tree)
             )
     return sections
 
@@ -80,16 +90,27 @@ def export_chat(
 
     sections = [f"# {session.title}"]
     if session.system_prompt:
-        sections.append("## System\n\n" + session.system_prompt)
+        sections.append(
+            ui_text("chat.chat_export.system_heading") + session.system_prompt
+        )
     sections.extend(
         _markdown_messages(session.message_history(), include_history=include_history)
     )
     if include_history:
         for child in session.sub_agent_conversations:
-            sections.append(f"# Subskill: {child.path} · #{child.order}")
+            sections.append(
+                ui_text(
+                    "chat.chat_export.subskill_heading",
+                    path=child.path,
+                    order=child.order,
+                )
+            )
             sections.extend(
                 _markdown_messages(child.message_history(), include_history=True)
             )
             if child.raw_history:
-                sections.append("### Raw history\n\n" + _json_block(child.raw_history))
+                sections.append(
+                    ui_text("chat.chat_export.raw_history_heading")
+                    + _json_block(child.raw_history)
+                )
     return "\n\n".join(sections) + "\n"

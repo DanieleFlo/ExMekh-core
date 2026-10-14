@@ -685,7 +685,7 @@ class RawHistoryComponent:
                                         ]
                                     )
                                     .props(
-                                        f'title="Context tokens before closing: {before_tok:,} • after closing: {after_tok:,}"'
+                                        f'title="{ui_text("shared.context_compaction.tooltip", before=before_tok, after=after_tok)}"'
                                     )
                                 ):
                                     ui.icon(

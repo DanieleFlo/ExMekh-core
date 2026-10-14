@@ -1085,7 +1085,10 @@ class ChatViewComponent:
                             )
                             if len(unique_paths) > 1:
                                 paths_str = ", ".join(
-                                    p if p != "/" else "root" for p in unique_paths
+                                    p
+                                    if p != "/"
+                                    else ui_text("chat.chat_view.steering_root")
+                                    for p in unique_paths
                                 )
                                 ui.label(paths_str).classes(
                                     UI_PRESENTATION[
@@ -1333,7 +1336,7 @@ class ChatViewComponent:
                                     ]
                                 )
                                 .props(
-                                    f'title="Context tokens before closing: {before_tok:,} • after closing: {after_tok:,}"'
+                                    f'title="{ui_text("shared.context_compaction.tooltip", before=before_tok, after=after_tok)}"'
                                 )
                             ):
                                 ui.icon(
@@ -1608,11 +1611,15 @@ class ChatViewComponent:
     def _render_steering_insertion(self, insertion: SteeringInsertion) -> None:
         self._rendered_insertion_ids.add(insertion.message_id)
         location = (
-            f"after {insertion.tool_name}"
+            ui_text("chat.chat_view.steering_after_tool", tool_name=insertion.tool_name)
             if insertion.tool_name
-            else "before the response"
+            else ui_text("chat.chat_view.steering_before_response")
         )
-        skill = insertion.skill_path if insertion.skill_path != "/" else "root"
+        skill = (
+            insertion.skill_path
+            if insertion.skill_path != "/"
+            else ui_text("chat.chat_view.steering_root")
+        )
         with ui.row().classes(
             UI_PRESENTATION[
                 "render_steering_insertion.classes.steering_tool_marker_items_center_gap_1_5"

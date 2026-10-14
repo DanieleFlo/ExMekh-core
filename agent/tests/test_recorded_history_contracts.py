@@ -12,6 +12,7 @@ from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.history.converter import (
     reconstruct_execution_history_and_cache,
 )
+from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -321,3 +322,37 @@ def test_cached_reads_take_priority_over_same_name_pending_tools(
     assert [node.events[-1]["content"] for node in tools] == [original, cached]
     # Reading either view leaves the recorded transcripts untouched.
     assert all("tool_call_id" not in item for item in message.raw_history[1:])
+
+
+@pytest.mark.parametrize("role", ["SYSTEM", "DEVELOPER"])
+def test_prompt_query_returns_an_owned_normalized_root_message(role):
+    source = {
+        "role": role,
+        "content": "  retained prompt  ",
+        "metadata": {"tags": ["original"]},
+    }
+    transcript = [
+        {"role": "user", "content": "ordinary input"},
+        {"role": "system", "content": "  "},
+        source,
+    ]
+    history = RecordedHistory(
+        transcript, [{"history": [{"role": "system", "content": "child prompt"}]}]
+    )
+    queried = history.system_prompt_message()
+    assert queried is not None
+    assert queried["role"] == role.lower()
+    assert queried["content"] == "  retained prompt  "
+    queried["metadata"]["tags"].append("changed")
+    assert source["metadata"]["tags"] == ["original"]
+    assert source["role"] == role
+    message = ChatMessage(role="assistant", raw_history=transcript)
+    assert message.system_prompt_message()["content"] == "  retained prompt  "
+
+
+def test_prompt_query_does_not_borrow_the_system_prompt_of_a_child_skill():
+    history = RecordedHistory(
+        [], [{"history": [{"role": "system", "content": "child prompt"}]}]
+    )
+    assert history.system_prompt_message() is None
+    assert ChatMessage(role="assistant").system_prompt_message() is None

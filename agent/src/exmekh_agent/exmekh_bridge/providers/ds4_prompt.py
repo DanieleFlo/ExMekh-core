@@ -6,6 +6,7 @@ import json
 from html import escape
 from typing import Any
 
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.exmekh_bridge.resources import load_prompt
 
@@ -18,10 +19,13 @@ _RETURN_GUIDANCE = load_prompt("ds4_return_guidance")
 def apply_ds4_scope(messages: list[dict[str, Any]], agentic: dict[str, Any]) -> None:
     """Mirror DS4's scope instruction on the newest user or tool message."""
     scope = (
-        "<agent_runtime>\nAgent runtime scope for this turn. Allowed ordinary tools: "
-        + (", ".join(agentic["allowed_tools"]) or "(none)")
-        + ". Allowed skills: "
-        + (", ".join(agentic["allowed_skills"]) or "(none)")
+        app_text(
+            "execution.ds4_prompt.scope_prefix",
+            tools=", ".join(agentic["allowed_tools"])
+            or app_text("execution.ds4_prompt.no_capabilities"),
+            skills=", ".join(agentic["allowed_skills"])
+            or app_text("execution.ds4_prompt.no_capabilities"),
+        )
         + _SCOPE_GUIDANCE
     )
     if agentic.get("operation") == "return":

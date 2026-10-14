@@ -19,7 +19,7 @@ def source_projects(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     exmekh_dir = tmp_path / "exmekh_lib"
     exmekh_dir.mkdir()
     (exmekh_dir / "pyproject.toml").write_text('[project]\nname = "exmekh-lib"\n')
-    monkeypatch.setattr(sync, "__file__", str(agent_dir / "src/exmekh_agent/sync.py"))
+    monkeypatch.setattr(sync, "APPLICATION_ROOT", agent_dir)
     monkeypatch.setenv("UV_BIN", "/custom/bin/uv")
     return agent_dir
 

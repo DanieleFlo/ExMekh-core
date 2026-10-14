@@ -186,10 +186,9 @@ async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
     tool_events: list[ToolEvent] = []
     response = await run_agent_turn(
         user_prompt=(
-            "Open the file-processing skill, then use edit-file to create the missing "
+            "Open the file-processing skill, then use new-file to create the missing "
             "file probe.txt with exactly the text FRONTEND_INTERACTIVE_OK. "
-            'Use edits=\'<edit path="probe.txt"><old_text><all/></old_text>'
-            "<new_text>FRONTEND_INTERACTIVE_OK</new_text></edit>'. "
+            'Use path="probe.txt" and content="FRONTEND_INTERACTIVE_OK". '
             "Do not use bash, delegate, or create other files. "
             "Exit the skill and confirm completion."
         ),
@@ -203,7 +202,7 @@ async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
     )
     assert (tmp_path / "probe.txt").read_text() == "FRONTEND_INTERACTIVE_OK"
     assert any(
-        event.tool_name == "edit-file" and event.status == "completed"
+        event.tool_name == "new-file" and event.status == "completed"
         for event in tool_events
     ), tool_events
     assert response.strip()
@@ -399,3 +398,58 @@ async def test_live_e2e_multi_turn_execution_history_preserves_prior_tools() -> 
         f"Expected Turn 1 capabilities in <execution-history>, got:\n{latest_history_xml}"
     )
     safe_print(f"\n[LIVE Turn 2 Final Response]: {response_2[:300]}...")
+
+
+@pytest.mark.parametrize("initial", ["", "ORIGINAL"])
+@pytest.mark.asyncio
+async def test_live_e2e_file_edit_and_delete(tmp_path: Path, initial: str) -> None:
+    path = tmp_path / "probe.txt"
+    path.write_text(initial)
+    expected = initial + "APPENDED"
+    events: list[ToolEvent] = []
+    response = await run_agent_turn(
+        user_prompt=(
+            "Enter the file-processing skill. Inspect and read the existing probe.txt, "
+            "then use edit-file to append exactly APPENDED with no newline. "
+            "The file already exists, even when its content is empty. "
+            "Use the literal exmekh_edit and exmekh_new_text format and the ID supplied by the server. "
+            "Do not use bash, new-file, or delegate. Exit the skill and confirm completion."
+        ),
+        model=config.default_model,
+        agent_mode="deep_agent",
+        settings=ChatSettings(work_root=str(tmp_path)),
+        on_token=lambda _: None,
+        on_reasoning=lambda *_: None,
+        on_tool_event=events.append,
+        on_context=lambda _: None,
+    )
+    assert path.read_text() == expected
+    assert any(
+        event.tool_name == "edit-file" and event.status == "completed"
+        for event in events
+    ), events
+    assert response.strip()
+    events.clear()
+    response = await run_agent_turn(
+        user_prompt=(
+            "Enter the file-processing skill and use delete-file with path=probe.txt. "
+            "Delete the existing file directly; no inspect-file or read-file is needed. "
+            "Do not use bash or delegate. Exit the skill and confirm completion."
+        ),
+        model=config.default_model,
+        agent_mode="deep_agent",
+        settings=ChatSettings(work_root=str(tmp_path)),
+        on_token=lambda _: None,
+        on_reasoning=lambda *_: None,
+        on_tool_event=events.append,
+        on_context=lambda _: None,
+    )
+    assert not path.exists()
+    assert any(
+        event.tool_name == "delete-file" and event.status == "completed"
+        for event in events
+    ), events
+    assert not any(
+        event.tool_name in {"inspect-file", "read-file"} for event in events
+    ), events
+    assert response.strip()

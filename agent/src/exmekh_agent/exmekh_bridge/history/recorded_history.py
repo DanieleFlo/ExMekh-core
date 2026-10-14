@@ -20,6 +20,19 @@ class RecordedHistory:
     messages: list[dict[str, Any]]
     skills: list[dict[str, Any]]
 
+    def system_prompt_message(self) -> dict[str, Any] | None:
+        """Return the first nonempty root prompt without sharing retained data."""
+        for message in self.messages:
+            role = str(message.get("role", "")).lower()
+            if (
+                role in {"system", "developer"}
+                and str(message.get("content", "")).strip()
+            ):
+                owned = deepcopy(message)
+                owned["role"] = role
+                return owned
+        return None
+
     def scopes(self) -> Iterator[list[dict[str, Any]]]:
         """Visit the root transcript and all retained skill transcripts."""
         yield self.messages

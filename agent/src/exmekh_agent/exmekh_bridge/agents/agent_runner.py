@@ -22,7 +22,9 @@ from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.providers.local import LocalProvider
 
 from exmekh_agent.config import config
+from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.config.execution import TITLE_GENERATION
 from exmekh_agent.exmekh_bridge.agents.cancellation import (
     CancellableProvider,
     raise_if_cancelled,
@@ -37,6 +39,7 @@ from exmekh_agent.exmekh_bridge.agents.sub_agents import (
     SubAgentEvent,
     SubAgentEventRouter,
 )
+from exmekh_agent.exmekh_bridge.agents.turn_request import AgentTurnRequest
 from exmekh_agent.exmekh_bridge.capabilities.agent_design import (
     build_designed_agent,
     build_generic_agent,
@@ -121,7 +124,7 @@ def execute_agent_turn_sync(
     steering: TurnSteering | None = None,
     on_steering_added: Callable[[], None] | None = None,
     image_urls: list[str] | None = None,
-    agent_profile: str = "generic",
+    agent_profile: str = AGENT_DEFAULTS["default_profile"],
     agent_design: AgentDesign | None = None,
     capabilities_paths: list[str] | None = None,
 ) -> str:
@@ -130,83 +133,50 @@ def execute_agent_turn_sync(
         if cancellation_event is not None:
             raise_if_cancelled(cancellation_event)
         return _execute_agent_turn_sync_unlocked(
-            user_prompt=user_prompt,
-            model=model,
-            base_url=base_url,
-            api_key=api_key,
-            api_type=api_type,
-            reasoning_effort_str=reasoning_effort_str,
-            agent_mode=agent_mode,
-            capabilities_path_str=capabilities_path_str,
-            name_hds=name_hds,
-            on_token=on_token,
-            on_reasoning=on_reasoning,
-            on_tool_event=on_tool_event,
-            on_skill_event=on_skill_event,
-            on_raw_history=on_raw_history,
-            history=history,
-            agent_context_id=agent_context_id,
-            on_sub_agent_event=on_sub_agent_event,
-            sub_agent_history=sub_agent_history,
-            work_root=work_root,
-            coding_agent_persistent_history=coding_agent_persistent_history,
-            on_context=on_context,
-            on_request_manual_approval=on_request_manual_approval,
-            on_command_approved=on_command_approved,
-            tool_approval_mode=tool_approval_mode,
-            approved_commands_history=approved_commands_history,
-            tool_approval_raw_history=tool_approval_raw_history,
-            cancellation_event=cancellation_event,
-            steering=steering,
-            on_steering_added=on_steering_added,
-            image_urls=image_urls,
-            agent_profile=agent_profile,
-            agent_design=agent_design,
-            capabilities_paths=capabilities_paths,
+            request=AgentTurnRequest(
+                user_prompt=user_prompt,
+                model=model,
+                base_url=base_url,
+                api_key=api_key,
+                api_type=api_type,
+                reasoning_effort_str=reasoning_effort_str,
+                agent_mode=agent_mode,
+                capabilities_path_str=capabilities_path_str,
+                name_hds=name_hds,
+                on_token=on_token,
+                on_reasoning=on_reasoning,
+                on_tool_event=on_tool_event,
+                on_skill_event=on_skill_event,
+                on_raw_history=on_raw_history,
+                history=history,
+                agent_context_id=agent_context_id,
+                on_sub_agent_event=on_sub_agent_event,
+                sub_agent_history=sub_agent_history,
+                work_root=work_root,
+                coding_agent_persistent_history=coding_agent_persistent_history,
+                on_context=on_context,
+                on_request_manual_approval=on_request_manual_approval,
+                on_command_approved=on_command_approved,
+                tool_approval_mode=tool_approval_mode,
+                approved_commands_history=approved_commands_history,
+                tool_approval_raw_history=tool_approval_raw_history,
+                cancellation_event=cancellation_event,
+                steering=steering,
+                on_steering_added=on_steering_added,
+                image_urls=image_urls,
+                agent_profile=agent_profile,
+                agent_design=agent_design,
+                capabilities_paths=capabilities_paths,
+            )
         )
 
 
-def _execute_agent_turn_sync_unlocked(
-    user_prompt: str,
-    model: str,
-    base_url: str,
-    api_key: str,
-    api_type: str,
-    reasoning_effort_str: str,
-    agent_mode: str,
-    capabilities_path_str: str,
-    name_hds: str,
-    on_token: Callable[[str], None],
-    on_reasoning: Callable[..., None],
-    on_tool_event: Callable[[ToolEvent], None],
-    on_skill_event: Callable[[SkillNode, str], None] | None = None,
-    on_raw_history: Callable[[list[dict[str, Any]], list[dict[str, Any]]], None]
-    | None = None,
-    history: Any | None = None,
-    agent_context_id: str | None = None,
-    on_sub_agent_event: Callable[[SubAgentEvent], None] | None = None,
-    sub_agent_history: list[SubAgentConversation] | None = None,
-    work_root: str | None = None,
-    coding_agent_persistent_history: bool | None = None,
-    on_context: Callable[[ProviderContextUsage], None] | None = None,
-    on_request_manual_approval: Callable[[str], bool] | None = None,
-    on_command_approved: CommandApprovedCallback | None = None,
-    tool_approval_mode: str | None = None,
-    approved_commands_history: list[str] | None = None,
-    tool_approval_raw_history: list[dict[str, Any]] | None = None,
-    cancellation_event: threading.Event | None = None,
-    steering: TurnSteering | None = None,
-    on_steering_added: Callable[[], None] | None = None,
-    image_urls: list[str] | None = None,
-    agent_profile: str = "generic",
-    agent_design: AgentDesign | None = None,
-    capabilities_paths: list[str] | None = None,
-) -> str:
+def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
     """Synchronous execution of a turn using exmekh_lib, dispatched in background thread."""
-    content = user_content(user_prompt, image_urls or [])
+    content = user_content(request.user_prompt, request.image_urls or [])
     reasoning_effort: ReasoningEffort | None = None
-    if reasoning_effort_str:
-        clean_effort = reasoning_effort_str.strip().lower()
+    if request.reasoning_effort_str:
+        clean_effort = request.reasoning_effort_str.strip().lower()
         try:
             reasoning_effort = ReasoningEffortLMX(clean_effort)
         except ValueError:
@@ -216,73 +186,84 @@ def _execute_agent_turn_sync_unlocked(
                 reasoning_effort = None
 
     provider = LocalProvider(
-        model=model,
-        api="responses" if api_type == "responses" else "chat_completions",
+        model=request.model,
+        api="responses" if request.api_type == "responses" else "chat_completions",
         reasoning_effort=reasoning_effort,
-        base_url=base_url,
-        api_key=api_key,
+        base_url=request.base_url,
+        api_key=request.api_key,
     )
     context_provider = None
-    if on_context or (steering is not None and agent_mode == "deep_agent"):
+    if request.on_context or (
+        request.steering is not None and request.agent_mode == "deep_agent"
+    ):
         context_provider = ContextTrackingProvider(
             provider,
-            on_context=on_context,
-            context_id=agent_context_id or name_hds or "main",
-            agentic_only=agent_mode == "deep_agent",
-            ds4_qwen=config.uses_ds4_qwen_prompt(model, base_url),
-            thinking=reasoning_effort_str.strip().lower() != "none",
-            api_type=api_type,
+            on_context=request.on_context,
+            context_id=request.agent_context_id
+            or request.name_hds
+            or AGENT_DEFAULTS["name_hds"],
+            agentic_only=request.agent_mode == "deep_agent",
+            ds4_qwen=config.uses_ds4_qwen_prompt(request.model, request.base_url),
+            thinking=request.reasoning_effort_str.strip().lower() != "none",
+            api_type=request.api_type,
         )
         provider = context_provider
 
-    if cancellation_event is not None:
-        provider = CancellableProvider(provider, cancellation_event)
+    if request.cancellation_event is not None:
+        provider = CancellableProvider(provider, request.cancellation_event)
 
-    if agent_mode == "deep_agent":
+    if request.agent_mode == "deep_agent":
         effective_approval_mode = (
-            tool_approval_mode
-            if tool_approval_mode is not None
+            request.tool_approval_mode
+            if request.tool_approval_mode is not None
             else DEFAULT_TOOL_APPROVAL_MODE
         )
         approval_hook = CommandApprovalHook(
             mode=effective_approval_mode,
-            history=tool_approval_raw_history or approved_commands_history or [],
-            request_manual_approval=on_request_manual_approval,
-            on_command_approved=on_command_approved,
-            model=model,
-            base_url=base_url,
-            api_key=api_key,
-            api_type=api_type,
+            history=request.tool_approval_raw_history
+            or request.approved_commands_history
+            or [],
+            request_manual_approval=request.on_request_manual_approval,
+            on_command_approved=request.on_command_approved,
+            model=request.model,
+            base_url=request.base_url,
+            api_key=request.api_key,
+            api_type=request.api_type,
         )
-        approval_tool_hooks = {"bash": ToolHooks(before=approval_hook)}
-        cap_path = Path(capabilities_path_str or config.capabilities_path)
+        approval_tool_hooks = {
+            AGENT_DEFAULTS["shell_tool"]: ToolHooks(before=approval_hook)
+        }
+        cap_path = Path(request.capabilities_path_str or config.capabilities_path)
         cap_paths = (
-            [Path(path) for path in capabilities_paths]
-            if capabilities_paths
+            [Path(path) for path in request.capabilities_paths]
+            if request.capabilities_paths
             else [cap_path]
         )
-        event_router = SubAgentEventRouter(on_sub_agent_event)
-        if agent_design is not None or agent_profile != "generic":
-            design = agent_design or CapabilityRepository().default_design(
-                agent_profile, [str(path) for path in cap_paths]
+        event_router = SubAgentEventRouter(request.on_sub_agent_event)
+        if (
+            request.agent_design is not None
+            or request.agent_profile != AGENT_DEFAULTS["generic_profile"]
+        ):
+            design = request.agent_design or CapabilityRepository().default_design(
+                request.agent_profile, [str(path) for path in cap_paths]
             )
             root_node, children = build_designed_agent(
-                design, event_router, approval_tool_hooks, agent_context_id
+                design, event_router, approval_tool_hooks, request.agent_context_id
             )
         else:
             root_node, children = build_generic_agent(
                 cap_paths,
                 event_router,
                 approval_tool_hooks,
-                root_name=name_hds or "main",
+                root_name=request.name_hds or AGENT_DEFAULTS["name_hds"],
                 coding_persistent_history=config.coding_agent_persistent_history
-                if coding_agent_persistent_history is None
-                else coding_agent_persistent_history,
-                agent_context_id=agent_context_id,
+                if request.coding_agent_persistent_history is None
+                else request.coding_agent_persistent_history,
+                agent_context_id=request.agent_context_id,
             )
 
         prior_exmekh = convert_to_exmekh_messages(
-            history, current_user_prompt=user_prompt
+            request.history, current_user_prompt=request.user_prompt
         )
         content_by_dump = {
             message.message_dump()["content"]: serialize_user_content(message)
@@ -295,17 +276,17 @@ def _execute_agent_turn_sync_unlocked(
             restored_history, restored_tree = restore_image_history(
                 raw_history, skill_tree, content_by_dump
             )
-            publish_raw_history(on_raw_history, restored_history, restored_tree)
+            publish_raw_history(request.on_raw_history, restored_history, restored_tree)
 
         event_handler = DeepAgentTurnEventHandler(
             event_router,
-            on_token,
-            on_reasoning,
-            on_tool_event,
-            on_skill_event,
-            publish_multimodal_history if on_raw_history else None,
-            steering,
-            on_steering_added,
+            request.on_token,
+            request.on_reasoning,
+            request.on_tool_event,
+            request.on_skill_event,
+            publish_multimodal_history if request.on_raw_history else None,
+            request.steering,
+            request.on_steering_added,
         )
         if context_provider is not None:
             context_provider.set_request_observer(event_handler.begin_request)
@@ -313,17 +294,17 @@ def _execute_agent_turn_sync_unlocked(
         agent = DeepAgent(
             provider=provider,
             node=root_node,
-            work_root=Path(work_root or config.work_root),
+            work_root=Path(request.work_root or config.work_root),
             on_stream=event_handler,
         )
 
         for child in children:
-            if not child.persistent_history or not sub_agent_history:
+            if not child.persistent_history or not request.sub_agent_history:
                 continue
             previous = next(
                 (
                     item
-                    for item in reversed(sub_agent_history)
+                    for item in reversed(request.sub_agent_history)
                     if item.path == child.path and item.persistent_history
                 ),
                 None,
@@ -334,14 +315,14 @@ def _execute_agent_turn_sync_unlocked(
                     prior_exmekh=convert_to_exmekh_messages(previous.replay_history()),
                 )
 
-        if history:
-            restore_node_history(root_node, history, prior_exmekh=prior_exmekh)
+        if request.history:
+            restore_node_history(root_node, request.history, prior_exmekh=prior_exmekh)
 
         try:
-            if steering is not None:
+            if request.steering is not None:
                 # Restored messages follow one system message and precede the
                 # initial user message. Skill compaction preserves that prefix.
-                steering.bind(agent.steer, history_start=len(prior_exmekh) + 2)
+                request.steering.bind(agent.steer, history_start=len(prior_exmekh) + 2)
             response = agent.run(user_message=content)
         except BaseException:
             event_handler.finish("error")
@@ -349,10 +330,10 @@ def _execute_agent_turn_sync_unlocked(
         else:
             event_handler.finish()
         finally:
-            if steering is not None:
-                steering.close()
+            if request.steering is not None:
+                request.steering.close()
 
-        if on_raw_history:
+        if request.on_raw_history:
             publish_multimodal_history(
                 response.history,
                 [serialize_skill_execution(s) for s in response.skill_executions],
@@ -367,7 +348,7 @@ def _execute_agent_turn_sync_unlocked(
             system_message=SystemMessage(load_prompt("quick_chat")),
         )
         prior_exmekh = convert_to_exmekh_messages(
-            history, current_user_prompt=user_prompt
+            request.history, current_user_prompt=request.user_prompt
         )
         if prior_exmekh:
             try:
@@ -380,7 +361,7 @@ def _execute_agent_turn_sync_unlocked(
                     )
                 )
 
-        event_handler = QuickChatEventHandler(on_token, on_reasoning)
+        event_handler = QuickChatEventHandler(request.on_token, request.on_reasoning)
 
         response = client.call(
             ClientRequest(
@@ -391,9 +372,9 @@ def _execute_agent_turn_sync_unlocked(
         )
         final_text = event_handler.finish(str(response.get_message() or ""))
 
-        if on_raw_history:
+        if request.on_raw_history:
             publish_raw_history(
-                on_raw_history,
+                request.on_raw_history,
                 [exmekh_message_to_raw_dict(item) for item in client.get_history()],
                 [],
             )
@@ -525,8 +506,7 @@ def _generate_chat_title_sync_unlocked(
     if not user_prompt or not user_prompt.strip():
         return app_text("execution.agent_runner.new_conversation")
 
-    clean_prompt = user_prompt.strip().replace("\n", " ")
-    fallback_title = clean_prompt[:30] + ("..." if len(clean_prompt) > 30 else "")
+    fallback_title = TITLE_GENERATION.fallback(user_prompt)
 
     effective_model = model or config.default_model
     effective_api = api_type or config.api_type
@@ -548,19 +528,12 @@ def _generate_chat_title_sync_unlocked(
             message=UserMessage(
                 load_prompt("chat_title_input").format(user_prompt=user_prompt)
             ),
-            extra={
-                "temperature": 0.3,
-                **(
-                    {"max_output_tokens": 256, "reasoning": {"effort": "none"}}
-                    if effective_api == "responses"
-                    else {"max_tokens": 256, "reasoning_effort": "none"}
-                ),
-            },
+            extra=TITLE_GENERATION.request_extra(effective_api),
         )
 
         response = client.call_structured(request, ChatTitle, strict=True)
 
-        title = response.get_message().title.strip().strip("\"'")
+        title = TITLE_GENERATION.normalize(response.get_message().title)
 
         if title:
             return title

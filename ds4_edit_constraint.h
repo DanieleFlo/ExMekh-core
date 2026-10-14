@@ -1,7 +1,7 @@
 #ifndef DS4_EDIT_CONSTRAINT_H
 #define DS4_EDIT_CONSTRAINT_H
 
-/* Match logical UTF-8 bytes, independently of XML/native transport escapes. */
+/* Match logical UTF-8 bytes, independently of native transport escapes. */
 typedef struct {
     char *text;
     size_t length;
@@ -11,7 +11,6 @@ typedef struct {
     size_t *candidate_line;
     size_t *selection_line;
     size_t bucket[257];
-    bool create;
 } edit_constraint;
 
 static size_t edit_constraint_count_lines(const char *text) {
@@ -21,16 +20,12 @@ static size_t edit_constraint_count_lines(const char *text) {
     return lines;
 }
 
-static size_t edit_constraint_line_count(const edit_constraint *c) {
-    return c->lines;
+static bool edit_constraint_matches(const edit_constraint *c, const char *text) {
+    return !strcmp(c->text, text);
 }
 
-static bool edit_constraint_is_creation(const edit_constraint *c) {
-    return c->create;
-}
-
-static bool edit_constraint_matches(const edit_constraint *c, const char *text, bool create) {
-    return c->create == create && !strcmp(c->text, text);
+static bool edit_constraint_empty(const edit_constraint *c) {
+    return c->length == 0;
 }
 
 static size_t edit_constraint_memory_bound(size_t length) {
@@ -124,11 +119,10 @@ static void edit_index_unique(edit_constraint *c) {
     free(sa); free(tmp); free(rank); free(next); free(count);
 }
 
-static void edit_constraint_init(edit_constraint *c, const char *text, bool create) {
+static void edit_constraint_init(edit_constraint *c, const char *text) {
     memset(c, 0, sizeof(*c));
     c->text = xstrdup(text);
     c->length = strlen(text);
-    c->create = create;
     size_t line_capacity = 0;
     for (size_t i = 0; i < c->length; i++) {
         if (i == 0 || (text[i-1] == '\n') ||

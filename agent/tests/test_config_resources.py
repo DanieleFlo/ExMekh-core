@@ -19,6 +19,7 @@ from exmekh_agent.config.catalogs import (
     settings,
 )
 from exmekh_agent.config.environment import ENVIRONMENT_FIELDS
+from exmekh_agent.config.execution import TitleGenerationSettings
 from exmekh_agent.utils.files import atomic_write_text
 from exmekh_agent.utils.resources import read_json, read_text
 
@@ -200,3 +201,43 @@ def test_control_configuration_references_and_template_parameters_match():
                 if field is not None
             }
             assert fields == {kw.arg for kw in node.keywords}, (path, key, fields)
+
+
+@pytest.mark.parametrize(
+    "api_type, budget_key",
+    [("responses", "max_output_tokens"), ("chat_completions", "max_tokens")],
+)
+def test_title_policy_uses_configured_limits_and_sampling(api_type, budget_key):
+    policy = TitleGenerationSettings(
+        fallback_max_characters=4,
+        temperature=0.7,
+        max_output_tokens=19,
+        reasoning_effort="low",
+        trim_characters="[]",
+    )
+    assert policy.fallback("  abcd\nmore  ") == "abcd..."
+    assert policy.fallback("  ab  ") == "ab"
+    assert policy.normalize(" [configured title] ") == "configured title"
+    extra = policy.request_extra(api_type)
+    assert extra["temperature"] == 0.7
+    assert extra[budget_key] == 19
+    assert (
+        extra["reasoning"]["effort"]
+        if api_type == "responses"
+        else extra["reasoning_effort"]
+    ) == "low"
+
+
+def test_graph_colors_are_owned_by_presentation_configuration():
+    path = CONFIG_DIR.parent / "ui/graph/graph_data.py"
+    literals = [
+        node.value
+        for node in ast.walk(ast.parse(path.read_text()))
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+    ]
+    assert not any(
+        value.startswith("#")
+        and len(value) in {4, 7, 9}
+        and all(character in "0123456789abcdefABCDEF" for character in value[1:])
+        for value in literals
+    )

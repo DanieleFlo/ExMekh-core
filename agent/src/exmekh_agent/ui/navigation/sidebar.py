@@ -533,7 +533,11 @@ class SidebarComponent:
         count = len(session_manager.list_sessions(project_id))
         if await self._confirm(
             app_text("navigation.sidebar.delete_this_project"),
-            f"{project.name}: all {count} conversations will be deleted.",
+            app_text(
+                "navigation.sidebar.delete_project_description",
+                name=project.name,
+                count=count,
+            ),
         ):
             try:
                 session_manager.delete_project(project_id)

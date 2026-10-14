@@ -1,0 +1,450 @@
+{
+  "date": "2026-10-14",
+  "timezone": "Europe/Rome",
+  "status": "PASS",
+  "configuration": {
+    "model": "Qwen3.8-27B-UD-Q4_K_S",
+    "backend": "CUDA",
+    "gpu": "RTX 3090",
+    "context_capacity": 26000,
+    "mtp": true,
+    "vision_encoder_loaded": true
+  },
+  "changes": [
+    {
+      "area": "FileWriteTarget",
+      "result": "Canonical target and initial snapshot own validation, cooperative locking and atomic commit; callers use methods rather than repeated filesystem arguments."
+    },
+    {
+      "area": "FileInteractiveCalls",
+      "result": "Removed single-handler dispatch dictionary; authorization, scope and visible evidence still belong to the runtime."
+    },
+    {
+      "area": "Shared configuration",
+      "result": "Centralized interactive client protocol, temporary file policy, model-facing agent runtime text, checkpoint diagnostics and wheel packaging; CLI messages use catalogs."
+    },
+    {
+      "area": "Interactive checkpoint ownership",
+      "result": "Extracted capture/staging/publication and budget; grouped worker operation inputs and clarified reserved_bytes."
+    },
+    {
+      "area": "Cancelled checkpoint eviction",
+      "result": "Published rollback remains authoritative until worker restore; concurrent auxiliary save rechecks before replacing; repeated publication is idempotent."
+    },
+    {
+      "area": "Wheel synchronization",
+      "result": "Separate build/install/orchestration; rebuilt through actual launcher, installed package compared byte-for-byte with source wheel."
+    }
+  ],
+  "audit": {
+    "agent": {
+      "python_modules_scanned": 114,
+      "literal_exception_messages_outside_config_and_capability_resources": 0,
+      "functions_with_more_than_three_arguments": 63,
+      "private_access_candidates": 1
+    },
+    "library": {
+      "python_modules_scanned": 254,
+      "literal_exception_messages_outside_config_and_capability_resources": 0,
+      "functions_with_more_than_three_arguments": 101,
+      "private_access_candidates": 9
+    }
+  },
+  "validation": {
+    "library_unit": {
+      "passed": 2767,
+      "line_and_branch_coverage_percent": 100,
+      "coverage_exclusions_changed": false
+    },
+    "agent_parallel": {
+      "passed": 927,
+      "coverage_percent": 100
+    },
+    "agent_serial_ui": {
+      "passed": 3,
+      "coverage_percent": 100
+    },
+    "library_ruff": "PASS",
+    "agent_ruff": "PASS",
+    "library_pyright": {
+      "errors": 0,
+      "warnings": 0
+    },
+    "native": [
+      "ds4_server_test: PASS",
+      "test-server-interactive: PASS",
+      "test_server_memory_lifetime: PASS",
+      "CUDA build/link: PASS",
+      "interactive ASan/UBSan with leak detection: PASS"
+    ],
+    "root_python_without_live_environment": {
+      "passed": 5,
+      "skipped": 30
+    },
+    "wheel": {
+      "python_modules": 254,
+      "matches_source": true,
+      "sha256": "5b84c000f2f68722dc1cd727e8f3c9f8162b580218c556f5ff5fee137d4cc01e",
+      "installed_python_modules": 254,
+      "installed_matches_wheel": true
+    },
+    "live_runs": [
+      {
+        "case": "rollback-after-fix",
+        "returncode": 0,
+        "seconds": 37.39
+      },
+      {
+        "case": "rollback-long-after-fix",
+        "returncode": 0,
+        "seconds": 109.58
+      },
+      {
+        "case": "cache-none-final",
+        "returncode": 0,
+        "seconds": 249.8
+      },
+      {
+        "case": "cache-low-stream-final",
+        "returncode": 0,
+        "seconds": 310.92
+      },
+      {
+        "case": "cache-long-cancel-final",
+        "returncode": 0,
+        "seconds": 108.25
+      },
+      {
+        "case": "cache-ordinary",
+        "returncode": 0,
+        "seconds": 23.43
+      },
+      {
+        "case": "file-edit-http-final",
+        "returncode": 0,
+        "seconds": 63.61
+      },
+      {
+        "case": "agent-file-tools",
+        "returncode": 0,
+        "seconds": 361.56
+      }
+    ],
+    "cache_measurements": [
+      {
+        "run": "rollback-after-fix",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+        "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+        "minimum_cached_tokens": 2611,
+        "input_tokens": 2956,
+        "cached_tokens": 2627,
+        "prefill_tokens": 329
+      },
+      {
+        "run": "rollback-long-after-fix",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 640,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+        "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+        "minimum_cached_tokens": 12945,
+        "input_tokens": 13285,
+        "cached_tokens": 12961,
+        "prefill_tokens": 324
+      },
+      {
+        "run": "cache-none-final",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_keeps_history_with_steering",
+        "scenario": "steering-after-cancelled-edit-pause",
+        "minimum_cached_tokens": 2611,
+        "input_tokens": 2954,
+        "cached_tokens": 2627,
+        "prefill_tokens": 327
+      },
+      {
+        "run": "cache-none-final",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+        "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+        "minimum_cached_tokens": 2611,
+        "input_tokens": 2954,
+        "cached_tokens": 2627,
+        "prefill_tokens": 327
+      },
+      {
+        "run": "cache-none-final",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_completed_tool_boundary_keeps_history_with_steering",
+        "scenario": "steering-after-completed-tool",
+        "minimum_cached_tokens": 2573,
+        "input_tokens": 2759,
+        "cached_tokens": 2627,
+        "prefill_tokens": 132
+      },
+      {
+        "run": "cache-none-final",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_full_replay_without_steering_keeps_history",
+        "scenario": "full-replay-with-trailing-tool-output",
+        "minimum_cached_tokens": 2573,
+        "input_tokens": 2743,
+        "cached_tokens": 2627,
+        "prefill_tokens": 116
+      },
+      {
+        "run": "cache-none-final",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_resumed_edit_keeps_history_with_steering",
+        "scenario": "steering-after-resumed-edit",
+        "minimum_cached_tokens": 2751,
+        "input_tokens": 3034,
+        "cached_tokens": 2903,
+        "prefill_tokens": 131
+      },
+      {
+        "run": "cache-none-final",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_scoped_auxiliary_keeps_agent_history",
+        "scenario": "auxiliary-with-independent-agent-context",
+        "minimum_cached_tokens": 2573,
+        "input_tokens": 2743,
+        "cached_tokens": 2627,
+        "prefill_tokens": 116
+      },
+      {
+        "run": "cache-none-final",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_stateless_auxiliary_keeps_agent_history",
+        "scenario": "auxiliary-without-agent-context",
+        "minimum_cached_tokens": 2573,
+        "input_tokens": 2743,
+        "cached_tokens": 2627,
+        "prefill_tokens": 116
+      },
+      {
+        "run": "cache-low-stream-final",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_keeps_history_with_steering",
+        "scenario": "steering-after-cancelled-edit-pause",
+        "minimum_cached_tokens": 2613,
+        "input_tokens": 2954,
+        "cached_tokens": 2629,
+        "prefill_tokens": 325
+      },
+      {
+        "run": "cache-low-stream-final",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+        "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+        "minimum_cached_tokens": 2613,
+        "input_tokens": 2953,
+        "cached_tokens": 2629,
+        "prefill_tokens": 324
+      },
+      {
+        "run": "cache-low-stream-final",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_completed_tool_boundary_keeps_history_with_steering",
+        "scenario": "steering-after-completed-tool",
+        "minimum_cached_tokens": 2572,
+        "input_tokens": 2759,
+        "cached_tokens": 2629,
+        "prefill_tokens": 130
+      },
+      {
+        "run": "cache-low-stream-final",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_full_replay_without_steering_keeps_history",
+        "scenario": "full-replay-with-trailing-tool-output",
+        "minimum_cached_tokens": 2572,
+        "input_tokens": 2743,
+        "cached_tokens": 2629,
+        "prefill_tokens": 114
+      },
+      {
+        "run": "cache-low-stream-final",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_resumed_edit_keeps_history_with_steering",
+        "scenario": "steering-after-resumed-edit",
+        "minimum_cached_tokens": 2751,
+        "input_tokens": 3059,
+        "cached_tokens": 2930,
+        "prefill_tokens": 129
+      },
+      {
+        "run": "cache-low-stream-final",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_scoped_auxiliary_keeps_agent_history",
+        "scenario": "auxiliary-with-independent-agent-context",
+        "minimum_cached_tokens": 2572,
+        "input_tokens": 2743,
+        "cached_tokens": 2629,
+        "prefill_tokens": 114
+      },
+      {
+        "run": "cache-low-stream-final",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 96,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_stateless_auxiliary_keeps_agent_history",
+        "scenario": "auxiliary-without-agent-context",
+        "minimum_cached_tokens": 2572,
+        "input_tokens": 2743,
+        "cached_tokens": 2629,
+        "prefill_tokens": 114
+      },
+      {
+        "run": "cache-long-cancel-final",
+        "stream": true,
+        "reasoning": "low",
+        "archive_lines": 640,
+        "interactive": true,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_keeps_history_with_steering",
+        "scenario": "steering-after-cancelled-edit-pause",
+        "minimum_cached_tokens": 12945,
+        "input_tokens": 13286,
+        "cached_tokens": 12961,
+        "prefill_tokens": 325
+      },
+      {
+        "run": "cache-ordinary",
+        "stream": false,
+        "reasoning": "none",
+        "archive_lines": 96,
+        "interactive": false,
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_completed_tool_boundary_keeps_history_with_steering",
+        "scenario": "steering-after-completed-tool",
+        "minimum_cached_tokens": 2418,
+        "input_tokens": 2602,
+        "cached_tokens": 2470,
+        "prefill_tokens": 132
+      }
+    ],
+    "cache_http_errors": [],
+    "live_cache_checks_passed": 6,
+    "live_cache_scenarios_passed": 18,
+    "interactive_http": {
+      "live_tests_passed": 6,
+      "reference_parser_tests_passed": 3
+    },
+    "frontend_live": {
+      "passed": 5,
+      "file_operations": [
+        "new-file",
+        "edit-file of existing empty file",
+        "edit-file append to existing content",
+        "delete-file without inspect/read"
+      ]
+    },
+    "documentation_checks": {
+      "passed": 10
+    }
+  },
+  "reproduction": {
+    "old_process": "FAIL, reproduced deterministically before restart",
+    "before": [
+      {
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+        "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+        "minimum_cached_tokens": 2611,
+        "input_tokens": 2765,
+        "cached_tokens": 596,
+        "prefill_tokens": 2169
+      }
+    ],
+    "after_small": [
+      {
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+        "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+        "minimum_cached_tokens": 2611,
+        "input_tokens": 2956,
+        "cached_tokens": 2627,
+        "prefill_tokens": 329
+      }
+    ],
+    "after_long": [
+      {
+        "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+        "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+        "minimum_cached_tokens": 12945,
+        "input_tokens": 13285,
+        "cached_tokens": 12961,
+        "prefill_tokens": 324
+      }
+    ]
+  },
+  "source_sha256": {
+    "ds4_server.c": "3ea2a4b1d6587082a2676a2506e06728b41787af39b76ec8c95e487f167ad038",
+    "ds4_interactive_runtime.h": "72d5ef05432d73feea05d334ee99b88739631cdcf7d9eae4aafed782e63ae7cd",
+    "ds4_interactive_checkpoint.h": "8e87bfe95ac9702fe598350812d832440e9f9dd43b4fa10983f671606e107d4c",
+    "ds4_interactive_settings.h": "4ff3416098463279f45b639143ca92af48419fea5d5f44b1780591ecc5a7acae",
+    "ds4_agentic_settings.h": "0190a6f91b5a99d9577ad962d03741f5ec9f6dcc61a849f861170515b27a977c",
+    "tests/test_server_interactive.c": "713e979f0c9b120ca551edf836a69c43500f824bb3ce703328e12b7bd3121e3b",
+    "tests/test_steering_cache_live.py": "5750287772085ba4e8f615537d937da99a4b26737041beb8e13f0cf8c17f4796",
+    "exmekh_lib/src/exmekh_lib/core/file_inspection/edit_filesystem.py": "a120d7f272df0d4b3ba4f5c6d7f5ea59f7804fe8fa25f0636bc6d3d7f7b39c3f",
+    "exmekh_lib/src/exmekh_lib/config/interactive.py": "628099e367450f6c8df5a11517682322f29491b7fef33e60fd97ff647feb5f40",
+    "agent/src/exmekh_agent/config/packaging.py": "6f8d44d2b4f0b5f37371b38d5de3c0ce03e2d214a392b0802b010b86c103d69b",
+    "agent/src/exmekh_agent/sync.py": "3cd931c9bf8b02d8bfe69108e1943d8ba9accb5405c097160a5ceb5999092d2e"
+  },
+  "binary_sha256": "d8290833238b26bbc42bad9dd1ed2d6ae5d488e9d0bc4f2f43b16f119a3282c0",
+  "raw_archive": "performance-results/clean-code-live-review-20261014",
+  "limits": [
+    "Live qualification covers Qwen3.8-27B and CUDA on RTX 3090; no kernels changed. Other models, Metal, SSD streaming and distributed inference were not exercised here.",
+    "Cancellation qualification covers a suspended file_snapshot exchange, not an arbitrary GPU fault or interrupted prefill.",
+    "Windows lease adapter is tested with a simulated locking API; real filesystem operations ran on Linux/WSL.",
+    "No exhaustive semantic certification of every class or all clean-code principles is claimed; large C and some UI orchestration modules remain candidates for future decomposition.",
+    "Legacy C messages outside the changed domain were not all moved. Protocol field names and test fixture text are not product prose.",
+    "git diff --check passes on source and new docs; the existing Aider research example contains intentional SEARCH/REPLACE markers recognized by Git as conflict markers."
+  ],
+  "temporary_server": {
+    "pid": 177605,
+    "terminated": true,
+    "port_8080_listening": false
+  }
+}

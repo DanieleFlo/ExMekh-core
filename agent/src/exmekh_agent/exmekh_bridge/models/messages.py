@@ -109,6 +109,12 @@ class ChatMessage(BaseModel):
         )
         return guidance.to_chat_message() if guidance is not None else None
 
+    def system_prompt_message(self) -> dict[str, Any] | None:
+        """Expose the retained prompt through the transcript's public API."""
+        return RecordedHistory(
+            self.raw_history, self.skill_history_tree
+        ).system_prompt_message()
+
     def arguments_for_tool(self, event: ToolEvent) -> dict[str, Any]:
         """Resolve arguments through the recorded invocation's public API."""
         if event.arguments:
@@ -372,7 +378,7 @@ class SubAgentConversation(BaseModel):
 
     def fail_call(self) -> None:
         message = self._active_assistant()
-        message.error = "Sub-agent call failed"
+        message.error = app_text("execution.models.sub_agent_call_failed")
         message.finish("error")
         self.status = "error"
 
@@ -398,5 +404,5 @@ class ChatTitle(BaseModel):
     """Structured output schema for generating a concise chat session title."""
 
     title: str = Field(
-        description="A concise, clear, and descriptive title for the conversation in the exact same language as the user's message (maximum 4-6 words, no quotes)."
+        description=app_text("execution.agent_runner.title_schema_description")
     )

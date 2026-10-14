@@ -52,7 +52,7 @@ static bool interactive_keys(const schema_json_value *v, const char *const *keys
 
 static bool interactive_version(const schema_json_value *v) {
     const schema_json_value *version = schema_json_object_get(v, "version");
-    return version && version->kind == SCHEMA_JSON_NUMBER && version->number == 2;
+    return version && version->kind == SCHEMA_JSON_NUMBER && version->number == INTERACTIVE_PROTOCOL_VERSION;
 }
 
 static bool interactive_request_options(const char *body) {
@@ -97,10 +97,10 @@ static void interactive_tool_define_field(interactive_tool *tool, int prop,
 
 static const interactive_behavior interactive_behaviors[] = {
     {
-        .name = "edit_file.v2",
-        .request_kind = "file_snapshot",
+        .name = EDIT_BEHAVIOR_NAME,
+        .request_kind = EDIT_SNAPSHOT_KIND,
         .description = interactive_edit_description,
-        .diagnostic_probe = "<delete/>",
+        .diagnostic_probe = EDIT_DIAGNOSTIC_PROBE,
         .configure = interactive_edit_config,
         .string_prefix = interactive_edit_string_prefix,
         .string_prefix_oracle = interactive_edit_string_prefix_oracle,
@@ -180,7 +180,7 @@ static bool interactive_compile(request *r, char *err, size_t errlen) {
     }
     return true;
 invalid:
-    snprintf(err, errlen, "invalid or unsupported interactive v2 configuration (document must be one required string without enum/const)");
+    snprintf(err, errlen, "%s", interactive_configuration_error);
     return false;
 }
 

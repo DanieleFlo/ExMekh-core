@@ -6,6 +6,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from exmekh_agent.config import config
+from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
@@ -43,7 +44,11 @@ GraphNodeKind = Literal[
 
 GRAPH_LAYOUT = presentation_config("graph_layout")
 
-NODE_COLORS: dict[GraphNodeKind, str] = presentation_config("graph")["node_colors"]
+GRAPH_PRESENTATION = presentation_config("graph")
+
+NODE_COLORS: dict[GraphNodeKind, str] = GRAPH_PRESENTATION["node_colors"]
+
+MAIN_HISTORY_ID = GRAPH_PRESENTATION["main_history_id"]
 
 
 class GraphNode(BaseModel):
@@ -89,7 +94,7 @@ class GraphInteractionLink(BaseModel):
     y1: float
     x2: float
     y2: float
-    color: str = "#22d3ee"
+    color: str = NODE_COLORS["sub_agent_bundle"]
 
 
 class GraphHistoryLine(BaseModel):
@@ -107,7 +112,7 @@ class GraphHistoryLine(BaseModel):
     y1: float = DRAWING_DEFAULTS["initial_center_y"]
     x2: float = DRAWING_DEFAULTS["initial_history_end_x"]
     y2: float = DRAWING_DEFAULTS["initial_center_y"]
-    line_color: str = "#a1a1aa"
+    line_color: str = GRAPH_PRESENTATION["main_line_color"]
     nodes: list[GraphNode] = Field(default_factory=list)
     skill_branches: list[GraphSkillBranch] = Field(default_factory=list)
 
@@ -244,7 +249,7 @@ def _build_tool_triplet_events(
     call_event: dict[str, Any] = {
         "role": "assistant",
         "event_stage": "tool_call",
-        "stage_label": "1. Tool Call",
+        "stage_label": app_text("graph.graph_data.tool_call_stage"),
         "tool_name": tool_name,
         "tool_call_id": tool_call_id,
         "skill_path": norm_path,
@@ -276,7 +281,7 @@ def _build_tool_triplet_events(
     execution_event: dict[str, Any] = {
         "role": "execution",
         "event_stage": "tool_execution",
-        "stage_label": "2. Tool Execution",
+        "stage_label": app_text("graph.graph_data.tool_execution_stage"),
         "tool_name": tool_name,
         "tool_call_id": tool_call_id,
         "event_type": exec_type,
@@ -289,7 +294,7 @@ def _build_tool_triplet_events(
     response_event: dict[str, Any] = {
         "role": "tool",
         "event_stage": "tool_response",
-        "stage_label": "3. Tool Response",
+        "stage_label": app_text("graph.graph_data.tool_response_stage"),
         "name": tool_name,
         "tool_call_id": tool_call_id,
         "skill_path": norm_path,
@@ -395,7 +400,9 @@ def _extract_nodes_from_skill_node(
             short_label=_truncate_label(
                 skill.name, DRAWING_DEFAULTS["skill_label_length"]
             ),
-            color="#a855f7" if eff_depth == 1 else "#818cf8",
+            color=NODE_COLORS["skill_bundle"]
+            if eff_depth == 1
+            else GRAPH_PRESENTATION["nested_skill_color"],
             depth=eff_depth,
             skill_path=eff_path,
             skill_name=skill.name,
@@ -586,7 +593,9 @@ def _extract_nodes_from_raw_scope(
                         short_label=_truncate_label(
                             tc_name, DRAWING_DEFAULTS["raw_label_length"]
                         ),
-                        color="#a855f7" if child_depth == 1 else "#818cf8",
+                        color=NODE_COLORS["skill_bundle"]
+                        if child_depth == 1
+                        else GRAPH_PRESENTATION["nested_skill_color"],
                         depth=child_depth,
                         skill_path=child_path,
                         skill_name=tc_name,
@@ -683,31 +692,20 @@ def _extract_real_system_prompt_event(
     explicit_system_prompt: str = "",
     capabilities_path_str: str = "",
     capability_paths: tuple[str, ...] | None = None,
-    name_hds: str = "main",
+    name_hds: str = AGENT_DEFAULTS["name_hds"],
     is_sub_agent: bool = False,
 ) -> dict[str, Any] | None:
     """Extract the real System Prompt event from recorded raw_history or from the real exmekh_lib Node HDS."""
-    for msg in messages:
-        for rm in msg.raw_history:
-            role = str(rm.get("role", "")).lower()
-            content = str(rm.get("content", "")).strip()
-            if role in ("system", "developer") and content:
-                ev = dict(rm)
-                ev["role"] = role
-                ev["event_stage"] = "system_prompt"
-                ev["stage_label"] = ui_text("graph.graph_data.system_prompt")
-                return ev
-
-    if fallback_raw_history:
-        for rm in fallback_raw_history:
-            role = str(rm.get("role", "")).lower()
-            content = str(rm.get("content", "")).strip()
-            if role in ("system", "developer") and content:
-                ev = dict(rm)
-                ev["role"] = role
-                ev["event_stage"] = "system_prompt"
-                ev["stage_label"] = ui_text("graph.graph_data.system_prompt")
-                return ev
+    prompts = (message.system_prompt_message() for message in messages)
+    recorded_prompt = next((prompt for prompt in prompts if prompt is not None), None)
+    if recorded_prompt is None:
+        recorded_prompt = RecordedHistory(
+            fallback_raw_history or [], []
+        ).system_prompt_message()
+    if recorded_prompt is not None:
+        recorded_prompt["event_stage"] = "system_prompt"
+        recorded_prompt["stage_label"] = ui_text("graph.graph_data.system_prompt")
+        return recorded_prompt
 
     for msg in messages:
         if msg.role == "system" and msg.content.strip():
@@ -737,7 +735,10 @@ def _extract_real_system_prompt_event(
             "role": "system",
             "event_stage": "system_prompt",
             "stage_label": ui_text("graph.graph_data.system_prompt"),
-            "name_hds": (name_hds or "main").strip("/").split("/")[-1] or "main",
+            "name_hds": (name_hds or AGENT_DEFAULTS["name_hds"])
+            .strip("/")
+            .split("/")[-1]
+            or AGENT_DEFAULTS["name_hds"],
             "content": real_hds_prompt,
         }
 
@@ -752,7 +753,7 @@ def _build_nodes_for_messages(
     system_prompt: str = "",
     capabilities_path_str: str = "",
     capability_paths: tuple[str, ...] | None = None,
-    name_hds: str = "main",
+    name_hds: str = AGENT_DEFAULTS["name_hds"],
     fallback_raw_history: list[dict[str, Any]] | None = None,
     is_sub_agent: bool = False,
 ) -> list[GraphNode]:
@@ -774,7 +775,9 @@ def _build_nodes_for_messages(
             is_sub_agent=is_sub_agent,
         )
         if sys_event is not None:
-            hds_short = (name_hds or "main").strip("/").split("/")[-1] or "main"
+            hds_short = (name_hds or AGENT_DEFAULTS["name_hds"]).strip("/").split("/")[
+                -1
+            ] or AGENT_DEFAULTS["name_hds"]
             step_idx = len(nodes)
             nodes.append(
                 GraphNode(
@@ -1044,7 +1047,7 @@ def _ensure_interaction_nodes_on_main(
         )
         inter_node = GraphNode(
             id=f"main_inter_{sub_conv.id}",
-            history_id="main",
+            history_id=MAIN_HISTORY_ID,
             history_label=ui_text("graph.graph_data.main_history"),
             step_index=insert_pos,
             kind="sub_agent_bundle",
@@ -1230,7 +1233,7 @@ def _ensure_sub_agent_branches_do_not_cross(
                 (
                     h
                     for h in sub_lines
-                    if h.id in (id_a, id_b) and h.parent_history_id != "main"
+                    if h.id in (id_a, id_b) and h.parent_history_id != MAIN_HISTORY_ID
                 ),
                 next(h for h in sub_lines if h.id == id_b),
             )
@@ -1416,23 +1419,23 @@ def build_graph_data_from_session(
     # 1. Build Main History nodes & ensure an interaction node exists for each sub-agent
     main_nodes = _build_nodes_for_messages(
         main_messages,
-        history_id="main",
+        history_id=MAIN_HISTORY_ID,
         history_label=ui_text("graph.graph_data.main_history"),
         system_prompt=session.system_prompt,
         capabilities_path_str=session.settings.capabilities_path,
         capability_paths=tuple(
             session.settings.capability_paths(config.capabilities_path)
         ),
-        name_hds=session.settings.name_hds or "main",
+        name_hds=session.settings.name_hds or AGENT_DEFAULTS["name_hds"],
         is_sub_agent=False,
     )
     interaction_map = _ensure_interaction_nodes_on_main(main_nodes, sub_conversations)
 
     main_line = GraphHistoryLine(
-        id="main",
+        id=MAIN_HISTORY_ID,
         label=ui_text("graph.graph_data.main_history"),
         is_main=True,
-        line_color="#a1a1aa",
+        line_color=GRAPH_PRESENTATION["main_line_color"],
         nodes=main_nodes,
     )
     canvas_width = _layout_main_horizontal_history(
@@ -1446,8 +1449,8 @@ def build_graph_data_from_session(
     # Determine each sub-agent's attachment point first, then assign monotonically decreasing angles
     # ordered by anchor_x from left to right (theta_left > theta_right => cot(theta_left) < cot(theta_right))
     # so sub-agent histories fan out and mathematically NEVER cross each other unless they exchange data.
-    ray_palette = ["#06b6d4", "#6366f1", "#ec4899", "#14b8a6", "#f97316"]
-    history_by_path: dict[str, GraphHistoryLine] = {"main": main_line}
+    ray_palette = GRAPH_PRESENTATION["sub_agent_palette"]
+    history_by_path: dict[str, GraphHistoryLine] = {MAIN_HISTORY_ID: main_line}
 
     pending_subs: list[dict[str, Any]] = []
     for idx, sub_conv in enumerate(sub_conversations):
@@ -1511,7 +1514,7 @@ def build_graph_data_from_session(
         sub_nodes = item["sub_nodes"]
         anchor_x = item["anchor_x"]
         anchor_y = item["anchor_y"]
-        parent_id = "main"
+        parent_id = MAIN_HISTORY_ID
         angle_deg = angle_by_sub_id[sub_conv.id]
 
         path_parts = [p for p in sub_conv.path.strip("/").split("/") if p]

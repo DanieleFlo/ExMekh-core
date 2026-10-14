@@ -111,7 +111,9 @@ def convert_to_exmekh_messages(
             close_pending_tool_calls(exmekh_messages, pending_tool_calls)
             if role == "user":
                 exmekh_messages.append(
-                    AssistantMessage(content="[Execution interrupted]")
+                    AssistantMessage(
+                        content=app_text("execution.history.execution_interrupted")
+                    )
                 )
         if isinstance(item, Message):
             if item.get_role_name() != "system":
@@ -132,7 +134,11 @@ def convert_to_exmekh_messages(
 
     if pending_tool_calls:
         close_pending_tool_calls(exmekh_messages, pending_tool_calls)
-        exmekh_messages.append(AssistantMessage(content="[Execution interrupted]"))
+        exmekh_messages.append(
+            AssistantMessage(
+                content=app_text("execution.history.execution_interrupted")
+            )
+        )
 
     return exmekh_messages
 
@@ -265,7 +271,7 @@ def _serialize_skill_node_to_tool_call(
     }
     tc = ToolCall(id=call_id, function=FunctionCall(name=skill.name, arguments=args))
     tm = ToolMessage(
-        content=f'<DeepSkill name="{skill.name}" path="{skill.path}" depth="{skill.depth}" status="{skill.status}">Completed {skill.name}</DeepSkill>',
+        content=f'<DeepSkill name="{skill.name}" path="{skill.path}" depth="{skill.depth}" status="{skill.status}">{app_text("execution.context_usage.completed_skill_name", skill_name=skill.name)}</DeepSkill>',
         tool_call_id=call_id,
         name=skill.name,
     )
@@ -279,7 +285,7 @@ def close_pending_tool_calls(
     for tool_call in pending_tool_calls:
         messages.append(
             ToolMessage(
-                content="[Execution interrupted]",
+                content=app_text("execution.history.execution_interrupted"),
                 tool_call_id=tool_call.get_id(),
                 name=tool_call.get_name(),
             )
@@ -358,7 +364,7 @@ def chat_message_to_exmekh_messages(msg: ChatMessage) -> list[Message[Any]]:
                     ),
                 )
                 tm = ToolMessage(
-                    content=f'<Tool name="{ev.tool_name}" depth="{ev.depth}" path="{ev.skill_path}">Output of {ev.tool_name}</Tool>',
+                    content=f'<Tool name="{ev.tool_name}" depth="{ev.depth}" path="{ev.skill_path}">{app_text("execution.history.tool_output", tool_name=ev.tool_name)}</Tool>',
                     tool_call_id=cid,
                     name=ev.tool_name,
                 )

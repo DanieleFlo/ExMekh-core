@@ -39,37 +39,412 @@ Queste evidenze non identificano da sole la causa interna nei logits, nel framin
 
 ## 2. Cosa fanno altri strumenti
 
-Le fonti esterne sono primarie e sono state consultate il 13 ottobre 2026. Le pagine dei repository si riferiscono all'istantanea web di `main` consultata in quella data; non sono commit fissati. Prima di portarne codice nel progetto va fissata la revisione. Non sono state riprodotte le loro misure su DS4.
+Questa sezione segue il processamento dei file per agente: scoperta, ispezione, lettura, creazione, modifica, inserimento, rimozione, rinomina e verifica. Distingue tool del modello, comandi dell'interfaccia utente e contratti API. Gli esempi sono casi illustrativi originali, non trace di prove eseguite.
 
-| Approccio | Forma e osservazione dalla fonte | Utilità per DS4 |
+Fonti primarie consultate il 13 ottobre 2026. I repository sono descritti nell'istantanea di `main` consultata, senza commit fissato. Per Codex sono verificate anche le dichiarazioni dei tool esposte in questa chat. Dove è disponibile solo il contratto pubblico non viene inventato l'algoritmo interno. Non sono state riprodotte le misure esterne su DS4.
+
+### 2.1 Codex: ricerca e lettura tramite strumenti disponibili, modifiche tramite patch
+
+Il catalogo di tool dipende dall'harness, non dal solo nome del modello. La documentazione CLI descrive un agente che ispeziona il repository locale, lo modifica ed esegue comandi. Lettori dedicati, shell e strumenti MCP possono coesistere. Fonte: [Codex CLI](https://learn.chatgpt.com/docs/codex/cli).
+
+#### Scoperta, ispezione e lettura
+
+Nel set di questa chat ricerca e lettura testuale passano soprattutto per `exec_command`: il modello genera un comando, il runtime avvia il processo e restituisce output, exit code o session ID se continua. Il risultato è quello del programma eseguito; non uno schema universale di documento.
+
+| Tool esposto qui | Input rilevante | Funzione sui file |
 | --- | --- | --- |
-| Anthropic text editor | Operazione esplicita; sostituzione tramite `path`, `old_str`, `new_str`; creazione tramite contenuto separato | Il vecchio testo resta una stringa di dati, senza comandi incorporati |
-| Aider | Blocchi SEARCH/REPLACE; oppure file completo; formati differenti per modelli differenti | La sostituzione è semplice da capire; riscrivere tutto costa output anche per piccoli cambiamenti |
-| Codex apply_patch | Intestazioni distinte per aggiunta, aggiornamento e cancellazione; corpi orientati alle righe | Delete è un'operazione senza corpo; i dettagli del diff aggiungono altre regole da apprendere |
-| Qwen Code | `write_file(file_path, content)` e `edit(file_path, old_string, new_string, replace_all)` | Distingue scrittura completa e sostituzione; conserva però la creazione implicita con old vuoto |
-| DeepSeek Tool Calls | Funzioni definite dal client tramite JSON Schema; modalità strict per la forma degli argomenti | Il protocollo non decide la semantica dei file: selezione, autorizzazione e commit restano nel runtime |
-| Hashline | Riferimenti verificabili associati alla lettura, invece di ricopiare tutto il vecchio testo | Alternativa per selezioni lunghe, ma parte del suo vantaggio è già coperta dal nostro masking |
-| llguidance | Maschere di token da grammatica/tokenizer e avanzamento su tratti deterministici | La struttura può essere responsabilità del motore; non occorre esporre nuovi comandi al modello |
+| `exec_command` | `cmd`, `workdir`, `shell`, budget di output/attesa, `tty`, eventuali permessi | Ricerca, listing, metadati, lettura, script, conversioni, Git e test |
+| `write_stdin` | `session_id`, `chars`, budget di output/attesa | Input o altro output di un processo già avviato |
+| `apply_patch` | Payload testuale freeform | Creazione, aggiornamento, spostamento e cancellazione |
+| `view_image` | `path`, `detail` | Ispezione visiva di un'immagine locale |
 
-La documentazione Anthropic richiede corrispondenza esatta per `old_str`, inclusi spazi e indentazione, e distingue creazione e sostituzione con un campo comando. Non documenta una cancellazione tramite contenuto speciale. Non è una prova che tre tool separati siano sempre migliori, ma mostra una separazione chiara fra comando e testo. Fonte: [text editor ufficiale](https://platform.claude.com/docs/en/agents-and-tools/tool-use/text-editor-tool).
+Queste firme vengono dalle dichiarazioni locali: non sono una lista identica per ogni versione di Codex. `functions.exec` orchestra le chiamate in JavaScript; non aggiunge una selezione di testo del file.
 
-Aider documenta SEARCH/REPLACE come modo per produrre solo i tratti cambiati. Descrive il formato whole come semplice ma costoso, e varianti adattate a famiglie di modelli. La lezione trasferibile è valutare il formato sul modello effettivo, anziché assumere che un formato diff sia universalmente naturale. Fonte: [formati Aider](https://aider.chat/docs/more/edit-formats.html).
+Esempio del percorso via shell:
 
-Il parser pubblico di Codex rappresenta aggiunta, cancellazione e aggiornamento come varianti distinte. La cancellazione contiene il percorso, senza un corpo di sostituzione. Questa separazione si può adottare senza importare l'intera grammatica patch. Fonte: [parser apply_patch](https://github.com/openai/codex/blob/main/codex-rs/apply-patch/src/parser.rs).
+```text
+exec_command(cmd="rg --files -g '*.py'", workdir="/work/project")
+exec_command(cmd="rg -n 'parse_config' src", workdir="/work/project")
+exec_command(cmd="sed -n '40,100p' src/config.py", workdir="/work/project")
+```
 
-Qwen Code documenta `write_file` per creare o sovrascrivere il contenuto completo e `edit` per una sostituzione univoca, oppure tutte le occorrenze con `replace_all`. Old vuoto crea soltanto un file assente. Il runtime può chiedere al modello di correggere una selezione non trovata o ambigua prima della verifica finale e mostra il diff per l'approvazione. La pagina consultata non espone un tool dedicato alla cancellazione di file. Fonte: [filesystem di Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/developers/tools/file-system/).
+Listing e metadati si ottengono con `ls`, `stat`, `file`, `wc` o equivalenti PowerShell. Un PDF, archivio o formato binario può essere analizzato invocando programmi/librerie adatti. `view_image` non è un parser universale di documenti. Se l'output è tagliato, il modello deve richiedere un altro intervallo o cercare più precisamente.
 
-Per DS4 prenderei la distinzione write/edit come candidato da misurare. Eviterei di trasferire creazione implicita, sostituzione globale e correzione automatica: aggiungono decisioni che il contratto proposto vuole eliminare. Questa è una scelta progettuale locale, non una prova di superiorità rispetto a Qwen Code né una qualifica del nostro Qwen27.
+La guida ufficiale suggerisce `rg`/`rg --files` e lettori dedicati quando presenti. Cita `read_file`, `list_dir` e `glob_file_search` come possibili strumenti dell'harness; non ne garantisce il caricamento in ogni sessione. Descrive `shell_command` e la coppia `exec_command`/`write_stdin` per processi interattivi. Fonte: [Codex Prompting Guide](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide).
 
-DeepSeek documenta tool definiti dall'applicazione, argomenti JSON e risultati associati al `tool_call_id`: il modello propone la chiamata, il client esegue la funzione. La modalità strict beta vincola gli argomenti allo schema; gli oggetti richiedono tutti i campi e `additionalProperties: false`. La guida consultata non definisce un editor filesystem standard o un contratto universale write/edit/delete. Fonte: [Tool Calls DeepSeek](https://api-docs.deepseek.com/guides/tool_calls/).
+#### Creazione, edit, insert, rimozione e rename
 
-L'inferenza per DS4 è che uno schema piatto può semplificare la forma della chiamata, ma non certifica che old esista nello snapshot, sia univoco o che il file non sia cambiato. Il server conserva framing e vincoli di generazione; il client conserva autorizzazioni, verifiche sul filesystem e pubblicazione. Il framing nativo DeepSeek e l'XML attualmente contenuto nell'argomento `edits` sono due livelli distinti: semplificare il secondo non richiede di eliminare il primo. Questa proposta resta da qualificare separatamente sui modelli e backend DeepSeek disponibili.
+`apply_patch` separa l'operazione nell'intestazione dal corpo orientato alle righe. Il modello produce una patch, senza incapsularla in XML. Esempio:
 
-Il lavoro originale su hashline associa riferimenti di riga verificabili al testo letto. Il benchmark dell'autore usa mutazioni di file React e mostra differenze fra modelli, compresi casi in cui hashline non supera replace. È una motivazione per un confronto locale, non una previsione numerica per Qwen27 o Flash. Fonte: [ricerca dell'autore](https://stencil.so/blog/the-harness-problem).
+```text
+*** Begin Patch
+*** Add File: notes.txt
++prima nota
+*** Update File: config.py
+@@
+-enabled = False
++enabled = True
++verbose = False
+*** Delete File: obsolete.txt
+*** End Patch
+```
 
-La documentazione corrente di oh-my-pi mostra anche quanto possa crescere questa idea: tag di snapshot, operazioni di riga e blocco, registri, spostamenti, recupero di snapshot e modalità multiple. Per la nostra ricerca è utile la separazione fra selezione e contenuto; copiare quel linguaggio amplierebbe il problema che stiamo cercando di ridurre. Fonte: [tool edit di oh-my-pi](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/edit.md).
+| Operazione | Forma | Effetto |
+| --- | --- | --- |
+| Creare | `Add File`, righe `+` | Contenuto del nuovo file |
+| Sostituire | `Update File`, righe `-` e `+` | Rimozione del vecchio tratto e aggiunta del nuovo |
+| Inserire | Righe `+` vicino al contesto invariato | Inserimento localizzato dal contesto |
+| Rimuovere testo | Righe `-` senza aggiunte | Il file rimane |
+| Delete del file | `Delete File` senza corpo | Cancellazione esplicita |
+| Rename/move | `Move to` nell'update | Destinazione e possibile edit |
+| Localizzare | Contesto, ancora `@@`, eventuale marcatore EOF | Non richiede i conteggi standard degli hunk unified diff |
 
-Diff-XYZ confronta comprensione/applicazione/generazione di diff e trova risultati dipendenti da compito e dimensione del modello. EDIT-Bench valuta editing da richieste reali e mostra quanto conti il contesto disponibile. Sono ragioni per misurare sia correttezza meccanica sia risultato della richiesta: nessuno dei due benchmark dimostra quale API vinca nel nostro motore. Fonti: [Diff-XYZ v2](https://arxiv.org/abs/2510.12487v2), [EDIT-Bench v2](https://arxiv.org/abs/2511.04486v2).
+La grammatica freeform è pubblicata nella [guida Codex](https://developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide). I prefissi del diff alterano la rappresentazione visiva di old; il contenuto, però, non richiede entità XML o CDATA. Rimangono framing e delimitatori: freeform significa una sintassi testuale, non assenza di sintassi.
+
+#### Contratto API, risultati e garanzie
+
+Il tool **Responses API** `apply_patch` è distinto dalla forma freeform locale. Restituisce operazioni `create_file`, `update_file`, `delete_file`, con `path` ed eventualmente `diff`. Delete non porta diff. Il chiamante applica e restituisce `apply_patch_call_output` con call ID e successo/errore. L'atomicità complessiva o per file è una scelta del chiamante, non una garanzia implicita del formato. Fonte: [Apply Patch API](https://developers.openai.com/api/docs/guides/tools-apply-patch).
+
+Anche il tool shell API è diverso dalla firma locale: il modello propone comandi, l'ambiente li esegue e restituisce stdout/stderr e stato. Fonte: [Shell API](https://developers.openai.com/api/docs/guides/tools-shell).
+
+Nel set locale esaminato non è esposto uno scambio pubblico `path → snapshot → old vincolato` come in DS4. La validità della sintassi non dimostra quindi che sia stato impedito al modello di generare old inesistente. Per la nostra progettazione il precedente utile è la dichiarazione esplicita delle operazioni. Verifica e recupero possono usare rilettura, diff e comandi di test; una trasformazione molto ripetitiva può essere espressa da uno script anziché da una grande patch.
+
+### 2.2 Claude Code: Read, Edit e Write, ricerca e shell
+
+Claude Code cerca, legge, modifica ed esegue verifiche nel proprio loop. L'Agent SDK incorpora lo stesso agente e i suoi strumenti; un Client SDK dell'API richiede invece il loop e le implementazioni del chiamante. Il text editor API del paragrafo successivo è un contratto ulteriore. Fonti: [ciclo di Claude Code](https://code.claude.com/docs/en/how-claude-code-works), [Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview).
+
+#### Tool e argomenti
+
+| Tool | Input | Lavoro svolto |
+| --- | --- | --- |
+| `Read` | `file_path`, `offset?`, `limit?` | File o porzione di righe |
+| `Glob` | `pattern`, `path?` | Percorsi per glob |
+| `Grep` | `pattern`, `path?`, `glob?`, `output_mode?`, `-i?`, `multiline?` | Ricerca di contenuto; righe, percorsi o conteggi |
+| `Bash` / `PowerShell` | `command` e opzioni di esecuzione | Listing, metadati, conversioni, Git, comandi su file e test |
+| `Edit` | `file_path`, `old_string`, `new_string`, `replace_all` | Sostituzione testuale |
+| `Write` | `file_path`, `content` | Creazione o contenuto completo |
+
+Le firme sono nella [reference degli input degli hook](https://code.claude.com/docs/en/hooks#pretooluse-input), che documenta le chiamate reali. Non richiedono documenti XML dentro gli argomenti.
+
+Read restituisce testo numerato e gestisce anche immagini, PDF e notebook; per directory si usa la shell. Nella documentazione corrente Glob/Grep sono normalmente esposti su Windows; macOS/Linux/WSL usano di default la ricerca via Bash, con condizioni per riabilitare i due tool. Fonte: [reference dei tool](https://code.claude.com/docs/en/tools-reference).
+
+Per file lunghi offset/limit permette letture mirate. Il changelog 2.1.296 aggiunge `allow_large`, quando il contesto può contenere una lettura oltre i limiti ordinari. Fonte: [changelog ufficiale](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md).
+
+#### Edit: sostituzione, inserimento e rimozione di testo
+
+```json
+{"file_path":"/work/config.py","old_string":"enabled = True\n","new_string":"enabled = True\nverbose = False\n","replace_all":false}
+```
+
+Questo inserisce dopo l'ancora mantenendola in new. Per inserire prima si inverte l'ordine del nuovo testo; per togliere un blocco si usa new vuoto. `replace_all` cambia tutte le occorrenze, non il file intero.
+
+Edit richiede match esatto e, senza replace_all, univoco; non usa regex/fuzzy. La lettura preventiva dipende da modello/versione: i modelli meno recenti la richiedono; quelli nuovi hanno eccezioni quando Read è disponibile e non richiederebbe permesso. Un file cambiato può essere ammesso se old continua a coincidere esattamente e univocamente. Fonte: [Edit](https://code.claude.com/docs/en/tools-reference#edit-tool-behavior).
+
+La conseguenza progettuale è una verifica al momento dell'esecuzione, diversa dal congelamento del file dalla lettura. Per DS4 dobbiamo decidere separatamente quali cambiamenti esterni accettare.
+
+#### Write: creazione, riscrittura e svuotamento
+
+Write crea o sovrascrive con il contenuto intero; non appende o fonde. Content vuoto lascia un file vuoto. La lettura preventiva di un file esistente ha eccezioni analoghe a Edit, con casi speciali per notebook e letture parziali. Fonte: [Write](https://code.claude.com/docs/en/tools-reference#write-tool-behavior).
+
+Non ci sono old e marcatore all: il nome identifica già il tipo di cambiamento. Questa separazione è vicina al candidato write/edit locale.
+
+#### Delete, rename, notebook e ispezione strutturale
+
+Il catalogo pubblico non elenca un tool Delete filesystem: rimozioni e spostamenti passano dalla shell. Write vuoto non fa unlink. La documentazione del rewind cita proprio rm/mv/cp come cambiamenti da shell non ripristinati dai checkpoint ordinari. Fonte: [checkpointing](https://code.claude.com/docs/en/checkpointing).
+
+NotebookEdit interviene sulle celle, con replace/insert/delete, anziché sostituire old nel JSON completo. Fonte: [NotebookEdit](https://code.claude.com/docs/en/tools-reference#notebookedit-tool-behavior).
+
+I plugin di code intelligence aggiungono definizioni, riferimenti e diagnostica. Non costituiscono un inspect obbligatorio prima di ogni edit. Fonte: [categorie di tool](https://code.claude.com/docs/en/how-claude-code-works#tools).
+
+#### Controlli e risultati
+
+Permessi su file e shell, normalizzazione dei path e hook sono responsabilità del runtime. Un deny di lettura può impedire anche edit/write. Il modello riceve l'esito e può rileggere o ritentare. Fonti: [permessi](https://code.claude.com/docs/en/permissions), [hook](https://code.claude.com/docs/en/hooks#pretooluse-input).
+
+I checkpoint offrono recupero delle modifiche tracciate, non una transazione universale. Le firme Read/Edit/Write non dimostrano da sole conservazione di ogni encoding o terminatore: quelle garanzie richiedono verifiche dell'implementazione specifica. La semplificazione dell'API e le policy di filesystem restano decisioni distinte.
+
+### 2.3 Claude via Messages API: text editor con comandi espliciti
+
+L'editor API `str_replace_based_edit_tool` ha schema definito da Anthropic. Il modello emette tool_use, ma lettura/scrittura sono implementate dal chiamante. Non è il catalogo Claude Code. Fonte: [text editor API](https://platform.claude.com/docs/en/agents-and-tools/tool-use/text-editor-tool).
+
+| Comando | Argomenti | Operazione |
+| --- | --- | --- |
+| `view` | `path`, `view_range?` | File/directory; righe 1-based, -1 per EOF |
+| `str_replace` | `path`, `old_str`, `new_str` | Sostituzione esatta e univoca |
+| `create` | `path`, `file_text` | File nuovo con contenuto completo |
+| `insert` | `path`, `insert_line`, `insert_text` | Dopo riga; 0 significa inizio |
+
+La configurazione max_characters controlla la troncatura di view nelle versioni supportate. Il chiamante restituisce tool_result associato all'ID e is_error per errori, inclusi match zero/multipli. Fonte: [comandi e risultati](https://platform.claude.com/docs/en/agents-and-tools/tool-use/text-editor-tool).
+
+```json
+{"command":"insert","path":"/work/notes.txt","insert_line":0,"insert_text":"Titolo\n"}
+```
+
+La lista documentata non include delete del file. New vuoto elimina testo; unlink richiede un altro strumento del chiamante. Non gli vanno attribuiti hook o rewind di Claude Code. La variante mostra che anche un unico tool con campo comando può separare l'operazione dai dati: non è necessario nasconderla nel contenuto.
+
+### 2.4 Aider: file nel contesto, repo map e coders di editing
+
+Il percorso ordinario di Aider organizza i file nel contesto e interpreta la risposta del modello. L'utente nomina file all'avvio o li aggiunge nella chat; un coder trasforma le istruzioni di edit in cambiamenti. È diverso dal ciclo di chiamate Read → Edit degli altri agenti. Fonte: [uso di Aider](https://aider.chat/docs/usage.html).
+
+#### Scoperta, ispezione e lettura
+
+La repo map presenta percorsi, simboli e firme pertinenti entro un budget. Parsing e relazioni nel repository aiutano a selezionare contesto: la mappa non contiene necessariamente il file completo. Fonte: [repository map](https://aider.chat/docs/repomap.html).
+
+| Comando dell'utente | Effetto |
+| --- | --- |
+| `/ls` | File conosciuti e presenti nel contesto |
+| `/map`, `/map-refresh` | Visualizzazione/aggiornamento della mappa |
+| `/add` | Caricamento di file editabili |
+| `/read-only` | Caricamento di riferimenti non editabili |
+| `/drop` | Rimozione dal contesto, senza cancellazione sul disco |
+| `/run` | Comando shell e possibile inclusione dell'output |
+| `/diff` | Differenze prodotte |
+| `/lint`, `/test` | Verifiche e recupero |
+| `/undo` | Annullamento dell'ultimo commit di Aider |
+
+Questi sono comandi dell'interfaccia, non una lista di function tool autonomi del modello. Fonte: [comandi Aider](https://aider.chat/docs/usage/commands.html).
+
+L'ispezione del codice avviene quindi attraverso mappe e file caricati, oppure output di comandi. Non emerge un passaggio obbligatorio inspect che restituisca prima numero di righe e metadati del file.
+
+#### SEARCH/REPLACE: edit, insert, append e creazione
+
+Il formato diff è percorso più fence e blocchi SEARCH/REPLACE. Il modello descrive i tratti cambiati e il coder produce il nuovo file; esistono varianti con il percorso dentro la fence, oltre a whole e udiff. Fonte: [formati di edit](https://aider.chat/docs/more/edit-formats.html).
+
+````text
+config.py
+```
+<<<<<<< SEARCH
+enabled = False
+=======
+enabled = True
+verbose = False
+>>>>>>> REPLACE
+```
+````
+
+Nel coder corrente SEARCH vuoto crea un file assente o appende a un file presente. REPLACE vuoto elimina il blocco e conserva il file. Il match prova l'esatto e recuperi mirati sull'indentazione; gestisce alcuni `...`. Il matching generico per distanza compare dopo un return e non è il fallback attivo. L'esatto ordinario seleziona il primo blocco corrispondente: non va attribuito il vincolo DS4 di unicità globale. Fonte: [editblock_coder.py](https://github.com/Aider-AI/aider/blob/main/aider/coders/editblock_coder.py).
+
+Un insert interno mantiene un'ancora in REPLACE. Old vuoto è quindi una scorciatoia con semantica diversa dal nostro candidato. Il coder può togliere involucri e aggiungere newline; non è un riferimento per conservazione byte-esatta. Alcuni blocchi possono risultare applicati quando altri falliscono: il recupero comunica quelli riusciti affinché il modello non li ripeta. Fonte: [applicazione dei blocchi](https://github.com/Aider-AI/aider/blob/main/aider/coders/editblock_coder.py).
+
+#### Whole e udiff, delete e rename
+
+Il coder whole riceve il contenuto completo del file e lo riscrive. Udiff usa hunk orientati alle righe ed è implementato da un altro coder. Sono formati scelti dall'applicazione, non tag all nel campo vecchio testo. Fonti: [wholefile coder](https://github.com/Aider-AI/aider/blob/main/aider/coders/wholefile_coder.py), [udiff coder](https://github.com/Aider-AI/aider/blob/main/aider/coders/udiff_coder.py).
+
+Nel percorso whole/SEARCH-REPLACE, eliminare tutto il contenuto produce un file vuoto. Delete e rename fisici richiedono un'operazione filesystem nel workflow, per esempio una shell. `/drop` non fa unlink. Non viene documentato un tool dedicato delete-file nel percorso ordinario descritto.
+
+#### Risultati e verifica
+
+L'integrazione Git offre diff, commit e undo, con auto-commit configurabile. Non equivale a rollback transazionale di un batch. Fonte: [Git integration](https://aider.chat/docs/git.html).
+
+Nel modo architect un modello propone la soluzione e un editor la traduce nel formato di edit. È una strategia che aggiunge una richiesta/modello, diversa dal nostro vincolo dinamico sullo snapshot durante la generazione. Fonte: [chat modes](https://aider.chat/docs/usage/modes.html).
+
+### 2.5 Pi: set piccolo ed edit strutturati sul file originale
+
+Pi è distinto dal fork oh-my-pi. La factory coding corrente costruisce `read`, `bash`, `edit`, `write`; il catalogo contiene anche `grep`, `find`, `ls`, `powershell`. La factory read-only seleziona read/grep/find/ls. Presenza nel codice e caricamento di default non sono equivalenti. Fonte: [registro Pi](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/index.ts).
+
+#### Lettura e ispezione
+
+`read(path, offset?, limit?)` accetta path relativo/assoluto e righe 1-based. Legge il file e restituisce testo o allegato immagine, con troncatura; il trattamento delle immagini considera capacità del modello e ridimensionamento. Fonte: [read.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/read.ts).
+
+L'output comune è limitato normalmente a 2.000 righe o 50 KiB. Il modello continua con offset invece di assumere di aver visto tutto. Fonte: [truncate.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/truncate.ts).
+
+Quando disponibili, gli altri strumenti sono:
+
+| Tool | Argomenti | Backend/risultato |
+| --- | --- | --- |
+| `grep` | `pattern`, `path?`, `glob?`, `ignoreCase?`, `literal?`, `context?`, `limit?` | Ripgrep e righe di contesto, ignore nelle scansioni |
+| `find` | `pattern`, `path?`, `limit?` | Percorsi per glob, normalmente tramite fd |
+| `ls` | `path?`, `limit?` | Listing ordinato, dotfile e directory marcate |
+
+Fonti: [grep.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/grep.ts), [find.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/find.ts), [ls.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/ls.ts).
+
+Con il set coding piccolo, la shell copre ricerca, listing e metadati. Non c'è un inspect obbligatorio distinto dalla lettura.
+
+#### Edit, inserimento e rimozione di testo
+
+La firma corrente è `edit(path, edits=[{oldText,newText}, ...])`. Le sostituzioni si riferiscono all'originale, devono essere disgiunte e precedono una scrittura finale. Il risultato comprende diff, patch e prima riga modificata. Fonte: [edit.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/edit.ts).
+
+```json
+{"path":"config.py","edits":[{"oldText":"enabled = False","newText":"enabled = True"},{"oldText":"obsolete = True\n","newText":""}]}
+```
+
+L'insert conserva un'ancora in newText, la rimozione usa newText vuoto. Old vuoto è rifiutato; non si impone partenza da inizio riga. Il backend verifica match, duplicati, sovrapposizioni e cambiamenti effettivi; applica in ordine inverso per mantenere gli offset. Fonte: [edit-diff.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/edit-diff.ts).
+
+**La firma dice exact, il backend ammette anche recuperi.** Normalizza i terminatori e può usare fallback su Unicode, virgolette e spazi, cercando di conservare le righe invariate. Fonte: [matching e normalizzazione](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/edit-diff.ts).
+
+Il modulo edit separa/ripristina BOM e terminatori rilevati e scrive UTF-8. Serializza le mutazioni tramite una coda per file. Il corpo esaminato non richiede una precedente evidenza di Read in conversazione: legge il file per applicare old. Fonte: [esecuzione di edit](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/edit.ts).
+
+Queste scelte non garantiscono ogni combinazione di CR/LF e encoding del contratto DS4. La coda interna non impedisce tutte le scritture di processi esterni.
+
+#### Write, delete, rename e verifica
+
+`write(path, content)` crea/sovrascrive, crea parent mancanti e scrive UTF-8. Content vuoto lascia un file vuoto; non richiede all. Fonte: [write.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/write.ts).
+
+Nel set ordinario non c'è delete/rename dedicato. `bash(command, timeout?)` copre quelle operazioni, conversioni e test, restituendo output/stato e informazioni di troncatura. Fonte: [bash.ts](https://github.com/badlogic/pi-mono/blob/main/packages/coding-agent/src/core/tools/bash.ts).
+
+Il precedente più utile è il batch di sostituzioni sullo stesso originale con una firma piccola. Fallback, creazione dei parent e scrittura diretta sono decisioni aggiuntive che non servono per adottare quella firma.
+
+### 2.6 Oh-my-pi: lettura unificata, snapshot e linguaggio hashline
+
+Il lavoro originale hashline proponeva brevi riferimenti per riga; l'API corrente usa anche un tag di snapshot per file e un linguaggio più ampio. Gli esempi storici e attuali non vanno mescolati. Fonti: [ricerca originale](https://stencil.so/blog/the-harness-problem), [edit corrente](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/edit.md).
+
+#### Read: ispezione e lettura
+
+`read(path)` può indirizzare file, directory, URL o risorse interne. Selettori come `:50-100`, `:-20`, `:raw` e intervalli multipli scelgono la vista; path letterali esistenti hanno precedenza sui suffissi. Può mostrare alberi, sintesi strutturali, testo, immagini, documenti, archivi e SQLite. Restituisce range/troncatura e registra snapshot/righe viste quando il target è editabile. Fonte: [read](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/read.md).
+
+Non richiede una coppia inspect/read: il renderer sceglie la rappresentazione e il modello può richiedere raw o una porzione. Il costo è un linguaggio nel path e risultati che possono essere proiezioni del file, non byte da riscrivere integralmente.
+
+#### Grep e Find
+
+`grep(pattern, path?, case?, gitignore?, skip?)` cerca contenuti con regex, contesto e gruppi per file. In hashline i risultati possono portare tag e righe registrate per edit; skip pagina i file. Fonte: [grep](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/grep.md).
+
+`find(query, grep_keywords, path?)` è invece ricerca semantica: pre-ranking lessicale, valutazioni di file/passaggi con un modello e risultati con range/rilevanza. Non è il find per glob di Pi. Fonte: [find](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/find.md).
+
+Grep è diretto per identificatori; find aggiunge giudizi per concetti. Un tag rende verificabile la versione, non l'intento della scelta.
+
+#### Edit hashline: replace, insert, cut, delete e move
+
+`edit(input)` usa sezioni `[PATH#TAG]` e numeri dello snapshot originale. Le righe nuove hanno prefisso `+`, separato dai comandi. Fonte: [hashline](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/edit.md).
+
+| Forma | Effetto |
+| --- | --- |
+| `PUT N.=M:` | Sostituzione del range inclusivo |
+| `PUT N*:` | Sostituzione di blocco sintattico |
+| `PUT <N:` / `PUT >N:` | Inserimento prima/dopo |
+| `PUT >$:` | Append a EOF |
+| `CUT N.=M` / `CUT N*` | Rimozione e cattura nel registro |
+| `PUT ... @nome` | Incolla registro |
+| `REM` | Delete del file senza corpo |
+| `MV destinazione` | Move del risultato |
+
+```text
+[config.py#4D2A]
+PUT 7.=7:
++enabled = True
+```
+
+I blocchi sono risolti sintatticamente. Il runtime verifica tag, range, righe viste e conflitti; può recuperare tag obsoleti da snapshot conservati. Prepara i file prima delle scritture, ma un errore operativo può lasciare risultati parziali. Fonte: [validazione di edit](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/edit.md).
+
+Sono disponibili anche replace/patch/apply_patch/sloppy, con prompt e schema diversi. Per DS4 la parte utile è selezionare blocchi lunghi senza copiarne l'interno e separare delete dal corpo; registri e modalità multiple sono funzionalità ulteriori.
+
+#### Write e risorse speciali
+
+`write(path, content)` crea/sovrascrive file e può delegare a handler per risorse interne, archivi, SQLite e conflitti. Per un file normale content vuoto significa vuoto; per una riga SQLite identificata può significare cancellazione. Restituisce ricevuta ed eventualmente tag/diagnostica. Un tag dopo write non rende automaticamente viste tutte le righe. Fonte: [write](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/write.md).
+
+Due campi non significano necessariamente poca semantica: qui essa cambia anche col path. Nel confronto DS4 conviene isolare il caso file regolare.
+
+#### AST, LSP e trasformazioni strutturali
+
+`ast_grep(pat, path?, lang?, skip?)` cerca nodi e catture sintattiche, usando linguaggio inferito o esplicito. Fonte: [ast_grep](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/ast-grep.md).
+
+`ast_edit(ops=[{pat,out}], paths=[...])` prepara un preview; un write ai dispositivi resolve/reject applica/scarta. Out vuoto elimina un nodo. Il percorso di apply ricalcola la proposta; non va equiparato a una transazione universale o a snapshot byte-esatto. Fonte: [ast_edit](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/ast-edit.md).
+
+`lsp(action, file?, line?, symbol?, query?, new_name?, apply?)` offre diagnostica, definizioni/riferimenti, simboli, rename, rename_file e code actions, secondo capacità dei server linguistici. Fonte: [lsp](https://github.com/can1357/oh-my-pi/blob/main/docs/tools/lsp.md).
+
+Il sistema copre molti casi: file, range, blocchi, registri, AST e semantica. È una fonte per i casi lunghi, con molte più regole del problema new/edit/delete.
+
+### 2.7 Qwen Code: lettori dedicati, write/edit e stato di lettura
+
+Qwen Code è un harness completo, distinto dall'utilizzo di un modello Qwen dentro DS4. Il catalogo filesystem separa listing, lettura, ricerca, scrittura ed editing; la configurazione può cambiare quali strumenti sono esposti. Fonte: [filesystem Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/developers/tools/file-system/).
+
+#### Scoperta e lettura
+
+| Tool | Argomenti principali | Operazione |
+| --- | --- | --- |
+| `list_directory` | `path`, `ignore?`, `respect_git_ignore?` | Listing diretto, directory prima dei file; opt-in |
+| `glob` | `pattern`, `path?` | Percorsi, ignore configurati, risultati limitati/ordinati |
+| `grep_search` | `pattern`, `path?`, `glob?`, `limit?` | Regex, percorsi e righe dei match |
+| `read_file` | `file_path`, `offset?`, `limit?`, `pages?` | Testo/media oppure intervalli |
+| `read_many_files` | `paths`, opzioni include/exclude/ignore | Raccolta di più file |
+
+Le prime quattro firme sono nella [reference filesystem](https://qwenlm.github.io/qwen-code-docs/en/developers/tools/file-system/); la lettura multipla ha una [reference propria](https://qwenlm.github.io/qwen-code-docs/en/developers/tools/multi-file/).
+
+ReadFile usa offset di testo **0-based**, mentre pages dei PDF è 1-based. La pipeline distingue testo, media e notebook, considera modalità del modello e segnala la troncatura. Una richiesta senza offset/limit/pages conta come lettura completa solo quando il risultato non è tagliato; la cache può evitare di reinviare un contenuto invariato ancora presente in history. Fonte: [read-file.ts](https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/tools/read-file.ts).
+
+ReadManyFiles prende path/glob, applica include/exclude e concatena i testi con separatori per file; per una directory occorre un pattern, non il solo nome. Media esplicitamente richiesti hanno trattamento dedicato. Fonte: [read_many_files](https://qwenlm.github.io/qwen-code-docs/en/developers/tools/multi-file/).
+
+Questa ispezione è distribuita fra listing/ricerca/lettura. Non emerge un inspect separato obbligatorio; il controllo importante è lo stato della lettura registrata dal runtime.
+
+#### Edit e inserimento
+
+`edit(file_path, old_string, new_string, replace_all?)` richiede un match univoco salvo sostituzione globale. Old vuoto crea soltanto un file assente; su uno presente fallisce. Insert conserva un'ancora in new; new vuoto rimuove contenuto. Il modulo controlla lettura/freschezza, prepara il diff e ricontrolla prima della scrittura. Fonte: [edit.ts](https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/tools/edit.ts).
+
+```json
+{"file_path":"/work/config.py","old_string":"enabled = True\n","new_string":"enabled = True\nverbose = False\n","replace_all":false}
+```
+
+Il backend non è soltanto un confronto dei byte emessi: gli helper cercano il letterale, poi equivalenze deterministiche su caratteri/whitespace, recuperando il tratto del disco. Per delete di testo possono includere una newline successiva per non lasciare una riga vuota. Questo modifica la semantica di una rimozione rispetto a «solo i byte selezionati». Fonte: [editHelper.ts](https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/utils/editHelper.ts).
+
+**Documentazione e codice vanno distinti:** la guida descrive anche correzione multi-stage tramite modello; nel calculateEdit del modulo esaminato compaiono normalizzazioni e errori espliciti per match zero/multiplo. Non è stato verificato un passaggio di correzione LLM in altri livelli. Non si può quindi dichiararlo una garanzia corrente dell'intera applicazione. Fonti: [guida](https://qwenlm.github.io/qwen-code-docs/en/developers/tools/file-system/), [modulo edit](https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/tools/edit.ts).
+
+#### Write, notebook, delete e rename
+
+`write_file(file_path, content)` crea o sostituisce il contenuto completo. Il codice conserva metadata di encoding/BOM del file presente, crea i parent quando necessario, controlla freschezza prima della scrittura e aggiorna la cache dopo. I controlli non eliminano ogni corsa con writer esterni. Fonte: [write-file.ts](https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/tools/write-file.ts).
+
+`notebook_edit(notebook_path, cell_id?, new_source?, cell_type?, edit_mode?)` lavora su celle con replace/insert/delete. Richiede lettura e ID non ambiguo; un cambio del codice invalida gli output della cella. Fonte: [notebook-edit.ts](https://github.com/QwenLM/qwen-code/blob/main/packages/core/src/tools/notebook-edit.ts).
+
+Nel catalogo descritto non c'è un delete/rename dedicato per file ordinari. `run_shell_command(command, description?, directory?, is_background?)` copre operazioni filesystem e verifiche. La guida indirizza ricerca/lettura ai tool dedicati; la shell restituisce output, exit code e informazioni sui processi. Fonte: [shell Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/developers/tools/shell/).
+
+#### Utilità per DS4
+
+Write/edit separati e stato di lettura sono precedenti pertinenti. Creazione tramite old vuoto, replace_all, normalizzazioni e consumo implicito di newline sono invece scelte aggiuntive. La lunghezza di una firma non rivela da sola quanta semantica il backend introduca.
+
+### 2.8 DeepSeek Tool Calls: protocollo di funzioni, non catalogo filesystem
+
+La guida DeepSeek definisce funzioni del chiamante con nome, descrizione e JSON Schema. Il modello restituisce tool_calls; il client esegue e aggiunge risultati collegati da tool_call_id, poi richiama il modello. Il servizio non esegue quelle funzioni al posto del client. Fonte: [Tool Calls DeepSeek](https://api-docs.deepseek.com/guides/tool_calls/).
+
+#### Cosa è definito e cosa no
+
+| Operazione di file | Evidenza nel contratto consultato |
+| --- | --- |
+| Listing/ispezione | Nessuna funzione filesystem standard definita |
+| Lettura/ricerca | Il chiamante deve fornire implementazione e schema |
+| Create/edit/insert | Semantica scelta dall'harness che espone la funzione |
+| Delete/rename | Non dedotti da stringhe speciali del protocollo |
+| Risultato/errore | Contenuto della risposta del tool associata all'ID |
+
+Non è corretto inventare un read_file universale di DeepSeek a partire da questo protocollo. Se un agente usa DeepSeek insieme ai tool di Pi, Qwen Code o DS4, è quel catalogo a determinare il processamento dei file. Il nome del provider non stabilisce se old vuoto crei, se si usino righe o se delete passi da shell.
+
+#### Schema e controllo dell'inferenza
+
+La modalità strict beta vincola la forma alla funzione definita dal client; richiede gli oggetti con campi required e additionalProperties false, con limitazioni sui tipi supportati. Fonte: [strict DeepSeek](https://api-docs.deepseek.com/guides/tool_calls/#strict-mode-beta).
+
+È una garanzia di forma. Per DS4 old deve anche esistere nello snapshot ed essere univoco, e il filesystem deve essere ricontrollato: sono vincoli ulteriori. Framing nativo DeepSeek e XML dentro edits sono livelli distinti. Il protocollo non obbliga a incorporare XML negli argomenti e non giustifica togliere le validazioni del client. La qualifica dei nostri backend/modelli resta separata dalla disponibilità del tool calling del provider.
+
+### 2.9 Llguidance: controllo della generazione, non agente di file
+
+Llguidance non definisce Read/Edit/Write e non decide come leggere o cancellare. Dati grammatica, tokenizer e prefisso, calcola token che possono proseguire verso una stringa valida; supporta avanzamento nei tratti deterministici. Filesystem, autorizzazione, snapshot e commit appartengono all'harness. Fonte: [llguidance](https://github.com/guidance-ai/llguidance).
+
+Serve come riferimento per il nostro controllo dell'inferenza: grammatica per la forma, vincolo dinamico per old reale. Nessuno dei due determina da solo il blocco semanticamente giusto. Confrontarlo con un agente come se avesse un diverso tool delete confonderebbe i livelli.
+
+### 2.10 Mappa comparativa delle operazioni
+
+La tabella sintetizza i paragrafi precedenti nel medesimo perimetro/versione; non introduce garanzie ulteriori.
+
+| Operazione | Codex locale | Claude Code | Claude editor API | Aider | Pi | Oh-my-pi | Qwen Code |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Scoperta | Shell/tool esposti | Shell/Glob | view/altri tool | Repo map | Bash/find/ls | read/grep/find | glob/list_directory |
+| Lettura | Shell/lettore/view_image | Read | view | File nel contesto | read | read e selettori | read_file/read_many_files |
+| Ispezione strutturale | Programmi/plugin | Plugin/LSP | Chiamante | Repo map | Estensioni/programmi | Sintesi/AST/LSP | Lettori/ricerche |
+| Creazione | Add File | Write | create | SEARCH vuoto/whole | write | write | write_file/old vuoto |
+| Edit | Update File | Edit | str_replace | SEARCH-REPLACE/udiff | edits[] | PUT/CUT/varianti | edit |
+| Insert | Aggiunte con contesto | Ancora in new | insert dopo riga | Ancora/append | Ancora | PUT prima/dopo/EOF | Ancora |
+| Togliere testo | Righe rimosse | new vuoto | new vuoto | REPLACE vuoto | newText vuoto | CUT/range | new vuoto + helper |
+| File intero/vuoto | Patch/shell | Write | Sostituzione/chiamante | Whole/edit integrale | write | write | write_file |
+| Delete del file | Delete File/shell | Shell | Altro tool | Workflow filesystem | Shell | REM | Shell |
+| Rename/move | Move to/shell | Shell/plugin | Altro tool | Workflow filesystem | Shell | MV/LSP | Shell |
+
+DeepSeek è nella sezione precedente come protocollo, llguidance come motore di vincoli: non hanno un catalogo filesystem equivalente alle colonne della tabella.
+
+Per DS4 emergono quattro decisioni indipendenti:
+
+1. **Contesto:** lettori mirati, file nel prompt, mappe di simboli o ricerca semantica.
+2. **Selezione:** old letterale, contesto di patch, righe associate a snapshot o nodi.
+3. **Operazione:** nome del tool, campo comando o intestazione.
+4. **Controlli:** vincolo durante generazione, validazione all'esecuzione e preflight filesystem.
+
+Il nostro vantaggio è il vincolo dinamico di old. Adottare una firma più corta non richiede di adottare matching permissivo, delete via shell o perdita dello snapshot.
+
+Diff-XYZ trova risultati dipendenti da compito/modello; EDIT-Bench sottolinea il contesto delle richieste reali. Nessuno determina quale catalogo vinca su DS4. Fonti: [Diff-XYZ v2](https://arxiv.org/abs/2510.12487v2), [EDIT-Bench v2](https://arxiv.org/abs/2511.04486v2).
 
 ## 3. Le protezioni da conservare
 

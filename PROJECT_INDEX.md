@@ -246,8 +246,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   checkpoint delle chiamate parziali, retry/replay, masking di old_text da
   inizio riga, vitalità dei prefissi, sampling locale e gate MTP;
   le attività client restano in `exmekh_lib/todo.md`.
-- `docs/agentic/interactive-calls.md` — contratto wire interattivo v2: documento
-  edit senza code, con ultimo new_text prima della chiusura del singolo edit.
+- `docs/agentic/interactive-calls.md` — contratto `edit_file.v3` sul trasporto
+  interattivo v2: corpi letterali e due marcatori con ID server a tre cifre;
+  creazione e cancellazione sono tool separati, senza inspect/read.
   `docs/performance/interactive-edit-xml-v2-qualification-20261011.json` registra
   lo storico con code del 11 ottobre, prefill reale e confronto maschera/oracolo.
   La qualifica del 9 ottobre conserva soltanto lo storico v1.
@@ -331,23 +332,26 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   Possiede il writer comune del framing nativo e la policy dei batch OLD;
   cambio di fase, query di capacità ed esito della verifica sono operazioni
   distinte. I contatori dei draft da snapshot sono separati da quelli MTP.
+- `ds4_prompt_settings.h` — template completi di Qwen/Qwen4, DeepSeek/DeepSeek 4.1, GLM, output strutturato e recupero dei tool invalidi; nessuna istruzione del modello è costruita con prosa inline nel server.
+- `ds4_server_text.h` — diagnostica, errori API e formati dei log del server; prompt e testi agentici restano nei rispettivi config.
+- `ds4_agentic_settings.h` — testo del runtime agentico, istruzioni di ritorno dalla skill e diagnostica dei checkpoint; il rendering usa questi valori senza duplicare le istruzioni.
+- `ds4_interactive_checkpoint.h` — possiede cattura, staging, budget e pubblicazione dei rollback delle pause; un rollback pubblicato è protetto da richieste ausiliarie e finalizzazioni ripetute fino al ripristino sul worker.
+- `ds4_interactive_settings.h` — proprietario unico di limiti, versione wire, marcatori edit, descrizione del tool e messaggi del protocollo interattivo.
 - `ds4_interactive_config.h`, `ds4_interactive_grammar.h`,
   `ds4_interactive_runtime.h` — protocollo Responses interattivo v2: registro
   dei comportamenti, policy del documento, pause interne alla stringa con KV,
   ripresa della stessa chiamata, ricevute idempotenti e interruzioni/replay.
   Il runtime possiede lifecycle, restore dello stato generato, budget e wire;
   il dispatcher usa queste operazioni senza gestire gli internals della continuazione.
-- `ds4_interactive_edit.h` — comportamento `edit_file.v2`: snapshot per edit,
-  adattatore JSON, descrizione del tool e policy di sampling unica. Configurazione e stato sono
+- `docs/architecture/steering-cache-fix-20261014.md`, `docs/performance/steering-cache-fix-20261014.json` — correzione della continuazione Responses dopo steering e del salvataggio prima delle richieste ausiliarie; checkpoint distinti per resume e rollback delle pause edit, con prove live e native.
+- `ds4_interactive_edit.h` — comportamento `edit_file.v3`: snapshot per edit,
+  adattatore JSON e policy di sampling unica; valida il nome del campo compilato. Configurazione e stato sono
   opachi per il protocollo e liberati dai callback del comportamento.
-- `ds4_edit_document.h` — riconoscitore del dialetto XML edit, entità/CDATA,
-  ownership dei percorsi e snapshot condivisi, chiusura finale new_text senza code
-  e checkpoint incrementali sui prefissi accettati, ai confini di scalar UTF-8.
-  Le prove del masking leggono i checkpoint senza modificare autorizzazioni o stato.
-  Per literal old_text globalmente univoci propone suffix XML dello snapshot;
-  il comportamento applica gli escape nativi e il motore verifica i token.
-  Il restart delle proposte è quello della scansione, anche per prove su un
-  prefisso precedente al checkpoint accettato.
+- `ds4_edit_document.h` — riconoscitore di `exmekh_edit` e `exmekh_new_text`,
+  corpi letterali, ID casuali a tre cifre unici nella chiamata, ownership dei
+  percorsi e snapshot condivisi; checkpoint incrementali ai confini UTF-8.
+  Le prove del masking sono read-only. I draft del testo vecchio propongono
+  byte letterali dello snapshot, poi protetti dal trasporto nativo.
 - `ds4_edit_constraint.h` — vincolo dinamico sui byte logici da inizio riga,
   unicità globale e indice suffix array/LCP dello snapshot, esposto tramite API
   di matching e candidati senza accesso agli indici interni.
@@ -372,6 +376,13 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `agent/src/exmekh_agent/exmekh_bridge/history/converter.py` — serializzazione delle skill, conversione della history e
   deduplicazione del prompt corrente tramite le API pubbliche Message;
   `agent_runner.py` coordina l'esecuzione e mantiene gli import di compatibilità.
+- `agent/src/exmekh_agent/exmekh_bridge/agents/turn_request.py` — input tipizzato del turno, passato come valore unico al worker; il runner conserva il punto di ingresso pubblico compatibile.
+- `agent/src/exmekh_agent/config/execution.py`, `agent/src/exmekh_agent/config/resources/execution.json` — policy dei titoli: sampling, budget, normalizzazione e fallback tramite metodi del tipo di configurazione.
+- `agent/src/exmekh_agent/exmekh_bridge/history/recorded_history.py` — query pubbliche sulle trascrizioni; il prompt del root è restituito come copia indipendente tramite ChatMessage, senza interpretazione duplicata nella UI.
+- `tools/check_product_text.py`, `tests/test_product_text_configuration.py` — gate contro prosa, messaggi, descrizioni, log e tooltip inline nel server di produzione e nei sorgenti Python di agente/libreria, incluse le capability. È eseguito da `make test-product-text` e dalla suite `make test`.
+- `docs/performance/text-configuration-20261014.json` — migrazione aggiuntiva dei testi, confronto dei token C preprocessati CPU/GPU e verifiche di server, agente e gate.
+- `docs/architecture/clean-code-live-review-20261014.md`, `docs/performance/clean-code-live-review-20261014.json` — revisione successiva con modifiche anche alla libreria, wheel verificata, copertura completa, test UI e qualifica CUDA live; include la regressione cancel/auxiliary/steering e il suo fix.
+- `docs/performance/clean-code-review-20261014.json` — esito del refactoring e dell'audit trasversale, test non live, limiti della verifica e aree ancora da semplificare.
 - `agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py` — osservazione uniforme
   delle richieste normali e strutturate, isolamento dei contesti figli e
   conservazione dei token totali dichiarati dal provider.
@@ -436,34 +447,42 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `exmekh_lib/old_agent/` — archivio storico Agent Wiki: launcher presenti ad agosto 2026, wheel `agent-wiki` 0.1.0 versionata a settembre e sorgenti estratti integralmente; provenienza e hash in `provenance.json`, guida in `README.md`.
 - `exmekh_lib/` — repository Git locale dei sorgenti ExMekh-Lib, con cronologia propria,
   esclusa dal Git di DS4.
-- `exmekh_lib/src/exmekh_lib/core/models/edit_document.py` — parser del dialetto XML v2,
-  preserva corpi/entità/CDATA e chiusura finale per elemento; nessun accesso al filesystem.
+- `exmekh_lib/src/exmekh_lib/core/models/edit_document.py` — parser letterale `edit_file.v3` con soli marcatori `exmekh_edit`/`exmekh_new_text`, ID e corpi senza decoding XML; nessun accesso al filesystem.
 - `exmekh_lib/src/exmekh_lib/core/file_inspection/edit_selection.py`, `editing.py`,
-  `interactive.py` e `edit_filesystem.py` — selezioni/intervalli e conflitti sullo snapshot
+  `interactive.py` e `edit_filesystem.py` — selezioni letterali e conflitti sullo snapshot
   iniziale, autorizzazioni per call ID/indice, raggruppamento alias, verifica dopo hook e
   commit per file. L'edit preparato possiede preflight e commit, l'approvazione verifica
   le evidenze; il runtime annulla anche cambi di scope durante una pausa.
   Filesystem/evidenze/permessi restano del client; masking/KV del server.
 - `exmekh_lib/src/exmekh_lib/core/file_inspection/lines.py` e
   `exmekh_lib/tests/core/file_inspection/test_lines.py` — API comune per righe fisiche,
-  offset e inserimento a EOF; lettura e selezioni usano le stesse regole CR/LF.
+  offset di lettura e confini CR/LF, inclusa la fine del file.
 - `exmekh_lib/src/exmekh_lib/core/models/tool.py` — il tool possiede la copia della
   politica di esecuzione; i compositori usano la sua API per mantenere contratto
   interattivo e obbligo di esecuzione sincrona negli override.
+- `exmekh_lib/src/exmekh_lib/config/interactive.py` — versione, tipo di snapshot ed endpoint condivisi tra negoziazione, validazione e trasporto del client.
+- `exmekh_lib/src/exmekh_lib/core/file_inspection/edit_filesystem.py` — `FileWriteTarget` raggruppa risorsa, path canonico e snapshot, esponendo `validate()` e `commit()`; locking e pubblicazione atomica restano sotto questa responsabilità. Prefisso e permessi temporanei vengono da `config/file_editing.py`.
+- `exmekh_lib/tests/core/file_inspection/test_edit_write_boundaries.py` e `tests/core/tool_calls/test_output_failure_boundaries.py` — nuovi casi di errore: scritture concorrenti, commit parziali, cancellazione, metadati e output non pubblicabili.
 - `exmekh_lib/src/exmekh_lib/core/providers/interactive_contract.py` e
   `interactive_transport.py` — autorizzazioni wire immutabili per chiamata e
   classificazione uniforme degli errori JSON/encoding di HTTP e SSE.
-- `exmekh_lib/tests/core/file_inspection/test_xml_edit_document.py` e
-  `exmekh_lib/tests/live/test_file_editing_live.py` — regressioni XML del client e
-  prove live di scritture esatte, alias e rifiuto dell'intera chiamata.
+- `exmekh_lib/tests/core/file_inspection/test_literal_file_tools.py`,
+  `test_xml_edit_document.py` e `tests/live/test_file_editing_live.py` —
+  regressioni client sui tre tool, ID omessi, corpi letterali, alias e rifiuto
+  dell'intera chiamata; verifiche live dei byte e del routing del modello.
 - `docs/architecture/client-xml-edit-v2-20261012.md` — qualifica client XML v2 e
   aggiornamento della wheel predefinita; esiti live distinti dai test deterministici.
 - `docs/architecture/client-xml-clean-review-20261012.md` — revisione delle
   responsabilità dei tool, refactoring del client e nuove regressioni di cancellazione,
   con qualifica deterministica e live della wheel predefinita.
+- `docs/architecture/file-tools-literal-v3-20261013.md` — migrazione client/server
+  ai tre tool separati, wheel installata, verifiche deterministiche e limiti
+  ancora osservati nelle prove agentiche con Qwen27/CUDA.
 - `docs/architecture/file-tool-simplification-research-20261013.md` — ricerca sui
-  formati di editing e proposta write/edit/delete: rimozione di comandi nei corpi
-  e XML annidato, riuso del masking, selezioni lunghe e confronto sperimentale.
+  tool di file di Codex, Claude Code/API, Aider, Pi, oh-my-pi e Qwen Code;
+  confini DeepSeek/llguidance e proposta write/edit/delete con riuso del masking,
+  rimozione di XML annidato, selezioni lunghe e confronto sperimentale.
+- `agent/src/exmekh_agent/config/packaging.py` — politica e percorsi della build del wheel; `sync.py` separa build, installazione e orchestrazione e usa i cataloghi per tutti i messaggi.
 - `agent/sync_exmekh_lib.sh` e `agent/src/exmekh_agent/sync.py` — ricostruiscono ExMekh-Lib dai sorgenti
   locali, aggiornano wheel e lockfile e reinstallano la dipendenza nel frontend.
   La distribuzione e la CLI sono `exmekh-lib`, il namespace Python è
@@ -804,6 +823,14 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   atomico dei checkpoint mancanti, corrotti o troncati; i casi che verificano
   un nome preciso usano `tool_choice=required` con un unico nome consentito,
   separando il protocollo dalla propensione del modello a chiamare un tool.
+- `docs/architecture/steering-cache-reproduction-20261014.md` e
+  `docs/performance/steering-cache-reproduction-20261014.json` — misure delle
+  perdite di riuso dopo steering e richieste ausiliarie, controlli positivi,
+  riproduzione SSE lunga e isolamento senza comportamento edit interattivo.
+- `tests/test_steering_cache_live.py` — riproduzione HTTP opt-in del prefill della
+  storia dopo steering e richieste ausiliarie; controlli con tool completati,
+  cancellazione di una pausa edit e contesti separati, misurati tramite i
+  contatori cached/prefill del server. Non esegue tool sul filesystem.
 - `tests/test_server_interactive.c` — fixture host per vincoli testuali e
   oracolo indipendente, XML/entità/CDATA, chiusure letterali e finali, sintassi native,
   frontiere di sampling, prefissi ]/]] coerenti con lo snapshot, retry, batch,

@@ -45,12 +45,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--work-dir", type=Path, required=True)
-    parser.add_argument("--case", choices=("html", "unicode", "old_text", "old_text_long", "old_text_cdata"), default="html")
+    parser.add_argument("--case", choices=("html", "unicode", "old_text", "old_text_long", "old_text_markup"), default="html")
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--server-log", type=Path,
                         help="Server log with DS4_SERVER_PHASE_PROFILE=1 to measure edit decoding separately")
-    parser.add_argument("--numeric-entities", action="store_true",
-                        help="Spell non-ASCII characters and CR/LF as XML numeric entities in the prompt")
     args = parser.parse_args()
     if args.repeats < 1:
         parser.error("--repeats must be positive")
@@ -68,17 +66,14 @@ def main():
     long_line = "UNIQUE_LINE_BEGIN " + "known source text copied exactly with a target verifier. " * 24
     cdata_line = "UNIQUE_MARKUP_BEGIN " + "<p>α中🙂 & literal markup</p> " * 16
     original, old, replacement = {
-        "html": (None, "<all/>", html),
-        "unicode": (None, "<all/>", "α中🙂 & <literal/> </new_text></edit>\r\n"),
+        "html": ("", "", html),
+        "unicode": ("", "", "α中🙂 & <literal/> </new_text></edit>\r\n"),
         "old_text": ("same α中🙂 & < ]\r\nKEEP\n", "same α中🙂 & < ]", "updated α中🙂"),
         "old_text_long": (long_line + "\r\nKEEP\n", long_line, "updated"),
-        "old_text_cdata": (cdata_line + "\r\nKEEP\n", cdata_line, "updated"),
+        "old_text_markup": (cdata_line + "\r\nKEEP\n", cdata_line, "updated"),
     }[args.case]
-    expected = (replacement + "\r\nKEEP\n" if original is not None else replacement).encode()
+    expected = (replacement + "\r\nKEEP\n" if original else replacement).encode()
     document = edit_fragment("page.html", old, replacement)
-    if args.numeric_entities:
-        document = "".join(f"&#{ord(character)};" if ord(character) >= 128 or character in "\r\n"
-                           else character for character in document)
     records = []
     for repeat in range(args.repeats + 1):
         directory = args.work_dir / f"case-{repeat}"
@@ -86,21 +81,16 @@ def main():
         if original is not None:
             (directory / "page.html").write_bytes(original.encode())
         provider = EditingLiveProvider(directory)
-        record = {"repeat": repeat, "warmup": repeat == 0, "case": args.case,
-                  "numeric_entities": args.numeric_entities}
+        record = {"repeat": repeat, "warmup": repeat == 0, "case": args.case}
         started = time.monotonic()
         log_offset = args.server_log.stat().st_size if args.server_log else 0
         try:
             node, _ = editing_node(provider, directory)
             started = time.monotonic()
             prerequisites = (
-                "First inspect page.html and read both physical lines in separate turns. "
-                if original is not None else "The file is missing; do not inspect or read it. "
+                "First inspect page.html and read its physical lines (0/0 if empty). "
             )
-            action = "Create page.html containing exactly the requested HTML. " if args.case == "html" else \
-                "Apply the requested edit to page.html, preserving every byte. "
-            if args.numeric_entities:
-                action += "Copy the XML numeric entities exactly; they specify the requested Unicode and CR/LF bytes. "
+            action = "Edit the existing page.html with literal text, preserving every byte. "
             node.run(
                 "Enter file-processing. " + action
                 + prerequisites

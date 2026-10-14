@@ -14,6 +14,15 @@ struct interactive_receipt {
     interactive_receipt *next;
 };
 
+/* A compact live rollback is cheap while decoding. Only an actual pause
+ * converts it into a portable payload that survives other jobs using the slot. */
+typedef struct {
+    resident_kv_frontier resident;
+    live_tool_state binding;
+    agent_context_checkpoint *checkpoint;
+    uint64_t reserved_bytes;
+} interactive_rollback;
+
 struct interactive_entry {
     server *owner;
     char id[40];
@@ -28,6 +37,7 @@ struct interactive_entry {
     size_t snapshot_bytes;
     size_t behavior_bytes;
     uint64_t checkpoint_bytes;
+    interactive_rollback rollback;
     char *text;
     uint64_t rng;
     int generated, prompt_tokens;
@@ -49,9 +59,11 @@ static bool interactive_active(const interactive_entry *e) {
     return e->status == INTERACTIVE_RUNNING || e->status == INTERACTIVE_AWAITING;
 }
 
+#include "ds4_interactive_checkpoint.h"
+
 static char *interactive_capabilities_body(server_model_syntax syntax) {
     buf body = {0};
-    buf_puts(&body, "{\"interactive\":{\"version\":2,\"apis\":[\"responses\"],\"behaviors\":[");
+    buf_puts(&body, "{\"interactive\":{\"version\":" INTERACTIVE_VERSION_TEXT ",\"apis\":[\"responses\"],\"behaviors\":[");
     for (size_t i = 0; i < sizeof(interactive_behaviors)/sizeof(interactive_behaviors[0]); i++) {
         if (i) buf_putc(&body, ',');
         json_escape(&body, interactive_behaviors[i].name);
@@ -86,7 +98,7 @@ static int interactive_prompt_tokens(const request *r, int fallback) {
 
 static char *interactive_acceptance_body(const request *r) {
     buf body = {0};
-    buf_printf(&body, "{\"type\":\"interactive.accepted\",\"version\":2,\"continuation_id\":\"%s\"}",
+    buf_printf(&body, "{\"type\":\"interactive.accepted\",\"version\":" INTERACTIVE_VERSION_TEXT ",\"continuation_id\":\"%s\"}",
                r->interactive.entry->id);
     return buf_take(&body);
 }
@@ -123,32 +135,15 @@ static void interactive_resume_generation(const request *r, buf *text,
     }
 }
 
-static bool interactive_checkpoint_reserve_locked(server *s, int slot_id,
-        const char *context_id, uint64_t bytes, bool *pending) {
-    interactive_entry *owner = NULL;
-    uint64_t used = 0;
-    for (interactive_entry *entry = s->interactive_entries; entry; entry = entry->next) {
-        used += entry->checkpoint_bytes;
-        if (entry->slot_id == slot_id && !strcmp(entry->context_id, context_id) && interactive_active(entry))
-            owner = entry;
-    }
-    *pending = owner != NULL;
-    if (!owner) return true;
-    if (bytes > INTERACTIVE_CHECKPOINT_BUDGET ||
-        used - owner->checkpoint_bytes > INTERACTIVE_CHECKPOINT_BUDGET - bytes) return false;
-    owner->checkpoint_bytes = bytes;
-    return true;
-}
-
 static void interactive_append_acceptance(buf *b, const request *r) {
     if (r->interactive.entry)
-        buf_printf(b, ",\"interactive\":{\"version\":2,\"continuation_id\":\"%s\"}", r->interactive.entry->id);
+        buf_printf(b, ",\"interactive\":{\"version\":" INTERACTIVE_VERSION_TEXT ",\"continuation_id\":\"%s\"}", r->interactive.entry->id);
 }
 
 static void interactive_append_interruption(buf *body, const interactive_entry *e,
                                              const char *status, const char *code,
                                              const char *message) {
-    buf_printf(body, "{\"type\":\"interactive.%s\",\"version\":2,\"continuation_id\":\"%s\",\"status\":\"%s\",\"code\":",
+    buf_printf(body, "{\"type\":\"interactive.%s\",\"version\":" INTERACTIVE_VERSION_TEXT ",\"continuation_id\":\"%s\",\"status\":\"%s\",\"code\":",
         status, e->id, status);
     json_escape(body, code);
     buf_puts(body, ",\"message\":");
@@ -172,15 +167,8 @@ static char *interactive_interrupted_body(const interactive_entry *e,
     return buf_take(&b);
 }
 
-static void interactive_drop_checkpoint_locked(server *s, interactive_entry *e) {
-    e->checkpoint_bytes = 0;
-    if (e->slot_id < 0 || e->slot_id >= s->slot_count) return;
-    server_slot *slot = &s->slots[e->slot_id];
-    agent_context_checkpoint *cp = agent_context_checkpoint_find_locked(slot, e->context_id);
-    if (cp) agent_context_checkpoint_remove_locked(slot, cp, true);
-}
-
 static void interactive_release_payload(interactive_entry *e) {
+    interactive_rollback_clear(&e->rollback);
     if (e->owns_request) request_free(&e->paused);
     e->owns_request = false;
     free(e->text); e->text = NULL;
@@ -222,10 +210,10 @@ static void interactive_sweep_locked(server *s) {
             continue;
         }
         if (e->status == INTERACTIVE_AWAITING) {
-            char *expired = interactive_interrupted_body(e, "expired", "expired", "interactive continuation expired");
+            char *expired = interactive_interrupted_body(e, "expired", "expired", interactive_expired_message);
             if (e->operation) { free(e->operation->result); e->operation->result = expired; }
             else free(expired);
-            interactive_drop_checkpoint_locked(s, e);
+            interactive_publish_rollback_locked(s, e);
             interactive_release_payload(e);
             e->status = INTERACTIVE_EXPIRED;
             e->expires = now + INTERACTIVE_RECEIPT_TTL;
@@ -357,7 +345,7 @@ static bool interactive_send(int fd, bool cors, bool stream, const char *body) {
 
 static char *interactive_status_body(const interactive_entry *e) {
     buf b = {0};
-    buf_printf(&b, "{\"type\":\"interactive.status\",\"version\":2,\"continuation_id\":\"%s\",\"status\":\"%s\",\"result\":",
+    buf_printf(&b, "{\"type\":\"interactive.status\",\"version\":" INTERACTIVE_VERSION_TEXT ",\"continuation_id\":\"%s\",\"status\":\"%s\",\"result\":",
                e->id, interactive_status_name(e->status));
     buf_puts(&b, e->operation && e->operation->result ? e->operation->result : "null");
     buf_putc(&b, '}');
@@ -378,14 +366,14 @@ static bool interactive_admit(server *s, int fd, request *r) {
     if (!r->interactive.count) {
         pthread_mutex_unlock(&s->tool_mu);
         if (!context) return false;
-        http_error(fd, s->enable_cors, 409, "agent context has an active interactive turn");
+        http_error(fd, s->enable_cors, 409, interactive_active_context_error);
         return true;
     }
     const char *id = interactive_string(r->interactive.wire, "request_id");
     char hash[41];
     if (!interactive_hash_body(r->raw_body, hash)) {
         pthread_mutex_unlock(&s->tool_mu);
-        http_error(fd, s->enable_cors, 400, "invalid interactive request");
+        http_error(fd, s->enable_cors, 400, interactive_request_error);
         return true;
     }
     for (interactive_entry *e = s->interactive_entries; e; e = e->next) {
@@ -394,7 +382,7 @@ static bool interactive_admit(server *s, int fd, request *r) {
         if (!receipt) continue;
         if (strcmp(receipt->hash, hash)) {
             pthread_mutex_unlock(&s->tool_mu);
-            http_error(fd, s->enable_cors, 409, "request_id reused with different payload");
+            http_error(fd, s->enable_cors, 409, interactive_reused_request_error);
         } else {
             char *body = receipt->result ? xstrdup(receipt->result) : interactive_status_body(e);
             pthread_mutex_unlock(&s->tool_mu);
@@ -407,7 +395,7 @@ static bool interactive_admit(server *s, int fd, request *r) {
     if (context || records >= INTERACTIVE_MAX_RECORDS || active >= INTERACTIVE_MAX_ACTIVE) {
         pthread_mutex_unlock(&s->tool_mu);
         http_error(fd, s->enable_cors, context ? 409 : 429,
-                   context ? "agent context has an active interactive turn" : "interactive capacity reached");
+                   context ? interactive_active_context_error : interactive_capacity_error);
         return true;
     }
     interactive_entry *e = xmalloc(sizeof(*e));
@@ -497,8 +485,7 @@ static void interactive_profile_frontier(server *s, server_slot *slot,
         agentic_filter_token(filter, -1, tool->behavior->diagnostic_probe, strlen(tool->behavior->diagnostic_probe));
     buf encoded = {0}; json_escape(&encoded, piece);
     server_log(DS4_LOG_GENERATION,
-        "ds4-server: interactive payload frontier call_id=%s input_index=%zu temperature=%.3f "
-        "unmasked_best=%d piece=%s raw_argmax_allowed=%s operation_probe_allowed=%s",
+        interactive_payload_frontier_log,
         call->call_id, call->input_index, temperature, best, encoded.ptr,
         allowed ? "true" : "false", probe ? "true" : "false");
     free(piece); buf_free(&encoded);
@@ -509,9 +496,13 @@ static bool interactive_suspend(server *s, server_slot *slot, job *j,
         int prompt_tokens, thinking_state thinking, responses_stream *stream,
         char *err, size_t errlen) {
     interactive_entry *e = j->req.interactive.entry;
-    if (!e || !agent_context_checkpoint_save(s, slot, e->context_id, err, errlen)) return false;
+    interactive_checkpoint_operation checkpoint = {
+        .owner = s, .slot = slot, .entry = e, .error = err, .error_capacity = errlen,
+    };
+    if (!e || !agent_context_checkpoint_save(s, slot, e->context_id, err, errlen) ||
+        !interactive_stage_rollback(&checkpoint)) return false;
     buf b = {0};
-    buf_printf(&b, "{\"type\":\"interactive.await_input\",\"version\":2,\"status\":\"awaiting_input\",\"continuation_id\":\"%s\",\"exchange_id\":\"%s\",\"call_id\":\"%s\",\"tool_name\":",
+    buf_printf(&b, "{\"type\":\"interactive.await_input\",\"version\":" INTERACTIVE_VERSION_TEXT ",\"status\":\"awaiting_input\",\"continuation_id\":\"%s\",\"exchange_id\":\"%s\",\"call_id\":\"%s\",\"tool_name\":",
                e->id, call->exchange_id, call->call_id);
     json_escape(&b, call->tool->name);
     buf_puts(&b, ",\"behavior\":"); json_escape(&b, call->tool->behavior->name);
@@ -527,7 +518,7 @@ static bool interactive_suspend(server *s, server_slot *slot, job *j,
         interactive_drop_checkpoint_locked(s, e);
         pthread_mutex_unlock(&s->tool_mu);
         buf_free(&b);
-        snprintf(err, errlen, "interactive turn cancelled before suspension");
+        snprintf(err, errlen, "%s", interactive_cancelled_before_pause_error);
         return false;
     }
     interactive_record_response_locked(&j->req, b.ptr);
@@ -674,10 +665,12 @@ static void interactive_terminal(server *s, interactive_entry *e,
     buf_puts(&b, "],\"usage\":");
     append_responses_usage_json(&b, r, e->prompt_tokens, e->generated);
     buf_putc(&b, '}');
+    bool rollback = status == INTERACTIVE_CANCELLED && calls.len == 0;
     free(items); tool_calls_free(&calls); free(content); free(reasoning);
     pthread_mutex_lock(&s->tool_mu);
     interactive_record_response_locked(r, b.ptr);
-    interactive_drop_checkpoint_locked(s, e);
+    if (rollback) interactive_publish_rollback_locked(s, e);
+    else interactive_drop_checkpoint_locked(s, e);
     e->status = status;
     e->finalizing = false;
     e->expires = time(NULL) + INTERACTIVE_RECEIPT_TTL;
@@ -694,13 +687,14 @@ static void interactive_finish_request(server *s, request *r, bool cancelled) {
         e->status = cancelled ? INTERACTIVE_CANCELLED : INTERACTIVE_FAILED;
     if (r->interactive.receipt && !r->interactive.receipt->result) {
         char *failure = interactive_interrupted_body(e, interactive_status_name(e->status),
-            "generation_aborted", "interactive generation ended before a result");
+            "generation_aborted", interactive_aborted_message);
         interactive_record_response_locked(r, failure);
         free(failure);
     }
     e->queued = false;
     e->expires = time(NULL) + INTERACTIVE_RECEIPT_TTL;
-    interactive_drop_checkpoint_locked(s, e);
+    if (e->status == INTERACTIVE_CANCELLED) interactive_publish_rollback_locked(s, e);
+    else interactive_drop_checkpoint_locked(s, e);
     interactive_release_payload(e);
     pthread_mutex_unlock(&s->tool_mu);
 }
@@ -784,14 +778,14 @@ static int interactive_control(server *s, int fd, const char *body, request *out
         !interactive_scope_equal(&e->allowed_tools, &control.allowed_tools) ||
         !interactive_scope_equal(&e->allowed_skills, &control.allowed_skills)) {
         pthread_mutex_unlock(&s->tool_mu);
-        http_error(fd, s->enable_cors, 409, "unknown interactive continuation or mismatched scope");
+        http_error(fd, s->enable_cors, 409, interactive_unknown_scope_error);
         goto answered;
     }
     interactive_receipt *receipt = status ? NULL : interactive_receipt_find(e, id);
     if (resume && !stream) streaming = e->streaming;
     if (receipt && strcmp(receipt->hash, hash)) {
         pthread_mutex_unlock(&s->tool_mu);
-        http_error(fd, s->enable_cors, 409, "request_id reused with different payload");
+        http_error(fd, s->enable_cors, 409, interactive_reused_request_error);
         goto answered;
     }
     if (status || receipt) {
@@ -803,14 +797,14 @@ static int interactive_control(server *s, int fd, const char *body, request *out
     }
     if (e->finalizing) {
         pthread_mutex_unlock(&s->tool_mu);
-        http_error(fd, s->enable_cors, 409, "interactive operation is finalizing");
+        http_error(fd, s->enable_cors, 409, interactive_finalizing_error);
         goto answered;
     }
     if (cancel && e->status == INTERACTIVE_RUNNING) {
         interactive_receipt_add(e, id, hash);
         e->status = INTERACTIVE_CANCELLED;
         if (e->running) job_mark_cancelled(e->running);
-        char *result = interactive_interrupted_body(e, "cancelled", "cancelled", "interactive turn cancelled");
+        char *result = interactive_interrupted_body(e, "cancelled", "cancelled", interactive_cancelled_message);
         e->operation->result = xstrdup(result);
         pthread_mutex_unlock(&s->tool_mu);
         if (streaming) sse_headers(fd, s->enable_cors);
@@ -820,12 +814,12 @@ static int interactive_control(server *s, int fd, const char *body, request *out
     if (e->status != INTERACTIVE_AWAITING || !e->owns_request ||
         (resume && strcmp(e->pending->exchange_id, exchange))) {
         pthread_mutex_unlock(&s->tool_mu);
-        http_error(fd, s->enable_cors, 409, "interactive exchange is unavailable or already consumed");
+        http_error(fd, s->enable_cors, 409, interactive_exchange_unavailable_error);
         goto answered;
     }
     if (resume && stream && streaming != e->streaming) {
         pthread_mutex_unlock(&s->tool_mu);
-        http_error(fd, s->enable_cors, 400, "resume must preserve the original streaming mode");
+        http_error(fd, s->enable_cors, 400, interactive_stream_mode_error);
         goto answered;
     }
     size_t receipts = 0;
@@ -833,7 +827,7 @@ static int interactive_control(server *s, int fd, const char *body, request *out
     /* The configure receipt is separate from the exchange budget. */
     if (!cancel && receipts > INTERACTIVE_MAX_RECORDS) {
         pthread_mutex_unlock(&s->tool_mu);
-        http_error(fd, s->enable_cors, 429, "interactive exchange limit exceeded");
+        http_error(fd, s->enable_cors, 429, interactive_exchange_limit_error);
         goto answered;
     }
     const schema_json_value *reply = schema_json_object_get(wire, "reply");
@@ -857,7 +851,7 @@ static int interactive_control(server *s, int fd, const char *body, request *out
         if (used > INTERACTIVE_SNAPSHOT_BUDGET || bytes > INTERACTIVE_SNAPSHOT_BUDGET - used ||
             memory_used > INTERACTIVE_STATE_BUDGET || memory > INTERACTIVE_STATE_BUDGET - memory_used) {
             pthread_mutex_unlock(&s->tool_mu);
-            http_error(fd, s->enable_cors, 429, "interactive snapshot memory budget exceeded");
+            http_error(fd, s->enable_cors, 429, interactive_snapshot_budget_error);
             goto answered;
         }
         if (!interactive_call_prepare_reply(e->pending, reply)) {
@@ -874,7 +868,7 @@ static int interactive_control(server *s, int fd, const char *body, request *out
         pthread_mutex_unlock(&s->tool_mu);
         interactive_terminal(s, e, cancel ? INTERACTIVE_CANCELLED : INTERACTIVE_REJECTED,
             cancel ? "cancelled" : interactive_string(reply, "code"),
-            cancel ? "interactive turn cancelled" : interactive_string(reply, "message"), !cancel);
+            cancel ? interactive_cancelled_message : interactive_string(reply, "message"), !cancel);
         pthread_mutex_lock(&s->tool_mu);
         char *result = xstrdup(operation->result);
         pthread_mutex_unlock(&s->tool_mu);
@@ -895,7 +889,7 @@ static int interactive_control(server *s, int fd, const char *body, request *out
     schema_json_free(root); request_free(&control);
     return 2;
 invalid:
-    http_error(fd, s->enable_cors, 400, "invalid interactive control payload");
+    http_error(fd, s->enable_cors, 400, interactive_control_error);
 answered:
     schema_json_free(root); request_free(&control);
     return 1;

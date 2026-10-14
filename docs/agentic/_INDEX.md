@@ -61,12 +61,12 @@ Da root, avviare il server in un terminale:
 - righe 97–148: **Dipendenza ExMekh-Lib** — `agent/pyproject.toml` installa ExMekh-Lib dalla wheel versionata in `agent/wheels/`.
 - righe 149–176: **Verifica** — Da `agent/`:
 
-## [Chiamate interattive v2: edit document con chiusura finale](interactive-calls.md)
+## [Chiamate interattive: edit letterali v3](interactive-calls.md)
 
-Usare GET /v1/agentic/capabilities e POST /v1/responses.
+Il client conserva i controlli sul workroot, sui permessi, sulle identità dei
 
-- righe 8–47: **Configurazione e descrizione del tool** — Usare GET /v1/agentic/capabilities e POST /v1/responses.
-- righe 48–116: **Documento e chiusura finale** — Il modello genera soltanto il prefisso `<edit path="example1.txt"`.
-- righe 117–210: **Pausa, ripresa, rifiuto e campionamento** — La pausa avviene **dentro la stringa**, subito dopo il doppio apice che
-- righe 211–244: **Responsabilità e limiti** — **Server:** grammatica, masking, unicità della selezione letterale, combinazioni
-- righe 245–286: **Esecuzione dei test** — Il report delle prestazioni XML
+- righe 8–20: **Tool e responsabilità** — Il client conserva i controlli sul workroot, sui permessi, sulle identità dei
+- righe 21–42: **Configurazione** — {
+- righe 43–69: **Due marcatori e corpi letterali** — <exmekh_edit path="notes.txt" id="427" />vecchio testo<exmekh_new_text id="427"/>nuovo testo
+- righe 70–90: **Selezione e ID omessi** — La selezione letterale deve partire da un confine di riga fisica, comprendere
+- righe 91–113: **Autorizzazione, applicazione e trasporto** — Ogni path richiede uno scambio `file_snapshot`, con call ID, exchange ID

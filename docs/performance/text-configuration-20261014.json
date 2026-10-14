@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-14",
+  "status": "PASS",
+  "scope": [
+    "ds4_server.c production before native test fixtures",
+    "All Python source of exmekh_agent and exmekh_lib, including capabilities, excluding their config owners and documentation strings"
+  ],
+  "migration": {
+    "initial_server_prose_or_template_groups": 325,
+    "additional_short_diagnostic_groups": 34,
+    "owners": [
+      "ds4_prompt_settings.h",
+      "ds4_server_text.h",
+      "ds4_agentic_settings.h",
+      "ds4_interactive_settings.h",
+      "agent/src/exmekh_agent/config/texts/*.json"
+    ],
+    "additional_labels_from_complete_output_calls": 24
+  },
+  "compiled_equivalence": {
+    "cpu": {
+      "identical_tokens": 270449,
+      "sha256": "2735ee04acedc1dd47bb98f257d1dab6070e89be51587fc7ba6b2fef3c5109f6"
+    },
+    "gpu": {
+      "identical_tokens": 285365,
+      "sha256": "d2f5743656c47e37e2cc5ddbbfb961bbaa20345cd30113a65e2d51d0c1696f9e"
+    },
+    "method": "Compare exact lexical token sequences of cc -E -P before/after, with and without DS4_NO_GPU. Whitespace and comments are excluded; literal bytes and placeholders are preserved."
+  },
+  "validation": {
+    "agent_parallel_passed": 927,
+    "agent_serial_ui_passed": 3,
+    "configured_agent_coverage_percent": 100,
+    "native": [
+      "CUDA build/link",
+      "ds4_server_test",
+      "test-server-interactive",
+      "test_server_memory_lifetime"
+    ],
+    "product_text_regressions_passed": 4,
+    "inline_text_violations": 0,
+    "ruff": "PASS",
+    "live_tests_repeated": false,
+    "documentation_checks_passed": 10
+  },
+  "policy": "AGENT.md explicitly requires product prompts, descriptions, errors, diagnostics and labels to live in their domain configuration/resources. make test depends on test-product-text.",
+  "source_sha256": {
+    "ds4_server.c": "6c4bce01ba5eb10cb49a9e8d56643b0fae5d1f30229d23f768b95ca8d339a3b6",
+    "ds4_server_text.h": "50c5bd183c67c28c6fd2e3e05bf5f81117a88717be6979f39708652db3f29b5c",
+    "ds4_prompt_settings.h": "eb196c2723095130f5705302d83ea4719e80dba77327415028a58622ed41a45d",
+    "ds4_agentic_settings.h": "7674260f380591e8f36ba950125bda0b2b27ba78602319acaba3a7fa31eaffaf",
+    "ds4_interactive_settings.h": "63f3a2684b9450be9a412b3051224ac36d7375e43afccf9d836961fddb460d88",
+    "tools/check_product_text.py": "79db3b503347c5740da5fc35d109dbe835e26052a565cf1d03fdc918bc45dc45",
+    "tests/test_product_text_configuration.py": "8b180360d19c77a03f79ca1076cf8e7311b7a3c8d42851c824d0b02e52406802"
+  },
+  "raw_archive": "performance-results/text-configuration-20261014",
+  "limits": [
+    "The architectural scanner is a regression guard, not a proof for every possible language or dynamically constructed phrase.",
+    "Other C engine/backend source files and shell launchers were not migrated in this follow-up.",
+    "Protocol syntax, identifiers, documentation and test fixtures remain code/data at their normal boundaries."
+  ]
+}

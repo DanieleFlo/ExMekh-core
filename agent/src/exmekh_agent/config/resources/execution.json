@@ -7,5 +7,12 @@
   "storage_alert_timeout_ms": 8000,
   "graph_notification_timeout_ms": 1500,
   "provider_initial_delay_seconds": 0.5,
-  "provider_refresh_interval_seconds": 10.0
+  "provider_refresh_interval_seconds": 10.0,
+  "chat_title": {
+    "fallback_max_characters": 30,
+    "temperature": 0.3,
+    "max_output_tokens": 256,
+    "reasoning_effort": "none",
+    "trim_characters": "\"'"
+  }
 }

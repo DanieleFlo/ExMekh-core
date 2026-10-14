@@ -1116,7 +1116,8 @@ endif
 ds4_server_test: ds4_server_test.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
 
-INTERACTIVE_HEADERS = ds4_edit_constraint.h ds4_edit_document.h ds4_interactive_edit.h ds4_interactive_config.h ds4_interactive_grammar.h ds4_interactive_runtime.h
+AGENTIC_HEADERS = ds4_agentic_settings.h ds4_prompt_settings.h ds4_server_text.h
+INTERACTIVE_HEADERS = $(AGENTIC_HEADERS) ds4_interactive_checkpoint.h ds4_interactive_settings.h ds4_edit_constraint.h ds4_edit_document.h ds4_interactive_edit.h ds4_interactive_config.h ds4_interactive_grammar.h ds4_interactive_runtime.h
 ds4_server.o ds4_server_cpu.o ds4_server_test.o: $(INTERACTIVE_HEADERS)
 ds4_test.o tests/test_server_agentic_payload.o tests/test_server_resident_frontier.o: $(INTERACTIVE_HEADERS)
 
@@ -1349,3 +1350,10 @@ tests/test_read_queue: tests/test_read_queue.c ds4_read_queue.h
 .PHONY: test-read-queue
 test-read-queue: tests/test_read_queue
 	./tests/test_read_queue
+
+.PHONY: test-product-text
+test-product-text:
+	python3 -m unittest tests.test_product_text_configuration -v
+
+# Product text placement is part of the normal regression suite.
+test: test-product-text

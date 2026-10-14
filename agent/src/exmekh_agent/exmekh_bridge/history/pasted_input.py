@@ -344,11 +344,8 @@ def create_input_markdown_file(
 
 def format_user_input_file_xml(relative_path: str) -> str:
     """Generate an English prompt reference for any staged file."""
-    return (
-        f'<{XML_TAG_NAME} path="{relative_path}">\n'
-        f"This file was attached from user input.\n"
-        f"Path: {relative_path}\n"
-        f"</{XML_TAG_NAME}>"
+    return app_text(
+        "execution.pasted_input.file_reference", tag=XML_TAG_NAME, path=relative_path
     )
 
 
@@ -377,7 +374,11 @@ def prepare_user_input(
             *(
                 attachment.reference(work_root, temp_dirname, storage=storage)
                 if attachment.image_urls
-                else f"Attachment: {attachment.filename}\n{attachment.content}"
+                else app_text(
+                    "execution.pasted_input.inline_attachment",
+                    filename=attachment.filename,
+                    content=attachment.content,
+                )
                 for attachment in attachments or []
             ),
         ]
@@ -404,12 +405,16 @@ def prepare_user_input(
     ]
     for attachment in attachments or []:
         if attachment.pdf_pages:
-            prompt += (
-                f"\n\nPDF {attachment.filename}: pages 1–{len(attachment.image_urls)} "
-                f"of {attachment.pdf_pages} are attached as images in page order."
+            prompt += app_text(
+                "execution.pasted_input.pdf_page_notice",
+                prefix=app_text("execution.pasted_input.pdf_notice_prefix"),
+                marker=app_text("execution.pasted_input.pdf_notice_marker"),
+                filename=attachment.filename,
+                sent_pages=len(attachment.image_urls),
+                total_pages=attachment.pdf_pages,
             )
             if attachment.pdf_pages > len(attachment.image_urls):
-                prompt += " Remaining pages were not sent."
+                prompt += app_text("execution.pasted_input.pdf_remaining_pages")
     image_paths = [
         attachment.relative_path
         for attachment in attachments or []

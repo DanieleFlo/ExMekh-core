@@ -1,0 +1,139 @@
+{
+  "date": "2026-10-14",
+  "scope": [
+    "Server interactive/edit production paths and native tests",
+    "Agent turn orchestration, recorded history, graph presentation and configuration",
+    "Read-only review of exmekh_lib file processing, interactive provider contracts and public class responsibilities"
+  ],
+  "changes": [
+    {
+      "area": "Server configuration",
+      "files": [
+        "ds4_interactive_settings.h",
+        "ds4_interactive_config.h",
+        "ds4_interactive_runtime.h",
+        "ds4_server.c"
+      ],
+      "result": "Shared limits, version, edit markers, description, diagnostics and messages have one configuration owner. Serialized version and accepted version derive from the same constant."
+    },
+    {
+      "area": "Edit parser inputs",
+      "files": [
+        "ds4_edit_document.h",
+        "ds4_interactive_edit.h"
+      ],
+      "result": "Related parser arguments use edit_document_input and interactive_edit_input. Generic behavior callback signatures remain compatible."
+    },
+    {
+      "area": "Rejected authorization",
+      "files": [
+        "ds4_edit_document.h",
+        "tests/test_server_interactive.c"
+      ],
+      "result": "A contradictory snapshot is rejected without assigning an ID or mutating pending authorization. ID assignment is published after validation."
+    },
+    {
+      "area": "Completion validation",
+      "files": [
+        "ds4_interactive_edit.h",
+        "tests/test_server_interactive.c"
+      ],
+      "result": "Final arguments must contain the exact document property compiled from the tool definition."
+    },
+    {
+      "area": "Agent worker input",
+      "files": [
+        "agent/src/exmekh_agent/exmekh_bridge/agents/turn_request.py",
+        "agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py"
+      ],
+      "result": "The worker receives one typed AgentTurnRequest instead of duplicating the public argument list. Public caller compatibility is preserved."
+    },
+    {
+      "area": "Title policy",
+      "files": [
+        "agent/src/exmekh_agent/config/execution.py",
+        "agent/src/exmekh_agent/config/resources/execution.json",
+        "agent/src/exmekh_agent/config/texts/execution.json"
+      ],
+      "result": "TitleGenerationSettings owns configurable sampling, normalization and fallback, exposed through methods used by the runner."
+    },
+    {
+      "area": "Recorded history ownership",
+      "files": [
+        "agent/src/exmekh_agent/exmekh_bridge/history/recorded_history.py",
+        "agent/src/exmekh_agent/exmekh_bridge/models/messages.py",
+        "agent/src/exmekh_agent/ui/graph/graph_data.py"
+      ],
+      "result": "The graph obtains an owned normalized root prompt through ChatMessage and RecordedHistory. It does not duplicate transcript interpretation or borrow child prompts."
+    },
+    {
+      "area": "Graph presentation",
+      "files": [
+        "agent/src/exmekh_agent/config/presentation/graph.json",
+        "agent/src/exmekh_agent/ui/graph/graph_data.py"
+      ],
+      "result": "Previously inline colors, palette and main history identity are read from presentation configuration."
+    }
+  ],
+  "audit": {
+    "python_modules_scanned": {
+      "agent": 97,
+      "library": 180
+    },
+    "classification": "AST screening identifies review candidates; counts alone do not establish violations. Configuration and capability resources are excluded from literal exception screening.",
+    "literal_exception_messages_outside_configuration_and_capabilities": {
+      "agent": 0,
+      "library": 0
+    },
+    "library_classes_reviewed": [
+      "EditApproval: authorization, evidence, encoding and commit delegated through methods",
+      "EditDocument/EditElement: literal document parsing and domain data",
+      "FileToolRuntime/FileInspectionHistory: visible provenance and batch prerequisites",
+      "InteractiveContract: wire authorization independent of HTTP",
+      "FileEditFormat/FileEditingSettings: fixed grammar versus operational limits and messages"
+    ],
+    "private_access_classification": "Copies of the same class may use private methods; namedtuple._replace is a documented API. No mechanical private-to-public renaming was applied.",
+    "argument_policy": "Group related values when the grouping represents a real request or domain concept; retain explicit callback and compatibility boundaries."
+  },
+  "validation": {
+    "live_tests_run": false,
+    "agent_final": {
+      "passed": 930,
+      "coverage_percent": 100,
+      "log": "/tmp/ds4-clean-code-agent-final.log"
+    },
+    "library_non_live": {
+      "passed": 2687,
+      "log": "/tmp/ds4-clean-code-library-tests.log",
+      "source_modified_by_this_review": false
+    },
+    "root_python": {
+      "total": 39,
+      "passed": 31,
+      "skipped": 8
+    },
+    "native": [
+      "make test-server-interactive: PASS including two added regressions",
+      "tests/test_server_memory_lifetime: PASS",
+      "ds4_server_test: PASS",
+      "ds4-server CUDA build/link: PASS, binary not launched",
+      "Interactive parser AddressSanitizer + UndefinedBehaviorSanitizer with leak detection: PASS"
+    ],
+    "agent_ruff": "PASS",
+    "final_diff_check": "PASS before documentation-only edits",
+    "extra_library_lint_and_typecheck": "NOT_RUN: automatic approval review could not complete because its account quota was exhausted. These checks do not invalidate the completed non-live library test run."
+  },
+  "remaining": [
+    "ds4_server.c and inference/backend modules remain large; extraction needs separate semantic and performance verification.",
+    "Graph traversal and page turn orchestration still contain long functions; typed request grouping does not by itself split all responsibilities.",
+    "The public agent entry point intentionally retains its existing parameter API; the implementation boundary uses one request object.",
+    "Some provider wire identifiers and protocol version literals remain in exmekh_lib; moving them is a possible follow-up requiring provider tests and a rebuilt wheel.",
+    "No exhaustive semantic certification of every class or all clean-code principles is claimed.",
+    "The previously reproduced steering cache defect is not fixed by this refactoring."
+  ],
+  "follow_up": {
+    "report": "docs/performance/clean-code-live-review-20261014.json",
+    "steering_cache_fix": "docs/performance/steering-cache-fix-20261014.json",
+    "note": "Historical outcomes above describe the earlier review. The follow-up modifies the library, centralizes its interactive protocol and qualifies the wheel and server live, including cancellation followed by an auxiliary request."
+  }
+}

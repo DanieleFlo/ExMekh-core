@@ -930,7 +930,7 @@ class ChatPageController:
                 )
                 cancelled = True
                 session.cleanup_active_sub_agents()
-                response_text = "[Generation stopped by user]"
+                response_text = ui_text("chat.page_controller.stopped_response_marker")
                 message_error = "cancelled"
             except Exception as error:  # noqa: BLE001 - UI execution boundary
                 session.cleanup_active_sub_agents()

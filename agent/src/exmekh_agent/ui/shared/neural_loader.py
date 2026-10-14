@@ -27,7 +27,9 @@ class NeuralLoader(ui.element, component="../resources/js/neural_loader.js"):
                 None, sample_loader_tokens
             )
         except Exception:
-            logger.debug("Unable to load the neural loader vocabulary", exc_info=True)
+            logger.debug(
+                ui_text("shared.neural_loader.vocabulary_unavailable"), exc_info=True
+            )
             return
         if not self.is_deleted:
             with self.client:

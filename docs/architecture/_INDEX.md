@@ -2,6 +2,18 @@
 
 Indice generato; non modificare a mano.
 
+## [Revisione del codice e qualifica live — 14 ottobre 2026](clean-code-live-review-20261014.md)
+
+`FileWriteTarget` raggruppa workspace, risorsa, path canonico e snapshot.
+
+- righe 9–38: **Responsabilità, incapsulamento e argomenti** — `FileWriteTarget` raggruppa workspace, risorsa, path canonico e snapshot.
+- righe 39–54: **Principi controllati** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 55–73: **Configurazione e testo** — `config/interactive.py` è il proprietario della versione wire, del tipo di
+- righe 74–91: **Difetto aggiuntivo trovato dai test live** — Dopo cancel, il checkpoint dell’ultimo turno completato era pubblicato, mentre
+- righe 92–111: **Verifiche e distribuzione** — Passano 2767 test della libreria, 927 test paralleli dell’agente e 3 test UI
+- righe 112–125: **Limiti e lavoro strutturale restante** — Il server C, alcuni moduli di inferenza e alcune funzioni di orchestrazione UI
+- righe 126–140: **Verifica successiva della collocazione dei testi** — Il controllo è stato esteso oltre le sole eccezioni: restavano istruzioni del
+
 ## [Revisione del codice Flash e dei confini dell'agente — 4 ottobre 2026](clean-code-review-20261004.md)
 
 Revisione delle modifiche pendenti sul branch `codex/qwen-flash-3090`, a partire
@@ -77,25 +89,69 @@ Il punto fragile è l'accoppiamento fra operazione, selezione e rappresentazione
 - righe 5–39: **1. Risultato della lettura** — Il punto fragile è l'accoppiamento fra operazione, selezione e rappresentazione del contenuto.
   - righe 13–21: **Codice e documentazione esaminati** — Sezione strutturale; consultare il contenuto locale indicato.
   - righe 22–39: **Evidenze locali** — La revisione client più recente riporta **13 PASS e 2 FAIL su 15 casi target-only**, senza skip.
-- righe 40–73: **2. Cosa fanno altri strumenti** — Le fonti esterne sono primarie e sono state consultate il 13 ottobre 2026.
-- righe 74–88: **3. Le protezioni da conservare** — La maggior parte della complessità del filesystem ha una responsabilità reale e può restare interna al runtime:
-- righe 89–142: **4. Contratto candidato: write, edit, delete** — Il primo candidato da confrontare con v2 usa tre strumenti con argomenti ordinari:
-  - righe 107–118: **Se new deve essere distinto da write** — Esiste un compromesso reale.
-  - righe 119–134: **Esempi delle operazioni** — Questi sono oggetti logici, non una nuova sintassi da copiare dentro una stringa XML:
-  - righe 135–142: **Un file per chiamata e gestione dei batch** — Una chiamata con tre campi piatti evita il documento di frammenti, i path ripetuti e le pause a metà XML.
-- righe 143–158: **5. Eliminare CDATA: distinguere dati e trasporto** — CDATA non cambia il valore logico dopo il parsing, ma cambia ciò che il modello deve generare.
-  - righe 153–158: **Perché non partire da un formato raw nuovo** — Un payload raw sarebbe più vicino al file, ma ha comunque bisogno di distinguere contenuto e confini.
-- righe 159–185: **6. Usare il controllo dell'inferenza senza ampliare l'API** — Il motore può seguire un flusso piccolo e distinto per operazione:
-- righe 186–205: **7. Una restrizione da riesaminare: unicità globale** — Il contratto impone contemporaneamente partenza da inizio riga e unicità globale, comprese occorrenze a metà riga.
-- righe 206–230: **8. Blocchi lunghi, inserimenti e file vuoti** — Per un file non vuoto una sostituzione che conserva l'ancora rappresenta già l'inserimento prima/dopo di essa.
-  - righe 208–213: **Inserimenti** — Per un file non vuoto una sostituzione che conserva l'ancora rappresenta già l'inserimento prima/dopo di essa.
-  - righe 214–219: **Intervalli numerici attuali** — Il ramo `start_line/end_line` viene controllato solo lessicalmente dal server: positività, ordine e limiti sono verificati dal client.
-  - righe 220–230: **Alternative da valutare solo se emerge il bisogno** — Fra queste, due ancore letterali potrebbero riutilizzare meglio il masking esistente; riferimenti a blocchi possono essere migliori se la lettura espone già unità adeguate.
-- righe 231–248: **9. Cosa togliere, cosa spostare, cosa rinviare** — La separazione di delete consente anche di riesaminare la dipendenza dalla lettura del contenuto: cancellare un file non richiede decodificarne il testo.
-- righe 249–260: **10. Alternative di formato e priorità** — L'XML standard dei **risultati** e dei metadati del runtime è un confine diverso.
-- righe 261–277: **11. Skill candidata più corta** — Una descrizione candidata dell'editing, da adattare alla semantica batch scelta, potrebbe essere:
-- righe 278–297: **12. Confronto sperimentale e migrazione** — Il prossimo lavoro dovrebbe confrontare v2 e un solo candidato minimale con richieste naturali, senza dettare nel prompt i tag o gli argomenti da emettere.
-- righe 298–300: **13. Stato delle verifiche di questa ricerca** — Sono stati letti codice, skill e report locali e confrontate fonti primarie esterne.
+- righe 40–448: **2. Cosa fanno altri strumenti** — Questa sezione segue il processamento dei file per agente: scoperta, ispezione, lettura, creazione, modifica, inserimento, rimozione, rinomina e verifica.
+  - righe 46–111: **2.1 Codex: ricerca e lettura tramite strumenti disponibili, modifiche tramite patch** — Il catalogo di tool dipende dall'harness, non dal solo nome del modello.
+    - righe 50–74: **Scoperta, ispezione e lettura** — Nel set di questa chat ricerca e lettura testuale passano soprattutto per `exec_command`: il modello genera un comando, il runtime avvia il processo e restituisce output, exit code o session ID se continua.
+    - righe 75–103: **Creazione, edit, insert, rimozione e rename** — `apply_patch` separa l'operazione nell'intestazione dal corpo orientato alle righe.
+    - righe 104–111: **Contratto API, risultati e garanzie** — Il tool **Responses API** `apply_patch` è distinto dalla forma freeform locale.
+  - righe 112–164: **2.2 Claude Code: Read, Edit e Write, ricerca e shell** — Claude Code cerca, legge, modifica ed esegue verifiche nel proprio loop.
+    - righe 116–132: **Tool e argomenti** — Le firme sono nella reference degli input degli hook, che documenta le chiamate reali.
+    - righe 133–144: **Edit: sostituzione, inserimento e rimozione di testo** — {"file_path":"/work/config.py","old_string":"enabled = True\n","new_string":"enabled = True\nverbose = False\n","replace_all":false}
+    - righe 145–150: **Write: creazione, riscrittura e svuotamento** — Write crea o sovrascrive con il contenuto intero; non appende o fonde.
+    - righe 151–158: **Delete, rename, notebook e ispezione strutturale** — Il catalogo pubblico non elenca un tool Delete filesystem: rimozioni e spostamenti passano dalla shell.
+    - righe 159–164: **Controlli e risultati** — Permessi su file e shell, normalizzazione dei path e hook sono responsabilità del runtime.
+  - righe 165–183: **2.3 Claude via Messages API: text editor con comandi espliciti** — L'editor API `str_replace_based_edit_tool` ha schema definito da Anthropic.
+  - righe 184–239: **2.4 Aider: file nel contesto, repo map e coders di editing** — Il percorso ordinario di Aider organizza i file nel contesto e interpreta la risposta del modello.
+    - righe 188–207: **Scoperta, ispezione e lettura** — La repo map presenta percorsi, simboli e firme pertinenti entro un budget.
+    - righe 208–227: **SEARCH/REPLACE: edit, insert, append e creazione** — Il formato diff è percorso più fence e blocchi SEARCH/REPLACE.
+    - righe 228–233: **Whole e udiff, delete e rename** — Il coder whole riceve il contenuto completo del file e lo riscrive.
+    - righe 234–239: **Risultati e verifica** — L'integrazione Git offre diff, commit e undo, con auto-commit configurabile.
+  - righe 240–285: **2.5 Pi: set piccolo ed edit strutturati sul file originale** — Pi è distinto dal fork oh-my-pi.
+    - righe 244–261: **Lettura e ispezione** — `read(path, offset?, limit?)` accetta path relativo/assoluto e righe 1-based.
+    - righe 262–277: **Edit, inserimento e rimozione di testo** — La firma corrente è `edit(path, edits=[{oldText,newText}, ...])`.
+    - righe 278–285: **Write, delete, rename e verifica** — `write(path, content)` crea/sovrascrive, crea parent mancanti e scrive UTF-8.
+  - righe 286–344: **2.6 Oh-my-pi: lettura unificata, snapshot e linguaggio hashline** — Il lavoro originale hashline proponeva brevi riferimenti per riga; l'API corrente usa anche un tag di snapshot per file e un linguaggio più ampio.
+    - righe 290–295: **Read: ispezione e lettura** — `read(path)` può indirizzare file, directory, URL o risorse interne.
+    - righe 296–303: **Grep e Find** — `grep(pattern, path?, case?, gitignore?, skip?)` cerca contenuti con regex, contesto e gruppi per file.
+    - righe 304–328: **Edit hashline: replace, insert, cut, delete e move** — `edit(input)` usa sezioni `[PATH#TAG]` e numeri dello snapshot originale.
+    - righe 329–334: **Write e risorse speciali** — `write(path, content)` crea/sovrascrive file e può delegare a handler per risorse interne, archivi, SQLite e conflitti.
+    - righe 335–344: **AST, LSP e trasformazioni strutturali** — `ast_grep(pat, path?, lang?, skip?)` cerca nodi e catture sintattiche, usando linguaggio inferito o esplicito.
+  - righe 345–390: **2.7 Qwen Code: lettori dedicati, write/edit e stato di lettura** — Qwen Code è un harness completo, distinto dall'utilizzo di un modello Qwen dentro DS4.
+    - righe 349–366: **Scoperta e lettura** — Le prime quattro firme sono nella reference filesystem; la lettura multipla ha una reference propria.
+    - righe 367–378: **Edit e inserimento** — `edit(file_path, old_string, new_string, replace_all?)` richiede un match univoco salvo sostituzione globale.
+    - righe 379–386: **Write, notebook, delete e rename** — `write_file(file_path, content)` crea o sostituisce il contenuto completo.
+    - righe 387–390: **Utilità per DS4** — Write/edit separati e stato di lettura sono precedenti pertinenti.
+  - righe 391–412: **2.8 DeepSeek Tool Calls: protocollo di funzioni, non catalogo filesystem** — La guida DeepSeek definisce funzioni del chiamante con nome, descrizione e JSON Schema.
+    - righe 395–406: **Cosa è definito e cosa no** — Non è corretto inventare un read_file universale di DeepSeek a partire da questo protocollo.
+    - righe 407–412: **Schema e controllo dell'inferenza** — La modalità strict beta vincola la forma alla funzione definita dal client; richiede gli oggetti con campi required e additionalProperties false, con limitazioni sui tipi supportati.
+  - righe 413–418: **2.9 Llguidance: controllo della generazione, non agente di file** — Llguidance non definisce Read/Edit/Write e non decide come leggere o cancellare.
+  - righe 419–448: **2.10 Mappa comparativa delle operazioni** — La tabella sintetizza i paragrafi precedenti nel medesimo perimetro/versione; non introduce garanzie ulteriori.
+- righe 449–463: **3. Le protezioni da conservare** — La maggior parte della complessità del filesystem ha una responsabilità reale e può restare interna al runtime:
+- righe 464–517: **4. Contratto candidato: write, edit, delete** — Il primo candidato da confrontare con v2 usa tre strumenti con argomenti ordinari:
+  - righe 482–493: **Se new deve essere distinto da write** — Esiste un compromesso reale.
+  - righe 494–509: **Esempi delle operazioni** — Questi sono oggetti logici, non una nuova sintassi da copiare dentro una stringa XML:
+  - righe 510–517: **Un file per chiamata e gestione dei batch** — Una chiamata con tre campi piatti evita il documento di frammenti, i path ripetuti e le pause a metà XML.
+- righe 518–533: **5. Eliminare CDATA: distinguere dati e trasporto** — CDATA non cambia il valore logico dopo il parsing, ma cambia ciò che il modello deve generare.
+  - righe 528–533: **Perché non partire da un formato raw nuovo** — Un payload raw sarebbe più vicino al file, ma ha comunque bisogno di distinguere contenuto e confini.
+- righe 534–560: **6. Usare il controllo dell'inferenza senza ampliare l'API** — Il motore può seguire un flusso piccolo e distinto per operazione:
+- righe 561–580: **7. Una restrizione da riesaminare: unicità globale** — Il contratto impone contemporaneamente partenza da inizio riga e unicità globale, comprese occorrenze a metà riga.
+- righe 581–605: **8. Blocchi lunghi, inserimenti e file vuoti** — Per un file non vuoto una sostituzione che conserva l'ancora rappresenta già l'inserimento prima/dopo di essa.
+  - righe 583–588: **Inserimenti** — Per un file non vuoto una sostituzione che conserva l'ancora rappresenta già l'inserimento prima/dopo di essa.
+  - righe 589–594: **Intervalli numerici attuali** — Il ramo `start_line/end_line` viene controllato solo lessicalmente dal server: positività, ordine e limiti sono verificati dal client.
+  - righe 595–605: **Alternative da valutare solo se emerge il bisogno** — Fra queste, due ancore letterali potrebbero riutilizzare meglio il masking esistente; riferimenti a blocchi possono essere migliori se la lettura espone già unità adeguate.
+- righe 606–623: **9. Cosa togliere, cosa spostare, cosa rinviare** — La separazione di delete consente anche di riesaminare la dipendenza dalla lettura del contenuto: cancellare un file non richiede decodificarne il testo.
+- righe 624–635: **10. Alternative di formato e priorità** — L'XML standard dei **risultati** e dei metadati del runtime è un confine diverso.
+- righe 636–652: **11. Skill candidata più corta** — Una descrizione candidata dell'editing, da adattare alla semantica batch scelta, potrebbe essere:
+- righe 653–672: **12. Confronto sperimentale e migrazione** — Il prossimo lavoro dovrebbe confrontare v2 e un solo candidato minimale con richieste naturali, senza dettare nel prompt i tag o gli argomenti da emettere.
+- righe 673–675: **13. Stato delle verifiche di questa ricerca** — Sono stati letti codice, skill e report locali e confrontate fonti primarie esterne.
+
+## [Tool file letterali v3 — 13 ottobre 2026](file-tools-literal-v3-20261013.md)
+
+Edit usa soltanto due marcatori:
+
+- righe 8–35: **Contratto implementato** — Edit usa soltanto due marcatori:
+- righe 36–44: **Distribuzione** — La wheel `agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl` è stata ricostruita
+- righe 45–76: **Verifiche e limiti osservati** — I tre fallimenti live sono svuotamento dell'intero file, inserimento con CRLF
 
 ## [Audit RAM e VRAM durante l'inferenza — 13 ottobre 2026](inference-memory-audit-20261013.md)
 
@@ -259,3 +315,21 @@ La policy dei batch ha operazioni distinte per entrare in una fase, leggere
 - righe 10–27: **Responsabilità e interfacce** — La policy dei batch ha operazioni distinte per entrare in una fase, leggere
 - righe 28–54: **Correzioni e uniformità** — la selezione completa con un delta.
 - righe 55–69: **Verifiche e limiti** — Le evidenze finali, gli hash e gli esiti delle prove sono nel
+
+## [Correzione del riuso KV dopo steering — 14 ottobre 2026](steering-cache-fix-20261014.md)
+
+`responses_prepare_live_continuation` cercava soltanto risultati di tool in
+
+- righe 10–37: **Cause e comportamento corretto** — `responses_prepare_live_continuation` cercava soltanto risultati di tool in
+- righe 38–56: **Contratto delle prove** — Il test di cancellazione confronta la ripresa con i token già riusati prima
+- righe 57–76: **Risultati verificati** — Tutte le 13 prove live della cache passano, senza errori HTTP nelle fixture.
+- righe 77–93: **Ripetibilità** — DS4_STEERING_CACHE_BASE_URL=http://127.0.0.1:8080 \
+- righe 94–101: **Verifica successiva: cancel seguito da richiesta ausiliaria** — La revisione con test live ha aggiunto un
+
+## [Riproduzione del prefill dopo steering — 14 ottobre 2026](steering-cache-reproduction-20261014.md)
+
+Ogni caso apre una skill sintetica, scalda una conversazione con un tool,
+
+- righe 12–54: **Risultati** — Ogni caso apre una skill sintetica, scalda una conversazione con un tool,
+- righe 55–71: **Conseguenze per la diagnosi** — La diagnosi iniziale limitata alla cancellazione interattiva era incompleta:
+- righe 72–94: **Comandi ripetibili** — Su una sola istanza server inattiva, dalla radice del repository:

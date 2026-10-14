@@ -136,5 +136,20 @@
   "input_bar.attachment_details": "File: {filename}\nSize: {size} • {tokens} tok\nPath: {path}\n\n{preview}{insert_hint}• Remove attachment",
   "input_bar.attachment_preview": "Preview:\n{snippet}\n\n",
   "input_bar.attachment_insert_hint": "• Insert into the message as plain text\n",
-  "input_bar.generating": "Generating response"
+  "input_bar.generating": "Generating response",
+  "page_controller.stopped_response_marker": "[Generation stopped by user]",
+  "chat_view.steering_after_tool": "after {tool_name}",
+  "chat_view.steering_before_response": "before the response",
+  "chat_view.steering_root": "root",
+  "chat_export.steering_heading": "## User · Steering\n\n",
+  "chat_export.steering_image": "\n\n![Steering image]({url})",
+  "chat_export.attached_image": "![Attached image {index}]({url})",
+  "chat_export.reasoning_heading": "### Reasoning\n\n",
+  "chat_export.tools_heading": "### Tools\n\n",
+  "chat_export.skills_heading": "### Skills\n\n",
+  "chat_export.status": "Status: {error}",
+  "chat_export.subskill_history_heading": "### Subskill history\n\n",
+  "chat_export.system_heading": "## System\n\n",
+  "chat_export.subskill_heading": "# Subskill: {path} · #{order}",
+  "chat_export.raw_history_heading": "### Raw history\n\n"
 }

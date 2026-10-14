@@ -132,7 +132,7 @@ def _build_messages_from_skill_node(node: SkillNode) -> list[dict[str, Any]]:
             {
                 "role": "tool",
                 "name": node.name,
-                "content": f'<DeepSkill name="{node.name}" path="{node.path}" status="{node.status}">Completed {node.name}</DeepSkill>',
+                "content": f'<DeepSkill name="{node.name}" path="{node.path}" status="{node.status}">{app_text("execution.context_usage.completed_skill_name", skill_name=node.name)}</DeepSkill>',
             },
         ]
 
@@ -166,7 +166,7 @@ def _build_messages_from_skill_node(node: SkillNode) -> list[dict[str, Any]]:
                 {
                     "role": "tool",
                     "name": ev.tool_name,
-                    "content": f'<Tool name="{ev.tool_name}">Output of {ev.tool_name}</Tool>',
+                    "content": f'<Tool name="{ev.tool_name}">{app_text("execution.history.tool_output", tool_name=ev.tool_name)}</Tool>',
                 }
             )
     for sub in node.sub_skills:
@@ -336,7 +336,7 @@ def _build_turn_messages_for_assistant(
                     {
                         "role": "tool",
                         "name": ev.tool_name,
-                        "content": f'<Tool name="{ev.tool_name}">Output of {ev.tool_name}</Tool>',
+                        "content": f'<Tool name="{ev.tool_name}">{app_text("execution.history.tool_output", tool_name=ev.tool_name)}</Tool>',
                     }
                 )
 

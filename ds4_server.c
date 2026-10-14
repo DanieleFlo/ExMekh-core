@@ -1,6 +1,8 @@
 #include "ds4.h"
 #include "ds4_env.h"
 #include "ds4_tool_text.h"
+#include "ds4_server_text.h"
+#include "ds4_prompt_settings.h"
 #include "ds4_distributed.h"
 #include "ds4_gpu_args.h"
 #include "ds4_qwen4_runtime.h"
@@ -84,19 +86,19 @@ typedef struct {
 } buf;
 
 static void die(const char *msg) {
-    fprintf(stderr, "ds4-server: %s\n", msg);
+    fprintf(stderr, DS4_SERVER_TEXT_MESSAGE_LINE, msg);
     exit(1);
 }
 
 static void *xmalloc(size_t n) {
     void *p = malloc(n ? n : 1);
-    if (!p) die("out of memory");
+    if (!p) die(DS4_SERVER_TEXT_OUT_OF_MEMORY);
     return p;
 }
 
 static void *xrealloc(void *p, size_t n) {
     p = realloc(p, n ? n : 1);
-    if (!p) die("out of memory");
+    if (!p) die(DS4_SERVER_TEXT_OUT_OF_MEMORY);
     return p;
 }
 
@@ -133,7 +135,7 @@ static char *xstrndup(const char *s, size_t n) {
 }
 
 static void buf_reserve(buf *b, size_t add) {
-    if (add > SIZE_MAX - b->len - 1) die("buffer overflow");
+    if (add > SIZE_MAX - b->len - 1) die(DS4_SERVER_TEXT_BUFFER_OVERFLOW);
     size_t need = b->len + add + 1;
     if (need <= b->cap) return;
     size_t cap = b->cap ? b->cap * 2 : 256;
@@ -170,7 +172,7 @@ static void buf_printf(buf *b, const char *fmt, ...) {
     va_copy(ap2, ap);
     int n = vsnprintf(NULL, 0, fmt, ap);
     va_end(ap);
-    if (n < 0) die("vsnprintf failed");
+    if (n < 0) die(DS4_SERVER_TEXT_VSNPRINTF_FAILED);
     buf_reserve(b, (size_t)n);
     vsnprintf(b->ptr + b->len, b->cap - b->len, fmt, ap2);
     va_end(ap2);
@@ -2140,18 +2142,8 @@ static bool responses_live_has_call_id(server *s, const char *id);
 static bool anthropic_live_has_call_id(server *s, const char *id);
 static stop_list live_tool_call_order(server *s, api_style api, const stop_list *ids);
 
-#define INTERACTIVE_MAX_TOOLS 16
-#define INTERACTIVE_MAX_FIELDS 64
-#define INTERACTIVE_MAX_SNAPSHOT (1024 * 1024)
-#define INTERACTIVE_MAX_TEXT (1024 * 1024)
-#define INTERACTIVE_MAX_VALUES (16 * 1024)
-#define INTERACTIVE_MAX_RECORDS 64
-#define INTERACTIVE_MAX_ACTIVE 8
-#define INTERACTIVE_SNAPSHOT_BUDGET (8 * 1024 * 1024)
-#define INTERACTIVE_STATE_BUDGET (128 * 1024 * 1024)
-#define INTERACTIVE_CHECKPOINT_BUDGET (UINT64_C(8) * 1024 * 1024 * 1024)
-#define INTERACTIVE_TTL 300
-#define INTERACTIVE_RECEIPT_TTL 600
+#include "ds4_agentic_settings.h"
+#include "ds4_interactive_settings.h"
 
 typedef struct interactive_entry interactive_entry;
 typedef struct interactive_receipt interactive_receipt;
@@ -2407,10 +2399,7 @@ static void prepend_response_schema_instruction(chat_msgs *msgs,
     if (!msgs || !r || !r->response_schema_json) return;
     buf instruction = {0};
     buf_puts(&instruction,
-        "If thinking is enabled, keep all reasoning (including JSON examples) "
-        "before the closing </think> tag. Immediately after </think>, return "
-        "exactly one JSON value and no prose, Markdown, or code fences. "
-        "The JSON value must satisfy this JSON Schema exactly:\n");
+        DS4_PROMPT_STRUCTURED_OUTPUT_GUIDANCE);
     buf_puts(&instruction, r->response_schema_json);
     chat_msg msg = {0};
     msg.role = xstrdup("system");
@@ -2490,7 +2479,7 @@ static bool agentic_validate_registry(const request *r,
     if (!r->has_tools &&
         (r->allowed_tools.len != 0 || r->allowed_skills.len != 0)) {
         snprintf(err, errlen,
-                 "agentic capabilities cannot be used with tool_choice=none");
+                 DS4_AGENT_TEXT_AGENTIC_CAPABILITIES_CANNOT_BE_USED_WITH_TOOL_CHOICE_NONE);
         return false;
     }
     for (int group = 0; group < 2; group++) {
@@ -2501,19 +2490,19 @@ static bool agentic_validate_registry(const request *r,
                 tool_schema_orders_find(&r->tool_orders, name);
             if (!order) {
                 snprintf(err, errlen,
-                         "agentic capability is not registered: %s", name);
+                         DS4_AGENT_TEXT_AGENTIC_CAPABILITY_IS_NOT_REGISTERED_S, name);
                 return false;
             }
             if (!order->schema ||
                 !schema_json_schema_supported(order->schema, 0)) {
                 snprintf(err, errlen,
-                         "agentic capability has unsupported JSON schema: %s",
+                         DS4_AGENT_TEXT_AGENTIC_CAPABILITY_HAS_UNSUPPORTED_JSON_SCHEMA_S,
                          name);
                 return false;
             }
             if (group == 0 && id_list_contains(&r->allowed_skills, name)) {
                 snprintf(err, errlen,
-                         "agentic capability cannot be both tool and skill: %s",
+                         DS4_AGENT_TEXT_AGENTIC_CAPABILITY_CANNOT_BE_BOTH_TOOL_AND_SKILL_S,
                          name);
                 return false;
             }
@@ -2545,7 +2534,7 @@ static bool request_validate_ignore_eos(const request *r,
     if (!r || !r->ignore_eos) return true;
     if (r->temperature_set && r->temperature == 0.0f) return true;
     snprintf(err, errlen,
-             "ignore_eos requires an explicit temperature of 0");
+             DS4_SERVER_TEXT_IGNORE_EOS_REQUIRES_AN_EXPLICIT_TEMPERATURE_OF);
     return false;
 }
 
@@ -3122,7 +3111,7 @@ static bool parse_agentic_name_array(const char **p, stop_list *out,
     json_ws(p);
     stop_list_clear(out);
     if (**p != '[') {
-        snprintf(err, errlen, "agentic capability list must be an array");
+        snprintf(err, errlen, DS4_AGENT_TEXT_AGENTIC_CAPABILITY_LIST_MUST_BE_AN_ARRAY);
         return false;
     }
     (*p)++;
@@ -3131,11 +3120,11 @@ static bool parse_agentic_name_array(const char **p, stop_list *out,
         char *name = NULL;
         if (!json_string(p, &name) || !name || !name[0]) {
             free(name);
-            snprintf(err, errlen, "agentic capability names must be non-empty strings");
+            snprintf(err, errlen, DS4_AGENT_TEXT_AGENTIC_CAPABILITY_NAMES_MUST_BE_NON_EMPTY_STRINGS);
             return false;
         }
         if (id_list_contains(out, name)) {
-            snprintf(err, errlen, "duplicate agentic capability: %s", name);
+            snprintf(err, errlen, DS4_AGENT_TEXT_DUPLICATE_AGENTIC_CAPABILITY_S, name);
             free(name);
             return false;
         }
@@ -3145,12 +3134,12 @@ static bool parse_agentic_name_array(const char **p, stop_list *out,
             (*p)++;
             json_ws(p);
         } else if (**p != ']') {
-            snprintf(err, errlen, "invalid agentic capability array");
+            snprintf(err, errlen, DS4_AGENT_TEXT_INVALID_AGENTIC_CAPABILITY_ARRAY);
             return false;
         }
     }
     if (**p != ']') {
-        snprintf(err, errlen, "unterminated agentic capability array");
+        snprintf(err, errlen, DS4_AGENT_TEXT_UNTERMINATED_AGENTIC_CAPABILITY_ARRAY);
         return false;
     }
     (*p)++;
@@ -3161,7 +3150,7 @@ static bool parse_agentic_value(const char **p, request *r,
                                 char *err, size_t errlen) {
     json_ws(p);
     if (**p != '{') {
-        snprintf(err, errlen, "agentic must be an object");
+        snprintf(err, errlen, DS4_AGENT_TEXT_AGENTIC_MUST_BE_AN_OBJECT);
         return false;
     }
     (*p)++;
@@ -3199,7 +3188,7 @@ static bool parse_agentic_value(const char **p, request *r,
         } else if (!strcmp(key, "operation")) {
             char *op = NULL;
             if (got_operation || !json_string(p, &op) || strcmp(op, "return")) {
-                snprintf(err, errlen, "agentic.operation must be return");
+                snprintf(err, errlen, DS4_AGENT_TEXT_AGENTIC_OPERATION_MUST_BE_RETURN);
                 free(op);
                 free(key);
                 return false;
@@ -3210,7 +3199,7 @@ static bool parse_agentic_value(const char **p, request *r,
         } else if (!strcmp(key, "skill_call_id")) {
             char *id = NULL;
             if (got_call_id || !json_string(p, &id) || !id || !id[0]) {
-                snprintf(err, errlen, "agentic.skill_call_id must be a non-empty string");
+                snprintf(err, errlen, DS4_AGENT_TEXT_AGENTIC_SKILL_CALL_ID_MUST_BE_A_NON_EMPTY_STRING);
                 free(id);
                 free(key);
                 return false;
@@ -3222,7 +3211,7 @@ static bool parse_agentic_value(const char **p, request *r,
             char *id = NULL;
             if (got_context_id || !json_string(p, &id) || !id || !id[0]) {
                 snprintf(err, errlen,
-                         "agentic.agent_context_id must be a non-empty string");
+                         DS4_AGENT_TEXT_AGENTIC_AGENT_CONTEXT_ID_MUST_BE_A_NON_EMPTY_STRING);
                 free(id);
                 free(key);
                 return false;
@@ -3234,13 +3223,13 @@ static bool parse_agentic_value(const char **p, request *r,
             size_t nodes = 0;
             if (got_interactive ||
                 !(r->interactive.wire = schema_json_parse_value(p, 0, &nodes))) {
-                snprintf(err, errlen, "invalid agentic.interactive object");
+                snprintf(err, errlen, DS4_AGENT_TEXT_INVALID_AGENTIC_INTERACTIVE_OBJECT);
                 free(key);
                 return false;
             }
             got_interactive = true;
         } else {
-            snprintf(err, errlen, "unsupported agentic field: %s", key);
+            snprintf(err, errlen, DS4_AGENT_TEXT_UNSUPPORTED_AGENTIC_FIELD_S, key);
             free(key);
             return false;
         }
@@ -3257,12 +3246,12 @@ static bool parse_agentic_value(const char **p, request *r,
     (*p)++;
     if (!got_tools || !got_skills || !got_context_id) {
         snprintf(err, errlen,
-                 "agentic requires agent_context_id, allowed_tools and allowed_skills");
+                 DS4_AGENT_TEXT_AGENTIC_REQUIRES_AGENT_CONTEXT_ID_ALLOWED_TOOLS_AND_ALLOWED_SKILLS);
         return false;
     }
     if (r->agentic_return != got_call_id) {
         snprintf(err, errlen,
-                 "agentic return requires operation and skill_call_id together");
+                 DS4_AGENT_TEXT_AGENTIC_RETURN_REQUIRES_OPERATION_AND_SKILL_CALL_ID_TOGETHER);
         return false;
     }
     return true;
@@ -3561,7 +3550,7 @@ static char *responses_special_schema_from_tool(const char *raw) {
     if (type && !strcmp(type, "tool_search")) {
         buf b = {0};
         buf_puts(&b, "{\"name\":\"tool_search\",\"description\":");
-        json_escape(&b, description ? description : "Search available tools.");
+        json_escape(&b, description ? description : DS4_PROMPT_TOOL_SEARCH_DESCRIPTION);
         buf_puts(&b, ",\"parameters\":");
         buf_puts(&b, parameters ? parameters :
                  "{\"type\":\"object\",\"properties\":{}}");
@@ -3955,8 +3944,7 @@ static bool server_is_text_content_type(const char *type) {
 static void server_unsupported_content_error(char *err, size_t errlen) {
     if (err && errlen)
         snprintf(err, errlen,
-                 "Unsupported content type: only text and images are supported. "
-                 "Convert documents or other attachments to text or images before sending.");
+                 DS4_SERVER_TEXT_UNSUPPORTED_CONTENT_TYPE_ONLY_TEXT_AND_IMAGES_ARE_SUPPORTED);
 }
 
 static bool parse_openai_content_object(const char **p, chat_msg *msg,
@@ -4553,41 +4541,11 @@ bad:
 
 static void append_tools_prompt_text(buf *b, const char *tool_schemas, bool v41) {
     if (!tool_schemas || !tool_schemas[0]) return;
-    if (v41) buf_puts(b,
-        "## Tools\n\n"
-        "You can invoke tools using this format:\n\n"
-        DS41_TOOL_CALLS_START "\n"
-        DS41_INVOKE_START " name=\"$TOOL_NAME\">\n"
-        DS41_PARAM_START " name=\"$PARAMETER_NAME\" string=\"true|false\">$PARAMETER_VALUE" DS41_PARAM_END "\n"
-        DS41_INVOKE_END "\n" DS41_TOOL_CALLS_END "\n\n"
-        "String values use string=\"true\"; all other values use JSON and string=\"false\". "
-        "Inside string values only, escape a literal </｜DSML｜ parameter> as &lt;/｜DSML｜ parameter>. "
-        "To write that escaped spelling literally, use &amp;lt;/｜DSML｜ parameter>. Other HTML entities are unchanged.\n\n"
-        "Finish reasoning with </think> before tool calls or a final response.\n\n"
-        "### Available Tool Schemas\n\n");
+    if (v41) buf_puts(b, DS4_PROMPT_DEEPSEEK41_TOOLS);
     else buf_puts(b,
-        "## Tools\n\n"
-        "You have access to a set of tools to help answer the user question. "
-        "You can invoke tools by writing a \"<｜DSML｜tool_calls>\" block like the following:\n\n"
-        "<｜DSML｜tool_calls>\n"
-        "<｜DSML｜invoke name=\"$TOOL_NAME\">\n"
-        "<｜DSML｜parameter name=\"$PARAMETER_NAME\" string=\"true|false\">$PARAMETER_VALUE</｜DSML｜parameter>\n"
-        "...\n"
-        "</｜DSML｜invoke>\n"
-        "<｜DSML｜invoke name=\"$TOOL_NAME2\">\n"
-        "...\n"
-        "</｜DSML｜invoke>\n"
-        "</｜DSML｜tool_calls>\n\n"
-        "String parameters should be specified as raw text and set `string=\"true\"`. "
-        "Preserve characters such as `>`, `&`, and `&&` exactly; never replace normal string characters with XML or HTML entity escapes. "
-        "Only if a string value itself contains the exact closing parameter tag `</｜DSML｜parameter>`, write that tag as `&lt;/｜DSML｜parameter>` inside the value. "
-        "For all other types (numbers, booleans, arrays, objects), pass the value in JSON format and set `string=\"false\"`.\n\n"
-        "When thinking mode is enabled, finish reasoning with </think> before any tool calls or final response.\n\n"
-        "Otherwise, output directly after </think> with tool calls or final response.\n\n"
-        "### Available Tool Schemas\n\n");
+        DS4_PROMPT_DEEPSEEK_TOOLS_INSTRUCTION);
     buf_puts(b, tool_schemas);
-    buf_puts(b, "\n\nYou MUST strictly follow the above defined tool name and parameter schemas to invoke tool calls. "
-                "Use the exact parameter names from the schemas.");
+    buf_puts(b, DS4_PROMPT_TOOL_SCHEMA_GUIDANCE);
 }
 
 static void append_qwen_tools_prompt_text(buf *b, const char *tool_schemas) {
@@ -4598,30 +4556,10 @@ static void append_qwen_tools_prompt_text(buf *b, const char *tool_schemas) {
      * regress to a conversational answer even when the system required a
      * capability. */
     buf_puts(b,
-        "# Tools\n\n"
-        "You have access to the following functions:\n\n<tools>\n");
+        DS4_PROMPT_QWEN_TOOLS_PREFIX);
     buf_puts(b, tool_schemas);
     buf_puts(b,
-        "\n</tools>\n\n"
-        "If you choose to call a function, ONLY reply in the following DSML "
-        "format with NO suffix:\n\n"
-        "<｜DSML｜tool_calls>\n"
-        "<｜DSML｜invoke name=\"$TOOL_NAME\">\n"
-        "<｜DSML｜parameter name=\"$PARAMETER_NAME\" string=\"true|false\">$PARAMETER_VALUE</｜DSML｜parameter>\n"
-        "</｜DSML｜invoke>\n"
-        "</｜DSML｜tool_calls>\n\n"
-        "<IMPORTANT>\n"
-        "Reminder:\n"
-        "- Function calls MUST use the DSML format above; native <tool_call> "
-        "syntax is not executable in this runtime\n"
-        "- Required parameters MUST be specified with their exact schema names\n"
-        "- String parameters use raw text and string=\"true\"; numbers, booleans, "
-        "arrays, and objects use JSON and string=\"false\"\n"
-        "- When an instruction requires a listed function, call it instead of "
-        "answering with prose\n"
-        "- If no function call is needed, answer normally and do not mention "
-        "function calls\n"
-        "</IMPORTANT>");
+        DS4_PROMPT_QWEN_TOOLS_SUFFIX);
 }
 
 
@@ -4747,10 +4685,7 @@ static bool append_glm_tool_schema_json(buf *b, const char *json,
 static void append_glm_tools_prompt_text(buf *b, const char *tool_schemas) {
     if (!tool_schemas || !tool_schemas[0]) return;
     buf_puts(b,
-        "\n# Tools\n\n"
-        "You may call one or more functions to assist with the user query.\n\n"
-        "You are provided with function signatures within <tools></tools> XML tags:\n"
-        "<tools>\n\n");
+        DS4_PROMPT_GLM_TOOLS_PREFIX);
 
     const char *p = tool_schemas;
     bool any = false;
@@ -4765,7 +4700,7 @@ static void append_glm_tools_prompt_text(buf *b, const char *tool_schemas) {
         }
         free(raw);
         if (emitted) {
-            buf_puts(b, "\n\n\n");
+            buf_puts(b, DS4_PROMPT_TOOL_SCHEMA_SEPARATOR);
             any = true;
         }
         json_ws(&p);
@@ -4773,14 +4708,7 @@ static void append_glm_tools_prompt_text(buf *b, const char *tool_schemas) {
     if (!any) buf_putc(b, '\n');
 
     buf_puts(b,
-        "</tools>\n\n"
-        "For each function call, output the function name and arguments within the following XML format:\n"
-        "<tool_call>{function-name}"
-        "<arg_key>{arg-key-1}</arg_key>"
-        "<arg_value>{arg-value-1}</arg_value>"
-        "<arg_key>{arg-key-2}</arg_key>"
-        "<arg_value>{arg-value-2}</arg_value>"
-        "...</tool_call>");
+        DS4_PROMPT_GLM_TOOLS_SUFFIX);
 }
 
 static void append_dsml_attr_escaped(buf *b, const char *s) {
@@ -5308,7 +5236,7 @@ static char *render_glm_chat_prompt_text(const chat_msgs *msgs,
     if (think) {
         const char *effort = ds4_glm_reasoning_effort_text(think_mode);
         buf_puts(&out, "<|system|>");
-        buf_puts(&out, effort ? effort : "Reasoning Effort: Max");
+        buf_puts(&out, effort ? effort : DS4_PROMPT_REASONING_MAX_LABEL);
     }
     if (tool_schemas && tool_schemas[0]) {
         buf tools = {0};
@@ -5540,7 +5468,7 @@ static char *render_deepseek41_chat(const chat_msgs *msgs, int start,
 }
 
 static void append_qwen4_tools_prompt_text(buf *b, const char *tool_schemas) {
-    buf_puts(b, "# Tools\n\nYou have access to the following functions:\n\n<tools>");
+    buf_puts(b, DS4_PROMPT_QWEN4_TOOLS_PREFIX);
     const char *p = tool_schemas ? tool_schemas : "";
     json_ws(&p);
     while (*p) {
@@ -5562,18 +5490,7 @@ static void append_qwen4_tools_prompt_text(buf *b, const char *tool_schemas) {
         json_ws(&p);
     }
     buf_puts(b,
-        "\n</tools>\n\n"
-        "If you choose to call a function ONLY reply in the following format with NO suffix:\n\n"
-        "<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n"
-        "<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n"
-        "</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n"
-        "- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested "
-        "within <tool_call></tool_call> XML tags\n"
-        "- Required parameters MUST be specified\n"
-        "- You may provide optional reasoning for your function call in natural language BEFORE the function call, "
-        "but NOT after\n"
-        "- If there is no function call available, answer the question like normal with your current knowledge and "
-        "do not tell the user about function calls\n</IMPORTANT>");
+        DS4_PROMPT_QWEN4_TOOLS_SUFFIX);
 }
 
 static void append_qwen4_tool_response(buf *b, const char *text, size_t len) {
@@ -5754,11 +5671,11 @@ static bool request_tokenize_multimodal_prompt(ds4_engine *e, server *s,
         return true;
     }
     if (count > 16) {
-        snprintf(err, errlen, "too many images; at most 16 are allowed");
+        snprintf(err, errlen, DS4_SERVER_TEXT_TOO_MANY_IMAGES_AT_MOST_ARE_ALLOWED);
         return false;
     }
     if (!e || !s || !ds4_engine_has_vision(e)) {
-        snprintf(err, errlen, "image input requires starting ds4-server with --vision FILE");
+        snprintf(err, errlen, DS4_SERVER_TEXT_IMAGE_INPUT_REQUIRES_STARTING_DS4_SERVER_WITH_VISION_FILE);
         return false;
     }
 
@@ -5789,7 +5706,7 @@ static bool request_tokenize_multimodal_prompt(ds4_engine *e, server *s,
     for (size_t i = 0; i < count; i++) {
         const char *marker = strstr(cursor, inputs[i]->marker);
         if (!marker) {
-            snprintf(err, errlen, "image marker was lost while rendering the request");
+            snprintf(err, errlen, DS4_SERVER_TEXT_IMAGE_MARKER_WAS_LOST_WHILE_RENDERING_THE_REQUEST);
             ok = false;
             break;
         }
@@ -6035,52 +5952,29 @@ static void append_qwen_agentic_scope_instruction(chat_msgs *msgs,
     if (!msgs || !r || r->model_syntax != SERVER_MODEL_SYNTAX_QWEN ||
         (!r->agentic_present && !zero_arg_required)) return;
     buf scope = {0};
-    buf_puts(&scope, "<agent_runtime>\n");
+    buf_puts(&scope, agentic_scope_open);
     if (r->agentic_present) {
-        buf_puts(&scope,
-                 "Agent runtime scope for this turn. Allowed ordinary tools: ");
-        if (r->allowed_tools.len == 0) buf_puts(&scope, "(none)");
+        buf_puts(&scope, agentic_allowed_tools);
+        if (r->allowed_tools.len == 0) buf_puts(&scope, agentic_no_capabilities);
         for (int i = 0; i < r->allowed_tools.len; i++) {
-            if (i) buf_puts(&scope, ", ");
+            if (i) buf_puts(&scope, agentic_list_separator);
             buf_puts(&scope, r->allowed_tools.v[i]);
         }
-        buf_puts(&scope, ". Allowed skills: ");
-        if (r->allowed_skills.len == 0) buf_puts(&scope, "(none)");
+        buf_puts(&scope, agentic_allowed_skills);
+        if (r->allowed_skills.len == 0) buf_puts(&scope, agentic_no_capabilities);
         for (int i = 0; i < r->allowed_skills.len; i++) {
-            if (i) buf_puts(&scope, ", ");
+            if (i) buf_puts(&scope, agentic_list_separator);
             buf_puts(&scope, r->allowed_skills.v[i]);
         }
-        buf_puts(&scope,
-                 ". These lists are permissions, not an unconditional request "
-                 "to call a capability. Use DSML to invoke a permitted capability "
-                 "when needed for unfinished work. Tool and skill results already "
-                 "in the conversation represent completed work: do not repeat "
-                 "successful calls just because the original request mentions them.\n");
+        buf_puts(&scope, agentic_capability_guidance);
         if (r->agentic_return) {
-            buf_puts(&scope,
-                     "The invoked skill has already finished and EXITED. "
-                     "You are now back in its caller, outside that skill. "
-                     "Do not execute that completed skill's exit instructions "
-                     "again: its exit has already produced the returned result. "
-                     "Its internal conversation, tool calls and nested skills "
-                     "have been removed from this context and replaced by this "
-                     "result. Their absence is not evidence of unfinished work. "
-                     "This is the result of executing the skill, not an instruction "
-                     "to enter it. Resume the caller after that skill invocation; "
-                     "do not reopen it to replay steps hidden by compaction. "
-                     "If the result reports a failure or missing work, handle that "
-                     "explicitly; otherwise continue with the next caller step "
-                     "or answer the user when the requested work is complete.\n");
+            buf_puts(&scope, agentic_skill_return_guidance);
         }
     }
     if (zero_arg_required) {
-        buf_puts(&scope,
-                 "This turn requires the single available zero-argument tool. "
-                 "You MUST emit its valid DSML call before the output-token budget "
-                 "ends. Keep reasoning brief; do not substitute a prose plan, "
-                 "checklist, or promise for the actual call.\n");
+        buf_puts(&scope, agentic_required_tool_guidance);
     }
-    buf_puts(&scope, "</agent_runtime>");
+    buf_puts(&scope, agentic_scope_close);
 
     /* Live continuations evaluate only the new tool-result tail. Put scope
      * there (including returns), not in an old user message that is skipped
@@ -6181,7 +6075,7 @@ static bool responses_validate_tool_outputs(server *s, const chat_msgs *msgs,
             const chat_msg *prior = found == raxNotFound ? NULL : (const chat_msg *)found;
             if (!live_known && !prior) {
                 snprintf(err, errlen,
-                         "Responses continuation state is not available for call_id %s; retry by replaying the full input history",
+                         DS4_SERVER_TEXT_RESPONSES_CONTINUATION_STATE_IS_NOT_AVAILABLE_FOR_CALL_ID_S,
                          id);
                 ok = false;
                 break;
@@ -6208,11 +6102,12 @@ static void responses_prepare_live_continuation(server *s, request *r,
                                                 const chat_msgs *msgs) {
     if (!r || r->api != API_RESPONSES || !msgs || msgs->len == 0) return;
 
-    /* Qwen's agent-runtime scope is represented as a synthetic system message.
-     * The renderer hoists/ignores it as appropriate, so it must not hide the
-     * actual trailing tool outputs from protocol continuation detection. */
+    /* Steering and interruption evidence follow tool outputs as user messages.
+     * They belong to the new tail, not to the assistant frontier bound by IDs.
+     * Skip them only while locating that boundary; render the whole tail below. */
     int tail_end = msgs->len;
-    while (tail_end > 0 && role_is_system(msgs->v[tail_end - 1].role)) {
+    while (tail_end > 0 && (role_is_system(msgs->v[tail_end - 1].role) ||
+                           !strcmp(msgs->v[tail_end - 1].role, "user"))) {
         tail_end--;
     }
     int tail_start = tail_end;
@@ -6290,7 +6185,7 @@ static bool anthropic_validate_tool_results(server *s, const chat_msgs *msgs,
             const chat_msg *prior = found == raxNotFound ? NULL : (const chat_msg *)found;
             if (!live_known && !prior) {
                 snprintf(err, errlen,
-                         "Anthropic continuation state is not available for tool_use_id %s; retry by replaying the full messages history",
+                         DS4_SERVER_TEXT_ANTHROPIC_CONTINUATION_STATE_IS_NOT_AVAILABLE_FOR_TOOL_USE_ID_S,
                          id);
                 ok = false;
                 break;
@@ -6497,13 +6392,13 @@ static bool parse_chat_request(ds4_engine *e, server *s, const char *body, int d
         } else if (!strcmp(key, "response_format")) {
             if (r->response_schema || !parse_chat_response_format(&p, r)) {
                 snprintf(err, errlen,
-                         "invalid or unsupported json_schema response_format");
+                         DS4_SERVER_TEXT_INVALID_OR_UNSUPPORTED_JSON_SCHEMA_RESPONSE_FORMAT);
                 free(key);
                 goto bad;
             }
         } else if (!strcmp(key, "agentic")) {
             snprintf(err, errlen,
-                     "agentic is supported only by /v1/responses");
+                     DS4_AGENT_TEXT_AGENTIC_IS_SUPPORTED_ONLY_BY_V1_RESPONSES);
             free(key);
             chat_msgs_free(&msgs);
             free(tool_schemas);
@@ -6520,7 +6415,7 @@ static bool parse_chat_request(ds4_engine *e, server *s, const char *body, int d
     }
     if (*p != '}') goto bad;
     if (!got_messages) {
-        snprintf(err, errlen, "missing messages");
+        snprintf(err, errlen, DS4_SERVER_TEXT_MISSING_MESSAGES);
         chat_msgs_free(&msgs);
         free(tool_schemas);
         request_free(r);
@@ -6536,7 +6431,7 @@ static bool parse_chat_request(ds4_engine *e, server *s, const char *body, int d
     if (r->tool_choice_required && !r->has_tools) goto bad;
     if (r->response_schema && r->has_tools) {
         snprintf(err, errlen,
-                 "json_schema response_format cannot be combined with tools");
+                 DS4_SERVER_TEXT_JSON_SCHEMA_RESPONSE_FORMAT_CANNOT_BE_COMBINED_WITH_TOOLS);
         chat_msgs_free(&msgs);
         free(tool_schemas);
         request_free(r);
@@ -6569,7 +6464,7 @@ static bool parse_chat_request(ds4_engine *e, server *s, const char *body, int d
 bad:
     chat_msgs_free(&msgs);
     free(tool_schemas);
-    if (!err[0]) snprintf(err, errlen, "invalid JSON request");
+    if (!err[0]) snprintf(err, errlen, DS4_SERVER_TEXT_INVALID_JSON_REQUEST);
     request_free(r);
     return false;
 }
@@ -6732,7 +6627,7 @@ static bool parse_anthropic_request(ds4_engine *e, server *s, const char *body, 
             }
         } else if (!strcmp(key, "agentic")) {
             snprintf(err, errlen,
-                     "agentic is supported only by /v1/responses");
+                     DS4_AGENT_TEXT_AGENTIC_IS_SUPPORTED_ONLY_BY_V1_RESPONSES);
             free(key);
             chat_msgs_free(&msgs);
             free(system);
@@ -6750,7 +6645,7 @@ static bool parse_anthropic_request(ds4_engine *e, server *s, const char *body, 
     }
     if (*p != '}') goto bad;
     if (!got_messages) {
-        snprintf(err, errlen, "missing messages");
+        snprintf(err, errlen, DS4_SERVER_TEXT_MISSING_MESSAGES);
         chat_msgs_free(&msgs);
         free(system);
         free(tool_schemas);
@@ -6809,7 +6704,7 @@ bad:
     chat_msgs_free(&msgs);
     free(system);
     free(tool_schemas);
-    snprintf(err, errlen, "invalid JSON request");
+    snprintf(err, errlen, DS4_SERVER_TEXT_INVALID_JSON_REQUEST);
     request_free(r);
     return false;
 }
@@ -7682,7 +7577,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
                 } else if (!strcmp(choice, "required")) {
                     r->tool_choice_required = true;
                 } else if (strcmp(choice, "auto") != 0) {
-                    snprintf(err, errlen, "tool_choice=%s not supported", choice);
+                    snprintf(err, errlen, DS4_SERVER_TEXT_TOOL_CHOICE_S_NOT_SUPPORTED, choice);
                     free(choice);
                     free(key);
                     chat_msgs_free(&msgs);
@@ -7694,7 +7589,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
                 }
                 free(choice);
             } else if (*p == '{') {
-                snprintf(err, errlen, "forced tool_choice not supported");
+                snprintf(err, errlen, DS4_SERVER_TEXT_FORCED_TOOL_CHOICE_NOT_SUPPORTED);
                 free(key);
                 chat_msgs_free(&msgs);
                 buf_free(&loaded_tool_schemas);
@@ -7759,7 +7654,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
         } else if (!strcmp(key, "text")) {
             if (r->response_schema || !parse_responses_text_format(&p, r)) {
                 snprintf(err, errlen,
-                         "invalid or unsupported json_schema text.format");
+                         DS4_SERVER_TEXT_INVALID_OR_UNSUPPORTED_JSON_SCHEMA_TEXT_FORMAT);
                 free(key);
                 goto bad;
             }
@@ -7790,7 +7685,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
             json_ws(&p);
             if (!json_lit(&p, "null")) {
                 snprintf(err, errlen,
-                         "%s is not supported; replay full input instead",
+                         DS4_SERVER_TEXT_S_IS_NOT_SUPPORTED_REPLAY_FULL_INPUT_INSTEAD,
                          key);
                 free(key);
                 chat_msgs_free(&msgs);
@@ -7811,7 +7706,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
     }
     if (*p != '}') goto bad;
     if (!got_input) {
-        snprintf(err, errlen, "missing input");
+        snprintf(err, errlen, DS4_SERVER_TEXT_MISSING_INPUT);
         chat_msgs_free(&msgs);
         buf_free(&loaded_tool_schemas);
         free(instructions);
@@ -7848,7 +7743,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
         combined_tool_schemas.ptr : NULL;
     r->has_tools = active_tool_schemas && active_tool_schemas[0];
     if (r->tool_choice_required && !r->has_tools) {
-        snprintf(err, errlen, "tool_choice=required needs at least one tool");
+        snprintf(err, errlen, DS4_SERVER_TEXT_TOOL_CHOICE_REQUIRED_NEEDS_AT_LEAST_ONE_TOOL);
         chat_msgs_free(&msgs);
         buf_free(&combined_tool_schemas);
         buf_free(&loaded_tool_schemas);
@@ -7859,7 +7754,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
     }
     if (r->response_schema && r->has_tools) {
         snprintf(err, errlen,
-                 "json_schema text.format cannot be combined with tools");
+                 DS4_SERVER_TEXT_JSON_SCHEMA_TEXT_FORMAT_CANNOT_BE_COMBINED_WITH_TOOLS);
         chat_msgs_free(&msgs);
         buf_free(&combined_tool_schemas);
         buf_free(&loaded_tool_schemas);
@@ -7894,7 +7789,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
     if (!interactive_compile(r, err, errlen) ||
         (r->interactive.count && !interactive_request_options(body))) {
         if (r->interactive.count && !err[0])
-            snprintf(err, errlen, "interactive v2 does not accept stop or ignore_eos");
+            snprintf(err, errlen, DS4_INTERACTIVE_TEXT_INTERACTIVE_V2_DOES_NOT_ACCEPT_STOP_OR_IGNORE_EOS);
         chat_msgs_free(&msgs);
         buf_free(&combined_tool_schemas);
         buf_free(&loaded_tool_schemas);
@@ -7928,7 +7823,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
          !id_list_contains(&r->responses_live_call_ids,
                            r->agentic_skill_call_id))) {
         snprintf(err, errlen,
-                 "agentic return input must contain function_call_output for %s",
+                 DS4_AGENT_TEXT_AGENTIC_RETURN_INPUT_MUST_CONTAIN_FUNCTION_CALL_OUTPUT_FOR_S,
                  r->agentic_skill_call_id ? r->agentic_skill_call_id : "(missing)");
         chat_msgs_free(&msgs);
         buf_free(&combined_tool_schemas);
@@ -7961,7 +7856,7 @@ bad:
     buf_free(&loaded_tool_schemas);
     free(instructions);
     free(tool_schemas);
-    if (!err[0]) snprintf(err, errlen, "invalid JSON request");
+    if (!err[0]) snprintf(err, errlen, DS4_SERVER_TEXT_INVALID_JSON_REQUEST);
     request_free(r);
     return false;
 }
@@ -8119,7 +8014,7 @@ static bool parse_completion_request(ds4_engine *e, const char *body, int def_to
     }
     if (*p != '}') goto bad;
     if (!prompt) {
-        snprintf(err, errlen, "missing prompt");
+        snprintf(err, errlen, DS4_SERVER_TEXT_MISSING_PROMPT);
         request_free(r);
         return false;
     }
@@ -8130,7 +8025,7 @@ static bool parse_completion_request(ds4_engine *e, const char *body, int def_to
     chat_msgs msgs = {0};
     chat_msg sys = {0};
     sys.role = xstrdup("system");
-    sys.content = xstrdup("You are a helpful assistant");
+    sys.content = xstrdup(DS4_PROMPT_DEFAULT_SYSTEM_MESSAGE);
     chat_msgs_push(&msgs, sys);
     chat_msg user_msg = {0};
     user_msg.role = xstrdup("user");
@@ -8145,7 +8040,7 @@ static bool parse_completion_request(ds4_engine *e, const char *body, int def_to
     return true;
 bad:
     free(prompt);
-    snprintf(err, errlen, "invalid JSON request");
+    snprintf(err, errlen, DS4_SERVER_TEXT_INVALID_JSON_REQUEST);
     request_free(r);
     return false;
 }
@@ -8582,7 +8477,7 @@ static bool parse_deepseek_generated_message_ex(const char *text,
         if (!think_end) {
             const char *candidate = find_any_tool_start(text);
             if (!candidate || !find_any_tool_end(candidate)) {
-                fprintf(stderr, "ds4-server: thinking not closed, ignoring incomplete DSML in reasoning\n");
+                fprintf(stderr, DS4_SERVER_TEXT_THINKING_NOT_CLOSED_IGNORING_INCOMPLETE_DSML_IN_REASONING);
                 ds4_local_unterminated_reasoning(text, content_out, reasoning_out);
                 return true;
             }
@@ -8809,7 +8704,7 @@ static bool parse_glm_generated_message_ex(const char *text,
         if (!think_end) {
             const char *candidate = strstr(text, tool_start);
             if (!candidate || !strstr(candidate, tool_end)) {
-                fprintf(stderr, "ds4-server: thinking not closed, ignoring incomplete GLM tool calls in reasoning\n");
+                fprintf(stderr, DS4_SERVER_TEXT_THINKING_NOT_CLOSED_IGNORING_INCOMPLETE_GLM_TOOL_CALLS_IN);
                 ds4_local_unterminated_reasoning(text, content_out, reasoning_out);
                 return true;
             }
@@ -9027,7 +8922,7 @@ static bool parse_qwen4_generated_message_ex(const char *text,
         if (!think_end) {
             const char *candidate = strstr(text, tool_start);
             if (!candidate || !strstr(candidate, tool_end)) {
-                fprintf(stderr, "ds4-server: thinking not closed, ignoring incomplete Qwen tool calls in reasoning\n");
+                fprintf(stderr, DS4_SERVER_TEXT_THINKING_NOT_CLOSED_IGNORING_INCOMPLETE_QWEN_TOOL_CALLS_IN);
                 ds4_local_unterminated_reasoning(text, content_out, reasoning_out);
                 return true;
             }
@@ -9310,7 +9205,7 @@ static bool parse_generated_message_for_response_for_syntax(server_model_syntax 
     const char *finish = finish_io && *finish_io ? *finish_io : "stop";
     if (has_tools && saw_tool_start && strcmp(finish, "error") != 0) {
         if (finish_io) *finish_io = tool_parse_failure_recovery_finish(finish);
-        if (err && errlen) snprintf(err, errlen, "invalid tool call");
+        if (err && errlen) snprintf(err, errlen, DS4_SERVER_TEXT_INVALID_TOOL_CALL);
         if (recovered_out) *recovered_out = true;
     }
     return false;
@@ -9392,11 +9287,11 @@ static void append_cors_headers(buf *h) {
 
 static bool http_response(int fd, bool enable_cors, int code, const char *type, const char *body) {
     const char *reason = code == 200 ? "OK" :
-                         code == 204 ? "No Content" :
-                         code == 400 ? "Bad Request" :
-                         code == 404 ? "Not Found" :
+                         code == 204 ? DS4_SERVER_TEXT_NO_CONTENT :
+                         code == 400 ? DS4_SERVER_TEXT_BAD_REQUEST :
+                         code == 404 ? DS4_SERVER_TEXT_NOT_FOUND :
                          code == 409 ? "Conflict" :
-                         code == 500 ? "Internal Server Error" : "Error";
+                         code == 500 ? DS4_SERVER_TEXT_INTERNAL_SERVER_ERROR : "Error";
     const size_t body_len = body ? strlen(body) : 0;
     buf h = {0};
     buf_printf(&h,
@@ -9446,7 +9341,7 @@ static bool http_error_context_length_exceeded(int fd, bool enable_cors,
     buf b = {0};
     char msg[160];
     snprintf(msg, sizeof(msg),
-             "Prompt has %d tokens, but the configured context size is %d tokens",
+             DS4_SERVER_TEXT_PROMPT_HAS_D_TOKENS_BUT_THE_CONFIGURED_CONTEXT_SIZE,
              n_prompt_tokens, ctx_size);
 
     if (r && r->api == API_ANTHROPIC) {
@@ -9494,7 +9389,7 @@ static bool sse_headers(int fd, bool enable_cors) {
 }
 
 static bool sse_error_event(int fd, const request *r, const char *msg) {
-    const char *message = msg && msg[0] ? msg : "internal server error";
+    const char *message = msg && msg[0] ? msg : DS4_SERVER_TEXT_INTERNAL_SERVER_ERROR_SSE_ERROR_EVENT;
     buf b = {0};
     if (r && r->api == API_ANTHROPIC) {
         buf_puts(&b, "event: error\ndata: {\"type\":\"error\",\"error\":{\"type\":\"api_error\",\"message\":");
@@ -13388,8 +13283,7 @@ static bool responses_sse_completed(int fd, const request *r,
     json_escape(&b, r->model);
     append_interactive_response_metadata(&b, r);
     if (!strcmp(event_type, "response.failed")) {
-        buf_puts(&b, ",\"error\":{\"code\":\"server_error\","
-                     "\"message\":\"generation failed\"}");
+        buf_puts(&b, DS4_SERVER_TEXT_ERROR_CODE_SERVER_ERROR_MESSAGE_GENERATION_FAILED);
     } else if (!strcmp(event_type, "response.incomplete")) {
         buf_puts(&b, ",\"incomplete_details\":{\"reason\":\"max_tokens\"}");
     }
@@ -13665,8 +13559,7 @@ static bool responses_final_response(int fd, bool enable_cors,
     json_escape(&b, r->model);
     append_interactive_response_metadata(&b, r);
     if (finish && !strcmp(finish, "error")) {
-        buf_puts(&b, ",\"error\":{\"code\":\"server_error\","
-                     "\"message\":\"generation failed\"}");
+        buf_puts(&b, DS4_SERVER_TEXT_ERROR_CODE_SERVER_ERROR_MESSAGE_GENERATION_FAILED);
     } else if (finish && !strcmp(finish, "length")) {
         buf_puts(&b, ",\"incomplete_details\":{\"reason\":\"max_tokens\"}");
     }
@@ -14903,6 +14796,7 @@ struct agent_context_checkpoint {
     ds4_tokens system_prefix;
     live_tool_state responses_live;
     double write_ms;
+    bool restore_pending; /* Published rollback is authoritative until loaded. */
     agent_context_checkpoint *next;
 };
 
@@ -15325,7 +15219,7 @@ static bool skill_checkpoint_unlink(const char *path) {
         nanosleep(&pause, NULL);
     }
     server_log(DS4_LOG_WARNING,
-               "ds4-server: failed to delete skill checkpoint path=%s error=%s",
+               DS4_AGENT_TEXT_FAILED_TO_DELETE_SKILL_CHECKPOINT_PATH_S_ERROR_S,
                path, strerror(saved));
     return false;
 }
@@ -15438,7 +15332,7 @@ static void skill_checkpoint_cleanup_orphans(const char *base) {
     closedir(root);
     if (files) {
         server_log(DS4_LOG_KVCACHE,
-                   "ds4-server: removed orphan agentic checkpoints files=%llu bytes=%llu",
+                   DS4_AGENT_TEXT_REMOVED_ORPHAN_AGENTIC_CHECKPOINTS_FILES_LLU_BYTES_LLU,
                    (unsigned long long)files, (unsigned long long)bytes);
     }
 }
@@ -15486,14 +15380,14 @@ static bool skill_frame_save(server *s, server_slot *slot,
     if (write_ms_out) *write_ms_out = 0.0;
     if (!s || !slot || !call || !call->id || !call->id[0] ||
         !call->name || !call->name[0] || !s->skill_dir) {
-        snprintf(err, errlen, "invalid skill checkpoint request");
+        snprintf(err, errlen, DS4_AGENT_TEXT_INVALID_SKILL_CHECKPOINT_REQUEST);
         return false;
     }
     pthread_mutex_lock(&s->tool_mu);
     bool duplicate = skill_frame_slot_locked(s, call->id) >= 0;
     pthread_mutex_unlock(&s->tool_mu);
     if (duplicate) {
-        snprintf(err, errlen, "duplicate skill call_id: %s", call->id);
+        snprintf(err, errlen, DS4_SERVER_TEXT_DUPLICATE_SKILL_CALL_ID_S, call->id);
         return false;
     }
     const uint64_t expected_bytes = ds4_session_payload_bytes(slot->session);
@@ -15505,7 +15399,7 @@ static bool skill_frame_save(server *s, server_slot *slot,
         else reserved += expected_bytes;
         if (reserved > s->kv.budget_bytes) {
             snprintf(err, errlen,
-                     "active skill checkpoints exceed the Qwen session cache budget");
+                     DS4_AGENT_TEXT_ACTIVE_SKILL_CHECKPOINTS_EXCEED_THE_QWEN_SESSION_CACHE_BUDGET);
             return false;
         }
         /* Skill files live in a private subdirectory and are not part of the
@@ -15518,7 +15412,7 @@ static bool skill_frame_save(server *s, server_slot *slot,
         pthread_mutex_unlock(&s->kv_mu);
         if (indexed == UINT64_MAX || indexed > s->kv.budget_bytes - reserved) {
             snprintf(err, errlen,
-                     "failed to reserve Qwen session cache space for skill checkpoint");
+                     DS4_AGENT_TEXT_FAILED_TO_RESERVE_QWEN_SESSION_CACHE_SPACE_FOR_SKILL);
             return false;
         }
     }
@@ -15532,7 +15426,7 @@ static bool skill_frame_save(server *s, server_slot *slot,
     snprintf(tmp_path, tmp_n, "%s.tmp.XXXXXX", final_path);
     int fd = mkstemp(tmp_path);
     if (fd < 0) {
-        snprintf(err, errlen, "failed to create skill checkpoint: %s",
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_CREATE_SKILL_CHECKPOINT_S,
                  strerror(errno));
         free(tmp_path);
         free(final_path);
@@ -15543,7 +15437,7 @@ static bool skill_frame_save(server *s, server_slot *slot,
         int saved = errno;
         close(fd);
         unlink(tmp_path);
-        snprintf(err, errlen, "failed to open skill checkpoint: %s",
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_OPEN_SKILL_CHECKPOINT_S,
                  strerror(saved));
         free(tmp_path);
         free(final_path);
@@ -15559,26 +15453,26 @@ static bool skill_frame_save(server *s, server_slot *slot,
     int rc = ds4_session_save_payload(slot->session, fp, err, errlen);
     state_metrics.stage_ms = (now_sec() - t0) * 1000.0;
     if (rc == 0 && fflush(fp) != 0) {
-        snprintf(err, errlen, "failed to flush skill checkpoint: %s",
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_FLUSH_SKILL_CHECKPOINT_S,
                  strerror(errno));
         rc = 1;
     }
     if (rc == 0 && fsync(fileno(fp)) != 0) {
-        snprintf(err, errlen, "failed to sync skill checkpoint: %s",
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_SYNC_SKILL_CHECKPOINT_S,
                  strerror(errno));
         rc = 1;
     }
     if (rc == 0 && !skill_payload_checksum(fp, bytes, &checksum)) {
-        snprintf(err, errlen, "failed to checksum skill checkpoint");
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_CHECKSUM_SKILL_CHECKPOINT);
         rc = 1;
     }
     if (fclose(fp) != 0 && rc == 0) {
-        snprintf(err, errlen, "failed to close skill checkpoint: %s",
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_CLOSE_SKILL_CHECKPOINT_S,
                  strerror(errno));
         rc = 1;
     }
     if (rc == 0 && rename(tmp_path, final_path) != 0) {
-        snprintf(err, errlen, "failed to publish skill checkpoint: %s",
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_PUBLISH_SKILL_CHECKPOINT_S,
                  strerror(errno));
         rc = 1;
     }
@@ -15615,13 +15509,13 @@ static bool skill_frame_save(server *s, server_slot *slot,
     }
     pthread_mutex_unlock(&s->tool_mu);
     if (duplicate) {
-        snprintf(err, errlen, "duplicate skill call_id: %s", call->id);
+        snprintf(err, errlen, DS4_SERVER_TEXT_DUPLICATE_SKILL_CALL_ID_S, call->id);
         skill_frame_free(f, true);
         return false;
     }
     if (write_ms_out) *write_ms_out = write_ms;
     server_log(DS4_LOG_KVCACHE,
-               "SKILL_CHECKPOINT call_id=%s skill=%s sequence=%d checkpoint_tokens=%d checkpoint_file=%s checkpoint_bytes=%llu checkpoint_stage_ms=%.3f checkpoint_write_ms=%.3f skill_checkpoint_count=%llu skill_checkpoint_live_bytes=%llu skill_checkpoint_peak_bytes=%llu",
+               DS4_AGENT_TEXT_SKILL_CHECKPOINT_LOG,
                f->call_id, f->skill_name, f->frontier.len, f->frontier.len,
                f->checkpoint_path,
                (unsigned long long)f->checkpoint_bytes, f->stage_ms, f->write_ms,
@@ -15636,12 +15530,12 @@ static bool skill_frame_restore(server_slot *slot, skill_frame *target,
                                 char *err, size_t errlen) {
     if (metrics) memset(metrics, 0, sizeof(*metrics));
     if (!slot || !target || !target->checkpoint_path) {
-        snprintf(err, errlen, "invalid skill restore request");
+        snprintf(err, errlen, DS4_AGENT_TEXT_INVALID_SKILL_RESTORE_REQUEST);
         return false;
     }
     FILE *fp = fopen(target->checkpoint_path, "rb");
     if (!fp) {
-        snprintf(err, errlen, "failed to open skill checkpoint: %s",
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_OPEN_SKILL_CHECKPOINT_S,
                  strerror(errno));
         return false;
     }
@@ -15650,7 +15544,7 @@ static bool skill_frame_restore(server_slot *slot, skill_frame *target,
     if (!skill_payload_checksum(fp, target->checkpoint_bytes, &checksum) ||
         checksum != target->checkpoint_checksum) {
         fclose(fp);
-        snprintf(err, errlen, "corrupt or truncated skill checkpoint");
+        snprintf(err, errlen, DS4_AGENT_TEXT_CORRUPT_OR_TRUNCATED_SKILL_CHECKPOINT);
         return false;
     }
     const double verified = now_sec();
@@ -15662,7 +15556,7 @@ static bool skill_frame_restore(server_slot *slot, skill_frame *target,
         metrics->restore_ms = (now_sec() - verified) * 1000.0;
     }
     if (fclose(fp) != 0 && rc == 0) {
-        snprintf(err, errlen, "failed to close skill checkpoint: %s",
+        snprintf(err, errlen, DS4_AGENT_TEXT_FAILED_TO_CLOSE_SKILL_CHECKPOINT_S,
                  strerror(errno));
         rc = 1;
     }
@@ -15706,7 +15600,7 @@ static bool server_encode_image(server *s, const server_image_input *input,
                                 ds4_vision_embedding *out,
                                 char *err, size_t errlen) {
     if (server_image_cache_get(&s->image_cache, input, out)) {
-        server_log(DS4_LOG_KVCACHE, "ds4-server: vision embedding cache hit");
+        server_log(DS4_LOG_KVCACHE, DS4_SERVER_TEXT_VISION_EMBEDDING_CACHE_HIT);
         return true;
     }
     if (!ds4_engine_vision_encode_memory(s->engine, input->encoded,
@@ -15718,7 +15612,7 @@ static bool server_encode_image(server *s, const server_image_input *input,
     server_image_cache_put(&s->image_cache, input, out,
                             (uint32_t)ds4_engine_embd_dim(s->engine),
                             SERVER_IMAGE_CACHE_BYTES);
-    server_log(DS4_LOG_KVCACHE, "ds4-server: vision embedding encoded; cache=%zu bytes",
+    server_log(DS4_LOG_KVCACHE, DS4_SERVER_TEXT_VISION_EMBEDDING_ENCODED_CACHE_ZU_BYTES,
                s->image_cache.bytes);
     return true;
 }
@@ -15801,7 +15695,7 @@ static void tool_memory_init_locked(tool_memory *m) {
     if (m->by_id && m->by_block) return;
     m->by_id = raxNew();
     m->by_block = raxNew();
-    if (!m->by_id || !m->by_block) die("out of memory");
+    if (!m->by_id || !m->by_block) die(DS4_SERVER_TEXT_OUT_OF_MEMORY);
 }
 
 static void tool_memory_link_head(tool_memory *m, tool_memory_entry *e) {
@@ -15861,7 +15755,7 @@ static tool_memory_block *tool_memory_get_block_locked(tool_memory *m,
     if (!raxInsert(m->by_block, (unsigned char *)b->dsml, b->len, b, NULL)) {
         free(b->dsml);
         free(b);
-        die("out of memory");
+        die(DS4_SERVER_TEXT_OUT_OF_MEMORY);
     }
     m->bytes += b->bytes;
     return b;
@@ -15945,7 +15839,7 @@ static void tool_memory_put_locked(tool_memory *m, const char *id,
         free(e->id);
         free(e);
         tool_memory_release_block_locked(m, b);
-        die("out of memory");
+        die(DS4_SERVER_TEXT_OUT_OF_MEMORY);
     }
     tool_memory_link_head(m, e);
     m->entries++;
@@ -16036,6 +15930,18 @@ static agent_context_checkpoint *agent_context_checkpoint_find_locked(
         if (!strcmp(cp->context_id, context_id)) return cp;
     }
     return NULL;
+}
+
+static agent_context_checkpoint *agent_context_checkpoint_take_locked(
+        server_slot *slot, const char *context_id) {
+    if (!slot || !context_id) return NULL;
+    agent_context_checkpoint **link = &slot->agent_contexts;
+    while (*link && strcmp((*link)->context_id, context_id)) link = &(*link)->next;
+    if (!*link) return NULL;
+    agent_context_checkpoint *checkpoint = *link;
+    *link = checkpoint->next;
+    checkpoint->next = NULL;
+    return checkpoint;
 }
 
 static void agent_context_checkpoint_remove_locked(
@@ -16134,7 +16040,7 @@ static FILE *resident_kv_frontier_open_write(
     if (!state || payload_bytes == 0 ||
         payload_bytes >= (uint64_t)SIZE_MAX) {
         if (errlen) snprintf(err, errlen,
-                             "invalid resident KV frontier size");
+                             DS4_SERVER_TEXT_INVALID_RESIDENT_KV_FRONTIER_SIZE);
         return NULL;
     }
     const size_t stream_bytes = (size_t)payload_bytes + 1;
@@ -16144,7 +16050,7 @@ static FILE *resident_kv_frontier_open_write(
         uint8_t *ptr = realloc(state->ptr, stream_bytes);
         if (!ptr) {
             if (errlen) snprintf(err, errlen,
-                                 "out of memory for resident KV frontier");
+                                 DS4_SERVER_TEXT_OUT_OF_MEMORY_FOR_RESIDENT_KV_FRONTIER);
             return NULL;
         }
         state->ptr = ptr;
@@ -16152,7 +16058,7 @@ static FILE *resident_kv_frontier_open_write(
     }
     FILE *fp = fmemopen(state->ptr, stream_bytes, "wb");
     if (!fp && errlen) {
-        snprintf(err, errlen, "failed to open resident KV memory stream");
+        snprintf(err, errlen, DS4_SERVER_TEXT_FAILED_TO_OPEN_RESIDENT_KV_MEMORY_STREAM);
     }
     return fp;
 }
@@ -16207,7 +16113,7 @@ static bool resident_kv_frontier_capture(ds4_session *session,
     }
     if (fclose(fp) != 0 && rc == 0) {
         if (errlen) snprintf(err, errlen,
-                             "failed to finalize resident KV frontier");
+                             DS4_SERVER_TEXT_FAILED_TO_FINALIZE_RESIDENT_KV_FRONTIER);
         rc = 1;
     }
     if (rc != 0 || written != bytes) return false;
@@ -16228,7 +16134,7 @@ static bool resident_kv_frontier_restore(ds4_session *session,
      * cancellation, or a failed eval. Let the caller rebuild from system KV. */
     if (!frontier->full_payload &&
         ds4_session_common_prefix(session, &frontier->tokens) != frontier->tokens.len) {
-        if (errlen) snprintf(err, errlen, "compact frontier lost its live KV prefix");
+        if (errlen) snprintf(err, errlen, DS4_SERVER_TEXT_COMPACT_FRONTIER_LOST_ITS_LIVE_KV_PREFIX);
         return false;
     }
     if (frontier->device_state) {
@@ -16242,7 +16148,7 @@ static bool resident_kv_frontier_restore(ds4_session *session,
                         (size_t)frontier->state.len, "rb");
     if (!fp) {
         if (errlen) snprintf(err, errlen,
-                             "failed to open resident KV frontier");
+                             DS4_SERVER_TEXT_FAILED_TO_OPEN_RESIDENT_KV_FRONTIER);
         return false;
     }
     int rc = frontier->full_payload ?
@@ -16251,7 +16157,7 @@ static bool resident_kv_frontier_restore(ds4_session *session,
                                      NULL, err, errlen);
     if (fclose(fp) != 0 && rc == 0) {
         if (errlen) snprintf(err, errlen,
-                             "failed to close resident KV frontier");
+                             DS4_SERVER_TEXT_FAILED_TO_CLOSE_RESIDENT_KV_FRONTIER);
         rc = 1;
     }
     return rc == 0;
@@ -17074,7 +16980,7 @@ static int kv_cache_cold_store_target_request(server *s, const request *req,
             request_system_prefix_tokens(s, req, &rendered_system);
         ds4_tokens_free(&rendered_system);
         server_log(DS4_LOG_KVCACHE,
-                   "ds4-server: agent-system boundary system_tokens=%d prompt_tokens=%d syntax=%s",
+                   DS4_SERVER_TEXT_AGENT_SYSTEM_BOUNDARY_SYSTEM_TOKENS_D_PROMPT_TOKENS_D_SYNTAX_S,
                    n, prompt->len,
                    server_model_syntax_name(req->model_syntax));
         if (n >= s->kv.opt.min_tokens) {
@@ -17299,11 +17205,11 @@ static void kv_cache_discard_failed_disk_entry(server *s, server_slot *slot,
     pthread_mutex_lock(&s->kv_mu);
     if (unlink(path) == 0) {
         server_log(DS4_LOG_KVCACHE,
-                   "ds4-server: kv cache discarded reason=prefill-failed file=%s",
+                   DS4_SERVER_TEXT_KV_CACHE_DISCARDED_REASON_PREFILL_FAILED_FILE_S,
                    path);
     } else if (errno != ENOENT) {
         server_log(DS4_LOG_WARNING,
-                   "ds4-server: kv cache failed to discard prefill-failed file=%s: %s",
+                   DS4_SERVER_TEXT_KV_CACHE_FAILED_TO_DISCARD_PREFILL_FAILED_FILE_S,
                    path, strerror(errno));
     }
     pthread_mutex_unlock(&s->kv_mu);
@@ -17845,16 +17751,7 @@ static void trace_write_cache_diag(
         const char *disk_path)
 {
     fprintf(s->trace,
-            "\n--- cache decision ---\n"
-            "live_tokens_before: %d\n"
-            "prompt_tokens: %d\n"
-            "live_prompt_common: %d\n"
-            "memory_token_reusable: %d\n"
-            "memory_miss_reason: %s\n"
-            "tool_replay: mem=%d disk=%d canonical=%d missing_ids=%d\n"
-            "cache_source: %s\n"
-            "cached_tokens: %d\n"
-            "disk_cached_tokens: %d\n",
+            DS4_SERVER_TEXT_CACHE_DECISION_LOG,
             d && d->valid ? d->old_pos : 0,
             d && d->valid ? d->prompt_len : 0,
             d && d->valid ? d->common : 0,
@@ -17951,20 +17848,20 @@ static uint64_t trace_begin(
     trace_write_cache_diag(s, cache_diag, &j->req.tool_replay, cached,
                            cache_source, disk_cached, disk_path);
     if (j->req.raw_body) {
-        fputs("\n--- raw request json ---\n", s->trace);
+        fputs(DS4_SERVER_TEXT_RAW_REQUEST_JSON, s->trace);
         fputs(j->req.raw_body, s->trace);
         if (!j->req.raw_body[0] || j->req.raw_body[strlen(j->req.raw_body) - 1] != '\n') {
             fputc('\n', s->trace);
         }
     }
     if (j->req.prompt_text) {
-        fputs("\n--- rendered prompt ---\n", s->trace);
+        fputs(DS4_SERVER_TEXT_RENDERED_PROMPT, s->trace);
         fputs(j->req.prompt_text, s->trace);
         if (!j->req.prompt_text[0] || j->req.prompt_text[strlen(j->req.prompt_text) - 1] != '\n') {
             fputc('\n', s->trace);
         }
     }
-    fputs("\n--- generated text ---\n", s->trace);
+    fputs(DS4_SERVER_TEXT_GENERATED_TEXT, s->trace);
     fflush(s->trace);
     pthread_mutex_unlock(&s->trace_mu);
     return id;
@@ -18007,7 +17904,7 @@ static void trace_finish(
 
     pthread_mutex_lock(&s->trace_mu);
     fprintf(s->trace,
-            "\n\n--- parsed message ---\nfinish: %s\ngenerated_tokens: %d\ndsml_start: %d\ndsml_end: %d\nelapsed_sec: %.3f\n",
+            DS4_SERVER_TEXT_PARSED_MESSAGE_TRACE,
             final_finish,
             completion,
             saw_tool_start ? 1 : 0,
@@ -18033,7 +17930,7 @@ static void trace_finish(
                     tc->arguments ? tc->arguments : "");
         }
     }
-    fprintf(s->trace, "\n===== end request %llu =====\n", (unsigned long long)id);
+    fprintf(s->trace, DS4_SERVER_TEXT_END_REQUEST_LLU, (unsigned long long)id);
     fflush(s->trace);
     pthread_mutex_unlock(&s->trace_mu);
 }
@@ -18108,8 +18005,8 @@ static void log_decode_progress(req_kind kind, int prompt_tokens, int completion
     log_flags(flags, sizeof(flags), responses_protocol,
               tools, thinking, dsml_start, dsml_end);
     server_log(DS4_LOG_GENERATION,
-               "ds4-server: %s ctx=%s gen=%d%s%s decoding chunk=%.2f t/s avg=%.2f t/s %.3fs",
-               kind == REQ_CHAT ? "chat" : "completion",
+               DS4_SERVER_TEXT_S_CTX_S_GEN_D_S_S_DECODING_CHUNK,
+               kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                ctx,
                completion,
                flags[0] ? " " : "",
@@ -18244,16 +18141,15 @@ static char *build_invalid_dsml_tool_error_suffix(const request *r,
                                                   const char *detail) {
     char *system = rendered_chat_system_region(r);
     buf tool_error = {0};
-    buf_puts(&tool_error, "Tool error: invalid DSML tool call");
+    buf_puts(&tool_error, DS4_SERVER_TEXT_TOOL_ERROR_INVALID_DSML_TOOL_CALL);
     if (detail && detail[0]) {
         buf_puts(&tool_error, ": ");
         buf_puts(&tool_error, detail);
     }
     buf_puts(&tool_error,
-             "\nThe previous assistant output was not executed because the DSML syntax was malformed. "
-             "Emit a new valid DSML tool call, or answer normally if no tool is needed.");
+             DS4_PROMPT_INVALID_DSML_TOOL_GUIDANCE);
     if (system && system[0]) {
-        buf_puts(&tool_error, "\n\nSystem prompt reminder:\n");
+        buf_puts(&tool_error, DS4_PROMPT_SYSTEM_REMINDER);
         buf_puts(&tool_error, system);
     }
 
@@ -18289,15 +18185,13 @@ static char *build_invalid_glm_tool_error_suffix(const request *r,
                                                  const thinking_state *thinking,
                                                  const char *detail) {
     buf tool_error = {0};
-    buf_puts(&tool_error, "Tool error: invalid GLM tool call");
+    buf_puts(&tool_error, DS4_SERVER_TEXT_TOOL_ERROR_INVALID_GLM_TOOL_CALL);
     if (detail && detail[0]) {
         buf_puts(&tool_error, ": ");
         buf_puts(&tool_error, detail);
     }
     buf_puts(&tool_error,
-             "\nThe previous assistant output was not executed because the "
-             "<tool_call> syntax was malformed. Emit a new valid <tool_call>, "
-             "or answer normally if no tool is needed.");
+             DS4_PROMPT_INVALID_GLM_TOOL_GUIDANCE);
 
     buf suffix = {0};
     if (r && ds4_think_mode_enabled(r->think_mode) && thinking && thinking->inside) {
@@ -18318,15 +18212,13 @@ static char *build_invalid_qwen_tool_error_suffix(const request *r,
                                                   const thinking_state *thinking,
                                                   const char *detail) {
     buf tool_error = {0};
-    buf_puts(&tool_error, "Tool error: invalid Qwen tool call");
+    buf_puts(&tool_error, DS4_SERVER_TEXT_TOOL_ERROR_INVALID_QWEN_TOOL_CALL);
     if (detail && detail[0]) {
         buf_puts(&tool_error, ": ");
         buf_puts(&tool_error, detail);
     }
     buf_puts(&tool_error,
-             "\nThe previous assistant output was not executed because the "
-             "<tool_call><function=...> syntax was malformed. Emit a new valid "
-             "<tool_call>, or answer normally if no tool is needed.");
+             DS4_PROMPT_INVALID_QWEN_TOOL_GUIDANCE);
     buf suffix = {0};
     if (r && ds4_think_mode_enabled(r->think_mode) && thinking && thinking->inside) {
         buf_puts(&suffix, "\n</think>\n\n");
@@ -18459,7 +18351,7 @@ static int server_session_sync(server *s, server_slot *slot,
         if (rc != 0) return rc;
         if (done >= prompt->len) return 0;
         if (done < target) {
-            if (err && errlen) snprintf(err, errlen, "prefill made no progress");
+            if (err && errlen) snprintf(err, errlen, DS4_SERVER_TEXT_PREFILL_MADE_NO_PROGRESS);
             return 1;
         }
     }
@@ -18543,7 +18435,7 @@ static bool ensure_resident_system_frontier(
         return false;
     }
     server_log(DS4_LOG_KVCACHE,
-               "ds4-server: resident system frontier captured tokens=%d bytes=%.2f MiB location=%s %.3fms",
+               DS4_SERVER_TEXT_RESIDENT_SYSTEM_FRONTIER_CAPTURED_TOKENS_D_BYTES_F_MIB,
                system->len,
                (double)resident_kv_frontier_bytes(&slot->system_frontier) /
                    (1024.0 * 1024.0),
@@ -18629,7 +18521,7 @@ static int server_session_sync_multimodal(server *s, server_slot *slot,
         if (rc != 0) return rc;
         if (done >= prompt->len) return 0;
         if (done < target) {
-            if (err && errlen) snprintf(err, errlen, "prefill made no progress");
+            if (err && errlen) snprintf(err, errlen, DS4_SERVER_TEXT_PREFILL_MADE_NO_PROGRESS);
             return 1;
         }
     }
@@ -18660,7 +18552,7 @@ static bool append_rendered_suffix_to_live_session(server *s, server_slot *slot,
     if (!s || !slot || !suffix || !suffix[0]) return true;
     const ds4_tokens *live = ds4_session_tokens(slot->session);
     if (!live) {
-        if (err && errlen) snprintf(err, errlen, "live session is unavailable");
+        if (err && errlen) snprintf(err, errlen, DS4_SERVER_TEXT_LIVE_SESSION_IS_UNAVAILABLE);
         return false;
     }
 
@@ -18684,7 +18576,7 @@ static bool append_exact_tokens_to_live_session(server *s, server_slot *slot,
     if (!s || !slot || !tokens || count <= 0) return false;
     const ds4_tokens *live = ds4_session_tokens(slot->session);
     if (!live) {
-        if (err && errlen) snprintf(err, errlen, "live session is unavailable");
+        if (err && errlen) snprintf(err, errlen, DS4_SERVER_TEXT_LIVE_SESSION_IS_UNAVAILABLE);
         return false;
     }
     ds4_tokens target = {0};
@@ -18714,20 +18606,16 @@ static void server_log_constraint_divergence(
     piece_hex[shown * 2] = '\0';
     server_log(
         DS4_LOG_GENERATION,
-        "ds4-server: constraint divergence kind=%s token=%d "
-        "analyzed_allowed=%s oracle_allowed=%s piece_len=%zu piece_hex=%s "
-        "raw_len=%zu dsml_mode=%d decode=%d tracker_pos=%zu "
-        "inside_invoke=%s active_prop=%d invoke_body_start=%zu "
-        "param_value_start=%zu saw_invoke=%s",
-        r->response_schema ? "json_schema" : "dsml",
+        DS4_SERVER_TEXT_CONSTRAINT_DIVERGENCE_LOG,
+        r->response_schema ? DS4_SERVER_DIAGNOSTIC_JSON_SCHEMA : DS4_SERVER_DIAGNOSTIC_DSML,
         step->difference.token,
-        step->difference.analyzed_allowed ? "true" : "false",
-        step->difference.oracle_allowed ? "true" : "false",
+        step->difference.analyzed_allowed ? DS4_SERVER_DIAGNOSTIC_TRUE : DS4_SERVER_DIAGNOSTIC_FALSE,
+        step->difference.oracle_allowed ? DS4_SERVER_DIAGNOSTIC_TRUE : DS4_SERVER_DIAGNOSTIC_FALSE,
         piece_len, piece_hex, raw_len,
         (int)tracker->mode, (int)tracker->decode, tracker->pos,
-        tracker->inside_invoke ? "true" : "false", tracker->active_prop,
+        tracker->inside_invoke ? DS4_SERVER_DIAGNOSTIC_TRUE : DS4_SERVER_DIAGNOSTIC_FALSE, tracker->active_prop,
         tracker->invoke_body_start, tracker->param_value_start,
-        tracker->saw_invoke ? "true" : "false");
+        tracker->saw_invoke ? DS4_SERVER_DIAGNOSTIC_TRUE : DS4_SERVER_DIAGNOSTIC_FALSE);
     free(piece);
     (void)raw;
 }
@@ -19439,7 +19327,7 @@ static void log_tool_calls_summary(const char *ctx, const tool_calls *calls,
     char flags[32];
     log_flags(flags, sizeof(flags), responses_protocol, false, false, false, false);
     server_log(DS4_LOG_TOOL,
-               "ds4-server: tool calls ctx=%s%s%s n=%d raw_tool_text=%d ids=[%s] names=[%s]",
+               DS4_SERVER_TEXT_TOOL_CALLS_CTX_S_S_S_N_D_RAW_TOOL_TEXT,
                ctx,
                flags[0] ? " " : "",
                flags,
@@ -19517,8 +19405,8 @@ static void server_progress_cb(void *ud, const char *event, int current, int tot
               p->has_tools, false, false, false);
     const char *phase = p->phase ? p->phase : "prefill";
     server_log(DS4_LOG_PREFILL,
-               "ds4-server: %s ctx=%s%s%s %s chunk %d/%d (%.1f%%) chunk=%.2f t/s avg=%.2f t/s %.3fs",
-               p->kind == REQ_CHAT ? "chat" : "completion",
+               DS4_SERVER_TEXT_PREFILL_PROGRESS_LOG,
+               p->kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                p->ctx,
                flags[0] ? " " : "",
                flags,
@@ -19542,14 +19430,14 @@ static void send_prefill_failure_response(server *s, const job *j,
     if (j->req.stream && progress && progress->headers_sent) {
         if (progress->stream_failed) {
             server_log(DS4_LOG_GENERATION,
-                       "ds4-server: %s ctx=%s%s%s prefill failed after stream closed: %s",
+                       DS4_SERVER_TEXT_S_CTX_S_S_S_PREFILL_FAILED_AFTER_STREAM,
                        kind, ctx, flags && flags[0] ? " " : "",
                        flags && flags[0] ? flags : "", err);
             return;
         }
         if (!sse_error_event(j->fd, &j->req, err)) {
             server_log(DS4_LOG_GENERATION,
-                       "ds4-server: %s ctx=%s%s%s prefill SSE error failed: %s",
+                       DS4_SERVER_TEXT_S_CTX_S_S_S_PREFILL_SSE_ERROR_FAILED,
                        kind, ctx, flags && flags[0] ? " " : "",
                        flags && flags[0] ? flags : "", err);
         }
@@ -19759,10 +19647,10 @@ static void remember_thinking_checkpoint(server *s, server_slot *slot,
         j->req.prompt_preserves_reasoning && !visible_continuation;
     pthread_mutex_unlock(&s->tool_mu);
     server_log(DS4_LOG_KVCACHE,
-               "ds4-server: thinking live checkpoint remembered ctx=%s live=%d visible=%zu",
+               DS4_SERVER_TEXT_THINKING_LIVE_CHECKPOINT_REMEMBERED_CTX_S_LIVE_D_VISIBLE,
                ctx, ds4_session_pos(slot->session), strlen(visible));
     trace_event(s, trace_id,
-                "thinking live checkpoint remembered: live=%d visible=%zu",
+                DS4_SERVER_TEXT_THINKING_LIVE_CHECKPOINT_REMEMBERED_LIVE_D_VISIBLE_ZU,
                 ds4_session_pos(slot->session), strlen(visible));
     free(visible);
 }
@@ -19803,7 +19691,7 @@ static bool remember_qwen_tool_turn_visible_checkpoint(server *s, server_slot *s
     if (!visible) return false;
     thinking_live_remember(s, slot, visible, &j->req);
     server_log(DS4_LOG_KVCACHE,
-               "ds4-server: qwen tool-turn visible checkpoint remembered ctx=%s live=%d visible=%zu",
+               DS4_SERVER_TEXT_QWEN_TOOL_TURN_VISIBLE_CHECKPOINT_REMEMBERED_CTX_S_LIVE,
                ctx, ds4_session_pos(slot->session),
                strlen(visible));
     free(visible);
@@ -19873,20 +19761,20 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
                                                    sizeof(request_err))) {
             canonicalized = true;
             server_log(DS4_LOG_KVCACHE,
-                       "ds4-server: post-response checkpoint rebuilt source=memory-request cached=%d response_prefill=%d target=%d location=%s %.3fms",
+                       DS4_SERVER_TEXT_POST_RESPONSE_CHECKPOINT_REBUILT_SOURCE_MEMORY_REQUEST_CACHED_D,
                        response_frontier->tokens.len, appended,
                        ds4_session_pos(slot->session),
                        resident_kv_frontier_location(response_frontier),
                        (now_sec() - request_t0) * 1000.0);
             trace_event(s, trace_id,
-                        "post-response checkpoint rebuilt via request frontier: cached=%d response_prefill=%d target=%d",
+                        DS4_SERVER_TEXT_POST_RESPONSE_CHECKPOINT_REBUILT_VIA_REQUEST_FRONTIER_CACHED_D,
                         response_frontier->tokens.len, appended,
                         ds4_session_pos(slot->session));
             goto done;
         }
         server_log(DS4_LOG_WARNING,
-                   "ds4-server: resident request frontier restore failed ctx=%s error=\"%s\"; falling back",
-                   ctx, request_err[0] ? request_err : "unknown error");
+                   DS4_SERVER_TEXT_RESIDENT_REQUEST_FRONTIER_RESTORE_FAILED_CTX_S_ERROR_S,
+                   ctx, request_err[0] ? request_err : DS4_SERVER_TEXT_UNKNOWN_ERROR);
     }
     const int live_len = ds4_session_pos(slot->session);
     const int common = ds4_session_common_prefix(slot->session, &canonical);
@@ -19918,23 +19806,23 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
          * vision embeddings or restore rows for an unverified image. Keep the
          * correctly conditioned sampled frontier instead. */
         server_log(DS4_LOG_WARNING,
-                   "ds4-server: multimodal tool checkpoint canonicalization skipped ctx=%s common=%d live=%d canonical=%d reason=preserve-image-state",
+                   DS4_SERVER_TEXT_MULTIMODAL_TOOL_CHECKPOINT_CANONICALIZATION_SKIPPED_CTX_S_COMMON_D,
                    ctx, common, live_len, canonical.len);
         trace_event(s, trace_id,
-                    "multimodal tool checkpoint canonicalization skipped: common=%d live=%d canonical=%d",
+                    DS4_SERVER_TEXT_MULTIMODAL_TOOL_CHECKPOINT_CANONICALIZATION_SKIPPED_COMMON_D_LIVE_D,
                     common, live_len, canonical.len);
         goto done;
     }
 
     if (!safe_prompt_prefix) {
         trace_event(s, trace_id,
-                    "tool checkpoint canonicalization skipped: common=%d prompt=%d live=%d canonical=%d",
+                    DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZATION_SKIPPED_COMMON_D_PROMPT_D_LIVE,
                     common, j->req.prompt.len, live_len, canonical.len);
         goto done;
     }
     if (common < j->req.prompt.len) {
         trace_event(s, trace_id,
-                    "tool checkpoint canonicalization crosses BPE seam: common=%d prompt=%d",
+                    DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZATION_CROSSES_BPE_SEAM_COMMON_D_PROMPT,
                     common, j->req.prompt.len);
     }
 
@@ -19947,10 +19835,10 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
     if (rr == DS4_SESSION_REWRITE_OK) {
         canonicalized = true;
         server_log(DS4_LOG_KVCACHE,
-                   "ds4-server: tool checkpoint canonicalized ctx=%s common=%d live=%d canonical=%d",
+                   DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZED_CTX_S_COMMON_D_LIVE_D,
                    ctx, common, live_len, canonical.len);
         trace_event(s, trace_id,
-                    "tool checkpoint canonicalized: common=%d live=%d canonical=%d",
+                    DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZED_COMMON_D_LIVE_D_CANONICAL_D,
                     common, live_len, canonical.len);
     } else if (rr == DS4_SESSION_REWRITE_REBUILD_NEEDED) {
         /* The generated DSML suffix and the canonical prompt share a prefix,
@@ -19996,7 +19884,7 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
                              (loaded > 0 ? "disk" : "full");
         const double rebuild_t0 = now_sec();
         server_log(DS4_LOG_KVCACHE,
-                   "ds4-server: tool checkpoint canonicalization needs %d tokens rebuild ctx=%s request_ctx=%s reason=canonical-tail-rewrite tail=%d discard=%d common=%d live=%d target=%d cached=%d source=%s%s%s",
+                   DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZATION_NEEDS_D_TOKENS_REBUILD_CTX_S,
                    replay_tokens,
                    rebuild_ctx,
                    ctx,
@@ -20007,7 +19895,7 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
                    canonical.len,
                    loaded,
                    source,
-                   path ? " file=" : "",
+                   path ? DS4_SERVER_DIAGNOSTIC_FILE : "",
                    path ? path : "");
         server_prefill_progress rebuild_progress = {
             .srv = s,
@@ -20015,7 +19903,7 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
             .kind = j->req.kind,
             .prompt_tokens = sync_prompt->len,
             .cached_tokens = loaded,
-            .phase = "tool checkpoint rebuild",
+            .phase = DS4_SERVER_TEXT_TOOL_CHECKPOINT_REBUILD,
             .has_tools = j->req.has_tools,
             .t0 = rebuild_t0,
             .fd = j->fd,
@@ -20039,43 +19927,43 @@ static bool canonicalize_tool_checkpoint(server *s, server_slot *slot,
             const double rebuild_sec = now_sec() - rebuild_t0;
             if (restored_resident_system) {
                 server_log(DS4_LOG_KVCACHE,
-                           "ds4-server: tool checkpoint rebuild done ctx=%s request_ctx=%s source=memory-system cached=%d replay=%d target=%d %.3fs",
+                           DS4_SERVER_TEXT_CHECKPOINT_FROM_MEMORY_LOG,
                            rebuild_ctx, ctx, loaded, replay_tokens,
                            canonical.len, rebuild_sec);
                 trace_event(s, trace_id,
-                            "tool checkpoint canonicalized via resident system: common=%d live=%d canonical=%d cached=%d",
+                            DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZED_VIA_RESIDENT_SYSTEM_COMMON_D_LIVE,
                             common, live_len, canonical.len, loaded);
             } else if (loaded > 0) {
                 server_log(DS4_LOG_KVCACHE,
-                           "ds4-server: tool checkpoint rebuild done ctx=%s request_ctx=%s source=disk cached=%d replay=%d target=%d %.3fs",
+                           DS4_SERVER_TEXT_CHECKPOINT_FROM_DISK_LOG,
                            rebuild_ctx, ctx, loaded, replay_tokens, canonical.len, rebuild_sec);
                 trace_event(s, trace_id,
-                            "tool checkpoint canonicalized via disk: common=%d live=%d canonical=%d cached=%d file=%s",
+                            DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZED_VIA_DISK_COMMON_D_LIVE_D,
                             common, live_len, canonical.len, loaded, path ? path : "");
             } else {
                 server_log(DS4_LOG_KVCACHE,
-                           "ds4-server: tool checkpoint rebuild done ctx=%s request_ctx=%s source=full cached=0 replay=%d target=%d %.3fs",
+                           DS4_SERVER_TEXT_CHECKPOINT_FROM_REPLAY_LOG,
                            rebuild_ctx, ctx, replay_tokens, canonical.len, rebuild_sec);
                 trace_event(s, trace_id,
-                            "tool checkpoint canonicalized via rebuild: common=%d live=%d canonical=%d reason=%s",
+                            DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZED_VIA_REBUILD_COMMON_D_LIVE_D,
                             common, live_len, canonical.len, err);
             }
         } else {
             ds4_session_set_progress(slot->session, NULL, NULL);
             ds4_session_set_display_progress(slot->session, NULL, NULL);
             server_log(DS4_LOG_KVCACHE,
-                       "ds4-server: tool checkpoint rebuild failed ctx=%s request_ctx=%s source=%s cached=%d replay=%d target=%d error=\"%s\"",
+                       DS4_SERVER_TEXT_TOOL_CHECKPOINT_REBUILD_FAILED_CTX_S_REQUEST_CTX_S_SOURCE,
                        rebuild_ctx, ctx, source, loaded, replay_tokens,
                        canonical.len, sync_err);
-            trace_event(s, trace_id, "tool checkpoint canonicalization failed after rebuild request: %s", sync_err);
+            trace_event(s, trace_id, DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZATION_FAILED_AFTER_REBUILD_REQUEST_S, sync_err);
         }
         ds4_tokens_free(&effective);
         free(path);
     } else {
         server_log(DS4_LOG_KVCACHE,
-                   "ds4-server: tool checkpoint canonicalization failed ctx=%s common=%d live=%d canonical=%d error=\"%s\"",
+                   DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZATION_FAILED_CTX_S_COMMON_D_LIVE,
                    ctx, common, live_len, canonical.len, err);
-        trace_event(s, trace_id, "tool checkpoint canonicalization failed: %s", err);
+        trace_event(s, trace_id, DS4_SERVER_TEXT_TOOL_CHECKPOINT_CANONICALIZATION_FAILED_S, err);
     }
 
 done:
@@ -20120,7 +20008,7 @@ static bool server_cancel_pending_decode_locked(server *s, server_slot *slot) {
     slot->decode_pending = false;
     s->decode_pending--;
     slot->decode_rc = DS4_SESSION_SYNC_INTERRUPTED;
-    snprintf(slot->decode_err, sizeof(slot->decode_err), "client disconnected");
+    snprintf(slot->decode_err, sizeof(slot->decode_err), DS4_SERVER_TEXT_CLIENT_DISCONNECTED);
     slot->decode_done = true;
     pthread_cond_broadcast(&s->model_cv);
     return true;
@@ -20134,8 +20022,8 @@ static int server_eval_tokens(server *s, server_slot *slot, int token,
     if (!s->batched_mode) {
         if (g_stop_requested || slot_job_cancelled(slot)) {
             if (err && errlen) snprintf(err, errlen, "%s",
-                                        g_stop_requested ? "shutdown requested" :
-                                                           "client disconnected");
+                                        g_stop_requested ? DS4_SERVER_TEXT_SHUTDOWN_REQUESTED :
+                                                           DS4_SERVER_TEXT_CLIENT_DISCONNECTED);
             return DS4_SESSION_SYNC_INTERRUPTED;
         }
         server_inference_lock(s);
@@ -20149,13 +20037,13 @@ static int server_eval_tokens(server *s, server_slot *slot, int token,
     if (g_stop_requested || slot_job_cancelled(slot)) {
         pthread_mutex_unlock(&s->model_mu);
         if (err && errlen) snprintf(err, errlen, "%s",
-                                    g_stop_requested ? "shutdown requested" :
-                                                       "client disconnected");
+                                    g_stop_requested ? DS4_SERVER_TEXT_SHUTDOWN_REQUESTED :
+                                                       DS4_SERVER_TEXT_CLIENT_DISCONNECTED);
         return DS4_SESSION_SYNC_INTERRUPTED;
     }
     if (slot->decode_pending || slot->decode_in_flight) {
         pthread_mutex_unlock(&s->model_mu);
-        if (err && errlen) snprintf(err, errlen, "session already has a decode in flight");
+        if (err && errlen) snprintf(err, errlen, DS4_SERVER_TEXT_SESSION_ALREADY_HAS_A_DECODE_IN_FLIGHT);
         return 1;
     }
     slot->decode_token = token;
@@ -20173,7 +20061,7 @@ static int server_eval_tokens(server *s, server_slot *slot, int token,
             server_cancel_pending_decode_locked(s, slot)) {
             if (!client_cancelled) {
                 snprintf(slot->decode_err, sizeof(slot->decode_err),
-                         "shutdown requested");
+                         DS4_SERVER_TEXT_SHUTDOWN_REQUESTED);
             }
             break;
         }
@@ -20186,8 +20074,8 @@ static int server_eval_tokens(server *s, server_slot *slot, int token,
     if (g_stop_requested && rc == 0) rc = DS4_SESSION_SYNC_INTERRUPTED;
     if (rc != 0 && err && errlen) {
         snprintf(err, errlen, "%s",
-                 g_stop_requested ? "shutdown requested" :
-                 (slot->decode_err[0] ? slot->decode_err : "decode interrupted"));
+                 g_stop_requested ? DS4_SERVER_TEXT_SHUTDOWN_REQUESTED :
+                 (slot->decode_err[0] ? slot->decode_err : DS4_SERVER_TEXT_DECODE_INTERRUPTED));
     }
     slot->decode_done = false;
     if (rc == 0) {
@@ -20309,9 +20197,9 @@ static void *decode_worker_main(void *arg) {
         server_inference_unlock(s);
         if (log_batches) {
             server_log(DS4_LOG_DEFAULT,
-                       "ds4-server: decode batch count=%d elapsed=%.3f ms status=%s",
+                       DS4_SERVER_TEXT_DECODE_BATCH_COUNT_D_ELAPSED_F_MS_STATUS_S,
                        count, (now_sec() - batch_t0) * 1000.0,
-                       rc == 0 ? "ok" : "error");
+                       rc == 0 ? DS4_SERVER_DIAGNOSTIC_OK : DS4_SERVER_DIAGNOSTIC_ERROR);
         }
 
         pthread_mutex_lock(&s->model_mu);
@@ -20326,7 +20214,7 @@ static void *decode_worker_main(void *arg) {
             }
             if (rc != 0) {
                 snprintf(slot->decode_err, sizeof(slot->decode_err), "%s",
-                         batch_err[0] ? batch_err : "batched decode failed");
+                         batch_err[0] ? batch_err : DS4_SERVER_TEXT_BATCHED_DECODE_FAILED);
             }
             slot->decode_done = true;
         }
@@ -20372,22 +20260,39 @@ static bool agent_context_request_matches_saved(
 static bool interactive_checkpoint_reserve_locked(server *s, int slot_id,
     const char *context_id, uint64_t bytes, bool *pending);
 
+/* A published rollback owns the completed history while the resident session
+ * still contains the cancelled pause. An eviction must not overwrite it. */
+static bool agent_context_checkpoint_restore_pending_locked(
+        server_slot *slot, const char *context_id) {
+    agent_context_checkpoint *checkpoint =
+        agent_context_checkpoint_find_locked(slot, context_id);
+    return checkpoint && checkpoint->restore_pending;
+}
+
 static bool agent_context_checkpoint_save(server *s, server_slot *slot,
                                           const char *context_id,
                                           char *err, size_t errlen) {
-    if (!s || !slot || !slot->session || !s->skill_dir ||
-        !context_id || !context_id[0]) {
-        snprintf(err, errlen, "invalid agent context checkpoint request");
+    if (!s || !slot || !context_id || !context_id[0]) {
+        snprintf(err, errlen, agentic_invalid_checkpoint_request);
+        return false;
+    }
+    pthread_mutex_lock(&s->tool_mu);
+    const bool restore_pending =
+        agent_context_checkpoint_restore_pending_locked(slot, context_id);
+    pthread_mutex_unlock(&s->tool_mu);
+    if (restore_pending) return true;
+    if (!slot->session || !s->skill_dir) {
+        snprintf(err, errlen, agentic_invalid_checkpoint_request);
         return false;
     }
     const ds4_tokens *live = ds4_session_tokens(slot->session);
     if (!live) {
-        snprintf(err, errlen, "invalid agent context frontier");
+        snprintf(err, errlen, agentic_invalid_checkpoint_frontier);
         return false;
     }
     const uint64_t expected = ds4_session_payload_bytes(slot->session);
     if (expected == 0) {
-        snprintf(err, errlen, "agent context has no portable session payload");
+        snprintf(err, errlen, agentic_missing_checkpoint_payload);
         return false;
     }
 
@@ -20397,7 +20302,7 @@ static bool agent_context_checkpoint_save(server *s, server_slot *slot,
              s->skill_dir, slot->id);
     int fd = mkstemps(path, 4);
     if (fd < 0) {
-        snprintf(err, errlen, "failed to create agent context checkpoint: %s",
+        snprintf(err, errlen, agentic_checkpoint_create_error,
                  strerror(errno));
         free(path);
         return false;
@@ -20407,7 +20312,7 @@ static bool agent_context_checkpoint_save(server *s, server_slot *slot,
         int saved = errno;
         close(fd);
         unlink(path);
-        snprintf(err, errlen, "failed to open agent context checkpoint: %s",
+        snprintf(err, errlen, agentic_checkpoint_open_error,
                  strerror(saved));
         free(path);
         return false;
@@ -20418,17 +20323,17 @@ static bool agent_context_checkpoint_save(server *s, server_slot *slot,
     int rc = ds4_session_save_payload(slot->session, fp, err, errlen);
     server_inference_unlock(s);
     if (rc == 0 && fflush(fp) != 0) {
-        snprintf(err, errlen, "failed to flush agent context checkpoint: %s",
+        snprintf(err, errlen, agentic_checkpoint_flush_error,
                  strerror(errno));
         rc = 1;
     }
     if (rc == 0 && fsync(fileno(fp)) != 0) {
-        snprintf(err, errlen, "failed to sync agent context checkpoint: %s",
+        snprintf(err, errlen, agentic_checkpoint_sync_error,
                  strerror(errno));
         rc = 1;
     }
     if (fclose(fp) != 0 && rc == 0) {
-        snprintf(err, errlen, "failed to close agent context checkpoint: %s",
+        snprintf(err, errlen, agentic_checkpoint_close_error,
                  strerror(errno));
         rc = 1;
     }
@@ -20451,19 +20356,25 @@ static bool agent_context_checkpoint_save(server *s, server_slot *slot,
     ds4_tokens_copy(&cp->system_prefix, &slot->active_system_prefix);
 
     pthread_mutex_lock(&s->tool_mu);
+    /* Cancellation can publish while payload serialization is in progress. */
+    if (agent_context_checkpoint_restore_pending_locked(slot, context_id)) {
+        pthread_mutex_unlock(&s->tool_mu);
+        agent_context_checkpoint_free(cp, true);
+        return true;
+    }
     live_tool_state_copy_locked(&cp->responses_live, &slot->responses_live);
     bool interactive_pending = false;
     if (!interactive_checkpoint_reserve_locked(s, slot->id, context_id, expected, &interactive_pending)) {
         pthread_mutex_unlock(&s->tool_mu);
         agent_context_checkpoint_free(cp, true);
-        snprintf(err, errlen, "interactive checkpoint byte budget exceeded");
+        snprintf(err, errlen, agentic_checkpoint_budget_error);
         return false;
     }
     if ((!cp->responses_live.valid || cp->responses_live.call_ids.len == 0) &&
         !interactive_pending) {
         pthread_mutex_unlock(&s->tool_mu);
         agent_context_checkpoint_free(cp, true);
-        snprintf(err, errlen, "agent context has no live tool call");
+        snprintf(err, errlen, agentic_checkpoint_missing_call);
         return false;
     }
     agent_context_checkpoint *previous =
@@ -20478,7 +20389,7 @@ static bool agent_context_checkpoint_save(server *s, server_slot *slot,
     pthread_mutex_unlock(&s->tool_mu);
 
     server_log(DS4_LOG_KVCACHE,
-               "AGENT_CONTEXT_CHECKPOINT slot=%d context_id=%s checkpoint_tokens=%d system_tokens=%d checkpoint_file=%s checkpoint_bytes=%llu checkpoint_write_ms=%.3f agent_context_checkpoint_count=%llu",
+               DS4_AGENT_TEXT_CHECKPOINT_SAVED_LOG,
                slot->id, cp->context_id, cp->frontier.len,
                cp->system_prefix.len, cp->checkpoint_path,
                (unsigned long long)cp->checkpoint_bytes, cp->write_ms,
@@ -20491,12 +20402,12 @@ static bool agent_context_checkpoint_restore(
         double *read_ms, char *err, size_t errlen) {
     if (read_ms) *read_ms = 0.0;
     if (!s || !slot || !cp || !cp->checkpoint_path) {
-        snprintf(err, errlen, "agent context checkpoint is unavailable");
+        snprintf(err, errlen, agentic_checkpoint_unavailable);
         return false;
     }
     FILE *fp = fopen(cp->checkpoint_path, "rb");
     if (!fp) {
-        snprintf(err, errlen, "failed to open agent context checkpoint: %s",
+        snprintf(err, errlen, agentic_checkpoint_open_error,
                  strerror(errno));
         return false;
     }
@@ -20506,7 +20417,7 @@ static bool agent_context_checkpoint_restore(
                                       cp->checkpoint_bytes, err, errlen);
     server_inference_unlock(s);
     if (fclose(fp) != 0 && rc == 0) {
-        snprintf(err, errlen, "failed to close agent context checkpoint: %s",
+        snprintf(err, errlen, agentic_checkpoint_close_error,
                  strerror(errno));
         rc = 1;
     }
@@ -20514,6 +20425,7 @@ static bool agent_context_checkpoint_restore(
     if (rc != 0) return false;
     pthread_mutex_lock(&s->tool_mu);
     live_tool_state_copy_locked(&slot->responses_live, &cp->responses_live);
+    cp->restore_pending = false;
     pthread_mutex_unlock(&s->tool_mu);
     return true;
 }
@@ -20543,6 +20455,19 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
     int agent_context_discarded_tokens = 0;
     double agent_context_read_ms = 0.0;
 
+    const bool same_context = j->req.agentic_present && slot->active_agent_context_id &&
+        !strcmp(slot->active_agent_context_id, j->req.agent_context_id);
+    /* A stateless auxiliary request evicts an agent just like another context.
+     * Save the bound frontier before clearing its owner, so both paths restore
+     * the exact payload and call IDs when the agent continues. */
+    if (!same_context && slot->active_agent_context_id &&
+        agent_context_has_pending_tool_call(s, slot) &&
+        !agent_context_checkpoint_save(s, slot, slot->active_agent_context_id,
+                                       err, sizeof(err))) {
+        ds4_tokens_free(&incoming_system);
+        http_error(j->fd, s->enable_cors, 500, err);
+        return;
+    }
     if (!j->req.agentic_present) {
         free(slot->active_agent_context_id);
         slot->active_agent_context_id = NULL;
@@ -20554,39 +20479,25 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
             agent_context_checkpoint_find_locked(
                 slot, j->req.agent_context_id);
         pthread_mutex_unlock(&s->tool_mu);
-        const bool same_context = slot->active_agent_context_id &&
-            !strcmp(slot->active_agent_context_id,
-                    j->req.agent_context_id);
 
         if (saved &&
             !agent_context_request_matches_saved(
                 saved, &j->req, &incoming_system)) {
             ds4_tokens_free(&incoming_system);
             http_error(j->fd, s->enable_cors, 409,
-                       "Agent context system prompt or tool registry changed");
+                       DS4_AGENT_TEXT_AGENT_CONTEXT_SYSTEM_PROMPT_OR_TOOL_REGISTRY_CHANGED);
             return;
         }
 
         if (j->req.interactive.resumed) {
             if (!saved) {
                 ds4_tokens_free(&incoming_system);
-                http_error(j->fd, s->enable_cors, 409, "interactive checkpoint is unavailable");
+                http_error(j->fd, s->enable_cors, 409, DS4_INTERACTIVE_TEXT_INTERACTIVE_CHECKPOINT_IS_UNAVAILABLE);
                 return;
             }
             ds4_tokens_copy(&j->req.prompt, &saved->frontier);
         }
 
-        if (!same_context && slot->active_agent_context_id &&
-            agent_context_has_pending_tool_call(s, slot) &&
-            !agent_context_checkpoint_save(
-                s, slot, slot->active_agent_context_id,
-                err, sizeof(err))) {
-            ds4_tokens_free(&incoming_system);
-            http_error(j->fd, s->enable_cors, 500,
-                       err[0] ? err :
-                       "Agent context checkpoint save failed");
-            return;
-        }
 
         if (saved) {
             const int previous_pos = ds4_session_pos(slot->session);
@@ -20599,7 +20510,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
                 ds4_tokens_free(&incoming_system);
                 http_error(j->fd, s->enable_cors, 409,
                            err[0] ? err :
-                           "Agent context checkpoint restore failed");
+                           DS4_AGENT_TEXT_AGENT_CONTEXT_CHECKPOINT_RESTORE_FAILED);
                 return;
             }
             ds4_tokens_copy(&slot->active_system_prefix,
@@ -20612,7 +20523,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
                 ds4_tokens_free(&incoming_system);
                 http_error(
                     j->fd, s->enable_cors, 409,
-                    "Agentic tool registry changed within an agent context");
+                    DS4_AGENT_TEXT_AGENTIC_TOOL_REGISTRY_CHANGED_WITHIN_AN_AGENT_CONTEXT);
                 return;
             }
             if (incoming_system.len > 0) {
@@ -20632,6 +20543,14 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         slot->agentic_registry_bound = true;
     }
     ds4_tokens_free(&incoming_system);
+    interactive_checkpoint_operation checkpoint = {
+        .owner = s, .slot = slot, .entry = j->req.interactive.entry,
+        .error = err, .error_capacity = sizeof(err),
+    };
+    if (!interactive_capture_rollback(&checkpoint, &j->req)) {
+        http_error(j->fd, s->enable_cors, 500, err);
+        return;
+    }
     const bool multimodal = j->req.image_count != 0;
     server_inference_lock(s);
     const int old_pos = ds4_session_pos(slot->session);
@@ -20672,7 +20591,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         if (!return_frame) {
             ds4_tokens_free(&effective_prompt);
             http_error(j->fd, s->enable_cors, 409,
-                       "Agentic skill checkpoint is not available for this call_id");
+                       DS4_AGENT_TEXT_AGENTIC_SKILL_CHECKPOINT_IS_NOT_AVAILABLE_FOR_THIS_CALL_ID);
             return;
         }
         return_discarded_tokens = old_pos > return_frame->frontier.len ?
@@ -20681,7 +20600,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
                                  err, sizeof(err))) {
             ds4_tokens_free(&effective_prompt);
             http_error(j->fd, s->enable_cors, 409,
-                       err[0] ? err : "Agentic skill checkpoint restore failed");
+                       err[0] ? err : DS4_AGENT_TEXT_AGENTIC_SKILL_CHECKPOINT_RESTORE_FAILED);
             return;
         }
         build_prompt_from_exact_prefix_and_text_suffix(
@@ -20714,7 +20633,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
          * no disk key to search by. */
         ds4_tokens_free(&effective_prompt);
         http_error(j->fd, s->enable_cors, 409,
-                   "Responses continuation state is not available; retry by replaying the full input history");
+                   DS4_SERVER_TEXT_RESPONSES_CONTINUATION_STATE_IS_NOT_AVAILABLE_RETRY_BY_REPLAYING);
         return;
     }
     if (j->req.api == API_ANTHROPIC &&
@@ -20723,7 +20642,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
     {
         ds4_tokens_free(&effective_prompt);
         http_error(j->fd, s->enable_cors, 409,
-                   "Anthropic continuation state is not available; retry by replaying the full messages history");
+                   DS4_SERVER_TEXT_ANTHROPIC_CONTINUATION_STATE_IS_NOT_AVAILABLE_RETRY_BY_REPLAYING);
         return;
     }
 
@@ -20799,12 +20718,12 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
             cache_source = "memory-rewind";
             cache_diag.rewind_to = reuse.reuse_tokens;
             server_log(DS4_LOG_KVCACHE,
-                       "ds4-server: rewound GLM live prefix from %d to %d; final prompt token will be reevaluated",
+                       DS4_SERVER_TEXT_REWOUND_GLM_LIVE_PREFIX_FROM_D_TO_D_FINAL,
                        old_pos, reuse.reuse_tokens);
         } else {
             cached = 0;
             server_log(DS4_LOG_KVCACHE,
-                       "ds4-server: GLM live prefix rewind from %d to %d requires rebuild",
+                       DS4_SERVER_TEXT_GLM_LIVE_PREFIX_REWIND_FROM_D_TO_D_REQUIRES,
                        old_pos, reuse.reuse_tokens);
         }
         break;
@@ -20845,10 +20764,10 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         ds4_tokens_free(&effective_prompt);
         if (j->req.api == API_ANTHROPIC) {
             http_error(j->fd, s->enable_cors, 409,
-                       "Anthropic continuation state is not available; retry by replaying the full messages history");
+                       DS4_SERVER_TEXT_ANTHROPIC_CONTINUATION_STATE_IS_NOT_AVAILABLE_RETRY_BY_REPLAYING);
         } else {
             http_error(j->fd, s->enable_cors, 409,
-                       "Responses continuation state is not available; retry by replaying the full input history");
+                       DS4_SERVER_TEXT_RESPONSES_CONTINUATION_STATE_IS_NOT_AVAILABLE_RETRY_BY_REPLAYING);
         }
         return;
     }
@@ -20877,26 +20796,26 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
             cache_source = "memory-system";
             prompt_for_sync = &j->req.prompt;
             server_log(DS4_LOG_KVCACHE,
-                       "ds4-server: resident system frontier restored tokens=%d %.3fms",
+                       DS4_SERVER_TEXT_RESIDENT_SYSTEM_FRONTIER_RESTORED_TOKENS_D_FMS,
                        cached, (now_sec() - restore_t0) * 1000.0);
         } else if (!job_cancelled(j)) {
             server_log(DS4_LOG_WARNING,
-                       "ds4-server: resident system frontier restore failed: %s",
-                       err[0] ? err : "unknown error");
+                       DS4_SERVER_TEXT_RESIDENT_SYSTEM_FRONTIER_RESTORE_FAILED_S,
+                       err[0] ? err : DS4_SERVER_TEXT_UNKNOWN_ERROR);
             resident_kv_frontier_clear(&slot->system_frontier);
         }
     }
     if (cached == 0 && old_pos > 0) {
         server_log(DS4_LOG_WARNING,
-                   "ds4-server: live kv cache miss%s live=%d prompt=%d common=%d vision=%s reason=%s",
-                   responses_protocol ? " RESPPROTO" : "",
+                   DS4_SERVER_TEXT_LIVE_KV_CACHE_MISS_S_LIVE_D_PROMPT_D,
+                   responses_protocol ? DS4_SERVER_DIAGNOSTIC_RESPPROTO : "",
                    old_pos, j->req.prompt.len, common,
-                   live_vision_match ? "match" : "mismatch",
+                   live_vision_match ? DS4_SERVER_DIAGNOSTIC_MATCH : DS4_SERVER_DIAGNOSTIC_MISMATCH,
                    trace_cache_miss_reason(&cache_diag));
     }
     if (multimodal && cached > 0) {
         server_log(DS4_LOG_KVCACHE,
-                   "ds4-server: multimodal live kv hit images=%zu cached=%d prompt=%d identity=fingerprint-match",
+                   DS4_SERVER_TEXT_MULTIMODAL_LIVE_KV_HIT_IMAGES_ZU_CACHED_D_PROMPT,
                    j->req.image_count, cached, prompt_for_sync->len);
     }
     if (cached == 0) slot->continued_last_store_tokens = 0;
@@ -20961,20 +20880,20 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
               j->req.has_tools, false, false, false);
     if (responses_live_continuation) {
         server_log(DS4_LOG_PREFILL,
-                   "ds4-server: responses live continuation RESPPROTO match=%s ids=%d cached=%d prompt=%d",
-                   responses_live_match ? responses_live_match : "unknown",
+                   DS4_SERVER_TEXT_RESPONSES_LIVE_CONTINUATION_RESPPROTO_MATCH_S_IDS_D_CACHED,
+                   responses_live_match ? responses_live_match : DS4_SERVER_DIAGNOSTIC_UNKNOWN,
                    responses_live_match_ids,
                    cached,
                    prompt_tokens);
     } else if (anthropic_live_continuation) {
         server_log(DS4_LOG_PREFILL,
-                   "ds4-server: anthropic live continuation match=tool-output-ids ids=%d cached=%d prompt=%d",
+                   DS4_SERVER_TEXT_ANTHROPIC_LIVE_CONTINUATION_MATCH_TOOL_OUTPUT_IDS_IDS_D,
                    anthropic_live_match_ids,
                    cached,
                    prompt_tokens);
     } else if (thinking_live_continuation) {
         server_log(DS4_LOG_PREFILL,
-                   "ds4-server: thinking live continuation match=visible-prefix cached=%d prompt=%d",
+                   DS4_SERVER_TEXT_THINKING_LIVE_CONTINUATION_MATCH_VISIBLE_PREFIX_CACHED_D_PROMPT,
                    cached,
                    prompt_tokens);
     }
@@ -20982,17 +20901,17 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         /* Kept for backward-compatible diagnostics. New parsing always filters
          * historical reasoning, so this branch is normally unreachable. */
         server_log(DS4_LOG_WARNING,
-                   "ds4-server: responses replay RESPPROTO missing reasoning state; continuing from visible history source=%s cached=%d prompt=%d",
+                   DS4_SERVER_TEXT_RESPONSES_REPLAY_RESPPROTO_MISSING_REASONING_STATE_CONTINUING_FROM_VISIBLE,
                    cache_source,
                    cached,
                    prompt_tokens);
         trace_event(s, trace_id,
-                    "responses replay missing reasoning state; continuing from visible history source=%s cached=%d",
+                    DS4_SERVER_TEXT_RESPONSES_REPLAY_MISSING_REASONING_STATE_CONTINUING_FROM_VISIBLE_HISTORY,
                     cache_source, cached);
     }
     server_log(DS4_LOG_PREFILL,
-               "ds4-server: %s ctx=%s%s%s prompt start",
-               j->req.kind == REQ_CHAT ? "chat" : "completion",
+               DS4_SERVER_TEXT_S_CTX_S_S_S_PROMPT_START,
+               j->req.kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                ctx_span,
                req_flags[0] ? " " : "",
                req_flags);
@@ -21010,8 +20929,8 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         tokens_start_with(prompt_for_sync, &slot->active_system_prefix) &&
         !job_cancelled(j)) {
         server_log(DS4_LOG_WARNING,
-                   "ds4-server: resident system frontier capture failed: %s",
-                   resident_err[0] ? resident_err : "boundary unavailable");
+                   DS4_SERVER_TEXT_RESIDENT_SYSTEM_FRONTIER_CAPTURE_FAILED_S,
+                   resident_err[0] ? resident_err : DS4_SERVER_TEXT_BOUNDARY_UNAVAILABLE);
     }
 
     bool cold_store_is_system = false;
@@ -21054,10 +20973,10 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
             free(disk_cache_path);
             if (job_cancelled(j)) {
                 request_live_state_clear(s, slot);
-                trace_event(s, trace_id, "cancelled during prefill");
+                trace_event(s, trace_id, DS4_SERVER_TEXT_CANCELLED_DURING_PREFILL);
                 return;
             }
-            trace_event(s, trace_id, "prefill failed: %s", err);
+            trace_event(s, trace_id, DS4_SERVER_TEXT_PREFILL_FAILED_S, err);
             send_prefill_failure_response(s, j, &progress, ctx_span, req_flags, err);
             return;
         }
@@ -21095,10 +21014,10 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         free(disk_cache_path);
         if (job_cancelled(j)) {
             request_live_state_clear(s, slot);
-            trace_event(s, trace_id, "cancelled during prefill");
+            trace_event(s, trace_id, DS4_SERVER_TEXT_CANCELLED_DURING_PREFILL);
             return;
         }
-        trace_event(s, trace_id, "prefill failed: %s", err);
+        trace_event(s, trace_id, DS4_SERVER_TEXT_PREFILL_FAILED_S, err);
         send_prefill_failure_response(s, j, &progress, ctx_span, req_flags, err);
         return;
     }
@@ -21107,7 +21026,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         ds4_session_set_progress(slot->session, NULL, NULL);
         ds4_session_set_display_progress(slot->session, NULL, NULL);
         request_live_state_clear(s, slot);
-        trace_event(s, trace_id, "cancelled after prefill");
+        trace_event(s, trace_id, DS4_SERVER_TEXT_CANCELLED_AFTER_PREFILL);
         ds4_tokens_free(&effective_prompt);
         return;
     }
@@ -21124,11 +21043,11 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         const uint64_t live_bytes = s->skill_checkpoint_live_bytes;
         pthread_mutex_unlock(&s->tool_mu);
         server_log(DS4_LOG_KVCACHE,
-                   "SKILL_RETURN call_id=%s restored_tokens=%d discarded_child_tokens=%d result_prefill_tokens=%d checkpoint_read_ms=%.3f checkpoint_restore_ms=%.3f checkpoint_deleted=%s skill_return_count=%llu skill_checkpoint_live_bytes=%llu",
+                   DS4_AGENT_TEXT_SKILL_RETURN_LOG,
                    returned_call_id, restored_tokens, return_discarded_tokens,
                    result_prefill, return_metrics.read_ms,
                    return_metrics.restore_ms,
-                   checkpoint_deleted ? "true" : "false",
+                   checkpoint_deleted ? DS4_SERVER_DIAGNOSTIC_TRUE : DS4_SERVER_DIAGNOSTIC_FALSE,
                    (unsigned long long)return_count,
                    (unsigned long long)live_bytes);
         free(returned_call_id);
@@ -21150,11 +21069,11 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
             slot, restored_context, false);
         pthread_mutex_unlock(&s->tool_mu);
         server_log(DS4_LOG_KVCACHE,
-                   "AGENT_CONTEXT_RESTORE slot=%d context_id=%s restored_tokens=%d discarded_context_tokens=%d result_prefill_tokens=%d checkpoint_read_ms=%.3f checkpoint_deleted=%s agent_context_restore_count=%llu",
+                   DS4_AGENT_TEXT_CHECKPOINT_RESTORED_LOG,
                    slot->id, restored_context_id, restored_tokens,
                    agent_context_discarded_tokens, result_prefill,
                    agent_context_read_ms,
-                   checkpoint_deleted ? "true" : "false",
+                   checkpoint_deleted ? DS4_SERVER_DIAGNOSTIC_TRUE : DS4_SERVER_DIAGNOSTIC_FALSE,
                    (unsigned long long)restore_count);
         free(restored_context_id);
         restored_context = NULL;
@@ -21168,8 +21087,8 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
     ds4_session_set_display_progress(slot->session, NULL, NULL);
     if (!multimodal) kv_cache_maybe_store_continued(s, slot);
     server_log(DS4_LOG_PREFILL,
-               "ds4-server: %s ctx=%s%s%s prompt done %.3fs",
-               j->req.kind == REQ_CHAT ? "chat" : "completion",
+               DS4_SERVER_TEXT_S_CTX_S_S_S_PROMPT_DONE_FS,
+               j->req.kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                ctx_span,
                req_flags[0] ? " " : "",
                req_flags,
@@ -21201,7 +21120,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
                                              frontier_err,
                                              sizeof(frontier_err))) {
             server_log(DS4_LOG_KVCACHE,
-                       "ds4-server: response frontier captured tokens=%d bytes=%.2f MiB location=%s %.3fms",
+                       DS4_SERVER_TEXT_RESPONSE_FRONTIER_CAPTURED_TOKENS_D_BYTES_F_MIB_LOCATION,
                        j->response_frontier.tokens.len,
                        (double)resident_kv_frontier_bytes(
                            &j->response_frontier) /
@@ -21211,8 +21130,8 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
                        (now_sec() - frontier_t0) * 1000.0);
         } else if (!job_cancelled(j)) {
             server_log(DS4_LOG_WARNING,
-                       "ds4-server: response frontier capture failed: %s",
-                       frontier_err[0] ? frontier_err : "unknown error");
+                       DS4_SERVER_TEXT_RESPONSE_FRONTIER_CAPTURE_FAILED_S,
+                       frontier_err[0] ? frontier_err : DS4_SERVER_TEXT_UNKNOWN_ERROR);
         }
     }
 
@@ -21230,8 +21149,8 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
     if (j->req.stream) {
         if (progress.stream_failed) {
             server_log(DS4_LOG_GENERATION,
-                       "ds4-server: %s ctx=%s%s%s stream closed during prefill",
-                       j->req.kind == REQ_CHAT ? "chat" : "completion",
+                       DS4_SERVER_TEXT_S_CTX_S_S_S_STREAM_CLOSED_DURING_PREFILL,
+                       j->req.kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                        ctx_span,
                        req_flags[0] ? " " : "",
                        req_flags);
@@ -21245,8 +21164,8 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         if (!progress.headers_sent && !sse_headers(j->fd, s->enable_cors)) {
             job_mark_cancelled(j);
             server_log(DS4_LOG_GENERATION,
-                       "ds4-server: %s ctx=%s%s%s sse headers failed",
-                       j->req.kind == REQ_CHAT ? "chat" : "completion",
+                       DS4_SERVER_TEXT_S_CTX_S_S_S_SSE_HEADERS_FAILED,
+                       j->req.kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                        ctx_span,
                        req_flags[0] ? " " : "",
                        req_flags);
@@ -21259,7 +21178,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
             !anthropic_sse_start_live(j->fd, &j->req, id,
                                       prompt_tokens, &anthropic_live)) {
             job_mark_cancelled(j);
-            server_log(DS4_LOG_GENERATION, "ds4-server: chat ctx=%s anthropic stream start failed", ctx_span);
+            server_log(DS4_LOG_GENERATION, DS4_SERVER_TEXT_CHAT_CTX_S_ANTHROPIC_STREAM_START_FAILED, ctx_span);
             request_live_state_clear(s, slot);
             ds4_tokens_free(&effective_prompt);
             return;
@@ -21267,7 +21186,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         if (j->req.api == API_OPENAI && j->req.kind == REQ_CHAT &&
             !sse_chunk(j->fd, &j->req, id, NULL, NULL)) {
             job_mark_cancelled(j);
-            server_log(DS4_LOG_GENERATION, "ds4-server: chat ctx=%s openai role chunk failed", ctx_span);
+            server_log(DS4_LOG_GENERATION, DS4_SERVER_TEXT_CHAT_CTX_S_OPENAI_ROLE_CHUNK_FAILED, ctx_span);
             request_live_state_clear(s, slot);
             ds4_tokens_free(&effective_prompt);
             return;
@@ -21279,7 +21198,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
             if (!responses_sse_created(j->fd, &j->req, &responses_live, responses_created_at)) {
                 job_mark_cancelled(j);
                 server_log(DS4_LOG_GENERATION,
-                           "ds4-server: chat ctx=%s%s%s responses created event failed",
+                           DS4_SERVER_TEXT_CHAT_CTX_S_S_S_RESPONSES_CREATED_EVENT_FAILED,
                            ctx_span,
                            req_flags[0] ? " " : "",
                            req_flags);
@@ -21330,9 +21249,9 @@ decode_again:
     int next_tool_progress = 128;
     const int resumed_completion = completion;
     int next_decode_log = (completion / 50 + 1) * 50;
-    const char *stop_detail = max_tokens == room ? "context limit" : "output limit";
+    const char *stop_detail = max_tokens == room ? DS4_SERVER_TEXT_CONTEXT_LIMIT : DS4_SERVER_TEXT_OUTPUT_LIMIT;
     int stop_token = -1;
-    trace_event(s, trace_id, "prefill done; decode_max=%d ctx_room=%d", max_tokens, room);
+    trace_event(s, trace_id, DS4_SERVER_TEXT_PREFILL_DONE_DECODE_MAX_D_CTX_ROOM_D, max_tokens, room);
     const double decode_t0 = now_sec();
     const bool phase_profile = server_phase_profile_enabled();
     const server_constraint_mode constraint_mode =
@@ -21678,8 +21597,8 @@ decode_again:
             buf_free(&json_filter.scratch);
             if (token < 0) {
                 finish = "error";
-                snprintf(err, sizeof(err), "%s constrained decoder has no valid token",
-                         response_constrained_sample ? "structured output" : "agentic");
+                snprintf(err, sizeof(err), DS4_SERVER_TEXT_S_CONSTRAINED_DECODER_HAS_NO_VALID_TOKEN,
+                         response_constrained_sample ? DS4_SERVER_TEXT_STRUCTURED_OUTPUT : "agentic");
                 break;
             }
             if (ds4_token_is_stop_for_think_mode(s->engine,
@@ -21825,7 +21744,7 @@ decode_again:
 
         if (ntok == 0) {
             finish = "error";
-            snprintf(err, sizeof(err), "decode returned no tokens");
+            snprintf(err, sizeof(err), DS4_SERVER_TEXT_DECODE_RETURNED_NO_TOKENS);
             break;
         }
         snapshot_draft_policy_observe(&draft_policy, proposal_count, ntok);
@@ -21843,7 +21762,7 @@ decode_again:
                                                  token,
                                                  j->req.think_mode)) {
                 finish = "stop";
-                stop_detail = "stop token";
+                stop_detail = DS4_SERVER_TEXT_STOP_TOKEN;
                 stop_token = token;
                 stop_decode = true;
                 break;
@@ -21857,7 +21776,7 @@ decode_again:
             if (j->req.interactive.count && (memchr(piece, 0, piece_len) ||
                 text.len > INTERACTIVE_MAX_TEXT || piece_len > INTERACTIVE_MAX_TEXT - text.len)) {
                 free(piece); finish = "error";
-                snprintf(err, sizeof(err), "interactive generated text exceeds its byte limit or contains NUL");
+                snprintf(err, sizeof(err), DS4_INTERACTIVE_TEXT_INTERACTIVE_GENERATED_TEXT_EXCEEDS_ITS_BYTE_LIMIT_OR_CONTAINS);
                 stop_decode = true; break;
             }
 
@@ -21893,7 +21812,7 @@ decode_again:
                 if (!ok) {
                     job_mark_cancelled(j);
                     finish = "error";
-                    snprintf(err, sizeof(err), "client stream write failed");
+                    snprintf(err, sizeof(err), DS4_SERVER_TEXT_CLIENT_STREAM_WRITE_FAILED);
                     free(piece);
                     stop_decode = true;
                     break;
@@ -21906,7 +21825,7 @@ decode_again:
                                              false)) {
                 job_mark_cancelled(j);
                 finish = "error";
-                snprintf(err, sizeof(err), "client stream write failed");
+                snprintf(err, sizeof(err), DS4_SERVER_TEXT_CLIENT_STREAM_WRITE_FAILED);
                 free(piece);
                 stop_decode = true;
                 break;
@@ -21917,7 +21836,7 @@ decode_again:
                                           false)) {
                 job_mark_cancelled(j);
                 finish = "error";
-                snprintf(err, sizeof(err), "client stream write failed");
+                snprintf(err, sizeof(err), DS4_SERVER_TEXT_CLIENT_STREAM_WRITE_FAILED);
                 free(piece);
                 stop_decode = true;
                 break;
@@ -21928,7 +21847,7 @@ decode_again:
                                              false)) {
                 job_mark_cancelled(j);
                 finish = "error";
-                snprintf(err, sizeof(err), "client stream write failed");
+                snprintf(err, sizeof(err), DS4_SERVER_TEXT_CLIENT_STREAM_WRITE_FAILED);
                 free(piece);
                 stop_decode = true;
                 break;
@@ -21965,13 +21884,13 @@ decode_again:
                         finish = "tool_calls";
                         stop_decode = true;
                         server_log(DS4_LOG_WARNING,
-                                   "ds4-server: chat ctx=%s%s%s recovered a complete tool call from unclosed reasoning after %d generated tokens",
+                                   DS4_SERVER_TEXT_CHAT_CTX_S_S_S_RECOVERED_A_COMPLETE_TOOL,
                                    ctx_span,
                                    req_flags[0] ? " " : "",
                                    req_flags,
                                    completion);
                         trace_event(s, trace_id,
-                                    "recovered complete tool call from unclosed reasoning after %d generated tokens",
+                                    DS4_SERVER_TEXT_RECOVERED_COMPLETE_TOOL_CALL_FROM_UNCLOSED_REASONING_AFTER_D,
                                     completion);
                         break;
                     }
@@ -21994,27 +21913,27 @@ decode_again:
                     if (orphan_end && !saw_orphan_tool_end) {
                         saw_orphan_tool_end = true;
                         server_log(DS4_LOG_WARNING,
-                                   "ds4-server: chat ctx=%s%s%s ignored orphan tool-call end marker after %d generated tokens",
+                                   DS4_SERVER_TEXT_CHAT_CTX_S_S_S_IGNORED_ORPHAN_TOOL_CALL,
                                    ctx_span,
                                    req_flags[0] ? " " : "",
                                    req_flags,
                                    completion);
                         trace_event(s, trace_id,
-                                    "ignored orphan tool-call end marker after %d generated tokens",
+                                    DS4_SERVER_TEXT_IGNORED_ORPHAN_TOOL_CALL_END_MARKER_AFTER_D_GENERATED,
                                     completion);
                     }
                     if (saw_tool_start && !old_start) {
-                        trace_event(s, trace_id, "entered tool-call block after %d generated tokens", completion);
+                        trace_event(s, trace_id, DS4_SERVER_TEXT_ENTERED_TOOL_CALL_BLOCK_AFTER_D_GENERATED_TOKENS, completion);
                     }
                     if (saw_tool_end && !old_end) {
-                        trace_event(s, trace_id, "closed tool-call block after %d generated tokens", completion);
+                        trace_event(s, trace_id, DS4_SERVER_TEXT_CLOSED_TOOL_CALL_BLOCK_AFTER_D_GENERATED_TOKENS, completion);
                     }
                     const size_t marker_hold = 80;
                     size_t hold_from = text.len > marker_hold ? text.len - marker_hold : 0;
                     if (hold_from > tool_scan_from) tool_scan_from = hold_from;
                     if (s->trace && completion >= next_tool_progress) {
                         trace_event(s, trace_id,
-                                    "progress gen=%d dsml_start=%d dsml_end=%d",
+                                    DS4_SERVER_TEXT_PROGRESS_GEN_D_DSML_START_D_DSML_END_D,
                                     completion, saw_tool_start ? 1 : 0, saw_tool_end ? 1 : 0);
                         next_tool_progress += 128;
                     }
@@ -22038,7 +21957,7 @@ decode_again:
             if (hit_stop) {
                 (void)stop_len;
                 finish = "stop";
-                stop_detail = "client stop sequence";
+                stop_detail = DS4_SERVER_TEXT_CLIENT_STOP_SEQUENCE;
                 client_stop = true;
                 text.len = stop_pos;
                 text.ptr[text.len] = '\0';
@@ -22077,7 +21996,7 @@ decode_again:
                 finish = "error";
                 stop_decode = true;
             } else {
-                trace_event(s, trace_id, "speculative boundary: kept=%d discarded=%d resample=%d",
+                trace_event(s, trace_id, DS4_SERVER_TEXT_SPECULATIVE_BOUNDARY_KEPT_D_DISCARDED_D_RESAMPLE_D,
                             kept, ntok - kept, resample);
             }
         }
@@ -22102,7 +22021,7 @@ decode_again:
     if (phase_profile) {
         const double decode_wall_ms = (now_sec() - decode_t0) * 1000.0;
         if (phase.old_text_draft_cycles) server_log(DS4_LOG_GENERATION,
-            "ds4-server: old_text drafts cycles=%llu proposed=%llu accepted=%llu sampled_rows=%llu fallbacks=%llu batches=32/64\n",
+            DS4_SERVER_TEXT_OLD_TEXT_DRAFTS_CYCLES_LLU_PROPOSED_LLU_ACCEPTED_LLU_SAMPLED_ROWS,
             (unsigned long long)phase.old_text_draft_cycles,
             (unsigned long long)phase.old_text_proposed,
             (unsigned long long)phase.old_text_accepted,
@@ -22119,30 +22038,7 @@ decode_again:
             decode_wall_ms - known_ms : 0.0;
         server_log(
             DS4_LOG_GENERATION,
-            "ds4-server: phase profile ctx=%s gen=%d mode=%s wall=%.3fms "
-            "forced_build=%.3fms/%llu forced_sync=%.3fms/%llu/%llu_tok "
-            "forced_prefix_probe=%.3fms sampling_mask_build=%.3fms "
-            "oracle_compare=%.3fms/%llu/%llu_div constraint_cpu=%.3fms "
-            "constraint_cpu_exposed=%.3fms constraint_cpu_overlapped=0.000ms "
-            "filter_setup=%.3fms filter=%.3fms filtered_sample=%.3fms/%llu "
-            "plain_sample=%.3fms/%llu eval=%.3fms/%llu residual=%.3fms "
-            "vocab=%llu filter_calls=%llu accepted=%llu finite_allowed=%llu "
-            "piece_bytes=%llu candidate_tokens_tested=%llu "
-            "parser_transition_count=%llu parser_bytes_visited=%llu "
-            "trie_nodes_visited=%llu subtrees_pruned=%llu "
-            "trie_leaf_tokens_emitted=%llu mask_cache_hit=%llu mask_cache_miss=%llu "
-            "grammar_compile_ms=%.3f grammar_jit_ms=%.3f "
-            "trie_compile_ms=%.3f trie_compiled_nodes=%llu trie_memory_bytes=%llu "
-            "static_mask_compile_ms=%.3f static_mask_memory_bytes=%llu "
-            "dynamic_frontier_size=%llu "
-            "search_static_steps=%llu search_static_fallbacks=%llu "
-            "mtp_constrained_target_only_steps=%llu "
-            "mtp_constrained_speculative_cycles=%llu "
-            "mtp_constrained_sampled_rows=%llu "
-            "mtp_constrained_accepted_drafts=%llu "
-            "mtp_constrained_fallbacks=%llu "
-            "constraint_state_checkpoint=%llu constraint_state_rollback=%llu "
-            "exhaustive_fallback_steps=%llu",
+            DS4_SERVER_TEXT_PHASE_PROFILE_CTX_S_GEN_D_MODE_S_WALL,
             ctx_span, completion, server_constraint_mode_name(constraint_mode),
             decode_wall_ms,
             phase.forced_build_ms,
@@ -22196,7 +22092,7 @@ decode_again:
     }
     if (job_cancelled(j)) {
         request_live_state_clear(s, slot);
-        trace_event(s, trace_id, "cancelled during generation after %d tokens", completion);
+        trace_event(s, trace_id, DS4_SERVER_TEXT_CANCELLED_DURING_GENERATION_AFTER_D_TOKENS, completion);
         anthropic_stream_free(&anthropic_live);
         openai_stream_free(&openai_live);
         responses_stream_free(&responses_live);
@@ -22207,14 +22103,14 @@ decode_again:
 
     if (g_stop_requested && strcmp(finish, "error") != 0) {
         finish = "error";
-        snprintf(err, sizeof(err), "shutdown requested");
+        snprintf(err, sizeof(err), DS4_SERVER_TEXT_SHUTDOWN_REQUESTED);
     }
 
     if (j->req.interactive.count &&
         (!strcmp(finish, "error") || !strcmp(finish, "length") ||
          (saw_tool_start && !saw_tool_end))) {
         interactive_fail_job(s, j, interactive_call_for(&j->req,dsml_tracker.invoke_body_start), "incomplete_generation",
-                             err[0] ? err : "interactive generation ended before completion",
+                             err[0] ? err : DS4_INTERACTIVE_TEXT_INTERACTIVE_GENERATION_ENDED_BEFORE_COMPLETION,
                              prompt_tokens, completion);
         request_live_state_clear(s, slot);
         anthropic_stream_free(&anthropic_live); openai_stream_free(&openai_live);
@@ -22229,17 +22125,17 @@ decode_again:
             j->req.think_mode != DS4_THINK_NONE, true)) {
         finish = "error";
         snprintf(err, sizeof(err),
-                 "structured output ended before a schema-valid JSON value");
+                 DS4_SERVER_TEXT_STRUCTURED_OUTPUT_ENDED_BEFORE_A_SCHEMA_VALID_JSON_VALUE);
     }
 
     if (j->req.kind == REQ_CHAT && j->req.has_tools &&
         saw_tool_start && !saw_tool_end && strcmp(finish, "error") != 0)
     {
         server_log(DS4_LOG_WARNING,
-                   "ds4-server: incomplete %s tool call: stop=%s token=%d generated=%d limit=%d room=%d",
-                   j->req.model_syntax == SERVER_MODEL_SYNTAX_GLM ? "GLM" : "DeepSeek",
+                   DS4_SERVER_TEXT_INCOMPLETE_S_TOOL_CALL_STOP_S_TOKEN_D_GENERATED,
+                   j->req.model_syntax == SERVER_MODEL_SYNTAX_GLM ? DS4_SERVER_DIAGNOSTIC_GLM : DS4_SERVER_DIAGNOSTIC_DEEPSEEK,
                    stop_detail, stop_token, completion, max_tokens, room);
-        trace_event(s, trace_id, "incomplete tool call: stop=%s token=%d generated=%d limit=%d room=%d",
+        trace_event(s, trace_id, DS4_SERVER_TEXT_INCOMPLETE_TOOL_CALL_STOP_S_TOKEN_D_GENERATED_D,
                     stop_detail, stop_token, completion, max_tokens, room);
     }
     if (j->req.kind == REQ_CHAT && j->req.has_tools &&
@@ -22269,12 +22165,12 @@ decode_again:
                 saw_tool_end = true;
                 completed_truncation = true;
                 server_log(DS4_LOG_WARNING,
-                           "ds4-server: chat ctx=%s%s%s repaired unterminated tool call (%d calls recovered)",
+                           DS4_SERVER_TEXT_CHAT_CTX_S_S_S_REPAIRED_UNTERMINATED_TOOL_CALL,
                            ctx_span,
                            req_flags[0] ? " " : "",
                            req_flags,
                            test_calls.len);
-                trace_event(s, trace_id, "repaired unterminated tool call (%d calls recovered)", test_calls.len);
+                trace_event(s, trace_id, DS4_SERVER_TEXT_REPAIRED_UNTERMINATED_TOOL_CALL_D_CALLS_RECOVERED, test_calls.len);
             }
             tool_calls_free(&test_calls);
         }
@@ -22283,14 +22179,14 @@ decode_again:
                 int recovery_tokens = 0;
                 char recovery_err[160] = {0};
                 server_log(DS4_LOG_WARNING,
-                           "ds4-server: chat ctx=%s%s%s unterminated tool call; continuing with model-visible tool error",
+                           DS4_SERVER_TEXT_CHAT_CTX_S_S_S_UNTERMINATED_TOOL_CALL_CONTINUING,
                            ctx_span,
                            req_flags[0] ? " " : "",
                            req_flags);
                 trace_event(s, trace_id,
-                            "unterminated tool call; continuing with model-visible tool error");
+                            DS4_SERVER_TEXT_UNTERMINATED_TOOL_CALL_CONTINUING_WITH_MODEL_VISIBLE_TOOL_ERROR);
                 if (continue_after_invalid_dsml(s, slot, &j->req, &thinking,
-                                                "unterminated tool call",
+                                                DS4_SERVER_TEXT_UNTERMINATED_TOOL_CALL,
                                                 &recovery_tokens,
                                                 recovery_err,
                                                 sizeof(recovery_err)))
@@ -22298,24 +22194,24 @@ decode_again:
                     dsml_recovery_attempted = true;
                     recovery_completion += completion;
                     server_log(DS4_LOG_GENERATION,
-                               "ds4-server: chat ctx=%s%s%s tool-error continuation appended %d tokens",
+                               DS4_SERVER_TEXT_CHAT_CTX_S_S_S_TOOL_ERROR_CONTINUATION_APPENDED,
                                ctx_span,
                                req_flags[0] ? " " : "",
                                req_flags,
                                recovery_tokens);
                     trace_event(s, trace_id,
-                                "tool-error continuation appended %d tokens",
+                                DS4_SERVER_TEXT_TOOL_ERROR_CONTINUATION_APPENDED_D_TOKENS,
                                 recovery_tokens);
                     buf_free(&repaired);
                     buf_free(&text);
                     goto decode_again;
                 }
                 finish = "error";
-                snprintf(err, sizeof(err), "invalid tool call recovery failed: %s",
-                         recovery_err[0] ? recovery_err : "unknown error");
+                snprintf(err, sizeof(err), DS4_SERVER_TEXT_INVALID_TOOL_CALL_RECOVERY_FAILED_S,
+                         recovery_err[0] ? recovery_err : DS4_SERVER_TEXT_UNKNOWN_ERROR);
             } else {
                 finish = "error";
-                snprintf(err, sizeof(err), "unterminated tool call (%s; token=%d, generated=%d, limit=%d)",
+                snprintf(err, sizeof(err), DS4_SERVER_TEXT_UNTERMINATED_TOOL_CALL_S_TOKEN_D_GENERATED_D_LIMIT,
                          stop_detail, stop_token, completion, max_tokens);
             }
         }
@@ -22345,7 +22241,7 @@ decode_again:
     }
     if (job_cancelled(j)) {
         request_live_state_clear(s, slot);
-        trace_event(s, trace_id, "cancelled while flushing generation");
+        trace_event(s, trace_id, DS4_SERVER_TEXT_CANCELLED_WHILE_FLUSHING_GENERATION);
         anthropic_stream_free(&anthropic_live);
         openai_stream_free(&openai_live);
         responses_stream_free(&responses_live);
@@ -22379,7 +22275,7 @@ decode_again:
         if (!parsed_ok && j->req.interactive.count) {
             final_finish = "error";
             tool_calls_free(&parsed_calls);
-            snprintf(err, sizeof(err), "interactive native argument extraction failed");
+            snprintf(err, sizeof(err), DS4_INTERACTIVE_TEXT_INTERACTIVE_NATIVE_ARGUMENT_EXTRACTION_FAILED);
         }
         if (!parsed_ok && recovered_tool_parse_failure && j->req.has_tools && saw_tool_start) {
             /* parse_generated_message failed even though DSML was present.
@@ -22391,14 +22287,14 @@ decode_again:
                 completion < max_tokens) {
                 int recovery_tokens = 0;
                 char recovery_err[160] = {0};
-                const char *detail = err[0] ? err : "invalid tool call";
+                const char *detail = err[0] ? err : DS4_SERVER_TEXT_INVALID_TOOL_CALL;
                 server_log(DS4_LOG_WARNING,
-                           "ds4-server: chat ctx=%s%s%s invalid tool call; continuing with model-visible tool error",
+                           DS4_SERVER_TEXT_CHAT_CTX_S_S_S_INVALID_TOOL_CALL_CONTINUING,
                            ctx_span,
                            req_flags[0] ? " " : "",
                            req_flags);
                 trace_event(s, trace_id,
-                            "invalid tool call; continuing with model-visible tool error");
+                            DS4_SERVER_TEXT_INVALID_TOOL_CALL_CONTINUING_WITH_MODEL_VISIBLE_TOOL_ERROR);
                 if (continue_after_invalid_dsml(s, slot, &j->req, &thinking,
                                                 detail,
                                                 &recovery_tokens,
@@ -22408,13 +22304,13 @@ decode_again:
                     dsml_recovery_attempted = true;
                     recovery_completion += completion;
                     server_log(DS4_LOG_GENERATION,
-                               "ds4-server: chat ctx=%s%s%s tool-error continuation appended %d tokens",
+                               DS4_SERVER_TEXT_CHAT_CTX_S_S_S_TOOL_ERROR_CONTINUATION_APPENDED,
                                ctx_span,
                                req_flags[0] ? " " : "",
                                req_flags,
                                recovery_tokens);
                     trace_event(s, trace_id,
-                                "tool-error continuation appended %d tokens",
+                                DS4_SERVER_TEXT_TOOL_ERROR_CONTINUATION_APPENDED_D_TOKENS,
                                 recovery_tokens);
                     free(parsed_content);
                     free(parsed_reasoning);
@@ -22423,8 +22319,8 @@ decode_again:
                     goto decode_again;
                 }
                 final_finish = "error";
-                snprintf(err, sizeof(err), "invalid tool call recovery failed: %s",
-                         recovery_err[0] ? recovery_err : "unknown error");
+                snprintf(err, sizeof(err), DS4_SERVER_TEXT_INVALID_TOOL_CALL_RECOVERY_FAILED_S,
+                         recovery_err[0] ? recovery_err : DS4_SERVER_TEXT_UNKNOWN_ERROR);
             }
             if (!parsed_ok) {
                 /* Print raw DSML snippet for debugging */
@@ -22437,7 +22333,7 @@ decode_again:
                 /* Also log a snippet of the full text to see what the model output */
                 size_t text_snippet_len = text.len > 300 ? 300 : text.len;
                 server_log(DS4_LOG_WARNING,
-                           "ds4-server: chat ctx=%s%s%s invalid tool call returned as assistant text finish=%s [text_len=%zu saw_start=%d saw_end=%d text_snippet: %.*s]",
+                           DS4_SERVER_TEXT_CHAT_CTX_S_S_S_INVALID_TOOL_CALL_RETURNED,
                            ctx_span,
                            req_flags[0] ? " " : "",
                            req_flags,
@@ -22446,22 +22342,22 @@ decode_again:
                            saw_tool_start,
                            saw_tool_end,
                            (int)text_snippet_len,
-                           text.ptr ? text.ptr : "(null)");
+                           text.ptr ? text.ptr : DS4_SERVER_DIAGNOSTIC_NULL);
                 server_log(DS4_LOG_WARNING,
-                           "ds4-server: chat ctx=%s%s%s invalid tool call dsml_snippet: %.*s",
+                           DS4_SERVER_TEXT_CHAT_CTX_S_S_S_INVALID_TOOL_CALL_DSML_SNIPPET,
                            ctx_span,
                            req_flags[0] ? " " : "",
                            req_flags,
                            (int)dsml_snippet_len,
-                           dsml_start ? dsml_start : "(none)");
+                           dsml_start ? dsml_start : DS4_SERVER_DIAGNOSTIC_NONE);
                 trace_event(s, trace_id,
-                            "invalid tool call returned as assistant text finish=%s",
+                            DS4_SERVER_TEXT_INVALID_TOOL_CALL_RETURNED_AS_ASSISTANT_TEXT_FINISH_S,
                             final_finish);
             }
         }
         if (job_cancelled(j)) {
             request_live_state_clear(s, slot);
-            trace_event(s, trace_id, "cancelled during response parsing");
+            trace_event(s, trace_id, DS4_SERVER_TEXT_CANCELLED_DURING_RESPONSE_PARSING);
             free(parsed_content);
             free(parsed_reasoning);
             tool_calls_free(&parsed_calls);
@@ -22476,7 +22372,7 @@ decode_again:
             if (j->req.interactive.count &&
                 !interactive_apply_call_ids(&j->req, text.ptr, &parsed_calls)) {
                 tool_calls_free(&parsed_calls);
-                snprintf(err, sizeof(err), "interactive argument extraction failed");
+                snprintf(err, sizeof(err), DS4_INTERACTIVE_TEXT_INTERACTIVE_ARGUMENT_EXTRACTION_FAILED);
                 final_finish = "error";
             }
             if (openai_live_chat) apply_openai_stream_tool_ids(&parsed_calls, &openai_live);
@@ -22496,7 +22392,7 @@ decode_again:
                         id_list_contains(&j->req.allowed_skills, call->name);
                     if (is_tool == is_skill) {
                         snprintf(err, sizeof(err),
-                                 "generated capability is not allowed: %s",
+                                 DS4_SERVER_TEXT_GENERATED_CAPABILITY_IS_NOT_ALLOWED_S,
                                  call->name ? call->name : "(missing)");
                         agentic_ok = false;
                         break;
@@ -22506,7 +22402,7 @@ decode_again:
                     if (!order || !order->schema || !call->arguments ||
                         !schema_json_validate_raw(order->schema, call->arguments)) {
                         snprintf(err, sizeof(err),
-                                 "generated arguments do not match schema for %s",
+                                 DS4_SERVER_TEXT_GENERATED_ARGUMENTS_DO_NOT_MATCH_SCHEMA_FOR_S,
                                  call->name ? call->name : "(missing)");
                         agentic_ok = false;
                         break;
@@ -22539,7 +22435,7 @@ decode_again:
     }
     if (job_cancelled(j)) {
         request_live_state_clear(s, slot);
-        trace_event(s, trace_id, "cancelled before publishing response state");
+        trace_event(s, trace_id, DS4_SERVER_TEXT_CANCELLED_BEFORE_PUBLISHING_RESPONSE_STATE);
         free(parsed_content);
         free(parsed_reasoning);
         tool_calls_free(&parsed_calls);
@@ -22684,11 +22580,11 @@ decode_again:
     if (!response_ok) {
         job_mark_cancelled(j);
         final_finish = "error";
-        snprintf(err, sizeof(err), "client disconnected");
+        snprintf(err, sizeof(err), DS4_SERVER_TEXT_CLIENT_DISCONNECTED);
         request_live_state_clear(s, slot);
         server_log(DS4_LOG_DEFAULT,
-                   "ds4-server: %s ctx=%s%s%s client disconnected",
-                   j->req.kind == REQ_CHAT ? "chat" : "completion",
+                   DS4_SERVER_TEXT_S_CTX_S_S_S_CLIENT_DISCONNECTED,
+                   j->req.kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                    ctx_span,
                    req_flags[0] ? " " : "",
                    req_flags);
@@ -22703,7 +22599,7 @@ decode_again:
                   saw_tool_end);
         if (!strcmp(final_finish, "error") && err[0]) {
             server_log(DS4_LOG_GENERATION,
-                       "ds4-server: chat ctx=%s gen=%d%s%s finish=%s error=\"%s\" %.3fs",
+                       DS4_SERVER_TEXT_CHAT_CTX_S_GEN_D_S_S_FINISH_S,
                        ctx_span,
                        completion,
                        flags[0] ? " " : "",
@@ -22713,7 +22609,7 @@ decode_again:
                        now_sec() - t0);
         } else {
             server_log(DS4_LOG_GENERATION,
-                       "ds4-server: chat ctx=%s gen=%d%s%s finish=%s %.3fs",
+                       DS4_SERVER_TEXT_CHAT_CTX_S_GEN_D_S_S_FINISH_S_GENERATE_JOB_INNER,
                        ctx_span,
                        completion,
                        flags[0] ? " " : "",
@@ -22731,8 +22627,8 @@ decode_again:
                   false);
         if (!strcmp(final_finish, "error") && err[0]) {
             server_log(DS4_LOG_GENERATION,
-                       "ds4-server: %s ctx=%s gen=%d%s%s finish=%s error=\"%s\" %.3fs",
-                       j->req.kind == REQ_CHAT ? "chat" : "completion",
+                       DS4_SERVER_DIAGNOSTIC_DS4_SERVER_S_CTX_S_GEN_D_S_S_FINISH_S_ERROR_S_FS,
+                       j->req.kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                        ctx_span,
                        completion,
                        flags[0] ? " " : "",
@@ -22742,8 +22638,8 @@ decode_again:
                        now_sec() - t0);
         } else {
             server_log(DS4_LOG_GENERATION,
-                       "ds4-server: %s ctx=%s gen=%d%s%s finish=%s %.3fs",
-                       j->req.kind == REQ_CHAT ? "chat" : "completion",
+                       DS4_SERVER_DIAGNOSTIC_DS4_SERVER_S_CTX_S_GEN_D_S_S_FINISH_S_FS,
+                       j->req.kind == REQ_CHAT ? DS4_SERVER_DIAGNOSTIC_CHAT : DS4_SERVER_DIAGNOSTIC_COMPLETION,
                        ctx_span,
                        completion,
                        flags[0] ? " " : "",
@@ -22773,7 +22669,7 @@ decode_again:
              * continuation and is preferable to rejecting a tool result after
              * the client has already received its call_id. */
             server_log(DS4_LOG_WARNING,
-                       "ds4-server: Responses post-response visible checkpoint canonicalization failed ctx=%s",
+                       DS4_SERVER_TEXT_RESPONSES_POST_RESPONSE_VISIBLE_CHECKPOINT_CANONICALIZATION_FAILED_CTX_S,
                        ctx_span);
         }
     }
@@ -22801,7 +22697,7 @@ decode_again:
             thinking_live_remember(s, slot, visible, &j->req);
         } else {
             server_log(DS4_LOG_WARNING,
-                       "ds4-server: chat/completions post-response thinking checkpoint canonicalization failed ctx=%s",
+                       DS4_SERVER_TEXT_CHAT_COMPLETIONS_POST_RESPONSE_THINKING_CHECKPOINT_CANONICALIZATION_FAILED_CTX,
                        ctx_span);
         }
         free(visible);
@@ -22845,7 +22741,7 @@ static void generate_job(server *s, server_slot *slot, job *j) {
     ds4_session_set_cancel(slot->session, job_cancelled, j);
     if (!job_cancelled(j) && interactive_allowed) generate_job_inner(s, slot, j);
     else if (interactive && !job_cancelled(j))
-        http_error(j->fd, s->enable_cors, 409, "interactive operation was cancelled before dispatch");
+        http_error(j->fd, s->enable_cors, 409, DS4_INTERACTIVE_TEXT_INTERACTIVE_OPERATION_WAS_CANCELLED_BEFORE_DISPATCH);
     ds4_session_set_cancel(slot->session, NULL, NULL);
     interactive_job_end(s, j, interactive);
 
@@ -22862,11 +22758,7 @@ static void generate_job(server *s, server_slot *slot, job *j) {
             after.kv_misses >= tiers_before.kv_misses && after.cpu_wait_seconds >= tiers_before.cpu_wait_seconds &&
             after.cpu_h2d_bytes >= tiers_before.cpu_h2d_bytes && after.activation_d2h_bytes >= tiers_before.activation_d2h_bytes)
             server_log(DS4_LOG_GENERATION,
-            "ds4-server: Qwen request tiers CPU_pairs=%llu GPU_hit_pairs=%llu PCIe_pairs=%llu "
-            "SSD_bytes=%llu SSD_projection_reads=%llu expert_H2D_bytes=%llu KV_H2D_bytes=%llu KV_hits=%llu KV_misses=%llu CPU_wait_ms=%.3f "
-            "expert_RAM_bytes=%llu KV_RAM_bytes=%llu staging_bytes=%llu expert_VRAM_bytes=%llu "
-            "streamed_KV_VRAM_bytes=%llu KV_workspace_bytes=%llu hybrid_workspace_bytes=%llu hybrid_host_bytes=%llu CPU_H2D_bytes=%llu activation_D2H_bytes=%llu "
-            "CPU_stage_jobs=%llu staging_wait_ms=%.3f victim_select_ms=%.3f",
+            DS4_SERVER_TEXT_QWEN_REQUEST_TIERS_CPU_PAIRS_LLU_GPU_HIT_PAIRS_LLU_PCIE_PAIRS_LLU,
             (unsigned long long)(after.cpu_pairs - tiers_before.cpu_pairs),
             (unsigned long long)(after.gpu_pairs - tiers_before.gpu_pairs),
             (unsigned long long)(after.pcie_pairs - tiers_before.pcie_pairs),
@@ -22889,10 +22781,7 @@ static void generate_job(server *s, server_slot *slot, job *j) {
         if (j->qwen_tiers.shared_batches) {
             const ds4_gpu_qwen4_tier_stats shared = j->qwen_tiers.shared;
             server_log(DS4_LOG_GENERATION,
-                "ds4-server: Qwen request shared decode batches=%llu CPU_pairs=%llu GPU_hit_pairs=%llu PCIe_pairs=%llu "
-                "SSD_bytes=%llu SSD_projection_reads=%llu expert_H2D_bytes=%llu KV_H2D_bytes=%llu KV_hits=%llu KV_misses=%llu CPU_wait_ms=%.3f "
-                "CPU_H2D_bytes=%llu activation_D2H_bytes=%llu CPU_stage_jobs=%llu staging_wait_ms=%.3f victim_select_ms=%.3f "
-                "attribution=shared-do-not-sum-across-requests valid=%u",
+                DS4_SERVER_TEXT_QWEN_REQUEST_TIERS_LOG,
                 (unsigned long long)j->qwen_tiers.shared_batches,
                 (unsigned long long)shared.cpu_pairs, (unsigned long long)shared.gpu_pairs,
                 (unsigned long long)shared.pcie_pairs, (unsigned long long)shared.ssd_bytes,
@@ -22903,7 +22792,7 @@ static void generate_job(server *s, server_slot *slot, job *j) {
                 (unsigned long long)shared.activation_d2h_bytes, (unsigned long long)shared.cpu_stage_jobs,
                 shared.staging_wait_seconds * 1000.0, shared.victim_select_seconds * 1000.0, have);
         }
-        if (!have) server_log(DS4_LOG_GENERATION, "ds4-server: Qwen request tier counters incomplete after engine counter reset");
+        if (!have) server_log(DS4_LOG_GENERATION, DS4_SERVER_TEXT_QWEN_REQUEST_TIER_COUNTERS_INCOMPLETE_AFTER_ENGINE_COUNTER_RESET);
     }
 #endif
 
@@ -23074,12 +22963,11 @@ static void dispatch_jobs_locked(server *s) {
         chosen_slot->busy = true;
         if (chosen_evict_live > 0) {
             server_log(DS4_LOG_KVCACHE,
-                       "slot %d: request reuses nothing; evicting checkpoint "
-                       "(%d tokens, idle %lld s, %s)",
+                       DS4_SERVER_TEXT_SLOT_D_REQUEST_REUSES_NOTHING_EVICTING_CHECKPOINT_D_TOKENS,
                        chosen_slot->id, chosen_evict_live,
                        (long long)chosen_evict_idle,
                        chosen_evict_idle >= SLOT_STALE_AFTER_SEC
-                       ? "stale" : "protected");
+                       ? DS4_SERVER_DIAGNOSTIC_STALE : DS4_SERVER_DIAGNOSTIC_PROTECTED);
         }
         pthread_cond_broadcast(&s->cv);
     }
@@ -23477,7 +23365,7 @@ static void *client_main(void *arg) {
 
     http_request hr = {0};
     if (!read_http_request(fd, &hr)) {
-        http_error(fd, s->enable_cors, 400, "bad HTTP request");
+        http_error(fd, s->enable_cors, 400, DS4_SERVER_TEXT_BAD_HTTP_REQUEST);
         goto done;
     }
 
@@ -23544,7 +23432,7 @@ static void *client_main(void *arg) {
         ok = parse_completion_request(s->engine, hr.body, s->default_tokens,
                                       ctx_size, &req, err, sizeof(err));
     } else {
-        http_error(fd, s->enable_cors, 404, "unknown endpoint");
+        http_error(fd, s->enable_cors, 404, DS4_SERVER_TEXT_UNKNOWN_ENDPOINT);
         http_request_free(&hr);
         goto done;
     }
@@ -23579,7 +23467,7 @@ static void *client_main(void *arg) {
     pthread_cond_init(&j.cv, NULL);
 
     if (!enqueue(s, &j)) {
-        http_error(fd, s->enable_cors, 503, "server shutting down");
+        http_error(fd, s->enable_cors, 503, DS4_SERVER_TEXT_SERVER_SHUTTING_DOWN);
         interactive_finish_request(s, &j.req, false);
         pthread_cond_destroy(&j.cv);
         pthread_mutex_destroy(&j.mu);
@@ -23667,7 +23555,7 @@ static int parse_int_arg(const char *s, const char *opt) {
     char *end = NULL;
     long v = strtol(s, &end, 10);
     if (!s[0] || *end || v <= 0 || v > INT_MAX) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: invalid value for %s: %s", opt, s);
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_INVALID_VALUE_FOR_S_S, opt, s);
         exit(2);
     }
     return (int)v;
@@ -23677,7 +23565,7 @@ static int parse_nonneg_int_arg(const char *s, const char *opt) {
     char *end = NULL;
     long v = strtol(s, &end, 10);
     if (!s[0] || *end || v < 0 || v > INT_MAX) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: invalid value for %s: %s", opt, s);
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_INVALID_VALUE_FOR_S_S, opt, s);
         exit(2);
     }
     return (int)v;
@@ -23687,7 +23575,7 @@ static float parse_float_arg(const char *s, const char *opt, float minv, float m
     char *end = NULL;
     float v = strtof(s, &end);
     if (!s[0] || *end || v < minv || v > maxv) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: invalid value for %s: %s", opt, s);
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_INVALID_VALUE_FOR_S_S, opt, s);
         exit(2);
     }
     return v;
@@ -23695,7 +23583,7 @@ static float parse_float_arg(const char *s, const char *opt, float minv, float m
 
 static const char *need_arg(int *i, int argc, char **argv, const char *opt) {
     if (*i + 1 >= argc) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: missing value for %s", opt);
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_MISSING_VALUE_FOR_S, opt);
         exit(2);
     }
     return argv[++(*i)];
@@ -23711,7 +23599,7 @@ static void log_context_memory(ds4_backend backend, int ctx_size,
                                                       prefill_chunk,
                                                       ssd_streaming);
     server_log(DS4_LOG_DEFAULT,
-               "ds4-server: context buffers %.2f MiB (ctx=%d, backend=%s, prefill_chunk=%u, raw_kv_rows=%u, compressed_kv_rows=%u)",
+               DS4_SERVER_TEXT_CONTEXT_BUFFERS_F_MIB_CTX_D_BACKEND_S_PREFILL_CHUNK,
                (double)m.total_bytes / (1024.0 * 1024.0),
                ctx_size,
                ds4_backend_name(backend),
@@ -23724,9 +23612,7 @@ static void log_context_memory(ds4_backend backend, int ctx_size,
         const double gib = 1024.0 * 1024.0 * 1024.0;
         const double caches = (double)(m.raw_bytes + m.compressed_bytes);
         server_log(DS4_LOG_DEFAULT,
-                   "ds4-server: %d resident sessions request at least %.2f GiB of "
-                   "context buffers, or %.2f GiB when the model shares one prefill "
-                   "workspace",
+                   DS4_SERVER_TEXT_D_RESIDENT_SESSIONS_REQUEST_AT_LEAST_F_GIB_OF,
                    session_count,
                    (double)m.total_bytes * (double)session_count / gib,
                    (caches * (double)session_count + (double)m.scratch_bytes) / gib);
@@ -23796,11 +23682,11 @@ static ds4_backend parse_backend_arg(const char *s, const char *arg) {
     if (!strcmp(s, "cuda")) return DS4_BACKEND_CUDA;
 #endif
     if (!strcmp(s, "cpu")) return DS4_BACKEND_CPU;
-    server_log(DS4_LOG_DEFAULT, "ds4-server: invalid %s value: %s", arg, s);
+    server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_INVALID_OPTION_VALUE, arg, s);
 #ifdef DS4_ROCM_BUILD
-    server_log(DS4_LOG_DEFAULT, "ds4-server: valid server backends are: metal, rocm, cpu");
+    server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_VALID_SERVER_BACKENDS_ARE_METAL_ROCM_CPU);
 #else
-    server_log(DS4_LOG_DEFAULT, "ds4-server: valid server backends are: metal, cuda, cpu");
+    server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_VALID_SERVER_BACKENDS_ARE_METAL_CUDA_CPU);
 #endif
     exit(2);
 }
@@ -23862,8 +23748,8 @@ static server_config parse_options(int argc, char **argv) {
                                    sizeof(dist_parse_err));
         if (dist_parse == DS4_DIST_CLI_ERROR) {
             server_log(DS4_LOG_DEFAULT,
-                       "ds4-server: %s",
-                       dist_parse_err[0] ? dist_parse_err : "invalid distributed option");
+                       DS4_SERVER_TEXT_MESSAGE,
+                       dist_parse_err[0] ? dist_parse_err : DS4_SERVER_TEXT_INVALID_DISTRIBUTED_OPTION);
             exit(2);
         }
         if (dist_parse == DS4_DIST_CLI_MATCHED) continue;
@@ -23879,9 +23765,9 @@ static server_config parse_options(int argc, char **argv) {
                                  sizeof(tp_parse_err));
         if (tp_parse == DS4_TP_CLI_ERROR) {
             server_log(DS4_LOG_DEFAULT,
-                       "ds4-server: %s",
+                       DS4_SERVER_TEXT_MESSAGE,
                        tp_parse_err[0] ? tp_parse_err :
-                       "invalid tensor-parallel option");
+                       DS4_SERVER_TEXT_INVALID_TENSOR_PARALLEL_OPTION);
             exit(2);
         }
         if (tp_parse == DS4_TP_CLI_MATCHED) continue;
@@ -23984,7 +23870,7 @@ static server_config parse_options(int argc, char **argv) {
             if (!ds4_parse_streaming_cache_experts_arg(
                     need_arg(&i, argc, argv, arg), &experts, &bytes)) {
                 server_log(DS4_LOG_DEFAULT,
-                           "ds4-server: --ssd-streaming-cache-experts must be a positive count or <number>GB");
+                           DS4_SERVER_TEXT_SSD_STREAMING_CACHE_EXPERTS_MUST_BE_A_POSITIVE_COUNT);
                 exit(2);
             }
             c.engine.ssd_streaming_cache_experts = experts;
@@ -23997,7 +23883,7 @@ static server_config parse_options(int argc, char **argv) {
             int v = parse_int_arg(need_arg(&i, argc, argv, arg), arg);
             if (v <= 0) {
                 server_log(DS4_LOG_DEFAULT,
-                           "ds4-server: --ssd-streaming-preload-experts must be positive");
+                           DS4_SERVER_TEXT_SSD_STREAMING_PRELOAD_EXPERTS_MUST_BE_POSITIVE);
                 exit(2);
             }
             c.engine.ssd_streaming_preload_experts = (uint32_t)v;
@@ -24005,21 +23891,21 @@ static server_config parse_options(int argc, char **argv) {
             if (!ds4_parse_gib_arg(need_arg(&i, argc, argv, arg),
                                    &c.engine.simulate_used_memory_bytes)) {
                 server_log(DS4_LOG_DEFAULT,
-                           "ds4-server: --simulate-used-memory must be a positive GiB value, e.g. 64GB");
+                           DS4_SERVER_TEXT_SIMULATE_USED_MEMORY_MUST_BE_A_POSITIVE_GIB_VALUE);
                 exit(2);
             }
         } else if (!strcmp(arg, "--prefill-chunk")) {
             int v = parse_int_arg(need_arg(&i, argc, argv, arg), arg);
             if (v <= 0) {
                 server_log(DS4_LOG_DEFAULT,
-                           "ds4-server: --prefill-chunk must be positive");
+                           DS4_SERVER_TEXT_PREFILL_CHUNK_MUST_BE_POSITIVE);
                 exit(2);
             }
             c.engine.prefill_chunk = (uint32_t)v;
         } else if (!strcmp(arg, "--power")) {
             c.engine.power_percent = parse_int_arg(need_arg(&i, argc, argv, arg), arg);
             if (c.engine.power_percent < 1 || c.engine.power_percent > 100) {
-                server_log(DS4_LOG_DEFAULT, "ds4-server: --power must be between 1 and 100");
+                server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_POWER_MUST_BE_BETWEEN_AND);
                 exit(2);
             }
         } else if (!strcmp(arg, "--dir-steering-file")) {
@@ -24052,7 +23938,7 @@ static server_config parse_options(int argc, char **argv) {
         } else if (!strcmp(arg, "--cpu")) {
             c.engine.backend = DS4_BACKEND_CPU;
         } else {
-            server_log(DS4_LOG_DEFAULT, "ds4-server: unknown option: %s", arg);
+            server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_UNKNOWN_OPTION_S, arg);
             usage(stderr, NULL);
             exit(2);
         }
@@ -24061,7 +23947,7 @@ static server_config parse_options(int argc, char **argv) {
         c.kv_cache.cold_max_tokens < c.kv_cache.min_tokens)
     {
         server_log(DS4_LOG_DEFAULT,
-                   "ds4-server: --kv-cache-cold-max-tokens must be 0 or >= --kv-cache-min-tokens");
+                   DS4_SERVER_TEXT_KV_CACHE_COLD_MAX_TOKENS_MUST_BE_OR_KV);
         exit(2);
     }
     if (c.engine.directional_steering_file && !directional_steering_scale_set) {
@@ -24072,7 +23958,7 @@ static server_config parse_options(int argc, char **argv) {
                                           &c.engine.distributed,
                                           tp_err,
                                           sizeof(tp_err))) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: %s", tp_err);
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_MESSAGE, tp_err);
         exit(2);
     }
     char dist_err[256];
@@ -24080,18 +23966,18 @@ static server_config parse_options(int argc, char **argv) {
                                         &c.engine,
                                         dist_err,
                                         sizeof(dist_err)) != 0) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: %s", dist_err);
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_MESSAGE, dist_err);
         exit(2);
     }
     if (!ds4_tp_validate_engine_options(&c.engine,
                                         tp_err,
                                         sizeof(tp_err))) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: %s", tp_err);
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_MESSAGE, tp_err);
         exit(2);
     }
     if (c.engine.tp.role == DS4_TP_WORKER) {
         server_log(DS4_LOG_DEFAULT,
-                   "ds4-server: --role worker is a serving mode; start tensor-parallel workers with ./ds4");
+                   DS4_SERVER_TEXT_ROLE_WORKER_IS_A_SERVING_MODE_START_TENSOR_PARALLEL);
         exit(2);
     }
     return c;
@@ -24126,13 +24012,12 @@ int main(int argc, char **argv) {
     server_config cfg = parse_options(argc, argv);
     if (server_constraint_mode_from_env() == SERVER_CONSTRAINT_INVALID) {
         fprintf(stderr,
-                "ds4-server: invalid DS4_CONSTRAINT_MODE '%s'; expected trie, "
-                "incremental, optimized, oracle_only or compare_new_vs_oracle\n",
-                getenv("DS4_CONSTRAINT_MODE"));
+                DS4_SERVER_TEXT_INVALID_CONSTRAINT_MODE,
+                getenv(DS4_SERVER_DIAGNOSTIC_DS4_CONSTRAINT_MODE));
         return 2;
     }
     if (cfg.chdir_path && chdir(cfg.chdir_path) != 0) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: failed to chdir to %s: %s",
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_FAILED_TO_CHDIR_TO_S_S,
                    cfg.chdir_path, strerror(errno));
         return 1;
     }
@@ -24150,7 +24035,7 @@ int main(int argc, char **argv) {
         if (parse_gpu_vram_arg(cfg.gpu_vram_arg, cfg.gpu_devices_arg,
                                &gpu_cfg, &skip_cuda,
                                gpu_err, sizeof(gpu_err)) != 0) {
-            fprintf(stderr, "ds4-server: %s\n", gpu_err);
+            fprintf(stderr, DS4_SERVER_TEXT_MESSAGE_LINE, gpu_err);
             return 2;
         }
         cfg.engine.backend = skip_cuda ? DS4_BACKEND_CPU : DS4_BACKEND_CUDA;
@@ -24172,7 +24057,7 @@ int main(int argc, char **argv) {
     } else if (ds4_engine_open(&engine, &cfg.engine) != 0) {
         return 1;
     }
-    server_log(DS4_LOG_DEFAULT, "ds4-server: loaded model %s",
+    server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_LOADED_MODEL_S,
                ds4_engine_model_name(engine));
 
     char *automatic_kv_dir = NULL;
@@ -24187,7 +24072,7 @@ int main(int argc, char **argv) {
             cfg.kv_disk_space_mb = DS4_QWEN_SESSION_CACHE_DEFAULT_MB;
         if (cfg.kv_disk_space_mb > DS4_QWEN_SESSION_CACHE_MAX_MB) {
             server_log(DS4_LOG_DEFAULT,
-                       "ds4-server: audited Qwen Q4_K_S session cache budget must be <= %llu MiB",
+                       DS4_SERVER_TEXT_AUDITED_QWEN_Q4_K_S_SESSION_CACHE_BUDGET_MUST_BE_LLU,
                        (unsigned long long)DS4_QWEN_SESSION_CACHE_MAX_MB);
             ds4_engine_close(engine);
             return 2;
@@ -24231,7 +24116,7 @@ int main(int argc, char **argv) {
                            tp_err, sizeof(tp_err)) ||
             !ds4_engine_tp_bind(engine, tp_leader,
                                 tp_err, sizeof(tp_err))) {
-            server_log(DS4_LOG_DEFAULT, "ds4-server: %s", tp_err);
+            server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_MESSAGE, tp_err);
             ds4_tp_free(tp_leader);
             ds4_engine_close(engine);
             return 1;
@@ -24288,7 +24173,7 @@ int main(int argc, char **argv) {
         slot->id = i;
         if (ds4_session_create(&slot->session, engine, cfg.ctx_size) != 0) {
             server_log(DS4_LOG_DEFAULT,
-                       "ds4-server: failed to create %s session %d/%d",
+                       DS4_SERVER_TEXT_FAILED_TO_CREATE_S_SESSION_D_D,
                        ds4_backend_name(cfg.engine.backend), i + 1, slot_count);
             server_close_resources(&s);
             return 1;
@@ -24312,40 +24197,40 @@ int main(int argc, char **argv) {
     s.skill_dir = skill_checkpoint_dir_create(skill_checkpoint_base);
     if (!s.skill_dir) {
         server_log(DS4_LOG_DEFAULT,
-                   "ds4-server: failed to create agentic checkpoint directory: %s",
+                   DS4_AGENT_TEXT_FAILED_TO_CREATE_AGENTIC_CHECKPOINT_DIRECTORY_S,
                    strerror(errno));
         server_close_resources(&s);
         return 1;
     }
     server_log(DS4_LOG_KVCACHE,
-               "ds4-server: agentic skill checkpoints dir=%s",
+               DS4_AGENT_TEXT_AGENTIC_SKILL_CHECKPOINTS_DIR_S,
                s.skill_dir);
     if (s.disable_exact_dsml_tool_replay) {
         server_log(DS4_LOG_DEFAULT,
-                   "ds4-server: exact DSML tool replay disabled; tool history uses canonical JSON rendering");
+                   DS4_SERVER_TEXT_EXACT_DSML_TOOL_REPLAY_DISABLED_TOOL_HISTORY_USES_CANONICAL);
     }
     if (s.batched_mode) {
         server_log(DS4_LOG_DEFAULT,
-                   "ds4-server: batched mode enabled resident_sessions=%d prefill_quantum=%d mixed_prefill_quantum=%d decode_coalesce_us=%ld",
+                   DS4_SERVER_TEXT_BATCHED_MODE_LOG,
                    s.slot_count,
                    server_prefill_quantum_for(&s, false),
                    server_prefill_quantum_for(&s, true),
                    server_decode_coalesce_us());
         if (ds4_engine_mtp_draft_tokens(engine) > 1 && !s.qwen4_batch_mtp) {
             server_log(DS4_LOG_DEFAULT,
-                       "ds4-server: MTP speculative decoding is disabled while native session batching is active");
+                       DS4_SERVER_TEXT_MTP_SPECULATIVE_DECODING_IS_DISABLED_WHILE_NATIVE_SESSION_BATCHING);
         }
     }
     if (cfg.trace_path) {
         s.trace = fopen(cfg.trace_path, "w");
         if (!s.trace) {
-            server_log(DS4_LOG_DEFAULT, "ds4-server: failed to open trace file %s: %s",
+            server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_FAILED_TO_OPEN_TRACE_FILE_S_S,
                        cfg.trace_path, strerror(errno));
             server_close_resources(&s);
             return 1;
         }
         setvbuf(s.trace, NULL, _IONBF, 0);
-        server_log(DS4_LOG_DEFAULT, "ds4-server: tracing session to %s", cfg.trace_path);
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_TRACING_SESSION_TO_S, cfg.trace_path);
     }
 
     pthread_t worker = (pthread_t){0};
@@ -24353,7 +24238,7 @@ int main(int argc, char **argv) {
     bool decode_thread_started = false;
     if (s.batched_mode) {
         if (pthread_create(&s.decode_thread, NULL, decode_worker_main, &s) != 0) {
-            server_log(DS4_LOG_DEFAULT, "ds4-server: failed to start decode coordinator");
+            server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_FAILED_TO_START_DECODE_COORDINATOR);
             server_close_resources(&s);
             return 1;
         }
@@ -24362,7 +24247,7 @@ int main(int argc, char **argv) {
             if (pthread_create(&s.slot_threads[i], NULL, slot_worker_main,
                                &s.slots[i]) != 0) {
                 server_log(DS4_LOG_DEFAULT,
-                           "ds4-server: failed to start session worker %d/%d",
+                           DS4_SERVER_TEXT_FAILED_TO_START_SESSION_WORKER_D_D,
                            i + 1, s.slot_count);
                 server_request_worker_stop(&s);
                 for (int j = 0; j < slot_threads_started; j++) {
@@ -24376,14 +24261,14 @@ int main(int argc, char **argv) {
             slot_threads_started++;
         }
     } else if (pthread_create(&worker, NULL, worker_main, &s) != 0) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: failed to start worker");
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_FAILED_TO_START_WORKER);
         server_close_resources(&s);
         return 1;
     }
 
     int lfd = listen_on(cfg.host, cfg.port);
     if (lfd < 0) {
-        server_log(DS4_LOG_DEFAULT, "ds4-server: failed to listen on %s:%d: %s", cfg.host, cfg.port, strerror(errno));
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_FAILED_TO_LISTEN_ON_S_D_S, cfg.host, cfg.port, strerror(errno));
         server_request_worker_stop(&s);
         if (s.batched_mode) {
             for (int i = 0; i < slot_threads_started; i++) {
@@ -24398,7 +24283,7 @@ int main(int argc, char **argv) {
         return 1;
     }
     g_listen_fd = lfd;
-    server_log(DS4_LOG_DEFAULT, "ds4-server: listening on http://%s:%d", cfg.host, cfg.port);
+    server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_LISTENING_ON_HTTP_S_D, cfg.host, cfg.port);
 
     time_t interactive_maintenance = 0;
     while (!g_stop_requested) {
@@ -24413,14 +24298,14 @@ int main(int argc, char **argv) {
         int ready = poll(&incoming, 1, 1000);
         if (ready <= 0) {
             if (ready < 0 && errno != EINTR && !g_stop_requested)
-                server_log(DS4_LOG_DEFAULT, "ds4-server: listen poll failed: %s", strerror(errno));
+                server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_LISTEN_POLL_FAILED_S, strerror(errno));
             continue;
         }
         int fd = accept(lfd, NULL, NULL);
         if (fd < 0) {
             if (g_stop_requested) break;
             if (errno == EINTR) continue;
-            server_log(DS4_LOG_DEFAULT, "ds4-server: accept failed: %s", strerror(errno));
+            server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_ACCEPT_FAILED_S, strerror(errno));
             continue;
         }
         if (g_stop_requested) {
@@ -24452,7 +24337,7 @@ int main(int argc, char **argv) {
         g_listen_fd = -1;
     }
 
-    server_log(DS4_LOG_DEFAULT, "ds4-server: shutdown requested, draining requests");
+    server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_SHUTDOWN_REQUESTED_DRAINING_REQUESTS);
     server_request_worker_stop(&s);
     if (s.batched_mode) {
         for (int i = 0; i < slot_threads_started; i++) {
@@ -24473,7 +24358,7 @@ int main(int argc, char **argv) {
         const ds4_tokens *tokens = ds4_session_tokens(slot->session);
         if (!tokens || tokens->len < s.kv.opt.min_tokens) continue;
         server_log(DS4_LOG_KVCACHE,
-                   "ds4-server: persisting resident KV cache before shutdown slot=%d tokens=%d",
+                   DS4_SERVER_TEXT_PERSISTING_RESIDENT_KV_CACHE_BEFORE_SHUTDOWN_SLOT_D_TOKENS,
                    i, tokens->len);
         kv_cache_store_current(&s, slot, "shutdown");
     }
@@ -29122,6 +29007,44 @@ static void test_responses_live_tail_renders_tool_outputs_only(void) {
 
     chat_msgs_free(&msgs);
     request_free(&r);
+}
+
+
+static void test_responses_live_tail_keeps_steering_and_stops_at_assistant(void) {
+    const server_model_syntax syntaxes[] = {
+        SERVER_MODEL_SYNTAX_QWEN, SERVER_MODEL_SYNTAX_QWEN4,
+        SERVER_MODEL_SYNTAX_DEEPSEEK, SERVER_MODEL_SYNTAX_DEEPSEEK41,
+    };
+    for (size_t i = 0; i < sizeof(syntaxes)/sizeof(syntaxes[0]); i++) {
+        request r; request_init(&r, REQ_CHAT, 128);
+        r.api = API_RESPONSES; r.model_syntax = syntaxes[i];
+        chat_msgs msgs = {0};
+        chat_msg assistant = {.role = xstrdup("assistant")};
+        tool_call call = {.id = xstrdup("bound-call"), .name = xstrdup("warm"), .arguments = xstrdup("{}")};
+        tool_calls_push(&assistant.calls, call); chat_msgs_push(&msgs, assistant);
+        chat_msg tool = {.role = xstrdup("tool"), .tool_call_id = xstrdup("bound-call"), .content = xstrdup("completed-result")};
+        chat_msgs_push(&msgs, tool);
+        chat_msg interruption = {.role = xstrdup("user"), .content = xstrdup("cancelled-inference-evidence")};
+        chat_msgs_push(&msgs, interruption);
+        chat_msg steering = {.role = xstrdup("user"), .content = xstrdup("steering-after-tool")};
+        chat_msgs_push(&msgs, steering);
+        responses_prepare_live_continuation(NULL, &r, &msgs);
+        TEST_ASSERT(r.responses_live_call_ids.len == 1);
+        TEST_ASSERT(!strcmp(r.responses_live_call_ids.v[0], "bound-call"));
+        TEST_ASSERT(strstr(r.responses_live_suffix_text, "completed-result"));
+        TEST_ASSERT(strstr(r.responses_live_suffix_text, "cancelled-inference-evidence"));
+        TEST_ASSERT(strstr(r.responses_live_suffix_text, "steering-after-tool"));
+        TEST_ASSERT(!strstr(r.responses_live_suffix_text, "warm"));
+        request_free(&r);
+        request_init(&r, REQ_CHAT, 128); r.api = API_RESPONSES; r.model_syntax = syntaxes[i];
+        chat_msg later = {.role = xstrdup("assistant"), .content = xstrdup("intervening-answer")};
+        chat_msgs_push(&msgs, later);
+        chat_msg next = {.role = xstrdup("user"), .content = xstrdup("new-input")};
+        chat_msgs_push(&msgs, next);
+        responses_prepare_live_continuation(NULL, &r, &msgs);
+        TEST_ASSERT(!r.responses_live_suffix_text && !r.responses_live_call_ids.len);
+        chat_msgs_free(&msgs); request_free(&r);
+    }
 }
 
 static void test_responses_tool_output_id_validation(void) {
@@ -34334,6 +34257,7 @@ static void ds4_server_unit_tests_run(void) {
     test_response_publish_precedes_checkpoint_cleanup();
     test_prethinking_frontier_covers_openai_endpoints();
     test_responses_live_tail_renders_tool_outputs_only();
+    test_responses_live_tail_keeps_steering_and_stops_at_assistant();
     test_responses_tool_output_id_validation();
     test_responses_stateless_tool_replay_ignores_reasoning();
     test_responses_visible_suffix_matches_client_replay();

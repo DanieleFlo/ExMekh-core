@@ -91,7 +91,9 @@ def prepare_message_edit(
     notices = [
         line
         for line in message.content.splitlines()
-        if paths and line.startswith("PDF ") and "are attached as images" in line
+        if paths
+        and line.startswith(app_text("execution.pasted_input.pdf_notice_prefix"))
+        and app_text("execution.pasted_input.pdf_notice_marker") in line
     ]
     # Repeated PDF pages can have identical payloads: retain their order and count.
     images = [*message.image_urls, *prepared.image_urls]
