@@ -3,7 +3,9 @@ from __future__ import annotations
 import importlib.metadata
 import importlib.util
 import os
+import shlex
 import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -182,11 +184,37 @@ def test_wsl_launchers_resolve_paths_and_forward_arguments(
         assert lines[2:] == [
             "run",
             "--no-project",
+            "--isolated",
             "--python",
             "3.13",
-            str(agent_dir / "src/exmekh_agent/sync.py"),
+            "-m",
+            "exmekh_agent.sync",
             "argument with spaces",
         ]
+
+
+def test_sync_launcher_bootstraps_without_installed_packages(tmp_path: Path) -> None:
+    agent_dir = Path(__file__).resolve().parents[1]
+    uv = tmp_path / "uv executable"
+    uv.write_text(
+        '#!/bin/bash\nif [[ "$1" == run ]]; then\n'
+        "    shift 5\n"
+        f'    exec {shlex.quote(sys.executable)} -S "$@"\n'
+        "fi\nexit 73\n"
+    )
+    uv.chmod(0o755)
+    result = subprocess.run(
+        [str(agent_dir / "sync_exmekh_lib.sh")],
+        cwd=tmp_path,
+        env=dict(os.environ, UV_BIN=str(uv), PYTHONPATH=""),
+        capture_output=True,
+        text=True,
+    )
+    # Reaching the wheel build with site packages disabled proves bootstrap works.
+    assert result.returncode == 1
+    assert "Building ExMekh-Lib from" in result.stdout
+    assert "exit status 73" in result.stdout
+    assert "Traceback" not in result.stderr
 
 
 @pytest.mark.parametrize("script", ["run.sh", "sync_exmekh_lib.sh"])

@@ -1,0 +1,224 @@
+{
+  "date": "2026-10-15",
+  "original_session_date": "2026-10-14",
+  "chat_id": "26a4665e-e816-4396-8c84-7250ff75fa09",
+  "original_source_sha256": {
+    "original-chat.json": "8b7bd66c19e5a7b291d599c3ee97e3cd922b6f5736178d82d60e4958207b4597",
+    "original-server.log": "82fda73d42c6c2cc421901bb0b242a382ba5d963897293daba5db9325ed62575"
+  },
+  "original_generated_call_count": 42,
+  "original_discarded_completed_calls": [
+    {
+      "server_time": "1014 18:38:07",
+      "prompt_ctx": "13867..14213:346",
+      "call_id": "call_3b024531c96e68125be6e0b3e00f97b3",
+      "name": "bash",
+      "history_locations": [],
+      "has_tool_output": false,
+      "execution_events": []
+    },
+    {
+      "server_time": "1014 18:40:06",
+      "prompt_ctx": "17410..18416:1006",
+      "call_id": "call_47b6b59991e46a60407cd491e68c3093",
+      "name": "bash",
+      "history_locations": [],
+      "has_tool_output": false,
+      "execution_events": []
+    },
+    {
+      "server_time": "1014 18:51:04",
+      "prompt_ctx": "20643..21526:883",
+      "call_id": "call_75724f12898242dd311cd58c524b3faf",
+      "name": "bash",
+      "history_locations": [],
+      "has_tool_output": false,
+      "execution_events": []
+    }
+  ],
+  "baseline": {
+    "method": "Emulate the old client's omitted history by disabling only Client._record_superseded_response; same server binary and model.",
+    "measurements": [
+      {
+        "iteration": 1,
+        "streaming": false,
+        "minimum_cached_tokens": 2184,
+        "cached_tokens": 292,
+        "input_tokens": 2244,
+        "prefill_tokens": 1952
+      }
+    ]
+  },
+  "corrected": {
+    "json": [
+      {
+        "iteration": 1,
+        "streaming": false,
+        "minimum_cached_tokens": 2184,
+        "cached_tokens": 2222,
+        "input_tokens": 2381,
+        "prefill_tokens": 159
+      },
+      {
+        "iteration": 2,
+        "streaming": false,
+        "minimum_cached_tokens": 2445,
+        "cached_tokens": 2483,
+        "input_tokens": 2642,
+        "prefill_tokens": 159
+      }
+    ],
+    "sse": [
+      {
+        "iteration": 1,
+        "streaming": true,
+        "minimum_cached_tokens": 2184,
+        "cached_tokens": 2222,
+        "input_tokens": 2381,
+        "prefill_tokens": 159
+      },
+      {
+        "iteration": 2,
+        "streaming": true,
+        "minimum_cached_tokens": 2445,
+        "cached_tokens": 2483,
+        "input_tokens": 2642,
+        "prefill_tokens": 159
+      }
+    ]
+  },
+  "cache_regressions": [
+    {
+      "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_keeps_history_with_steering",
+      "scenario": "steering-after-cancelled-edit-pause",
+      "minimum_cached_tokens": 2265,
+      "input_tokens": 2521,
+      "cached_tokens": 2281,
+      "prefill_tokens": 240
+    },
+    {
+      "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_cancelled_edit_pause_survives_stateless_auxiliary",
+      "scenario": "steering-after-cancelled-edit-pause-and-auxiliary",
+      "minimum_cached_tokens": 2265,
+      "input_tokens": 2522,
+      "cached_tokens": 2281,
+      "prefill_tokens": 241
+    },
+    {
+      "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_completed_tool_boundary_keeps_history_with_steering",
+      "scenario": "steering-after-completed-tool",
+      "minimum_cached_tokens": 2227,
+      "input_tokens": 2325,
+      "cached_tokens": 2281,
+      "prefill_tokens": 44
+    },
+    {
+      "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_full_replay_without_steering_keeps_history",
+      "scenario": "full-replay-with-trailing-tool-output",
+      "minimum_cached_tokens": 2227,
+      "input_tokens": 2309,
+      "cached_tokens": 2281,
+      "prefill_tokens": 28
+    },
+    {
+      "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_resumed_edit_keeps_history_with_steering",
+      "scenario": "steering-after-resumed-edit",
+      "minimum_cached_tokens": 2317,
+      "input_tokens": 2512,
+      "cached_tokens": 2469,
+      "prefill_tokens": 43
+    },
+    {
+      "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_scoped_auxiliary_keeps_agent_history",
+      "scenario": "auxiliary-with-independent-agent-context",
+      "minimum_cached_tokens": 2227,
+      "input_tokens": 2309,
+      "cached_tokens": 2281,
+      "prefill_tokens": 28
+    },
+    {
+      "test": "tests.test_steering_cache_live.SteeringCacheLiveTests.test_stateless_auxiliary_keeps_agent_history",
+      "scenario": "auxiliary-without-agent-context",
+      "minimum_cached_tokens": 2227,
+      "input_tokens": 2309,
+      "cached_tokens": 2281,
+      "prefill_tokens": 28
+    }
+  ],
+  "runtime": {
+    "model": "Qwen3.8-27B-UD-Q4_K_S",
+    "backend": "CUDA",
+    "gpu": "RTX 3090",
+    "mtp": true,
+    "context": 26000,
+    "server_changed": false
+  },
+  "validation": {
+    "library": {
+      "passed": 2920,
+      "skipped": 62,
+      "changed_modules_statement_and_branch_coverage": "100%",
+      "full_coverage_gate": "99.99%: uncovered unrelated concurrent deletion branch in edit_filesystem.py:147"
+    },
+    "live_client": {
+      "tests_passed": 2,
+      "successive_steering_measurements": 4
+    },
+    "server_cache_suite": {
+      "passed": 10,
+      "skipped": 0
+    },
+    "ruff": "PASS",
+    "pyright_changed_library_modules": "PASS",
+    "agent": {
+      "latest_full_run": {
+        "passed": 990,
+        "skipped": 43,
+        "failed": [
+          "test_board_interactions_e2e.py::test_connect_options_change_with_selection_connections_and_undo"
+        ],
+        "statement_and_branch_coverage": "100%"
+      },
+      "earlier_full_run_failure": "test_corrections_e2e.py::test_tool_thinking_and_tokens_are_visible_before_final_answer",
+      "isolated_retries": {
+        "corrections_e2e": "PASS",
+        "board_interactions_e2e": "PASS"
+      },
+      "focused_history_graph_steering_tests": {
+        "passed": 100,
+        "note": "Subset run; its global coverage gate is not applicable to a subset."
+      }
+    }
+  },
+  "wheel_sha256": "746bb52ca1129b802f43bfd704e5e848c5f0e54d5da157c97e62457849753ff9",
+  "wheel_and_installed_sources_verified": {
+    "core/models/client.py": "01eab2112cabfbe32d8d5d03d950d8d22c9a8d0aa6d76c9528091d44c2c4d063",
+    "core/models/provider_response.py": "5bad90ac8c8876e868ba2b585a5b0017ee4d26f636290e92a4560a93aba8bcf9",
+    "core/providers/interactive_openai.py": "bf4071e402910e18e6bcd5f2005b9684b1087fc216abf01f8cbc577dab8c1415"
+  },
+  "source_sha256": {
+    "exmekh_lib/src/exmekh_lib/config/model_text.py": "177b3fc46aa8f579f83d086a0287910f8be691f6e8dcad102e881f3f0648c41c",
+    "exmekh_lib/tests/providers/test_interactive.py": "c4e8f59aa96b631d9ea50a3456fb3b824aa7c4a6ee53319985381adef7d95d9d",
+    "exmekh_lib/tests/core/models/test_provider_response.py": "2dc97bf71eb864f5eb7e69b27762d80c1291ba0f12226a430b0bd651afd7cf47",
+    "exmekh_lib/tests/live/test_steering_history_live.py": "7949e8dbb8b2987b081ec9886b97037f426b2f2bbb2ae4f2c00ff8cb7e8ca2d9",
+    "agent/src/exmekh_agent/exmekh_bridge/history/recorded_output.py": "afeab184ce344d17428b2e5e744db412c3b4560ba75a3b020f6d3a4abfecb8f8",
+    "agent/src/exmekh_agent/ui/graph/graph_data.py": "f7f9f1e7135cea69c9d64368259583904c402ee607ab8a6cc2de4a3fa776c648",
+    "agent/tests/test_graph_view.py": "29cba4d6eed775eae338075eec6f57530f395f415737adc19473cbd6b9264e79",
+    "ds4_server.c": "1101aef8a457178e49a5fb436da2397c31f1f71618960da63515acd6ba9249cd",
+    "ds4-server": "1cf4baf0fe860ec6382f0831c9c198b11fa62464edf4d020fc64a845562e464c"
+  },
+  "local_evidence_directory": "performance-results/steering-completed-response-20261015",
+  "evidence_sha256": {
+    "baseline-json.json": "f1ec39085c5e7d6b412ab78b0b88161aadee5fb6c54d9f1a6c51003d0b575a5e",
+    "corrected-json.json": "0d1b5bed34325a35c6e189597aafd889c32ca414f85e4b070dc58f81cfb4b71c",
+    "corrected-sse.json": "43e207ff62fd76ad28e8359856460a14aaf9936b42e08a01da5fd6ab454cbf52",
+    "cache-regressions.json": "a562359ab1f46d8b21ff31ee24d10ad5e2613211a4097f8b34146a6bb799ddd1",
+    "original-call-execution-trace.json": "a573af5e234a0d4b595220d30d903bdc413a995306532c6de27f7f59dc63dc9b",
+    "server.trace": "d2584566e88e1b35d461e5303ce39bff91c7f6818cad614e12e39f3719290ba6"
+  },
+  "limitations": [
+    "Original server log ends during the third resumed prefill.",
+    "Live model qualification is limited to Qwen27/CUDA; no kernel changes.",
+    "Context exhaustion is separate from this regression."
+  ]
+}

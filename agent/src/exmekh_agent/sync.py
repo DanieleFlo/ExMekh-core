@@ -7,9 +7,8 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from exmekh_agent.config.catalogs import message as app_text
-from exmekh_agent.config.packaging import WHEEL_SYNC
-from exmekh_agent.config.paths import APPLICATION_ROOT
+from exmekh_agent.package_paths import APPLICATION_ROOT
+from exmekh_agent.sync_config import WHEEL_SYNC, app_text
 
 
 def _build_wheel(source: Path, output: Path, uv: str) -> Path:

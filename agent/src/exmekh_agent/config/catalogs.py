@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from pathlib import Path
 from typing import Any
 
-from exmekh_agent.utils.resources import read_json
-
-CONFIG_DIR = Path(__file__).parent
+from exmekh_agent.package_paths import CONFIG_DIR
+from exmekh_agent.utils.resources import catalog_message, read_json
 
 
 def settings(name: str) -> dict[str, Any]:
@@ -20,6 +18,4 @@ def presentation_settings(name: str) -> dict[str, Any]:
 
 
 def message(key: str, **values: object) -> str:
-    catalog, entry = key.split(".", 1)
-    text = read_json(CONFIG_DIR / "texts" / f"{catalog}.json")[entry]
-    return text.format(**values) if values else text
+    return catalog_message(CONFIG_DIR, key, **values)

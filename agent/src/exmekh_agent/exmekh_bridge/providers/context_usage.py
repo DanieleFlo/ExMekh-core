@@ -161,7 +161,7 @@ def _build_messages_from_skill_node(node: SkillNode) -> list[dict[str, Any]]:
                 ],
             }
         )
-        if ev.status == "completed" or ev.event_type == "tool_end":
+        if not ev.is_running:
             inner_messages.append(
                 {
                     "role": "tool",
@@ -331,7 +331,7 @@ def _build_turn_messages_for_assistant(
                     ],
                 }
             )
-            if ev.status == "completed" or ev.event_type == "tool_end":
+            if not ev.is_running:
                 synthesized.append(
                     {
                         "role": "tool",

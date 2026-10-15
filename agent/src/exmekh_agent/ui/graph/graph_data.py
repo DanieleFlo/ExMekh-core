@@ -11,6 +11,7 @@ from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
+from exmekh_agent.exmekh_bridge.history.recorded_output import RecordedToolOutput
 from exmekh_agent.exmekh_bridge.history.skill_history import (
     inner_skill_history_messages,
     take_skill_for_call,
@@ -242,9 +243,9 @@ def _build_tool_triplet_events(
     skill_path: str,
     depth: int,
 ) -> list[dict[str, Any]]:
-    """Build the 3 grouped events for a tool/skill node:
+    """Build grouped events for a tool/skill node:
     1) tool call
-    2) tool execution
+    2) tool execution, when the call reached dispatch
     3) tool response
     """
     norm_path = _normalize_skill_path(skill_path)
@@ -303,6 +304,11 @@ def _build_tool_triplet_events(
         "depth": depth,
         "content": tool_response_content,
     }
+    if tool_event is None and RecordedToolOutput.cancelled_before_execution(
+        tool_response_content
+    ):
+        response_event.update(status="cancelled", executed=False)
+        return [call_event, response_event]
     return [call_event, execution_event, response_event]
 
 

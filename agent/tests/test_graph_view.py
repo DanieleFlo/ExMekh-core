@@ -4,6 +4,7 @@ import math
 from collections.abc import Generator
 
 import pytest
+from exmekh_lib.utils.xml import stringify_tool_result
 from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
@@ -49,6 +50,37 @@ def graph_ui_context() -> Generator[None]:
     client = Client(page("/test-graph-view"))
     with client:
         yield
+
+
+@pytest.mark.parametrize(
+    "content, cancelled",
+    [
+        (stringify_tool_result({"status": "cancelled", "executed": False}), True),
+        (stringify_tool_result({"status": "cancelled", "executed": True}), False),
+        (stringify_tool_result({"status": "completed", "executed": False}), False),
+        ("<other><status>cancelled</status><executed>false</executed></other>", False),
+        ("<tool-result/>", False),
+        ("ordinary tool output", False),
+    ],
+)
+def test_undispatched_call_receipt_does_not_invent_an_execution(content, cancelled):
+    events = _build_tool_triplet_events(
+        tool_name="bash",
+        tool_call_id="cancelled-call",
+        arguments={},
+        assistant_content="",
+        tool_event=None,
+        tool_response_content=content,
+        skill_path="/file-processing",
+        depth=1,
+    )
+    stages = [event["event_stage"] for event in events]
+    if cancelled:
+        assert stages == ["tool_call", "tool_response"]
+        assert events[-1]["status"] == "cancelled"
+        assert events[-1]["executed"] is False
+    else:
+        assert stages == ["tool_call", "tool_execution", "tool_response"]
 
 
 @pytest.mark.parametrize("tool_header_count", [1, 3])

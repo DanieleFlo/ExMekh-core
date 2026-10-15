@@ -31,7 +31,9 @@ comportamenti incoerenti verificabili con test.
 | `MessageEditor` | Dialog di modifica e durata degli upload temporanei | `open`, callback di salvataggio tipizzata; la chat non gestisce il ciclo di vita del form |
 | `Disclosure` / `DisclosureState` | Interazione coerente e scelte di apertura locali alla vista | Clic, Enter e Spazio, visibilità, chevron e `aria-expanded` |
 | `ChatRoutes` | URL delle conversazioni e risoluzione dei bookmark | `path_for`, `resolve`; repository esplicito e ID stabile anche dopo rinomina, refresh e navigazione Indietro/Avanti |
-| `RecordedToolOutput` | Interpretazione dei metadati degli output registrati | `parse`; include corpo, riferimenti e thinking già interpretati |
+| `RecordedToolOutput` | Interpretazione dei metadati degli output registrati | `parse`, `cancelled_before_execution`; include corpo, riferimenti e thinking già interpretati |
+| `ProviderResponse` (ExMekh-Lib) | Evidenze della risposta da registrare, distinte dalle chiamate eseguibili | `history_messages`; il client non costruisce ricevute di cancellazione |
+| `package_paths` / `utils.resources` | Percorsi del pacchetto e lettura dei cataloghi, disponibili anche nel bootstrap | Costanti condivise, `catalog_message`; configurazione runtime e sync delegano allo stesso proprietario |
 | `ToolEvent` | Identità, stato e durata di una chiamata | `execution_status`, `matches_update`, `merge_update`, `normalized_copy`; `record_tool_event` mantiene una sola voce per invocazione |
 | `TurnStreamCollector` | Accumulo e snapshot del turno, compreso lo steering | `can_steer`, `steer`, `snapshot_message`, `build_message`; il registro non attraversa lo steering interno |
 | `ActiveTurnRegistry` | Task attivi, revisioni, cancellazione e passaggio delle code | `start`, `finish`, `snapshot`, `can_steer`, `steer`, `stop_and_wait`; delega al raccoglitore la consegna della guida |
@@ -44,6 +46,8 @@ e `tools`. Il pacchetto `models` separa `execution`, `messages`, `settings` e
 `sessions`; il suo `__init__` mantiene gli import pubblici precedenti.
 Il ciclo di vita degli eventi resta nei modelli di esecuzione, il branching e
 le code nella sessione, gli override nelle impostazioni e il contenuto nel messaggio.
+Anche il contesto sintetizzato usa `ToolEvent.is_running`: gli avvii legacy non
+diventano risultati completati e gli errori terminali restano nel conteggio.
 `state` resta una cartella coesa per stato e persistenza, senza aggiungere
 sottopacchetti che conterrebbero un solo modulo.
 

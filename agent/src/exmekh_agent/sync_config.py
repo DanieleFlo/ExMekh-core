@@ -1,6 +1,9 @@
-"""Workspace wheel build and installation policy."""
+"""Wheel sync configuration, available before application dependencies exist."""
 
 from dataclasses import dataclass
+
+from exmekh_agent.package_paths import CONFIG_DIR
+from exmekh_agent.utils.resources import catalog_message
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,3 +20,7 @@ class WheelSyncSettings:
 
 
 WHEEL_SYNC = WheelSyncSettings()
+
+
+def app_text(key: str, **values: object) -> str:
+    return catalog_message(CONFIG_DIR, key, **values)

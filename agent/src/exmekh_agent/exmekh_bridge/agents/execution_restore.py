@@ -40,6 +40,15 @@ class RecordedInvocation:
     skill: dict[str, Any] | None
 
     @property
+    def cancelled_before_execution(self) -> bool:
+        return (
+            self.result is not None
+            and RecordedToolOutput.cancelled_before_execution(
+                str(self.result.get("content") or "")
+            )
+        )
+
+    @property
     def output(self) -> RecordedToolOutput | None:
         text = self.skill.get("output") if self.skill is not None else None
         if not text and self.result is not None:
@@ -116,6 +125,8 @@ class ExecutionHistoryRestorer:
                     self._restore_steering(event, output_id, path)
 
     def _restore_invocation(self, invocation: RecordedInvocation, path: str) -> None:
+        if invocation.cancelled_before_execution:
+            return
         call = invocation.call
         entry = self._history.record(call.get_name(), call.get_id())
         output = invocation.output

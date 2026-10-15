@@ -2,6 +2,14 @@
 
 Indice generato; non modificare a mano.
 
+## [Revisione del client e dell'agente — 15 ottobre 2026](clean-code-client-review-20261015.md)
+
+`ProviderResponse.history_messages()` possiede la costruzione della history
+
+- righe 9–49: **Responsabilità e comportamento** — `ProviderResponse.history_messages()` possiede la costruzione della history
+- righe 50–76: **Principi controllati** — Lo screening dei richiami privati ha trovato soltanto accessi fra istanze della
+- righe 77–91: **Verifiche** — Le suite complete e i controlli statici sono registrati nel JSON collegato.
+
 ## [Revisione del codice e qualifica live — 14 ottobre 2026](clean-code-live-review-20261014.md)
 
 `FileWriteTarget` raggruppa workspace, risorsa, path canonico e snapshot.
@@ -341,3 +349,11 @@ Ogni caso apre una skill sintetica, scalda una conversazione con un tool,
 - righe 12–54: **Risultati** — Ogni caso apre una skill sintetica, scalda una conversazione con un tool,
 - righe 55–71: **Conseguenze per la diagnosi** — La diagnosi iniziale limitata alla cancellazione interattiva era incompleta:
 - righe 72–94: **Comandi ripetibili** — Su una sola istanza server inattiva, dalla radice del repository:
+
+## [Steering dopo una risposta completata — 15 ottobre 2026](steering-completed-response-20261015.md)
+
+I call ID uniscono le chiamate generate nel log, le chiamate e risposte nella
+
+- righe 17–42: **Corrispondenza fra chiamate ed esecuzioni** — I call ID uniscono le chiamate generate nel log, le chiamate e risposte nella
+- righe 43–66: **Correzione** — `InteractiveResponseOpenAI` distingue il risultato completato dal server e
+- righe 67–120: **Verifica** — Le regressioni con SDK e runtime reali, trasporto simulato e file temporanei

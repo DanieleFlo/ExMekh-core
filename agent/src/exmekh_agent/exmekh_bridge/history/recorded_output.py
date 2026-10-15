@@ -19,6 +19,19 @@ class RecordedToolOutput:
     summary_mode: str | None = None
 
     @staticmethod
+    def cancelled_before_execution(text: str) -> bool:
+        """Recognize a transcript receipt for a generated, undispatched call."""
+        try:
+            root = ET.fromstring(text)
+        except ET.ParseError:
+            return False
+        return (
+            root.tag == "tool-result"
+            and root.findtext("status") == "cancelled"
+            and root.findtext("executed") == "false"
+        )
+
+    @staticmethod
     def split_header(text: object) -> tuple[str, str] | None:
         """Separate the recorded envelope, leaving body interpretation to callers."""
         if not isinstance(text, str) or not text.lstrip().startswith("<header>"):

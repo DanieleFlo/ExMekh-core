@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-15",
+  "repository_revisions_at_report_time": {
+    ".": "f39507d85498be7f56d050d6c9c56a7758544a2d",
+    "exmekh_lib": "00baebeea4cd366d6d5258fc3d4c2e668c25cd9d"
+  },
+  "screening": {
+    "agent": {
+      "modules": 117,
+      "private_call_candidates": 1,
+      "long_function_candidates": 21,
+      "wide_signature_candidates": 8
+    },
+    "exmekh_lib": {
+      "modules": 255,
+      "private_call_candidates": 7,
+      "long_function_candidates": 0,
+      "wide_signature_candidates": 13
+    }
+  },
+  "reviewed_private_call_candidates": "Same-class calls and public named-tuple _replace; no mechanical public renaming.",
+  "validation": {
+    "library": {
+      "passed": 2928,
+      "skipped": 63,
+      "failed": 0,
+      "statement_and_branch_coverage": "100%"
+    },
+    "agent": {
+      "full_suite": {
+        "passed": 1000,
+        "skipped": 43,
+        "failed": 0
+      },
+      "final_restore_regressions": {
+        "passed": 40,
+        "failed": 0
+      },
+      "final_non_e2e_suite": {
+        "passed": 922,
+        "skipped": 33,
+        "failed": 0
+      },
+      "final_statement_and_branch_coverage": "100%"
+    },
+    "live_client_steering": {
+      "passed": 2,
+      "skipped": 0
+    },
+    "live_single_and_batch_deletion": {
+      "passed": 2,
+      "skipped": 0
+    },
+    "native_server_unit_tests": "PASS",
+    "server_build": "up to date",
+    "ruff_library_full": "PASS",
+    "ruff_agent_full": "PASS",
+    "pyright_library_full": "PASS"
+  },
+  "steering_measurements": {
+    "json": [
+      {
+        "iteration": 1,
+        "streaming": false,
+        "minimum_cached_tokens": 2184,
+        "cached_tokens": 2222,
+        "input_tokens": 2381
+      },
+      {
+        "iteration": 2,
+        "streaming": false,
+        "minimum_cached_tokens": 2445,
+        "cached_tokens": 2483,
+        "input_tokens": 2642
+      }
+    ],
+    "sse": [
+      {
+        "iteration": 1,
+        "streaming": true,
+        "minimum_cached_tokens": 2184,
+        "cached_tokens": 2222,
+        "input_tokens": 2381
+      },
+      {
+        "iteration": 2,
+        "streaming": true,
+        "minimum_cached_tokens": 2445,
+        "cached_tokens": 2483,
+        "input_tokens": 2642
+      }
+    ]
+  },
+  "wheel_sha256": "27ef1fac37f0badc91f69672bd001b0a999e22b2f3f1e454087d2e3e49361c09",
+  "wheel_and_installed_sources": {
+    "core/models/client.py": "f3b0db91d1695efc23c7e8bb0a972c649bf08275f1eeef4d8c19baee8839191a",
+    "core/models/provider_response.py": "c53888f9583282359f97d0704438d3a87d59709b7691956d443700ebd902f78d",
+    "core/providers/interactive_openai.py": "bf4071e402910e18e6bcd5f2005b9684b1087fc216abf01f8cbc577dab8c1415",
+    "core/file_inspection/edit_filesystem.py": "341392b4ed2625993679a1430aeb42503e5e5bb9bc6ff02919c1f91f358fc6dd",
+    "capabilities/tools/delete-file/main.py": "58f0e0bc051ee2433e4661fd798ff9828e6ab6b3d2fe47aab094e74e886db7c0"
+  },
+  "source_sha256": {
+    "agent/src/exmekh_agent/package_paths.py": "a608b136582479ea64d405d3bb7ca0d0b6f30e79f86e3ea3d0dcec430777331f",
+    "agent/src/exmekh_agent/utils/resources.py": "1f0511e79a7a31a16552f292690071f11855efff343e5a3b63ec6e7736db33fd",
+    "agent/src/exmekh_agent/config/catalogs.py": "0d1d96ed5f084b2044a32ccd2fe794c71e2ee35e60af6d5d111c907324536c84",
+    "agent/src/exmekh_agent/config/paths.py": "ccf1bff0430b3b953e85b9ea1b8cb03fcb2f022c783e91cb4a5000819ac6692f",
+    "agent/src/exmekh_agent/sync_config.py": "8c50918e811d4f4a3b1245a315810a710a616b75a8c7b1c4c629b46634be41a7",
+    "agent/src/exmekh_agent/sync.py": "4a6f795a9f3adf2e08ebacbbc2a7151c33b7df0f93ab0fd78ce974a53b7f6820",
+    "agent/src/exmekh_agent/exmekh_bridge/providers/context_usage.py": "0198c446ec792cbabeb81fa15abe37f13ba281b47626cbb9a4e2b536d4326c76",
+    "agent/src/exmekh_agent/exmekh_bridge/agents/execution_restore.py": "675dd8d59baec804a3be1b5bced52e55ed83cbf55bb49713927c34d30f90aff7",
+    "agent/src/exmekh_agent/exmekh_bridge/history/recorded_output.py": "afeab184ce344d17428b2e5e744db412c3b4560ba75a3b020f6d3a4abfecb8f8",
+    "agent/src/exmekh_agent/ui/graph/graph_data.py": "f7f9f1e7135cea69c9d64368259583904c402ee607ab8a6cc2de4a3fa776c648"
+  },
+  "local_evidence_directory": "performance-results/clean-code-review-20261015",
+  "evidence_sha256": {
+    "audit.json": "17003c02a5ec0c27a3a61063afb233c3250ce665b11e316ef470d2f2031dc65a",
+    "steering-json.json": "ae1e44a784d04f74dc46bfcef46136e7083dca5b78c0172a544895e96bde684d",
+    "steering-sse.json": "7ec9b4e796149cda9eebe2007b2b7e19c1b53a55862bad5785e7235894f10fe1",
+    "server.trace": "b4a52d7b11d3a844e5ac1c76cff160daeb08f75ce15d31e7b7f03d227914bb47"
+  },
+  "remaining_candidates": "Long UI/layout builders retained; no blanket clean-code certification.",
+  "platform_scope": "Qwen27/CUDA/RTX3090/MTP; C engine and kernels unchanged."
+}

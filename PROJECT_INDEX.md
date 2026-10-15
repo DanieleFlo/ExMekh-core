@@ -413,9 +413,12 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   metadati invalidi, callback reasoning e osservazione delle richieste strutturate.
 - `agent/src/exmekh_agent/exmekh_bridge/agents/execution_restore.py` — ricostruisce history e cache
   tramite le API pubbliche ExMekh-Lib, mantenendo identità e metadati degli output
-  riletti e lo scope dei messaggi di steering dopo la compattazione.
+  riletti e lo scope dei messaggi di steering dopo la compattazione; esclude dalle
+  esecuzioni le chiamate annullate prima del dispatch conservate nella raw history.
 - `agent/src/exmekh_agent/exmekh_bridge/history/recorded_output.py` — parser unico degli header XML
-  persistiti; conserva corpo e riferimenti degli output, con fallback legacy.
+  persistiti; conserva corpo e riferimenti degli output, con fallback legacy;
+  riconosce le ricevute di annullamento prima del dispatch, che il grafo mostra
+  senza inventare un evento di esecuzione.
 - `agent/src/exmekh_agent/exmekh_bridge/history/steering_history.py` — seleziona gli ID di steering
   del livello corrente, escludendo quelli delle skill discendenti.
 - `agent/src/exmekh_agent/exmekh_bridge/history/message_edit.py` — prepara il testo modificato,
@@ -455,6 +458,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   commit per file. L'edit preparato possiede preflight e commit, l'approvazione verifica
   le evidenze; il runtime annulla anche cambi di scope durante una pausa.
   Filesystem/evidenze/permessi restano del client; masking/KV del server.
+  `FileDeletionTarget` possiede validazione, identità e rimozione file/alberi;
+  i batch del tool mantengono ordine e fallimenti indipendenti e rifiutano
+  link simbolici espliciti senza eliminarne i bersagli.
 - `exmekh_lib/src/exmekh_lib/core/file_inspection/lines.py` e
   `exmekh_lib/tests/core/file_inspection/test_lines.py` — API comune per righe fisiche,
   offset di lettura e confini CR/LF, inclusa la fine del file.
@@ -483,7 +489,10 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   tool di file di Codex, Claude Code/API, Aider, Pi, oh-my-pi e Qwen Code;
   confini DeepSeek/llguidance e proposta write/edit/delete con riuso del masking,
   rimozione di XML annidato, selezioni lunghe e confronto sperimentale.
-- `agent/src/exmekh_agent/config/packaging.py` — politica e percorsi della build del wheel; `sync.py` separa build, installazione e orchestrazione e usa i cataloghi per tutti i messaggi.
+- `agent/src/exmekh_agent/sync_config.py` — politica, percorsi e cataloghi della build del wheel, accessibili senza dipendenze applicative; `sync.py` separa build, installazione e orchestrazione. Il launcher carica i sorgenti in un interprete isolato anche senza un frontend già installato.
+- `agent/src/exmekh_agent/package_paths.py` — percorsi condivisi del pacchetto,
+  usati da configurazione e bootstrap; `utils/resources.py` possiede anche
+  `catalog_message`, evitando lettori e percorsi duplicati nel sync.
 - `agent/src/exmekh_agent/state/session_manager.py` — persistenza atomica dei record,
   configurazioni pubblicate dopo il salvataggio e viste con selezione indipendente
   per pagina; le viste condividono conversazioni, progetti e store.
@@ -843,6 +852,16 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   storia dopo steering e richieste ausiliarie; controlli con tool completati,
   cancellazione di una pausa edit e contesti separati, misurati tramite i
   contatori cached/prefill del server. Non esegue tool sul filesystem.
+- `docs/architecture/steering-completed-response-20261015.md` e relativo JSON
+  in `docs/performance/` — correlazione fra chiamate generate ed esecuzioni nella
+  chat originale; correzione client delle risposte completate ma superate dallo
+  steering, conservate come evidenza con output cancellati senza dispatch.
+- `docs/architecture/clean-code-client-review-20261015.md` e relativo JSON —
+  audit delle responsabilità client/frontend, target di cancellazione, API delle
+  evidenze di risposta, stati dei tool e bootstrap condiviso, con test e hash.
+- `exmekh_lib/tests/live/test_steering_history_live.py` — due steering consecutivi
+  tramite client/server reali, JSON e SSE; contatori wire della cache e nessuna
+  esecuzione dei tool sintetici.
 - `tests/test_server_interactive.c` — fixture host per vincoli testuali e
   oracolo indipendente, XML/entità/CDATA, chiusure letterali e finali, sintassi native,
   frontiere di sampling, prefissi ]/]] coerenti con lo snapshot, retry, batch,

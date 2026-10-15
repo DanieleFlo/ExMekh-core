@@ -47,6 +47,38 @@ from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.history.raw_history_view import RawHistoryComponent
 
 
+@pytest.mark.parametrize("scope", ["root", "skill"])
+@pytest.mark.parametrize(
+    "event_type,status,has_result",
+    [
+        ("tool_start", "completed", False),
+        ("execution", "error", True),
+        ("tool_end", "error", True),
+        ("execution", "running", False),
+    ],
+)
+def test_synthesized_context_uses_the_event_lifecycle(
+    scope, event_type, status, has_result
+):
+    event = ToolEvent(tool_name="probe", event_type=event_type, status=status)
+    messages = (
+        cu._build_turn_messages_for_assistant(
+            ChatMessage(role="assistant", tool_events=[event])
+        )
+        if scope == "root"
+        else cu._build_messages_from_skill_node(
+            SkillNode(name="work", path="/work", depth=1, tool_events=[event])
+        )
+    )
+    assert (
+        any(
+            item.get("role") == "tool" and item.get("name") == "probe"
+            for item in messages
+        )
+        is has_result
+    )
+
+
 def test_qwen_tokenizer_counts_tokens_and_fallback() -> None:
     cu._tokenizer_instance = None
     tokenizer = get_qwen_tokenizer()

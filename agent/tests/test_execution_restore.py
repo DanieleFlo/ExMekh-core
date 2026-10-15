@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 from exmekh_lib.core.cache.session_cache import SessionCache
 from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
+from exmekh_lib.utils.xml import stringify_tool_result
 
 from exmekh_agent.exmekh_bridge.history.converter import (
     reconstruct_execution_history_and_cache,
@@ -35,6 +36,29 @@ def opening(name: str, call_id: str) -> dict:
             {"id": call_id, "function": {"name": name, "arguments": {}}},
         ],
     }
+
+
+def test_restore_keeps_undispatched_calls_out_of_execution_history():
+    message = ChatMessage(
+        role="assistant",
+        raw_history=[
+            opening("delete-file", "cancelled"),
+            {
+                "role": "tool",
+                "tool_call_id": "cancelled",
+                "content": stringify_tool_result(
+                    {"status": "cancelled", "executed": False}
+                ),
+            },
+            opening("read-file", "executed"),
+            {"role": "tool", "tool_call_id": "executed", "content": "legacy output"},
+        ],
+    )
+    history = ExecutionHistory()
+    reconstruct_execution_history_and_cache([message], history)
+    assert [(entry.name, entry.call_id) for entry in history.entries] == [
+        ("read-file", "executed")
+    ]
 
 
 @pytest.mark.parametrize(
