@@ -908,6 +908,10 @@ class ChatPageController:
                     accepts_events=accepts_pending_events,
                 )
 
+            def on_model_context(context) -> None:
+                if accepts_events():
+                    collector.set_model_context(context)
+
             def on_steering_added() -> None:
                 if not accepts_events():
                     return
@@ -968,6 +972,7 @@ class ChatPageController:
                     agent_mode=session.agent_mode,
                     on_skill_event=on_skill,
                     on_raw_history=on_raw_history,
+                    on_model_context=on_model_context,
                     history=prior_history,
                     agent_context_id=session.id,
                     on_sub_agent_event=lambda event: loop.call_soon_threadsafe(

@@ -10,6 +10,7 @@ from typing import Any
 from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
 from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEvent
+from exmekh_agent.exmekh_bridge.history.compaction import ModelContextCheckpoint
 from exmekh_agent.exmekh_bridge.models import (
     ProviderContextUsage,
     SkillNode,
@@ -60,3 +61,4 @@ class AgentTurnRequest:
     agent_profile: str = AGENT_DEFAULTS["default_profile"]
     agent_design: AgentDesign | None = None
     capabilities_paths: list[str] | None = None
+    on_model_context: Callable[[ModelContextCheckpoint], None] | None = None

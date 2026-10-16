@@ -27,6 +27,7 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - Deep Thinking retains provider thinking in direct tool output headers, up to 200 tokens before summarizing. A renamed copy follows ordinary skill behavior; the editor explains this distinction.
 - **Readable execution results**: tool rows remain compact until clicked or activated with Enter/Space. Expanded results scroll within a bounded panel; completed skills offer their result in the last row of the expanded skill. Raw History preserves the XML header at the top of content with readable indentation while copying the original JSON. Archived read_tool_output results are matched by output ID and summary mode, including older saved chats.
 - **Responsive tabs**: chat, execution graph, history, dialogs, and the agent editor adapt to desktop, tablet, and phone widths.
+- **Automatic context compaction**: each DeepAgent node compacts its working history before the next inference at 80% of the server-reported context limit. Change the percentage (1–99) in Global Settings. Unknown server limits do not activate compaction. Graph and Raw retain original calls and outputs; a switch in Raw selects the complete execution archive or the current model context. Saved chats resume from the compact context while keeping their inspectable archive.
 
 - **Local Provider Control**:
   - Dynamic health check of the local server endpoint (LM Studio, Ollama, llama.cpp, vLLM).

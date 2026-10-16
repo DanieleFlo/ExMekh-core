@@ -255,3 +255,20 @@ async def test_old_provider_response_does_not_replace_current_context_capacity(
     assert config.get_context_length() == 8192
     assert config.uses_ds4_qwen_prompt("Qwen-shared-model", "http://first.test/v1")
     assert not config.uses_ds4_qwen_prompt("Qwen-shared-model", config.base_url)
+
+
+async def test_explicit_provider_probe_caches_capacity_for_the_probed_endpoint(monkeypatch):
+    monkeypatch.setattr(config, "base_url", "http://current.test/v1")
+    monkeypatch.setattr(config, "model_context_lengths", {})
+    monkeypatch.setattr(config, "server_context_lengths", {})
+    monkeypatch.setattr(config, "default_model", "shared")
+    config.set_model_context_length("shared", 8192)
+    response = MagicMock(status_code=200)
+    response.json.return_value = {"data": [{"id": "shared", "context_length": 32768}]}
+    with patch("httpx.AsyncClient.get", AsyncMock(return_value=response)):
+        assert await check_provider_health("http://other.test/v1/", "") == (True, ["shared"])
+    assert config.get_context_length("shared") == 8192
+    assert config.get_server_context_length("shared", config.base_url) == 8192
+    assert config.get_server_context_length("shared", "http://other.test/v1") == 32768
+    config.set_model_context_length("invalid", True)
+    assert config.get_server_context_length("invalid", config.base_url) is None

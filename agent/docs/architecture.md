@@ -40,6 +40,30 @@ comportamenti incoerenti verificabili con test.
 
 ## Organizzazione dei moduli e delle risorse
 
+La compattazione automatica separa il contesto di esecuzione dalla cronologia
+ispezionabile. `AutoCompactionPolicy` confronta la prossima richiesta e gli ultimi
+totali del provider con la soglia globale e il limite scoperto per endpoint/modello.
+Il runtime del nodo esegue la sostituzione a batch completato e ricostruisce la
+richiesta prima dell'inferenza. Le chiamate interne di scoring e riassunto non
+attraversano la policy. User/system e ancore delle skill restano protetti: la
+compattazione non garantisce una riduzione sotto soglia per qualsiasi input.
+
+`HistoryArchive` possiede aggiornamenti, porzioni sostituite e confini del turno
+per root e figli; espone snapshot indipendenti come `ModelContextCheckpoint`.
+Il runner e gli osservatori usano questi metodi senza modificare i dati interni.
+Le porzioni vengono espanse per Graph/Raw e normalizzate
+con i lettori condivisi, anche negli alberi delle skill. Il checkpoint viene salvato
+nel messaggio del turno: la ripresa e il conteggio usano il contesto effettivo,
+mentre il transcript visibile conserva gli originali. I nodi figli hanno checkpoint
+indipendenti. Replay, conteggio e vista Current context usano la stessa selezione
+del checkpoint e includono tutti i messaggi successivi. Il provider mantiene lo
+stato DS4 di ogni nodo anche senza osservatore UI; solo il root pubblica i propri
+conteggi alla chat. La soglia è persistita; i limiti scoperti restano runtime e
+sono attribuiti all'endpoint effettivamente interrogato.
+La stima Qwen usa il testo letterale del client, come il server dopo la rimozione
+delle istruzioni operative sintetiche. La query non conserva prefissi modificati
+né aggiunge scope o messaggi; solo le risposte aggiornano i totali dei checkpoint.
+
 La UI è divisa in `agents`, `chat`, `graph`, `history`, `navigation`, `settings`
 e `shared`. Il bridge separa `agents`, `capabilities`, `history`, `providers`
 e `tools`. Il pacchetto `models` separa `execution`, `messages`, `settings` e

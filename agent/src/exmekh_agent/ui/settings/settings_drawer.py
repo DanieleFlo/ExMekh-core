@@ -39,6 +39,7 @@ class SettingsDrawerComponent:
         self.input_api_key: ui.input | None = None
         self.select_api_type: ui.select | None = None
         self.select_reasoning: ui.select | None = None
+        self.compaction_threshold: ui.number | None = None
         self.model_select: ui.select | None = None
         self.status_badge: ui.badge | None = None
         self.status_spinner: ui.spinner | None = None
@@ -149,6 +150,30 @@ class SettingsDrawerComponent:
                     )
                     .props(UI_PRESENTATION["build.props.outlined_dense_dark"])
                     .classes(UI_PRESENTATION["build.classes.w_full_text_xs"])
+                )
+                self.compaction_threshold = (
+                    ui.number(
+                        ui_text("settings.settings_drawer.compaction_threshold"),
+                        value=config.auto_compaction_threshold_percent,
+                        min=1,
+                        max=99,
+                        step=1,
+                        precision=0,
+                        validation={
+                            ui_text(
+                                "settings.settings_drawer.invalid_compaction_threshold"
+                            ): lambda value: (
+                                value is not None
+                                and 1 <= value <= 99
+                                and value == int(value)
+                            )
+                        },
+                    )
+                    .props(UI_PRESENTATION["build.props.outlined_dense_dark"])
+                    .classes(UI_PRESENTATION["build.classes.w_full_text_xs"])
+                )
+                self.compaction_threshold.tooltip(
+                    ui_text("settings.settings_drawer.compaction_help")
                 )
                 self.save_button = (
                     ui.button(
@@ -457,6 +482,8 @@ class SettingsDrawerComponent:
             self.drawer.hide()
 
     def _sync_inputs_from_config(self) -> None:
+        if self.compaction_threshold:
+            self.compaction_threshold.value = config.auto_compaction_threshold_percent
         if self.input_base_url:
             self.input_base_url.value = config.base_url
         if self.input_api_key:
@@ -475,6 +502,7 @@ class SettingsDrawerComponent:
             self.input_api_key,
             self.select_api_type,
             self.select_reasoning,
+            self.compaction_threshold,
             self.model_select,
             self.save_button,
         ):
@@ -508,6 +536,12 @@ class SettingsDrawerComponent:
             if self.model_select
             else config.default_model,
         }
+        if self.compaction_threshold is not None:
+            if not self.compaction_threshold.validate():
+                return
+            values["auto_compaction_threshold_percent"] = int(
+                self.compaction_threshold.value
+            )
         with client:
             self._set_saving(True)
         try:

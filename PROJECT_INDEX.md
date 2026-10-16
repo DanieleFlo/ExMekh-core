@@ -387,6 +387,30 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py` — osservazione uniforme
   delle richieste normali e strutturate, isolamento dei contesti figli e
   conservazione dei token totali dichiarati dal provider.
+- `agent/src/exmekh_agent/exmekh_bridge/providers/ds4_context.py`, `ds4_prompt.py` —
+  stima del prompt letterale Qwen e checkpoint dei return skill: le query non
+  aggiungono istruzioni operative rimosse dal server né modificano lo stato.
+  Eliminate le risorse obsolete `ds4_scope_guidance` e `ds4_return_guidance`.
+  `tests/test_qwen38_compatibility.py` verifica validazione e sampling agentico
+  senza richiedere il vecchio simbolo dell'iniezione server.
+- `agent/src/exmekh_agent/exmekh_bridge/agents/auto_compaction.py` — soglia globale
+  predefinita all'80% del limite scoperto per endpoint e modello; usa i totali
+  del provider e la stima della prossima richiesta, con riarmo dopo la riduzione.
+- `agent/src/exmekh_agent/exmekh_bridge/history/compaction.py` — `HistoryArchive`
+  possiede contesto, porzioni sostituite e confini del turno per root e figli;
+  espone checkpoint indipendenti. Replay, conteggio e Raw Current includono
+  anche i messaggi successivi al checkpoint; Graph e Raw Full espandono gli originali.
+  Raw offre uno switch fra archivio completo e contesto corrente.
+  `agent/tests/test_auto_compaction.py`, `test_auto_compaction_e2e.py` e
+  `agent/tests/compaction_probe.py` verificano il client reale con inferenza mock,
+  steering, nesting, ripresa, recupero degli output e UI desktop/mobile.
+- `docs/performance/automatic-history-compaction-20261016.json` — esiti delle
+  suite complete frontend/libreria, copertura, hash della wheel e screenshot
+  della compattazione automatica; distingue i test mock dalla qualifica live.
+- `exmekh_lib/src/exmekh_lib/core/history_compaction/inference_policy.py` — contratto
+  pubblico della policy prima dell'inferenza e dopo la sostituzione. `CompactionResult`
+  possiede la proiezione dei messaggi trattenuti; `MessageHistory.discard_latest`
+  rimuove soltanto le occorrenze rifiutate, preservando input già accettati.
 - `agent/src/exmekh_agent/exmekh_bridge/agents/cancellation.py` — inoltra richieste
   normali/strutturate conservando handler interattivo e reasoning; interrompe
   chiamate e stream dei turni cancellati.
@@ -460,6 +484,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   nodo; valutazione, riassunti/presentazione e proiezione sono separati. Lo schema
   contiene un campo obbligatorio per candidato. Scope attivi, user/system e
   riferimenti agli output mantengono il proprio contratto.
+  Il runtime ammette anche una policy per nodo prima dell'inferenza; l'evento
+  `DeepAgentHistoryCompactionEvent` conserva le porzioni sostituite per i frontend.
 - `exmekh_lib/src/exmekh_lib/core/models/xml_header.py` — renderer e lettore pubblico
   degli header; metadati decodificati e corpo esatto condivisi con il frontend.
 - `exmekh_lib/src/exmekh_lib/core/cache/output_file_store.py` — letture di snapshot

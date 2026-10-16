@@ -35,6 +35,8 @@ def apply_sub_agent_event(
         conversation.add_tool_event(event.tool_event)
     elif event.action == "completed":
         conversation.complete_call(event.response, event.raw_history)
-    elif event.action == "error":
+    if event.model_context is not None:
+        conversation.set_model_context(event.model_context, event.raw_history)
+    if event.action == "error":
         conversation.fail_call()
     return conversation

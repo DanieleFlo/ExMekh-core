@@ -13,6 +13,7 @@ from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.provider import DEFAULTS as PROVIDER_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
+from exmekh_agent.exmekh_bridge.history.compaction import replay_model_context
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
@@ -402,11 +403,18 @@ def build_compacted_context_messages(
     if not chat_messages:
         return []
 
-    sys_prompt = _resolve_system_prompt_for_session(session, chat_messages)
-    context_messages: list[dict[str, Any]] = [{"role": "system", "content": sys_prompt}]
+    resumed = replay_model_context(chat_messages)
+    if resumed is None:
+        sys_prompt = _resolve_system_prompt_for_session(session, chat_messages)
+        context_messages: list[dict[str, Any]] = [{"role": "system", "content": sys_prompt}]
+    else:
+        context_messages = []
+        chat_messages = resumed
 
     for msg in chat_messages:
-        if msg.role == "user":
+        if isinstance(msg, dict):
+            context_messages.append(msg)
+        elif msg.role == "user":
             context_messages.append({"role": "user", "content": msg.content})
         elif msg.role == "assistant":
             context_messages.extend(_build_turn_messages_for_assistant(msg))

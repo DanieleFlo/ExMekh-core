@@ -58,7 +58,6 @@ from exmekh_agent.exmekh_bridge.models import (
 )
 from exmekh_agent.exmekh_bridge.providers.context_usage import count_message_dict_tokens
 from exmekh_agent.exmekh_bridge.providers.ds4_prompt import (
-    apply_ds4_scope,
     render_ds4_qwen_prompt,
 )
 from exmekh_agent.state.session_manager import SessionManager, session_manager
@@ -258,7 +257,6 @@ def test_context_estimates_do_not_tokenize_binary_base64():
         {"content": "Inspect"}
     )
     messages = [raw]
-    apply_ds4_scope(messages, {"allowed_tools": [], "allowed_skills": []})
     prompt = render_ds4_qwen_prompt(messages, [])
     assert "Inspect" in prompt and "base64" not in prompt
 

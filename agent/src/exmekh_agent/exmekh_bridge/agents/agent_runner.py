@@ -25,6 +25,7 @@ from exmekh_agent.config import config
 from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.execution import TITLE_GENERATION
+from exmekh_agent.exmekh_bridge.agents.auto_compaction import AutoCompactionPolicy
 from exmekh_agent.exmekh_bridge.agents.cancellation import (
     CancellableProvider,
     raise_if_cancelled,
@@ -46,6 +47,11 @@ from exmekh_agent.exmekh_bridge.capabilities.agent_design import (
 )
 from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
+)
+from exmekh_agent.exmekh_bridge.history.compaction import (
+    HistoryArchive,
+    ModelContextCheckpoint,
+    latest_model_context,
 )
 from exmekh_agent.exmekh_bridge.history.converter import (
     convert_to_exmekh_messages,
@@ -128,6 +134,7 @@ def execute_agent_turn_sync(
     agent_profile: str = AGENT_DEFAULTS["default_profile"],
     agent_design: AgentDesign | None = None,
     capabilities_paths: list[str] | None = None,
+    on_model_context: Callable[[ModelContextCheckpoint], None] | None = None,
 ) -> str:
     """Run one complete provider request without overlapping another request."""
     with _provider_request_lock:
@@ -169,6 +176,7 @@ def execute_agent_turn_sync(
                 agent_profile=agent_profile,
                 agent_design=agent_design,
                 capabilities_paths=capabilities_paths,
+                on_model_context=on_model_context,
             )
         )
 
@@ -195,8 +203,14 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
         api_key=request.api_key,
     )
     context_provider = None
-    if request.on_context or (
-        request.steering is not None and request.agent_mode == "deep_agent"
+    if (
+        (
+            request.agent_mode == "deep_agent"
+            and config.get_server_context_length(request.model, request.base_url)
+            is not None
+        )
+        or request.on_context
+        or (request.steering is not None and request.agent_mode == "deep_agent")
     ):
         context_provider = ContextTrackingProvider(
             provider,
@@ -275,11 +289,42 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
             and not isinstance(message.get_message(), str)
         }
 
+        archive = HistoryArchive(latest_model_context(request.history))
+        archive.begin_turn([exmekh_message_to_raw_dict(m) for m in prior_exmekh])
+
         def publish_multimodal_history(raw_history, skill_tree):
             restored_history, restored_tree = restore_image_history(
                 raw_history, skill_tree, content_by_dump
             )
-            publish_raw_history(request.on_raw_history, restored_history, restored_tree)
+            expanded_history = archive.update(restored_history)
+            expanded_history, expanded_tree = restore_image_history(
+                expanded_history, archive.expand_tree(restored_tree), content_by_dump
+            )
+            checkpoint = archive.checkpoint()
+            if checkpoint is not None and request.on_model_context:
+                try:
+                    request.on_model_context(checkpoint)
+                except Exception as error:
+                    logger.warning(
+                        app_text(
+                            "errors_agents.event_handlers.unable_to_publish_model_context_s"
+                        ),
+                        error,
+                    )
+            if request.on_raw_history:
+                publish_raw_history(
+                    request.on_raw_history,
+                    expanded_history,
+                    expanded_tree,
+                )
+
+        def on_compaction(event):
+            if context_provider is not None:
+                context_provider.invalidate_context(event.agent_context_id)
+            if event.agent_context_id != root_node.agent_context_id:
+                return
+            archive.record_compaction(event.replaced_history)
+            publish_multimodal_history(event.history, event.history_tree)
 
         event_handler = DeepAgentTurnEventHandler(
             event_router,
@@ -287,9 +332,12 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
             request.on_reasoning,
             request.on_tool_event,
             request.on_skill_event,
-            publish_multimodal_history if request.on_raw_history else None,
+            publish_multimodal_history
+            if request.on_raw_history or request.on_model_context
+            else None,
             request.steering,
             request.on_steering_added,
+            on_compaction,
         )
         if context_provider is not None:
             context_provider.set_request_observer(event_handler.begin_request)
@@ -300,6 +348,13 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
             work_root=Path(request.work_root or config.work_root),
             on_stream=event_handler,
         )
+        if context_provider is not None:
+            for node in agent.capabilities_by_node:
+                node.set_history_compaction_policy(
+                    AutoCompactionPolicy(
+                        context_provider, model=request.model, base_url=request.base_url
+                    )
+                )
 
         for child in children:
             if not child.persistent_history or not request.sub_agent_history:
@@ -320,12 +375,25 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
 
         if request.history:
             restore_node_history(root_node, request.history, prior_exmekh=prior_exmekh)
+            if context_provider is not None:
+                for message in reversed(request.history):
+                    usage = getattr(message, "context_usage", None)
+                    if usage is not None:
+                        context_provider.restore_context_usage(
+                            root_node.agent_context_id, usage
+                        )
+                        break
 
         try:
             if request.steering is not None:
                 # Restored messages follow one system message and precede the
                 # initial user message. Skill compaction preserves that prefix.
-                request.steering.bind(agent.steer, history_start=len(prior_exmekh) + 2)
+                archived_prefix = archive.expand(
+                    [exmekh_message_to_raw_dict(m) for m in prior_exmekh]
+                )
+                request.steering.bind(
+                    agent.steer, history_start=len(archived_prefix) + 2
+                )
             response = agent.run(user_message=content)
         except BaseException:
             event_handler.finish("error")
@@ -336,7 +404,7 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
             if request.steering is not None:
                 request.steering.close()
 
-        if request.on_raw_history:
+        if request.on_raw_history or request.on_model_context:
             publish_multimodal_history(
                 response.history,
                 [serialize_skill_execution(s) for s in response.skill_executions],
@@ -407,6 +475,7 @@ async def run_agent_turn(
     on_steering_added: Callable[[], None] | None = None,
     image_urls: list[str] | None = None,
     get_tool_approval_mode: Callable[[], str] | None = None,
+    on_model_context: Callable[[ModelContextCheckpoint], None] | None = None,
 ) -> str:
     """Asynchronously runs the agent turn in a background worker thread."""
     loop = asyncio.get_running_loop()
@@ -456,6 +525,7 @@ async def run_agent_turn(
                 else settings.coding_agent_persistent_history
             ),
             on_context=on_context,
+            on_model_context=on_model_context,
             on_request_manual_approval=partial(
                 request_manual_approval, on_request_manual_approval
             )

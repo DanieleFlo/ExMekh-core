@@ -10,6 +10,7 @@ from copy import deepcopy
 from typing import Any
 
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
+from exmekh_agent.exmekh_bridge.history.compaction import ModelContextCheckpoint
 from exmekh_agent.exmekh_bridge.history.skill_history import skill_opening_call_id
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
@@ -53,6 +54,7 @@ class TurnStreamCollector:
         self.tools: list[ToolEvent] = []
         self.skills: list[SkillNode] = []
         self.raw_history: list[dict[str, Any]] = []
+        self.model_context: ModelContextCheckpoint | None = None
         self.skill_history_tree: list[dict[str, Any]] = []
         self.context_usage: ProviderContextUsage | None = None
         self._pending_skill_before: dict[str, int] = {}
@@ -175,6 +177,10 @@ class TurnStreamCollector:
                     skill.record_closure_tokens(before, context.prompt_tokens)
             self._sync_skill_context_tokens()
 
+    def set_model_context(self, context: ModelContextCheckpoint) -> None:
+        """Retain an owned checkpoint before publishing the matching raw snapshot."""
+        self.model_context = context.model_copy(deep=True)
+
     def _all_skills(self) -> list[SkillNode]:
         return [node for root in self.skills for node in root.iter_nodes()]
 
@@ -234,12 +240,15 @@ class TurnStreamCollector:
             tool_events=self.tools,
             skills=self.skills,
             raw_history=self.raw_history,
+            model_context=self.model_context,
             skill_history_tree=self.skill_history_tree,
             context_usage=self.context_usage,
             is_streaming=is_streaming,
             error=error,
         )
         self.steering.apply_to(message)
+        if self.model_context is not None:
+            message.raw_history_start = self.model_context.turn_start
         return message
 
     def skill_snapshot(self, path: str) -> SkillNode | None:

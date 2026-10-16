@@ -41,7 +41,6 @@ async def check_provider_health(
     base_url: str | None = None, api_key: str | None = None
 ) -> tuple[bool, list[str]]:
     """Check the configured provider endpoint and list its models."""
-    configured_endpoint = (config.base_url, config.api_key)
     url = (config.base_url if base_url is None else base_url).rstrip("/")
     key = config.api_key if api_key is None else api_key
 
@@ -69,11 +68,8 @@ async def check_provider_health(
                             m_id, str(m.get("owned_by") or ""), base_url=url
                         )
                         ctx_len = extract_model_context_length(m)
-                        if ctx_len is not None and configured_endpoint == (
-                            config.base_url,
-                            config.api_key,
-                        ):
-                            config.set_model_context_length(m_id, ctx_len)
+                        if ctx_len is not None:
+                            config.set_model_context_length(m_id, ctx_len, base_url=url)
                 return True, sorted(set(models))
             return False, []
     except Exception as e:  # noqa: BLE001 - health probe converts failures to status

@@ -8,6 +8,7 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
+from exmekh_agent.exmekh_bridge.history.compaction import ModelContextCheckpoint
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -301,6 +302,27 @@ def test_raw_history_component_render(ui_context: Client) -> None:
         session.messages.clear()
         rh.render_session(session)
         assert "0 messages" in rh.status_label.text
+
+
+def test_current_context_includes_messages_after_the_latest_checkpoint(ui_context: Client):
+    checkpoint = ModelContextCheckpoint(
+        history=[{"role": "user", "content": "retained context"}]
+    )
+    session = ChatSession(messages=[
+        ChatMessage(role="assistant", model_context=checkpoint),
+        ChatMessage(role="user", content="follow-up input"),
+        ChatMessage(role="assistant", content="follow-up answer"),
+    ])
+    with ui_context:
+        view = RawHistoryComponent()
+        view.build()
+        view.history_mode = "context"
+        view.render_session(session)
+    assert [item["content"] for item in view.raw_json_data] == [
+        "retained context", "follow-up input", "follow-up answer"
+    ]
+    view.raw_json_data[0]["content"] = "mutated view"
+    assert checkpoint.history[0]["content"] == "retained context"
 
 
 def test_raw_history_vertical_compaction_and_matryoshka(ui_context: Client) -> None:

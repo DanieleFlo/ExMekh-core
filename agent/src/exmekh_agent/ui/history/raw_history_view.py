@@ -19,6 +19,7 @@ from exmekh_agent.exmekh_bridge.history.skill_history import (
 )
 from exmekh_agent.exmekh_bridge.history.tool_calls import parse_tool_calls
 from exmekh_agent.exmekh_bridge.models import (
+    ChatMessage,
     ChatSession,
     SkillNode,
     ToolEvent,
@@ -203,6 +204,7 @@ class RawHistoryComponent:
         self.content_container: ui.column | None = None
         self.expansions: list[ui.expansion] = []
         self.current_session: ChatSession | None = None
+        self.history_mode = "archive"
         self.status_label: ui.label | None = None
         self.raw_json_data: list[dict[str, Any]] = []
         self.skill_tree_data: list[dict[str, Any]] = []
@@ -270,6 +272,21 @@ class RawHistoryComponent:
             with ui.row().classes(
                 UI_PRESENTATION["render_toolbar.classes.items_center_gap_2"]
             ):
+                with ui.row().classes(UI_PRESENTATION["context_switch.classes"]):
+                    archive_label = ui.label(
+                        ui_text("history.raw_history_view.full_archive")
+                    ).classes(UI_PRESENTATION["context_switch.label_classes"])
+                    view_switch = ui.switch(
+                        value=self.history_mode == "context",
+                        on_change=lambda event: self._set_history_mode(
+                            "context" if event.value else "archive"
+                        ),
+                    ).props(UI_PRESENTATION["context_switch.props"])
+                    context_label = ui.label(
+                        ui_text("history.raw_history_view.model_context")
+                    ).classes(UI_PRESENTATION["context_switch.label_classes"])
+                    archive_label.on("click", lambda: view_switch.set_value(False))
+                    context_label.on("click", lambda: view_switch.set_value(True))
                 ui.button(
                     ui_text("history.raw_history_view.expand_all"),
                     icon=UI_PRESENTATION["render_toolbar.icon.unfold_more"],
@@ -312,6 +329,30 @@ class RawHistoryComponent:
                     ]
                 )
 
+    def _set_history_mode(self, value: str) -> None:
+        self.history_mode = value
+        if self.current_session is not None:
+            self._render_preserving_stream(self.current_session)
+
+    def _render_preserving_stream(self, session: ChatSession) -> None:
+        streaming = self.is_streaming
+        content, reasoning = self.live_response_text, self.live_reasoning_text
+        self.render_session(session)
+        if streaming:
+            self.start_live_turn()
+            self.stream_token(content)
+            self.stream_reasoning(reasoning)
+
+    def update_context_snapshot(
+        self, session: ChatSession, message: ChatMessage
+    ) -> None:
+        if message.model_context is None:
+            return
+        display = session.model_copy(
+            update={"messages": [*session.messages, message.model_copy(deep=True)]}
+        )
+        self._render_preserving_stream(display)
+
     def render_session(self, session: ChatSession) -> None:
         if not self.container or not self.content_container:
             return
@@ -328,6 +369,9 @@ class RawHistoryComponent:
 
         context_usage.populate_skill_closure_tokens(session)
         raw_messages, skill_tree = build_raw_history_from_session(session)
+        if self.history_mode == "context":
+            raw_messages = context_usage.build_compacted_context_messages(session)
+            skill_tree = []
         self.raw_json_data = raw_messages
         self.skill_tree_data = skill_tree
 
@@ -482,7 +526,7 @@ class RawHistoryComponent:
                                 "render_single_raw_message.classes.font_mono_text_11px_text_amber_400_90_bg_ambe"
                             ]
                         )
-                    elif msg.get("tool_calls"):
+                    elif parse_tool_calls(msg.get("tool_calls")):
                         ui.label(ui_text("history.raw_history_view.tool_call")).classes(
                             UI_PRESENTATION[
                                 "render_single_raw_message.classes.font_mono_text_10px_text_amber_300_bg_amber_9"

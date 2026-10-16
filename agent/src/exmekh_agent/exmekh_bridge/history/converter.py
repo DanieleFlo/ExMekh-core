@@ -21,6 +21,7 @@ from exmekh_lib.interfaces.message import Message
 
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.execution_restore import ExecutionHistoryRestorer
+from exmekh_agent.exmekh_bridge.history.compaction import replay_model_context
 from exmekh_agent.exmekh_bridge.history.image_input import (
     deserialize_user_content,
     serialize_user_content,
@@ -104,6 +105,12 @@ def convert_to_exmekh_messages(
             items = items[:-1]
 
     pending_tool_calls: list[ToolCall] = []
+
+    # UI transcripts retain originals; resume from the latest working-context
+    # checkpoint, then append only inputs recorded after that checkpoint.
+    resumed = replay_model_context(items)
+    if resumed is not None:
+        items = resumed
 
     for item in items:
         role = _history_role(item)

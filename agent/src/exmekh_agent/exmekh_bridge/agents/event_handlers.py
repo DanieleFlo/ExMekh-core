@@ -11,6 +11,7 @@ from typing import Any
 from exmekh_lib.core.agents.deep_agent import (
     DeepAgentEvent,
     DeepAgentExecutionEvent,
+    DeepAgentHistoryCompactionEvent,
     DeepAgentStreamEvent,
 )
 from exmekh_lib.core.models.provider_stream_event import (
@@ -105,6 +106,7 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         | None,
         steering: TurnSteering | None = None,
         on_steering_added: Callable[[], None] | None = None,
+        on_compaction: Callable[[DeepAgentHistoryCompactionEvent], None] | None = None,
     ) -> None:
         self.event_router = event_router
         self.on_token = on_token
@@ -114,6 +116,7 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         self.on_raw_history = on_raw_history
         self.steering = steering
         self.on_steering_added = on_steering_added
+        self.on_compaction = on_compaction
         self._preceding_tool: tuple[str, str] | None = None
         self.skill_stack: list[SkillNode] = []
         self.active_tools: dict[tuple[str | None, str, str, int], ToolEvent] = {}
@@ -163,6 +166,11 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         return node
 
     def handle(self, event: DeepAgentEvent) -> None:
+        if isinstance(event, DeepAgentHistoryCompactionEvent):
+            if self.on_compaction:
+                self.on_compaction(event)
+            self.event_router.route(event)
+            return
         if self.event_router.route(event):
             return
         if not isinstance(event, (DeepAgentStreamEvent, DeepAgentExecutionEvent)):

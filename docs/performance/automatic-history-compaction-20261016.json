@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-16",
+  "feature": "Automatic per-node history compaction with preserved execution archives",
+  "default_threshold_percent": 80,
+  "threshold_range": [1, 99],
+  "capacity_source": "Provider model metadata, scoped by endpoint and model",
+  "wheel": {
+    "path": "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl",
+    "sha256": "c45c41362a9f1a8a34225678ea097d65bea5492fa266cabc82747db84dade673",
+    "installed_and_lockfile_updated": true
+  },
+  "frontend": {
+    "command": ".venv/bin/python -m pytest -n 4 -q --cov-report=term-missing:skip-covered",
+    "working_directory": "agent",
+    "passed": 1058,
+    "skipped": 43,
+    "seconds": 217.92,
+    "statement_and_branch_coverage_percent": 100,
+    "missing_statements": 0,
+    "missing_branches": 0
+  },
+  "library": {
+    "command": ".venv/bin/python -m pytest -n 4 -q --cov=exmekh_lib --cov-branch --cov-report=term-missing:skip-covered",
+    "working_directory": "exmekh_lib",
+    "commit": "bbe6d44",
+    "passed": 3032,
+    "skipped": 71,
+    "seconds": 13.34,
+    "statement_and_branch_coverage_percent": 100,
+    "missing_statements": 0,
+    "missing_branches": 0
+  },
+  "additional_checks": {
+    "frontend_ruff": "passed",
+    "library_ruff": "passed",
+    "library_pyright": "0 errors, 0 warnings",
+    "product_text_configuration": "passed",
+    "git_diff_check_both_repositories": "passed",
+    "wheel_matches_committed_library_source_files": 272,
+    "wheel_hash_matches_uv_lock": true
+  },
+  "clean_code_review": {
+    "direct_private_access_audit": {
+      "frontend_python_files": 119,
+      "library_python_files": 265,
+      "reviewed_accesses_outside_self_or_cls": 16,
+      "finding": "Accesses belong to same-class instances or the public namedtuple _replace API; no direct foreign private-field access found."
+    },
+    "ownership_changes": [
+      "HistoryArchive owns replacement records and turn boundaries for root and children; callers use snapshots and commands.",
+      "HistoryCompactionPolicy separates before_inference decisions from after_compaction notification.",
+      "CompactionResult owns retained-message projection; NodeRuntime no longer reconstructs identity from index-map internals.",
+      "MessageHistory owns occurrence-aware rollback; Client and NodeRuntime share the public removal API.",
+      "TurnStreamCollector owns copying incoming model-context checkpoints."
+    ],
+    "corrected_behaviors": [
+      "Child replay and Raw Current include messages recorded after the latest compact-context checkpoint.",
+      "Context views do not share mutable saved history with their callers.",
+      "Metadata probes cache capacity against the actual endpoint, including explicit alternate probes and stale responses.",
+      "DS4 scope checkpoints are tracked for root and children independently of UI observers.",
+      "Rollback of repeated message objects preserves occurrences already accepted by the provider.",
+      "DS4 estimates literal client prompts after server guidance removal in 04e8e1c; obsolete injected-prefix state and guidance resources are removed.",
+      "The Qwen38 static gate checks capability validation and sampling rather than requiring the removed server guidance function."
+    ],
+    "root_static_checks": {
+      "command": "agent/.venv/bin/python -m unittest tests.test_product_text_configuration tests.test_qwen38_compatibility tests.test_server_sampling_matrix.SamplingMatrixFixtureTests -q",
+      "passed": 26,
+      "skipped": 3,
+      "seconds": 1.043
+    }
+  },
+  "mock_and_browser_scenarios": [
+    "Threshold boundary, configurable value and persistence",
+    "Unknown server capacity and endpoint isolation",
+    "Provider totals and request estimates",
+    "DS4 preflight matches literal server prompt without synthetic scope instructions",
+    "Repeated compaction and prevention of duplicate calls in Raw",
+    "Preservation of original tool arguments, outputs and graph nodes",
+    "Checkpoint serialization and continuation from compact context",
+    "Recovery of original output after runtime reconstruction",
+    "Nested skills and native return metadata",
+    "Independent child-node archives and replay",
+    "Steering accepted during compaction and delivered before inference",
+    "Summary/scoring failure, cancellation and rejected input rollback",
+    "Optional observers and final checkpoint completeness",
+    "User images preserved through compaction and replay",
+    "Raw switch with pointer, keyboard and a 390px viewport",
+    "Switch and page reload while compaction is paused"
+  ],
+  "visual_inspection": {
+    "status": "passed",
+    "artifacts_directory": "agent/screenshots/auto-compaction-20261016",
+    "files": ["raw-archive.png", "raw-context.png", "raw-context-mobile.png", "graph.png"]
+  },
+  "limits": [
+    "No live model-provider or GPU performance qualification was run for this change.",
+    "Protected system/user messages and active scope anchors can prevent reduction below the threshold.",
+    "Coverage follows the repositories' existing configured inclusions; frontend UI is additionally checked through Playwright and screenshots.",
+    "The cross-repository private-access scan and targeted review are not a formal proof of every clean-code property; existing large coordination modules were not rewritten wholesale."
+  ]
+}

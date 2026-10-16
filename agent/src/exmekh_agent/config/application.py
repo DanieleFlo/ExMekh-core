@@ -51,6 +51,15 @@ class AppConfig:
         )
     )
     model_context_lengths: dict[str, int] = field(default_factory=dict)
+    server_context_lengths: dict[tuple[str, str], int] = field(default_factory=dict)
+    auto_compaction_threshold_percent: int = field(
+        default_factory=lambda: int(
+            os.getenv(
+                ENVIRONMENT_FIELDS["auto_compaction_threshold_percent"],
+                str(PROVIDER_DEFAULTS["auto_compaction_threshold_percent"]),
+            )
+        )
+    )
     model_owners: dict[tuple[str, str], str] = field(default_factory=dict)
     api_type: str = field(
         default_factory=lambda: os.getenv(
@@ -99,6 +108,14 @@ class AppConfig:
     )
     data_dir: Path = field(default_factory=lambda: DEFAULT_DATA_DIR)
 
+    def __post_init__(self) -> None:
+        self._validate_compaction_threshold(self.auto_compaction_threshold_percent)
+
+    @staticmethod
+    def _validate_compaction_threshold(value: object) -> None:
+        if type(value) is not int or not 1 <= value <= 99:
+            raise ValueError(app_text("configuration.invalid_compaction_threshold"))
+
     def save_to_env(self, env_path: Path | None = None) -> bool:
         """Persist settings atomically, reporting failure without changing the old file."""
         env_path = env_path or DEFAULT_ENV_PATH
@@ -142,8 +159,16 @@ class AppConfig:
             return False
         return True
 
-    def set_model_context_length(self, model: str, length: int) -> None:
-        if model and isinstance(length, int) and length > 0:
+    def set_model_context_length(
+        self, model: str, length: int, *, base_url: str | None = None
+    ) -> None:
+        if model and type(length) is int and length > 0:
+            endpoint = self.base_url if base_url is None else base_url
+            self.server_context_lengths[
+                self._model_endpoint_key(model, endpoint)
+            ] = length
+            if endpoint.rstrip("/") != self.base_url.rstrip("/"):
+                return
             self.model_context_lengths[model] = length
             if model == self.default_model:
                 self.context_length = length
@@ -168,6 +193,11 @@ class AppConfig:
             return self.model_context_lengths[target_model]
         return self.context_length
 
+    def get_server_context_length(self, model: str, base_url: str) -> int | None:
+        return self.server_context_lengths.get(
+            self._model_endpoint_key(model, base_url)
+        )
+
     def select_available_model(self, models: Sequence[str]) -> None:
         """Follow the loaded model in memory; only explicit settings saves persist it."""
         if not models:
@@ -177,6 +207,10 @@ class AppConfig:
         self.context_length = self.get_context_length()
 
     def _apply_updates(self, values: dict[str, object]) -> None:
+        threshold = values.get(
+            "auto_compaction_threshold_percent", self.auto_compaction_threshold_percent
+        )
+        self._validate_compaction_threshold(threshold)
         allowed_fields = {item.name for item in fields(self)}
         for name, value in values.items():
             if name in allowed_fields:

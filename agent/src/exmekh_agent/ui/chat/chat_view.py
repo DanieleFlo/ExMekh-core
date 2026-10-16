@@ -1794,6 +1794,8 @@ class ChatViewComponent:
         """Publish newly recorded output even when no tool or skill changes state."""
         previous = self._streaming_history
         self._streaming_history = message
+        if self.raw_history_view:
+            self.raw_history_view.update_context_snapshot(self.sessions.get_current_session(), message)
         if previous is None or not message.has_same_execution_details(previous):
             self._refresh_streaming_skills_and_tools()
 

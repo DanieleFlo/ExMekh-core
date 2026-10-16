@@ -10,6 +10,7 @@ from uuid import uuid4
 from exmekh_lib.core.agents.deep_agent import (
     DeepAgentEvent,
     DeepAgentExecutionEvent,
+    DeepAgentHistoryCompactionEvent,
     DeepAgentStreamEvent,
 )
 from exmekh_lib.core.agents.node import Node
@@ -17,14 +18,24 @@ from exmekh_lib.core.models.provider_stream_event import ProviderStreamEventType
 from exmekh_lib.interfaces.message import Message
 
 from exmekh_agent.config.catalogs import message as app_text
-from exmekh_agent.exmekh_bridge.history.converter import restore_node_history
+from exmekh_agent.exmekh_bridge.history.compaction import (
+    HistoryArchive,
+    ModelContextCheckpoint,
+    latest_model_context,
+)
+from exmekh_agent.exmekh_bridge.history.converter import (
+    exmekh_message_to_raw_dict,
+    restore_node_history,
+)
 from exmekh_agent.exmekh_bridge.models import SubAgentConversation, ToolEvent
 from exmekh_agent.exmekh_bridge.tools.tool_events import tool_event_from_execution
 
 
 @dataclass(frozen=True, slots=True)
 class SubAgentEvent:
-    action: Literal["started", "token", "reasoning", "tool", "completed", "error"]
+    action: Literal[
+        "started", "token", "reasoning", "tool", "completed", "error", "history"
+    ]
     id: str
     path: str
     persistent_history: bool
@@ -35,6 +46,7 @@ class SubAgentEvent:
     skill_path: str = "/"
     depth: int = 0
     tool_event: ToolEvent | None = None
+    model_context: ModelContextCheckpoint | None = None
 
 
 class SubAgentEventRouter:
@@ -82,6 +94,7 @@ class ObservedNode(Node):
         self._event_router = event_router
         self._conversation_id = str(uuid4())
         self._active_call_id: str | None = None
+        self._archive = HistoryArchive()
 
     def restore_conversation(
         self,
@@ -91,6 +104,8 @@ class ObservedNode(Node):
         if not self.persistent_history:
             return
         self._conversation_id = previous.id
+        self._archive = HistoryArchive(latest_model_context(previous.message_history()))
+        self._archive.begin_turn([exmekh_message_to_raw_dict(m) for m in prior_exmekh])
         if prior_exmekh:
             restore_node_history(
                 self, previous.message_history(), prior_exmekh=prior_exmekh
@@ -104,6 +119,17 @@ class ObservedNode(Node):
             "path": self.path,
             "persistent_history": self.persistent_history,
         }
+        if isinstance(event, DeepAgentHistoryCompactionEvent):
+            self._archive.record_compaction(event.replaced_history)
+            self._event_router.publish(
+                SubAgentEvent(
+                    action="history",
+                    raw_history=self._archive.update(event.history),
+                    model_context=self._archive.checkpoint(),
+                    **shared,
+                )
+            )
+            return
         if isinstance(event, DeepAgentStreamEvent):
             provider_event = event.provider_event
             if provider_event.type == ProviderStreamEventType.RESPONSE:
@@ -131,6 +157,9 @@ class ObservedNode(Node):
         self._event_router.publish(child_event)
 
     def run(self, user_message: str) -> Any:
+        if not self.persistent_history:
+            self._archive = HistoryArchive()
+        self._archive.begin_turn()
         conversation_id = (
             self._conversation_id if self.persistent_history else str(uuid4())
         )
@@ -154,7 +183,8 @@ class ObservedNode(Node):
                     path=self.path,
                     persistent_history=self.persistent_history,
                     response=str(response.get_message() or ""),
-                    raw_history=list(response.history),
+                    raw_history=self._archive.update(list(response.history)),
+                    model_context=self._archive.checkpoint(),
                 )
             )
             return response

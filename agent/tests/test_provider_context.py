@@ -44,7 +44,6 @@ from exmekh_agent.exmekh_bridge.providers.context_usage import (
     populate_skill_closure_tokens,
 )
 from exmekh_agent.exmekh_bridge.providers.ds4_prompt import (
-    apply_ds4_scope,
     render_ds4_qwen_prompt,
 )
 from exmekh_agent.exmekh_bridge.providers.provider_context import (
@@ -323,7 +322,7 @@ def test_raw_history_replacement_retains_badge_identity() -> None:
     assert "tokens_after_close" not in collector.skill_history_tree[0]
 
 
-def test_ds4_render_includes_tools_scope_roles_and_dsml() -> None:
+def test_ds4_render_preserves_client_content_and_includes_tools_roles_and_dsml() -> None:
     tools = [{"function": {"name": "search", "parameters": {"type": "object"}}}]
     calls = [
         {
@@ -347,14 +346,10 @@ def test_ds4_render_includes_tools_scope_roles_and_dsml() -> None:
         {"role": "assistant", "content": "<think>already wrapped</think>answer"},
         {"role": "user", "content": "follow up"},
     ]
-    apply_ds4_scope(
-        messages,
-        {"allowed_tools": ["search"], "allowed_skills": [], "operation": "return"},
-    )
     prompt = render_ds4_qwen_prompt(messages, tools)
     assert '"name":"search"' in prompt
-    assert "Allowed ordinary tools: search" in prompt
-    assert "has already finished and EXITED" in prompt
+    assert "<agent_runtime>" not in prompt
+    assert messages[-1]["content"] == "follow up"
     assert 'name="search&amp;&quot;"' in prompt
     assert 'string="true">x &lt;/｜DSML｜parameter>' in prompt
     assert "\\u003c/｜DSML｜parameter>" in prompt
@@ -386,12 +381,6 @@ def test_ds4_render_includes_tools_scope_roles_and_dsml() -> None:
         ],
         [],
     )
-    scope_only = [{"role": "system", "content": ""}]
-    apply_ds4_scope(scope_only, {"allowed_tools": [], "allowed_skills": []})
-    assert scope_only[-1]["role"] == "system"
-    empty_tool = [{"role": "tool", "content": ""}]
-    apply_ds4_scope(empty_tool, {"allowed_tools": [], "allowed_skills": []})
-    assert empty_tool[0]["content"].startswith("<agent_runtime>")
     tool_tail = render_ds4_qwen_prompt(
         [
             {

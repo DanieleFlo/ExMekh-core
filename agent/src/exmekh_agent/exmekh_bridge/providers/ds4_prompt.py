@@ -6,37 +6,11 @@ import json
 from html import escape
 from typing import Any
 
-from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.exmekh_bridge.resources import load_prompt
 
 _TOOLS_PREFIX = load_prompt("ds4_tools_prefix")
 _TOOLS_SUFFIX = load_prompt("ds4_tools_suffix")
-_SCOPE_GUIDANCE = load_prompt("ds4_scope_guidance")
-_RETURN_GUIDANCE = load_prompt("ds4_return_guidance")
-
-
-def apply_ds4_scope(messages: list[dict[str, Any]], agentic: dict[str, Any]) -> None:
-    """Mirror DS4's scope instruction on the newest user or tool message."""
-    scope = (
-        app_text(
-            "execution.ds4_prompt.scope_prefix",
-            tools=", ".join(agentic["allowed_tools"])
-            or app_text("execution.ds4_prompt.no_capabilities"),
-            skills=", ".join(agentic["allowed_skills"])
-            or app_text("execution.ds4_prompt.no_capabilities"),
-        )
-        + _SCOPE_GUIDANCE
-    )
-    if agentic.get("operation") == "return":
-        scope += _RETURN_GUIDANCE
-    scope += "</agent_runtime>"
-    for message in reversed(messages):
-        if message["role"] in ("user", "tool"):
-            content = content_text(message.get("content"))
-            message["content"] = content + ("\n\n" if content else "") + scope
-            return
-    messages.append({"role": "system", "content": scope})
 
 
 def _json(value: Any) -> str:

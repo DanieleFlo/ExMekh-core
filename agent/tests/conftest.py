@@ -78,3 +78,4 @@ def preserve_env_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
     monkeypatch.setattr(AppConfig, "save_to_env", save_test_settings)
+    monkeypatch.setattr(config, "server_context_lengths", {})

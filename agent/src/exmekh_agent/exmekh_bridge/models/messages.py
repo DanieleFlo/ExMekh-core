@@ -11,6 +11,10 @@ from exmekh_lib.core.models.assistant_message import ToolCall
 from pydantic import BaseModel, Field
 
 from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.exmekh_bridge.history.compaction import (
+    ModelContextCheckpoint,
+    replay_model_context,
+)
 from exmekh_agent.exmekh_bridge.history.recorded_history import (
     RecordedHistory,
     extract_turn_raw_history,
@@ -78,6 +82,7 @@ class ChatMessage(BaseModel):
     tool_events: list[ToolEvent] = Field(default_factory=list)
     skills: list[SkillNode] = Field(default_factory=list)
     raw_history: list[dict[str, Any]] = Field(default_factory=list)
+    model_context: ModelContextCheckpoint | None = None
     raw_history_start: int | None = Field(default=None, ge=0)
     steering_messages: list[QueuedMessage] = Field(default_factory=list)
     # None identifies older chats whose positions still need history reconstruction.
@@ -114,6 +119,7 @@ class ChatMessage(BaseModel):
         """Compare the execution panels independently of root text and reasoning."""
         return (
             self.raw_history == other.raw_history
+            and self.model_context == other.model_context
             and self.skill_history_tree == other.skill_history_tree
             and self.skills == other.skills
             and self.tool_events == other.tool_events
@@ -339,8 +345,11 @@ class SubAgentConversation(BaseModel):
     def message_history(self) -> list[ChatMessage]:
         return list(self.messages)
 
-    def replay_history(self) -> list[dict[str, Any]] | list[ChatMessage]:
+    def replay_history(self) -> list[dict[str, Any] | ChatMessage]:
         """Replay the retained ExMekh-Lib snapshot, with a safe fallback for legacy calls."""
+        resumed = replay_model_context(self.messages)
+        if resumed is not None:
+            return resumed
         return (
             deepcopy(self.raw_history) if self.raw_history else deepcopy(self.messages)
         )
@@ -386,6 +395,15 @@ class SubAgentConversation(BaseModel):
         self.raw_history = deepcopy(raw_history)
         message.raw_history = deepcopy(raw_history)
         self.status = "completed"
+
+    def set_model_context(
+        self, context: ModelContextCheckpoint, raw_history: list[dict[str, Any]]
+    ) -> None:
+        message = self.messages[-1]
+        message.model_context = context.model_copy(deep=True)
+        message.raw_history = deepcopy(raw_history)
+        message.raw_history_start = context.turn_start
+        self.raw_history = deepcopy(raw_history)
 
     def fail_call(self) -> None:
         message = self._active_assistant()

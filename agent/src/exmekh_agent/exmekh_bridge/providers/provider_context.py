@@ -55,24 +55,58 @@ class ContextTrackingProvider(Provider):
             else OpenAIChatCompletionToolMapper
         )
         self._ds4_context = Ds4ContextEstimator(thinking=thinking) if ds4_qwen else None
+        self._scope_estimators: dict[str, Ds4ContextEstimator] = {}
+        self._last_totals: dict[str, int] = {}
+
+    def invalidate_context(self, context_id: str | None) -> None:
+        self._last_totals.pop(context_id or "", None)
+        self._scope_estimators.pop(context_id or "", None)
+
+    def restore_context_usage(
+        self, context_id: str, usage: ProviderContextUsage
+    ) -> None:
+        if usage.authoritative_total is not None:
+            self._last_totals[context_id] = usage.authoritative_total
+
+    def last_context_total(self, request: ProviderRequest) -> int:
+        agentic = (request.get_extra() or {}).get("agentic") or {}
+        return self._last_totals.get(agentic.get("agent_context_id") or "", 0)
+
+    def _remember_totals(self, request, response) -> None:
+        agentic = (request.get_extra() or {}).get("agentic") or {}
+        usage = response.usage
+        if agentic and usage is not None and usage.prompt_tokens is not None:
+            self._last_totals[agentic.get("agent_context_id") or ""] = (
+                usage.prompt_tokens + (usage.completion_tokens or 0)
+            )
 
     def set_request_observer(self, observer: Callable[[], None] | None) -> None:
         """Observe owned requests without exposing the provider's callback storage."""
         self._on_request = observer
 
+    def estimate_context(self, request: ProviderRequest) -> ProviderContextUsage:
+        """Estimate a node's next prompt without notifying UI or admitting inference."""
+        return self._estimate_request(
+            request, (request.get_extra() or {}).get("agentic") or {}
+        )
+
+    def _observes(self, request: ProviderRequest) -> bool:
+        agentic = (request.get_extra() or {}).get("agentic") or {}
+        return not agentic or agentic.get("agent_context_id") == self._context_id
+
     def _begin_request(self, request: ProviderRequest) -> ProviderContextUsage | None:
         agentic = (request.get_extra() or {}).get("agentic") or {}
         # Stateless thinking summaries have no agentic scope and are not chat context.
-        if (self._agentic_only and not agentic) or (
-            agentic and agentic.get("agent_context_id") != self._context_id
-        ):
+        if self._agentic_only and not agentic:
             return None
-        if self._on_request:
+        observes = self._observes(request)
+        if observes and self._on_request:
             self._on_request()
-        if self._on_context is None:
+        if self._ds4_context is None and (not observes or self._on_context is None):
             return None
         context = self._estimate_request(request, agentic)
-        self._on_context(context)
+        if observes and self._on_context:
+            self._on_context(context)
         return context
 
     def _record_response(
@@ -89,9 +123,10 @@ class ContextTrackingProvider(Provider):
             usage.prompt_tokens if has_prompt_usage else context.prompt_tokens
         )
         completion_tokens = usage.completion_tokens if has_prompt_usage else None
-        if self._ds4_context and has_prompt_usage:
-            agentic = (request.get_extra() or {}).get("agentic") or {}
-            self._ds4_context.record_response(
+        agentic = (request.get_extra() or {}).get("agentic") or {}
+        estimator = self._estimator(agentic)
+        if estimator and has_prompt_usage:
+            estimator.record_response(
                 response,
                 agentic.get("allowed_skills", []),
                 context.return_call_id,
@@ -107,11 +142,13 @@ class ContextTrackingProvider(Provider):
             )
             if response.thinking and response.thinking.thoughts:
                 final_context.streamed_reasoning = response.thinking.thoughts
-        self._on_context(final_context)
+        if self._observes(request) and self._on_context:
+            self._on_context(final_context)
 
     def call(self, request: ProviderRequest) -> ProviderResponse:
         context = self._begin_request(request)
         response = self._provider.call(request)
+        self._remember_totals(request, response)
         self._record_response(context, request, response)
         return response
 
@@ -125,13 +162,26 @@ class ContextTrackingProvider(Provider):
             if tools and request.get_tool_choice() != "none"
             else []
         )
-        if self._ds4_context:
-            return self._ds4_context.estimate_request(messages, schemas, agentic)
+        estimator = self._estimator(agentic)
+        if estimator:
+            return estimator.estimate_request(messages, schemas, agentic)
         prompt_tokens = sum(count_message_dict_tokens(message) for message in messages)
         prompt_tokens += count_text_tokens(json.dumps(schemas, ensure_ascii=False))
         return ProviderContextUsage(
             prompt_tokens=prompt_tokens, return_call_id=agentic.get("skill_call_id")
         )
+
+    def _estimator(self, agentic: dict) -> Ds4ContextEstimator | None:
+        if self._ds4_context is None:
+            return None
+        context_id = agentic.get("agent_context_id") or ""
+        if not agentic or context_id == self._context_id:
+            return self._ds4_context
+        if context_id not in self._scope_estimators:
+            self._scope_estimators[context_id] = Ds4ContextEstimator(
+                thinking=self._ds4_context.thinking
+            )
+        return self._scope_estimators[context_id]
 
     def call_structured[ResponseModel: BaseModel](
         self, request: StructuredProviderRequest[ResponseModel]

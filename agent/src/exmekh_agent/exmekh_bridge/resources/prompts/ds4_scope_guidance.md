@@ -1,1 +1,0 @@
-. These lists are permissions, not an unconditional request to call a capability. Use DSML to invoke a permitted capability when needed for unfinished work. Tool and skill results already in the conversation represent completed work: do not repeat successful calls just because the original request mentions them.

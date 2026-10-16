@@ -463,7 +463,12 @@ class Qwen38CompatibilityTests(unittest.TestCase):
         self.assertIn('.ds4/qwen38-ud-q4ks-kv', engine)
         self.assertIn("SERVER_MODEL_SYNTAX_QWEN", server)
         self.assertIn("render_qwen_chat_prompt_text", server)
-        self.assertIn("append_qwen_agentic_scope_instruction", server)
+        # Operational guidance belongs to the client; the server enforces scope
+        # through capability validation and constrained sampling.
+        self.assertNotIn("append_qwen_agentic_scope_instruction", server)
+        self.assertIn("agentic_validate_registry", server)
+        self.assertIn("agentic_name_is_allowed", server)
+        self.assertIn("test_agentic_return_preserves_client_result", server)
         self.assertIn("ds4_engine_model_descriptor(engine)", server)
         self.assertIn("DS4_MODEL_FAMILY_QWEN35", server)
         self.assertIn("ds4_engine_model_descriptor(ds4_engine *e)", engine)

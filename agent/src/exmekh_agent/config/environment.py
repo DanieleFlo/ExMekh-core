@@ -5,6 +5,7 @@ ENVIRONMENT_FIELDS = {
     "api_key": "API_KEY",
     "default_model": "DEFAULT_MODEL",
     "context_length": "CONTEXT_LENGTH",
+    "auto_compaction_threshold_percent": "AUTO_COMPACTION_THRESHOLD_PERCENT",
     "api_type": "API_TYPE",
     "reasoning_effort": "REASONING_EFFORT",
     "coding_agent_persistent_history": "CODING_AGENT_PERSISTENT_HISTORY",
