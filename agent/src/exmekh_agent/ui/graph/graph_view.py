@@ -115,6 +115,10 @@ class GraphViewComponent:
                         NODE_COLORS["sub_agent_bundle"],
                     ),
                     (app_text("graph.graph_view.assistant"), NODE_COLORS["assistant"]),
+                    (
+                        app_text("graph.graph_data.compaction_short"),
+                        NODE_COLORS["compaction"],
+                    ),
                 ]
                 for lbl, color in legend_items:
                     with ui.row().classes(
@@ -517,6 +521,10 @@ class GraphViewComponent:
             border_cls = UI_PRESENTATION["event.system.border"]
             badge_cls = UI_PRESENTATION["event.system.badge"]
             icon_name = UI_PRESENTATION["render_horizontal_event_card.icon.terminal"]
+        elif ev.get("event_stage") == "history_compaction":
+            border_cls = UI_PRESENTATION["event.compaction.border"]
+            badge_cls = UI_PRESENTATION["event.compaction.badge"]
+            icon_name = UI_PRESENTATION["event.compaction.icon"]
         elif ev.get("event_stage") == "steering_message":
             border_cls = UI_PRESENTATION["event.steering.border"]
             badge_cls = UI_PRESENTATION["event.steering.badge"]

@@ -120,7 +120,12 @@ class ObservedNode(Node):
             "persistent_history": self.persistent_history,
         }
         if isinstance(event, DeepAgentHistoryCompactionEvent):
-            self._archive.record_compaction(event.replaced_history)
+            self._archive.record_compaction(
+                event.replaced_history,
+                history=event.history,
+                skill_path=event.skill_path,
+                depth=event.depth,
+            )
             self._event_router.publish(
                 SubAgentEvent(
                     action="history",

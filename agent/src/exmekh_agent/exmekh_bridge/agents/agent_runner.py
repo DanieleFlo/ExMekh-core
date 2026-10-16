@@ -327,7 +327,12 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
                 context_provider.invalidate_context(event.agent_context_id)
             if event.agent_context_id != root_node.agent_context_id:
                 return
-            archive.record_compaction(event.replaced_history)
+            archive.record_compaction(
+                event.replaced_history,
+                history=event.history,
+                skill_path=event.skill_path,
+                depth=event.depth,
+            )
             publish_multimodal_history(event.history, event.history_tree)
 
         event_handler = DeepAgentTurnEventHandler(

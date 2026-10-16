@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Europe/Rome",
+  "scope": "Frontend graph and saved compaction event metadata; ExMekh-Lib and its bundled wheel are unchanged",
+  "behavior": {
+    "node_kind": "compaction",
+    "label": "Context compaction",
+    "caption_and_legend": "Compaction",
+    "color": "#a3e635",
+    "details": "One runtime event, including operation identity, replacement IDs, scope, timestamp and execution boundary; no fabricated tool execution stages",
+    "batching": "One applied operation produces one point even when it replaces multiple history blocks",
+    "ordering": "Place after the last completed invocation or synthetic replacement at application time, preserving preceding accepted guidance and placing the point before resumed work",
+    "new_turn": "Retain saved events on earlier messages and clear only the new turn's event list; compaction of previous context is shown before new work",
+    "scopes": "Root, nested skills and observed child conversations retain independent metadata and graph positions",
+    "persistence": "Optional compactions list in ModelContextCheckpoint; metadata does not enter the model's request history"
+  },
+  "validation": {
+    "frontend_full_suite": {
+      "passed": 1086,
+      "skipped": 44,
+      "seconds": 224.58,
+      "statement_and_branch_coverage_percent": 100,
+      "includes_playwright": true
+    },
+    "focused_graph_archive_and_browser_suite": {
+      "passed": 88,
+      "seconds": 36.85,
+      "covers": ["one operation replacing multiple blocks", "chronological order and accepted guidance", "new work after compaction", "legacy raw markers", "save and reload", "child conversations and nested skills", "legend and selectable event details"]
+    },
+    "ruff": "passed",
+    "product_text_gate": {"passed": 4, "seconds": 0.40},
+    "git_diff_check": "passed",
+    "frontend_runtime": {"restarted": true, "http_status": 200},
+    "original_chat_sha256_unchanged": "a9f9a9edfe1736a5b47bbe5df39a7beb238c6d6f79202f1738593ff4cb2276a3",
+    "evidence_directory": "performance-results/compaction-overhead-20261016",
+    "screenshot": "graph-compaction.png"
+  },
+  "compatibility": [
+    "Existing chats without operation metadata display their available compact_history markers as dedicated points, without invented execution records or timestamps; several old markers cannot reliably be grouped into their original operation.",
+    "The graph retains its existing rendering lifecycle: final response completion produces the full graph. The transient compaction progress bar remains in the response area while the operation runs.",
+    "Only successfully applied replacements create persistent compaction events. Failed attempts retain the existing execution error node.",
+    "No changes to model requests, scoring, inference kernels or server protocols."
+  ]
+}

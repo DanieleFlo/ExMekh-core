@@ -39,6 +39,11 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   ends, fails, or is stopped. The library system configuration retains a target
   of 10% of candidates above the summary threshold, with a minimum of two when
   available and all ties at the cutoff preserved.
+  Graph shows each applied compaction as a separate lime point at its execution
+  boundary, with a legend entry and selectable event details. One operation
+  replacing several history blocks produces one point; saved chats retain the
+  events for root and child conversations. Legacy chats display available
+  compaction markers without fabricated execution stages or timestamps.
 
 - **Local Provider Control**:
   - Dynamic health check of the local server endpoint (LM Studio, Ollama, llama.cpp, vLLM).

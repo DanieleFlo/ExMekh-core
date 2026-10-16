@@ -250,6 +250,14 @@ def test_real_client_compacts_and_keeps_raw_graph_and_replay(probe, tmp_path):
     graph = build_graph_data_from_session(session)
     assert "ORIGINAL_1" in str(graph)
     assert "compact_history" in str(graph)
+    compactions = [
+        node for node in graph.histories[0].nodes if node.kind == "compaction"
+    ]
+    assert (
+        len(compactions)
+        == len(probe.score_requests)
+        == len(message.model_context.compactions)
+    )
     assert build_compacted_context_messages(session) == message.model_context.history
     restored = ChatSession.model_validate_json(session.model_dump_json())
     assert restored.messages[-1].model_context == message.model_context
@@ -381,6 +389,7 @@ def test_child_compaction_keeps_separate_history_and_restores_it(probe, tmp_path
     graph = build_graph_data_from_session(session)
     assert len(graph.histories) == 2
     assert "CHILD_ORIGINAL" in str(graph)
+    assert any(node.kind == "compaction" for node in graph.histories[1].nodes)
     restored = ChatSession.model_validate_json(session.model_dump_json())
     assert (
         restored.sub_agent_conversations[0].replay_history() == child.replay_history()
@@ -428,6 +437,10 @@ def test_nested_skills_keep_original_outputs_after_compaction_and_reload(
     assert "PARENT_ORIGINAL" in str(raw)
     assert "NESTED_ORIGINAL" in str(raw)
     assert "NESTED_ORIGINAL" in str(graph)
+    assert any(
+        node.kind == "compaction" and node.depth > 0
+        for node in graph.histories[0].nodes
+    )
 
 
 def test_final_provider_usage_is_restored_before_the_next_turn(probe, tmp_path):

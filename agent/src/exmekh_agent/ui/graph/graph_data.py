@@ -3,12 +3,14 @@ from __future__ import annotations
 import math
 from typing import Any, Literal
 
+from exmekh_lib.config.history_compaction import HISTORY_COMPACTION
 from pydantic import BaseModel, Field
 
 from exmekh_agent.config import config
 from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
+from exmekh_agent.exmekh_bridge.history.compaction import RecordedCompaction
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 from exmekh_agent.exmekh_bridge.history.recorded_output import RecordedToolOutput
@@ -38,6 +40,7 @@ GraphNodeKind = Literal[
     "system",
     "user",
     "steering",
+    "compaction",
     "tool_bundle",
     "skill_bundle",
     "sub_agent_bundle",
@@ -496,6 +499,7 @@ def _extract_nodes_from_raw_scope(
     skill_name: str | None,
     nodes: list[GraphNode],
     message: ChatMessage | None = None,
+    compaction_slots: dict[str, int] | None = None,
 ) -> None:
     """Walk a raw_history scope and emit grouped nodes for tool calls, steering messages, and nested skills."""
     children_queue = list(skill_tree)
@@ -586,6 +590,32 @@ def _extract_nodes_from_raw_scope(
             tc_name = tc.get_name()
             tc_id = tc.get_id()
             tc_args = tc.get_arguments()
+            if tc_name == HISTORY_COMPACTION.tool_name:
+                recorded = (
+                    message.model_context.compactions
+                    if message and message.model_context
+                    else []
+                )
+                if compaction_slots is not None and any(
+                    tc_id in event.replacement_call_ids for event in recorded
+                ):
+                    compaction_slots[tc_id] = len(nodes)
+                else:
+                    nodes.append(
+                        _compaction_node(
+                            RecordedCompaction(
+                                id=tc_id,
+                                replacement_call_ids=[tc_id],
+                                skill_path=norm_scope_path,
+                                depth=scope_depth,
+                                timestamp=None,
+                            ),
+                            step_index=len(nodes),
+                            history_id=history_id,
+                            history_label=history_label,
+                        )
+                    )
+                continue
             matched_ev = _match_tool_event(tc_id, tc_name)
             tool_msg = tool_result_for_call(following_tools, tc_id, idx)
             tool_resp_str = (
@@ -675,6 +705,7 @@ def _extract_nodes_from_raw_scope(
                     skill_name=tc_name,
                     nodes=nodes,
                     message=message,
+                    compaction_slots=compaction_slots,
                 )
             elif matched_struct_skill is not None:
                 _extract_nodes_from_skill_node(
@@ -733,6 +764,85 @@ def _extract_nodes_from_raw_scope(
                 )
 
         i = j
+
+
+def _compaction_node(
+    event: RecordedCompaction,
+    *,
+    step_index: int,
+    history_id: str,
+    history_label: str,
+) -> GraphNode:
+    path = _normalize_skill_path(event.skill_path)
+    return GraphNode(
+        id=f"{history_id}_node_{step_index}",
+        history_id=history_id,
+        history_label=history_label,
+        step_index=step_index,
+        kind="compaction",
+        label=ui_text("graph.graph_data.compaction"),
+        short_label=ui_text("graph.graph_data.compaction_short"),
+        color=NODE_COLORS["compaction"],
+        depth=_path_step_depth(path, event.depth),
+        skill_path=path,
+        skill_name=path.rsplit("/", 1)[-1] if path != "/" else None,
+        events=[
+            {
+                "role": "compaction",
+                "event_stage": "history_compaction",
+                "stage_label": ui_text("graph.graph_data.compaction_stage"),
+                "name": HISTORY_COMPACTION.tool_name,
+                **event.model_dump(),
+            }
+        ],
+    )
+
+
+def _insert_recorded_compactions(
+    message: ChatMessage,
+    nodes: list[GraphNode],
+    start: int,
+    slots: dict[str, int],
+    *,
+    history_id: str,
+    history_label: str,
+) -> None:
+    if message.model_context is None:
+        return
+    placements: list[tuple[int, RecordedCompaction]] = []
+    for event in message.model_context.compactions:
+        position = slots.get(event.after_tool_call_id or "", start)
+        for index in range(start, len(nodes)):
+            if event.after_tool_call_id is not None and any(
+                item.get("tool_call_id") == event.after_tool_call_id
+                for item in nodes[index].events
+            ):
+                position = index + 1
+        following_users = event.following_user_count
+        while (
+            following_users
+            and position < len(nodes)
+            and nodes[position].kind == "steering"
+        ):
+            position += 1
+            following_users -= 1
+        placements.append((position, event))
+    for offset, (position, event) in enumerate(
+        sorted(placements, key=lambda item: item[0])
+    ):
+        nodes.insert(
+            position + offset,
+            _compaction_node(
+                event,
+                step_index=position + offset,
+                history_id=history_id,
+                history_label=history_label,
+            ),
+        )
+    if placements:
+        for index, node in enumerate(nodes):
+            node.step_index = index
+            node.id = f"{history_id}_node_{index}"
 
 
 def _extract_real_system_prompt_event(
@@ -932,6 +1042,7 @@ def _build_nodes_for_messages(
             effective_raw = list(fallback_raw_history)
 
         before_tools_count = len(nodes)
+        compaction_slots: dict[str, int] = {}
         if effective_raw:
             turn_slice = msg.turn_raw_history(
                 previous_history=prev_raw, fallback_history=effective_raw
@@ -953,10 +1064,12 @@ def _build_nodes_for_messages(
                 skill_name=None,
                 nodes=nodes,
                 message=msg,
+                compaction_slots=compaction_slots,
             )
 
         if not any(
-            node.kind in ("tool_bundle", "skill_bundle", "sub_agent_bundle")
+            node.kind
+            in ("tool_bundle", "skill_bundle", "sub_agent_bundle", "compaction")
             for node in nodes[before_tools_count:]
         ):
             known_skill_paths = {
@@ -1020,6 +1133,15 @@ def _build_nodes_for_messages(
                 history_label=history_label,
             )
             emitted_steering_ids.add(guidance.id)
+
+        _insert_recorded_compactions(
+            msg,
+            nodes,
+            before_tools_count,
+            compaction_slots,
+            history_id=history_id,
+            history_label=history_label,
+        )
 
         # Final assistant response node back on the main history line (depth = 0)
         resp_events: list[dict[str, Any]] = [

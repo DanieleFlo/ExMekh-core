@@ -410,6 +410,14 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `agent/tests/test_auto_compaction.py`, `test_auto_compaction_e2e.py` e
   `agent/tests/compaction_probe.py` verificano il client reale con inferenza mock,
   steering, nesting, ripresa, recupero degli output e UI desktop/mobile.
+  `RecordedCompaction` conserva per turno identità, blocchi sostituiti e confine
+  dell'evento applicato, distinti dai marcatori inseriti nel contesto del modello.
+  `agent/src/exmekh_agent/ui/graph/graph_data.py` colloca un punto `compaction`
+  per operazione, anche quando sostituisce più blocchi, con legenda e dettaglio
+  dedicati; conserva la posizione rispetto a tool, steering, skill e sottoagenti.
+  Le chat precedenti mostrano i marcatori disponibili senza inventare esecuzioni
+  o timestamp. Regressioni in `agent/tests/test_graph_compaction.py` e qualifica
+  in `docs/performance/graph-compaction-events-20261016.json`.
 - `docs/performance/automatic-history-compaction-20261016.json` — esiti delle
   suite complete frontend/libreria, copertura, hash della wheel e screenshot
   della compattazione automatica; distingue i test mock dalla qualifica live.

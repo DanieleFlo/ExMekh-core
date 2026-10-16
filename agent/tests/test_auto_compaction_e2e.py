@@ -161,6 +161,14 @@ async def test_compaction_preserves_raw_graph_and_reload(compaction_server, tmp_
             await page.set_viewport_size({"width": 1360, "height": 920})
             await page.locator(".sub-tabs-bar .q-tab:has-text('Graph')").click()
             await expect(page.get_by_text("Graph View", exact=True)).to_be_visible()
+            compaction_points = page.locator("button[data-kind='compaction']")
+            expected_points = len(message["model_context"]["compactions"])
+            assert expected_points > 0
+            await expect(compaction_points).to_have_count(expected_points)
+            await compaction_points.first.click()
+            await expect(page.locator(".graph-bottom-menu-open")).to_contain_text(
+                "History compaction"
+            )
             await page.screenshot(path=str(tmp_path / "graph.png"), full_page=True)
             assert "ORIGINAL_1" in str(data["graph"])
             await page.reload(wait_until="networkidle")
@@ -169,6 +177,13 @@ async def test_compaction_preserves_raw_graph_and_reload(compaction_server, tmp_
             data = await state(compaction_server)
             assert "ORIGINAL_1" in str(data["graph"])
             assert "ORIGINAL_1" not in str(data["calls"][-4:])
+            await page.locator(".sub-tabs-bar .q-tab:has-text('Graph')").click()
+            total_operations = sum(
+                len(item["model_context"]["compactions"])
+                for item in data["session"]["messages"]
+                if item.get("model_context")
+            )
+            await expect(compaction_points).to_have_count(total_operations)
             assert not errors
         finally:
             await browser.close()

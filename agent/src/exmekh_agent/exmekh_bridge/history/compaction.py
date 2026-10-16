@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Sequence
 from copy import deepcopy
 from typing import Any
@@ -11,10 +12,23 @@ from pydantic import BaseModel, Field
 from exmekh_agent.exmekh_bridge.history.tool_calls import parse_tool_calls
 
 
+class RecordedCompaction(BaseModel):
+    """One applied operation, independent of the number of replaced blocks."""
+
+    id: str
+    replacement_call_ids: list[str]
+    after_tool_call_id: str | None = None
+    following_user_count: int = 0
+    skill_path: str = "/"
+    depth: int = 0
+    timestamp: float | None = Field(default_factory=time.time)
+
+
 class ModelContextCheckpoint(BaseModel):
     history: list[dict[str, Any]] = Field(default_factory=list)
     replacements: dict[str, list[dict[str, Any]]] = Field(default_factory=dict)
     turn_start: int | None = None
+    compactions: list[RecordedCompaction] = Field(default_factory=list)
 
     def expand(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Restore originals before their compaction marker, retaining both for inspection."""
@@ -71,6 +85,7 @@ class HistoryArchive:
         self._prior_user_count = 0
 
     def begin_turn(self, history: list[dict[str, Any]] | None = None) -> None:
+        self._checkpoint.compactions = []
         if history is not None:
             self._checkpoint.history = deepcopy(history)
         self._prior_user_count = sum(
@@ -78,8 +93,37 @@ class HistoryArchive:
         )
         self._checkpoint.turn_start = None
 
-    def record_compaction(self, replacements: dict[str, list[dict[str, Any]]]) -> None:
+    def record_compaction(
+        self,
+        replacements: dict[str, list[dict[str, Any]]],
+        *,
+        history: list[dict[str, Any]] | None = None,
+        skill_path: str = "/",
+        depth: int = 0,
+    ) -> None:
         self._checkpoint.replacements.update(deepcopy(replacements))
+        if not replacements:
+            return
+        operation_id = next(iter(replacements))
+        if any(event.id == operation_id for event in self._checkpoint.compactions):
+            return
+        anchor = next(reversed(replacements))
+        following_users = 0
+        for item in reversed(history or []):
+            if item.get("role") in {"tool", "function"} and item.get("tool_call_id"):
+                anchor = item["tool_call_id"]
+                break
+            following_users += item.get("role") == "user"
+        self._checkpoint.compactions.append(
+            RecordedCompaction(
+                id=operation_id,
+                replacement_call_ids=list(replacements),
+                after_tool_call_id=anchor,
+                following_user_count=following_users,
+                skill_path=skill_path,
+                depth=depth,
+            )
+        )
 
     def update(self, history: list[dict[str, Any]]) -> list[dict[str, Any]]:
         self._checkpoint.history = deepcopy(history)
