@@ -22,7 +22,7 @@ class Ds4ContextEstimator:
 
     def __init__(self, *, thinking: bool) -> None:
         self._thinking = thinking
-        self._skill_checkpoints: dict[str, int] = {}
+        self._skill_checkpoints: dict[str, tuple[int, bool]] = {}
 
     @property
     def thinking(self) -> bool:
@@ -33,21 +33,32 @@ class Ds4ContextEstimator:
         messages: list[dict[str, Any]],
         schemas: list[dict[str, Any]],
         agentic: dict[str, Any],
+        *,
+        response_schema: dict[str, Any] | None = None,
+        thinking: bool | None = None,
     ) -> ProviderContextUsage:
+        thinking = self._thinking if thinking is None else thinking
         prompt_tokens = count_text_tokens(
-            render_ds4_qwen_prompt(messages, schemas, thinking=self._thinking)
+            render_ds4_qwen_prompt(
+                messages, schemas, thinking=thinking, response_schema=response_schema
+            )
         )
         return_call_id = agentic.get("skill_call_id")
         checkpoint = self._skill_checkpoints.get(return_call_id)
         opening_index = find_skill_opening_index(messages, "", return_call_id)
-        closure_tokens_ready = checkpoint is not None and opening_index >= 0
+        closure_tokens_ready = (
+            checkpoint is not None
+            and checkpoint[1] == thinking
+            and response_schema is None
+            and opening_index >= 0
+        )
         if closure_tokens_ready:
             # DS4 restores the sampled opening, including reasoning, then
             # evaluates a tool-result tail beginning with the terminal token.
             tail = "<|im_end|>\n" + render_ds4_qwen_prompt(
-                messages[opening_index + 1 :], [], thinking=self._thinking
+                messages[opening_index + 1 :], [], thinking=thinking
             )
-            prompt_tokens = checkpoint + count_text_tokens(tail)
+            prompt_tokens = checkpoint[0] + count_text_tokens(tail)
         return ProviderContextUsage(
             prompt_tokens=prompt_tokens,
             return_call_id=return_call_id,
@@ -61,6 +72,8 @@ class Ds4ContextEstimator:
         return_call_id: str | None,
         prompt_tokens: int,
         completion_tokens: int | None,
+        *,
+        thinking: bool | None = None,
     ) -> None:
         if completion_tokens is None:
             return
@@ -68,5 +81,6 @@ class Ds4ContextEstimator:
         for call in response.get_tool_calls() or []:
             if call.get_name() in allowed_skills:
                 self._skill_checkpoints[call.get_id()] = (
-                    prompt_tokens + completion_tokens + 1
+                    prompt_tokens + completion_tokens + 1,
+                    self._thinking if thinking is None else thinking,
                 )

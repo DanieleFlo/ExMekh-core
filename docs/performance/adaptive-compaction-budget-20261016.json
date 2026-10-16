@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Europe/Rome",
+  "stage": "Implementation validation before the subsequent clean-code review",
+  "subsequent_validation": "docs/performance/compaction-budget-clean-review-20261016.json",
+  "issue": "A tool batch or temporary compaction request can jump past the context capacity",
+  "behavior": [
+    "The application supplies each DeepAgent node with the discovered context capacity and a complete-request token estimator.",
+    "A request over budget forces compaction even when the threshold policy is disarmed or there are no replaceable messages.",
+    "Compaction exports eligible tool bodies to node-scoped files when its scoring prompt does not fit, including bodies below the ordinary 5000-token limit.",
+    "System, user, active skill instructions and original archived messages are preserved. Existing file references are not exported recursively.",
+    "Oversized catalogs are scored in disjoint batches. Oversized summary sources are processed in lossless chunks and combined; lack of reduction stops the operation.",
+    "After compaction and steering delivery, the runtime checks the next request again and stops explicitly if protected input or insufficient reduction still prevents it from fitting.",
+    "New history rearms the threshold policy even if a previous compaction stayed above 80%. Root context invalidation also clears obsolete native skill checkpoints."
+  ],
+  "request_budget": {
+    "generation_reserve": "min(1024, capacity // 8)",
+    "estimator": "Literal DS4 Qwen prompt plus structured-output instruction and schema",
+    "unknown_capacity": "No fabricated context limit; the budget is not installed"
+  },
+  "validation": {
+    "library": {
+      "passed": 3053,
+      "skipped": 71,
+      "seconds": 11.12,
+      "statement_and_branch_coverage_percent": 100,
+      "ruff": "passed",
+      "pyright": "0 errors, 0 warnings"
+    },
+    "frontend": {
+      "passed": 1062,
+      "skipped": 43,
+      "seconds": 218.30,
+      "statement_and_branch_coverage_percent": 100,
+      "parallel_workers": 4,
+      "includes_playwright": true,
+      "ruff": "passed"
+    },
+    "live": {
+      "test": "agent/tests/test_compaction_budget_live.py",
+      "api": "responses",
+      "model": "Qwen3.8-27B-UD-Q4_K_S",
+      "hardware": "Existing local CUDA RTX 3090 server",
+      "capacity": 26000,
+      "original_prompt_tokens": 44135,
+      "original_body_tokens": 44000,
+      "original_request_status": 400,
+      "scoring_prompt_tokens": 783,
+      "scoring_estimate_tokens": 782,
+      "resumed_prompt_tokens": 618,
+      "resumed_completion_tokens": 53,
+      "preserved_constraint": "CP-7",
+      "original_history_unchanged": true,
+      "tools_executed": false,
+      "passed": 1,
+      "seconds": 11.54,
+      "evidence": "agent/.test-tmp/live-adaptive-budget/test_oversized_history_is_exte0/live-budget.json"
+    },
+    "wheel": {
+      "sha256": "daf2b80534261326222df0eda92f0750706157e12f7682cd510e1029a04486b8",
+      "matching_source_files": 267,
+      "synced_and_installed": true
+    },
+    "logs": "performance-results/compaction-overhead-20261016"
+  },
+  "scope": [
+    "The guard uses the discovered capacity and supplied estimator; it cannot make oversized protected system/user input reducible.",
+    "The live test starts with a synthetic imported oversized history. Unit tests also cover a sub-5000-token tool output crossing the remaining budget, disarmed policies, insufficient compaction, export failure, empty and already-external outputs, batched scoring and bounded summaries.",
+    "No inference kernels, server protocols or cache payload formats changed. Metal, SSD streaming and distributed inference were not retested."
+  ]
+}

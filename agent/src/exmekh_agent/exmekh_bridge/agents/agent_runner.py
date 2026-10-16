@@ -350,10 +350,11 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
         )
         if context_provider is not None:
             for node in agent.capabilities_by_node:
+                policy = AutoCompactionPolicy(
+                    context_provider, model=request.model, base_url=request.base_url
+                )
                 node.set_history_compaction_policy(
-                    AutoCompactionPolicy(
-                        context_provider, model=request.model, base_url=request.base_url
-                    )
+                    policy, budget=policy.request_budget()
                 )
 
         for child in children:

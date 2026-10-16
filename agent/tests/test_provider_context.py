@@ -55,6 +55,124 @@ class StructuredAnswer(BaseModel):
     text: str
 
 
+@pytest.mark.parametrize("ds4_qwen", [True, False])
+def test_request_budget_counts_the_structured_schema_and_guidance(ds4_qwen):
+    tracker = ContextTrackingProvider(
+        StubProvider(),
+        on_context=None,
+        context_id="root",
+        ds4_qwen=ds4_qwen,
+        thinking=False,
+    )
+    messages = [SystemMessage("rules"), UserMessage("task")]
+    ordinary = tracker.count_request_tokens(ProviderRequest(messages))
+    request = StructuredProviderRequest(messages, StructuredAnswer, tool_choice="none")
+    structured = tracker.count_request_tokens(request)
+    assert structured > ordinary + count_text_tokens("text")
+    assert structured == tracker.estimate_context(request).prompt_tokens
+
+
+@pytest.mark.parametrize("default_thinking,effort", [(True, "none"), (False, "high")])
+def test_prompt_estimate_uses_the_request_thinking_override(default_thinking, effort):
+    tracker = ContextTrackingProvider(
+        StubProvider(),
+        on_context=None,
+        context_id="root",
+        ds4_qwen=True,
+        thinking=default_thinking,
+    )
+    request = ProviderRequest([UserMessage("task")], reasoning_effort_override=effort)
+    expected = count_text_tokens(
+        render_ds4_qwen_prompt(
+            [message.message_dump() for message in request.get_messages()],
+            [],
+            thinking=effort != "none",
+        )
+    )
+    assert tracker.count_request_tokens(request) == expected
+
+
+def test_structured_response_preserves_authoritative_totals_for_compaction():
+    provider = StubProvider()
+    tracker = ContextTrackingProvider(
+        provider,
+        on_context=None,
+        context_id="root",
+        ds4_qwen=False,
+        thinking=False,
+    )
+    request = StructuredProviderRequest(
+        [UserMessage("task")],
+        StructuredAnswer,
+        extra={"agentic": {"agent_context_id": "root"}},
+    )
+    tracker.call_structured(request)
+    assert tracker.last_context_total(request) == 4100
+
+
+def test_skill_checkpoint_requires_matching_thinking_and_unstructured_prompt():
+    provider = StubProvider()
+    tracker = ContextTrackingProvider(
+        provider,
+        on_context=None,
+        context_id="root",
+        ds4_qwen=True,
+        thinking=False,
+    )
+    call = ToolCall("open", FunctionCall("skill", {}))
+    provider.tool_calls = [call]
+    opening = ProviderRequest(
+        [UserMessage("task")],
+        reasoning_effort_override="high",
+        extra={"agentic": {"agent_context_id": "root", "allowed_skills": ["skill"]}},
+    )
+    tracker.call(opening)
+    messages = [
+        *opening.get_messages(),
+        AssistantMessage(None, tool_calls=[call]),
+        ToolMessage("result", "open", "skill"),
+    ]
+    extra = {"agentic": {"agent_context_id": "root", "skill_call_id": "open"}}
+    matching = ProviderRequest(messages, extra=extra, reasoning_effort_override="high")
+    assert tracker.estimate_context(matching).closure_tokens_ready
+    changed_mode = ProviderRequest(messages, extra=extra)
+    assert not tracker.estimate_context(changed_mode).closure_tokens_ready
+    structured = StructuredProviderRequest(
+        messages, StructuredAnswer, extra=extra, reasoning_effort_override="high"
+    )
+    assert not tracker.estimate_context(structured).closure_tokens_ready
+
+
+def test_invalidating_root_discards_sampled_skill_checkpoints():
+    provider = StubProvider()
+    tracker = ContextTrackingProvider(
+        provider,
+        on_context=None,
+        context_id="root",
+        ds4_qwen=True,
+        thinking=False,
+    )
+    opening = ProviderRequest(
+        [SystemMessage("rules"), UserMessage("task")],
+        extra={"agentic": {"agent_context_id": "root", "allowed_skills": ["skill"]}},
+    )
+    provider.tool_calls = [ToolCall("open", FunctionCall("skill", {}))]
+    tracker.call(opening)
+    closure = ProviderRequest(
+        [
+            *opening.get_messages(),
+            AssistantMessage(
+                None, tool_calls=[ToolCall("open", FunctionCall("skill", {}))]
+            ),
+            ToolMessage("result", "open", "skill"),
+        ],
+        extra={"agentic": {"agent_context_id": "root", "skill_call_id": "open"}},
+    )
+    assert tracker.estimate_context(closure).closure_tokens_ready
+    tracker.invalidate_context("root")
+    assert not tracker.estimate_context(closure).closure_tokens_ready
+
+
 class StubProvider(Provider):
     def __init__(self) -> None:
         super().__init__(QwenTokenizer())
@@ -322,7 +440,9 @@ def test_raw_history_replacement_retains_badge_identity() -> None:
     assert "tokens_after_close" not in collector.skill_history_tree[0]
 
 
-def test_ds4_render_preserves_client_content_and_includes_tools_roles_and_dsml() -> None:
+def test_ds4_render_preserves_client_content_and_includes_tools_roles_and_dsml() -> (
+    None
+):
     tools = [{"function": {"name": "search", "parameters": {"type": "object"}}}]
     calls = [
         {

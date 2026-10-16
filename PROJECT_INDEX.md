@@ -386,7 +386,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/performance/clean-code-review-20261014.json` — esito del refactoring e dell'audit trasversale, test non live, limiti della verifica e aree ancora da semplificare.
 - `agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py` — osservazione uniforme
   delle richieste normali e strutturate, isolamento dei contesti figli e
-  conservazione dei token totali dichiarati dal provider.
+  conservazione dei token totali dichiarati dal provider. Budget e UI usano
+  la stessa stima completa, con schema strutturato e override del thinking.
 - `agent/src/exmekh_agent/exmekh_bridge/providers/ds4_context.py`, `ds4_prompt.py` —
   stima del prompt letterale Qwen e checkpoint dei return skill: le query non
   aggiungono istruzioni operative rimosse dal server né modificano lo stato.
@@ -398,6 +399,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   del provider e la stima della prossima richiesta, con riarmo dopo la riduzione.
   Un errore di compattazione ferma l'inferenza conservando la history e permette
   un nuovo tentativo al turno successivo, senza disabilitare la policy.
+  Nuovi messaggi riarmano il trigger anche se il risultato precedente resta
+  sopra soglia; il confronto usa contenuti, distinguendo modifiche da semplici
+  ricaricamenti. `RequestBudget` controlla la capienza prima dell'invio.
 - `agent/src/exmekh_agent/exmekh_bridge/history/compaction.py` — `HistoryArchive`
   possiede contesto, porzioni sostituite e confini del turno per root e figli;
   espone checkpoint indipendenti. Replay, conteggio e Raw Current includono
@@ -425,9 +429,32 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   pubblico della policy prima dell'inferenza e dopo la sostituzione. `CompactionResult`
   possiede la proiezione dei messaggi trattenuti; `MessageHistory.discard_latest`
   rimuove soltanto le occorrenze rifiutate, preservando input già accettati.
+- `exmekh_lib/src/exmekh_lib/core/history_compaction/scoring.py` — scoring con
+  history completa e catalogo temporaneo in JSON compatto, per lasciare spazio
+  allo schema senza ripetere i tag XML per ogni campo. Risultati e archivio
+  conservano il renderer XML; `docs/performance/compaction-catalog-overhead-20261016.json`
+  documenta la riproduzione del limite e la verifica sulla chat originale copiata.
+- `exmekh_lib/src/exmekh_lib/core/models/request_budget.py`,
+  `exmekh_lib/src/exmekh_lib/core/history_compaction/context.py` — budget del prompt
+  con spazio riservato alla generazione ed esportazione adattiva degli output
+  nella copia usata dallo scoring. Scoring e riassunti si suddividono quando
+  necessario; il runtime ricontrolla la history dopo compattazione e steering.
+  `agent/src/exmekh_agent/exmekh_bridge/resources/prompts/ds4_structured_prefix.md`
+  permette di contare anche l'istruzione e lo schema delle chiamate strutturate.
+  `agent/tests/test_compaction_budget_live.py` verifica con il server esistente
+  una history iniziale oltre capienza e la successiva ripresa senza tool reali.
+  Gli esiti sono in `docs/performance/adaptive-compaction-budget-20261016.json`.
+- `docs/architecture/compaction-budget-clean-review-20261016.md`,
+  `docs/performance/compaction-budget-clean-review-20261016.json` — revisione
+  delle responsabilità del budget, della preparazione degli output e degli
+  adattatori; regressione degli allegati duplicati, suite complete e prova live.
+  `RequestBudget.split_text()` verifica i frammenti come richieste complete;
+  `ToolOutputPreparer.shorten()` e `OutputCandidate.with_presentation()`
+  possiedono riduzione e aggiornamento della rappresentazione.
 - `agent/src/exmekh_agent/exmekh_bridge/agents/cancellation.py` — inoltra richieste
-  normali/strutturate conservando handler interattivo e reasoning; interrompe
-  chiamate e stream dei turni cancellati.
+  normali/strutturate tramite `ProviderRequest.with_event_handler()`, conservando
+  opzioni e allegati senza espanderli di nuovo; interrompe chiamate e stream
+  dei turni cancellati.
 - `agent/src/exmekh_agent/ui/shared/neural_loader.py`,
   `agent/src/exmekh_agent/ui/resources/js/neural_loader.js` — indicatore canvas
   per client, con caricamento asincrono, pausa e cleanup dell'animazione.

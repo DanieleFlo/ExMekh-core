@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from exmekh_lib.core.models.provider_request import ProviderRequest
+from exmekh_lib.core.models.request_budget import RequestBudget
 
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.providers.provider_context import (
@@ -17,7 +18,15 @@ class AutoCompactionPolicy:
         self._tracker = tracker
         self._model = model
         self._base_url = base_url
-        self._armed = True
+        self._compacted_messages: tuple[dict[str, str], ...] | None = None
+
+    def request_budget(self) -> RequestBudget | None:
+        capacity = config.get_server_context_length(self._model, self._base_url)
+        return (
+            RequestBudget(capacity, self._tracker.count_request_tokens)
+            if capacity is not None
+            else None
+        )
 
     def _over_threshold(self, request: ProviderRequest) -> bool:
         capacity = config.get_server_context_length(self._model, self._base_url)
@@ -31,13 +40,17 @@ class AutoCompactionPolicy:
 
     def before_inference(self, request: ProviderRequest) -> bool:
         if not self._over_threshold(request):
-            self._armed = True
+            self._compacted_messages = None
             return False
-        if not self._armed:
-            return False
-        return True
+        return self._snapshot(request) != self._compacted_messages
 
     def after_compaction(self, request: ProviderRequest) -> None:
-        # Only a successful replacement can disarm the policy. A failed attempt
-        # stops the turn, and a later user retry must still be able to compact.
-        self._armed = not self._over_threshold(request)
+        # Compare content so equivalent restored message objects do not rearm the
+        # policy, while edits to existing messages still trigger compaction.
+        self._compacted_messages = (
+            self._snapshot(request) if self._over_threshold(request) else None
+        )
+
+    @staticmethod
+    def _snapshot(request: ProviderRequest) -> tuple[dict[str, str], ...]:
+        return tuple(message.message_dump() for message in request.get_messages())

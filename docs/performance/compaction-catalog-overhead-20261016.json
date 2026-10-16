@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Europe/Rome",
+  "issue": "History compaction scoring catalog exceeded the available context",
+  "original_session": {
+    "title": "Ricerca su Antirez e social",
+    "id": "239e49b8-57c2-41e0-852b-f1370b32daf1",
+    "model": "Qwen3.8-27B-UD-Q4_K_S",
+    "context_capacity": 26000,
+    "last_agent_prompt_tokens": 20815,
+    "last_agent_completion_tokens": 206,
+    "last_tool_result": "File reference for an 8106-token web page; already externalized",
+    "failure": "Prompt has 27214 tokens, but the configured context size is 26000 tokens"
+  },
+  "root_cause": "The temporary scoring request appended a verbose XML catalog and a score schema to the full conversation. XML tags, type attributes and escaping repeated across 34 entries consumed the remaining headroom before generation.",
+  "change": "Serialize the internal scoring catalog as compact JSON with identical fields and previews. Preserve the full history, original system and user messages, tools and mandatory score schema. Tool results, synthetic compaction results and the execution archive retain XML.",
+  "live_replay": {
+    "api": "responses",
+    "hardware": "Local CUDA RTX 3090, existing Qwen3.8 server, ctx=26000",
+    "source": "Copied original conversation and 15 referenced output files",
+    "original_catalog_status": 400,
+    "original_catalog_prompt_tokens": 27214,
+    "compact_catalog_prompt_tokens": 23337,
+    "tokens_saved": 3877,
+    "valid_required_scores": 34,
+    "scoring_completion_tokens": 343,
+    "summary_requests": 25,
+    "next_request_messages": 11,
+    "resumed_agent_prompt_tokens": 16904,
+    "resumed_agent_generation": {
+      "tokens": 1600,
+      "status": "incomplete",
+      "reason": "Reached the diagnostic max_output_tokens=1600 budget; no context overflow",
+      "generated_tool_calls": 0
+    },
+    "controlled_summary_probe": {
+      "reasoning": "none",
+      "tool_choice": "none",
+      "status": "completed",
+      "prompt_tokens": 12482,
+      "completion_tokens": 895,
+      "generated_tool_calls": 0,
+      "tools_executed": false
+    },
+    "original_chat_unchanged": true,
+    "original_chat_sha256": "a9f9a9edfe1736a5b47bbe5df39a7beb238c6d6f79202f1738593ff4cb2276a3",
+    "agent_tools_executed": false,
+    "evidence_directory": "performance-results/compaction-overhead-20261016"
+  },
+  "validation": {
+    "focused_tests_passed": 80,
+    "library_tests_passed": 3034,
+    "library_tests_skipped": 71,
+    "statement_and_branch_coverage_percent": 100,
+    "library_ruff": "passed",
+    "library_pyright": "0 errors, 0 warnings",
+    "frontend_ruff": "passed",
+    "frontend_suite": {
+      "passed": 1058,
+      "skipped": 43,
+      "failed": 1,
+      "coverage_percent": 100,
+      "failure": "Playwright menu-close button detached during mobile viewport transition in test_compaction_preserves_raw_graph_and_reload",
+      "isolated_compaction_browser_recheck": {
+        "passed": 4,
+        "failed": 0,
+        "seconds": 16.69
+      }
+    },
+    "wheel_sync": "Built, locked and reinstalled using agent/sync_exmekh_lib.sh",
+    "wheel_sha256": "9d37dfcd7ed592a4cbcc0e0d0771fcd068cacc2a211100aa728b05a911db80c9",
+    "wheel_source_files_verified": 265,
+    "frontend_restarted": true,
+    "frontend_http_status": 200
+  },
+  "scope_limits": [
+    "This fixes the observed scoring-catalog overhead without truncating conversation data.",
+    "The existing 5000-token output-to-file threshold is unchanged; it is not a dynamic remaining-context budget.",
+    "Inference kernels, server protocol and cache formats are unchanged. Metal, SSD streaming and distributed inference were not retested."
+  ]
+}

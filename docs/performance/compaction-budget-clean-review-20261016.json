@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Europe/Rome",
+  "library_commit": "88abf99c4e5ffb115e68e06fecc3a31d5a033abe",
+  "review": "docs/architecture/compaction-budget-clean-review-20261016.md",
+  "scope": [
+    "Changed compaction code and related provider, cancellation, context estimation, output preparation and automatic policy paths in both repositories.",
+    "Broader Python source audit for cross-object private access and ownership boundaries; no blanket clean-code certification of every module.",
+    "No changes to inference kernels, server protocols or cache payload formats. Metal, SSD streaming and distributed inference were not retested."
+  ],
+  "corrections": [
+    "ProviderRequest owns event-handler adaptation. Cancellation no longer rebuilds already expanded messages and duplicates tool attachment companions; ordinary and structured regression tests failed before the fix and pass afterward.",
+    "RequestBudget owns lossless source splitting and checks each complete wrapped request rather than assuming additive token costs.",
+    "ToolOutputPreparer owns the choice of a shorter file representation; OutputCandidate owns updating its presentation while retaining the original source.",
+    "Budget admission and UI context observation use the same complete structured-schema and thinking-aware estimate.",
+    "Structured responses remember authoritative totals just like ordinary responses; sampled skill checkpoints require compatible thinking and an unstructured prompt.",
+    "Automatic policy compares content snapshots: equivalent restored messages do not rearm it, while edited or new messages do."
+  ],
+  "validation": {
+    "library": {
+      "command": "uv run --locked pytest -n 4 --cov=exmekh_lib --cov-branch --cov-report=term-missing -q",
+      "passed": 3056,
+      "skipped": 71,
+      "seconds": 13.69,
+      "statement_and_branch_coverage_percent": 100,
+      "ruff_check": "passed",
+      "changed_python_files_format_check": "passed",
+      "pyright": "0 errors, 0 warnings, 0 informations"
+    },
+    "frontend": {
+      "command": "uv run --locked pytest -n 4 -q",
+      "passed": 1070,
+      "skipped": 44,
+      "seconds": 242.74,
+      "statement_and_branch_coverage_percent": 100,
+      "includes_playwright": true,
+      "ruff_check": "passed",
+      "changed_python_files_format_check": "passed"
+    },
+    "product_text_gate": {
+      "test": "tests/test_product_text_configuration.py",
+      "passed": 4,
+      "seconds": 0.38
+    },
+    "live": {
+      "test": "agent/tests/test_compaction_budget_live.py",
+      "api": "responses",
+      "model": "Qwen3.8-27B-UD-Q4_K_S",
+      "backend": "Existing local CUDA RTX 3090 server",
+      "capacity": 26000,
+      "original_prompt_tokens": 44135,
+      "original_request_status": 400,
+      "scoring_estimated_and_actual_prompt_tokens": 783,
+      "scoring_completion_tokens": 7,
+      "resumed_estimated_and_actual_prompt_tokens": 619,
+      "resumed_completion_tokens": 9,
+      "preserved_constraint": "CP-7",
+      "original_history_unchanged": true,
+      "tools_executed": false,
+      "passed": 1,
+      "seconds": 6.97,
+      "evidence": "agent/.test-tmp/live-clean-budget/test_oversized_history_is_exte0/live-budget.json"
+    },
+    "wheel": {
+      "sha256": "9afa2917232f8b47fed4473a375a996cd86f0fcc8f0213f3bb1099e5196f40aa",
+      "matching_source_and_installed_python_files": 267,
+      "synced_and_installed": true
+    },
+    "original_chat": {
+      "title": "Ricerca su Antirez e social",
+      "id": "239e49b8-57c2-41e0-852b-f1370b32daf1",
+      "sha256_unchanged": "a9f9a9edfe1736a5b47bbe5df39a7beb238c6d6f79202f1738593ff4cb2276a3"
+    },
+    "frontend_runtime": {
+      "restarted_after_wheel_sync": true,
+      "http_status": 200
+    },
+    "git_diff_check": "passed in both repositories",
+    "logs": "performance-results/compaction-overhead-20261016"
+  },
+  "remaining_limits": [
+    "An oversized protected system/user input cannot be made reducible without changing user content; compaction is attempted and the request then fails explicitly.",
+    "Budget checks depend on the supplied estimator and discovered capacity. The live test validates exact counts for this model and scenario, not every provider or multimodal format.",
+    "The full-suite coverage gate excludes the pre-existing coverage omit lists; live scenarios are opt-in and are reported separately."
+  ]
+}

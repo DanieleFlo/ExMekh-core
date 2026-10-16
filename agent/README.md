@@ -29,6 +29,11 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
 - **Responsive tabs**: chat, execution graph, history, dialogs, and the agent editor adapt to desktop, tablet, and phone widths.
 - **Automatic context compaction**: each DeepAgent node compacts its working history before the next inference at 80% of the server-reported context limit. Change the percentage (1–99) in Global Settings. Unknown server limits do not activate compaction. Graph and Raw retain original calls and outputs; a switch in Raw selects the complete execution archive or the current model context. Saved chats resume from the compact context while keeping their inspectable archive.
 
+  With a known server limit, a request budget also protects against tool batches
+  jumping across the threshold: compaction externalizes large outputs when needed,
+  bounds its scoring and summary requests, and checks the result before inference.
+  Protected input that still cannot fit stops the turn with an explicit error.
+
 - **Local Provider Control**:
   - Dynamic health check of the local server endpoint (LM Studio, Ollama, llama.cpp, vLLM).
   - Dynamic discovery and selection of installed models.

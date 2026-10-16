@@ -1,0 +1,1 @@
+If thinking is enabled, keep all reasoning (including JSON examples) before the closing </think> tag. Immediately after </think>, return exactly one JSON value and no prose, Markdown, or code fences. The JSON value must satisfy this JSON Schema exactly:

@@ -11,6 +11,7 @@ from exmekh_agent.exmekh_bridge.resources import load_prompt
 
 _TOOLS_PREFIX = load_prompt("ds4_tools_prefix")
 _TOOLS_SUFFIX = load_prompt("ds4_tools_suffix")
+_STRUCTURED_PREFIX = load_prompt("ds4_structured_prefix")
 
 
 def _json(value: Any) -> str:
@@ -57,12 +58,15 @@ def render_ds4_qwen_prompt(
     tools: list[dict[str, Any]],
     *,
     thinking: bool = True,
+    response_schema: dict[str, Any] | None = None,
 ) -> str:
     """Include tool schemas, role boundaries, tool responses and generation prefix."""
     system_parts = []
     if tools:
         schemas = "\n".join(_json(tool.get("function", tool)) for tool in tools)
         system_parts.append(_TOOLS_PREFIX + schemas + _TOOLS_SUFFIX)
+    if response_schema is not None:
+        system_parts.append(_STRUCTURED_PREFIX + _json(response_schema))
     system_parts.extend(
         content_text(message.get("content")).strip()
         for message in messages

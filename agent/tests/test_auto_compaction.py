@@ -159,6 +159,28 @@ def test_policy_rearms_only_after_effective_compaction(monkeypatch):
     assert policy.before_inference(request)
 
 
+def test_policy_uses_content_to_rearm_after_restoration_or_edits(monkeypatch):
+    monkeypatch.setattr(
+        config, "server_context_lengths", {(config.base_url.rstrip("/"), "probe"): 1000}
+    )
+    tracker = MagicMock()
+    tracker.last_context_total.return_value = 0
+    tracker.estimate_context.return_value = ProviderContextUsage(prompt_tokens=900)
+    policy = AutoCompactionPolicy(tracker, model="probe", base_url=config.base_url)
+    parts = ["original task"]
+    request = ProviderRequest([UserMessage(parts)])
+    policy.after_compaction(request)
+    restored = ProviderRequest([UserMessage("original task")])
+    assert not policy.before_inference(restored)
+    parts[0] = "edited task"
+    assert policy.before_inference(request)
+    policy.after_compaction(request)
+    assert not policy.before_inference(request)
+    assert policy.before_inference(
+        ProviderRequest([*request.get_messages(), UserMessage("new evidence")])
+    )
+
+
 def test_unknown_endpoint_does_not_reuse_another_servers_limit(monkeypatch):
     monkeypatch.setattr(config, "server_context_lengths", {})
     tracker = MagicMock()
@@ -234,6 +256,27 @@ def test_no_compaction_below_threshold(probe, tmp_path):
     run_turn(tmp_path, session)
     assert not probe.score_requests
     assert session.messages[-1].model_context is None
+
+
+def test_policy_rearms_for_new_history_even_when_last_compaction_stayed_over_threshold(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        config, "server_context_lengths", {(config.base_url.rstrip("/"), "probe"): 1000}
+    )
+    tracker = MagicMock()
+    tracker.estimate_context.return_value = ProviderContextUsage(prompt_tokens=900)
+    tracker.last_context_total.return_value = 0
+    policy = AutoCompactionPolicy(tracker, model="probe", base_url=config.base_url)
+    first = ProviderRequest([UserMessage("task")])
+    policy.after_compaction(first)
+    assert not policy.before_inference(first)
+    assert policy.before_inference(
+        ProviderRequest([*first.get_messages(), UserMessage("new constraint")])
+    )
+    assert policy.request_budget().capacity == 1000
+    monkeypatch.setattr(config, "server_context_lengths", {})
+    assert policy.request_budget() is None
 
 
 def test_compaction_failure_keeps_original_and_stops_before_inference(probe, tmp_path):

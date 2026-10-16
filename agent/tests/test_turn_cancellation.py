@@ -21,6 +21,7 @@ from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEventType,
 )
 from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
+from exmekh_lib.core.models.tool_message import ToolMessage
 from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.providers.local import LocalProvider
 from nicegui.client import Client as NiceGuiClient
@@ -46,6 +47,29 @@ from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.chat.page_controller import ChatPageController
 from tests.approval_probe import ApprovalProbeProvider
 from tests.mock_client import MockProvider
+
+
+@pytest.mark.parametrize("structured", [False, True])
+def test_cancellation_wrapper_does_not_duplicate_tool_attachments(structured):
+    provider = MockProvider()
+    companion = UserMessage("tool attachment")
+    messages = [
+        UserMessage("task"),
+        AssistantMessage(None, tool_calls=[ToolCall("call", FunctionCall("work", {}))]),
+        ToolMessage("result", "call", "work", attachments=companion),
+    ]
+    request = (
+        StructuredProviderRequest(messages, ChatTitle)
+        if structured
+        else ProviderRequest(messages)
+    )
+    method = "call_structured" if structured else "call"
+    guarded = CancellableProvider(provider, Event())
+    with patch.object(provider, method, return_value=Mock()) as call:
+        getattr(guarded, method)(request)
+    forwarded = call.call_args.args[0]
+    assert forwarded.get_messages() == request.get_messages()
+    assert forwarded.get_messages().count(companion) == 1
 
 
 def test_cancellable_provider_preserves_public_request_options_and_streams() -> None:

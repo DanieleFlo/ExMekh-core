@@ -14,10 +14,12 @@ from exmekh_lib.core.models.structured_provider_response import (
 from exmekh_lib.core.providers.openai_chat_completion_tool_mapper import (
     OpenAIChatCompletionToolMapper,
 )
+from exmekh_lib.core.providers.openai_json_schema_mapper import OpenAIJSONSchemaMapper
 from exmekh_lib.core.providers.openai_response_tool_mapper import (
     OpenAIResponseToolMapper,
 )
 from exmekh_lib.interfaces.provider import Provider
+from exmekh_lib.utils.json import serialize_json
 from pydantic import BaseModel
 
 from exmekh_agent.exmekh_bridge.models import ProviderContextUsage
@@ -61,6 +63,8 @@ class ContextTrackingProvider(Provider):
     def invalidate_context(self, context_id: str | None) -> None:
         self._last_totals.pop(context_id or "", None)
         self._scope_estimators.pop(context_id or "", None)
+        if self._ds4_context is not None and context_id == self._context_id:
+            self._ds4_context = Ds4ContextEstimator(thinking=self._ds4_context.thinking)
 
     def restore_context_usage(
         self, context_id: str, usage: ProviderContextUsage
@@ -89,6 +93,15 @@ class ContextTrackingProvider(Provider):
         return self._estimate_request(
             request, (request.get_extra() or {}).get("agentic") or {}
         )
+
+    def count_request_tokens(self, request: ProviderRequest) -> int:
+        """Use the same complete prompt estimate for admission and observation."""
+        return self.estimate_context(request).prompt_tokens
+
+    @staticmethod
+    def _thinking_override(request: ProviderRequest) -> bool | None:
+        effort = request.get_reasoning_effort_override()
+        return None if effort is None else effort != "none"
 
     def _observes(self, request: ProviderRequest) -> bool:
         agentic = (request.get_extra() or {}).get("agentic") or {}
@@ -132,6 +145,7 @@ class ContextTrackingProvider(Provider):
                 context.return_call_id,
                 prompt_tokens,
                 completion_tokens,
+                thinking=self._thinking_override(request),
             )
         final_context = context.with_provider_totals(prompt_tokens, completion_tokens)
         if completion_tokens is None:
@@ -163,10 +177,25 @@ class ContextTrackingProvider(Provider):
             else []
         )
         estimator = self._estimator(agentic)
+        response_schema = (
+            OpenAIJSONSchemaMapper.map(
+                request.get_response_model(), strict=request.get_strict()
+            )["schema"]
+            if isinstance(request, StructuredProviderRequest)
+            else None
+        )
         if estimator:
-            return estimator.estimate_request(messages, schemas, agentic)
+            return estimator.estimate_request(
+                messages,
+                schemas,
+                agentic,
+                response_schema=response_schema,
+                thinking=self._thinking_override(request),
+            )
         prompt_tokens = sum(count_message_dict_tokens(message) for message in messages)
         prompt_tokens += count_text_tokens(json.dumps(schemas, ensure_ascii=False))
+        if response_schema is not None:
+            prompt_tokens += count_text_tokens(serialize_json(response_schema))
         return ProviderContextUsage(
             prompt_tokens=prompt_tokens, return_call_id=agentic.get("skill_call_id")
         )
@@ -188,5 +217,6 @@ class ContextTrackingProvider(Provider):
     ) -> StructuredProviderResponse[ResponseModel]:
         context = self._begin_request(request)
         response = self._provider.call_structured(request)
+        self._remember_totals(request, response)
         self._record_response(context, request, response)
         return response
