@@ -15,6 +15,7 @@ from exmekh_lib.core.models.provider_request import ProviderRequest
 from exmekh_lib.core.models.provider_response import ProviderResponse
 from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
 from exmekh_lib.core.models.user_message import UserMessage
+from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
@@ -24,6 +25,8 @@ from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ProviderContextUsage,
+    ReasoningBlock,
+    SkillNode,
     ToolEvent,
 )
 from exmekh_agent.exmekh_bridge.providers.context_usage import (
@@ -311,3 +314,76 @@ def test_final_recount_retains_thinking_when_only_streamed():
         + count_text_tokens("Complete final answer")
         + count_text_tokens("Thinking supplied only in streaming")
     )
+
+
+def test_reconnected_reasoning_updates_keep_execution_controls_mounted():
+    client = Client(page("/stable-activity"))
+    try:
+        with client:
+            view = ChatViewComponent(lambda _: None)
+            view.build()
+            view.start_assistant_stream()
+            snapshot = ChatMessage(
+                role="assistant",
+                skills=[
+                    SkillNode(
+                        name="work",
+                        path="/work",
+                        depth=1,
+                        status="completed",
+                        start_time=1,
+                        end_time=2,
+                        duration_seconds=1,
+                    )
+                ],
+            )
+            view.restore_stream_snapshot(snapshot)
+            before = tuple(
+                element.id for element in view.current_skills_container.descendants()
+            )
+            updated = snapshot.model_copy(deep=True)
+            updated.reasoning_blocks = [ReasoningBlock(content="more root reasoning")]
+            view.restore_stream_snapshot(updated)
+            after = tuple(
+                element.id for element in view.current_skills_container.descendants()
+            )
+            assert before == after
+            changed = updated.model_copy(deep=True)
+            changed.skills[0].tokens_before_close = 100
+            changed.skills[0].tokens_after_close = 20
+            view.restore_stream_snapshot(changed)
+            assert (
+                tuple(
+                    element.id
+                    for element in view.current_skills_container.descendants()
+                )
+                != after
+            )
+    finally:
+        client.delete()
+
+
+def test_reasoning_expansion_choices_survive_rendering_the_same_blocks_again():
+    client = Client(page("/stable-reasoning-expansion"))
+    try:
+        with client:
+            view = ChatViewComponent(lambda _: None)
+            block = ReasoningBlock(content="recorded reasoning", end_time=1)
+            original = view._render_reasoning_group([block])
+            original.set_value(True)
+            child = next(
+                element
+                for element in original.descendants()
+                if isinstance(element, ui.expansion)
+            )
+            child.set_value(True)
+            restored = view._render_reasoning_group([block.model_copy(deep=True)])
+            assert restored.value is True
+            restored_child = next(
+                element
+                for element in restored.descendants()
+                if isinstance(element, ui.expansion)
+            )
+            assert restored_child.value is True
+    finally:
+        client.delete()

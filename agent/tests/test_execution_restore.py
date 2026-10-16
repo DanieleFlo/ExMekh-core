@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pytest
 from exmekh_lib.core.cache.session_cache import SessionCache
+from exmekh_lib.core.models.tool_output_reference import ToolOutputReference
+from exmekh_lib.core.models.xml_header import XmlHeader
 from exmekh_lib.core.tool_calls.execution_history import ExecutionHistory
 from exmekh_lib.utils.xml import stringify_tool_result
 
@@ -266,3 +268,35 @@ def test_a_skill_read_without_original_history_retains_the_output_identity(
         assert history.entries[0].recoverable_output_id(cache) == "saved-skill"
     finally:
         session_cache.close()
+
+
+def test_recorded_output_preserves_base64_fields_and_exact_body():
+    body = "\n\r\n  original body\r\n"
+    text = XmlHeader(
+        "DeepSkill",
+        "skill\x00",
+        "id\x01",
+        fields={
+            "thinking": "thought\x02",
+            "used-tools": [{"name": "tool\x03", "id": "child\x04"}],
+        },
+    ).prepend_to(body)
+    parsed = RecordedToolOutput.parse(text)
+    assert parsed is not None
+    assert parsed.name == "skill\x00"
+    assert parsed.id == "id\x01"
+    assert parsed.thinking == "thought\x02"
+    assert parsed.body == body
+    assert parsed.used_tools == (ToolOutputReference("tool\x03", "child\x04"),)
+    envelope = RecordedToolOutput.split_header(text)
+    assert envelope is not None and envelope[1] == body
+
+
+@pytest.mark.parametrize("field", ["id", "name", "thinking"])
+def test_invalid_encoded_metadata_does_not_become_a_literal_identifier(field):
+    text = (
+        f'<header><id>valid</id><{field} encoding="base64">???</{field}></header>body'
+        if field != "id"
+        else '<header><id encoding="base64">???</id></header>body'
+    )
+    assert RecordedToolOutput.parse(text) is None

@@ -161,6 +161,15 @@ Edit usa soltanto due marcatori:
 - righe 36–44: **Distribuzione** — La wheel `agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl` è stata ricostruita
 - righe 45–76: **Verifiche e limiti osservati** — I tre fallimenti live sono svuotamento dell'intero file, inserimento con CRLF
 
+## [Revisione della compattazione e dei confini del frontend — 16 ottobre 2026](history-compaction-clean-review-20261016.md)
+
+Il frontend non interpreta più gli elementi XML degli header della libreria.
+
+- righe 8–26: **Responsabilità e interfacce** — Il frontend non interpreta più gli elementi XML degli header della libreria.
+- righe 27–58: **Difetti riprodotti e corretti** — risultato più recente, anche quando nella history era visibile uno snapshot
+- righe 59–78: **Principi controllati e limiti** — La revisione ha verificato responsabilità, API pubbliche, dipendenze,
+- righe 79–82: **Verifiche** — Gli esiti, i conteggi e la provenienza della wheel sono registrati nel
+
 ## [Audit RAM e VRAM durante l'inferenza — 13 ottobre 2026](inference-memory-audit-20261013.md)
 
 1.

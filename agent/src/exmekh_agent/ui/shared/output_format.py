@@ -62,11 +62,7 @@ def format_raw_output_text(text: str) -> str:
     parts = RecordedToolOutput.split_header(text)
     if parts is not None:
         header, body = parts
-        try:
-            header = _format_xml(header)
-        except ET.ParseError:
-            return text
-        return header + "\n" + format_output_text(body)
+        return _format_xml(header) + "\n" + format_output_text(body)
     return format_output_text(text)
 
 

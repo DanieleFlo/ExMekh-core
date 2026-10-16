@@ -110,6 +110,16 @@ class ChatMessage(BaseModel):
             self.raw_history, self.skill_history_tree
         ).system_prompt_message()
 
+    def has_same_execution_details(self, other: ChatMessage) -> bool:
+        """Compare the execution panels independently of root text and reasoning."""
+        return (
+            self.raw_history == other.raw_history
+            and self.skill_history_tree == other.skill_history_tree
+            and self.skills == other.skills
+            and self.tool_events == other.tool_events
+            and self.steering_insertions == other.steering_insertions
+        )
+
     def arguments_for_tool(self, event: ToolEvent) -> dict[str, Any]:
         """Resolve arguments through the recorded invocation's public API."""
         if event.arguments:

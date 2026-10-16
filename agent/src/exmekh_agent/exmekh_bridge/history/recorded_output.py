@@ -1,4 +1,4 @@
-"""Parse persisted ExMekh-Lib output headers at the frontend boundary."""
+"""Parse persisted output through ExMekh-Lib's public XML metadata interface."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from xml.etree import ElementTree as ET
 
 from exmekh_lib.core.models.tool_output_reference import ToolOutputReference
+from exmekh_lib.core.models.xml_header import XmlHeader, XmlHeaderContent
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,49 +33,42 @@ class RecordedToolOutput:
         )
 
     @staticmethod
-    def split_header(text: object) -> tuple[str, str] | None:
-        """Separate the recorded envelope, leaving body interpretation to callers."""
-        if not isinstance(text, str) or not text.lstrip().startswith("<header>"):
+    def _content(text: object) -> XmlHeaderContent | None:
+        if not isinstance(text, str):
             return None
-        header, separator, body = text.partition("</header>")
-        if not separator:
-            return None
-        return header + separator, body.lstrip("\r\n")
+        return XmlHeader.parse_content(text.lstrip())
+
+    @classmethod
+    def split_header(cls, text: object) -> tuple[str, str] | None:
+        """Separate the recorded envelope without changing tool-authored text."""
+        parsed = cls._content(text)
+        return None if parsed is None else (parsed.header, parsed.body)
 
     @classmethod
     def parse(cls, text: object) -> RecordedToolOutput | None:
-        parts = cls.split_header(text)
-        if parts is None:
-            return None
-        header, body = parts
-        try:
-            root = ET.fromstring(header)
-        except ET.ParseError:
-            return None
-        output_id = (root.findtext("id") or "").strip()
-        if not output_id:
-            return None
-        return cls(
-            name=(root.findtext("name") or "").strip(),
-            source=(root.findtext("type") or "Tool").strip(),
-            id=output_id,
-            body=body,
-            used_tools=cls._references(root),
-            thinking=root.findtext("thinking") or "",
-            summary_mode=root.findtext("summary-mode"),
-        )
-
-    @staticmethod
-    def _references(root: ET.Element) -> tuple[ToolOutputReference, ...] | None:
-        used_tools = root.find("used-tools")
-        if used_tools is None:
+        parsed = cls._content(text)
+        if parsed is None:
             return None
         try:
-            return tuple(
-                ToolOutputReference(
-                    name=item.findtext("name") or "", id=item.findtext("id") or ""
-                )
-                for item in used_tools.findall("item")
-            )
+            output_id = (parsed.field("id") or "").strip()
+            if not output_id:
+                return None
+            name = (parsed.field("name") or "").strip()
+            source = (parsed.field("type") or "Tool").strip()
+            thinking = parsed.field("thinking") or ""
+            summary_mode = parsed.field("summary-mode")
         except (TypeError, ValueError):
             return None
+        try:
+            references = parsed.output_references()
+        except (TypeError, ValueError):
+            references = None
+        return cls(
+            name=name,
+            source=source,
+            id=output_id,
+            body=parsed.body,
+            used_tools=references,
+            thinking=thinking,
+            summary_mode=summary_mode,
+        )

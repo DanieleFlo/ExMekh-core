@@ -415,10 +415,15 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   tramite le API pubbliche ExMekh-Lib, mantenendo identità e metadati degli output
   riletti e lo scope dei messaggi di steering dopo la compattazione; esclude dalle
   esecuzioni le chiamate annullate prima del dispatch conservate nella raw history.
-- `agent/src/exmekh_agent/exmekh_bridge/history/recorded_output.py` — parser unico degli header XML
-  persistiti; conserva corpo e riferimenti degli output, con fallback legacy;
+- `agent/src/exmekh_agent/exmekh_bridge/history/recorded_output.py` — lettore dei risultati persistiti
+  tramite l'API pubblica `XmlHeaderContent` della libreria; conserva campi base64,
+  corpo esatto e riferimenti, con fallback legacy;
   riconosce le ricevute di annullamento prima del dispatch, che il grafo mostra
   senza inventare un evento di esecuzione.
+- `agent/src/exmekh_agent/exmekh_bridge/models/messages.py` e
+  `agent/src/exmekh_agent/ui/chat/chat_view.py` — confronto pubblico dei dettagli
+  di esecuzione, controlli stabili durante il reasoning e stato di apertura
+  condiviso per tool, skill e pannelli reasoning.
 - `agent/src/exmekh_agent/exmekh_bridge/history/steering_history.py` — seleziona gli ID di steering
   del livello corrente, escludendo quelli delle skill discendenti.
 - `agent/src/exmekh_agent/exmekh_bridge/history/message_edit.py` — prepara il testo modificato,
@@ -451,6 +456,16 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `exmekh_lib/old_agent/` — archivio storico Agent Wiki: launcher presenti ad agosto 2026, wheel `agent-wiki` 0.1.0 versionata a settembre e sorgenti estratti integralmente; provenienza e hash in `provenance.json`, guida in `README.md`.
 - `exmekh_lib/` — repository Git locale dei sorgenti ExMekh-Lib, con cronologia propria,
   esclusa dal Git di DS4.
+- `exmekh_lib/src/exmekh_lib/core/history_compaction/` — compattazione esplicita e isolata per
+  nodo; valutazione, riassunti/presentazione e proiezione sono separati. Lo schema
+  contiene un campo obbligatorio per candidato. Scope attivi, user/system e
+  riferimenti agli output mantengono il proprio contratto.
+- `exmekh_lib/src/exmekh_lib/core/models/xml_header.py` — renderer e lettore pubblico
+  degli header; metadati decodificati e corpo esatto condivisi con il frontend.
+- `exmekh_lib/src/exmekh_lib/core/cache/output_file_store.py` — letture di snapshot
+  autorizzate dal proprietario, con verifica dell'identità prima e dopo l'accesso.
+- `docs/architecture/history-compaction-clean-review-20261016.md` — responsabilità,
+  regressioni di snapshot/XML/streaming e qualifica della wheel aggiornata.
 - `exmekh_lib/src/exmekh_lib/core/models/edit_document.py` — parser letterale `edit_file.v3` con soli marcatori `exmekh_edit`/`exmekh_new_text`, ID e corpi senza decoding XML; nessun accesso al filesystem.
 - `exmekh_lib/src/exmekh_lib/core/file_inspection/edit_selection.py`, `editing.py`,
   `interactive.py` e `edit_filesystem.py` — selezioni letterali e conflitti sullo snapshot

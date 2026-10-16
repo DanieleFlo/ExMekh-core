@@ -1037,12 +1037,18 @@ class ChatViewComponent:
         """
         count = len(blocks)
         total_duration = sum(b.elapsed_seconds() for b in blocks)
-        with ui.expansion("").classes(
+        expansion_key = f"reasoning:{blocks[0].id}"
+        with ui.expansion(
+            "",
+            value=self._disclosures.is_expanded(expansion_key),
+            on_value_change=lambda event: self._disclosures.set_expanded(
+                expansion_key, event.value
+            ),
+        ).classes(
             UI_PRESENTATION[
                 "render_reasoning_group.classes.w_full_reasoning_master_expansion_reasoning_e"
             ]
         ) as master_exp:
-            master_exp.value = False  # Initially compacted into a single line
             with master_exp.add_slot("header"):
                 with ui.row().classes(
                     UI_PRESENTATION[
@@ -1125,14 +1131,18 @@ class ChatViewComponent:
         expandable with a click to display its full thinking content.
         """
         block_duration = block.elapsed_seconds()
-        with ui.expansion("").classes(
+        expansion_key = f"reasoning-block:{block.id}"
+        with ui.expansion(
+            "",
+            value=self._disclosures.is_expanded(expansion_key),
+            on_value_change=lambda event: self._disclosures.set_expanded(
+                expansion_key, event.value
+            ),
+        ).classes(
             UI_PRESENTATION[
                 "render_reasoning_sub_block.classes.w_full_reasoning_sub_block_text_xs"
             ]
         ) as sub_exp:
-            sub_exp.value = (
-                False  # Initially collapsed so each sub-block can be expanded in turn
-            )
             with sub_exp.add_slot("header"):
                 with ui.row().classes(
                     UI_PRESENTATION[
@@ -1726,6 +1736,10 @@ class ChatViewComponent:
         """Show the latest live turn in a page opened after generation began."""
         if not self.current_stream_card:
             return
+        previous = self._streaming_history
+        execution_changed = previous is None or not message.has_same_execution_details(
+            previous
+        )
         self._streaming_history = message
         self.streaming_steering_insertions = message.confirmed_steering_insertions()
         self._update_steering_spinners()
@@ -1755,7 +1769,8 @@ class ChatViewComponent:
         self.streaming_root_tools = [
             event for event in message.tool_events if event.skill_path == "/"
         ]
-        self._refresh_streaming_skills_and_tools()
+        if execution_changed:
+            self._refresh_streaming_skills_and_tools()
 
     def show_steering_messages(self, messages: list[QueuedMessage]) -> None:
         if self.current_steering_container is None:
@@ -1779,10 +1794,7 @@ class ChatViewComponent:
         """Publish newly recorded output even when no tool or skill changes state."""
         previous = self._streaming_history
         self._streaming_history = message
-        if previous is None or (
-            previous.raw_history != message.raw_history
-            or previous.skill_history_tree != message.skill_history_tree
-        ):
+        if previous is None or not message.has_same_execution_details(previous):
             self._refresh_streaming_skills_and_tools()
 
     def show_steering_insertions(self, message: ChatMessage) -> None:

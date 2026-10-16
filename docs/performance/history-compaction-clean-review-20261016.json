@@ -1,0 +1,176 @@
+{
+  "date": "2026-10-16",
+  "library_commit": "2ed5764d6f9adf8ef632c9b85e7342b0880f78d7",
+  "library_offline": {
+    "status": "passed",
+    "tests": 3016,
+    "seconds": 29.83
+  },
+  "library_coverage": {
+    "covered_lines": 14054,
+    "num_statements": 14054,
+    "percent_covered": 100.0,
+    "percent_covered_display": "100",
+    "missing_lines": 0,
+    "excluded_lines": 106,
+    "percent_statements_covered": 100.0,
+    "percent_statements_covered_display": "100",
+    "num_branches": 3690,
+    "num_partial_branches": 0,
+    "covered_branches": 3690,
+    "missing_branches": 0,
+    "percent_branches_covered": 100.0,
+    "percent_branches_covered_display": "100"
+  },
+  "live_workflow": {
+    "status": "passed",
+    "tests": 8,
+    "seconds": 446.26,
+    "cases": [
+      {
+        "name": "test_live_synthetic_history_compacts_and_workflow_remains_usable[chat_completions-repeat-1]",
+        "seconds": 42.89
+      },
+      {
+        "name": "test_live_synthetic_history_compacts_and_workflow_remains_usable[chat_completions-repeat-2]",
+        "seconds": 41.067
+      },
+      {
+        "name": "test_live_synthetic_history_compacts_and_workflow_remains_usable[chat_completions-uncached-files]",
+        "seconds": 28.816
+      },
+      {
+        "name": "test_live_synthetic_history_compacts_and_workflow_remains_usable[responses-repeat-1]",
+        "seconds": 37.43
+      },
+      {
+        "name": "test_live_synthetic_history_compacts_and_workflow_remains_usable[responses-repeat-2]",
+        "seconds": 41.629
+      },
+      {
+        "name": "test_live_synthetic_history_compacts_and_workflow_remains_usable[responses-uncached-files]",
+        "seconds": 36.568
+      },
+      {
+        "name": "test_live_explicit_child_compaction_preserves_root_and_allows_real_tool_continuation",
+        "seconds": 63.467
+      },
+      {
+        "name": "test_live_compaction_inside_nested_skills_keeps_scope_and_allows_both_exits",
+        "seconds": 154.021
+      }
+    ],
+    "model": "Qwen3.8-27B-UD-Q4_K_S",
+    "metrics_source": "Observed pytest output; success and case names verified against saved JUnit.",
+    "inline_metrics": [
+      {
+        "api": "chat_completions",
+        "trial": 0,
+        "before_tokens": 6259,
+        "after_tokens": 992
+      },
+      {
+        "api": "chat_completions",
+        "trial": 1,
+        "before_tokens": 6259,
+        "after_tokens": 1026
+      },
+      {
+        "api": "responses",
+        "trial": 0,
+        "before_tokens": 6259,
+        "after_tokens": 948
+      },
+      {
+        "api": "responses",
+        "trial": 1,
+        "before_tokens": 6259,
+        "after_tokens": 997
+      }
+    ],
+    "uncached_files": [
+      {
+        "api": "chat_completions",
+        "before_tokens": 1314,
+        "after_tokens": 1298
+      },
+      {
+        "api": "responses",
+        "before_tokens": 1313,
+        "after_tokens": 1277
+      }
+    ],
+    "child_node": {
+      "before_tokens": 6853,
+      "after_tokens": 1567,
+      "root_unchanged": true,
+      "real_followup_tool_calls": 1
+    },
+    "nested_skills": {
+      "before_tokens": 7668,
+      "after_tokens": 2386,
+      "final_tokens": 2134,
+      "scope_preserved": true,
+      "final_depth": 0
+    },
+    "limits": [
+      "KV reuse and server prefill cost were not measured.",
+      "Workflow assertions validate the client history; effective server prompt reconstruction after native return was not qualified."
+    ]
+  },
+  "wheel": {
+    "path": "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl",
+    "sha256": "bd574f5bc781c57f95999557b0b836aecd0b6b41fc2423f7461243d635d25b53",
+    "python_source_files_verified": 264,
+    "matches_library_sources": true
+  },
+  "static_checks": {
+    "ruff_library": "passed",
+    "ruff_frontend": "passed",
+    "pyright_library": "0 errors, 0 warnings"
+  },
+  "server_checks": {
+    "make_ds4_server_test": "up to date",
+    "ds4_server_test": "passed",
+    "product_text_tests": 4,
+    "product_text_status": "passed"
+  },
+  "not_qualified": [
+    "Metal, SSD streaming, distributed inference and GPU numerical/performance paths: no changes in this review."
+  ],
+  "frontend": {
+    "status": "passed",
+    "tests": 991,
+    "seconds": 142.03,
+    "browser_e2e_included": true,
+    "coverage": {
+      "covered_lines": 5953,
+      "num_statements": 5953,
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "missing_lines": 0,
+      "excluded_lines": 0,
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100",
+      "num_branches": 1930,
+      "num_partial_branches": 0,
+      "covered_branches": 1930,
+      "missing_branches": 0,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100"
+    }
+  },
+  "repository_documentation_checks": {
+    "status": "passed",
+    "tests": 8
+  },
+  "regressions_verified": [
+    "Newer cached descendants incorrectly attached to an older visible output.",
+    "Explicit empty used-tools replaced with cached descendants.",
+    "Referenced execution response_type missing its public XML field name.",
+    "Frontend base64 metadata and leading body line breaks not preserved.",
+    "Output snapshot changes during file reads.",
+    "Repeated root reasoning snapshots detached execution controls.",
+    "Reasoning expansion choices reset during rerendering."
+  ]
+}
