@@ -147,6 +147,56 @@ async def test_global_threshold_validation_and_save(compaction_server):
             await browser.close()
 
 
+async def test_failed_compaction_is_visible_and_can_be_retried(
+    compaction_server, tmp_path
+):
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            executable_path=get_edge_executable(), headless=True
+        )
+        page = await browser.new_page()
+        try:
+            await page.goto(compaction_server, wait_until="networkidle")
+            await page.get_by_role(
+                "button", name="New project chat", exact=True
+            ).first.click()
+            await page.request.post(compaction_server + "/test/summary-error/true")
+            before = await state(compaction_server)
+            await send_command(page, "Fail compaction")
+            await wait_turn_completion(page)
+            await expect(
+                page.get_by_text(
+                    "Automatic history compaction failed", exact=False
+                ).first
+            ).to_be_visible()
+            failed = await state(compaction_server)
+            assert len(failed["calls"]) == len(before["calls"]) + 1
+            assert failed["session"]["messages"][-1]["error"].startswith(
+                "Automatic history compaction failed"
+            )
+            await expect(
+                page.get_by_text("Mock compaction unavailable", exact=False).first
+            ).to_be_visible()
+            assert "ORIGINAL_" in str(failed["session"]["messages"][-1]["raw_history"])
+            assert "ORIGINAL_" in str(failed["graph"])
+            await page.screenshot(
+                path=str(tmp_path / "compaction-error.png"), full_page=True
+            )
+            await page.request.post(compaction_server + "/test/summary-error/false")
+            await page.reload(wait_until="networkidle")
+            await send_command(page, "Retry compaction")
+            await wait_turn_completion(page)
+            await expect(page.locator(".msg-assistant").last).to_contain_text(
+                "COMPACTION_OK"
+            )
+            resumed = await state(compaction_server)
+            assert resumed["session"]["messages"][-1]["model_context"] is not None
+            assert "ORIGINAL_" in str(resumed["graph"])
+        finally:
+            await page.request.post(compaction_server + "/test/summary-error/false")
+            await browser.close()
+
+
 async def test_switch_during_compaction_and_reconnected_stream(compaction_server):
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(

@@ -14703,6 +14703,8 @@ struct skill_frame {
     char *checkpoint_path;
     uint64_t checkpoint_checksum;
     ds4_tokens frontier;
+    char *request_prefix;
+    visible_image_key images;
     uint64_t checkpoint_bytes;
     double stage_ms;
     double write_ms;
@@ -15157,6 +15159,7 @@ static void skill_frame_free(skill_frame *f, bool unlink_file) {
     free(f->call_id);
     free(f->skill_name);
     free(f->checkpoint_path);
+    free(f->request_prefix);
     ds4_tokens_free(&f->frontier);
     free(f);
 }
@@ -15300,9 +15303,8 @@ static bool skill_payload_checksum(FILE *fp, uint64_t bytes, uint64_t *out) {
 
 static bool skill_frame_save(server *s, server_slot *slot,
                              const tool_call *call,
-                             double *write_ms_out,
+                             const request *req,
                              char *err, size_t errlen) {
-    if (write_ms_out) *write_ms_out = 0.0;
     if (!s || !slot || !call || !call->id || !call->id[0] ||
         !call->name || !call->name[0] || !s->skill_dir) {
         snprintf(err, errlen, DS4_AGENT_TEXT_INVALID_SKILL_CHECKPOINT_REQUEST);
@@ -15420,6 +15422,9 @@ static bool skill_frame_save(server *s, server_slot *slot,
     f->checkpoint_checksum = checksum;
     f->stage_ms = state_metrics.stage_ms;
     f->write_ms = write_ms;
+    if (req && req->prompt_text) {
+        f->request_prefix = visible_prompt_key(req, req->prompt_text, &f->images);
+    }
     ds4_tokens_copy(&f->frontier, ds4_session_tokens(slot->session));
     pthread_mutex_lock(&s->tool_mu);
     duplicate = skill_frame_slot_locked(s, call->id) >= 0;
@@ -15438,7 +15443,6 @@ static bool skill_frame_save(server *s, server_slot *slot,
         skill_frame_free(f, true);
         return false;
     }
-    if (write_ms_out) *write_ms_out = write_ms;
     server_log(DS4_LOG_KVCACHE,
                DS4_AGENT_TEXT_SKILL_CHECKPOINT_LOG,
                f->call_id, f->skill_name, f->frontier.len, f->frontier.len,
@@ -17398,7 +17402,11 @@ static slot_reuse slot_probe_reuse_locked(server *s, server_slot *slot,
         }
     }
 
-    if (req->api == API_RESPONSES && req->responses_live_suffix_text &&
+    /* IDs bind output-only continuations. A full replay owns its entire prompt:
+     * scoring may add a schema, and compaction may replace earlier history while
+     * retaining the latest call IDs. Those requests need prefix-based reuse. */
+    if (req->api == API_RESPONSES && req->responses_requires_live_tool_state &&
+        req->responses_live_suffix_text &&
         req->responses_live_call_ids.len > 0 &&
         responses_live_matches_request_locked(slot,
                                               &req->responses_live_call_ids,
@@ -17410,7 +17418,8 @@ static slot_reuse slot_probe_reuse_locked(server *s, server_slot *slot,
         return pr;
     }
 
-    if (req->api == API_ANTHROPIC && req->anthropic_live_suffix_text &&
+    if (req->api == API_ANTHROPIC && req->anthropic_requires_live_tool_state &&
+        req->anthropic_live_suffix_text &&
         req->anthropic_live_call_ids.len > 0 &&
         anthropic_live_matches_request_locked(slot,
                                               &req->anthropic_live_call_ids,
@@ -17505,6 +17514,24 @@ static int live_text_prefix_prompt(server *s, server_slot *slot,
         effective_prompt);
     free(live_text);
     return live_tokens->len;
+}
+
+/* A skill checkpoint owns the caller prefix at entry. A full replay may have
+ * compacted that prefix while the skill was active; restoring it would undo
+ * the replacement. Output-only returns still inherit their caller's context. */
+static bool skill_frame_matches_request(const skill_frame *frame,
+                                        const request *req) {
+    if (!frame || !req) return false;
+    if (req->responses_requires_live_tool_state) return true;
+    if (!frame->request_prefix || !req->prompt_text) return false;
+    visible_image_key images;
+    char *key = visible_prompt_key(req, req->prompt_text, &images);
+    const size_t prefix_len = strlen(frame->request_prefix);
+    const bool matches = key && prefix_len > 0 &&
+        byte_prefix_match(key, strlen(key), frame->request_prefix, prefix_len) &&
+        visible_image_prefix_matches(&images, &frame->images, prefix_len);
+    free(key);
+    return matches;
 }
 
 static slot_reuse slot_probe_reuse(server *s, server_slot *slot,
@@ -20476,6 +20503,9 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         }
         return_discarded_tokens = old_pos > return_frame->frontier.len ?
                                   old_pos - return_frame->frontier.len : 0;
+    }
+    const bool restore_skill = skill_frame_matches_request(return_frame, &j->req);
+    if (restore_skill) {
         if (!skill_frame_restore(slot, return_frame, &return_metrics,
                                  err, sizeof(err))) {
             ds4_tokens_free(&effective_prompt);
@@ -20914,7 +20944,7 @@ static void generate_job_inner(server *s, server_slot *slot, job *j) {
         const int result_prefill = prompt_for_sync->len > cached ?
                                    prompt_for_sync->len - cached : 0;
         char *returned_call_id = xstrdup(return_frame->call_id);
-        const int restored_tokens = return_frame->frontier.len;
+        const int restored_tokens = restore_skill ? return_frame->frontier.len : 0;
         pthread_mutex_lock(&s->tool_mu);
         const bool checkpoint_deleted =
             skill_frames_consume_through_locked(s, slot, return_frame);
@@ -22288,7 +22318,7 @@ decode_again:
                         break;
                     }
                     if (is_skill &&
-                        !skill_frame_save(s, slot, call, NULL,
+                        !skill_frame_save(s, slot, call, &j->req,
                                           err, sizeof(err))) {
                         agentic_ok = false;
                         break;
@@ -24531,6 +24561,7 @@ static void test_slot_probe_live_state_tiers(void) {
         job j = {0};
         j.req.api = API_RESPONSES;
         j.req.responses_live_suffix_text = xstrdup(" tool-out");
+        j.req.responses_requires_live_tool_state = true;
         id_list_push_unique(&j.req.responses_live_call_ids, "call-abc");
         ds4_tokens_push(&j.req.prompt, 999);
         slot_reuse pr = slot_probe_reuse_locked(&s, &slot, &j.req);
@@ -24560,6 +24591,7 @@ static void test_slot_probe_live_state_tiers(void) {
         job j = {0};
         j.req.api = API_ANTHROPIC;
         j.req.anthropic_live_suffix_text = xstrdup(" result");
+        j.req.anthropic_requires_live_tool_state = true;
         id_list_push_unique(&j.req.anthropic_live_call_ids, "toolu-1");
         ds4_tokens_push(&j.req.prompt, 999);
         slot_reuse pr = slot_probe_reuse_locked(&s, &slot, &j.req);
@@ -24646,6 +24678,45 @@ static void test_slot_probe_live_state_tiers(void) {
         visible_live_free(&slot.thinking_live);
         ds4_session_free_test_checkpoint(slot.session);
         request_free(&j.req);
+    }
+}
+
+static void test_slot_probe_replayed_tool_ids_do_not_override_history(void) {
+    server s = {0};
+    const int tokens[] = {1, 2, 3};
+    const char *replays[] = {
+        "scoring schema: prior conversation, tool result, rate entries",
+        "original system: compacted conversation, tool result",
+    };
+    for (int anthropic = 0; anthropic < 2; anthropic++) {
+        server_slot slot = {0};
+        slot.session = ds4_session_new_test_checkpoint(tokens, 3);
+        live_tool_state *live = anthropic ? &slot.anthropic_live : &slot.responses_live;
+        live->valid = true;
+        live->live_tokens = 3;
+        live->visible_text = xstrdup("original system: prior conversation, tool call");
+        live->visible_len = strlen(live->visible_text);
+        id_list_push_unique(&live->call_ids, "same-call");
+        for (size_t i = 0; i < sizeof(replays) / sizeof(replays[0]); i++) {
+            request req = {0};
+            req.api = anthropic ? API_ANTHROPIC : API_RESPONSES;
+            req.prompt_text = xstrdup(replays[i]);
+            ds4_tokens_push(&req.prompt, 999);
+            if (anthropic) {
+                req.anthropic_live_suffix_text = xstrdup(" tool result");
+                id_list_push_unique(&req.anthropic_live_call_ids, "same-call");
+            } else {
+                req.responses_live_suffix_text = xstrdup(" tool result, rate entries");
+                id_list_push_unique(&req.responses_live_call_ids, "same-call");
+            }
+            /* Replayed calls make this a self-contained request. Matching IDs
+             * cannot discard a new schema or restore history already compacted. */
+            TEST_ASSERT(slot_probe_reuse_locked(&s, &slot, &req).kind == REUSE_NONE);
+            TEST_ASSERT(slot_probe_reuse_locked(&s, &slot, &req).reuse_tokens == 0);
+            request_free(&req);
+        }
+        live_tool_state_free(live);
+        ds4_session_free_test_checkpoint(slot.session);
     }
 }
 
@@ -28675,6 +28746,28 @@ static void test_skill_return_preserves_pending_sibling(void) {
     TEST_ASSERT(s.skill_checkpoint_live_bytes == 100);
     skill_frames_clear_locked(&s, &slot);
     TEST_ASSERT(s.skill_checkpoint_live_bytes == 0);
+}
+
+static void test_skill_return_reuses_only_the_original_caller_prefix(void) {
+    skill_frame frame = {.request_prefix = "system: original history; caller"};
+    request req = {.prompt_text = "system: original history; caller tool result"};
+    TEST_ASSERT(skill_frame_matches_request(&frame, &req));
+    req.prompt_text = "system: compacted history; caller tool result";
+    TEST_ASSERT(!skill_frame_matches_request(&frame, &req));
+    req.prompt_text = "different system: original history; caller tool result";
+    TEST_ASSERT(!skill_frame_matches_request(&frame, &req));
+    req.prompt_text = "system: original";
+    TEST_ASSERT(!skill_frame_matches_request(&frame, &req));
+    req.prompt_text = NULL;
+    TEST_ASSERT(!skill_frame_matches_request(&frame, &req));
+    req.responses_requires_live_tool_state = true;
+    TEST_ASSERT(skill_frame_matches_request(&frame, &req));
+    TEST_ASSERT(!skill_frame_matches_request(NULL, &req));
+    TEST_ASSERT(!skill_frame_matches_request(&frame, NULL));
+    req.responses_requires_live_tool_state = false;
+    req.prompt_text = "system: original history; caller tool result";
+    frame.request_prefix = NULL;
+    TEST_ASSERT(!skill_frame_matches_request(&frame, &req));
 }
 
 static void test_resident_system_frontier_matches_shared_prompt_only(void) {
@@ -33982,6 +34075,7 @@ static void ds4_server_unit_tests_run(void) {
     test_live_continuation_contract();
     test_slot_probe_and_routing_scores();
     test_slot_probe_live_state_tiers();
+    test_slot_probe_replayed_tool_ids_do_not_override_history();
     test_slot_probe_vision_tiers();
     test_slot_routing_staleness_tiers();
     test_dispatch_routes_alien_request_to_empty_slot();
@@ -34078,6 +34172,7 @@ static void ds4_server_unit_tests_run(void) {
     test_anthropic_tool_use_parses_before_role();
     test_tool_checkpoint_canonicalization_gate_exact_replay();
     test_skill_return_preserves_pending_sibling();
+    test_skill_return_reuses_only_the_original_caller_prefix();
     test_resident_system_frontier_matches_shared_prompt_only();
     test_resident_system_frontier_replaces_unrelated_live_state();
     test_resident_frontier_memory_stream_preserves_last_byte();

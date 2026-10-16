@@ -35,10 +35,9 @@ class AutoCompactionPolicy:
             return False
         if not self._armed:
             return False
-        # Rearm only after usage drops below the threshold. Failed or ineffective
-        # compaction must not spin on the same oversized protected context.
-        self._armed = False
         return True
 
     def after_compaction(self, request: ProviderRequest) -> None:
+        # Only a successful replacement can disarm the policy. A failed attempt
+        # stops the turn, and a later user retry must still be able to compact.
         self._armed = not self._over_threshold(request)

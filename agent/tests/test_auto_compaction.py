@@ -130,6 +130,9 @@ def test_policy_boundary_and_no_repeated_attempts(monkeypatch, used, expected):
     policy = AutoCompactionPolicy(tracker, model="probe", base_url=config.base_url)
     request = ProviderRequest([UserMessage("task")])
     assert policy.before_inference(request) is expected
+    # An attempt that raises before applying history must remain retryable.
+    assert policy.before_inference(request) is expected
+    policy.after_compaction(request)
     assert policy.before_inference(request) is False
     tracker.estimate_context.return_value = ProviderContextUsage(prompt_tokens=100)
     assert not policy.before_inference(request)
@@ -233,13 +236,19 @@ def test_no_compaction_below_threshold(probe, tmp_path):
     assert session.messages[-1].model_context is None
 
 
-def test_compaction_failure_keeps_original_and_finishes(probe, tmp_path):
+def test_compaction_failure_keeps_original_and_stops_before_inference(probe, tmp_path):
     probe.summary_error = RuntimeError("mock summary failed")
     session = ChatSession()
-    run_turn(tmp_path, session)
-    assert session.messages[-1].content.startswith("COMPACTION_OK")
-    assert session.messages[-1].model_context is None
-    assert "ORIGINAL_1" in str(session.messages[-1].raw_history)
+    collector = TurnStreamCollector()
+    with pytest.raises(
+        RuntimeError, match="Automatic history compaction failed"
+    ) as error:
+        run_turn(tmp_path, session, collector=collector)
+    assert str(error.value.__cause__) == "mock summary failed"
+    message = collector.build_message()
+    assert message.model_context is None
+    assert "ORIGINAL_1" in str(message.raw_history)
+    assert len(probe.requests) == 1
     assert len(probe.score_requests) == 1
 
 
@@ -426,9 +435,16 @@ def test_scoring_failure_preserves_the_uncompacted_context(probe, tmp_path):
 
     probe.on_score = fail
     session = ChatSession()
-    run_turn(tmp_path, session)
-    assert session.messages[-1].model_context is None
-    assert "ORIGINAL_1" in str(session.messages[-1].raw_history)
+    collector = TurnStreamCollector()
+    with pytest.raises(
+        RuntimeError, match="Automatic history compaction failed"
+    ) as error:
+        run_turn(tmp_path, session, collector=collector)
+    assert str(error.value.__cause__) == "Invalid mock scores"
+    message = collector.build_message()
+    assert message.model_context is None
+    assert "ORIGINAL_1" in str(message.raw_history)
+    assert len(probe.requests) == 1
 
 
 def test_user_image_survives_compaction_archive_and_replay(probe, tmp_path):
@@ -664,9 +680,11 @@ def test_ds4_preflight_is_stable_and_does_not_change_the_sent_prompt(
         },
     )
     first = tracker.estimate_context(request).prompt_tokens
-    assert first == count_text_tokens(render_ds4_qwen_prompt(
-        [message.message_dump() for message in messages], [], thinking=False
-    ))
+    assert first == count_text_tokens(
+        render_ds4_qwen_prompt(
+            [message.message_dump() for message in messages], [], thinking=False
+        )
+    )
     assert tracker.estimate_context(request).prompt_tokens == first
     if with_user:
         tracker.call(request)

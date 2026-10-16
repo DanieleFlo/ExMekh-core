@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Europe/Rome",
+  "issue": "Full history replay ignored by live tool and skill checkpoint reuse during compaction",
+  "original_session": {
+    "title": "Ricerca su Antirez e social",
+    "id": "4d8f75fe-a168-4d14-a2f2-766db209bee3",
+    "model": "Qwen3.8-27B-UD-Q4_K_S",
+    "api": "responses",
+    "context_capacity": 26000,
+    "threshold_percent": 80,
+    "threshold_tokens": 20800,
+    "model_context_checkpoint_saved": false,
+    "final_error": "Prompt has 26042 tokens, but the configured context size is 26000 tokens"
+  },
+  "original_timeline": [
+    {
+      "time": "15:43:49",
+      "event": "read-file output completed; canonical tool frontier reached 18433 tokens"
+    },
+    {
+      "time": "15:43:52-15:43:53",
+      "event": "Compaction scoring was attempted three times, incorrectly classified as tool-output-ids continuation",
+      "cached_tokens": 18433,
+      "effective_prompt_tokens": 26539,
+      "inherited_system_tokens": 5125,
+      "result": "Request exceeded capacity before scoring generation"
+    },
+    {
+      "time": "15:43:54",
+      "event": "Runtime swallowed compaction failure and resumed the original history; policy remained disarmed",
+      "original_agent_prompt_tokens": 23753
+    },
+    {
+      "time": "15:45:13",
+      "event": "Agent reached 25930 prompt tokens; subsequent interactive generations exhausted the context"
+    },
+    {
+      "time": "15:45:19",
+      "event": "Incomplete generation recovery restored the resident system and replayed the history tail",
+      "system_tokens": 5125,
+      "tail_prefill_tokens": 20817,
+      "seconds": 53.367
+    },
+    {
+      "time": "15:46:18",
+      "event": "Another incomplete generation recovery replayed the history tail",
+      "tail_prefill_tokens": 20867,
+      "seconds": 55.366
+    },
+    {
+      "time": "15:47:17",
+      "event": "Turn ended with context overflow"
+    }
+  ],
+  "root_cause": "Call IDs authenticate output-only continuations, not the entire contents of a self-contained replay. The reuse probe ignored new system/schema instructions in scoring and could similarly undo replaced history. Routing and execution both use this probe.",
+  "changes": [
+    "Restrict call-ID-only reuse to requests that actually require live tool state; self-contained replays use visible/text/token prefix checks.",
+    "Skill returns restore checkpoints only if the caller's original rendered prefix still matches. A rewritten caller history is replayed and the obsolete checkpoint is consumed after successful sync.",
+    "Preserve output-only continuation and visible-prefix reuse; apply the same rule to the equivalent Anthropic branch.",
+    "Propagate automatic compaction failures with their cause instead of sending the original oversized request.",
+    "Disarm the threshold policy only after a successful replacement, allowing a later user retry after failure.",
+    "Update the bundled library wheel and lockfile."
+  ],
+  "live_responses_regression": {
+    "command": "agent/.venv/bin/python tests/test_server_compaction_replay.py --url http://localhost:8080 --output <report.json>",
+    "hardware": "NVIDIA GeForce RTX 3090, CUDA, Qwen3.8-27B-UD-Q4_K_S, MTP, ctx=26000",
+    "executes_real_tools": false,
+    "before": {
+      "scoring_with_live_call_id_prompt_tokens": 1546,
+      "identical_isolated_scoring_prompt_tokens": 204,
+      "passed": false
+    },
+    "after": {
+      "scoring_with_live_call_id_prompt_tokens": 204,
+      "identical_isolated_scoring_prompt_tokens": 204,
+      "structured_scores_valid": true,
+      "passed": true,
+      "seconds": 12.592
+    }
+  },
+  "original_history_diagnostics": {
+    "original_chat_modified": false,
+    "file_outputs_access": "read-only",
+    "isolated_scoring": {
+      "started_at": "15:55:53",
+      "note": "This request in the supplied server log belongs to the diagnostic replay, after the original chat ended.",
+      "prompt_tokens": 22500,
+      "system_tokens": 1506,
+      "score_fields": 12,
+      "valid_scores": true
+    },
+    "compactor": {
+      "input_messages": 16,
+      "protected_active_skill_opening_index": 6,
+      "output_messages": 8,
+      "history_only_tokens_before": 19247,
+      "history_only_tokens_after": 8945,
+      "score_source": "Cached from the successful real isolated scoring request",
+      "summary_requests": 11,
+      "summary_source": "Real local model, original cached/file-backed tool outputs",
+      "seconds": 264.014
+    }
+  },
+  "validation": {
+    "native_regression_before": "8 failed assertions across schema/history-replacement cases",
+    "native_regression_after": "ds4_server_test passed",
+    "interactive_protocol": "make test-server-interactive passed",
+    "cuda_server_build": "make ds4-server passed",
+    "root_static_checks": {
+      "tests": 29,
+      "skipped": 3,
+      "passed": true
+    },
+    "library": {
+      "commit": "ff21d7a",
+      "passed": 3033,
+      "skipped": 71,
+      "seconds": 14.42,
+      "statement_and_branch_coverage_percent": 100,
+      "ruff": "passed",
+      "pyright": "0 errors, 0 warnings"
+    },
+    "frontend": {
+      "passed": 1059,
+      "skipped": 43,
+      "seconds": 232.02,
+      "statement_and_branch_coverage_percent": 100,
+      "focused_mock_and_browser_tests": 50,
+      "ruff": "passed",
+      "scenarios": [
+        "Summary/scoring error stops inference and retains original completed batches and cached outputs",
+        "Next turn can retry compaction",
+        "Frontend displays compaction error, retains raw history and graph, and resumes after reload",
+        "Successful compaction, nested native returns, steering, cancellation, archive/current switch and mobile layout"
+      ],
+      "final_wheel_focused_test_seconds": 24.11,
+      "error_screenshot": "agent/.test-tmp/compaction-verified/test_failed_compaction_is_visi0/compaction-error.png"
+    },
+    "wheel": {
+      "sha256": "001184481499297668a12e62bfe20b12d5addf756355982663b5ceb89cce4af5",
+      "matching_library_source_files": 272,
+      "lockfile_matches": true
+    }
+  },
+  "scope_limits": [
+    "Original chat replay used cached real scores and live summaries; the entire original agent workflow was not rerun.",
+    "Live protocol regression ran on the local CUDA Qwen3.8 server. Metal, SSD streaming, distributed inference and other model families were not tested live; inference kernels and cache payload formats were unchanged."
+  ],
+  "local_evidence_directory": "performance-results/automatic-history-compaction-20261016",
+  "native_skill_return_regression": {
+    "fixture": "Synthetic mock work tools inside two nested native skills; no external tools executed",
+    "command": "BASE_URL=http://localhost:8080/v1 .venv/bin/python -m pytest -n 0 --run-live -s tests/live/test_history_compaction_agent_live.py::test_live_compaction_inside_nested_skills_keeps_scope_and_allows_both_exits",
+    "before": {
+      "server_prompt_tokens_before_compaction": 8251,
+      "resumed_server_prompt_tokens": [
+        3257,
+        8404,
+        8383
+      ],
+      "previous_client_only_assertions_passed": true,
+      "problem": "Native return restored the uncompacted caller prefix"
+    },
+    "after": {
+      "server_prompt_tokens_before_compaction": 8251,
+      "resumed_server_prompt_tokens": [
+        3284,
+        3039,
+        2898
+      ],
+      "final_depth": 0,
+      "scope_preserved": true,
+      "completed_tools": [
+        "mock-skill",
+        "nested-skill",
+        "nested-sub-tool",
+        "exit_agent",
+        "exit_agent"
+      ],
+      "passed": true,
+      "seconds": 136.17
+    },
+    "normal_checkpoint_reuse": "Also observed unchanged compact caller checkpoints restored successfully during an additional synthetic workflow; the fast native path remains available",
+    "library_test_commit": "09d05f3"
+  }
+}

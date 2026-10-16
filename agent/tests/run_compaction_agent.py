@@ -76,6 +76,13 @@ def resume_compaction() -> None:
     compaction_gate.set()
 
 
+@app.post("/test/summary-error/{enabled}")
+def summary_error(enabled: bool) -> None:
+    provider.summary_error = (
+        RuntimeError("Mock compaction unavailable") if enabled else None
+    )
+
+
 if __name__ == "__main__":
     config.data_dir.joinpath("work").mkdir(parents=True, exist_ok=True)
     project = session_manager.create_project(config.work_root)

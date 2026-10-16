@@ -396,6 +396,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `agent/src/exmekh_agent/exmekh_bridge/agents/auto_compaction.py` — soglia globale
   predefinita all'80% del limite scoperto per endpoint e modello; usa i totali
   del provider e la stima della prossima richiesta, con riarmo dopo la riduzione.
+  Un errore di compattazione ferma l'inferenza conservando la history e permette
+  un nuovo tentativo al turno successivo, senza disabilitare la policy.
 - `agent/src/exmekh_agent/exmekh_bridge/history/compaction.py` — `HistoryArchive`
   possiede contesto, porzioni sostituite e confini del turno per root e figli;
   espone checkpoint indipendenti. Replay, conteggio e Raw Current includono
@@ -407,6 +409,18 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/performance/automatic-history-compaction-20261016.json` — esiti delle
   suite complete frontend/libreria, copertura, hash della wheel e screenshot
   della compattazione automatica; distingue i test mock dalla qualifica live.
+- `tests/test_server_compaction_replay.py` — regressione live Responses contro
+  un server già attivo: confronta lo stesso scoring con e senza binding del
+  tool nella KV; il replay completo deve rispettare il proprio prompt.
+  I test nativi coprono anche history sostituite, riuso del prefisso visibile
+  e continuazioni che inviano soltanto gli output dei tool.
+  I checkpoint skill conservano il prefisso del chiamante; un return con history
+  riscritta usa il replay aggiornato e consuma il vecchio checkpoint dopo il sync.
+  `exmekh_lib/tests/live/test_history_compaction_agent_live.py` verifica anche
+  i token effettivi del server dopo entrambi i ritorni da skill annidate.
+- `docs/performance/automatic-compaction-replay-fix-20261016.json` — correlazione
+  fra chat e log del server, riproduzione prima/dopo, copertura e verifiche della
+  correzione del riuso tramite ID durante lo scoring della compattazione.
 - `exmekh_lib/src/exmekh_lib/core/history_compaction/inference_policy.py` — contratto
   pubblico della policy prima dell'inferenza e dopo la sostituzione. `CompactionResult`
   possiede la proiezione dei messaggi trattenuti; `MessageHistory.discard_latest`
