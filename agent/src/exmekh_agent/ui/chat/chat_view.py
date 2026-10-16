@@ -9,6 +9,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Literal
 
+from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 from nicegui import ui
 
 from exmekh_agent.config.catalogs import message as app_text
@@ -37,6 +38,7 @@ from exmekh_agent.exmekh_bridge.providers.context_usage import (
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.ui.chat.chat_export import ExportFormat, export_chat
+from exmekh_agent.ui.chat.compaction_progress import CompactionProgressView
 from exmekh_agent.ui.chat.message_editor import EditMessageCallback, MessageEditor
 from exmekh_agent.ui.chat.message_text import message_display_text
 from exmekh_agent.ui.graph.graph_view import GraphViewComponent
@@ -120,6 +122,7 @@ class ChatViewComponent:
         self.stream_started_at: float | None = None
         self.stream_duration_label: ui.label | None = None
         self.stream_timer: ui.timer | None = None
+        self.compaction_progress_view: CompactionProgressView | None = None
         self.current_thinking_label: ui.html | None = None
         self.current_live_reasoning_timer_label: ui.label | None = None
         self.current_loading_placeholder: ui.row | None = None
@@ -1709,6 +1712,7 @@ class ChatViewComponent:
                     )
 
                     # Parsed HTML response (with LaTeX MathML support)
+                    self.compaction_progress_view = CompactionProgressView()
                     self.current_response_text = ""
                     self.current_html = ui.html("").classes(
                         UI_PRESENTATION[
@@ -1736,6 +1740,7 @@ class ChatViewComponent:
         """Show the latest live turn in a page opened after generation began."""
         if not self.current_stream_card:
             return
+        self.update_compaction_progress(message.compaction_progress)
         previous = self._streaming_history
         execution_changed = previous is None or not message.has_same_execution_details(
             previous
@@ -1795,7 +1800,9 @@ class ChatViewComponent:
         previous = self._streaming_history
         self._streaming_history = message
         if self.raw_history_view:
-            self.raw_history_view.update_context_snapshot(self.sessions.get_current_session(), message)
+            self.raw_history_view.update_context_snapshot(
+                self.sessions.get_current_session(), message
+            )
         if previous is None or not message.has_same_execution_details(previous):
             self._refresh_streaming_skills_and_tools()
 
@@ -1813,6 +1820,8 @@ class ChatViewComponent:
                 spinner.set_visibility(False)
 
     def _update_stream_duration(self) -> None:
+        if self.compaction_progress_view is not None:
+            self.compaction_progress_view.refresh()
         if self.stream_duration_label and self.stream_started_at is not None:
             elapsed = time.monotonic() - self.stream_started_at
             self.stream_duration_label.text = format_duration(elapsed)
@@ -2028,6 +2037,9 @@ class ChatViewComponent:
             self._refresh_streaming_skills_and_tools()
 
     def finalize_stream(self) -> None:
+        if self.compaction_progress_view is not None:
+            self.compaction_progress_view.show([])
+            self.compaction_progress_view = None
         self._streaming_history = None
         if self.stream_timer:
             self.stream_timer.cancel()
@@ -2065,3 +2077,11 @@ class ChatViewComponent:
         self.streaming_root_tools.clear()
         self.live_skill_timer_labels.clear()
         self.live_tool_timer_labels.clear()
+
+    def update_compaction_progress(
+        self, events: list[DeepAgentCompactionProgressEvent]
+    ) -> None:
+        if self.compaction_progress_view is not None:
+            self.compaction_progress_view.show(events)
+            if events and self.current_loading_placeholder:
+                self.current_loading_placeholder.set_visibility(False)

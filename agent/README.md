@@ -33,6 +33,12 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   jumping across the threshold: compaction externalizes large outputs when needed,
   bounds its scoring and summary requests, and checks the result before inference.
   Protected input that still cannot fit stops the turn with an explicit error.
+  A temporary progress bar appears inside the assistant response during compaction,
+  showing completed/total outputs, elapsed time, and remaining time estimated from
+  actual summaries. It survives page reconnection and disappears when compaction
+  ends, fails, or is stopped. The library system configuration retains a target
+  of 10% of candidates above the summary threshold, with a minimum of two when
+  available and all ties at the cutoff preserved.
 
 - **Local Provider Control**:
   - Dynamic health check of the local server endpoint (LM Studio, Ollama, llama.cpp, vLLM).

@@ -7,6 +7,7 @@ import uuid
 from copy import deepcopy
 from typing import Any, Literal
 
+from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 from exmekh_lib.core.models.assistant_message import ToolCall
 from pydantic import BaseModel, Field
 
@@ -89,6 +90,9 @@ class ChatMessage(BaseModel):
     steering_insertions: list[SteeringInsertion] | None = None
     skill_history_tree: list[dict[str, Any]] = Field(default_factory=list)
     context_usage: ProviderContextUsage | None = None
+    compaction_progress: list[DeepAgentCompactionProgressEvent] = Field(
+        default_factory=list, exclude=True
+    )
     timestamp: float = Field(default_factory=time.time)
     duration_seconds: float | None = None
     is_streaming: bool = False

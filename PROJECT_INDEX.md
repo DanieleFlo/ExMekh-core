@@ -455,6 +455,18 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   normali/strutturate tramite `ProviderRequest.with_event_handler()`, conservando
   opzioni e allegati senza espanderli di nuovo; interrompe chiamate e stream
   dei turni cancellati.
+- `exmekh_lib/src/exmekh_lib/core/history_compaction/progress.py` — snapshot
+  transitori, conteggio degli output e stima dei tempi basata sui soli riassunti
+  effettivi. Il runtime emette `DeepAgentCompactionProgressEvent`; il collector
+  conserva lo stato per la riconnessione, escluso dalla serializzazione dei messaggi.
+  `agent/src/exmekh_agent/ui/chat/compaction_progress.py` visualizza la barra
+  nell'area della risposta e la rimuove alla conclusione dell'operazione o del turno.
+  Test in `exmekh_lib/tests/core/history_compaction/test_progress.py`,
+  `agent/tests/test_compaction_progress.py` e `test_auto_compaction_e2e.py`.
+  Qualifica e provenienza in `docs/performance/compaction-progress-retention-20261016.json`.
+- `exmekh_lib/src/exmekh_lib/core/history_compaction/policy.py` — normalizzazione
+  uniforme dei voti dopo tutti i lotti: quota configurata del 10% con minimo due,
+  preservando tutti i pari merito al confine. Valori in `config/history_compaction.py`.
 - `agent/src/exmekh_agent/ui/shared/neural_loader.py`,
   `agent/src/exmekh_agent/ui/resources/js/neural_loader.js` — indicatore canvas
   per client, con caricamento asincrono, pausa e cleanup dell'animazione.

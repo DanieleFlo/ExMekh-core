@@ -9,6 +9,7 @@ from collections.abc import Callable
 from typing import Any
 
 from exmekh_lib.core.agents.deep_agent import (
+    DeepAgentCompactionProgressEvent,
     DeepAgentEvent,
     DeepAgentExecutionEvent,
     DeepAgentHistoryCompactionEvent,
@@ -107,6 +108,8 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         steering: TurnSteering | None = None,
         on_steering_added: Callable[[], None] | None = None,
         on_compaction: Callable[[DeepAgentHistoryCompactionEvent], None] | None = None,
+        on_compaction_progress: Callable[[DeepAgentCompactionProgressEvent], None]
+        | None = None,
     ) -> None:
         self.event_router = event_router
         self.on_token = on_token
@@ -117,6 +120,7 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         self.steering = steering
         self.on_steering_added = on_steering_added
         self.on_compaction = on_compaction
+        self.on_compaction_progress = on_compaction_progress
         self._preceding_tool: tuple[str, str] | None = None
         self.skill_stack: list[SkillNode] = []
         self.active_tools: dict[tuple[str | None, str, str, int], ToolEvent] = {}
@@ -166,6 +170,10 @@ class DeepAgentTurnEventHandler(DeepAgentEventHandler):
         return node
 
     def handle(self, event: DeepAgentEvent) -> None:
+        if isinstance(event, DeepAgentCompactionProgressEvent):
+            if self.on_compaction_progress:
+                self.on_compaction_progress(event)
+            return
         if isinstance(event, DeepAgentHistoryCompactionEvent):
             if self.on_compaction:
                 self.on_compaction(event)

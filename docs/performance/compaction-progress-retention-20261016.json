@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Europe/Rome",
+  "library_commit": "aacfa0c4968fbdd67ba68084408d4098547acc0c",
+  "behavior": {
+    "location": "Temporary progress panel inside the assistant response, with a bar for each concurrently compacting scope",
+    "phases": ["scoring", "summarizing", "completed", "failed"],
+    "counter": "Completed output candidates / total candidates, including declared descendants",
+    "elapsed": "Entire operation, including preparation and scoring; updated by the existing response timer",
+    "remaining": "Mean duration of completed logical summaries times pending summaries, minus time in the active summary; reference-only and retained-original outputs do not contribute timing samples",
+    "assistant_state_summary": "Included in planned summary work when present",
+    "before_first_completed_summary": "Remaining time shown as estimating",
+    "lifecycle": "Survives browser reconnection through live snapshots; removed after completion, error, cancellation or turn finalization; excluded from serialized messages"
+  },
+  "retention": {
+    "configuration": "exmekh_lib/src/exmekh_lib/config/history_compaction.py",
+    "summary_fraction": 0.10,
+    "minimum_summary_candidates": 2,
+    "summary_score_threshold": 10,
+    "target": "max(2, ceil(total_outputs * 0.10)); existing below-threshold scores are never promoted",
+    "normalization": "Subtract one common offset from every score, clamping at 1, so the cutoff score maps to 10",
+    "ties": "Preserve every candidate tied at the cutoff, even when the target share is exceeded",
+    "no_op": "Keep original scores when within the target or when ties mean no candidate would be excluded",
+    "batching": "Normalize once after all scoring batches, rather than applying the quota independently per batch"
+  },
+  "validation": {
+    "library": {
+      "passed": 3071,
+      "skipped": 71,
+      "seconds": 13.43,
+      "statement_and_branch_coverage_percent": 100,
+      "ruff": "passed",
+      "pyright": "0 errors, 0 warnings, 0 informations"
+    },
+    "frontend": {
+      "passed": 1076,
+      "skipped": 44,
+      "seconds": 227.80,
+      "statement_and_branch_coverage_percent": 100,
+      "includes_playwright": true,
+      "ruff": "passed",
+      "frontend_restarted": true,
+      "http_status": 200
+    },
+    "targeted_frontend": {
+      "passed": 21,
+      "seconds": 30.17,
+      "covers": ["UI configuration resources", "progress snapshots and rendering", "browser desktop and mobile", "reload during compaction", "completion and Stop", "failed compaction and retry"]
+    },
+    "product_text_gate": {"passed": 4, "seconds": 0.39},
+    "live_budget_regression": {
+      "passed": 1,
+      "seconds": 11.15,
+      "api": "responses",
+      "model": "Qwen3.8-27B-UD-Q4_K_S",
+      "capacity": 26000,
+      "original_prompt_tokens": 44135,
+      "scoring_estimated_and_actual_prompt_tokens": 783,
+      "resumed_estimated_and_actual_prompt_tokens": 615,
+      "resumed_completion_tokens": 9,
+      "preserved_constraint": "CP-7",
+      "real_tools_executed": false
+    },
+    "wheel": {
+      "sha256": "c0d226cc4a3d0c94ca52e8a4cdb11b9fc588a4a4e050daa7a3ad6625409bdc69",
+      "matching_source_and_installed_python_files": 268,
+      "synced_and_installed": true
+    },
+    "evidence_directory": "performance-results/compaction-overhead-20261016",
+    "screenshots": ["progress-desktop.png", "progress-mobile.png"],
+    "original_chat_sha256_unchanged": "a9f9a9edfe1736a5b47bbe5df39a7beb238c6d6f79202f1738593ff4cb2276a3"
+  },
+  "limits": [
+    "Remaining time is an estimate; summary duration varies with source and generated length. No estimate is shown during scoring or before the first timing sample.",
+    "Equal votes can retain more than 10%, as explicitly requested; the target does not force summaries for unavailable or already short retained outputs.",
+    "No inference kernels or server protocols changed. Metal, SSD streaming and distributed inference were not retested. Coverage percentages apply to the repositories' configured source and omit lists."
+  ]
+}

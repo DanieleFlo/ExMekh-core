@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 
 import httpx
 import pytest
@@ -19,11 +20,72 @@ def compaction_server():
     yield from start_mock_server(0, "tests.run_compaction_agent")
 
 
+@pytest.fixture
+def progress_server():
+    yield from start_mock_server(0, "tests.run_compaction_agent")
+
+
 async def state(url):
     async with httpx.AsyncClient(trust_env=False) as client:
         response = await client.get(url + "/test/state")
         response.raise_for_status()
         return response.json()
+
+
+@pytest.mark.parametrize("completion", ["resume", "stop"])
+async def test_compaction_bar_is_in_response_and_survives_reload(
+    progress_server, tmp_path, completion
+):
+    compaction_server = progress_server
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            executable_path=get_edge_executable(), headless=True
+        )
+        try:
+            page = await browser.new_page(viewport={"width": 1360, "height": 920})
+            await page.goto(compaction_server, wait_until="networkidle")
+            await page.get_by_role(
+                "button", name="New project chat", exact=True
+            ).first.click()
+            await page.request.post(compaction_server + "/test/pause-compaction")
+            await send_command(page, "Show compaction progress")
+            progress = page.locator(".msg-assistant .compaction-progress")
+            await expect(progress).to_be_visible()
+            await expect(progress).to_contain_text("Evaluating outputs")
+            await expect(progress).to_contain_text(re.compile(r"Elapsed [1-9][0-9]*s"))
+            await expect(progress.get_by_role("progressbar")).to_be_visible()
+            await page.screenshot(
+                path=str(tmp_path / "compaction-progress.png"), full_page=True
+            )
+            await page.reload(wait_until="networkidle")
+            await expect(progress).to_be_visible()
+            await page.set_viewport_size({"width": 390, "height": 844})
+            close_menu = page.get_by_role(
+                "button", name="Close projects menu", exact=True
+            )
+            await expect(close_menu).to_be_hidden()
+            await expect(progress).to_be_visible()
+            bounds = await progress.bounding_box()
+            assert bounds["x"] >= 0 and bounds["x"] + bounds["width"] <= 390
+            await page.screenshot(
+                path=str(tmp_path / "compaction-progress-mobile.png"), full_page=True
+            )
+            if completion == "stop":
+                await page.locator("button:has(i:has-text('stop'))").first.click()
+            await page.request.post(compaction_server + "/test/resume-compaction")
+            await wait_turn_completion(page)
+            await expect(progress).to_have_count(0)
+            if completion == "resume":
+                await expect(page.locator(".msg-assistant").last).to_contain_text(
+                    "COMPACTION_OK"
+                )
+            else:
+                assert (await state(compaction_server))["session"]["messages"][-1][
+                    "error"
+                ] == "cancelled"
+        finally:
+            await page.request.post(compaction_server + "/test/resume-compaction")
+            await browser.close()
 
 
 async def test_compaction_preserves_raw_graph_and_reload(compaction_server, tmp_path):
@@ -174,6 +236,7 @@ async def test_failed_compaction_is_visible_and_can_be_retried(
             assert failed["session"]["messages"][-1]["error"].startswith(
                 "Automatic history compaction failed"
             )
+            await expect(page.locator(".compaction-progress")).to_have_count(0)
             await expect(
                 page.get_by_text("Mock compaction unavailable", exact=False).first
             ).to_be_visible()

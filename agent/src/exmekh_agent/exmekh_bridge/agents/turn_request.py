@@ -7,6 +7,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
+
 from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
 from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEvent
@@ -62,3 +64,6 @@ class AgentTurnRequest:
     agent_design: AgentDesign | None = None
     capabilities_paths: list[str] | None = None
     on_model_context: Callable[[ModelContextCheckpoint], None] | None = None
+    on_compaction_progress: (
+        Callable[[DeepAgentCompactionProgressEvent], None] | None
+    ) = None

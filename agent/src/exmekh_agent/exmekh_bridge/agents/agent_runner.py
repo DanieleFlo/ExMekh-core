@@ -8,6 +8,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
+from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 from exmekh_lib.core.agents.deep_agent.deep_agent import DeepAgent
 from exmekh_lib.core.models.client import Client
 from exmekh_lib.core.models.client_request import ClientRequest
@@ -135,6 +136,8 @@ def execute_agent_turn_sync(
     agent_design: AgentDesign | None = None,
     capabilities_paths: list[str] | None = None,
     on_model_context: Callable[[ModelContextCheckpoint], None] | None = None,
+    on_compaction_progress: Callable[[DeepAgentCompactionProgressEvent], None]
+    | None = None,
 ) -> str:
     """Run one complete provider request without overlapping another request."""
     with _provider_request_lock:
@@ -177,6 +180,7 @@ def execute_agent_turn_sync(
                 agent_design=agent_design,
                 capabilities_paths=capabilities_paths,
                 on_model_context=on_model_context,
+                on_compaction_progress=on_compaction_progress,
             )
         )
 
@@ -338,6 +342,7 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
             request.steering,
             request.on_steering_added,
             on_compaction,
+            request.on_compaction_progress,
         )
         if context_provider is not None:
             context_provider.set_request_observer(event_handler.begin_request)
@@ -477,6 +482,8 @@ async def run_agent_turn(
     image_urls: list[str] | None = None,
     get_tool_approval_mode: Callable[[], str] | None = None,
     on_model_context: Callable[[ModelContextCheckpoint], None] | None = None,
+    on_compaction_progress: Callable[[DeepAgentCompactionProgressEvent], None]
+    | None = None,
 ) -> str:
     """Asynchronously runs the agent turn in a background worker thread."""
     loop = asyncio.get_running_loop()
@@ -527,6 +534,7 @@ async def run_agent_turn(
             ),
             on_context=on_context,
             on_model_context=on_model_context,
+            on_compaction_progress=on_compaction_progress,
             on_request_manual_approval=partial(
                 request_manual_approval, on_request_manual_approval
             )

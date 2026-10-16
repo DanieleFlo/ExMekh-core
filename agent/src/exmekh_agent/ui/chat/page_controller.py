@@ -912,6 +912,16 @@ class ChatPageController:
                 if accepts_events():
                     collector.set_model_context(context)
 
+            def on_compaction_progress(event) -> None:
+                if not accepts_events():
+                    return
+                collector.set_compaction_progress(event)
+                mark_stream_changed()
+                snapshot = collector.compaction_snapshot()
+                show_stream_update(
+                    lambda view: view.update_compaction_progress(snapshot)
+                )
+
             def on_steering_added() -> None:
                 if not accepts_events():
                     return
@@ -973,6 +983,7 @@ class ChatPageController:
                     on_skill_event=on_skill,
                     on_raw_history=on_raw_history,
                     on_model_context=on_model_context,
+                    on_compaction_progress=on_compaction_progress,
                     history=prior_history,
                     agent_context_id=session.id,
                     on_sub_agent_event=lambda event: loop.call_soon_threadsafe(

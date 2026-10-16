@@ -9,6 +9,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
+
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
 from exmekh_agent.exmekh_bridge.history.compaction import ModelContextCheckpoint
 from exmekh_agent.exmekh_bridge.history.skill_history import skill_opening_call_id
@@ -58,6 +60,17 @@ class TurnStreamCollector:
         self.skill_history_tree: list[dict[str, Any]] = []
         self.context_usage: ProviderContextUsage | None = None
         self._pending_skill_before: dict[str, int] = {}
+        self._compactions: dict[str, DeepAgentCompactionProgressEvent] = {}
+
+    def set_compaction_progress(self, event: DeepAgentCompactionProgressEvent) -> None:
+        operation_id = event.progress.operation_id
+        if event.progress.finished:
+            self._compactions.pop(operation_id, None)
+        else:
+            self._compactions[operation_id] = event
+
+    def compaction_snapshot(self) -> list[DeepAgentCompactionProgressEvent]:
+        return list(self._compactions.values())
 
     def _close_current_reasoning_block(self) -> None:
         """Finalize timing on the active reasoning block if one is open."""
@@ -243,6 +256,7 @@ class TurnStreamCollector:
             model_context=self.model_context,
             skill_history_tree=self.skill_history_tree,
             context_usage=self.context_usage,
+            compaction_progress=self.compaction_snapshot() if is_streaming else [],
             is_streaming=is_streaming,
             error=error,
         )

@@ -140,6 +140,25 @@ def test_policy_boundary_and_no_repeated_attempts(monkeypatch, used, expected):
     assert policy.before_inference(request) is expected
 
 
+def test_compaction_progress_is_published_before_scoring_and_ends_after_work(
+    probe, tmp_path
+):
+    events = []
+
+    def observe(event):
+        events.append(event)
+
+    def check_scoring():
+        assert events[-1].progress.phase == "scoring"
+
+    probe.on_score = check_scoring
+    run_turn(tmp_path, ChatSession(), on_compaction_progress=observe)
+    assert events
+    assert events[-1].progress.phase == "completed"
+    assert events[-1].progress.completed_outputs == events[-1].progress.total_outputs
+    assert any(event.progress.active_summary_started_at is not None for event in events)
+
+
 def test_policy_rearms_only_after_effective_compaction(monkeypatch):
     monkeypatch.setattr(
         config, "server_context_lengths", {(config.base_url.rstrip("/"), "probe"): 1000}
