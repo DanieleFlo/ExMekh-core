@@ -13,6 +13,7 @@ from exmekh_lib.core.models.structured_provider_request import StructuredProvide
 from exmekh_lib.core.models.structured_provider_response import (
     StructuredProviderResponse,
 )
+from exmekh_lib.core.models.tools import Tools
 from exmekh_lib.interfaces.event_handler import ProviderEventHandler
 from exmekh_lib.interfaces.provider import Provider
 from pydantic import BaseModel
@@ -44,6 +45,9 @@ class CancellableProvider(Provider):
         super().__init__(provider.get_tokenizer())
         self._provider = provider
         self._cancellation = cancellation
+
+    def get_tools_text(self, tools: Tools | None) -> str:
+        return self._provider.get_tools_text(tools)
 
     def call(self, request: ProviderRequest) -> ProviderResponse:
         raise_if_cancelled(self._cancellation)

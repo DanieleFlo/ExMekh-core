@@ -388,9 +388,13 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   delle richieste normali e strutturate, isolamento dei contesti figli e
   conservazione dei token totali dichiarati dal provider. Budget e UI usano
   la stessa stima completa, con schema strutturato e override del thinking.
+  Come il wrapper di cancellazione, delega la serializzazione dei tool all'API
+  pubblica del provider concreto.
 - `agent/src/exmekh_agent/exmekh_bridge/providers/ds4_context.py`, `ds4_prompt.py` —
   stima del prompt letterale Qwen e checkpoint dei return skill: le query non
   aggiungono istruzioni operative rimosse dal server né modificano lo stato.
+  I checkpoint verificano il prefisso del chiamante, inclusi i tool, e vengono
+  consumati al ritorno anche quando la risposta non include i conteggi.
   Eliminate le risorse obsolete `ds4_scope_guidance` e `ds4_return_guidance`.
   `tests/test_qwen38_compatibility.py` verifica validazione e sampling agentico
   senza richiedere il vecchio simbolo dell'iniezione server.
@@ -421,6 +425,12 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/performance/automatic-history-compaction-20261016.json` — esiti delle
   suite complete frontend/libreria, copertura, hash della wheel e screenshot
   della compattazione automatica; distingue i test mock dalla qualifica live.
+- `tests/test_compaction_scoring_cache.py` — regressione live dello scoring con
+  JSON Schema vincolato: riuso della history Qwen con thinking none/low/high/xhigh,
+  ripresa dal checkpoint originale e fallback dopo modifiche alla history.
+  Include il replay con immagini e marcatori locali alla richiesta; il server
+  costruisce i prompt fuori dal lock usando copie di checkpoint compatibili.
+  Lo schema resta nel decoder; le istruzioni di formato sono in coda al prompt.
 - `tests/test_server_compaction_replay.py` — regressione live Responses contro
   un server già attivo: confronta lo stesso scoring con e senza binding del
   tool nella KV; il replay completo deve rispettare il proprio prompt.

@@ -11,6 +11,7 @@ from exmekh_lib.core.models.structured_provider_request import StructuredProvide
 from exmekh_lib.core.models.structured_provider_response import (
     StructuredProviderResponse,
 )
+from exmekh_lib.core.models.tools import Tools
 from exmekh_lib.core.providers.openai_chat_completion_tool_mapper import (
     OpenAIChatCompletionToolMapper,
 )
@@ -60,6 +61,9 @@ class ContextTrackingProvider(Provider):
         self._scope_estimators: dict[str, Ds4ContextEstimator] = {}
         self._last_totals: dict[str, int] = {}
 
+    def get_tools_text(self, tools: Tools | None) -> str:
+        return self._provider.get_tools_text(tools)
+
     def invalidate_context(self, context_id: str | None) -> None:
         self._last_totals.pop(context_id or "", None)
         self._scope_estimators.pop(context_id or "", None)
@@ -76,7 +80,11 @@ class ContextTrackingProvider(Provider):
         agentic = (request.get_extra() or {}).get("agentic") or {}
         return self._last_totals.get(agentic.get("agent_context_id") or "", 0)
 
-    def _remember_totals(self, request, response) -> None:
+    def _remember_totals(
+        self,
+        request: ProviderRequest,
+        response: ProviderResponse | StructuredProviderResponse,
+    ) -> None:
         agentic = (request.get_extra() or {}).get("agentic") or {}
         usage = response.usage
         if agentic and usage is not None and usage.prompt_tokens is not None:
@@ -138,13 +146,12 @@ class ContextTrackingProvider(Provider):
         completion_tokens = usage.completion_tokens if has_prompt_usage else None
         agentic = (request.get_extra() or {}).get("agentic") or {}
         estimator = self._estimator(agentic)
-        if estimator and has_prompt_usage:
+        if estimator:
             estimator.record_response(
                 response,
-                agentic.get("allowed_skills", []),
-                context.return_call_id,
-                prompt_tokens,
-                completion_tokens,
+                agentic,
+                messages=[message.message_dump() for message in request.get_messages()],
+                schemas=self._tool_schemas(request),
                 thinking=self._thinking_override(request),
             )
         final_context = context.with_provider_totals(prompt_tokens, completion_tokens)
@@ -170,12 +177,7 @@ class ContextTrackingProvider(Provider):
         self, request: ProviderRequest, agentic: dict
     ) -> ProviderContextUsage:
         messages = [message.message_dump() for message in request.get_messages()]
-        tools = request.get_tools()
-        schemas = (
-            self._tool_mapper.map_tools(tools)
-            if tools and request.get_tool_choice() != "none"
-            else []
-        )
+        schemas = self._tool_schemas(request)
         estimator = self._estimator(agentic)
         response_schema = (
             OpenAIJSONSchemaMapper.map(
@@ -199,6 +201,14 @@ class ContextTrackingProvider(Provider):
         return ProviderContextUsage(
             prompt_tokens=prompt_tokens, return_call_id=agentic.get("skill_call_id")
         )
+
+    def _tool_schemas(self, request: ProviderRequest) -> list[dict]:
+        tools = request.get_tools()
+        if tools and (
+            self._ds4_context is not None or request.get_tool_choice() != "none"
+        ):
+            return self._tool_mapper.map_tools(tools)
+        return []
 
     def _estimator(self, agentic: dict) -> Ds4ContextEstimator | None:
         if self._ds4_context is None:

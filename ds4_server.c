@@ -2387,13 +2387,7 @@ static void chat_msgs_push(chat_msgs *msgs, chat_msg msg) {
     msgs->v[msgs->len++] = msg;
 }
 
-static void chat_msgs_prepend(chat_msgs *msgs, chat_msg msg) {
-    chat_msgs_push(msgs, msg);
-    for (int i = msgs->len - 1; i > 0; i--) msgs->v[i] = msgs->v[i - 1];
-    msgs->v[0] = msg;
-}
-
-static void prepend_response_schema_instruction(chat_msgs *msgs,
+static void append_response_schema_instruction(chat_msgs *msgs,
                                                 const request *r) {
     if (!msgs || !r || !r->response_schema_json) return;
     buf instruction = {0};
@@ -2401,9 +2395,11 @@ static void prepend_response_schema_instruction(chat_msgs *msgs,
         DS4_PROMPT_STRUCTURED_OUTPUT_GUIDANCE);
     buf_puts(&instruction, r->response_schema_json);
     chat_msg msg = {0};
-    msg.role = xstrdup("system");
+    msg.role = xstrdup("user");
     msg.content = buf_take(&instruction);
-    chat_msgs_prepend(msgs, msg);
+    /* Keep structured-output guidance after the replayable conversation. The
+     * decoder still receives response_schema independently of this text. */
+    chat_msgs_push(msgs, msg);
 }
 
 static void tool_schema_order_free(tool_schema_order *o) {
@@ -5148,7 +5144,8 @@ static void append_qwen_assistant_message_prefix(buf *out,
 static char *render_qwen_chat_prompt_text(const chat_msgs *msgs,
                                           const char *tool_schemas,
                                           const tool_schema_orders *tool_orders,
-                                          ds4_think_mode think_mode) {
+                                          ds4_think_mode think_mode,
+                                          ds4_think_mode generation_mode) {
     (void)tool_orders;
     const bool think = ds4_think_mode_enabled(think_mode);
     const bool tool_context = chat_history_uses_tool_context(msgs, tool_schemas);
@@ -5200,8 +5197,11 @@ static char *render_qwen_chat_prompt_text(const chat_msgs *msgs,
             pending_assistant = true;
         } else if (!strcmp(m->role, "assistant")) {
             buf_puts(&out, "<|im_start|>assistant\n");
+            /* Generated tool turns include this boundary even with thinking
+             * disabled; a full replay must retain it for prefix reuse. */
             append_qwen_assistant_message_prefix(
-                &out, m, think && (tool_context || i > last_user_idx));
+                &out, m, m->calls.len > 0 ||
+                (think && (tool_context || i > last_user_idx)));
             append_qwen_trimmed_content(&out, m->content);
             append_dsml_tool_calls_text(&out, &m->calls, false);
             buf_puts(&out, "<|im_end|>\n");
@@ -5211,7 +5211,8 @@ static char *render_qwen_chat_prompt_text(const chat_msgs *msgs,
     if (tool_group_open) buf_puts(&out, "<|im_end|>\n");
     if (pending_assistant) {
         buf_puts(&out, "<|im_start|>assistant\n");
-        buf_puts(&out, think ? "<think>\n" : "<think>\n\n</think>\n\n");
+        buf_puts(&out, ds4_think_mode_enabled(generation_mode) ?
+                 "<think>\n" : "<think>\n\n</think>\n\n");
     }
 
     buf_free(&system);
@@ -5589,10 +5590,11 @@ static void append_qwen4_conversation(buf *out, const chat_msgs *msgs, int start
     if (pending_assistant) append_qwen4_generation_prompt(out, think);
 }
 
-static char *render_qwen4_chat_prompt_text(const chat_msgs *msgs,
+static char *render_qwen4_chat_prompt_for_generation(const chat_msgs *msgs,
                                           const char *tool_schemas,
                                           const tool_schema_orders *tool_orders,
-                                          ds4_think_mode think_mode) {
+                                          ds4_think_mode think_mode,
+                                          ds4_think_mode generation_mode) {
     const bool think = ds4_think_mode_enabled(think_mode);
     const char *effort = think ? ds4_qwen4_reasoning_effort_text(think_mode) : NULL;
     const bool have_tools = tool_schemas && tool_schemas[0];
@@ -5623,9 +5625,22 @@ static char *render_qwen4_chat_prompt_text(const chat_msgs *msgs,
         buf_puts(&out, "<|im_end|>\n");
     }
     buf_free(&system);
-    append_qwen4_conversation(&out, msgs, 0, tool_orders, think);
+    append_qwen4_conversation(&out, msgs, 0, tool_orders,
+                              ds4_think_mode_enabled(generation_mode));
     return buf_take(&out);
 }
+
+static char *render_qwen4_chat_prompt_text(const chat_msgs *msgs,
+                                          const char *tool_schemas,
+                                          const tool_schema_orders *tool_orders,
+                                          ds4_think_mode think_mode) {
+    return render_qwen4_chat_prompt_for_generation(
+        msgs, tool_schemas, tool_orders, think_mode, think_mode);
+}
+
+static char *render_responses_prompt(server *s, const request *r,
+                                     const chat_msgs *msgs,
+                                     const char *tool_schemas);
 
 static char *render_chat_prompt_text_for_syntax(server_model_syntax syntax,
                                                 const chat_msgs *msgs,
@@ -5638,7 +5653,7 @@ static char *render_chat_prompt_text_for_syntax(server_model_syntax syntax,
     }
     if (syntax == SERVER_MODEL_SYNTAX_QWEN) {
         return render_qwen_chat_prompt_text(msgs, tool_schemas,
-                                            tool_orders, think_mode);
+                                            tool_orders, think_mode, think_mode);
     }
     if (syntax == SERVER_MODEL_SYNTAX_DEEPSEEK41)
         return render_deepseek41_chat(msgs, 0, tool_schemas, think_mode, false);
@@ -6365,7 +6380,7 @@ static bool parse_chat_request(ds4_engine *e, server *s, const char *body, int d
         return false;
     }
     if (r->response_schema) {
-        prepend_response_schema_instruction(&msgs, r);
+        append_response_schema_instruction(&msgs, r);
     }
     if (!got_thinking && model_alias_disables_thinking(r->model)) thinking_enabled = false;
     if (!got_thinking && model_alias_enables_thinking(r->model)) thinking_enabled = true;
@@ -6373,7 +6388,7 @@ static bool parse_chat_request(ds4_engine *e, server *s, const char *body, int d
         think_mode_from_enabled(thinking_enabled, reasoning_effort), ctx_size);
     kv_cache_restore_tool_memory_for_messages(s, &msgs);
     tool_memory_attach_to_messages(s, &msgs, &r->tool_replay);
-    const char *active_tool_schemas = r->has_tools ? tool_schemas : NULL;
+    const char *active_tool_schemas = tool_schemas;
     r->prompt_preserves_reasoning =
         chat_history_uses_tool_context(&msgs, active_tool_schemas);
     r->prompt_text = render_chat_prompt_text_for_syntax(
@@ -7657,7 +7672,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
             msgs.v[0] = tmp;
         }
     }
-    prepend_response_schema_instruction(&msgs, r);
+    append_response_schema_instruction(&msgs, r);
     buf combined_tool_schemas = {0};
     if (tool_schemas && tool_schemas[0]) buf_puts(&combined_tool_schemas, tool_schemas);
     if (loaded_tool_schemas.len) {
@@ -7665,10 +7680,8 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
         buf_append(&combined_tool_schemas, loaded_tool_schemas.ptr,
                    loaded_tool_schemas.len);
     }
-    const char *active_tool_schemas =
-        (!tool_choice_none && combined_tool_schemas.len) ?
-        combined_tool_schemas.ptr : NULL;
-    r->has_tools = active_tool_schemas && active_tool_schemas[0];
+    const char *active_tool_schemas = combined_tool_schemas.ptr;
+    r->has_tools = !tool_choice_none && combined_tool_schemas.len > 0;
     if (r->tool_choice_required && !r->has_tools) {
         snprintf(err, errlen, DS4_SERVER_TEXT_TOOL_CHOICE_REQUIRED_NEEDS_AT_LEAST_ONE_TOOL);
         chat_msgs_free(&msgs);
@@ -7725,7 +7738,6 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
         request_free(r);
         return false;
     }
-    active_tool_schemas = (!tool_choice_none && combined_tool_schemas.len) ? combined_tool_schemas.ptr : NULL;
     if (!responses_validate_tool_outputs(s, &msgs, r->think_mode,
                                          &r->responses_requires_live_tool_state,
                                          &r->responses_requires_live_reasoning,
@@ -7758,9 +7770,7 @@ static bool parse_responses_request(ds4_engine *e, server *s, const char *body, 
         request_free(r);
         return false;
     }
-    r->prompt_text = render_chat_prompt_text_for_syntax(
-        r->model_syntax, &msgs, active_tool_schemas,
-        &r->tool_orders, r->think_mode);
+    r->prompt_text = render_responses_prompt(s, r, &msgs, active_tool_schemas);
     if (!request_tokenize_multimodal_prompt(e, s, r, &msgs, err, errlen)) {
         chat_msgs_free(&msgs);
         buf_free(&combined_tool_schemas);
@@ -14625,25 +14635,54 @@ typedef struct {
     size_t offsets[16];
 } visible_image_key;
 
-static char *visible_prompt_key(const request *req, const char *text,
-                                 visible_image_key *images) {
+static char *visible_prompt_key_for_markers(const char *text,
+                                            const char *const *markers,
+                                            size_t count,
+                                            visible_image_key *images) {
     memset(images, 0, sizeof(*images));
-    if (!req || !text || req->image_count > 16 ||
-        (req->image_count && !req->image_markers)) return NULL;
+    if (!text || count > 16 || (count && !markers)) return NULL;
     char *key = xstrdup(text);
     const char *cursor = text;
-    for (size_t i = 0; i < req->image_count; i++) {
-        const char *marker = strstr(cursor, req->image_markers[i]);
-        size_t len = strlen(req->image_markers[i]);
-        if (!marker || !len) {
+    for (size_t i = 0; i < count; i++) {
+        const char *marker = markers[i] && markers[i][0] ?
+            strstr(cursor, markers[i]) : NULL;
+        if (!marker) {
             free(key);
             return NULL;
         }
+        size_t len = strlen(markers[i]);
         images->offsets[images->count++] = (size_t)(marker - text);
         memset(key + (marker - text), '\036', len);
         cursor = marker + len;
     }
     return key;
+}
+
+static char *visible_prompt_key(const request *req, const char *text,
+                                 visible_image_key *images) {
+    const char *markers[16];
+    memset(images, 0, sizeof(*images));
+    if (!req || req->image_count > 16 ||
+        (req->image_count && !req->image_markers)) return NULL;
+    for (size_t i = 0; i < req->image_count; i++)
+        markers[i] = req->image_markers[i];
+    return visible_prompt_key_for_markers(text, markers, req->image_count, images);
+}
+
+/* Parsing already owns the nonce markers, before vision encoding populates
+ * request.images. Prompt selection must use these original message markers. */
+static char *chat_msgs_visible_prompt_key(const chat_msgs *msgs, const char *text,
+                                           visible_image_key *images) {
+    const char *markers[16];
+    size_t count = 0;
+    memset(images, 0, sizeof(*images));
+    for (int i = 0; i < msgs->len; i++) {
+        for (size_t j = 0; j < msgs->v[i].images.len; j++) {
+            if (count == 16) return NULL;
+            markers[count++] = msgs->v[i].images.v[j].marker;
+        }
+    }
+    return visible_prompt_key_for_markers(text, markers, count, images);
 }
 
 static bool visible_image_prefix_matches(const visible_image_key *incoming,
@@ -14660,6 +14699,7 @@ typedef struct {
     bool valid;
     /* Token frontier of a canonical visible assistant tool-call turn. */
     int live_tokens;
+    ds4_think_mode think_mode;
     /* Optional rendered conversation text that the client is expected to replay. */
     char *visible_text;
     size_t visible_len;
@@ -15815,6 +15855,7 @@ static void live_tool_state_copy_locked(live_tool_state *dst,
     if (!src) return;
     dst->valid = src->valid;
     dst->live_tokens = src->live_tokens;
+    dst->think_mode = src->think_mode;
     dst->images = src->images;
     if (src->visible_text) {
         dst->visible_text = xstrdup(src->visible_text);
@@ -16125,6 +16166,7 @@ static void responses_live_remember(server *s, server_slot *slot,
     slot->responses_live.visible_text = key;
     slot->responses_live.visible_len = key ? strlen(key) : 0;
     slot->responses_live.images = images;
+    slot->responses_live.think_mode = req->think_mode;
     if (calls) {
         for (int i = 0; i < calls->len; i++) {
             id_list_push_unique(&slot->responses_live.call_ids, calls->v[i].id);
@@ -16197,6 +16239,14 @@ static bool anthropic_live_has_call_id(server *s, const char *id) {
     return found;
 }
 
+static bool live_tool_state_matches_call_ids(const live_tool_state *state,
+                                               const stop_list *ids) {
+    if (!state->valid || state->call_ids.len != ids->len) return false;
+    for (int i = 0; i < ids->len; i++)
+        if (!id_list_contains(&state->call_ids, ids->v[i])) return false;
+    return true;
+}
+
 static stop_list live_tool_call_order(server *s, api_style api, const stop_list *ids) {
     stop_list order = {0};
     if (!s || !ids || !ids->len || (api != API_RESPONSES && api != API_ANTHROPIC)) return order;
@@ -16204,11 +16254,7 @@ static stop_list live_tool_call_order(server *s, api_style api, const stop_list 
     for (int i = 0; i < s->slot_count; i++) {
         const live_tool_state *live = api == API_RESPONSES ?
             &s->slots[i].responses_live : &s->slots[i].anthropic_live;
-        if (!live->valid || live->call_ids.len != ids->len) continue;
-        bool match = true;
-        for (int j = 0; j < ids->len && match; j++)
-            match = id_list_contains(&live->call_ids, ids->v[j]);
-        if (!match) continue;
+        if (!live_tool_state_matches_call_ids(live, ids)) continue;
         for (int j = 0; j < live->call_ids.len; j++)
             id_list_push_unique(&order, live->call_ids.v[j]);
         break;
@@ -16220,13 +16266,8 @@ static stop_list live_tool_call_order(server *s, api_style api, const stop_list 
 static bool responses_live_matches_request_locked(server_slot *slot,
                                                   const stop_list *ids,
                                                   int live_tokens) {
-    bool ok = slot->responses_live.valid &&
-              slot->responses_live.live_tokens == live_tokens &&
-              slot->responses_live.call_ids.len == ids->len;
-    for (int i = 0; ok && i < ids->len; i++) {
-        ok = id_list_contains(&slot->responses_live.call_ids, ids->v[i]);
-    }
-    return ok;
+    return slot->responses_live.live_tokens == live_tokens &&
+        live_tool_state_matches_call_ids(&slot->responses_live, ids);
 }
 
 static bool responses_live_matches_request(server *s, server_slot *slot,
@@ -16242,13 +16283,8 @@ static bool responses_live_matches_request(server *s, server_slot *slot,
 static bool anthropic_live_matches_request_locked(server_slot *slot,
                                                   const stop_list *ids,
                                                   int live_tokens) {
-    bool ok = slot->anthropic_live.valid &&
-              slot->anthropic_live.live_tokens == live_tokens &&
-              slot->anthropic_live.call_ids.len == ids->len;
-    for (int i = 0; ok && i < ids->len; i++) {
-        ok = id_list_contains(&slot->anthropic_live.call_ids, ids->v[i]);
-    }
-    return ok;
+    return slot->anthropic_live.live_tokens == live_tokens &&
+        live_tool_state_matches_call_ids(&slot->anthropic_live, ids);
 }
 
 static bool tool_memory_has_id(server *s, const char *id) {
@@ -16822,6 +16858,75 @@ static int kv_cache_chat_anchor_pos(const kv_disk_cache *kc,
                                     int user_token_id,
                                     int assistant_token_id) {
     return ds4_kvstore_chat_anchor_pos(kc, prompt, user_token_id, assistant_token_id);
+}
+
+/* A structured auxiliary response can disable new thinking without changing
+ * the template of an already computed Qwen conversation. Call IDs only locate a
+ * candidate: the complete visible prefix and image positions must still match.
+ * Routing and the worker revalidate the actual KV prefix before using it. */
+static char *responses_structured_prompt_for_state(
+        const request *r, const chat_msgs *msgs, const char *tool_schemas,
+        const live_tool_state *state) {
+    char *candidate = r->model_syntax == SERVER_MODEL_SYNTAX_QWEN ?
+        render_qwen_chat_prompt_text(msgs, tool_schemas, &r->tool_orders,
+                                    state->think_mode, r->think_mode) :
+        render_qwen4_chat_prompt_for_generation(msgs, tool_schemas, &r->tool_orders,
+                                                state->think_mode, r->think_mode);
+    visible_image_key images;
+    char *key = chat_msgs_visible_prompt_key(msgs, candidate, &images);
+    const bool matches = key &&
+        byte_prefix_match(key, strlen(key), state->visible_text, state->visible_len) &&
+        visible_image_prefix_matches(&images, &state->images, state->visible_len);
+    free(key);
+    if (matches) return candidate;
+    free(candidate);
+    return NULL;
+}
+
+static void collect_structured_prompt_state(live_tool_state **states,
+                                              size_t *count,
+                                              const live_tool_state *state,
+                                              const request *r) {
+    if (!state->visible_text || state->think_mode == r->think_mode ||
+        !live_tool_state_matches_call_ids(state, &r->responses_live_call_ids)) return;
+    *states = xrealloc(*states, (*count + 1) * sizeof(**states));
+    (*states)[*count] = (live_tool_state){0};
+    live_tool_state_copy_locked(&(*states)[(*count)++], state);
+}
+
+static char *render_responses_prompt(server *s, const request *r,
+                                     const chat_msgs *msgs,
+                                     const char *tool_schemas) {
+    char *prompt = NULL;
+    if (s && r->response_schema && !r->has_tools &&
+        r->think_mode == DS4_THINK_NONE && r->responses_live_call_ids.len > 0 &&
+        !r->responses_requires_live_tool_state &&
+        (r->model_syntax == SERVER_MODEL_SYNTAX_QWEN ||
+         r->model_syntax == SERVER_MODEL_SYNTAX_QWEN4)) {
+        live_tool_state *states = NULL;
+        size_t count = 0;
+        pthread_mutex_lock(&s->tool_mu);
+        for (int i = 0; i < s->slot_count; i++) {
+            collect_structured_prompt_state(&states, &count,
+                &s->slots[i].responses_live, r);
+            for (agent_context_checkpoint *cp = s->slots[i].agent_contexts;
+                 cp; cp = cp->next) {
+                collect_structured_prompt_state(&states, &count,
+                    &cp->responses_live, r);
+            }
+        }
+        pthread_mutex_unlock(&s->tool_mu);
+        /* Rendering can traverse a long history; keep it outside tool_mu.
+         * Owned snapshots remain valid if a worker changes the live state. */
+        for (size_t i = 0; i < count; i++) {
+            if (!prompt) prompt = responses_structured_prompt_for_state(
+                r, msgs, tool_schemas, &states[i]);
+            live_tool_state_free(&states[i]);
+        }
+        free(states);
+    }
+    return prompt ? prompt : render_chat_prompt_text_for_syntax(
+        r->model_syntax, msgs, tool_schemas, &r->tool_orders, r->think_mode);
 }
 
 static int kv_cache_cold_store_target_ids(const kv_disk_cache *kc,
@@ -33310,6 +33415,114 @@ static void test_response_schema_local_references(void) {
     request_free(&r);
 }
 
+static const char test_inline_png_base64[] =
+    "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFUlEQVR4nGP8z8DQwMDAwMAEIkAYABglAYOd/VRoAAAAAElFTkSuQmCC";
+
+static void check_structured_scoring_prefix(server_model_syntax syntax,
+                                             ds4_think_mode mode,
+                                             bool with_image,
+                                             const char *tools) {
+    chat_msgs msgs = {0};
+    const char *input = "["
+        "{\"role\":\"system\",\"content\":\"Original rules.\"},"
+        "{\"role\":\"user\",\"content\":\"Original evidence.\"},"
+        "{\"role\":\"assistant\",\"content\":\"Acknowledged.\"},"
+        "{\"role\":\"user\",\"content\":\"Run bash.\"},"
+        "{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{"
+        "\"id\":\"call_scoring\",\"type\":\"function\",\"function\":{"
+        "\"name\":\"bash\",\"arguments\":\"{\\\"command\\\":\\\"true\\\"}\"}}]}]";
+    char err[160] = {0};
+    TEST_ASSERT(parse_messages(&input, &msgs, err, sizeof(err)));
+    if (with_image) {
+        char marker[SERVER_IMAGE_MARKER_BYTES];
+        TEST_ASSERT(server_image_inputs_push_base64(&msgs.v[1].images,
+            "image/png", test_inline_png_base64, marker));
+        append_owned_text(&msgs.v[1].content, marker);
+    }
+    request r;
+    request_init(&r, REQ_CHAT, 128);
+    r.api = API_RESPONSES;
+    r.model_syntax = syntax;
+    r.think_mode = DS4_THINK_NONE;
+    r.tool_orders = make_bash_order();
+    TEST_ASSERT(request_set_response_schema(&r, xstrdup(
+        "{\"type\":\"object\",\"properties\":{\"entry_3\":{\"type\":\"integer\","
+        "\"minimum\":1,\"maximum\":100}},\"required\":[\"entry_3\"],\"additionalProperties\":false}")));
+    char *prefix = render_chat_prompt_text_for_syntax(
+        r.model_syntax, &msgs, tools, &r.tool_orders, mode);
+    server_slot slot = {0};
+    slot.responses_live.valid = true;
+    slot.responses_live.think_mode = mode;
+    slot.responses_live.visible_text = chat_msgs_visible_prompt_key(
+        &msgs, prefix, &slot.responses_live.images);
+    TEST_ASSERT(slot.responses_live.visible_text != NULL);
+    slot.responses_live.visible_len = strlen(prefix);
+    id_list_push_unique(&slot.responses_live.call_ids, "call_scoring");
+    server s = {.slots = &slot, .slot_count = 1};
+    pthread_mutex_init(&s.tool_mu, NULL);
+    chat_msg output = {.role = xstrdup("tool"), .content = xstrdup("Evidence."),
+                       .tool_call_id = xstrdup("call_scoring")};
+    chat_msgs_push(&msgs, output);
+    chat_msg catalog = {.role = xstrdup("user"), .content = xstrdup("Rate entry_3.")};
+    chat_msgs_push(&msgs, catalog);
+    append_response_schema_instruction(&msgs, &r);
+    TEST_ASSERT(!strcmp(msgs.v[0].content, "Original rules."));
+    TEST_ASSERT(!strcmp(msgs.v[msgs.len - 1].role, "user"));
+    responses_prepare_live_continuation(NULL, &r, &msgs);
+    char *prompt = render_responses_prompt(&s, &r, &msgs, tools);
+    TEST_ASSERT(byte_prefix_match(prompt, strlen(prompt), prefix, strlen(prefix)));
+    TEST_ASSERT(strstr(prompt, "Rate entry_3.") < strstr(prompt, DS4_PROMPT_STRUCTURED_OUTPUT_GUIDANCE));
+    const char *generation = "<|im_start|>assistant\n<think>\n\n</think>\n\n";
+    TEST_ASSERT(strlen(prompt) >= strlen(generation) &&
+        !strcmp(prompt + strlen(prompt) - strlen(generation), generation));
+    free(prompt);
+
+    /* The template mode must also survive eviction into an agent checkpoint. */
+    agent_context_checkpoint saved = {0};
+    live_tool_state_copy_locked(&saved.responses_live, &slot.responses_live);
+    live_tool_state_clear_locked(&slot.responses_live);
+    slot.agent_contexts = &saved;
+    prompt = render_responses_prompt(&s, &r, &msgs, tools);
+    TEST_ASSERT(byte_prefix_match(prompt, strlen(prompt), prefix, strlen(prefix)));
+    free(prompt);
+
+    free(msgs.v[1].content);
+    msgs.v[1].content = xstrdup("Changed evidence.");
+    prompt = render_responses_prompt(&s, &r, &msgs, tools);
+    TEST_ASSERT(!byte_prefix_match(prompt, strlen(prompt), prefix, strlen(prefix)));
+    free(prompt);
+    TEST_ASSERT(schema_json_validate_raw(r.response_schema, "{\"entry_3\":30}"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema, "{\"entry_3\":101}"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema, "{\"entry_3\":\"30\"}"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema, "{}"));
+    TEST_ASSERT(!schema_json_validate_raw(r.response_schema, "{\"entry_3\":30,\"extra\":1}"));
+    live_tool_state_free(&saved.responses_live);
+    live_tool_state_free(&slot.responses_live);
+    pthread_mutex_destroy(&s.tool_mu);
+    free(prefix);
+    request_free(&r);
+    chat_msgs_free(&msgs);
+}
+
+static void test_structured_scoring_retains_qwen_prefix(void) {
+    const server_model_syntax syntaxes[] = {
+        SERVER_MODEL_SYNTAX_QWEN, SERVER_MODEL_SYNTAX_QWEN4,
+    };
+    const ds4_think_mode modes[] = {
+        DS4_THINK_NONE, DS4_THINK_LOW, DS4_THINK_HIGH, DS4_THINK_MAX,
+    };
+    const char *tools = "{\"name\":\"bash\",\"parameters\":{\"type\":\"object\","
+        "\"properties\":{\"command\":{\"type\":\"string\"}},\"required\":[\"command\"]}}";
+    for (size_t syntax = 0; syntax < sizeof(syntaxes) / sizeof(syntaxes[0]); syntax++) {
+        for (size_t mode = 0; mode < sizeof(modes) / sizeof(modes[0]); mode++) {
+            for (int with_image = 0; with_image <= 1; with_image++) {
+                check_structured_scoring_prefix(
+                    syntaxes[syntax], modes[mode], with_image, tools);
+            }
+        }
+    }
+}
+
 static void test_schema_replacement_and_response_formats(void) {
     tool_schema_orders orders = {0};
     tool_schema_orders_add_json(
@@ -33331,7 +33544,7 @@ static void test_schema_replacement_and_response_formats(void) {
     TEST_ASSERT(parse_chat_response_format(&chat, &r));
     TEST_ASSERT(r.response_schema && r.response_schema_json);
     chat_msgs schema_msgs = {0};
-    prepend_response_schema_instruction(&schema_msgs, &r);
+    append_response_schema_instruction(&schema_msgs, &r);
     TEST_ASSERT(schema_msgs.len == 1);
     TEST_ASSERT(schema_msgs.v[0].content &&
                 strstr(schema_msgs.v[0].content, "\"required\":[\"ok\"]"));
@@ -33546,9 +33759,6 @@ static void test_agentic_orphan_checkpoint_cleanup(void) {
     free(checkpoint);
     free(stale);
 }
-
-static const char test_inline_png_base64[] =
-    "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFUlEQVR4nGP8z8DQwMDAwMAEIkAYABglAYOd/VRoAAAAAElFTkSuQmCC";
 
 static void test_unsupported_content_is_rejected_with_clear_error(void) {
     const char *types[] = {"file", "input_file", "input_audio", "video", "future_type"};
@@ -34056,6 +34266,7 @@ static void ds4_server_unit_tests_run(void) {
     test_json_schema_unknown_keywords_fail_closed();
     test_static_string_partition_classifier();
     test_response_json_incremental_lex_state();
+    test_structured_scoring_retains_qwen_prefix();
     test_schema_replacement_and_response_formats();
     test_response_schema_local_references();
     test_agentic_orphan_checkpoint_cleanup();

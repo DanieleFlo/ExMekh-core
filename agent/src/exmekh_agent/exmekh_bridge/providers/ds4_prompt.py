@@ -58,15 +58,22 @@ def render_ds4_qwen_prompt(
     tools: list[dict[str, Any]],
     *,
     thinking: bool = True,
+    generation_thinking: bool | None = None,
     response_schema: dict[str, Any] | None = None,
 ) -> str:
     """Include tool schemas, role boundaries, tool responses and generation prefix."""
+    generation_thinking = (
+        thinking if generation_thinking is None else generation_thinking
+    )
+    if response_schema is not None:
+        messages = [
+            *messages,
+            {"role": "user", "content": _STRUCTURED_PREFIX + _json(response_schema)},
+        ]
     system_parts = []
     if tools:
         schemas = "\n".join(_json(tool.get("function", tool)) for tool in tools)
         system_parts.append(_TOOLS_PREFIX + schemas + _TOOLS_SUFFIX)
-    if response_schema is not None:
-        system_parts.append(_STRUCTURED_PREFIX + _json(response_schema))
     system_parts.extend(
         content_text(message.get("content")).strip()
         for message in messages
@@ -103,14 +110,13 @@ def render_ds4_qwen_prompt(
         else:
             parts.append(f"<|im_start|>{role}\n")
             if role == "assistant":
+                calls = _tool_calls(message)
                 if (
-                    thinking
-                    and (tool_context or index > last_user)
-                    and not content.startswith(("<think>", "</think>"))
-                ):
+                    calls or (thinking and (tool_context or index > last_user))
+                ) and not content.startswith(("<think>", "</think>")):
                     reasoning = str(message.get("reasoning_content") or "").strip()
                     parts.append("<think>\n" + reasoning + "\n</think>\n\n")
-                parts.append(content + _render_tool_calls(_tool_calls(message)))
+                parts.append(content + _render_tool_calls(calls))
                 pending_assistant = False
             else:
                 parts.append(content)
@@ -120,5 +126,5 @@ def render_ds4_qwen_prompt(
         parts.append("<|im_end|>\n")
     if pending_assistant:
         parts.append("<|im_start|>assistant\n")
-        parts.append("<think>\n" if thinking else "<think>\n\n</think>\n\n")
+        parts.append("<think>\n" if generation_thinking else "<think>\n\n</think>\n\n")
     return "".join(parts)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from threading import Event
 from unittest.mock import patch
 
 import pytest
@@ -24,12 +25,17 @@ from exmekh_lib.core.models.tool import Tool
 from exmekh_lib.core.models.tool_message import ToolMessage
 from exmekh_lib.core.models.tools import Tools
 from exmekh_lib.core.models.user_message import UserMessage
+from exmekh_lib.core.providers.openai_json_schema_mapper import OpenAIJSONSchemaMapper
+from exmekh_lib.core.providers.openai_response_tool_mapper import (
+    OpenAIResponseToolMapper,
+)
 from exmekh_lib.interfaces.provider import Provider
 from exmekh_lib.tokenizers.qwen import QwenTokenizer
 from pydantic import BaseModel
 
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents.agent_runner import execute_agent_turn_sync
+from exmekh_agent.exmekh_bridge.agents.cancellation import CancellableProvider
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
@@ -55,6 +61,79 @@ class StructuredAnswer(BaseModel):
     text: str
 
 
+@pytest.mark.parametrize("with_tools", [False, True])
+def test_nested_provider_wrappers_delegate_tool_serialization(with_tools):
+    provider = StubProvider()
+    tools = Tools([Tool(search, description="Find a result")]) if with_tools else None
+    tracker = ContextTrackingProvider(
+        provider, on_context=None, context_id="root", ds4_qwen=True, thinking=False
+    )
+    cancellation = Event()
+    guarded = CancellableProvider(tracker, cancellation)
+    cancellation.set()
+    with patch.object(
+        provider, "get_tools_text", return_value="wire tools"
+    ) as serialize:
+        assert guarded.get_tools_text(tools) == "wire tools"
+    serialize.assert_called_once_with(tools)
+
+
+@pytest.mark.parametrize("changed", ["history", "tools"])
+def test_ds4_checkpoint_rejects_changed_caller_prefix(changed):
+    provider = StubProvider()
+    call = ToolCall("open", FunctionCall("skill", {}))
+    provider.tool_calls = [call]
+    tracker = ContextTrackingProvider(
+        provider, on_context=None, context_id="root", ds4_qwen=True, thinking=False
+    )
+    scope = {"agent_context_id": "root", "allowed_skills": ["skill"]}
+    tools = Tools([Tool(search, description="Find a result")])
+    user = UserMessage("original task")
+    response = tracker.call(
+        ProviderRequest([user], tools=tools, extra={"agentic": scope})
+    )
+
+    def returning(messages, schemas):
+        return ProviderRequest(
+            [*messages, response, ToolMessage("closed", "open", "skill")],
+            tools=schemas,
+            extra={"agentic": {**scope, "skill_call_id": "open"}},
+        )
+
+    assert tracker.estimate_context(returning([user], tools)).closure_tokens_ready
+    changed_request = returning(
+        [UserMessage("compacted task")] if changed == "history" else [user],
+        None if changed == "tools" else tools,
+    )
+    estimate = tracker.estimate_context(changed_request)
+    assert not estimate.closure_tokens_ready
+    literal = ContextTrackingProvider(
+        provider, on_context=None, context_id="root", ds4_qwen=True, thinking=False
+    )
+    assert estimate.prompt_tokens == literal.count_request_tokens(changed_request)
+
+
+@pytest.mark.parametrize("usage", [None, ModelUsage(prompt_tokens=4000)])
+def test_ds4_completed_return_consumes_checkpoint_without_usage(usage):
+    provider = StubProvider()
+    provider.tool_calls = [ToolCall("open", FunctionCall("skill", {}))]
+    tracker = ContextTrackingProvider(
+        provider, on_context=None, context_id="root", ds4_qwen=True, thinking=True
+    )
+    scope = {"agent_context_id": "root", "allowed_skills": ["skill"]}
+    user = UserMessage("task")
+    response = tracker.call(ProviderRequest([user], extra={"agentic": scope}))
+    returning = ProviderRequest(
+        [user, response, ToolMessage("closed", "open", "skill")],
+        extra={"agentic": {**scope, "skill_call_id": "open"}},
+    )
+    assert tracker.estimate_context(returning).closure_tokens_ready
+    provider.tool_calls = None
+    provider.usage = usage
+    tracker.call(returning)
+    assert not tracker.estimate_context(returning).closure_tokens_ready
+
+
 @pytest.mark.parametrize("ds4_qwen", [True, False])
 def test_request_budget_counts_the_structured_schema_and_guidance(ds4_qwen):
     tracker = ContextTrackingProvider(
@@ -70,6 +149,44 @@ def test_request_budget_counts_the_structured_schema_and_guidance(ds4_qwen):
     structured = tracker.count_request_tokens(request)
     assert structured > ordinary + count_text_tokens("text")
     assert structured == tracker.estimate_context(request).prompt_tokens
+
+
+@pytest.mark.parametrize("thinking", [False, True])
+def test_scoring_budget_retains_tools_and_places_schema_after_history(thinking):
+    tracker = ContextTrackingProvider(
+        StubProvider(),
+        on_context=None,
+        context_id="root",
+        ds4_qwen=True,
+        thinking=thinking,
+    )
+    tools = Tools([Tool(search, description="Find a result")])
+    messages = [
+        SystemMessage("rules"),
+        UserMessage("task"),
+        AssistantMessage("earlier"),
+        UserMessage("rate the outputs"),
+    ]
+    request = StructuredProviderRequest(
+        messages,
+        StructuredAnswer,
+        tools=tools,
+        tool_choice="none",
+        reasoning_effort_override="none",
+    )
+    schemas = OpenAIResponseToolMapper.map_tools(tools)
+    prompt = render_ds4_qwen_prompt(
+        [message.message_dump() for message in messages],
+        schemas,
+        thinking=thinking,
+        generation_thinking=False,
+        response_schema=OpenAIJSONSchemaMapper.map(StructuredAnswer)["schema"],
+    )
+    assert prompt.index('"name":"search"') < prompt.index("task")
+    assert prompt.index("rate the outputs") < prompt.index('"required":["text"]')
+    assert prompt.endswith("<think>\n\n</think>\n\n")
+    assert tracker.count_request_tokens(request) == count_text_tokens(prompt)
+    assert len(messages) == 4
 
 
 @pytest.mark.parametrize("default_thinking,effort", [(True, "none"), (False, "high")])

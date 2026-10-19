@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from exmekh_lib.core.models.provider_response import ProviderResponse
@@ -17,12 +18,22 @@ from exmekh_agent.exmekh_bridge.providers.context_usage import (
 from exmekh_agent.exmekh_bridge.providers.ds4_prompt import render_ds4_qwen_prompt
 
 
+@dataclass(frozen=True)
+class _SkillCheckpoint:
+    sampled_tokens: int
+    thinking: bool
+    request_prefix: str
+
+    def matches(self, prompt: str, *, thinking: bool) -> bool:
+        return self.thinking == thinking and prompt.startswith(self.request_prefix)
+
+
 class Ds4ContextEstimator:
     """Own sampled skill-opening totals; prompt estimation never changes them."""
 
     def __init__(self, *, thinking: bool) -> None:
         self._thinking = thinking
-        self._skill_checkpoints: dict[str, tuple[int, bool]] = {}
+        self._skill_checkpoints: dict[str, _SkillCheckpoint] = {}
 
     @property
     def thinking(self) -> bool:
@@ -38,17 +49,25 @@ class Ds4ContextEstimator:
         thinking: bool | None = None,
     ) -> ProviderContextUsage:
         thinking = self._thinking if thinking is None else thinking
-        prompt_tokens = count_text_tokens(
-            render_ds4_qwen_prompt(
-                messages, schemas, thinking=thinking, response_schema=response_schema
-            )
+        # Scoring can reuse a thinking conversation while disabling only its
+        # new generation. Retain that history's template in the prompt budget.
+        history_thinking = (
+            self._thinking if response_schema is not None and not thinking else thinking
         )
+        prompt = render_ds4_qwen_prompt(
+            messages,
+            schemas,
+            thinking=history_thinking,
+            generation_thinking=thinking,
+            response_schema=response_schema,
+        )
+        prompt_tokens = count_text_tokens(prompt)
         return_call_id = agentic.get("skill_call_id")
         checkpoint = self._skill_checkpoints.get(return_call_id)
         opening_index = find_skill_opening_index(messages, "", return_call_id)
         closure_tokens_ready = (
             checkpoint is not None
-            and checkpoint[1] == thinking
+            and checkpoint.matches(prompt, thinking=thinking)
             and response_schema is None
             and opening_index >= 0
         )
@@ -58,7 +77,7 @@ class Ds4ContextEstimator:
             tail = "<|im_end|>\n" + render_ds4_qwen_prompt(
                 messages[opening_index + 1 :], [], thinking=thinking
             )
-            prompt_tokens = checkpoint[0] + count_text_tokens(tail)
+            prompt_tokens = checkpoint.sampled_tokens + count_text_tokens(tail)
         return ProviderContextUsage(
             prompt_tokens=prompt_tokens,
             return_call_id=return_call_id,
@@ -68,19 +87,28 @@ class Ds4ContextEstimator:
     def record_response(
         self,
         response: ProviderResponse | StructuredProviderResponse,
-        allowed_skills: list[str],
-        return_call_id: str | None,
-        prompt_tokens: int,
-        completion_tokens: int | None,
+        agentic: dict[str, Any],
         *,
+        messages: list[dict[str, Any]],
+        schemas: list[dict[str, Any]],
         thinking: bool | None = None,
     ) -> None:
-        if completion_tokens is None:
+        # A completed return consumes its checkpoint even without usage totals.
+        self._skill_checkpoints.pop(agentic.get("skill_call_id"), None)
+        usage = response.usage
+        if (
+            usage is None
+            or usage.prompt_tokens is None
+            or usage.completion_tokens is None
+        ):
             return
-        self._skill_checkpoints.pop(return_call_id, None)
+        thinking = self._thinking if thinking is None else thinking
         for call in response.get_tool_calls() or []:
-            if call.get_name() in allowed_skills:
-                self._skill_checkpoints[call.get_id()] = (
-                    prompt_tokens + completion_tokens + 1,
-                    self._thinking if thinking is None else thinking,
+            if call.get_name() in agentic.get("allowed_skills", []):
+                self._skill_checkpoints[call.get_id()] = _SkillCheckpoint(
+                    sampled_tokens=usage.prompt_tokens + usage.completion_tokens + 1,
+                    thinking=thinking,
+                    request_prefix=render_ds4_qwen_prompt(
+                        messages, schemas, thinking=thinking
+                    ),
                 )

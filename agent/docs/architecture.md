@@ -37,6 +37,9 @@ comportamenti incoerenti verificabili con test.
 | `ToolEvent` | Identità, stato e durata di una chiamata | `execution_status`, `matches_update`, `merge_update`, `normalized_copy`; `record_tool_event` mantiene una sola voce per invocazione |
 | `TurnStreamCollector` | Accumulo e snapshot del turno, compreso lo steering | `can_steer`, `steer`, `snapshot_message`, `build_message`; il registro non attraversa lo steering interno |
 | `ActiveTurnRegistry` | Task attivi, revisioni, cancellazione e passaggio delle code | `start`, `finish`, `snapshot`, `can_steer`, `steer`, `stop_and_wait`; delega al raccoglitore la consegna della guida |
+| `ContextTrackingProvider` | Osservazione delle richieste e conteggi separati per nodo | `estimate_context`, `count_request_tokens`, `last_context_total`, `invalidate_context`; delega `get_tools_text` al provider concreto |
+| `Ds4ContextEstimator` | Prompt Qwen e validità dei checkpoint skill campionati | `estimate_request` non modifica i checkpoint; `record_response` ne gestisce creazione e consumo usando i conteggi della risposta |
+| `CancellableProvider` | Cancellazione delle chiamate e dei relativi stream | `call`, `call_structured`; inoltra `get_tools_text` senza reinterpretare la serializzazione del provider |
 
 ## Organizzazione dei moduli e delle risorse
 
@@ -63,6 +66,18 @@ sono attribuiti all'endpoint effettivamente interrogato.
 La stima Qwen usa il testo letterale del client, come il server dopo la rimozione
 delle istruzioni operative sintetiche. La query non conserva prefissi modificati
 né aggiunge scope o messaggi; solo le risposte aggiornano i totali dei checkpoint.
+Ogni checkpoint immutabile possiede conteggio, modalità thinking e prefisso della
+richiesta iniziale. Il riuso richiede lo stesso prefisso, incluse le definizioni
+dei tool: una history modificata o compattata usa la stima letterale aggiornata.
+Un ritorno completato consuma il checkpoint anche quando mancano i conteggi.
+
+Con un checkpoint compatibile, lo scoring conserva il template della history e
+disabilita il thinking solo per la nuova generazione. Le istruzioni dello schema
+sono aggiunte dopo la history;
+il JSON Schema rimane vincolante nel decoder del server. Non serve un parametro
+aggiuntivo in `extra_body`. Il server confronta il prefisso visibile e i marcatori
+delle immagini prima dell'encoding; il worker verifica anche l'identità delle
+immagini contro la KV. Il rendering usa copie dei checkpoint fuori dal lock.
 
 La UI è divisa in `agents`, `chat`, `graph`, `history`, `navigation`, `settings`
 e `shared`. Il bridge separa `agents`, `capabilities`, `history`, `providers`

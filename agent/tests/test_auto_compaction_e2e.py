@@ -138,8 +138,8 @@ async def test_compaction_preserves_raw_graph_and_reload(compaction_server, tmp_
             close_menu = page.get_by_role(
                 "button", name="Close projects menu", exact=True
             )
-            if await close_menu.is_visible():
-                await close_menu.click()
+            # The responsive drawer closes itself after the viewport changes.
+            await expect(close_menu).to_be_hidden()
             await view_switch.click()
             await expect(view_switch).to_have_attribute("aria-checked", "false")
             await expect(
