@@ -179,6 +179,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   di responsabilità, incapsulamento, errori e debito residuo; regressioni
   di lifecycle T00–T04, invalidazione di sessioni parcheggiate, rilascio CUDA,
   build e validazione degli artefatti numerici.
+  Il riesame T05/T06 copre anche ammissione nel registro, scope fra thread,
+  cancellazione prima del commit e stato dei gruppi dopo un rilascio fallito.
 - `docs/architecture/native-suite-runtime-lifecycle.md` — inventario dello stato
   globale, confini del bridge legacy, teardown selettivo e matrice di qualifica.
 - `docs/architecture/native-suite-v1-contract.md`, `schemas/ds4-suite-*.schema.json`
@@ -189,6 +191,19 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   eventi, prenotazioni atomiche, budget device/host/pinned/checkpoint e trimming
   tramite destructor del proprietario; contabilità posseduta e disponibilità
   globale distinte. Le query memoria sessione usano i totali del registro.
+  Il registro verifica anche il reclaim proiettato con la stessa politica
+  della prenotazione reale e protegge i lease finché esistono scope attivi.
+- `ds4_executor.c/.h` — planner dell'intera operazione, visite ripetute, budget,
+  costi e isteresi; executor validate/reserve/quiesce/save/execute/restore/commit,
+  cancellazione, journal e recupero senza replay. Le prenotazioni scoped/nidificate
+  riusano capacità fra fasi. Il runtime serializza anche transazioni fra modelli.
+- `ds4_bundle.c/.h` — directory binaria verificata SHA-256, mmap dei file GGUF e
+  safetensors originali, inventario esaustivo e binding dell'adapter; caricamento
+  e rilascio di gruppi mediante callback del backend, senza espandere i pesi.
+- `tools/suite_bundle.py`, `tools/prepare_suite_bundles.py`,
+  `config/suite-bundles/`, `schemas/ds4-suite-bundle-v1.schema.json` — compiler
+  offline e conversione deterministica, profili con revisioni/hash fissati,
+  download esplicito con resume/checksum e discovery; nessuna inferenza Python.
 - `ds4_cuda_accounting.cuh` — accounting host delle allocazioni CUDA e pinned;
   i tensori condividono lo storage tramite view, le copie D2D mantengono il
   budget fino alla fence. Nessun nuovo kernel o percorso numerico.
@@ -198,11 +213,18 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `ds4_lifecycle.inc`, `ds4_lifecycle_text.h` — adapter interno all'engine per
   checkpoint, parcheggio/ripresa, query memoria, trimming e rilascio dei soli
   pesi Qwen27 CUDA; mantiene identità e callback e valida un grafo candidato.
+  Espone anche le vittime all'executor tramite un adapter opaco, mantenendo
+  stime e snapshot nella responsabilità dell'engine.
 - `tests/test_resources.c`, `tests/test_lifecycle_cuda.c` — gate host di lifetime,
   alias, overflow, concorrenza e file corrotti; gate reale di continuazione,
   OOM/SSD, MTP e stato multimodale. Qualifica nel report T03–T04.
 - `docs/performance/native-suite-t03-t04-20261020/` — comandi, inventario degli
   adapter, risultati e limiti della qualifica delle nuove operazioni lifecycle.
+- `tests/test_executor.c`, `tests/test_executor_cuda.c`, `tests/test_bundle.c`,
+  `tests/test_suite_bundle.py` — matrice budget/fault/recovery, continuazione
+  Qwen27 reale e gate del loader/converter/downloader; eseguiti anche con sanitizer.
+- `docs/performance/native-suite-t05-t06-20261020/` — evidenze T05/T06, inventari
+  reali Qwen/Gemma, memoria di apertura, regressioni e istruzioni delle nuove API.
 - `tests/fixtures/native-suite-v1/`, `tests/test_suite_*.py`, `tests/test_runtime*.c`
   — corpus sintetico congelato e test dei contratti, gate numerici e lifecycle.
 - `tools/freeze_multimodal_baseline.py`, `tools/export_suite_baseline.py`,
@@ -218,8 +240,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   e contratti client; proposta, non funzionalità già implementata.
 - `docs/roadmaps/native-multimodal-suite-implementation-20261020.md` — piano
   operativo in 23 task con sottotask, dipendenze, invarianti e gate numerici,
-  multimodali, di memoria/ripristino e prestazionali; T00/T01 completati e T02
-  CUDA verificato, qualifica degli altri backend ancora aperta.
+  multimodali, di memoria/ripristino e prestazionali; T00/T01 e gate locali T05/T06
+  completati, T02 CUDA verificato; qualifiche residue T02/T03/T04 esplicite.
 - `AGENT.md` — vincoli architetturali, qualità, sicurezza e test obbligatori per
   chi modifica il progetto.
 - `docs/roadmaps/` — roadmap ordinate, obiettivi di inferenza e gate di correttezza.

@@ -61,6 +61,10 @@ ds4_status ds4_resources_set_budget(ds4_resources *, ds4_memory_location,
                                      const ds4_resource_budget *);
 ds4_status ds4_resources_get_budget(ds4_resources *, ds4_memory_location, ds4_resource_budget *);
 ds4_status ds4_resources_available(ds4_resources *, ds4_memory_location, uint64_t *);
+/* Atomic, read-only admission using the registry's own budget policy. Reclaimed
+ * bytes are a projection, not an eviction; NULL means no reclamation. */
+ds4_status ds4_resources_can_reserve(ds4_resources *, const uint64_t bytes[DS4_MEMORY_COUNT],
+                                    const uint64_t reclaimed[DS4_MEMORY_COUNT]);
 ds4_status ds4_resources_reconcile(ds4_resources *, ds4_memory_location, uint64_t global_free, bool known);
 ds4_status ds4_resources_transfer_owner(ds4_resources *, uint64_t from, uint64_t to);
 ds4_status ds4_resource_register(ds4_resources *, const ds4_resource_spec *, ds4_resource **);
@@ -87,6 +91,15 @@ ds4_status ds4_resources_reserve(ds4_resources *, uint64_t owner,
 ds4_status ds4_reservation_use(ds4_reservation *, uint64_t event);
 ds4_status ds4_reservation_commit(ds4_reservation *, const ds4_resource_spec *, ds4_resource **);
 ds4_status ds4_reservation_cancel(ds4_reservation *);
+
+/* Allocations made in this thread borrow from the operation's reservation,
+ * retain their own owner, and return capacity to the lease on free. Cancel
+ * detaches surviving allocations. Leave scopes in reverse order on their
+ * entering thread. Any active scope, including on another thread, pins its
+ * lease against cancellation. The caller owns the handle across scope entry. */
+typedef struct { ds4_reservation *previous, *active; } ds4_reservation_scope;
+ds4_reservation_scope ds4_reservation_enter(ds4_reservation *);
+void ds4_reservation_leave(ds4_reservation_scope *);
 
 #ifdef __cplusplus
 }

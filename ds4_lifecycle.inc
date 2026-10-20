@@ -215,6 +215,20 @@ static ds4_status lifecycle_checkpoint_restore(ds4_session *s, const ds4_session
     free(aux); return status;
 }
 
+/* Takes ownership only on success. Both public parking and the transactional
+ * adapter use the same suspension, avoiding a second checkpoint copy. */
+static ds4_status lifecycle_suspend(ds4_session *s, ds4_session_checkpoint *p) {
+#ifndef DS4_NO_GPU
+    if (!ds4_gpu_synchronize()) return DS4_STATUS_INFERENCE;
+    ds4_session_checkpoint_free(s->parked_checkpoint); s->parked_checkpoint = p;
+    qwen_graph_free(&s->qwen_graph); s->qwen_graph_ready = false;
+    s->lifecycle_parked = true;
+    return DS4_STATUS_OK;
+#else
+    (void)s; (void)p; return DS4_STATUS_UNSUPPORTED;
+#endif
+}
+
 static ds4_status lifecycle_park(ds4_session *s, const char *directory) {
     if (!s || !directory || !directory[0]) return DS4_STATUS_INVALID;
     if (!lifecycle_supported(s->engine)) return DS4_STATUS_UNSUPPORTED;
@@ -225,11 +239,9 @@ static ds4_status lifecycle_park(ds4_session *s, const char *directory) {
         ds4_status status = lifecycle_checkpoint_capture(s, directory, NULL, 0, &p);
         if (status) return status;
     }
-    if (!ds4_gpu_synchronize()) { ds4_session_checkpoint_free(p); return DS4_STATUS_INFERENCE; }
-    ds4_session_checkpoint_free(s->parked_checkpoint); s->parked_checkpoint = p;
-    qwen_graph_free(&s->qwen_graph); s->qwen_graph_ready = false;
-    s->lifecycle_parked = true;
-    return DS4_STATUS_OK;
+    ds4_status status = lifecycle_suspend(s, p);
+    if (status) ds4_session_checkpoint_free(p);
+    return status;
 #else
     (void)directory; return DS4_STATUS_UNSUPPORTED;
 #endif
@@ -363,4 +375,113 @@ ds4_status ds4_session_memory_query(ds4_session *s, ds4_session_memory *out) {
         (g->host_pos3 ? (uint64_t)g->ctx_cap * 12u : 0);
 #endif
     return DS4_STATUS_OK;
+}
+
+typedef struct {
+    ds4_engine *engine;
+    ds4_session *session;
+    const char *directory;
+    ds4_session_checkpoint *checkpoint;
+    bool released;
+} lifecycle_reclaim_context;
+struct ds4_engine_reclaim {
+    char *directory;
+    size_t count;
+    ds4_execution_victim victims[DS4_EXECUTOR_MAX_VICTIMS];
+    lifecycle_reclaim_context contexts[DS4_EXECUTOR_MAX_VICTIMS];
+};
+static ds4_status lifecycle_reclaim_quiesce(void *opaque) {
+    lifecycle_reclaim_context *c = opaque;
+    DS4_ENGINE_MAINTENANCE_SCOPE(c->engine, DS4_STATUS_BUSY);
+#if !defined(DS4_NO_GPU) && !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+    return ds4_gpu_quiesce_status();
+#else
+    return DS4_STATUS_UNSUPPORTED;
+#endif
+}
+static ds4_status lifecycle_reclaim_save(void *opaque) {
+    lifecycle_reclaim_context *c = opaque;
+    if (!c->session->checkpoint_valid) return DS4_STATUS_OK;
+    return ds4_session_checkpoint_capture(c->session, c->directory, NULL, 0, &c->checkpoint);
+}
+static ds4_status lifecycle_reclaim_release(void *opaque) {
+    lifecycle_reclaim_context *c = opaque;
+    if (!c->session) {
+        ds4_status status = ds4_engine_weights_release(c->engine);
+        if (!status) c->released = true;
+        return status;
+    }
+    DS4_ENGINE_MAINTENANCE_SCOPE(c->engine, DS4_STATUS_BUSY);
+    ds4_status status = lifecycle_suspend(c->session, c->checkpoint);
+    if (!status) { c->checkpoint = NULL; c->released = true; }
+    return status;
+}
+static ds4_status lifecycle_reclaim_restore(void *opaque) {
+    lifecycle_reclaim_context *c = opaque;
+    if (!c->released) return DS4_STATUS_OK;
+    ds4_status status = c->session ? ds4_session_resume(c->session) : ds4_engine_weights_load(c->engine);
+    if (!status) c->released = false;
+    return status;
+}
+static void lifecycle_reclaim_discard(void *opaque) {
+    lifecycle_reclaim_context *c = opaque;
+    ds4_session_checkpoint_free(c->checkpoint); c->checkpoint = NULL;
+}
+ds4_status ds4_engine_reclaim_close(ds4_engine_reclaim *a) {
+    if (!a) return DS4_STATUS_OK;
+    for (size_t i = 0; i < a->count; i++)
+        if (a->contexts[i].released || a->contexts[i].checkpoint) return DS4_STATUS_BUSY;
+    free(a->directory); free(a); return DS4_STATUS_OK;
+}
+const ds4_execution_victim *ds4_engine_reclaim_victims(const ds4_engine_reclaim *a, size_t *count) {
+    if (count) *count = a ? a->count : 0;
+    return a ? a->victims : NULL;
+}
+const char *ds4_engine_reclaim_checkpoint(const ds4_engine_reclaim *a, size_t index) {
+    if (!a || index >= a->count) return NULL;
+    const lifecycle_reclaim_context *c=&a->contexts[index];
+    const ds4_session_checkpoint *p=c->checkpoint;
+    if (!p && c->released && c->session) p=c->session->parked_checkpoint;
+    return ds4_session_checkpoint_path(p);
+}
+ds4_status ds4_engine_reclaim_create(ds4_engine_reclaim **out, ds4_engine *e, const char *directory) {
+    if (!out) return DS4_STATUS_INVALID;
+    *out = NULL;
+    if (!e || !directory || !directory[0]) return DS4_STATUS_INVALID;
+    DS4_ENGINE_MAINTENANCE_SCOPE(e, DS4_STATUS_BUSY);
+    if (!lifecycle_supported(e)) return DS4_STATUS_UNSUPPORTED;
+    if (e->weights_evicted) return DS4_STATUS_NOT_RESIDENT;
+    ds4_engine_reclaim *a = calloc(1, sizeof(*a));
+    if (!a) return DS4_STATUS_NOMEM;
+    a->directory = strdup(directory);
+    if (!a->directory) { free(a); return DS4_STATUS_NOMEM; }
+    for (ds4_session *s = e->sessions; s; s = s->engine_next) {
+        if (s->lifecycle_parked) continue;
+        if (a->count >= DS4_EXECUTOR_MAX_VICTIMS-1) { ds4_engine_reclaim_close(a); return DS4_STATUS_UNSUPPORTED; }
+        size_t i = a->count++;
+        a->contexts[i] = (lifecycle_reclaim_context){.engine=e, .session=s, .directory=a->directory};
+        ds4_session_memory memory;
+        if (ds4_session_memory_query(s, &memory) || !memory.capacity_known ||
+            (s->checkpoint_valid && !memory.payload_known)) { ds4_engine_reclaim_close(a); return DS4_STATUS_NOT_READY; }
+        a->victims[i] = (ds4_execution_victim){.kind=DS4_RECLAIM_SESSION,
+            .reclaimed.bytes={[DS4_MEMORY_DEVICE]=memory.device_capacity},
+            .checkpoint.bytes={[DS4_MEMORY_CHECKPOINT]=memory.payload_known ? memory.payload+DS4_CHECKPOINT_HEADER_BYTES : 0,
+                               [DS4_MEMORY_HOST]=DS4_SESSION_IO_CHUNK},
+            .cost=memory.payload <= UINT64_MAX/2 ? memory.payload*2 : UINT64_MAX,
+            .context=&a->contexts[i], .quiesce=lifecycle_reclaim_quiesce, .save=lifecycle_reclaim_save,
+            .release=lifecycle_reclaim_release, .restore=lifecycle_reclaim_restore, .discard=lifecycle_reclaim_discard};
+    }
+    size_t i = a->count++;
+    a->contexts[i] = (lifecycle_reclaim_context){.engine=e, .directory=a->directory};
+    ds4_resource_totals weights;
+    ds4_resources_totals(ds4_engine_resources(e), DS4_RESOURCE_OWNER_LEGACY_WEIGHTS, &weights);
+    a->victims[i] = (ds4_execution_victim){.kind=DS4_RECLAIM_WEIGHTS,
+        .reclaimed.bytes={[DS4_MEMORY_DEVICE]=weights.allocated[DS4_MEMORY_DEVICE],
+                         [DS4_MEMORY_PINNED]=weights.allocated[DS4_MEMORY_PINNED]},
+        .cost=weights.allocated[DS4_MEMORY_DEVICE], .context=&a->contexts[i],
+        .quiesce=lifecycle_reclaim_quiesce, .release=lifecycle_reclaim_release, .restore=lifecycle_reclaim_restore};
+    uint64_t staging = UINT64_C(256)*1024u*1024u;
+    if (weights.allocated[DS4_MEMORY_PINNED] < staging)
+        a->victims[i].restore_extra.bytes[DS4_MEMORY_PINNED] = staging-weights.allocated[DS4_MEMORY_PINNED];
+    *out = a; return DS4_STATUS_OK;
 }

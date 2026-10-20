@@ -76,6 +76,13 @@ int main(void) {
     assert(ds4_runtime_model_create(runtime, &descriptor, NULL, NULL, &bad) == DS4_STATUS_INVALID && !bad);
     ds4_runtime_release(runtime); /* Models retain shared backend ownership. */
     assert(!b.shutdowns);
+    ds4_runtime_transaction transaction={0}, nested_transaction={0};
+    assert(!ds4_runtime_transaction_begin(runtime,&transaction));
+    assert(ds4_runtime_transaction_begin(runtime,&nested_transaction)==DS4_STATUS_BUSY);
+    ds4_runtime_scope visit={0};
+    assert(!ds4_runtime_model_enter(a.handle,&visit)); ds4_runtime_scope_leave(&visit);
+    assert(!ds4_runtime_model_enter(c.handle,&visit)); ds4_runtime_scope_leave(&visit);
+    ds4_runtime_transaction_end(&transaction);
     ds4_runtime_scope outer = {0}, inner = {0}, other = {0};
     assert(ds4_runtime_model_enter(a.handle, &outer) == DS4_STATUS_OK);
     assert(ds4_runtime_model_enter(a.handle, &inner) == DS4_STATUS_OK);

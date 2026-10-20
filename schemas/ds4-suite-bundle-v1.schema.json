@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["version", "model", "revision", "profile", "assets", "components", "files"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {"const": 1},
+    "model": {"type": "string", "minLength": 1},
+    "revision": {"$ref": "#/$defs/revision"},
+    "profile": {"type": "string", "minLength": 1},
+    "assets": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "string", "minLength": 1}},
+    "components": {"type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "revision", "for_model_revision", "compute_dtype", "selectors"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "revision": {"$ref": "#/$defs/revision"},
+        "for_model_revision": {"$ref": "#/$defs/revision"},
+        "compute_dtype": {"enum": ["float32", "bfloat16"]},
+        "selectors": {"type": "array", "minItems": 1, "items": {
+          "type": "object", "additionalProperties": false, "required": ["file"],
+          "properties": {"file": {"type": "string", "minLength": 1}, "prefix": {"type": "string"}, "group_regex": {"type": "string"}}
+        }}
+      }
+    }},
+    "files": {"type": "array", "minItems": 1, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "format", "revision", "bytes", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1}, "format": {"enum": ["gguf", "safetensors", "asset"]},
+        "revision": {"$ref": "#/$defs/revision"}, "bytes": {"type": "integer", "minimum": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "url": {"type": "string", "minLength": 1},
+        "repository": {"type": "string", "minLength": 1}
+      }
+    }}
+  },
+  "$defs": {"revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"}}
+}

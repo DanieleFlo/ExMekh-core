@@ -101,3 +101,40 @@ La [verifica del riesame](../performance/native-suite-t03-t04-20261020/review-ve
 registra sorgenti/binari finali, comandi, log, confronto con T00 e gate SSD CUDA.
 Gli artefatti completi rimangono in
 `performance-results/native-suite-review-t03-t04-20261020`.
+
+## Riesame di T05–T06
+
+Il terzo passaggio comprende planner, executor, registro, loader, tool offline e
+build. Sono stati riletti anche lifecycle, runtime, confini CLI/server e i
+metodi di branching/revisione di `ChatSession`. I tre accessi a metodi privati
+su `branch`/`revised` avvengono dentro la classe che li definisce, su proprie
+copie: non richiedono di esporre dettagli interni al manager.
+
+| Problema | Correzione e responsabilità |
+| --- | --- |
+| Il planner ricostruiva capacità host/device, margini e disponibilità globale leggendo più getter e duplicando la politica del registro | `ds4_resources_can_reserve` verifica ammissione e reclaim proiettato sotto un unico lock. La prenotazione reale usa lo stesso calcolo. Il planner descrive soltanto domanda e vittime |
+| Un disconnect durante caricamento, save, restore o attesa del recupero poteva arrivare dopo l'ultimo controllo e consentire compute o commit | Controlli alle frontiere di fase e immediatamente prima della pubblicazione; restore e drain proseguono comunque. Nessun replay |
+| La cancellazione di una reservation controllava solo il TLS del thread chiamante: poteva liberare un lease attivo su un altro thread o nascosto da uno scope nidificato | Il registro conta gli scope attivi del lease. La cancellazione restituisce `BUSY` finché uno scope è vivo; le allocazioni scoped ereditano anche il suo evento, come quelle committate esplicitamente |
+| Rilascio dei gruppi duplicato fra percorso normale e recupero; una funzione orchestrava anche tutti i dettagli delle fasi | Helper comuni per save, rilascio delle vittime, visite e rilascio inverso dei gruppi. Il journal mantiene i bit prima dei callback potenzialmente parziali |
+| Un gruppo poteva continuare a dichiararsi residente dopo un drain/free fallito | Il proprietario del gruppo invalida la disponibilità prima di tentare il rilascio, conserva lo storage per il recupero e impedisce reload/uso prematuro |
+| Il reader dell'indice classificava anche gli errori di allocazione come dati invalidi | Il reader conserva il primo stato tipizzato; `NOMEM` e indice invalido restano distinti nel cleanup comune |
+| Discovery rileggeva gli stessi pesi condivisi per ogni componente; verifica degli artefatti ripetuta fra più funzioni | Un solo controllo di identità condiviso, hash una volta per file nella discovery; nessun cambiamento ai byte degli artefatti |
+| Regex di layer invalide, selector su asset/revisioni incompatibili o indici troppo grandi fallivano tardi con eccezioni di packing o nel loader | Selector validati prima della lettura dei pesi e limite della directory prima della pubblicazione; buffer incrementale e limite di formato a 64 MiB |
+| Le dipendenze transitive degli header pubblici erano elencate diversamente fra client, test, engine e probe | Gruppo comune `DS4_API_HEADERS`; nessuna modifica ai flag numerici o ai kernel |
+
+Non sono state aggiunte classi per funzioni senza stato. Il registro possiede
+budget e lifetime, l'executor possiede l'operazione, il loader possiede directory
+e gruppi, l'engine conosce i payload delle proprie sessioni. CLI/server restano
+client delle API opache e l'agente usa i metodi delle proprie sessioni/store.
+
+La revisione migliora responsabilità singola, incapsulamento, assenza di
+duplicazione, nomi, errori e testabilità nei confini esaminati. Non tutti i
+principi sono già soddisfatti nell'intera repository: rimangono i monoliti
+engine/server, lo stato globale legacy, l'accounting host incompleto e gli
+adapter non qualificati. Estrarli senza oracle/backend disponibili sposterebbe
+il rischio, senza dimostrare un miglioramento. Metal, ROCm e distribuito non
+ricevono una qualifica da questi test locali.
+
+Le evidenze finali del riesame sono nel
+[registro T05–T06](../performance/native-suite-t05-t06-20261020/review-verification.json).
+I log restano in `performance-results/native-suite-review-t05-t06-20261020`.

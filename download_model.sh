@@ -62,6 +62,7 @@ usage() {
 DwarfStar GGUF downloader
 
 Usage:
+  ./download_model.sh suite-bundle --manifest FILE --root DIR [--component ID]
   ./download_model.sh ds4f-q2 [--token TOKEN]
   ./download_model.sh ds4f-q2-q4 [--token TOKEN]
   ./download_model.sh ds4f-q4 [--token TOKEN]
@@ -277,6 +278,9 @@ fi
 
 MODEL=$1
 shift
+if [ "$MODEL" = "suite-bundle" ]; then
+    exec python3 "$ROOT/tools/suite_bundle.py" download "$@"
+fi
 MODEL_FILES=
 LINK_MODEL=1
 FORCE_HF_DOWNLOAD=0

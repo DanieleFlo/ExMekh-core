@@ -52,6 +52,7 @@ void ds4_gpu_cleanup(void);
 /* Tracks tensor storage and views. Raw legacy weight/derived allocations are
  * reported separately; global device free is never summed with owned bytes. */
 ds4_resources *ds4_gpu_resources(void);
+ds4_status ds4_gpu_quiesce_status(void);
 int ds4_gpu_resources_refresh(uint64_t margin);
 /* Release the single legacy GGUF owner's maps and derived caches, retaining
  * streams, cuBLAS and independently allocated component tensors. New suite

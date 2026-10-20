@@ -28,31 +28,77 @@ struct ds4_resource {
     ds4_resources *registry;
     ds4_resource *next, *backing;
     ds4_resource_info info;
+    ds4_reservation *lease;
 };
 struct ds4_reservation {
     ds4_reservation *next;
+    ds4_reservation *parent;
     ds4_resources *registry;
     uint64_t owner, bytes[DS4_MEMORY_COUNT], event;
+    size_t scopes;
 };
+
+static __thread ds4_reservation *current_reservation;
+ds4_reservation_scope ds4_reservation_enter(ds4_reservation *lease) {
+    ds4_reservation_scope scope = {current_reservation, lease};
+    if (lease) {
+        pthread_mutex_lock(&lease->registry->mutex);
+        lease->scopes++;
+        pthread_mutex_unlock(&lease->registry->mutex);
+    }
+    current_reservation = lease;
+    return scope;
+}
+void ds4_reservation_leave(ds4_reservation_scope *scope) {
+    if (scope->active) {
+        ds4_reservation *lease = scope->active;
+        pthread_mutex_lock(&lease->registry->mutex);
+        lease->scopes--;
+        pthread_mutex_unlock(&lease->registry->mutex);
+        scope->active = NULL;
+    }
+    current_reservation = scope->previous;
+}
 
 static bool location_valid(ds4_memory_location l) { return (unsigned)l < DS4_MEMORY_COUNT; }
 static uint64_t subtract(uint64_t a, uint64_t b) { return a > b ? a - b : 0; }
 static uint64_t add(uint64_t a, uint64_t b) { return b > UINT64_MAX - a ? UINT64_MAX : a + b; }
-static uint64_t available(ds4_resources *r, ds4_memory_location l) {
+static uint64_t available_after(ds4_resources *r, ds4_memory_location l, const uint64_t *reclaimed) {
     const ds4_resource_budget *b = &r->budget[l];
-    uint64_t allocated = r->totals.allocated[l], reserved = r->totals.reserved[l];
+    uint64_t credit = reclaimed ? reclaimed[l] : 0;
+    uint64_t allocated = subtract(r->totals.allocated[l], credit), reserved = r->totals.reserved[l];
     if (l == DS4_MEMORY_HOST) {
-        allocated = add(allocated, add(r->totals.allocated[DS4_MEMORY_PINNED], r->totals.allocated[DS4_MEMORY_RESIDENT]));
-        reserved = add(reserved, add(r->totals.reserved[DS4_MEMORY_PINNED], r->totals.reserved[DS4_MEMORY_RESIDENT]));
+        const ds4_memory_location shared[] = {DS4_MEMORY_PINNED, DS4_MEMORY_RESIDENT};
+        for (size_t i = 0; i < 2; i++) {
+            uint64_t part = reclaimed ? reclaimed[shared[i]] : 0;
+            allocated = add(allocated, subtract(r->totals.allocated[shared[i]], part));
+            reserved = add(reserved, r->totals.reserved[shared[i]]);
+            credit = add(credit, part);
+        }
     }
     uint64_t free = subtract(b->limit, allocated);
-    if (b->global_known && b->global_free < free) free = b->global_free;
+    uint64_t global = add(b->global_free, credit);
+    if (b->global_known && global < free) free = global;
     free = subtract(subtract(free, reserved), b->margin);
     if (l == DS4_MEMORY_PINNED || l == DS4_MEMORY_RESIDENT) {
-        uint64_t host = available(r, DS4_MEMORY_HOST);
+        uint64_t host = available_after(r, DS4_MEMORY_HOST, reclaimed);
         if (host < free) free = host;
     }
     return free;
+}
+static uint64_t available(ds4_resources *r, ds4_memory_location l) {
+    return available_after(r, l, NULL);
+}
+static ds4_status can_reserve(ds4_resources *r, const uint64_t *bytes, const uint64_t *reclaimed) {
+    if (r->destroying) return DS4_STATUS_BUSY;
+    for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++)
+        if (reclaimed && reclaimed[i] > r->totals.allocated[i]) return DS4_STATUS_INVALID;
+    for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++)
+        if (bytes[i] > available_after(r, i, reclaimed)) return DS4_STATUS_NOMEM;
+    uint64_t host = bytes[DS4_MEMORY_HOST], pinned = bytes[DS4_MEMORY_PINNED], resident = bytes[DS4_MEMORY_RESIDENT];
+    if (pinned > UINT64_MAX-host || resident > UINT64_MAX-host-pinned ||
+        host+pinned+resident > available_after(r, DS4_MEMORY_HOST, reclaimed)) return DS4_STATUS_NOMEM;
+    return DS4_STATUS_OK;
 }
 ds4_status ds4_resources_create(ds4_resources **out) {
     if (!out) return DS4_STATUS_INVALID;
@@ -86,6 +132,14 @@ ds4_status ds4_resources_available(ds4_resources *r, ds4_memory_location l, uint
     if (!r || !out || !location_valid(l)) return DS4_STATUS_INVALID;
     pthread_mutex_lock(&r->mutex); *out = available(r, l);
     pthread_mutex_unlock(&r->mutex); return DS4_STATUS_OK;
+}
+ds4_status ds4_resources_can_reserve(ds4_resources *r, const uint64_t bytes[DS4_MEMORY_COUNT],
+                                    const uint64_t reclaimed[DS4_MEMORY_COUNT]) {
+    if (!r || !bytes) return DS4_STATUS_INVALID;
+    pthread_mutex_lock(&r->mutex);
+    ds4_status status = can_reserve(r, bytes, reclaimed);
+    pthread_mutex_unlock(&r->mutex);
+    return status;
 }
 ds4_status ds4_resources_get_budget(ds4_resources *r, ds4_memory_location l, ds4_resource_budget *out) {
     if (!r || !out || !location_valid(l)) return DS4_STATUS_INVALID;
@@ -132,9 +186,20 @@ ds4_status ds4_resource_register(ds4_resources *r, const ds4_resource_spec *s, d
     ds4_resource *p = calloc(1, sizeof(*p));
     if (!p) return DS4_STATUS_NOMEM;
     pthread_mutex_lock(&r->mutex);
+    ds4_reservation *lease = current_reservation;
+    if (lease && lease->registry != r) lease = NULL;
     ds4_status status = r->destroying ? DS4_STATUS_BUSY :
-        s->allocated > available(r, s->location) ? DS4_STATUS_NOMEM : DS4_STATUS_OK;
-    if (!status) { insert(r, p, s); *out = p; }
+        s->allocated > (lease ? lease->bytes[s->location] : available(r, s->location)) ?
+        DS4_STATUS_NOMEM : DS4_STATUS_OK;
+    if (!status) {
+        if (lease) {
+            lease->bytes[s->location] -= s->allocated;
+            r->totals.reserved[s->location] -= s->allocated;
+            p->lease = lease;
+            p->info.last_event = lease->event;
+        }
+        insert(r, p, s); *out = p;
+    }
     pthread_mutex_unlock(&r->mutex);
     if (status) free(p);
     return status;
@@ -196,6 +261,10 @@ static ds4_status release(ds4_resource *p) {
         r->totals.requested[s->location] -= s->requested;
         r->totals.allocated[s->location] -= s->allocated;
         r->totals.live[s->location] -= s->live;
+        if (p->lease) {
+            p->lease->bytes[s->location] += s->allocated;
+            r->totals.reserved[s->location] += s->allocated;
+        }
         /* Do not credit global_free: backend destruction or an unrelated
          * process may change physical residency. Refresh its sample explicitly. */
     }
@@ -303,16 +372,20 @@ ds4_status ds4_resources_reserve(ds4_resources *r, uint64_t owner,
     ds4_reservation *p = calloc(1, sizeof(*p));
     if (!p) return DS4_STATUS_NOMEM;
     pthread_mutex_lock(&r->mutex);
+    ds4_reservation *parent = current_reservation;
+    if (parent && parent->registry != r) parent = NULL;
     ds4_status status = r->destroying ? DS4_STATUS_BUSY : DS4_STATUS_OK;
-    for (unsigned i = 0; i < DS4_MEMORY_COUNT && !status; i++)
-        if (bytes[i] > available(r, i)) status = DS4_STATUS_NOMEM;
-    uint64_t host = bytes[DS4_MEMORY_HOST], pinned = bytes[DS4_MEMORY_PINNED], resident = bytes[DS4_MEMORY_RESIDENT];
-    if (!status && (pinned > UINT64_MAX - host || resident > UINT64_MAX - host - pinned ||
-        host + pinned + resident > available(r, DS4_MEMORY_HOST))) status = DS4_STATUS_NOMEM;
+    if (!status && !parent) status = can_reserve(r, bytes, NULL);
+    for (unsigned i = 0; parent && i < DS4_MEMORY_COUNT && !status; i++)
+        if (bytes[i] > parent->bytes[i]) status = DS4_STATUS_NOMEM;
     if (!status) {
         p->registry = r; p->owner = owner; memcpy(p->bytes, bytes, sizeof(p->bytes));
+        p->parent = parent;
         p->next = r->leases; r->leases = p;
-        for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++) r->totals.reserved[i] += bytes[i];
+        for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++) {
+            if (parent) parent->bytes[i] -= bytes[i];
+            else r->totals.reserved[i] += bytes[i];
+        }
         r->reservations++; *out = p;
     }
     pthread_mutex_unlock(&r->mutex); if (status) free(p); return status;
@@ -336,17 +409,26 @@ ds4_status ds4_reservation_commit(ds4_reservation *p, const ds4_resource_spec *s
     if (!status) {
         p->bytes[s->location] -= s->allocated;
         r->totals.reserved[s->location] -= s->allocated;
-        insert(r, resource, s); resource->info.last_event = p->event; *out = resource;
+        insert(r, resource, s); resource->info.last_event = p->event;
+        resource->lease = p->parent; *out = resource;
     }
     pthread_mutex_unlock(&r->mutex); if (status) free(resource); return status;
 }
 ds4_status ds4_reservation_cancel(ds4_reservation *p) {
     if (!p) return DS4_STATUS_OK;
     ds4_resources *r = p->registry; pthread_mutex_lock(&r->mutex);
-    if (r->destroying || p->event > r->completed) {
+    bool children = false;
+    for (ds4_reservation *child = r->leases; child; child = child->next)
+        if (child->parent == p) children = true;
+    if (r->destroying || p->event > r->completed || children || p->scopes) {
         pthread_mutex_unlock(&r->mutex); return DS4_STATUS_BUSY;
     }
-    for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++) r->totals.reserved[i] -= p->bytes[i];
+    for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++) {
+        if (p->parent) p->parent->bytes[i] += p->bytes[i];
+        else r->totals.reserved[i] -= p->bytes[i];
+    }
+    for (ds4_resource *resource = r->head; resource; resource = resource->next)
+        if (resource->lease == p) resource->lease = p->parent;
     ds4_reservation **link = &r->leases;
     while (*link != p) link = &(*link)->next;
     *link = p->next;

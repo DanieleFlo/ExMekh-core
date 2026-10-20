@@ -4121,7 +4121,13 @@ extern "C" int ds4_gpu_end_commands(void) {
     }
     return cuda_ok(cudaDeviceSynchronize(), "end commands");
 }
-extern "C" int ds4_gpu_synchronize(void) { return cuda_ok(cuda_account_synchronize(), "synchronize"); }
+extern "C" ds4_status ds4_gpu_quiesce_status(void) {
+    cudaError_t status = cuda_account_synchronize();
+    if (cuda_ok(status, "synchronize")) return DS4_STATUS_OK;
+    return status == cudaErrorIllegalAddress || status == cudaErrorLaunchFailure || status == cudaErrorAssert ?
+        DS4_STATUS_DEVICE_LOST : DS4_STATUS_INFERENCE;
+}
+extern "C" int ds4_gpu_synchronize(void) { return ds4_gpu_quiesce_status() == DS4_STATUS_OK; }
 
 extern "C" int ds4_gpu_set_model_map(const void *model_map, uint64_t model_size) {
     if (!model_map || model_size == 0) return 0;

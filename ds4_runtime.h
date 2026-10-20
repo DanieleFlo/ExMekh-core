@@ -21,7 +21,8 @@ typedef enum {
     DS4_STATUS_NOMEM,
     DS4_STATUS_CANCELLED,
     DS4_STATUS_INFERENCE,
-    DS4_STATUS_RESTORE
+    DS4_STATUS_RESTORE,
+    DS4_STATUS_DEVICE_LOST
 } ds4_status;
 
 enum {
@@ -97,6 +98,12 @@ ds4_status ds4_runtime_model_enter_exclusive(ds4_runtime_model *, ds4_runtime_sc
 ds4_status ds4_runtime_begin_update(ds4_runtime *runtime, ds4_runtime_scope *scope);
 /* Leave either kind of scope on its entering thread; safe for an empty scope. */
 void ds4_runtime_scope_leave(ds4_runtime_scope *scope);
+
+/* Serial operation lease. Unlike an update scope, it permits sequential model
+ * scopes on this thread while excluding inference on other threads. */
+typedef struct { ds4_runtime *runtime; } ds4_runtime_transaction;
+ds4_status ds4_runtime_transaction_begin(ds4_runtime *, ds4_runtime_transaction *);
+void ds4_runtime_transaction_end(ds4_runtime_transaction *);
 
 /* Adapter contract for T03–T05. No HTTP or tensor layout appears here.
  * An estimate is unknown unless known=true; zero is a valid known estimate.

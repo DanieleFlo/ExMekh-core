@@ -129,6 +129,71 @@ static void concurrency(void) {
     for (unsigned i = 0; i < 8; i++) assert(!pthread_join(threads[i], NULL));
     assert(!ds4_resources_close(r));
 }
+static void admission(void) {
+    ds4_resources *r; assert(!ds4_resources_create(&r));
+    ds4_resource *device, *host, *pinned;
+    ds4_resource_spec s = spec(7, 80);
+    assert(!ds4_resource_register(r, &s, &device));
+    s = spec(7, 40); s.location = DS4_MEMORY_HOST;
+    assert(!ds4_resource_register(r, &s, &host));
+    s = spec(7, 20); s.location = DS4_MEMORY_PINNED;
+    assert(!ds4_resource_register(r, &s, &pinned));
+    ds4_resource_budget budget = {.limit=100, .margin=10, .global_known=true, .global_free=20};
+    assert(!ds4_resources_set_budget(r, DS4_MEMORY_DEVICE, &budget));
+    budget = (ds4_resource_budget){.limit=100, .margin=5, .global_known=true, .global_free=40};
+    assert(!ds4_resources_set_budget(r, DS4_MEMORY_HOST, &budget));
+    uint64_t need[DS4_MEMORY_COUNT] = {[DS4_MEMORY_DEVICE]=20};
+    uint64_t reclaimed[DS4_MEMORY_COUNT] = {[DS4_MEMORY_DEVICE]=80};
+    assert(ds4_resources_can_reserve(r, need, NULL) == DS4_STATUS_NOMEM);
+    assert(!ds4_resources_can_reserve(r, need, reclaimed));
+    reclaimed[DS4_MEMORY_DEVICE]++;
+    assert(ds4_resources_can_reserve(r, need, reclaimed) == DS4_STATUS_INVALID);
+    reclaimed[DS4_MEMORY_DEVICE] = 40;
+    budget = (ds4_resource_budget){.limit=30};
+    assert(!ds4_resources_set_budget(r, DS4_MEMORY_DEVICE, &budget));
+    need[DS4_MEMORY_DEVICE] = 1;
+    assert(ds4_resources_can_reserve(r, need, reclaimed) == DS4_STATUS_NOMEM);
+    need[DS4_MEMORY_DEVICE] = 0;
+    need[DS4_MEMORY_HOST] = 30; need[DS4_MEMORY_PINNED] = 20;
+    ds4_reservation *lease = NULL;
+    assert(ds4_resources_can_reserve(r, need, NULL) == DS4_STATUS_NOMEM);
+    assert(ds4_resources_reserve(r, 8, need, &lease) == DS4_STATUS_NOMEM);
+    need[DS4_MEMORY_HOST] = need[DS4_MEMORY_PINNED] = 10;
+    assert(!ds4_resources_can_reserve(r, need, NULL));
+    assert(!ds4_resources_reserve(r, 8, need, &lease));
+    assert(!ds4_reservation_cancel(lease));
+    assert(!ds4_resource_release(device) && !ds4_resource_release(host) && !ds4_resource_release(pinned));
+    assert(!ds4_resources_close(r));
+}
+typedef struct { ds4_reservation *lease; ds4_status status; } cancel_attempt;
+static void *cancel_elsewhere(void *opaque) {
+    cancel_attempt *attempt = opaque;
+    attempt->status = ds4_reservation_cancel(attempt->lease);
+    return NULL;
+}
+static void scoped_lifetime(void) {
+    ds4_resources *r; assert(!ds4_resources_create(&r));
+    uint64_t bytes[DS4_MEMORY_COUNT] = {[DS4_MEMORY_DEVICE]=80};
+    ds4_reservation *lease;
+    assert(!ds4_resources_reserve(r, 7, bytes, &lease));
+    ds4_reservation_scope outer = ds4_reservation_enter(lease);
+    ds4_reservation_scope inner = ds4_reservation_enter(NULL);
+    cancel_attempt attempt = {.lease=lease};
+    pthread_t thread;
+    assert(!pthread_create(&thread, NULL, cancel_elsewhere, &attempt));
+    assert(!pthread_join(thread, NULL) && attempt.status == DS4_STATUS_BUSY);
+    assert(ds4_reservation_cancel(lease) == DS4_STATUS_BUSY);
+    ds4_reservation_leave(&inner);
+    assert(!ds4_reservation_use(lease, 42));
+    ds4_resource_spec s = spec(7, 80); ds4_resource *allocation;
+    assert(!ds4_resource_register(r, &s, &allocation));
+    assert(ds4_resource_release(allocation) == DS4_STATUS_BUSY);
+    ds4_reservation_leave(&outer);
+    assert(ds4_reservation_cancel(lease) == DS4_STATUS_BUSY);
+    ds4_resources_complete(r, 42);
+    assert(!ds4_reservation_cancel(lease));
+    assert(!ds4_resource_release(allocation) && !ds4_resources_close(r));
+}
 static void checkpoints(void) {
     uint8_t identity[32] = {17}, config[32] = {42};
     FILE *fp = tmpfile(); assert(fp);
@@ -166,7 +231,7 @@ static void checkpoints(void) {
     fclose(fp);
 }
 int main(void) {
-    lifetime(); budgets(); trimming(); concurrency(); checkpoints();
+    lifetime(); budgets(); trimming(); concurrency(); admission(); scoped_lifetime(); checkpoints();
     puts("PASS: resource lifetime, aliases, events, budgets, concurrent reservations and checkpoint validation");
     return 0;
 }

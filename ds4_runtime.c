@@ -16,6 +16,7 @@ struct ds4_runtime {
     ds4_runtime_model *active;
     ds4_runtime_model *closing;
     bool transitioning;
+    bool transaction;
     size_t depth;
 };
 
@@ -182,6 +183,28 @@ ds4_status ds4_runtime_begin_update(ds4_runtime *runtime, ds4_runtime_scope *sco
     scope->previous_resource_owner = ds4_resource_current_owner();
     (void)ds4_resource_owner_enter((uint64_t)(uintptr_t)runtime);
     return DS4_STATUS_OK;
+}
+
+ds4_status ds4_runtime_transaction_begin(ds4_runtime *runtime, ds4_runtime_transaction *lease) {
+    if (!runtime || !lease || lease->runtime) return DS4_STATUS_INVALID;
+    pthread_mutex_lock(&runtime->mutex);
+    if (runtime->depth || runtime->closing || runtime->transitioning || runtime->transaction) {
+        pthread_mutex_unlock(&runtime->mutex);
+        return DS4_STATUS_BUSY;
+    }
+    runtime->transaction = true;
+    runtime->references++;
+    lease->runtime = runtime;
+    return DS4_STATUS_OK;
+}
+
+void ds4_runtime_transaction_end(ds4_runtime_transaction *lease) {
+    if (!lease || !lease->runtime) return;
+    ds4_runtime *runtime = lease->runtime;
+    runtime->transaction = false;
+    lease->runtime = NULL;
+    pthread_mutex_unlock(&runtime->mutex);
+    ds4_runtime_release(runtime);
 }
 
 void ds4_runtime_scope_leave(ds4_runtime_scope *scope) {

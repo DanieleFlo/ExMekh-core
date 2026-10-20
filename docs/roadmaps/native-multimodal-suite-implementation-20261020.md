@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00 e T01 sono `DONE`; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T05–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md) e [T03–T04](../performance/native-suite-t03-t04-20261020/README.md).
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza anticipare l'inferenza dei nuovi modelli o promuovere profili quantizzati.
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -131,34 +131,49 @@ Le API `trim`, `park/resume`, `weights_release/load` e checkpoint espliciti sono
 
 ## 9. T05 — Ammissione, pianificazione e transazione comune
 
-**Dipendenze:** T03, T04. **Priorità:** bloccante. **Stato:** `PLANNED`.
+**Dipendenze:** T03, T04. **Priorità:** bloccante. **Stato:** `DONE` per il core comune e l'adapter Qwen27 CUDA single GPU; le qualifiche residue T03/T04 restano aperte.
 
-- [ ] `T05.1` Costruire il piano dell'intera operazione, incluse visite ripetute ai componenti e ritorno al LLM, prima di eseguire eviction.
-- [ ] `T05.2` Implementare scelta senza eviction, cache ricostruibili, sospensione selettiva sessioni, rilascio selettivo pesi e piani streamed. Nessun nome di modello nei criteri generici.
-- [ ] `T05.3` Confrontare piani ammissibili usando byte, costi di checkpoint/restore e trasferimento; considerare pesi-only con stato residente. Applicare isteresi per evitare oscillazioni.
-- [ ] `T05.4` Eseguire validate/reserve/quiesce/checkpoint/execute/restore/commit con journal dell'operazione e cleanup idempotente. Il commit del risultato finale è successivo al restore.
-- [ ] `T05.5` Implementare cancellazione cooperativa, drain degli eventi e gestione della disconnessione senza abbandonare sessioni parcheggiate.
-- [ ] `T05.6` Rivalutare un'allocazione fallita solo a frontiere che consentono rollback esatto. Non ripetere automaticamente richieste con stato parzialmente avanzato.
-- [ ] `T05.7` Esporre stato di recupero, conservazione checkpoint e indisponibilità selettiva quando il restore è impedito; distinguere errori device non recuperabili.
+- [x] `T05.1` Costruire il piano dell'intera operazione, incluse visite ripetute ai componenti e ritorno al LLM, prima di eseguire eviction.
+- [x] `T05.2` Implementare scelta senza eviction, cache ricostruibili, sospensione selettiva sessioni, rilascio selettivo pesi e piani streamed. Nessun nome di modello nei criteri generici.
+- [x] `T05.3` Confrontare piani ammissibili usando byte, costi di checkpoint/restore e trasferimento; considerare pesi-only con stato residente. Applicare isteresi per evitare oscillazioni.
+- [x] `T05.4` Eseguire validate/reserve/quiesce/checkpoint/execute/restore/commit con journal dell'operazione e cleanup idempotente. Il commit del risultato finale è successivo al restore.
+- [x] `T05.5` Implementare cancellazione cooperativa, drain degli eventi e gestione della disconnessione senza abbandonare sessioni parcheggiate.
+- [x] `T05.6` Rivalutare un'allocazione fallita solo a frontiere che consentono rollback esatto. Non ripetere automaticamente richieste con stato parzialmente avanzato.
+- [x] `T05.7` Esporre stato di recupero, conservazione checkpoint e indisponibilità selettiva quando il restore è impedito; distinguere errori device non recuperabili.
 
 **Gate di completamento:** matrice di budget simulati seleziona tutti i piani attesi. Nel caso capiente, zero checkpoint/eviction. Ogni fault iniettato prima/durante/dopo compute termina in stato pronto oppure recuperabile dichiarato, mai in falso successo. Nessuna modifica implicita dei parametri della richiesta.
 
 **Artefatti:** planner C, executor transazionale e test con adapter fittizi più almeno un LLM reale.
 
+**Verifica T05:** `ds4_executor.c/.h`, transazioni runtime e adapter pubblico
+`ds4_engine_reclaim`. Matrice host di budget e fault, cancellazione, recupero e
+device perso durante compute/restore; Qwen27 CUDA con zero eviction, sessione
+parcheggiata e soli pesi scaricati, continuazione bit-exact in tutti e tre i casi.
+Il disconnect è un segnale al callback di cancellazione; il collegamento al
+protocollo HTTP resta T17. Dettagli nel [report T05–T06](../performance/native-suite-t05-t06-20261020/README.md).
+
 ## 10. T06 — Manifest, conversione e loader dei nuovi componenti
 
-**Dipendenze:** T00, T01, T02. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T00, T01, T02. **Priorità:** alta. **Stato:** `DONE` per inventario, conversione e loader dei bundle BF16; nessuna qualifica numerica dei nuovi modelli implicita.
 
-- [ ] `T06.1` Definire bundle che collega encoder, vision/audio, DiT, VAE, tokenizer, processor e scheduler alle revisioni esatte; rifiutare combinazioni incompatibili.
-- [ ] `T06.2` Scegliere il formato nativo per ogni componente. Preferire loader GGUF esistente e conversione offline deterministica; valutare safetensors mmap se evita perdita o complessità, senza obbligare un unico contenitore a tutti.
-- [ ] `T06.3` Implementare mapping dei tensor, shape, stride, dtype, endian/allineamento, scale norm e parametri per layer. Inventario esaustivo: tensor sconosciuti non possono essere ignorati senza una regola motivata.
-- [ ] `T06.4` Per i GGUF Unsloth leggere il tipo effettivo per tensore e preservare il layout misto. Non assumere che Q4_K_M, Q8_0, INT8 ConvRot, AWQ e BnB condividano packing o kernel.
-- [ ] `T06.5` Rendere scaricabile ogni componente/gruppo mantenendo mmap e metadata host validi. Evitare espansione completa dei pesi quantizzati durante l'apertura.
-- [ ] `T06.6` Estendere downloader e discovery con target espliciti, checksum e resume. Scaricare un bundle image/embedding non cambia il modello conversazionale selezionato.
+- [x] `T06.1` Definire bundle che collega encoder, vision/audio, DiT, VAE, tokenizer, processor e scheduler alle revisioni esatte; rifiutare combinazioni incompatibili.
+- [x] `T06.2` Scegliere il formato nativo per ogni componente. Preferire loader GGUF esistente e conversione offline deterministica; valutare safetensors mmap se evita perdita o complessità, senza obbligare un unico contenitore a tutti.
+- [x] `T06.3` Implementare mapping dei tensor, shape, stride, dtype, endian/allineamento, scale norm e parametri per layer. Inventario esaustivo: tensor sconosciuti non possono essere ignorati senza una regola motivata.
+- [x] `T06.4` Per i GGUF Unsloth leggere il tipo effettivo per tensore e preservare il layout misto. Non assumere che Q4_K_M, Q8_0, INT8 ConvRot, AWQ e BnB condividano packing o kernel.
+- [x] `T06.5` Rendere scaricabile ogni componente/gruppo mantenendo mmap e metadata host validi. Evitare espansione completa dei pesi quantizzati durante l'apertura.
+- [x] `T06.6` Estendere downloader e discovery con target espliciti, checksum e resume. Scaricare un bundle image/embedding non cambia il modello conversazionale selezionato.
 
 **Gate di completamento:** dump di tutti i tensor e metadata coincide col manifest; conversione ripetuta produce gli stessi byte dove previsto. Errori di componente/shape/precisione falliscono prima dell'inferenza. I picchi di caricamento rispettano i budget e non nascondono una seconda copia integrale.
 
 **Aree:** `download_model.sh`, `gguf-tools/`, loader/catalogo e nuovi manifest.
+
+**Verifica T06:** 1.285 tensori Qwen Image e 1.376 Gemma, inclusi 480 scalari,
+confrontati dal loader C con il manifest compilato e l'inventario T00. Hash di
+ogni artefatto verificato, apertura mmap bounded, conversione BF16/FP32 ripetuta
+identica e GGUF misti verificati su fixture dei tipi supportati. Il profilo
+Unsloth Q4_K_M è fissato come candidato `NOT_VERIFIED`: pesi assenti e qualifica
+numerica riservata a T20. Binding delle architetture e inferenza restano T07–T16.
+Evidenze e comandi nel [report T05–T06](../performance/native-suite-t05-t06-20261020/README.md).
 
 ## 11. T07 — Primitive numeriche e kernel CUDA comuni
 
@@ -458,4 +473,4 @@ Devono essere dimostrati: generazione/editing/RGBA nativi; embedding nativi dell
 
 La matrice dei backend e delle famiglie deve distinguere il supporto architetturale dalla qualificazione sperimentale. Funzioni richieste sul target di rilascio non possono essere omesse con `NOT_VERIFIED`; hardware aggiuntivo non disponibile resta esplicitamente fuori dalla dichiarazione di qualificazione, senza attribuirgli risultati della 3090.
 
-Aggiornamento di implementazione: T00/T01 completati, runtime T02 verificato su RTX 3090 single GPU; qualifica degli altri backend ancora aperta. Oracle Qwen/Gemma eseguiti esclusivamente in sviluppo, con pesi e sorgenti verificati. Nessun nuovo endpoint image/embedding o kernel modello nativo è ancora abilitato. T03–T22 non sono stati implementati in questa consegna.
+Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. Nessun nuovo endpoint image/embedding o kernel dei nuovi modelli è ancora abilitato: T07–T22 restano pianificati.

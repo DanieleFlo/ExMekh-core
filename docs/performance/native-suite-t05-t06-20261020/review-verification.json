@@ -1,0 +1,891 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-20",
+  "source_parent": "65618064d22919ad2436ded995857baa9b7d4fd8",
+  "scope": "T05/T06 implementation plus clean-code review before the requested commit",
+  "initial_implementation": {
+    "path": "docs/performance/native-suite-t05-t06-20261020/verification.json",
+    "bytes": 50378,
+    "sha256": "60283ec524f6f8044402596e78f32b7a297fa42ee06251d041a4e30d0dc2a896"
+  },
+  "sources": [
+    {
+      "path": ".gitattributes",
+      "bytes": 1485,
+      "sha256": "2aa3eeabeae3d69ef1f72c70716ab76689b39c6b5f7a6a278a95156e3574f7ab"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 2915,
+      "sha256": "f17edadc2ff05baaf9f35cfcbd8a76699da2af758ef6bcd276e9c85bdbbf4c5a"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 68185,
+      "sha256": "52e5549eded85b14e8e04c249b1f493b8a54bec452a475b0b36ce0f04fde27f5"
+    },
+    {
+      "path": "PROJECT_INDEX.md",
+      "bytes": 83724,
+      "sha256": "400fe2f3c4279416be1e19fd149457647e8beddefdea1ab23e05f0afd862a4fe"
+    },
+    {
+      "path": "config/suite-bundles/embeddinggemma-2-bf16.json",
+      "bytes": 7996,
+      "sha256": "178f2f6043f26f13ca2b7c89a0406043344183bfa4c9abcfefea78810e35356c"
+    },
+    {
+      "path": "config/suite-bundles/qwen-image-2.1-turbo-bf16.json",
+      "bytes": 9764,
+      "sha256": "70d46c939eaae830d1663d5c000b6a9a15de8546f107a42d62f1936a8d1905c8"
+    },
+    {
+      "path": "config/suite-bundles/qwen-image-2.1-turbo-dit-q4-k-m.json",
+      "bytes": 8942,
+      "sha256": "cf1f3d408a731f06291c35826af848b9150f5b1e8c64a57c305a4cf33f4c8696"
+    },
+    {
+      "path": "docs/architecture/native-suite-clean-code-review-20261020.md",
+      "bytes": 13784,
+      "sha256": "ff5f0c3df2ffdd7c368796a6f87bdb5f6ea720021fe9cc9b35ee9fa72bb2a0f0"
+    },
+    {
+      "path": "docs/performance/native-suite-t05-t06-20261020/README.md",
+      "bytes": 9805,
+      "sha256": "ce747f854385af5cbef4c795e825e018b3f0ec5638204151e7fadbc5d25f1de8"
+    },
+    {
+      "path": "docs/performance/native-suite-t05-t06-20261020/verification.json",
+      "bytes": 50378,
+      "sha256": "60283ec524f6f8044402596e78f32b7a297fa42ee06251d041a4e30d0dc2a896"
+    },
+    {
+      "path": "docs/roadmaps/native-multimodal-suite-implementation-20261020.md",
+      "bytes": 53365,
+      "sha256": "9a56e26bf69d70397105e55c7ecc474e883849e09fda23c0d64cc081875d7b24"
+    },
+    {
+      "path": "download_model.sh",
+      "bytes": 29118,
+      "sha256": "e9f7bba8780aad4de65d4a8d9d5afd3597df42a27dfe831c893c9c9d9fb15c72"
+    },
+    {
+      "path": "ds4.h",
+      "bytes": 48401,
+      "sha256": "86ef7acfb5b496bd405cbad0df19948401818530ddae0aab47783f28de87769f"
+    },
+    {
+      "path": "ds4_bundle.c",
+      "bytes": 21363,
+      "sha256": "310801729fb3e76e2cfc03b0e8eb6e703d4de90ca15e0b47a1b3580ff46a9f60"
+    },
+    {
+      "path": "ds4_bundle.h",
+      "bytes": 3133,
+      "sha256": "3a60bbdc7ffb82557dd223b9a570c0ab11c51733b720c426204fbdd2676da318"
+    },
+    {
+      "path": "ds4_cuda.cu",
+      "bytes": 1682619,
+      "sha256": "cbc44f06c3dc3f23488d6dace17877d4fcdd92d310764a308a0de8a584593374"
+    },
+    {
+      "path": "ds4_executor.c",
+      "bytes": 15462,
+      "sha256": "40639b078782e936e5d759409da6b8f729789b69ea7575d483153490c11d72ec"
+    },
+    {
+      "path": "ds4_executor.h",
+      "bytes": 3713,
+      "sha256": "fc79430302934ecc34d84f3415882edba3488d1825f91cbe34147a2a4236f411"
+    },
+    {
+      "path": "ds4_gpu.h",
+      "bytes": 159848,
+      "sha256": "7ff020005b42df24587eaa188445c2e8117291e8f2ec20e1a4b807b656a53f20"
+    },
+    {
+      "path": "ds4_lifecycle.inc",
+      "bytes": 23913,
+      "sha256": "a56bb82e9384b87f53b5d2591565e16ba54bec712fbb08f6ab2a63a4ba156941"
+    },
+    {
+      "path": "ds4_resources.c",
+      "bytes": 20139,
+      "sha256": "94a2aecdce73f3bcb3f12b8b9265e1e2b9850fabd7584c0256c93b960c46faf5"
+    },
+    {
+      "path": "ds4_resources.h",
+      "bytes": 5288,
+      "sha256": "fd457b2b6ddc7dd84517bdc4031d07963c7db42e041a5377a39f3f9b30b213d5"
+    },
+    {
+      "path": "ds4_runtime.c",
+      "bytes": 9885,
+      "sha256": "9b8499eddda90e08ca17de0dd10b993d36ed710722bce0e1d7824ab9f7e16c0f"
+    },
+    {
+      "path": "ds4_runtime.h",
+      "bytes": 5170,
+      "sha256": "c421e8b61d0347e8a66faffc8516065c4d6ddc9e4e3e6b1abab0227874e11888"
+    },
+    {
+      "path": "schemas/ds4-suite-bundle-v1.schema.json",
+      "bytes": 1928,
+      "sha256": "9249e2bbed8a51a329511310d87630bf415af52354bb3d0ac14689b925e91a07"
+    },
+    {
+      "path": "tests/test_bundle.c",
+      "bytes": 6619,
+      "sha256": "ef1f4b32f37ae3fce9efef3e9c6dbbe5dc4afd4cd467bf05362611e607bf69f6"
+    },
+    {
+      "path": "tests/test_executor.c",
+      "bytes": 10973,
+      "sha256": "0849b578df87c68d671c01686b78c94b87a26cc4249ca0d720ce2e6603b07ea8"
+    },
+    {
+      "path": "tests/test_executor_cuda.c",
+      "bytes": 5075,
+      "sha256": "0a33a17ca95f586b068decdf8a5b33394f4251233e445ec2e67e48d84432be8c"
+    },
+    {
+      "path": "tests/test_resources.c",
+      "bytes": 12488,
+      "sha256": "acaafb427dd55685ee310a64e67872f2e94d949c36f9f37d53b37bb250c3949b"
+    },
+    {
+      "path": "tests/test_runtime.c",
+      "bytes": 6462,
+      "sha256": "40f2bf5f65a842f7ebc64ecd5a205da0afab44b747d607e1cfd901894192a194"
+    },
+    {
+      "path": "tests/test_suite_bundle.py",
+      "bytes": 14252,
+      "sha256": "e357459936919a867b106eb071ddbdb8eeafeeaf16b7aadfe14e335a00310469"
+    },
+    {
+      "path": "tools/prepare_suite_bundles.py",
+      "bytes": 7587,
+      "sha256": "660cfeb3293f10a473f563eae21a7af026128c45d0c967a92c728c29329be3c6"
+    },
+    {
+      "path": "tools/suite_bundle.py",
+      "bytes": 23267,
+      "sha256": "973e6105ba2174b11ea01be8dd306c863d40129e3c83751e0789ef1b26a27869"
+    }
+  ],
+  "responsibilities": {
+    "resource_registry": "admission/reclaim projection, budgets, reservation scopes/events and accounting",
+    "executor": "operation planning, lifecycle phases, journal, cancellation/recovery and publication",
+    "engine_adapter": "model-specific checkpoint payloads and reclaim estimates behind public API",
+    "bundle_loader": "verified directory, immutable file mappings and weight-group state",
+    "offline_tools": "pinned specification, inventory, conversion, downloads and discovery"
+  },
+  "fixes": [
+    "single admission policy for planner and root reservation",
+    "cancellation at load/save/restore/recovery boundaries and before commit",
+    "scopes pin leases across threads and nested TLS changes; scoped allocations inherit event",
+    "one reverse group-release path shared by normal execution and recovery",
+    "failed group drain/free cannot remain ready or reload prematurely",
+    "reader preserves NOMEM instead of classifying all parse failures INVALID",
+    "shared artifact identity check and one hash per unique discovery file",
+    "early selector/revision/group validation and bounded incremental native index writer",
+    "shared public-header build dependencies; Python imports and formatting"
+  ],
+  "broader_audit": [
+    "CLI/server use opaque engine/session API",
+    "ChatSession private calls on branch/revised are within the declaring class",
+    "legacy engine/server globals and broad responsibilities remain explicit debt"
+  ],
+  "checks": [
+    {
+      "name": "production-build-and-host-regressions",
+      "status": "PASS",
+      "command": "make test-executor test-resources test-runtime test-bundle test-suite-contracts test-product-text tests/test_session_state ds4_server_test test-read-queue test-ssd-cache ds4 ds4-server ds4-bench ds4-eval tests/test_executor_cuda tests/test_lifecycle_cuda tests/test_runtime_cuda tests/test_cuda_ssd_cache tools/probe_suite_baseline -j2",
+      "log": {
+        "path": "performance-results/native-suite-review-t05-t06-20261020/build-final.log",
+        "bytes": 15022,
+        "sha256": "a4f2c9029a4e31f5aa28a65e06dbf676695c8532d9468487b64e2c7c977ec6d0"
+      }
+    },
+    {
+      "name": "final-incremental-build-and-host",
+      "status": "PASS",
+      "command": "make test-executor test-resources test-runtime test-bundle ds4 ds4-server ds4-bench ds4-eval tests/test_executor_cuda tests/test_lifecycle_cuda tests/test_runtime_cuda tools/probe_suite_baseline -j2",
+      "log": {
+        "path": "performance-results/native-suite-review-t05-t06-20261020/build-verified.log",
+        "bytes": 2379,
+        "sha256": "77ea90050cd095a856e5577f8febf945c921b73604527f79b6db2fcb857051b5"
+      }
+    },
+    {
+      "name": "server-and-session-state",
+      "status": "PASS",
+      "command": "./tests/test_session_state && ./ds4_server_test",
+      "logs": [
+        {
+          "path": "performance-results/native-suite-review-t05-t06-20261020/session-state.log",
+          "bytes": 24,
+          "sha256": "eb9a7878f0e059662c87f63a37eec97bb20e70f90775ff38ca2c03526ea663e9"
+        },
+        {
+          "path": "performance-results/native-suite-review-t05-t06-20261020/server.log",
+          "bytes": 574,
+          "sha256": "48575c99abdad7521299bd010c62932e39b8e35690abb4f6b022dbc3e74d1e30"
+        }
+      ]
+    },
+    {
+      "name": "asan-ubsan-leaks",
+      "status": "PASS",
+      "build": "cc -std=c11 -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -I. -pthread",
+      "executions": [
+        {
+          "sources": [
+            "ds4_executor.c",
+            "ds4_resources.c",
+            "ds4_runtime.c",
+            "tests/test_executor.c"
+          ],
+          "command": "ASAN_OPTIONS=detect_leaks=1 ./performance-results/native-suite-review-t05-t06-20261020/executor-asan",
+          "scenarios_including_success": 16
+        },
+        {
+          "sources": [
+            "ds4_bundle.c",
+            "ds4_resources.c",
+            "tests/test_bundle.c"
+          ],
+          "command": "DS4_BUNDLE_TEST_BINARY=./performance-results/native-suite-review-t05-t06-20261020/bundle-asan ASAN_OPTIONS=detect_leaks=1 python3 -m unittest tests.test_suite_bundle -v",
+          "tests": 11
+        },
+        {
+          "sources": [
+            "ds4_resources.c",
+            "ds4_checkpoint.c",
+            "tests/test_resources.c"
+          ],
+          "command": "ASAN_OPTIONS=detect_leaks=1 ./performance-results/native-suite-review-t05-t06-20261020/resources-asan"
+        }
+      ],
+      "logs": [
+        {
+          "path": "performance-results/native-suite-review-t05-t06-20261020/executor-asan.log",
+          "bytes": 96,
+          "sha256": "aa06e6bb2585028aed8617e8bf5e1f006dac675b3eb4e0aadd941e73330f4bbd"
+        },
+        {
+          "path": "performance-results/native-suite-review-t05-t06-20261020/bundle-asan.log",
+          "bytes": 1735,
+          "sha256": "042cb32c92ba5efcbdae00df7ccd262e6010889114cf90a23977e5119e23129b"
+        },
+        {
+          "path": "performance-results/native-suite-review-t05-t06-20261020/resources-asan.log",
+          "bytes": 101,
+          "sha256": "a7fbaf4f7b8576ff1d79210177eb225905057965fc688b8aa6fd7ff2dac026ef"
+        }
+      ]
+    },
+    {
+      "name": "pinned-profiles-regenerated-byte-identically",
+      "status": "PASS",
+      "command": "python3 tools/prepare_suite_bundles.py --root performance-results/native-suite-oracles-20261020/models --output performance-results/native-suite-review-t05-t06-20261020/profiles",
+      "log": {
+        "path": "performance-results/native-suite-review-t05-t06-20261020/profiles.log",
+        "bytes": 134,
+        "sha256": "c060204e7e8fdde9c83223c57405ebbfaf0ee62326b36b215dff8f37ba1ae83b"
+      }
+    },
+    {
+      "name": "python-lint-and-format",
+      "status": "PASS",
+      "commands": [
+        "agent/.venv/bin/ruff check --select E4,E7,E9,F,I tools/suite_bundle.py tools/prepare_suite_bundles.py tests/test_suite_bundle.py",
+        "agent/.venv/bin/ruff format --check tools/suite_bundle.py tools/prepare_suite_bundles.py tests/test_suite_bundle.py"
+      ]
+    }
+  ],
+  "gpu_runs": [
+    {
+      "name": "executor-cuda-final",
+      "command": [
+        "./tests/test_executor_cuda",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "binary_sha256": "0be6001785db34fc6e3cb3f68cc1d2f68e28fa76bfcf48301bec8f03a1a763fc"
+    },
+    {
+      "name": "lifecycle-target",
+      "command": [
+        "./tests/test_lifecycle_cuda",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "binary_sha256": "2322768ff198506c62599c8c589f34980210810f2ce3073fb2910d3e92daae4a"
+    },
+    {
+      "name": "lifecycle-mtp-vision",
+      "command": [
+        "./tests/test_lifecycle_cuda",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+        "gguf/mmproj-Qwen3.8-27B-F16.gguf"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "binary_sha256": "2322768ff198506c62599c8c589f34980210810f2ce3073fb2910d3e92daae4a"
+    },
+    {
+      "name": "cuda-ssd",
+      "command": [
+        "./tests/test_cuda_ssd_cache"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "binary_sha256": "d1b07e52f38004280e911a6263bc2138b93b78a741d34f8bb673bb586e679ea1"
+    },
+    {
+      "name": "baseline-final",
+      "command": [
+        "/usr/bin/python3",
+        "tools/run_suite_baseline.py",
+        "--output",
+        "performance-results/native-suite-review-t05-t06-20261020/baseline-final",
+        "--compare",
+        "performance-results/native-suite-t00-20261020-r2"
+      ],
+      "environment": {},
+      "exit_code": 0,
+      "binary_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f"
+    },
+    {
+      "name": "flash-launcher",
+      "command": [
+        "./ds4-bench",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "performance-results/native-suite-review-final-flash-20261020/prompt.txt",
+        "--ctx-start",
+        "32",
+        "--ctx-max",
+        "32",
+        "--ctx-alloc",
+        "256",
+        "--gen-tokens",
+        "2",
+        "--prefill-chunk",
+        "32",
+        "--repetitions",
+        "1",
+        "--dump-frontier-logits-dir",
+        "performance-results/native-suite-review-t05-t06-20261020/flash-final/launcher",
+        "--csv",
+        "performance-results/native-suite-review-t05-t06-20261020/flash-final/launcher/timing.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+        "DS4_CUDA_QWEN4_KV_RESIDENT": "32768",
+        "DS4_CUDA_QWEN4_EXPERT_POLICY": "stable",
+        "DS4_CUDA_QWEN4_PREFILL_RING": "1",
+        "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+        "DS4_CUDA_QWEN4_PCIE_FRAC": "1",
+        "DS4_CUDA_QWEN4_HYBRID_PREFILL": "0",
+        "DS4_CUDA_QWEN4_DECODE_RANKS": "1",
+        "DS4_CUDA_QWEN4_DECODE_GRAPHS": "1",
+        "DS4_CUDA_QWEN4_KV_DECODE_BATCH": "1",
+        "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS": "1"
+      },
+      "exit_code": 0,
+      "binary_sha256": "1eb5e82ecf878c26e72c39a9560a6c8f884e425f27a17a7fa1033208019ac4d7"
+    },
+    {
+      "name": "flash-streamed-backing",
+      "command": [
+        "./ds4-bench",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "performance-results/native-suite-review-final-flash-20261020/prompt.txt",
+        "--ctx-start",
+        "32",
+        "--ctx-max",
+        "32",
+        "--ctx-alloc",
+        "4096",
+        "--gen-tokens",
+        "2",
+        "--prefill-chunk",
+        "32",
+        "--repetitions",
+        "1",
+        "--dump-frontier-logits-dir",
+        "performance-results/native-suite-review-t05-t06-20261020/flash-final/streamed-backing",
+        "--csv",
+        "performance-results/native-suite-review-t05-t06-20261020/flash-final/streamed-backing/timing.csv"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+        "DS4_CUDA_QWEN4_KV_RESIDENT": "2052",
+        "DS4_CUDA_QWEN4_EXPERT_POLICY": "stable",
+        "DS4_CUDA_QWEN4_PREFILL_RING": "1",
+        "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+        "DS4_CUDA_QWEN4_PCIE_FRAC": "1",
+        "DS4_CUDA_QWEN4_HYBRID_PREFILL": "0",
+        "DS4_CUDA_QWEN4_DECODE_RANKS": "1",
+        "DS4_CUDA_QWEN4_DECODE_GRAPHS": "1",
+        "DS4_CUDA_QWEN4_KV_DECODE_BATCH": "1",
+        "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS": "1"
+      },
+      "exit_code": 0,
+      "binary_sha256": "1eb5e82ecf878c26e72c39a9560a6c8f884e425f27a17a7fa1033208019ac4d7"
+    },
+    {
+      "name": "runtime-cuda",
+      "command": [
+        "./tests/test_runtime_cuda",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf"
+      ],
+      "environment": {
+        "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+        "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+        "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+        "DS4_CUDA_QWEN4_KV_RESIDENT": "2052",
+        "DS4_CUDA_QWEN4_EXPERT_POLICY": "stable",
+        "DS4_CUDA_QWEN4_PREFILL_RING": "1",
+        "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+        "DS4_CUDA_QWEN4_PCIE_FRAC": "1",
+        "DS4_CUDA_QWEN4_HYBRID_PREFILL": "0",
+        "DS4_CUDA_QWEN4_DECODE_RANKS": "1",
+        "DS4_CUDA_QWEN4_DECODE_GRAPHS": "1",
+        "DS4_CUDA_QWEN4_KV_DECODE_BATCH": "1",
+        "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS": "1"
+      },
+      "exit_code": 0,
+      "binary_sha256": "9df4a554cdb1ef2b1426d488da2bda0750557988df4cdf1de9c900b812a20661"
+    }
+  ],
+  "qwen_baseline_comparison": [
+    {
+      "case": "text",
+      "command": [
+        "tools/probe_suite_baseline",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "-",
+        "-",
+        "tests/vision-fixtures/glm53/spatial.png",
+        "performance-results/native-suite-review-t05-t06-20261020/baseline-final/text"
+      ],
+      "exit_code": 0,
+      "files": [
+        {
+          "path": "logits.f32",
+          "bytes": 8939520,
+          "sha256": "e8f94dece964f807484799b079423f4e686331d6fda181a5a1e9337817f5459f",
+          "finite": true,
+          "bit_exact": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 131,
+          "sha256": "d78fdeb13643a406300bad57c45183bc3b1393ae3246e5b84719da20652c6b28"
+        },
+        {
+          "path": "session.payload",
+          "bytes": 161556612,
+          "sha256": "4865f5899d6d621dbcc5d091e9bfcc0bfbd7d5eed8de508f22821c8212210731",
+          "bit_exact": true
+        },
+        {
+          "path": "stderr.log",
+          "bytes": 714,
+          "sha256": "47ce0a597e339cd836cbe6acbcfe9b188933f2f7bd1cb9fae735ba016c72c656"
+        }
+      ]
+    },
+    {
+      "case": "text-mtp",
+      "command": [
+        "tools/probe_suite_baseline",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+        "-",
+        "tests/vision-fixtures/glm53/spatial.png",
+        "performance-results/native-suite-review-t05-t06-20261020/baseline-final/text-mtp"
+      ],
+      "exit_code": 0,
+      "files": [
+        {
+          "path": "logits.f32",
+          "bytes": 8939520,
+          "sha256": "e8f94dece964f807484799b079423f4e686331d6fda181a5a1e9337817f5459f",
+          "finite": true,
+          "bit_exact": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 130,
+          "sha256": "0b8ef57e86bc1cc72be7ac005cc276d8dcc3df96194f5cd3a4993629cdfd57c3"
+        },
+        {
+          "path": "session.payload",
+          "bytes": 162676868,
+          "sha256": "f07a8d365c0ded9a1bb324f48370ee5750bfdc748c75d19c62ca49d081851a5a",
+          "bit_exact": true
+        },
+        {
+          "path": "stderr.log",
+          "bytes": 979,
+          "sha256": "3693aa8628eeb37a5e1e33593314f9893bd817cf55df2bcc73af4f0b218cad5b"
+        }
+      ]
+    },
+    {
+      "case": "vision",
+      "command": [
+        "tools/probe_suite_baseline",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "-",
+        "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+        "tests/vision-fixtures/glm53/spatial.png",
+        "performance-results/native-suite-review-t05-t06-20261020/baseline-final/vision"
+      ],
+      "exit_code": 0,
+      "files": [
+        {
+          "path": "logits.f32",
+          "bytes": 8939520,
+          "sha256": "9beb382fce11f31c46c10171afbaf6e70237dcfbcb44a5511e260305360284f7",
+          "finite": true,
+          "bit_exact": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 134,
+          "sha256": "981dd671fc855eb940f3f4e28c7c79229193b200babdcd156bed776788c80b74"
+        },
+        {
+          "path": "session.payload",
+          "bytes": 263412216,
+          "sha256": "f0533ab34b50fe14d821e074cd7bd8aeddb837a09010d916d9169bf8a686353f",
+          "bit_exact": true
+        },
+        {
+          "path": "stderr.log",
+          "bytes": 756,
+          "sha256": "06eb6a86f3af9eab458d3c455b33d319bcdb96315c85211ef45f0a2334a6499d"
+        }
+      ]
+    },
+    {
+      "case": "vision-mtp",
+      "command": [
+        "tools/probe_suite_baseline",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+        "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+        "tests/vision-fixtures/glm53/spatial.png",
+        "performance-results/native-suite-review-t05-t06-20261020/baseline-final/vision-mtp"
+      ],
+      "exit_code": 0,
+      "files": [
+        {
+          "path": "logits.f32",
+          "bytes": 8939520,
+          "sha256": "9beb382fce11f31c46c10171afbaf6e70237dcfbcb44a5511e260305360284f7",
+          "finite": true,
+          "bit_exact": true
+        },
+        {
+          "path": "result.json",
+          "bytes": 133,
+          "sha256": "4a89a6ac4d648248b413587236ad462c2cd134d07a8628d8029141cd5e4c7acf"
+        },
+        {
+          "path": "session.payload",
+          "bytes": 270897656,
+          "sha256": "777c043132849ddca27f51a670ce19f302a4c7c50ee27186b71be57cddbcbcee",
+          "bit_exact": true
+        },
+        {
+          "path": "stderr.log",
+          "bytes": 1021,
+          "sha256": "f627ff4f34d76f9feee0da07bb14ab89ac98c3473eacbeff673d0cd5bb39371c"
+        }
+      ]
+    }
+  ],
+  "flash_comparison": [
+    {
+      "profile": "launcher",
+      "files": [
+        {
+          "name": "frontier_000032.decode.json",
+          "sha256": "b68feb52b83ba86825008797ac3ce3c380b97707bfa8bbbdaf8348b5338d4739"
+        },
+        {
+          "name": "frontier_000032.logits.json",
+          "sha256": "3067e2d3f6687c51bba714b3508eb7e61c7b96ced3eb87aad9f624bbd0bc0f1f"
+        }
+      ],
+      "baseline": {
+        "profile": "launcher",
+        "build": "baseline",
+        "command": [
+          "/home/daniele/ds4/performance-results/native-suite-t00-20261020/binaries/ds4-bench",
+          "--cuda",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--prompt-file",
+          "performance-results/native-suite-review-final-flash-20261020/prompt.txt",
+          "--ctx-start",
+          "32",
+          "--ctx-max",
+          "32",
+          "--ctx-alloc",
+          "256",
+          "--gen-tokens",
+          "2",
+          "--prefill-chunk",
+          "32",
+          "--repetitions",
+          "1",
+          "--dump-frontier-logits-dir",
+          "performance-results/native-suite-t03-t04-20261020/flash-final/launcher-baseline",
+          "--csv",
+          "performance-results/native-suite-t03-t04-20261020/flash-final/launcher-baseline/timing.csv"
+        ],
+        "environment": {
+          "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+          "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+          "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+          "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+          "DS4_CUDA_QWEN4_KV_RESIDENT": "32768",
+          "DS4_CUDA_QWEN4_EXPERT_POLICY": "stable",
+          "DS4_CUDA_QWEN4_PREFILL_RING": "1",
+          "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+          "DS4_CUDA_QWEN4_PCIE_FRAC": "1",
+          "DS4_CUDA_QWEN4_HYBRID_PREFILL": "0",
+          "DS4_CUDA_QWEN4_DECODE_RANKS": "1",
+          "DS4_CUDA_QWEN4_DECODE_GRAPHS": "1",
+          "DS4_CUDA_QWEN4_KV_DECODE_BATCH": "1",
+          "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS": "1"
+        },
+        "exit_code": 0,
+        "binary_sha256": "7a1f980077572dacd007e481154a9fa80dffc994be5f151e5c4781a564ef1d1c",
+        "files": [
+          {
+            "name": "frontier_000032.decode.json",
+            "sha256": "b68feb52b83ba86825008797ac3ce3c380b97707bfa8bbbdaf8348b5338d4739"
+          },
+          {
+            "name": "frontier_000032.logits.json",
+            "sha256": "3067e2d3f6687c51bba714b3508eb7e61c7b96ced3eb87aad9f624bbd0bc0f1f"
+          }
+        ]
+      },
+      "bit_exact": true
+    },
+    {
+      "profile": "streamed-backing",
+      "files": [
+        {
+          "name": "frontier_000032.decode.json",
+          "sha256": "188d6bb36ff66ecc897a8f6086de625591f61cafc5ba02f19c3715996e442fb1"
+        },
+        {
+          "name": "frontier_000032.logits.json",
+          "sha256": "18da21588704d321ec1c8251d1c16f5157154abb47cad9d593e1ae12f6f38f6b"
+        }
+      ],
+      "baseline": {
+        "profile": "streamed-backing",
+        "build": "baseline",
+        "command": [
+          "/home/daniele/ds4/performance-results/native-suite-t00-20261020/binaries/ds4-bench",
+          "--cuda",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--prompt-file",
+          "performance-results/native-suite-review-final-flash-20261020/prompt.txt",
+          "--ctx-start",
+          "32",
+          "--ctx-max",
+          "32",
+          "--ctx-alloc",
+          "4096",
+          "--gen-tokens",
+          "2",
+          "--prefill-chunk",
+          "32",
+          "--repetitions",
+          "1",
+          "--dump-frontier-logits-dir",
+          "performance-results/native-suite-t03-t04-20261020/flash-final/streamed-backing-baseline",
+          "--csv",
+          "performance-results/native-suite-t03-t04-20261020/flash-final/streamed-backing-baseline/timing.csv"
+        ],
+        "environment": {
+          "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+          "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+          "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+          "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+          "DS4_CUDA_QWEN4_KV_RESIDENT": "2052",
+          "DS4_CUDA_QWEN4_EXPERT_POLICY": "stable",
+          "DS4_CUDA_QWEN4_PREFILL_RING": "1",
+          "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+          "DS4_CUDA_QWEN4_PCIE_FRAC": "1",
+          "DS4_CUDA_QWEN4_HYBRID_PREFILL": "0",
+          "DS4_CUDA_QWEN4_DECODE_RANKS": "1",
+          "DS4_CUDA_QWEN4_DECODE_GRAPHS": "1",
+          "DS4_CUDA_QWEN4_KV_DECODE_BATCH": "1",
+          "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS": "1"
+        },
+        "exit_code": 0,
+        "binary_sha256": "7a1f980077572dacd007e481154a9fa80dffc994be5f151e5c4781a564ef1d1c",
+        "files": [
+          {
+            "name": "frontier_000032.decode.json",
+            "sha256": "188d6bb36ff66ecc897a8f6086de625591f61cafc5ba02f19c3715996e442fb1"
+          },
+          {
+            "name": "frontier_000032.logits.json",
+            "sha256": "18da21588704d321ec1c8251d1c16f5157154abb47cad9d593e1ae12f6f38f6b"
+          }
+        ]
+      },
+      "bit_exact": true
+    }
+  ],
+  "bundle_inventories": [
+    {
+      "profile": "qwen-image-2.1-turbo-bf16",
+      "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "status": "PASS",
+      "artifacts": 16,
+      "artifact_bytes": 32451607098,
+      "components": 3,
+      "tensors": 1285,
+      "scalar_tensors": 0,
+      "native_index_sha256": "8fdbe2b02a80483ebd90db73a96517762cf75b8dd709b77be3c8253066117969",
+      "manifest_sha256": "55c96b79289d7081299507c3a6597abe837f817a0d1f9b08894a37080405e617",
+      "native_dump_sha256": "1a0164bce8820359bc0a061f991ce3a2906215f9d9afc99f85412121c514ffa3",
+      "compared_to": "docs/performance/native-suite-t00-20261020/tensors.json"
+    },
+    {
+      "profile": "embeddinggemma-2-bf16",
+      "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+      "status": "PASS",
+      "artifacts": 12,
+      "artifact_bytes": 1525786076,
+      "components": 5,
+      "tensors": 1376,
+      "scalar_tensors": 480,
+      "native_index_sha256": "99429e21c2c26885bde829e215025a93867e71477479f73fbdd2a6994cc47207",
+      "manifest_sha256": "7bc9c35b36b298435e37fb18b8dfe4b89ff9f42e88320cc87ee9e02a6a7d227f",
+      "native_dump_sha256": "081e961bfd362bc09a490ca2d699200fb182a84654229ce8d701181bb7b0e517",
+      "compared_to": "docs/performance/native-suite-t00-20261020/tensors.json"
+    }
+  ],
+  "bundle_open_memory": [
+    {
+      "bundle": "gemma",
+      "max_rss_kib": 2304,
+      "elapsed": "0:03.81",
+      "scope": "native hash verification, mmap open, dump and close; no inference",
+      "log": {
+        "path": "performance-results/native-suite-review-t05-t06-20261020/gemma-native-memory.log",
+        "bytes": 888,
+        "sha256": "2c8f910a30a9ace441087e13dd4a9cdbd22e389f360dc2ee59f374465068e7c4"
+      }
+    },
+    {
+      "bundle": "qwen-image",
+      "max_rss_kib": 2240,
+      "elapsed": "1:21.57",
+      "scope": "native hash verification, mmap open, dump and close; no inference",
+      "log": {
+        "path": "performance-results/native-suite-review-t05-t06-20261020/qwen-image-native-memory.log",
+        "bytes": 894,
+        "sha256": "47f68130af61dd949dd7ed6a4f560ed9ca2a219a5c1376c191f29ef9b5596849"
+      }
+    }
+  ],
+  "verification_scripts": [
+    {
+      "path": "performance-results/native-suite-review-t05-t06-20261020/run_final.py",
+      "bytes": 2427,
+      "sha256": "4252e95b3941494de6b9784dfb8d1a36eb1bc715a47a191fc0c0564ec1c88eab"
+    },
+    {
+      "path": "performance-results/native-suite-review-t05-t06-20261020/verify_inventories.py",
+      "bytes": 2822,
+      "sha256": "3cef35e8ff942dbb8fe74aa109bbfd1b71c3c1f7a26aaae53504a672a9792736"
+    },
+    {
+      "path": "performance-results/native-suite-review-t05-t06-20261020/capture_review.py",
+      "bytes": 8299,
+      "sha256": "0c9d089a80aa58e769890a3540884a52bcd97c6c0dd2341717fd820b266c831c"
+    }
+  ],
+  "final_binaries": [
+    {
+      "path": "ds4",
+      "bytes": 67600552,
+      "sha256": "feca535ba2d51d6c4249da8a25a97560c30b482e249964229c295f42e2a0cc80"
+    },
+    {
+      "path": "ds4-server",
+      "bytes": 69864000,
+      "sha256": "4bf106aa4cf9583759d875d000c18090ed881a8622bcb91915750648781e21f9"
+    },
+    {
+      "path": "ds4-bench",
+      "bytes": 67336384,
+      "sha256": "1eb5e82ecf878c26e72c39a9560a6c8f884e425f27a17a7fa1033208019ac4d7"
+    },
+    {
+      "path": "ds4-eval",
+      "bytes": 67671480,
+      "sha256": "ffca68b14e887bdcd43841d1ac3652b3c0a5e75c7445acec3c1644dffcf476d0"
+    },
+    {
+      "path": "tests/test_executor_cuda",
+      "bytes": 67080752,
+      "sha256": "0be6001785db34fc6e3cb3f68cc1d2f68e28fa76bfcf48301bec8f03a1a763fc"
+    },
+    {
+      "path": "tests/test_bundle",
+      "bytes": 157960,
+      "sha256": "5c6d350d479fb6e46097a8c5f0e682b97ab6b602d4ba63089ae06f1ac4f8b75e"
+    }
+  ],
+  "not_verified": [
+    "Metal",
+    "ROCm",
+    "distributed",
+    "other model lifecycle adapters",
+    "Qwen Image/Gemma native inference and HTTP routing (later tasks)",
+    "Unsloth GGUF candidate payload and numerical qualification"
+  ],
+  "performance_claim": null,
+  "remaining_debt": [
+    "monolithic engine/server",
+    "legacy global context bridge",
+    "incomplete host accounting and backend qualification"
+  ]
+}

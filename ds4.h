@@ -9,6 +9,7 @@
 #include "ds4_ssd.h"
 #include "ds4_runtime.h"
 #include "ds4_resources.h"
+#include "ds4_executor.h"
 
 /* Public engine boundary.
  *
@@ -355,6 +356,14 @@ ds4_status ds4_session_checkpoint_restore(ds4_session *, const ds4_session_check
         void *metadata, size_t *metadata_bytes);
 ds4_status ds4_session_park(ds4_session *, const char *directory);
 ds4_status ds4_session_resume(ds4_session *);
+typedef struct ds4_engine_reclaim ds4_engine_reclaim;
+/* Snapshot reclaim estimates for an operation. Keep engine and sessions alive
+ * until the execution and this adapter are closed. Costs default to transferred
+ * bytes; callers may copy descriptors and supply measured costs to the planner. */
+ds4_status ds4_engine_reclaim_create(ds4_engine_reclaim **, ds4_engine *, const char *directory);
+const ds4_execution_victim *ds4_engine_reclaim_victims(const ds4_engine_reclaim *, size_t *count);
+const char *ds4_engine_reclaim_checkpoint(const ds4_engine_reclaim *, size_t index);
+ds4_status ds4_engine_reclaim_close(ds4_engine_reclaim *);
 bool ds4_engine_has_vision(ds4_engine *e);
 /* Serial with session work on this engine. Qwen27 temporarily stages each
  * live session's full payload, releases its graph, encodes to host embeddings,
