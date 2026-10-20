@@ -529,7 +529,91 @@ static void test_glm_spec_rollback(void) {
 }
 #endif
 
+static void test_lifecycle_artifact_identity(void) {
+    FILE *file = tmpfile();
+    uint8_t data[64] = {1};
+    assert(file && fwrite(data, 1, sizeof(data), file) == sizeof(data) && !fflush(file));
+    ds4_engine engine = {0};
+    engine.model.fd = fileno(file);
+    engine.model.size = sizeof(data);
+    engine.model.tensor_data_pos = 32;
+    engine.model.map = mmap(NULL, sizeof(data), PROT_READ, MAP_SHARED, fileno(file), 0);
+    assert(engine.model.map != MAP_FAILED && lifecycle_identity(&engine));
+    uint8_t original[32]; memcpy(original, engine.lifecycle_identity, sizeof(original));
+    assert(lifecycle_identity(&engine));
+    /* Only the weight body changes. The opened-file identity must catch it
+     * without rescanning the entire artifact or mutating any live session. */
+    uint8_t changed = 7;
+    assert(pwrite(fileno(file), &changed, 1, 50) == 1);
+    struct timespec times[2] = {{1000000, 1}, {1000000, 2}};
+    assert(!futimens(fileno(file), times));
+    assert(!lifecycle_identity(&engine));
+    assert(!memcmp(original, engine.lifecycle_identity, sizeof(original)));
+    engine.lifecycle_identity_ready = false;
+    assert(lifecycle_identity(&engine));
+    assert(memcmp(original, engine.lifecycle_identity, sizeof(original)));
+    assert(!munmap((void *)engine.model.map, sizeof(data)) && !fclose(file));
+}
+
+static void test_lifecycle_reentrant_mutation(void) {
+    ds4_runtime *runtime = NULL;
+    ds4_engine engine = {0}; ds4_session session = {.engine=&engine};
+    ds4_runtime_descriptor descriptor = {DS4_SUITE_ABI, "fixture", "v1", "f32", "target",
+        DS4_OPERATION_CHAT, DS4_MODALITY_TEXT, 128, 0};
+    assert(!ds4_runtime_create(&runtime, NULL, NULL));
+    assert(!ds4_runtime_model_create(runtime, &descriptor, NULL, NULL, &engine.runtime_model));
+    ds4_runtime_scope running = {0};
+    assert(!ds4_runtime_model_enter(engine.runtime_model, &running));
+    ds4_session_checkpoint *checkpoint = (void *)1;
+    assert(ds4_session_checkpoint_capture(&session, "/tmp", NULL, 0, &checkpoint) == DS4_STATUS_BUSY && !checkpoint);
+    assert(ds4_session_park(&session, "/tmp") == DS4_STATUS_BUSY);
+    assert(ds4_session_resume(&session) == DS4_STATUS_BUSY);
+    assert(ds4_session_trim(&session) == DS4_STATUS_BUSY);
+    assert(ds4_engine_weights_release(&engine) == DS4_STATUS_BUSY);
+    assert(ds4_engine_weights_load(&engine) == DS4_STATUS_BUSY);
+    ds4_session_memory memory;
+    assert(!ds4_session_memory_query(&session, &memory));
+    ds4_runtime_scope_leave(&running);
+    assert(!ds4_runtime_model_close(engine.runtime_model));
+    ds4_runtime_release(runtime);
+}
+
+static void test_lifecycle_invalid_arguments(void) {
+    ds4_engine engine = {0};
+    ds4_session session = {.engine=&engine};
+    ds4_session_checkpoint *checkpoint = (void *)1;
+    assert(ds4_engine_weights_release(NULL) == DS4_STATUS_INVALID);
+    assert(ds4_engine_weights_load(NULL) == DS4_STATUS_INVALID);
+    assert(!ds4_session_pos(NULL) && !ds4_session_ctx(NULL) && !ds4_session_prefill_cap(NULL));
+    assert(ds4_session_park(&session, NULL) == DS4_STATUS_INVALID);
+    assert(ds4_session_park(&session, "") == DS4_STATUS_INVALID);
+    assert(ds4_session_checkpoint_capture(&session, "", NULL, 0, &checkpoint) == DS4_STATUS_INVALID && !checkpoint);
+}
+
+static void test_invalidate_parked_checkpoint(void) {
+    char path[] = "/tmp/ds4-invalidate-XXXXXX";
+    int fd = mkstemp(path);
+    assert(fd >= 0 && !close(fd));
+    ds4_engine engine = {0};
+    ds4_session session = {.engine=&engine, .lifecycle_parked=true, .checkpoint_valid=true};
+    session.checkpoint.len = 9;
+    session.parked_checkpoint = calloc(1, sizeof(*session.parked_checkpoint));
+    assert(session.parked_checkpoint);
+    session.parked_checkpoint->file.path = strdup(path);
+    assert(session.parked_checkpoint->file.path);
+    float logits = 1;
+    assert(ds4_session_set_logits(&session, &logits, (int)DS4_N_VOCAB));
+    ds4_session_invalidate(&session);
+    assert(!session.checkpoint_valid && !session.checkpoint.len);
+    assert(session.lifecycle_parked && !session.parked_checkpoint && access(path, F_OK));
+    ds4_session_invalidate(&session);
+}
+
 int main(void) {
+    test_lifecycle_invalid_arguments();
+    test_invalidate_parked_checkpoint();
+    test_lifecycle_reentrant_mutation();
+    test_lifecycle_artifact_identity();
     test_vision_prefix();
     test_vision_fingerprint_prefix();
     test_rewind();

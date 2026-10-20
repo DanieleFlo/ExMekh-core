@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00 e T01 sono `DONE`; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03–T22 restano `PLANNED`. Evidenze e limiti nel [report T00–T02](../performance/native-suite-t00-20261020/README.md).
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00 e T01 sono `DONE`; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T05–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md) e [T03–T04](../performance/native-suite-t03-t04-20261020/README.md).
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -96,14 +96,16 @@ Il bridge legacy consente un solo GGUF LLM per runtime; i componenti nativi usan
 
 ## 7. T03 — Registro risorse e accounting su GPU, RAM e SSD
 
-**Dipendenze:** T02. **Priorità:** bloccante. **Stato:** `PLANNED`.
+**Dipendenze:** T02. **Priorità:** bloccante. **Stato:** `IN_PROGRESS` — API C e accounting CUDA implementati; inventario automatico RAM legacy e qualifica degli altri backend aperti.
 
-- [ ] `T03.1` Registrare byte richiesti/allocati/vivi, proprietario, collocazione, formato, refcount, ultimo evento GPU e possibilità di rilascio per ogni risorsa.
+- [x] `T03.1` Registrare byte richiesti/allocati/vivi, proprietario, collocazione, formato, refcount, ultimo evento GPU e possibilità di rilascio per ogni risorsa.
 - [ ] `T03.2` Separare storage mmap, RAM residente, RAM anonima e pinned. Rappresentare una copia autorevole senza contare due volte storage condiviso e view.
-- [ ] `T03.3` Aggiungere prenotazioni per working set, copie in volo, doppio staging e conversioni. Una copia asincrona consuma il budget prima del suo completamento.
-- [ ] `T03.4` Esporre stime e contatori delle sessioni: capacità allocata, payload salvabile, scratch e cache MTP/ricorrenti. Non usare soltanto il numero di token.
-- [ ] `T03.5` Definire budget host/device dinamici, margine, limiti pinned e spazio checkpoint; riconciliare contabilità posseduta e memoria globale senza sommarle impropriamente.
-- [ ] `T03.6` Implementare rilascio selettivo e trimming delle cache ricostruibili tramite il proprietario, senza reset globale del backend.
+- [x] `T03.3` Aggiungere prenotazioni per working set, copie in volo, doppio staging e conversioni. Una copia asincrona consuma il budget prima del suo completamento.
+- [x] `T03.4` Esporre stime e contatori delle sessioni: capacità allocata, payload salvabile, scratch e cache MTP/ricorrenti. Non usare soltanto il numero di token.
+- [x] `T03.5` Definire budget host/device dinamici, margine, limiti pinned e spazio checkpoint; riconciliare contabilità posseduta e memoria globale senza sommarle impropriamente.
+- [x] `T03.6` Implementare rilascio selettivo e trimming delle cache ricostruibili tramite il proprietario, senza reset globale del backend.
+
+Registro in `ds4_resources.c/.h`, binding CUDA in `ds4_cuda_accounting.cuh` e query Qwen27 in `ds4_lifecycle.inc`. Le view trattengono lo storage CUDA reale; prenotazioni e cancellazione con eventi hanno test concorrenti host. Storage mmap e pinned sono tracciati, RAM anonima/residente legacy resta esplicitamente ignota (`host_known=false`): T03.2 non è chiuso. La capacità virtuale managed ha un ledger separato dalla VRAM fisica. Driver/cuBLAS/MMQ restano nel campione globale, non vengono inventati come zero. [Contratti, test e limiti](../performance/native-suite-t03-t04-20261020/README.md).
 
 **Gate di completamento:** allocazioni e rilasci tracciati si bilanciano per proprietario; le view non raddoppiano i byte. Reservazioni impediscono oversubscription nei test concorrenti host; cancellare un prefetch restituisce tutti i budget. Le stime espongono chiaramente componenti ignote invece di assumere zero.
 
@@ -111,15 +113,17 @@ Il bridge legacy consente un solo GGUF LLM per runtime; i componenti nativi usan
 
 ## 8. T04 — Generalizzare sospensione, checkpoint e rilascio pesi
 
-**Dipendenze:** T02, T03. **Priorità:** bloccante. **Stato:** `PLANNED`.
+**Dipendenze:** T02, T03. **Priorità:** bloccante. **Stato:** `IN_PROGRESS` — adapter Qwen27 CUDA e gate locali implementati; altre famiglie, MTP embedded e backend restano esclusi dalle nuove API.
 
-- [ ] `T04.1` Adattare il meccanismo Qwen27 vision a operazioni lifecycle comuni, preservando identità sessione, callback e modalità MTP.
-- [ ] `T04.2` Separare rilascio scratch, parcheggio dello stato e rilascio pesi. Supportare anche pesi scaricati con stato sessione mantenuto in GPU, quando richiesto dal piano.
-- [ ] `T04.3` Inventariare gli adapter delle famiglie LLM correnti, inclusi Qwen27, Flash Next/Mini, DeepSeek e GLM: stato completo, risorse condivise e vincoli TP/SSD. Dichiarare la matrice effettivamente qualificata.
+- [x] `T04.1` Adattare il meccanismo Qwen27 vision a operazioni lifecycle comuni, preservando identità sessione, callback e modalità MTP.
+- [x] `T04.2` Separare rilascio scratch, parcheggio dello stato e rilascio pesi. Supportare anche pesi scaricati con stato sessione mantenuto in GPU, quando richiesto dal piano.
+- [x] `T04.3` Inventariare gli adapter delle famiglie LLM correnti, inclusi Qwen27, Flash Next/Mini, DeepSeek e GLM: stato completo, risorse condivise e vincoli TP/SSD. Dichiarare la matrice effettivamente qualificata.
 - [ ] `T04.4` Conservare payload KV, stato ricorrente/conv, MTP/DSpark pertinenti, logits/hidden pendenti, identità immagini e mRoPE. Integrare anche RNG/sampler e metadata request/context posseduti dal server.
-- [ ] `T04.5` Validare fingerprint del modello, ABI, checksum, dimensioni e configurazione prima di mutare una sessione. Mantenere la compatibilità delle cache esistenti oppure introdurre una versione esplicita con rifiuto chiaro.
-- [ ] `T04.6` Completare il checkpoint prima di distruggere la copia autorevole; conservare il file finché il restore non è validato. Gestire checkpoint multipli e restore parziale senza perdere quelli ancora necessari.
+- [x] `T04.5` Validare fingerprint del modello, ABI, checksum, dimensioni e configurazione prima di mutare una sessione. Mantenere la compatibilità delle cache esistenti oppure introdurre una versione esplicita con rifiuto chiaro.
+- [x] `T04.6` Completare il checkpoint prima di distruggere la copia autorevole; conservare il file finché il restore non è validato. Gestire checkpoint multipli e restore parziale senza perdere quelli ancora necessari.
 - [ ] `T04.7` Invalidare o ricatturare grafi che contengono indirizzi GPU dei pesi ricaricati. Testare target-only, MTP esterno/embedded e stati multimodali pertinenti.
+
+Le API `trim`, `park/resume`, `weights_release/load` e checkpoint espliciti sono separate. L'envelope lifecycle v1 conserva il fingerprint di directory GGUF/identità dei file aperti, configurazione e checksum; il payload legacy non cambia. Il restore valida un grafo candidato prima del commit, mantiene l'oggetto sessione e conserva i checkpoint dopo gli errori. I gate Qwen27 target-only e MTP esterno/multimodale verificano continuazione bit-exact, più sessioni, corruzione, OOM e budget SSD insufficiente. T04.4 resta aperto per DSpark/altre famiglie e integrazione server transazionale; T04.7 per il MTP embedded e le altre piattaforme. [Inventario ed evidenze](../performance/native-suite-t03-t04-20261020/README.md).
 
 **Gate di completamento:** per ogni famiglia qualificata, continuazione deterministica bit-exact dopo parcheggio sessioni, reload pesi e combinazione delle due operazioni, sul medesimo percorso numerico. Corruzione o spazio SSD insufficiente non distruggono lo stato vivo. Checkpoint conservati dopo restore fallito; nessun callback punta a oggetti liberati.
 

@@ -1,7 +1,7 @@
 CC ?= cc
 UNAME_S := $(shell uname -s)
 
-CPU_SUPPORT_OBJS = ds4_runtime.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o
+CPU_SUPPORT_OBJS = ds4_runtime.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o
 CPU_CORE_OBJS = ds4_cpu.o $(CPU_SUPPORT_OBJS)
 
 ifeq ($(UNAME_S),Darwin)
@@ -29,7 +29,7 @@ DS4_DSPARK_SUPPORT ?= gguf/DeepSeek-V4-Flash-DSpark-support-0731.gguf
 
 ifeq ($(UNAME_S),Darwin)
 METAL_LDLIBS := $(LDLIBS) -framework Foundation -framework Metal
-CORE_OBJS = ds4.o ds4_runtime.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o
+CORE_OBJS = ds4.o ds4_runtime.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o
 else
 CFLAGS += -D_GNU_SOURCE -fno-finite-math-only
 CUDA_HOME ?= $(shell if [ -x /usr/local/cuda/bin/nvcc ]; then \
@@ -58,8 +58,8 @@ MMQ_INCLUDES := -Icuda/mmq
 MMQ_OBJS := cuda/mmq/ds4_ggml_stubs.o cuda/mmq/ds4_mmq.o cuda/mmq/ds4_mmq_d2r.o cuda/mmq/quantize.o cuda/mmq/mmid.o cuda/mmq/mmvq.o cuda/mmq/ds4_repack.o
 # Standalone CUDA test links use this object group as well as production links.
 # Build AVX2 host arithmetic with the C compiler, not nvcc's intrinsic parser.
-MMQ_OBJS += ds4_qwen4_cpu.o
-CORE_OBJS = ds4.o ds4_runtime.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_cuda.o ds4_layer_pack.o ds4_engram.o $(MMQ_OBJS)
+MMQ_OBJS += ds4_qwen4_cpu.o ds4_resources.o
+CORE_OBJS = ds4.o ds4_runtime.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_cuda.o ds4_layer_pack.o ds4_engram.o $(MMQ_OBJS)
 CUDA_LDLIBS ?= -lm -Xcompiler -pthread -L$(CUDA_HOME)/targets/sbsa-linux/lib -L$(CUDA_HOME)/lib64 -lcudart -lcublas
 HIPCC ?= $(shell command -v hipcc 2>/dev/null || echo /opt/rocm/bin/hipcc)
 ROCM_ARCH ?= gfx1151
@@ -326,7 +326,7 @@ cuda:
 
 strix-halo:
 	$(MAKE) -B ds4 ds4-server ds4-bench ds4-eval \
-		CORE_OBJS="ds4.o ds4_runtime.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_rocm.o ds4_rocm_compat.o ds4_rocm_unavailable.o ds4_layer_pack.o $(ROCM_MMQ_OBJS)" \
+		CORE_OBJS="ds4.o ds4_runtime.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_rocm.o ds4_rocm_compat.o ds4_rocm_unavailable.o ds4_layer_pack.o $(ROCM_MMQ_OBJS)" \
 		CFLAGS="$(CFLAGS) $(ROCM_HOST_CFLAGS) -DDS4_ROCM_BUILD" \
 		DS4_LINK="$(HIPCC) $(ROCM_CFLAGS)" \
 		DS4_LINK_LIBS="$(ROCM_LDLIBS)"
@@ -342,7 +342,7 @@ test-rocm:
 		test-session-state \
 		tests/test_layer_pack tests/test_engine_mgpu_placement tests/test_gpu_args tests/test_prompt_prefix \
 		ds4 ds4-server ds4-bench \
-		CORE_OBJS="ds4.o ds4_runtime.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_rocm.o ds4_rocm_compat.o ds4_rocm_unavailable.o ds4_layer_pack.o $(ROCM_MMQ_OBJS)" \
+		CORE_OBJS="ds4.o ds4_runtime.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_rocm.o ds4_rocm_compat.o ds4_rocm_unavailable.o ds4_layer_pack.o $(ROCM_MMQ_OBJS)" \
 		CFLAGS="$(CFLAGS) $(ROCM_HOST_CFLAGS) -DDS4_ROCM_BUILD" \
 		DS4_LINK="$(HIPCC) $(ROCM_CFLAGS)" \
 		DS4_LINK_LIBS="$(ROCM_LDLIBS)"
@@ -570,7 +570,7 @@ docs-index: research-index
 docs-check: docs-index
 	python3 -m unittest tests.test_research_corpus tests.test_docs_wiki -v
 
-ds4.o: ds4.c ds4.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_qwen.h ds4_env.h ds4_qwen4_runtime.h ds4_gpu_tp.h ds4_deepseek41_gpu.h ds4_linux_memory.h ds4_engram.h ds4_read_queue.h
+ds4.o: ds4.c ds4.h ds4_lifecycle.inc ds4_lifecycle_text.h ds4_checkpoint.h ds4_sha256.h ds4_resources.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_qwen.h ds4_env.h ds4_qwen4_runtime.h ds4_gpu_tp.h ds4_deepseek41_gpu.h ds4_linux_memory.h ds4_engram.h ds4_read_queue.h
 	$(CC) $(CFLAGS) -c -o $@ ds4.c
 
 ds4_image.o: ds4_image.c ds4_image.h third_party/iris/jpeg.h third_party/iris/png.h
@@ -669,7 +669,7 @@ rax.o: rax.c rax.h rax_malloc.h
 linenoise.o: linenoise.c linenoise.h
 	$(CC) $(CFLAGS) -c -o $@ linenoise.c
 
-ds4_cpu.o: ds4.c ds4.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_gpu_tp.h ds4_qwen.h ds4_env.h ds4_qwen4_runtime.h
+ds4_cpu.o: ds4.c ds4.h ds4_lifecycle.inc ds4_lifecycle_text.h ds4_checkpoint.h ds4_sha256.h ds4_resources.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_gpu_tp.h ds4_qwen.h ds4_env.h ds4_qwen4_runtime.h
 	$(CC) $(CFLAGS) -Wno-unused-function -DDS4_NO_GPU -c -o $@ ds4.c
 
 ds4_cli_cpu.o: ds4_cli.c ds4.h ds4_ssd.h ds4_distributed.h ds4_help.h ds4_prompt_prefix.h linenoise.h
@@ -1368,12 +1368,12 @@ tools/probe_suite_baseline: tools/probe_suite_baseline.o $(CORE_OBJS)
 	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
 endif
 
-ds4_runtime.o: ds4_runtime.c ds4_runtime.h
+ds4_runtime.o: ds4_runtime.c ds4_runtime.h ds4_resources.h
 ds4.o ds4_cpu.o ds4_test_hooks.o ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o \
  tests/test_session_state.o tests/test_session_state_gpu.o: ds4_runtime.h
 
-tests/test_runtime: tests/test_runtime.c ds4_runtime.c ds4_runtime.h
-	$(CC) $(CFLAGS) -I. -o $@ tests/test_runtime.c ds4_runtime.c $(LDLIBS)
+tests/test_runtime: tests/test_runtime.c ds4_runtime.c ds4_runtime.h ds4_resources.o
+	$(CC) $(CFLAGS) -I. -o $@ tests/test_runtime.c ds4_runtime.c ds4_resources.o $(LDLIBS)
 
 ifeq ($(UNAME_S),Linux)
 tests/test_runtime_cuda.o: tests/test_runtime_cuda.c ds4.h ds4_gpu.h ds4_gpu_mgpu.h ds4_runtime.h
@@ -1396,7 +1396,33 @@ test-suite-contracts:
 test: test-suite-contracts
 
 clean-suite-runtime:
-	rm -f tests/test_runtime tests/test_runtime_cuda tools/probe_suite_baseline tools/probe_suite_baseline.o
+	rm -f tests/test_runtime tests/test_runtime_cuda tests/test_resources tests/test_lifecycle_cuda tools/probe_suite_baseline tools/probe_suite_baseline.o
 
 .PHONY: clean-suite-runtime
 clean: clean-suite-runtime
+
+# Native suite resource and checkpoint gates run without a model.
+ds4_resources.o: ds4_resources.c ds4_resources.h ds4_runtime.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+ds4_checkpoint.o: ds4_checkpoint.c ds4_checkpoint.h ds4_sha256.h ds4_runtime.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+tests/test_resources: tests/test_resources.c ds4_resources.o ds4_checkpoint.o
+	$(CC) $(CFLAGS) -I. -o $@ $^ $(LDLIBS)
+.PHONY: test-resources
+test-resources: tests/test_resources
+	./tests/test_resources
+test: test-resources
+
+tests/test_lifecycle_cuda.o: tests/test_lifecycle_cuda.c ds4.h ds4_resources.h
+	$(CC) $(CFLAGS) -I. -c -o $@ $<
+tests/test_lifecycle_cuda: tests/test_lifecycle_cuda.o $(CORE_OBJS)
+	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
+
+ds4_cuda.o tests/qwen_iq4_dequant_probe.o: ds4_cuda_accounting.cuh ds4_resources.h
+ds4_image.o: ds4_sha256.h
+ds4.o ds4_cpu.o ds4_test_hooks.o ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o \
+ tests/test_session_state.o tests/test_session_state_gpu.o \
+ tests/test_qwen_mtp_callback.o tests/test_qwen_snapshot_drafts.o tests/test_qwen_memory_lifetime.o \
+ tests/qwen_mtp_catchup_probe.o tests/test_qwen4_ngrams.o tests/test_qwen4_ngram_state.o \
+ tests/test_deepseek41_gguf.o tests/test_deepseek41_graph.o tests/test_deepseek41_prefill.o: \
+ ds4_lifecycle.inc ds4_lifecycle_text.h ds4_resources.h ds4_checkpoint.h ds4_sha256.h ds4_runtime.h

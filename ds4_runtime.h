@@ -86,8 +86,12 @@ ds4_status ds4_runtime_model_close(ds4_runtime_model *model);
 typedef struct {
     ds4_runtime_model *model;
     ds4_runtime *runtime;
+    uint64_t previous_resource_owner;
 } ds4_runtime_scope;
 ds4_status ds4_runtime_model_enter(ds4_runtime_model *model, ds4_runtime_scope *scope);
+/* Mutating lifecycle calls must start between scopes. In particular, a
+ * progress/cancel callback cannot destroy the graph executing its caller. */
+ds4_status ds4_runtime_model_enter_exclusive(ds4_runtime_model *, ds4_runtime_scope *);
 /* Exclusive construction/update, before a model handle exists. Rejects nested
  * execution, fences the previous owner, and invalidates the active context. */
 ds4_status ds4_runtime_begin_update(ds4_runtime *runtime, ds4_runtime_scope *scope);

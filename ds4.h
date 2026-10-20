@@ -8,6 +8,7 @@
 
 #include "ds4_ssd.h"
 #include "ds4_runtime.h"
+#include "ds4_resources.h"
 
 /* Public engine boundary.
  *
@@ -327,6 +328,33 @@ uint32_t ds4_engine_layer_compress_ratio(ds4_engine *e, uint32_t layer);
 uint64_t ds4_engine_hidden_f32_values(ds4_engine *e);
 int ds4_engine_embd_dim(ds4_engine *e);
 uint64_t ds4_engine_model_bytes(ds4_engine *e);
+/* Lifecycle operations are explicit and serialized with inference. Unsupported
+ * families/backends return UNSUPPORTED before changing anything. The initial
+ * qualified adapter is Qwen27, CUDA single GPU without TP/SSD. */
+typedef struct ds4_session_checkpoint ds4_session_checkpoint;
+typedef struct {
+    uint64_t device_capacity, host_capacity, payload, scratch, recurrent, mtp;
+    bool capacity_known, host_known, payload_known;
+    bool parked, weights_resident;
+} ds4_session_memory;
+ds4_status ds4_session_memory_query(ds4_session *, ds4_session_memory *);
+/* Borrowed backend registry. Entries from a caller must be released before
+ * runtime close. capacity_known covers device tensors; host_known is separate. */
+ds4_resources *ds4_engine_resources(ds4_engine *);
+ds4_status ds4_session_trim(ds4_session *);
+ds4_status ds4_engine_weights_release(ds4_engine *);
+ds4_status ds4_engine_weights_load(ds4_engine *);
+/* Metadata is caller-owned sampler/RNG/request state, copied into the file.
+ * The caller must explicitly dispose checkpoints; restore never unlinks them.
+ * Restoring into a candidate graph protects the live state on every failure. */
+ds4_status ds4_session_checkpoint_capture(ds4_session *, const char *directory,
+        const void *metadata, size_t metadata_bytes, ds4_session_checkpoint **);
+const char *ds4_session_checkpoint_path(const ds4_session_checkpoint *);
+void ds4_session_checkpoint_free(ds4_session_checkpoint *);
+ds4_status ds4_session_checkpoint_restore(ds4_session *, const ds4_session_checkpoint *,
+        void *metadata, size_t *metadata_bytes);
+ds4_status ds4_session_park(ds4_session *, const char *directory);
+ds4_status ds4_session_resume(ds4_session *);
 bool ds4_engine_has_vision(ds4_engine *e);
 /* Serial with session work on this engine. Qwen27 temporarily stages each
  * live session's full payload, releases its graph, encodes to host embeddings,

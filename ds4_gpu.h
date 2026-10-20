@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "ds4_resources.h"
 #include "ds4_qwen4_vision.h"
 
 #include "ds4_qwen.h"
@@ -48,6 +49,10 @@ typedef struct {
 int ds4_gpu_init(void);
 void ds4_gpu_cleanup(void);
 #if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+/* Tracks tensor storage and views. Raw legacy weight/derived allocations are
+ * reported separately; global device free is never summed with owned bytes. */
+ds4_resources *ds4_gpu_resources(void);
+int ds4_gpu_resources_refresh(uint64_t margin);
 /* Release the single legacy GGUF owner's maps and derived caches, retaining
  * streams, cuBLAS and independently allocated component tensors. New suite
  * adapters must own tensors; they must not use the legacy offset cache. */

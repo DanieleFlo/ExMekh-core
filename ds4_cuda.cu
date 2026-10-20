@@ -175,6 +175,7 @@ static_assert(sizeof(cuda_block_iq4_xs) == 136,
 #include "ds4_gpu_tp.h"
 #include "ds4_iq2_tables_cuda.inc"
 #include "ds4_iq_ud_tables_cuda.inc"
+#include "ds4_cuda_accounting.cuh"
 
 typedef struct {
     ds4_gpu_attention_decode_row row[DS4_GPU_ATTENTION_DECODE_BATCH_MAX];
@@ -932,7 +933,7 @@ static const char *cuda_model_range_ptr(const void *model_map, uint64_t offset, 
     }
 
     void *dev = NULL;
-    err = cudaMalloc(&dev, (size_t)bytes);
+    err = cuda_model_malloc(&dev, (size_t)bytes);
     if (err != cudaSuccess) {
         (void)cudaGetLastError();
         fprintf(stderr, "ds4: CUDA model range alloc failed for %s (%.2f MiB): %s\n",
@@ -1882,7 +1883,7 @@ static const __half *cuda_q8_f16_ptr(
         }
     }
     __half *dev = NULL;
-    cudaError_t err = cudaMalloc(&dev, (size_t)out_bytes);
+    cudaError_t err = cuda_model_malloc(&dev, (size_t)out_bytes);
     if (err != cudaSuccess) {
         fprintf(stderr, "ds4: CUDA q8 fp16 cache alloc failed on device %d (%.2f MiB): %s\n",
                 expected_device, (double)out_bytes / 1048576.0, cudaGetErrorString(err));
@@ -1989,7 +1990,7 @@ static float *cuda_q8_f32_ptr(
         }
     }
     float *dev = NULL;
-    cudaError_t err = cudaMalloc(&dev, (size_t)out_bytes);
+    cudaError_t err = cuda_model_malloc(&dev, (size_t)out_bytes);
     if (err != cudaSuccess) {
         fprintf(stderr, "ds4: CUDA q8 fp32 cache alloc failed on device %d (%.2f MiB): %s\n",
                 expected_device, (double)out_bytes / 1048576.0, cudaGetErrorString(err));
@@ -2256,7 +2257,7 @@ static int cuda_model_stage_pool_alloc(uint64_t bytes) {
         }
     }
     for (size_t i = 0; i < 4; i++) {
-        cudaError_t err = cudaMallocHost(&g_model_stage_raw[i], (size_t)bytes);
+        cudaError_t err = cuda_model_malloc_host(&g_model_stage_raw[i], (size_t)bytes);
         if (err != cudaSuccess) {
             fprintf(stderr, "ds4: CUDA pinned model staging allocation failed: %s\n", cudaGetErrorString(err));
             (void)cudaGetLastError();
@@ -2365,7 +2366,7 @@ static int cuda_stream_selected_stage_pool_alloc(uint64_t bytes) {
         return 0;
     }
     for (size_t i = 0; i < 4; i++) {
-        err = cudaMallocHost(&g_stream_selected_stage_raw[i], (size_t)bytes);
+        err = cuda_model_malloc_host(&g_stream_selected_stage_raw[i], (size_t)bytes);
         if (err != cudaSuccess) {
             fprintf(stderr,
                     "ds4: CUDA streaming selected staging allocation failed: %s\n",
@@ -2553,7 +2554,7 @@ static char *cuda_model_arena_alloc(uint64_t bytes, const char *what, uint64_t e
         if (chunk > free_bytes - reserve) chunk = aligned;
     }
     void *dev = NULL;
-    cudaError_t err = cudaMalloc(&dev, (size_t)chunk);
+    cudaError_t err = cuda_model_malloc(&dev, (size_t)chunk);
     if (err != cudaSuccess) {
         fprintf(stderr, "ds4: CUDA model arena alloc failed for %s (%.2f MiB chunk): %s\n",
                 what ? what : "weights",
@@ -2682,7 +2683,7 @@ static int cuda_model_copy_chunked(const void *model_map, uint64_t model_size, u
 
     void *dev = NULL;
     const double t0 = cuda_wall_sec();
-    cudaError_t err = cudaMalloc(&dev, (size_t)model_size);
+    cudaError_t err = cuda_model_malloc(&dev, (size_t)model_size);
     if (err != cudaSuccess) {
         fprintf(stderr, "ds4: CUDA model allocation skipped: %s\n", cudaGetErrorString(err));
         (void)cudaGetLastError();
@@ -2871,6 +2872,13 @@ static int cublas_ok(cublasStatus_t st, const char *what) {
 
 extern "C" int ds4_gpu_init_multi(const ds4_gpu_config *cfg) {
     if (!cfg || cfg->n_gpus < 1 || cfg->n_gpus > DS4_MAX_GPUS) return 0;
+    g_cuda_account_multidevice = cfg->n_gpus > 1;
+    if (g_cuda_account_multidevice && g_tensor_resources) {
+        /* Automatic physical reconciliation is qualified only on one GPU.
+         * Never apply device zero's capacity to the sum of legacy TP tiers. */
+        ds4_resource_budget budget = {UINT64_MAX, 0, 0, false};
+        (void)ds4_resources_set_budget(g_tensor_resources, DS4_MEMORY_DEVICE, &budget);
+    }
     cuda_xdev_env_refresh();
     cuda_decode_dispatch_env_refresh();
     g_current_logical_tier = -1;
@@ -3223,16 +3231,60 @@ extern "C" void ds4_gpu_cleanup(void) {
 
 __global__ static void fill_f32_kernel(float *x, uint64_t n, float v);
 
+extern "C" int ds4_gpu_resources_refresh(uint64_t margin) {
+    if (g_n_gpus > 1) return 0;
+    size_t free_bytes = 0, total = 0;
+    if (cudaMemGetInfo(&free_bytes, &total) != cudaSuccess) return 0;
+    ds4_resource_budget budget = {total, margin, free_bytes, true};
+    return ds4_resources_set_budget(ds4_gpu_resources(), DS4_MEMORY_DEVICE, &budget) == DS4_STATUS_OK;
+}
+typedef struct { void *ptr; int device; } cuda_tensor_storage;
+static ds4_status cuda_tensor_storage_free(void *opaque) {
+    cuda_tensor_storage *storage = (cuda_tensor_storage *)opaque;
+    if (storage->ptr) {
+        cudaError_t status = cudaErrorInvalidDevice;
+        WITH_DEVICE(g_gpu[storage->device].device_id) { status = cuda_untracked_free(storage->ptr); }
+        if (status != cudaSuccess) return DS4_STATUS_INFERENCE;
+    }
+    /* Also reconcile failed native allocations: the registered budget was
+     * consumed before cudaMalloc, even when no storage pointer was returned. */
+    if (!storage->ptr) (void)cudaGetLastError();
+    size_t free_bytes = 0, total = 0;
+    if (g_n_gpus <= 1 && cudaMemGetInfo(&free_bytes, &total) == cudaSuccess)
+        (void)ds4_resources_reconcile(ds4_gpu_resources(), DS4_MEMORY_DEVICE, free_bytes, true);
+    free(storage);
+    return DS4_STATUS_OK;
+}
+static cuda_tensor_storage *cuda_tensor_account(ds4_gpu_tensor *t, uint64_t bytes, int device,
+                                               ds4_memory_location location) {
+    cuda_tensor_storage *storage = (cuda_tensor_storage *)calloc(1, sizeof(*storage));
+    if (!storage) return NULL;
+    storage->device = device;
+    ds4_resource_spec spec = {};
+    spec.owner = ds4_resource_current_owner();
+    spec.requested = spec.allocated = spec.live = bytes;
+    spec.location = location; spec.device = device;
+    spec.destroy = cuda_tensor_storage_free; spec.opaque = storage;
+    if (ds4_resource_register(ds4_gpu_resources(), &spec, &t->account) != DS4_STATUS_OK) {
+        free(storage); return NULL;
+    }
+    return storage;
+}
+
 extern "C" int ds4_gpu_tensor_alloc_on(ds4_gpu_tensor *t, int device_id,
                                        uint64_t bytes) {
     if (!t) return 1;
     if (device_id < 0 || device_id >= g_n_gpus) return 2;
     if (bytes == 0) bytes = 1;
+    if (bytes > SIZE_MAX) return 3;
+    cuda_tensor_storage *storage = cuda_tensor_account(t, bytes, device_id, DS4_MEMORY_DEVICE);
+    if (!storage) return 3;
     int ok = 0;
     WITH_DEVICE(g_gpu[device_id].device_id) {
-        ok = cuda_ok(cudaMalloc(&t->ptr, (size_t)bytes), "tensor alloc");
+        ok = cuda_ok(cuda_untracked_malloc(&t->ptr, (size_t)bytes), "tensor alloc");
     }
-    if (!ok) return 3;
+    if (!ok) { (void)ds4_resource_release(t->account); t->account = NULL; return 3; }
+    storage->ptr = t->ptr;
     t->bytes = bytes;
     t->owner = 1;
     t->device_id = device_id;
@@ -3249,23 +3301,44 @@ extern "C" int ds4_gpu_tensor_copy_async(ds4_gpu_tensor *dst,
     if (!dst || !src || bytes > dst->bytes || bytes > src->bytes) return 0;
     if (qwen4_cuda::kv_streamed(dst->ptr) || qwen4_cuda::kv_streamed(src->ptr)) return 0;
     if (bytes == 0) return 1;
-    return cuda_ok(cudaMemcpyAsync(dst->ptr, src->ptr, (size_t)bytes,
-                                   cudaMemcpyDeviceToDevice, 0),
-                   "tensor copy async");
+    if (g_n_gpus > 1)
+        return cuda_ok(cudaMemcpyAsync(dst->ptr, src->ptr, (size_t)bytes, cudaMemcpyDeviceToDevice, 0),
+                       "tensor copy async");
+    pthread_mutex_lock(&g_cuda_account_events_mutex);
+    uint64_t event = ++g_cuda_account_event;
+    (void)ds4_resource_use(dst->account, event);
+    (void)ds4_resource_use(src->account, event);
+    int ok = cuda_ok(cudaMemcpyAsync(dst->ptr, src->ptr, (size_t)bytes,
+                                     cudaMemcpyDeviceToDevice, 0), "tensor copy async");
+    pthread_mutex_unlock(&g_cuda_account_events_mutex);
+    return ok;
 }
 
-extern "C" void ds4_gpu_tensor_free_in_place(ds4_gpu_tensor *t) {
-    if (!t) return;
+static bool cuda_tensor_release_storage(ds4_gpu_tensor *t) {
+    if (!t) return true;
     int d = ds4_tensor_device_idx(t);
-    if (t->owner && t->ptr) {
-        qwen4_cuda::kv_release(t->ptr);
+    /* Streamed KV owns child tensors. Release that graph outside the registry
+     * destructor, whose mutation guard deliberately forbids recursive frees. */
+    if (t->owner && t->ptr) qwen4_cuda::kv_release(t->ptr);
+    qwen4_cuda::route_invalidate(t->ptr, t->bytes);
+    if (t->account) {
+        if (cuda_tensor_account_release(t->account) != DS4_STATUS_OK) return false;
+    } else if (t->owner && t->ptr) {
+        cudaError_t status = cudaErrorInvalidDevice;
         WITH_DEVICE(g_gpu[d].device_id) {
-            (void)cudaFree(t->ptr);
+            status = cudaFree(t->ptr);
         }
+        if (status != cudaSuccess) return false;
     }
+    t->account = NULL;
     t->ptr = NULL;
     t->bytes = 0;
     t->owner = 0;
+    return true;
+}
+
+extern "C" void ds4_gpu_tensor_free_in_place(ds4_gpu_tensor *t) {
+    (void)cuda_tensor_release_storage(t);
 }
 
 extern "C" ds4_gpu_tensor *ds4_gpu_tensor_alloc(uint64_t bytes) {
@@ -3282,14 +3355,18 @@ extern "C" ds4_gpu_tensor *ds4_gpu_tensor_alloc_managed(uint64_t bytes) {
     if (bytes == 0) bytes = 1;
     ds4_gpu_tensor *t = (ds4_gpu_tensor *)calloc(1, sizeof(*t));
     if (!t) return NULL;
+    if (bytes > SIZE_MAX) { free(t); return NULL; }
+    cuda_tensor_storage *storage = cuda_tensor_account(t, bytes, 0, DS4_MEMORY_MANAGED);
+    if (!storage) { free(t); return NULL; }
     int ok = 0;
     /* Managed memory is not device-bound, but we record device 0 so that
      * subsequent ds4_gpu_tensor_free pairs with WITH_DEVICE(0) safely. */
     WITH_DEVICE(g_gpu[0].device_id) {
-        ok = cuda_ok(cudaMallocManaged(&t->ptr, (size_t)bytes),
+        ok = cuda_ok(cuda_untracked_managed(&t->ptr, (size_t)bytes),
                      "managed tensor alloc");
     }
-    if (!ok) { free(t); return NULL; }
+    if (!ok) { (void)ds4_resource_release(t->account); free(t); return NULL; }
+    storage->ptr = t->ptr;
     t->bytes = bytes;
     t->owner = 1;
     t->device_id = 0;
@@ -3342,15 +3419,19 @@ extern "C" ds4_gpu_tensor *ds4_gpu_tensor_alloc_managed_on(int tier, uint64_t by
     if (bytes == 0) bytes = 1;
     ds4_gpu_tensor *t = (ds4_gpu_tensor *)calloc(1, sizeof(*t));
     if (!t) return NULL;
+    if (bytes > SIZE_MAX) { free(t); return NULL; }
+    cuda_tensor_storage *storage = cuda_tensor_account(t, bytes, tier, DS4_MEMORY_MANAGED);
+    if (!storage) { free(t); return NULL; }
     int ok = 0;
     /* Run the cudaMallocManaged call under the home tier's device so the
      * first-touch home matches the stamped device_id; the page itself can
      * migrate freely under managed-memory semantics. */
     WITH_DEVICE(g_gpu[tier].device_id) {
-        ok = cuda_ok(cudaMallocManaged(&t->ptr, (size_t)bytes),
+        ok = cuda_ok(cuda_untracked_managed(&t->ptr, (size_t)bytes),
                      "managed tensor alloc (tier)");
     }
-    if (!ok) { free(t); return NULL; }
+    if (!ok) { (void)ds4_resource_release(t->account); free(t); return NULL; }
+    storage->ptr = t->ptr;
     t->bytes = bytes;
     t->owner = 1;
     t->device_id = tier;
@@ -3406,20 +3487,16 @@ extern "C" ds4_gpu_tensor *ds4_gpu_tensor_view(const ds4_gpu_tensor *base, uint6
     t->bytes = bytes;
     t->owner = 0;
     t->device_id = base->device_id;  /* inherit owning device */
+    if (base->account && ds4_resource_view(base->account, offset, bytes, &t->account) != DS4_STATUS_OK) {
+        free(t); return NULL;
+    }
     return t;
 }
 
 extern "C" void ds4_gpu_tensor_free(ds4_gpu_tensor *tensor) {
-    if (!tensor) return;
-    if (tensor->owner) qwen4_cuda::kv_release(tensor->ptr);
-    qwen4_cuda::route_invalidate(tensor->ptr, tensor->bytes);
-    int d = ds4_tensor_device_idx(tensor);
-    if (tensor->owner && tensor->ptr) {
-        WITH_DEVICE(g_gpu[d].device_id) {
-            (void)cudaFree(tensor->ptr);
-        }
-    }
-    free(tensor);
+    /* A failed release retains both the wrapper and its accounting handle,
+     * matching the registry's retry contract instead of reporting a free. */
+    if (cuda_tensor_release_storage(tensor)) free(tensor);
 }
 
 extern "C" uint64_t ds4_gpu_tensor_bytes(const ds4_gpu_tensor *tensor) {
@@ -4044,7 +4121,7 @@ extern "C" int ds4_gpu_end_commands(void) {
     }
     return cuda_ok(cudaDeviceSynchronize(), "end commands");
 }
-extern "C" int ds4_gpu_synchronize(void) { return cuda_ok(cudaDeviceSynchronize(), "synchronize"); }
+extern "C" int ds4_gpu_synchronize(void) { return cuda_ok(cuda_account_synchronize(), "synchronize"); }
 
 extern "C" int ds4_gpu_set_model_map(const void *model_map, uint64_t model_size) {
     if (!model_map || model_size == 0) return 0;
@@ -4097,7 +4174,7 @@ extern "C" int ds4_gpu_set_model_map(const void *model_map, uint64_t model_size)
     if (copy_model) {
         void *dev = NULL;
         const double t0 = cuda_wall_sec();
-        cudaError_t err = cudaMalloc(&dev, (size_t)model_size);
+        cudaError_t err = cuda_model_malloc(&dev, (size_t)model_size);
         if (err == cudaSuccess) {
             fprintf(stderr, "ds4: CUDA copying %.2f GiB model to device memory\n",
                     (double)model_size / 1073741824.0);
@@ -4197,7 +4274,7 @@ extern "C" int ds4_gpu_set_aux_model_map_range(
     }
 
     void *device = NULL;
-    cudaError_t err = cudaMalloc(&device, (size_t)map_size);
+    cudaError_t err = cuda_model_malloc(&device, (size_t)map_size);
     if (err != cudaSuccess) {
         fprintf(stderr,
                 "ds4: CUDA vision map allocation failed (%.2f GiB): %s\n",
@@ -4497,7 +4574,7 @@ extern "C" int ds4_gpu_device_cache_tensors(int device_id,
          * message. */
     }
 
-    if (!cuda_ok(cudaMalloc(&new_base, new_bytes), "device cache alloc")) {
+    if (!cuda_ok(cuda_model_malloc(&new_base, new_bytes), "device cache alloc")) {
         if (prev_device >= 0) (void)cudaSetDevice(prev_device);
         return 5;
     }
@@ -4603,7 +4680,7 @@ extern "C" int ds4_gpu_device_cache_support_tensors(int device_id,
     if (cudaGetDevice(&prev_device) != cudaSuccess) prev_device = -1;
     if (cudaSetDevice(device_id) != cudaSuccess) return 4;
     void *base = NULL;
-    if (!cuda_ok(cudaMalloc(&base, (size_t)want), "support cache alloc")) {
+    if (!cuda_ok(cuda_model_malloc(&base, (size_t)want), "support cache alloc")) {
         if (prev_device >= 0) (void)cudaSetDevice(prev_device);
         return 5;
     }
@@ -4944,7 +5021,7 @@ static int cuda_build_derived_artifacts(
     g_derived_artifact_build_secs = cuda_wall_sec() - t0;
     if (!g_aligned_q81_scratch) {
         const size_t scratch_bytes = 96u * 1024u * 1024u;
-        cudaError_t scratch_err = cudaMalloc(&g_aligned_q81_scratch,
+        cudaError_t scratch_err = cuda_model_malloc(&g_aligned_q81_scratch,
                                              scratch_bytes);
         if (scratch_err == cudaSuccess) {
             ds4_mmq_set_aligned_q81_scratch(g_aligned_q81_scratch,

@@ -191,6 +191,11 @@ int main(int argc, char **argv) {
     assert(!flock(lock, LOCK_UN)); close(lock);
     ds4_session_snapshot_free(&snapshot);
     ds4_tokens_free(&prompt); free(before); free(after);
+    ds4_resource_totals totals;
+    ds4_resources_totals(ds4_gpu_resources(), 0, &totals);
+    assert(!totals.roots && !totals.views);
+    for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++)
+        assert(!totals.allocated[i] && !totals.reserved[i]);
     puts("runtime CUDA ownership/activation/legacy reopen: PASS");
     return 0;
 }

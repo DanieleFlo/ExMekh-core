@@ -45,6 +45,9 @@
 #include <unistd.h>
 
 #include "ds4.h"
+#include "ds4_checkpoint.h"
+#include "ds4_sha256.h"
+#include "ds4_lifecycle_text.h"
 #include "ds4_env.h"
 #include "ds4_tool_text.h"
 #include "ds4_distributed.h"
@@ -43138,6 +43141,11 @@ typedef enum {
 } ds4_vision_kind;
 
 struct ds4_engine {
+    bool weights_evicted;
+    bool lifecycle_identity_ready;
+    uint8_t lifecycle_identity[32];
+    struct stat lifecycle_files[3];
+    ds4_resource *storage_accounts[3];
     ds4_runtime *runtime;
     ds4_runtime_model *runtime_model;
     ds4_shape shape;
@@ -43253,14 +43261,33 @@ static const ds4_shape *ds4_engine_shape(const ds4_engine *e) {
     return e && e->runtime ? &e->shape : &g_ds4_shape;
 }
 
+static ds4_status ds4_engine_account_storage(ds4_engine *e) {
+    ds4_resources *registry = ds4_engine_resources(e);
+    if (!registry) return DS4_STATUS_OK;
+    ds4_model *maps[] = {&e->model, &e->mtp_model, &e->vision_model};
+    for (unsigned i = 0; i < 3; i++) {
+        if (!maps[i]->map) continue;
+        ds4_resource_spec spec = {.owner=DS4_RESOURCE_OWNER_LEGACY_WEIGHTS,
+            .requested=maps[i]->size, .allocated=maps[i]->size, .live=maps[i]->size,
+            .location=DS4_MEMORY_MMAP, .format=UINT32_C(0x46554747), .device=-1, .authoritative=true};
+        ds4_status status = ds4_resource_register(registry, &spec, &e->storage_accounts[i]);
+        if (status) return status;
+    }
+    return DS4_STATUS_OK;
+}
+
 /* Automatic cleanup keeps every early return inside the legacy bridge under
  * the same model scope. GCC and Clang both support this C extension. Synthetic
  * reference tests with an unregistered engine keep their existing behavior. */
-#define DS4_ENGINE_SCOPE(engine, ...) \
+#define DS4_ENGINE_SCOPE_IMPL(engine, enter_scope, ...) \
     ds4_runtime_scope runtime_scope __attribute__((cleanup(ds4_runtime_scope_leave))) = {0}; \
     if ((engine) && (engine)->runtime_model && \
-        ds4_runtime_model_enter((engine)->runtime_model, &runtime_scope) != DS4_STATUS_OK) \
+        enter_scope((engine)->runtime_model, &runtime_scope) != DS4_STATUS_OK) \
         return __VA_ARGS__
+#define DS4_ENGINE_SCOPE(engine, ...) \
+    DS4_ENGINE_SCOPE_IMPL(engine, ds4_runtime_model_enter, __VA_ARGS__)
+#define DS4_ENGINE_MAINTENANCE_SCOPE(engine, ...) \
+    DS4_ENGINE_SCOPE_IMPL(engine, ds4_runtime_model_enter_exclusive, __VA_ARGS__)
 
 static DS4_MAYBE_UNUSED uint64_t ds4_engine_glm_graph_budget(
         const ds4_engine *e, uint64_t next_graph_bytes) {
@@ -62300,6 +62327,9 @@ typedef struct {
 } ds4_vision_identity;
 
 struct ds4_session {
+    ds4_session_checkpoint *parked_checkpoint;
+    bool lifecycle_parked;
+    bool vision_lifecycle_parked;
     ds4_engine *engine;
     ds4_session *engine_next;
     ds4_session_payload_file vision_parked_payload;
@@ -62826,6 +62856,15 @@ static void ds4_session_dspark_scheduler_note(
 
 static void payload_set_err(char *err, size_t errlen, const char *msg) {
     if (errlen != 0) snprintf(err, errlen, "%s", msg);
+}
+
+/* Residency is an engine/session rule, shared by every execution entry point.
+ * Argument validation stays with the operation so legacy return codes remain
+ * unchanged. In particular, a refusal must precede speculative RNG updates. */
+static bool ds4_session_require_resident(const ds4_session *s, char *err, size_t errlen) {
+    if (!s || (!s->lifecycle_parked && (!s->engine || !s->engine->weights_evicted))) return true;
+    payload_set_err(err, errlen, DS4_LIFECYCLE_NOT_RESIDENT);
+    return false;
 }
 
 static void payload_put_u32(uint8_t out[4], uint32_t v) {
@@ -68700,6 +68739,9 @@ static bool ds4_session_greedy_splitkv_replay_exact(
 
 int ds4_session_eval_argmax(ds4_session *s, int token, char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (!s) return -1;
     if (ds4_session_is_cpu(s) || ds4_session_is_glm(s) ||
         ds4_session_is_qwen(s) || ds4_session_is_ds41(s)) {
@@ -74698,7 +74740,8 @@ static int ds4_engine_attach_runtime(ds4_engine **out, ds4_runtime *runtime,
             .context_tokens = opt->context_size > 0 ? (uint32_t)opt->context_size : 4096
         };
         const ds4_runtime_model_ops model_ops = {ds4_engine_runtime_activate, ds4_engine_release};
-        if (ds4_runtime_model_create(runtime, &descriptor, &model_ops, e,
+        if (ds4_engine_account_storage(e) != DS4_STATUS_OK ||
+            ds4_runtime_model_create(runtime, &descriptor, &model_ops, e,
                                      &e->runtime_model) != DS4_STATUS_OK) {
             ds4_engine_release(e);
             *out = NULL;
@@ -74754,6 +74797,8 @@ static int ds4_engine_open_internal(ds4_engine **out,
                                      const ds4_engine_options *opt,
                                      const ds4_gpu_config *gpu_cfg) {
     ds4_engine *e = xcalloc(1, sizeof(*e));
+    ds4_resource_owner_scope resource_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)e);
 #if defined(DS4_ROCM_BUILD) && !defined(DS4_NO_GPU)
     g_glm_rocm_guard_available_baseline = 0;
     (void)ds4_linux_nonmovable_memory(&g_glm_rocm_guard_available_baseline);
@@ -76970,6 +77015,9 @@ done:
 static int ds4_engine_vision_encode_image(ds4_engine *e, const ds4_image *image,
         ds4_vision_embedding *out, char *err, size_t errlen) {
     if (!e) return 0;
+    if (e->weights_evicted) {
+        payload_set_err(err, errlen, DS4_LIFECYCLE_NOT_RESIDENT); return 0;
+    }
 #ifndef DS4_NO_GPU
     uint64_t before = ds4_gpu_tier_free_vram(0);
 #endif
@@ -77000,7 +77048,7 @@ int ds4_engine_vision_encode_file(
         ds4_vision_embedding *out,
         char *error,
         size_t error_cap) {
-    DS4_ENGINE_SCOPE(e, 0);
+    DS4_ENGINE_MAINTENANCE_SCOPE(e, 0);
     ds4_image image = {0};
     if (!ds4_image_decode_file(&image, path, error, error_cap)) return 0;
     int ok = ds4_engine_vision_encode_image(e, &image, out, error, error_cap);
@@ -77015,7 +77063,7 @@ int ds4_engine_vision_encode_memory(
         ds4_vision_embedding *out,
         char *error,
         size_t error_cap) {
-    DS4_ENGINE_SCOPE(e, 0);
+    DS4_ENGINE_MAINTENANCE_SCOPE(e, 0);
     ds4_image image = {0};
     if (!ds4_image_decode_memory(&image, encoded, encoded_len, error, error_cap)) return 0;
     int ok = ds4_engine_vision_encode_image(e, &image, out, error, error_cap);
@@ -77268,6 +77316,7 @@ static void ds4_engine_release(void *opaque) {
     }
 #endif
     ds4_expert_profile_close();
+    for (unsigned i = 0; i < 3; i++) (void)ds4_resource_release(e->storage_accounts[i]);
     weights_free(&e->weights);
     vocab_free(&e->vocab);
 #ifndef DS4_NO_GPU
@@ -77497,6 +77546,8 @@ static int ds4_session_create_internal(ds4_session **out, ds4_engine *e, int ctx
     s->engine = e;
     s->ctx_size = ctx_size;
     s->skill_state_session_id = ds4_skill_session_id_new(s);
+    ds4_resource_owner_scope resource_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (DS4_MODEL_FAMILY == DS4_MODEL_FAMILY_QWEN35) {
         /* RTX 3090 profiling mirrors the eval-batch split used by the local
          * llama.cpp/LM Studio runtime: 2048 rows amortize the Q4_K expansion
@@ -77976,6 +78027,7 @@ void ds4_session_free(ds4_session *s) {
         if (*link == s) *link = s->engine_next;
     }
     ds4_session_payload_file_free(&s->vision_parked_payload);
+    ds4_session_checkpoint_free(s->parked_checkpoint);
     if (s->glm_reserved_graph_bytes && s->engine) {
         s->engine->glm_session_graph_bytes -= s->glm_reserved_graph_bytes;
         s->engine->glm_session_count--;
@@ -78286,6 +78338,9 @@ int ds4_session_eval_output_head_from_hc(ds4_session *s,
                                          char *err,
                                          size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (!s || !s->engine || !hidden_hc || n_tokens == 0 || !logits) {
         if (errlen) snprintf(err, errlen, "invalid output-head hidden-state input");
         return 1;
@@ -79176,6 +79231,9 @@ int ds4_session_eval_layer_slice(ds4_session *s,
                                  char *err,
                                  size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (!s || !s->engine) {
         if (errlen) snprintf(err, errlen, "missing layer-slice session");
         return 1;
@@ -79715,8 +79773,20 @@ static void ds4_session_note_prefill_progress(void *ud, const char *event, int c
 /* Vision runs under the caller's inference lock. Checkpoint every live 27B
  * session before destroying its graph; model weights stay resident. Resuming
  * preserves session identity/callbacks and never reuses a compact KV frontier. */
+#include "ds4_lifecycle.inc"
+
 static int engine_vision_resume_sessions(ds4_engine *e, char *err, size_t errlen) {
 #ifndef DS4_NO_GPU
+    if (lifecycle_supported(e)) {
+        for (ds4_session *s = e->sessions; s; s = s->engine_next) {
+            if (!s->vision_lifecycle_parked) continue;
+            if (lifecycle_resume(s) != DS4_STATUS_OK) {
+                payload_set_err(err, errlen, DS4_LIFECYCLE_RESTORE); return 0;
+            }
+            s->vision_lifecycle_parked = false;
+        }
+        return 1;
+    }
     for (ds4_session *s = e->sessions; s; s = s->engine_next) {
         if (!s->vision_parked) continue;
         if (s->qwen_graph_ready) qwen_graph_free(&s->qwen_graph);
@@ -79743,6 +79813,17 @@ static int engine_vision_resume_sessions(ds4_engine *e, char *err, size_t errlen
 
 static int engine_vision_suspend_sessions(ds4_engine *e, char *err, size_t errlen) {
 #ifndef DS4_NO_GPU
+    if (lifecycle_supported(e)) {
+        for (ds4_session *s = e->sessions; s; s = s->engine_next) {
+            if (s->lifecycle_parked) continue;
+            if (lifecycle_park(s, "/tmp") != DS4_STATUS_OK) {
+                (void)engine_vision_resume_sessions(e, err, errlen);
+                payload_set_err(err, errlen, DS4_LIFECYCLE_CHECKPOINT); return 0;
+            }
+            s->vision_lifecycle_parked = true;
+        }
+        return 1;
+    }
     if (DS4_MODEL_FAMILY != DS4_MODEL_FAMILY_QWEN35) return 1;
     for (ds4_session *s = e->sessions; s; s = s->engine_next) {
         if (!s->qwen_graph_ready || s->vision_parked) continue;
@@ -79942,6 +80023,9 @@ static int ds4_session_sync_lockstep(ds4_session *s, const ds4_tokens *prompt,
  * here instead of as a gate timeout mid-decode. */
 int ds4_session_sync(ds4_session *s, const ds4_tokens *prompt, char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (s && s->checkpoint_valid && !ds4_session_vision_prefix_matches(
                      s, s->sync_images, s->sync_image_count)) {
         ds4_session_invalidate(s);
@@ -80037,6 +80121,9 @@ int ds4_session_sync_multimodal(
         char *err,
         size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (!s || !prompt || (image_count != 0 && !images)) {
         snprintf(err, errlen, "invalid multimodal prompt");
         return 1;
@@ -80111,6 +80198,7 @@ int ds4_session_sync_multimodal(
 }
 
 static int ds4_session_sync_internal(ds4_session *s, const ds4_tokens *prompt, char *err, size_t errlen) {
+    if (!ds4_session_require_resident(s, err, errlen)) return 1;
     if (!s || !prompt) {
         snprintf(err, errlen, "missing session or prompt");
         return 1;
@@ -82486,7 +82574,7 @@ int ds4_session_copy_logits(ds4_session *s, float *out, int cap) {
 
 int ds4_session_set_logits(ds4_session *s, const float *logits, int n) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
-    if (!s || !logits || n != (int)DS4_N_VOCAB) return 1;
+    if (!s || s->lifecycle_parked || !logits || n != (int)DS4_N_VOCAB) return 1;
     memcpy(s->logits, logits, (size_t)DS4_N_VOCAB * sizeof(s->logits[0]));
     return 0;
 }
@@ -83196,6 +83284,7 @@ static void ds4_session_prepare_support_draft(ds4_session *s,
 
 static int ds4_session_eval_internal(ds4_session *s, int token, bool probe_mtp,
                                      char *err, size_t errlen) {
+    if (!ds4_session_require_resident(s, err, errlen)) return 1;
     if (!s) return 1;
     if (s->distributed) {
         if (!s->checkpoint_valid) {
@@ -83485,6 +83574,9 @@ static int ds4_session_eval_probe_tp(ds4_session *s, int token, bool probe_mtp,
 
 int ds4_session_eval(ds4_session *s, int token, char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     bool probe_mtp = true;
 #ifndef DS4_NO_GPU
     if (s && s->engine && s->engine->support_kind == DS4_SUPPORT_DSPARK) {
@@ -91528,6 +91620,9 @@ int ds4_session_eval_speculative_sample(
         int *accepted, int accepted_cap, int *next_token,
         char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
 #ifdef DS4_NO_GPU
     (void)top_k;
     (void)top_p;
@@ -91589,6 +91684,9 @@ int ds4_session_eval_draft_tokens(
         ds4_speculative_target_sample_fn sample_target, void *sample_target_ud,
         char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (next_token) *next_token = -1;
     if (!s || !proposals || count <= 0 || count > 64 || !accepted ||
         !sample_target || !next_token || !rng) return 0;
@@ -91683,6 +91781,9 @@ int ds4_session_eval_speculative_constrained_sample(
         ds4_speculative_target_sample_fn sample_target, void *sample_target_ud,
         char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (next_token) *next_token = -1;
     if (!s || !accepted || accepted_cap <= 0 || max_tokens <= 0 ||
         !sample_target) return 0;
@@ -91716,6 +91817,9 @@ int ds4_session_eval_speculative_argmax(ds4_session *s, int first_token,
                                         int *accepted, int accepted_cap,
                                         char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     return ds4_session_eval_speculative_argmax_impl(
         s, first_token, max_tokens, eos_token, false, DS4_THINK_HIGH,
         accepted, accepted_cap, err, errlen);
@@ -91726,6 +91830,9 @@ int ds4_session_eval_speculative_argmax_ignoring_eos(
         ds4_think_mode think_mode,
         int *accepted, int accepted_cap, char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     return ds4_session_eval_speculative_argmax_impl(
         s, first_token, max_tokens, eos_token, true, think_mode,
         accepted, accepted_cap, err, errlen);
@@ -91738,6 +91845,9 @@ int ds4_session_eval_speculative(ds4_session *s, int first_token,
                                  int *accepted, int accepted_cap,
                                  char *err, size_t errlen) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
+    if (!ds4_session_require_resident(s, err, errlen)) return -1;
+    ds4_resource_owner_scope operation_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     if (temperature <= 0.0f) {
         return ds4_session_eval_speculative_argmax(
             s, first_token, max_tokens, eos_token,
@@ -91882,6 +91992,10 @@ int ds4_session_eval_speculative(ds4_session *s, int first_token,
 void ds4_session_invalidate(ds4_session *s) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), );
     if (!s) return;
+    /* An explicit invalidation must not resurrect the parked transcript on
+     * resume. Keep the session parked, now with an empty authoritative state. */
+    ds4_session_checkpoint_free(s->parked_checkpoint);
+    s->parked_checkpoint = NULL;
     if (ds4_session_tp_leader(s) &&
         !ds4_tp_failed(s->engine->tp.ctx)) {
         (void)ds4_tp_send_invalidate(s->engine->tp.ctx, s->tp_session_id);
@@ -91977,7 +92091,7 @@ void ds4_session_rewind(ds4_session *s, int pos) {
 
 int ds4_session_pos(ds4_session *s) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
-    return s->checkpoint.len;
+    return s ? s->checkpoint.len : 0;
 }
 
 bool ds4_session_checkpoint_valid(const ds4_session *s) {
@@ -92022,7 +92136,7 @@ void ds4_session_set_test_images(ds4_session *s,
 
 int ds4_session_ctx(ds4_session *s) {
     DS4_ENGINE_SCOPE((s ? s->engine : NULL), -1);
-    return s->ctx_size;
+    return s ? s->ctx_size : 0;
 }
 
 int ds4_session_prefill_cap(ds4_session *s) {

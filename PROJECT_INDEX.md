@@ -177,13 +177,32 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 
 - `docs/architecture/native-suite-clean-code-review-20261020.md` — revisione
   di responsabilità, incapsulamento, errori e debito residuo; regressioni
-  di lifecycle, build e validazione degli artefatti numerici.
+  di lifecycle T00–T04, invalidazione di sessioni parcheggiate, rilascio CUDA,
+  build e validazione degli artefatti numerici.
 - `docs/architecture/native-suite-runtime-lifecycle.md` — inventario dello stato
   globale, confini del bridge legacy, teardown selettivo e matrice di qualifica.
 - `docs/architecture/native-suite-v1-contract.md`, `schemas/ds4-suite-*.schema.json`
   — contratti C/HTTP e catalogo congelati; nuovi endpoint previsti da T17.
 - `docs/performance/native-suite-t00-20261020/` — source/model/tensor manifest,
   baseline dei LLM, oracle multimodali, soglie e registro provenienza/licenze.
+- `ds4_resources.c/.h` — registro C di storage e view, ownership, refcount,
+  eventi, prenotazioni atomiche, budget device/host/pinned/checkpoint e trimming
+  tramite destructor del proprietario; contabilità posseduta e disponibilità
+  globale distinte. Le query memoria sessione usano i totali del registro.
+- `ds4_cuda_accounting.cuh` — accounting host delle allocazioni CUDA e pinned;
+  i tensori condividono lo storage tramite view, le copie D2D mantengono il
+  budget fino alla fence. Nessun nuovo kernel o percorso numerico.
+- `ds4_checkpoint.c/.h`, `ds4_sha256.h` — envelope lifecycle versionato con
+  identità/configurazione e checksum SHA-256; riuso dello SHA delle immagini,
+  validazione completa prima del restore e payload legacy invariato.
+- `ds4_lifecycle.inc`, `ds4_lifecycle_text.h` — adapter interno all'engine per
+  checkpoint, parcheggio/ripresa, query memoria, trimming e rilascio dei soli
+  pesi Qwen27 CUDA; mantiene identità e callback e valida un grafo candidato.
+- `tests/test_resources.c`, `tests/test_lifecycle_cuda.c` — gate host di lifetime,
+  alias, overflow, concorrenza e file corrotti; gate reale di continuazione,
+  OOM/SSD, MTP e stato multimodale. Qualifica nel report T03–T04.
+- `docs/performance/native-suite-t03-t04-20261020/` — comandi, inventario degli
+  adapter, risultati e limiti della qualifica delle nuove operazioni lifecycle.
 - `tests/fixtures/native-suite-v1/`, `tests/test_suite_*.py`, `tests/test_runtime*.c`
   — corpus sintetico congelato e test dei contratti, gate numerici e lifecycle.
 - `tools/freeze_multimodal_baseline.py`, `tools/export_suite_baseline.py`,

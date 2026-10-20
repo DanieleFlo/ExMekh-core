@@ -1,6 +1,6 @@
 # Revisione di responsabilità e coerenza della suite nativa
 
-20 ottobre 2026. Revisione del lavoro T00–T02 prima del commit. Il perimetro
+20 ottobre 2026. Revisione del lavoro T00–T04 prima del commit. Il perimetro
 comprende runtime, bridge LLM, diagnostic vision, build, tool numerici e test;
 sono stati esaminati anche i confini CLI/server e le classi di configurazione,
 sessione e persistenza dell'agente. Non è una certificazione dell'intera repository.
@@ -63,3 +63,41 @@ I log del riesame restano in `performance-results/native-suite-review-20261020`;
 i tentativi di build falliti sono conservati insieme alla build corretta.
 Le modifiche preesistenti a wheel, lock e ordine dell'indice esperimenti sono
 escluse dal commit della suite.
+
+## Riesame di T03–T04
+
+Il secondo passaggio esamina registro, accounting CUDA, checkpoint, adapter
+sessione, integrazione vision e build. La lettura si estende a getter e
+invalidazione legacy, CLI/server e ai confini fra `ChatSession`, manager e
+persistenza JSON dell'agente. Nessuna modifica all'agente è necessaria: i
+metodi privati osservati sulle copie di `ChatSession` sono chiamati dalla
+classe stessa; il manager usa l'interfaccia della sessione e dello store.
+
+| Problema | Correzione e responsabilità |
+| --- | --- |
+| Query memoria con un elenco manuale di decine di tensor e lettura del campo backend `owner`, destinato a divergere dalle nuove allocazioni | La sessione chiede al registro i byte device del proprio owner. L'adapter interpreta soltanto le categorie ricorrenti/MTP tramite l'API tensoriale |
+| `trim` poteva togliere un'entry di accounting senza destructor e dichiarare liberati byte ancora allocati | Il registro considera solo entry ricostruibili con destructor, senza alias o eventi pendenti; un errore mantiene entry e riferimento |
+| I due free CUDA duplicavano il cleanup e invalidavano diversamente la route cache; gli errori di `cudaFree` erano ignorati | Unico helper del backend per storage, cache e wrapper. Un rilascio fallito conserva handle e accounting; il destructor propaga il fallimento |
+| Invalidare una sessione parcheggiata lasciava un checkpoint che poteva ripristinare la conversazione invalidata | La sessione elimina il proprio checkpoint interno e rimane parcheggiata con stato vuoto; il resume non resuscita la history |
+| `set_logits` sembrava riuscire su uno stato parcheggiato, ma il successivo restore ne annullava l'effetto | Rifiuto prima della modifica, coerente con l'autorità del checkpoint su disco |
+| Controllo di residenza ripetuto in 14 entry point con possibilità di divergenza | Unico controllo nel dominio sessione/engine; mantiene i codici legacy e precede l'avanzamento della speculazione |
+| Handle null e directory vuote producevano esiti incoerenti; due getter dereferenziavano sessioni null | `INVALID` per argomenti lifecycle invalidi; getter null a zero come `prefill_cap`, preservando il codice di errore `BUSY` |
+| Risigillare un checkpoint su uno stream più lungo conservava un trailer che lo rendeva invalido | Il serializer tronca il file alla dimensione dell'envelope prima di `fsync`; nessuna modifica del payload ABI |
+| Hash già scritti nell'envelope erano conservati anche nell'handle senza più essere letti | Rimossi dall'handle; la validazione legge il file autorevole |
+| Dipendenze incomplete degli header/frammenti potevano lasciare test compilati contro codice vecchio | Dipendenze comuni per i test che includono l'engine e per il probe CUDA; regole LF per frammenti C e nuovi manifest |
+
+I test aggiunti verificano effetti osservabili: rilascio reale e fallito,
+contenuto di view dopo free del proprietario, equivalenza dei due cleanup,
+checkpoint con trailer, mancata resurrezione dopo invalidazione e assenza di
+allocazioni/prenotazioni residue. I gate Qwen27 confrontano tutti i logits e
+i token della continuazione nelle tre modalità di sospensione.
+
+Responsabilità, incapsulamento, nomi, duplicazione, errori e testabilità sono
+migliorati nei confini esaminati. Restano il monolite engine/server, i globali
+legacy confinati dal runtime, l'inventario host incompleto e gli adapter non
+qualificati. La revisione non chiude T03/T04 né certifica Metal, ROCm o TP.
+
+La [verifica del riesame](../performance/native-suite-t03-t04-20261020/review-verification.json)
+registra sorgenti/binari finali, comandi, log, confronto con T00 e gate SSD CUDA.
+Gli artefatti completi rimangono in
+`performance-results/native-suite-review-t03-t04-20261020`.

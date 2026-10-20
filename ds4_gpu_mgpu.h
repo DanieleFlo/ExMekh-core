@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "ds4_qwen.h"
+#include "ds4_resources.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +44,7 @@ struct ds4_gpu_tensor {
     uint64_t bytes;
     int      owner;
     int      device_id;   /* -1 means legacy/untagged → treat as device 0 */
+    ds4_resource *account;
 };
 #ifndef DS4_GPU_TENSOR_DEFINED
 #define DS4_GPU_TENSOR_DEFINED

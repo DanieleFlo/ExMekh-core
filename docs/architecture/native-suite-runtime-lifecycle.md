@@ -41,8 +41,10 @@ La convenience API `ds4_engine_open()` conserva il runtime privato e rifiuta
 l'apertura se ne esiste già uno; la condivisione deve essere esplicita.
 I test verificano che stream CUDA e handle cuBLAS rimangano gli stessi durante
 il rebind, che un componente possa precedere il LLM e che snapshot esistenti
-continuino bit-exact su un engine ricaricato. Eviction dei soli pesi con engine
-vivo e ripristino automatico della transazione/sessioni restano T04/T05.
+continuino bit-exact su un engine ricaricato. T04 aggiunge il rilascio dei soli
+pesi con engine e sessioni vivi per Qwen27 CUDA single GPU; il ripristino
+automatico della transazione resta T05. I [gate T03–T04](../performance/native-suite-t03-t04-20261020/README.md)
+documentano la qualifica e le esclusioni degli adapter.
 
 ## Inventario dello stato globale
 
@@ -69,7 +71,10 @@ di struct contenenti stream, thread o mutex.
 Il rilascio CUDA legacy separa range/derived/pinned staging del modello da
 stream, handle e scratch del runtime. I tensori dei nuovi adapter hanno
 allocazioni indipendenti: l'identità del loro handle e il relativo destructor
-determinano il proprietario. Accounting, alias/view e budget sono T03.
+determinano il proprietario. Il registro T03 in `ds4_resources.c/.h` gestisce
+accounting, alias/view, prenotazioni ed eventi; il binding CUDA è in
+`ds4_cuda_accounting.cuh`. La memoria host legacy non ancora inventariata
+rimane esplicitamente ignota nelle query.
 
 ## Compatibilità e verifiche
 
