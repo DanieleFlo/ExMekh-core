@@ -1,0 +1,932 @@
+{
+  "published": [
+    {
+      "repository": "Qwen/Qwen-Image-2.1-Turbo",
+      "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "artifacts": [
+        {
+          "path": ".gitattributes",
+          "bytes": 2463,
+          "git_blob": "fc4d1a57717e33389cb9647dcfeef9b7a404ff30",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "LICENSE",
+          "bytes": 7831,
+          "git_blob": "13ae08d5a5828f508cf0e852b1b316c0c0bbb9b3",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "README.md",
+          "bytes": 15116,
+          "git_blob": "37308417b59a016d9a2b147fb4c91f769edf3def",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "assets/edit-preview.png",
+          "bytes": 867046,
+          "git_blob": "ee2886bb5f6e02bf1e06b77b0f01cffddfa7a666",
+          "published_sha256": "ab8bea3ec5e5456ccaf5e225a79b60c02e743785fd5bffed5ed31f2a5b225334",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/t2i-preview.png",
+          "bytes": 850319,
+          "git_blob": "413e2b53364c3859c614f2de686b030887d0bf2d",
+          "published_sha256": "32c84b89d31e2c62f1e8feb62e7dc88941945d2a622e1784984e7272bc5f428a",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-ballet.png",
+          "bytes": 4509235,
+          "git_blob": "8fe68a393d51ec124c4550c7b2d563865c823664",
+          "published_sha256": "bea468baa657e35e81f74373964a257c2eb6bf1556b304ab59801a92fea9a372",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-boat-input.png",
+          "bytes": 1878998,
+          "git_blob": "d49867e9c5e04f8b4a472cb1af83a08a00e5579e",
+          "published_sha256": "903f87e2553cbae5b400469a95aac46ea3068f7525d98cab448b4564aee5ab05",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-composition-input-grid.png",
+          "bytes": 726912,
+          "git_blob": "9367eaff4dd5ede6807cfd1aaabdf039e8436ec3",
+          "published_sha256": "61f86f317d9114ea5ecfcb879fcc83c848919682930da8a84aa8c430cfded991",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-composition.png",
+          "bytes": 4153287,
+          "git_blob": "9be1de5c99c11849f8a99fd417c764b2350715e0",
+          "published_sha256": "2981c6ae9ecbc48cd7e1d846210231a38cd04afb980194f076686ed6f78226f6",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-figure-input-1.png",
+          "bytes": 550642,
+          "git_blob": "a2bb60904f53358e925ede314865ede3d1cba2b3",
+          "published_sha256": "e3c3c75bc05a1740b22b09653022c0e6077d626f3f94df0ff6e3e8d1eeab7728",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-figure.png",
+          "bytes": 4477801,
+          "git_blob": "42b115f733d8edf6285bc8dcc2efb4f8d4a80e27",
+          "published_sha256": "cf69433e51c20eb9cf05b10f62f3fd8e55c8f276a0867a851f6872a09de436ba",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-interior-input-grid.png",
+          "bytes": 847488,
+          "git_blob": "c38d9f9c3422bec48791f4a1d7cc854a3fefedc6",
+          "published_sha256": "dcfd59fe3eacdabab99d5a077e0c6a149a8634261f40d0e9a035fc5cf5f17612",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-interior.png",
+          "bytes": 4486660,
+          "git_blob": "c0971623fef7de389eaf13a42dcf2ea68af96d6a",
+          "published_sha256": "90d37b3880d179caa158a0273dd61756f567c5ca16144f61fd08cca2e608da49",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-portrait.png",
+          "bytes": 6273797,
+          "git_blob": "10136f2526d2a04a1c0c646b5643ab8bc8a37ec8",
+          "published_sha256": "8855135944f03a78e274c14059c6b0cec5cb5932262774ba3ce87d32f99dc155",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-poster.png",
+          "bytes": 5771548,
+          "git_blob": "8709a2896910330ed0075f9bdbc7fd3d19449d0c",
+          "published_sha256": "a6ca151f459650596133fe0d78802f5604bc3a757d2a4740ddae46a23531c8e1",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-rgba.png",
+          "bytes": 2615160,
+          "git_blob": "7167216ae0f4bcb1b7c07068e9c1daead1a47937",
+          "published_sha256": "a7ffdacf26f8686e42d9947e90a2b9f8dd3407dcb3402cd8dd61f733efc619ae",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/turbo-ui.png",
+          "bytes": 3693778,
+          "git_blob": "1729902fe0d4eb64f66697048b44c68edea205ff",
+          "published_sha256": "d7b8a7cea1f33c6f5711b5309902640fdf7470fd727fc387cf5c137fe8cdf570",
+          "local_sha256": null
+        },
+        {
+          "path": "model_index.json",
+          "bytes": 578,
+          "git_blob": "cdc1dae2997ff637225c42c388196b38a9bbaae8",
+          "published_sha256": null,
+          "local_sha256": "97e2febeb19d93cb41fa44807cde8bd42757950b5dffeacdb0331fb2d390cf20",
+          "local_bytes": 578,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/model_index.json"
+        },
+        {
+          "path": "processor/chat_template.jinja",
+          "bytes": 5292,
+          "git_blob": "124386803f142761528f710e77ae483f5f8c4fc4",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "processor/processor_config.json",
+          "bytes": 1300,
+          "git_blob": "7ad6acdf4203f22b7b990e36ccc3a1fe38563d5e",
+          "published_sha256": null,
+          "local_sha256": "14932921ca485d458a04dafd8069fbb0a4505622a48208d19ed247115801385b",
+          "local_bytes": 1300,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/processor/processor_config.json"
+        },
+        {
+          "path": "processor/tokenizer.json",
+          "bytes": 11422650,
+          "git_blob": "c7afbed2efcdf019f88ab0572ec29d3bf595dfe2",
+          "published_sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+          "local_sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+          "local_bytes": 11422650,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/processor/tokenizer.json"
+        },
+        {
+          "path": "processor/tokenizer_config.json",
+          "bytes": 705,
+          "git_blob": "6577e86ca277ad0367551e280ba1d58ad4d42c52",
+          "published_sha256": null,
+          "local_sha256": "fd42a0b35a8d13cd473e88e310b50cbf1bccaa9eb60ed0fd873af5f8f0c59307",
+          "local_bytes": 705,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/processor/tokenizer_config.json"
+        },
+        {
+          "path": "scheduler/scheduler_config.json",
+          "bytes": 486,
+          "git_blob": "72837792c1944182b3707415cdaeb825e6bf5598",
+          "published_sha256": null,
+          "local_sha256": "16c948c71f9152a34cce6e3a2f309e97ad2dca32beecbe5e2fd3a7925b7eb4bb",
+          "local_bytes": 486,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/scheduler/scheduler_config.json"
+        },
+        {
+          "path": "text_encoder/config.json",
+          "bytes": 1542,
+          "git_blob": "b5881fa79f7c988a9ac2f91e4f1192deed7ac034",
+          "published_sha256": null,
+          "local_sha256": "89050cba6b66c4f68f52305b54fc37efe28d95232246b94aa8dc0cfa36f3b734",
+          "local_bytes": 1542,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/text_encoder/config.json"
+        },
+        {
+          "path": "text_encoder/generation_config.json",
+          "bytes": 241,
+          "git_blob": "5d04d3c8d7d02d1092ae021f236c5b1c11661a96",
+          "published_sha256": null,
+          "local_sha256": "d04d0c6fdd1dc056cf68178425a3ecf17a0b9e848cf1a8378ad31c623263472c",
+          "local_bytes": 241,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/text_encoder/generation_config.json"
+        },
+        {
+          "path": "text_encoder/model.safetensors",
+          "bytes": 17534340584,
+          "git_blob": "ac7ba2386468e7154ffc95e58645b9393667b666",
+          "published_sha256": "a1eee8233f3063466dd3b06e857b0a2cf13a77c543908374771d51a546beb2e0",
+          "local_sha256": null
+        },
+        {
+          "path": "transformer/config.json",
+          "bytes": 370,
+          "git_blob": "b3f8d1cf08a94a1d4ec09e2bfeb5344af25f2983",
+          "published_sha256": null,
+          "local_sha256": "2c567038ca190824728844b8d06d94ae02360e668707afd9734e789a7eb58ce3",
+          "local_bytes": 370,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/transformer/config.json"
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+          "bytes": 9968332504,
+          "git_blob": "9f48b006b184384e7938a2f77129b340b5be29f7",
+          "published_sha256": "6cccd922767f01694461bdcf1f34ea7b771f3442e4d5e338ea9aa55277431cc0",
+          "local_sha256": null
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+          "bytes": 4261951904,
+          "git_blob": "eefab5a49a9a03921394a8ad658bf5188236f555",
+          "published_sha256": "69f53ebb063d2f606bdaff7e22e0e2144f28d978d73dc75e6e4293fc5982eab5",
+          "local_sha256": null
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model.safetensors.index.json",
+          "bytes": 30283,
+          "git_blob": "bd64579cfd093a6a4ea8fb492217790018c53c0d",
+          "published_sha256": null,
+          "local_sha256": "17987f6623b1c814d0ef55a137d99142b7b3b040eb1bf241b5575dd35af803a2",
+          "local_bytes": 30283,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/transformer/diffusion_pytorch_model.safetensors.index.json"
+        },
+        {
+          "path": "vae/config.json",
+          "bytes": 2172,
+          "git_blob": "9b780c2dd9601cb0b93ae8f462b58dd3a7468347",
+          "published_sha256": null,
+          "local_sha256": "42bfdec412459bbb7bc38a0617ab70edcfc873f84ec47e0c7d01c53ba09885a5",
+          "local_bytes": 2172,
+          "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/resolve/fc13ba1986fcb905854dc8de2f52eee395f49b5b/vae/config.json"
+        },
+        {
+          "path": "vae/diffusion_pytorch_model.safetensors",
+          "bytes": 675508656,
+          "git_blob": "df155420cfc5637d1692ef211fc85545e907a86f",
+          "published_sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "local_sha256": null
+        }
+      ],
+      "weight_downloaded": false
+    },
+    {
+      "repository": "google/embeddinggemma-2",
+      "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+      "artifacts": [
+        {
+          "path": ".gitattributes",
+          "bytes": 1301,
+          "git_blob": "341d702660437460ba92cd99ce60f4d66545521b",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "1_Pooling/config.json",
+          "bytes": 90,
+          "git_blob": "2730fc1de168630e474c4066987f46d091de2189",
+          "published_sha256": null,
+          "local_sha256": "8759bdf7c77efc7df7723f64856a593c8943b71ee38baf2a88771fbaf78438f9",
+          "local_bytes": 90,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/1_Pooling/config.json"
+        },
+        {
+          "path": "2_Normalize/config.json",
+          "bytes": 97,
+          "git_blob": "8babba92405167e8718211dc51f44fb117e423e4",
+          "published_sha256": null,
+          "local_sha256": "cdb09dfca347a56aa2d691744e38d5ad3c7cbc2834e7181272b9a15328b82524",
+          "local_bytes": 97,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/2_Normalize/config.json"
+        },
+        {
+          "path": "README.md",
+          "bytes": 21730,
+          "git_blob": "960d956ce1d9664b1f67d814bfbbc7160a66c8d1",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "chat_template.jinja",
+          "bytes": 1016,
+          "git_blob": "8df4ab8961aa08b66b470c5adbdc51374aabb63b",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "config.json",
+          "bytes": 4455,
+          "git_blob": "dc524b2cbef566d66d8533c67dc68a6a8f5d340a",
+          "published_sha256": null,
+          "local_sha256": "b8f1e9931b57fbc054acdb445c41765d55b0074c58d145fa82839941ad1b5bb3",
+          "local_bytes": 4455,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/config.json"
+        },
+        {
+          "path": "config_sentence_transformers.json",
+          "bytes": 1565,
+          "git_blob": "ba7dd4d5481cbaf271d5e8d1ad4271c5a45d2fd7",
+          "published_sha256": null,
+          "local_sha256": "031e56a498d33c349ab489a21885bcfe25b4fcba841149dc99e1e90d4a7c28f5",
+          "local_bytes": 1565,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/config_sentence_transformers.json"
+        },
+        {
+          "path": "model.safetensors",
+          "bytes": 1488915288,
+          "git_blob": "95b4ef9f6465d3665486f6b374593a8d7d6ae003",
+          "published_sha256": "197a32965d4b1105faf060417baa899e193fb73cd401f42ec9295234d5553d79",
+          "local_sha256": null
+        },
+        {
+          "path": "modules.json",
+          "bytes": 413,
+          "git_blob": "1ab20c8ab29b8338488b415e5c09af14b742fe3d",
+          "published_sha256": null,
+          "local_sha256": "3d02572a0455b832de67fb8e63a54981bc7e8b46e337c95e917bd8122a533bfd",
+          "local_bytes": 413,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/modules.json"
+        },
+        {
+          "path": "preprocessor_config.json",
+          "bytes": 511,
+          "git_blob": "4adff307a29874c969eda7edb5d3f07faaef879d",
+          "published_sha256": null,
+          "local_sha256": "ea2ae257e901064abdd98dceb19f2b0da06af600bed15e0f99f5c85c37ee9d78",
+          "local_bytes": 511,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/preprocessor_config.json"
+        },
+        {
+          "path": "processor_config.json",
+          "bytes": 1788,
+          "git_blob": "63043a5a2fd2e25a2fc5336fcdaf24e515d12289",
+          "published_sha256": null,
+          "local_sha256": "168f6a08522f3ce5dea596d94d003af2fd691742d4f41fe1f9d8cce76bfbf69c",
+          "local_bytes": 1788,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/processor_config.json"
+        },
+        {
+          "path": "sentence_bert_config.json",
+          "bytes": 747,
+          "git_blob": "b3b98f8308641875fca1e4ddbfae5f38996bb54f",
+          "published_sha256": null,
+          "local_sha256": "b1bcd9f2dce3ae863b359e87d0710b5dbc3314a59ecb4e2f97c7778fc8e4b228",
+          "local_bytes": 747,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/sentence_bert_config.json"
+        },
+        {
+          "path": "tokenizer.json",
+          "bytes": 32170510,
+          "git_blob": "8562f6c9ab4b722ecf89bf869e734560e54d3b85",
+          "published_sha256": "4d777ef5bdc1aa36227abdfb77c3e49e7b9c892d16e1b6bda41c393504828be4",
+          "local_sha256": "4d777ef5bdc1aa36227abdfb77c3e49e7b9c892d16e1b6bda41c393504828be4",
+          "local_bytes": 32170510,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/tokenizer.json"
+        },
+        {
+          "path": "tokenizer.model",
+          "bytes": 4689013,
+          "git_blob": "734e2919dcbd7fc5758b79817d3225134ffc9124",
+          "published_sha256": "e594c8a90eb08d8bda498ff4747977dc827ae0c3c56b5c0d41a605a22d02ef03",
+          "local_sha256": "e594c8a90eb08d8bda498ff4747977dc827ae0c3c56b5c0d41a605a22d02ef03",
+          "local_bytes": 4689013,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/tokenizer.model"
+        },
+        {
+          "path": "tokenizer_config.json",
+          "bytes": 1599,
+          "git_blob": "a9afd12fb3ca2c418fd405320ace85ad46748d03",
+          "published_sha256": null,
+          "local_sha256": "17bd5d6e9364ca49a534e1502076593317c298d4a663623091ed45388f004874",
+          "local_bytes": 1599,
+          "url": "https://huggingface.co/google/embeddinggemma-2/resolve/914f7f89142e33e77833254d9c9b90c3cef7303b/tokenizer_config.json"
+        }
+      ],
+      "weight_downloaded": false
+    },
+    {
+      "repository": "unsloth/Qwen-Image-2.1-Turbo-GGUF",
+      "revision": "5d1f9f759ea877ae556cda88dbec958b62ad3809",
+      "artifacts": [
+        {
+          "path": ".gitattributes",
+          "bytes": 2561,
+          "git_blob": "4c08dceff408c586beec0ff8f14a08011885587c",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "README.md",
+          "bytes": 23643,
+          "git_blob": "ba5e73d40355a24a46a0fe81a2564da55f2e2e8d",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "assets/chalkboard.png",
+          "bytes": 1344995,
+          "git_blob": "eba3ac5aef43d21ab6f417fc899430d0194558a3",
+          "published_sha256": "66605508ef15afe844c371cb56b6fdf6f66f035a70498f390c0040180117ed9e",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/honeybee.png",
+          "bytes": 1450060,
+          "git_blob": "dfad56b1fde9001449c25c28a9ecf9e7e1088270",
+          "published_sha256": "dd6c1d537165a3f67afe5273064c47a52eb2c8f521aa43f1a6f3519bd7593fa0",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/knight.png",
+          "bytes": 1711079,
+          "git_blob": "f5dde97a6194eeaa6ac5f6dbb69bd4ee8cab8559",
+          "published_sha256": "5b4b9ba7694dcc42978d79c8db22645c025bb5e85c55121f430627422546f768",
+          "local_sha256": null
+        },
+        {
+          "path": "assets/ramen.png",
+          "bytes": 1454069,
+          "git_blob": "ec93a3d282b17ba75d77d921f9efdbd4be738d8b",
+          "published_sha256": "80bdb87448f3413bd8542e5c3cd2f64d5d5f98dfb368c9bac62b8d10f0270f11",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-F16.gguf",
+          "bytes": 14230275904,
+          "git_blob": "e3965a36003e0f08c35992ecdedc3ccc88a5ca46",
+          "published_sha256": "4f2241cb2cccb6ce874ebcdd99138a10f96da9c40e4ff1ea0560111511e3e80f",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q2_K.gguf",
+          "bytes": 2466137920,
+          "git_blob": "16a078808d03cbbd53b68cb72daf5485c7404035",
+          "published_sha256": "19c0c8aba44d7dbd760e0d916e3eae8dcc285244cbeca98c34aa0e59c32fb709",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q3_K_M.gguf",
+          "bytes": 3168290624,
+          "git_blob": "7bbd490e06ec16d1e867f05de796b8bcde7843d5",
+          "published_sha256": "2fd16e6590c8153980f0de4d8965007d8cf3cc497240e74c03db7bb05e799467",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q3_K_S.gguf",
+          "bytes": 2724742976,
+          "git_blob": "44a8a946b56676a9ffc05d64dba266026ceb9e44",
+          "published_sha256": "af7bc3c158a846459a6a7db714354ac3dcea6a9afc3a043786831ef8801d3e53",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q3_K_XL.gguf",
+          "bytes": 3612493632,
+          "git_blob": "87e66c5a13ed51418d559c39d8ef3dc1fa663331",
+          "published_sha256": "b0a97d37640a2dc0d8205cd357464c550be96c81830d3ca296b5490b40593b42",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q4_K_M.gguf",
+          "bytes": 4199565120,
+          "git_blob": "e8e206890b9315b6ef2c253a9dea731388835364",
+          "published_sha256": "8940e8b522af886e0c0f5afddf720e82dd223cb9a43580b5f61c4d740452ac20",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q4_K_S.gguf",
+          "bytes": 3906357056,
+          "git_blob": "9739284106145842bf435a8d7b8a66e369c30b2d",
+          "published_sha256": "2a8e536a9e615d1407a82a600d1e695f34acbe36c7c169fb4be7eb0ecfa56cbe",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q5_K_M.gguf",
+          "bytes": 5390223168,
+          "git_blob": "96d87c721a27c7095cebe840fd4bfbc6ac8999a8",
+          "published_sha256": "37c51ff446f4db2e131a9d12c003f0c0e824c8b8ba4dcd8c6cd5753f13457f5f",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q5_K_S.gguf",
+          "bytes": 4501948224,
+          "git_blob": "f732dd818a6a6b0df06edb5253e137db2c50c672",
+          "published_sha256": "72d93eb6f5d7be1a619c34f525393d001bc2fb9485d087f63c8462932b40177d",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q6_K.gguf",
+          "bytes": 6271551296,
+          "git_blob": "5665d1dedcd237f6b59cad5716831a78ee1042f9",
+          "published_sha256": "f4560fb47ad863ffed7e32737d3c42988c44bd0c459606777d7ffe2e895d0a70",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q6_K_XL.gguf",
+          "bytes": 6718506816,
+          "git_blob": "c9760f414385b39c814e012bfaaa8da382493d1c",
+          "published_sha256": "809a2a16e48aff8cbc7ecb668570b15f5645c8244f68963c2e7926562b668ce2",
+          "local_sha256": null
+        },
+        {
+          "path": "qwen-image-2.1-turbo-Q8_0.gguf",
+          "bytes": 7640860480,
+          "git_blob": "2b26c28d53445a719c24a00858851266701dc3a2",
+          "published_sha256": "399d2ddc3636f36456e2f5bfa57187da4e38721bc046430317f42a9eab5b1712",
+          "local_sha256": null
+        }
+      ],
+      "weight_downloaded": false
+    },
+    {
+      "repository": "unsloth/Qwen3-VL-8B-Instruct-GGUF",
+      "revision": "b93a7ee713758252c555be4210c00540df954dc2",
+      "artifacts": [
+        {
+          "path": ".gitattributes",
+          "bytes": 3416,
+          "git_blob": "162efbc651bc47150eab8d13a5c07626d416437d",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-BF16.gguf",
+          "bytes": 16388045408,
+          "git_blob": "438f500ba6c9e711a362c36d9c46e8f4c27ed46a",
+          "published_sha256": "7159768faf43dedcdbf6d8e78ee6f4325ada151be2a248d785e4b683b87c782a",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-IQ4_NL.gguf",
+          "bytes": 4793625440,
+          "git_blob": "349bcfd9d9fd967f311bffc388b20649b5480028",
+          "published_sha256": "31fabbd15be7617110ee6bfdc9e1a7db9c052e1e5a6e59f54446d9125e36a7a7",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-IQ4_XS.gguf",
+          "bytes": 4581288800,
+          "git_blob": "6f4bf53aa0dd6c71b112b1320e55a3405ff1187d",
+          "published_sha256": "2b1d61aff9f0ffd41c02d97346e98f592e78cb963c1c6256052131278a2fec51",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q2_K.gguf",
+          "bytes": 3281734496,
+          "git_blob": "c28ce835beaa469fc0793a3d5d64c3ed45f6f27e",
+          "published_sha256": "28d318051c511f78d9584093b1d54ce3e5e380df7896d5d451310f600ccf8220",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q2_K_L.gguf",
+          "bytes": 3427593056,
+          "git_blob": "a740ecc3fbc805cc8015844f3f143729ae5888c1",
+          "published_sha256": "e1a1d4550398b0b5bef503e06eead6c3c95e247faa9d969a3e5b03e20db6db7f",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q3_K_M.gguf",
+          "bytes": 4124162912,
+          "git_blob": "f2cf7469324cb701a447f81015055f8c5dae826f",
+          "published_sha256": "44d2eb1ed1e96f8848a9b18c732a9e34467ea7110003c475c7b495174fb18c4c",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q3_K_S.gguf",
+          "bytes": 3769613152,
+          "git_blob": "1140ad3b51261656b9da101dbdd4a56930d41935",
+          "published_sha256": "3912290e0518f5728a7f2c2e19b279c188eb02b6074a215385d25a20b5438b7e",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q4_0.gguf",
+          "bytes": 4787333984,
+          "git_blob": "125b6aab747e994188cb0259db7787314bea3ed9",
+          "published_sha256": "9c9a8c07bb188dd9398eeacae70d648bb56895a04fc1c8e8a85788363e30b486",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q4_1.gguf",
+          "bytes": 5247757152,
+          "git_blob": "0be952373f73d1e2d33f2a67e3411f31af12a443",
+          "published_sha256": "2edad527595e08e5d409eb7a80aa8689165a8ffd9ab1fcfda8d1e2a78823a394",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q4_K_M.gguf",
+          "bytes": 5027785568,
+          "git_blob": "82eee6a5c8cd1fbd3b3be0e5fae5680a8bb06b5c",
+          "published_sha256": "108e7ff92b78eefd3db4741885104acba514255c11b617d3c7b197a5f46efe89",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q4_K_S.gguf",
+          "bytes": 4802014048,
+          "git_blob": "16493811dcc1a73239c5ccaab22ccab2cc825230",
+          "published_sha256": "c977be9b9f9b8a6d025936e8ea0396e450059d45e0c8ace3299c10b1668a3fba",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q5_K_M.gguf",
+          "bytes": 5851114336,
+          "git_blob": "1f9b265c41167d8e0cea0c6d1616278b86d6fab8",
+          "published_sha256": "bb6d45711239c508c18b6a67f00dd094a41add64e8639f8554738bfeccf5a3bc",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q5_K_S.gguf",
+          "bytes": 5720763232,
+          "git_blob": "0a1de51a50a0b8f85c9a19856e9ca4b0aa488f31",
+          "published_sha256": "dbecb3a21b13c531ff4422aba45a2e106fc08605af97d589fb068931df32bf0f",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q6_K.gguf",
+          "bytes": 6725901152,
+          "git_blob": "2aa19a9e94194f25459125c2e1e86f98dd40ea03",
+          "published_sha256": "2f963d09b4c7485df9bfd4ac4d7ce192cc9cc004a45555b605eeb0a7a83f0057",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-Q8_0.gguf",
+          "bytes": 8709520224,
+          "git_blob": "679dccac2fc4459743d6fcedc00fbed2da4c9a32",
+          "published_sha256": "cb8616bf6ed228982d9e47d7b72b42195342efa26044b0ee1873e61d9e78d3d7",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-IQ1_M.gguf",
+          "bytes": 2401995616,
+          "git_blob": "9cedffb4c9392ef79d2e19e8be1685cc21bcfc7f",
+          "published_sha256": "66c57a548388b708ca53f82c3f25dceb6c2faff26b7be11659d4bb169a9a51a8",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-IQ1_S.gguf",
+          "bytes": 2282064736,
+          "git_blob": "d0094fde989e111bd84f3f87125102d8c5e1ea7c",
+          "published_sha256": "4ffe95155ef37694779e08b6a5e117d9f05a9ec72d54ee128773b36c995571eb",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-IQ2_M.gguf",
+          "bytes": 3116403552,
+          "git_blob": "6a46d02e5014e00967bef279f82ef3ba658c9f25",
+          "published_sha256": "ebe0cd000f72ed1c086c441f4422979ac1bc567cc899ad913c72c01f5fbddc8e",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-IQ2_XXS.gguf",
+          "bytes": 2608761696,
+          "git_blob": "9269cb921eb523dc114a83b72081126e34215315",
+          "published_sha256": "183e1f781fe02f78acdccfd8214c87bdf6b634fd9d0711798d5f07de6b632196",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-IQ3_XXS.gguf",
+          "bytes": 3410266976,
+          "git_blob": "df3a568d4ba15036139fd9ac7773e21838897bd8",
+          "published_sha256": "028135d13f24261f8571695773cac4f6cb73dfe8c6f99dfed925270e34f41dcc",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-Q2_K_XL.gguf",
+          "bytes": 3501976416,
+          "git_blob": "ebacaaec291066a2094adbdd1b0f7ec6aac20dc5",
+          "published_sha256": "2cd7f46781a634c4077271120f40564c1cde2c679b18a746ae542ca56e7ea9b2",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-Q3_K_XL.gguf",
+          "bytes": 4313344864,
+          "git_blob": "b01cb9d94911d63f1c23660f3aec40b88efb4c1f",
+          "published_sha256": "d88cfc1e6eadb988bc0a8a4e087bf60124fb28a9d8f819b8f4c076c102ba4e0d",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-Q4_K_XL.gguf",
+          "bytes": 5148699488,
+          "git_blob": "95cf35f52cbd7d2e662cb636a9785c082df40a07",
+          "published_sha256": "e3d1a6e87c5cb31e054f2c3bc0dd82ffde052f613de5eef3665b7bd33c9b703e",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-Q5_K_XL.gguf",
+          "bytes": 5884767072,
+          "git_blob": "3a01a1338b2769b4f062005bd9ce223ebc030bbb",
+          "published_sha256": "d138d047fe5736cdc678490d6ba16d2e42f690a6d648b5c8fbdac0e17789fac6",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-Q6_K_XL.gguf",
+          "bytes": 7490550624,
+          "git_blob": "c7ac84ab1367a3f0606ed6ffbf7d23eaf3b24d7f",
+          "published_sha256": "dc3cc983735542500f40c32c1a9dacdeff198a440fac541056dca6b550389130",
+          "local_sha256": null
+        },
+        {
+          "path": "Qwen3-VL-8B-Instruct-UD-Q8_K_XL.gguf",
+          "bytes": 10824039264,
+          "git_blob": "2df17936874dacd419136a9c6e8bbd3674459c04",
+          "published_sha256": "6d15b2376bea85649a9f9d63277a80519a261af2e34ee9ef6b605d8a0bc365b6",
+          "local_sha256": null
+        },
+        {
+          "path": "README.md",
+          "bytes": 9037,
+          "git_blob": "6a564b1e1358a3f028b037f9c57400dc39b02b93",
+          "published_sha256": null,
+          "local_sha256": null
+        },
+        {
+          "path": "imatrix_unsloth.gguf_file",
+          "bytes": 5316790,
+          "git_blob": "950b105a6f0affff638ade421047d897e027dbc4",
+          "published_sha256": "5e0d7ba9b5d9030f8d6406fdd02d5b0df8108a85f5fbc99625d3c2f6d294e30a",
+          "local_sha256": null
+        },
+        {
+          "path": "mmproj-BF16.gguf",
+          "bytes": 1162569280,
+          "git_blob": "0f5ba00d2b5f7c9aa8b9da34c50e0a5b5b36e0c6",
+          "published_sha256": "6516bb64bae1503a0fcd7ec9fa39655f8c481580be0a0a066397941d9761c9f4",
+          "local_sha256": null
+        },
+        {
+          "path": "mmproj-F16.gguf",
+          "bytes": 1159030336,
+          "git_blob": "98e9e8e34ebddc615617313a09085ad0a243e9d6",
+          "published_sha256": "d406d03ebabefdef86a2c86bf0c1b65f9e046f7a81c218f25de4931b46a07fc4",
+          "local_sha256": null
+        },
+        {
+          "path": "mmproj-F32.gguf",
+          "bytes": 2305574464,
+          "git_blob": "639686d70cd2bf7037958f3ad69a533d3ec61e3f",
+          "published_sha256": "1b9824e71c84041aded2145c91eaf7c9fead0524c646fb225ea5d7fd5d5b4ba0",
+          "local_sha256": null
+        }
+      ],
+      "weight_downloaded": false
+    }
+  ],
+  "locally_verified": [
+    {
+      "repository": "Qwen/Qwen-Image-2.1-Turbo",
+      "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "files": [
+        {
+          "path": "LICENSE",
+          "sha256": "8dc973f024ff95966bea25866efa443fd16776dcb1001e681e3d467ea572b28d",
+          "bytes": 7831
+        },
+        {
+          "path": "README.md",
+          "sha256": "9a262724d564444f1fd41a1a3fc1aae75bfb7873cd623abb3acd3d59f02ee4c5",
+          "bytes": 15116
+        },
+        {
+          "path": "model_index.json",
+          "sha256": "97e2febeb19d93cb41fa44807cde8bd42757950b5dffeacdb0331fb2d390cf20",
+          "bytes": 578
+        },
+        {
+          "path": "processor/processor_config.json",
+          "sha256": "14932921ca485d458a04dafd8069fbb0a4505622a48208d19ed247115801385b",
+          "bytes": 1300
+        },
+        {
+          "path": "processor/tokenizer.json",
+          "sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+          "bytes": 11422650
+        },
+        {
+          "path": "processor/tokenizer_config.json",
+          "sha256": "fd42a0b35a8d13cd473e88e310b50cbf1bccaa9eb60ed0fd873af5f8f0c59307",
+          "bytes": 705
+        },
+        {
+          "path": "scheduler/scheduler_config.json",
+          "sha256": "16c948c71f9152a34cce6e3a2f309e97ad2dca32beecbe5e2fd3a7925b7eb4bb",
+          "bytes": 486
+        },
+        {
+          "path": "text_encoder/config.json",
+          "sha256": "89050cba6b66c4f68f52305b54fc37efe28d95232246b94aa8dc0cfa36f3b734",
+          "bytes": 1542
+        },
+        {
+          "path": "text_encoder/generation_config.json",
+          "sha256": "d04d0c6fdd1dc056cf68178425a3ecf17a0b9e848cf1a8378ad31c623263472c",
+          "bytes": 241
+        },
+        {
+          "path": "text_encoder/model.safetensors",
+          "sha256": "a1eee8233f3063466dd3b06e857b0a2cf13a77c543908374771d51a546beb2e0",
+          "bytes": 17534340584
+        },
+        {
+          "path": "transformer/config.json",
+          "sha256": "2c567038ca190824728844b8d06d94ae02360e668707afd9734e789a7eb58ce3",
+          "bytes": 370
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+          "sha256": "6cccd922767f01694461bdcf1f34ea7b771f3442e4d5e338ea9aa55277431cc0",
+          "bytes": 9968332504
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+          "sha256": "69f53ebb063d2f606bdaff7e22e0e2144f28d978d73dc75e6e4293fc5982eab5",
+          "bytes": 4261951904
+        },
+        {
+          "path": "transformer/diffusion_pytorch_model.safetensors.index.json",
+          "sha256": "17987f6623b1c814d0ef55a137d99142b7b3b040eb1bf241b5575dd35af803a2",
+          "bytes": 30283
+        },
+        {
+          "path": "vae/config.json",
+          "sha256": "42bfdec412459bbb7bc38a0617ab70edcfc873f84ec47e0c7d01c53ba09885a5",
+          "bytes": 2172
+        },
+        {
+          "path": "vae/diffusion_pytorch_model.safetensors",
+          "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+          "bytes": 675508656
+        },
+        {
+          "path": "processor/chat_template.jinja",
+          "bytes": 5292,
+          "sha256": "3636d0f0bd6bef02654cdffdc447b79cb2cef8ab02cc75267345946291a489e4",
+          "supplemental_pinned_template": true
+        }
+      ]
+    },
+    {
+      "repository": "google/embeddinggemma-2",
+      "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+      "files": [
+        {
+          "path": "1_Pooling/config.json",
+          "sha256": "8759bdf7c77efc7df7723f64856a593c8943b71ee38baf2a88771fbaf78438f9",
+          "bytes": 90
+        },
+        {
+          "path": "2_Normalize/config.json",
+          "sha256": "cdb09dfca347a56aa2d691744e38d5ad3c7cbc2834e7181272b9a15328b82524",
+          "bytes": 97
+        },
+        {
+          "path": "README.md",
+          "sha256": "b677a0ee2818c36f091b65fd3d9b4baea9f04d53b02b49cae916c74bf9682037",
+          "bytes": 21730
+        },
+        {
+          "path": "config.json",
+          "sha256": "b8f1e9931b57fbc054acdb445c41765d55b0074c58d145fa82839941ad1b5bb3",
+          "bytes": 4455
+        },
+        {
+          "path": "config_sentence_transformers.json",
+          "sha256": "031e56a498d33c349ab489a21885bcfe25b4fcba841149dc99e1e90d4a7c28f5",
+          "bytes": 1565
+        },
+        {
+          "path": "model.safetensors",
+          "sha256": "197a32965d4b1105faf060417baa899e193fb73cd401f42ec9295234d5553d79",
+          "bytes": 1488915288
+        },
+        {
+          "path": "modules.json",
+          "sha256": "3d02572a0455b832de67fb8e63a54981bc7e8b46e337c95e917bd8122a533bfd",
+          "bytes": 413
+        },
+        {
+          "path": "preprocessor_config.json",
+          "sha256": "ea2ae257e901064abdd98dceb19f2b0da06af600bed15e0f99f5c85c37ee9d78",
+          "bytes": 511
+        },
+        {
+          "path": "processor_config.json",
+          "sha256": "168f6a08522f3ce5dea596d94d003af2fd691742d4f41fe1f9d8cce76bfbf69c",
+          "bytes": 1788
+        },
+        {
+          "path": "sentence_bert_config.json",
+          "sha256": "b1bcd9f2dce3ae863b359e87d0710b5dbc3314a59ecb4e2f97c7778fc8e4b228",
+          "bytes": 747
+        },
+        {
+          "path": "tokenizer.json",
+          "sha256": "4d777ef5bdc1aa36227abdfb77c3e49e7b9c892d16e1b6bda41c393504828be4",
+          "bytes": 32170510
+        },
+        {
+          "path": "tokenizer.model",
+          "sha256": "e594c8a90eb08d8bda498ff4747977dc827ae0c3c56b5c0d41a605a22d02ef03",
+          "bytes": 4689013
+        },
+        {
+          "path": "tokenizer_config.json",
+          "sha256": "17bd5d6e9364ca49a534e1502076593317c298d4a663623091ed45388f004874",
+          "bytes": 1599
+        }
+      ]
+    }
+  ],
+  "reference_archives": [
+    {
+      "repository": "huggingface/transformers",
+      "revision": "d4fcbccd0966ace9505b9cbd3041d28ad822d8a7",
+      "url": "https://codeload.github.com/huggingface/transformers/tar.gz/d4fcbccd0966ace9505b9cbd3041d28ad822d8a7",
+      "archive_sha256": "e9f898a13b39acd13ca5dfe3ae7b4d81dcd238c313db0836e7aa19b92e2e7c1f"
+    },
+    {
+      "repository": "huggingface/diffusers",
+      "revision": "aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e",
+      "url": "https://codeload.github.com/huggingface/diffusers/tar.gz/aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e",
+      "archive_sha256": "54e95568407ec6e84ae3cf49ba646df42b2a3aff595ca3452af6102b3618adfb"
+    }
+  ]
+}

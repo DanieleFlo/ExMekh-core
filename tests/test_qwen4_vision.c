@@ -5,10 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* ds4.c: writes u32 tokens, dim, grid rows, grid cols, then the merged embeddings as floats */
-int ds4_qwen4_vision_dump(const char *vision_path, const char *image_path, const char *out_path,
-                          uint32_t min_image_tokens, uint32_t max_image_tokens);
-
 int main(int argc, char **argv) {
     if (argc < 4) {
         fprintf(stderr, "usage: %s mmproj.gguf image out.bin [min_tokens max_tokens]\n", argv[0]);

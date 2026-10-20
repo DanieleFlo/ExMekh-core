@@ -1,0 +1,257 @@
+{
+  "sources": [
+    {
+      "repository": "huggingface/transformers",
+      "revision": "d4fcbccd0966ace9505b9cbd3041d28ad822d8a7",
+      "license_file": "https://raw.githubusercontent.com/huggingface/transformers/d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/LICENSE",
+      "license_sha256": "77fd4710def9ec3c0f6225800e0235f15a425abd4a8b03559127fcd782612049",
+      "repository_license": "Apache-2.0",
+      "imported_code": false,
+      "files": [
+        {
+          "path": "src/transformers/models/embedding_gemma2/modeling_embedding_gemma2.py",
+          "url": "https://raw.githubusercontent.com/huggingface/transformers/d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/embedding_gemma2/modeling_embedding_gemma2.py",
+          "bytes": 43757,
+          "sha256": "f0376b13fb5230b349ce269c4fb40906931744a84df57c1d208f46032941eda7",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        },
+        {
+          "path": "src/transformers/models/embedding_gemma2/processing_embedding_gemma2.py",
+          "url": "https://raw.githubusercontent.com/huggingface/transformers/d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/embedding_gemma2/processing_embedding_gemma2.py",
+          "bytes": 22089,
+          "sha256": "707c0fb79433c8760c55af239638fb03c20c267d7b0ac7eb65eee3ffc1baba2c",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        },
+        {
+          "path": "src/transformers/models/qwen3_vl/modeling_qwen3_vl.py",
+          "url": "https://raw.githubusercontent.com/huggingface/transformers/d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/qwen3_vl/modeling_qwen3_vl.py",
+          "bytes": 64289,
+          "sha256": "0ee6d35edd380adf4c5ef9cb73ef061a4e75de8aa4c20164eecafdc965fe56db",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        }
+      ]
+    },
+    {
+      "repository": "huggingface/diffusers",
+      "revision": "aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e",
+      "license_file": "https://raw.githubusercontent.com/huggingface/diffusers/aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/LICENSE",
+      "license_sha256": "f9e2070c247517b1ddf65f7b11b393484a18da91a958fd18a97bd0f241c3125c",
+      "repository_license": "Apache-2.0",
+      "imported_code": false,
+      "files": [
+        {
+          "path": "src/diffusers/models/transformers/transformer_qwenimage21.py",
+          "url": "https://raw.githubusercontent.com/huggingface/diffusers/aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/models/transformers/transformer_qwenimage21.py",
+          "bytes": 48180,
+          "sha256": "7a3393f89b1eb71d79c8669a719a21a616e6c8b188b2c1f5a2faca2cc701f171",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        },
+        {
+          "path": "src/diffusers/pipelines/qwenimage21/pipeline_qwenimage21.py",
+          "url": "https://raw.githubusercontent.com/huggingface/diffusers/aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/pipelines/qwenimage21/pipeline_qwenimage21.py",
+          "bytes": 42974,
+          "sha256": "e75e4ce38d38e194edaac818bba99b2115b4bb2bfdbd15ce03a2813b0fe8856c",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        },
+        {
+          "path": "src/diffusers/models/autoencoders/autoencoder_kl_qwenimage21.py",
+          "url": "https://raw.githubusercontent.com/huggingface/diffusers/aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/models/autoencoders/autoencoder_kl_qwenimage21.py",
+          "bytes": 58515,
+          "sha256": "1e29f252dbddd044b84c8b794589001ce94bb125a8f13eb5b226ef30c1e2ea11",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        },
+        {
+          "path": "src/diffusers/hooks/group_offloading.py",
+          "url": "https://raw.githubusercontent.com/huggingface/diffusers/aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/hooks/group_offloading.py",
+          "bytes": 51247,
+          "sha256": "dd03ec250e8af51f3060761f31a316b821abd6c2d2f506ccdfe0734c0368c74a",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        }
+      ]
+    },
+    {
+      "repository": "ggml-org/llama.cpp",
+      "revision": "b38960f52079e41f91863dd0905ec13432966b39",
+      "license_file": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b38960f52079e41f91863dd0905ec13432966b39/LICENSE",
+      "license_sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d",
+      "repository_license": "MIT",
+      "imported_code": false,
+      "files": [
+        {
+          "path": "src/models/gemma-embedding2.cpp",
+          "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b38960f52079e41f91863dd0905ec13432966b39/src/models/gemma-embedding2.cpp",
+          "bytes": 10830,
+          "sha256": "b1dc7a1f51de6af71cdff3c953ab1ceff41963ff82144a36e86efefa8705d798",
+          "declared_license": "MIT",
+          "ported": false
+        },
+        {
+          "path": "conversion/gemma.py",
+          "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b38960f52079e41f91863dd0905ec13432966b39/conversion/gemma.py",
+          "bytes": 57887,
+          "sha256": "20e431f0868eef1bc8e47f79e82071309d129d8e21ba065997136dfa6eefecf7",
+          "declared_license": "MIT",
+          "ported": false
+        },
+        {
+          "path": "ggml/src/ggml-cuda/mmq.cu",
+          "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b38960f52079e41f91863dd0905ec13432966b39/ggml/src/ggml-cuda/mmq.cu",
+          "bytes": 19978,
+          "sha256": "513ed8c9f2d4f33dc41a5d9cc066148ac63a6e4772bb487b5c064af9086da22e",
+          "declared_license": "MIT",
+          "ported": false
+        },
+        {
+          "path": "ggml/src/ggml-cuda/fattn-tile.cuh",
+          "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/b38960f52079e41f91863dd0905ec13432966b39/ggml/src/ggml-cuda/fattn-tile.cuh",
+          "bytes": 63145,
+          "sha256": "ae731e173cd519ea099ddbc68d86c2c2836bb88c149480c564f05b9e50b23ce0",
+          "declared_license": "MIT",
+          "ported": false
+        }
+      ]
+    },
+    {
+      "repository": "unslothai/unsloth",
+      "revision": "e3b00a1e7c440b3202530f68cf4d3d268cb67a91",
+      "license_file": "https://raw.githubusercontent.com/unslothai/unsloth/e3b00a1e7c440b3202530f68cf4d3d268cb67a91/LICENSE",
+      "license_sha256": "40e0b458a68b557560def38b106a1a0da1aac57685536dcb882f1c78c647e4d3",
+      "repository_license": "Apache-2.0",
+      "imported_code": false,
+      "files": [
+        {
+          "path": "unsloth/kernels/rms_layernorm.py",
+          "url": "https://raw.githubusercontent.com/unslothai/unsloth/e3b00a1e7c440b3202530f68cf4d3d268cb67a91/unsloth/kernels/rms_layernorm.py",
+          "bytes": 37296,
+          "sha256": "9f60dd5a773cfbcba591a01cde8eaff10c3318818ba7511715bfef4927653ec7",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        },
+        {
+          "path": "unsloth/kernels/geglu.py",
+          "url": "https://raw.githubusercontent.com/unslothai/unsloth/e3b00a1e7c440b3202530f68cf4d3d268cb67a91/unsloth/kernels/geglu.py",
+          "bytes": 8562,
+          "sha256": "de4c7eddffecf7cecb67358a28821149bb2f5d2123adaaece714352f9cc4b12c",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        },
+        {
+          "path": "studio/backend/core/inference/diffusion.py",
+          "url": "https://raw.githubusercontent.com/unslothai/unsloth/e3b00a1e7c440b3202530f68cf4d3d268cb67a91/studio/backend/core/inference/diffusion.py",
+          "bytes": 684001,
+          "sha256": "69c97cbcbdf0225e1f40f4c5632d372bdc468b39c97a6a176ab50a9d929a8187",
+          "declared_license": "AGPL-3.0-only",
+          "ported": false
+        },
+        {
+          "path": "studio/backend/core/inference/diffusion_memory.py",
+          "url": "https://raw.githubusercontent.com/unslothai/unsloth/e3b00a1e7c440b3202530f68cf4d3d268cb67a91/studio/backend/core/inference/diffusion_memory.py",
+          "bytes": 239533,
+          "sha256": "fce513d0967302a997082e25f3859d54167fb2df83a8b64a2857b1ce0ea5933a",
+          "declared_license": "AGPL-3.0-only",
+          "ported": false
+        }
+      ]
+    },
+    {
+      "repository": "leejet/stable-diffusion.cpp",
+      "revision": "b13a48219d5cdf408edcb93da6cd69b612ed03d3",
+      "license_file": "https://raw.githubusercontent.com/leejet/stable-diffusion.cpp/b13a48219d5cdf408edcb93da6cd69b612ed03d3/LICENSE",
+      "license_sha256": "b53fa08f515cb5a6fff7b9fd8fcd0961a4b80df29d74372d25e1f9171aa042ee",
+      "repository_license": "MIT",
+      "imported_code": false,
+      "files": [
+        {
+          "path": "docs/qwen_image_2.1.md",
+          "url": "https://raw.githubusercontent.com/leejet/stable-diffusion.cpp/b13a48219d5cdf408edcb93da6cd69b612ed03d3/docs/qwen_image_2.1.md",
+          "bytes": 8184,
+          "sha256": "7693cbb909f54f0060d419a4a1e4cfcda5b84c745760c015083b7c7c5c1c1565",
+          "declared_license": "MIT",
+          "ported": false
+        }
+      ]
+    },
+    {
+      "repository": "Comfy-Org/ComfyUI",
+      "revision": "b1a247c9cf9dbfda4b2c0a0c1d50950667eeaa0c",
+      "license_file": "https://raw.githubusercontent.com/Comfy-Org/ComfyUI/b1a247c9cf9dbfda4b2c0a0c1d50950667eeaa0c/LICENSE",
+      "license_sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "repository_license": "GPL-3.0",
+      "imported_code": false,
+      "files": [
+        {
+          "path": "comfy/ldm/qwen_image21/model.py",
+          "url": "https://raw.githubusercontent.com/Comfy-Org/ComfyUI/b1a247c9cf9dbfda4b2c0a0c1d50950667eeaa0c/comfy/ldm/qwen_image21/model.py",
+          "bytes": 24054,
+          "sha256": "a69dff15ff6fa369fab5ca0d3261f8aaf19aaedd3fc66414e20a1cf7df0aa5ac",
+          "declared_license": "Apache-2.0 header; surrounding integration GPL-3.0",
+          "ported": false
+        },
+        {
+          "path": "comfy/text_encoders/qwen_image21.py",
+          "url": "https://raw.githubusercontent.com/Comfy-Org/ComfyUI/b1a247c9cf9dbfda4b2c0a0c1d50950667eeaa0c/comfy/text_encoders/qwen_image21.py",
+          "bytes": 4817,
+          "sha256": "f552c9336b13f1f1fd8524650ac28ffc68c0931b3512855820edf97e415d34f4",
+          "declared_license": "Apache-2.0 header; surrounding integration GPL-3.0",
+          "ported": false
+        }
+      ]
+    },
+    {
+      "repository": "sgl-project/sglang",
+      "revision": "eae134d61fa9ce2e532d7543062cb9c6a7e200d7",
+      "license_file": "https://raw.githubusercontent.com/sgl-project/sglang/eae134d61fa9ce2e532d7543062cb9c6a7e200d7/LICENSE",
+      "license_sha256": "1495e1e757ef4d0925a2350563cf5754bb23c51701a8ec4fb3c5cdcbedae6747",
+      "repository_license": "Apache-2.0",
+      "imported_code": false,
+      "files": [
+        {
+          "path": "python/sglang/multimodal_gen/runtime/managers/memory_managers/layerwise_offload.py",
+          "url": "https://raw.githubusercontent.com/sgl-project/sglang/eae134d61fa9ce2e532d7543062cb9c6a7e200d7/python/sglang/multimodal_gen/runtime/managers/memory_managers/layerwise_offload.py",
+          "bytes": 160988,
+          "sha256": "adf06cc1b4fa986103a923c5bdbf5608e887f250fd0f441bee94c34b94afb856",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        }
+      ]
+    },
+    {
+      "repository": "vllm-project/vllm-omni",
+      "revision": "18c3bd5d2d4323bc7adca1ac3c465c4a53bbfb6e",
+      "license_file": "https://raw.githubusercontent.com/vllm-project/vllm-omni/18c3bd5d2d4323bc7adca1ac3c465c4a53bbfb6e/LICENSE",
+      "license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "repository_license": "Apache-2.0",
+      "imported_code": false,
+      "files": [
+        {
+          "path": "README.md",
+          "url": "https://raw.githubusercontent.com/vllm-project/vllm-omni/18c3bd5d2d4323bc7adca1ac3c465c4a53bbfb6e/README.md",
+          "bytes": 9660,
+          "sha256": "2b7d9eda9fec3f528e32a90ecaa93523871c61a830c8942aa206c98ad5a94f02",
+          "declared_license": "Apache-2.0",
+          "ported": false
+        }
+      ]
+    }
+  ],
+  "new_runtime": "Original C implementation; no external kernel port in T00-T02",
+  "weights": [
+    {
+      "model": "Qwen/Qwen-Image-2.1-Turbo",
+      "declared_license": "qwen-research",
+      "license_path": "LICENSE"
+    },
+    {
+      "model": "google/embeddinggemma-2",
+      "declared_license": "Apache-2.0",
+      "license_path": "README.md front matter"
+    }
+  ]
+}

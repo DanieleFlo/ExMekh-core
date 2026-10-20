@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false, "required": ["object", "data"],
+  "properties": {
+    "object": {"const": "list"},
+    "data": {"type": "array", "items": {"$ref": "#/$defs/model"}},
+    "ds4": {"type":"object","additionalProperties":false,"required":["version","limits"],"properties":{
+      "version":{"const":1},"limits":{"type":"object","additionalProperties":false,
+        "required":["max_upload_bytes","media_ttl_seconds","media_quota_bytes","max_inflight_requests"],
+        "properties":{"max_upload_bytes":{"const":536870912},"media_ttl_seconds":{"const":3600},
+          "media_quota_bytes":{"type":"integer","minimum":536870912},"max_inflight_requests":{"type":"integer","minimum":1}}}
+    }}
+  },
+  "$defs": {
+    "modalities": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["text", "image", "video", "audio"]}},
+    "component": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "optional", "input_modalities", "storage_format", "compute_dtype", "host_loaded", "device_resident"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "optional": {"type": "boolean"},
+        "input_modalities": {"$ref": "#/$defs/modalities"},
+        "storage_format": {"type": "string", "minLength": 1}, "compute_dtype": {"enum": ["float32", "bfloat16", "float16"]},
+        "host_loaded": {"type": "boolean"}, "device_resident": {"type": "boolean"}
+      }
+    },
+    "model": {
+      "type": "object", "additionalProperties": false, "required": ["id", "object", "created", "owned_by", "ds4"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "object": {"const": "model"}, "created": {"type": "integer", "minimum": 0}, "owned_by": {"type": "string"},
+        "ds4": {
+          "type": "object", "additionalProperties": false,
+          "required": ["version", "revision", "profile", "operations", "input_modalities", "context_tokens", "embedding_dimensions", "configured", "resident", "ready", "qualified_backends", "components"],
+          "properties": {
+            "version": {"const": 1}, "revision": {"type": "string", "minLength": 1}, "profile": {"type": "string", "minLength": 1},
+            "operations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["chat", "image_generate", "image_edit", "embed"]}},
+            "input_modalities": {"$ref": "#/$defs/modalities"}, "context_tokens": {"type": "integer", "minimum": 1},
+            "embedding_dimensions": {"type": "array", "uniqueItems": true, "items": {"type": "integer", "minimum": 1}},
+            "configured": {"type": "boolean"}, "resident": {"type": "boolean"}, "ready": {"type": "boolean"},
+            "qualified_backends": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+            "components": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/component"}}
+          },
+          "allOf": [
+            {"if":{"properties":{"operations":{"contains":{"const":"embed"}}}},"then":{"properties":{"embedding_dimensions":{"minItems":1}}},"else":{"properties":{"embedding_dimensions":{"maxItems":0}}}},
+            {"if":{"properties":{"ready":{"const":true}}},"then":{"properties":{"qualified_backends":{"minItems":1}}}}
+          ]
+        }
+      }
+    }
+  }
+}

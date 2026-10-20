@@ -1,0 +1,138 @@
+[
+  {
+    "case": "text",
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "-",
+      "-",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-t00-20261020-r2/text"
+    ],
+    "exit_code": 0,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "e8f94dece964f807484799b079423f4e686331d6fda181a5a1e9337817f5459f"
+      },
+      {
+        "path": "result.json",
+        "bytes": 131,
+        "sha256": "fada35b63f2d3e81a3cdbdf2b5854036958fdf5029b635d6ff8eab2e6f61d89a"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 161556612,
+        "sha256": "4865f5899d6d621dbcc5d091e9bfcc0bfbd7d5eed8de508f22821c8212210731"
+      },
+      {
+        "path": "stderr.log",
+        "bytes": 714,
+        "sha256": "350c5b683d10edb0aa9c8715173a507e4e4e308ab31fd4b8b00cf3abf98ac95c"
+      }
+    ]
+  },
+  {
+    "case": "text-mtp",
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+      "-",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-t00-20261020-r2/text-mtp"
+    ],
+    "exit_code": 0,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "e8f94dece964f807484799b079423f4e686331d6fda181a5a1e9337817f5459f"
+      },
+      {
+        "path": "result.json",
+        "bytes": 130,
+        "sha256": "dfa2b7cf57958f418e4aed8708dad0e051a004cc8e8011db694468d911dd912c"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 162676868,
+        "sha256": "f07a8d365c0ded9a1bb324f48370ee5750bfdc748c75d19c62ca49d081851a5a"
+      },
+      {
+        "path": "stderr.log",
+        "bytes": 979,
+        "sha256": "05139801b01c154eb4cb7a94ca0f874dba8a5341348b426eecf9ae85312dc993"
+      }
+    ]
+  },
+  {
+    "case": "vision",
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "-",
+      "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-t00-20261020-r2/vision"
+    ],
+    "exit_code": 0,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "9beb382fce11f31c46c10171afbaf6e70237dcfbcb44a5511e260305360284f7"
+      },
+      {
+        "path": "result.json",
+        "bytes": 134,
+        "sha256": "71c3fea7784ebf19f4672006b509ccc72401d93cc55f8b8267bcffc1a8eadcef"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 263412216,
+        "sha256": "f0533ab34b50fe14d821e074cd7bd8aeddb837a09010d916d9169bf8a686353f"
+      },
+      {
+        "path": "stderr.log",
+        "bytes": 756,
+        "sha256": "50e931bafdb0fcc91f342b0a4b3ccb9246aa9ff3e3af9f65cc980dd389e1c879"
+      }
+    ]
+  },
+  {
+    "case": "vision-mtp",
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+      "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-t00-20261020-r2/vision-mtp"
+    ],
+    "exit_code": 0,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "9beb382fce11f31c46c10171afbaf6e70237dcfbcb44a5511e260305360284f7"
+      },
+      {
+        "path": "result.json",
+        "bytes": 133,
+        "sha256": "b3bca6c4bcc37c875e110369a2e9da3715a878197690a09028dae5e4acf47b51"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 270897656,
+        "sha256": "777c043132849ddca27f51a670ce19f302a4c7c50ee27186b71be57cddbcbcee"
+      },
+      {
+        "path": "stderr.log",
+        "bytes": 1021,
+        "sha256": "55c0193ca2bd243b8f4e705e764837a7a1fcd148503c343ad205bf602e813998"
+      }
+    ]
+  }
+]

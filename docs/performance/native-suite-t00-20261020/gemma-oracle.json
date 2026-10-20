@@ -1,0 +1,102 @@
+{
+  "model": "gemma",
+  "prepared_sha256": "9f8816cfdaa73673242d998f3729a99f0adaace1f402345df2969b313d269f6c",
+  "torch": "2.14.1+cu130",
+  "cuda": "13.0",
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "dtype": "bfloat16",
+  "tf32": false,
+  "warmup": 1,
+  "repeats": 5,
+  "cases": [
+    {
+      "id": "text",
+      "shape": [
+        2,
+        768
+      ],
+      "max_repeat_abs": 0.0,
+      "seconds": [
+        0.03642453199790907,
+        0.0358467619989824,
+        0.033856460999231786,
+        0.034466065000742674,
+        0.03475847599838744
+      ],
+      "result_sha256": "db4ce07cfe9e52ae161ee4893ded72dda285f6c2b3f642c9c6a2d6ddbb45d826"
+    },
+    {
+      "id": "image",
+      "shape": [
+        1,
+        768
+      ],
+      "max_repeat_abs": 0.0,
+      "seconds": [
+        0.12741516000096453,
+        0.12430528800177854,
+        0.12140895199991064,
+        0.13182124000013573,
+        0.12728798800162622
+      ],
+      "result_sha256": "76c348181c828f10545bfe427847e563e26d91c7df37d08db9e0aaa991d60fd5"
+    },
+    {
+      "id": "audio",
+      "shape": [
+        1,
+        768
+      ],
+      "max_repeat_abs": 0.0,
+      "seconds": [
+        0.065005401000235,
+        0.05984324799646856,
+        0.06372080099754385,
+        0.06523969199770363,
+        0.05719897700328147
+      ],
+      "result_sha256": "9fa7553c30c79387f2ab623d4e49038607fe0e7b4feeda704e1136615d6dbf70"
+    },
+    {
+      "id": "video",
+      "shape": [
+        1,
+        768
+      ],
+      "max_repeat_abs": 0.0,
+      "seconds": [
+        0.09902896699713892,
+        0.10304701299901353,
+        0.09426820099906763,
+        0.09391901400158531,
+        0.09868850500060944
+      ],
+      "result_sha256": "3344e81a06f027ecd0a446c34462e4cb2e93e6b139202768161959c09149ea8a"
+    },
+    {
+      "id": "interleaved",
+      "shape": [
+        1,
+        768
+      ],
+      "max_repeat_abs": 0.0,
+      "seconds": [
+        0.2506442479971156,
+        0.26568320200021844,
+        0.2966253209997376,
+        0.26394767699821386,
+        0.2314517220002017
+      ],
+      "result_sha256": "597ffee1c8da763ed5fa4635789ae9ae55cef81c98a0ad351503b75b1ecc91da"
+    }
+  ],
+  "dependencies": {
+    "numpy": "2.5.3",
+    "tokenizers": "0.23.1",
+    "huggingface-hub": "1.33.0",
+    "accelerate": "1.15.0"
+  },
+  "pooling": "attention_mask mean including prompts, float32 reduction then L2; raw hidden also saved",
+  "attention": "eager",
+  "peak_device_bytes": 2323099648
+}

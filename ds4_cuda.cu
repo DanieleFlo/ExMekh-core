@@ -3070,8 +3070,90 @@ extern "C" int ds4_gpu_init(void) {
     return ds4_gpu_init_multi(&cfg);
 }
 
+/* The offset/range caches are exclusively the legacy GGUF owner's. Suite
+ * components allocate their own tensors and never enter this cache namespace.
+ * Fencing precedes invalidation; streams and cuBLAS remain runtime-owned. */
+extern "C" void ds4_gpu_legacy_model_release(void) {
+    ds4_gpu_stream_expert_cache_prefetch_finish(true);
+    (void)cudaDeviceSynchronize();
+    ds4_gpu_decode_graphs_invalidate();
+    cuda_stream_selected_cache_release();
+    cuda_stream_selected_stage_release();
+    /* Per-device selective cache teardown (selective model cache). */
+    for (int d = 0; d < DS4_MAX_GPUS; d++) {
+        if (!g_dev_cache[d].present) continue;
+        int prev = -1;
+        (void)cudaGetDevice(&prev);
+        (void)cudaSetDevice(d);
+        if (g_dev_cache[d].base) (void)cudaFree(g_dev_cache[d].base);
+        g_dev_cache[d].base = NULL;
+        g_dev_cache[d].bytes = 0;
+        g_dev_cache[d].present = 0;
+        if (prev >= 0) (void)cudaSetDevice(prev);
+    }
+    g_cache_ranges.clear();
+
+    cuda_model_range_release_all();
+    g_qwen4_tiered_cache = false;
+    cuda_derived_range_release_all();
+    cuda_q8_f16_cache_release_all();
+    g_q8_f16_disabled_after_oom = 0;
+    g_q8_f16_budget_notice_printed = 0;
+    for (const cuda_q8_f32_range &r : g_q8_f32_ranges) {
+        (void)cudaFree(r.device_ptr);
+    }
+    g_q8_f32_ranges.clear();
+    g_q8_f32_by_offset.clear();
+    g_q8_f32_bytes = 0;
+    for (size_t i = 0; i < 4; i++) {
+        if (g_model_stage_event[i]) {
+            (void)cudaEventDestroy(g_model_stage_event[i]);
+            g_model_stage_event[i] = NULL;
+        }
+        if (g_model_stage_raw[i]) {
+            (void)cudaFreeHost(g_model_stage_raw[i]);
+            g_model_stage_raw[i] = NULL;
+            g_model_stage[i] = NULL;
+        }
+    }
+    g_model_stage_bytes = 0;
+    if (g_model_upload_stream) {
+        (void)cudaStreamDestroy(g_model_upload_stream);
+        g_model_upload_stream = NULL;
+    }
+    if (g_model_device_owned && g_model_device_base) {
+        (void)cudaFree((void *)g_model_device_base);
+    }
+    if (g_model_registered && g_model_host_base) {
+        (void)cudaHostUnregister((void *)g_model_host_base);
+    }
+    g_model_host_base = NULL;
+    g_model_device_base = NULL;
+    g_model_registered_size = 0;
+    g_model_registered = 0;
+    g_model_device_owned = 0;
+    g_model_range_mapping_supported = 1;
+    g_model_hmm_direct = 0;
+    g_model_fd = -1;
+    if (g_model_direct_fd >= 0) {
+        (void)close(g_model_direct_fd);
+        g_model_direct_fd = -1;
+    }
+    g_model_direct_align = 1;
+    g_model_file_size = 0;
+    g_model_cache_full = 0;
+    if (g_model_prefetch_stream) {
+        (void)cudaStreamDestroy(g_model_prefetch_stream);
+        g_model_prefetch_stream = NULL;
+    }
+    g_support_host_base = NULL;
+    g_support_host_size = 0;
+    g_support_offset_bias = 0;
+}
+
 extern "C" void ds4_gpu_cleanup(void) {
     ds4_gpu_stream_expert_cache_prefetch_finish(true);
+    ds4_gpu_legacy_model_release();
     ds4_gpu_tp_shutdown();
     (void)cudaDeviceSynchronize();
     ds4_gpu_decode_graphs_invalidate();
@@ -3128,85 +3210,14 @@ extern "C" void ds4_gpu_cleanup(void) {
             }
         }
     }
-    cuda_stream_selected_cache_release();
-    cuda_stream_selected_stage_release();
     g_n_gpus = 0;
     g_device_is_spark = false;
     g_cublas_ready = 0;
 
-    /* Per-device selective cache teardown (selective model cache). */
-    for (int d = 0; d < DS4_MAX_GPUS; d++) {
-        if (!g_dev_cache[d].present) continue;
-        int prev = -1;
-        (void)cudaGetDevice(&prev);
-        (void)cudaSetDevice(d);
-        if (g_dev_cache[d].base) (void)cudaFree(g_dev_cache[d].base);
-        g_dev_cache[d].base = NULL;
-        g_dev_cache[d].bytes = 0;
-        g_dev_cache[d].present = 0;
-        if (prev >= 0) (void)cudaSetDevice(prev);
-    }
-    g_cache_ranges.clear();
-
-    /* Continue with legacy global teardown below. */
-
-    cuda_model_range_release_all();
-    g_qwen4_tiered_cache = false;
-    cuda_derived_range_release_all();
-    cuda_q8_f16_cache_release_all();
-    g_q8_f16_disabled_after_oom = 0;
-    g_q8_f16_budget_notice_printed = 0;
-    for (const cuda_q8_f32_range &r : g_q8_f32_ranges) {
-        (void)cudaFree(r.device_ptr);
-    }
-    g_q8_f32_ranges.clear();
-    g_q8_f32_by_offset.clear();
-    g_q8_f32_bytes = 0;
     if (g_cuda_tmp) {
         (void)cudaFree(g_cuda_tmp);
         g_cuda_tmp = NULL;
         g_cuda_tmp_bytes = 0;
-    }
-    for (size_t i = 0; i < 4; i++) {
-        if (g_model_stage_event[i]) {
-            (void)cudaEventDestroy(g_model_stage_event[i]);
-            g_model_stage_event[i] = NULL;
-        }
-        if (g_model_stage_raw[i]) {
-            (void)cudaFreeHost(g_model_stage_raw[i]);
-            g_model_stage_raw[i] = NULL;
-            g_model_stage[i] = NULL;
-        }
-    }
-    g_model_stage_bytes = 0;
-    if (g_model_upload_stream) {
-        (void)cudaStreamDestroy(g_model_upload_stream);
-        g_model_upload_stream = NULL;
-    }
-    if (g_model_device_owned && g_model_device_base) {
-        (void)cudaFree((void *)g_model_device_base);
-    }
-    if (g_model_registered && g_model_host_base) {
-        (void)cudaHostUnregister((void *)g_model_host_base);
-    }
-    g_model_host_base = NULL;
-    g_model_device_base = NULL;
-    g_model_registered_size = 0;
-    g_model_registered = 0;
-    g_model_device_owned = 0;
-    g_model_range_mapping_supported = 1;
-    g_model_hmm_direct = 0;
-    g_model_fd = -1;
-    if (g_model_direct_fd >= 0) {
-        (void)close(g_model_direct_fd);
-        g_model_direct_fd = -1;
-    }
-    g_model_direct_align = 1;
-    g_model_file_size = 0;
-    g_model_cache_full = 0;
-    if (g_model_prefetch_stream) {
-        (void)cudaStreamDestroy(g_model_prefetch_stream);
-        g_model_prefetch_stream = NULL;
     }
 }
 

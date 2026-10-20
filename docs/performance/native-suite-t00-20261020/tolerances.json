@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "frozen_before_native_kernel_port": true,
+  "measured_repeat_max_abs": {"gemma_text":0.0,"gemma_image":0.0,"gemma_video":0.0,"gemma_audio":0.0,"gemma_interleaved":0.0,"qwen_rgba_512":0.0},
+  "finite_required": true,
+  "legacy_lifecycle": {"logits_bit_exact":true,"payload_bit_exact":true,"max_abs":0.0},
+  "primitive_float32": {"max_abs":0.00002,"relative_l2":0.00001},
+  "primitive_bfloat16": {"max_abs":0.04,"relative_l2":0.02},
+  "gemma_forward": {"cosine_min":0.999,"max_abs":0.005,"rmse_max":0.0015,"unit_norm_error_max":0.00001,"dimensions":[128,256,512,768],"float16":"REJECT"},
+  "qwen_latent_boundary": {"relative_l2":0.01,"rmse_max":0.02},
+  "qwen_rgba": {"rmse_max":0.01,"ssim_rgb_min":0.99,"alpha_mae_max":0.00392156862745098,"range":[0,1]},
+  "ssim": {"window":11,"sigma":1.5,"K1":0.01,"K2":0.03,"range":1.0,"padding":"reflect","reduce":"mean channels RGB"},
+  "retrieval": {"recall_at_1_drop_max":0.03125,"recall_at_5_drop_max":0.03125,"ndcg_at_10_drop_max":0.01,"per_split_link_and_dimension":true,"reference":"retrieval.json"},
+  "image_task_gates": {"required_ocr_exact_text_rate":1.0,"required_layout_relation_rate":1.0,"alpha_edge_mae_max":0.00392156862745098,"reference_preservation_ssim_min":0.99,"human_review":"required for task appropriateness, not a substitute for numeric gates"},
+  "policy": "Zero measured repeat noise. Cross-kernel budgets are declared acceptance ceilings, not evidence of existing native quality. Every boundary and held-out task must pass; averages cannot hide failures. Quantized profiles require separate qualification; never widen these thresholds after a failure."
+}

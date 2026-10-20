@@ -47,6 +47,12 @@ typedef struct {
 
 int ds4_gpu_init(void);
 void ds4_gpu_cleanup(void);
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+/* Release the single legacy GGUF owner's maps and derived caches, retaining
+ * streams, cuBLAS and independently allocated component tensors. New suite
+ * adapters must own tensors; they must not use the legacy offset cache. */
+void ds4_gpu_legacy_model_release(void);
+#endif
 
 /* Optional Flash CUDA cache metadata; model bytes and KV stay independent. */
 #if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)

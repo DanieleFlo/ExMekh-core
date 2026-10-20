@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "ds4_ssd.h"
+#include "ds4_runtime.h"
 
 /* Public engine boundary.
  *
@@ -293,6 +294,19 @@ int ds4_engine_create_with_gpu_config(ds4_engine **out,
                                        const ds4_engine_options *opt,
                                        const struct ds4_gpu_config *gpu_cfg);
 void ds4_engine_close(ds4_engine *e);
+/* Checked close retains a handle on BUSY/fence failure so callers can retry. */
+ds4_status ds4_engine_close_checked(ds4_engine *e);
+/* CUDA single-GPU service lifetime, independent of any LLM. The caller owns
+ * one reference and releases it with ds4_runtime_release. Attach engines
+ * explicitly; ordinary ds4_engine_open keeps its private-runtime behavior. */
+ds4_status ds4_compute_runtime_open(ds4_runtime **out);
+int ds4_engine_open_with_runtime(ds4_engine **out, ds4_runtime *runtime,
+                                 const ds4_engine_options *opt);
+/* Borrowed CUDA runtime handle. A registered component retains the
+ * runtime independently of the LLM. Other backends are not yet qualified for
+ * shared component residency and return NULL. Sessions must precede engine
+ * close, just as before. The legacy map loader permits one live LLM owner. */
+ds4_runtime *ds4_engine_runtime(ds4_engine *e);
 void ds4_engine_summary(ds4_engine *e);
 int ds4_engine_vocab_size(ds4_engine *e);
 uint32_t ds4_engine_prefill_chunk(ds4_engine *e);
@@ -329,6 +343,11 @@ int ds4_engine_vision_encode_memory(ds4_engine *e,
                                     char *error,
                                     size_t error_cap);
 void ds4_vision_embedding_free(ds4_vision_embedding *embedding);
+/* Standalone vision diagnostic. Owns and closes a private runtime; refuses a
+ * live suite. Output is four u32 dimensions followed by float embeddings.
+ * Returns one on success, zero on failure. */
+int ds4_qwen4_vision_dump(const char *vision_path, const char *image_path, const char *out_path,
+                          uint32_t min_image_tokens, uint32_t max_image_tokens);
 int ds4_prompt_append_vision(ds4_engine *e,
                              ds4_tokens *tokens,
                              ds4_vision_span *span,

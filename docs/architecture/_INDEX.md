@@ -65,6 +65,14 @@ Il documento dopo gli hook deve contenere gli stessi path nello stesso ordine
 - righe 31–69: **Verifiche** — La suite completa ExMekh-Lib sul client aggiornato passa: **2.588 PASS,
 - righe 70–90: **Limiti** — Il masking garantisce vincoli del documento, non l'intento dell'utente:
 
+## [Revisione del budget di compattazione — 16 ottobre 2026](compaction-budget-clean-review-20261016.md)
+
+espansa: gli allegati dei risultati dei tool comparivano due volte.
+
+- righe 9–27: **Difetti e correzioni** — espansa: gli allegati dei risultati dei tool comparivano due volte.
+- righe 28–46: **Proprietari delle responsabilità** — I chiamanti usano le API pubbliche invece di ricostruire dettagli dei dati di
+- righe 47–61: **Verifica e limiti** — Le suite complete delle due repository, i test browser, lint, tipi della
+
 ## [Accettazione merge DS4 e exmekh-lib — 2 ottobre 2026](ds4-merge-acceptance-20261002.md)
 
 **PASS per Qwen3.8-27B sulla RTX 3090.** Sono concluse le prove residue:
@@ -177,6 +185,60 @@ Il frontend non interpreta più gli elementi XML degli header della libreria.
 - righe 8–28: **Correzioni** — 1.
 - righe 29–51: **Memoria che rimane intenzionalmente disponibile** — non più visibili possono restare nello spazio prenotato dal contesto e vengono
 - righe 52–94: **Verifica e limiti delle misure** — Qwen3.8-27B UD-Q4_K_S, sidecar MTP, RTX 3090, CUDA/Linux su WSL.
+
+## [Suite multimodale nativa DS4: analisi e decisioni](native-multimodal-suite-analysis-20261020.md)
+
+Le istruzioni della conversazione corrente definiscono il perimetro del lavoro.
+
+- righe 7–22: **1. Requisiti acquisiti e confini** — Le istruzioni della conversazione corrente definiscono il perimetro del lavoro.
+- righe 23–43: **2. Cosa recuperare dalla chat condivisa** — La chat condivisa è stata letta nel browser.
+- righe 44–75: **3. Stato reale di DS4 e ostacoli prioritari** — L'audit in lettura ha usato il checkout con HEAD `5e2e99cf3249a5a28efed038bfd4fb2fbda6ce21`, contenente anche modifiche locali preesistenti.
+  - righe 48–59: **3.1 Base già disponibile** — Il report Qwen27 vision, `ds4.h` e le funzioni `engine_vision_suspend_sessions`, `engine_vision_resume_sessions`, `ds4_engine_vision_encode_image` in `ds4.c` documentano e implementano:
+  - righe 60–67: **3.2 Stato globale da separare** — `g_ds4_shape` alimenta macro come `DS4_MODEL_FAMILY`, `DS4_N_LAYER`, `DS4_N_EMBD`.
+  - righe 68–75: **3.3 Il consumo KV non coincide con la chat condivisa** — `qwen_graph_alloc` usa `DS4_QWEN_ALLOC` con `sizeof(float)` anche per key/value cache.
+- righe 76–105: **4. Qwen-Image-2.1-Turbo: semantica da preservare** — Il checkpoint ufficiale comprende encoder Qwen3-VL, DiT single-stream block-causal e VAE dedicato.
+  - righe 82–89: **4.1 Conditioning e scheduler** — La pipeline Diffusers costituisce un oracle semantico: template e padding, esclusione del prefisso di sistema, ordine delle reference e hidden state prima della RMSNorm finale devono coincidere.
+  - righe 90–97: **4.2 Attention e prefix cache** — Nel transformer Diffusers testo e blocchi immagine hanno una maschera block-causal.
+  - righe 98–105: **4.3 Memoria e ordine delle fasi** — Il piano base è preprocessing → encoder/encoding reference → DiT ripetuto → VAE decode → ripristino.
+- righe 106–129: **5. EmbeddingGemma 2: quattro modalità nello stesso spazio** — La model card Google descrive backbone testuale ed encoder vision/audio caricabili selettivamente, spazio comune a 768 dimensioni, contesto operativo 8192 e troncamenti supportati 512/256/128.
+  - righe 114–121: **5.1 Pooling, precisione e task** — I moduli del checkpoint includono pooling e normalizzazione.
+  - righe 122–129: **5.2 Immagini, video e audio** — L'immagine richiede preprocessing, posizioni patch, encoder, riduzione/proiezione e inserimento dei soft token nel backbone.
+- righe 130–151: **6. Cosa trasferire dai motori esaminati** — Le fonti seguenti sono state aperte e confrontate con il codice locale.
+- righe 152–189: **7. Gestore comune di memoria ed esecuzione** — Servono descrittori per modello, componente, gruppo di pesi, sessione, risorsa e operazione.
+  - righe 154–161: **7.1 Oggetti minimi** — Servono descrittori per modello, componente, gruppo di pesi, sessione, risorsa e operazione.
+  - righe 162–173: **7.2 Ammissione e scelta del piano** — La condizione di ammissione di ciascuna fase è:
+  - righe 174–181: **7.3 Transazione, cancellazione e recupero** — Sequenza concettuale: validate → reserve → quiesce → checkpoint se necessario → execute → release/retain → restore → commit result.
+  - righe 182–189: **7.4 Prefetch e riuso** — Il prefetch CPU può precedere l'esecuzione solo per modelli già configurati e con budget host.
+- righe 190–201: **8. Contratto client e integrazione agentica** — Un solo server e una sola configurazione client, con selezione `model`.
+- righe 202–210: **9. Decisioni numeriche e sperimentali** — 1.
+- righe 211–225: **10. Rischi, evidenze mancanti e scelta dell'ordine** — Il percorso critico parte dai confini runtime e dal gestore di risorse, poi sviluppa i percorsi numerici separati e li integra.
+
+## [Revisione di responsabilità e coerenza della suite nativa](native-suite-clean-code-review-20261020.md)
+
+l'engine conosce shape e modello; il backend possiede stream e allocazioni;
+
+- righe 8–23: **Correzioni applicate** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 24–57: **Principi verificati e limiti** — l'engine conosce shape e modello; il backend possiede stream e allocazioni;
+- righe 58–65: **Evidenze** — Comandi, hash e log sono nel manifest di verifica
+
+## [Runtime e contesti della suite nativa](native-suite-runtime-lifecycle.md)
+
+Il runtime possiede mutex ricorsivo, fence e teardown condiviso.
+
+- righe 8–46: **Proprietari e alternanza** — Il runtime possiede mutex ricorsivo, fence e teardown condiviso.
+- righe 47–73: **Inventario dello stato globale** — La classificazione si applica anche alle cache statiche interne alle funzioni:
+- righe 74–105: **Compatibilità e verifiche** — Per Metal e ROCm il riferimento runtime resta interno all'engine e non si
+
+## [Contratti della suite nativa DS4, versione 1](native-suite-v1-contract.md)
+
+Il catalogo distingue `model_id`, `revision`, `profile` e `component`.
+
+- righe 8–31: **Identità e discovery** — Il catalogo distingue `model_id`, `revision`, `profile` e `component`.
+- righe 32–77: **Operazioni e input standard** — Le immagini usano `model`, `prompt`, `n` (default 1, intervallo 1–8), `size` (default
+- righe 78–126: **Estensione embedding multimodali** — La versione è dichiarata da `ds4.version=1`; il campo `input` contiene un
+- righe 127–185: **Risultati, idempotenza e completamento** — Embedding mantiene `{object:"list",data:[{object:"embedding",index,embedding}],
+- righe 186–226: **Esempi client e matrice delle capability** — Le chiamate seguenti descrivono il contratto futuro T17: non sono test live
+- righe 227–256: **Confine C e lifecycle** — `ds4_runtime` possiede serializzazione e teardown condiviso.
 
 ## [Qwen Flash: esperti ibridi, PCIe e KV paginato](qwen-flash-hybrid-kv-20261006.md)
 

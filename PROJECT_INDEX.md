@@ -175,6 +175,32 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 
 ### Istruzioni, obiettivi e documentazione
 
+- `docs/architecture/native-suite-clean-code-review-20261020.md` — revisione
+  di responsabilità, incapsulamento, errori e debito residuo; regressioni
+  di lifecycle, build e validazione degli artefatti numerici.
+- `docs/architecture/native-suite-runtime-lifecycle.md` — inventario dello stato
+  globale, confini del bridge legacy, teardown selettivo e matrice di qualifica.
+- `docs/architecture/native-suite-v1-contract.md`, `schemas/ds4-suite-*.schema.json`
+  — contratti C/HTTP e catalogo congelati; nuovi endpoint previsti da T17.
+- `docs/performance/native-suite-t00-20261020/` — source/model/tensor manifest,
+  baseline dei LLM, oracle multimodali, soglie e registro provenienza/licenze.
+- `tests/fixtures/native-suite-v1/`, `tests/test_suite_*.py`, `tests/test_runtime*.c`
+  — corpus sintetico congelato e test dei contratti, gate numerici e lifecycle.
+- `tools/freeze_multimodal_baseline.py`, `tools/export_suite_baseline.py`,
+  `tools/prepare_suite_oracles.py`, `tools/run_suite_*.py`,
+  `tools/score_suite_gemma_corpus.py`, `tools/freeze_suite_noise.py`,
+  `tools/build_suite_corpus.py`, `tools/create_suite_speech.ps1`,
+  `tools/suite_numeric_metrics.py`, `tools/suite_artifacts.py`,
+  `tools/probe_suite_baseline.c` — strumenti
+  di sviluppo T00, separati dall'inferenza di produzione.
+- `docs/architecture/native-multimodal-suite-analysis-20261020.md` — analisi
+  della suite nativa Qwen-Image-2.1-Turbo / EmbeddingGemma 2: audit del runtime,
+  fonti Unsloth/llama.cpp e altri motori, semantica numerica, residenza dinamica
+  e contratti client; proposta, non funzionalità già implementata.
+- `docs/roadmaps/native-multimodal-suite-implementation-20261020.md` — piano
+  operativo in 23 task con sottotask, dipendenze, invarianti e gate numerici,
+  multimodali, di memoria/ripristino e prestazionali; T00/T01 completati e T02
+  CUDA verificato, qualifica degli altri backend ancora aperta.
 - `AGENT.md` — vincoli architetturali, qualità, sicurezza e test obbligatori per
   chi modifica il progetto.
 - `docs/roadmaps/` — roadmap ordinate, obiettivi di inferenza e gate di correttezza.
@@ -188,7 +214,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `STRIXHALO.md` — note operative per build ed esecuzione ROCm su Strix Halo.
 - `PROJECT_INDEX.md` — questo indice e ordine della spiegazione tecnica.
 - `.gitattributes` — fine riga LF per i launcher WSL e i fixture Qwen verificati
-  tramite checksum; gestione dei diff per le continuazioni del modello e
+  tramite checksum, inclusi corpus/manifest/schemi della suite nativa; gestione
+  dei diff per le continuazioni del modello e
   conservazione dei byte originali dei report e della patch 27B archiviati.
 - `docs/INDEX.md` — indice madre della wiki tecnica, con tassonomia, regole di
   costruzione e accesso agli indici semantici di ogni macro-argomento.
@@ -715,6 +742,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 
 ### API, modello e orchestrazione centrale
 
+- `ds4_runtime.c/.h` — descrittori immutabili, scope serializzate, attivazione,
+  fence e ownership del runtime condiviso; bridge del caricatore legacy in `ds4.c`.
 - `ds4.h` — API pubblica stretta: descrittore canonico di famiglia/target,
   opzioni engine, token, sessioni, sync/eval, logits, sampling filtrato,
   batching, snapshot, checkpoint ricorrenti Qwen per skill e callback.

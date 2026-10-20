@@ -1,0 +1,154 @@
+{
+  "environment": {
+    "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+    "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+    "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+    "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+    "DS4_CUDA_QWEN4_KV_RESIDENT": "32768",
+    "DS4_CUDA_QWEN4_EXPERT_POLICY": "stable",
+    "DS4_CUDA_QWEN4_PREFILL_RING": "1",
+    "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+    "DS4_CUDA_QWEN4_PCIE_FRAC": "1",
+    "DS4_CUDA_QWEN4_HYBRID_PREFILL": "0",
+    "DS4_CUDA_QWEN4_DECODE_RANKS": "1",
+    "DS4_CUDA_QWEN4_DECODE_GRAPHS": "1",
+    "DS4_CUDA_QWEN4_KV_DECODE_BATCH": "1",
+    "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS": "1"
+  },
+  "runs": [
+    {
+      "id": "baseline",
+      "command": [
+        "/home/daniele/ds4/performance-results/native-suite-t00-20261020/binaries/ds4-bench",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "performance-results/native-suite-review-final-flash-20261020/prompt.txt",
+        "--ctx-start",
+        "32",
+        "--ctx-max",
+        "32",
+        "--ctx-alloc",
+        "256",
+        "--gen-tokens",
+        "2",
+        "--prefill-chunk",
+        "32",
+        "--repetitions",
+        "1",
+        "--dump-frontier-logits-dir",
+        "performance-results/native-suite-review-final-flash-20261020/baseline",
+        "--csv",
+        "performance-results/native-suite-review-final-flash-20261020/baseline/timing.csv"
+      ],
+      "exit_code": 0,
+      "binary_sha256": "7a1f980077572dacd007e481154a9fa80dffc994be5f151e5c4781a564ef1d1c",
+      "logits": [
+        {
+          "path": "frontier_000032.decode.json",
+          "sha256": "b68feb52b83ba86825008797ac3ce3c380b97707bfa8bbbdaf8348b5338d4739"
+        },
+        {
+          "path": "frontier_000032.logits.json",
+          "sha256": "3067e2d3f6687c51bba714b3508eb7e61c7b96ced3eb87aad9f624bbd0bc0f1f"
+        }
+      ]
+    },
+    {
+      "id": "candidate",
+      "command": [
+        "/home/daniele/ds4/ds4-bench",
+        "--cuda",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--prompt-file",
+        "performance-results/native-suite-review-final-flash-20261020/prompt.txt",
+        "--ctx-start",
+        "32",
+        "--ctx-max",
+        "32",
+        "--ctx-alloc",
+        "256",
+        "--gen-tokens",
+        "2",
+        "--prefill-chunk",
+        "32",
+        "--repetitions",
+        "1",
+        "--dump-frontier-logits-dir",
+        "performance-results/native-suite-review-final-flash-20261020/candidate",
+        "--csv",
+        "performance-results/native-suite-review-final-flash-20261020/candidate/timing.csv"
+      ],
+      "exit_code": 0,
+      "binary_sha256": "ead49bb5ffa34d08394e75489d58b614ad87d7c08d61d3bfdf8f761b39f7e131",
+      "logits": [
+        {
+          "path": "frontier_000032.decode.json",
+          "sha256": "b68feb52b83ba86825008797ac3ce3c380b97707bfa8bbbdaf8348b5338d4739"
+        },
+        {
+          "path": "frontier_000032.logits.json",
+          "sha256": "3067e2d3f6687c51bba714b3508eb7e61c7b96ced3eb87aad9f624bbd0bc0f1f"
+        }
+      ]
+    }
+  ],
+  "bit_exact": true,
+  "payload_probe": {
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+      "-",
+      "-",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-review-final-flash-20261020/payload"
+    ],
+    "exit_code": 0,
+    "directory": "performance-results/native-suite-review-final-flash-20261020/payload",
+    "environment": {
+      "DS4_CUDA_QWEN4_TIERED_CACHE": "1",
+      "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "auto",
+      "DS4_CUDA_QWEN4_RAM_CACHE_MB": "auto",
+      "DS4_CUDA_QWEN4_KV_STREAMING": "1",
+      "DS4_CUDA_QWEN4_KV_RESIDENT": "32768",
+      "DS4_CUDA_QWEN4_EXPERT_POLICY": "stable",
+      "DS4_CUDA_QWEN4_PREFILL_RING": "1",
+      "DS4_CUDA_QWEN4_HYBRID_MOE": "1",
+      "DS4_CUDA_QWEN4_PCIE_FRAC": "1",
+      "DS4_CUDA_QWEN4_HYBRID_PREFILL": "0",
+      "DS4_CUDA_QWEN4_DECODE_RANKS": "1",
+      "DS4_CUDA_QWEN4_DECODE_GRAPHS": "1",
+      "DS4_CUDA_QWEN4_KV_DECODE_BATCH": "1",
+      "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS": "1"
+    },
+    "baseline_timing": "post-refactor snapshot; pre-refactor logits compared independently above",
+    "source_sha256": "a9b9fd2a1c92ae3d5b2f8ec9e432fe1edb655a663de7515fce74138aaa92b91a",
+    "probe_sha256": "8c54c38ea17b399e7f3670c4e0ad5efcd1e1f4d4d43667bde9b53324d5297aa5",
+    "finite": true,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "6cb21046a9cab965b5c0f214e0264e5fbc0178e60c9980bdee1c2a53710703ee",
+        "finite": true
+      },
+      {
+        "path": "result.json",
+        "bytes": 125,
+        "sha256": "6c0275fb74fbc4dce86328077ed9b582cc40ab477dd85c30f2411537e807b50d"
+      },
+      {
+        "path": "runtime.log",
+        "bytes": 1183,
+        "sha256": "faffc3f5ea6caa22bb178111e4d0e8a02c497142ab4c2b9d8cd049d521674e59"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 119945636,
+        "sha256": "0e7ce11a648bb61d6827f25899cec75a6554e6d7d81d4eb6cb41356fd38a26cc"
+      }
+    ]
+  }
+}

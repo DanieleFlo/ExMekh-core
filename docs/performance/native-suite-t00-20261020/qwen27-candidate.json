@@ -1,0 +1,150 @@
+[
+  {
+    "case": "text",
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "-",
+      "-",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-review-final-qwen-20261020/text"
+    ],
+    "exit_code": 0,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "e8f94dece964f807484799b079423f4e686331d6fda181a5a1e9337817f5459f",
+        "finite": true,
+        "bit_exact": true
+      },
+      {
+        "path": "result.json",
+        "bytes": 131,
+        "sha256": "dc4c194f31e447d438effc8f26133ca645eaefbe120d21b933e1d17f50811035"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 161556612,
+        "sha256": "4865f5899d6d621dbcc5d091e9bfcc0bfbd7d5eed8de508f22821c8212210731",
+        "bit_exact": true
+      },
+      {
+        "path": "stderr.log",
+        "bytes": 714,
+        "sha256": "fe5655bc22bf68ce185022a5f215e4ebed4303b5930a2d7a08574f65f14dff84"
+      }
+    ]
+  },
+  {
+    "case": "text-mtp",
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+      "-",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-review-final-qwen-20261020/text-mtp"
+    ],
+    "exit_code": 0,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "e8f94dece964f807484799b079423f4e686331d6fda181a5a1e9337817f5459f",
+        "finite": true,
+        "bit_exact": true
+      },
+      {
+        "path": "result.json",
+        "bytes": 130,
+        "sha256": "3d9a42e97d668644bfed0ab6e4c957276cf55674759f8e5d6353f406dff99922"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 162676868,
+        "sha256": "f07a8d365c0ded9a1bb324f48370ee5750bfdc748c75d19c62ca49d081851a5a",
+        "bit_exact": true
+      },
+      {
+        "path": "stderr.log",
+        "bytes": 979,
+        "sha256": "9e8cfb9bc2065cf9a546c8d6ed6dd03e7559c449313d451bdaa8dc7d1182c4a6"
+      }
+    ]
+  },
+  {
+    "case": "vision",
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "-",
+      "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-review-final-qwen-20261020/vision"
+    ],
+    "exit_code": 0,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "9beb382fce11f31c46c10171afbaf6e70237dcfbcb44a5511e260305360284f7",
+        "finite": true,
+        "bit_exact": true
+      },
+      {
+        "path": "result.json",
+        "bytes": 134,
+        "sha256": "570edcc131a56ed4dc98f2ada6a18fafab8062807ff506de9075af88b77d44b3"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 263412216,
+        "sha256": "f0533ab34b50fe14d821e074cd7bd8aeddb837a09010d916d9169bf8a686353f",
+        "bit_exact": true
+      },
+      {
+        "path": "stderr.log",
+        "bytes": 756,
+        "sha256": "ea2d93fd77539e9c304eda2aa72bf59bff0b4da63a2c2f93a477775973219b7d"
+      }
+    ]
+  },
+  {
+    "case": "vision-mtp",
+    "command": [
+      "tools/probe_suite_baseline",
+      "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+      "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+      "tests/vision-fixtures/glm53/spatial.png",
+      "performance-results/native-suite-review-final-qwen-20261020/vision-mtp"
+    ],
+    "exit_code": 0,
+    "files": [
+      {
+        "path": "logits.f32",
+        "bytes": 8939520,
+        "sha256": "9beb382fce11f31c46c10171afbaf6e70237dcfbcb44a5511e260305360284f7",
+        "finite": true,
+        "bit_exact": true
+      },
+      {
+        "path": "result.json",
+        "bytes": 133,
+        "sha256": "f7ff166e35bf0d9a06adcdd9c4c198678328e410b2156e7090cc1fc47d90ed3d"
+      },
+      {
+        "path": "session.payload",
+        "bytes": 270897656,
+        "sha256": "777c043132849ddca27f51a670ce19f302a4c7c50ee27186b71be57cddbcbcee",
+        "bit_exact": true
+      },
+      {
+        "path": "stderr.log",
+        "bytes": 1021,
+        "sha256": "ee70ff1139d3a151414257db6b3542e02d61b19c6ab3955f5f9e29ebeb44183a"
+      }
+    ]
+  }
+]

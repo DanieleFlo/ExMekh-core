@@ -1,0 +1,63 @@
+{
+  "model": "qwen",
+  "prepared_sha256": "9f8816cfdaa73673242d998f3729a99f0adaace1f402345df2969b313d269f6c",
+  "torch": "2.14.1+cu130",
+  "cuda": "13.0",
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "dtype": "bfloat16",
+  "tf32": false,
+  "warmup": 1,
+  "repeats": 5,
+  "cases": [
+    {
+      "id": "image-generation-512",
+      "shape": [
+        1,
+        512,
+        512,
+        4
+      ],
+      "max_repeat_abs": 0.0,
+      "seconds": [
+        28.302426589998504,
+        28.246119654999347,
+        28.05004391300099,
+        29.76656385699971,
+        29.34775593500308
+      ],
+      "result_sha256": "b4d76e7e7a3370f2e92cc27dc911cc819f361af745bddba6b923d99a2d210872"
+    }
+  ],
+  "dependencies": {
+    "numpy": "2.5.3",
+    "tokenizers": "0.23.1",
+    "huggingface-hub": "1.33.0",
+    "accelerate": "1.15.0"
+  },
+  "recipe": {
+    "seed": 20261020,
+    "height": 512,
+    "width": 512,
+    "steps": 8,
+    "cfg": 1.0,
+    "scheduler": {
+      "num_train_timesteps": 1000,
+      "shift": 1.0,
+      "use_dynamic_shifting": false,
+      "base_shift": 0.5,
+      "max_shift": 0.9,
+      "base_image_seq_len": 256,
+      "max_image_seq_len": 8192,
+      "invert_sigmas": false,
+      "shift_terminal": null,
+      "use_karras_sigmas": false,
+      "use_exponential_sigmas": false,
+      "use_beta_sigmas": false,
+      "time_shift_type": "exponential",
+      "stochastic_sampling": false,
+      "_class_name": "FlowMatchEulerDiscreteScheduler",
+      "_diffusers_version": "0.41.0.dev0"
+    }
+  },
+  "peak_device_bytes": 17588752384
+}

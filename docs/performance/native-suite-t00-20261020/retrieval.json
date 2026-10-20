@@ -1,0 +1,6918 @@
+{
+  "corpus_sha256": "024c98ad1bd17ce977a42864146f99ca8fa0e4540d64153e11fe62adccfbf620",
+  "prepared_sha256": "9f8816cfdaa73673242d998f3729a99f0adaace1f402345df2969b313d269f6c",
+  "profile": "bf16-eager-mean-f32-l2",
+  "decode": "wave mono PCM16, soxr HQ 16kHz; video frames selected at 1fps",
+  "torch": "2.14.1+cu130",
+  "soxr": "1.1.0",
+  "numpy": "2.5.3",
+  "items": 104,
+  "unique_processor_inputs": 240,
+  "max_tokens": 1629,
+  "metrics": {
+    "dev/text_to_image/128": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/text_to_image/256": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/text_to_image/512": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/text_to_image/768": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/image_to_text/128": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/image_to_text/256": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/image_to_text/512": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/image_to_text/768": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/text_to_image/128": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/text_to_image/256": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/text_to_image/512": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/text_to_image/768": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/image_to_text/128": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/image_to_text/256": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/image_to_text/512": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/image_to_text/768": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/text_to_video/128": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/text_to_video/256": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/text_to_video/512": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/text_to_video/768": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/video_to_text/128": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/video_to_text/256": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/video_to_text/512": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/video_to_text/768": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/text_to_video/128": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/text_to_video/256": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/text_to_video/512": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/text_to_video/768": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/video_to_text/128": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/video_to_text/256": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/video_to_text/512": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "heldout/video_to_text/768": {
+      "recall_at_1": 1.0,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 1.0
+    },
+    "dev/text_to_audio/128": {
+      "recall_at_1": 0.6875,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8487118045281781
+    },
+    "dev/text_to_audio/256": {
+      "recall_at_1": 0.6875,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8432676793573902
+    },
+    "dev/text_to_audio/512": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8147228201007499
+    },
+    "dev/text_to_audio/768": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8147228201007499
+    },
+    "dev/audio_to_text/128": {
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.7233604681476768
+    },
+    "dev/audio_to_text/256": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.8080328858630988
+    },
+    "dev/audio_to_text/512": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.8080328858630988
+    },
+    "dev/audio_to_text/768": {
+      "recall_at_1": 0.75,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.8705328858630988
+    },
+    "heldout/text_to_audio/128": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8408997232724514
+    },
+    "heldout/text_to_audio/256": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8245335040760192
+    },
+    "heldout/text_to_audio/512": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8202007889556063
+    },
+    "heldout/text_to_audio/768": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8202007889556063
+    },
+    "heldout/audio_to_text/128": {
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.75,
+      "ndcg_at_10": 0.7217525857326119
+    },
+    "heldout/audio_to_text/256": {
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.7618991050595311
+    },
+    "heldout/audio_to_text/512": {
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.748392117584935
+    },
+    "heldout/audio_to_text/768": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.8272583367813672
+    }
+  },
+  "rankings": {
+    "text-to-image-0/128": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-2",
+      "image-6",
+      "image-5",
+      "image-3",
+      "image-7"
+    ],
+    "text-to-image-0/256": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "text-to-image-0/512": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "text-to-image-0/768": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "image-to-text-0/128": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-2",
+      "image-6",
+      "image-5",
+      "image-3",
+      "image-7"
+    ],
+    "image-to-text-0/256": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "image-to-text-0/512": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-7",
+      "image-5",
+      "image-3"
+    ],
+    "image-to-text-0/768": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "text-to-image-1/128": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-1/256": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-6",
+      "image-4",
+      "image-2"
+    ],
+    "text-to-image-1/512": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-1/768": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-6",
+      "image-4",
+      "image-2"
+    ],
+    "image-to-text-1/128": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-3",
+      "image-4",
+      "image-7",
+      "image-2",
+      "image-6"
+    ],
+    "image-to-text-1/256": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-1/512": [
+      "image-1",
+      "image-0",
+      "image-3",
+      "image-7",
+      "image-5",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-1/768": [
+      "image-1",
+      "image-0",
+      "image-7",
+      "image-5",
+      "image-3",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-2/128": [
+      "image-2",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-7"
+    ],
+    "text-to-image-2/256": [
+      "image-2",
+      "image-3",
+      "image-6",
+      "image-4",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-1"
+    ],
+    "text-to-image-2/512": [
+      "image-2",
+      "image-3",
+      "image-6",
+      "image-0",
+      "image-4",
+      "image-5",
+      "image-7",
+      "image-1"
+    ],
+    "text-to-image-2/768": [
+      "image-2",
+      "image-3",
+      "image-6",
+      "image-0",
+      "image-4",
+      "image-7",
+      "image-5",
+      "image-1"
+    ],
+    "image-to-text-2/128": [
+      "image-2",
+      "image-0",
+      "image-4",
+      "image-3",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-7"
+    ],
+    "image-to-text-2/256": [
+      "image-2",
+      "image-0",
+      "image-3",
+      "image-6",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-5"
+    ],
+    "image-to-text-2/512": [
+      "image-2",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-6",
+      "image-1",
+      "image-7",
+      "image-5"
+    ],
+    "image-to-text-2/768": [
+      "image-2",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-6",
+      "image-1",
+      "image-7",
+      "image-5"
+    ],
+    "text-to-image-3/128": [
+      "image-3",
+      "image-2",
+      "image-1",
+      "image-5",
+      "image-0",
+      "image-7",
+      "image-4",
+      "image-6"
+    ],
+    "text-to-image-3/256": [
+      "image-3",
+      "image-2",
+      "image-7",
+      "image-5",
+      "image-1",
+      "image-6",
+      "image-0",
+      "image-4"
+    ],
+    "text-to-image-3/512": [
+      "image-3",
+      "image-2",
+      "image-7",
+      "image-5",
+      "image-1",
+      "image-6",
+      "image-0",
+      "image-4"
+    ],
+    "text-to-image-3/768": [
+      "image-3",
+      "image-2",
+      "image-7",
+      "image-5",
+      "image-1",
+      "image-6",
+      "image-0",
+      "image-4"
+    ],
+    "image-to-text-3/128": [
+      "image-3",
+      "image-2",
+      "image-0",
+      "image-1",
+      "image-5",
+      "image-4",
+      "image-7",
+      "image-6"
+    ],
+    "image-to-text-3/256": [
+      "image-3",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-4"
+    ],
+    "image-to-text-3/512": [
+      "image-3",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-4"
+    ],
+    "image-to-text-3/768": [
+      "image-3",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-4"
+    ],
+    "text-to-image-4/128": [
+      "image-4",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-2",
+      "image-7",
+      "image-1",
+      "image-3"
+    ],
+    "text-to-image-4/256": [
+      "image-4",
+      "image-5",
+      "image-6",
+      "image-0",
+      "image-2",
+      "image-7",
+      "image-1",
+      "image-3"
+    ],
+    "text-to-image-4/512": [
+      "image-4",
+      "image-5",
+      "image-6",
+      "image-0",
+      "image-2",
+      "image-7",
+      "image-1",
+      "image-3"
+    ],
+    "text-to-image-4/768": [
+      "image-4",
+      "image-5",
+      "image-6",
+      "image-0",
+      "image-2",
+      "image-7",
+      "image-1",
+      "image-3"
+    ],
+    "image-to-text-4/128": [
+      "image-4",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-2",
+      "image-1",
+      "image-3",
+      "image-7"
+    ],
+    "image-to-text-4/256": [
+      "image-4",
+      "image-0",
+      "image-6",
+      "image-5",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-3"
+    ],
+    "image-to-text-4/512": [
+      "image-4",
+      "image-0",
+      "image-5",
+      "image-6",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-3"
+    ],
+    "image-to-text-4/768": [
+      "image-4",
+      "image-0",
+      "image-5",
+      "image-6",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-3"
+    ],
+    "text-to-image-5/128": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-5/256": [
+      "image-5",
+      "image-4",
+      "image-7",
+      "image-1",
+      "image-3",
+      "image-6",
+      "image-0",
+      "image-2"
+    ],
+    "text-to-image-5/512": [
+      "image-5",
+      "image-4",
+      "image-7",
+      "image-1",
+      "image-3",
+      "image-6",
+      "image-0",
+      "image-2"
+    ],
+    "text-to-image-5/768": [
+      "image-5",
+      "image-4",
+      "image-7",
+      "image-1",
+      "image-3",
+      "image-6",
+      "image-0",
+      "image-2"
+    ],
+    "image-to-text-5/128": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-0",
+      "image-3",
+      "image-7",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-5/256": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-5/512": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-5/768": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-6/128": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-3",
+      "image-1"
+    ],
+    "text-to-image-6/256": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-3",
+      "image-1"
+    ],
+    "text-to-image-6/512": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-1",
+      "image-3"
+    ],
+    "text-to-image-6/768": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-1",
+      "image-3"
+    ],
+    "image-to-text-6/128": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-3",
+      "image-1"
+    ],
+    "image-to-text-6/256": [
+      "image-6",
+      "image-7",
+      "image-0",
+      "image-4",
+      "image-2",
+      "image-5",
+      "image-1",
+      "image-3"
+    ],
+    "image-to-text-6/512": [
+      "image-6",
+      "image-7",
+      "image-0",
+      "image-4",
+      "image-2",
+      "image-1",
+      "image-5",
+      "image-3"
+    ],
+    "image-to-text-6/768": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-1",
+      "image-5",
+      "image-3"
+    ],
+    "text-to-image-7/128": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-0",
+      "image-3",
+      "image-4",
+      "image-2"
+    ],
+    "text-to-image-7/256": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-3",
+      "image-4",
+      "image-0",
+      "image-2"
+    ],
+    "text-to-image-7/512": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-3",
+      "image-4",
+      "image-0",
+      "image-2"
+    ],
+    "text-to-image-7/768": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-3",
+      "image-4",
+      "image-0",
+      "image-2"
+    ],
+    "image-to-text-7/128": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-0",
+      "image-4",
+      "image-3",
+      "image-2"
+    ],
+    "image-to-text-7/256": [
+      "image-7",
+      "image-6",
+      "image-1",
+      "image-5",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-2"
+    ],
+    "image-to-text-7/512": [
+      "image-7",
+      "image-6",
+      "image-1",
+      "image-5",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-2"
+    ],
+    "image-to-text-7/768": [
+      "image-7",
+      "image-6",
+      "image-1",
+      "image-5",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-2"
+    ],
+    "text-to-image-8/128": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-10",
+      "image-14",
+      "image-13",
+      "image-15",
+      "image-11"
+    ],
+    "text-to-image-8/256": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-11"
+    ],
+    "text-to-image-8/512": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-11"
+    ],
+    "text-to-image-8/768": [
+      "image-8",
+      "image-9",
+      "image-14",
+      "image-12",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-11"
+    ],
+    "image-to-text-8/128": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-15",
+      "image-13",
+      "image-11"
+    ],
+    "image-to-text-8/256": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-11",
+      "image-13",
+      "image-15"
+    ],
+    "image-to-text-8/512": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-11",
+      "image-13",
+      "image-15"
+    ],
+    "image-to-text-8/768": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-13",
+      "image-11",
+      "image-15"
+    ],
+    "text-to-image-9/128": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-11",
+      "image-12",
+      "image-15",
+      "image-10",
+      "image-14"
+    ],
+    "text-to-image-9/256": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-15",
+      "image-11",
+      "image-12",
+      "image-14",
+      "image-10"
+    ],
+    "text-to-image-9/512": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-15",
+      "image-11",
+      "image-12",
+      "image-14",
+      "image-10"
+    ],
+    "text-to-image-9/768": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-15",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-10"
+    ],
+    "image-to-text-9/128": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-12",
+      "image-15",
+      "image-11",
+      "image-10",
+      "image-14"
+    ],
+    "image-to-text-9/256": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-11",
+      "image-15",
+      "image-12",
+      "image-10",
+      "image-14"
+    ],
+    "image-to-text-9/512": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-11",
+      "image-15",
+      "image-12",
+      "image-14",
+      "image-10"
+    ],
+    "image-to-text-9/768": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-11",
+      "image-15",
+      "image-12",
+      "image-14",
+      "image-10"
+    ],
+    "text-to-image-10/128": [
+      "image-10",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-13",
+      "image-9",
+      "image-14",
+      "image-15"
+    ],
+    "text-to-image-10/256": [
+      "image-10",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-14",
+      "image-13",
+      "image-9",
+      "image-15"
+    ],
+    "text-to-image-10/512": [
+      "image-10",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-14",
+      "image-13",
+      "image-9",
+      "image-15"
+    ],
+    "text-to-image-10/768": [
+      "image-10",
+      "image-11",
+      "image-8",
+      "image-12",
+      "image-14",
+      "image-9",
+      "image-13",
+      "image-15"
+    ],
+    "image-to-text-10/128": [
+      "image-10",
+      "image-14",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-9"
+    ],
+    "image-to-text-10/256": [
+      "image-10",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-8",
+      "image-13",
+      "image-15",
+      "image-9"
+    ],
+    "image-to-text-10/512": [
+      "image-10",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-9"
+    ],
+    "image-to-text-10/768": [
+      "image-10",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-9"
+    ],
+    "text-to-image-11/128": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-9",
+      "image-12",
+      "image-15",
+      "image-8",
+      "image-14"
+    ],
+    "text-to-image-11/256": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "text-to-image-11/512": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-9",
+      "image-15",
+      "image-12",
+      "image-8",
+      "image-14"
+    ],
+    "text-to-image-11/768": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-9",
+      "image-15",
+      "image-12",
+      "image-8",
+      "image-14"
+    ],
+    "image-to-text-11/128": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-11/256": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-11/512": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-11/768": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-14",
+      "image-12",
+      "image-8"
+    ],
+    "text-to-image-12/128": [
+      "image-12",
+      "image-13",
+      "image-10",
+      "image-8",
+      "image-14",
+      "image-9",
+      "image-15",
+      "image-11"
+    ],
+    "text-to-image-12/256": [
+      "image-12",
+      "image-13",
+      "image-10",
+      "image-14",
+      "image-8",
+      "image-9",
+      "image-15",
+      "image-11"
+    ],
+    "text-to-image-12/512": [
+      "image-12",
+      "image-13",
+      "image-8",
+      "image-10",
+      "image-14",
+      "image-9",
+      "image-11",
+      "image-15"
+    ],
+    "text-to-image-12/768": [
+      "image-12",
+      "image-13",
+      "image-8",
+      "image-10",
+      "image-14",
+      "image-9",
+      "image-15",
+      "image-11"
+    ],
+    "image-to-text-12/128": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-10",
+      "image-8",
+      "image-15",
+      "image-11",
+      "image-9"
+    ],
+    "image-to-text-12/256": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-8",
+      "image-10",
+      "image-11",
+      "image-9",
+      "image-15"
+    ],
+    "image-to-text-12/512": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-8",
+      "image-10",
+      "image-11",
+      "image-9",
+      "image-15"
+    ],
+    "image-to-text-12/768": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-8",
+      "image-10",
+      "image-11",
+      "image-9",
+      "image-15"
+    ],
+    "text-to-image-13/128": [
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-11",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-14"
+    ],
+    "text-to-image-13/256": [
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-15",
+      "image-11",
+      "image-14",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-image-13/512": [
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-11",
+      "image-15",
+      "image-8",
+      "image-14",
+      "image-10"
+    ],
+    "text-to-image-13/768": [
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-15",
+      "image-11",
+      "image-8",
+      "image-14",
+      "image-10"
+    ],
+    "image-to-text-13/128": [
+      "image-13",
+      "image-12",
+      "image-15",
+      "image-11",
+      "image-10",
+      "image-9",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-13/256": [
+      "image-13",
+      "image-12",
+      "image-11",
+      "image-9",
+      "image-15",
+      "image-10",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-13/512": [
+      "image-13",
+      "image-12",
+      "image-11",
+      "image-9",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-14"
+    ],
+    "image-to-text-13/768": [
+      "image-13",
+      "image-12",
+      "image-11",
+      "image-9",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-14"
+    ],
+    "text-to-image-14/128": [
+      "image-14",
+      "image-12",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-13",
+      "image-9",
+      "image-11"
+    ],
+    "text-to-image-14/256": [
+      "image-14",
+      "image-15",
+      "image-12",
+      "image-10",
+      "image-8",
+      "image-11",
+      "image-9",
+      "image-13"
+    ],
+    "text-to-image-14/512": [
+      "image-14",
+      "image-15",
+      "image-10",
+      "image-12",
+      "image-8",
+      "image-11",
+      "image-9",
+      "image-13"
+    ],
+    "text-to-image-14/768": [
+      "image-14",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-12",
+      "image-9",
+      "image-11",
+      "image-13"
+    ],
+    "image-to-text-14/128": [
+      "image-14",
+      "image-15",
+      "image-12",
+      "image-8",
+      "image-10",
+      "image-13",
+      "image-9",
+      "image-11"
+    ],
+    "image-to-text-14/256": [
+      "image-14",
+      "image-15",
+      "image-8",
+      "image-12",
+      "image-10",
+      "image-9",
+      "image-11",
+      "image-13"
+    ],
+    "image-to-text-14/512": [
+      "image-14",
+      "image-15",
+      "image-8",
+      "image-12",
+      "image-10",
+      "image-9",
+      "image-11",
+      "image-13"
+    ],
+    "image-to-text-14/768": [
+      "image-14",
+      "image-15",
+      "image-8",
+      "image-12",
+      "image-10",
+      "image-9",
+      "image-11",
+      "image-13"
+    ],
+    "text-to-image-15/128": [
+      "image-15",
+      "image-14",
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-11",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-image-15/256": [
+      "image-15",
+      "image-14",
+      "image-13",
+      "image-11",
+      "image-9",
+      "image-12",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-image-15/512": [
+      "image-15",
+      "image-14",
+      "image-9",
+      "image-11",
+      "image-13",
+      "image-12",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-image-15/768": [
+      "image-15",
+      "image-14",
+      "image-11",
+      "image-9",
+      "image-13",
+      "image-10",
+      "image-12",
+      "image-8"
+    ],
+    "image-to-text-15/128": [
+      "image-15",
+      "image-14",
+      "image-12",
+      "image-13",
+      "image-9",
+      "image-10",
+      "image-11",
+      "image-8"
+    ],
+    "image-to-text-15/256": [
+      "image-15",
+      "image-14",
+      "image-13",
+      "image-11",
+      "image-9",
+      "image-12",
+      "image-10",
+      "image-8"
+    ],
+    "image-to-text-15/512": [
+      "image-15",
+      "image-14",
+      "image-9",
+      "image-13",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-10"
+    ],
+    "image-to-text-15/768": [
+      "image-15",
+      "image-14",
+      "image-13",
+      "image-11",
+      "image-9",
+      "image-12",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-image-16/128": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-2",
+      "image-6",
+      "image-5",
+      "image-3",
+      "image-7"
+    ],
+    "text-to-image-16/256": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-2",
+      "image-6",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "text-to-image-16/512": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-2",
+      "image-6",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "text-to-image-16/768": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-2",
+      "image-6",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "image-to-text-16/128": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-2",
+      "image-6",
+      "image-5",
+      "image-3",
+      "image-7"
+    ],
+    "image-to-text-16/256": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "image-to-text-16/512": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-7",
+      "image-5",
+      "image-3"
+    ],
+    "image-to-text-16/768": [
+      "image-0",
+      "image-1",
+      "image-4",
+      "image-6",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-3"
+    ],
+    "text-to-image-17/128": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-3",
+      "image-7",
+      "image-4",
+      "image-2",
+      "image-6"
+    ],
+    "text-to-image-17/256": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-17/512": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-4",
+      "image-2",
+      "image-6"
+    ],
+    "text-to-image-17/768": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-4",
+      "image-2",
+      "image-6"
+    ],
+    "image-to-text-17/128": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-3",
+      "image-4",
+      "image-7",
+      "image-2",
+      "image-6"
+    ],
+    "image-to-text-17/256": [
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-3",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-17/512": [
+      "image-1",
+      "image-0",
+      "image-3",
+      "image-7",
+      "image-5",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-17/768": [
+      "image-1",
+      "image-0",
+      "image-7",
+      "image-5",
+      "image-3",
+      "image-4",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-18/128": [
+      "image-2",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-7"
+    ],
+    "text-to-image-18/256": [
+      "image-2",
+      "image-3",
+      "image-4",
+      "image-6",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-1"
+    ],
+    "text-to-image-18/512": [
+      "image-2",
+      "image-3",
+      "image-4",
+      "image-0",
+      "image-6",
+      "image-5",
+      "image-7",
+      "image-1"
+    ],
+    "text-to-image-18/768": [
+      "image-2",
+      "image-3",
+      "image-4",
+      "image-0",
+      "image-6",
+      "image-5",
+      "image-7",
+      "image-1"
+    ],
+    "image-to-text-18/128": [
+      "image-2",
+      "image-0",
+      "image-4",
+      "image-3",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-7"
+    ],
+    "image-to-text-18/256": [
+      "image-2",
+      "image-0",
+      "image-3",
+      "image-6",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-5"
+    ],
+    "image-to-text-18/512": [
+      "image-2",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-6",
+      "image-1",
+      "image-7",
+      "image-5"
+    ],
+    "image-to-text-18/768": [
+      "image-2",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-6",
+      "image-1",
+      "image-7",
+      "image-5"
+    ],
+    "text-to-image-19/128": [
+      "image-3",
+      "image-2",
+      "image-1",
+      "image-0",
+      "image-5",
+      "image-7",
+      "image-4",
+      "image-6"
+    ],
+    "text-to-image-19/256": [
+      "image-3",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-1",
+      "image-6",
+      "image-0",
+      "image-4"
+    ],
+    "text-to-image-19/512": [
+      "image-3",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-1",
+      "image-4",
+      "image-0",
+      "image-6"
+    ],
+    "text-to-image-19/768": [
+      "image-3",
+      "image-2",
+      "image-5",
+      "image-7",
+      "image-1",
+      "image-4",
+      "image-0",
+      "image-6"
+    ],
+    "image-to-text-19/128": [
+      "image-3",
+      "image-2",
+      "image-0",
+      "image-1",
+      "image-5",
+      "image-4",
+      "image-7",
+      "image-6"
+    ],
+    "image-to-text-19/256": [
+      "image-3",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-4"
+    ],
+    "image-to-text-19/512": [
+      "image-3",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-4"
+    ],
+    "image-to-text-19/768": [
+      "image-3",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-4"
+    ],
+    "text-to-image-20/128": [
+      "image-4",
+      "image-5",
+      "image-0",
+      "image-2",
+      "image-6",
+      "image-1",
+      "image-3",
+      "image-7"
+    ],
+    "text-to-image-20/256": [
+      "image-4",
+      "image-5",
+      "image-6",
+      "image-0",
+      "image-2",
+      "image-7",
+      "image-1",
+      "image-3"
+    ],
+    "text-to-image-20/512": [
+      "image-4",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-2",
+      "image-7",
+      "image-1",
+      "image-3"
+    ],
+    "text-to-image-20/768": [
+      "image-4",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-2",
+      "image-7",
+      "image-1",
+      "image-3"
+    ],
+    "image-to-text-20/128": [
+      "image-4",
+      "image-5",
+      "image-0",
+      "image-6",
+      "image-2",
+      "image-1",
+      "image-3",
+      "image-7"
+    ],
+    "image-to-text-20/256": [
+      "image-4",
+      "image-0",
+      "image-6",
+      "image-5",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-3"
+    ],
+    "image-to-text-20/512": [
+      "image-4",
+      "image-0",
+      "image-5",
+      "image-6",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-3"
+    ],
+    "image-to-text-20/768": [
+      "image-4",
+      "image-0",
+      "image-5",
+      "image-6",
+      "image-2",
+      "image-1",
+      "image-7",
+      "image-3"
+    ],
+    "text-to-image-21/128": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-0",
+      "image-3",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-21/256": [
+      "image-5",
+      "image-4",
+      "image-7",
+      "image-1",
+      "image-3",
+      "image-6",
+      "image-0",
+      "image-2"
+    ],
+    "text-to-image-21/512": [
+      "image-5",
+      "image-4",
+      "image-7",
+      "image-1",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-21/768": [
+      "image-5",
+      "image-4",
+      "image-7",
+      "image-1",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-21/128": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-0",
+      "image-3",
+      "image-7",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-21/256": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-21/512": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "image-to-text-21/768": [
+      "image-5",
+      "image-4",
+      "image-1",
+      "image-7",
+      "image-3",
+      "image-0",
+      "image-6",
+      "image-2"
+    ],
+    "text-to-image-22/128": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-1",
+      "image-3"
+    ],
+    "text-to-image-22/256": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-2",
+      "image-0",
+      "image-5",
+      "image-3",
+      "image-1"
+    ],
+    "text-to-image-22/512": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-1",
+      "image-3"
+    ],
+    "text-to-image-22/768": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-1",
+      "image-3"
+    ],
+    "image-to-text-22/128": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-5",
+      "image-3",
+      "image-1"
+    ],
+    "image-to-text-22/256": [
+      "image-6",
+      "image-7",
+      "image-0",
+      "image-4",
+      "image-2",
+      "image-5",
+      "image-1",
+      "image-3"
+    ],
+    "image-to-text-22/512": [
+      "image-6",
+      "image-7",
+      "image-0",
+      "image-4",
+      "image-2",
+      "image-1",
+      "image-5",
+      "image-3"
+    ],
+    "image-to-text-22/768": [
+      "image-6",
+      "image-7",
+      "image-4",
+      "image-0",
+      "image-2",
+      "image-1",
+      "image-5",
+      "image-3"
+    ],
+    "text-to-image-23/128": [
+      "image-7",
+      "image-6",
+      "image-1",
+      "image-5",
+      "image-0",
+      "image-4",
+      "image-3",
+      "image-2"
+    ],
+    "text-to-image-23/256": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-3",
+      "image-4",
+      "image-0",
+      "image-2"
+    ],
+    "text-to-image-23/512": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-3",
+      "image-4",
+      "image-0",
+      "image-2"
+    ],
+    "text-to-image-23/768": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-3",
+      "image-4",
+      "image-0",
+      "image-2"
+    ],
+    "image-to-text-23/128": [
+      "image-7",
+      "image-6",
+      "image-5",
+      "image-1",
+      "image-0",
+      "image-4",
+      "image-3",
+      "image-2"
+    ],
+    "image-to-text-23/256": [
+      "image-7",
+      "image-6",
+      "image-1",
+      "image-5",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-2"
+    ],
+    "image-to-text-23/512": [
+      "image-7",
+      "image-6",
+      "image-1",
+      "image-5",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-2"
+    ],
+    "image-to-text-23/768": [
+      "image-7",
+      "image-6",
+      "image-1",
+      "image-5",
+      "image-3",
+      "image-0",
+      "image-4",
+      "image-2"
+    ],
+    "text-to-image-24/128": [
+      "image-8",
+      "image-9",
+      "image-14",
+      "image-12",
+      "image-10",
+      "image-15",
+      "image-13",
+      "image-11"
+    ],
+    "text-to-image-24/256": [
+      "image-8",
+      "image-9",
+      "image-14",
+      "image-12",
+      "image-10",
+      "image-15",
+      "image-13",
+      "image-11"
+    ],
+    "text-to-image-24/512": [
+      "image-8",
+      "image-9",
+      "image-14",
+      "image-12",
+      "image-10",
+      "image-15",
+      "image-13",
+      "image-11"
+    ],
+    "text-to-image-24/768": [
+      "image-8",
+      "image-9",
+      "image-14",
+      "image-12",
+      "image-10",
+      "image-15",
+      "image-13",
+      "image-11"
+    ],
+    "image-to-text-24/128": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-15",
+      "image-13",
+      "image-11"
+    ],
+    "image-to-text-24/256": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-11",
+      "image-13",
+      "image-15"
+    ],
+    "image-to-text-24/512": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-11",
+      "image-13",
+      "image-15"
+    ],
+    "image-to-text-24/768": [
+      "image-8",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-10",
+      "image-13",
+      "image-11",
+      "image-15"
+    ],
+    "text-to-image-25/128": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-11",
+      "image-15",
+      "image-12",
+      "image-10",
+      "image-14"
+    ],
+    "text-to-image-25/256": [
+      "image-9",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-10"
+    ],
+    "text-to-image-25/512": [
+      "image-9",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-10"
+    ],
+    "text-to-image-25/768": [
+      "image-9",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-10"
+    ],
+    "image-to-text-25/128": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-12",
+      "image-15",
+      "image-11",
+      "image-10",
+      "image-14"
+    ],
+    "image-to-text-25/256": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-11",
+      "image-15",
+      "image-12",
+      "image-10",
+      "image-14"
+    ],
+    "image-to-text-25/512": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-11",
+      "image-15",
+      "image-12",
+      "image-14",
+      "image-10"
+    ],
+    "image-to-text-25/768": [
+      "image-9",
+      "image-8",
+      "image-13",
+      "image-11",
+      "image-15",
+      "image-12",
+      "image-14",
+      "image-10"
+    ],
+    "text-to-image-26/128": [
+      "image-10",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-13",
+      "image-9",
+      "image-14",
+      "image-15"
+    ],
+    "text-to-image-26/256": [
+      "image-10",
+      "image-11",
+      "image-12",
+      "image-14",
+      "image-8",
+      "image-13",
+      "image-15",
+      "image-9"
+    ],
+    "text-to-image-26/512": [
+      "image-10",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-14",
+      "image-15",
+      "image-9",
+      "image-13"
+    ],
+    "text-to-image-26/768": [
+      "image-10",
+      "image-11",
+      "image-14",
+      "image-8",
+      "image-12",
+      "image-9",
+      "image-15",
+      "image-13"
+    ],
+    "image-to-text-26/128": [
+      "image-10",
+      "image-14",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-9"
+    ],
+    "image-to-text-26/256": [
+      "image-10",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-8",
+      "image-13",
+      "image-15",
+      "image-9"
+    ],
+    "image-to-text-26/512": [
+      "image-10",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-9"
+    ],
+    "image-to-text-26/768": [
+      "image-10",
+      "image-11",
+      "image-14",
+      "image-12",
+      "image-8",
+      "image-15",
+      "image-13",
+      "image-9"
+    ],
+    "text-to-image-27/128": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-9",
+      "image-12",
+      "image-15",
+      "image-8",
+      "image-14"
+    ],
+    "text-to-image-27/256": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "text-to-image-27/512": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "text-to-image-27/768": [
+      "image-11",
+      "image-10",
+      "image-15",
+      "image-9",
+      "image-13",
+      "image-14",
+      "image-8",
+      "image-12"
+    ],
+    "image-to-text-27/128": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-27/256": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-27/512": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-12",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-27/768": [
+      "image-11",
+      "image-10",
+      "image-13",
+      "image-15",
+      "image-9",
+      "image-14",
+      "image-12",
+      "image-8"
+    ],
+    "text-to-image-28/128": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-10",
+      "image-8",
+      "image-9",
+      "image-15",
+      "image-11"
+    ],
+    "text-to-image-28/256": [
+      "image-12",
+      "image-13",
+      "image-10",
+      "image-14",
+      "image-8",
+      "image-9",
+      "image-15",
+      "image-11"
+    ],
+    "text-to-image-28/512": [
+      "image-12",
+      "image-13",
+      "image-8",
+      "image-14",
+      "image-10",
+      "image-9",
+      "image-15",
+      "image-11"
+    ],
+    "text-to-image-28/768": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-8",
+      "image-10",
+      "image-9",
+      "image-15",
+      "image-11"
+    ],
+    "image-to-text-28/128": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-10",
+      "image-8",
+      "image-15",
+      "image-11",
+      "image-9"
+    ],
+    "image-to-text-28/256": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-8",
+      "image-10",
+      "image-11",
+      "image-9",
+      "image-15"
+    ],
+    "image-to-text-28/512": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-8",
+      "image-10",
+      "image-11",
+      "image-9",
+      "image-15"
+    ],
+    "image-to-text-28/768": [
+      "image-12",
+      "image-13",
+      "image-14",
+      "image-8",
+      "image-10",
+      "image-11",
+      "image-9",
+      "image-15"
+    ],
+    "text-to-image-29/128": [
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-11",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-14"
+    ],
+    "text-to-image-29/256": [
+      "image-13",
+      "image-12",
+      "image-15",
+      "image-9",
+      "image-11",
+      "image-14",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-image-29/512": [
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-15",
+      "image-11",
+      "image-14",
+      "image-8",
+      "image-10"
+    ],
+    "text-to-image-29/768": [
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-15",
+      "image-11",
+      "image-14",
+      "image-8",
+      "image-10"
+    ],
+    "image-to-text-29/128": [
+      "image-13",
+      "image-12",
+      "image-15",
+      "image-11",
+      "image-10",
+      "image-9",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-29/256": [
+      "image-13",
+      "image-12",
+      "image-11",
+      "image-9",
+      "image-15",
+      "image-10",
+      "image-14",
+      "image-8"
+    ],
+    "image-to-text-29/512": [
+      "image-13",
+      "image-12",
+      "image-11",
+      "image-9",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-14"
+    ],
+    "image-to-text-29/768": [
+      "image-13",
+      "image-12",
+      "image-11",
+      "image-9",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-14"
+    ],
+    "text-to-image-30/128": [
+      "image-14",
+      "image-15",
+      "image-12",
+      "image-10",
+      "image-8",
+      "image-9",
+      "image-13",
+      "image-11"
+    ],
+    "text-to-image-30/256": [
+      "image-14",
+      "image-15",
+      "image-10",
+      "image-12",
+      "image-8",
+      "image-11",
+      "image-9",
+      "image-13"
+    ],
+    "text-to-image-30/512": [
+      "image-14",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-12",
+      "image-11",
+      "image-9",
+      "image-13"
+    ],
+    "text-to-image-30/768": [
+      "image-14",
+      "image-15",
+      "image-10",
+      "image-8",
+      "image-12",
+      "image-9",
+      "image-11",
+      "image-13"
+    ],
+    "image-to-text-30/128": [
+      "image-14",
+      "image-15",
+      "image-12",
+      "image-8",
+      "image-10",
+      "image-13",
+      "image-9",
+      "image-11"
+    ],
+    "image-to-text-30/256": [
+      "image-14",
+      "image-15",
+      "image-8",
+      "image-12",
+      "image-10",
+      "image-9",
+      "image-11",
+      "image-13"
+    ],
+    "image-to-text-30/512": [
+      "image-14",
+      "image-15",
+      "image-8",
+      "image-12",
+      "image-10",
+      "image-9",
+      "image-11",
+      "image-13"
+    ],
+    "image-to-text-30/768": [
+      "image-14",
+      "image-15",
+      "image-8",
+      "image-12",
+      "image-10",
+      "image-9",
+      "image-11",
+      "image-13"
+    ],
+    "text-to-image-31/128": [
+      "image-15",
+      "image-14",
+      "image-13",
+      "image-12",
+      "image-9",
+      "image-11",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-image-31/256": [
+      "image-15",
+      "image-14",
+      "image-11",
+      "image-13",
+      "image-9",
+      "image-12",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-image-31/512": [
+      "image-15",
+      "image-14",
+      "image-9",
+      "image-11",
+      "image-13",
+      "image-10",
+      "image-12",
+      "image-8"
+    ],
+    "text-to-image-31/768": [
+      "image-15",
+      "image-14",
+      "image-9",
+      "image-11",
+      "image-13",
+      "image-10",
+      "image-8",
+      "image-12"
+    ],
+    "image-to-text-31/128": [
+      "image-15",
+      "image-14",
+      "image-12",
+      "image-13",
+      "image-9",
+      "image-10",
+      "image-11",
+      "image-8"
+    ],
+    "image-to-text-31/256": [
+      "image-15",
+      "image-14",
+      "image-13",
+      "image-11",
+      "image-9",
+      "image-12",
+      "image-10",
+      "image-8"
+    ],
+    "image-to-text-31/512": [
+      "image-15",
+      "image-14",
+      "image-9",
+      "image-13",
+      "image-11",
+      "image-12",
+      "image-8",
+      "image-10"
+    ],
+    "image-to-text-31/768": [
+      "image-15",
+      "image-14",
+      "image-13",
+      "image-11",
+      "image-9",
+      "image-12",
+      "image-10",
+      "image-8"
+    ],
+    "text-to-video-0/128": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-0/256": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-0/512": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-0/768": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "video-to-text-0/128": [
+      "video-0",
+      "video-1",
+      "video-2",
+      "video-3"
+    ],
+    "video-to-text-0/256": [
+      "video-0",
+      "video-2",
+      "video-3",
+      "video-1"
+    ],
+    "video-to-text-0/512": [
+      "video-0",
+      "video-3",
+      "video-1",
+      "video-2"
+    ],
+    "video-to-text-0/768": [
+      "video-0",
+      "video-3",
+      "video-2",
+      "video-1"
+    ],
+    "text-to-video-1/128": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "text-to-video-1/256": [
+      "video-1",
+      "video-2",
+      "video-3",
+      "video-0"
+    ],
+    "text-to-video-1/512": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "text-to-video-1/768": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-1/128": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-1/256": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "video-to-text-1/512": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "video-to-text-1/768": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "text-to-video-2/128": [
+      "video-2",
+      "video-0",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-2/256": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-2/512": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-2/768": [
+      "video-2",
+      "video-1",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-2/128": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "video-to-text-2/256": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-2/512": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-2/768": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-3/128": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-3/256": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-3/512": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-3/768": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "video-to-text-3/128": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-3/256": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-3/512": [
+      "video-3",
+      "video-0",
+      "video-2",
+      "video-1"
+    ],
+    "video-to-text-3/768": [
+      "video-3",
+      "video-0",
+      "video-2",
+      "video-1"
+    ],
+    "text-to-video-4/128": [
+      "video-4",
+      "video-7",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-4/256": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-4/512": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-4/768": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "video-to-text-4/128": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-4/256": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-4/512": [
+      "video-4",
+      "video-6",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-4/768": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "text-to-video-5/128": [
+      "video-5",
+      "video-6",
+      "video-4",
+      "video-7"
+    ],
+    "text-to-video-5/256": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "text-to-video-5/512": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "text-to-video-5/768": [
+      "video-5",
+      "video-4",
+      "video-7",
+      "video-6"
+    ],
+    "video-to-text-5/128": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "video-to-text-5/256": [
+      "video-5",
+      "video-7",
+      "video-6",
+      "video-4"
+    ],
+    "video-to-text-5/512": [
+      "video-5",
+      "video-7",
+      "video-6",
+      "video-4"
+    ],
+    "video-to-text-5/768": [
+      "video-5",
+      "video-7",
+      "video-4",
+      "video-6"
+    ],
+    "text-to-video-6/128": [
+      "video-6",
+      "video-7",
+      "video-4",
+      "video-5"
+    ],
+    "text-to-video-6/256": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-6/512": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-6/768": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-6/128": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-6/256": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-6/512": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-6/768": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "text-to-video-7/128": [
+      "video-7",
+      "video-6",
+      "video-5",
+      "video-4"
+    ],
+    "text-to-video-7/256": [
+      "video-7",
+      "video-4",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-7/512": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-7/768": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-7/128": [
+      "video-7",
+      "video-6",
+      "video-4",
+      "video-5"
+    ],
+    "video-to-text-7/256": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-7/512": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-7/768": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-8/128": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-8/256": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-8/512": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-8/768": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "video-to-text-8/128": [
+      "video-0",
+      "video-1",
+      "video-2",
+      "video-3"
+    ],
+    "video-to-text-8/256": [
+      "video-0",
+      "video-2",
+      "video-3",
+      "video-1"
+    ],
+    "video-to-text-8/512": [
+      "video-0",
+      "video-3",
+      "video-1",
+      "video-2"
+    ],
+    "video-to-text-8/768": [
+      "video-0",
+      "video-3",
+      "video-2",
+      "video-1"
+    ],
+    "text-to-video-9/128": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "text-to-video-9/256": [
+      "video-1",
+      "video-2",
+      "video-3",
+      "video-0"
+    ],
+    "text-to-video-9/512": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "text-to-video-9/768": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-9/128": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-9/256": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "video-to-text-9/512": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "video-to-text-9/768": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "text-to-video-10/128": [
+      "video-2",
+      "video-0",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-10/256": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-10/512": [
+      "video-2",
+      "video-1",
+      "video-0",
+      "video-3"
+    ],
+    "text-to-video-10/768": [
+      "video-2",
+      "video-1",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-10/128": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "video-to-text-10/256": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-10/512": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-10/768": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-11/128": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-11/256": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-11/512": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-11/768": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "video-to-text-11/128": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-11/256": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-11/512": [
+      "video-3",
+      "video-0",
+      "video-2",
+      "video-1"
+    ],
+    "video-to-text-11/768": [
+      "video-3",
+      "video-0",
+      "video-2",
+      "video-1"
+    ],
+    "text-to-video-12/128": [
+      "video-4",
+      "video-7",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-12/256": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-12/512": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-12/768": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "video-to-text-12/128": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-12/256": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-12/512": [
+      "video-4",
+      "video-6",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-12/768": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "text-to-video-13/128": [
+      "video-5",
+      "video-6",
+      "video-7",
+      "video-4"
+    ],
+    "text-to-video-13/256": [
+      "video-5",
+      "video-7",
+      "video-4",
+      "video-6"
+    ],
+    "text-to-video-13/512": [
+      "video-5",
+      "video-4",
+      "video-7",
+      "video-6"
+    ],
+    "text-to-video-13/768": [
+      "video-5",
+      "video-7",
+      "video-4",
+      "video-6"
+    ],
+    "video-to-text-13/128": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "video-to-text-13/256": [
+      "video-5",
+      "video-7",
+      "video-6",
+      "video-4"
+    ],
+    "video-to-text-13/512": [
+      "video-5",
+      "video-7",
+      "video-6",
+      "video-4"
+    ],
+    "video-to-text-13/768": [
+      "video-5",
+      "video-7",
+      "video-4",
+      "video-6"
+    ],
+    "text-to-video-14/128": [
+      "video-6",
+      "video-7",
+      "video-4",
+      "video-5"
+    ],
+    "text-to-video-14/256": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-14/512": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-14/768": [
+      "video-6",
+      "video-7",
+      "video-4",
+      "video-5"
+    ],
+    "video-to-text-14/128": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-14/256": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-14/512": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-14/768": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "text-to-video-15/128": [
+      "video-7",
+      "video-6",
+      "video-4",
+      "video-5"
+    ],
+    "text-to-video-15/256": [
+      "video-7",
+      "video-4",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-15/512": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-15/768": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-15/128": [
+      "video-7",
+      "video-6",
+      "video-4",
+      "video-5"
+    ],
+    "video-to-text-15/256": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-15/512": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-15/768": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-16/128": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-16/256": [
+      "video-0",
+      "video-2",
+      "video-3",
+      "video-1"
+    ],
+    "text-to-video-16/512": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-16/768": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "video-to-text-16/128": [
+      "video-0",
+      "video-1",
+      "video-2",
+      "video-3"
+    ],
+    "video-to-text-16/256": [
+      "video-0",
+      "video-2",
+      "video-3",
+      "video-1"
+    ],
+    "video-to-text-16/512": [
+      "video-0",
+      "video-3",
+      "video-1",
+      "video-2"
+    ],
+    "video-to-text-16/768": [
+      "video-0",
+      "video-3",
+      "video-2",
+      "video-1"
+    ],
+    "text-to-video-17/128": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "text-to-video-17/256": [
+      "video-1",
+      "video-2",
+      "video-3",
+      "video-0"
+    ],
+    "text-to-video-17/512": [
+      "video-1",
+      "video-2",
+      "video-3",
+      "video-0"
+    ],
+    "text-to-video-17/768": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-17/128": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-17/256": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "video-to-text-17/512": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "video-to-text-17/768": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "text-to-video-18/128": [
+      "video-2",
+      "video-0",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-18/256": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-18/512": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-18/768": [
+      "video-2",
+      "video-1",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-18/128": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "video-to-text-18/256": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-18/512": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-18/768": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-19/128": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-19/256": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-19/512": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-19/768": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "video-to-text-19/128": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-19/256": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-19/512": [
+      "video-3",
+      "video-0",
+      "video-2",
+      "video-1"
+    ],
+    "video-to-text-19/768": [
+      "video-3",
+      "video-0",
+      "video-2",
+      "video-1"
+    ],
+    "text-to-video-20/128": [
+      "video-4",
+      "video-5",
+      "video-7",
+      "video-6"
+    ],
+    "text-to-video-20/256": [
+      "video-4",
+      "video-6",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-20/512": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-20/768": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "video-to-text-20/128": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-20/256": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-20/512": [
+      "video-4",
+      "video-6",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-20/768": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "text-to-video-21/128": [
+      "video-5",
+      "video-6",
+      "video-4",
+      "video-7"
+    ],
+    "text-to-video-21/256": [
+      "video-5",
+      "video-6",
+      "video-4",
+      "video-7"
+    ],
+    "text-to-video-21/512": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "text-to-video-21/768": [
+      "video-5",
+      "video-4",
+      "video-7",
+      "video-6"
+    ],
+    "video-to-text-21/128": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "video-to-text-21/256": [
+      "video-5",
+      "video-7",
+      "video-6",
+      "video-4"
+    ],
+    "video-to-text-21/512": [
+      "video-5",
+      "video-7",
+      "video-6",
+      "video-4"
+    ],
+    "video-to-text-21/768": [
+      "video-5",
+      "video-7",
+      "video-4",
+      "video-6"
+    ],
+    "text-to-video-22/128": [
+      "video-6",
+      "video-7",
+      "video-5",
+      "video-4"
+    ],
+    "text-to-video-22/256": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-22/512": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-22/768": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-22/128": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-22/256": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-22/512": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-22/768": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "text-to-video-23/128": [
+      "video-7",
+      "video-6",
+      "video-5",
+      "video-4"
+    ],
+    "text-to-video-23/256": [
+      "video-7",
+      "video-4",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-23/512": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-23/768": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-23/128": [
+      "video-7",
+      "video-6",
+      "video-4",
+      "video-5"
+    ],
+    "video-to-text-23/256": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-23/512": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-23/768": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-24/128": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-24/256": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-24/512": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-24/768": [
+      "video-0",
+      "video-2",
+      "video-1",
+      "video-3"
+    ],
+    "video-to-text-24/128": [
+      "video-0",
+      "video-1",
+      "video-2",
+      "video-3"
+    ],
+    "video-to-text-24/256": [
+      "video-0",
+      "video-2",
+      "video-3",
+      "video-1"
+    ],
+    "video-to-text-24/512": [
+      "video-0",
+      "video-3",
+      "video-1",
+      "video-2"
+    ],
+    "video-to-text-24/768": [
+      "video-0",
+      "video-3",
+      "video-2",
+      "video-1"
+    ],
+    "text-to-video-25/128": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "text-to-video-25/256": [
+      "video-1",
+      "video-2",
+      "video-3",
+      "video-0"
+    ],
+    "text-to-video-25/512": [
+      "video-1",
+      "video-0",
+      "video-2",
+      "video-3"
+    ],
+    "text-to-video-25/768": [
+      "video-1",
+      "video-0",
+      "video-2",
+      "video-3"
+    ],
+    "video-to-text-25/128": [
+      "video-1",
+      "video-2",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-25/256": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "video-to-text-25/512": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "video-to-text-25/768": [
+      "video-1",
+      "video-0",
+      "video-3",
+      "video-2"
+    ],
+    "text-to-video-26/128": [
+      "video-2",
+      "video-0",
+      "video-1",
+      "video-3"
+    ],
+    "text-to-video-26/256": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-26/512": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-26/768": [
+      "video-2",
+      "video-1",
+      "video-0",
+      "video-3"
+    ],
+    "video-to-text-26/128": [
+      "video-2",
+      "video-3",
+      "video-1",
+      "video-0"
+    ],
+    "video-to-text-26/256": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-26/512": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-26/768": [
+      "video-2",
+      "video-3",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-27/128": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "text-to-video-27/256": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-27/512": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "text-to-video-27/768": [
+      "video-3",
+      "video-2",
+      "video-1",
+      "video-0"
+    ],
+    "video-to-text-27/128": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-27/256": [
+      "video-3",
+      "video-2",
+      "video-0",
+      "video-1"
+    ],
+    "video-to-text-27/512": [
+      "video-3",
+      "video-0",
+      "video-2",
+      "video-1"
+    ],
+    "video-to-text-27/768": [
+      "video-3",
+      "video-0",
+      "video-2",
+      "video-1"
+    ],
+    "text-to-video-28/128": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-28/256": [
+      "video-4",
+      "video-6",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-28/512": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-28/768": [
+      "video-4",
+      "video-7",
+      "video-6",
+      "video-5"
+    ],
+    "video-to-text-28/128": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-28/256": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-28/512": [
+      "video-4",
+      "video-6",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-28/768": [
+      "video-4",
+      "video-6",
+      "video-5",
+      "video-7"
+    ],
+    "text-to-video-29/128": [
+      "video-5",
+      "video-6",
+      "video-4",
+      "video-7"
+    ],
+    "text-to-video-29/256": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "text-to-video-29/512": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "text-to-video-29/768": [
+      "video-5",
+      "video-4",
+      "video-7",
+      "video-6"
+    ],
+    "video-to-text-29/128": [
+      "video-5",
+      "video-4",
+      "video-6",
+      "video-7"
+    ],
+    "video-to-text-29/256": [
+      "video-5",
+      "video-7",
+      "video-6",
+      "video-4"
+    ],
+    "video-to-text-29/512": [
+      "video-5",
+      "video-7",
+      "video-6",
+      "video-4"
+    ],
+    "video-to-text-29/768": [
+      "video-5",
+      "video-7",
+      "video-4",
+      "video-6"
+    ],
+    "text-to-video-30/128": [
+      "video-6",
+      "video-7",
+      "video-4",
+      "video-5"
+    ],
+    "text-to-video-30/256": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-30/512": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "text-to-video-30/768": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-30/128": [
+      "video-6",
+      "video-4",
+      "video-7",
+      "video-5"
+    ],
+    "video-to-text-30/256": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-30/512": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "video-to-text-30/768": [
+      "video-6",
+      "video-4",
+      "video-5",
+      "video-7"
+    ],
+    "text-to-video-31/128": [
+      "video-7",
+      "video-6",
+      "video-5",
+      "video-4"
+    ],
+    "text-to-video-31/256": [
+      "video-7",
+      "video-4",
+      "video-6",
+      "video-5"
+    ],
+    "text-to-video-31/512": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-video-31/768": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-31/128": [
+      "video-7",
+      "video-6",
+      "video-4",
+      "video-5"
+    ],
+    "video-to-text-31/256": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-31/512": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "video-to-text-31/768": [
+      "video-7",
+      "video-4",
+      "video-5",
+      "video-6"
+    ],
+    "text-to-audio-0/128": [
+      "audio-0",
+      "audio-3",
+      "audio-10",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-1",
+      "audio-2"
+    ],
+    "text-to-audio-0/256": [
+      "audio-0",
+      "audio-8",
+      "audio-9",
+      "audio-3",
+      "audio-10",
+      "audio-11",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-0/512": [
+      "audio-0",
+      "audio-3",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-11",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-0/768": [
+      "audio-0",
+      "audio-3",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-11",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-0/128": [
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2",
+      "audio-8",
+      "audio-10",
+      "audio-9",
+      "audio-11"
+    ],
+    "audio-to-text-0/256": [
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-9",
+      "audio-11",
+      "audio-10"
+    ],
+    "audio-to-text-0/512": [
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-8",
+      "audio-11",
+      "audio-9",
+      "audio-10"
+    ],
+    "audio-to-text-0/768": [
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-8",
+      "audio-11",
+      "audio-9",
+      "audio-10"
+    ],
+    "text-to-audio-1/128": [
+      "audio-1",
+      "audio-10",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-11",
+      "audio-0",
+      "audio-2"
+    ],
+    "text-to-audio-1/256": [
+      "audio-1",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-11",
+      "audio-3",
+      "audio-0",
+      "audio-2"
+    ],
+    "text-to-audio-1/512": [
+      "audio-1",
+      "audio-10",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-3",
+      "audio-0",
+      "audio-2"
+    ],
+    "text-to-audio-1/768": [
+      "audio-1",
+      "audio-10",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-3",
+      "audio-0",
+      "audio-2"
+    ],
+    "audio-to-text-1/128": [
+      "audio-1",
+      "audio-0",
+      "audio-3",
+      "audio-11",
+      "audio-8",
+      "audio-2",
+      "audio-10",
+      "audio-9"
+    ],
+    "audio-to-text-1/256": [
+      "audio-1",
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10"
+    ],
+    "audio-to-text-1/512": [
+      "audio-1",
+      "audio-2",
+      "audio-0",
+      "audio-3",
+      "audio-8",
+      "audio-11",
+      "audio-9",
+      "audio-10"
+    ],
+    "audio-to-text-1/768": [
+      "audio-1",
+      "audio-0",
+      "audio-2",
+      "audio-3",
+      "audio-8",
+      "audio-11",
+      "audio-9",
+      "audio-10"
+    ],
+    "text-to-audio-2/128": [
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-3",
+      "audio-10",
+      "audio-11",
+      "audio-0",
+      "audio-1"
+    ],
+    "text-to-audio-2/256": [
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-10",
+      "audio-3",
+      "audio-11",
+      "audio-0",
+      "audio-1"
+    ],
+    "text-to-audio-2/512": [
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-3",
+      "audio-0",
+      "audio-10",
+      "audio-11",
+      "audio-1"
+    ],
+    "text-to-audio-2/768": [
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-11",
+      "audio-1"
+    ],
+    "audio-to-text-2/128": [
+      "audio-2",
+      "audio-3",
+      "audio-8",
+      "audio-0",
+      "audio-11",
+      "audio-10",
+      "audio-9",
+      "audio-1"
+    ],
+    "audio-to-text-2/256": [
+      "audio-2",
+      "audio-0",
+      "audio-3",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-1",
+      "audio-10"
+    ],
+    "audio-to-text-2/512": [
+      "audio-2",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10"
+    ],
+    "audio-to-text-2/768": [
+      "audio-2",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10"
+    ],
+    "text-to-audio-3/128": [
+      "audio-3",
+      "audio-8",
+      "audio-10",
+      "audio-9",
+      "audio-11",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-3/256": [
+      "audio-3",
+      "audio-8",
+      "audio-9",
+      "audio-10",
+      "audio-11",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-3/512": [
+      "audio-3",
+      "audio-8",
+      "audio-9",
+      "audio-0",
+      "audio-10",
+      "audio-11",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-3/768": [
+      "audio-3",
+      "audio-0",
+      "audio-8",
+      "audio-9",
+      "audio-10",
+      "audio-11",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-3/128": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-10",
+      "audio-9",
+      "audio-11"
+    ],
+    "audio-to-text-3/256": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-9",
+      "audio-10",
+      "audio-11"
+    ],
+    "audio-to-text-3/512": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-9",
+      "audio-10",
+      "audio-11"
+    ],
+    "audio-to-text-3/768": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-10",
+      "audio-9",
+      "audio-11"
+    ],
+    "text-to-audio-4/128": [
+      "audio-4",
+      "audio-14",
+      "audio-7",
+      "audio-12",
+      "audio-6",
+      "audio-15",
+      "audio-13",
+      "audio-5"
+    ],
+    "text-to-audio-4/256": [
+      "audio-4",
+      "audio-12",
+      "audio-15",
+      "audio-7",
+      "audio-14",
+      "audio-13",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-4/512": [
+      "audio-4",
+      "audio-15",
+      "audio-7",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-4/768": [
+      "audio-4",
+      "audio-15",
+      "audio-7",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-4/128": [
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-14",
+      "audio-15",
+      "audio-13"
+    ],
+    "audio-to-text-4/256": [
+      "audio-4",
+      "audio-7",
+      "audio-6",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-4/512": [
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-15",
+      "audio-13",
+      "audio-14"
+    ],
+    "audio-to-text-4/768": [
+      "audio-4",
+      "audio-7",
+      "audio-6",
+      "audio-5",
+      "audio-15",
+      "audio-12",
+      "audio-13",
+      "audio-14"
+    ],
+    "text-to-audio-5/128": [
+      "audio-5",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-15",
+      "audio-13",
+      "audio-6",
+      "audio-4"
+    ],
+    "text-to-audio-5/256": [
+      "audio-5",
+      "audio-12",
+      "audio-15",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-13",
+      "audio-6"
+    ],
+    "text-to-audio-5/512": [
+      "audio-5",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-4",
+      "audio-7",
+      "audio-13",
+      "audio-6"
+    ],
+    "text-to-audio-5/768": [
+      "audio-5",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-4",
+      "audio-7",
+      "audio-13",
+      "audio-6"
+    ],
+    "audio-to-text-5/128": [
+      "audio-5",
+      "audio-6",
+      "audio-7",
+      "audio-4",
+      "audio-12",
+      "audio-14",
+      "audio-15",
+      "audio-13"
+    ],
+    "audio-to-text-5/256": [
+      "audio-5",
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-5/512": [
+      "audio-5",
+      "audio-4",
+      "audio-7",
+      "audio-6",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-5/768": [
+      "audio-5",
+      "audio-4",
+      "audio-7",
+      "audio-6",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "text-to-audio-6/128": [
+      "audio-6",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-4",
+      "audio-7",
+      "audio-5"
+    ],
+    "text-to-audio-6/256": [
+      "audio-6",
+      "audio-15",
+      "audio-12",
+      "audio-13",
+      "audio-14",
+      "audio-4",
+      "audio-7",
+      "audio-5"
+    ],
+    "text-to-audio-6/512": [
+      "audio-6",
+      "audio-15",
+      "audio-12",
+      "audio-4",
+      "audio-7",
+      "audio-14",
+      "audio-13",
+      "audio-5"
+    ],
+    "text-to-audio-6/768": [
+      "audio-6",
+      "audio-15",
+      "audio-12",
+      "audio-4",
+      "audio-14",
+      "audio-7",
+      "audio-13",
+      "audio-5"
+    ],
+    "audio-to-text-6/128": [
+      "audio-6",
+      "audio-4",
+      "audio-12",
+      "audio-7",
+      "audio-15",
+      "audio-13",
+      "audio-5",
+      "audio-14"
+    ],
+    "audio-to-text-6/256": [
+      "audio-6",
+      "audio-4",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-6/512": [
+      "audio-6",
+      "audio-4",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-6/768": [
+      "audio-6",
+      "audio-4",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "text-to-audio-7/128": [
+      "audio-7",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-4",
+      "audio-13",
+      "audio-5",
+      "audio-6"
+    ],
+    "text-to-audio-7/256": [
+      "audio-7",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-13",
+      "audio-4",
+      "audio-5",
+      "audio-6"
+    ],
+    "text-to-audio-7/512": [
+      "audio-7",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-4",
+      "audio-13",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-7/768": [
+      "audio-7",
+      "audio-15",
+      "audio-14",
+      "audio-4",
+      "audio-12",
+      "audio-13",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-7/128": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-7/256": [
+      "audio-7",
+      "audio-4",
+      "audio-12",
+      "audio-6",
+      "audio-13",
+      "audio-5",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-7/512": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-13",
+      "audio-12",
+      "audio-5",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-7/768": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-12",
+      "audio-13",
+      "audio-5",
+      "audio-15",
+      "audio-14"
+    ],
+    "text-to-audio-8/128": [
+      "audio-9",
+      "audio-11",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-8/256": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-0",
+      "audio-1"
+    ],
+    "text-to-audio-8/512": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-8/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-8/128": [
+      "audio-3",
+      "audio-10",
+      "audio-8",
+      "audio-2",
+      "audio-0",
+      "audio-1",
+      "audio-9",
+      "audio-11"
+    ],
+    "audio-to-text-8/256": [
+      "audio-8",
+      "audio-0",
+      "audio-2",
+      "audio-9",
+      "audio-3",
+      "audio-10",
+      "audio-1",
+      "audio-11"
+    ],
+    "audio-to-text-8/512": [
+      "audio-8",
+      "audio-0",
+      "audio-9",
+      "audio-3",
+      "audio-10",
+      "audio-2",
+      "audio-1",
+      "audio-11"
+    ],
+    "audio-to-text-8/768": [
+      "audio-8",
+      "audio-0",
+      "audio-10",
+      "audio-9",
+      "audio-3",
+      "audio-2",
+      "audio-11",
+      "audio-1"
+    ],
+    "text-to-audio-9/128": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-9/256": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-0",
+      "audio-1"
+    ],
+    "text-to-audio-9/512": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-0",
+      "audio-1"
+    ],
+    "text-to-audio-9/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-9/128": [
+      "audio-3",
+      "audio-8",
+      "audio-10",
+      "audio-2",
+      "audio-0",
+      "audio-9",
+      "audio-11",
+      "audio-1"
+    ],
+    "audio-to-text-9/256": [
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-0",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-9/512": [
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2"
+    ],
+    "audio-to-text-9/768": [
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2"
+    ],
+    "text-to-audio-10/128": [
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-3",
+      "audio-10",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-10/256": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-10/512": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-10/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-1",
+      "audio-2"
+    ],
+    "audio-to-text-10/128": [
+      "audio-3",
+      "audio-1",
+      "audio-0",
+      "audio-10",
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-11"
+    ],
+    "audio-to-text-10/256": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1",
+      "audio-8",
+      "audio-9",
+      "audio-10",
+      "audio-11"
+    ],
+    "audio-to-text-10/512": [
+      "audio-0",
+      "audio-1",
+      "audio-3",
+      "audio-2",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-11"
+    ],
+    "audio-to-text-10/768": [
+      "audio-1",
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-10",
+      "audio-11"
+    ],
+    "text-to-audio-11/128": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-1",
+      "audio-3",
+      "audio-10",
+      "audio-2",
+      "audio-0"
+    ],
+    "text-to-audio-11/256": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-11/512": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-11/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-11/128": [
+      "audio-8",
+      "audio-10",
+      "audio-11",
+      "audio-9",
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-11/256": [
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-11/512": [
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2"
+    ],
+    "audio-to-text-11/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2"
+    ],
+    "text-to-audio-12/128": [
+      "audio-13",
+      "audio-12",
+      "audio-15",
+      "audio-7",
+      "audio-14",
+      "audio-6",
+      "audio-5",
+      "audio-4"
+    ],
+    "text-to-audio-12/256": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-5",
+      "audio-6"
+    ],
+    "text-to-audio-12/512": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-12/768": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-12/128": [
+      "audio-6",
+      "audio-12",
+      "audio-4",
+      "audio-7",
+      "audio-5",
+      "audio-14",
+      "audio-15",
+      "audio-13"
+    ],
+    "audio-to-text-12/256": [
+      "audio-6",
+      "audio-12",
+      "audio-4",
+      "audio-7",
+      "audio-13",
+      "audio-5",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-12/512": [
+      "audio-6",
+      "audio-4",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-13",
+      "audio-5",
+      "audio-15"
+    ],
+    "audio-to-text-12/768": [
+      "audio-12",
+      "audio-6",
+      "audio-4",
+      "audio-14",
+      "audio-7",
+      "audio-15",
+      "audio-5",
+      "audio-13"
+    ],
+    "text-to-audio-13/128": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-6",
+      "audio-5",
+      "audio-4"
+    ],
+    "text-to-audio-13/256": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-6",
+      "audio-4",
+      "audio-5"
+    ],
+    "text-to-audio-13/512": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-13/768": [
+      "audio-13",
+      "audio-15",
+      "audio-7",
+      "audio-12",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-13/128": [
+      "audio-12",
+      "audio-6",
+      "audio-15",
+      "audio-13",
+      "audio-14",
+      "audio-4",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-13/256": [
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-6",
+      "audio-4",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-13/512": [
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-13/768": [
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5"
+    ],
+    "text-to-audio-14/128": [
+      "audio-13",
+      "audio-12",
+      "audio-15",
+      "audio-14",
+      "audio-5",
+      "audio-7",
+      "audio-6",
+      "audio-4"
+    ],
+    "text-to-audio-14/256": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-5",
+      "audio-4",
+      "audio-6"
+    ],
+    "text-to-audio-14/512": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-5",
+      "audio-6"
+    ],
+    "text-to-audio-14/768": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-5",
+      "audio-6"
+    ],
+    "audio-to-text-14/128": [
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-15"
+    ],
+    "audio-to-text-14/256": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-14",
+      "audio-15"
+    ],
+    "audio-to-text-14/512": [
+      "audio-7",
+      "audio-4",
+      "audio-5",
+      "audio-6",
+      "audio-13",
+      "audio-14",
+      "audio-12",
+      "audio-15"
+    ],
+    "audio-to-text-14/768": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-5",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-15"
+    ],
+    "text-to-audio-15/128": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-6",
+      "audio-5",
+      "audio-4"
+    ],
+    "text-to-audio-15/256": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-15/512": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-15/768": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-15/128": [
+      "audio-6",
+      "audio-12",
+      "audio-7",
+      "audio-4",
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-5"
+    ],
+    "audio-to-text-15/256": [
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-6",
+      "audio-7",
+      "audio-4",
+      "audio-14",
+      "audio-5"
+    ],
+    "audio-to-text-15/512": [
+      "audio-13",
+      "audio-12",
+      "audio-15",
+      "audio-4",
+      "audio-14",
+      "audio-6",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-15/768": [
+      "audio-12",
+      "audio-15",
+      "audio-13",
+      "audio-4",
+      "audio-14",
+      "audio-6",
+      "audio-7",
+      "audio-5"
+    ],
+    "text-to-audio-16/128": [
+      "audio-0",
+      "audio-3",
+      "audio-9",
+      "audio-10",
+      "audio-8",
+      "audio-11",
+      "audio-1",
+      "audio-2"
+    ],
+    "text-to-audio-16/256": [
+      "audio-0",
+      "audio-8",
+      "audio-9",
+      "audio-3",
+      "audio-11",
+      "audio-10",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-16/512": [
+      "audio-0",
+      "audio-3",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-10",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-16/768": [
+      "audio-0",
+      "audio-3",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-10",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-16/128": [
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2",
+      "audio-8",
+      "audio-10",
+      "audio-9",
+      "audio-11"
+    ],
+    "audio-to-text-16/256": [
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-9",
+      "audio-11",
+      "audio-10"
+    ],
+    "audio-to-text-16/512": [
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-8",
+      "audio-11",
+      "audio-9",
+      "audio-10"
+    ],
+    "audio-to-text-16/768": [
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-8",
+      "audio-11",
+      "audio-9",
+      "audio-10"
+    ],
+    "text-to-audio-17/128": [
+      "audio-1",
+      "audio-10",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-3",
+      "audio-0",
+      "audio-2"
+    ],
+    "text-to-audio-17/256": [
+      "audio-1",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-10",
+      "audio-3",
+      "audio-0",
+      "audio-2"
+    ],
+    "text-to-audio-17/512": [
+      "audio-1",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-10",
+      "audio-3",
+      "audio-0",
+      "audio-2"
+    ],
+    "text-to-audio-17/768": [
+      "audio-1",
+      "audio-9",
+      "audio-10",
+      "audio-11",
+      "audio-8",
+      "audio-3",
+      "audio-0",
+      "audio-2"
+    ],
+    "audio-to-text-17/128": [
+      "audio-1",
+      "audio-0",
+      "audio-3",
+      "audio-11",
+      "audio-8",
+      "audio-2",
+      "audio-10",
+      "audio-9"
+    ],
+    "audio-to-text-17/256": [
+      "audio-1",
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10"
+    ],
+    "audio-to-text-17/512": [
+      "audio-1",
+      "audio-2",
+      "audio-0",
+      "audio-3",
+      "audio-8",
+      "audio-11",
+      "audio-9",
+      "audio-10"
+    ],
+    "audio-to-text-17/768": [
+      "audio-1",
+      "audio-0",
+      "audio-2",
+      "audio-3",
+      "audio-8",
+      "audio-11",
+      "audio-9",
+      "audio-10"
+    ],
+    "text-to-audio-18/128": [
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-3",
+      "audio-10",
+      "audio-11",
+      "audio-0",
+      "audio-1"
+    ],
+    "text-to-audio-18/256": [
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10",
+      "audio-3",
+      "audio-0",
+      "audio-1"
+    ],
+    "text-to-audio-18/512": [
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-3",
+      "audio-11",
+      "audio-0",
+      "audio-10",
+      "audio-1"
+    ],
+    "text-to-audio-18/768": [
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-3",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-1"
+    ],
+    "audio-to-text-18/128": [
+      "audio-2",
+      "audio-3",
+      "audio-8",
+      "audio-0",
+      "audio-11",
+      "audio-10",
+      "audio-9",
+      "audio-1"
+    ],
+    "audio-to-text-18/256": [
+      "audio-2",
+      "audio-0",
+      "audio-3",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-1",
+      "audio-10"
+    ],
+    "audio-to-text-18/512": [
+      "audio-2",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10"
+    ],
+    "audio-to-text-18/768": [
+      "audio-2",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10"
+    ],
+    "text-to-audio-19/128": [
+      "audio-3",
+      "audio-10",
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-19/256": [
+      "audio-3",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-11",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-19/512": [
+      "audio-3",
+      "audio-8",
+      "audio-0",
+      "audio-9",
+      "audio-11",
+      "audio-10",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-19/768": [
+      "audio-3",
+      "audio-0",
+      "audio-8",
+      "audio-9",
+      "audio-10",
+      "audio-11",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-19/128": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-10",
+      "audio-9",
+      "audio-11"
+    ],
+    "audio-to-text-19/256": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-9",
+      "audio-10",
+      "audio-11"
+    ],
+    "audio-to-text-19/512": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-9",
+      "audio-10",
+      "audio-11"
+    ],
+    "audio-to-text-19/768": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-8",
+      "audio-1",
+      "audio-10",
+      "audio-9",
+      "audio-11"
+    ],
+    "text-to-audio-20/128": [
+      "audio-4",
+      "audio-14",
+      "audio-7",
+      "audio-12",
+      "audio-15",
+      "audio-6",
+      "audio-13",
+      "audio-5"
+    ],
+    "text-to-audio-20/256": [
+      "audio-4",
+      "audio-15",
+      "audio-7",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-20/512": [
+      "audio-4",
+      "audio-15",
+      "audio-7",
+      "audio-12",
+      "audio-13",
+      "audio-14",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-20/768": [
+      "audio-4",
+      "audio-15",
+      "audio-7",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-20/128": [
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-14",
+      "audio-15",
+      "audio-13"
+    ],
+    "audio-to-text-20/256": [
+      "audio-4",
+      "audio-7",
+      "audio-6",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-20/512": [
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-15",
+      "audio-13",
+      "audio-14"
+    ],
+    "audio-to-text-20/768": [
+      "audio-4",
+      "audio-7",
+      "audio-6",
+      "audio-5",
+      "audio-15",
+      "audio-12",
+      "audio-13",
+      "audio-14"
+    ],
+    "text-to-audio-21/128": [
+      "audio-5",
+      "audio-14",
+      "audio-12",
+      "audio-15",
+      "audio-7",
+      "audio-13",
+      "audio-6",
+      "audio-4"
+    ],
+    "text-to-audio-21/256": [
+      "audio-5",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-13",
+      "audio-7",
+      "audio-4",
+      "audio-6"
+    ],
+    "text-to-audio-21/512": [
+      "audio-5",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-4",
+      "audio-7",
+      "audio-6"
+    ],
+    "text-to-audio-21/768": [
+      "audio-5",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-7",
+      "audio-4",
+      "audio-13",
+      "audio-6"
+    ],
+    "audio-to-text-21/128": [
+      "audio-5",
+      "audio-6",
+      "audio-7",
+      "audio-4",
+      "audio-12",
+      "audio-14",
+      "audio-15",
+      "audio-13"
+    ],
+    "audio-to-text-21/256": [
+      "audio-5",
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-21/512": [
+      "audio-5",
+      "audio-4",
+      "audio-7",
+      "audio-6",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-21/768": [
+      "audio-5",
+      "audio-4",
+      "audio-7",
+      "audio-6",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "text-to-audio-22/128": [
+      "audio-6",
+      "audio-15",
+      "audio-12",
+      "audio-13",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-5"
+    ],
+    "text-to-audio-22/256": [
+      "audio-6",
+      "audio-15",
+      "audio-12",
+      "audio-13",
+      "audio-14",
+      "audio-4",
+      "audio-7",
+      "audio-5"
+    ],
+    "text-to-audio-22/512": [
+      "audio-6",
+      "audio-15",
+      "audio-12",
+      "audio-4",
+      "audio-13",
+      "audio-7",
+      "audio-14",
+      "audio-5"
+    ],
+    "text-to-audio-22/768": [
+      "audio-6",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-4",
+      "audio-13",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-22/128": [
+      "audio-6",
+      "audio-4",
+      "audio-12",
+      "audio-7",
+      "audio-15",
+      "audio-13",
+      "audio-5",
+      "audio-14"
+    ],
+    "audio-to-text-22/256": [
+      "audio-6",
+      "audio-4",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-22/512": [
+      "audio-6",
+      "audio-4",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-22/768": [
+      "audio-6",
+      "audio-4",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "text-to-audio-23/128": [
+      "audio-7",
+      "audio-14",
+      "audio-15",
+      "audio-12",
+      "audio-13",
+      "audio-4",
+      "audio-5",
+      "audio-6"
+    ],
+    "text-to-audio-23/256": [
+      "audio-7",
+      "audio-15",
+      "audio-14",
+      "audio-13",
+      "audio-12",
+      "audio-4",
+      "audio-5",
+      "audio-6"
+    ],
+    "text-to-audio-23/512": [
+      "audio-7",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-13",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-23/768": [
+      "audio-7",
+      "audio-15",
+      "audio-14",
+      "audio-4",
+      "audio-12",
+      "audio-13",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-23/128": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-23/256": [
+      "audio-7",
+      "audio-4",
+      "audio-12",
+      "audio-6",
+      "audio-13",
+      "audio-5",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-23/512": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-13",
+      "audio-12",
+      "audio-5",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-23/768": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-12",
+      "audio-13",
+      "audio-5",
+      "audio-15",
+      "audio-14"
+    ],
+    "text-to-audio-24/128": [
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-24/256": [
+      "audio-9",
+      "audio-11",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-24/512": [
+      "audio-9",
+      "audio-11",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-24/768": [
+      "audio-9",
+      "audio-11",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-24/128": [
+      "audio-3",
+      "audio-10",
+      "audio-8",
+      "audio-2",
+      "audio-0",
+      "audio-1",
+      "audio-9",
+      "audio-11"
+    ],
+    "audio-to-text-24/256": [
+      "audio-8",
+      "audio-0",
+      "audio-2",
+      "audio-9",
+      "audio-3",
+      "audio-10",
+      "audio-1",
+      "audio-11"
+    ],
+    "audio-to-text-24/512": [
+      "audio-8",
+      "audio-0",
+      "audio-9",
+      "audio-3",
+      "audio-10",
+      "audio-2",
+      "audio-1",
+      "audio-11"
+    ],
+    "audio-to-text-24/768": [
+      "audio-8",
+      "audio-0",
+      "audio-10",
+      "audio-9",
+      "audio-3",
+      "audio-2",
+      "audio-11",
+      "audio-1"
+    ],
+    "text-to-audio-25/128": [
+      "audio-9",
+      "audio-11",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-25/256": [
+      "audio-9",
+      "audio-11",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-25/512": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-25/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-25/128": [
+      "audio-3",
+      "audio-8",
+      "audio-10",
+      "audio-2",
+      "audio-0",
+      "audio-9",
+      "audio-11",
+      "audio-1"
+    ],
+    "audio-to-text-25/256": [
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-0",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-25/512": [
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2"
+    ],
+    "audio-to-text-25/768": [
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2"
+    ],
+    "text-to-audio-26/128": [
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-26/256": [
+      "audio-9",
+      "audio-11",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-26/512": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-26/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-1",
+      "audio-2"
+    ],
+    "audio-to-text-26/128": [
+      "audio-3",
+      "audio-1",
+      "audio-0",
+      "audio-10",
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-11"
+    ],
+    "audio-to-text-26/256": [
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1",
+      "audio-8",
+      "audio-9",
+      "audio-10",
+      "audio-11"
+    ],
+    "audio-to-text-26/512": [
+      "audio-0",
+      "audio-1",
+      "audio-3",
+      "audio-2",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-11"
+    ],
+    "audio-to-text-26/768": [
+      "audio-1",
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-8",
+      "audio-9",
+      "audio-10",
+      "audio-11"
+    ],
+    "text-to-audio-27/128": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-27/256": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-3",
+      "audio-2",
+      "audio-1",
+      "audio-0"
+    ],
+    "text-to-audio-27/512": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "text-to-audio-27/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-3",
+      "audio-10",
+      "audio-2",
+      "audio-0",
+      "audio-1"
+    ],
+    "audio-to-text-27/128": [
+      "audio-8",
+      "audio-10",
+      "audio-11",
+      "audio-9",
+      "audio-3",
+      "audio-0",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-27/256": [
+      "audio-9",
+      "audio-8",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-2",
+      "audio-1"
+    ],
+    "audio-to-text-27/512": [
+      "audio-8",
+      "audio-9",
+      "audio-11",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2"
+    ],
+    "audio-to-text-27/768": [
+      "audio-11",
+      "audio-9",
+      "audio-8",
+      "audio-10",
+      "audio-0",
+      "audio-3",
+      "audio-1",
+      "audio-2"
+    ],
+    "text-to-audio-28/128": [
+      "audio-13",
+      "audio-12",
+      "audio-15",
+      "audio-14",
+      "audio-7",
+      "audio-6",
+      "audio-5",
+      "audio-4"
+    ],
+    "text-to-audio-28/256": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-5",
+      "audio-4",
+      "audio-6"
+    ],
+    "text-to-audio-28/512": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-28/768": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-28/128": [
+      "audio-6",
+      "audio-12",
+      "audio-4",
+      "audio-7",
+      "audio-5",
+      "audio-14",
+      "audio-15",
+      "audio-13"
+    ],
+    "audio-to-text-28/256": [
+      "audio-6",
+      "audio-12",
+      "audio-4",
+      "audio-7",
+      "audio-13",
+      "audio-5",
+      "audio-15",
+      "audio-14"
+    ],
+    "audio-to-text-28/512": [
+      "audio-6",
+      "audio-4",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-13",
+      "audio-5",
+      "audio-15"
+    ],
+    "audio-to-text-28/768": [
+      "audio-12",
+      "audio-6",
+      "audio-4",
+      "audio-14",
+      "audio-7",
+      "audio-15",
+      "audio-5",
+      "audio-13"
+    ],
+    "text-to-audio-29/128": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-6",
+      "audio-5",
+      "audio-4"
+    ],
+    "text-to-audio-29/256": [
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-7",
+      "audio-5",
+      "audio-6",
+      "audio-4"
+    ],
+    "text-to-audio-29/512": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-29/768": [
+      "audio-13",
+      "audio-15",
+      "audio-7",
+      "audio-12",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-29/128": [
+      "audio-12",
+      "audio-6",
+      "audio-15",
+      "audio-13",
+      "audio-14",
+      "audio-4",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-29/256": [
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-6",
+      "audio-4",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-29/512": [
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-29/768": [
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5"
+    ],
+    "text-to-audio-30/128": [
+      "audio-13",
+      "audio-12",
+      "audio-14",
+      "audio-15",
+      "audio-5",
+      "audio-7",
+      "audio-6",
+      "audio-4"
+    ],
+    "text-to-audio-30/256": [
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-12",
+      "audio-7",
+      "audio-5",
+      "audio-4",
+      "audio-6"
+    ],
+    "text-to-audio-30/512": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-5",
+      "audio-6"
+    ],
+    "text-to-audio-30/768": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-4",
+      "audio-5",
+      "audio-6"
+    ],
+    "audio-to-text-30/128": [
+      "audio-4",
+      "audio-6",
+      "audio-7",
+      "audio-5",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-15"
+    ],
+    "audio-to-text-30/256": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-5",
+      "audio-12",
+      "audio-13",
+      "audio-14",
+      "audio-15"
+    ],
+    "audio-to-text-30/512": [
+      "audio-7",
+      "audio-4",
+      "audio-5",
+      "audio-6",
+      "audio-13",
+      "audio-14",
+      "audio-12",
+      "audio-15"
+    ],
+    "audio-to-text-30/768": [
+      "audio-7",
+      "audio-4",
+      "audio-6",
+      "audio-5",
+      "audio-12",
+      "audio-14",
+      "audio-13",
+      "audio-15"
+    ],
+    "text-to-audio-31/128": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-6",
+      "audio-5",
+      "audio-4"
+    ],
+    "text-to-audio-31/256": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-14",
+      "audio-7",
+      "audio-6",
+      "audio-4",
+      "audio-5"
+    ],
+    "text-to-audio-31/512": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "text-to-audio-31/768": [
+      "audio-13",
+      "audio-15",
+      "audio-12",
+      "audio-7",
+      "audio-14",
+      "audio-4",
+      "audio-6",
+      "audio-5"
+    ],
+    "audio-to-text-31/128": [
+      "audio-6",
+      "audio-12",
+      "audio-7",
+      "audio-4",
+      "audio-13",
+      "audio-15",
+      "audio-14",
+      "audio-5"
+    ],
+    "audio-to-text-31/256": [
+      "audio-12",
+      "audio-13",
+      "audio-15",
+      "audio-6",
+      "audio-7",
+      "audio-4",
+      "audio-14",
+      "audio-5"
+    ],
+    "audio-to-text-31/512": [
+      "audio-13",
+      "audio-12",
+      "audio-15",
+      "audio-4",
+      "audio-14",
+      "audio-6",
+      "audio-7",
+      "audio-5"
+    ],
+    "audio-to-text-31/768": [
+      "audio-12",
+      "audio-15",
+      "audio-13",
+      "audio-4",
+      "audio-14",
+      "audio-6",
+      "audio-7",
+      "audio-5"
+    ]
+  },
+  "quality_scope": "mechanics and regression on fixed synthetic data; not a real-world benchmark",
+  "media_sensitivity": {
+    "image": 16,
+    "audio": 16,
+    "video": 8
+  }
+}

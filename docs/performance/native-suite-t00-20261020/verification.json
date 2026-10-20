@@ -1,0 +1,758 @@
+{
+  "date_utc": "2026-10-20T15:39:52.693978+00:00",
+  "head": "5e2e99cf3249a5a28efed038bfd4fb2fbda6ce21",
+  "scope": "T00/T01 complete; T02 CUDA single-GPU implemented, reviewed and verified. Production image/embedding kernels and new HTTP endpoints remain in later tasks.",
+  "sources": [
+    {
+      "path": "ds4_runtime.c",
+      "bytes": 8000,
+      "sha256": "71ea20237c43965619ec01a292d6b8c75416b1a092475f9f06dd9ade674ad166"
+    },
+    {
+      "path": "ds4_runtime.h",
+      "bytes": 4503,
+      "sha256": "112753a4a92cc959ae1cc15c52ea3031f58d7e0e8aee0b298d3c618eeb266884"
+    },
+    {
+      "path": "ds4.c",
+      "bytes": 4137598,
+      "sha256": "a9b9fd2a1c92ae3d5b2f8ec9e432fe1edb655a663de7515fce74138aaa92b91a"
+    },
+    {
+      "path": "ds4.h",
+      "bytes": 46004,
+      "sha256": "68d764ccb60d77978fbab68b686e55e4b6da2b88397a923b20c3f180a2e2c9ab"
+    },
+    {
+      "path": "ds4_cuda.cu",
+      "bytes": 1677924,
+      "sha256": "79120ccb3833c502222c7d9c73f8b9d3c3ad089505e0cae80d728e210e658af3"
+    },
+    {
+      "path": "ds4_gpu.h",
+      "bytes": 159534,
+      "sha256": "95de0aaf052ee1732794898239bd17f978cc34bfd6105c8af2ad85cb9ea25472"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 64172,
+      "sha256": "c9670bb55f7f97de4b578618e23f453d116378817d82ee9406e537a023d6f0a6"
+    },
+    {
+      "path": "tests/test_runtime.c",
+      "bytes": 5982,
+      "sha256": "7af93a052ebe45e4d804c3005ee64661f814465b08bc4464622949d727872127"
+    },
+    {
+      "path": "tests/test_runtime_cuda.c",
+      "bytes": 9850,
+      "sha256": "9b7e3c10b7fa573f3eaa71c063bdbdf1c53f17cea8eab99060779a497804b68e"
+    },
+    {
+      "path": "tests/test_suite_contracts.py",
+      "bytes": 6477,
+      "sha256": "b77935771baa7344addae74b90422d5d0d2a5e8a36bf1883426c07ed8a57d13f"
+    },
+    {
+      "path": "tests/test_suite_baseline_manifests.py",
+      "bytes": 4520,
+      "sha256": "1c6433eead5b3d6e3b293b7f361d9233b2ed59b4ff675757b6aef0d9dd29c318"
+    },
+    {
+      "path": "tests/test_suite_numeric_metrics.py",
+      "bytes": 1812,
+      "sha256": "4adc0bc48fa277946dd117b702afe4d6d9fe1606c4dad17a6448f5adafd81152"
+    },
+    {
+      "path": "tools/suite_numeric_metrics.py",
+      "bytes": 3292,
+      "sha256": "eeaf67c5b6525d06e0a6571036e1cab591c0a9509d3e21ff194b68080bcd4676"
+    },
+    {
+      "path": "schemas/ds4-suite-v1.schema.json",
+      "bytes": 4728,
+      "sha256": "37e2cb7a7ee4f81305abe90618159702670ad86e90fe0ba1d316b99e111f4bed"
+    },
+    {
+      "path": "schemas/ds4-suite-catalog-v1.schema.json",
+      "bytes": 3388,
+      "sha256": "3793ea4469f4608670dabc77859d698e57893b8a7a75a0e4bf64e5b0b8192667"
+    },
+    {
+      "path": "tools/build_suite_corpus.py",
+      "bytes": 11797,
+      "sha256": "981217f295d3a955dba1d37f07e3cba4a152c44e2d46a8ffd2b059676da72b5e"
+    },
+    {
+      "path": "tools/create_suite_speech.ps1",
+      "bytes": 1680,
+      "sha256": "058ee48cb728638b35480e6ed61eaa25d6551c08d3c2903be77d9cec97fb98d5"
+    },
+    {
+      "path": "tools/export_suite_baseline.py",
+      "bytes": 7314,
+      "sha256": "56188710baa5f3cc4bfe121d8895c5d1f86343b385ad799b1e8c2217c8714868"
+    },
+    {
+      "path": "tools/freeze_multimodal_baseline.py",
+      "bytes": 13005,
+      "sha256": "227a82854bd35c18a67eacec16b298497a59cd3d80747e3452203f95e991161d"
+    },
+    {
+      "path": "tools/freeze_suite_noise.py",
+      "bytes": 2437,
+      "sha256": "136567e5c658c254e5771487e3c4903335e408622f1ac9c3b38236ed076b6480"
+    },
+    {
+      "path": "tools/prepare_suite_oracles.py",
+      "bytes": 3647,
+      "sha256": "4f964644693b8de7f70093c573a9eee8c10b2bb95133936b15bf3f50e44be31a"
+    },
+    {
+      "path": "tools/probe_suite_baseline.c",
+      "bytes": 3158,
+      "sha256": "fda8095d2740e00f9942a8fce4e67b84ed726e664c6d066b1247a889886181e8"
+    },
+    {
+      "path": "tools/run_suite_baseline.py",
+      "bytes": 2273,
+      "sha256": "5f6b9d235676e69914bc7adc3f464b44ddd0d5631edea24219b8654361d04e6a"
+    },
+    {
+      "path": "tools/run_suite_flash_baseline.py",
+      "bytes": 4538,
+      "sha256": "69a36d1f69f289e01bd688f3eabd4de374a62bb59e5c061d49e289eb61e9a08c"
+    },
+    {
+      "path": "tools/run_suite_oracle.py",
+      "bytes": 11223,
+      "sha256": "be7783f54ffeb8e7d09ecbf76a10fcc9ae87e3f8a09a639956e639655d5b7393"
+    },
+    {
+      "path": "tools/score_suite_gemma_corpus.py",
+      "bytes": 9587,
+      "sha256": "0279c320e2580b45572b29c2fde493982f4391b33bee958ac9ddac613d1131d8"
+    },
+    {
+      "path": "tests/requirements-suite.txt",
+      "bytes": 99,
+      "sha256": "ebe7e8b3503d1d1e9acd7352c58a3149ae8b0fca8742c6120d1ab040f0bceebb"
+    },
+    {
+      "path": "tests/fixtures/native-suite-v1/corpus.json",
+      "bytes": 89849,
+      "sha256": "024c98ad1bd17ce977a42864146f99ca8fa0e4540d64153e11fe62adccfbf620"
+    },
+    {
+      "path": ".gitattributes",
+      "bytes": 1295,
+      "sha256": "d25ca1da4f11246d32093aa70c598c0f1336f70218b664b92829a57da93cced0"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 2800,
+      "sha256": "276ad4da2dc6fa622552dd6f102c90b02777c39834615fb276ad830d994a7a81"
+    },
+    {
+      "path": "PROJECT_INDEX.md",
+      "bytes": 80524,
+      "sha256": "d406cf041639f0d290df707a50411fca900a79e29c95629e81b4790bccc3df32"
+    },
+    {
+      "path": "tools/suite_artifacts.py",
+      "bytes": 4088,
+      "sha256": "9438c507edf917332bb4fee5ce6c380a4911278182b1d14601439d34695cb8eb"
+    },
+    {
+      "path": "tests/test_suite_artifacts.py",
+      "bytes": 4773,
+      "sha256": "1d9e83e2d1323da09827d70c33d2aede9529f0666b6dc8e56a6299bbf8a66e23"
+    },
+    {
+      "path": "tests/ds4_test.c",
+      "bytes": 322665,
+      "sha256": "7ae11a5879f8d4f9d496ab63e4ebbe5c9cc7f2dc2161ea19f35d895fe628f8fb"
+    },
+    {
+      "path": "tests/test_qwen4_vision.c",
+      "bytes": 607,
+      "sha256": "eadc78198ded0a3d2a427a0591b4cc73d78b56d7286d0871be361a90a64fe864"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "ds4",
+      "bytes": 71095760,
+      "sha256": "6deabe15dfaee91f63d23334952cce055d9ad6af5d6bbf2b9a203fdc5fef419d"
+    },
+    {
+      "path": "ds4-server",
+      "bytes": 73351136,
+      "sha256": "efaec44da73ee367c7094c6d9ec7f6b6577b0a00f975d4eaa72ea380acf8ab76"
+    },
+    {
+      "path": "ds4-bench",
+      "bytes": 70827528,
+      "sha256": "ead49bb5ffa34d08394e75489d58b614ad87d7c08d61d3bfdf8f761b39f7e131"
+    },
+    {
+      "path": "ds4-eval",
+      "bytes": 71166664,
+      "sha256": "e1aff6ab4bd4a0d7b45d8a4afc68df355b0b44aac62064cc3cbc758d86458ce7"
+    },
+    {
+      "path": "tools/probe_suite_baseline",
+      "bytes": 70561624,
+      "sha256": "8c54c38ea17b399e7f3670c4e0ad5efcd1e1f4d4d43667bde9b53324d5297aa5"
+    },
+    {
+      "path": "tests/test_runtime_cuda",
+      "bytes": 70589064,
+      "sha256": "d9d1aea222d86001c35ab114ecc720e30d809e9dd7b06fa14d31da0eee626769"
+    },
+    {
+      "path": "tests/test_qwen_mtp_callback",
+      "bytes": 70568432,
+      "sha256": "ad4ff32ed0d49ae607d1a567e4b0add06c02f63f695b83d124fd88ff77052d8f"
+    },
+    {
+      "path": "tests/test_qwen_snapshot_drafts",
+      "bytes": 70596440,
+      "sha256": "047d48c53d9b5810afce605db46c47dd1f8f6ba215f82589b15a952db8a6af5c"
+    }
+  ],
+  "checks": [
+    {
+      "id": "unit-final",
+      "command": [
+        "make",
+        "test-runtime",
+        "test-suite-contracts"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/unit-final.log",
+      "sha256": "e7480c476d8691546571c3c710f671a1326b11588a6d28ba6972d129cf28883b",
+      "verdict": "PASS"
+    },
+    {
+      "id": "numeric-final",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_numeric_metrics",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/numeric-final.log",
+      "sha256": "171b9cc6f17d5718162f62f638192751f272db96e57792d1a1dd4dd0ec00733c",
+      "verdict": "PASS"
+    },
+    {
+      "id": "asan-build",
+      "command": [
+        "gcc",
+        "-std=c11",
+        "-O1",
+        "-g",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer",
+        "-pthread",
+        "-I.",
+        "tests/test_runtime.c",
+        "ds4_runtime.c",
+        "-o",
+        "performance-results/native-suite-review-20261020/runtime-asan"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/asan-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "verdict": "PASS"
+    },
+    {
+      "id": "asan",
+      "command": [
+        "./performance-results/native-suite-review-20261020/runtime-asan"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/asan.log",
+      "sha256": "2f14c75701e112010734179b4f9ba6f421aa707ccd100c13dabf2a61956a9324",
+      "verdict": "PASS"
+    },
+    {
+      "id": "server-cpu",
+      "command": [
+        "./ds4_server_test"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/server-cpu.log",
+      "sha256": "31b3c8e78871c7dd4d55f60ec32b714c44172f53412be0309541f2516469263a",
+      "verdict": "PASS"
+    },
+    {
+      "id": "server-and-core",
+      "command": [
+        "./ds4_test",
+        "--server",
+        "--qwen35-layer-pattern",
+        "--quant-storage-layout",
+        "--constraint-trie"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/server-and-core.log",
+      "sha256": "58a378fbc5af0a67b8c2ca33e64d5a454d131e814a9c6df37c14b6e7526d5780",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_session_state",
+      "command": [
+        "./tests/test_session_state"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_session_state.log",
+      "sha256": "eb9a7878f0e059662c87f63a37eec97bb20e70f90775ff38ca2c03526ea663e9",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_server_interactive",
+      "command": [
+        "./tests/test_server_interactive"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_server_interactive.log",
+      "sha256": "df347408da720e9cde6b31672aaec4c9380927502f0b6ea5192d35c56b49e27e",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_server_memory_lifetime",
+      "command": [
+        "./tests/test_server_memory_lifetime"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_server_memory_lifetime.log",
+      "sha256": "3211fb52a7dc487c2caa8c18841051bc2e8fe272130de9941de0f880b3ccb2c1",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_layer_pack",
+      "command": [
+        "./tests/test_layer_pack"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_layer_pack.log",
+      "sha256": "14763eadb72a567458a39910f9ec3c08f215322cc4e46433520f869966d3ea11",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_engine_mgpu_placement",
+      "command": [
+        "./tests/test_engine_mgpu_placement"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_engine_mgpu_placement.log",
+      "sha256": "1fd8fdc88ebb2cdb855e3696152b8f24cf7cdcfb97200c924485856c84d3a7f5",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_gpu_args",
+      "command": [
+        "./tests/test_gpu_args"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_gpu_args.log",
+      "sha256": "112882a278cf0bd5d14a35d354fb43b818b11a92a09cc47e50449a004b50fe06",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_prompt_prefix",
+      "command": [
+        "./tests/test_prompt_prefix"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_prompt_prefix.log",
+      "sha256": "617f25c93f4a258f37fa0a751558ec02339cf086c253863512d535b35823825b",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_sampling",
+      "command": [
+        "./tests/test_sampling"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_sampling.log",
+      "sha256": "51f84747b60c6ea2d1f2cbc766ba02c6396a8324d898d70cce4d3ddb2faaddf6",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_deepseek4_vision_image",
+      "command": [
+        "./tests/test_deepseek4_vision_image"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_deepseek4_vision_image.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_image_decode",
+      "command": [
+        "./tests/test_image_decode"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_image_decode.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_linux_memory",
+      "command": [
+        "./tests/test_linux_memory"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_linux_memory.log",
+      "sha256": "edae8fcfb2d635310aabf3b1a5dee087327b028b2bbee2cfe21f09eeda4af2db",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_read_queue",
+      "command": [
+        "./tests/test_read_queue"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_read_queue.log",
+      "sha256": "d7648a5b91a8b5cc9d11985af25d933f81fdb8dabc5d822943cd357e7287b0c6",
+      "verdict": "PASS"
+    },
+    {
+      "id": "test_engram",
+      "command": [
+        "./tests/test_engram"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/test_engram.log",
+      "sha256": "e43cb64281a94011227d78aa6b92554aef27bb3b08b3100e22095eec16a0a40b",
+      "verdict": "PASS"
+    },
+    {
+      "id": "gpu-args-cli",
+      "command": [
+        "bash",
+        "tests/test_gpu_args_cli.sh"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/gpu-args-cli.log",
+      "sha256": "c9364f3c7bdc70739f3eb17cc8929e9b94217c0d024c18d1cdcb286475ec7bac",
+      "verdict": "PASS"
+    },
+    {
+      "id": "eval-cases",
+      "command": [
+        "./ds4-eval",
+        "--validate-cases"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/eval-cases.log",
+      "sha256": "e625c5e5f9a8e43737556c4976ae955e27ac8f70fc9c84c1b40ebd9399e006b5",
+      "verdict": "PASS"
+    },
+    {
+      "id": "eval-extractors",
+      "command": [
+        "./ds4-eval",
+        "--self-test-extractors"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/eval-extractors.log",
+      "sha256": "65363cdc2333af422d47495f6a4fc82bfe2eb0773084dd97707593256542ca9d",
+      "verdict": "PASS"
+    },
+    {
+      "id": "fixture-regressions",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_qwen38_compatibility",
+        "tests.test_server_sampling_matrix.SamplingMatrixFixtureTests",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/fixture-regressions.log",
+      "sha256": "9375c807e8623e1cc0ed9ef9c52256428fca1a023946899db300f786f109b155",
+      "verdict": "PASS"
+    },
+    {
+      "id": "runtime-cuda-final",
+      "command": [
+        "./tests/test_runtime_cuda",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/runtime-cuda-final.log",
+      "sha256": "78daca8d6402aa95a96e35240f65ba93bde68d05ad2ada6c36f82137a269a08d",
+      "verdict": "PASS"
+    },
+    {
+      "id": "mtp-callback",
+      "command": [
+        "./tests/test_qwen_mtp_callback",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "gguf/mtp-Qwen3.8-27B-Q4_0.gguf"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/mtp-callback.log",
+      "sha256": "e03d5c34de19d4e91e2423f33035df76e557addb4e062658955bac8f5004f0d3",
+      "verdict": "PASS"
+    },
+    {
+      "id": "mtp-snapshot",
+      "command": [
+        "./tests/test_qwen_snapshot_drafts",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "gguf/mtp-Qwen3.8-27B-Q4_0.gguf"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/mtp-snapshot.log",
+      "sha256": "d05805e908fccc6d1297fe0c07d536d93c9af384c75969ed4d4233120091c451",
+      "verdict": "PASS"
+    },
+    {
+      "id": "qwen-baselines",
+      "command": [
+        "python3",
+        "tools/run_suite_baseline.py",
+        "--output",
+        "performance-results/native-suite-review-final-qwen-20261020",
+        "--compare",
+        "performance-results/native-suite-t00-20261020-r2"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/qwen-baselines.log",
+      "sha256": "38eb8c4569ccafe6d20f144d2cd97fbb2e2f40dee60225bcd1bad20e0eb05088",
+      "verdict": "PASS"
+    },
+    {
+      "id": "flash-baselines",
+      "command": [
+        "python3",
+        "tools/run_suite_flash_baseline.py",
+        "--baseline",
+        "performance-results/native-suite-t00-20261020/binaries/ds4-bench",
+        "--candidate",
+        "ds4-bench",
+        "--output",
+        "performance-results/native-suite-review-final-flash-20261020",
+        "--payload-probe"
+      ],
+      "exit_code": 0,
+      "log": "performance-results/native-suite-review-20261020/flash-baselines.log",
+      "sha256": "63dc769b49e03384f870a371cad102c8b0894049080cfb7582ed0e13754c5e8d",
+      "verdict": "PASS"
+    },
+    {
+      "id": "build",
+      "command": [
+        "make",
+        "ds4",
+        "ds4-server",
+        "ds4-bench",
+        "ds4-eval",
+        "tools/probe_suite_baseline",
+        "ds4_test",
+        "ds4_server_test",
+        "tests/test_runtime_cuda",
+        "tests/test_session_state",
+        "tests/test_engine_mgpu_placement",
+        "tests/test_sampling",
+        "tests/test_qwen4_vision",
+        "tests/test_qwen_mtp_callback",
+        "tests/test_qwen_snapshot_drafts",
+        "CUDA_ARCH=sm_86",
+        "-j2"
+      ],
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "performance-results/native-suite-review-20261020/build-final.log",
+      "sha256": "40581e5de854e7d420ebf282f9967aa37c764d2838a0b96a6bb988062d78ac21"
+    },
+    {
+      "id": "agent-tests",
+      "command": [
+        ".venv/bin/python",
+        "-m",
+        "pytest",
+        "-n",
+        "2"
+      ],
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "performance-results/native-suite-review-20261020/agent-tests.log",
+      "sha256": "8760d37b5b2ad2a59a8bb606321d9c61d0e6e866903b8ae36b98d120164ab6f3",
+      "working_directory": "agent",
+      "passed": 1128,
+      "skipped": 44,
+      "configured_coverage_percent": 100
+    },
+    {
+      "id": "agent-lint",
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "src",
+        "tests"
+      ],
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "performance-results/native-suite-review-20261020/agent-lint.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "working_directory": "agent"
+    },
+    {
+      "id": "final-static",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_suite_contracts",
+        "tests.test_suite_baseline_manifests",
+        "tests.test_suite_artifacts",
+        "tests.test_docs_wiki",
+        "tests.test_research_corpus",
+        "tests.test_product_text_configuration",
+        "-v"
+      ],
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "performance-results/native-suite-review-20261020/final-static.log",
+      "sha256": "fd07c4a34d23f83200fa34eb10979aae6eadf31b6e8612d9aff46974c2d489a8"
+    },
+    {
+      "id": "python-lint",
+      "command": [
+        "agent/.venv/bin/ruff",
+        "check",
+        "--select",
+        "E4,E7,E9,F,I",
+        "tools/build_suite_corpus.py",
+        "tools/export_suite_baseline.py",
+        "tools/freeze_multimodal_baseline.py",
+        "tools/freeze_suite_noise.py",
+        "tools/prepare_suite_oracles.py",
+        "tools/run_suite_baseline.py",
+        "tools/run_suite_flash_baseline.py",
+        "tools/run_suite_oracle.py",
+        "tools/score_suite_gemma_corpus.py",
+        "tools/suite_numeric_metrics.py",
+        "tools/suite_artifacts.py",
+        "tests/test_suite_artifacts.py",
+        "tests/test_suite_contracts.py",
+        "tests/test_suite_baseline_manifests.py",
+        "tests/test_suite_numeric_metrics.py"
+      ],
+      "exit_code": 0,
+      "verdict": "PASS",
+      "log": "performance-results/native-suite-review-20261020/lint-final.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    }
+  ],
+  "qualification": {
+    "runtime_cpu": "PASS",
+    "cuda_single_gpu": "PASS",
+    "qwen27_text_vision_mtp": "PASS bit-exact against frozen original",
+    "flash_tiered": "PASS bit-exact against frozen original",
+    "metal": "NOT_VERIFIED",
+    "rocm": "NOT_VERIFIED",
+    "multi_gpu_tp_distributed": "NOT_VERIFIED; distributed tests not executed",
+    "standalone_vision_lifecycle": "PASS: repeated deterministic dumps and decode/output failures; subsequent LLM open succeeds",
+    "agent": "PASS: 1128 passed, 44 skipped; configured coverage 100%; live providers not enabled"
+  },
+  "task_status": {
+    "T00": "DONE",
+    "T01": "DONE",
+    "T02": "IN_PROGRESS; other backend qualification pending"
+  },
+  "baseline_manifests": [
+    {
+      "path": "docs/performance/native-suite-t00-20261020/sources.json",
+      "bytes": 50506,
+      "sha256": "f4369016872c9f72ac13bc3ab9989d3479fb14abf7d1ec201dea9d2878ea2b68"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/models.json",
+      "bytes": 38886,
+      "sha256": "ad30a8596d5d9a9368ff4e5c538274e7fe255d194da30e43f05c4ebf75cf399d"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/tensors.json",
+      "bytes": 755300,
+      "sha256": "1d14c8d8045bd7445ebc0627e10a35ba5eb2f065d91ecf6bfe5c429581393f29"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/hardware.json",
+      "bytes": 3711,
+      "sha256": "0ea29d7e350dc613f94519a4cb2a3848bdc8b7712eabc8dc80ea93098e862183"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/gemma-oracle.json",
+      "bytes": 2450,
+      "sha256": "3e70b3d36cead11fd35d24cfbfa77e23aca197e67f30b0dd4f5838037511098b"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/gemma-f32-oracle.json",
+      "bytes": 2493,
+      "sha256": "e45492d7fb977781ce87768b0c424d1edaf1f53c05b0c06d20c86569be2040ea"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/gemma-cross-dtype.json",
+      "bytes": 2472,
+      "sha256": "32a71203c1287d7325717f66c52e7fa23e85e113adaf6404de46bf352d2b9632"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/qwen-oracle.json",
+      "bytes": 1537,
+      "sha256": "efd421a5f8a6ac725c590268c56f6b401652401076bcf5973a07a884ca814c82"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/retrieval.json",
+      "bytes": 122481,
+      "sha256": "93540805c1ff53c19bd090015447eaa96948c4bc5f813389c6bd80909fc5a8e4"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/noise.json",
+      "bytes": 2676,
+      "sha256": "749353b3691be4d7486444301a0d2dc5e8ec372af0c50ed4322b2473e48ede80"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/noise-calibration.json",
+      "bytes": 122,
+      "sha256": "2454a9748f42e6f8a863630e5708cceef8d8701e7f9e279bbb7192a94a11dd5e"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/tolerances.json",
+      "bytes": 1639,
+      "sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/provenance.json",
+      "bytes": 12499,
+      "sha256": "232857e9bfdb0c64451bb25604015664fee5c2886fcdeb8572f902e33491a785"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/artifacts.json",
+      "bytes": 8331,
+      "sha256": "882664c61ac4979b0bb486867a628ee5761537006ba2f480e1972dce505cd346"
+    }
+  ],
+  "worktree_preservation": {
+    "agent_changes": "Compared with original git diff --binary: identical",
+    "experiments_index": "Original generated section order preserved after rebuilding indexes",
+    "excluded_from_commit": [
+      "agent/uv.lock",
+      "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl",
+      "docs/experiments/_INDEX.md"
+    ]
+  },
+  "review": "docs/architecture/native-suite-clean-code-review-20261020.md"
+}

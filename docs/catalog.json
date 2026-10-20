@@ -286,6 +286,39 @@
           ]
         },
         {
+          "path": "docs/architecture/compaction-budget-clean-review-20261016.md",
+          "sections": [
+            {
+              "title": "Revisione del budget di compattazione — 16 ottobre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 61,
+              "summary": "La revisione copre le modifiche al budget e i confini collegati fra libreria,"
+            },
+            {
+              "title": "Difetti e correzioni",
+              "level": 2,
+              "start": 9,
+              "end": 27,
+              "summary": "espansa: gli allegati dei risultati dei tool comparivano due volte."
+            },
+            {
+              "title": "Proprietari delle responsabilità",
+              "level": 2,
+              "start": 28,
+              "end": 46,
+              "summary": "I chiamanti usano le API pubbliche invece di ricostruire dettagli dei dati di"
+            },
+            {
+              "title": "Verifica e limiti",
+              "level": 2,
+              "start": 47,
+              "end": 61,
+              "summary": "Le suite complete delle due repository, i test browser, lint, tipi della"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/ds4-merge-acceptance-20261002.md",
           "sections": [
             {
@@ -935,6 +968,292 @@
               "start": 52,
               "end": 94,
               "summary": "Qwen3.8-27B UD-Q4_K_S, sidecar MTP, RTX 3090, CUDA/Linux su WSL."
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/native-multimodal-suite-analysis-20261020.md",
+          "sections": [
+            {
+              "title": "Suite multimodale nativa DS4: analisi e decisioni",
+              "level": 1,
+              "start": 1,
+              "end": 225,
+              "summary": "Data: 20 ottobre 2026."
+            },
+            {
+              "title": "1. Requisiti acquisiti e confini",
+              "level": 2,
+              "start": 7,
+              "end": 22,
+              "summary": "Le istruzioni della conversazione corrente definiscono il perimetro del lavoro."
+            },
+            {
+              "title": "2. Cosa recuperare dalla chat condivisa",
+              "level": 2,
+              "start": 23,
+              "end": 43,
+              "summary": "La chat condivisa è stata letta nel browser."
+            },
+            {
+              "title": "3. Stato reale di DS4 e ostacoli prioritari",
+              "level": 2,
+              "start": 44,
+              "end": 75,
+              "summary": "L'audit in lettura ha usato il checkout con HEAD `5e2e99cf3249a5a28efed038bfd4fb2fbda6ce21`, contenente anche modifiche locali preesistenti."
+            },
+            {
+              "title": "3.1 Base già disponibile",
+              "level": 3,
+              "start": 48,
+              "end": 59,
+              "summary": "Il report Qwen27 vision, `ds4.h` e le funzioni `engine_vision_suspend_sessions`, `engine_vision_resume_sessions`, `ds4_engine_vision_encode_image` in `ds4.c` documentano e implementano:"
+            },
+            {
+              "title": "3.2 Stato globale da separare",
+              "level": 3,
+              "start": 60,
+              "end": 67,
+              "summary": "`g_ds4_shape` alimenta macro come `DS4_MODEL_FAMILY`, `DS4_N_LAYER`, `DS4_N_EMBD`."
+            },
+            {
+              "title": "3.3 Il consumo KV non coincide con la chat condivisa",
+              "level": 3,
+              "start": 68,
+              "end": 75,
+              "summary": "`qwen_graph_alloc` usa `DS4_QWEN_ALLOC` con `sizeof(float)` anche per key/value cache."
+            },
+            {
+              "title": "4. Qwen-Image-2.1-Turbo: semantica da preservare",
+              "level": 2,
+              "start": 76,
+              "end": 105,
+              "summary": "Il checkpoint ufficiale comprende encoder Qwen3-VL, DiT single-stream block-causal e VAE dedicato."
+            },
+            {
+              "title": "4.1 Conditioning e scheduler",
+              "level": 3,
+              "start": 82,
+              "end": 89,
+              "summary": "La pipeline Diffusers costituisce un oracle semantico: template e padding, esclusione del prefisso di sistema, ordine delle reference e hidden state prima della RMSNorm finale devono coincidere."
+            },
+            {
+              "title": "4.2 Attention e prefix cache",
+              "level": 3,
+              "start": 90,
+              "end": 97,
+              "summary": "Nel transformer Diffusers testo e blocchi immagine hanno una maschera block-causal."
+            },
+            {
+              "title": "4.3 Memoria e ordine delle fasi",
+              "level": 3,
+              "start": 98,
+              "end": 105,
+              "summary": "Il piano base è preprocessing → encoder/encoding reference → DiT ripetuto → VAE decode → ripristino."
+            },
+            {
+              "title": "5. EmbeddingGemma 2: quattro modalità nello stesso spazio",
+              "level": 2,
+              "start": 106,
+              "end": 129,
+              "summary": "La model card Google descrive backbone testuale ed encoder vision/audio caricabili selettivamente, spazio comune a 768 dimensioni, contesto operativo 8192 e troncamenti supportati 512/256/128."
+            },
+            {
+              "title": "5.1 Pooling, precisione e task",
+              "level": 3,
+              "start": 114,
+              "end": 121,
+              "summary": "I moduli del checkpoint includono pooling e normalizzazione."
+            },
+            {
+              "title": "5.2 Immagini, video e audio",
+              "level": 3,
+              "start": 122,
+              "end": 129,
+              "summary": "L'immagine richiede preprocessing, posizioni patch, encoder, riduzione/proiezione e inserimento dei soft token nel backbone."
+            },
+            {
+              "title": "6. Cosa trasferire dai motori esaminati",
+              "level": 2,
+              "start": 130,
+              "end": 151,
+              "summary": "Le fonti seguenti sono state aperte e confrontate con il codice locale."
+            },
+            {
+              "title": "7. Gestore comune di memoria ed esecuzione",
+              "level": 2,
+              "start": 152,
+              "end": 189,
+              "summary": "Servono descrittori per modello, componente, gruppo di pesi, sessione, risorsa e operazione."
+            },
+            {
+              "title": "7.1 Oggetti minimi",
+              "level": 3,
+              "start": 154,
+              "end": 161,
+              "summary": "Servono descrittori per modello, componente, gruppo di pesi, sessione, risorsa e operazione."
+            },
+            {
+              "title": "7.2 Ammissione e scelta del piano",
+              "level": 3,
+              "start": 162,
+              "end": 173,
+              "summary": "La condizione di ammissione di ciascuna fase è:"
+            },
+            {
+              "title": "7.3 Transazione, cancellazione e recupero",
+              "level": 3,
+              "start": 174,
+              "end": 181,
+              "summary": "Sequenza concettuale: validate → reserve → quiesce → checkpoint se necessario → execute → release/retain → restore → commit result."
+            },
+            {
+              "title": "7.4 Prefetch e riuso",
+              "level": 3,
+              "start": 182,
+              "end": 189,
+              "summary": "Il prefetch CPU può precedere l'esecuzione solo per modelli già configurati e con budget host."
+            },
+            {
+              "title": "8. Contratto client e integrazione agentica",
+              "level": 2,
+              "start": 190,
+              "end": 201,
+              "summary": "Un solo server e una sola configurazione client, con selezione `model`."
+            },
+            {
+              "title": "9. Decisioni numeriche e sperimentali",
+              "level": 2,
+              "start": 202,
+              "end": 210,
+              "summary": "1."
+            },
+            {
+              "title": "10. Rischi, evidenze mancanti e scelta dell'ordine",
+              "level": 2,
+              "start": 211,
+              "end": 225,
+              "summary": "Il percorso critico parte dai confini runtime e dal gestore di risorse, poi sviluppa i percorsi numerici separati e li integra."
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/native-suite-clean-code-review-20261020.md",
+          "sections": [
+            {
+              "title": "Revisione di responsabilità e coerenza della suite nativa",
+              "level": 1,
+              "start": 1,
+              "end": 65,
+              "summary": "20 ottobre 2026."
+            },
+            {
+              "title": "Correzioni applicate",
+              "level": 2,
+              "start": 8,
+              "end": 23,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
+            },
+            {
+              "title": "Principi verificati e limiti",
+              "level": 2,
+              "start": 24,
+              "end": 57,
+              "summary": "l'engine conosce shape e modello; il backend possiede stream e allocazioni;"
+            },
+            {
+              "title": "Evidenze",
+              "level": 2,
+              "start": 58,
+              "end": 65,
+              "summary": "Comandi, hash e log sono nel manifest di verifica"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/native-suite-runtime-lifecycle.md",
+          "sections": [
+            {
+              "title": "Runtime e contesti della suite nativa",
+              "level": 1,
+              "start": 1,
+              "end": 105,
+              "summary": "Implementazione T02 del 20 ottobre 2026."
+            },
+            {
+              "title": "Proprietari e alternanza",
+              "level": 2,
+              "start": 8,
+              "end": 46,
+              "summary": "Il runtime possiede mutex ricorsivo, fence e teardown condiviso."
+            },
+            {
+              "title": "Inventario dello stato globale",
+              "level": 2,
+              "start": 47,
+              "end": 73,
+              "summary": "La classificazione si applica anche alle cache statiche interne alle funzioni:"
+            },
+            {
+              "title": "Compatibilità e verifiche",
+              "level": 2,
+              "start": 74,
+              "end": 105,
+              "summary": "Per Metal e ROCm il riferimento runtime resta interno all'engine e non si"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/native-suite-v1-contract.md",
+          "sections": [
+            {
+              "title": "Contratti della suite nativa DS4, versione 1",
+              "level": 1,
+              "start": 1,
+              "end": 256,
+              "summary": "Stato: specifica congelata per T01, 20 ottobre 2026."
+            },
+            {
+              "title": "Identità e discovery",
+              "level": 2,
+              "start": 8,
+              "end": 31,
+              "summary": "Il catalogo distingue `model_id`, `revision`, `profile` e `component`."
+            },
+            {
+              "title": "Operazioni e input standard",
+              "level": 2,
+              "start": 32,
+              "end": 77,
+              "summary": "Le immagini usano `model`, `prompt`, `n` (default 1, intervallo 1–8), `size` (default"
+            },
+            {
+              "title": "Estensione embedding multimodali",
+              "level": 2,
+              "start": 78,
+              "end": 126,
+              "summary": "La versione è dichiarata da `ds4.version=1`; il campo `input` contiene un"
+            },
+            {
+              "title": "Risultati, idempotenza e completamento",
+              "level": 2,
+              "start": 127,
+              "end": 185,
+              "summary": "Embedding mantiene `{object:\"list\",data:[{object:\"embedding\",index,embedding}],"
+            },
+            {
+              "title": "Esempi client e matrice delle capability",
+              "level": 2,
+              "start": 186,
+              "end": 226,
+              "summary": "Le chiamate seguenti descrivono il contratto futuro T17: non sono test live"
+            },
+            {
+              "title": "Confine C e lifecycle",
+              "level": 2,
+              "start": 227,
+              "end": 256,
+              "summary": "`ds4_runtime` possiede serializzazione e teardown condiviso."
             }
           ]
         },
@@ -6100,6 +6419,242 @@
               "start": 400,
               "end": 418,
               "summary": "Il protocollo ora conserva configurazione e stato opachi del comportamento."
+            }
+          ]
+        },
+        {
+          "path": "docs/roadmaps/native-multimodal-suite-implementation-20261020.md",
+          "sections": [
+            {
+              "title": "Piano di implementazione: suite multimodale nativa DS4",
+              "level": 1,
+              "start": 1,
+              "end": 457,
+              "summary": "Data: 20 ottobre 2026."
+            },
+            {
+              "title": "1. Risultato atteso e invarianti vincolanti",
+              "level": 2,
+              "start": 7,
+              "end": 23,
+              "summary": "Una sola istanza DS4 deve servire LLM, Qwen-Image-2.1-Turbo ed EmbeddingGemma 2, decidendo dinamicamente quali componenti tenere in GPU, spostare o ricaricare, senza perdita di conversazione."
+            },
+            {
+              "title": "2. Regole per completare un task",
+              "level": 2,
+              "start": 24,
+              "end": 31,
+              "summary": "Ogni task parte `PLANNED`, passa a `IN_PROGRESS` e diventa `DONE` solo con i propri gate superati e artefatti verificabili."
+            },
+            {
+              "title": "3. Milestone, ordine e dipendenze",
+              "level": 2,
+              "start": 32,
+              "end": 46,
+              "summary": "Ordine critico: `T00 → T01 → T02 → T03 → T04 → T05`."
+            },
+            {
+              "title": "4. T00 — Congelare fonti, baseline e criteri numerici",
+              "level": 2,
+              "start": 47,
+              "end": 63,
+              "summary": "**Dipendenze:** nessuna."
+            },
+            {
+              "title": "5. T01 — Congelare i contratti pubblici e interni",
+              "level": 2,
+              "start": 64,
+              "end": 79,
+              "summary": "**Dipendenze:** T00."
+            },
+            {
+              "title": "6. T02 — Separare contesti modello e lifecycle del runtime",
+              "level": 2,
+              "start": 80,
+              "end": 96,
+              "summary": "**Dipendenze:** T00, T01."
+            },
+            {
+              "title": "7. T03 — Registro risorse e accounting su GPU, RAM e SSD",
+              "level": 2,
+              "start": 97,
+              "end": 111,
+              "summary": "**Dipendenze:** T02."
+            },
+            {
+              "title": "8. T04 — Generalizzare sospensione, checkpoint e rilascio pesi",
+              "level": 2,
+              "start": 112,
+              "end": 127,
+              "summary": "**Dipendenze:** T02, T03."
+            },
+            {
+              "title": "9. T05 — Ammissione, pianificazione e transazione comune",
+              "level": 2,
+              "start": 128,
+              "end": 143,
+              "summary": "**Dipendenze:** T03, T04."
+            },
+            {
+              "title": "10. T06 — Manifest, conversione e loader dei nuovi componenti",
+              "level": 2,
+              "start": 144,
+              "end": 158,
+              "summary": "**Dipendenze:** T00, T01, T02."
+            },
+            {
+              "title": "11. T07 — Primitive numeriche e kernel CUDA comuni",
+              "level": 2,
+              "start": 159,
+              "end": 174,
+              "summary": "**Dipendenze:** T00, T02, T06."
+            },
+            {
+              "title": "12. T08 — Encoder Qwen3-VL per Qwen Image",
+              "level": 2,
+              "start": 175,
+              "end": 188,
+              "summary": "**Dipendenze:** T06, T07."
+            },
+            {
+              "title": "13. T09 — DiT single-stream, scheduler Turbo e prefix cache",
+              "level": 2,
+              "start": 189,
+              "end": 203,
+              "summary": "**Dipendenze:** T06, T07."
+            },
+            {
+              "title": "14. T10 — VAE Qwen 2.1, immagini reference e RGBA",
+              "level": 2,
+              "start": 204,
+              "end": 217,
+              "summary": "**Dipendenze:** T06, T07."
+            },
+            {
+              "title": "15. T11 — Pipeline image nativa funzionale",
+              "level": 2,
+              "start": 218,
+              "end": 231,
+              "summary": "**Dipendenze:** T08, T09, T10."
+            },
+            {
+              "title": "16. T12 — Backbone testuale EmbeddingGemma 2 e pooling",
+              "level": 2,
+              "start": 232,
+              "end": 245,
+              "summary": "**Dipendenze:** T06, T07."
+            },
+            {
+              "title": "17. T13 — Media e preprocessing deterministico",
+              "level": 2,
+              "start": 246,
+              "end": 260,
+              "summary": "**Dipendenze:** T00, T01, T06."
+            },
+            {
+              "title": "18. T14 — Encoder vision e video EmbeddingGemma 2",
+              "level": 2,
+              "start": 261,
+              "end": 273,
+              "summary": "**Dipendenze:** T12, T13."
+            },
+            {
+              "title": "19. T15 — Encoder audio EmbeddingGemma 2",
+              "level": 2,
+              "start": 274,
+              "end": 286,
+              "summary": "**Dipendenze:** T12, T13."
+            },
+            {
+              "title": "20. T16 — Embedding multimodali composti e piano selettivo",
+              "level": 2,
+              "start": 287,
+              "end": 300,
+              "summary": "**Dipendenze:** T12, T14, T15."
+            },
+            {
+              "title": "21. T17 — Registro modelli, HTTP e gestione dei risultati",
+              "level": 2,
+              "start": 301,
+              "end": 315,
+              "summary": "**Dipendenze:** T01, T05, T11, T16."
+            },
+            {
+              "title": "22. T18 — Client semplice e integrazione ExMekh",
+              "level": 2,
+              "start": 316,
+              "end": 330,
+              "summary": "**Dipendenze:** T17."
+            },
+            {
+              "title": "23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo",
+              "level": 2,
+              "start": 331,
+              "end": 347,
+              "summary": "**Dipendenze:** T05, T07, T11, T16, T17."
+            },
+            {
+              "title": "24. T20 — Quantizzazione e ottimizzazioni numeriche misurate",
+              "level": 2,
+              "start": 348,
+              "end": 362,
+              "summary": "**Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming."
+            },
+            {
+              "title": "25. T21 — Qualificazione integrata, guasti e regressioni",
+              "level": 2,
+              "start": 363,
+              "end": 377,
+              "summary": "**Dipendenze:** T17, T18, T19; tutti i profili promossi da T20."
+            },
+            {
+              "title": "26. T22 — Packaging, documentazione e consegna",
+              "level": 2,
+              "start": 378,
+              "end": 389,
+              "summary": "**Dipendenze:** T21."
+            },
+            {
+              "title": "27. Matrice obbligatoria di memoria e ripristino",
+              "level": 2,
+              "start": 390,
+              "end": 410,
+              "summary": "La matrice usa budget controllati e allocazioni possedute; si aggiungono prove reali sulla memoria libera della 3090."
+            },
+            {
+              "title": "28. Gate numerici, di qualità e prestazionali",
+              "level": 2,
+              "start": 411,
+              "end": 448,
+              "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
+            },
+            {
+              "title": "28.1 Gate numerici",
+              "level": 3,
+              "start": 413,
+              "end": 422,
+              "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
+            },
+            {
+              "title": "28.2 Corpus di accettazione proposto",
+              "level": 3,
+              "start": 423,
+              "end": 439,
+              "summary": "Il corpus minimo viene congelato in T00 prima delle ottimizzazioni; può essere ampliato con un nuovo manifest, mantenendo i casi precedenti."
+            },
+            {
+              "title": "28.3 Gate prestazionali e memoria",
+              "level": 3,
+              "start": 440,
+              "end": 448,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
+            },
+            {
+              "title": "29. Definizione di completamento globale",
+              "level": 2,
+              "start": 449,
+              "end": 457,
+              "summary": "Il lavoro di implementazione è completo quando T00–T19, T21 e T22 sono `DONE`, T20 ha una valutazione esplicita dei candidati e tutti i profili effettivamente pubblicati hanno superato i rispettivi gate."
             }
           ]
         },

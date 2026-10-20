@@ -1,0 +1,76 @@
+{
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "driver": "617.42 [Deprecated; will be removed in CUDA 14.0. Use KMD Version instead]",
+  "toolkit": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Thu_Mar_28_02:18:24_PDT_2024\nCuda compilation tools, release 12.4, V12.4.131\nBuild cuda_12.4.r12.4/compiler.34097967_0\n",
+  "meminfo_at_freeze": "MemTotal:       49332084 kB\nMemFree:         1699016 kB\nMemAvailable:   40750004 kB\nBuffers:           33668 kB\nCached:         39313056 kB\nSwapCached:           16 kB\nActive:           782380 kB\nInactive:       46003560 kB\nActive(anon):       3540 kB\nInactive(anon):  7439928 kB\nActive(file):     778840 kB\nInactive(file): 38563632 kB\nUnevictable:           0 kB\nMlocked:               0 kB\nSwapTotal:      12582912 kB\nSwapFree:       12582896 kB\nDirty:                76 kB\nWriteback:             0 kB\nAnonPages:       7440140 kB\nMapped:           445448 kB\nShmem:              4200 kB\nKReclaimable:     218300 kB\nSlab:             355404 kB\nSReclaimable:     218300 kB\nSUnreclaim:       137104 kB\nKernelStack:        9032 kB\nPageTables:       204028 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:    37248952 kB\nCommitted_AS:   10510360 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:       45180 kB\nVmallocChunk:          0 kB\nPercpu:             6656 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:  38672384 kB\nFilePmdMapped:         0 kB\nBalloon:               0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:       52224 kB\nDirectMap2M:    13578240 kB\nDirectMap1G:    46137344 kB\n",
+  "gpu_fb_memory_at_freeze": "Total                                          : 24576 MiB\n        Reserved                                       : 250 MiB\n        Used                                           : 1734 MiB\n        Free                                           : 22593 MiB",
+  "pinned_probe_bytes": 67108864,
+  "pinned_maximum": "NOT_VERIFIED; probe proves only this allocation",
+  "pcie": {
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "bytes": 67108864,
+    "warmup": 2,
+    "samples": [
+      {
+        "direction": "H2D",
+        "GiB_s": 1.505581
+      },
+      {
+        "direction": "H2D",
+        "GiB_s": 1.505525
+      },
+      {
+        "direction": "H2D",
+        "GiB_s": 1.506123
+      },
+      {
+        "direction": "H2D",
+        "GiB_s": 1.49839
+      },
+      {
+        "direction": "H2D",
+        "GiB_s": 1.506365
+      },
+      {
+        "direction": "D2H",
+        "GiB_s": 1.543138
+      },
+      {
+        "direction": "D2H",
+        "GiB_s": 1.542629
+      },
+      {
+        "direction": "D2H",
+        "GiB_s": 1.545414
+      },
+      {
+        "direction": "D2H",
+        "GiB_s": 1.542937
+      },
+      {
+        "direction": "D2H",
+        "GiB_s": 1.545129
+      }
+    ]
+  },
+  "ssd": {
+    "path": "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "O_DIRECT": true,
+    "bytes_per_sample": 268435456,
+    "samples_GiB_s": [
+      2.097054764572575,
+      1.8206400662542621,
+      1.8830472069738862,
+      1.9246779886754029,
+      1.9507272057606244
+    ],
+    "load": "concurrent Gemma corpus oracle, existing model file read only"
+  },
+  "initial_pinned_budget_bytes": 268435456,
+  "legacy_pinned_staging": {
+    "slots": 4,
+    "bytes_per_slot": 67108864,
+    "total_bytes": 268435456,
+    "evidence": "mixed-runtime.log: 4 x 64 MiB pinned staging"
+  }
+}

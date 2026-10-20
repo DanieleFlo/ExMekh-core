@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ds4:suite:request:v1",
+  "title": "DS4 suite v1 request contracts; not endpoint availability",
+  "$defs": {
+    "tokens": {"type":"array","minItems":1,"items":{"type":"integer","minimum":0,"maximum":2147483647}},
+    "media": {
+      "type":"object","additionalProperties":false,"required":["type","file_id"],
+      "properties":{"type":{"enum":["image","video","audio"]},"file_id":{"type":"string","pattern":"^file-[A-Za-z0-9_-]+$"},"audio":{"enum":["exclude","include"],"default":"exclude"}},
+      "if":{"properties":{"type":{"const":"video"}}},"else":{"not":{"required":["audio"]}}
+    },
+    "text": {"type":"object","additionalProperties":false,"required":["type","text"],"properties":{"type":{"const":"text"},"text":{"type":"string","minLength":1}}},
+    "element": {"type":"object","additionalProperties":false,"required":["content"],"properties":{"content":{"type":"array","minItems":1,"items":{"oneOf":[{"$ref":"#/$defs/text"},{"$ref":"#/$defs/media"}]}}}},
+    "extension": {
+      "type":"object","additionalProperties":false,"required":["version"],
+      "properties":{"version":{"const":1},"task":{"enum":["raw","search_query","document","code_query","similarity"],"default":"raw"},"title":{"type":"string","minLength":1},"overflow":{"const":"error","default":"error"}},
+      "if":{"required":["title"]},"then":{"required":["task"],"properties":{"task":{"const":"document"}}}
+    },
+    "embeddings": {
+      "type":"object","additionalProperties":false,"required":["model","input"],
+      "properties":{
+        "model":{"type":"string","minLength":1},
+        "input":{"oneOf":[{"type":"string","minLength":1},{"type":"array","minItems":1,"items":{"type":"string","minLength":1}},{"$ref":"#/$defs/tokens"},{"type":"array","minItems":1,"items":{"$ref":"#/$defs/tokens"}},{"type":"array","minItems":1,"items":{"$ref":"#/$defs/element"}}]},
+        "dimensions":{"type":"integer","enum":[128,256,512,768]},"encoding_format":{"enum":["float","base64"],"default":"float"},"user":{"type":"string"},"ds4":{"$ref":"#/$defs/extension"}
+      },
+      "if":{"properties":{"input":{"type":"array","contains":{"type":"object"}}}},"then":{"required":["ds4"]},
+      "allOf":[{"if":{"properties":{"input":{"anyOf":[{"$ref":"#/$defs/tokens"},{"type":"array","minItems":1,"items":{"$ref":"#/$defs/tokens"}}]}}},"then":{"properties":{"ds4":{"properties":{"task":{"const":"raw"}},"not":{"required":["title"]}}}}}]
+    },
+    "image_extension": {"type":"object","additionalProperties":false,"required":["version"],"properties":{"version":{"const":1},"seed":{"type":"integer","minimum":0,"maximum":18446744073709551615},"sampling":{"const":"checkpoint","default":"checkpoint"}}},
+    "image_generation": {
+      "type":"object","additionalProperties":false,"required":["model","prompt"],
+      "properties":{"model":{"type":"string","minLength":1},"prompt":{"type":"string","minLength":1},"n":{"type":"integer","minimum":1,"maximum":8,"default":1},"size":{"type":"string","pattern":"^[1-9][0-9]*x[1-9][0-9]*$","default":"1024x1024"},"output_format":{"enum":["png","webp","jpeg"],"default":"png"},"background":{"enum":["auto","opaque","transparent"],"default":"auto"},"ds4":{"$ref":"#/$defs/image_extension"}},
+      "not":{"required":["output_format","background"],"properties":{"output_format":{"const":"jpeg"},"background":{"const":"transparent"}}}
+    },
+    "image_edit": {
+      "type":"object","required":["model","prompt","images","ds4"],"additionalProperties":false,
+      "properties":{
+        "model":{"type":"string","minLength":1},"prompt":{"type":"string","minLength":1},
+        "images":{"type":"array","minItems":1,"items":{"type":"string","pattern":"^file-[A-Za-z0-9_-]+$"}},
+        "n":{"type":"integer","minimum":1,"maximum":8,"default":1},
+        "size":{"type":"string","pattern":"^[1-9][0-9]*x[1-9][0-9]*$","default":"1024x1024"},
+        "output_format":{"enum":["png","webp","jpeg"],"default":"png"},
+        "background":{"enum":["auto","opaque","transparent"],"default":"auto"},
+        "ds4":{"$ref":"#/$defs/image_extension"}
+      },
+      "not":{"required":["output_format","background"],"properties":{"output_format":{"const":"jpeg"},"background":{"const":"transparent"}}}
+    },
+    "upload_metadata": {
+      "type":"object","additionalProperties":false,"required":["purpose","filename","bytes","content_type"],
+      "properties":{"purpose":{"const":"ds4_media"},"filename":{"type":"string","minLength":1},"bytes":{"type":"integer","minimum":1,"maximum":536870912},"content_type":{"enum":["image/png","image/jpeg","image/webp","video/mp4","video/webm","audio/wav","audio/mpeg","audio/flac","audio/ogg"]}}
+    }
+  }
+}

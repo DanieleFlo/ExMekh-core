@@ -1,0 +1,85 @@
+{
+  "scope": "diagnostic across explicit BF16 and FP32 profiles, not a native candidate gate",
+  "cases": {
+    "text": {
+      "embedding": {
+        "max_abs": 0.0008190246298909187,
+        "rmse": 0.0002323793622566614,
+        "relative_l2": 0.006439885794327041,
+        "bit_exact": false,
+        "cosine_min": 0.9999775757151184,
+        "unit_norm_error_max": 4.091996319566249e-08
+      },
+      "hidden": {
+        "max_abs": 19.44482421875,
+        "rmse": 0.9596032884829638,
+        "relative_l2": 0.01109573294661278,
+        "bit_exact": false
+      }
+    },
+    "image": {
+      "embedding": {
+        "max_abs": 0.0010884245857596397,
+        "rmse": 0.00030956803566885456,
+        "relative_l2": 0.008579000815894248,
+        "bit_exact": false,
+        "cosine_min": 0.9999632003728284,
+        "unit_norm_error_max": 3.7230931448917204e-08
+      },
+      "hidden": {
+        "max_abs": 247.946044921875,
+        "rmse": 4.056747384383895,
+        "relative_l2": 0.09158679154006745,
+        "bit_exact": false
+      }
+    },
+    "audio": {
+      "embedding": {
+        "max_abs": 0.0022042840719223022,
+        "rmse": 0.0007148584746580668,
+        "relative_l2": 0.019810739661242614,
+        "bit_exact": false,
+        "cosine_min": 0.999803767291367,
+        "unit_norm_error_max": 5.3530457844175316e-08
+      },
+      "hidden": {
+        "max_abs": 25.385250091552734,
+        "rmse": 2.463200281903432,
+        "relative_l2": 0.040476275897250426,
+        "bit_exact": false
+      }
+    },
+    "video": {
+      "embedding": {
+        "max_abs": 0.0011605443432927132,
+        "rmse": 0.0003578335420567883,
+        "relative_l2": 0.009916573378582252,
+        "bit_exact": false,
+        "cosine_min": 0.9999508307834938,
+        "unit_norm_error_max": 8.115143890208287e-09
+      },
+      "hidden": {
+        "max_abs": 94.43408203125,
+        "rmse": 3.316050582815422,
+        "relative_l2": 0.06946843115749894,
+        "bit_exact": false
+      }
+    },
+    "interleaved": {
+      "embedding": {
+        "max_abs": 0.0013675708323717117,
+        "rmse": 0.00028632111371409096,
+        "relative_l2": 0.007934763737528584,
+        "bit_exact": false,
+        "cosine_min": 0.9999685197617801,
+        "unit_norm_error_max": 4.882201820599619e-08
+      },
+      "hidden": {
+        "max_abs": 143.9453887939453,
+        "rmse": 4.204151689384865,
+        "relative_l2": 0.10771074184820387,
+        "bit_exact": false
+      }
+    }
+  }
+}

@@ -7594,6 +7594,11 @@ static void test_run_entry(const ds4_test_entry *entry) {
     int before = test_failures;
     fprintf(stderr, "%s:\n", entry->name);
     entry->fn();
+#ifndef DS4_NO_GPU
+    /* An entry owns its engine fixtures. A later case can open another model
+     * or quality profile without inheriting the preceding case's runtime. */
+    test_close_engines();
+#endif
     fprintf(stderr, "%s: ", entry->name);
     ds4_log(stderr,
             test_failures == before ? DS4_LOG_OK : DS4_LOG_ERROR,

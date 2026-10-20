@@ -1,0 +1,203 @@
+{
+  "inputs": {
+    "freeze": "performance-results/native-suite-t00-20261020",
+    "headers": "performance-results/native-suite-tensor-headers-20261020",
+    "qwen27": "performance-results/native-suite-t00-20261020-r2",
+    "candidate": "performance-results/native-suite-review-final-qwen-20261020",
+    "prepared": "performance-results/native-suite-oracles-20261020",
+    "gemma": "performance-results/native-suite-gemma-oracle-20261020-r2",
+    "qwen": "performance-results/native-suite-qwen-oracle-20261020-r3",
+    "retrieval": "performance-results/native-suite-gemma-corpus-20261020-r2",
+    "noise": "performance-results/native-suite-qwen-noise-20261020",
+    "flash": "performance-results/native-suite-review-final-flash-20261020",
+    "gemma_f32": "performance-results/native-suite-gemma-oracle-f32-20261020"
+  },
+  "arrays": [
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/audio-inputs.npz",
+      "bytes": 52313,
+      "sha256": "24b0e0ca96a030777a17646c00c2a501410a362ba1bad5748f136da7ad75b4e5"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/audio.npz",
+      "bytes": 252698,
+      "sha256": "87e982fc614ebaaf8aed7cab19a7fa54babeb3838822abc083b557baa3c159a0"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/image-inputs.npz",
+      "bytes": 7787040,
+      "sha256": "f2ab3d9dd95d2b7bcb4142dfbd93dbe3feae91e7b1cd4878b59a56579e257bb2"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/image.npz",
+      "bytes": 2177818,
+      "sha256": "84ff4d314c50efbf1d2ea70f148c8251edea52db686119bceb241ae79e5ddf7f"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/interleaved-inputs.npz",
+      "bytes": 15625575,
+      "sha256": "695f208c6dde28ffb97fbeb748f6893c3b38edc2c00ae8287ae9b8cd79ff72d4"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/interleaved.npz",
+      "bytes": 4553498,
+      "sha256": "de7fa7da29b389d079cad76996c4f07b2227c7a05afbd19bed8376aef2757273"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/stimuli.npz",
+      "bytes": 189186,
+      "sha256": "ff30ad41f213f9dda005faf589409981d6ce7857debcb6c68fe80d42ec68f04d"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/text-inputs.npz",
+      "bytes": 948,
+      "sha256": "1da4a9e380dea56a4926a72789346699fb31488a615401dd147f5e1163ae6242"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/text.npz",
+      "bytes": 240922,
+      "sha256": "058155919a75b7ddf7cb0871f921bb16fc3ca1644a17591ce6c958873fbef4e4"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/video-inputs.npz",
+      "bytes": 7787238,
+      "sha256": "86c0a1847b3366e48718b56c6c6ebf0517b7ed73c9b1c571cd316699a33bc234"
+    },
+    {
+      "experiment": "gemma",
+      "path": "performance-results/native-suite-gemma-oracle-20261020-r2/video.npz",
+      "bytes": 2128666,
+      "sha256": "ee28183bd99b2e084c0dc820dec5f374d9247092ad06d4cb12670b8cd0d09d8a"
+    },
+    {
+      "experiment": "qwen",
+      "path": "performance-results/native-suite-qwen-oracle-20261020-r3/image-generation-512.npz",
+      "bytes": 6293674,
+      "sha256": "3163ac723f1004857c41bdf86d3885546af5229c0e63ac9f616d8d43e73f37fa"
+    },
+    {
+      "experiment": "qwen",
+      "path": "performance-results/native-suite-qwen-oracle-20261020-r3/initial-latents.npz",
+      "bytes": 262412,
+      "sha256": "82aba063e68ef0ac414951452eaf615fde6e71cdb4982d9534fff207cf1090ab"
+    },
+    {
+      "experiment": "retrieval",
+      "path": "performance-results/native-suite-gemma-corpus-20261020-r2/vectors.npz",
+      "bytes": 345302,
+      "sha256": "f2225d2a1b81d5ff8ea6c97d64449ab02673a0be1a7921a4ffb3d6706855d41e"
+    },
+    {
+      "experiment": "noise",
+      "path": "performance-results/native-suite-qwen-noise-20261020/1024x1024-seed-20261020.npz",
+      "bytes": 1048844,
+      "sha256": "76040609bb596dbd93c90ead2246ef0a60902401a659bc972eb91c73bc02a86c"
+    },
+    {
+      "experiment": "noise",
+      "path": "performance-results/native-suite-qwen-noise-20261020/1024x1024-seed-20261021.npz",
+      "bytes": 1048844,
+      "sha256": "ff7f735f0f8f27571aa3e29c9282c5f20d6de5f188f2c31c0c57f5ef73997183"
+    },
+    {
+      "experiment": "noise",
+      "path": "performance-results/native-suite-qwen-noise-20261020/1024x1536-seed-20261020.npz",
+      "bytes": 1573132,
+      "sha256": "d6747a1978a3c3375816ff7ac02be328c017fb07b5c17a9327608d05cd68a5c7"
+    },
+    {
+      "experiment": "noise",
+      "path": "performance-results/native-suite-qwen-noise-20261020/1024x1536-seed-20261021.npz",
+      "bytes": 1573132,
+      "sha256": "89a2b2370b95f8749bd372194ec66aa184f1a455164852fe99ee62fcab990400"
+    },
+    {
+      "experiment": "noise",
+      "path": "performance-results/native-suite-qwen-noise-20261020/1536x1024-seed-20261020.npz",
+      "bytes": 1573132,
+      "sha256": "d6747a1978a3c3375816ff7ac02be328c017fb07b5c17a9327608d05cd68a5c7"
+    },
+    {
+      "experiment": "noise",
+      "path": "performance-results/native-suite-qwen-noise-20261020/1536x1024-seed-20261021.npz",
+      "bytes": 1573132,
+      "sha256": "89a2b2370b95f8749bd372194ec66aa184f1a455164852fe99ee62fcab990400"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/audio-inputs.npz",
+      "bytes": 52313,
+      "sha256": "24b0e0ca96a030777a17646c00c2a501410a362ba1bad5748f136da7ad75b4e5"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/audio.npz",
+      "bytes": 252698,
+      "sha256": "ebdec88aeb5e2fe5feae25dfd035fe903a897ea6cc05ff3326c59a14e5374266"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/image-inputs.npz",
+      "bytes": 7787040,
+      "sha256": "f2ab3d9dd95d2b7bcb4142dfbd93dbe3feae91e7b1cd4878b59a56579e257bb2"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/image.npz",
+      "bytes": 2177818,
+      "sha256": "89f36feddb58040496bbb8fd7b82a1f9c80ac264fa9fca70521e734c25d983cd"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/interleaved-inputs.npz",
+      "bytes": 15625575,
+      "sha256": "695f208c6dde28ffb97fbeb748f6893c3b38edc2c00ae8287ae9b8cd79ff72d4"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/interleaved.npz",
+      "bytes": 4553498,
+      "sha256": "8787a940505278a53cde02d1183cb4bf7471d4291f4087fefa638f726f9f89e4"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/stimuli.npz",
+      "bytes": 189186,
+      "sha256": "ff30ad41f213f9dda005faf589409981d6ce7857debcb6c68fe80d42ec68f04d"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/text-inputs.npz",
+      "bytes": 948,
+      "sha256": "1da4a9e380dea56a4926a72789346699fb31488a615401dd147f5e1163ae6242"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/text.npz",
+      "bytes": 240922,
+      "sha256": "bc5857224688abb39e3ab113ca6ee705882d9ac06dabe67a25e16636c29832e1"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/video-inputs.npz",
+      "bytes": 7787238,
+      "sha256": "86c0a1847b3366e48718b56c6c6ebf0517b7ed73c9b1c571cd316699a33bc234"
+    },
+    {
+      "experiment": "gemma_f32",
+      "path": "performance-results/native-suite-gemma-oracle-f32-20261020/video.npz",
+      "bytes": 2128666,
+      "sha256": "70d2082e3105505b51df1b7e9da28cc42cdadbd38ad86bca16e6ef514048f932"
+    }
+  ]
+}

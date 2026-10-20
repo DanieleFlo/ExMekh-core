@@ -9,6 +9,11 @@ gguf-tools/quality-testing/data/*/continuations/*.txt -diff
 # Qwen metadata snapshots are validated by byte-level SHA-256 checksums.
 gguf-tools/quality-testing/data/qwen38-metadata/*.json text eol=lf
 
+# Native suite manifests and corpus identities are hashed byte for byte.
+tests/fixtures/native-suite-v1/*.json text eol=lf
+docs/performance/native-suite-t00-20261020/*.json text eol=lf
+schemas/ds4-suite-*.json text eol=lf
+
 # Source and build files stay readable and executable across Windows/WSL.
 # Model fixtures retain their existing byte-level rules above.
 .gitattributes text eol=lf
