@@ -26,6 +26,7 @@ class ProjectSettings(BaseModel):
     capabilities_path: str | None = None
     additional_capabilities_paths: list[str] = Field(default_factory=list)
     coding_agent_persistent_history: bool | None = None
+    parameter_descriptions_in_schema: bool = False
     tool_approval_mode: str = DEFAULT_TOOL_APPROVAL_MODE
 
     def with_agent(self, profile: AgentProfile, design: AgentDesign | None) -> Self:
@@ -107,6 +108,7 @@ class ChatSettings(ProjectSettings):
                     project.settings.additional_capabilities_paths
                 ),
                 "coding_agent_persistent_history": project.settings.coding_agent_persistent_history,
+                "parameter_descriptions_in_schema": project.settings.parameter_descriptions_in_schema,
                 "work_root": project.work_root,
             }
         )

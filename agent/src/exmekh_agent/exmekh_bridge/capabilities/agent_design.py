@@ -6,6 +6,7 @@ from pathlib import Path
 
 from exmekh_lib.core.agents.node import DefaultCapabilities, Node, ToolHooks
 
+from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.config.paths import BUNDLED_CAPABILITIES_DIR
 from exmekh_agent.exmekh_bridge.agents.sub_agents import (
     ObservedNode,
@@ -27,29 +28,20 @@ def build_generic_agent(
     agent_context_id: str | None = None,
 ) -> tuple[Node, list[ObservedNode]]:
     """Build the bundled hierarchy through the same boundary as custom designs."""
-    defaults = DefaultCapabilities(mocks=True, tool_hooks=approval_hooks)
-    children: list[ObservedNode] = []
-    if defaults.capabilities_path.resolve() in {
-        path.resolve() for path in capabilities_paths
-    }:
-        children.append(
-            ObservedNode(
-                name_hds="mock-sub-agent",
-                path=f"{root_name}/mock-sub-agent",
-                event_router=router,
-                default_capabilities=defaults,
-            )
-        )
-    children.append(
+    defaults = CapabilityRepository().default_capabilities_for(
+        root_name, capabilities_paths, approval_hooks
+    )
+    child_name = AGENT_DEFAULTS["coding_capability"]
+    children = [
         ObservedNode(
             capabilities_paths=[BUNDLED_CAPABILITIES_DIR],
             default_capabilities=defaults,
-            name_hds="coding-agent",
-            path=f"{root_name}/coding-agent",
+            name_hds=child_name,
+            path=f"{root_name}/{child_name}",
             event_router=router,
             persistent_history=coding_persistent_history,
         )
-    )
+    ]
     root = Node(
         capabilities_paths=capabilities_paths,
         children=children,
@@ -73,7 +65,6 @@ def build_designed_agent(
         item = design.node(node_id)
         included = compiled.default_names_for(item.id)
         defaults = DefaultCapabilities(
-            mocks=False,
             harness=False,
             include=included,
             tool_hooks=approval_hooks if "bash" in included else None,

@@ -6,13 +6,13 @@ import os
 from pathlib import Path
 from typing import Any
 
-from exmekh_lib.core.agents.node import DefaultCapabilities
 from nicegui import app
 
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents import agent_runner
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.steering_probe import SteeringProbeProvider
 
 provider = SteeringProbeProvider(
@@ -25,7 +25,7 @@ config.agent_mode = "deep_agent"
 config.default_model = "steering-probe"
 config.reasoning_effort = "none"
 config.work_root = str(Path(__file__).resolve().parents[1])
-config.capabilities_path = str(DefaultCapabilities(mocks=True).capabilities_path)
+config.capabilities_path = str(TEST_CAPABILITIES)
 config.name_hds = "main"
 
 

@@ -63,6 +63,7 @@ class AgentTurnRequest:
     agent_profile: str = AGENT_DEFAULTS["default_profile"]
     agent_design: AgentDesign | None = None
     capabilities_paths: list[str] | None = None
+    parameter_descriptions_in_schema: bool = False
     on_model_context: Callable[[ModelContextCheckpoint], None] | None = None
     on_compaction_progress: (
         Callable[[DeepAgentCompactionProgressEvent], None] | None

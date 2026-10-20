@@ -101,11 +101,13 @@ class ChatViewComponent:
         on_edit_message: EditMessageCallback | None = None,
         on_agent_settings: Callable[[], None] | None = None,
         sessions: SessionManager | None = None,
+        on_split_message: Callable[[str, str], object] | None = None,
     ) -> None:
         self._sessions = sessions
         self.on_suggested_prompt = on_suggested_prompt
         self.on_edit_message = on_edit_message
         self.on_agent_settings = on_agent_settings
+        self.on_split_message = on_split_message
         self.agent_settings_button: ui.button | None = None
         self.chat_container: ui.column | None = None
         self.child_chat_container: ui.column | None = None
@@ -451,7 +453,7 @@ class ChatViewComponent:
         target.clear()
 
         with target:
-            messages = child.messages if child else session.messages
+            messages = child.message_history() if child else session.message_history()
             if not messages:
                 self._render_welcome_hero()
                 return
@@ -596,16 +598,12 @@ class ChatViewComponent:
             ):
                 suggestions = [
                     (
-                        app_text("chat.chat_view.run_mock_tool"),
-                        app_text(
-                            "chat.chat_view.use_the_mock_tool_to_verify_tool_execution"
-                        ),
+                        app_text("chat.chat_view.calculate_example"),
+                        app_text("chat.chat_view.calculate_example_prompt"),
                     ),
                     (
                         app_text("chat.chat_view.demonstrate_nested_skills"),
-                        app_text(
-                            "chat.chat_view.use_the_mock_skill_and_invoke_sub_tools_within_it_to_demonstrate_nesti"
-                        ),
+                        app_text("chat.chat_view.deep_thinking_example_prompt"),
                     ),
                     (
                         app_text("chat.chat_view.reasoning_test"),
@@ -1033,6 +1031,21 @@ class ChatViewComponent:
                             ]
                         )
                         self._render_copy_button(msg.content)
+
+                        if (
+                            self.on_split_message
+                            and self.selected_sub_agent_id is None
+                            and msg.can_split
+                        ):
+                            session_id = self.sessions.get_current_session().id
+                            ui.button(
+                                icon="call_split",
+                                on_click=partial(
+                                    self.on_split_message, session_id, msg.id
+                                ),
+                            ).props(UI_PRESENTATION["split.props"]).classes(
+                                UI_PRESENTATION["split.classes"]
+                            ).tooltip(ui_text("chat.split.button"))
 
     def _render_reasoning_group(self, blocks: list[ReasoningBlock]) -> ui.expansion:
         """Renders multiple reasoning blocks compacted into a single expandable row,

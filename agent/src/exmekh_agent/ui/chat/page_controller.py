@@ -160,6 +160,7 @@ class ChatPageController:
                 on_suggested_prompt=self.use_suggested_prompt,
                 sessions=self.sessions,
                 on_edit_message=self.edit_message,
+                on_split_message=self.split_conversation,
                 on_agent_settings=self.open_chat_agent_settings,
             )
             self.chat_view.build()
@@ -320,9 +321,7 @@ class ChatPageController:
         if include_live and collector is None and sub_agent is None:
             snapshot = active_turns.snapshot(active_session.id, after_revision=-1)
             if snapshot and snapshot.message is not None:
-                active_session = active_session.model_copy(
-                    update={"messages": [*active_session.messages, snapshot.message]}
-                )
+                active_session = active_session.with_message(snapshot.message)
         self._context_updates.request(
             active_session,
             collector=collector,
@@ -543,6 +542,26 @@ class ChatPageController:
             return await self._edit_message(
                 session_id, message_id, text, attachment_paths, attachments
             )
+
+    async def split_conversation(self, session_id: str, message_id: str) -> None:
+        async with active_turns.edit_lock(session_id):
+            try:
+                branch = await self.sessions.split_session_async(session_id, message_id)
+            except ValueError as error:
+                with self._client:
+                    ui.notify(str(error), type="warning")
+                return
+            if branch is None:
+                with self._client:
+                    ui.notify(ui_text("chat.split.save_failed"), type="negative")
+                return
+            with self._client:
+                self.session_switched(branch.id)
+                if self.sidebar:
+                    self.sidebar.clear_sub_agent_selection()
+                    if branch.project_id:
+                        self.sidebar.expand_project(branch.project_id)
+                    self.sidebar.render_sessions()
 
     async def _edit_message(
         self,

@@ -50,6 +50,7 @@ class SessionManager:
         )
         self._session_store = JsonRecordStore(self.storage_dir, ChatSession)
         self._project_store = JsonRecordStore(self.projects_dir, Project)
+        self._split_lock = asyncio.Lock()
         self.projects: dict[str, Project] = {}
         self.sessions: dict[str, ChatSession] = {}
         self.current_session_id: str | None = None
@@ -66,6 +67,7 @@ class SessionManager:
             self.projects_dir,
             self._session_store,
             self._project_store,
+            self._split_lock,
             self.projects,
             self.sessions,
             self.current_session_id,
@@ -79,6 +81,7 @@ class SessionManager:
                 self.projects_dir,
                 self._session_store,
                 self._project_store,
+                self._split_lock,
                 self.projects,
                 self.sessions,
                 self.current_session_id,
@@ -255,6 +258,49 @@ class SessionManager:
     def get_session(self, session_id: str) -> ChatSession | None:
         return self.sessions.get(session_id)
 
+    def _prepare_split(self, session: ChatSession, message_id: str) -> ChatSession:
+        origin = session.split_origin_id or session.id
+        number = 1 + max(
+            (
+                item.split_number
+                for item in self.sessions.values()
+                if item.split_origin_id == origin
+            ),
+            default=0,
+        )
+        return session.split_after(message_id, number)
+
+    async def split_session_async(
+        self, session_id: str, message_id: str
+    ) -> ChatSession | None:
+        """Snapshot on the caller loop and serialize split publication across views."""
+        async with self._split_lock:
+            session = self.get_session(session_id)
+            if session is None:
+                return None
+            branch = self._prepare_split(session, message_id)
+            loop = asyncio.get_running_loop()
+            saving = loop.run_in_executor(None, self.save_session, branch)
+            try:
+                saved = await asyncio.shield(saving)
+            except asyncio.CancelledError:
+                # Cancellation cannot stop the disk write. Keep the split lock
+                # until it finishes, then remove any unpublished record.
+                if await saving:
+                    await loop.run_in_executor(
+                        None, self._session_store.delete, branch.id
+                    )
+                raise
+            if not saved:
+                return None
+            if not self.owns_session(session):
+                await asyncio.get_running_loop().run_in_executor(
+                    None, self._session_store.delete, branch.id
+                )
+                return None
+            self.sessions[branch.id] = branch
+            return branch
+
     def snapshot_current_session(self) -> ChatSession:
         """Capture persisted messages and the current unfinished response."""
         session = self.get_current_session().model_copy(deep=True)
@@ -274,9 +320,7 @@ class SessionManager:
         """Append and persist a message while the session is still managed."""
         if not self.owns_session(session):
             return False
-        updated = session.model_copy(
-            update={"messages": [*session.message_history(), message]}
-        )
+        updated = session.with_message(message)
         if not self.save_session(updated):
             return False
         session.add_message(message)

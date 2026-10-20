@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
+from math import isfinite
 from typing import Literal
 from uuid import uuid4
 
@@ -50,6 +52,9 @@ class AgentDesign(BaseModel):
 
     def has_node(self, node_id: str) -> bool:
         return any(node.id == node_id for node in self.nodes)
+
+    def node_ids(self) -> tuple[str, ...]:
+        return tuple(node.id for node in self.nodes)
 
     def connected_nodes(self) -> list[tuple[DesignNode, DesignNode]]:
         """Expose endpoints for presentation without leaking link resolution."""
@@ -137,9 +142,93 @@ class AgentDesign(BaseModel):
             raise
 
     def move_node(self, node_id: str, x: float, y: float) -> None:
-        node = self.node(node_id)
-        node.x = max(0, x)
-        node.y = max(0, y)
+        self.move_nodes({node_id: (x, y)})
+
+    def move_nodes(self, positions: dict[str, tuple[float, float]]) -> None:
+        """Validate every target before applying one collective board edit."""
+        nodes = [(self.node(node_id), x, y) for node_id, (x, y) in positions.items()]
+        if any(not isfinite(value) for _, x, y in nodes for value in (x, y)):
+            raise ValueError(
+                app_text("errors_state.agent_design.coordinates_must_be_finite")
+            )
+        for node, x, y in nodes:
+            node.x, node.y = max(0, x), max(0, y)
+
+    def remove_nodes(self, node_ids: Iterable[str]) -> None:
+        """Remove a selection atomically, keeping the root and validating every ID."""
+        selected = {self.node(node_id).id for node_id in node_ids} - {self.root_id}
+        self.nodes = [node for node in self.nodes if node.id not in selected]
+        self.links = [
+            link for link in self.links if not {link.parent, link.child} & selected
+        ]
+
+    def disconnect_nodes(self, node_ids: Iterable[str]) -> None:
+        """Remove incident links without exposing connection storage to the caller."""
+        selected = {self.node(node_id).id for node_id in node_ids}
+        self.links = [
+            link for link in self.links if not {link.parent, link.child} & selected
+        ]
+
+    def arrange(self) -> None:
+        """Lay out the DAG in layers; shared children follow all their parents."""
+        self.validate_graph()
+        remaining = {node.id for node in self.nodes}
+        layers: dict[str, int] = {}
+        order: dict[str, int] = {}
+        while remaining:
+            ready = [
+                node
+                for node in self.nodes
+                if node.id in remaining
+                and all(
+                    link.parent in layers
+                    for link in self.links
+                    if link.child == node.id
+                )
+            ]
+            for node in ready:
+                layers[node.id] = max(
+                    (
+                        layers[link.parent] + 1
+                        for link in self.links
+                        if link.child == node.id
+                    ),
+                    default=0,
+                )
+                remaining.remove(node.id)
+        columns = [
+            [node for node in self.nodes if layers[node.id] == level]
+            for level in range(max(layers.values(), default=0) + 1)
+        ]
+        row_gap = BOARD_DEFAULTS["node_height"] + BOARD_DEFAULTS["node_gap"]
+        height = max(map(len, columns), default=0) * row_gap
+        for level, column in enumerate(columns):
+
+            def parent_order(node: DesignNode) -> float:
+                parents = [
+                    order[link.parent] for link in self.links if link.child == node.id
+                ]
+                return sum(parents) / len(parents) if parents else -1
+
+            column.sort(
+                key=lambda node: (
+                    parent_order(node),
+                    node.id != self.root_id,
+                    node.kind,
+                    node.name,
+                )
+            )
+            for index, node in enumerate(column):
+                order[node.id] = index
+                node.x = (
+                    BOARD_DEFAULTS["initial_node_x"]
+                    + level * (BOARD_DEFAULTS["skill_child_x_offset"])
+                )
+                node.y = (
+                    BOARD_DEFAULTS["initial_node_y"]
+                    + (height - len(column) * row_gap) / 2
+                    + index * row_gap
+                )
 
     def add_positioned_node(self, node: DesignNode, parent_id: str) -> None:
         """Add an automatically arranged card, restoring the caller's card on failure."""
@@ -207,11 +296,7 @@ class AgentDesign(BaseModel):
                     "errors_state.agent_design.choose_another_root_before_removing_this_hds"
                 )
             )
-        node = self.node(node_id)
-        self.nodes.remove(node)
-        self.links = [
-            link for link in self.links if node_id not in {link.parent, link.child}
-        ]
+        self.remove_nodes([node_id])
 
     def set_root(self, node_id: str) -> None:
         if self.node(node_id).kind != "hds":

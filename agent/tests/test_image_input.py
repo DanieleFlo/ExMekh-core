@@ -6,7 +6,6 @@ from io import BytesIO
 from unittest.mock import patch
 
 import pytest
-from exmekh_lib.core.agents.node import DefaultCapabilities
 from exmekh_lib.core.models.user_message import (
     DocumentUserMessage,
     FilesUserMessage,
@@ -67,6 +66,7 @@ from exmekh_agent.ui.shared.image_preview import (
     render_image_thumbnail,
     show_image_preview,
 )
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.image_samples import pdf_bytes, png_bytes
 from tests.mock_client import MockProvider
 from tests.steering_probe import SteeringProbeProvider
@@ -281,9 +281,7 @@ async def test_real_exmekh_runner_receives_and_replays_images(tmp_path, mode):
             on_raw_history=lambda raw, _: histories.append(raw),
             settings=ChatSettings(
                 work_root=str(tmp_path),
-                capabilities_path=str(
-                    DefaultCapabilities(mocks=True).capabilities_path
-                ),
+                capabilities_path=str(TEST_CAPABILITIES),
                 tool_approval_mode="Approve All",
             ),
         )
@@ -318,9 +316,7 @@ async def test_real_exmekh_runner_receives_and_replays_images(tmp_path, mode):
             ],
             settings=ChatSettings(
                 work_root=str(tmp_path),
-                capabilities_path=str(
-                    DefaultCapabilities(mocks=True).capabilities_path
-                ),
+                capabilities_path=str(TEST_CAPABILITIES),
             ),
         )
         previous = next(
@@ -349,9 +345,7 @@ async def test_real_exmekh_runner_receives_and_replays_images(tmp_path, mode):
             on_tool_event=lambda _: None,
             settings=ChatSettings(
                 work_root=str(tmp_path),
-                capabilities_path=str(
-                    DefaultCapabilities(mocks=True).capabilities_path
-                ),
+                capabilities_path=str(TEST_CAPABILITIES),
             ),
         )
         previous = next(
@@ -385,9 +379,7 @@ async def test_multimodal_steering_is_confirmed_and_restored_in_nested_history(
                 on_raw_history=lambda raw, _: histories.append(raw),
                 settings=ChatSettings(
                     work_root=str(tmp_path),
-                    capabilities_path=str(
-                        DefaultCapabilities(mocks=True).capabilities_path
-                    ),
+                    capabilities_path=str(TEST_CAPABILITIES),
                 ),
             )
         )

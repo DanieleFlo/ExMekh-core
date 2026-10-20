@@ -7,7 +7,6 @@ from threading import Event
 from unittest.mock import Mock, patch
 
 import pytest
-from exmekh_lib.core.agents.node import DefaultCapabilities
 from exmekh_lib.core.models.assistant_message import (
     AssistantMessage,
     FunctionCall,
@@ -46,6 +45,7 @@ from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.chat.page_controller import ChatPageController
 from tests.approval_probe import ApprovalProbeProvider
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.mock_client import MockProvider
 
 
@@ -225,9 +225,7 @@ async def test_real_exmekh_turn_stops_before_another_inference_when_approval_is_
     session = manager.get_current_session()
     session.agent_mode = "deep_agent"
     session.settings.work_root = str(tmp_path)
-    session.settings.capabilities_path = str(
-        DefaultCapabilities(mocks=True).capabilities_path
-    )
+    session.settings.capabilities_path = str(TEST_CAPABILITIES)
     collector = TurnStreamCollector()
     worker_finished = asyncio.Event()
     loop = asyncio.get_running_loop()
@@ -341,9 +339,7 @@ async def test_live_stop_pending_approval_prevents_another_model_request(
     model = config.default_model if config.default_model in models else models[0]
     session = ChatSession(agent_mode="deep_agent")
     session.settings.work_root = str(tmp_path)
-    session.settings.capabilities_path = str(
-        DefaultCapabilities(mocks=True).capabilities_path
-    )
+    session.settings.capabilities_path = str(TEST_CAPABILITIES)
     approval_requested = asyncio.Event()
     worker_finished = asyncio.Event()
     decision: Future[bool] = Future()

@@ -135,6 +135,7 @@ def execute_agent_turn_sync(
     agent_profile: str = AGENT_DEFAULTS["default_profile"],
     agent_design: AgentDesign | None = None,
     capabilities_paths: list[str] | None = None,
+    parameter_descriptions_in_schema: bool = False,
     on_model_context: Callable[[ModelContextCheckpoint], None] | None = None,
     on_compaction_progress: Callable[[DeepAgentCompactionProgressEvent], None]
     | None = None,
@@ -179,6 +180,7 @@ def execute_agent_turn_sync(
                 agent_profile=agent_profile,
                 agent_design=agent_design,
                 capabilities_paths=capabilities_paths,
+                parameter_descriptions_in_schema=parameter_descriptions_in_schema,
                 on_model_context=on_model_context,
                 on_compaction_progress=on_compaction_progress,
             )
@@ -357,6 +359,7 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
             node=root_node,
             work_root=Path(request.work_root or config.work_root),
             on_stream=event_handler,
+            parameter_descriptions_in_schema=request.parameter_descriptions_in_schema,
         )
         if context_provider is not None:
             for node in agent.capabilities_by_node:
@@ -522,6 +525,7 @@ async def run_agent_turn(
             agent_profile=settings.agent_profile,
             agent_design=settings.agent_design,
             capabilities_paths=settings.capability_paths(config.capabilities_path),
+            parameter_descriptions_in_schema=settings.parameter_descriptions_in_schema,
             on_token=on_token,
             on_reasoning=on_reasoning,
             on_tool_event=on_tool_event,

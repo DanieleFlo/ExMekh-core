@@ -99,6 +99,10 @@ class ChatMessage(BaseModel):
     error: str | None = None
 
     @property
+    def can_split(self) -> bool:
+        return self.role == "assistant" and not self.is_streaming and not self.error
+
+    @property
     def visible_text(self) -> str:
         return (
             self.display_content if self.display_content is not None else self.content
@@ -359,10 +363,14 @@ class SubAgentConversation(BaseModel):
         )
 
     def discard_calls_from(self, timestamp: float) -> bool:
-        """Retain completed calls that began before a revised parent turn."""
-        self.messages = [
-            message for message in self.messages if message.timestamp < timestamp
-        ]
+        """Retain only the completed prefix before a revised parent turn."""
+        retained_count = 0
+        for index, message in enumerate(self.messages):
+            if message.timestamp >= timestamp or message.is_streaming:
+                break
+            if message.role == "assistant":
+                retained_count = index + 1
+        self.messages = self.messages[:retained_count]
         if not self.messages:
             self.raw_history = []
             return False

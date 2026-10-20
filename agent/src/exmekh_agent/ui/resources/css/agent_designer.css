@@ -62,3 +62,10 @@
 .agent-profile-option.agent-profile-selected { border-color: #38bdf8; color: #38bdf8; background: #082f49; box-shadow: inset 0 0 0 1px #38bdf8; }
 .agent-profile-option:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
 .capability-path-row { min-width: 0; }
+.agent-board-selection {
+    position: absolute;
+    pointer-events: none;
+    border: 1px solid #38bdf8;
+    background: rgb(56 189 248 / 12%);
+    z-index: 5;
+}

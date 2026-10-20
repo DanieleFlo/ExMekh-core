@@ -477,7 +477,7 @@ def test_execute_agent_turn_sync_uses_distinct_agent_context_id(
     ]
 
 
-def test_deep_agent_adds_bundled_mock_sub_agent() -> None:
+def test_deep_agent_uses_harness_without_removed_mock_sub_agent() -> None:
     capabilities = DefaultCapabilities().capabilities_path
     response = MagicMock()
     response.get_message.return_value = "done"
@@ -510,10 +510,9 @@ def test_deep_agent_adds_bundled_mock_sub_agent() -> None:
     assert node_class.call_count == 1
     children = node_class.call_args.kwargs["children"]
     assert [child.name_hds for child in children] == [
-        "mock-sub-agent",
         "coding-agent",
     ]
-    assert children[1].path == "main/coding-agent"
+    assert children[0].path == "main/coding-agent"
 
 
 def test_provider_requests_are_serialized_across_worker_threads() -> None:

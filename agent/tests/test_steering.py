@@ -14,7 +14,6 @@ from exmekh_lib.core.agents.deep_agent import (
     DeepAgentExecutionEventType,
     DeepAgentStreamEvent,
 )
-from exmekh_lib.core.agents.node import DefaultCapabilities
 from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
@@ -60,6 +59,7 @@ from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.chat.page_controller import ChatPageController
 from exmekh_agent.ui.graph.graph_data import build_graph_data_from_session
 from exmekh_agent.ui.history.raw_history_view import build_raw_history_from_session
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.steering_probe import SteeringProbeProvider
 
 
@@ -81,7 +81,7 @@ def _mock_turn_options(
         on_raw_history=on_raw_history,
         settings=ChatSettings(
             work_root=str(tmp_path),
-            capabilities_path=str(DefaultCapabilities(mocks=True).capabilities_path),
+            capabilities_path=str(TEST_CAPABILITIES),
             tool_approval_mode="Approve All",
         ),
         steering=steering,
@@ -1087,9 +1087,7 @@ async def test_controller_steers_real_exmekh_after_refresh_and_preserves_next_tu
     session = manager.get_current_session()
     session.agent_mode = "deep_agent"
     session.settings.work_root = str(tmp_path)
-    session.settings.capabilities_path = str(
-        DefaultCapabilities(mocks=True).capabilities_path
-    )
+    session.settings.capabilities_path = str(TEST_CAPABILITIES)
     session.settings.tool_approval_mode = "Approve All"
     session.messages = [
         ChatMessage(role="user", content="Previous request"),

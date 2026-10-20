@@ -32,6 +32,50 @@ class ChatSession(BaseModel):
     agent_mode: Literal["deep_agent", "quick_chat"] = AGENT_DEFAULTS["agent_mode"]
     system_prompt: str = ""
     settings: ChatSettings = Field(default_factory=ChatSettings)
+    split_origin_id: str | None = None
+    split_base_title: str | None = None
+    split_number: int = 0
+
+    def split_after(self, message_id: str, number: int) -> ChatSession:
+        """Copy a completed turn boundary, retaining only its execution history."""
+        index = next(
+            (
+                index
+                for index, message in enumerate(self.messages)
+                if message.id == message_id
+            ),
+            None,
+        )
+        if index is None:
+            raise ValueError(app_text("chat.split.invalid_boundary"))
+        message = self.messages[index]
+        if not message.can_split:
+            raise ValueError(app_text("chat.split.invalid_boundary"))
+        branch = self.model_copy(deep=True)
+        branch.id = str(uuid.uuid4())
+        branch.created_at = branch.updated_at = time.time()
+        branch.split_origin_id = self.split_origin_id or self.id
+        branch.split_base_title = self.split_base_title or self.title
+        branch.split_number = number
+        branch.title = f"{branch.split_base_title} ({number})"
+        branch.messages = branch.messages[: index + 1]
+        cutoff = (
+            self.messages[index + 1].timestamp
+            if index + 1 < len(self.messages)
+            else float("inf")
+        )
+        branch._discard_branch_state_from(cutoff)
+        return branch
+
+    def _discard_branch_state_from(self, timestamp: float) -> None:
+        """Reset child calls, pending input and approvals after changing a prefix."""
+        self.sub_agent_conversations = [
+            child
+            for child in self.sub_agent_conversations
+            if child.discard_calls_from(timestamp)
+        ]
+        self.queued_messages = []
+        self.settings.clear_command_approvals()
 
     def export_data(self, *, include_history: bool) -> dict[str, Any]:
         """Export conversation content without execution settings or pending input."""
@@ -67,6 +111,10 @@ class ChatSession(BaseModel):
     def add_message(self, message: ChatMessage) -> None:
         self.messages.append(message)
 
+    def with_message(self, message: ChatMessage) -> ChatSession:
+        """Return a snapshot with an independent message list and one appended item."""
+        return self.model_copy(update={"messages": [*self.messages, message]})
+
     def find_user_message(self, message_id: str) -> ChatMessage | None:
         for message in self.messages:
             found = message.find_user_message(message_id)
@@ -94,13 +142,7 @@ class ChatSession(BaseModel):
                 },
             )
         ]
-        revised.sub_agent_conversations = [
-            child
-            for child in revised.sub_agent_conversations
-            if child.discard_calls_from(cutoff)
-        ]
-        revised.queued_messages = []
-        revised.settings.clear_command_approvals()
+        revised._discard_branch_state_from(cutoff)
         return revised
 
     def _revision_boundary(

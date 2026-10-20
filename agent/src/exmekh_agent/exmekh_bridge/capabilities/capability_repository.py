@@ -13,12 +13,7 @@ from uuid import uuid4
 import yaml
 from exmekh_lib.config.capabilities import CAPABILITY_FORMAT
 from exmekh_lib.config.runtime import RUNTIME
-from exmekh_lib.core.agents.capabilities.defaults import (
-    HARNESS_NAMES,
-    MOCK_NAMES,
-    RUNTIME_NAMES,
-)
-from exmekh_lib.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.agents.node import DefaultCapabilities, ToolHooks
 
 from exmekh_agent.config import config
 from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
@@ -31,7 +26,7 @@ from exmekh_agent.utils.markdown import markdown_parts as markdown_parts
 
 BOARD_DEFAULTS = presentation_settings("agent_board")
 
-RUNTIME_TOOLS = RUNTIME_NAMES
+RUNTIME_TOOLS = RUNTIME.runtime_tool_names
 
 
 @dataclass(frozen=True)
@@ -67,6 +62,20 @@ class CapabilityRepository:
     def __init__(self, data_dir: Path | None = None) -> None:
         self._data_dir = data_dir or config.data_dir
         self._library_path = DefaultCapabilities().capabilities_path
+
+    def default_capabilities_for(
+        self, root_name: str, paths: list[Path], tool_hooks: dict[str, ToolHooks]
+    ) -> DefaultCapabilities:
+        """Include the bundled root only when external folders do not define it."""
+        external_root = any(
+            path.resolve() != self._library_path.resolve()
+            and (path / CAPABILITY_FORMAT.hds_folder / f"{root_name}.md").is_file()
+            for path in paths
+        )
+        return DefaultCapabilities(
+            include=[] if external_root else [AGENT_DEFAULTS["name_hds"]],
+            tool_hooks=tool_hooks,
+        )
 
     @staticmethod
     def folder_reference(path: str) -> str:
@@ -290,7 +299,12 @@ class CapabilityRepository:
     def _skill_dependencies(skill: DesignNode) -> list[tuple[str, str]]:
         metadata, _ = markdown_parts(skill.content)
         dependencies = []
-        for kind, key in (("skill", "sub-skills"), ("tool", "sub-tools")):
+        for kind, key in (
+            ("skill", "sub-skills"),
+            ("tool", "sub-tools"),
+            ("skill", "optional-sub-skills"),
+            ("tool", "optional-sub-tools"),
+        ):
             names = metadata.get(key)
             if names is None:
                 continue
@@ -319,6 +333,17 @@ class CapabilityRepository:
             if child is None:
                 source = catalog.get((kind, name))
                 if source is None:
+                    metadata, _ = markdown_parts(skill.content)
+                    key = (
+                        "optional-sub-skills"
+                        if kind == "skill"
+                        else "optional-sub-tools"
+                    )
+                    required_key = "sub-skills" if kind == "skill" else "sub-tools"
+                    if name in metadata.get(key, []) and name not in metadata.get(
+                        required_key, []
+                    ):
+                        continue
                     raise ValueError(
                         app_text(
                             "errors_capabilities.capability_repository.missing_capability_required_by",
@@ -374,6 +399,8 @@ class CapabilityRepository:
         design: AgentDesign, node: DesignNode, metadata: dict, instructions: str
     ) -> str:
         metadata = dict(metadata)
+        metadata.pop("optional-sub-skills", None)
+        metadata.pop("optional-sub-tools", None)
         metadata["sub-skills"] = [
             item.name for item in design.children(node.id, kind="skill")
         ]
@@ -469,9 +496,35 @@ class CapabilityRepository:
     def _is_bundled(self, node: DesignNode) -> bool:
         if node.name in RUNTIME_TOOLS and not node.source:
             return True
-        return node.name in HARNESS_NAMES | MOCK_NAMES and Path(
+        return node.name in DefaultCapabilities.catalog and Path(
             node.source
         ).is_relative_to(self._library_path)
+
+    def dependency_warnings(self, design: AgentDesign) -> list[str]:
+        """Check dependencies in each execution scope, including nested skills."""
+        warnings = []
+        for parent in design.nodes:
+            if parent.kind == "tool":
+                continue
+            children = design.children(parent.id)
+            names = {child.name for child in children}
+            for child in children:
+                entry = DefaultCapabilities.catalog.get(child.name)
+                if entry is None or child.kind != "tool":
+                    continue
+                if child.source and not self._is_bundled(child):
+                    continue
+                missing = set(entry.dependencies) - names
+                if missing:
+                    warnings.append(
+                        app_text(
+                            "agents.agent_designer.missing_dependencies",
+                            parent=parent.name,
+                            tool=child.name,
+                            dependencies=", ".join(sorted(missing)),
+                        )
+                    )
+        return warnings
 
     def _write_hds(self, folder: Path, hds: DesignNode, design: AgentDesign) -> None:
         metadata, body = markdown_parts(hds.content)

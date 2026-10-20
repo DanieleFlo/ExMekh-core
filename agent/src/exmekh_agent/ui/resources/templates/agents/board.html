@@ -1,3 +1,4 @@
+{% set selected_ids = selected_ids|default([selected_id]) %}
 <div class="agent-workbench" data-scope="{{ scope }}">
   <aside class="agent-palette">
     <h3>Capabilities</h3>
@@ -14,7 +15,7 @@
       <button type="button" data-board-pan="{{ direction }}"
               aria-label="Pan {{ direction }}" title="Pan {{ direction }}">{{ symbol }}</button>
       {% endfor %}
-      <span>Drag empty space to pan</span>
+      <span>Drag to pan · Right-drag to select · Ctrl/Cmd-click to toggle</span>
     </div>
     <div class="agent-board-viewport" tabindex="0" role="region" aria-label="Agent board">
       <div class="agent-board" data-node-width="{{ node_width }}" data-node-height="{{ node_height }}"
@@ -31,7 +32,8 @@
           {% endfor %}
         </svg>
         {% for item in nodes %}
-        <button type="button" class="agent-board-node{% if item.id == selected_id %} selected{% endif %}"
+        <button type="button" class="agent-board-node{% if item.id in selected_ids %} selected{% endif %}"
+                aria-pressed="{{ 'true' if item.id in selected_ids else 'false' }}"
                 data-node="{{ item.id }}"
                 style="left:{{ item.x }}px;top:{{ item.y }}px;--node-color:{{ colors[item.kind] }}">
           <small>{{ item.kind.upper() }}{% if item.id == root_id %} · ROOT{% endif %}</small>

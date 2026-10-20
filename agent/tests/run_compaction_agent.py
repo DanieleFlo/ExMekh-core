@@ -5,7 +5,6 @@ from __future__ import annotations
 from threading import Event
 from typing import Any
 
-from exmekh_lib.core.agents.node import DefaultCapabilities
 from nicegui import app
 
 from exmekh_agent.config import application, config
@@ -13,6 +12,7 @@ from exmekh_agent.exmekh_bridge.agents import agent_runner
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.graph.graph_data import build_graph_data_from_session
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.compaction_probe import CompactionProbeProvider
 
 provider = CompactionProbeProvider(rounds=3)
@@ -35,7 +35,7 @@ agent_runner.LocalProvider = lambda **kwargs: provider
 agent_runner.generate_chat_title_sync = lambda *args, **kwargs: "Compaction mock"
 config.default_model = "compaction-probe"
 config.reasoning_effort = "none"
-config.capabilities_path = str(DefaultCapabilities(mocks=True).capabilities_path)
+config.capabilities_path = str(TEST_CAPABILITIES)
 config.work_root = str(config.data_dir / "work")
 config.base_url = f"http://{config.host}:{config.port}/provider/v1"
 config.auto_compaction_threshold_percent = 80

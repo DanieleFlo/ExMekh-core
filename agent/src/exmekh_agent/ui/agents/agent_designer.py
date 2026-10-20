@@ -16,6 +16,7 @@ from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
 )
 from exmekh_agent.state.agent_design import AgentDesign, AgentProfile, DesignNode
 from exmekh_agent.state.design_history import DesignHistory, DesignSnapshot
+from exmekh_agent.state.design_selection import DesignSelection
 from exmekh_agent.ui.agents.capability_editor import CapabilityEditor
 from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 
@@ -30,7 +31,7 @@ class AgentDesigner:
         self._dialog: ui.dialog | None = None
         self._design = AgentDesign()
         self._catalog: list[DesignNode] = []
-        self._selected_id = ""
+        self._selection = DesignSelection()
         self._on_cancelled: Callable[[], None] | None = None
         self._on_saved: Callable[[AgentDesign], None] | None = None
         self._board: ui.html | None = None
@@ -81,6 +82,11 @@ class AgentDesigner:
                             .tooltip(ui_text("agents.agent_designer.undo_shortcut"))
                         )
                         self._undo_button.disable()
+                        ui.button(
+                            ui_text("agents.agent_designer.arrange"),
+                            icon="auto_fix_high",
+                            on_click=lambda: self._change_design(self._design.arrange),
+                        ).props(UI_PRESENTATION["build.props.flat"])
                         ui.button(
                             ui_text("agents.agent_designer.new_hds"),
                             icon=UI_PRESENTATION["build.icon.add"],
@@ -134,15 +140,21 @@ class AgentDesigner:
         self._generation += 1
         generation = self._generation
         self._refresh_timer.deactivate()
+        source_design = (
+            design.model_copy(deep=True, update={"capability_paths": list(paths)})
+            if design is not None and paths is not None
+            else design
+        )
         try:
             catalog = await asyncio.get_running_loop().run_in_executor(
                 None, partial(self._capabilities.catalog, paths)
             )
             updated_design = (
                 await asyncio.get_running_loop().run_in_executor(
-                    None, partial(self._capabilities.expand_skill_connections, design)
+                    None,
+                    partial(self._capabilities.expand_skill_connections, source_design),
                 )
-                if design
+                if source_design
                 else await asyncio.get_running_loop().run_in_executor(
                     None, partial(self._capabilities.default_design, profile, paths)
                 )
@@ -171,7 +183,7 @@ class AgentDesigner:
         self._design = updated_design
         self._on_saved = on_saved
         self._on_cancelled = on_cancelled
-        self._selected_id = self._design.root_id
+        self._select_nodes([self._design.root_id])
         self._history.clear()
         self._copied_sources.clear()
         with client:
@@ -211,30 +223,54 @@ class AgentDesigner:
         with client:
             self._catalog = refresh.catalog
             self._design = refresh.design
-            if not self._design.has_node(self._selected_id):
-                self._selected_id = self._design.root_id
             self._history.clear()
             self._render()
 
     def _render(self) -> None:
+        self._selection = self._selection.retain_existing(self._design)
         if self._undo_button:
             self._undo_button.set_enabled(self._history.can_undo)
         self._render_board()
         self._details.clear()
-        if self._selected_id:
-            with self._details:
-                self._render_details(self._design.node(self._selected_id))
+        with self._details:
+            for warning in self._capabilities.dependency_warnings(self._design):
+                ui.label(warning).classes(UI_PRESENTATION["dependency_warning.classes"])
+            if len(self._selection.node_ids) > 1:
+                ui.label(
+                    ui_text(
+                        "agents.agent_designer.selected_count",
+                        count=len(self._selection.node_ids),
+                    )
+                )
+                ui.button(
+                    ui_text("agents.agent_designer.disconnect_selected"),
+                    icon="link_off",
+                    on_click=self._disconnect_selected,
+                ).props(UI_PRESENTATION["collective.props"])
+                removable = set(self._selection.node_ids) - {self._design.root_id}
+                button = ui.button(
+                    ui_text("agents.agent_designer.remove_selected"),
+                    icon="delete_outline",
+                    on_click=self._remove_selected,
+                ).props(UI_PRESENTATION["remove_selected.props"])
+                button.set_enabled(bool(removable))
+            elif self._selection.primary_id:
+                self._render_details(self._design.node(self._selection.primary_id))
 
     def _change_design(self, change: Callable[[], None]) -> None:
-        before = DesignSnapshot.capture(self._design, self._catalog, self._selected_id)
+        before = DesignSnapshot.capture(self._design, self._catalog, self._selection)
+        previous_warnings = set(self._capabilities.dependency_warnings(self._design))
         change()
         self._history.record(before, self._design, self._catalog)
         if (
             before.design != self._design
             or before.catalog != self._catalog
-            or before.selected_id != self._selected_id
+            or before.selection != self._selection
         ):
             self._render()
+            for warning in self._capabilities.dependency_warnings(self._design):
+                if warning not in previous_warnings:
+                    ui.notify(warning, type="warning")
 
     def _undo(self) -> None:
         if self._saving:
@@ -244,7 +280,7 @@ class AgentDesigner:
             return
         self._design = snapshot.design
         self._catalog = snapshot.catalog
-        self._selected_id = snapshot.selected_id
+        self._selection = snapshot.selection
         self._render()
 
     def _render_board(self) -> None:
@@ -264,7 +300,8 @@ class AgentDesigner:
             catalog=self._catalog,
             nodes=nodes,
             connections=self._design.connected_nodes(),
-            selected_id=self._selected_id,
+            selected_id=self._selection.primary_id,
+            selected_ids=self._selection.node_ids,
             root_id=self._design.root_id,
             width=width,
             height=height,
@@ -365,59 +402,82 @@ class AgentDesigner:
 
     def _handle_action(self, event) -> None:
         data = event.args
-        if self._saving or data.get("scope") != self._scope or not self._dialog.value:
+        if (
+            not isinstance(data, dict)
+            or self._saving
+            or data.get("scope") != self._scope
+            or not self._dialog.value
+        ):
             return
-        if data["action"] == "undo":
+        action = data.get("action")
+        if action == "undo":
             self._undo()
             return
 
         def apply_action() -> None:
-            if data["action"] == "add":
-                original = next(node for node in self._catalog if node.id == data["id"])
-                node = original.model_copy(
-                    update={
-                        "x": max(
-                            0, float(data.get("x", BOARD_DEFAULTS["palette_node_x"]))
-                        ),
-                        "y": max(
-                            0,
-                            float(
-                                data.get(
-                                    "y",
-                                    max(
-                                        (item.y for item in self._design.nodes),
-                                        default=0,
-                                    )
-                                    + BOARD_DEFAULTS["palette_vertical_gap"],
-                                )
-                            ),
-                        ),
-                    },
-                    deep=True,
-                )
-                parent = self._design.node(self._selected_id)
-                parent_id = (
-                    parent.id
-                    if parent.kind in {"hds", "skill"}
-                    else self._design.root_id
-                )
-                self._design = self._capabilities.add_to_design(
-                    self._design, node, parent_id, self._catalog
-                )
-                self._selected_id = self._design.capability(node.kind, node.name).id
-            elif data["action"] == "move":
+            if action == "add":
+                self._add_capability(data)
+            elif action == "move":
                 self._design.move_node(data["id"], float(data["x"]), float(data["y"]))
-            elif data["action"] == "select":
-                self._selected_id = self._design.node(data["id"]).id
+            elif action == "move_many":
+                self._move_nodes(data["positions"], data["ids"])
+            elif action == "select":
+                self._select_nodes(
+                    data.get("ids", [data["id"]] if "id" in data else [])
+                )
 
         try:
-            if data["action"] == "select":
+            if action == "select":
                 apply_action()
                 self._render()
             else:
                 self._change_design(apply_action)
-        except (ValueError, StopIteration, KeyError) as error:
+        except (ValueError, TypeError, StopIteration, KeyError) as error:
             ui.notify(str(error), type="warning")
+
+    def _add_capability(self, data: dict) -> None:
+        original = next(node for node in self._catalog if node.id == data["id"])
+        default_y = (
+            max((node.y for node in self._design.nodes), default=0)
+            + BOARD_DEFAULTS["palette_vertical_gap"]
+        )
+        node = original.model_copy(
+            deep=True,
+            update={
+                "x": float(data.get("x", BOARD_DEFAULTS["palette_node_x"])),
+                "y": float(data.get("y", default_y)),
+            },
+        )
+        parent = self._design.node(self._selection.primary_id or self._design.root_id)
+        parent_id = (
+            parent.id if parent.kind in {"hds", "skill"} else self._design.root_id
+        )
+        self._design = self._capabilities.add_to_design(
+            self._design, node, parent_id, self._catalog
+        )
+        self._select_nodes([self._design.capability(node.kind, node.name).id])
+
+    def _move_nodes(self, positions: list[dict], ids: list[str]) -> None:
+        selection = DesignSelection.for_nodes(self._design, ids)
+        self._design.move_nodes(
+            {item["id"]: (float(item["x"]), float(item["y"])) for item in positions}
+        )
+        self._selection = selection
+
+    def _select_nodes(self, ids: list[str]) -> None:
+        self._selection = DesignSelection.for_nodes(self._design, ids)
+
+    def _remove_selected(self) -> None:
+        def remove() -> None:
+            self._design.remove_nodes(self._selection.node_ids)
+            self._select_nodes([self._design.root_id])
+
+        self._change_design(remove)
+
+    def _disconnect_selected(self) -> None:
+        self._change_design(
+            partial(self._design.disconnect_nodes, self._selection.node_ids)
+        )
 
     def _connect(self, parent: str, child: str | None) -> None:
         if not child:
@@ -436,7 +496,7 @@ class AgentDesigner:
     def _remove_node(self, node_id: str) -> None:
         def remove() -> None:
             self._design.remove_node(node_id)
-            self._selected_id = self._design.root_id
+            self._select_nodes([self._design.root_id])
 
         self._change_design(remove)
 
@@ -482,7 +542,7 @@ class AgentDesigner:
 
                     def add_node() -> None:
                         self._design.add_node(node, self._design.root_id)
-                        self._selected_id = node.id
+                        self._select_nodes([node.id])
 
                     self._change_design(add_node)
                 except ValueError as error:

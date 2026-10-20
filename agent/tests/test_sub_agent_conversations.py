@@ -335,7 +335,10 @@ def test_live_persistent_child_reuses_block_and_history_across_root_turns(
                 on_sub_agent_event=lambda event: apply_sub_agent_event(session, event),
                 on_raw_history=lambda history, _: raw_history.extend(history),
                 history=list(session.messages),
-                sub_agent_history=list(session.sub_agent_conversations),
+                sub_agent_history=[
+                    *session.sub_agent_conversations,
+                    SubAgentConversation(path="main/removed-agent"),
+                ],
                 agent_context_id=session.id,
             )
         session.messages.extend(

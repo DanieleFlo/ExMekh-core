@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 
 import pytest
 from exmekh_lib.core.agents.deep_agent import DeepAgentHistoryCompactionEvent
-from exmekh_lib.core.agents.node import DefaultCapabilities
 from exmekh_lib.core.models.assistant_message import (
     AssistantMessage,
     FunctionCall,
@@ -51,6 +50,7 @@ from exmekh_agent.exmekh_bridge.providers.provider_context import (
 from exmekh_agent.state.sub_agent_conversations import apply_sub_agent_event
 from exmekh_agent.ui.graph.graph_data import build_graph_data_from_session
 from exmekh_agent.ui.history.raw_history_view import build_raw_history_from_session
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.compaction_probe import CompactionProbeProvider
 from tests.image_samples import png_bytes
 
@@ -85,7 +85,7 @@ def run_turn(
         api_type="responses",
         reasoning_effort_str="none",
         agent_mode="deep_agent",
-        capabilities_path_str=str(DefaultCapabilities(mocks=True).capabilities_path),
+        capabilities_path_str=str(TEST_CAPABILITIES),
         name_hds="main",
         work_root=str(tmp_path),
         agent_context_id=session.id,
@@ -367,7 +367,7 @@ def test_child_compaction_keeps_separate_history_and_restores_it(probe, tmp_path
     probe.script = [
         tool_call(
             "call_sub_agent",
-            {"sub_agent": "mock-sub-agent", "text": "Child task"},
+            {"sub_agent": "coding-agent", "text": "Child task"},
             "delegate",
         ),
         tool_call(
@@ -397,7 +397,7 @@ def test_child_compaction_keeps_separate_history_and_restores_it(probe, tmp_path
     probe.script = [
         tool_call(
             "call_sub_agent",
-            {"sub_agent": "mock-sub-agent", "text": "Child again"},
+            {"sub_agent": "coding-agent", "text": "Child again"},
             "delegate2",
         ),
         AssistantMessage("CHILD_AGAIN"),

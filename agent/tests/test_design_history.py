@@ -6,6 +6,7 @@ import pytest
 
 from exmekh_agent.state.agent_design import AgentDesign, DesignLink, DesignNode
 from exmekh_agent.state.design_history import DesignHistory, DesignSnapshot
+from exmekh_agent.state.design_selection import DesignSelection
 
 
 def make_design():
@@ -77,7 +78,9 @@ def test_every_edit_restores_nodes_links_root_history_catalog_and_selection():
     snapshots = []
 
     def edit(operation, selected="root"):
-        before = DesignSnapshot.capture(design, catalog, selected)
+        before = DesignSnapshot.capture(
+            design, catalog, DesignSelection.for_nodes(design, [selected])
+        )
         snapshots.append(deepcopy(before))
         operation()
         history.record(before, design, catalog)
@@ -113,7 +116,9 @@ def test_undo_ignores_noop_changes_and_reset_discards_previous_editor_session():
     design = make_design()
     catalog = []
     history = DesignHistory()
-    before = DesignSnapshot.capture(design, catalog, "root")
+    before = DesignSnapshot.capture(
+        design, catalog, DesignSelection.for_nodes(design, ["root"])
+    )
     design.move_node("root", design.node("root").x, design.node("root").y)
     history.record(before, design, catalog)
     assert not history.can_undo

@@ -7,7 +7,6 @@ import time
 from threading import Event
 from typing import Any
 
-from exmekh_lib.core.agents.node import DefaultCapabilities
 from exmekh_lib.core.models.assistant_message import (
     AssistantMessage,
     FunctionCall,
@@ -28,6 +27,7 @@ from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.settings import settings_drawer
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.mock_client import MockClient, MockProvider
 
 
@@ -121,7 +121,7 @@ agent_runner.LocalProvider = lambda *args, **kwargs: provider
 agent_runner.Client = MockClient
 config.default_model = "edit-test-model"
 config.reasoning_effort = "none"
-config.capabilities_path = str(DefaultCapabilities(mocks=True).capabilities_path)
+config.capabilities_path = str(TEST_CAPABILITIES)
 config.work_root = str(config.data_dir / "work")
 
 

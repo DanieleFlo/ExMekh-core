@@ -31,6 +31,7 @@ class ProjectSettingsDialogComponent:
         self._settings = ProjectSettings()
         self.capability_paths = CapabilityPathsEditor(config.capabilities_path)
         self.approval_select: ui.select | None = None
+        self.schema_descriptions: ui.switch | None = None
         self.root_label: ui.label | None = None
         self.agent_selector = AgentSelector(self.capability_paths.all_paths)
 
@@ -57,6 +58,12 @@ class ProjectSettingsDialogComponent:
                 UI_PRESENTATION["build.classes.text_xs_text_zinc_400_break_all"]
             )
             self.agent_selector.build()
+            self.schema_descriptions = ui.switch(
+                ui_text("settings.project_settings_dialog.schema_descriptions")
+            )
+            ui.label(
+                ui_text("settings.project_settings_dialog.schema_descriptions_hint")
+            ).classes(UI_PRESENTATION["build.classes.text_xs_text_zinc_400"])
             self.approval_select = (
                 ui.select(
                     TOOL_APPROVAL_MODES,
@@ -111,6 +118,7 @@ class ProjectSettingsDialogComponent:
             settings.tool_approval_mode
         )
         self.agent_selector.set_value(settings.agent_profile, settings.agent_design)
+        self.schema_descriptions.value = settings.parameter_descriptions_in_schema
         self.dialog.open()
 
     def close(self) -> None:
@@ -126,6 +134,7 @@ class ProjectSettingsDialogComponent:
         ).model_copy(
             update={
                 "tool_approval_mode": self.approval_select.value,
+                "parameter_descriptions_in_schema": self.schema_descriptions.value,
             }
         )
         settings = self.agent_selector.apply_to(settings)

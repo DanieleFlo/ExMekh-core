@@ -8,7 +8,6 @@ from unittest.mock import patch
 from xml.etree import ElementTree as ET
 
 import pytest
-from exmekh_lib.core.agents.node import DefaultCapabilities
 from PIL import Image
 
 from exmekh_agent.exmekh_bridge.agents.agent_runner import run_agent_turn
@@ -20,6 +19,7 @@ from exmekh_agent.exmekh_bridge.models import (
     ChatSettings,
     QueuedMessage,
 )
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.steering_probe import SteeringProbeProvider
 
 
@@ -38,7 +38,7 @@ async def test_saved_steering_is_discovered_and_read_in_later_fe_turns(
     collector = TurnStreamCollector()
     settings = ChatSettings(
         work_root=str(tmp_path),
-        capabilities_path=str(DefaultCapabilities(mocks=True).capabilities_path),
+        capabilities_path=str(TEST_CAPABILITIES),
         tool_approval_mode="Approve All",
     )
     guidance = QueuedMessage(

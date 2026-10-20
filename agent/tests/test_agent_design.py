@@ -20,6 +20,7 @@ from exmekh_agent.state.agent_design import (
     DesignNode,
 )
 from exmekh_agent.state.session_manager import SessionManager
+from tests.capability_fixtures import TEST_CAPABILITIES
 
 
 @pytest.mark.parametrize("profile", ["generic", "programmer", "creative", "custom"])
@@ -122,7 +123,7 @@ def test_graph_errors_and_cycles():
 
 def test_copies_preserve_sources_and_compile_dependency_closure(tmp_path: Path):
     with patch.object(config, "data_dir", tmp_path / "app"):
-        catalog = CapabilityRepository().catalog()
+        catalog = CapabilityRepository().catalog([str(TEST_CAPABILITIES)])
         skill = next(node for node in catalog if node.name == "deep-thinking")
         tool = next(node for node in catalog if node.name == "mock-tool")
         original_skill, original_tool = (
@@ -153,7 +154,8 @@ def test_copies_preserve_sources_and_compile_dependency_closure(tmp_path: Path):
         assert "my-tool" in {item.get_name() for item in data.tools}
         assert "calculate" in {item.get_name() for item in data.tools}
         available = {
-            (item.kind, item.name) for item in CapabilityRepository().catalog()
+            (item.kind, item.name)
+            for item in CapabilityRepository().catalog([str(TEST_CAPABILITIES)])
         }
         assert {
             ("skill", "deep-thinking"),
@@ -365,7 +367,9 @@ def test_user_tool_sharing_a_builtin_name_is_not_replaced_by_the_library(
         compiled.capabilities_for(root.id) / "tools" / "calculate" / "main.py"
     ).read_text() == content
     default_tool = next(
-        item for item in repository.catalog() if item.name == "mock-tool"
+        item
+        for item in repository.catalog([str(TEST_CAPABILITIES)])
+        if item.name == "mock-tool"
     )
     with pytest.raises(ValueError, match="already exists"):
         repository.copy_capability(default_tool, "calculate", default_tool.content)
@@ -385,13 +389,13 @@ def test_invalid_profile_updates_do_not_write_or_mutate_a_chat(tmp_path: Path):
 
 def test_skill_dependencies_are_visible_shared_and_migrated_only_once(tmp_path: Path):
     repository = CapabilityRepository(tmp_path / "data")
-    design = repository.default_design("generic")
+    design = repository.default_design("generic", [str(TEST_CAPABILITIES)])
     thinking = design.capability("skill", "deep-thinking")
     calculate = design.capability("tool", "calculate")
     assert design.skill_connections_explicit
     assert calculate in design.children(thinking.id)
     assert calculate not in design.children(design.root_id)
-    catalog = repository.catalog()
+    catalog = repository.catalog([str(TEST_CAPABILITIES)])
     mock = next(item for item in catalog if item.name == "mock-skill")
     expanded = repository.add_to_design(design, mock, design.root_id, catalog)
     mock = expanded.capability("skill", "mock-skill")
@@ -419,6 +423,7 @@ def test_skill_dependencies_are_visible_shared_and_migrated_only_once(tmp_path: 
             "nodes": [design.node(design.root_id).model_dump(), mock.model_dump()],
             "links": [{"parent": design.root_id, "child": mock.id}],
             "root_id": design.root_id,
+            "capability_paths": [str(TEST_CAPABILITIES)],
         }
     )
     migrated = repository.expand_skill_connections(legacy)
@@ -430,8 +435,8 @@ def test_skill_edits_save_prose_and_description_with_dependencies_from_connectio
     tmp_path: Path,
 ):
     repository = CapabilityRepository(tmp_path / "data")
-    design = repository.default_design("generic")
-    catalog = repository.catalog()
+    design = repository.default_design("generic", [str(TEST_CAPABILITIES)])
+    catalog = repository.catalog([str(TEST_CAPABILITIES)])
     mock = next(item for item in catalog if item.name == "mock-skill")
     original = Path(mock.source).read_bytes()
     design = repository.add_to_design(design, mock, design.root_id, catalog)
@@ -477,7 +482,7 @@ def test_builtin_skill_connections_override_yaml_without_altering_original(
     tmp_path: Path,
 ):
     repository = CapabilityRepository(tmp_path / "data")
-    design = repository.default_design("generic")
+    design = repository.default_design("generic", [str(TEST_CAPABILITIES)])
     skill = design.capability("skill", "deep-thinking")
     original = Path(skill.source).read_bytes()
     calculate = design.capability("tool", "calculate")
@@ -517,7 +522,7 @@ def test_invalid_skill_dependency_metadata_is_rejected(dependencies: str):
 
 def test_skill_connections_reject_hds_and_recursive_cycles_without_partial_changes():
     repository = CapabilityRepository()
-    design = repository.default_design("generic")
+    design = repository.default_design("generic", [str(TEST_CAPABILITIES)])
     skill = design.capability("skill", "deep-thinking")
     child = design.capability("hds", "coding-agent")
     before = design.model_dump()
@@ -540,8 +545,8 @@ def test_skill_connections_reject_hds_and_recursive_cycles_without_partial_chang
 
 def test_adding_a_tool_does_not_import_unrelated_skill_dependencies(tmp_path: Path):
     repository = CapabilityRepository(tmp_path / "data")
-    design = repository.default_design("generic")
-    catalog = repository.catalog()
+    design = repository.default_design("generic", [str(TEST_CAPABILITIES)])
+    catalog = repository.catalog([str(TEST_CAPABILITIES)])
     tool = next(
         item for item in catalog if item.kind == "tool" and item.name == "mock-sub-tool"
     )
@@ -553,12 +558,14 @@ def test_adding_a_tool_does_not_import_unrelated_skill_dependencies(tmp_path: Pa
     assert updated.capability("skill", "mock-skill") is None
     assert design.model_dump() == before
     compiled = repository.compile(updated)
-    assert tool.name in compiled.default_names_for(updated.root_id)
+    assert (
+        compiled.capabilities_for(updated.root_id) / "tools" / tool.name / "main.py"
+    ).is_file()
 
 
 def test_default_board_uses_current_harness_selection(tmp_path: Path):
     repository = CapabilityRepository(tmp_path)
-    catalog = repository.catalog()
+    catalog = repository.catalog([str(TEST_CAPABILITIES)])
     added = DesignNode(kind="tool", name="new-harness-tool")
     names = DefaultCapabilities().selected_names | {added.name}
     with (

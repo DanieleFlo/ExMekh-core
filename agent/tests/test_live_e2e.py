@@ -22,6 +22,7 @@ from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.navigation.header import HeaderComponent
 from exmekh_agent.ui.navigation.sidebar import SidebarComponent
 from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
+from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.live_file_support import verify_file_effects
 
 load_dotenv()
@@ -37,7 +38,10 @@ def safe_print(msg: str) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def check_real_provider_available(request: pytest.FixtureRequest) -> None:
+async def check_real_provider_available(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(config, "capabilities_path", str(TEST_CAPABILITIES))
     if request.node.name == "test_live_web_ui_components_init":
         return
     is_alive, models = await check_provider_health()
