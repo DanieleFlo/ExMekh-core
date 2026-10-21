@@ -1,0 +1,2701 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-21",
+  "source_head": "d48d8c18f36d9e3c266f7ce3bfa9a9ce29808530",
+  "source_state": "uncommitted implementation, no staging or commit",
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "hardware": "NVIDIA GeForce RTX 3090, 617.42, 24576 MiB",
+  "profile": "bf16-native-v1; BF16 tensors, FP32 accumulation, serial CUDA sm_86",
+  "tasks": {
+    "T09": {
+      "status": "DONE",
+      "scope": "resident cached official eight-step recipe; same-input full/cache equivalence"
+    },
+    "T10": {
+      "status": "DONE",
+      "scope": "image-only VAE, normalized latents, full/tiled RGBA decode and PNG host lifetime"
+    }
+  },
+  "comparisons": [
+    {
+      "case": "dit-text",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 295,
+      "required_max_relative_l2": 0.0,
+      "required_max_rmse": 0.0,
+      "diagnostic_failed": [],
+      "result_boundaries": [
+        {
+          "name": "step-7-latent-7.f32",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true,
+          "required": true,
+          "native_sha256": "6839ef17ef02e2796e6c4862df70d256a9124000aaf7ad9fff016c740e0e3ef8"
+        },
+        {
+          "name": "cache-same-input-1",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-2",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-3",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-4",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-5",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-6",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-7",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true
+        }
+      ],
+      "png_alpha_preserved": null,
+      "oracle_metadata": {
+        "fixture_sha256": "b11f2f2846b016c387d85c02e232d4191282d7afa747195c3afa1370eb273a90",
+        "shapes": [
+          [
+            8,
+            12
+          ]
+        ],
+        "steps": 8,
+        "cfg": 1,
+        "attention": "math SDPA FP32 intermediate",
+        "peak": 14273912832
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-text/oracle.json",
+        "bytes": 235,
+        "sha256": "d30e1a842a3ea643c34e53b25348a3907d0a218a2904aa001849243399b01f6a"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-text/input.ds4g",
+        "bytes": 188460,
+        "sha256": "b11f2f2846b016c387d85c02e232d4191282d7afa747195c3afa1370eb273a90"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-text-comparison.json",
+      "bytes": 83023,
+      "sha256": "cbbe0ca14acf5a54f9eccae337129193c4d8fcfebaba5dc7388ffd891d8c8fc1",
+      "numeric_live_at_step_end_bytes": [
+        14249539584,
+        14249539584,
+        14249539584,
+        14249539584,
+        14249539584,
+        14249539584,
+        14249539584,
+        14249539584
+      ]
+    },
+    {
+      "case": "dit-reference",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 288,
+      "required_max_relative_l2": 0.0046964106436942505,
+      "required_max_rmse": 0.009931250982959933,
+      "diagnostic_failed": [],
+      "result_boundaries": [
+        {
+          "name": "step-7-latent-7.f32",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true,
+          "required": true,
+          "native_sha256": "9ccff311bf8376a4243a1b522f381d52ca77304d64297c3f49c71258972d7d9e"
+        },
+        {
+          "name": "cache-same-input-1",
+          "max_abs": 0.078125,
+          "rmse": 0.009931250982959933,
+          "relative_l2": 0.0046964106436942505,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-2",
+          "max_abs": 0.03515625,
+          "rmse": 0.007453437794190216,
+          "relative_l2": 0.003781137472062596,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-3",
+          "max_abs": 0.125,
+          "rmse": 0.00780359631532753,
+          "relative_l2": 0.0040768427208760635,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-4",
+          "max_abs": 0.03125,
+          "rmse": 0.00569465134096614,
+          "relative_l2": 0.003016316466899275,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-5",
+          "max_abs": 0.04296875,
+          "rmse": 0.006464633773882754,
+          "relative_l2": 0.0034840016931049914,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-6",
+          "max_abs": 0.03125,
+          "rmse": 0.005848764838603155,
+          "relative_l2": 0.003221364484130301,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-7",
+          "max_abs": 0.03125,
+          "rmse": 0.00749630143553735,
+          "relative_l2": 0.004230893722560121,
+          "bit_exact": false,
+          "passed": true
+        }
+      ],
+      "png_alpha_preserved": null,
+      "oracle_metadata": {
+        "fixture_sha256": "50a546dd8698d11fa89d650a17eebcd1e0edd4cf93148f6b920cea520b7eceb9",
+        "shapes": [
+          [
+            16,
+            16
+          ],
+          [
+            16,
+            16
+          ]
+        ],
+        "steps": 8,
+        "cfg": 1,
+        "attention": "math SDPA FP32 intermediate",
+        "peak": 14496163328
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reference/oracle.json",
+        "bytes": 268,
+        "sha256": "ad6f7542e77d3222ac07db99c2c0440670ab0e73a36ab8fff0e12e9770e95a41"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reference/input.ds4g",
+        "bytes": 835706,
+        "sha256": "50a546dd8698d11fa89d650a17eebcd1e0edd4cf93148f6b920cea520b7eceb9"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-reference-comparison.json",
+      "bytes": 83595,
+      "sha256": "4b6de47348af6f4d617c9d83d8adb1eb9d7ebf5fb01552cbfc14f279caed73b2",
+      "numeric_live_at_step_end_bytes": [
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712
+      ]
+    },
+    {
+      "case": "dit-multi",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 288,
+      "required_max_relative_l2": 0.005250152073640052,
+      "required_max_rmse": 0.009937720722953094,
+      "diagnostic_failed": [],
+      "result_boundaries": [
+        {
+          "name": "step-7-latent-7.f32",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true,
+          "required": true,
+          "native_sha256": "64a8b41bbe1f207e8b35d58c982185de35958b010dfd2cf8ba76f9da42a84cd9"
+        },
+        {
+          "name": "cache-same-input-1",
+          "max_abs": 0.078125,
+          "rmse": 0.009887023068758695,
+          "relative_l2": 0.00477986688940942,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-2",
+          "max_abs": 0.03125,
+          "rmse": 0.0065762756560371815,
+          "relative_l2": 0.0033436532733856204,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-3",
+          "max_abs": 0.03125,
+          "rmse": 0.006183630848066106,
+          "relative_l2": 0.003222368409275457,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-4",
+          "max_abs": 0.27734375,
+          "rmse": 0.009937720722953094,
+          "relative_l2": 0.005250152073640052,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-5",
+          "max_abs": 0.08203125,
+          "rmse": 0.00694083808085659,
+          "relative_l2": 0.0037345731925754644,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-6",
+          "max_abs": 0.03125,
+          "rmse": 0.006029071673434501,
+          "relative_l2": 0.0033273008427163265,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-7",
+          "max_abs": 0.03125,
+          "rmse": 0.0075150874706144365,
+          "relative_l2": 0.004234344257179816,
+          "bit_exact": false,
+          "passed": true
+        }
+      ],
+      "png_alpha_preserved": null,
+      "oracle_metadata": {
+        "fixture_sha256": "e247b885357ad9911f0898a397db7fa8f1edfe342becd15d3950cf4c0a105cc0",
+        "shapes": [
+          [
+            16,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            16,
+            16
+          ]
+        ],
+        "steps": 8,
+        "cfg": 1,
+        "attention": "math SDPA FP32 intermediate",
+        "peak": 14683054080
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-multi/oracle.json",
+        "bytes": 300,
+        "sha256": "1c8a73428e7017200b9461336a06b7727fe446fbbab6ba9dd4fe479ee9627603"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-multi/input.ds4g",
+        "bytes": 1441992,
+        "sha256": "e247b885357ad9911f0898a397db7fa8f1edfe342becd15d3950cf4c0a105cc0"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-multi-comparison.json",
+      "bytes": 83594,
+      "sha256": "125cee7a5754716f842cbd38f92c34c6d458672880dddb151cccf46636b9ff88",
+      "numeric_live_at_step_end_bytes": [
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520
+      ]
+    },
+    {
+      "case": "dit-rgba",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 288,
+      "required_max_relative_l2": 0.004837514172407188,
+      "required_max_rmse": 0.00947676644524031,
+      "diagnostic_failed": [],
+      "result_boundaries": [
+        {
+          "name": "step-7-latent-7.f32",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true,
+          "required": true,
+          "native_sha256": "d251d75717afb0325c99b9125159c8a954f03b6d97c739ad79216987ee7d3115"
+        },
+        {
+          "name": "cache-same-input-1",
+          "max_abs": 0.234375,
+          "rmse": 0.00947676644524031,
+          "relative_l2": 0.004529343190457727,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-2",
+          "max_abs": 0.11328125,
+          "rmse": 0.009442521609555016,
+          "relative_l2": 0.004837514172407188,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-3",
+          "max_abs": 0.03125,
+          "rmse": 0.005942291078416422,
+          "relative_l2": 0.003126114940423275,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-4",
+          "max_abs": 0.046875,
+          "rmse": 0.006678714390532682,
+          "relative_l2": 0.003562807904489587,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-5",
+          "max_abs": 0.140625,
+          "rmse": 0.008641492873727324,
+          "relative_l2": 0.0046787556123385875,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-6",
+          "max_abs": 0.03125,
+          "rmse": 0.005838397022401523,
+          "relative_l2": 0.0032312048496099645,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-7",
+          "max_abs": 0.046875,
+          "rmse": 0.007488855516489958,
+          "relative_l2": 0.0042506817603797774,
+          "bit_exact": false,
+          "passed": true
+        }
+      ],
+      "png_alpha_preserved": null,
+      "oracle_metadata": {
+        "fixture_sha256": "5d5b0fa64eb8a33014284c1d6ba30e72427e9ffe134227ae2ca89f28797ad60f",
+        "shapes": [
+          [
+            16,
+            16
+          ],
+          [
+            16,
+            16
+          ]
+        ],
+        "steps": 8,
+        "cfg": 1,
+        "attention": "math SDPA FP32 intermediate",
+        "peak": 14683054080
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-rgba/oracle.json",
+        "bytes": 268,
+        "sha256": "e538665c8d560731c521e09c20e579f27218de0ab8e2d505181869221ee9d98e"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-rgba/input.ds4g",
+        "bytes": 835706,
+        "sha256": "5d5b0fa64eb8a33014284c1d6ba30e72427e9ffe134227ae2ca89f28797ad60f"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-rgba-comparison.json",
+      "bytes": 83591,
+      "sha256": "6f4f43bcad02418a583f1f325361e486dae423442e9d662737c0c0b2be621b8c",
+      "numeric_live_at_step_end_bytes": [
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712,
+        14387827712
+      ]
+    },
+    {
+      "case": "dit-reversed",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 288,
+      "required_max_relative_l2": 0.005137446485077386,
+      "required_max_rmse": 0.010559493229064833,
+      "diagnostic_failed": [
+        {
+          "name": "uncached-trajectory-7",
+          "max_abs": 0.205078125,
+          "rmse": 0.018324133456633255,
+          "relative_l2": 0.011840994554932328,
+          "bit_exact": false,
+          "passed": false,
+          "required": false
+        }
+      ],
+      "result_boundaries": [
+        {
+          "name": "step-7-latent-7.f32",
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "passed": true,
+          "required": true,
+          "native_sha256": "a1c5fc76a03fc6ecfa4353a84a779daabc50e1a42e464e46af2e907cf43635a4"
+        },
+        {
+          "name": "cache-same-input-1",
+          "max_abs": 0.09375,
+          "rmse": 0.010559493229064833,
+          "relative_l2": 0.005137446485077386,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-2",
+          "max_abs": 0.0703125,
+          "rmse": 0.007179730342510868,
+          "relative_l2": 0.0036623205006716102,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-3",
+          "max_abs": 0.03125,
+          "rmse": 0.006403174911784487,
+          "relative_l2": 0.0033380725361285297,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-4",
+          "max_abs": 0.2890625,
+          "rmse": 0.009526477567579914,
+          "relative_l2": 0.005043648394942058,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-5",
+          "max_abs": 0.03125,
+          "rmse": 0.005903765332047974,
+          "relative_l2": 0.0031812090755069158,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-6",
+          "max_abs": 0.03125,
+          "rmse": 0.005872633395983501,
+          "relative_l2": 0.0032441164366039596,
+          "bit_exact": false,
+          "passed": true
+        },
+        {
+          "name": "cache-same-input-7",
+          "max_abs": 0.03125,
+          "rmse": 0.007452820380768489,
+          "relative_l2": 0.004199336266721835,
+          "bit_exact": false,
+          "passed": true
+        }
+      ],
+      "png_alpha_preserved": null,
+      "oracle_metadata": {
+        "fixture_sha256": "b02a0c447926fd13396a649411ce063de8c328e46f789b769fc5d792eaad9fb2",
+        "shapes": [
+          [
+            16,
+            16
+          ],
+          [
+            16,
+            16
+          ],
+          [
+            16,
+            16
+          ]
+        ],
+        "steps": 8,
+        "cfg": 1,
+        "attention": "math SDPA FP32 intermediate",
+        "peak": 14685970432
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reversed/oracle.json",
+        "bytes": 300,
+        "sha256": "e69c0ded07626ef358bc2d0a805480440bf4c69d0974baa958085a2f66965b68"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reversed/input.ds4g",
+        "bytes": 1441992,
+        "sha256": "b02a0c447926fd13396a649411ce063de8c328e46f789b769fc5d792eaad9fb2"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-reversed-comparison.json",
+      "bytes": 83601,
+      "sha256": "c98ec28f9dc3ebfcc4a20722e354297840e4902acf7afaebe0a30622f276cdd9",
+      "numeric_live_at_step_end_bytes": [
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520,
+        14525931520
+      ]
+    },
+    {
+      "case": "vae-rgba",
+      "passed": true,
+      "required_count": 2,
+      "bit_exact_required": 0,
+      "required_max_relative_l2": 0.004314120696905077,
+      "required_max_rmse": 0.0038638796077101996,
+      "diagnostic_failed": [
+        {
+          "name": "decoder-2.bf16",
+          "max_abs": 0.5,
+          "rmse": 0.03224541951153524,
+          "relative_l2": 0.0036645975831625984,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "f7d903407d7ea3197179e0ec539aed9ec8ba8d7136a3554bf3b9d0c7fb72b3ad"
+        },
+        {
+          "name": "decoder-3.bf16",
+          "max_abs": 2.0,
+          "rmse": 0.0913574475396435,
+          "relative_l2": 0.006219630419001488,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "aeebc2658447abb0a4625abb9239ea7cc503229503e13524bf747c207629eeb7"
+        },
+        {
+          "name": "decoder-4.bf16",
+          "max_abs": 0.5,
+          "rmse": 0.04123395777768785,
+          "relative_l2": 0.004330224414849077,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "fca8b3d94e1cfe818ef7325a3534c0f9e5095e72844c17cfbfc85509036b9b33"
+        },
+        {
+          "name": "encoder-2.bf16",
+          "max_abs": 0.5625,
+          "rmse": 0.026746851078668622,
+          "relative_l2": 0.005362353016365486,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "7d0fd837dae0740b3576c9dae0820c415114f47622c31f3b473f9386acf8c9ca"
+        },
+        {
+          "name": "encoder-3.bf16",
+          "max_abs": 3.0,
+          "rmse": 0.06854641679208304,
+          "relative_l2": 0.006248395178763741,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "ffdffa315f6a2b2357de7569ed11e2253a1427882f66c15bdbfd058c6dace833"
+        },
+        {
+          "name": "encoder-4.bf16",
+          "max_abs": 5.875,
+          "rmse": 0.15023394124975797,
+          "relative_l2": 0.006265111141797263,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "2466b6fb04951ca7ba387e266ad7502ee8aaae11053ecd5ebee0474962f321fd"
+        },
+        {
+          "name": "encoder-5.bf16",
+          "max_abs": 5.71875,
+          "rmse": 0.19113651367901568,
+          "relative_l2": 0.004795667675228089,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "b812f8cc39cef46f5c57f060bcf5fa909b8465059e921c9f5edd56ba73b9a324"
+        }
+      ],
+      "result_boundaries": [
+        {
+          "name": "encoded-0.bf16",
+          "max_abs": 0.03125,
+          "rmse": 0.0038638796077101996,
+          "relative_l2": 0.004314120696905077,
+          "bit_exact": false,
+          "passed": true,
+          "required": true,
+          "native_sha256": "eef2c9f2abb474b0ec7a0cfab09a731e79db7f62f64bbf1067fa959be02b0f58"
+        },
+        {
+          "name": "pixels.f32",
+          "max_abs": 0.00390625,
+          "rmse": 0.0008648433964072289,
+          "relative_l2": 0.0018185524494672436,
+          "bit_exact": false,
+          "ssim_rgb": 0.999691930857084,
+          "alpha_mae": 0.00031248728434244793,
+          "passed": true,
+          "required": true,
+          "native_sha256": "fadb71a645df4909587b904cd8f5671be98b2ef5929aa759365f6fd742295f42"
+        }
+      ],
+      "png_alpha_preserved": true,
+      "oracle_metadata": {
+        "fixture_sha256": "716a84e1bb4c34752eec72b83d15e9f01d3d667ec8ffca6db0e6c55df2162672",
+        "width": 96,
+        "height": 64,
+        "peak": 733078528
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-rgba/oracle.json",
+        "bytes": 143,
+        "sha256": "7f0466749e1019fb048e09993f8628551b2590846682f497320a72d7b4a58212"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-rgba/input.ds4v",
+        "bytes": 24588,
+        "sha256": "716a84e1bb4c34752eec72b83d15e9f01d3d667ec8ffca6db0e6c55df2162672"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgba-comparison.json",
+      "bytes": 4737,
+      "sha256": "e18c1122b61e0eb0d7a0e178e5a755cbe26f1030109f3032e4317beb85d7f2f9"
+    },
+    {
+      "case": "vae-transparent",
+      "passed": true,
+      "required_count": 2,
+      "bit_exact_required": 0,
+      "required_max_relative_l2": 0.004705016946793026,
+      "required_max_rmse": 0.004818482401155097,
+      "diagnostic_failed": [
+        {
+          "name": "decoder-2.bf16",
+          "max_abs": 256.0,
+          "rmse": 9.955192785821191,
+          "relative_l2": 0.0023402356225920196,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "3297af2e343b67d4d8d3e3bcd7ab3428ef8a2df0aefbbd10b5984f64891d5acf"
+        },
+        {
+          "name": "decoder-3.bf16",
+          "max_abs": 16384.0,
+          "rmse": 355.8327931062478,
+          "relative_l2": 0.00244814198832135,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "15d47cf874405131a54531a45300a1d605bae93fa7090d69f8cab598b4c03d31"
+        },
+        {
+          "name": "decoder-4.bf16",
+          "max_abs": 8192.0,
+          "rmse": 336.1732648780329,
+          "relative_l2": 0.0023781313259143323,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "48ca044b316be3dbc7c713bcdb6c735cd89627d58dc4a30965f8cc1b26f0b15b"
+        },
+        {
+          "name": "encoder-2.bf16",
+          "max_abs": 0.25,
+          "rmse": 0.027518596059861435,
+          "relative_l2": 0.00547237084380319,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "04187fa9e661d12162d222e668f437f57c639e57980d7c66b14de295a144eda2"
+        },
+        {
+          "name": "encoder-3.bf16",
+          "max_abs": 0.53125,
+          "rmse": 0.07453640508681303,
+          "relative_l2": 0.007339527854996264,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "ac777d76526ff934f63893fe83b246c714ddd059d73759052a1d5f06975e0bd7"
+        },
+        {
+          "name": "encoder-4.bf16",
+          "max_abs": 2.0,
+          "rmse": 0.16175014072942237,
+          "relative_l2": 0.0070621303197106475,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "1d44938dfdb634422887f20a4a266cae26391ccb6f1a435fec44b1c0eba37d9d"
+        },
+        {
+          "name": "encoder-5.bf16",
+          "max_abs": 2.0,
+          "rmse": 0.20444600003589092,
+          "relative_l2": 0.005781839230510272,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "29c83e1718f8dbd619c790556590c5e7054e45318b4cac857d2222224db02236"
+        }
+      ],
+      "result_boundaries": [
+        {
+          "name": "encoded-0.bf16",
+          "max_abs": 0.03125,
+          "rmse": 0.004818482401155097,
+          "relative_l2": 0.004705016946793026,
+          "bit_exact": false,
+          "passed": true,
+          "required": true,
+          "native_sha256": "314cafd3d867d5a26c36c36ce1d2ac59ef2aafd6a4bd8139e05362077a0d24be"
+        },
+        {
+          "name": "pixels.f32",
+          "max_abs": 0.00390625,
+          "rmse": 0.0009998075308117918,
+          "relative_l2": 0.0019402797445285073,
+          "bit_exact": false,
+          "ssim_rgb": 0.999559012713876,
+          "alpha_mae": 0.0005970001220703125,
+          "passed": true,
+          "required": true,
+          "native_sha256": "eb27e1560699c15a35aeeb0347b3bf7b6b4bcca9cf8c6579f08e19a259f36c37"
+        }
+      ],
+      "png_alpha_preserved": true,
+      "oracle_metadata": {
+        "fixture_sha256": "0f778a899fc28bc3ed5d4bcc43b48db75fde1b7c5d89f47e2a7e67498b6b18ae",
+        "width": 96,
+        "height": 64,
+        "peak": 733127680
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-transparent/oracle.json",
+        "bytes": 143,
+        "sha256": "b86b2a53ae72ec3aceab234f18dc8d9c1e29f749500facbe76c4e401d1462534"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-transparent/input.ds4v",
+        "bytes": 24588,
+        "sha256": "0f778a899fc28bc3ed5d4bcc43b48db75fde1b7c5d89f47e2a7e67498b6b18ae"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-transparent-comparison.json",
+      "bytes": 4778,
+      "sha256": "ad1edce105c6bd2843747216c0d432a4c4b154e6592f74a83f3a89ef215840dd"
+    },
+    {
+      "case": "vae-rgb",
+      "passed": true,
+      "required_count": 2,
+      "bit_exact_required": 0,
+      "required_max_relative_l2": 0.003911605606393988,
+      "required_max_rmse": 0.0040557931304097,
+      "diagnostic_failed": [
+        {
+          "name": "decoder-2.bf16",
+          "max_abs": 0.5,
+          "rmse": 0.038068484166849874,
+          "relative_l2": 0.003128416449854805,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "45827fa7623e12b3349a55b1e0f92139f0a47048da13c9ffbf13956c2091d5c1"
+        },
+        {
+          "name": "decoder-3.bf16",
+          "max_abs": 1.0625,
+          "rmse": 0.09632644782592581,
+          "relative_l2": 0.006975238555485982,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "a74dc12eb51b472bd2dbf3272312e185e4bb9e39cf5ade5fefd3da3de852a900"
+        },
+        {
+          "name": "decoder-4.bf16",
+          "max_abs": 1.0,
+          "rmse": 0.04549982774171495,
+          "relative_l2": 0.003333664304155655,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "0c48ec31d0781b6f478e5d093e1b0126abb992b09d8cbeddc801972395d80945"
+        },
+        {
+          "name": "encoder-2.bf16",
+          "max_abs": 0.375,
+          "rmse": 0.025151389728164122,
+          "relative_l2": 0.00429768022916181,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "c234d6a412b8ca8591d47275cd1bd2f71908561c2642a1fcc894d58558f3c1eb"
+        },
+        {
+          "name": "encoder-3.bf16",
+          "max_abs": 0.5,
+          "rmse": 0.06157335822338687,
+          "relative_l2": 0.0044722898865267235,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "2ec385ad564c4f3e977b48ede24e2a7a5d9ac3175835c7d9de45eec6210da670"
+        },
+        {
+          "name": "encoder-4.bf16",
+          "max_abs": 2.0,
+          "rmse": 0.1442773157832143,
+          "relative_l2": 0.005057752865330732,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "6968ea99a004566429e7cf2d715b9cffd0bdff3f87696a0c4c3ae635b9c001ca"
+        },
+        {
+          "name": "encoder-5.bf16",
+          "max_abs": 3.0,
+          "rmse": 0.18993873411803436,
+          "relative_l2": 0.0047991994789329875,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "bf898dc552ecf806e96841b13d1ce7d0c2644002d3af5de7f5f1ea75a874deda"
+        }
+      ],
+      "result_boundaries": [
+        {
+          "name": "encoded-0.bf16",
+          "max_abs": 0.0234375,
+          "rmse": 0.0040557931304097,
+          "relative_l2": 0.003911605606393988,
+          "bit_exact": false,
+          "passed": true,
+          "required": true,
+          "native_sha256": "e95eb960ca94d67ac7c1345e9ae3bf509ea88fb4f8ae2219db99a7f0148d9370"
+        },
+        {
+          "name": "pixels.f32",
+          "max_abs": 0.0078125,
+          "rmse": 0.0005936954663697959,
+          "relative_l2": 0.0008882812540350668,
+          "bit_exact": false,
+          "ssim_rgb": 0.999837509500119,
+          "alpha_mae": 0.00010267893473307292,
+          "passed": true,
+          "required": true,
+          "native_sha256": "dfb9606cc8950b42bb7255a61d47d7d59ce6fc96873fcc4608cfce8382ca3f15"
+        }
+      ],
+      "png_alpha_preserved": true,
+      "oracle_metadata": {
+        "fixture_sha256": "1585b140f82d2bcf8ae38e9b6cb0ced5db3d510c0230457c399dd4d319e06700",
+        "width": 96,
+        "height": 64,
+        "peak": 733127680
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-rgb/oracle.json",
+        "bytes": 143,
+        "sha256": "5d36f0de5c838b52c3cbbf315bd5ce813de1b89023626497e4ab6710b3fee95a"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-rgb/input.ds4v",
+        "bytes": 18444,
+        "sha256": "1585b140f82d2bcf8ae38e9b6cb0ced5db3d510c0230457c399dd4d319e06700"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgb-comparison.json",
+      "bytes": 4730,
+      "sha256": "5a3d087037cdb347fc168612dc08b4c0b86a73567dceaf9ecce88edccf45bb41"
+    },
+    {
+      "case": "vae-wide",
+      "passed": true,
+      "required_count": 3,
+      "bit_exact_required": 0,
+      "required_max_relative_l2": 0.0064562359222027025,
+      "required_max_rmse": 0.006678989986094407,
+      "diagnostic_failed": [
+        {
+          "name": "decoder-1.bf16",
+          "max_abs": 1.0,
+          "rmse": 0.05032572454022789,
+          "relative_l2": 0.0070002225278758675,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "b963d09eca72ba6b8644ea876a7081364d5fd3a85b6fe031df96827df74758ae"
+        },
+        {
+          "name": "decoder-2.bf16",
+          "max_abs": 1.125,
+          "rmse": 0.08212059568633633,
+          "relative_l2": 0.008215799221433902,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "246b6197acf78b38c36e130872d1d84b254a750e762ef8643fa0365c8f02ee43"
+        },
+        {
+          "name": "decoder-3.bf16",
+          "max_abs": 3.375,
+          "rmse": 0.13863686117244503,
+          "relative_l2": 0.009470171150921912,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "b422f87f029d07d3c7e104d0d9231ac8ef188c8b66b8cda848689c05ab747648"
+        },
+        {
+          "name": "decoder-4.bf16",
+          "max_abs": 1.46484375,
+          "rmse": 0.05060271673308139,
+          "relative_l2": 0.004845107391258153,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "29521ec4d08a9a160b760be708b9d8f96731ecf4005921f8ff6d43cdbd267dbc"
+        },
+        {
+          "name": "encoder-2.bf16",
+          "max_abs": 1.109375,
+          "rmse": 0.03328174039159349,
+          "relative_l2": 0.006014652427923549,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "00182592d5b50aa94a4bb25892d018bd4d77597b9d27bde7bbdd5daf88b5794a"
+        },
+        {
+          "name": "encoder-3.bf16",
+          "max_abs": 85.3046875,
+          "rmse": 0.39896123665538297,
+          "relative_l2": 0.03254335817983703,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "36a4446ca13dc3fd25ded287ba09c34896103aebc560d06d6bb844aa3414ffca"
+        },
+        {
+          "name": "encoder-4.bf16",
+          "max_abs": 170.125,
+          "rmse": 0.7989627041241308,
+          "relative_l2": 0.0311031379329361,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "dae444d4c06d1ab56a388f5fff8c997033991b82bc4d9f8d0f3f9e06a51706ea"
+        },
+        {
+          "name": "encoder-5.bf16",
+          "max_abs": 171.6875,
+          "rmse": 0.7957072398960097,
+          "relative_l2": 0.017897280422747748,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "cc0405ceffb1de0180c65070fcf758b62838b76851af0b698bc1eee1fb92360d"
+        },
+        {
+          "name": "posterior-0.bf16",
+          "max_abs": 0.3984375,
+          "rmse": 0.022994931027540907,
+          "relative_l2": 0.006354830482942271,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "a74d075504f38f43eeb6909db59003b23e10df6d27323b432e5b59906994ae50"
+        }
+      ],
+      "result_boundaries": [
+        {
+          "name": "encoded-0.bf16",
+          "max_abs": 0.109375,
+          "rmse": 0.006678989986094407,
+          "relative_l2": 0.0064562359222027025,
+          "bit_exact": false,
+          "passed": true,
+          "required": true,
+          "native_sha256": "abb1b4b78e4ab3d52859f37743b3dbfb7596ebc81959f7452e879ace13a0a0f4"
+        },
+        {
+          "name": "pixels.f32",
+          "max_abs": 0.0185546875,
+          "rmse": 0.001017975723564571,
+          "relative_l2": 0.0017626507700307732,
+          "bit_exact": false,
+          "ssim_rgb": 0.9996746296849418,
+          "alpha_mae": 0.00042805572350819904,
+          "passed": true,
+          "required": true,
+          "native_sha256": "811fa8c171c2a9c74cb3f109ca03331852740e352aa7580e09a0d90cd08461ce"
+        },
+        {
+          "name": "tiled-equivalence",
+          "max_abs": 0.013671875,
+          "rmse": 0.0008897172823394044,
+          "relative_l2": 0.0015405952104925996,
+          "bit_exact": false,
+          "ssim_rgb": 0.9997189838107603,
+          "alpha_mae": 0.0003284382012983163,
+          "alpha_edge_mae": 0.0003304945130366832,
+          "passed": true
+        }
+      ],
+      "png_alpha_preserved": true,
+      "oracle_metadata": {
+        "fixture_sha256": "198db8c732f7f0db2ca6d6c7587dd5404531a3843f24d2311948537650f7156f",
+        "width": 768,
+        "height": 256,
+        "peak": 2016308736
+      },
+      "oracle_metadata_file": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-wide/oracle.json",
+        "bytes": 146,
+        "sha256": "68da93a3373dd41d9f6f94a57cb90114050b460296fdc309fa8edddb2ae9abd0"
+      },
+      "input_fixture": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-wide/input.ds4v",
+        "bytes": 786444,
+        "sha256": "198db8c732f7f0db2ca6d6c7587dd5404531a3843f24d2311948537650f7156f"
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-wide-comparison.json",
+      "bytes": 5202,
+      "sha256": "fbd5d1ac4e283399ee2886ac4d263a98473d8ca4571a4f21fa452213d13714f8"
+    },
+    {
+      "case": "encoder-text",
+      "verdict": "PASS",
+      "boundaries": 38,
+      "bit_exact": 38,
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-text-comparison.json",
+      "bytes": 10286,
+      "sha256": "5a6198df80eef37797623de0ee5d61b777f3fdb4a9b259099f0a9568a1605bf5"
+    },
+    {
+      "case": "encoder-reference",
+      "verdict": "PASS",
+      "boundaries": 69,
+      "bit_exact": 69,
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-reference-comparison.json",
+      "bytes": 18606,
+      "sha256": "1673220ef3c3b5bf57a03ecb630d7d7ac080bbbfc0212b0be85f69da2445e714"
+    },
+    {
+      "case": "encoder-multi",
+      "verdict": "PASS",
+      "boundaries": 69,
+      "bit_exact": 69,
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-multi-comparison.json",
+      "bytes": 18602,
+      "sha256": "574e7134eebc5d4ed32a2e57ad12ba3b0834cec59eef3874445260fb1072b82d"
+    }
+  ],
+  "benchmarks": {
+    "dit-text": {
+      "samples_seconds": [
+        1.7750239750002947,
+        1.6393840030004867,
+        1.5154487440004232,
+        1.5813217049999366,
+        1.7101805140000579
+      ],
+      "minimum": 1.5154487440004232,
+      "p10": 1.5417979284002286,
+      "median": 1.6393840030004867,
+      "mean": 1.6442717882002398,
+      "p90": 1.7490865906002,
+      "maximum": 1.7750239750002947,
+      "standard_deviation": 0.09167559612627997,
+      "coefficient_of_variation": 0.055754527192018996,
+      "verdict": "NEED_MORE_DATA",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v2/dit-text/timings.f64",
+      "bytes": 40,
+      "sha256": "5aaa5e1b1158812e658c425f55517a97ae30e8e5ca53c3d0f28e2a5edcdfcab5"
+    },
+    "dit-reference": {
+      "samples_seconds": [
+        2.953059516000394,
+        2.861054164000052,
+        3.0050508379999883,
+        2.9326725410001018,
+        2.9797415470002306
+      ],
+      "minimum": 2.861054164000052,
+      "p10": 2.889701514800072,
+      "median": 2.953059516000394,
+      "mean": 2.946315721200153,
+      "p90": 2.9949271216000852,
+      "maximum": 3.0050508379999883,
+      "standard_deviation": 0.04912890808143889,
+      "coefficient_of_variation": 0.016674692303996094,
+      "verdict": "STABLE_BASELINE",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v2/dit-reference/timings.f64",
+      "bytes": 40,
+      "sha256": "0c08d6493be42163749e013da9e249868b02491ee6702a8eb27a53eb1a1e7cdb"
+    },
+    "dit-multi": {
+      "samples_seconds": [
+        3.5276642680000805,
+        3.580856096000389,
+        3.4963942379999935,
+        3.4599349129994152,
+        3.4577339220004433
+      ],
+      "minimum": 3.4577339220004433,
+      "p10": 3.458614318400032,
+      "median": 3.4963942379999935,
+      "mean": 3.504516687400064,
+      "p90": 3.5595793648002654,
+      "maximum": 3.580856096000389,
+      "standard_deviation": 0.0460557308583516,
+      "coefficient_of_variation": 0.013141820960344604,
+      "verdict": "STABLE_BASELINE",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v2/dit-multi/timings.f64",
+      "bytes": 40,
+      "sha256": "60ae686dd707dd658de91a3d6bb015698b1d5be50cd41bc6e3f8066fb017d708"
+    },
+    "dit-rgba": {
+      "samples_seconds": [
+        2.926035382000009,
+        3.0397454759995526,
+        3.070796438999423,
+        3.0158837749995655,
+        2.9781980070001737
+      ],
+      "minimum": 2.926035382000009,
+      "p10": 2.946900432000075,
+      "median": 3.0158837749995655,
+      "mean": 3.006131815799745,
+      "p90": 3.058376053799475,
+      "maximum": 3.070796438999423,
+      "standard_deviation": 0.05020404114273257,
+      "coefficient_of_variation": 0.016700545491341465,
+      "verdict": "STABLE_BASELINE",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v2/dit-rgba/timings.f64",
+      "bytes": 40,
+      "sha256": "86449b781599f8e4a5317aa288391fa62dd8413fd6fb873aa488bcbeec669c17"
+    },
+    "dit-reversed": {
+      "samples_seconds": [
+        3.4873948340000425,
+        3.575723494000158,
+        3.660991615000057,
+        3.668808123999952,
+        3.6369623519995002
+      ],
+      "minimum": 3.4873948340000425,
+      "p10": 3.5227262980000886,
+      "median": 3.6369623519995002,
+      "mean": 3.605976083799942,
+      "p90": 3.665681520399994,
+      "maximum": 3.668808123999952,
+      "standard_deviation": 0.06769262110387163,
+      "coefficient_of_variation": 0.018772343335271877,
+      "verdict": "STABLE_BASELINE",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v2/dit-reversed/timings.f64",
+      "bytes": 40,
+      "sha256": "a0198057381adaed42c5d19f2e032f39e90d7d163005e5f0bf8d3eda8bf9712a"
+    },
+    "vae-rgba-encode": {
+      "samples_seconds": [
+        0.058414307000020926,
+        0.06424515800063091,
+        0.081727965999562,
+        0.06672695100041892,
+        0.05887351399996987
+      ],
+      "minimum": 0.058414307000020926,
+      "p10": 0.058597989800000506,
+      "median": 0.06424515800063091,
+      "mean": 0.06599757920012053,
+      "p90": 0.07572755999990477,
+      "maximum": 0.081727965999562,
+      "standard_deviation": 0.008477102740681332,
+      "coefficient_of_variation": 0.1284456618473341,
+      "verdict": "NEED_MORE_DATA",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgba/encode-timings.f64",
+      "bytes": 40,
+      "sha256": "6f65cde96b7e68abf5e651653866f448dd886956df9601e33d70af7701dd1aca"
+    },
+    "vae-rgba-decode": {
+      "samples_seconds": [
+        0.09648749099960696,
+        0.09527459999935672,
+        0.09502644700023666,
+        0.09541502299998683,
+        0.0950931990000754
+      ],
+      "minimum": 0.09502644700023666,
+      "p10": 0.09505314780017216,
+      "median": 0.09527459999935672,
+      "mean": 0.09545935199985252,
+      "p90": 0.09605850379975892,
+      "maximum": 0.09648749099960696,
+      "standard_deviation": 0.0005319103162508784,
+      "coefficient_of_variation": 0.005572113209522941,
+      "verdict": "STABLE_BASELINE",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgba/decode-timings.f64",
+      "bytes": 40,
+      "sha256": "f43af8cddccf38a640cc493835155d6a496a8981b2b47c79bf503895b23d9e9c"
+    },
+    "vae-transparent-encode": {
+      "samples_seconds": [
+        0.0547139979998974,
+        0.05287209699963569,
+        0.053983273999619996,
+        0.0561424289999195,
+        0.06123140900035651
+      ],
+      "minimum": 0.05287209699963569,
+      "p10": 0.053316567799629414,
+      "median": 0.0547139979998974,
+      "mean": 0.05578864139988582,
+      "p90": 0.05919581700018171,
+      "maximum": 0.06123140900035651,
+      "standard_deviation": 0.002921278006091946,
+      "coefficient_of_variation": 0.05236331146966997,
+      "verdict": "NEED_MORE_DATA",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-transparent/encode-timings.f64",
+      "bytes": 40,
+      "sha256": "cc50e8655430838c51bc2c388a9e121f1a8029898cf51fe38814b4b3dd31ff03"
+    },
+    "vae-transparent-decode": {
+      "samples_seconds": [
+        0.09432673100036482,
+        0.09639936800067517,
+        0.10698686799969437,
+        0.1004941230003169,
+        0.09749929099962173
+      ],
+      "minimum": 0.09432673100036482,
+      "p10": 0.09515578580048896,
+      "median": 0.09749929099962173,
+      "mean": 0.0991412762001346,
+      "p90": 0.10438976999994339,
+      "maximum": 0.10698686799969437,
+      "standard_deviation": 0.004399489211344322,
+      "coefficient_of_variation": 0.044375959035096106,
+      "verdict": "STABLE_BASELINE",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-transparent/decode-timings.f64",
+      "bytes": 40,
+      "sha256": "1f2213347290f4fd144da98f0cafb2142c1031114cc3c9fa36d683abf2f79f9e"
+    },
+    "vae-rgb-encode": {
+      "samples_seconds": [
+        0.07625556000039069,
+        0.06397148199994263,
+        0.05663480699968204,
+        0.056656507000298006,
+        0.05714383499980613
+      ],
+      "minimum": 0.05663480699968204,
+      "p10": 0.056643486999928425,
+      "median": 0.05714383499980613,
+      "mean": 0.0621324382000239,
+      "p90": 0.07134192880021147,
+      "maximum": 0.07625556000039069,
+      "standard_deviation": 0.007588683478632402,
+      "coefficient_of_variation": 0.12213722330036426,
+      "verdict": "NEED_MORE_DATA",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgb/encode-timings.f64",
+      "bytes": 40,
+      "sha256": "f0edf20257be3019fca1a61388caedf589c68709e2908aa5088f1ab9c0083dec"
+    },
+    "vae-rgb-decode": {
+      "samples_seconds": [
+        0.09646123599941347,
+        0.1037850669999898,
+        0.12541170500026055,
+        0.10267914099949849,
+        0.09465385600014997
+      ],
+      "minimum": 0.09465385600014997,
+      "p10": 0.09537680799985537,
+      "median": 0.10267914099949849,
+      "mean": 0.10459820099986246,
+      "p90": 0.11676104980015226,
+      "maximum": 0.12541170500026055,
+      "standard_deviation": 0.010978580271175067,
+      "coefficient_of_variation": 0.10495955156235912,
+      "verdict": "NEED_MORE_DATA",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgb/decode-timings.f64",
+      "bytes": 40,
+      "sha256": "a16563081406950e4689df189e4b74224b2bee9a56ae1de1cda7ee3378bd5658"
+    },
+    "vae-wide-encode": {
+      "samples_seconds": [
+        0.13900828900023043,
+        0.14581212299981416,
+        0.13615672800005996,
+        0.15318982400003733,
+        0.13503246600066632
+      ],
+      "minimum": 0.13503246600066632,
+      "p10": 0.13548217080042377,
+      "median": 0.13900828900023043,
+      "mean": 0.14183988600016165,
+      "p90": 0.15023874359994807,
+      "maximum": 0.15318982400003733,
+      "standard_deviation": 0.006800837490428643,
+      "coefficient_of_variation": 0.04794728536669081,
+      "verdict": "STABLE_BASELINE",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-wide/encode-timings.f64",
+      "bytes": 40,
+      "sha256": "66bcf28e470beaa9ca309f6d036ec1dd0c965846f11da3209577b95a4316a923"
+    },
+    "vae-wide-decode": {
+      "samples_seconds": [
+        0.3816458370001783,
+        0.38704906499970093,
+        0.3928873309996561,
+        0.42985410600067553,
+        0.38162155999998504
+      ],
+      "minimum": 0.38162155999998504,
+      "p10": 0.3816312708000623,
+      "median": 0.38704906499970093,
+      "mean": 0.3946115798000392,
+      "p90": 0.41506739600026776,
+      "maximum": 0.42985410600067553,
+      "standard_deviation": 0.018105531849638885,
+      "coefficient_of_variation": 0.04588190711183252,
+      "verdict": "STABLE_BASELINE",
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-wide/decode-timings.f64",
+      "bytes": 40,
+      "sha256": "b445a8b26f5646a7a6e40db99777e77024197bc6729a96c46179654e3bbe2ecb"
+    }
+  },
+  "commands": [
+    {
+      "name": "build",
+      "command": [
+        "make",
+        "CUDA_ARCH=sm_86",
+        "CUDNN_HOME=agent/.venv/lib/python3.13/site-packages/nvidia/cudnn",
+        "SUITE_CUDA_LIBDIR=agent/.venv/lib/python3.13/site-packages/nvidia/cu13/lib",
+        "SUITE_PYTHON=agent/.venv/bin/python",
+        "libds4-suite-cpu.a",
+        "libds4-suite-cuda.a",
+        "tests/probe_qwen_image_graph",
+        "tests/probe_qwen_image_encoder",
+        "tests/libds4_numeric_cpu.so",
+        "tests/libds4_numeric_cuda.so",
+        "tests/test_image_decode",
+        "test-qwen-image-graph",
+        "test-numeric-lifetime",
+        "test-qwen-image-input",
+        "test-runtime",
+        "test-resources",
+        "test-executor",
+        "test-bundle"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 2.00061692700001,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/build.log",
+        "bytes": 4780,
+        "sha256": "a85cb7b6d9ceb86d3f9c8da5dba760f88e368fc658462be2dea1de87767567e4"
+      },
+      "unittest_summary": [
+        "Ran 3 tests in 0.032s",
+        "OK",
+        "Ran 11 tests in 0.657s",
+        "OK"
+      ]
+    },
+    {
+      "name": "image-decode",
+      "command": [
+        "tests/test_image_decode"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.500297402999422,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/image-decode.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "numeric-cpu",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_numeric",
+        "-v"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 2.5006056499996703,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/numeric-cpu.log",
+        "bytes": 1459,
+        "sha256": "45dc19d77893f8035834727816f00f24c61fdc72cfb70a9d691688f2be0d0c01"
+      },
+      "unittest_summary": [
+        "Ran 14 tests in 1.332s",
+        "OK"
+      ]
+    },
+    {
+      "name": "numeric-cuda",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_numeric",
+        "-v"
+      ],
+      "env": {
+        "DS4_SUITE_NUMERIC_CUDA": "1"
+      },
+      "returncode": 0,
+      "seconds": 2.500670700000228,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/numeric-cuda.log",
+        "bytes": 1459,
+        "sha256": "1681ae62b09f96f9edde222e21379f08905ce0d2c2792508ff07a3744287e212"
+      },
+      "unittest_summary": [
+        "Ran 14 tests in 1.184s",
+        "OK"
+      ]
+    },
+    {
+      "name": "dit",
+      "command": [
+        "tests/probe_qwen_image_graph",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/bundles/dit/bundle.ds4b",
+        "performance-results/native-suite-oracles-20261020/models",
+        "dit",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-text",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-text",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reference",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-reference",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-multi",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-multi",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reversed",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-reversed"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 156.79997786500007,
+      "global_gpu_peak_mib": 15888,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit.log",
+        "bytes": 649,
+        "sha256": "8519721616d14527b61bc2966f8fa44c53388c9672d5ae1b1e9f7e2acd6e7359"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-dit-text",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-text",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-text",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-text-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 4.5068657049996546,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-dit-text.log",
+        "bytes": 107,
+        "sha256": "3e79cbed3d2d66b06020b519a0862b26b5cdf1efc16f0053eac0eeb8438c403e"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-dit-reference",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reference",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-reference",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-reference-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 7.004532903999461,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-dit-reference.log",
+        "bytes": 112,
+        "sha256": "e36a5fa3e52accb9cecb0ee1f4c1f80685a430ec4f01d1ebb2c3bb283e643695"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-dit-multi",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-multi",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-multi",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-multi-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 5.003644942999927,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-dit-multi.log",
+        "bytes": 108,
+        "sha256": "3f71286f5e3781e6ad299f0eb4027bece42927bc787aefd1b988b9d04fcf2d91"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-dit-rgba",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-rgba",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-rgba-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 6.503894608999872,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-dit-rgba.log",
+        "bytes": 107,
+        "sha256": "65a558766aca1297d77f7fff24e977090b03f3a148e89092839e9b9c19f8d06b"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-dit-reversed",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reversed",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-reversed",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/dit-reversed-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 5.5109509760004585,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-dit-reversed.log",
+        "bytes": 142,
+        "sha256": "0d0e91c5f02e94adf3cf53dbebfeabc447de0645d8025b72b5ca1b8d8d55e6f2"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "vae",
+      "command": [
+        "tests/probe_qwen_image_graph",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/bundles/vae/bundle.ds4b",
+        "performance-results/native-suite-oracles-20261020/models",
+        "vae",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-transparent",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-transparent",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-rgb",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgb",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-wide",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-wide"
+      ],
+      "env": {
+        "DS4_SUITE_GRAPH_REPEATS": "5"
+      },
+      "returncode": 0,
+      "seconds": 17.47769529499965,
+      "global_gpu_peak_mib": 2447,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae.log",
+        "bytes": 736,
+        "sha256": "1da437f989107a6a8361dbaa5ba15d6b11ce44f7a0995a23b21f9e5c88feb076"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-vae-rgba",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgba",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgba-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003766820000237,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-vae-rgba.log",
+        "bytes": 262,
+        "sha256": "dd46d7ec9c15c71064e4f7588ca4158bff4e82d010b957782e0bfb60bf2761d9"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-vae-transparent",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-transparent",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-transparent",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-transparent-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003620490006142,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-vae-transparent.log",
+        "bytes": 269,
+        "sha256": "f10a58c8dc8be7abaf2ddb9d68c051988f2df5fd3a248da74355049dff345718"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-vae-rgb",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-rgb",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgb",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-rgb-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003869040001518,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-vae-rgb.log",
+        "bytes": 261,
+        "sha256": "391ffe032a91e3146c98f7b04b2e64defbb52fd56e6e3356854ebedcae448ba8"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-vae-wide",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle/vae-wide",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-wide",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/vae-wide-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 3.003590710000026,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/compare-vae-wide.log",
+        "bytes": 308,
+        "sha256": "98de4cd409174dc3f4f79d06c6ff368492535daeb9ee8287c40dd397150b696c"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "legacy-build",
+      "command": [
+        "make",
+        "CUDA_ARCH=sm_86",
+        "ds4",
+        "ds4-server",
+        "ds4-bench",
+        "ds4-eval"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 1.5005705459998353,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/legacy-build.log",
+        "bytes": 2454,
+        "sha256": "9f646cdf8e010b4b0b1eb4189ec86e8994918662ed05a78900c5a1831f43c045"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "contracts",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_contracts",
+        "tests.test_qwen_image_tokenizer",
+        "tests.test_qwen_image_preprocess",
+        "-v"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003454540001258,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v3/contracts.log",
+        "bytes": 1233,
+        "sha256": "3d330d7513f7d1958af42102d89e4f67e27284afe43d406482b0b1b5840aa9d3"
+      },
+      "unittest_summary": [
+        "OK",
+        "Ran 9 tests in 0.049s",
+        "OK (skipped=2)"
+      ]
+    },
+    {
+      "name": "final-build",
+      "command": [
+        "make",
+        "CUDA_ARCH=sm_86",
+        "CUDNN_HOME=agent/.venv/lib/python3.13/site-packages/nvidia/cudnn",
+        "SUITE_CUDA_LIBDIR=agent/.venv/lib/python3.13/site-packages/nvidia/cu13/lib",
+        "SUITE_PYTHON=agent/.venv/bin/python",
+        "libds4-suite-cpu.a",
+        "libds4-suite-cuda.a",
+        "tests/probe_qwen_image_graph",
+        "tests/probe_qwen_image_encoder",
+        "test-qwen-image-graph"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 2.0006212509997567,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/final-build.log",
+        "bytes": 3398,
+        "sha256": "c0c79921d08130f0e73eb99c22ae90f3d2e83cd4c282992024cc404eb76e1916"
+      },
+      "unittest_summary": [
+        "Ran 3 tests in 0.032s",
+        "OK"
+      ]
+    },
+    {
+      "name": "encoder",
+      "command": [
+        "tests/probe_qwen_image_encoder",
+        "performance-results/native-suite-t05-t06-20261020/bundles/qwen-image-2.1-turbo-bf16/bundle.ds4b",
+        "performance-results/native-suite-oracles-20261020/models",
+        "performance-results/native-suite-t07-t08-20261020/tokenizer.ds4q",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/text/input.ds4i",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-text",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/reference/input.ds4i",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-reference",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/multi/input.ds4i",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-multi"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 86.44878924299974,
+      "global_gpu_peak_mib": 16520,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder.log",
+        "bytes": 436,
+        "sha256": "faddc9808ca80f7979990d6b5d2eedba32070d459afe97f481e53683ec09ba18"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-encoder-text",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_encoder.py",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/text",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-text",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-text-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5004203600001347,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/compare-encoder-text.log",
+        "bytes": 1031,
+        "sha256": "3aebb208dea51b7f985e8f68089ec73fbfd35f87a3cee8fad1a895e182ba7cbb"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-encoder-reference",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_encoder.py",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/reference",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-reference",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-reference-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.500395963000301,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/compare-encoder-reference.log",
+        "bytes": 1817,
+        "sha256": "5c8a5b2139c4ab717dc3b0b42ed4f03dd31986251989ca5f5fefc84433e4e3b2"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "compare-encoder-multi",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_encoder.py",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/multi",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-multi",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/encoder-multi-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 1.0030345209997904,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/compare-encoder-multi.log",
+        "bytes": 1813,
+        "sha256": "82045b63f415d407aa970c515d229a85443aef85510b9c72ec5ec88b53baf766"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "asan-build",
+      "command": [
+        "cc",
+        "-O1",
+        "-g",
+        "-std=c11",
+        "-D_GNU_SOURCE",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer",
+        "-I.",
+        "tests/test_numeric_lifetime.c",
+        "ds4_numeric.c",
+        "ds4_resources.c",
+        "-lm",
+        "-pthread",
+        "-o",
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/numeric-lifetime-asan"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 1.0004563399998005,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/asan-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "asan",
+      "command": [
+        "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/numeric-lifetime-asan"
+      ],
+      "env": {
+        "ASAN_OPTIONS": "detect_leaks=1"
+      },
+      "returncode": 0,
+      "seconds": 0.5003154030000587,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/regression/asan.log",
+        "bytes": 37,
+        "sha256": "ec865493582652f0c7e1074a3a420e6dab4209c4d689d5dce90e3cd93f2fe2ca"
+      },
+      "unittest_summary": []
+    },
+    {
+      "name": "python-configured",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_contracts",
+        "tests.test_qwen_image_tokenizer",
+        "tests.test_qwen_image_preprocess",
+        "tests.test_suite_artifacts",
+        "tests.test_suite_baseline_manifests",
+        "tests.test_suite_numeric_metrics",
+        "-v"
+      ],
+      "env": {
+        "DS4_SUITE_PREPARED": "performance-results/native-suite-oracles-20261020",
+        "DS4_SUITE_TOKENIZER_JSON": "performance-results/native-suite-oracles-20261020/models/Qwen/Qwen-Image-2.1-Turbo/processor/tokenizer.json",
+        "PYTHONPATH": "performance-results/native-suite-oracles-20261020/deps"
+      },
+      "returncode": 0,
+      "seconds": 8.001462831000026,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/checks/python-configured.log",
+        "bytes": 3085,
+        "sha256": "60a6e3e3333631a6311f11b08c6ecc4757fd5ca9a846b98c7ad5917c8dfd441a"
+      },
+      "unittest_summary": [
+        "Ran 24 tests in 7.291s",
+        "OK"
+      ]
+    },
+    {
+      "name": "docs",
+      "command": [
+        "make",
+        "docs-check"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003544639994288,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/checks/docs.log",
+        "bytes": 1808,
+        "sha256": "dc997dffa816b064fd105eb594e4fbfa5bff5583a4ffbecb45039cb65a94f31b"
+      },
+      "unittest_summary": [
+        "Ran 10 tests in 0.054s",
+        "OK"
+      ]
+    },
+    {
+      "name": "lint",
+      "command": [
+        "/home/daniele/.local/bin/uvx",
+        "--offline",
+        "--from",
+        "ruff==0.14.0",
+        "ruff",
+        "check",
+        "tools/compile_qwen_image_constants.py",
+        "tools/run_qwen_image_graph_oracle.py",
+        "tools/compare_qwen_image_graph.py",
+        "tools/diagnose_qwen_image_dit.py",
+        "tests/test_qwen_image_graph.py",
+        "tests/test_suite_numeric.py"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003469869998298,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/checks/lint.log",
+        "bytes": 19,
+        "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+      },
+      "unittest_summary": []
+    }
+  ],
+  "source_files": [
+    {
+      "path": ".gitignore",
+      "bytes": 3214,
+      "sha256": "8220dcb5265fb5f1879338df8b1b9dfdf388f6f478a68eaccad208d522ca9a98"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 74656,
+      "sha256": "e7f7b4339700b41e32d8ee30ea5e1407fdb6b50a22c19823f415c846d4465caa"
+    },
+    {
+      "path": "PROJECT_INDEX.md",
+      "bytes": 87552,
+      "sha256": "563614b36e5d09b148833b63315b89234a61bd794be0d307841df19376d801b7"
+    },
+    {
+      "path": "config/suite-bundles/qwen-image-2.1-turbo-bf16.json",
+      "bytes": 9764,
+      "sha256": "70d46c939eaae830d1663d5c000b6a9a15de8546f107a42d62f1936a8d1905c8"
+    },
+    {
+      "path": "docs/architecture/_INDEX.md",
+      "bytes": 40333,
+      "sha256": "313b2ae4711bf04259d4dbbdae78ae2519b13094d18318ca2fb04820aae5c958"
+    },
+    {
+      "path": "docs/catalog.json",
+      "bytes": 353190,
+      "sha256": "af1b7855304bfdab06206a930bd10b15d6a1246d4fe17febeea665ac0c2dc520"
+    },
+    {
+      "path": "docs/experiments/_INDEX.md",
+      "bytes": 2218,
+      "sha256": "427bb9b3be39e9a44eeed4f306f00d02079dd3575b70732ee68dde713c8d0f66"
+    },
+    {
+      "path": "docs/performance/native-suite-t09-t10-20261021/README.md",
+      "bytes": 8278,
+      "sha256": "7a4ce59c2633df8994c95180fd612122c1c4980b4c904f91766784bb717263bb"
+    },
+    {
+      "path": "docs/performance/native-suite-t09-t10-20261021/provenance.json",
+      "bytes": 4192,
+      "sha256": "432723263c630e28001c6120cfbc31f3a9a43db0bad5e88e776892001b127dd8"
+    },
+    {
+      "path": "docs/roadmaps/_INDEX.md",
+      "bytes": 69090,
+      "sha256": "670da26f97c45fedf48ebe5555f0bd300bf80d686c9cd3689599d8ceb37991be"
+    },
+    {
+      "path": "docs/roadmaps/native-multimodal-suite-implementation-20261020.md",
+      "bytes": 55493,
+      "sha256": "034f03c6909ad0acf11f366c27616b4690906348da3debc25a00b9c825b78150"
+    },
+    {
+      "path": "ds4_bundle.c",
+      "bytes": 22344,
+      "sha256": "7e496ffc471d937d799870d0f00975cf00d5d37abd4c74b9daa83d718ceeae79"
+    },
+    {
+      "path": "ds4_image.c",
+      "bytes": 42160,
+      "sha256": "9603375993ff9f447c598db863a7781787bd93a3d75e5877d31317913a9c684c"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 35186,
+      "sha256": "324cd8ea5bc084a32bd02a9eb48f55ed5cc67c690cb79c1ce5e64f3ce27e8d66"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 8586,
+      "sha256": "a972a59bb93ac21cabeeee3f2ba30be1bc30c43732b606073694b5b5b4f0c078"
+    },
+    {
+      "path": "ds4_numeric_cuda.cu",
+      "bytes": 36727,
+      "sha256": "0a535720b0cf3f09ba1851d0f9a57c7d03d0e45988e89fec32d9c319c82e758a"
+    },
+    {
+      "path": "ds4_numeric_cudnn.cu",
+      "bytes": 9944,
+      "sha256": "e6e594f930c9527813916a5cad1c0918bdbe3d5b94fa944865a981447a41691d"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 2738,
+      "sha256": "ecd88bc4f0cf899b7fb4b6001a04e369cc04f251654af50780014c6258f7886b"
+    },
+    {
+      "path": "ds4_numeric_weights.c",
+      "bytes": 1196,
+      "sha256": "a480cc3caa8f824a31d41a6d26eab8afcc9cb80914d00e9347fdb619260cda35"
+    },
+    {
+      "path": "ds4_numeric_weights.h",
+      "bytes": 548,
+      "sha256": "7d30208fd7cb70a464a870e29976722d5c1021210c80a4ddc9e81d4261eb9d47"
+    },
+    {
+      "path": "ds4_qwen_image_attention.c",
+      "bytes": 4490,
+      "sha256": "9b523420a46c03dd4787b59785c3dd1e695dbe91f8e804b5fe6dc9f36368b66d"
+    },
+    {
+      "path": "ds4_qwen_image_attention.h",
+      "bytes": 600,
+      "sha256": "333e74fe6f2939fcdbd42c5466f47df4f1e1ef9c34f834a67fd16f7ab350e633"
+    },
+    {
+      "path": "ds4_qwen_image_dit.c",
+      "bytes": 30436,
+      "sha256": "41216c7931b0de39eeb6dd135ea9628d77c5c9b6b36c2688b67c81385cd95f65"
+    },
+    {
+      "path": "ds4_qwen_image_dit.h",
+      "bytes": 3210,
+      "sha256": "9191c663abae9c8f6fadd5ba8608ebf3afa19858ca8de586735e52cd6b12c2a9"
+    },
+    {
+      "path": "ds4_qwen_image_dit_constants.h",
+      "bytes": 4311,
+      "sha256": "3bd136388f6c49e2bc208780b0141d8b333def66cebab440e67ce8a57ad6bd19"
+    },
+    {
+      "path": "ds4_qwen_image_graph.h",
+      "bytes": 8843,
+      "sha256": "6db8589ad188d20af427bde2351151dcad5b3a5d6d34aab8d06fb3fd59186d93"
+    },
+    {
+      "path": "ds4_qwen_image_vae.c",
+      "bytes": 32130,
+      "sha256": "3e941153dd405e879f88f729aae4575460ad30115b0f73b1614442ad5aa85b75"
+    },
+    {
+      "path": "ds4_qwen_image_vae.h",
+      "bytes": 2606,
+      "sha256": "e87e64d61a3f43c7250a019b3e997346b75e44d5dbcf1de6fa04252db01e8d63"
+    },
+    {
+      "path": "ds4_qwen_image_vae_stats.h",
+      "bytes": 1434,
+      "sha256": "72a2924688d15db52e56a4689abc0446ebfb584054148947e7df2393cbf3bad9"
+    },
+    {
+      "path": "ds4_resources.c",
+      "bytes": 20139,
+      "sha256": "94a2aecdce73f3bcb3f12b8b9265e1e2b9850fabd7584c0256c93b960c46faf5"
+    },
+    {
+      "path": "ds4_runtime.c",
+      "bytes": 9885,
+      "sha256": "9b8499eddda90e08ca17de0dd10b993d36ed710722bce0e1d7824ab9f7e16c0f"
+    },
+    {
+      "path": "tests/probe_qwen_image_graph.c",
+      "bytes": 17866,
+      "sha256": "7410f7e41f85be1b43a14225fd78182d018b320d7f9e5a48714d5732303a2d69"
+    },
+    {
+      "path": "tests/test_qwen_image_graph.py",
+      "bytes": 6977,
+      "sha256": "d7fc21e635a08dfc82eb2c7d04379ecae4da256ae1511c5ebab2bb5a0236e1d0"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 29230,
+      "sha256": "58d7e76b72864494117fb174f7d4f8a8b7843e27224f16be69ba5a3c82fb49e6"
+    },
+    {
+      "path": "third_party/diffusers/LICENSE",
+      "bytes": 11357,
+      "sha256": "f9e2070c247517b1ddf65f7b11b393484a18da91a958fd18a97bd0f241c3125c"
+    },
+    {
+      "path": "third_party/diffusers/NOTICE",
+      "bytes": 1070,
+      "sha256": "062fdb93c3ff8b417a6011dad9200f679b3e5bfb538d18f767159486da812012"
+    },
+    {
+      "path": "third_party/iris/png.h",
+      "bytes": 31360,
+      "sha256": "ee36ec1a3c5a6d503d87939d7d9dafac0304d50bc82345e1c2867f2a2af476b9"
+    },
+    {
+      "path": "tools/compare_qwen_image_graph.py",
+      "bytes": 6767,
+      "sha256": "dabeaadee5ccf72d9e8128248fffa63d1fc6f61872e70e10f621e7d2f3b97ca3"
+    },
+    {
+      "path": "tools/compile_qwen_image_constants.py",
+      "bytes": 1242,
+      "sha256": "416c4f0f0c1284e943cd75baf3424f467969167211ddc542dbc6a31ed41f017a"
+    },
+    {
+      "path": "tools/diagnose_qwen_image_dit.py",
+      "bytes": 11455,
+      "sha256": "c2a88e9fa4edb5234ebab60cbadb67bb9537d8ea12e04aebb5a10bc0066dff33"
+    },
+    {
+      "path": "tools/run_qwen_image_graph_oracle.py",
+      "bytes": 11457,
+      "sha256": "36fbea1b35af951d42b088eb8969a403f0a029541f8facd3f3d5dad49943758d"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "tests/probe_qwen_image_graph",
+      "bytes": 1913664,
+      "sha256": "0bc37455ca0ca9634f9465ab8fc146fd2315b16f1777feddb2b4609ed0032b59"
+    },
+    {
+      "path": "tests/probe_qwen_image_encoder",
+      "bytes": 1891168,
+      "sha256": "3e383da599cb1d952f0ac62017b8b75eb28308097f8f1e54da0fd78dbe87b653"
+    },
+    {
+      "path": "libds4-suite-cpu.a",
+      "bytes": 1762116,
+      "sha256": "f316ef83c11c3e731db74d5cf362dbc0dabf24817fc416bee2cb447846a4d4bd"
+    },
+    {
+      "path": "libds4-suite-cuda.a",
+      "bytes": 2663198,
+      "sha256": "76de490fb7dbc7ed18f10c624b21e61f9e5a184f7c863b75ba9916183cea69b3"
+    },
+    {
+      "path": "ds4",
+      "bytes": 71452984,
+      "sha256": "fea0b1797c693147303490f024d1f29ade6132d457d195c194720229e835513b"
+    },
+    {
+      "path": "ds4-server",
+      "bytes": 73712328,
+      "sha256": "929c9703907f1f9bf91262e557481acd02362a5cc1adae3f2eba4478e6cd2a7f"
+    },
+    {
+      "path": "ds4-bench",
+      "bytes": 71184728,
+      "sha256": "238b878865906a55e9e09f1eae6499701c6030c5babb8b4d273205be4cc55eaa"
+    },
+    {
+      "path": "ds4-eval",
+      "bytes": 71528008,
+      "sha256": "205a8f5103bc5e1a45286ce76f9f24160484ace099fad10533b1219b2512d0cc"
+    }
+  ],
+  "tolerance": {
+    "path": "docs/performance/native-suite-t00-20261020/tolerances.json",
+    "bytes": 1639,
+    "sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+  },
+  "limitations": [
+    "Uncached independent Euler trajectory reversed: final relative_l2 0.011840994554932328 exceeds 0.01. Retained diagnostic, not a qualified alternate recipe. Same-input velocity full/cache passes; both native paths match their respective frozen Diffusers paths.",
+    "Raw VAE posterior/internal stage feature maps are diagnostics; T10 gates normalized encode and output RGBA. Diagnostic failures are retained explicitly.",
+    "DiT references in the component oracle are synthetic latents paired with real T08 conditioning; no end-to-end image quality qualification (T11).",
+    "Qualified shapes: DiT target 128x192/256x256; VAE 64x96/256x768. Larger shapes, batches, video and quantized profiles are not qualified.",
+    "Cold loading latency is not isolated; subprocess duration includes bundle SHA-256 verification. No speedup is claimed.",
+    "VAE tile=8 correctness is measured; tile latency has no repeated performance qualification.",
+    "Owned numeric peak is a cumulative process high-water mark after each case; nvidia-smi is global device memory.",
+    "Metal, ROCm, distributed, LLM/image co-residency and HTTP composition remain NOT_VERIFIED/outside these component gates."
+  ],
+  "extra_cache_oracle": {
+    "case": "dit-reversed",
+    "passed": true,
+    "required_count": 302,
+    "bit_exact_required": 295,
+    "required_max_relative_l2": 0.005137446485077386,
+    "required_max_rmse": 0.010559493229064833,
+    "diagnostic_failed": [
+      {
+        "name": "uncached-trajectory-7",
+        "max_abs": 0.205078125,
+        "rmse": 0.018324133456633255,
+        "relative_l2": 0.011840994554932328,
+        "bit_exact": false,
+        "passed": false,
+        "required": false
+      }
+    ],
+    "result_boundaries": [
+      {
+        "name": "step-7-latent-7.f32",
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "passed": true,
+        "required": true,
+        "native_sha256": "a1c5fc76a03fc6ecfa4353a84a779daabc50e1a42e464e46af2e907cf43635a4"
+      },
+      {
+        "name": "cache-same-input-1",
+        "max_abs": 0.09375,
+        "rmse": 0.010559493229064833,
+        "relative_l2": 0.005137446485077386,
+        "bit_exact": false,
+        "passed": true
+      },
+      {
+        "name": "cache-same-input-2",
+        "max_abs": 0.0703125,
+        "rmse": 0.007179730342510868,
+        "relative_l2": 0.0036623205006716102,
+        "bit_exact": false,
+        "passed": true
+      },
+      {
+        "name": "cache-same-input-3",
+        "max_abs": 0.03125,
+        "rmse": 0.006403174911784487,
+        "relative_l2": 0.0033380725361285297,
+        "bit_exact": false,
+        "passed": true
+      },
+      {
+        "name": "cache-same-input-4",
+        "max_abs": 0.2890625,
+        "rmse": 0.009526477567579914,
+        "relative_l2": 0.005043648394942058,
+        "bit_exact": false,
+        "passed": true
+      },
+      {
+        "name": "cache-same-input-5",
+        "max_abs": 0.03125,
+        "rmse": 0.005903765332047974,
+        "relative_l2": 0.0031812090755069158,
+        "bit_exact": false,
+        "passed": true
+      },
+      {
+        "name": "cache-same-input-6",
+        "max_abs": 0.03125,
+        "rmse": 0.005872633395983501,
+        "relative_l2": 0.0032441164366039596,
+        "bit_exact": false,
+        "passed": true
+      },
+      {
+        "name": "cache-same-input-7",
+        "max_abs": 0.03125,
+        "rmse": 0.007452820380768489,
+        "relative_l2": 0.004199336266721835,
+        "bit_exact": false,
+        "passed": true
+      }
+    ],
+    "png_alpha_preserved": null,
+    "oracle_metadata": {
+      "fixture_sha256": "b02a0c447926fd13396a649411ce063de8c328e46f789b769fc5d792eaad9fb2",
+      "shapes": [
+        [
+          16,
+          16
+        ],
+        [
+          16,
+          16
+        ],
+        [
+          16,
+          16
+        ]
+      ],
+      "steps": 8,
+      "cfg": 1,
+      "attention": "math SDPA FP32 intermediate",
+      "peak": 14683054080
+    },
+    "oracle_metadata_file": {
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-cache-check/dit-reversed/oracle.json",
+      "bytes": 300,
+      "sha256": "44b41e433cb887e1e1ff50db6f1cc079a08cd1da66bdc86526ec9c0542272157"
+    },
+    "input_fixture": {
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-cache-check/dit-reversed/input.ds4g",
+      "bytes": 1441992,
+      "sha256": "b02a0c447926fd13396a649411ce063de8c328e46f789b769fc5d792eaad9fb2"
+    },
+    "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/oracle-cache-check-comparison.json",
+    "bytes": 85659,
+    "sha256": "7ddc53fb0fb2dab54988cc305cc28933923b8e2b2c24d007153803cf983a238f"
+  },
+  "rejected_evidence": [
+    {
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/qualification-v2/dit-reversed-comparison.json",
+      "bytes": 81971,
+      "sha256": "3aad584e2dad52b536f412b7433279a06fa92488f4500b17bce6964e5684e978"
+    }
+  ],
+  "dit_numeric_memory_bytes": [
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 14289405952
+    },
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 14531400704
+    },
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 14728585216
+    },
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 14728585216
+    },
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 14728585216
+    }
+  ],
+  "vae_numeric_memory_bytes": [
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 556983456
+    },
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 556983456
+    },
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 556983456
+    },
+    {
+      "before": 8519680,
+      "after": 8519680,
+      "cumulative_peak": 896741056
+    }
+  ],
+  "vae_plans_log": "vae plan full weights=675480832 device=157220864 host=237808\nvae PASS 96x64 RGBA host result after weight release\nmemory before=8519680 after=8519680 peak=556983456\nvae plan full weights=675480832 device=157220864 host=237808\nvae PASS 96x64 RGBA host result after weight release\nmemory before=8519680 after=8519680 peak=556983456\nvae plan full weights=675480832 device=157220864 host=237808\nvae PASS 96x64 RGBA host result after weight release\nmemory before=8519680 after=8519680 peak=556983456\nvae plan full weights=675480832 device=870318080 host=5576752\nvae plan bounded core=12 halo=14 overlap=1 device=757071872 host=5314608\nvae PASS 768x256 RGBA host result after weight release\nmemory before=8519680 after=8519680 peak=896741056\n",
+  "upstream_sources": [
+    {
+      "repository": "huggingface/transformers",
+      "revision": "d4fcbccd0966ace9505b9cbd3041d28ad822d8a7",
+      "url": "https://codeload.github.com/huggingface/transformers/tar.gz/d4fcbccd0966ace9505b9cbd3041d28ad822d8a7",
+      "archive_sha256": "e9f898a13b39acd13ca5dfe3ae7b4d81dcd238c313db0836e7aa19b92e2e7c1f"
+    },
+    {
+      "repository": "huggingface/diffusers",
+      "revision": "aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e",
+      "url": "https://codeload.github.com/huggingface/diffusers/tar.gz/aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e",
+      "archive_sha256": "54e95568407ec6e84ae3cf49ba646df42b2a3aff595ca3452af6102b3618adfb"
+    }
+  ],
+  "upstream_component_files": [
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/diffusers-aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/models/transformers/transformer_qwenimage21.py",
+      "bytes": 48180,
+      "sha256": "7a3393f89b1eb71d79c8669a719a21a616e6c8b188b2c1f5a2faca2cc701f171"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/diffusers-aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/models/autoencoders/autoencoder_kl_qwenimage21.py",
+      "bytes": 58515,
+      "sha256": "1e29f252dbddd044b84c8b794589001ce94bb125a8f13eb5b226ef30c1e2ea11"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/diffusers-aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/pipelines/qwenimage21/pipeline_qwenimage21.py",
+      "bytes": 42974,
+      "sha256": "e75e4ce38d38e194edaac818bba99b2115b4bb2bfdbd15ce03a2813b0fe8856c"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/diffusers-aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/schedulers/scheduling_flow_match_euler_discrete.py",
+      "bytes": 27414,
+      "sha256": "5448bbfe15324ea8034470e742c7782b1de3864c0836d98ef3dade65e30df6a7"
+    }
+  ],
+  "toolchain": {
+    "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+    "nvcc": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Thu_Mar_28_02:18:24_PDT_2024\nCuda compilation tools, release 12.4, V12.4.131\nBuild cuda_12.4.r12.4/compiler.34097967_0\n",
+    "suite_libraries": "native CUDA 13, cuBLAS/cuBLASLt 13.1.1, cuDNN 9.24.0; legacy binaries keep CUDA 12"
+  },
+  "lifecycle_checks": {
+    "status": "PASS",
+    "dit": [
+      "immutable copied conditioning/reference inputs",
+      "budget denial without published result or accounting growth",
+      "callback release BUSY",
+      "256 block and eight latent callbacks",
+      "equal live numeric bytes at all eight step ends",
+      "cache cleared on cancellation and request completion",
+      "release/reload and teardown"
+    ],
+    "vae": [
+      "RGB, RGBA, zero alpha and non-square image",
+      "encode cancellation after encoded callback",
+      "decode cancellation after complete callback",
+      "invalid tile plan and insufficient budget rejected",
+      "budget selects bounded core",
+      "encoder/decoder weight release/reload",
+      "PNG after weight release, RGBA quantization roundtrip, /dev/full error",
+      "numeric baseline restored and registry close succeeds"
+    ],
+    "sanitizer": "numeric failed-fence ownership under ASan/UBSan with leak detection"
+  },
+  "model": {
+    "repository": "Qwen/Qwen-Image-2.1-Turbo",
+    "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+    "files": [
+      {
+        "path": "LICENSE",
+        "sha256": "8dc973f024ff95966bea25866efa443fd16776dcb1001e681e3d467ea572b28d",
+        "bytes": 7831
+      },
+      {
+        "path": "README.md",
+        "sha256": "9a262724d564444f1fd41a1a3fc1aae75bfb7873cd623abb3acd3d59f02ee4c5",
+        "bytes": 15116
+      },
+      {
+        "path": "model_index.json",
+        "sha256": "97e2febeb19d93cb41fa44807cde8bd42757950b5dffeacdb0331fb2d390cf20",
+        "bytes": 578
+      },
+      {
+        "path": "processor/processor_config.json",
+        "sha256": "14932921ca485d458a04dafd8069fbb0a4505622a48208d19ed247115801385b",
+        "bytes": 1300
+      },
+      {
+        "path": "processor/tokenizer.json",
+        "sha256": "be75606093db2094d7cd20f3c2f385c212750648bd6ea4fb2bf507a6a4c55506",
+        "bytes": 11422650
+      },
+      {
+        "path": "processor/tokenizer_config.json",
+        "sha256": "fd42a0b35a8d13cd473e88e310b50cbf1bccaa9eb60ed0fd873af5f8f0c59307",
+        "bytes": 705
+      },
+      {
+        "path": "scheduler/scheduler_config.json",
+        "sha256": "16c948c71f9152a34cce6e3a2f309e97ad2dca32beecbe5e2fd3a7925b7eb4bb",
+        "bytes": 486
+      },
+      {
+        "path": "text_encoder/config.json",
+        "sha256": "89050cba6b66c4f68f52305b54fc37efe28d95232246b94aa8dc0cfa36f3b734",
+        "bytes": 1542
+      },
+      {
+        "path": "text_encoder/generation_config.json",
+        "sha256": "d04d0c6fdd1dc056cf68178425a3ecf17a0b9e848cf1a8378ad31c623263472c",
+        "bytes": 241
+      },
+      {
+        "path": "text_encoder/model.safetensors",
+        "sha256": "a1eee8233f3063466dd3b06e857b0a2cf13a77c543908374771d51a546beb2e0",
+        "bytes": 17534340584
+      },
+      {
+        "path": "transformer/config.json",
+        "sha256": "2c567038ca190824728844b8d06d94ae02360e668707afd9734e789a7eb58ce3",
+        "bytes": 370
+      },
+      {
+        "path": "transformer/diffusion_pytorch_model-00001-of-00002.safetensors",
+        "sha256": "6cccd922767f01694461bdcf1f34ea7b771f3442e4d5e338ea9aa55277431cc0",
+        "bytes": 9968332504
+      },
+      {
+        "path": "transformer/diffusion_pytorch_model-00002-of-00002.safetensors",
+        "sha256": "69f53ebb063d2f606bdaff7e22e0e2144f28d978d73dc75e6e4293fc5982eab5",
+        "bytes": 4261951904
+      },
+      {
+        "path": "transformer/diffusion_pytorch_model.safetensors.index.json",
+        "sha256": "17987f6623b1c814d0ef55a137d99142b7b3b040eb1bf241b5575dd35af803a2",
+        "bytes": 30283
+      },
+      {
+        "path": "vae/config.json",
+        "sha256": "42bfdec412459bbb7bc38a0617ab70edcfc873f84ec47e0c7d01c53ba09885a5",
+        "bytes": 2172
+      },
+      {
+        "path": "vae/diffusion_pytorch_model.safetensors",
+        "sha256": "71879ffd5321e6d10c3c87513e2b474b1252efa7f3dec2969214a9bf06a6dd5c",
+        "bytes": 675508656
+      }
+    ]
+  },
+  "component_indexes": [
+    {
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/bundles/dit/bundle.ds4b",
+      "bytes": 38113,
+      "sha256": "124b9b897d80437b24b839a1c24b5eeaee661f718f280b61fa79a1f1f2a66aa7"
+    },
+    {
+      "path": "/home/daniele/ds4/performance-results/native-suite-t09-t10-20261021/bundles/vae/bundle.ds4b",
+      "bytes": 35396,
+      "sha256": "28e4b30ca560a6d1d4761bf9ae3e151b86cd06663c344dd18c733fefe233d1ec"
+    }
+  ]
+}

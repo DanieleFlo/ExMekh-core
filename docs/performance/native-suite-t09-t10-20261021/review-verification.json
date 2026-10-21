@@ -1,0 +1,1841 @@
+{
+  "date": "2026-10-21",
+  "status": "PASS",
+  "source_head": "d48d8c18f36d9e3c266f7ce3bfa9a9ce29808530",
+  "scope": "T09/T10 native C port and clean-code review; single-request CPU/CUDA sm_86",
+  "original_qualification": {
+    "path": "docs/performance/native-suite-t09-t10-20261021/verification.json",
+    "bytes": 96035,
+    "sha256": "a862c9bc4f122348fd36b8591528239ff8c62b4ba83ce76cd7d2c5d2bf226b6a"
+  },
+  "tolerances": {
+    "path": "docs/performance/native-suite-t00-20261020/tolerances.json",
+    "bytes": 1639,
+    "sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+  },
+  "commands": [
+    {
+      "name": "build",
+      "command": [
+        "make",
+        "CUDA_ARCH=sm_86",
+        "CUDNN_HOME=agent/.venv/lib/python3.13/site-packages/nvidia/cudnn",
+        "SUITE_CUDA_LIBDIR=agent/.venv/lib/python3.13/site-packages/nvidia/cu13/lib",
+        "SUITE_PYTHON=agent/.venv/bin/python",
+        "libds4-suite-cpu.a",
+        "libds4-suite-cuda.a",
+        "tests/probe_qwen_image_graph",
+        "tests/probe_qwen_image_encoder",
+        "tests/libds4_numeric_cpu.so",
+        "tests/libds4_numeric_cuda.so",
+        "tests/test_image_decode",
+        "test-qwen-image-output",
+        "test-qwen-image-graph",
+        "test-numeric-lifetime",
+        "test-qwen-image-input",
+        "test-runtime",
+        "test-resources",
+        "test-executor",
+        "test-bundle"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 6.001384596000207,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/build.log",
+        "bytes": 7985,
+        "sha256": "a60515a20896c95e4b71880454fbbf8b634b6766f2b4a730f9e31f85a0a0765d"
+      },
+      "test_summary": [
+        "Ran 3 tests in 0.055s",
+        "OK",
+        "Ran 11 tests in 0.666s",
+        "OK"
+      ]
+    },
+    {
+      "name": "image-decode",
+      "command": [
+        "tests/test_image_decode"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5010444059989823,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/image-decode.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "numeric-cpu",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_numeric",
+        "-v"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 2.5006454220001615,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/numeric-cpu.log",
+        "bytes": 1459,
+        "sha256": "7a1335fc8549ca46a64fc4e666dbc36ea022a95200ad7951ee5e2e8c7217cf51"
+      },
+      "test_summary": [
+        "Ran 14 tests in 1.339s",
+        "OK"
+      ]
+    },
+    {
+      "name": "numeric-cuda",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_numeric",
+        "-v"
+      ],
+      "env": {
+        "DS4_SUITE_NUMERIC_CUDA": "1"
+      },
+      "returncode": 0,
+      "seconds": 2.5005668020003213,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/numeric-cuda.log",
+        "bytes": 1459,
+        "sha256": "891af3993f68776168d529bf3b08b17672222c2afc277c6df03c680a5b893c20"
+      },
+      "test_summary": [
+        "Ran 14 tests in 1.289s",
+        "OK"
+      ]
+    },
+    {
+      "name": "dit",
+      "command": [
+        "tests/probe_qwen_image_graph",
+        "performance-results/native-suite-t09-t10-20261021/bundles/dit/bundle.ds4b",
+        "performance-results/native-suite-oracles-20261020/models",
+        "dit",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-text",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-text",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reference",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-reference",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-multi",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-multi",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-rgba",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reversed",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-reversed"
+      ],
+      "env": {
+        "DS4_SUITE_GRAPH_REPEATS": "5"
+      },
+      "returncode": 0,
+      "seconds": 238.92666236500008,
+      "global_gpu_peak_mib": 16170,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit.log",
+        "bytes": 649,
+        "sha256": "8519721616d14527b61bc2966f8fa44c53388c9672d5ae1b1e9f7e2acd6e7359"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-dit-text",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-text",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-text",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-text-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 5.007938511000248,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-dit-text.log",
+        "bytes": 124,
+        "sha256": "b249128ba721cc0fd80e674508622aa947117c34c48470c8388c5c25a1d909da"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-dit-reference",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reference",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-reference",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-reference-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 8.511765696999646,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-dit-reference.log",
+        "bytes": 129,
+        "sha256": "7c94a362886bf8d02bd53537535a629b366b38b7e42459c1179ec51fcc2c3f17"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-dit-multi",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-multi",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-multi",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-multi-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 8.008424351999565,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-dit-multi.log",
+        "bytes": 125,
+        "sha256": "510ff6373c151a3740e22d80569af6a08bb13641dc1d881f40a6c483e28bf796"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-dit-rgba",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-rgba",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-rgba-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 9.014906217000316,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-dit-rgba.log",
+        "bytes": 124,
+        "sha256": "2eefd660ae60828054578439e90fac441d4461029db034c53b58c5bd58fa91d4"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-dit-reversed",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle-v2/dit-reversed",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-reversed",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-reversed-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 7.504615143001502,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-dit-reversed.log",
+        "bytes": 159,
+        "sha256": "a58509c2f475702714dba7439cdfc7b880990a4088b9f1558a5ce4924ec679f9"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "vae",
+      "command": [
+        "tests/probe_qwen_image_graph",
+        "performance-results/native-suite-t09-t10-20261021/bundles/vae/bundle.ds4b",
+        "performance-results/native-suite-oracles-20261020/models",
+        "vae",
+        "performance-results/native-suite-t09-t10-20261021/oracle/vae-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-rgba",
+        "performance-results/native-suite-t09-t10-20261021/oracle/vae-transparent",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-transparent",
+        "performance-results/native-suite-t09-t10-20261021/oracle/vae-rgb",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-rgb",
+        "performance-results/native-suite-t09-t10-20261021/oracle/vae-wide",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-wide"
+      ],
+      "env": {
+        "DS4_SUITE_GRAPH_REPEATS": "5"
+      },
+      "returncode": 0,
+      "seconds": 17.56515100300021,
+      "global_gpu_peak_mib": 2562,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae.log",
+        "bytes": 736,
+        "sha256": "981bd995e0ff85a847ec8a7127921e37e94a4a460d49693930eb4fd83f6655c0"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-vae-rgba",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle/vae-rgba",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-rgba",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-rgba-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5015458079997188,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-vae-rgba.log",
+        "bytes": 279,
+        "sha256": "bd737d1b1f0f489298bfb11878eaeb2165f6362fbadacc6fbab3ad3bb1bc3715"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-vae-transparent",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle/vae-transparent",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-transparent",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-transparent-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 1.0029114230001142,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-vae-transparent.log",
+        "bytes": 286,
+        "sha256": "e89bcb62bb359d65994b8ade66a650448f55b53d9508977f57175f7352b0e185"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-vae-rgb",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle/vae-rgb",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-rgb",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-rgb-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5004973859995516,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-vae-rgb.log",
+        "bytes": 278,
+        "sha256": "cfc91cee1d2c21469bd72a022ff897b7ebf4a49e2fe3d1bc9ae0ddead866b370"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-vae-wide",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_graph.py",
+        "performance-results/native-suite-t09-t10-20261021/oracle/vae-wide",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-wide",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-wide-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 3.008670395000081,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/compare-vae-wide.log",
+        "bytes": 325,
+        "sha256": "bfe3cd9aca97b0f5470226a7e7a1d1f16b951d17569711dfed6888295e58a62f"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "legacy-build",
+      "command": [
+        "make",
+        "CUDA_ARCH=sm_86",
+        "ds4",
+        "ds4-server",
+        "ds4-bench",
+        "ds4-eval"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 96.51916000200072,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/legacy-build.log",
+        "bytes": 4013,
+        "sha256": "0973e78b3a9deb86d12e763c7ecf695e9b07961720f0fef28e3a472cd0651c0e"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "contracts",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_contracts",
+        "tests.test_qwen_image_graph_comparison",
+        "-v"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 1.5005382819999795,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/contracts.log",
+        "bytes": 1598,
+        "sha256": "dfd3449c3fc19aeb034bf3e3dd5f071c01a98a46b7fab714e04e10ea9b327bd2"
+      },
+      "test_summary": [
+        "Ran 13 tests in 1.135s",
+        "OK"
+      ]
+    },
+    {
+      "name": "final-build",
+      "command": [
+        "make",
+        "CUDA_ARCH=sm_86",
+        "CUDNN_HOME=agent/.venv/lib/python3.13/site-packages/nvidia/cudnn",
+        "SUITE_CUDA_LIBDIR=agent/.venv/lib/python3.13/site-packages/nvidia/cu13/lib",
+        "SUITE_PYTHON=agent/.venv/bin/python",
+        "libds4-suite-cpu.a",
+        "libds4-suite-cuda.a",
+        "tests/probe_qwen_image_graph",
+        "tests/probe_qwen_image_encoder",
+        "test-qwen-image-graph"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 2.0006979769987083,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/final-build.log",
+        "bytes": 3649,
+        "sha256": "1a8016113ef600be03228ee802ed0e9cb74ed017f100fbf3f5cf3d71d1430425"
+      },
+      "test_summary": [
+        "Ran 3 tests in 0.036s",
+        "OK"
+      ]
+    },
+    {
+      "name": "encoder",
+      "command": [
+        "tests/probe_qwen_image_encoder",
+        "performance-results/native-suite-t05-t06-20261020/bundles/qwen-image-2.1-turbo-bf16/bundle.ds4b",
+        "performance-results/native-suite-oracles-20261020/models",
+        "performance-results/native-suite-t07-t08-20261020/tokenizer.ds4q",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/text/input.ds4i",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-text",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/reference/input.ds4i",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-reference",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/multi/input.ds4i",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-multi"
+      ],
+      "env": {
+        "DS4_SUITE_ENCODER_CHECKS": "1"
+      },
+      "returncode": 0,
+      "seconds": 101.98186616800012,
+      "global_gpu_peak_mib": 16467,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder.log",
+        "bytes": 919,
+        "sha256": "4585981bef00ce3a519810039f189b25ba9549e35e205c917753506ca39e3051"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-encoder-text",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_encoder.py",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/text",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-text",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-text-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5004325930003688,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/compare-encoder-text.log",
+        "bytes": 1031,
+        "sha256": "3aebb208dea51b7f985e8f68089ec73fbfd35f87a3cee8fad1a895e182ba7cbb"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-encoder-reference",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_encoder.py",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/reference",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-reference",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-reference-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 1.0107885819998046,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/compare-encoder-reference.log",
+        "bytes": 1817,
+        "sha256": "5c8a5b2139c4ab717dc3b0b42ed4f03dd31986251989ca5f5fefc84433e4e3b2"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "compare-encoder-multi",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/compare_qwen_image_encoder.py",
+        "performance-results/native-suite-t07-t08-20261020/oracle-v2/multi",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-multi",
+        "--output",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-multi-comparison.json"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 1.5118100629988476,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/compare-encoder-multi.log",
+        "bytes": 1813,
+        "sha256": "82045b63f415d407aa970c515d229a85443aef85510b9c72ec5ec88b53baf766"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "asan-build",
+      "command": [
+        "cc",
+        "-O1",
+        "-g",
+        "-std=c11",
+        "-D_GNU_SOURCE",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer",
+        "-I.",
+        "tests/test_numeric_lifetime.c",
+        "ds4_numeric.c",
+        "ds4_resources.c",
+        "-lm",
+        "-pthread",
+        "-o",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/numeric-lifetime-asan"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 1.0013591759998235,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/asan-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "asan",
+      "command": [
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/numeric-lifetime-asan"
+      ],
+      "env": {
+        "ASAN_OPTIONS": "detect_leaks=1"
+      },
+      "returncode": 0,
+      "seconds": 0.5003632379994087,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/asan.log",
+        "bytes": 37,
+        "sha256": "ec865493582652f0c7e1074a3a420e6dab4209c4d689d5dce90e3cd93f2fe2ca"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "python-configured",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_contracts",
+        "tests.test_qwen_image_tokenizer",
+        "tests.test_qwen_image_preprocess",
+        "tests.test_suite_artifacts",
+        "tests.test_suite_baseline_manifests",
+        "tests.test_suite_numeric_metrics",
+        "tests.test_qwen_image_graph_comparison",
+        "-v"
+      ],
+      "env": {
+        "DS4_SUITE_PREPARED": "performance-results/native-suite-oracles-20261020",
+        "DS4_SUITE_TOKENIZER_JSON": "performance-results/native-suite-oracles-20261020/models/Qwen/Qwen-Image-2.1-Turbo/processor/tokenizer.json",
+        "PYTHONPATH": "performance-results/native-suite-oracles-20261020/deps"
+      },
+      "returncode": 0,
+      "seconds": 9.006399459000022,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/checks-final/python-configured.log",
+        "bytes": 3971,
+        "sha256": "c4b065b075b23a0945778369efe93926102b5313f52e5c6c400fff840c36ed11"
+      },
+      "test_summary": [
+        "Ran 30 tests in 8.363s",
+        "OK"
+      ]
+    },
+    {
+      "name": "docs",
+      "command": [
+        "make",
+        "docs-check"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003674979998323,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/checks-final/docs.log",
+        "bytes": 1808,
+        "sha256": "52259448a9e84182789d56b0f269d978a2ae58789222157f4a7971fcc61847db"
+      },
+      "test_summary": [
+        "Ran 10 tests in 0.048s",
+        "OK"
+      ]
+    },
+    {
+      "name": "lint",
+      "command": [
+        "/home/daniele/.local/bin/uvx",
+        "--offline",
+        "--from",
+        "ruff==0.14.0",
+        "ruff",
+        "check",
+        "tools/compile_qwen_image_constants.py",
+        "tools/run_qwen_image_graph_oracle.py",
+        "tools/compare_qwen_image_graph.py",
+        "tools/diagnose_qwen_image_dit.py",
+        "tests/test_qwen_image_graph.py",
+        "tests/test_suite_numeric.py",
+        "tests/test_qwen_image_graph_comparison.py"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003808389992628,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/checks-final/lint.log",
+        "bytes": 19,
+        "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "asan-output-build",
+      "command": [
+        "cc",
+        "-O1",
+        "-g",
+        "-std=c11",
+        "-D_GNU_SOURCE",
+        "-fsanitize=address,undefined",
+        "-fno-omit-frame-pointer",
+        "-I.",
+        "tests/test_qwen_image_output.c",
+        "ds4_qwen_image_rgba.c",
+        "ds4_qwen_image_observer.c",
+        "ds4_numeric.c",
+        "ds4_resources.c",
+        "ds4_image.c",
+        "-lm",
+        "-pthread",
+        "-o",
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/checks-final/output-asan"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 3.0007446660001733,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/checks-final/asan-output-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "asan-output",
+      "command": [
+        "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/checks-final/output-asan"
+      ],
+      "env": {
+        "ASAN_OPTIONS": "detect_leaks=1"
+      },
+      "returncode": 0,
+      "seconds": 0.5003259929999331,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/checks-final/asan-output.log",
+        "bytes": 93,
+        "sha256": "044f61494e63652a0cb3e03001753b38f17a560be34aff8a46494c43a1fd2adb"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "build",
+      "command": [
+        "make",
+        "CUDA_ARCH=sm_86",
+        "ds4",
+        "ds4-server",
+        "ds4-bench",
+        "ds4-eval",
+        "test-bundle",
+        "ds4_server_test",
+        "tests/test_cuda_ssd_cache",
+        "tests/test_prompt_prefix",
+        "tests/test_session_state"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 32.00510359500004,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/legacy/build.log",
+        "bytes": 6842,
+        "sha256": "61594c7397775da31de2d12561496d382515a1948f950f0431a75e499fb4d285"
+      },
+      "test_summary": [
+        "Ran 11 tests in 0.654s",
+        "OK"
+      ]
+    },
+    {
+      "name": "server",
+      "command": [
+        "./ds4_server_test"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5004878800009465,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/legacy/server.log",
+        "bytes": 574,
+        "sha256": "b7d1388d10c0d96fb1141ea5b62e520f5c5d21dfc9a4e83dfb98d8998b3637da"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "ssd",
+      "command": [
+        "tests/test_cuda_ssd_cache"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 6.001124794000134,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/legacy/ssd.log",
+        "bytes": 12627,
+        "sha256": "726f0fd1d0d865a03ee33379aea7e8814204654212d1681351aacd7a10df052b"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "prompt-prefix",
+      "command": [
+        "tests/test_prompt_prefix"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5003109150002274,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/legacy/prompt-prefix.log",
+        "bytes": 27,
+        "sha256": "617f25c93f4a258f37fa0a751558ec02339cf086c253863512d535b35823825b"
+      },
+      "test_summary": []
+    },
+    {
+      "name": "session-state",
+      "command": [
+        "tests/test_session_state"
+      ],
+      "env": {},
+      "returncode": 0,
+      "seconds": 0.5002902550004364,
+      "global_gpu_peak_mib": null,
+      "log": {
+        "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/legacy/session-state.log",
+        "bytes": 24,
+        "sha256": "eb9a7878f0e059662c87f63a37eec97bb20e70f90775ff38ca2c03526ea663e9"
+      },
+      "test_summary": []
+    }
+  ],
+  "comparisons": [
+    {
+      "case": "dit-text",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 295,
+      "required_max_relative_l2": 0.0,
+      "required_max_rmse": 0.0,
+      "diagnostic_failed": [],
+      "unchanged_outputs_from_original": {
+        "step-7-latent-7.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-text-comparison.json",
+      "bytes": 83023,
+      "sha256": "cbbe0ca14acf5a54f9eccae337129193c4d8fcfebaba5dc7388ffd891d8c8fc1"
+    },
+    {
+      "case": "dit-reference",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 288,
+      "required_max_relative_l2": 0.0046964106436942505,
+      "required_max_rmse": 0.009931250982959933,
+      "diagnostic_failed": [],
+      "unchanged_outputs_from_original": {
+        "step-7-latent-7.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-reference-comparison.json",
+      "bytes": 83595,
+      "sha256": "4b6de47348af6f4d617c9d83d8adb1eb9d7ebf5fb01552cbfc14f279caed73b2"
+    },
+    {
+      "case": "dit-multi",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 288,
+      "required_max_relative_l2": 0.005250152073640052,
+      "required_max_rmse": 0.009937720722953094,
+      "diagnostic_failed": [],
+      "unchanged_outputs_from_original": {
+        "step-7-latent-7.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-multi-comparison.json",
+      "bytes": 83594,
+      "sha256": "125cee7a5754716f842cbd38f92c34c6d458672880dddb151cccf46636b9ff88"
+    },
+    {
+      "case": "dit-rgba",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 288,
+      "required_max_relative_l2": 0.004837514172407188,
+      "required_max_rmse": 0.00947676644524031,
+      "diagnostic_failed": [],
+      "unchanged_outputs_from_original": {
+        "step-7-latent-7.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-rgba-comparison.json",
+      "bytes": 83591,
+      "sha256": "6f4f43bcad02418a583f1f325361e486dae423442e9d662737c0c0b2be621b8c"
+    },
+    {
+      "case": "dit-reversed",
+      "passed": true,
+      "required_count": 295,
+      "bit_exact_required": 288,
+      "required_max_relative_l2": 0.005137446485077386,
+      "required_max_rmse": 0.010559493229064833,
+      "diagnostic_failed": [
+        {
+          "name": "uncached-trajectory-7",
+          "max_abs": 0.205078125,
+          "rmse": 0.018324133456633255,
+          "relative_l2": 0.011840994554932328,
+          "bit_exact": false,
+          "passed": false,
+          "required": false
+        }
+      ],
+      "unchanged_outputs_from_original": {
+        "step-7-latent-7.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/dit-reversed-comparison.json",
+      "bytes": 83601,
+      "sha256": "c98ec28f9dc3ebfcc4a20722e354297840e4902acf7afaebe0a30622f276cdd9"
+    },
+    {
+      "case": "vae-rgba",
+      "passed": true,
+      "required_count": 2,
+      "bit_exact_required": 0,
+      "required_max_relative_l2": 0.004314120696905077,
+      "required_max_rmse": 0.0038638796077101996,
+      "diagnostic_failed": [
+        {
+          "name": "decoder-2.bf16",
+          "max_abs": 0.5,
+          "rmse": 0.03224541951153524,
+          "relative_l2": 0.0036645975831625984,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "f7d903407d7ea3197179e0ec539aed9ec8ba8d7136a3554bf3b9d0c7fb72b3ad"
+        },
+        {
+          "name": "decoder-3.bf16",
+          "max_abs": 2.0,
+          "rmse": 0.0913574475396435,
+          "relative_l2": 0.006219630419001488,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "aeebc2658447abb0a4625abb9239ea7cc503229503e13524bf747c207629eeb7"
+        },
+        {
+          "name": "decoder-4.bf16",
+          "max_abs": 0.5,
+          "rmse": 0.04123395777768785,
+          "relative_l2": 0.004330224414849077,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "fca8b3d94e1cfe818ef7325a3534c0f9e5095e72844c17cfbfc85509036b9b33"
+        },
+        {
+          "name": "encoder-2.bf16",
+          "max_abs": 0.5625,
+          "rmse": 0.026746851078668622,
+          "relative_l2": 0.005362353016365486,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "7d0fd837dae0740b3576c9dae0820c415114f47622c31f3b473f9386acf8c9ca"
+        },
+        {
+          "name": "encoder-3.bf16",
+          "max_abs": 3.0,
+          "rmse": 0.06854641679208304,
+          "relative_l2": 0.006248395178763741,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "ffdffa315f6a2b2357de7569ed11e2253a1427882f66c15bdbfd058c6dace833"
+        },
+        {
+          "name": "encoder-4.bf16",
+          "max_abs": 5.875,
+          "rmse": 0.15023394124975797,
+          "relative_l2": 0.006265111141797263,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "2466b6fb04951ca7ba387e266ad7502ee8aaae11053ecd5ebee0474962f321fd"
+        },
+        {
+          "name": "encoder-5.bf16",
+          "max_abs": 5.71875,
+          "rmse": 0.19113651367901568,
+          "relative_l2": 0.004795667675228089,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "b812f8cc39cef46f5c57f060bcf5fa909b8465059e921c9f5edd56ba73b9a324"
+        }
+      ],
+      "unchanged_outputs_from_original": {
+        "encoded-0.bf16": true,
+        "pixels.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-rgba-comparison.json",
+      "bytes": 4737,
+      "sha256": "e18c1122b61e0eb0d7a0e178e5a755cbe26f1030109f3032e4317beb85d7f2f9"
+    },
+    {
+      "case": "vae-transparent",
+      "passed": true,
+      "required_count": 2,
+      "bit_exact_required": 0,
+      "required_max_relative_l2": 0.004705016946793026,
+      "required_max_rmse": 0.004818482401155097,
+      "diagnostic_failed": [
+        {
+          "name": "decoder-2.bf16",
+          "max_abs": 256.0,
+          "rmse": 9.955192785821191,
+          "relative_l2": 0.0023402356225920196,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "3297af2e343b67d4d8d3e3bcd7ab3428ef8a2df0aefbbd10b5984f64891d5acf"
+        },
+        {
+          "name": "decoder-3.bf16",
+          "max_abs": 16384.0,
+          "rmse": 355.8327931062478,
+          "relative_l2": 0.00244814198832135,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "15d47cf874405131a54531a45300a1d605bae93fa7090d69f8cab598b4c03d31"
+        },
+        {
+          "name": "decoder-4.bf16",
+          "max_abs": 8192.0,
+          "rmse": 336.1732648780329,
+          "relative_l2": 0.0023781313259143323,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "48ca044b316be3dbc7c713bcdb6c735cd89627d58dc4a30965f8cc1b26f0b15b"
+        },
+        {
+          "name": "encoder-2.bf16",
+          "max_abs": 0.25,
+          "rmse": 0.027518596059861435,
+          "relative_l2": 0.00547237084380319,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "04187fa9e661d12162d222e668f437f57c639e57980d7c66b14de295a144eda2"
+        },
+        {
+          "name": "encoder-3.bf16",
+          "max_abs": 0.53125,
+          "rmse": 0.07453640508681303,
+          "relative_l2": 0.007339527854996264,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "ac777d76526ff934f63893fe83b246c714ddd059d73759052a1d5f06975e0bd7"
+        },
+        {
+          "name": "encoder-4.bf16",
+          "max_abs": 2.0,
+          "rmse": 0.16175014072942237,
+          "relative_l2": 0.0070621303197106475,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "1d44938dfdb634422887f20a4a266cae26391ccb6f1a435fec44b1c0eba37d9d"
+        },
+        {
+          "name": "encoder-5.bf16",
+          "max_abs": 2.0,
+          "rmse": 0.20444600003589092,
+          "relative_l2": 0.005781839230510272,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "29c83e1718f8dbd619c790556590c5e7054e45318b4cac857d2222224db02236"
+        }
+      ],
+      "unchanged_outputs_from_original": {
+        "encoded-0.bf16": true,
+        "pixels.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-transparent-comparison.json",
+      "bytes": 4778,
+      "sha256": "ad1edce105c6bd2843747216c0d432a4c4b154e6592f74a83f3a89ef215840dd"
+    },
+    {
+      "case": "vae-rgb",
+      "passed": true,
+      "required_count": 2,
+      "bit_exact_required": 0,
+      "required_max_relative_l2": 0.003911605606393988,
+      "required_max_rmse": 0.0040557931304097,
+      "diagnostic_failed": [
+        {
+          "name": "decoder-2.bf16",
+          "max_abs": 0.5,
+          "rmse": 0.038068484166849874,
+          "relative_l2": 0.003128416449854805,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "45827fa7623e12b3349a55b1e0f92139f0a47048da13c9ffbf13956c2091d5c1"
+        },
+        {
+          "name": "decoder-3.bf16",
+          "max_abs": 1.0625,
+          "rmse": 0.09632644782592581,
+          "relative_l2": 0.006975238555485982,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "a74dc12eb51b472bd2dbf3272312e185e4bb9e39cf5ade5fefd3da3de852a900"
+        },
+        {
+          "name": "decoder-4.bf16",
+          "max_abs": 1.0,
+          "rmse": 0.04549982774171495,
+          "relative_l2": 0.003333664304155655,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "0c48ec31d0781b6f478e5d093e1b0126abb992b09d8cbeddc801972395d80945"
+        },
+        {
+          "name": "encoder-2.bf16",
+          "max_abs": 0.375,
+          "rmse": 0.025151389728164122,
+          "relative_l2": 0.00429768022916181,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "c234d6a412b8ca8591d47275cd1bd2f71908561c2642a1fcc894d58558f3c1eb"
+        },
+        {
+          "name": "encoder-3.bf16",
+          "max_abs": 0.5,
+          "rmse": 0.06157335822338687,
+          "relative_l2": 0.0044722898865267235,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "2ec385ad564c4f3e977b48ede24e2a7a5d9ac3175835c7d9de45eec6210da670"
+        },
+        {
+          "name": "encoder-4.bf16",
+          "max_abs": 2.0,
+          "rmse": 0.1442773157832143,
+          "relative_l2": 0.005057752865330732,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "6968ea99a004566429e7cf2d715b9cffd0bdff3f87696a0c4c3ae635b9c001ca"
+        },
+        {
+          "name": "encoder-5.bf16",
+          "max_abs": 3.0,
+          "rmse": 0.18993873411803436,
+          "relative_l2": 0.0047991994789329875,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "bf898dc552ecf806e96841b13d1ce7d0c2644002d3af5de7f5f1ea75a874deda"
+        }
+      ],
+      "unchanged_outputs_from_original": {
+        "encoded-0.bf16": true,
+        "pixels.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-rgb-comparison.json",
+      "bytes": 4730,
+      "sha256": "5a3d087037cdb347fc168612dc08b4c0b86a73567dceaf9ecce88edccf45bb41"
+    },
+    {
+      "case": "vae-wide",
+      "passed": true,
+      "required_count": 3,
+      "bit_exact_required": 0,
+      "required_max_relative_l2": 0.0064562359222027025,
+      "required_max_rmse": 0.006678989986094407,
+      "diagnostic_failed": [
+        {
+          "name": "decoder-1.bf16",
+          "max_abs": 1.0,
+          "rmse": 0.05032572454022789,
+          "relative_l2": 0.0070002225278758675,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "b963d09eca72ba6b8644ea876a7081364d5fd3a85b6fe031df96827df74758ae"
+        },
+        {
+          "name": "decoder-2.bf16",
+          "max_abs": 1.125,
+          "rmse": 0.08212059568633633,
+          "relative_l2": 0.008215799221433902,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "246b6197acf78b38c36e130872d1d84b254a750e762ef8643fa0365c8f02ee43"
+        },
+        {
+          "name": "decoder-3.bf16",
+          "max_abs": 3.375,
+          "rmse": 0.13863686117244503,
+          "relative_l2": 0.009470171150921912,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "b422f87f029d07d3c7e104d0d9231ac8ef188c8b66b8cda848689c05ab747648"
+        },
+        {
+          "name": "decoder-4.bf16",
+          "max_abs": 1.46484375,
+          "rmse": 0.05060271673308139,
+          "relative_l2": 0.004845107391258153,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "29521ec4d08a9a160b760be708b9d8f96731ecf4005921f8ff6d43cdbd267dbc"
+        },
+        {
+          "name": "encoder-2.bf16",
+          "max_abs": 1.109375,
+          "rmse": 0.03328174039159349,
+          "relative_l2": 0.006014652427923549,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "00182592d5b50aa94a4bb25892d018bd4d77597b9d27bde7bbdd5daf88b5794a"
+        },
+        {
+          "name": "encoder-3.bf16",
+          "max_abs": 85.3046875,
+          "rmse": 0.39896123665538297,
+          "relative_l2": 0.03254335817983703,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "36a4446ca13dc3fd25ded287ba09c34896103aebc560d06d6bb844aa3414ffca"
+        },
+        {
+          "name": "encoder-4.bf16",
+          "max_abs": 170.125,
+          "rmse": 0.7989627041241308,
+          "relative_l2": 0.0311031379329361,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "dae444d4c06d1ab56a388f5fff8c997033991b82bc4d9f8d0f3f9e06a51706ea"
+        },
+        {
+          "name": "encoder-5.bf16",
+          "max_abs": 171.6875,
+          "rmse": 0.7957072398960097,
+          "relative_l2": 0.017897280422747748,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "cc0405ceffb1de0180c65070fcf758b62838b76851af0b698bc1eee1fb92360d"
+        },
+        {
+          "name": "posterior-0.bf16",
+          "max_abs": 0.3984375,
+          "rmse": 0.022994931027540907,
+          "relative_l2": 0.006354830482942271,
+          "bit_exact": false,
+          "passed": false,
+          "required": false,
+          "native_sha256": "a74d075504f38f43eeb6909db59003b23e10df6d27323b432e5b59906994ae50"
+        }
+      ],
+      "unchanged_outputs_from_original": {
+        "encoded-0.bf16": true,
+        "pixels.f32": true,
+        "pixels-tiled.f32": true
+      },
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/qualification/vae-wide-comparison.json",
+      "bytes": 5202,
+      "sha256": "fbd5d1ac4e283399ee2886ac4d263a98473d8ca4571a4f21fa452213d13714f8"
+    },
+    {
+      "case": "encoder-text",
+      "verdict": "PASS",
+      "boundaries": 38,
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-text-comparison.json",
+      "bytes": 10286,
+      "sha256": "5a6198df80eef37797623de0ee5d61b777f3fdb4a9b259099f0a9568a1605bf5"
+    },
+    {
+      "case": "encoder-reference",
+      "verdict": "PASS",
+      "boundaries": 69,
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-reference-comparison.json",
+      "bytes": 18606,
+      "sha256": "1673220ef3c3b5bf57a03ecb630d7d7ac080bbbfc0212b0be85f69da2445e714"
+    },
+    {
+      "case": "encoder-multi",
+      "verdict": "PASS",
+      "boundaries": 69,
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-qualified/encoder-multi-comparison.json",
+      "bytes": 18602,
+      "sha256": "574e7134eebc5d4ed32a2e57ad12ba3b0834cec59eef3874445260fb1072b82d"
+    }
+  ],
+  "source_files": [
+    {
+      "path": ".gitignore",
+      "bytes": 3244,
+      "sha256": "f7f66f1c63fba5c31cd9082041fbd0bece30e38494ae3ce99dc71a5251b52eb1"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 75508,
+      "sha256": "5d173d293bcfa7d790d3b6c98d885dc06ed880e7c03e2eca175b5bc7e96aaf77"
+    },
+    {
+      "path": "PROJECT_INDEX.md",
+      "bytes": 88318,
+      "sha256": "ecb735201259e8ece9859fa85c0ecdf3009e1c9b04554eb4d36cee09d29bb08c"
+    },
+    {
+      "path": "ds4_bundle.c",
+      "bytes": 22231,
+      "sha256": "51f3658482c731443ee59457282cb2c3b57ddafbfc495a55f94ea3e1541bf8e1"
+    },
+    {
+      "path": "ds4_image.c",
+      "bytes": 42160,
+      "sha256": "9603375993ff9f447c598db863a7781787bd93a3d75e5877d31317913a9c684c"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 35213,
+      "sha256": "a158962ef735ef2586f395bc8c09a5accd1cd31a77d3607e88fe52e84d1db7f1"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 8586,
+      "sha256": "a972a59bb93ac21cabeeee3f2ba30be1bc30c43732b606073694b5b5b4f0c078"
+    },
+    {
+      "path": "ds4_numeric_cuda.cu",
+      "bytes": 36727,
+      "sha256": "0a535720b0cf3f09ba1851d0f9a57c7d03d0e45988e89fec32d9c319c82e758a"
+    },
+    {
+      "path": "ds4_numeric_cudnn.cu",
+      "bytes": 9944,
+      "sha256": "e6e594f930c9527813916a5cad1c0918bdbe3d5b94fa944865a981447a41691d"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 2738,
+      "sha256": "ecd88bc4f0cf899b7fb4b6001a04e369cc04f251654af50780014c6258f7886b"
+    },
+    {
+      "path": "ds4_numeric_weights.c",
+      "bytes": 1196,
+      "sha256": "a480cc3caa8f824a31d41a6d26eab8afcc9cb80914d00e9347fdb619260cda35"
+    },
+    {
+      "path": "ds4_numeric_weights.h",
+      "bytes": 548,
+      "sha256": "7d30208fd7cb70a464a870e29976722d5c1021210c80a4ddc9e81d4261eb9d47"
+    },
+    {
+      "path": "ds4_qwen_image_attention.c",
+      "bytes": 4490,
+      "sha256": "9b523420a46c03dd4787b59785c3dd1e695dbe91f8e804b5fe6dc9f36368b66d"
+    },
+    {
+      "path": "ds4_qwen_image_attention.h",
+      "bytes": 600,
+      "sha256": "333e74fe6f2939fcdbd42c5466f47df4f1e1ef9c34f834a67fd16f7ab350e633"
+    },
+    {
+      "path": "ds4_qwen_image_dit.c",
+      "bytes": 29987,
+      "sha256": "db2b7c2f865aac64221f6f267051a9cf6dce91f56e074299af188bede29e8530"
+    },
+    {
+      "path": "ds4_qwen_image_dit.h",
+      "bytes": 3210,
+      "sha256": "9191c663abae9c8f6fadd5ba8608ebf3afa19858ca8de586735e52cd6b12c2a9"
+    },
+    {
+      "path": "ds4_qwen_image_dit_constants.h",
+      "bytes": 4311,
+      "sha256": "3bd136388f6c49e2bc208780b0141d8b333def66cebab440e67ce8a57ad6bd19"
+    },
+    {
+      "path": "ds4_qwen_image_encoder.c",
+      "bytes": 35460,
+      "sha256": "a5cf58d4733641c2f3c4fcb070314be3dfcbafdf584076cd2c1137fbdc980c4a"
+    },
+    {
+      "path": "ds4_qwen_image_encoder.h",
+      "bytes": 2567,
+      "sha256": "6c054a5cbd27503ca80a81bf62fdcdca3b570af34746fd1806ae7a97b052ec10"
+    },
+    {
+      "path": "ds4_qwen_image_graph.h",
+      "bytes": 8937,
+      "sha256": "4e824c0ceed1fcabfafb10d656fbee78c0bfa32a6fb563147155f9c6d12b991b"
+    },
+    {
+      "path": "ds4_qwen_image_input.c",
+      "bytes": 11200,
+      "sha256": "1706facc6f8338e2eb1bdcf3cc1c1d89755d39755b2cc265718306282e525038"
+    },
+    {
+      "path": "ds4_qwen_image_observer.c",
+      "bytes": 799,
+      "sha256": "fa48144e9b7702d9056b2b6b965e17babd23a309c5cbbb9d6d86f678142bc6ff"
+    },
+    {
+      "path": "ds4_qwen_image_observer.h",
+      "bytes": 707,
+      "sha256": "d0fc424a9ceb685d72646a572398148154825bdf2f8143348c2d5b4260f659fd"
+    },
+    {
+      "path": "ds4_qwen_image_rgba.c",
+      "bytes": 3088,
+      "sha256": "9ba9b70db912dca7f9ba540dd8e8923e3e1d8e5a8138f98697b71832b6e8325d"
+    },
+    {
+      "path": "ds4_qwen_image_rgba.h",
+      "bytes": 771,
+      "sha256": "5ba69afb248509ef231ca6923eb6a4eee890d5b3a6f8ee3624c6a63a2613461b"
+    },
+    {
+      "path": "ds4_qwen_image_rgba_internal.h",
+      "bytes": 589,
+      "sha256": "0aa1b2ef5227787a6946de61bcd5df9756dcfef758e762f38c93b8852c661f9c"
+    },
+    {
+      "path": "ds4_qwen_image_vae.c",
+      "bytes": 30668,
+      "sha256": "14ee6e647fd594a5058b04d32db3814fa80d7fbcada9588937b0a3c1e8bd7392"
+    },
+    {
+      "path": "ds4_qwen_image_vae.h",
+      "bytes": 2494,
+      "sha256": "a82d9f4a08fcf71f44d40d72bd170cba76b001fd0f3ffa67021f2959c7abd632"
+    },
+    {
+      "path": "ds4_qwen_image_vae_stats.h",
+      "bytes": 1434,
+      "sha256": "72a2924688d15db52e56a4689abc0446ebfb584054148947e7df2393cbf3bad9"
+    },
+    {
+      "path": "ds4_resources.c",
+      "bytes": 20875,
+      "sha256": "24e0b7f3944a821f59149c150e1b6833905f0bc51ea0c4a306264b4f55723f7c"
+    },
+    {
+      "path": "ds4_resources.h",
+      "bytes": 5667,
+      "sha256": "9328f373284b0ab5efa1af6e94bbf415454d4f12643ffb76193140c039df9522"
+    },
+    {
+      "path": "ds4_runtime.c",
+      "bytes": 9885,
+      "sha256": "9b8499eddda90e08ca17de0dd10b993d36ed710722bce0e1d7824ab9f7e16c0f"
+    },
+    {
+      "path": "tests/probe_qwen_image_encoder.c",
+      "bytes": 13842,
+      "sha256": "86aef28a8a73555f16d178d6cb2a50e27bcca11e88c5f558c8ba6e934b90630a"
+    },
+    {
+      "path": "tests/probe_qwen_image_graph.c",
+      "bytes": 18517,
+      "sha256": "59a41eeae28bcda190940ca3d46ec7aa047ede91eeb1bc792b2342eb9427fc4b"
+    },
+    {
+      "path": "tests/test_numeric_lifetime.c",
+      "bytes": 3867,
+      "sha256": "3784d710d25abf693fce2ff83c9213bfb4587c6f42b38f2fc27dfd86aa7c6d95"
+    },
+    {
+      "path": "tests/test_qwen_image_graph.py",
+      "bytes": 6977,
+      "sha256": "d7fc21e635a08dfc82eb2c7d04379ecae4da256ae1511c5ebab2bb5a0236e1d0"
+    },
+    {
+      "path": "tests/test_qwen_image_graph_comparison.py",
+      "bytes": 5185,
+      "sha256": "e7d424ce174f1b84fe850424e9bae6762402ff2301128009c559c2c83b296c04"
+    },
+    {
+      "path": "tests/test_qwen_image_output.c",
+      "bytes": 3389,
+      "sha256": "cf137a7448f1bd4c53b59392563c0554138d69a201a612021a035e184fcadb88"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 29230,
+      "sha256": "58d7e76b72864494117fb174f7d4f8a8b7843e27224f16be69ba5a3c82fb49e6"
+    },
+    {
+      "path": "third_party/iris/png.h",
+      "bytes": 31360,
+      "sha256": "ee36ec1a3c5a6d503d87939d7d9dafac0304d50bc82345e1c2867f2a2af476b9"
+    },
+    {
+      "path": "tools/compare_qwen_image_graph.py",
+      "bytes": 8986,
+      "sha256": "ba5a18b1894cc00fc319a4b8e50fea26c822983c844bbbc2aaeb45ac96d0804a"
+    },
+    {
+      "path": "tools/compile_qwen_image_constants.py",
+      "bytes": 1242,
+      "sha256": "416c4f0f0c1284e943cd75baf3424f467969167211ddc542dbc6a31ed41f017a"
+    },
+    {
+      "path": "tools/diagnose_qwen_image_dit.py",
+      "bytes": 11455,
+      "sha256": "c2a88e9fa4edb5234ebab60cbadb67bb9537d8ea12e04aebb5a10bc0066dff33"
+    },
+    {
+      "path": "tools/run_qwen_image_graph_oracle.py",
+      "bytes": 11457,
+      "sha256": "36fbea1b35af951d42b088eb8969a403f0a029541f8facd3f3d5dad49943758d"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "tests/probe_qwen_image_graph",
+      "bytes": 1923512,
+      "sha256": "253c6735fd22a640b1a57d1013c5c66e770c8fc93a1d29185e2c52e86a2767ce"
+    },
+    {
+      "path": "tests/probe_qwen_image_encoder",
+      "bytes": 1901776,
+      "sha256": "1141e1eec7c51eec6b0e87a79467566d1b0fbd1a450625098120a067c4aece1f"
+    },
+    {
+      "path": "tests/test_qwen_image_output",
+      "bytes": 545696,
+      "sha256": "935bfd1fd8863d20b63859ec139200c990d8631b0d8dc32b1d522e9bef2347f9"
+    },
+    {
+      "path": "libds4-suite-cpu.a",
+      "bytes": 1792814,
+      "sha256": "c6d69a779113259d54d3d9ca53b91f63bce26de35d74f0d354a5c300fa777c69"
+    },
+    {
+      "path": "libds4-suite-cuda.a",
+      "bytes": 2693898,
+      "sha256": "f0a8aa89ff595a84d3b942b1321657b47a51d9dc2345af0b2fa82c3712dfe968"
+    },
+    {
+      "path": "ds4",
+      "bytes": 71454672,
+      "sha256": "7f3538d1c6f3e724ddb1b572390a32ed266591cec3b4da30d61f514202334429"
+    },
+    {
+      "path": "ds4-server",
+      "bytes": 73714000,
+      "sha256": "f30dfe9cc73176425ccdc9e48287ff2f2b76c89d33464d11acaa53a6d261604b"
+    },
+    {
+      "path": "ds4-bench",
+      "bytes": 71190504,
+      "sha256": "5b9bd82bd1953636b1d52bfacb418449b44df86309dfb230e0807ad8e95e314a"
+    },
+    {
+      "path": "ds4-eval",
+      "bytes": 71529688,
+      "sha256": "cad1590c20ed378fb0251893308df68282c8ad0047a7ae6a52a693055b693dfc"
+    },
+    {
+      "path": "ds4_server_test",
+      "bytes": 7515984,
+      "sha256": "6f7c4643ebf46de7312d7c8ff65735294e1e9b058d337f0182f33ae2ebadb49d"
+    }
+  ],
+  "benchmarks": {
+    "dit-text-timings.f64": {
+      "samples_seconds": [
+        1.7667849079989537,
+        1.7507348390008701,
+        1.659503492001022,
+        1.7426095249993523,
+        1.766939404000368
+      ],
+      "min": 1.659503492001022,
+      "p10": 1.6927459052003542,
+      "median": 1.7507348390008701,
+      "mean": 1.7373144336001132,
+      "p90": 1.7668776055998023,
+      "max": 1.766939404000368,
+      "standard_deviation": 0.040022083001994835,
+      "coefficient_of_variation": 0.0230367527189997,
+      "verdict": "STABLE_BASELINE"
+    },
+    "dit-reference-timings.f64": {
+      "samples_seconds": [
+        3.04166746699957,
+        3.1144712550012628,
+        3.058105963998969,
+        3.1136093009990873,
+        3.017887828000312
+      ],
+      "min": 3.017887828000312,
+      "p10": 3.027399683600015,
+      "median": 3.058105963998969,
+      "mean": 3.06914836299984,
+      "p90": 3.1141264734003924,
+      "max": 3.1144712550012628,
+      "standard_deviation": 0.038821942806241634,
+      "coefficient_of_variation": 0.012649092912633384,
+      "verdict": "STABLE_BASELINE"
+    },
+    "dit-multi-timings.f64": {
+      "samples_seconds": [
+        3.6574588539988326,
+        3.766715642001145,
+        3.6906708870010334,
+        3.667863368000326,
+        3.6665051319996564
+      ],
+      "min": 3.6574588539988326,
+      "p10": 3.661077365199162,
+      "median": 3.667863368000326,
+      "mean": 3.689842776600199,
+      "p90": 3.7362977400011004,
+      "max": 3.766715642001145,
+      "standard_deviation": 0.03996644017858146,
+      "coefficient_of_variation": 0.010831475105670037,
+      "verdict": "STABLE_BASELINE"
+    },
+    "dit-rgba-timings.f64": {
+      "samples_seconds": [
+        3.0789559740005643,
+        3.0439632489997166,
+        3.0500084070008597,
+        3.0772394760006136,
+        3.065641584998957
+      ],
+      "min": 3.0439632489997166,
+      "p10": 3.046381312200174,
+      "median": 3.065641584998957,
+      "mean": 3.0631617382001424,
+      "p90": 3.078269374800584,
+      "max": 3.0789559740005643,
+      "standard_deviation": 0.014109446023573191,
+      "coefficient_of_variation": 0.004606170757363809,
+      "verdict": "STABLE_BASELINE"
+    },
+    "dit-reversed-timings.f64": {
+      "samples_seconds": [
+        3.5679632120009046,
+        3.6447046639987093,
+        3.607665542000177,
+        3.652221769998505,
+        3.6685084119999374
+      ],
+      "min": 3.5679632120009046,
+      "p10": 3.5838441440006137,
+      "median": 3.6447046639987093,
+      "mean": 3.6282127199996466,
+      "p90": 3.661993755199364,
+      "max": 3.6685084119999374,
+      "standard_deviation": 0.03612298777878307,
+      "coefficient_of_variation": 0.009956138343174815,
+      "verdict": "STABLE_BASELINE"
+    },
+    "vae-rgba-encode-timings.f64": {
+      "samples_seconds": [
+        0.06333862700012105,
+        0.060096662999058026,
+        0.05722885499926633,
+        0.05680551699879288,
+        0.06056113599879609
+      ],
+      "min": 0.05680551699879288,
+      "p10": 0.05697485219898226,
+      "median": 0.060096662999058026,
+      "mean": 0.05960615959920688,
+      "p90": 0.06222763059959106,
+      "max": 0.06333862700012105,
+      "standard_deviation": 0.0023907765493277307,
+      "coefficient_of_variation": 0.04010955521045752,
+      "verdict": "STABLE_BASELINE"
+    },
+    "vae-rgba-decode-timings.f64": {
+      "samples_seconds": [
+        0.13447897800142528,
+        0.10027864299991052,
+        0.10208629500084498,
+        0.09951521400034835,
+        0.10118039500048326
+      ],
+      "min": 0.09951521400034835,
+      "p10": 0.09982058560017322,
+      "median": 0.10118039500048326,
+      "mean": 0.10750790500060248,
+      "p90": 0.12152190480119317,
+      "max": 0.13447897800142528,
+      "standard_deviation": 0.013513070377282757,
+      "coefficient_of_variation": 0.12569373737872605,
+      "verdict": "NEED_MORE_DATA"
+    },
+    "vae-transparent-encode-timings.f64": {
+      "samples_seconds": [
+        0.05812103300013405,
+        0.058511014000032446,
+        0.06201997100106382,
+        0.05644688800020958,
+        0.0578295409995917
+      ],
+      "min": 0.05644688800020958,
+      "p10": 0.05699994919996243,
+      "median": 0.05812103300013405,
+      "mean": 0.05858568940020632,
+      "p90": 0.060616388200651274,
+      "max": 0.06201997100106382,
+      "standard_deviation": 0.0018526739557670514,
+      "coefficient_of_variation": 0.03162331918826113,
+      "verdict": "STABLE_BASELINE"
+    },
+    "vae-transparent-decode-timings.f64": {
+      "samples_seconds": [
+        0.09942521800076065,
+        0.09421033700164116,
+        0.09551616399949125,
+        0.10184369099988544,
+        0.09469196700047178
+      ],
+      "min": 0.09421033700164116,
+      "p10": 0.09440298900117342,
+      "median": 0.09551616399949125,
+      "mean": 0.09713747540045006,
+      "p90": 0.10087630180023552,
+      "max": 0.10184369099988544,
+      "standard_deviation": 0.0029852816507884017,
+      "coefficient_of_variation": 0.03073254311460693,
+      "verdict": "STABLE_BASELINE"
+    },
+    "vae-rgb-encode-timings.f64": {
+      "samples_seconds": [
+        0.05536444999961532,
+        0.05712446899997303,
+        0.07320583799992164,
+        0.05776896600036707,
+        0.06011697999929311
+      ],
+      "min": 0.05536444999961532,
+      "p10": 0.056068457599758405,
+      "median": 0.05776896600036707,
+      "mean": 0.06071614059983403,
+      "p90": 0.06797029479967023,
+      "max": 0.07320583799992164,
+      "standard_deviation": 0.006427722300355802,
+      "coefficient_of_variation": 0.10586513300836141,
+      "verdict": "NEED_MORE_DATA"
+    },
+    "vae-rgb-decode-timings.f64": {
+      "samples_seconds": [
+        0.0985490099992603,
+        0.0954130879999866,
+        0.09527226499994867,
+        0.10004546900017885,
+        0.09569490600006247
+      ],
+      "min": 0.09527226499994867,
+      "p10": 0.09532859419996384,
+      "median": 0.09569490600006247,
+      "mean": 0.09699494759988739,
+      "p90": 0.09944688539981143,
+      "max": 0.10004546900017885,
+      "standard_deviation": 0.0019432351401714682,
+      "coefficient_of_variation": 0.02003439548405637,
+      "verdict": "STABLE_BASELINE"
+    },
+    "vae-wide-encode-timings.f64": {
+      "samples_seconds": [
+        0.14249242400001094,
+        0.19686273000115762,
+        0.13883906999944884,
+        0.1324152340002911,
+        0.13326200600022275
+      ],
+      "min": 0.1324152340002911,
+      "p10": 0.13275394280026376,
+      "median": 0.13883906999944884,
+      "mean": 0.14877429280022625,
+      "p90": 0.17511460760069894,
+      "max": 0.19686273000115762,
+      "standard_deviation": 0.024326603407534824,
+      "coefficient_of_variation": 0.16351348710627397,
+      "verdict": "NEED_MORE_DATA"
+    },
+    "vae-wide-decode-timings.f64": {
+      "samples_seconds": [
+        0.3879042249991471,
+        0.3841385790001368,
+        0.38478674799989676,
+        0.38550289900013013,
+        0.3909355579999101
+      ],
+      "min": 0.3841385790001368,
+      "p10": 0.3843978466000408,
+      "median": 0.38550289900013013,
+      "mean": 0.3866536017998442,
+      "p90": 0.3897230247996049,
+      "max": 0.3909355579999101,
+      "standard_deviation": 0.002491337271933021,
+      "coefficient_of_variation": 0.006443331344479991,
+      "verdict": "STABLE_BASELINE"
+    }
+  },
+  "not_verified": [
+    "Metal",
+    "ROCm",
+    "distributed",
+    "end-to-end image pipeline T11",
+    "HTTP T17",
+    "quantized image profiles"
+  ],
+  "limitations": [
+    "Independent uncached reversed trajectory retains relative_l2 0.011840994554932328 above 0.01. Production cached path and same-input cache/full equivalence pass unchanged ceilings.",
+    "VAE raw posterior/internal feature-map ceiling exceedances remain diagnostics; normalized latent, pixels, alpha and tile borders pass.",
+    "CV over 5% remains NEED_MORE_DATA. No performance optimization is promoted.",
+    "Legacy engine/server monoliths, backend globals and worst-case quadratic image BPE are still refactoring debt; this is not a whole-repository clean-code certification."
+  ],
+  "preserved_user_changes": "Pre-existing T18 roadmap annotations excluded from the commit",
+  "initial_failures": [
+    {
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/checks/docs.log",
+      "reason": "Documentation link target manifest had not been written yet; final docs-check passes."
+    },
+    {
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression/encoder.log",
+      "reason": "Early test expected BUSY but close reported success; follow-up accounting assertion exposed the group owner ignoring metadata release failure."
+    },
+    {
+      "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/regression-final/encoder.log",
+      "reason": "Scoped construction/close leaked metadata. Fixed in ds4_bundle weight-group ownership with synchronous host accounting and checked close."
+    }
+  ],
+  "agent": {
+    "command": "uv run --no-sync pytest -n 2",
+    "cwd": "agent",
+    "summary": "================= 1128 passed, 44 skipped in 631.58s (0:10:31) =================",
+    "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/agent-tests.log",
+    "bytes": 13590,
+    "sha256": "c496759ad866be0ce39dcbe3a9a49bce079c35587a406c629d1a9954c0a51835"
+  },
+  "commit_docs_check": {
+    "status": "PASS",
+    "scope": "canonical staged roadmap without pre-existing user T18 edits",
+    "path": "/home/daniele/ds4/performance-results/native-suite-review-t09-t10-20261021/commit-docs-check.log",
+    "bytes": 1808,
+    "sha256": "438d6380574c3cb1730c820898f020367cf9d18c6d022e2101ee7c6ad9e32076"
+  }
+}

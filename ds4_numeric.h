@@ -58,6 +58,11 @@ ds4_status ds4_num_copy(ds4_numeric *, ds4_num_view, ds4_num_view);
 ds4_status ds4_num_linear(ds4_numeric *, ds4_num_view y, ds4_num_view x,
                           ds4_num_view w, ds4_num_view bias, uint32_t rows,
                           uint32_t in, uint32_t out);
+/* Contiguous independent FP32 matrices. B is [batch,out,in] if transposed,
+ * otherwise [batch,in,out]. Used by math SDPA with FP32 intermediates. */
+ds4_status ds4_num_matmul_batch(ds4_numeric *, ds4_num_view y, ds4_num_view x,
+                                ds4_num_view w, uint32_t batch, uint32_t rows,
+                                uint32_t in, uint32_t out, bool transpose_b);
 enum { DS4_NUM_RMS, DS4_NUM_LAYER, DS4_NUM_L2 };
 enum { DS4_NUM_SCALE_NONE, DS4_NUM_SCALE_DIRECT, DS4_NUM_SCALE_ZERO_CENTERED };
 ds4_status ds4_num_norm(ds4_numeric *, ds4_num_view y, ds4_num_view x,
@@ -88,6 +93,11 @@ ds4_status ds4_num_point(ds4_numeric *, ds4_num_view y, ds4_num_view x,
 ds4_status ds4_num_rope(ds4_numeric *, ds4_num_view y, ds4_num_view x,
                         ds4_num_view cos, ds4_num_view sin, uint32_t heads,
                         uint32_t dim, bool adjacent, bool round_products);
+/* Adjacent complex multiplication has explicit FMA rounding, unlike the
+ * real-valued rotation above. Qwen Image 2.1 uses this convention. */
+ds4_status ds4_num_rope_complex(ds4_numeric *, ds4_num_view y, ds4_num_view x,
+                                ds4_num_view cos, ds4_num_view sin,
+                                uint32_t heads, uint32_t dim);
 /* Bounds are inclusive/exclusive key ranges per batch/query, so padding,
  * causal, block-causal, local/full and segmented vision need no score mask.
  * q/k/v layout: [batch,tokens,heads,dim]; GQA maps contiguous query groups.

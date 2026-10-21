@@ -3,6 +3,7 @@
 #include "ds4_bundle.h"
 #include "ds4_numeric.h"
 #include "ds4_qwen_image_input.h"
+#include "ds4_qwen_image_observer.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -15,12 +16,6 @@ typedef struct {
 } ds4_qwen_image_conditioning_view;
 ds4_qwen_image_conditioning_view
 ds4_qwen_image_conditioning_data(const ds4_qwen_image_conditioning *);
-
-typedef struct {
-  void *opaque;
-  bool (*cancelled)(void *);
-  ds4_status (*trace)(void *, const char *stage, uint32_t layer, ds4_num_view);
-} ds4_qwen_image_observer;
 
 /* Bundle, numeric context and runtime outlive the adapter. No GGUF LLM
  * engine is required. Open checks the complete 750-tensor architecture. */

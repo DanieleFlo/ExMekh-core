@@ -204,6 +204,23 @@ ds4_status ds4_resource_register(ds4_resources *r, const ds4_resource_spec *s, d
     if (status) free(p);
     return status;
 }
+ds4_status ds4_resource_register_host(ds4_resources *r, uint64_t owner,
+                                      uint64_t bytes, ds4_resource **out) {
+    if (!out) return DS4_STATUS_INVALID;
+    *out = NULL;
+    if (!bytes) return DS4_STATUS_INVALID;
+    uint64_t demand[DS4_MEMORY_COUNT] = {0};
+    demand[DS4_MEMORY_HOST] = bytes;
+    ds4_reservation *lease = NULL;
+    ds4_status status = ds4_resources_reserve(r, owner, demand, &lease);
+    if (status) return status;
+    ds4_resource_spec spec = {.owner = owner, .requested = bytes,
+        .allocated = bytes, .live = bytes, .location = DS4_MEMORY_HOST, .device = -1};
+    status = ds4_reservation_commit(lease, &spec, out);
+    ds4_reservation_cancel(lease);
+    return status;
+}
+
 ds4_status ds4_resource_view(ds4_resource *base, uint64_t offset, uint64_t bytes, ds4_resource **out) {
     if (!out) return DS4_STATUS_INVALID;
     *out = NULL;

@@ -6,6 +6,7 @@ The frozen T00 ceilings apply per case, never to averages across cases.
 
 import ctypes as C
 import json
+import math
 import os
 import unittest
 from pathlib import Path
@@ -93,6 +94,17 @@ class Numeric:
                 C.c_uint32,
                 C.c_uint32,
             ],
+            "ds4_num_matmul_batch": [
+                ptr,
+                View,
+                View,
+                View,
+                C.c_uint32,
+                C.c_uint32,
+                C.c_uint32,
+                C.c_uint32,
+                C.c_bool,
+            ],
             "ds4_num_norm": [
                 ptr,
                 View,
@@ -116,6 +128,15 @@ class Numeric:
                 C.c_uint32,
                 C.c_bool,
                 C.c_bool,
+            ],
+            "ds4_num_rope_complex": [
+                ptr,
+                View,
+                View,
+                View,
+                View,
+                C.c_uint32,
+                C.c_uint32,
             ],
             "ds4_num_attend": [
                 ptr,
@@ -252,6 +273,28 @@ class SuiteNumeric(unittest.TestCase):
         self.assertLessEqual(absolute, 0.04 if view.type == 30 else 0.00002, name)
         self.assertLessEqual(relative, 0.02 if view.type == 30 else 0.00001, name)
 
+    def test_matmul_batch(self):
+        torch.manual_seed(20261021)
+        x = torch.randn(3, 7, 65)
+        w = torch.randn(3, 13, 65) / math.sqrt(65)
+        y = self.n.tensor(torch.zeros(3, 7, 13))
+        self.n.call(
+            "matmul_batch", y, self.n.tensor(x), self.n.tensor(w), 3, 7, 65, 13, True
+        )
+        self.compare("linear-batch", y, x @ w.transpose(-2, -1), x=x, w=w)
+        self.n.call(
+            "matmul_batch",
+            y,
+            self.n.tensor(x),
+            self.n.tensor(w.transpose(-2, -1).contiguous()),
+            3,
+            7,
+            65,
+            13,
+            False,
+        )
+        self.compare("matmul-batch", y, x @ w.transpose(-2, -1), x=x, w=w)
+
     def test_linear(self):
         for dtype in (torch.float32, torch.bfloat16):
             for rows, in_dim, out_dim in (
@@ -336,6 +379,30 @@ class SuiteNumeric(unittest.TestCase):
             ):
                 self.n.call("point", y, xv, bv, op, 0.25)
                 self.compare(f"point-{dtype}-{op}", y, expected, x=x, b=b)
+
+    def test_complex_rope(self):
+        torch.manual_seed(20261021)
+        for dtype in (torch.float32, torch.bfloat16):
+            x = torch.randn(31, 3, 128).to(dtype)
+            angles = torch.randn(31, 1, 64)
+            co, si = angles.cos(), angles.sin()
+            u, v = x[..., ::2].float(), x[..., 1::2].float()
+            # Each float32 product is exact in float64. Round only the
+            # unfused term, then one FMA result, independently of native code.
+            real = (u.double() * co.double() - (v * si).double()).float()
+            imag = (u.double() * si.double() + (v * co).double()).float()
+            expected = torch.stack((real, imag), -1).flatten(-2).to(dtype)
+            y = self.n.tensor(torch.zeros_like(x))
+            self.n.call(
+                "rope_complex",
+                y,
+                self.n.tensor(x),
+                self.n.tensor(co),
+                self.n.tensor(si),
+                3,
+                128,
+            )
+            self.compare(f"complex-rope-{dtype}", y, expected)
 
     def test_rope(self):
         torch.manual_seed(17)

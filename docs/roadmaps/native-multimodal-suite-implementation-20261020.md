@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md); T09–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza anticipare l'inferenza dei nuovi modelli o promuovere profili quantizzati.
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md); T11–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -217,32 +217,36 @@ Evidenze nel [report T07–T08](../performance/native-suite-t07-t08-20261020/REA
 
 ## 13. T09 — DiT single-stream, scheduler Turbo e prefix cache
 
-**Dipendenze:** T06, T07. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T06, T07. **Priorità:** alta. **Stato:** `DONE` (componente residente, CUDA sm_86).
 
-- [ ] `T09.1` Implementare proiezioni input/testo, timestep embedding, modulazione, 32 blocchi e output usando la configurazione fissata.
-- [ ] `T09.2` Implementare metadata dei token, RoPE e maschera block-causal senza confondere la versione precedente dual-stream. Validare con maschere piccole materializzate soltanto nei test.
-- [ ] `T09.3` Implementare primo passo completo e passi target-only con prefix cache per layer; cache proprietaria del solo prefisso e invalidazione per conditioning/profilo.
-- [ ] `T09.4` Implementare scheduler Euler e otto passi ufficiali, zero terminale, trasformazioni di sigma/time shifting e CFG 1; nessuna recipe base ereditata implicitamente.
-- [ ] `T09.5` Accettare rumore iniziale esplicito per i confronti e definire RNG nativo stabile per la produzione. Tenere lo stato RNG della generazione distinto da quello del LLM sospeso.
-- [ ] `T09.6` Eseguire con DiT residente; esporre gruppi e dipendenze per T19. Stimare separatamente prefix cache, attivazioni e workspace del primo passo.
+- [x] `T09.1` Implementare proiezioni input/testo, timestep embedding, modulazione, 32 blocchi e output usando la configurazione fissata.
+- [x] `T09.2` Implementare metadata dei token, RoPE e maschera block-causal senza confondere la versione precedente dual-stream. Validare con maschere piccole materializzate soltanto nei test.
+- [x] `T09.3` Implementare primo passo completo e passi target-only con prefix cache per layer; cache proprietaria del solo prefisso e invalidazione per conditioning/profilo.
+- [x] `T09.4` Implementare scheduler Euler e otto passi ufficiali, zero terminale, trasformazioni di sigma/time shifting e CFG 1; nessuna recipe base ereditata implicitamente.
+- [x] `T09.5` Accettare rumore iniziale esplicito per i confronti e definire RNG nativo stabile per la produzione. Tenere lo stato RNG della generazione distinto da quello del LLM sospeso.
+- [x] `T09.6` Eseguire con DiT residente; esporre gruppi e dipendenze per T19. Stimare separatamente prefix cache, attivazioni e workspace del primo passo.
 
 **Gate di completamento:** output di ogni blocco e latenti di ogni passo entro soglie T00; esattamente otto aggiornamenti del latente nella recipe predefinita. Cached/uncached verificati con medesimo input, senza crescita di memoria fra i passi né view che trattengono il forward completo. Peak attention non quadratico per storage di score.
 
 **Artefatti:** grafo DiT, scheduler, dump step-by-step e stime memory-backed.
 
+Qualifica locale: cinque casi, 288 confini oracle per caso bit-exact, otto aggiornamenti e memoria stabile fra passi. Forward full/cached verificati sullo stesso latente; la deriva accumulata della traiettoria interamente uncached reversed resta diagnostica non qualificata, con soglie T00 invariate. Fonti, misure, guasti e limiti nel [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md).
+
 ## 14. T10 — VAE Qwen 2.1, immagini reference e RGBA
 
-**Dipendenze:** T06, T07. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T06, T07. **Priorità:** alta. **Stato:** `DONE` (immagine singola, CUDA sm_86).
 
-- [ ] `T10.1` Portare encode/decode del VAE corretto, normalizzazione dei 64 canali latenti, scaling e convenzioni spaziali/temporali necessarie al caso immagine.
-- [ ] `T10.2` Preservare alpha nei pixel e nelle reference; controllare clamp, conversione colore, range e orientamento. Rifiutare VAE precedenti incompatibili.
-- [ ] `T10.3` Implementare un percorso completo di riferimento su risoluzioni gestibili e decode tiled con overlap/blending dichiarati; scegliere tiling tramite il piano di memoria.
-- [ ] `T10.4` Gestire l'encoding delle reference prima del DiT e il successivo decode, con caricamento/rilascio ripetuto dello stesso componente quando opportuno.
-- [ ] `T10.5` Integrare PNG e output supportati; perdita di alpha solo su formato che la richiede esplicitamente. Il salvataggio non deve trattenere la VRAM del VAE.
+- [x] `T10.1` Portare encode/decode del VAE corretto, normalizzazione dei 64 canali latenti, scaling e convenzioni spaziali/temporali necessarie al caso immagine.
+- [x] `T10.2` Preservare alpha nei pixel e nelle reference; controllare clamp, conversione colore, range e orientamento. Rifiutare VAE precedenti incompatibili.
+- [x] `T10.3` Implementare un percorso completo di riferimento su risoluzioni gestibili e decode tiled con overlap/blending dichiarati; scegliere tiling tramite il piano di memoria.
+- [x] `T10.4` Gestire l'encoding delle reference prima del DiT e il successivo decode, con caricamento/rilascio ripetuto dello stesso componente quando opportuno.
+- [x] `T10.5` Integrare PNG e output supportati; perdita di alpha solo su formato che la richiede esplicitamente. Il salvataggio non deve trattenere la VRAM del VAE.
 
 **Gate di completamento:** latenti encode e pixel decode confrontati con oracle, casi RGBA/trasparenti e dimensioni non quadrate. Tiled vs completo supera gate percettivi e controlli sui bordi fissati in T00; nessuna dichiarazione bit-exact non dimostrata. Consumo a tile bounded e rilascio completo dopo il risultato host.
 
 **Artefatti:** adapter VAE, codec output e fixture di bordi/alpha.
+
+Qualifica locale: RGB/RGBA/trasparente 64×96, RGBA 256×768, encode normalizzato, pixel e tiled/full entro T00; PNG e cancellazione prima del risultato verificati dopo release/reload dei pesi. Posterior grezza e feature interne restano diagnostiche. La composizione della pipeline è T11. Evidenze nel [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md).
 
 ## 15. T11 — Pipeline image nativa funzionale
 
@@ -483,4 +487,4 @@ Devono essere dimostrati: generazione/editing/RGBA nativi; embedding nativi dell
 
 La matrice dei backend e delle famiglie deve distinguere il supporto architetturale dalla qualificazione sperimentale. Funzioni richieste sul target di rilascio non possono essere omesse con `NOT_VERIFIED`; hardware aggiuntivo non disponibile resta esplicitamente fuori dalla dichiarazione di qualificazione, senza attribuirgli risultati della 3090.
 
-Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato, qualificati su sm_86 in API C seriali. Nessun nuovo endpoint image/embedding è abilitato; DiT/VAE, Gemma completo e integrazione HTTP restano T09–T22. Evidenze e limiti nel report T07–T08.
+Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. Nessun nuovo endpoint image/embedding è abilitato; pipeline image, Gemma completo e integrazione HTTP restano T11–T22. Evidenze e limiti nei report T07–T08 e T09–T10.

@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "model": "Qwen/Qwen-Image-2.1-Turbo",
+  "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+  "diffusers_revision": "aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e",
+  "profile": "BF16 storage/output, FP32 accumulation, no TF32/FP16/fast-math fallback",
+  "research_entry_points": [
+    "docs/research/INDEX.md",
+    "docs/research/guides/problem-to-source.md",
+    "docs/research/platforms/llama-cpp.md",
+    "docs/research/forks/club3090-llama-moe-cache.md",
+    "docs/research/cuda/ampere-sm86-primitives.md"
+  ],
+  "decisions": [
+    {
+      "operations": "Single-stream DiT, metadata, block-causal mask, prefix K/V",
+      "source": "src/diffusers/models/transformers/transformer_qwenimage21.py",
+      "transfer": "Native C port of model equations; immutable request-owned inputs, detached prefix-only K/V, resource groups and lifecycle use DS4 contracts.",
+      "license": "third_party/diffusers/LICENSE",
+      "hypothesis": "Preserving BF16 boundaries, complex FMA order, segment GEMM geometry and PV layout reproduces the pinned native-library oracle.",
+      "rejected": "Real-arithmetic RoPE, libc-generated frequencies, flattened head GEMM and transposed PV change BF16 ties. Target-only final projection in the full first step also changed geometry. Failed runs remain preserved."
+    },
+    {
+      "operations": "FP32 math SDPA with BF16 input/output and wide VAE heads",
+      "sources": ["PyTorch 5c4886908584029761b579af026dcfb627c84070 math SDPA equations", "native cuBLAS 13.1.1 C API"],
+      "transfer": "Head-contiguous strided-batched SGEMM, split Q/K scale, explicit softmax bounds and 256-query tiles. Score storage is linear in key count. CPU reference uses independent loops.",
+      "hypothesis": "Actual image-model GEMM geometry matches the oracle with bounded score scratch.",
+      "limitation": "Correctness baseline, no FlashAttention throughput claim. Quantized LLM GEMV and MoE expert scheduling do not directly transfer to dense image GEMM."
+    },
+    {
+      "operations": "Eight-step Turbo Euler and RNG",
+      "sources": ["src/diffusers/pipelines/qwenimage21/pipeline_qwenimage21.py", "src/diffusers/schedulers/scheduling_flow_match_euler_discrete.py", "pinned model_index.json and scheduler/scheduler_config.json"],
+      "transfer": "Official fixed sigma grid and scalar-promotion BF16 boundaries; independent version-1 SplitMix64/Box-Muller generator. Oracle parity uses explicit noise.",
+      "rejected": "An early development oracle initialized the sample as FP32 and dumped BF16 latent payloads under the wrong type. oracle-v2 corrects those fixtures; T00 tolerances remain unchanged.",
+      "cache_comparison": "Same latent is supplied to cached/full forwards at each step. Independent Euler trajectories are retained separately as diagnostics; full-sequence versus target-only GEMM rounding accumulates in reversed and exceeds the final relative ceiling."
+    },
+    {
+      "operations": "Qwen 2.1 VAE image encode/decode and tiling",
+      "source": "src/diffusers/models/autoencoders/autoencoder_kl_qwenimage21.py",
+      "transfer": "First-frame temporal shortcuts, 64-channel normalization, deterministic native cuDNN image descriptors, full low-resolution attention and local upsampling tiles with explicit halo/overlap.",
+      "license": "third_party/diffusers/LICENSE",
+      "hypothesis": "Keeping global attention outside local decoder tiles preserves alpha and edge gates while bounding high-resolution activations.",
+      "rejected": "Assuming temporal shortcut factors equal one, generic small-head attention, reciprocal-multiply L2 normalization and singleton-time 3D convolution geometry did not reproduce the image oracle."
+    },
+    {
+      "operations": "RGBA PNG output",
+      "source": "existing third_party/iris/png.h",
+      "transfer": "Reuse C codec with incremental CRC and checked allocation/write/close. Host result owns no GPU buffer or model. No new codec dependency."
+    }
+  ],
+  "numeric_limits": "docs/performance/native-suite-t00-20261020/tolerances.json",
+  "full_evidence": "performance-results/native-suite-t09-t10-20261021/",
+  "notice": "third_party/diffusers/NOTICE"
+}

@@ -2,6 +2,14 @@
 
 Indice generato; non modificare a mano.
 
+## [Qwen 27B — esperimento 4 BIS archiviato](qwen27-4bis-20261008/README.md)
+
+1.
+
+- righe 8–33: **Idee provate** — 1.
+- righe 34–63: **Risultati e motivi del ritiro** — La macchina locale aveva RTX 3090, WSL e PCIe Gen4 x2, storicamente circa
+- righe 64–85: **Contenuto e recupero** — da engine, CUDA, header, frontend, build e strumenti condivisi.
+
 ## [4 BIS — Modalità di contesto esteso per Qwen3.8 27B](qwen27-4bis-20261008/documentation/qwen27-kv-capacity-4bis-20261006.md)
 
 `qwen35`: 64 layer target, attenzione completa ogni quattro layer, 4 KV head,
@@ -22,11 +30,3 @@ Indice generato; non modificare a mano.
 
 - righe 8–51: **Percorso sperimentale** — `--qwen-weight-streaming on` richiede Qwen denso 27B, CUDA e una sola GPU.
 - righe 52–77: **Provenienza e qualificazione** — Da Strata si riprendono ordine di consumo noto, residenti separati da
-
-## [Qwen 27B — esperimento 4 BIS archiviato](qwen27-4bis-20261008/README.md)
-
-1.
-
-- righe 8–33: **Idee provate** — 1.
-- righe 34–63: **Risultati e motivi del ritiro** — La macchina locale aveva RTX 3090, WSL e PCIe Gen4 x2, storicamente circa
-- righe 64–85: **Contenuto e recupero** — da engine, CUDA, header, frontend, build e strumenti condivisi.

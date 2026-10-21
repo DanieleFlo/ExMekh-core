@@ -183,3 +183,44 @@ backend non disponibili. Anche il BPE image usa ancora una ricerca quadratica
 nel caso limite di un singolo segmento molto lungo: il limite in byte non è
 un limite di latenza. Un algoritmo differente richiederà il proprio corpus di
 equivalenza e benchmark, senza cambiare la semantica per guadagnare velocità.
+
+## Riesame di T09–T10, 21 ottobre 2026
+
+Riletti DiT, VAE, primitive e helper, risultati, risorse/runtime, bridge dei
+pesi, build, probe e comparatori. Il controllo esteso comprende encoder/input
+T08, confini engine/server e responsabilità di `SessionManager`, `ChatSession`
+e `JsonRecordStore`. I metodi delle classi di sessione/persistenza esaminati
+restano nel rispettivo proprietario; il manager usa i loro metodi pubblici.
+Nessuna nuova classe C++ o gerarchia per funzioni senza stato.
+
+| Problema | Correzione e proprietario |
+| --- | --- |
+| Il VAE conosceva layout del risultato, record del registro e codec PNG | `ds4_qwen_image_rgba` possiede factory, memoria host, view, stima e PNG. Il decoder riceve il buffer scrivibile dalla factory privata e pubblica un handle opaco |
+| Trace/fence/cancellazione erano replicate in encoder, DiT e VAE | `ds4_qwen_image_observer` conserva un solo ordine: cancellazione, fence, callback, cancellazione prima della pubblicazione |
+| I record host potevano ereditare un evento GPU pendente anche per memoria CPU usata sincronicamente; il free perdeva il record occupato | `ds4_resource_register_host` prende capacità dal lease attivo con una reservation figlia sincrona. Staging asincrono mantiene register/use con il proprio evento; le copie numeriche host sono fenced |
+| `numeric_close` distruggeva il backend e ignorava il fallimento del rilascio dei propri metadata | Verifica e rilascio dei metadata precedono la chiusura del backend. Un close `BUSY` conserva contesto/backend e può essere ripetuto dopo il completamento dell'evento |
+| L'encoder ignorava gli errori di chiusura dei gruppi dopo aver già distrutto il model handle | Chiude ogni proprietario verificando lo stato, azzera gli handle conclusi e conserva l'adapter per il retry |
+| Il loader dei gruppi ignorava a sua volta un rilascio metadata `BUSY`, liberando l'handle e dichiarando successo | Il loader usa accounting host sincrono per il proprio inventario CPU e verifica il rilascio prima di decrementare i gruppi del bundle o distruggere l'handle. Il test costruisce/chiude l'encoder sotto un evento pendente e controlla il saldo completo |
+| Il client poteva modificare core/halo senza aggiornare le stime; anche il probe lo faceva | Costruttore esplicito del piano tiled e costruzione comune full/tiled. Decode verifica geometria e byte; un piano modificato viene rifiutato prima del compute. Gli output di un planner fallito sono azzerati |
+| Il DiT caricava e misurava direttamente gli array dei gruppi del helper | Metodi `qi_load_all`/`qi_group_bytes`; il proprietario mantiene rappresentazione e caricamento |
+| Un oracle parziale poteva ridurre implicitamente l'inventario; missing/NaN/PNG corrotti lasciavano un vecchio JSON PASS dopo il traceback | Inventario obbligatorio indipendente dai file presenti, hash della fixture e report FAIL anche su errore. CLI separata dal confronto, ceiling latente condiviso e diagnostici distinti dai gate |
+| Il controllo dei bordi tiled assumeva stride 112 senza leggere il piano | Il probe salva il piano costruito dall'adapter; il comparatore deriva i bordi da core/overlap/scala. PNG verifica anche dimensioni e orientamento |
+
+I test verificano gli effetti osservabili: saldo del registro sotto lease
+con evento pendente, alpha PNG, errore di scrittura, cancellazione dalla
+callback, conservazione del backend e retry. I comparatori hanno casi positivi,
+inventario vuoto, confine mancante anche da entrambi i lati, fixture alterata,
+non finiti e report precedente da sostituire. I gate model-backed riusano gli
+oracle congelati T00/T08/T09/T10; nessuna tolleranza è stata ampliata.
+
+Responsabilità singola, incapsulamento, coesione, dipendenze, duplicazione,
+nomi, errori e testabilità migliorano nei confini verificati. Non tutti i
+principi clean code sono soddisfatti nell'intera repository: rimangono i
+monoliti engine/server, lo stato globale dei backend legacy e il costo
+quadratico del BPE image nel caso limite. Separarli senza i relativi oracle
+e backend disponibili non dimostrerebbe un miglioramento. Restano fuori
+qualifica Metal, ROCm, distribuito, pipeline T11/HTTP T17 e profili quantizzati.
+
+Comandi, hash, risultati e limiti sono nel
+[registro del riesame T09–T10](../performance/native-suite-t09-t10-20261021/review-verification.json).
+I log completi sono in `performance-results/native-suite-review-t09-t10-20261021/`.

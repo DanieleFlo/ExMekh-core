@@ -219,15 +219,19 @@ l'engine conosce shape e modello; il backend possiede stream e allocazioni;
 
 - righe 8–23: **Correzioni applicate** — Sezione strutturale; consultare il contenuto locale indicato.
 - righe 24–57: **Principi verificati e limiti** — l'engine conosce shape e modello; il backend possiede stream e allocazioni;
-- righe 58–65: **Evidenze** — Comandi, hash e log sono nel manifest di verifica
+- righe 58–66: **Evidenze** — Comandi, hash e log sono nel manifest di verifica
+- righe 67–104: **Riesame di T03–T04** — Il secondo passaggio esamina registro, accounting CUDA, checkpoint, adapter
+- righe 105–141: **Riesame di T05–T06** — Il terzo passaggio comprende planner, executor, registro, loader, tool offline e
+- righe 142–186: **Riesame di T07–T08, 21 ottobre 2026** — Riletti i nuovi moduli numerici, encoder/tokenizer, preprocessing, bridge dei
+- righe 187–226: **Riesame di T09–T10, 21 ottobre 2026** — Riletti DiT, VAE, primitive e helper, risultati, risorse/runtime, bridge dei
 
 ## [Runtime e contesti della suite nativa](native-suite-runtime-lifecycle.md)
 
 Il runtime possiede mutex ricorsivo, fence e teardown condiviso.
 
-- righe 8–46: **Proprietari e alternanza** — Il runtime possiede mutex ricorsivo, fence e teardown condiviso.
-- righe 47–73: **Inventario dello stato globale** — La classificazione si applica anche alle cache statiche interne alle funzioni:
-- righe 74–105: **Compatibilità e verifiche** — Per Metal e ROCm il riferimento runtime resta interno all'engine e non si
+- righe 8–48: **Proprietari e alternanza** — Il runtime possiede mutex ricorsivo, fence e teardown condiviso.
+- righe 49–78: **Inventario dello stato globale** — La classificazione si applica anche alle cache statiche interne alle funzioni:
+- righe 79–110: **Compatibilità e verifiche** — Per Metal e ROCm il riferimento runtime resta interno all'engine e non si
 
 ## [Contratti della suite nativa DS4, versione 1](native-suite-v1-contract.md)
 

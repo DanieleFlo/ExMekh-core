@@ -173,10 +173,6 @@ static uint32_t png_update_crc(uint32_t crc, const uint8_t *buf, size_t len) {
     return c;
 }
 
-static uint32_t png_crc(const uint8_t *buf, size_t len) {
-    return png_update_crc(0xffffffffu, buf, len) ^ 0xffffffffu;
-}
-
 /* ========================================================================
  * Adler-32 for zlib
  * ======================================================================== */
@@ -266,13 +262,9 @@ static void png_write_chunk(FILE *f, const char *type, const uint8_t *data, size
     }
 
     /* CRC (over type + data) */
-    uint8_t *crc_data = (uint8_t *)malloc(4 + len);
-    memcpy(crc_data, type, 4);
-    if (len > 0 && data) {
-        memcpy(crc_data + 4, data, len);
-    }
-    uint32_t crc = png_crc(crc_data, 4 + len);
-    free(crc_data);
+    uint32_t crc = png_update_crc(0xffffffffu, (const uint8_t *)type, 4);
+    if (len > 0 && data) crc = png_update_crc(crc, data, len);
+    crc ^= 0xffffffffu;
 
     uint8_t crc_bytes[4] = {
         (crc >> 24) & 0xff,
@@ -338,6 +330,7 @@ static int png_save_internal(const png_image *img, FILE *f,
     size_t row_bytes = 1 + img->width * channels;  /* +1 for filter byte */
     size_t raw_len = img->height * row_bytes;
     uint8_t *raw = (uint8_t *)malloc(raw_len);
+    if (!raw) return -1;
 
     for (int y = 0; y < img->height; y++) {
         raw[y * row_bytes] = 0;  /* Filter: None */
@@ -370,7 +363,8 @@ int png_save(const png_image *img, const char *path) {
     if (!f) return -1;
 
     int result = png_save_internal(img, f, NULL, NULL);
-    fclose(f);
+    if (ferror(f)) result = -1;
+    if (fclose(f)) result = -1;
     return result;
 }
 
@@ -382,7 +376,8 @@ int png_save_with_text(const png_image *img, const char *path,
     if (!f) return -1;
 
     int result = png_save_internal(img, f, keyword, text);
-    fclose(f);
+    if (ferror(f)) result = -1;
+    if (fclose(f)) result = -1;
     return result;
 }
 

@@ -314,10 +314,8 @@ static ds4_status weight_group_create(ds4_weight_group **out, ds4_bundle *b, uin
         !backend->release || !backend->quiesce) return DS4_STATUS_INVALID;
     if (b->tensor_count > (SIZE_MAX-sizeof(ds4_weight_group))/sizeof(uint64_t)) return DS4_STATUS_INVALID;
     uint64_t metadata_bytes = sizeof(ds4_weight_group)+b->tensor_count*sizeof(uint64_t);
-    ds4_resource_spec metadata = {.owner=b->owner, .location=DS4_MEMORY_HOST, .device=-1,
-        .requested=metadata_bytes, .allocated=metadata_bytes, .live=metadata_bytes};
     ds4_resource *account = NULL;
-    ds4_status status = ds4_resource_register(b->resources, &metadata, &account);
+    ds4_status status = ds4_resource_register_host(b->resources, b->owner, metadata_bytes, &account);
     if (status) return status;
     ds4_weight_group *g = calloc(1, sizeof(*g));
     if (!g) { ds4_resource_release(account); return DS4_STATUS_NOMEM; }
@@ -391,7 +389,9 @@ ds4_status ds4_weight_group_close(ds4_weight_group *g) {
     if (!g) return DS4_STATUS_OK;
     ds4_status status=ds4_weight_group_release(g);
     if (status) return status;
-    g->bundle->groups--; ds4_resource_release(g->metadata); free(g->offsets); free(g); return DS4_STATUS_OK;
+    status=ds4_resource_release(g->metadata);
+    if (status) return status;
+    g->bundle->groups--; free(g->offsets); free(g); return DS4_STATUS_OK;
 }
 ds4_status ds4_weight_group_tensor(const ds4_weight_group *g, const char *name, const void **storage, uint64_t *offset) {
     if (!g || !name || !storage || !offset) return DS4_STATUS_INVALID;

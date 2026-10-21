@@ -14,7 +14,7 @@ typedef struct {
   ds4_status (*point)(void *, ds4_num_view, ds4_num_view, ds4_num_view,
                       uint32_t, float);
   ds4_status (*rope)(void *, ds4_num_view, ds4_num_view, ds4_num_view,
-                     ds4_num_view, uint32_t, uint32_t, bool, bool);
+                     ds4_num_view, uint32_t, uint32_t, bool, uint32_t);
   ds4_status (*attend)(void *, ds4_num_view, ds4_num_view, ds4_num_view,
                        ds4_num_view, const uint32_t *,
                        const ds4_num_attention *);
@@ -28,6 +28,8 @@ typedef struct {
                         const ds4_num_resample *);
   ds4_status (*softmax)(void *, ds4_num_view, ds4_num_view, const uint32_t *,
                         uint32_t, uint32_t, float);
+  ds4_status (*matmul_batch)(void *, ds4_num_view, ds4_num_view, ds4_num_view,
+                             uint32_t, uint32_t, uint32_t, uint32_t, bool);
 } ds4_numeric_ops;
 struct ds4_numeric {
   const ds4_numeric_ops *ops;

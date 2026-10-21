@@ -41,13 +41,7 @@ struct ds4_qwen_image_encoder {
 };
 static ds4_status host_account(ds4_qwen_image_encoder *e, uint64_t bytes,
                                ds4_resource **out) {
-  ds4_resource_spec spec = {.owner = e->owner,
-                            .location = DS4_MEMORY_HOST,
-                            .device = -1,
-                            .requested = bytes,
-                            .allocated = bytes,
-                            .live = bytes};
-  return ds4_resource_register(e->resources, &spec, out);
+  return ds4_resource_register_host(e->resources, e->owner, bytes, out);
 }
 static ds4_status host_allocate(ds4_qwen_image_encoder *e, uint64_t bytes,
                                 void **out, ds4_resource **account) {
@@ -302,16 +296,24 @@ ds4_status ds4_qwen_image_encoder_release_weights(ds4_qwen_image_encoder *e) {
 ds4_status ds4_qwen_image_encoder_close(ds4_qwen_image_encoder *e) {
   if (!e)
     return DS4_STATUS_OK;
-  ds4_status status = ds4_qwen_image_encoder_release_weights(e);
+  ds4_status status =
+      e->model ? ds4_qwen_image_encoder_release_weights(e) : DS4_STATUS_OK;
   if (status)
     return status;
   status = ds4_runtime_model_close(e->model);
   if (status)
     return status;
-  for (uint32_t i = 0; i < GROUPS; i++)
-    ds4_weight_group_close(e->groups[i]);
+  e->model = NULL;
+  for (uint32_t i = 0; i < GROUPS; i++) {
+    status = ds4_weight_group_close(e->groups[i]);
+    if (status)
+      return status;
+    e->groups[i] = NULL;
+  }
+  status = ds4_resource_release(e->metadata);
+  if (status)
+    return status;
   ds4_qwen_image_tokenizer_close(e->tokenizer);
-  ds4_resource_release(e->metadata);
   free(e);
   return DS4_STATUS_OK;
 }
@@ -411,23 +413,6 @@ static ds4_status norm(ds4_qwen_image_encoder *e, const char *prefix,
                       !layer);
 cleanup:
   return status;
-}
-static ds4_status observe(ds4_qwen_image_encoder *e,
-                          const ds4_qwen_image_observer *o, const char *stage,
-                          uint32_t i, ds4_num_view v) {
-  if (o && o->cancelled && o->cancelled(o->opaque))
-    return DS4_STATUS_CANCELLED;
-  if (o && o->trace) {
-    ds4_status s = ds4_numeric_fence(e->num);
-    if (s)
-      return s;
-    s = o->trace(o->opaque, stage, i, v);
-    if (s)
-      return s;
-  }
-  if (o && o->cancelled && o->cancelled(o->opaque))
-    return DS4_STATUS_CANCELLED;
-  return DS4_STATUS_OK;
 }
 static ds4_status vision_merger(ds4_qwen_image_encoder *e, const char *prefix,
                                 bool post, ds4_num_view x, ds4_num_view out,
@@ -545,9 +530,9 @@ static ds4_status vision(ds4_qwen_image_encoder *e,
   TRY(ds4_num_write(e->num, si, sines, (uint64_t)n * 36 * 4));
   TRY(ds4_num_point(e->num, co, co, none(), DS4_NUM_COS, 0));
   TRY(ds4_num_point(e->num, si, si, none(), DS4_NUM_SIN, 0));
-  TRY(observe(e, observer, "vision_input", 0, x));
-  TRY(observe(e, observer, "vision_cos", 0, co));
-  TRY(observe(e, observer, "vision_sin", 0, si));
+  TRY(ds4_qwen_image_observe(e->num, observer, "vision_input", 0, x));
+  TRY(ds4_qwen_image_observe(e->num, observer, "vision_cos", 0, co));
+  TRY(ds4_qwen_image_observe(e->num, observer, "vision_sin", 0, si));
   TRY(alloc_view(&w, (uint64_t)n * 1152, DS4_NUM_BF16, &normed));
   TRY(alloc_view(&w, (uint64_t)n * 3456, DS4_NUM_BF16, &qkv));
   TRY(alloc_view(&w, (uint64_t)n * 1152, DS4_NUM_BF16, &q));
@@ -590,17 +575,19 @@ static ds4_status vision(ds4_qwen_image_encoder *e,
     TRY(ds4_num_point(e->num, mlp, mlp, none(), DS4_NUM_GELU_TANH, 0));
     TRY(linear(e, prefix, "mlp.linear_fc2", proj, mlp, n, 4304, 1152, true));
     TRY(ds4_num_point(e->num, x, x, proj, DS4_NUM_ADD, 0));
-    TRY(observe(e, observer, "vision", layer, x));
+    TRY(ds4_qwen_image_observe(e->num, observer, "vision", layer, x));
     if (layer == 8 || layer == 16 || layer == 24) {
       uint32_t index = (layer - 8) / 8;
       snprintf(prefix, sizeof(prefix), "model.visual.deepstack_merger_list.%u",
                index);
       TRY(vision_merger(e, prefix, true, x, features[index], n));
-      TRY(observe(e, observer, "deepstack", index, features[index]));
+      TRY(ds4_qwen_image_observe(e->num, observer, "deepstack", index,
+                                 features[index]));
     }
   }
   TRY(vision_merger(e, "model.visual.merger", false, x, features[3], n));
-  TRY(observe(e, observer, "vision_merged", 0, features[3]));
+  TRY(ds4_qwen_image_observe(e->num, observer, "vision_merged", 0,
+                             features[3]));
 cleanup:
   host_free(bounds, host_accounts[0]);
   host_free(cosines, host_accounts[1]);
@@ -662,7 +649,7 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
       features[4] = {{0}};
   uint32_t n = in->count;
   TRY(ds4_runtime_model_enter(e->model, &scope));
-  TRY(observe(e, observer, "begin", 0, none()));
+  TRY(ds4_qwen_image_observe(e->num, observer, "begin", 0, none()));
   if (in->patches) {
     for (int i = 0; i < 4; i++)
       TRY(alloc_view(&w, (uint64_t)in->patches / 4 * 4096, DS4_NUM_BF16,
@@ -692,7 +679,7 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
             ds4_num_slice(features[3], (uint64_t)offset++ * 4096, 4096)));
       }
   }
-  TRY(observe(e, observer, "embeddings", 0, x));
+  TRY(ds4_qwen_image_observe(e->num, observer, "embeddings", 0, x));
   for (uint32_t t = 0; t < n; t++) {
     bounds[2 * t] = t < in->left_padding ? 0 : in->left_padding;
     bounds[2 * t + 1] = t < in->left_padding ? 0 : t + 1;
@@ -708,8 +695,8 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
   TRY(alloc_view(&w, (uint64_t)n * 64, DS4_NUM_BF16, &si));
   TRY(ds4_num_write(e->num, co, trig, (uint64_t)n * 128));
   TRY(ds4_num_write(e->num, si, trig + (uint64_t)n * 64, (uint64_t)n * 128));
-  TRY(observe(e, observer, "rope_cos", 0, co));
-  TRY(observe(e, observer, "rope_sin", 0, si));
+  TRY(ds4_qwen_image_observe(e->num, observer, "rope_cos", 0, co));
+  TRY(ds4_qwen_image_observe(e->num, observer, "rope_sin", 0, si));
   TRY(alloc_view(&w, (uint64_t)n * 4096, DS4_NUM_BF16, &normed));
   TRY(alloc_view(&w, (uint64_t)n * 4096, DS4_NUM_BF16, &q));
   TRY(alloc_view(&w, (uint64_t)n * 1024, DS4_NUM_BF16, &k));
@@ -725,22 +712,23 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
     snprintf(prefix, sizeof(prefix), "model.language_model.layers.%u", layer);
     TRY(norm(e, prefix, "input_layernorm", normed, x, 4096, false));
     if (!layer)
-      TRY(observe(e, observer, "input_norm", layer, normed));
+      TRY(ds4_qwen_image_observe(e->num, observer, "input_norm", layer,
+                                 normed));
     TRY(linear(e, prefix, "self_attn.q_proj", q, normed, n, 4096, 4096, false));
     TRY(linear(e, prefix, "self_attn.k_proj", k, normed, n, 4096, 1024, false));
     TRY(linear(e, prefix, "self_attn.v_proj", v, normed, n, 4096, 1024, false));
     TRY(norm(e, prefix, "self_attn.q_norm", q, q, 128, false));
     TRY(norm(e, prefix, "self_attn.k_norm", k, k, 128, false));
     if (!layer) {
-      TRY(observe(e, observer, "q_norm", layer, q));
-      TRY(observe(e, observer, "k_norm", layer, k));
-      TRY(observe(e, observer, "v_proj", layer, v));
+      TRY(ds4_qwen_image_observe(e->num, observer, "q_norm", layer, q));
+      TRY(ds4_qwen_image_observe(e->num, observer, "k_norm", layer, k));
+      TRY(ds4_qwen_image_observe(e->num, observer, "v_proj", layer, v));
     }
     TRY(ds4_num_rope(e->num, qr, q, co, si, 32, 128, false, true));
     TRY(ds4_num_rope(e->num, kr, k, co, si, 8, 128, false, true));
     if (!layer) {
-      TRY(observe(e, observer, "q_rope", layer, qr));
-      TRY(observe(e, observer, "k_rope", layer, kr));
+      TRY(ds4_qwen_image_observe(e->num, observer, "q_rope", layer, qr));
+      TRY(ds4_qwen_image_observe(e->num, observer, "k_rope", layer, kr));
     }
     ds4_num_attention a = {.batch = 1,
                            .queries = n,
@@ -753,12 +741,13 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
                            .round_probabilities = true};
     TRY(ds4_num_attend(e->num, attn, qr, kr, v, bounds, &a));
     if (!layer)
-      TRY(observe(e, observer, "attention", layer, attn));
+      TRY(ds4_qwen_image_observe(e->num, observer, "attention", layer, attn));
     TRY(linear(e, prefix, "self_attn.o_proj", proj, attn, n, 4096, 4096,
                false));
     TRY(ds4_num_point(e->num, x, x, proj, DS4_NUM_ADD, 0));
     if (!layer)
-      TRY(observe(e, observer, "attention_residual", layer, x));
+      TRY(ds4_qwen_image_observe(e->num, observer, "attention_residual", layer,
+                                 x));
     TRY(norm(e, prefix, "post_attention_layernorm", normed, x, 4096, false));
     TRY(linear(e, prefix, "mlp.gate_proj", gate, normed, n, 4096, 12288,
                false));
@@ -766,7 +755,7 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
     TRY(ds4_num_point(e->num, gate, gate, none(), DS4_NUM_SILU, 0));
     TRY(ds4_num_point(e->num, gate, gate, up, DS4_NUM_MUL, 0));
     if (!layer)
-      TRY(observe(e, observer, "mlp_mid", layer, gate));
+      TRY(ds4_qwen_image_observe(e->num, observer, "mlp_mid", layer, gate));
     TRY(linear(e, prefix, "mlp.down_proj", proj, gate, n, 12288, 4096, false));
     TRY(ds4_num_point(e->num, x, x, proj, DS4_NUM_ADD, 0));
     if (layer < 3 && in->patches) {
@@ -780,7 +769,7 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
               DS4_NUM_ADD, 0));
         }
     }
-    TRY(observe(e, observer, "text", layer, x));
+    TRY(ds4_qwen_image_observe(e->num, observer, "text", layer, x));
   }
   /* Intentionally skip language_model.norm and lm_head. The DiT was trained
    * on the last decoder block BEFORE final RMSNorm; no AR generation occurs. */
@@ -803,7 +792,8 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
                    ds4_num_slice(x, (uint64_t)in->drop * 4096,
                                  (uint64_t)result->count * 4096)));
   TRY(ds4_numeric_fence(e->num));
-  TRY(observe(e, observer, "conditioning", 0, ds4_num_data(result->hidden)));
+  TRY(ds4_qwen_image_observe(e->num, observer, "conditioning", 0,
+                             ds4_num_data(result->hidden)));
 cleanup:
   host_free(host, host_accounts[0]);
   host_free(trig, host_accounts[1]);

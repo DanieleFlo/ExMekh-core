@@ -181,6 +181,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   build e validazione degli artefatti numerici.
   Il riesame T05/T06 copre anche ammissione nel registro, scope fra thread,
   cancellazione prima del commit e stato dei gruppi dopo un rilascio fallito.
+  Il riesame T09/T10 separa observer e risultati RGBA, valida i piani VAE,
+  distingue accounting host sincrono da eventi GPU e conserva i close falliti.
 - `docs/architecture/native-suite-runtime-lifecycle.md` — inventario dello stato
   globale, confini del bridge legacy, teardown selettivo e matrice di qualifica.
 - `docs/architecture/native-suite-v1-contract.md`, `schemas/ds4-suite-*.schema.json`
@@ -214,6 +216,22 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `ds4_qwen_image_input.c/.h`, `ds4_qwen_image_input_internal.h` — proprietario
   opaco dell'input preparato, compositing vision, token/posizioni/padding e
   snapshot pubblico di sola lettura; l'encoder orchestra soltanto il forward.
+- `ds4_qwen_image_dit.c/.h`, `ds4_qwen_image_dit_constants.h` — DiT Qwen 2.1
+  single-stream a 32 blocchi, RoPE complex, scheduler Turbo a otto passi e RNG
+  indipendente; input immutabile e prefix K/V per layer posseduti dalla richiesta,
+  gruppi residenti e stime distinte per primo passo/cache/workspace.
+- `ds4_qwen_image_vae.c/.h`, `ds4_qwen_image_vae_stats.h` — VAE Qwen 2.1 a
+  64 canali, encode RGB/RGBA e decode completo/tiled con attention globale a
+  bassa risoluzione, piano di memoria e risultato host con salvataggio PNG.
+  Encoder e decoder sono gruppi ricaricabili separati.
+- `ds4_qwen_image_rgba.c/.h`, `ds4_qwen_image_rgba_internal.h` — proprietario
+  opaco del risultato host, factory privata, stima dello storage, view e PNG;
+  il VAE usa i metodi del risultato senza conoscerne la rappresentazione.
+- `ds4_qwen_image_observer.c/.h` — contratto comune di trace/cancellazione
+  per encoder, DiT e VAE; fence e controllo dopo callback in un solo modulo.
+- `ds4_qwen_image_graph.h`, `ds4_qwen_image_attention.c/.h` — helper privati
+  per binding esaustivo/lifecycle degli adapter e math SDPA FP32 con tile di
+  256 query e storage lineare nelle chiavi, incluse le head VAE da 1152.
 - `ds4_unicode_nfc.c/.h`, `third_party/unicode/`,
   `tools/generate_suite_nfc.py`, `tools/generate_suite_unicode.py` — NFC e
   classi Unicode delle dipendenze congelate, con dati/provenienza dedicati.
@@ -232,6 +250,17 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   confronti con oracle, hash, fonti, misure e limiti del batching.
   `review-verification.json` registra il riesame del 21 ottobre: API opache,
   rilascio dopo gli eventi, cancellazione finale, aliasing e regressioni.
+- `tools/compile_qwen_image_constants.py`, `tools/run_qwen_image_graph_oracle.py`,
+  `tools/compare_qwen_image_graph.py`, `tools/diagnose_qwen_image_dit.py` — dati
+  numerici congelati, oracle Diffusers e diagnosi offline DiT/VAE T09/T10.
+- `tests/probe_qwen_image_graph.c`, `tests/test_qwen_image_graph.py`,
+  `docs/performance/native-suite-t09-t10-20261021/` — gate di ogni blocco/passo,
+  cache/full recompute, RNG, VAE/alpha/tile, budget e rilascio; report locale
+  RTX 3090 con hash, fonti, misure e limiti, distinto dalla pipeline T11.
+  `third_party/diffusers/` conserva licenza e attribuzioni dei port Qwen 2.1.
+  `tests/test_qwen_image_output.c`, `tests/test_qwen_image_graph_comparison.py`
+  e `review-verification.json` coprono lifetime host/PNG, eventi, input corrotti,
+  inventario dei confini completo e riesame successivo al port.
 - `tools/suite_bundle.py`, `tools/prepare_suite_bundles.py`,
   `config/suite-bundles/`, `schemas/ds4-suite-bundle-v1.schema.json` — compiler
   offline e conversione deterministica, profili con revisioni/hash fissati,

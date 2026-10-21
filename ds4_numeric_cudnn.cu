@@ -93,6 +93,9 @@ extern "C" ds4_status ds4_numeric_cudnn_conv(void *state, ds4_numeric *context,
   int input[5], output[5], filter[5], xs[5], ys[5], pad[3], stride[3],
       dilation[3];
   bool symmetric = true;
+  const bool image = a->input[0] == 1 && a->kernel[0] == 1 &&
+                     !a->pad_before[0] && !a->pad_after[0] &&
+                     a->stride[0] == 1 && a->dilation[0] == 1;
   for (int d = 0; d < 3; d++)
     if (a->pad_before[d] != a->pad_after[d])
       symmetric = false;
@@ -156,12 +159,27 @@ extern "C" ds4_status ds4_numeric_cudnn_conv(void *state, ds4_numeric *context,
   CUDNN_TRY(cudnnCreateTensorDescriptor(&yd));
   CUDNN_TRY(cudnnCreateFilterDescriptor(&wd));
   CUDNN_TRY(cudnnCreateConvolutionDescriptor(&cd));
-  CUDNN_TRY(cudnnSetTensorNdDescriptor(xd, dtype, 5, input, xs));
-  CUDNN_TRY(cudnnSetTensorNdDescriptor(yd, dtype, 5, output, ys));
-  CUDNN_TRY(
-      cudnnSetFilterNdDescriptor(wd, dtype, CUDNN_TENSOR_NCHW, 5, filter));
-  CUDNN_TRY(cudnnSetConvolutionNdDescriptor(
-      cd, 3, pad, stride, dilation, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
+  if (image) {
+    CUDNN_TRY(cudnnSetTensor4dDescriptor(xd, CUDNN_TENSOR_NCHW, dtype, input[0],
+                                         input[1], input[3], input[4]));
+    CUDNN_TRY(cudnnSetTensor4dDescriptor(yd, CUDNN_TENSOR_NCHW, dtype,
+                                         output[0], output[1], output[3],
+                                         output[4]));
+    CUDNN_TRY(cudnnSetFilter4dDescriptor(wd, dtype, CUDNN_TENSOR_NCHW,
+                                         filter[0], filter[1], filter[3],
+                                         filter[4]));
+    CUDNN_TRY(cudnnSetConvolution2dDescriptor(
+        cd, pad[1], pad[2], stride[1], stride[2], dilation[1], dilation[2],
+        CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT));
+  } else {
+    CUDNN_TRY(cudnnSetTensorNdDescriptor(xd, dtype, 5, input, xs));
+    CUDNN_TRY(cudnnSetTensorNdDescriptor(yd, dtype, 5, output, ys));
+    CUDNN_TRY(
+        cudnnSetFilterNdDescriptor(wd, dtype, CUDNN_TENSOR_NCHW, 5, filter));
+    CUDNN_TRY(cudnnSetConvolutionNdDescriptor(cd, 3, pad, stride, dilation,
+                                              CUDNN_CROSS_CORRELATION,
+                                              CUDNN_DATA_FLOAT));
+  }
   CUDNN_TRY(cudnnSetConvolutionGroupCount(cd, a->groups));
   CUDNN_TRY(cudnnSetConvolutionMathType(
       cd, x.type == DS4_NUM_BF16 ? CUDNN_TENSOR_OP_MATH : CUDNN_FMA_MATH));
@@ -205,7 +223,11 @@ extern "C" ds4_status ds4_numeric_cudnn_conv(void *state, ds4_numeric *context,
     int dims[] = {1, (int)a->out_channels, 1, 1, 1},
         strides[] = {(int)a->out_channels, 1, 1, 1, 1};
     CUDNN_TRY(cudnnCreateTensorDescriptor(&bd));
-    CUDNN_TRY(cudnnSetTensorNdDescriptor(bd, dtype, 5, dims, strides));
+    if (image)
+      CUDNN_TRY(cudnnSetTensor4dDescriptor(bd, CUDNN_TENSOR_NCHW, dtype, 1,
+                                           a->out_channels, 1, 1));
+    else
+      CUDNN_TRY(cudnnSetTensorNdDescriptor(bd, dtype, 5, dims, strides));
     CUDNN_TRY(
         cudnnAddTensor(s->handle, &alpha, bd, bias.data, &alpha, yd, y.data));
   }

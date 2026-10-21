@@ -96,9 +96,11 @@ ds4_status ds4_numeric_close(ds4_numeric *c) {
   ds4_status s = c->ops->fence(c->state);
   if (s)
     return s;
+  s = ds4_resource_release(c->metadata);
+  if (s)
+    return s;
   if (c->ops->close)
     c->ops->close(c->state);
-  ds4_resource_release(c->metadata);
   free(c);
   return DS4_STATUS_OK;
 }
@@ -274,6 +276,27 @@ ds4_status ds4_num_linear(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
     return DS4_STATUS_INVALID;
   return c->ops->linear(c->state, y, x, w, b, rows, in, out);
 }
+ds4_status ds4_num_matmul_batch(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
+                                ds4_num_view w, uint32_t batch, uint32_t rows,
+                                uint32_t in, uint32_t out, bool transpose_b) {
+  uint64_t nx, nw, ny;
+  if (!c || !batch || batch > INT_MAX || !rows || rows > INT_MAX || !in ||
+      in > INT_MAX || !out || out > INT_MAX ||
+      !product((uint64_t)rows * in, batch, &nx) ||
+      !product((uint64_t)out * in, batch, &nw) ||
+      !product((uint64_t)rows * out, batch, &ny) || !fits(x, nx) ||
+      !fits(w, nw) || !fits(y, ny) || x.type != DS4_NUM_F32 ||
+      w.type != DS4_NUM_F32 || y.type != DS4_NUM_F32)
+    return DS4_STATUS_INVALID;
+  x = ds4_num_slice(x, 0, nx);
+  w = ds4_num_slice(w, 0, nw);
+  y = ds4_num_slice(y, 0, ny);
+  if (overlaps(y, x) || overlaps(y, w))
+    return DS4_STATUS_INVALID;
+  return c->ops->matmul_batch ? c->ops->matmul_batch(c->state, y, x, w, batch,
+                                                     rows, in, out, transpose_b)
+                              : DS4_STATUS_UNSUPPORTED;
+}
 ds4_status ds4_num_norm(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
                         ds4_num_view w, ds4_num_view b, uint32_t width,
                         float eps, uint32_t kind, uint32_t mode, bool pre) {
@@ -305,9 +328,9 @@ ds4_status ds4_num_point(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
     return DS4_STATUS_INVALID;
   return c->ops->point(c->state, y, x, b, op, scalar);
 }
-ds4_status ds4_num_rope(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
-                        ds4_num_view co, ds4_num_view si, uint32_t heads,
-                        uint32_t dim, bool adj, bool rounded) {
+static ds4_status num_rope(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
+                           ds4_num_view co, ds4_num_view si, uint32_t heads,
+                           uint32_t dim, bool adj, uint32_t rounding) {
   if (!c || !valid(x) || !fits(y, x.count) || x.type != y.type || !heads ||
       !dim || dim % 2 || x.count % ((uint64_t)heads * dim) ||
       !fits(co, x.count / heads / 2) || !fits(si, x.count / heads / 2) ||
@@ -316,7 +339,17 @@ ds4_status ds4_num_rope(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
   y = ds4_num_slice(y, 0, x.count);
   if (overlaps(y, x) || overlaps(y, co) || overlaps(y, si))
     return DS4_STATUS_INVALID;
-  return c->ops->rope(c->state, y, x, co, si, heads, dim, adj, rounded);
+  return c->ops->rope(c->state, y, x, co, si, heads, dim, adj, rounding);
+}
+ds4_status ds4_num_rope(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
+                        ds4_num_view co, ds4_num_view si, uint32_t heads,
+                        uint32_t dim, bool adj, bool rounded) {
+  return num_rope(c, y, x, co, si, heads, dim, adj, rounded ? 1 : 0);
+}
+ds4_status ds4_num_rope_complex(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
+                                ds4_num_view co, ds4_num_view si,
+                                uint32_t heads, uint32_t dim) {
+  return num_rope(c, y, x, co, si, heads, dim, true, 2);
 }
 ds4_status ds4_num_attend(ds4_numeric *c, ds4_num_view y, ds4_num_view q,
                           ds4_num_view k, ds4_num_view v,
@@ -446,6 +479,24 @@ static ds4_status cpu_linear(void *s, ds4_num_view y, ds4_num_view x,
     }
   return DS4_STATUS_OK;
 }
+static ds4_status cpu_matmul_batch(void *state, ds4_num_view y, ds4_num_view x,
+                                   ds4_num_view w, uint32_t batch,
+                                   uint32_t rows, uint32_t in, uint32_t out,
+                                   bool transpose_b) {
+  (void)state;
+  for (uint32_t b = 0; b < batch; b++)
+    for (uint32_t row = 0; row < rows; row++)
+      for (uint32_t j = 0; j < out; j++) {
+        double sum = 0;
+        for (uint32_t k = 0; k < in; k++)
+          sum += (double)get(x, ((uint64_t)b * rows + row) * in + k) *
+                 get(w, (uint64_t)b * in * out + (transpose_b
+                                                      ? (uint64_t)j * in + k
+                                                      : (uint64_t)k * out + j));
+        put(y, ((uint64_t)b * rows + row) * out + j, (float)sum);
+      }
+  return DS4_STATUS_OK;
+}
 static ds4_status cpu_norm(void *s, ds4_num_view y, ds4_num_view x,
                            ds4_num_view w, ds4_num_view b, uint32_t width,
                            float eps, uint32_t kind, uint32_t mode, bool pre) {
@@ -461,10 +512,13 @@ static ds4_status cpu_norm(void *s, ds4_num_view y, ds4_num_view x,
       double z = get(x, r * width + j) - mean;
       var += z * z;
     }
-    float inv = kind == DS4_NUM_L2 ? 1 / fmaxf(sqrtf((float)var), eps)
+    float divisor = fmaxf(sqrtf((float)var), eps);
+    float inv = kind == DS4_NUM_L2 ? 1 / divisor
                                    : 1 / sqrtf((float)(var / width) + eps);
     for (uint32_t j = 0; j < width; j++) {
-      float z = (get(x, r * width + j) - (float)mean) * inv;
+      float z = kind == DS4_NUM_L2
+                    ? get(x, r * width + j) / divisor
+                    : (get(x, r * width + j) - (float)mean) * inv;
       if (pre)
         z = rounded(z, x.type);
       if (mode != DS4_NUM_SCALE_NONE)
@@ -532,7 +586,7 @@ static ds4_status cpu_point(void *s, ds4_num_view y, ds4_num_view x,
 }
 static ds4_status cpu_rope(void *s, ds4_num_view y, ds4_num_view x,
                            ds4_num_view co, ds4_num_view si, uint32_t heads,
-                           uint32_t dim, bool adj, bool rp) {
+                           uint32_t dim, bool adj, uint32_t rounding) {
   (void)s;
   for (uint64_t i = 0; i < x.count / 2; i++) {
     uint32_t d = i % (dim / 2);
@@ -540,14 +594,14 @@ static ds4_status cpu_rope(void *s, ds4_num_view y, ds4_num_view x,
              b = a + (adj ? 1 : dim / 2), p = (h / heads) * (dim / 2) + d;
     float c = get(co, p), sn = get(si, p), u = get(x, a), v = get(x, b),
           uc = u * c, vs = v * sn, vc = v * c, us = u * sn;
-    if (rp) {
+    if (rounding == 1) {
       uc = rounded(uc, x.type);
       vs = rounded(vs, x.type);
       vc = rounded(vc, x.type);
       us = rounded(us, x.type);
     }
-    put(y, a, uc - vs);
-    put(y, b, vc + us);
+    put(y, a, rounding == 2 ? fmaf(u, c, -vs) : uc - vs);
+    put(y, b, rounding == 2 ? fmaf(u, sn, vc) : vc + us);
   }
   return DS4_STATUS_OK;
 }
@@ -808,9 +862,9 @@ ds4_status ds4_num_softmax(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
   return c->ops->softmax(c->state, y, x, bounds, rows, width, scale);
 }
 static const ds4_numeric_ops cpu_ops = {
-    cpu_alloc,  cpu_release, cpu_copy,  cpu_fence,   NULL,
-    cpu_linear, cpu_norm,    cpu_point, cpu_rope,    cpu_attend,
-    cpu_conv,   cpu_reorder, cpu_pool,  cpu_nearest, cpu_softmax};
+    cpu_alloc, cpu_release, cpu_copy,    cpu_fence,       NULL,     cpu_linear,
+    cpu_norm,  cpu_point,   cpu_rope,    cpu_attend,      cpu_conv, cpu_reorder,
+    cpu_pool,  cpu_nearest, cpu_softmax, cpu_matmul_batch};
 ds4_status ds4_numeric_cpu(ds4_numeric **out, ds4_resources *r,
                            uint64_t owner) {
   return ds4_numeric_create(out, &cpu_ops, NULL, r, owner, false);

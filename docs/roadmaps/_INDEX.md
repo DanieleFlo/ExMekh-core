@@ -243,32 +243,32 @@ Una sola istanza DS4 deve servire LLM, Qwen-Image-2.1-Turbo ed EmbeddingGemma 2,
 - righe 47–63: **4. T00 — Congelare fonti, baseline e criteri numerici** — **Dipendenze:** nessuna.
 - righe 64–79: **5. T01 — Congelare i contratti pubblici e interni** — **Dipendenze:** T00.
 - righe 80–96: **6. T02 — Separare contesti modello e lifecycle del runtime** — **Dipendenze:** T00, T01.
-- righe 97–111: **7. T03 — Registro risorse e accounting su GPU, RAM e SSD** — **Dipendenze:** T02.
-- righe 112–127: **8. T04 — Generalizzare sospensione, checkpoint e rilascio pesi** — **Dipendenze:** T02, T03.
-- righe 128–143: **9. T05 — Ammissione, pianificazione e transazione comune** — **Dipendenze:** T03, T04.
-- righe 144–158: **10. T06 — Manifest, conversione e loader dei nuovi componenti** — **Dipendenze:** T00, T01, T02.
-- righe 159–174: **11. T07 — Primitive numeriche e kernel CUDA comuni** — **Dipendenze:** T00, T02, T06.
-- righe 175–188: **12. T08 — Encoder Qwen3-VL per Qwen Image** — **Dipendenze:** T06, T07.
-- righe 189–203: **13. T09 — DiT single-stream, scheduler Turbo e prefix cache** — **Dipendenze:** T06, T07.
-- righe 204–217: **14. T10 — VAE Qwen 2.1, immagini reference e RGBA** — **Dipendenze:** T06, T07.
-- righe 218–231: **15. T11 — Pipeline image nativa funzionale** — **Dipendenze:** T08, T09, T10.
-- righe 232–245: **16. T12 — Backbone testuale EmbeddingGemma 2 e pooling** — **Dipendenze:** T06, T07.
-- righe 246–260: **17. T13 — Media e preprocessing deterministico** — **Dipendenze:** T00, T01, T06.
-- righe 261–273: **18. T14 — Encoder vision e video EmbeddingGemma 2** — **Dipendenze:** T12, T13.
-- righe 274–286: **19. T15 — Encoder audio EmbeddingGemma 2** — **Dipendenze:** T12, T13.
-- righe 287–300: **20. T16 — Embedding multimodali composti e piano selettivo** — **Dipendenze:** T12, T14, T15.
-- righe 301–315: **21. T17 — Registro modelli, HTTP e gestione dei risultati** — **Dipendenze:** T01, T05, T11, T16.
-- righe 316–330: **22. T18 — Client semplice e integrazione ExMekh** — **Dipendenze:** T17.
-- righe 331–347: **23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo** — **Dipendenze:** T05, T07, T11, T16, T17.
-- righe 348–362: **24. T20 — Quantizzazione e ottimizzazioni numeriche misurate** — **Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming.
-- righe 363–377: **25. T21 — Qualificazione integrata, guasti e regressioni** — **Dipendenze:** T17, T18, T19; tutti i profili promossi da T20.
-- righe 378–389: **26. T22 — Packaging, documentazione e consegna** — **Dipendenze:** T21.
-- righe 390–410: **27. Matrice obbligatoria di memoria e ripristino** — La matrice usa budget controllati e allocazioni possedute; si aggiungono prove reali sulla memoria libera della 3090.
-- righe 411–448: **28. Gate numerici, di qualità e prestazionali** — Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano.
-  - righe 413–422: **28.1 Gate numerici** — Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano.
-  - righe 423–439: **28.2 Corpus di accettazione proposto** — Il corpus minimo viene congelato in T00 prima delle ottimizzazioni; può essere ampliato con un nuovo manifest, mantenendo i casi precedenti.
-  - righe 440–448: **28.3 Gate prestazionali e memoria** — Sezione strutturale; consultare il contenuto locale indicato.
-- righe 449–457: **29. Definizione di completamento globale** — Il lavoro di implementazione è completo quando T00–T19, T21 e T22 sono `DONE`, T20 ha una valutazione esplicita dei candidati e tutti i profili effettivamente pubblicati hanno superato i rispettivi gate.
+- righe 97–113: **7. T03 — Registro risorse e accounting su GPU, RAM e SSD** — **Dipendenze:** T02.
+- righe 114–131: **8. T04 — Generalizzare sospensione, checkpoint e rilascio pesi** — **Dipendenze:** T02, T03.
+- righe 132–154: **9. T05 — Ammissione, pianificazione e transazione comune** — **Dipendenze:** T03, T04.
+- righe 155–177: **10. T06 — Manifest, conversione e loader dei nuovi componenti** — **Dipendenze:** T00, T01, T02.
+- righe 178–198: **11. T07 — Primitive numeriche e kernel CUDA comuni** — **Dipendenze:** T00, T02, T06.
+- righe 199–217: **12. T08 — Encoder Qwen3-VL per Qwen Image** — **Dipendenze:** T06, T07.
+- righe 218–234: **13. T09 — DiT single-stream, scheduler Turbo e prefix cache** — **Dipendenze:** T06, T07.
+- righe 235–250: **14. T10 — VAE Qwen 2.1, immagini reference e RGBA** — **Dipendenze:** T06, T07.
+- righe 251–264: **15. T11 — Pipeline image nativa funzionale** — **Dipendenze:** T08, T09, T10.
+- righe 265–278: **16. T12 — Backbone testuale EmbeddingGemma 2 e pooling** — **Dipendenze:** T06, T07.
+- righe 279–293: **17. T13 — Media e preprocessing deterministico** — **Dipendenze:** T00, T01, T06.
+- righe 294–306: **18. T14 — Encoder vision e video EmbeddingGemma 2** — **Dipendenze:** T12, T13.
+- righe 307–319: **19. T15 — Encoder audio EmbeddingGemma 2** — **Dipendenze:** T12, T13.
+- righe 320–333: **20. T16 — Embedding multimodali composti e piano selettivo** — **Dipendenze:** T12, T14, T15.
+- righe 334–348: **21. T17 — Registro modelli, HTTP e gestione dei risultati** — **Dipendenze:** T01, T05, T11, T16.
+- righe 349–363: **22. T18 — Client semplice e integrazione ExMekh** — **Dipendenze:** T17.
+- righe 364–380: **23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo** — **Dipendenze:** T05, T07, T11, T16, T17.
+- righe 381–395: **24. T20 — Quantizzazione e ottimizzazioni numeriche misurate** — **Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming.
+- righe 396–410: **25. T21 — Qualificazione integrata, guasti e regressioni** — **Dipendenze:** T17, T18, T19; tutti i profili promossi da T20.
+- righe 411–422: **26. T22 — Packaging, documentazione e consegna** — **Dipendenze:** T21.
+- righe 423–443: **27. Matrice obbligatoria di memoria e ripristino** — La matrice usa budget controllati e allocazioni possedute; si aggiungono prove reali sulla memoria libera della 3090.
+- righe 444–481: **28. Gate numerici, di qualità e prestazionali** — Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano.
+  - righe 446–455: **28.1 Gate numerici** — Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano.
+  - righe 456–472: **28.2 Corpus di accettazione proposto** — Il corpus minimo viene congelato in T00 prima delle ottimizzazioni; può essere ampliato con un nuovo manifest, mantenendo i casi precedenti.
+  - righe 473–481: **28.3 Gate prestazionali e memoria** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 482–490: **29. Definizione di completamento globale** — Il lavoro di implementazione è completo quando T00–T19, T21 e T22 sono `DONE`, T20 ha una valutazione esplicita dei candidati e tutti i profili effettivamente pubblicati hanno superato i rispettivi gate.
 
 ## [Piano di azione: Flash Next veloce, Qwen27 protetto](qwen-flash-performance-action-plan-20261004.md)
 

@@ -1413,7 +1413,7 @@ SUITE_CUDA_LDLIBS = -lm -pthread -L$(SUITE_CUDA_LIBDIR) -l:libcudart.so.13 -l:li
 SUITE_CUDNN_LIBS = -L$(CUDNN_HOME)/lib -L$(CUDNN_HOME)/lib64 -l:libcudnn.so.9 -Wl,-rpath,$(abspath $(CUDNN_HOME)/lib)
 SUITE_API_HEADERS = ds4_numeric.h ds4_bundle.h ds4_resources.h ds4_runtime.h
 
-SUITE_OBJS = ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o
+SUITE_OBJS = ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o
 libds4-suite-cpu.a: $(SUITE_OBJS)
 	$(AR) rcs $@ $^
 libds4-suite-cuda.a: $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
@@ -1429,10 +1429,27 @@ tests/test_qwen_image_input: tests/test_qwen_image_input.c ds4_qwen_image_input.
 test-qwen-image-input: tests/test_qwen_image_input
 	./tests/test_qwen_image_input
 clean-suite-numeric:
+	rm -f tests/test_qwen_image_output
+	rm -f tests/probe_qwen_image_graph tests/probe_qwen_image_graph.o tests/libds4_qwen_image_graph_cpu.so
 	rm -f $(filter-out ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o,$(SUITE_OBJS)) ds4_numeric_cuda.o ds4_numeric_cudnn.o libds4-suite-cpu.a libds4-suite-cuda.a tests/probe_qwen_image_encoder tests/probe_qwen_image_encoder.o tests/test_numeric_lifetime tests/libds4_numeric_cpu.so tests/libds4_numeric_cuda.so tests/suite_resources.o tests/libds4_image_suite.so tests/libds4_qwen_image_tokenizer.so tests/test_qwen_image_input
 clean: clean-suite-numeric
-ds4_qwen_image_encoder.o: ds4_qwen_image_encoder.c ds4_qwen_image_encoder.h ds4_qwen_image_input.h ds4_qwen_image_input_internal.h ds4_qwen_image_tokenizer.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
+ds4_qwen_image_encoder.o: ds4_qwen_image_encoder.c ds4_qwen_image_encoder.h ds4_qwen_image_observer.h ds4_qwen_image_input.h ds4_qwen_image_input_internal.h ds4_qwen_image_tokenizer.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_qwen_image_dit.o: ds4_qwen_image_dit.c ds4_qwen_image_dit.h ds4_qwen_image_dit_constants.h ds4_qwen_image_graph.h ds4_numeric_weights.h ds4_qwen_image_attention.h ds4_qwen_image_encoder.h ds4_qwen_image_observer.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_qwen_image_attention.o: ds4_qwen_image_attention.c ds4_qwen_image_attention.h ds4_qwen_image_graph.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_qwen_image_vae.o: ds4_qwen_image_vae.c ds4_qwen_image_vae.h ds4_qwen_image_vae_stats.h ds4_qwen_image_graph.h ds4_qwen_image_attention.h ds4_qwen_image_rgba_internal.h ds4_qwen_image_rgba.h ds4_qwen_image_observer.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_qwen_image_rgba.o: ds4_qwen_image_rgba.c ds4_qwen_image_rgba.h ds4_qwen_image_rgba_internal.h ds4_image.h third_party/iris/png.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_qwen_image_observer.o: ds4_qwen_image_observer.c ds4_qwen_image_observer.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+tests/test_qwen_image_output: tests/test_qwen_image_output.c ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_numeric.o ds4_resources.o ds4_image.o
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
+.PHONY: test-qwen-image-output
+test-qwen-image-output: tests/test_qwen_image_output
+	./tests/test_qwen_image_output
 ds4_qwen_image_input.o: ds4_qwen_image_input.c ds4_qwen_image_input.h ds4_qwen_image_input_internal.h ds4_qwen_image_tokenizer.h ds4_image.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_numeric_weights.o: ds4_numeric_weights.c ds4_numeric_weights.h $(SUITE_API_HEADERS)
@@ -1444,6 +1461,14 @@ ds4_unicode_nfc.o: ds4_unicode_nfc.c ds4_unicode_nfc.h third_party/unicode/nfc9.
 tests/probe_qwen_image_encoder: tests/probe_qwen_image_encoder.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
 	$(CC) $(SUITE_CFLAGS) -I. -c -o tests/probe_qwen_image_encoder.o $<
 	$(CC) -o $@ tests/probe_qwen_image_encoder.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+tests/probe_qwen_image_graph: tests/probe_qwen_image_graph.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
+	$(CC) $(SUITE_CFLAGS) -I. -c -o tests/probe_qwen_image_graph.o $<
+	$(CC) -o $@ tests/probe_qwen_image_graph.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+tests/libds4_qwen_image_graph_cpu.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o
+	$(CC) -shared -o $@ $^ -lm -pthread
+.PHONY: test-qwen-image-graph
+test-qwen-image-graph: tests/libds4_qwen_image_graph_cpu.so
+	$(SUITE_PYTHON) -m unittest tests.test_qwen_image_graph -v
 ds4_numeric.o: ds4_numeric.c ds4_numeric_internal.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_numeric_cuda.o: ds4_numeric_cuda.cu ds4_numeric_internal.h $(SUITE_API_HEADERS)

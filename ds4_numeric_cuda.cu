@@ -235,12 +235,13 @@ __global__ static void norm_kernel(ds4_num_view y, ds4_num_view x,
     float sum = 0;
     for (int j = 0; j < 8; j++)
       sum += partial[j];
-    inv = kind == DS4_NUM_L2 ? 1 / fmaxf(sqrtf(sum), eps)
-                             : rsqrtf(sum / width + eps);
+    inv =
+        kind == DS4_NUM_L2 ? fmaxf(sqrtf(sum), eps) : rsqrtf(sum / width + eps);
   }
   __syncthreads();
   for (uint32_t j = threadIdx.x; j < width; j += 256) {
-    float v = (readv(x, row * width + j) - mean) * inv;
+    float v = kind == DS4_NUM_L2 ? readv(x, row * width + j) / inv
+                                 : (readv(x, row * width + j) - mean) * inv;
     if (pre)
       v = roundv(v, x.type);
     if (kind == DS4_NUM_LAYER && mode == DS4_NUM_SCALE_DIRECT && bias.data) {
@@ -428,7 +429,7 @@ static ds4_status gpu_point(void *p, ds4_num_view y, ds4_num_view x,
 __global__ static void rope_kernel(ds4_num_view y, ds4_num_view x,
                                    ds4_num_view co, ds4_num_view si,
                                    uint32_t heads, uint32_t dim, bool adj,
-                                   bool rp) {
+                                   uint32_t rounding) {
   for (uint64_t i = (uint64_t)blockIdx.x * 256 + threadIdx.x; i < x.count / 2;
        i += (uint64_t)gridDim.x * 256) {
     uint32_t d = i % (dim / 2);
@@ -436,21 +437,21 @@ __global__ static void rope_kernel(ds4_num_view y, ds4_num_view x,
              b = a + (adj ? 1 : dim / 2), p = (h / heads) * (dim / 2) + d;
     float c = readv(co, p), sn = readv(si, p), u = readv(x, a), v = readv(x, b),
           uc = u * c, vs = v * sn, vc = v * c, us = u * sn;
-    if (rp) {
+    if (rounding == 1) {
       uc = roundv(uc, x.type);
       vs = roundv(vs, x.type);
       vc = roundv(vc, x.type);
       us = roundv(us, x.type);
     }
-    writev(y, a, uc - vs);
-    writev(y, b, vc + us);
+    writev(y, a, rounding == 2 ? fmaf(u, c, -vs) : uc - vs);
+    writev(y, b, rounding == 2 ? fmaf(u, sn, vc) : vc + us);
   }
 }
 static ds4_status gpu_rope(void *p, ds4_num_view y, ds4_num_view x,
                            ds4_num_view co, ds4_num_view si, uint32_t heads,
-                           uint32_t dim, bool adj, bool rp) {
+                           uint32_t dim, bool adj, uint32_t rounding) {
   rope_kernel<<<blocks(x.count / 2), 256, 0, ((numeric_cuda *)p)->stream>>>(
-      y, x, co, si, heads, dim, adj, rp);
+      y, x, co, si, heads, dim, adj, rounding);
   return launch_status();
 }
 __device__ static float attention_score(ds4_num_view q, ds4_num_view k,
@@ -806,10 +807,24 @@ static ds4_status gpu_softmax(void *state, ds4_num_view y, ds4_num_view x,
   ds4_status cleanup = ds4_num_dispose(ib);
   return status ? status : cleanup;
 }
+static ds4_status gpu_matmul_batch(void *p, ds4_num_view y, ds4_num_view x,
+                                   ds4_num_view w, uint32_t batch,
+                                   uint32_t rows, uint32_t in, uint32_t out,
+                                   bool transpose_b) {
+  numeric_cuda *s = (numeric_cuda *)p;
+  float alpha = 1, beta = 0;
+  cublasStatus_t status = cublasSgemmStridedBatched(
+      s->blas, transpose_b ? CUBLAS_OP_T : CUBLAS_OP_N, CUBLAS_OP_N, out, rows,
+      in, &alpha, (const float *)w.data, transpose_b ? in : out,
+      (long long)out * in, (const float *)x.data, in, (long long)rows * in,
+      &beta, (float *)y.data, out, (long long)rows * out, batch);
+  return status == CUBLAS_STATUS_SUCCESS ? DS4_STATUS_OK : DS4_STATUS_INFERENCE;
+}
 static const ds4_numeric_ops gpu_ops = {
-    gpu_allocate, gpu_release, gpu_copy,  gpu_fence,   gpu_close,
-    gpu_linear,   gpu_norm,    gpu_point, gpu_rope,    gpu_attend,
-    gpu_conv,     gpu_reorder, gpu_pool,  gpu_nearest, gpu_softmax};
+    gpu_allocate, gpu_release, gpu_copy,    gpu_fence,
+    gpu_close,    gpu_linear,  gpu_norm,    gpu_point,
+    gpu_rope,     gpu_attend,  gpu_conv,    gpu_reorder,
+    gpu_pool,     gpu_nearest, gpu_softmax, gpu_matmul_batch};
 extern "C" ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r,
                                        uint64_t owner) {
   if (!out || !r || !owner)

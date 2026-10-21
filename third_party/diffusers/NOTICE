@@ -1,0 +1,23 @@
+Qwen Image 2.1 native adapters
+
+Model equations, architecture and scheduler conventions adapted from
+huggingface/diffusers aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e:
+
+src/diffusers/models/transformers/transformer_qwenimage21.py
+Copyright 2026 Qwen-Image Team, The HuggingFace Team. All rights reserved.
+
+src/diffusers/models/autoencoders/autoencoder_kl_qwenimage21.py
+Copyright 2026 The Qwen Team and The HuggingFace Team. All rights reserved.
+
+src/diffusers/pipelines/qwenimage21/pipeline_qwenimage21.py
+Copyright 2026 Qwen-Image Team, The HuggingFace Team. All rights reserved.
+
+src/diffusers/schedulers/scheduling_flow_match_euler_discrete.py
+Copyright 2025 Stability AI, Katherine Crowson and The HuggingFace Team.
+All rights reserved.
+Licensed under Apache License 2.0, included in LICENSE.
+
+DS4 modifications: native C orchestration and ownership, BF16/FP32 numeric
+operations, detached prefix caches, resident weight groups, bounded attention
+and decoder tiling, explicit resource plans and host RGBA/PNG output.
+Python oracle programs are development tools only.

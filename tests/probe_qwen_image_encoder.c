@@ -296,6 +296,29 @@ int main(int argc, char **argv) {
     free(prompt);
   }
   CHECK(ds4_qwen_image_encoder_close(encoder));
+  if (getenv("DS4_SUITE_ENCODER_CHECKS")) {
+    uint64_t bytes[DS4_MEMORY_COUNT] = {0};
+    bytes[DS4_MEMORY_HOST] = 64 * 1024 * 1024;
+    ds4_reservation *lease = NULL;
+    CHECK(ds4_resources_reserve(resources, 700, bytes, &lease));
+    CHECK(ds4_reservation_use(lease, 99));
+    ds4_resource_totals before, after;
+    ds4_resources_totals(resources, 0, &before);
+    ds4_reservation_scope scope = ds4_reservation_enter(lease);
+    CHECK(ds4_qwen_image_encoder_open(&encoder, bundle, num, runtime, argv[3]));
+    ds4_reservation_leave(&scope);
+    CHECK(ds4_qwen_image_encoder_close(encoder));
+    ds4_resources_totals(resources, 0, &after);
+    if (before.roots != after.roots || before.views != after.views)
+      return 1;
+    for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++)
+      if (before.allocated[i] != after.allocated[i] ||
+          before.reserved[i] != after.reserved[i])
+        return 1;
+    ds4_resources_complete(resources, 99);
+    CHECK(ds4_reservation_cancel(lease));
+    puts("encoder scoped construction and synchronous host accounting: PASS");
+  }
   CHECK(ds4_bundle_close(bundle));
   CHECK(ds4_numeric_close(num));
   ds4_runtime_release(runtime);
