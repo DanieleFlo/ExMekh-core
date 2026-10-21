@@ -3,6 +3,7 @@
  * away by assuming that every temporal factor is one. */
 #include "ds4_qwen_image_vae.h"
 #include "ds4_qwen_image_attention.h"
+#include "ds4_qwen_image_components.h"
 #include "ds4_qwen_image_graph.h"
 #include "ds4_qwen_image_rgba_internal.h"
 #include "ds4_qwen_image_vae_stats.h"
@@ -122,9 +123,11 @@ cleanup:
 }
 ds4_status ds4_qwen_image_vae_open(ds4_qwen_image_vae **out, ds4_bundle *b,
                                    ds4_numeric *n, ds4_runtime *runtime) {
-  if (!out || !b || !n || !runtime)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!b || !n || !runtime)
+    return DS4_STATUS_INVALID;
   ds4_qwen_image_vae *e = NULL;
   ds4_resource *account = NULL;
   ds4_status status = qi_host(n, sizeof(*e), (void **)&e, &account);
@@ -189,12 +192,9 @@ static ds4_status va_norm(qi_graph *g, const char *name, va_tensor x,
   char key[256];
   uint64_t s = (uint64_t)x.h * x.w;
   QI_TRY(qi_alloc(&w, s * x.c, DS4_NUM_BF16, &trans));
-  ds4_num_reindex ix = {.rank = 2, .shape = {s, x.c}, .stride = {1, s}};
-  QI_TRY(ds4_num_reorder(g->num, trans, va_view(x), &ix));
   /* Wan/Qwen RMS uses L2 normalization rounded to BF16, then sqrt(C),
    * then gamma, each with its own rounding. RMSNorm(eps) is not equivalent. */
-  QI_TRY(ds4_num_norm(g->num, trans, trans, QI_NONE, QI_NONE, x.c, 1e-12f,
-                      DS4_NUM_L2, DS4_NUM_SCALE_NONE, false));
+  QI_TRY(ds4_num_channel_l2(g->num, trans, va_view(x), x.c, s, 1e-12f));
   QI_TRY(
       ds4_num_point(g->num, trans, trans, QI_NONE, DS4_NUM_SCALE, sqrtf(x.c)));
   snprintf(key, sizeof(key), "%s.gamma", name);
@@ -203,7 +203,7 @@ static ds4_status va_norm(qi_graph *g, const char *name, va_tensor x,
   if (silu)
     QI_TRY(ds4_num_point(g->num, trans, trans, QI_NONE, DS4_NUM_SILU, 0));
   QI_TRY(va_new(g, y, x.c, x.h, x.w));
-  ix = (ds4_num_reindex){.rank = 2, .shape = {x.c, s}, .stride = {1, x.c}};
+  ds4_num_reindex ix = {.rank = 2, .shape = {x.c, s}, .stride = {1, x.c}};
   QI_TRY(ds4_num_reorder(g->num, va_view(*y), trans, &ix));
 cleanup: {
   ds4_status t = qi_clear(&w);
@@ -253,8 +253,8 @@ cleanup: {
   return status ? status : s;
 }
 }
-/* The VAE uses a single wide head, with the same FP32 SDPA intermediates as
- * the DiT. Query tiles remain bounded even at the full latent resolution. */
+/* The VAE uses a single wide head and FP32 SDPA intermediates. The attention
+ * helper preserves full-query GEMM geometry while its score fits 512 MiB. */
 static ds4_status va_attention(qi_graph *g, const char *side, va_tensor *x) {
   ds4_status status;
   qi_work work = {.num = g->num};
@@ -520,12 +520,15 @@ ds4_status ds4_qwen_image_vae_encode(ds4_qwen_image_vae *e,
   uint64_t s = (uint64_t)r->width * r->height;
   QI_TRY(ds4_qwen_image_observe(g->num, o, "begin", 0, QI_NONE));
   QI_TRY(qi_host(g->num, s * 8, (void **)&host, &account));
+  /* Eager scalar division multiplies by its FP32 reciprocal. Using a C
+   * division instead moves byte 127 across a BF16 tie before the first conv. */
   for (uint32_t c = 0; c < 4; c++)
     for (uint64_t i = 0; i < s; i++)
-      host[c * s + i] = qi_bf16(
-          c == 3 && r->channels == 3
-              ? 1.f
-              : (float)r->pixels[i * r->channels + c] / 255.f * 2.f - 1.f);
+      host[c * s + i] = qi_bf16(c == 3 && r->channels == 3
+                                    ? 1.f
+                                    : (float)r->pixels[i * r->channels + c] *
+                                              (1.f / 255.f) * 2.f -
+                                          1.f);
   QI_TRY(va_new(g, &x, 4, r->height, r->width));
   QI_TRY(ds4_num_write(g->num, va_view(x), host, s * 8));
   qi_host_free(host, account);
@@ -568,11 +571,38 @@ cleanup: {
   return status;
 }
 }
+void qi_vae_encode_memory(const ds4_qwen_image_reference *r,
+                          ds4_runtime_estimate *out) {
+  uint64_t pixels = (uint64_t)r->width * r->height;
+  /* Live encoder activations and explicit convolution workspace, plus host
+   * pixels, readback and attention bounds. Weights are planned separately. */
+  *out = (ds4_runtime_estimate){
+      .device_bytes = pixels * 96 * 32 + 128 * 1024 * 1024,
+      .host_bytes = pixels * 16 + 65536,
+      .known = true};
+}
+void qi_vae_memory(ds4_qwen_image_vae *e, uint64_t *weights,
+                   uint64_t *resident) {
+  *weights = qi_weight_bytes(&e->g);
+  *resident = 0;
+  for (uint32_t i = 0; i < e->g.group_count; i++)
+    if (ds4_weight_group_resident(e->g.groups[i]))
+      *resident += qi_group_bytes(&e->g, i);
+}
+ds4_status qi_vae_load(ds4_qwen_image_vae *e) {
+  ds4_runtime_scope scope = {0};
+  ds4_status s = ds4_runtime_model_enter(e->g.model, &scope);
+  if (!s)
+    s = qi_load_all(&e->g);
+  ds4_runtime_scope_leave(&scope);
+  return s;
+}
 static uint64_t va_decode_bytes(uint32_t h, uint32_t w, uint32_t core) {
   uint64_t th = core && h > core + 28 ? core + 28 : h,
            tw = core && w > core + 28 ? core + 28 : w;
-  /* Includes full low-res attention and all overlapping norm/residual views,
-   * conv workspace (64 MiB), plus padding and library staging margin. */
+  /* Includes low-res attention and overlapping norm/residual views. The
+   * high-res factor covers explicit padding and activation-sized cuDNN
+   * workspace; the constant margin includes its additional 64 MiB. */
   return (uint64_t)h * w * 1152 * 64 + th * tw * 256 * 144 * 24 +
          128 * 1024 * 1024;
 }
@@ -580,8 +610,9 @@ static uint64_t va_decode_host(uint32_t h, uint32_t w, uint32_t core) {
   uint64_t th = core && core + 28 < h ? core + 28 : h;
   uint64_t tw = core && core + 28 < w ? core + 28 : w;
   /* RGBA result, blend weights, BF16 tile readback (including its halo),
-   * low-resolution attention bounds and the bounded per-tile range table. */
-  return (uint64_t)h * w * 256 * 4 + th * tw * 256 * 8 + (uint64_t)h * w * 8 +
+   * attention bounds and the separate full-query range table. Both tables
+   * stay live during attention; larger scores still use bounded query tiles. */
+  return (uint64_t)h * w * 256 * 4 + th * tw * 256 * 8 + (uint64_t)h * w * 16 +
          65536 + ds4_qwen_image_rgba_bytes(w * 16, h * 16);
 }
 static ds4_status va_plan(ds4_qwen_image_vae *e, uint32_t h, uint32_t w,

@@ -1,0 +1,14 @@
+EmbeddingGemma 2 text adapter
+
+Model equations and configuration conventions follow huggingface/transformers
+d4fcbccd0966ace9505b9cbd3041d28ad822d8a7:
+src/transformers/models/embedding_gemma2/modeling_embedding_gemma2.py
+src/transformers/models/gemma4/modeling_gemma4.py
+Copyright 2026 the HuggingFace Team. All rights reserved.
+Licensed under Apache License 2.0, included in LICENSE.
+
+DS4 modifications: independent native C tokenizer, projection-only PLE,
+bidirectional local/full attention using the existing numeric C API, ragged
+batch isolation, host mean/L2 pooling and explicit resource ownership.
+The pinned checkpoint supplies tokenizer/configuration data. Compilation and
+Transformers oracles are development tools; no Python serving dependency.

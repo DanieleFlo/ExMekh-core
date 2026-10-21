@@ -30,6 +30,8 @@ typedef struct {
                         uint32_t, uint32_t, float);
   ds4_status (*matmul_batch)(void *, ds4_num_view, ds4_num_view, ds4_num_view,
                              uint32_t, uint32_t, uint32_t, uint32_t, bool);
+  ds4_status (*channel_l2)(void *, ds4_num_view, ds4_num_view, uint32_t,
+                           uint32_t, float);
 } ds4_numeric_ops;
 struct ds4_numeric {
   const ds4_numeric_ops *ops;

@@ -92,13 +92,13 @@ extern "C" ds4_status ds4_numeric_cudnn_conv(void *state, ds4_numeric *context,
   ds4_status status = DS4_STATUS_OK;
   int input[5], output[5], filter[5], xs[5], ys[5], pad[3], stride[3],
       dilation[3];
-  bool symmetric = true;
+  bool padded_input = false;
   const bool image = a->input[0] == 1 && a->kernel[0] == 1 &&
                      !a->pad_before[0] && !a->pad_after[0] &&
                      a->stride[0] == 1 && a->dilation[0] == 1;
   for (int d = 0; d < 3; d++)
-    if (a->pad_before[d] != a->pad_after[d])
-      symmetric = false;
+    if (a->pad_before[d] || a->pad_after[d])
+      padded_input = true;
   input[0] = output[0] = a->batch;
   input[1] = a->in_channels;
   output[1] = filter[0] = a->out_channels;
@@ -112,13 +112,13 @@ extern "C" ds4_status ds4_numeric_cudnn_conv(void *state, ds4_numeric *context,
     if (padded_dim > INT_MAX || a->stride[d] > INT_MAX ||
         a->dilation[d] > INT_MAX)
       return DS4_STATUS_UNSUPPORTED;
-    input[d + 2] = symmetric ? a->input[d] : padded_dim;
+    input[d + 2] = padded_input ? padded_dim : a->input[d];
     output[d + 2] =
         (padded_dim - (uint64_t)a->dilation[d] * (a->kernel[d] - 1) - 1) /
             a->stride[d] +
         1;
     filter[d + 2] = a->kernel[d];
-    pad[d] = symmetric ? a->pad_before[d] : 0;
+    pad[d] = 0;
     stride[d] = a->stride[d];
     dilation[d] = a->dilation[d];
   }
@@ -140,7 +140,9 @@ extern "C" ds4_status ds4_numeric_cudnn_conv(void *state, ds4_numeric *context,
     if (status)                                                                \
       goto cleanup;                                                            \
   } while (0)
-  if (!symmetric) {
+  /* Match the explicit pad-then-convolve geometry, including symmetric
+   * padding. cuDNN's implicit padding can select another BF16 reduction. */
+  if (padded_input) {
     uint64_t count = (uint64_t)input[0] * xs[0];
     status = ds4_num_alloc(context, count, x.type, &padded);
     if (status)
@@ -189,18 +191,27 @@ extern "C" ds4_status ds4_numeric_cudnn_conv(void *state, ds4_numeric *context,
     CUDNN_TRY(cudnnGetConvolutionForwardAlgorithm_v7(s->handle, xd, wd, cd, yd,
                                                      8, &count, candidates));
     bool selected = false;
+    /* Tensor Core convolutions may stage a full FP32 activation: a fixed
+     * 64 MiB cap changed BF16 ties on megapixel VAE/reference inputs. Bound
+     * workspace by actual activation size, covered by the adapter's plan. */
+    uint64_t largest = xx.count > y.count ? xx.count : y.count;
+    uint64_t unit = ds4_num_type_bytes(x.type), margin = 64ull * 1024 * 1024;
+    if (largest > (SIZE_MAX - margin) / (2 * unit)) {
+      status = DS4_STATUS_UNSUPPORTED;
+      goto cleanup;
+    }
+    uint64_t workspace_limit = margin + largest * 2 * unit;
     for (int i = 0; i < count; i++) {
       if (candidates[i].status != CUDNN_STATUS_SUCCESS ||
           candidates[i].determinism != CUDNN_DETERMINISTIC ||
-          candidates[i].memory > 64u * 1024u * 1024u)
+          candidates[i].memory > workspace_limit)
         continue;
       if (x.type == DS4_NUM_F32 && candidates[i].mathType != CUDNN_FMA_MATH)
         continue;
       if (candidates[i].memory) {
         status = ds4_num_alloc(context, (candidates[i].memory + 3) / 4,
                                DS4_NUM_F32, &workspace);
-        if (status == DS4_STATUS_NOMEM)
-          continue;
+        /* Pressure must fail admission, not change the qualified reduction. */
         if (status)
           goto cleanup;
       }

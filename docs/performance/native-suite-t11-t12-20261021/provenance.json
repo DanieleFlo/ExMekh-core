@@ -1,0 +1,311 @@
+{
+  "version": 1,
+  "models": {
+    "google/embeddinggemma-2": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+    "Qwen/Qwen-Image-2.1-Turbo": "fc13ba1986fcb905854dc8de2f52eee395f49b5b"
+  },
+  "transformers": "d4fcbccd0966ace9505b9cbd3041d28ad822d8a7",
+  "diffusers": "aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e",
+  "pytorch": "5c4886908584029761b579af026dcfb627c84070",
+  "strata": {
+    "revision": "6674a0065fb96bacde33e3eb10f91a1df86f95f2",
+    "license": "MIT; ideas only, no source imported",
+    "transfer": "byte budgets and request-sized scratch; retain useful groups",
+    "not_transferred": "router expert cache, quantized GEMM/KV, MTP, speculative prefetch"
+  },
+  "sources": [
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/embedding_gemma2/modeling_embedding_gemma2.py",
+      "bytes": 43757,
+      "sha256": "f0376b13fb5230b349ce269c4fb40906931744a84df57c1d208f46032941eda7"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/gemma4/modeling_gemma4.py",
+      "bytes": 127002,
+      "sha256": "8c8ee26ac3e003dd7bea51c7d74df4fd0d25efa57740cbe7c8c68be8c5577c14"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/diffusers-aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e/src/diffusers/pipelines/qwenimage21/pipeline_qwenimage21.py",
+      "bytes": 42974,
+      "sha256": "e75e4ce38d38e194edaac818bba99b2115b4bb2bfdbd15ce03a2813b0fe8856c"
+    },
+    {
+      "path": "performance-results/flash-strata-20261006/strata-source-20261008/src/prefill/prefill.cpp",
+      "bytes": 235973,
+      "sha256": "cfe076cc4b34cb03018c30a455bc0f5c583f8ee47fd4c33afc4bcd6624f42be3"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/pytorch-softmax/SoftMax.cu",
+      "bytes": 65731,
+      "sha256": "17bf86e61f8c0f0bc2a37eed314bf412a1992826141bdcb6d9202c5066765b90"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/pytorch-softmax/PersistentSoftmax.cuh",
+      "bytes": 20256,
+      "sha256": "5abdcb3359480795f96d528d184dd98ecbe98d913061e63c764dcffe49906d4d"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/pytorch-softmax/Reduce.cuh",
+      "bytes": 50232,
+      "sha256": "8f8e3e87f3f7514d85e18515fb21698c780c1b1d1f5b03ef1288a8225c556d97"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/pytorch-softmax/block_reduce.cuh",
+      "bytes": 4479,
+      "sha256": "31ce6e510f68f23de06647114cf4eb4face8812778866b4d23e471b138c07bae"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/pytorch-softmax/SharedReduceOps.h",
+      "bytes": 16470,
+      "sha256": "75a6bad9a3c7f47572ab8264fd66487697e2a77bb9fba1b0d555d967aac18b5e"
+    }
+  ],
+  "pillow": [
+    {
+      "url": "https://raw.githubusercontent.com/python-pillow/Pillow/12.3.0/src/libImaging/Resample.c",
+      "path": "src/libImaging/Resample.c",
+      "sha256": "808c212d03289b9ab70fad67168da1b14ed8dd74f1607c7a7278c50cbc1ae0ab",
+      "bytes": 32578
+    },
+    {
+      "url": "https://raw.githubusercontent.com/python-pillow/Pillow/12.3.0/src/libImaging/Convert.c",
+      "path": "src/libImaging/Convert.c",
+      "sha256": "2befb53f832dd8a780a33b6ba417f63cbb44e3dbcdbbdc6b908c720a64ac03b9",
+      "bytes": 47982
+    },
+    {
+      "url": "https://raw.githubusercontent.com/python-pillow/Pillow/12.3.0/LICENSE",
+      "path": "LICENSE",
+      "sha256": "15181e7363dca9aed78b79bebebc7fde7f1814b8bd311ea3b87ae8ccadfc185b",
+      "bytes": 1457
+    }
+  ],
+  "licenses": [
+    {
+      "path": "third_party/pillow/LICENSE",
+      "bytes": 1457,
+      "sha256": "15181e7363dca9aed78b79bebebc7fde7f1814b8bd311ea3b87ae8ccadfc185b"
+    },
+    {
+      "path": "third_party/pillow/NOTICE",
+      "bytes": 692,
+      "sha256": "81194c355ffc61af175936b02f61812076cb1d119d23ce8fbd131628bfcbfcb8"
+    },
+    {
+      "path": "third_party/transformers/LICENSE",
+      "bytes": 11418,
+      "sha256": "77fd4710def9ec3c0f6225800e0235f15a425abd4a8b03559127fcd782612049"
+    },
+    {
+      "path": "third_party/transformers/NOTICE",
+      "bytes": 756,
+      "sha256": "46c4fb8b95d6c0ca67a57c828ec7c74fd230b256d9b4c1240fbe5b3afcbc94e5"
+    },
+    {
+      "path": "third_party/diffusers/NOTICE",
+      "bytes": 1070,
+      "sha256": "062fdb93c3ff8b417a6011dad9200f679b3e5bfb538d18f767159486da812012"
+    },
+    {
+      "path": "third_party/pytorch/LICENSE",
+      "bytes": 3464,
+      "sha256": "bd018feef8825e88181c84eb7e3aa4eafb8f08a20d9fd6ef948569610c4a3e43"
+    },
+    {
+      "path": "third_party/pytorch/NOTICE",
+      "bytes": 1054,
+      "sha256": "4a5dc843655c291778425edff6b7605644c6d175cced195e0acd8b68a0c8243d"
+    }
+  ],
+  "rms_experiment": {
+    "id": "gemma-rms-small-rows-fp32-reduction",
+    "hypothesis": "The existing vectorized RMS reduction preserves the frozen PyTorch mean order for small BF16 batches too; the 256-thread fallback changes rounding at BF16 ties and swaps one held-out nearest neighbour.",
+    "baseline": "gemma-qualification-v2/verification.json",
+    "diagnosis": "norm-diagnostics.json",
+    "workload": "EmbeddingGemma2 BF16, 12 rows x 512 input/post/PLE RMSNorm on RTX 3090 sm_86",
+    "target_metric": "exact RMS outputs and frozen held-out ranking without threshold changes",
+    "source": "existing ds4_numeric_cuda.cu rms_rows_kernel, qualified for T07/T08; PyTorch 5c4886908584029761b579af026dcfb627c84070",
+    "transfer": "reuse existing FP32 square/mean reduction and direct scaling, no causal attention or LLM kernels",
+    "performance_claim": false
+  },
+  "short_rms_experiment": {
+    "id": "gemma-eager-short-row-rms-order-v2",
+    "hypothesis": "The frozen PyTorch reduction uses 64/128/256/512 lanes per row when fewer than 16 rows are present. Reproduce the launch-dependent sum order before BF16 rounding to remove residual-stream drift.",
+    "baseline": "numeric-before-short-rms-order.cu; libnumeric-before-short-rms-order.so; gemma-qualification-v4",
+    "diagnosis": "Frozen exact-input primitive replay finds four RMS ties on text-0, including the first changed residual at layer8 PLE post norm. All linears and eager attention replay exactly.",
+    "sources": [
+      "PyTorch 5c488690 aten/src/ATen/native/cuda/Reduce.cuh setReduceConfig/input_vectorized_thread_reduce_impl/block_x_reduce",
+      "PyTorch 5c488690 PowKernel.cu (pow exponent -0.5 dispatches rsqrt)",
+      "docs/research/cuda/ampere-sm86-primitives.md"
+    ],
+    "variable": "RMS FP32 summation hierarchy for fewer than 16 rows; no change to rows>=16 or legacy LLM kernels",
+    "primitive": "16 CUDA tests PASS; all exact-input text-0 layer primitives bit-exact after change",
+    "model": "gemma-qualification-v5 PASS: all 48 frozen T00 texts have bit-exact embeddings, PLE, all 24 layers and projection; 54 vectors/all4 dimensions, padding, batch/task/ranking PASS. Two additional long-input hidden diagnostics remain non-exact, vectors PASS.",
+    "performance_claim": false,
+    "decision": "KEEP"
+  },
+  "wide_softmax_experiment": {
+    "id": "qwen-image-wide-fp32-softmax-order",
+    "hypothesis": "The first 1024x1024 DiT drift comes from warp-only FP32 softmax summation. Matching the frozen eager reduction's 1024-thread hierarchy and wide-row grouping preserves BF16 attention ties and the eight-step trajectory.",
+    "hardware": "RTX 3090 sm_86, CUDA suite without fast math",
+    "workload": "Frozen T00 qwen-heldout-0 seed20261021, 4096 image tokens plus text prefix; first block query tile256, 32 heads, head dimension128",
+    "baseline": "attention-numeric-baseline.json, numeric-before-wide-softmax.cu, libnumeric-softmax-before.so",
+    "diagnosis": "QK and PV with identical inputs are bit-exact; softmax differs in 21,067,372 FP32 entries and changes 68 BF16 attention outputs in the inspected tile. First-block preceding norm/projections/RoPE are bit-exact.",
+    "sources": [
+      "PyTorch 5c4886908584029761b579af026dcfb627c84070 SoftMax.cu, block_reduce.cuh",
+      "docs/research/cuda/ampere-sm86-primitives.md",
+      "docs/research/guides/problem-to-source.md"
+    ],
+    "variable": "FP32 softmax reduction for width>2048, no model-specific dispatch or approximation",
+    "target_metrics": [
+      "exact primitive replay",
+      "eight frozen latent boundaries",
+      "RGBA T00 gates",
+      "peak memory",
+      "five synchronized timing samples after warmup"
+    ],
+    "decision": "KEEP",
+    "correctness": "First 1024x1024 seed20261021 pipeline trajectory: all eight latents bit-exact to unmodified full PyTorch MATH. BF16 vision follow-up: all 27 vision blocks and complete single-reference encoder bit-exact. Seventeen CUDA primitive tests pass, including long BF16 attention and masked FP32 widths through14461.",
+    "performance_claim": false
+  },
+  "patch_cudnn_algorithms": {
+    "path": "performance-results/native-suite-t11-t12-20261021/patch-cudnn-algorithms.json",
+    "bytes": 1060,
+    "sha256": "772a58e1e0408f332b8cf7f945080ad30897f6615eec7dd5250973ee699f1b2c"
+  },
+  "patch_workspace_experiment": {
+    "id": "qwen-vision-multi-reference-patch-workspace",
+    "hypothesis": "At 8288 image patches the fixed 64MiB workspace cap excludes the eager-compatible deterministic convolution algorithm, changing BF16 ties before the first vision block. Admit the required workspace within the existing encoder estimate.",
+    "baseline": "cudnn-before-patch-workspace.cu; libnumeric-before-patch-workspace.so; encoder-large-multi-native",
+    "diagnosis": "Pixel inputs are exact. Algorithm0 differs in1233 patch values; algorithm1 with77,332,496 bytes workspace is bit-exact. The one-reference algorithm uses43,384,848 bytes and was already admitted.",
+    "source": "cuDNN C API algorithm/workspace query and actual frozen Transformers Qwen3VL Conv3d input/output replay",
+    "variable": "Workspace ceiling128MiB for full-patch convolutions only. Other convolutions retain64MiB. Encoder request bound unchanged and sufficient.",
+    "correctness": "All71 encoder boundaries, including patch projection,27vision layers, mergers,36text layers and conditioning, bit-exact to frozen eager oracle on two1184x896 references.",
+    "evidence": [
+      "patch-cudnn-algorithms.json",
+      "encoder-large-multi-workspace-fixed.json"
+    ],
+    "performance_claim": false,
+    "decision": "KEEP"
+  },
+  "vae_experiments": {
+    "vae-workspace-experiment": {
+      "id": "qwen-vae-activation-sized-cudnn-workspace",
+      "hypothesis": "The64MiB convolution workspace cap excludes the eager-compatible FP32-accumulating Tensor Core algorithm on megapixel VAE features. Bound workspace by64MiB plus twice the largest input/output activation, within the adapter request plan, instead of forcing another reduction.",
+      "baseline": "cudnn-before-activation-workspace.cu; libnumeric-before-activation-workspace.so; image-full-final-v2; vae-large-reference-native",
+      "diagnosis": "VAE encoded reference relative_l2=0.004309. Exact-input first96-channel3x3 convolution replay: algorithm0 differs2368 BF16 values; algorithm1 needs407,537,680 bytes and is bit-exact. Explicit versus implicit padding was equal for this first geometry only. The later all-operator replay found seven deeper geometries requiring explicit padding; the first control did not reject canonical padding generally.",
+      "source": "Frozen Diffusers aea7b70b QwenImage21VAE and cuDNN C API algorithm/workspace queries; no new numerical kernel",
+      "variable": "Convolution workspace admission only; no change to convolution equations, dtype, weights or input. Preferred workspace NOMEM fails instead of selecting another reduction.",
+      "evidence": [
+        "vae-cudnn-algorithms.json",
+        "vae-norm-conv-replay-baseline.log",
+        "vae-large-encoded-baseline.json"
+      ],
+      "decision": "KEEP",
+      "performance_claim": false,
+      "workspace_only_result": "image-big-activation-fixed FAIL: final latent relative_l2=0.0286428, RMSE=0.0423262. The workspace change alone was not sufficient and was not promoted alone.",
+      "decision_scope": "Retained for numerical correctness as part of the combined BF16 pipeline; no independent speedup claim",
+      "final_model_evidence": "image-phase-final/verification.json: all56 cases,448 latent boundaries and RGBA pass unchanged T00 thresholds; phase/binary provenance explicit",
+      "largest_pilot": "image-big-pixel-fixed-verification.json: both reference latents, conditioning and all8 denoising latents exact for both largest frozen seeds"
+    },
+    "channel-l2-experiment": {
+      "id": "qwen-vae-channel-axis-l2-order",
+      "hypothesis": "A transpose before L2 normalization changes the frozen eager channel-axis reduction's ordering. A generic channel-major input/spatial-major output L2 operator can preserve that ordering and BF16 ties, avoiding accumulated VAE drift without changing precision.",
+      "baseline": "numeric-before-channel-l2.c/.cu; vae-before-channel-l2.c; libnumeric-before-channel-l2.so; image-big-activation-fixed FAIL latent finalrelative0.028643",
+      "diagnosis": "With admitted cuDNN workspace, the first three convolution replays and first three complete norm/SiLU modules are bit-exact. The fourth norm has one BF16 tie; plain Torch transpose/normalize also differs, proving layout-dependent accumulation matters. Need verify all norm geometries and final pipeline, not infer success from the one primitive.",
+      "sources": [
+        "PyTorch5c488690 Reduce.cuh setReduceConfig/thread_reduce_impl/block_y_reduce",
+        "SharedReduceOps.h NormTwoOps",
+        "Frozen Diffusersaea7b70b QwenImage21RMS_norm",
+        "docs/research/cuda/ampere-sm86-primitives.md"
+      ],
+      "variable": "New generic L2 channel-axis layout operator used by VAE; existing RMS/row-L2/legacy kernels unchanged",
+      "target_metrics": [
+        "bit-exact BF16 primitive on actual and synthetic channel/spatial geometries",
+        "VAE normalized latents",
+        "eight frozen big2reference latents",
+        "RGBA",
+        "memory bounds"
+      ],
+      "decision": "KEEP",
+      "performance_claim": false,
+      "decision_scope": "Retained for numerical correctness as part of the combined BF16 pipeline; no independent speedup claim",
+      "final_model_evidence": "image-phase-final/verification.json: all56 cases,448 latent boundaries and RGBA pass unchanged T00 thresholds; phase/binary provenance explicit",
+      "largest_pilot": "image-big-pixel-fixed-verification.json: both reference latents, conditioning and all8 denoising latents exact for both largest frozen seeds"
+    },
+    "vae-attention-geometry-experiment": {
+      "id": "qwen-vae-single-head-full-math-geometry",
+      "hypothesis": "The frozen VAE uses one wide head and full query GEMMs when score<=512MiB. Preserving that geometry removes FP32 GEMM ties changed by256-query tiling; keep DiT32head tiling and its memory bound unchanged.",
+      "baseline": "attention-before-single-head-geometry.c; libsuite-before-single-head-geometry.so; vae-attention-replay-from-log.json and original baseline stdout. Generic vae-attention-replay.json was overwritten during replay; it is not baseline evidence.",
+      "diagnosis": "Actual VAE4144queries/keys, one768-dimhead: native and Torch query-tiled256 are bit-exact. Both differ from unmodified full PyTorch MATH in1510BF16 values,maxabs.015625,relative9.4865e-5. Therefore the remaining difference is the query GEMM geometry, not softmax accuracy.",
+      "source": "Frozen Diffusersaea7b70b QwenImage21AttentionBlock and actual captured q/k/v/full/tiled arrays",
+      "variable": "Use full single-head query geometry only while FP32score<=512MiB; typed registered interval buffer; no precision or attention mask changes",
+      "decision": "KEEP",
+      "performance_claim": false,
+      "decision_scope": "Retained for numerical correctness as part of the combined BF16 pipeline; no independent speedup claim",
+      "final_model_evidence": "image-phase-final/verification.json: all56 cases,448 latent boundaries and RGBA pass unchanged T00 thresholds; phase/binary provenance explicit",
+      "largest_pilot": "image-big-pixel-fixed-verification.json: both reference latents, conditioning and all8 denoising latents exact for both largest frozen seeds"
+    },
+    "vae-padding-geometry-experiment": {
+      "id": "qwen-vae-canonical-pad-then-convolve",
+      "hypothesis": "The frozen VAE materializes symmetric padding before calling convolution. Preserving that input geometry selects the matching cuDNN reduction on deeper layers too.",
+      "baseline": "cudnn-before-explicit-padding.cu; libnumeric-before-explicit-padding.so; vae-large-reference-geometry-fixed",
+      "diagnosis": "All exact-input norms/SiLU and most convolution replays pass. Seven stage2/3 convolutions differ with implicit symmetric padding (up to4752BF16 values), and each is bit-exact with explicit padding. Native stages0/1 already bit-exact; drift begins atstage2. Earlier first96channel convolution padding control was negative but did not cover these deeper geometries.",
+      "source": "Frozen Diffusersaea7b70b QwenImage21CausalConv3d.forward, existing native pad kernel, vae-padding-replay.json",
+      "variable": "Materialize all declared convolution padding using the existing bounded registered buffer; no new kernel or precision change",
+      "decision": "KEEP",
+      "performance_claim": false,
+      "decision_scope": "Retained for numerical correctness as part of the combined BF16 pipeline; no independent speedup claim",
+      "final_model_evidence": "image-phase-final/verification.json: all56 cases,448 latent boundaries and RGBA pass unchanged T00 thresholds; phase/binary provenance explicit",
+      "largest_pilot": "image-big-pixel-fixed-verification.json: both reference latents, conditioning and all8 denoising latents exact for both largest frozen seeds"
+    },
+    "pixel-normalization-experiment": {
+      "id": "qwen-vae-pixel-fp32-reciprocal",
+      "source_sha256": "6b1672264ac9ca63515e2002f6b714d7f9c7358273e70ef6b9fa9a2ee28fa26c",
+      "baseline": "vae-before-pixel-reciprocal.c; image-big-parity-fixed; vae-second-primitive-comparison.json",
+      "diagnosis": "955 BF16 input values differ on second frozen reference before first convolution; value127 crosses a BF16 tie when using division rather than eager FP32 reciprocal multiplication",
+      "exhaustive_uint8_values": 256,
+      "baseline_different_values": [
+        127
+      ],
+      "candidate_different_values": [],
+      "candidate_vs_cuda_eager_bit_exact": true,
+      "scope": "Standalone C replay of scalar conversion under production flags, plus actual full-pipeline largest pilot",
+      "full_pipeline_pilot": "image-big-pixel-fixed-verification.json",
+      "performance_claim": false,
+      "decision": "KEEP"
+    }
+  },
+  "bf16_query_geometry": {
+    "id": "bf16-eager-bounded-full-query-geometry",
+    "hypothesis": "When the complete BF16 score fits128MiB, preserve the eager full-query GEMM geometry rather than splitting queries into256 rows. This may remove BF16 ties in the Qwen language encoder without changing equations, masks or precision, and reduce GEMM launches.",
+    "baseline": "numeric-before-bf16-query-geometry.cu; libsuite-before-bf16-query-geometry.so; encoder-single19-native; image-phase-final/native-refs/case-12",
+    "diagnosis": "Only frozen case19seed21 exceeds the latent relative gate at0.0101937. Reference latents and all27vision stages are exact; first difference at textlayer0. Exact-input replay: norm, Q/K/V, Q/Knorm, RoPE, projection and MLP primitives exact; attention differs90BF16 values. Scalar softmax replay exact. Manual layer using full eager attention matches oracle exactly.",
+    "source": "Frozen Transformers d4fcbccd Qwen3VL eager attention and exact-input tools/diagnose_qwen_image_encoder.py replay",
+    "variable": "Use full queries only for queries>256 and complete BF16 scores<=128MiB; all other existing query tiling unchanged. No new kernel.",
+    "decision": "KEEP",
+    "performance_claim": false,
+    "decision_scope": "Numerical correction, no independent speedup claim",
+    "primitive": "Actual textlayer0 replay4,390,912 BF16 attention values bit-exact; new1072query32head8KV causalGQA regression bit-exact to eager; final19CUDA groups PASS",
+    "model": "All56cases/448latents/RGBA PASS unchangedT00; onlyrecipe19conditioning changed among5uniqueaffectedinputs, nowexact. Bothseed19 endtoendrerun. FinalGemma v6T00all1296boundariesbitexact.",
+    "memory": "Encoder/Gemma reserve the extra score/result rows beyond256, request sized; completeBF16score cap128MiB; larger requests keep256querytiles"
+  },
+  "rejected_runs_preserved": [
+    "gemma-qualification-v1 (ranking not enforced)",
+    "gemma-qualification-v2 (held-out rank failure)",
+    "gemma-qualification-v4 (four short RMS ties in exact-input text-0 replay)",
+    "image-full-final (native complete, latent failure)",
+    "image-large-bf16-fixed (encoder corrected; VAE still outside the latent gate)",
+    "image-big-activation-fixed (workspace alone did not close the gate)",
+    "image-big-parity-fixed (pixel127 normalization still diverged)",
+    "image-full-final-v2 (complete baseline before final VAE corrections)",
+    "image-phase-final/native-refs (case19seed21 relative_l2=0.0101937 before BF16 query geometry correction; batch completed15 cases then warm-repeat test fixture pointer failed)",
+    "image-full-admission (54/56 before host cache)"
+  ],
+  "development_only": "Python model execution and bounded math SDPA oracle; native serving uses neither",
+  "post_refactor_regression": {
+    "path": "docs/performance/native-suite-t11-t12-20261021/review-verification.json",
+    "bytes": 34866,
+    "sha256": "97c24888026161b757decd2bc3716b7695b1d6d74df3623fae39f680ed9bfe13"
+  }
+}

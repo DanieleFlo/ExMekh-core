@@ -22,6 +22,9 @@ def main():
     p.add_argument("--model", type=Path, required=True)
     p.add_argument("--oracle", type=Path, required=True)
     p.add_argument("--layer", type=int, default=0)
+    p.add_argument(
+        "--native", type=Path, help="Native trace directory for frequency controls"
+    )
     args = p.parse_args()
     torch.backends.cudnn.allow_tf32 = False
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -50,7 +53,7 @@ def main():
         prefix = f"model.visual.blocks.{args.layer}."
         weights = {
             key[len(prefix) :]: f.get_tensor(key).cuda()
-            for key in f
+            for key in f.keys()  # noqa: SIM118 -- safe_open is not iterable.
             if key.startswith(prefix)
         }
     ref = F.conv3d(x.reshape(-1, 3, 2, 16, 16), w, b, stride=(2, 16, 16)).flatten(1)
@@ -158,6 +161,19 @@ def main():
     freq = positions[..., None].float() * inv.cuda()
     co = torch.cat((freq.cos()[:, 0], freq.cos()[:, 1]), -1)
     si = torch.cat((freq.sin()[:, 0], freq.sin()[:, 1]), -1)
+    if args.native:
+        native_co = (
+            torch.from_numpy(np.fromfile(args.native / "vision_cos-0.bf16", np.float32))
+            .reshape(co.shape)
+            .cuda()
+        )
+        native_si = (
+            torch.from_numpy(np.fromfile(args.native / "vision_sin-0.bf16", np.float32))
+            .reshape(si.shape)
+            .cuda()
+        )
+        compare("production-cos", native_co, co)
+        compare("production-sin", native_si, si)
 
     def rope(z):
         z = z.float()
@@ -180,6 +196,21 @@ def main():
         )
         compare("rope", n.read(y, expected.shape).cuda(), expected)
         n.clear()
+        if args.native:
+            y = n.tensor(torch.zeros_like(expected))
+            n.call(
+                "rope",
+                y,
+                n.tensor(z.bfloat16()),
+                n.tensor(native_co),
+                n.tensor(native_si),
+                16,
+                72,
+                False,
+                False,
+            )
+            compare("production-rope", n.read(y, expected.shape).cuda(), expected)
+            n.clear()
         return expected
 
     q, k = rope(q), rope(k)

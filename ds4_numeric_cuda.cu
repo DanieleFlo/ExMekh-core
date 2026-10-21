@@ -285,6 +285,118 @@ __global__ static void rms_rows_kernel(ds4_num_view y, ds4_num_view x,
 typedef struct {
   float mean, m2, count;
 } moment;
+/* Preserve a channel-major L2 reduction before producing spatial-major data.
+ * The four interleaved accumulators and vertical tree follow the frozen eager
+ * strided reduction; transposing first changes rare BF16 ties in the VAE. */
+__global__ static void channel_l2_kernel(ds4_num_view y, ds4_num_view x,
+                                         uint32_t channels, uint32_t spatial,
+                                         float eps, uint32_t vec, bool split) {
+  __shared__ float sums[512];
+  uint64_t pixel = ((uint64_t)blockIdx.x * blockDim.x + threadIdx.x) * vec;
+  if (!split)
+    pixel = (((uint64_t)blockIdx.x * blockDim.y + threadIdx.y) * blockDim.x +
+             threadIdx.x) *
+            vec;
+  uint32_t step = split ? blockDim.y : 1, first = split ? threadIdx.y : 0;
+  float acc[4][4] = {{0}}, sum[4] = {0};
+  for (uint32_t base = first; base < channels; base += 4 * step)
+    for (uint32_t j = 0; j < 4; j++) {
+      uint32_t c = base + j * step;
+      if (c < channels)
+        for (uint32_t i = 0; i < vec; i++)
+          if (pixel + i < spatial) {
+            float v = readv(x, (uint64_t)c * spatial + pixel + i);
+            acc[j][i] = fmaf(v, v, acc[j][i]);
+          }
+    }
+  uint32_t at = (threadIdx.y * blockDim.x + threadIdx.x) * vec;
+  for (uint32_t i = 0; i < vec; i++) {
+    sum[i] = ((acc[0][i] + acc[1][i]) + acc[2][i]) + acc[3][i];
+    if (split)
+      sums[at + i] = sum[i];
+  }
+  if (split) {
+    __syncthreads();
+    for (uint32_t off = blockDim.y / 2; off; off /= 2) {
+      if (threadIdx.y < off)
+        for (uint32_t i = 0; i < vec; i++) {
+          sum[i] += sums[at + off * blockDim.x * vec + i];
+          sums[at + i] = sum[i];
+        }
+      __syncthreads();
+    }
+    for (uint32_t i = 0; i < vec; i++)
+      sum[i] = sums[threadIdx.x * vec + i];
+  }
+  for (uint32_t i = 0; i < vec; i++)
+    sum[i] = fmaxf(sqrtf(sum[i]), eps);
+  for (uint32_t c = first; c < channels; c += step)
+    for (uint32_t i = 0; i < vec; i++)
+      if (pixel + i < spatial)
+        writev(y, (pixel + i) * channels + c,
+               readv(x, (uint64_t)c * spatial + pixel + i) / sum[i]);
+}
+static uint32_t floor_power(uint32_t n) {
+  uint32_t p = 1;
+  while (p <= n / 2)
+    p *= 2;
+  return p;
+}
+static ds4_status gpu_channel_l2(void *state, ds4_num_view y, ds4_num_view x,
+                                 uint32_t channels, uint32_t spatial,
+                                 float eps) {
+  uint32_t vec = spatial % 4 == 0 ? 4 : spatial % 2 == 0 ? 2 : 1;
+  uint32_t limit = 512 / vec;
+  uint32_t columns = floor_power(spatial / vec < limit ? spatial / vec : limit);
+  uint32_t rows = floor_power(channels < limit ? channels : limit);
+  uint32_t bx = columns < 32 ? columns : 32;
+  uint32_t by = rows < limit / bx ? rows : limit / bx;
+  bx = columns < limit / by ? columns : limit / by;
+  uint32_t threshold = by * 16 < 256 ? by * 16 : 256;
+  bool split = channels >= threshold;
+  uint32_t span = bx * vec * (split ? 1 : by);
+  channel_l2_kernel<<<(spatial + span - 1) / span, dim3(bx, by), 0,
+                      ((numeric_cuda *)state)->stream>>>(
+      y, x, channels, spatial, eps, vec, split);
+  return launch_status();
+}
+/* The eager FP32 mean widens its row reduction when fewer than 16 rows
+ * share a block. Match that order before normalization: rare BF16 ties in
+ * short Gemma inputs otherwise amplify through the residual stream. */
+__global__ static void rms_short_rows_kernel(ds4_num_view y, ds4_num_view x,
+                                             ds4_num_view w, ds4_num_view bias,
+                                             uint32_t width, float eps,
+                                             uint32_t mode, bool pre) {
+  __shared__ float sums[512], inv;
+  uint64_t row = blockIdx.x;
+  float acc[4] = {0};
+  for (uint32_t j = threadIdx.x * 4; j < width; j += blockDim.x * 4)
+    for (uint32_t k = 0; k < 4; k++) {
+      float value = readv(x, row * width + j + k);
+      acc[k] += value * value;
+    }
+  sums[threadIdx.x] = ((acc[0] + acc[1]) + acc[2]) + acc[3];
+  __syncthreads();
+  for (uint32_t off = blockDim.x / 2; off >= 32; off /= 2) {
+    if (threadIdx.x < off)
+      sums[threadIdx.x] += sums[threadIdx.x + off];
+    __syncthreads();
+  }
+  if (threadIdx.x < 32) {
+    float sum = warp_sum(sums[threadIdx.x]);
+    if (!threadIdx.x)
+      inv = rsqrtf(sum * (1.0f / width) + eps);
+  }
+  __syncthreads();
+  for (uint32_t j = threadIdx.x; j < width; j += blockDim.x) {
+    float value = readv(x, row * width + j) * inv;
+    if (pre)
+      value = roundv(value, x.type);
+    if (mode != DS4_NUM_SCALE_NONE)
+      value *= readv(w, j) + (mode == DS4_NUM_SCALE_ZERO_CENTERED ? 1 : 0);
+    writev(y, row * width + j, value + (bias.data ? readv(bias, j) : 0));
+  }
+}
 __device__ static moment moment_join(moment left, moment right) {
   float count = left.count + right.count;
   if (count == 0)
@@ -353,8 +465,21 @@ static ds4_status gpu_norm(void *p, ds4_num_view y, ds4_num_view x,
                                                        mode);
     return launch_status();
   }
-  if (kind == DS4_NUM_RMS && width >= 128 && width % 4 == 0 &&
-      x.count / width >= 16) {
+  /* The vectorized mean also matters for short embedding batches: switching
+   * reduction order at 16 rows changes BF16 ties in direct-scale Gemma norm. */
+  if (kind == DS4_NUM_RMS && width >= 128 && width % 4 == 0) {
+    uint64_t rows = x.count / width;
+    if (rows < 16) {
+      uint32_t height = 1, threads = 32;
+      while (height * 2 <= rows)
+        height *= 2;
+      while (threads * 2 <= width / 4 && threads * 2 <= 512 / height)
+        threads *= 2;
+      rms_short_rows_kernel<<<(unsigned)rows, threads, 0,
+                              ((numeric_cuda *)p)->stream>>>(y, x, w, b, width,
+                                                             eps, mode, pre);
+      return launch_status();
+    }
     rms_rows_kernel<<<(unsigned)((x.count / width + 3) / 4), 128, 0,
                       ((numeric_cuda *)p)->stream>>>(y, x, w, b, width, eps,
                                                      mode, pre);
@@ -520,9 +645,9 @@ __global__ static void attention_kernel(ds4_num_view y, ds4_num_view q,
   for (uint32_t d = lane; d < a.dim; d += 32)
     writev(y, qi + d, acc[d / 32]);
 }
-/* BF16 eager attention rounds the QK GEMM and the normalized probabilities.
- * Keep those boundaries and Tensor Core accumulation, with fixed 256-row
- * query tiles. Scratch is O(heads*256*keys), never O(queries*keys). */
+/* BF16 eager attention rounds the QK GEMM and normalized probabilities.
+ * Preserve those boundaries. Complete scores up to 128 MiB keep the eager
+ * GEMM geometry; larger requests retain bounded 256-row query tiles. */
 __global__ static void softmax_rows_kernel(ds4_num_view scores,
                                            const uint32_t *bounds,
                                            uint32_t batch, uint32_t first,
@@ -594,13 +719,22 @@ __global__ static void scatter_attention(ds4_num_view y, ds4_num_view temp,
            readv(temp, i));
   }
 }
+__global__ static void softmax_wide_kernel(ds4_num_view, const uint32_t *,
+                                           uint32_t, uint32_t, uint32_t,
+                                           ds4_num_attention);
 static ds4_status bf16_attention(numeric_cuda *s, ds4_num_view y,
                                  ds4_num_view q, ds4_num_view k, ds4_num_view v,
                                  const uint32_t *bounds,
                                  const ds4_num_attention *a) {
   ds4_num_buffer *scratch = NULL, *packed_v = NULL, *packed_k = NULL,
                  *result = NULL;
-  const uint32_t tile_rows = 256;
+  /* Preserve eager GEMM geometry when a complete BF16 score is bounded.
+   * Splitting these rows changes rare BF16 ties in the language encoder. */
+  uint64_t row_bytes = (uint64_t)a->q_heads * a->keys * 2;
+  uint32_t tile_rows =
+      a->queries > 256 && row_bytes <= (128ull * 1024 * 1024) / a->queries
+          ? a->queries
+          : 256;
   ds4_status st =
       ds4_num_alloc(s->context, (uint64_t)a->q_heads * tile_rows * a->keys,
                     DS4_NUM_BF16, &scratch);
@@ -643,11 +777,16 @@ static ds4_status bf16_attention(numeric_cuda *s, ds4_num_view y,
         st = DS4_STATUS_INFERENCE;
         break;
       }
-      for (uint32_t h = 0; h < a->q_heads; h++)
-        softmax_rows_kernel<<<(rows + 3) / 4, 128, 0, s->stream>>>(
-            ds4_num_slice(scores, (uint64_t)h * rows * a->keys,
-                          (uint64_t)rows * a->keys),
-            bounds, batch, first, rows, *a);
+      for (uint32_t h = 0; h < a->q_heads; h++) {
+        ds4_num_view head = ds4_num_slice(scores, (uint64_t)h * rows * a->keys,
+                                          (uint64_t)rows * a->keys);
+        if (a->keys > 2048)
+          softmax_wide_kernel<<<rows, 1024, 0, s->stream>>>(head, bounds, batch,
+                                                            first, h, *a);
+        else
+          softmax_rows_kernel<<<(rows + 3) / 4, 128, 0, s->stream>>>(
+              head, bounds, batch, first, rows, *a);
+      }
       st = launch_status();
       if (st)
         break;
@@ -781,6 +920,106 @@ static ds4_status gpu_nearest(void *state, ds4_num_view y, ds4_num_view x,
       y, x, *a);
   return launch_status();
 }
+/* Match the pinned eager FP32 softmax reduction for long rows. A warp-only
+ * sum changes BF16 attention ties which can amplify over eight image steps.
+ * Scalar strided rows and aligned four-value groups have distinct sum order.
+ * Independent implementation of PyTorch 5c488690 SoftMax.cu conventions. */
+__device__ static float softmax_block_reduce(float value, float *scratch,
+                                             bool maximum) {
+  uint32_t lane = threadIdx.x % 32, warp = threadIdx.x / 32;
+  for (int offset = 16; offset; offset /= 2) {
+    float other = __shfl_down_sync(0xffffffff, value, offset);
+    value = maximum ? fmaxf(value, other) : value + other;
+  }
+  __syncthreads();
+  if (!lane)
+    scratch[warp] = value;
+  __syncthreads();
+  if (!warp) {
+    value = scratch[lane];
+    for (int offset = 16; offset; offset /= 2) {
+      float other = __shfl_down_sync(0xffffffff, value, offset);
+      value = maximum ? fmaxf(value, other) : value + other;
+    }
+    if (!lane)
+      scratch[0] = value;
+  }
+  __syncthreads();
+  return scratch[0];
+}
+__device__ static float softmax_wide_value(ds4_num_view input, uint32_t at,
+                                           uint32_t lo, uint32_t hi,
+                                           ds4_num_attention a) {
+  if (at < lo || at >= hi)
+    return -INFINITY;
+  float value = roundv(readv(input, at) * a.scale, input.type);
+  return a.softcap > 0 ? a.softcap * tanhf(value / a.softcap) : value;
+}
+__device__ static float softmax_wide_partial(ds4_num_view input, uint32_t width,
+                                             uint32_t lo, uint32_t hi,
+                                             ds4_num_attention a,
+                                             uint32_t shift, float maximum,
+                                             bool sum) {
+  float value = sum ? 0.f : -INFINITY;
+#define ACCUMULATE(at)                                                         \
+  do {                                                                         \
+    float z = softmax_wide_value(input, at, lo, hi, a);                        \
+    value = sum ? value + expf(z - maximum) : fmaxf(value, z);                 \
+  } while (0)
+  if (width <= 9 * 1024) {
+    for (uint32_t at = threadIdx.x; at < width; at += 1024)
+      ACCUMULATE(at);
+  } else {
+    uint32_t start = 0;
+    if (shift) {
+      if (threadIdx.x >= shift)
+        ACCUMULATE(threadIdx.x - shift);
+      start = 1024 - shift;
+    }
+    uint32_t size = width - start, tail = size % 4096;
+    for (uint32_t at = threadIdx.x * 4; at < size - tail; at += 4096)
+      for (uint32_t j = 0; j < 4; j++)
+        ACCUMULATE(start + at + j);
+    for (uint32_t at = size - tail + threadIdx.x; at < size; at += 1024)
+      ACCUMULATE(start + at);
+  }
+#undef ACCUMULATE
+  return value;
+}
+__global__ static void softmax_wide_kernel(ds4_num_view data,
+                                           const uint32_t *bounds,
+                                           uint32_t batch, uint32_t first,
+                                           uint32_t head, ds4_num_attention a) {
+  __shared__ float scratch[32];
+  uint32_t width = a.keys;
+  ds4_num_view row = data;
+  row.data = (char *)data.data +
+             (uint64_t)blockIdx.x * width * (data.type == DS4_NUM_F32 ? 4 : 2);
+  row.count = width;
+  uint64_t index = (uint64_t)batch * a.queries + first + blockIdx.x;
+  uint32_t lo = bounds[2 * index], hi = bounds[2 * index + 1];
+  /* BF16 eager softmax converts its contiguous score rows to FP32 first.
+   * Preserve that virtual alignment when grouping the long-row reduction. */
+  uint32_t shift = data.type == DS4_NUM_F32
+                       ? ((uintptr_t)row.data / 4) % 4
+                       : (((uint64_t)batch * a.q_heads + head) * a.queries +
+                          first + blockIdx.x) *
+                             width % 4;
+  if (lo == hi) {
+    for (uint32_t j = threadIdx.x; j < width; j += 1024)
+      writev(row, j, 0);
+    return;
+  }
+  float m = softmax_wide_partial(row, width, lo, hi, a, shift, 0, false);
+  m = softmax_block_reduce(m, scratch, true);
+  float sum = softmax_wide_partial(row, width, lo, hi, a, shift, m, true);
+  sum = softmax_block_reduce(sum, scratch, false);
+  for (uint32_t j = threadIdx.x; j < width; j += 1024)
+    writev(row, j,
+           j >= lo && j < hi
+               ? expf(softmax_wide_value(row, j, lo, hi, a) - m) / sum
+               : 0);
+}
 static ds4_status gpu_softmax(void *state, ds4_num_view y, ds4_num_view x,
                               const uint32_t *bounds, uint32_t rows,
                               uint32_t width, float scale) {
@@ -800,8 +1039,12 @@ static ds4_status gpu_softmax(void *state, ds4_num_view y, ds4_num_view x,
     a.queries = rows;
     a.keys = width;
     a.scale = scale;
-    softmax_rows_kernel<<<(rows + 3) / 4, 128, 0, s->stream>>>(
-        y, (const uint32_t *)bv.data, 0, 0, rows, a);
+    if (y.type == DS4_NUM_F32 && width > 2048)
+      softmax_wide_kernel<<<rows, 1024, 0, s->stream>>>(
+          y, (const uint32_t *)bv.data, 0, 0, 0, a);
+    else
+      softmax_rows_kernel<<<(rows + 3) / 4, 128, 0, s->stream>>>(
+          y, (const uint32_t *)bv.data, 0, 0, rows, a);
     status = launch_status();
   }
   ds4_status cleanup = ds4_num_dispose(ib);
@@ -821,10 +1064,10 @@ static ds4_status gpu_matmul_batch(void *p, ds4_num_view y, ds4_num_view x,
   return status == CUBLAS_STATUS_SUCCESS ? DS4_STATUS_OK : DS4_STATUS_INFERENCE;
 }
 static const ds4_numeric_ops gpu_ops = {
-    gpu_allocate, gpu_release, gpu_copy,    gpu_fence,
-    gpu_close,    gpu_linear,  gpu_norm,    gpu_point,
-    gpu_rope,     gpu_attend,  gpu_conv,    gpu_reorder,
-    gpu_pool,     gpu_nearest, gpu_softmax, gpu_matmul_batch};
+    gpu_allocate,     gpu_release,   gpu_copy,  gpu_fence,   gpu_close,
+    gpu_linear,       gpu_norm,      gpu_point, gpu_rope,    gpu_attend,
+    gpu_conv,         gpu_reorder,   gpu_pool,  gpu_nearest, gpu_softmax,
+    gpu_matmul_batch, gpu_channel_l2};
 extern "C" ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r,
                                        uint64_t owner) {
   if (!out || !r || !owner)

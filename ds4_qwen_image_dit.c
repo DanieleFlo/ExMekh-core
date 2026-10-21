@@ -2,6 +2,7 @@
  * aea7b70b (Apache-2.0). No dual-stream or approximate block skipping. */
 #include "ds4_qwen_image_dit.h"
 #include "ds4_qwen_image_attention.h"
+#include "ds4_qwen_image_components.h"
 #include "ds4_qwen_image_dit_constants.h"
 #include "ds4_qwen_image_graph.h"
 #define D 4096u
@@ -18,6 +19,9 @@ struct ds4_qwen_image_dit_input {
   ds4_num_buffer *conditioning, *references, *cos, *sin;
   ds4_num_buffer *k[32], *v[32];
   bool cached;
+  bool host_cache;
+  uint16_t *host_kv;
+  ds4_resource *host_account;
   ds4_resource *account, *metadata;
 };
 static ds4_status dit_bind(qi_graph *g) {
@@ -55,9 +59,11 @@ cleanup:
 }
 ds4_status ds4_qwen_image_dit_open(ds4_qwen_image_dit **out, ds4_bundle *b,
                                    ds4_numeric *num, ds4_runtime *runtime) {
-  if (!out || !b || !num || !runtime)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!b || !num || !runtime)
+    return DS4_STATUS_INVALID;
   ds4_resource *account = NULL;
   ds4_qwen_image_dit *e = NULL;
   ds4_status status = qi_host(num, sizeof(*e), (void **)&e, &account);
@@ -100,7 +106,23 @@ static ds4_status clear_cache(ds4_qwen_image_dit_input *p) {
     if (!status)
       status = s;
   }
+  qi_host_free(p->host_kv, p->host_account);
+  p->host_kv = NULL;
+  p->host_account = NULL;
   return status;
+}
+ds4_status ds4_qwen_image_dit_cache_place(ds4_qwen_image_dit_input *p,
+                                          ds4_memory_location location) {
+  if (!p || (location != DS4_MEMORY_HOST && location != DS4_MEMORY_DEVICE))
+    return DS4_STATUS_INVALID;
+  ds4_runtime_scope scope = {0};
+  ds4_status s = ds4_runtime_model_enter_exclusive(p->dit->g.model, &scope);
+  if (!s && p->cached)
+    s = DS4_STATUS_BUSY;
+  if (!s)
+    p->host_cache = location == DS4_MEMORY_HOST;
+  ds4_runtime_scope_leave(&scope);
+  return s;
 }
 ds4_status ds4_qwen_image_dit_cache_clear(ds4_qwen_image_dit_input *p) {
   if (!p)
@@ -336,10 +358,11 @@ static ds4_status timestep(qi_graph *g, float sigma, ds4_num_view temb,
       QI_TRY(ds4_num_point(g->num, slice, slice, (j % 2) ? QI_NONE : one,
                            (j % 2) ? DS4_NUM_TANH : DS4_NUM_ADD, 0));
     }
-cleanup: {
-  ds4_status s = qi_clear(&w);
-  return status ? status : s;
-}
+cleanup:
+  {
+    ds4_status s = qi_clear(&w);
+    return status ? status : s;
+  }
 }
 static ds4_status block(qi_graph *g, ds4_qwen_image_dit_input *p,
                         uint32_t layer, ds4_num_view x, ds4_num_view mod,
@@ -408,7 +431,22 @@ static ds4_status block(qi_graph *g, ds4_qwen_image_dit_input *p,
       DIAG("rope_q", rq);
       DIAG("rope_k", rk);
       QI_TRY(ds4_num_copy(g->num, kt, rk));
-      if (offset) {
+      if (p->host_cache && p->prefix) {
+        uint64_t elements = (uint64_t)p->prefix * D;
+        if (!p->host_kv)
+          QI_TRY(qi_host(g->num, elements * 4 * 32, (void **)&p->host_kv,
+                         &p->host_account));
+        uint16_t *kh = p->host_kv + elements * layer * 2, *vh = kh + elements;
+        ds4_num_view kp = ds4_num_slice(k, 0, elements),
+                     vp = ds4_num_slice(v, 0, elements);
+        if (offset) {
+          QI_TRY(ds4_num_write(g->num, kp, kh, elements * 2));
+          QI_TRY(ds4_num_write(g->num, vp, vh, elements * 2));
+        } else {
+          QI_TRY(ds4_num_read(g->num, kp, kh, elements * 2));
+          QI_TRY(ds4_num_read(g->num, vp, vh, elements * 2));
+        }
+      } else if (offset) {
         QI_TRY(ds4_num_copy(g->num,
                             ds4_num_slice(k, 0, (uint64_t)p->prefix * D),
                             ds4_num_data(p->k[layer])));
@@ -477,10 +515,11 @@ static ds4_status block(qi_graph *g, ds4_qwen_image_dit_input *p,
     QI_TRY(ds4_num_point(g->num, x, x, norm, DS4_NUM_ADD, 0));
     DIAG("residual", x);
   }
-cleanup: {
-  ds4_status s = qi_clear(&w);
-  return status ? status : s;
-}
+cleanup:
+  {
+    ds4_status s = qi_clear(&w);
+    return status ? status : s;
+  }
 #undef DIAG
 }
 ds4_status ds4_qwen_image_dit_forward(ds4_qwen_image_dit *e,
@@ -573,22 +612,23 @@ ds4_status ds4_qwen_image_dit_forward(ds4_qwen_image_dit *e,
   QI_TRY(
       ds4_qwen_image_observe(g->num, o, "velocity", 0, ds4_num_data(result)));
   QI_TRY(ds4_numeric_fence(g->num));
-cleanup: {
-  ds4_status s = qi_clear(&w);
-  if (!status)
-    status = s;
-  if (!status)
-    status = ds4_qwen_image_observe(g->num, o, "ready", 0, QI_NONE);
-  if (status) {
-    clear_cache(p);
-    ds4_num_dispose(result);
-  } else {
-    p->cached = true;
-    *out = result;
+cleanup:
+  {
+    ds4_status s = qi_clear(&w);
+    if (!status)
+      status = s;
+    if (!status)
+      status = ds4_qwen_image_observe(g->num, o, "ready", 0, QI_NONE);
+    if (status) {
+      clear_cache(p);
+      ds4_num_dispose(result);
+    } else {
+      p->cached = true;
+      *out = result;
+    }
+    ds4_runtime_scope_leave(&scope);
+    return status;
   }
-  ds4_runtime_scope_leave(&scope);
-  return status;
-}
 }
 void ds4_qwen_image_turbo_sigmas(float s[9]) {
   static const float recipe[] = {1.f,      .978453f, .95418f,
@@ -681,45 +721,83 @@ ds4_status ds4_qwen_image_dit_generate(ds4_qwen_image_dit *e,
         ds4_qwen_image_observe(g->num, o, "latent", i, ds4_num_data(latent)));
   }
   QI_TRY(ds4_numeric_fence(g->num));
-cleanup: {
-  ds4_num_dispose(velocity);
-  ds4_status s = qi_clear(&w);
-  if (!status)
-    status = s;
-  s = clear_cache(p);
-  if (!status)
-    status = s;
-  if (!status)
-    status = ds4_qwen_image_observe(g->num, o, "complete", 0, QI_NONE);
-  if (status)
-    ds4_num_dispose(latent);
-  else
-    *out = latent;
-  qi_host_free(host, ha);
-  ds4_runtime_scope_leave(&scope);
-  return status;
+cleanup:
+  {
+    ds4_num_dispose(velocity);
+    ds4_status s = qi_clear(&w);
+    if (!status)
+      status = s;
+    s = clear_cache(p);
+    if (!status)
+      status = s;
+    if (!status)
+      status = ds4_qwen_image_observe(g->num, o, "complete", 0, QI_NONE);
+    if (status)
+      ds4_num_dispose(latent);
+    else
+      *out = latent;
+    qi_host_free(host, ha);
+    ds4_runtime_scope_leave(&scope);
+    return status;
+  }
 }
+ds4_status qi_dit_load(ds4_qwen_image_dit *e) {
+  ds4_runtime_scope scope = {0};
+  ds4_status s = ds4_runtime_model_enter(e->g.model, &scope);
+  if (!s)
+    s = qi_load_all(&e->g);
+  ds4_runtime_scope_leave(&scope);
+  return s;
+}
+void qi_dit_memory(ds4_qwen_image_dit *e, uint32_t count, uint32_t target,
+                   uint32_t prefix, uint32_t query_span,
+                   ds4_qwen_image_dit_memory *m, uint64_t *resident) {
+  /* Bound live storage rather than reserving a second unused layer:
+   * block BF16 buffers <=26*N*D bytes; attention keys/scores <=24*N*D,
+   * attention queries <=14*Q*D (Q is the largest segment, not all tokens);
+   * forward projections <=8.032*N*D; prepared input/generation <=2.4*N*D.
+   * Round the N terms up to 62 and add 64 MiB for tile/GEMM scratch. This
+   * bounds cached steps too. Request-sized scratch avoids needless spills.
+   * Driver allocations remain in the device sample, outside owned storage. */
+  *m = (ds4_qwen_image_dit_memory){
+      .weights = qi_weight_bytes(&e->g),
+      .prefix_cache = (uint64_t)prefix * D * 4 * 32,
+      .first_step = ((uint64_t)count * 62 + (uint64_t)query_span * 14) * D +
+                    64 * 1024 * 1024,
+      .cached_step = (uint64_t)target * D * 100 + (uint64_t)prefix * D * 40 +
+                     64 * 1024 * 1024,
+      .host = sizeof(ds4_qwen_image_dit_input) + 65536 +
+              (uint64_t)count * (12 + 128 * sizeof(float)) +
+              (uint64_t)target * 64 * 4};
+  *resident = 0;
+  for (uint32_t i = 0; i < 33; i++) {
+    m->groups[i] = i;
+    m->dependencies[i] = i ? i - 1 : UINT32_MAX;
+    m->group_bytes[i] = qi_group_bytes(&e->g, i);
+    if (ds4_weight_group_resident(e->g.groups[i]))
+      *resident += m->group_bytes[i];
+  }
 }
 ds4_status ds4_qwen_image_dit_estimate(ds4_qwen_image_dit *e,
                                        const ds4_qwen_image_dit_input *p,
                                        ds4_qwen_image_dit_memory *m) {
   if (!e || !p || p->dit != e || !m)
     return DS4_STATUS_INVALID;
-  /* Live buffers plus online-attention metadata. cuBLAS workspace is bounded
-   * by the numeric context. Driver allocations remain in the device sample. */
-  *m = (ds4_qwen_image_dit_memory){
-      .weights = qi_weight_bytes(&e->g),
-      .prefix_cache = (uint64_t)p->prefix * D * 4 * 32,
-      .first_step = (uint64_t)p->count * D * 100 + 64 * 1024 * 1024,
-      .cached_step = (uint64_t)p->target * D * 100 +
-                     (uint64_t)p->prefix * D * 40 + 64 * 1024 * 1024,
-      .host = sizeof(*p) + 65536 +
-              (uint64_t)p->count * (12 + 128 * sizeof(float)) +
-              (uint64_t)p->target * 64 * 4};
-  for (uint32_t i = 0; i < 33; i++) {
-    m->groups[i] = i;
-    m->dependencies[i] = i ? i - 1 : UINT32_MAX;
-    m->group_bytes[i] = qi_group_bytes(&e->g, i);
+  uint64_t resident;
+  /* Equal end bounds identify image segments. All causal text runs together
+   * contain at most p->text queries, including expanded image placeholders. */
+  uint32_t span = p->text, run = 0, previous = UINT32_MAX;
+  for (uint32_t i = 0; i < p->count; i++) {
+    uint32_t end = p->bounds[2 * i + 1];
+    run = end == previous ? run + 1 : 1;
+    previous = end;
+    if (run > span)
+      span = run;
+  }
+  qi_dit_memory(e, p->count, p->target, p->prefix, span, m, &resident);
+  if (p->host_cache) {
+    m->host += m->prefix_cache;
+    m->prefix_cache = 0;
   }
   return DS4_STATUS_OK;
 }

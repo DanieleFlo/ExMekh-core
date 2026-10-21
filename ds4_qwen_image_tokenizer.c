@@ -80,9 +80,11 @@ void ds4_qwen_image_tokenizer_close(ds4_qwen_image_tokenizer *t) {
 ds4_status ds4_qwen_image_tokenizer_open(ds4_qwen_image_tokenizer **out,
                                          const char *path,
                                          const uint8_t sha[32]) {
-  if (!out || !path || !sha)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!path || !sha)
+    return DS4_STATUS_INVALID;
   FILE *f = fopen(path, "rb");
   if (!f)
     return DS4_STATUS_INVALID;
@@ -345,10 +347,12 @@ static bool emit(const ds4_qwen_image_tokenizer *t, const char *s, size_t n,
 ds4_status ds4_qwen_image_tokenize(const ds4_qwen_image_tokenizer *t,
                                    const char *s, uint32_t **out,
                                    size_t *count) {
+  if (out)
+    *out = NULL;
+  if (count)
+    *count = 0;
   if (!t || !s || !out || !count)
     return DS4_STATUS_INVALID;
-  *out = NULL;
-  *count = 0;
   char *normalized = NULL;
   ds4_status status = ds4_unicode_nfc(s, &normalized);
   if (status)
@@ -403,12 +407,15 @@ ds4_status ds4_qwen_image_prompt(const ds4_qwen_image_tokenizer *t,
                                  const char *prompt, const uint32_t *images,
                                  size_t count, uint32_t **out, size_t *n,
                                  size_t *drop) {
+  if (out)
+    *out = NULL;
+  if (n)
+    *n = 0;
+  if (drop)
+    *drop = 0;
   if (!t || !prompt || !out || !n || !drop || (count && !images) ||
       count > 1024)
     return DS4_STATUS_INVALID;
-  *out = NULL;
-  *n = 0;
-  *drop = 0;
   token_vec v = {0};
   for (uint32_t i = 0; i < t->npre; i++)
     if (!push(&v, t->prefix[i]))

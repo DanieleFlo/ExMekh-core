@@ -148,6 +148,8 @@ static int dit(ds4_bundle *bundle, ds4_numeric *num, ds4_runtime *runtime,
   ds4_qwen_image_conditioning_view cv = {ds4_num_data(c), mask, text};
   ds4_qwen_image_dit_input *p = NULL;
   CHECK(ds4_qwen_image_dit_prepare(e, cv, ds4_num_data(r), shapes, ns, &p));
+  if (getenv("DS4_SUITE_CACHE_HOST"))
+    CHECK(ds4_qwen_image_dit_cache_place(p, DS4_MEMORY_HOST));
   CHECK(ds4_num_free(c));
   CHECK(ds4_num_free(r));
   free(fixture);
@@ -441,9 +443,51 @@ static int vae(ds4_bundle *bundle, ds4_numeric *num, ds4_runtime *runtime,
          r.height);
   return 0;
 }
+/* Re-decode preserved full-pipeline latents after a VAE-only change. Keeping
+ * the DiT outputs fixed isolates pixel regressions without repeating DiT. */
+static int decode(ds4_bundle *bundle, ds4_numeric *num, ds4_runtime *runtime,
+                  const char *input, const char *out) {
+  size_t bytes;
+  uint32_t *shape = readall(input, "shape.u32", &bytes);
+  if (!shape || bytes != 8 || !shape[0] || !shape[1] || shape[0] % 32 ||
+      shape[1] % 32 || shape[0] > 2048 || shape[1] > 2048)
+    return 2;
+  uint32_t height = shape[0], width = shape[1];
+  free(shape);
+  float *data = readall(input, "decode.f32", &bytes);
+  if (!data || bytes != (uint64_t)height * width)
+    return 2;
+  ds4_qwen_image_vae *e = NULL;
+  ds4_num_buffer *z = NULL;
+  CHECK(ds4_qwen_image_vae_open(&e, bundle, num, runtime));
+  CHECK(ds4_num_alloc(num, bytes / 4, DS4_NUM_F32, &z));
+  CHECK(ds4_num_write(num, ds4_num_data(z), data, bytes));
+  free(data);
+  ds4_qwen_image_vae_plan plan;
+  CHECK(ds4_qwen_image_vae_plan_decode(e, height / 16, width / 16, UINT64_MAX,
+                                       &plan));
+  ds4_qwen_image_rgba *image = NULL;
+  double start = now();
+  CHECK(ds4_qwen_image_vae_decode(e, ds4_num_data(z), &plan, NULL, &image));
+  double seconds = now() - start;
+  ds4_qwen_image_rgba_view rgba = ds4_qwen_image_rgba_data(image);
+  if (rgba.width != width || rgba.height != height ||
+      !save(out, "rgba.f32", rgba.pixels, (uint64_t)width * height * 16))
+    return 1;
+  CHECK(ds4_qwen_image_vae_release_weights(e));
+  char path[4096];
+  snprintf(path, sizeof(path), "%s/result.png", out);
+  CHECK(ds4_qwen_image_rgba_save_png(image, path));
+  ds4_qwen_image_rgba_free(image);
+  CHECK(ds4_num_free(z));
+  CHECK(ds4_qwen_image_vae_close(e));
+  printf("decode PASS %ux%u seconds=%.9f\n", width, height, seconds);
+  return 0;
+}
 int main(int argc, char **argv) {
   if (argc < 6 || (argc - 4) % 2 ||
-      (strcmp(argv[3], "dit") && strcmp(argv[3], "vae")))
+      (strcmp(argv[3], "dit") && strcmp(argv[3], "vae") &&
+       strcmp(argv[3], "decode")))
     return 2;
   ds4_resources *resources = NULL;
   ds4_numeric *num = NULL;
@@ -459,6 +503,8 @@ int main(int argc, char **argv) {
     ds4_numeric_memory(num, &before, &peak);
     int result = !strcmp(argv[3], "dit")
                      ? dit(bundle, num, runtime, argv[arg], argv[arg + 1])
+                 : !strcmp(argv[3], "decode")
+                     ? decode(bundle, num, runtime, argv[arg], argv[arg + 1])
                      : vae(bundle, num, runtime, argv[arg], argv[arg + 1]);
     ds4_numeric_memory(num, &after, &peak);
     printf("memory before=%llu after=%llu peak=%llu\n",

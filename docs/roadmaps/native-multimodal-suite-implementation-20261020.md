@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md); T11–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -250,29 +250,50 @@ Qualifica locale: RGB/RGBA/trasparente 64×96, RGBA 256×768, encode normalizzat
 
 ## 15. T11 — Pipeline image nativa funzionale
 
-**Dipendenze:** T08, T09, T10. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T08, T09, T10. **Priorità:** alta. **Stato:** `IN_PROGRESS` — API C e piano completo implementati; gate di qualità separati dalla parità numerica. Il checkpoint oracle fallisce il layout di una fixture T00 con entrambi i seed, come DS4; review umana completa non verificata.
 
-- [ ] `T11.1` Comporre text-to-image ed editing con una/più reference, preserving recipe, seed, ordine, size e conditioning.
-- [ ] `T11.2` Esporre un piano di fasi capace di stimare l'intera richiesta prima del lavoro GPU e di riusare output host/cache valide.
-- [ ] `T11.3` Validare input, risoluzioni/allineamenti, numero reference e combinazioni supportate. Parametri SDK non implementati, incluse eventuali mask, restituiscono errore esplicito.
-- [ ] `T11.4` Eseguire inizialmente con fasi seriali e piani di component residency; integrare l'executor comune senza prefetch speculativo.
-- [ ] `T11.5` Produrre media e metadati riproducibili, dump intermedi opzionali e contatori per caricamento/encoder/DiT/VAE.
+- [x] `T11.1` Comporre text-to-image ed editing con una/più reference, preserving recipe, seed, ordine, size e conditioning.
+- [x] `T11.2` Esporre un piano di fasi capace di stimare l'intera richiesta prima del lavoro GPU e di riusare output host/cache valide.
+- [x] `T11.3` Validare input, risoluzioni/allineamenti, numero reference e combinazioni supportate. Parametri SDK non implementati, incluse eventuali mask, restituiscono errore esplicito.
+- [x] `T11.4` Eseguire inizialmente con fasi seriali e piani di component residency; integrare l'executor comune senza prefetch speculativo.
+- [x] `T11.5` Produrre media e metadati riproducibili, dump intermedi opzionali e contatori per caricamento/encoder/DiT/VAE.
 
 **Gate di completamento:** corpus image di T00 passa generazione, editing, multi-reference, testo nell'immagine e trasparenza. Nessun worker esterno o runtime Python attivo nel percorso DS4. Memoria e latenza totale misurate sulla 3090; risoluzioni non qualificate non vengono promesse.
+
+API opache `ds4_qwen_image_pipeline`, resize reference Lanczos dichiarato,
+quattro piani residency/cache e pubblicazione dopo il restore. Qualifica
+numerica `PASS` sui 56 casi (48 T00 più otto di sviluppo): 448 latenti entro
+soglia, di cui 432 bit-exact, e tutti gli output RGBA entro T00. La copertura
+per fasi conserva 17 esecuzioni complete con reference e verifica il decoder
+finale su 39 DiT invariati; non è un singolo run dell'ultimo binario.
+Mediana calda 256×256 con una reference: 12,901 s, cinque campioni, CV 2,41%.
+DiT residente e cache GPU quando ammessa; fallback host senza perdita BF16.
+Layout del checkpoint e review umana conservano stati distinti nel
+[report T11–T12](../performance/native-suite-t11-t12-20261021/README.md).
 
 **Artefatti:** entry point C image, smoke test CLI/engine e report di parità funzionale.
 
 ## 16. T12 — Backbone testuale EmbeddingGemma 2 e pooling
 
-**Dipendenze:** T06, T07. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T06, T07. **Priorità:** alta. **Stato:** `DONE` — qualifica testuale CUDA sm_86: hidden T00 bit-exact, vettori su 54 casi e tutte le dimensioni entro T00, batch/task/ranking verificati.
 
-- [ ] `T12.1` Portare tokenizer, embedding scaling, PLE da proiezione, norm, GELU, residui e proiezione finale, leggendo configurazioni per layer.
-- [ ] `T12.2` Implementare attenzione bidirezionale locale/full, head dimension e KV head variabili, RoPE e scala 1.0 secondo oracle. Testare inclusività dei bordi della finestra.
-- [ ] `T12.3` Implementare maschere di padding e pooling esatti del checkpoint, normalizzazione L2 e output 768/512/256/128 con rinormalizzazione dopo il troncamento.
-- [ ] `T12.4` Mappare task query/document/code/similarity ai prefissi corretti senza duplicazione e senza alterare media o titolo già formattato.
-- [ ] `T12.5` Supportare batch e input di lunghezza diversa senza attenzione fra elementi; niente KV persistente fra richieste embedding.
+- [x] `T12.1` Portare tokenizer, embedding scaling, PLE da proiezione, norm, GELU, residui e proiezione finale, leggendo configurazioni per layer.
+- [x] `T12.2` Implementare attenzione bidirezionale locale/full, head dimension e KV head variabili, RoPE e scala 1.0 secondo oracle. Testare inclusività dei bordi della finestra.
+- [x] `T12.3` Implementare maschere di padding e pooling esatti del checkpoint, normalizzazione L2 e output 768/512/256/128 con rinormalizzazione dopo il troncamento.
+- [x] `T12.4` Mappare task query/document/code/similarity ai prefissi corretti senza duplicazione e senza alterare media o titolo già formattato.
+- [x] `T12.5` Supportare batch e input di lunghezza diversa senza attenzione fra elementi; niente KV persistente fra richieste embedding.
 
 **Gate di completamento:** vettori e hidden state su fixture testo/codice/multilingue entro soglie T00; norma finale conforme, dimensioni esatte e ranking verificato. Un elemento produce lo stesso risultato da solo e nel batch entro tolleranza. Milestone interna: non autorizza a dichiarare il supporto multimodale completo.
+
+`ds4_embedding_gemma2` e tokenizer/config compilati offline con hash del bundle.
+Ragged batch isolati, nessun padding nelle chiavi o KV persistente. La qualifica
+conserva ogni layer/proiezione: tutti i confini dei 48 testi T00 sono bit-exact.
+La riduzione RMS riproduce l'ordine eager anche sotto 16 righe; ranking
+dev/held-out identico a 128/256/512/768 senza modificare le soglie. Batch,
+prefissi task e pooling con padding verificati. Lo stress aggiuntivo da
+517 token è ora bit-exact; quello da 1028 mantiene hidden grezzi non bit-exact
+ma vettori entro T00, come diagnostica esplicita. Evidenze e limiti nel
+[report T11–T12](../performance/native-suite-t11-t12-20261021/README.md).
 
 **Artefatti:** adapter Gemma text, pooling e fixture masking/task/dimensioni.
 
@@ -487,4 +508,4 @@ Devono essere dimostrati: generazione/editing/RGBA nativi; embedding nativi dell
 
 La matrice dei backend e delle famiglie deve distinguere il supporto architetturale dalla qualificazione sperimentale. Funzioni richieste sul target di rilascio non possono essere omesse con `NOT_VERIFIED`; hardware aggiuntivo non disponibile resta esplicitamente fuori dalla dichiarazione di qualificazione, senza attribuirgli risultati della 3090.
 
-Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. Nessun nuovo endpoint image/embedding è abilitato; pipeline image, Gemma completo e integrazione HTTP restano T11–T22. Evidenze e limiti nei report T07–T08 e T09–T10.
+Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Nessun nuovo endpoint image/embedding è abilitato; Gemma multimodale e integrazione HTTP restano T13–T22. Evidenze nei report T07–T08, T09–T10 e T11–T12.

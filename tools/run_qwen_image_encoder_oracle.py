@@ -21,6 +21,11 @@ def main():
         "--cases", nargs="+", default=["text", "reference", "multi", "reversed", "rgba"]
     )
     parser.add_argument("--native-padding-reference", type=Path)
+    parser.add_argument(
+        "--fixture",
+        type=Path,
+        help="Exact native encoder fixture instead of synthetic cases",
+    )
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     prepared = json.loads((args.prepared / "prepared.json").read_text())
@@ -86,6 +91,13 @@ def main():
             value = value[0]
         current[name] = value.detach().cpu().contiguous()
 
+    model.visual.patch_embed.register_forward_hook(
+        lambda m, a, o: save("vision_patch-0", o)
+    )
+    model.visual.blocks[0].register_forward_pre_hook(
+        lambda m, a: save("vision_input-0", a[0])
+    )
+
     for i, layer in enumerate(model.visual.blocks):
         layer.register_forward_hook(lambda m, a, o, i=i: save(f"vision-{i}", o))
     for i, layer in enumerate(model.visual.deepstack_merger_list):
@@ -120,21 +132,40 @@ def main():
         "unicode": [],
         "empty": [],
     }
-    for name in args.cases:
+    for name in [args.fixture.stem] if args.fixture else args.cases:
         directory = args.output / name
         directory.mkdir(exist_ok=False)
-        references = cases[name]
+        references = cases.get(name, [])
         prompt = "A red square beside a blue circle, clean white background."
         if name == "unicode":
             prompt = "Caffe\u0300, Ελληνικά, العربية, 中文, 日本語 🌈"
         if name == "empty":
             prompt = " "
-        fixture = (
-            struct.pack("<II", len(prompt.encode()), len(references)) + prompt.encode()
-        )
-        for image in references:
-            h, w, c = image.shape
-            fixture += struct.pack("<III", w, h, c) + image.tobytes()
+        if args.fixture:
+            fixture = args.fixture.read_bytes()
+            length, count = struct.unpack_from("<2I", fixture)
+            prompt = fixture[8 : 8 + length].decode()
+            at = 8 + length
+            references = []
+            for _ in range(count):
+                w, h, c = struct.unpack_from("<3I", fixture, at)
+                at += 12
+                references.append(
+                    np.frombuffer(fixture, np.uint8, count=w * h * c, offset=at)
+                    .reshape(h, w, c)
+                    .copy()
+                )
+                at += w * h * c
+            if at != len(fixture):
+                raise ValueError("invalid encoder fixture")
+        else:
+            fixture = (
+                struct.pack("<II", len(prompt.encode()), len(references))
+                + prompt.encode()
+            )
+            for image in references:
+                h, w, c = image.shape
+                fixture += struct.pack("<III", w, h, c) + image.tobytes()
         (directory / "input.ds4i").write_bytes(fixture)
         images = []
         for array in references:

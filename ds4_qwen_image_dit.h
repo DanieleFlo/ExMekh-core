@@ -37,6 +37,12 @@ ds4_status ds4_qwen_image_dit_estimate(ds4_qwen_image_dit *,
  * prefix. Useful for an exact uncached reference as well as request rollback.
  */
 ds4_status ds4_qwen_image_dit_cache_clear(ds4_qwen_image_dit_input *);
+/* Residency only, selected before execution. HOST keeps exact detached BF16
+ * K/V in bounded registered RAM and copies one layer synchronously on reuse.
+ * No recomputation, precision change, asynchronous prefetch or weight offload.
+ */
+ds4_status ds4_qwen_image_dit_cache_place(ds4_qwen_image_dit_input *,
+                                          ds4_memory_location);
 ds4_status ds4_qwen_image_dit_forward(ds4_qwen_image_dit *,
                                       ds4_qwen_image_dit_input *,
                                       ds4_num_view target, float sigma,

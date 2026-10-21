@@ -1,0 +1,13 @@
+Qwen Image reference preprocessing
+
+The independent C implementation in ds4_qwen_image_reference.c follows Pillow
+12.3.0 fixed-point Lanczos resampling and RGBA/RGBa conversion conventions:
+src/libImaging/Resample.c and src/libImaging/Convert.c.
+Copyright (c) 1997-2011 by Secret Labs AB.
+Copyright (c) 1995-2011 by Fredrik Lundh and contributors.
+Copyright (c) 2010 by Jeffrey 'Alex' Clark and contributors.
+Pillow's license and complete notices are included in LICENSE.
+
+DS4 modifications: explicit square-area geometry, bounded native allocations,
+registered host staging and RGB/RGBA input without a Pillow runtime dependency.
+Source hashes are recorded in the T11/T12 provenance report.

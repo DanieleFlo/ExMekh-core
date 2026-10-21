@@ -313,6 +313,19 @@ ds4_status ds4_num_norm(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
     return DS4_STATUS_INVALID;
   return c->ops->norm(c->state, y, x, w, b, width, eps, kind, mode, pre);
 }
+ds4_status ds4_num_channel_l2(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
+                              uint32_t channels, uint32_t spatial, float eps) {
+  if (!c || !channels || channels > INT_MAX || !spatial || spatial > INT_MAX ||
+      !valid(x) || x.count != (uint64_t)channels * spatial ||
+      !fits(y, x.count) || y.type != x.type || !isfinite(eps) || eps <= 0)
+    return DS4_STATUS_INVALID;
+  y = ds4_num_slice(y, 0, x.count);
+  if (overlaps(y, x))
+    return DS4_STATUS_INVALID;
+  return c->ops->channel_l2
+             ? c->ops->channel_l2(c->state, y, x, channels, spatial, eps)
+             : DS4_STATUS_UNSUPPORTED;
+}
 ds4_status ds4_num_point(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
                          ds4_num_view b, uint32_t op, float scalar) {
   if (!c || !valid(x) || !fits(y, x.count) || op > DS4_NUM_COS ||
@@ -525,6 +538,23 @@ static ds4_status cpu_norm(void *s, ds4_num_view y, ds4_num_view x,
         z *= get(w, j) + (mode == DS4_NUM_SCALE_ZERO_CENTERED ? 1 : 0);
       put(y, r * width + j, z + (b.data ? get(b, j) : 0));
     }
+  }
+  return DS4_STATUS_OK;
+}
+static ds4_status cpu_channel_l2(void *s, ds4_num_view y, ds4_num_view x,
+                                 uint32_t channels, uint32_t spatial,
+                                 float eps) {
+  (void)s;
+  for (uint32_t p = 0; p < spatial; p++) {
+    double sum = 0;
+    for (uint32_t c = 0; c < channels; c++) {
+      double value = get(x, (uint64_t)c * spatial + p);
+      sum += value * value;
+    }
+    float divisor = fmaxf(sqrtf((float)sum), eps);
+    for (uint32_t c = 0; c < channels; c++)
+      put(y, (uint64_t)p * channels + c,
+          get(x, (uint64_t)c * spatial + p) / divisor);
   }
   return DS4_STATUS_OK;
 }
@@ -862,9 +892,10 @@ ds4_status ds4_num_softmax(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
   return c->ops->softmax(c->state, y, x, bounds, rows, width, scale);
 }
 static const ds4_numeric_ops cpu_ops = {
-    cpu_alloc, cpu_release, cpu_copy,    cpu_fence,       NULL,     cpu_linear,
-    cpu_norm,  cpu_point,   cpu_rope,    cpu_attend,      cpu_conv, cpu_reorder,
-    cpu_pool,  cpu_nearest, cpu_softmax, cpu_matmul_batch};
+    cpu_alloc,        cpu_release,   cpu_copy,  cpu_fence,   NULL,
+    cpu_linear,       cpu_norm,      cpu_point, cpu_rope,    cpu_attend,
+    cpu_conv,         cpu_reorder,   cpu_pool,  cpu_nearest, cpu_softmax,
+    cpu_matmul_batch, cpu_channel_l2};
 ds4_status ds4_numeric_cpu(ds4_numeric **out, ds4_resources *r,
                            uint64_t owner) {
   return ds4_numeric_create(out, &cpu_ops, NULL, r, owner, false);

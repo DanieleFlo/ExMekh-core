@@ -41,7 +41,7 @@ def main():
     with safe_open(args.model, framework="pt", device="cpu") as f:
         weights = {
             key[len(prefix) :]: f.get_tensor(key).cuda()
-            for key in f
+            for key in f.keys()  # noqa: SIM118 -- safe_open is not iterable.
             if key.startswith(prefix)
         }
 

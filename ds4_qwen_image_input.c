@@ -159,10 +159,12 @@ ds4_status ds4_qwen_image_input_create(
     uint32_t pad_to, ds4_qwen_image_input **out) {
   uint64_t owner = 0;
   ds4_resources *resources = ds4_numeric_resources(num, &owner);
-  if (!resources || !tokenizer || !prompt || !out || (count && !refs) ||
-      count > 1024)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!resources || !tokenizer || !prompt || (count && !refs) ||
+      count > 1024)
+    return DS4_STATUS_INVALID;
   size_t prompt_bytes = strlen(prompt);
   if (prompt_bytes > 4u * 1024u * 1024u || pad_to > 262144)
     return DS4_STATUS_INVALID;

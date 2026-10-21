@@ -10,6 +10,7 @@ typedef struct {
     unsigned loads, releases, saves, restores, discarded, executed, committed, aborted;
     bool fail_load, fail_save, fail_release, fail_restore, fail_execute, cancel;
     bool fail_drain, device_lost, cancel_after_execute;
+    bool fail_commit, device_lost_release, device_lost_commit;
     bool *cancel_on_load, *cancel_on_save, *cancel_on_restore;
 } fixture;
 static ds4_status load(void *opaque) {
@@ -24,6 +25,8 @@ static ds4_status load(void *opaque) {
 }
 static ds4_status release(void *opaque) {
     fixture *f = opaque; f->releases++;
+    if (f->device_lost_release)
+      return DS4_STATUS_DEVICE_LOST;
     if (f->fail_release) return DS4_STATUS_INFERENCE;
     ds4_status status = ds4_resource_release(f->allocation);
     if (!status) f->allocation = NULL;
@@ -53,7 +56,13 @@ static ds4_status drain(void *opaque) {
     fixture *f=opaque;
     return f->fail_drain && f->executed ? DS4_STATUS_INFERENCE : DS4_STATUS_OK;
 }
-static ds4_status commit(void *opaque) { ((fixture *)opaque)->committed++; return DS4_STATUS_OK; }
+static ds4_status commit(void *opaque) {
+  fixture *f = opaque;
+  f->committed++;
+  if (f->device_lost_commit)
+    return DS4_STATUS_DEVICE_LOST;
+  return f->fail_commit ? DS4_STATUS_INFERENCE : DS4_STATUS_OK;
+}
 static void abort_result(void *opaque) { ((fixture *)opaque)->aborted++; }
 static bool cancelled(void *opaque) { return ((fixture *)opaque)->cancel; }
 
@@ -72,7 +81,7 @@ int main(void) {
     ds4_execution_group groups[] = {{.memory.bytes={[DS4_MEMORY_DEVICE]=60},
         .load_cost=5, .context=&group, .load=load, .release=release}};
     ds4_execution_step steps[] = {{.id=17, .groups=1, .retain=1}, {.id=18, .groups=1}};
-    ds4_execution_variant variants[] = {{steps, 2, 0, false}};
+    ds4_execution_variant variants[] = {{steps, 2, 0, false, 0}};
     ds4_execution_victim victims[] = {{.kind=DS4_RECLAIM_SESSION,
         .reclaimed.bytes={[DS4_MEMORY_DEVICE]=80}, .cost=10, .context=&resident,
         .quiesce=ready, .save=save, .release=release, .restore=restore, .discard=discard}};
@@ -146,6 +155,71 @@ int main(void) {
         assert(!ds4_execution_close(job));
         resident.fail_release = false;
     }
+    /* Successful eviction-free work may return weight-cache ownership to its
+     * adapter. Cancellation and victim restoration still release new groups. */
+    budgets(resources, 160);
+    variants[0].keep = 1;
+    steps[1].retain = 1;
+    operation = (fixture){0};
+    ds4_execution *cached = NULL;
+    assert(
+        !ds4_execution_create(&cached, runtime, resources, 30, &request, &ops));
+    assert(!ds4_execution_run(cached) && group.allocation &&
+           operation.committed == 1);
+    assert(!ds4_execution_close(cached) && group.allocation);
+    assert(!release(&group));
+    operation = (fixture){.cancel_after_execute = true};
+    assert(
+        !ds4_execution_create(&cached, runtime, resources, 30, &request, &ops));
+    assert(ds4_execution_run(cached) == DS4_STATUS_CANCELLED &&
+           !group.allocation);
+    assert(!ds4_execution_close(cached));
+    /* A failed commit releases the provisional weight cache. Preserve a
+     * device-loss result if that release itself fails; recovery never runs
+     * compute or commit a second time. */
+    for (unsigned fatal = 0; fatal < 2; fatal++) {
+      operation = (fixture){.fail_commit = true};
+      group.fail_release = !fatal;
+      group.device_lost_release = fatal;
+      assert(!ds4_execution_create(&cached, runtime, resources, 30, &request,
+                                   &ops));
+      assert(ds4_execution_run(cached) ==
+             (fatal ? DS4_STATUS_DEVICE_LOST : DS4_STATUS_RESTORE));
+      assert(ds4_execution_get_state(cached) ==
+             (fatal ? DS4_EXECUTION_UNAVAILABLE : DS4_EXECUTION_RECOVERABLE));
+      assert(group.allocation && !operation.aborted);
+      unsigned computed = operation.executed;
+      group.fail_release = group.device_lost_release = false;
+      assert(ds4_execution_recover(cached) ==
+             (fatal ? DS4_STATUS_DEVICE_LOST : DS4_STATUS_INFERENCE));
+      assert(!group.allocation && operation.aborted == 1 &&
+             operation.committed == 1);
+      assert(operation.executed == computed && !ds4_execution_close(cached));
+    }
+    operation = (fixture){.device_lost_commit = true};
+    assert(
+        !ds4_execution_create(&cached, runtime, resources, 30, &request, &ops));
+    assert(ds4_execution_run(cached) == DS4_STATUS_DEVICE_LOST);
+    assert(ds4_execution_get_state(cached) == DS4_EXECUTION_UNAVAILABLE);
+    assert(group.allocation && ds4_execution_close(cached) == DS4_STATUS_BUSY);
+    unsigned computed = operation.executed;
+    operation.device_lost_commit = false;
+    assert(ds4_execution_recover(cached) == DS4_STATUS_DEVICE_LOST);
+    assert(!group.allocation && operation.aborted == 1 &&
+           operation.committed == 1);
+    assert(operation.executed == computed && !ds4_execution_close(cached));
+    budgets(resources, 100);
+    operation = (fixture){0};
+    assert(
+        !ds4_execution_create(&cached, runtime, resources, 30, &request, &ops));
+    assert(!ds4_execution_run(cached) && !group.allocation &&
+           resident.allocation);
+    assert(!ds4_execution_close(cached));
+    variants[0].keep = 2;
+    assert(ds4_execution_plan_build(resources, &request, &plan) ==
+           DS4_STATUS_INVALID);
+    variants[0].keep = 0;
+    steps[1].retain = 0;
     fixture cache={.resources=resources,.owner=11,.bytes=20}, weights={.resources=resources,.owner=12,.bytes=100};
     budgets(resources,1000); assert(!load(&cache) && !load(&weights));
     ds4_execution_victim choices[3]={
@@ -163,7 +237,8 @@ int main(void) {
     choices[2].cost=9;
     assert(!ds4_execution_plan_build(resources,&matrix,&plan) && plan.victims==2);
     ds4_execution_step large={.id=17,.groups=1,.working.bytes={[DS4_MEMORY_DEVICE]=140}};
-    ds4_execution_variant alternatives[]={{&large,1,0,false},{steps,2,100,true}};
+    ds4_execution_variant alternatives[] = {{&large, 1, 0, false, 0},
+                                            {steps, 2, 100, true, 0}};
     matrix.variants=alternatives; matrix.variant_count=1;
     budgets(resources,240); assert(!ds4_execution_plan_build(resources,&matrix,&plan) && plan.victims==6);
     matrix.variant_count=2;

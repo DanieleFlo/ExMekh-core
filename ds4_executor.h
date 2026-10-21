@@ -7,7 +7,9 @@ extern "C" {
 
 #define DS4_EXECUTOR_MAX_VICTIMS 16u
 #define DS4_EXECUTOR_MAX_GROUPS 64u
-typedef struct { uint64_t bytes[DS4_MEMORY_COUNT]; } ds4_demand;
+typedef struct {
+    uint64_t bytes[DS4_MEMORY_COUNT];
+} ds4_demand;
 
 typedef struct {
     ds4_demand memory;
@@ -28,6 +30,10 @@ typedef struct {
     size_t step_count;
     uint64_t cost;
     bool streamed;
+    /* Optional adapter-owned weight cache after successful eviction-free
+     * execution. Victim restoration and every failure release new groups.
+     * These groups must be retained by the final step and outlive close. */
+    uint64_t keep;
 } ds4_execution_variant;
 
 typedef enum { DS4_RECLAIM_CACHE, DS4_RECLAIM_SESSION, DS4_RECLAIM_WEIGHTS } ds4_reclaim_kind;
@@ -62,15 +68,27 @@ typedef struct {
     uint64_t cost;
 } ds4_execution_plan;
 
-ds4_status ds4_execution_plan_build(ds4_resources *, const ds4_execution_request *, ds4_execution_plan *);
+ds4_status ds4_execution_plan_build(ds4_resources *, const ds4_execution_request *,
+                                    ds4_execution_plan *);
 
 typedef enum {
-    DS4_EXECUTION_NEW, DS4_EXECUTION_RUNNING, DS4_EXECUTION_RECOVERABLE,
-    DS4_EXECUTION_COMPLETE, DS4_EXECUTION_FAILED, DS4_EXECUTION_UNAVAILABLE
+    DS4_EXECUTION_NEW,
+    DS4_EXECUTION_RUNNING,
+    DS4_EXECUTION_RECOVERABLE,
+    DS4_EXECUTION_COMPLETE,
+    DS4_EXECUTION_FAILED,
+    DS4_EXECUTION_UNAVAILABLE
 } ds4_execution_state;
 typedef enum {
-    DS4_EXEC_VALIDATE, DS4_EXEC_RESERVE, DS4_EXEC_QUIESCE, DS4_EXEC_SAVE,
-    DS4_EXEC_RELEASE, DS4_EXEC_LOAD, DS4_EXEC_STEP, DS4_EXEC_RESTORE, DS4_EXEC_COMMIT
+    DS4_EXEC_VALIDATE,
+    DS4_EXEC_RESERVE,
+    DS4_EXEC_QUIESCE,
+    DS4_EXEC_SAVE,
+    DS4_EXEC_RELEASE,
+    DS4_EXEC_LOAD,
+    DS4_EXEC_STEP,
+    DS4_EXEC_RESTORE,
+    DS4_EXEC_COMMIT
 } ds4_execution_event;
 typedef struct {
     void *context;
@@ -83,12 +101,13 @@ typedef struct {
     void (*journal)(void *, ds4_execution_event, size_t, ds4_status);
 } ds4_execution_ops;
 typedef struct ds4_execution ds4_execution;
-/* Request descriptors remain immutable and callback contexts alive until close. Compute
- * is never retried. Recover retries only drain/release/restore, ignoring cancel.
- * DEVICE_LOST retains resources and checkpoints as UNAVAILABLE. Explicit
- * recovery validates the repaired backend and still fails the original result. */
+/* Request descriptors remain immutable and callback contexts alive until close.
+ * Compute is never retried. Recover retries only drain/release/restore,
+ * ignoring cancel. DEVICE_LOST retains resources and checkpoints as
+ * UNAVAILABLE. Explicit recovery validates the repaired backend and still fails
+ * the original result. */
 ds4_status ds4_execution_create(ds4_execution **, ds4_runtime *, ds4_resources *, uint64_t owner,
-                              const ds4_execution_request *, const ds4_execution_ops *);
+                                const ds4_execution_request *, const ds4_execution_ops *);
 ds4_status ds4_execution_run(ds4_execution *);
 ds4_status ds4_execution_recover(ds4_execution *);
 ds4_execution_state ds4_execution_get_state(const ds4_execution *);

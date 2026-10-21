@@ -199,6 +199,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   costi e isteresi; executor validate/reserve/quiesce/save/execute/restore/commit,
   cancellazione, journal e recupero senza replay. Le prenotazioni scoped/nidificate
   riusano capacità fra fasi. Il runtime serializza anche transazioni fra modelli.
+  Le varianti possono conservare nuovi gruppi nella cache dell'adapter dopo
+  successo senza vittime; errori e ripristino rilasciano i nuovi gruppi.
 - `ds4_bundle.c/.h` — directory binaria verificata SHA-256, mmap dei file GGUF e
   safetensors originali, inventario esaustivo e binding dell'adapter; caricamento
   e rilascio di gruppi mediante callback del backend, senza espandere i pesi.
@@ -207,11 +209,21 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   accounting, GEMM cuBLAS, norm, attivazioni, RoPE, attention online/tiled,
   convoluzioni cuDNN e layout/audio/VAE. Reference CPU indipendente;
   librerie statiche suite separate dal link dei binari LLM legacy.
+  Softmax lunga FP32/BF16 conserva l'ordine di riduzione e allineamento
+  dell'oracle eager; RMS usa la gerarchia della mean anche nei batch corti.
+  La L2 channel-major conserva l'ordine della riduzione prima del transpose.
+  L'attention BF16 usa query complete entro 128 MiB di score e tile da 256
+  oltre il cap; gli adapter riservano l'extra score/result proporzionato.
+  Le convoluzioni materializzano il padding e dimensionano il workspace sulle
+  attivazioni effettive, con margine di 64 MiB e accounting nel piano adapter.
+  Test a 2048–14461 chiavi e attribuzioni in `third_party/pytorch/`.
 - `ds4_numeric_weights.c/.h` — bridge dei gruppi bundle verso il contesto
   numerico tramite API pubbliche; il core dei buffer non conosce i modelli.
 - `ds4_qwen_image_encoder.c/.h`, `ds4_qwen_image_tokenizer.c/.h`,
   `config/qwen-image-encoder.json` — conditioning Qwen3-VL dedicato, tokenizer
   image, padding esplicito, vision/deepstack e output pre-norm finale.
+  Q/K/V vengono separati con tre reorder GPU per layer; le immagini mantengono
+  attention separate conformi alla geometria dell'oracle eager.
   `ds4_bundle` consente gruppi selettivi senza caricare la testa autoregressiva.
 - `ds4_qwen_image_input.c/.h`, `ds4_qwen_image_input_internal.h` — proprietario
   opaco dell'input preparato, compositing vision, token/posizioni/padding e
@@ -220,6 +232,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   single-stream a 32 blocchi, RoPE complex, scheduler Turbo a otto passi e RNG
   indipendente; input immutabile e prefix K/V per layer posseduti dalla richiesta,
   gruppi residenti e stime distinte per primo passo/cache/workspace.
+  La prefix cache BF16 può risiedere su device o host con trasferimenti per
+  layer, secondo il piano di memoria, senza cambiare il grafo numerico.
 - `ds4_qwen_image_vae.c/.h`, `ds4_qwen_image_vae_stats.h` — VAE Qwen 2.1 a
   64 canali, encode RGB/RGBA e decode completo/tiled con attention globale a
   bassa risoluzione, piano di memoria e risultato host con salvataggio PNG.
@@ -230,8 +244,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `ds4_qwen_image_observer.c/.h` — contratto comune di trace/cancellazione
   per encoder, DiT e VAE; fence e controllo dopo callback in un solo modulo.
 - `ds4_qwen_image_graph.h`, `ds4_qwen_image_attention.c/.h` — helper privati
-  per binding esaustivo/lifecycle degli adapter e math SDPA FP32 con tile di
-  256 query e storage lineare nelle chiavi, incluse le head VAE da 1152.
+  per binding esaustivo/lifecycle degli adapter e math SDPA FP32. DiT usa tile
+  di 256 query; la singola head VAE conserva la GEMM completa quando lo score
+  entra nel limite di 512 MiB, altrimenti usa gli stessi tile bounded.
 - `ds4_unicode_nfc.c/.h`, `third_party/unicode/`,
   `tools/generate_suite_nfc.py`, `tools/generate_suite_unicode.py` — NFC e
   classi Unicode delle dipendenze congelate, con dati/provenienza dedicati.
@@ -257,10 +272,44 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `docs/performance/native-suite-t09-t10-20261021/` — gate di ogni blocco/passo,
   cache/full recompute, RNG, VAE/alpha/tile, budget e rilascio; report locale
   RTX 3090 con hash, fonti, misure e limiti, distinto dalla pipeline T11.
+  La modalità `decode` verifica il VAE su latenti preservati, con controllo
+  del ritorno delle allocazioni possedute al livello iniziale per ogni caso.
   `third_party/diffusers/` conserva licenza e attribuzioni dei port Qwen 2.1.
   `tests/test_qwen_image_output.c`, `tests/test_qwen_image_graph_comparison.py`
   e `review-verification.json` coprono lifetime host/PNG, eventi, input corrotti,
   inventario dei confini completo e riesame successivo al port.
+- `ds4_qwen_image_pipeline.c/.h`, `ds4_qwen_image_components.h` — pipeline
+  seriale text-to-image/edit con input copiati, piano completo prima della GPU,
+  residency dei componenti e prefix cache host/device, observer e report;
+  pubblicazione RGBA subordinata al ripristino dell'executor comune.
+  Copia degli input, pianificazione e metadati sono responsabilità separate;
+  le stime VAE e resize sono interrogate nei rispettivi moduli. Dopo il run,
+  la query del piano restituisce quello eseguito senza ricalcolarlo.
+  Il bound DiT dipende dalla sequenza e dal segmento query più grande,
+  consentendo cache K/V residenti quando il budget effettivo lo permette.
+- `ds4_qwen_image_reference.c/.h`, `tests/test_qwen_image_reference.py`,
+  `third_party/pillow/` — recipe di resize reference ad area esplicita,
+  Lanczos/alpha uint8 conforme a Pillow 12.3, stima del proprio workspace,
+  test pixel e provenienza.
+- `ds4_embedding_gemma2.c/.h`, `ds4_gemma_tokenizer.c/.h` — backbone testuale
+  BF16 EmbeddingGemma 2, tokenizer BPE C, PLE da proiezione, attenzione locale
+  bidirezionale/full, task, batch ragged isolati, mean/L2 e Matryoshka;
+  `third_party/transformers/` conserva licenza e attribuzioni.
+- `tools/compile_embedding_gemma2.py` — compilazione offline di tokenizer e
+  configurazione per layer con hash delle sorgenti e checksum del payload.
+- `tests/test_suite_api.py` — output di ownership azzerati su input invalidi,
+  comprese le uscite indipendenti dei tokenizer; nessun modello richiesto.
+- `docs/architecture/native-suite-t11-t12-clean-code-review-20261021.md` —
+  revisione di responsabilità, API opache, errori e regressione del refactoring.
+- `tools/qualify_embedding_gemma2.py`, `tools/run_embedding_gemma2_oracle.py`,
+  `tools/qualify_qwen_image_pipeline.py`, `tools/run_qwen_image_pipeline_oracle.py`,
+  `tests/probe_native_suite.c`, `tests/probe_qwen_image_pipeline.c`,
+  `tests/test_embedding_gemma2.py` — oracle offline e gate T11/T12, dump completi,
+  ranking/dimensioni, ordini reference, ammissione e guasti/cancellazione.
+  `tests/test_suite_oracle_attention.py` verifica i mask del tiling per query
+  dell'oracle math, con asse delle chiavi intero e nessuna approssimazione.
+- `docs/performance/native-suite-t11-t12-20261021/` — qualifica locale dei due
+  adapter, comandi, hash, provenienza e limiti; nuovi endpoint restano T17.
 - `tools/suite_bundle.py`, `tools/prepare_suite_bundles.py`,
   `config/suite-bundles/`, `schemas/ds4-suite-bundle-v1.schema.json` — compiler
   offline e conversione deterministica, profili con revisioni/hash fissati,

@@ -17,6 +17,13 @@ ds4_status ds4_qwen_image_attention(ds4_numeric *num, ds4_num_view out,
       return DS4_STATUS_INVALID;
   qi_work work = {.num = num};
   ds4_status status;
+  uint32_t *ranges = NULL;
+  ds4_resource *range_account = NULL;
+  /* A wide single head (VAE) fits the eager full GEMM below this ceiling.
+   * Query tiling changed BF16 ties despite exact full-key softmax. Multi-head
+   * DiT retains its bounded 256-row workspace and request-sized memory plan. */
+  uint64_t full_score = (uint64_t)heads * nq * nk * sizeof(float);
+  uint32_t tile = heads == 1 && full_score <= 512ull * 1024 * 1024 ? nq : 256;
   ds4_num_view qt, kt, vt, qp, kp, vp, scores, values, output, bits, query;
   uint64_t qs = (uint64_t)nq * heads * dim, ks = (uint64_t)nk * heads * dim;
   QI_TRY(qi_alloc(&work, qs, DS4_NUM_F32, &qt));
@@ -39,13 +46,15 @@ ds4_status ds4_qwen_image_attention(ds4_numeric *num, ds4_num_view out,
   ix.shape[1] = nk;
   QI_TRY(ds4_num_reorder(num, kp, kt, &ix));
   QI_TRY(ds4_num_reorder(num, vp, vt, &ix));
-  QI_TRY(qi_alloc(&work, (uint64_t)heads * 256 * nk, DS4_NUM_F32, &scores));
-  QI_TRY(qi_alloc(&work, (uint64_t)heads * 256 * dim, DS4_NUM_F32, &values));
-  QI_TRY(qi_alloc(&work, (uint64_t)heads * 256 * dim, DS4_NUM_F32, &query));
+  QI_TRY(qi_alloc(&work, (uint64_t)heads * tile * nk, DS4_NUM_F32, &scores));
+  QI_TRY(qi_alloc(&work, (uint64_t)heads * tile * dim, DS4_NUM_F32, &values));
+  QI_TRY(qi_alloc(&work, (uint64_t)heads * tile * dim, DS4_NUM_F32, &query));
+  QI_TRY(qi_host(num, (uint64_t)heads * tile * 8, (void **)&ranges,
+                 &range_account));
   QI_TRY(qi_alloc(&work, qs, DS4_NUM_F32, &output));
   QI_TRY(qi_alloc(&work, qs, DS4_NUM_BF16, &bits));
-  for (uint32_t first = 0; first < nq; first += 256) {
-    uint32_t rows = nq - first < 256 ? nq - first : 256;
+  for (uint32_t first = 0; first < nq; first += tile) {
+    uint32_t rows = nq - first < tile ? nq - first : tile;
     ds4_num_view score = ds4_num_slice(scores, 0, (uint64_t)heads * rows * nk),
                  value = ds4_num_slice(values, 0, (uint64_t)heads * rows * dim),
                  qrows = ds4_num_slice(query, 0, (uint64_t)heads * rows * dim);
@@ -58,7 +67,6 @@ ds4_status ds4_qwen_image_attention(ds4_numeric *num, ds4_num_view out,
                            &ix));
     QI_TRY(ds4_num_matmul_batch(num, score, qrows, kp, heads, rows, dim, nk,
                                 true));
-    uint32_t ranges[32 * 256 * 2];
     for (uint32_t h = 0; h < heads; h++)
       memcpy(ranges + h * rows * 2, bounds + 2 * first,
              rows * 2 * sizeof(uint32_t));
@@ -80,6 +88,7 @@ ds4_status ds4_qwen_image_attention(ds4_numeric *num, ds4_num_view out,
   QI_TRY(ds4_num_reorder(num, out, bits, &ix));
 cleanup: {
   ds4_status s = qi_clear(&work);
+  qi_host_free(ranges, range_account);
   return status ? status : s;
 }
 }

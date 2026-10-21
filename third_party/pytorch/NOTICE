@@ -1,0 +1,22 @@
+Native numerical suite and image preprocessing
+
+The image processor resize conventions follow PyTorch's pinned antialiasing
+implementation, as recorded in the T07/T08 provenance.
+
+The FP32/BF16 long-row softmax reduction independently implements the accumulation
+and alignment conventions of PyTorch 5c4886908584029761b579af026dcfb627c84070:
+aten/src/ATen/native/cuda/SoftMax.cu
+aten/src/ATen/native/cuda/block_reduce.cuh
+
+The short-row RMS reduction follows the FP32 mean's vector accumulation and
+block/warp reduction order in the same revision:
+aten/src/ATen/native/cuda/Reduce.cuh
+
+The channel-major FP32 L2 reduction follows the same revision's strided
+reduction geometry, four interleaved accumulators and vertical reduction tree:
+aten/src/ATen/native/cuda/Reduce.cuh
+aten/src/ATen/native/SharedReduceOps.h (NormTwoOps)
+
+DS4 modifications: C numeric API, explicit interval masks, in-place output,
+resource ownership and native CUDA dispatch. No PyTorch runtime dependency.
+PyTorch's BSD-style license and copyright notices are included in LICENSE.

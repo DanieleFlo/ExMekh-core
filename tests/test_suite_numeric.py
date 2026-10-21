@@ -105,6 +105,7 @@ class Numeric:
                 C.c_uint32,
                 C.c_bool,
             ],
+            "ds4_num_channel_l2": [ptr, View, View, C.c_uint32, C.c_uint32, C.c_float],
             "ds4_num_norm": [
                 ptr,
                 View,
@@ -451,6 +452,98 @@ class SuiteNumeric(unittest.TestCase):
                         sin=si,
                     )
 
+    def test_short_rms_reduction_order(self):
+        torch.manual_seed(37)
+        cuda = bool(os.environ.get("DS4_SUITE_NUMERIC_CUDA"))
+        device = "cuda" if cuda else "cpu"
+        for rows in (1, 2, 4, 8, 12, 15, 16, 17):
+            for width in (128, 256, 512, 768, 4096):
+                x = (torch.randn(rows, width) * 0.3).bfloat16()
+                weight = torch.randn(width).bfloat16()
+                value = x.to(device).float()
+                normalized = (
+                    value * (value.square().mean(-1, keepdim=True) + 1e-6).rsqrt()
+                )
+                for pre in (False, True):
+                    expected = (
+                        (
+                            (normalized.bfloat16().float() if pre else normalized)
+                            * weight.to(device).float()
+                        )
+                        .bfloat16()
+                        .cpu()
+                    )
+                    y = self.n.tensor(torch.zeros_like(x))
+                    self.n.call(
+                        "norm",
+                        y,
+                        self.n.tensor(x),
+                        self.n.tensor(weight),
+                        View(),
+                        width,
+                        1e-6,
+                        0,
+                        1,
+                        pre,
+                    )
+                    actual = self.n.read(y, x.shape)
+                    if cuda:
+                        self.assertTrue(
+                            torch.equal(actual, expected.float()),
+                            f"short RMS {rows}x{width} pre={pre}",
+                        )
+                    self.compare(
+                        f"short-rms-{rows}-{width}-{pre}",
+                        y,
+                        expected,
+                        x=x,
+                        weight=weight,
+                    )
+                    self.n.clear()
+
+    def test_channel_l2_layout_and_rounding(self):
+        torch.manual_seed(43)
+        cuda = bool(os.environ.get("DS4_SUITE_NUMERIC_CUDA"))
+        device = "cuda" if cuda else "cpu"
+        for dtype in (torch.float32, torch.bfloat16):
+            for channels, spatial in (
+                (96, 4),
+                (96, 24),
+                (96, 65536),
+                (192, 28),
+                (384, 7),
+                (768, 24),
+                (768, 4144),
+                (1152, 128),
+            ):
+                x = torch.randn(channels, spatial).to(dtype)
+                x[:, 0] = 0
+                expected = (
+                    F.normalize(x.to(device).float(), dim=0, eps=1e-12)
+                    .to(dtype)
+                    .T.contiguous()
+                    .cpu()
+                )
+                source = self.n.tensor(x)
+                y = self.n.tensor(torch.zeros(spatial, channels, dtype=dtype))
+                self.n.call("channel_l2", y, source, channels, spatial, 1e-12)
+                actual = self.n.read(y, expected.shape)
+                if cuda and dtype == torch.bfloat16:
+                    self.assertTrue(
+                        torch.equal(actual, expected.float()),
+                        f"channel L2 {channels}x{spatial}",
+                    )
+                self.compare(
+                    f"channel-l2-{dtype}-{channels}-{spatial}", y, expected, x=x
+                )
+                self.assertEqual(
+                    self.n.lib.ds4_num_channel_l2(
+                        self.n.ctx, source, source, channels, spatial, 1e-12
+                    ),
+                    1,
+                )
+                self.n.clear()
+
     def test_attention(self):
         torch.manual_seed(23)
         for dtype in (torch.float32, torch.bfloat16):
@@ -524,6 +617,48 @@ class SuiteNumeric(unittest.TestCase):
                     )
                     self.n.clear()
 
+    def test_attention_long_bf16_softmax(self):
+        # Vision and image editing cross both eager softmax reduction regimes.
+        # Include an unaligned width and an empty row, beyond a short unit case.
+        torch.manual_seed(29)
+        device = "cuda" if os.environ.get("DS4_SUITE_NUMERIC_CUDA") else "cpu"
+        for nk in (2049, 4144, 9217):
+            nq, heads, dim = 9, 4, 72
+            q = (torch.randn(1, nq, heads, dim) * 0.3).bfloat16()
+            k, v = ((torch.randn(1, nk, heads, dim) * 0.3).bfloat16() for _ in range(2))
+            bounds = np.array(
+                [(0, 0), (0, nk), *[(r, nk - r) for r in range(2, nq)]],
+                dtype=np.uint32,
+            )
+            scores = (
+                q.to(device).transpose(1, 2)
+                @ k.to(device).transpose(1, 2).transpose(-1, -2)
+            ) * dim**-0.5
+            for r, (lo, hi) in enumerate(bounds):
+                scores[:, :, r, :lo] = -float("inf")
+                scores[:, :, r, hi:] = -float("inf")
+            expected = (
+                (
+                    scores.float().softmax(-1).nan_to_num().bfloat16()
+                    @ v.to(device).transpose(1, 2)
+                )
+                .transpose(1, 2)
+                .cpu()
+            )
+            y = self.n.tensor(torch.zeros_like(q))
+            a = Attention(1, nq, nk, heads, heads, dim, dim**-0.5, 0, True, True)
+            self.n.call(
+                "attend",
+                y,
+                self.n.tensor(q),
+                self.n.tensor(k),
+                self.n.tensor(v),
+                bounds.ctypes.data_as(C.POINTER(C.c_uint32)),
+                C.byref(a),
+            )
+            self.compare(f"attention-long-bf16-{nk}", y, expected, q=q, k=k, v=v)
+            self.n.clear()
+
     def test_attention_tile_window_edges(self):
         torch.manual_seed(24)
         for dtype in (torch.float32, torch.bfloat16):
@@ -568,6 +703,48 @@ class SuiteNumeric(unittest.TestCase):
                     v=v,
                 )
                 self.n.clear()
+
+    @unittest.skipUnless(os.environ.get("DS4_SUITE_NUMERIC_CUDA"), "CUDA GEMM geometry")
+    def test_attention_full_query_gqa_geometry(self):
+        # A real single-reference encoder has 1072 rows. Compare the complete
+        # eager GQA operation so query tiling cannot silently change BF16 ties.
+        torch.manual_seed(39)
+        rows, heads, kv, dim = 1072, 32, 8, 128
+        q = (torch.randn(1, rows, heads, dim, device="cuda") * 0.3).bfloat16()
+        k, v = (
+            (torch.randn(1, rows, kv, dim, device="cuda") * 0.3).bfloat16()
+            for _ in range(2)
+        )
+        scores = (
+            q.transpose(1, 2)
+            @ k.repeat_interleave(heads // kv, 2).transpose(1, 2).transpose(-1, -2)
+        ) * dim**-0.5
+        scores.masked_fill_(
+            torch.ones(rows, rows, device="cuda", dtype=torch.bool).triu(1),
+            -float("inf"),
+        )
+        expected = (
+            (
+                scores.float().softmax(-1).bfloat16()
+                @ v.repeat_interleave(heads // kv, 2).transpose(1, 2)
+            )
+            .transpose(1, 2)
+            .cpu()
+        )
+        bounds = np.array([(0, i + 1) for i in range(rows)], dtype=np.uint32)
+        y = self.n.tensor(torch.zeros_like(expected))
+        a = Attention(1, rows, rows, heads, kv, dim, dim**-0.5, 0, True, True)
+        self.n.call(
+            "attend",
+            y,
+            self.n.tensor(q),
+            self.n.tensor(k),
+            self.n.tensor(v),
+            bounds.ctypes.data_as(C.POINTER(C.c_uint32)),
+            C.byref(a),
+        )
+        actual = self.n.read(y, expected.shape)
+        self.assertTrue(torch.equal(actual, expected.float()))
 
     def test_convolution(self):
         torch.manual_seed(31)
@@ -694,6 +871,45 @@ class SuiteNumeric(unittest.TestCase):
             a = Resample(1, 4, (2, 3, 5), (3, 7, 9))
             self.n.call("nearest", y, self.n.tensor(x), C.byref(a))
             self.compare(f"nearest-{dtype}", y, expected, x=x)
+
+    def test_long_softmax_reduction_and_masks(self):
+        rng = torch.Generator().manual_seed(20261021)
+        cuda = bool(os.environ.get("DS4_SUITE_NUMERIC_CUDA"))
+        for width in (2048, 2049, 4096, 4119, 8192, 9216, 9217, 12288, 14461):
+            x = torch.randn(7, width, generator=rng)
+            ranges = np.array(
+                [
+                    [0, width],
+                    [1, width - 1],
+                    [7, 8],
+                    [0, 0],
+                    [width // 2, width],
+                    [0, 31],
+                    [3, width],
+                ],
+                dtype=np.uint32,
+            )
+            masked = x.clone()
+            for row, (lo, hi) in enumerate(ranges):
+                masked[row, :lo] = -torch.inf
+                masked[row, hi:] = -torch.inf
+            expected = (
+                masked.to("cuda" if cuda else "cpu").softmax(-1).nan_to_num().cpu()
+            )
+            y = self.n.tensor(torch.empty_like(x))
+            self.n.call(
+                "softmax",
+                y,
+                self.n.tensor(x),
+                ranges.ctypes.data_as(C.POINTER(C.c_uint32)),
+                7,
+                width,
+                1.0,
+            )
+            actual = self.n.read(y, x.shape)
+            if cuda and width > 2048:
+                self.assertTrue(torch.equal(actual, expected), f"wide softmax {width}")
+            self.compare(f"long-softmax-{width}", y, expected, x=x)
 
     def test_invalid_dimensions_and_lifetime(self):
         x = self.n.tensor(torch.ones(64))

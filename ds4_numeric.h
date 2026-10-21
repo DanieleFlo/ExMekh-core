@@ -69,6 +69,11 @@ ds4_status ds4_num_norm(ds4_numeric *, ds4_num_view y, ds4_num_view x,
                         ds4_num_view scale, ds4_num_view bias, uint32_t width,
                         float eps, uint32_t kind, uint32_t scale_mode,
                         bool round_before_scale);
+/* FP32 L2 over channels of x[channels,spatial], then cast to x's dtype and
+ * transpose into y[spatial,channels]. Layout is explicit: normalizing after
+ * a transpose can change BF16 ties. Input/output storage must not overlap. */
+ds4_status ds4_num_channel_l2(ds4_numeric *, ds4_num_view y, ds4_num_view x,
+                              uint32_t channels, uint32_t spatial, float eps);
 enum {
   DS4_NUM_ADD,
   DS4_NUM_MUL,

@@ -3,6 +3,7 @@
  * see the T07/T08 provenance record. All orchestration remains C. */
 #include "ds4_qwen_image_encoder.h"
 #include "ds4_numeric_weights.h"
+#include "ds4_qwen_image_components.h"
 #include "ds4_qwen_image_input_internal.h"
 #include "ds4_qwen_image_tokenizer.h"
 #include <math.h>
@@ -33,6 +34,7 @@ struct ds4_qwen_image_encoder {
   ds4_qwen_image_tokenizer *tokenizer;
   binding weights[750];
   size_t bound;
+  size_t embedding, positions; /* Validated mmap table indices. */
   ds4_weight_group *groups[GROUPS];
   uint32_t component;
   ds4_resources *resources;
@@ -101,6 +103,10 @@ static ds4_status bind_weight(ds4_qwen_image_encoder *e, const char *name,
       stride *= shape[j];
     }
     e->weights[e->bound++] = (binding){t, i, group};
+    if (!strcmp(name, "model.language_model.embed_tokens.weight"))
+      e->embedding = i;
+    if (!strcmp(name, "model.visual.pos_embed.weight"))
+      e->positions = i;
     return DS4_STATUS_OK;
   }
   return DS4_STATUS_INVALID;
@@ -213,9 +219,11 @@ ds4_status ds4_qwen_image_encoder_open(ds4_qwen_image_encoder **out,
                                        ds4_bundle *b, ds4_numeric *num,
                                        ds4_runtime *runtime,
                                        const char *tokenizer) {
-  if (!out || !b || !num || !runtime || !tokenizer)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!b || !num || !runtime || !tokenizer)
+    return DS4_STATUS_INVALID;
   if (strcmp(ds4_bundle_model(b), "Qwen/Qwen-Image-2.1-Turbo") ||
       strcmp(ds4_bundle_revision(b),
              "fc13ba1986fcb905854dc8de2f52eee395f49b5b"))
@@ -327,6 +335,9 @@ ds4_status ds4_qwen_image_prepare_padded(ds4_qwen_image_encoder *e,
                                          const ds4_qwen_image_reference *refs,
                                          size_t count, uint32_t pad_to,
                                          ds4_qwen_image_input **out) {
+  if (!out)
+    return DS4_STATUS_INVALID;
+  *out = NULL;
   if (!e)
     return DS4_STATUS_INVALID;
   return ds4_qwen_image_input_create(e->num, e->tokenizer, prompt, refs, count,
@@ -475,21 +486,21 @@ static ds4_status vision(ds4_qwen_image_encoder *e,
                                 .dilation = {1, 1, 1}};
     TRY(ds4_num_conv(e->num, x, patch, filter, bias, &conv));
   }
+  TRY(ds4_qwen_image_observe(e->num, observer, "vision_patch", 0, x));
   {
-    const binding *pos = lookup(e, "model.visual.pos_embed.weight");
-    const uint16_t *table = ds4_bundle_tensor_data(e->bundle, pos->index);
+    const uint16_t *table = ds4_bundle_tensor_data(e->bundle, e->positions);
     uint32_t offset = 0;
     for (uint32_t image = 0; image < in->images; image++) {
       uint32_t gh = in->grids[2 * image], gw = in->grids[2 * image + 1],
-               end = offset + gh * gw;
+               patches = gh * gw;
       for (uint32_t by = 0; by < gh / 2; by++)
         for (uint32_t bx = 0; bx < gw / 2; bx++)
           for (uint32_t dy = 0; dy < 2; dy++)
             for (uint32_t dx = 0; dx < 2; dx++) {
               uint32_t py = 2 * by + dy, px = 2 * bx + dx,
                        p = offset + (by * (gw / 2) + bx) * 4 + dy * 2 + dx;
-              bounds[2 * p] = offset;
-              bounds[2 * p + 1] = end;
+              bounds[2 * p] = 0;
+              bounds[2 * p + 1] = patches;
               for (uint32_t d = 0; d < 36; d++) {
                 uint32_t coord = d < 18 ? py : px;
                 float angle =
@@ -513,7 +524,7 @@ static ds4_status vision(ds4_qwen_image_encoder *e,
                     unbf16(table[((uint64_t)y1 * 48 + x0) * 1152 + d]) * w10 +
                     unbf16(table[((uint64_t)y1 * 48 + x1) * 1152 + d]) * w11;
             }
-      offset = end;
+      offset += patches;
     }
   }
   {
@@ -548,26 +559,39 @@ static ds4_status vision(ds4_qwen_image_encoder *e,
     snprintf(prefix, sizeof(prefix), "model.visual.blocks.%u", layer);
     TRY(norm(e, prefix, "norm1", normed, x, 1152, true));
     TRY(linear(e, prefix, "attn.qkv", qkv, normed, n, 1152, 3456, true));
-    for (uint32_t p = 0; p < n; p++) {
-      TRY(ds4_num_copy(e->num, ds4_num_slice(q, (uint64_t)p * 1152, 1152),
-                       ds4_num_slice(qkv, (uint64_t)p * 3456, 1152)));
-      TRY(ds4_num_copy(e->num, ds4_num_slice(k, (uint64_t)p * 1152, 1152),
-                       ds4_num_slice(qkv, (uint64_t)p * 3456 + 1152, 1152)));
-      TRY(ds4_num_copy(e->num, ds4_num_slice(v, (uint64_t)p * 1152, 1152),
-                       ds4_num_slice(qkv, (uint64_t)p * 3456 + 2304, 1152)));
-    }
+    /* Split packed QKV in three existing GPU reorders. Per-patch copy calls
+     * otherwise issue hundreds of thousands of host dispatches at image size.
+     */
+    ds4_num_reindex split = {
+        .rank = 2, .shape = {n, 1152}, .stride = {3456, 1}};
+    TRY(ds4_num_reorder(e->num, q, qkv, &split));
+    TRY(ds4_num_reorder(e->num, k, ds4_num_slice(qkv, 1152, qkv.count - 1152),
+                        &split));
+    TRY(ds4_num_reorder(e->num, v, ds4_num_slice(qkv, 2304, qkv.count - 2304),
+                        &split));
     TRY(ds4_num_rope(e->num, qr, q, co, si, 16, 72, false, false));
     TRY(ds4_num_rope(e->num, kr, k, co, si, 16, 72, false, false));
-    ds4_num_attention a = {.batch = 1,
-                           .queries = n,
-                           .keys = n,
-                           .q_heads = 16,
-                           .kv_heads = 16,
-                           .dim = 72,
-                           .scale = 1 / sqrtf(72),
-                           .round_scores = true,
-                           .round_probabilities = true};
-    TRY(ds4_num_attend(e->num, attn, qr, kr, v, bounds, &a));
+    /* The eager oracle attends to each image separately. Preserve both its
+     * softmax width and GEMM geometry; a masked concatenation changes ties. */
+    uint32_t offset = 0;
+    for (uint32_t image = 0; image < in->images; image++) {
+      uint32_t patches = in->grids[2 * image] * in->grids[2 * image + 1];
+      uint64_t at = (uint64_t)offset * 1152, size = (uint64_t)patches * 1152;
+      ds4_num_attention a = {.batch = 1,
+                             .queries = patches,
+                             .keys = patches,
+                             .q_heads = 16,
+                             .kv_heads = 16,
+                             .dim = 72,
+                             .scale = 1 / sqrtf(72),
+                             .round_scores = true,
+                             .round_probabilities = true};
+      TRY(ds4_num_attend(e->num, ds4_num_slice(attn, at, size),
+                         ds4_num_slice(qr, at, size),
+                         ds4_num_slice(kr, at, size),
+                         ds4_num_slice(v, at, size), bounds + 2 * offset, &a));
+      offset += patches;
+    }
     TRY(linear(e, prefix, "attn.proj", proj, attn, n, 1152, 1152, true));
     TRY(ds4_num_point(e->num, x, x, proj, DS4_NUM_ADD, 0));
     TRY(norm(e, prefix, "norm2", normed, x, 1152, true));
@@ -605,6 +629,28 @@ cleanup:
   return status;
 }
 
+void qi_encoder_memory(ds4_qwen_image_encoder *e, bool vision,
+                       uint64_t *weights, uint64_t *resident) {
+  *weights = *resident = 0;
+  for (uint32_t i = 0; i < GROUPS; i++)
+    if (vision || i < TEXT_LAYERS) {
+      uint64_t bytes = ds4_weight_group_bytes(e->groups[i]);
+      *weights += bytes;
+      if (ds4_weight_group_resident(e->groups[i]))
+        *resident += bytes;
+    }
+}
+ds4_status qi_encoder_load(ds4_qwen_image_encoder *e, bool vision) {
+  ds4_runtime_scope scope = {0};
+  ds4_status s = ds4_runtime_model_enter(e->model, &scope);
+  if (s)
+    return s;
+  for (uint32_t i = 0; i < GROUPS && !s; i++)
+    if (vision || i < TEXT_LAYERS)
+      s = ds4_weight_group_load(e->groups[i]);
+  ds4_runtime_scope_leave(&scope);
+  return s;
+}
 ds4_status ds4_qwen_image_encoder_estimate(ds4_qwen_image_encoder *e,
                                            const ds4_qwen_image_input *source,
                                            ds4_runtime_estimate *out) {
@@ -623,6 +669,23 @@ ds4_status ds4_qwen_image_encoder_estimate(ds4_qwen_image_encoder *e,
    * deepstack, host preprocessing and output. Conservative, not measured. */
   out->device_bytes +=
       (uint64_t)in->count * 100000 + (uint64_t)in->patches * 100000;
+  /* BF16 attention can use full-query GEMMs below its 128 MiB score cap.
+   * Add only the extra score/result rows beyond the existing 256-row plan;
+   * image and text attention run sequentially, so reserve their maximum. */
+  uint64_t extra = 0;
+  for (uint32_t i = 0; i <= in->images; i++) {
+    uint64_t rows = i == in->images
+                        ? in->count
+                        : (uint64_t)in->grids[i * 2] * in->grids[i * 2 + 1];
+    uint32_t heads = i == in->images ? 32 : 16;
+    uint32_t dim = i == in->images ? 128 : 72;
+    if (rows > 256 && rows * rows * heads * 2 <= 128ull * 1024 * 1024) {
+      uint64_t bytes = (rows - 256) * heads * (rows + dim) * 2;
+      if (bytes > extra)
+        extra = bytes;
+    }
+  }
+  out->device_bytes += extra;
   out->host_bytes = (uint64_t)in->count * 32768 + (uint64_t)in->patches * 40000;
   out->known = true;
   return DS4_STATUS_OK;
@@ -631,9 +694,11 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
                                  const ds4_qwen_image_input *source,
                                  const ds4_qwen_image_observer *observer,
                                  ds4_qwen_image_conditioning **out) {
-  if (!e || !out)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!e)
+    return DS4_STATUS_INVALID;
   ds4_qwen_image_input_view input = ds4_qwen_image_input_data(source);
   const ds4_qwen_image_input_view *in = &input;
   if (!in->count)
@@ -662,8 +727,7 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
                     &host_accounts[1]));
   TRY(host_allocate(e, (uint64_t)n * 8, (void **)&bounds, &host_accounts[2]));
   {
-    const binding *emb = lookup(e, "model.language_model.embed_tokens.weight");
-    const uint16_t *table = ds4_bundle_tensor_data(e->bundle, emb->index);
+    const uint16_t *table = ds4_bundle_tensor_data(e->bundle, e->embedding);
     for (uint32_t i = 0; i < n; i++)
       memcpy(host + (uint64_t)i * 4096, table + (uint64_t)in->tokens[i] * 4096,
              8192);

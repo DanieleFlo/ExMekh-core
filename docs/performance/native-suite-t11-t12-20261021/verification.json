@@ -1,0 +1,1735 @@
+{
+  "version": 1,
+  "date": "2026-10-21",
+  "source_head": "f87c2fe9f16e4379e28e2c0f82b20d609ae50baf",
+  "implementation": {
+    "T11.1-T11.5": "IMPLEMENTED",
+    "T12.1-T12.5": "IMPLEMENTED"
+  },
+  "gate_status": {
+    "T11": "IN_PROGRESS",
+    "T12": "DONE"
+  },
+  "hardware": "RTX 3090 sm_86, Linux/WSL, single GPU",
+  "profile": "bf16-native-v1; FP32 accumulation; no FP16/TF32/fast-math fallback",
+  "tolerances": {
+    "path": "docs/performance/native-suite-t00-20261020/tolerances.json",
+    "bytes": 1639,
+    "sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+  },
+  "gemma": {
+    "qualification": {
+      "path": "performance-results/native-suite-t11-t12-20261021/gemma-qualification-v6/verification.json",
+      "bytes": 275014,
+      "sha256": "c51d69bcfeff9562452951eb55447d6386988836d637b05faeb6cec3b1c9f2ec"
+    },
+    "binary": {
+      "path": "performance-results/native-suite-t11-t12-20261021/probe-gemma-v6",
+      "bytes": 2426952,
+      "sha256": "6ad2ae6d2ea4484ba01fe3cf118a0f457523bd44e2a786780d36c81c25a01a0a"
+    },
+    "vector_verdict": "PASS",
+    "cases": 54,
+    "tokens_all_exact": true,
+    "vector_worst": {
+      "max_abs": 0.0008382499217987061,
+      "rmse": 0.00024235985923215216,
+      "cosine_min": 0.9999774444919077,
+      "unit_norm_error_max": 7.054260175998195e-08
+    },
+    "dimensions": {
+      "128": {
+        "max_abs": 0.0010650050826370716,
+        "rmse": 5.6306936031061315e-05,
+        "relative_l2": 0.0006370402549807533,
+        "bit_exact": false,
+        "cosine_min": 0.999989042852781,
+        "unit_norm_error_max": 7.613510377701971e-08
+      },
+      "256": {
+        "max_abs": 0.0009634536691009998,
+        "rmse": 5.069111103545879e-05,
+        "relative_l2": 0.000811057774552517,
+        "bit_exact": false,
+        "cosine_min": 0.9999822390030744,
+        "unit_norm_error_max": 8.947179386264992e-08
+      },
+      "512": {
+        "max_abs": 0.000882267951965332,
+        "rmse": 3.8746554350802795e-05,
+        "relative_l2": 0.0008767344413026075,
+        "bit_exact": false,
+        "cosine_min": 0.9999792460900565,
+        "unit_norm_error_max": 8.801199025132433e-08
+      }
+    },
+    "ranking": {
+      "dev-768": {
+        "top1_match": 1.0,
+        "top5_overlap": 1.0,
+        "ndcg10": 1.0,
+        "verdict": "PASS"
+      },
+      "heldout-768": {
+        "top1_match": 1.0,
+        "top5_overlap": 1.0,
+        "ndcg10": 1.0,
+        "verdict": "PASS"
+      },
+      "dev-128": {
+        "top1_match": 1.0,
+        "top5_overlap": 1.0,
+        "ndcg10": 1.0,
+        "verdict": "PASS"
+      },
+      "heldout-128": {
+        "top1_match": 1.0,
+        "top5_overlap": 1.0,
+        "ndcg10": 1.0,
+        "verdict": "PASS"
+      },
+      "dev-256": {
+        "top1_match": 1.0,
+        "top5_overlap": 1.0,
+        "ndcg10": 1.0,
+        "verdict": "PASS"
+      },
+      "heldout-256": {
+        "top1_match": 1.0,
+        "top5_overlap": 1.0,
+        "ndcg10": 1.0,
+        "verdict": "PASS"
+      },
+      "dev-512": {
+        "top1_match": 1.0,
+        "top5_overlap": 1.0,
+        "ndcg10": 1.0,
+        "verdict": "PASS"
+      },
+      "heldout-512": {
+        "top1_match": 1.0,
+        "top5_overlap": 1.0,
+        "ndcg10": 1.0,
+        "verdict": "PASS"
+      }
+    },
+    "native_batch_single_bit_exact": true,
+    "tasks": {
+      "query": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true
+      },
+      "document": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true
+      },
+      "CodeRetrieval": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true
+      },
+      "SentenceSimilarity": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true
+      }
+    },
+    "oracle_padding": {
+      "cases_sha256": "bdc950623006fd56a4f693187f25a19d8d1406d107a3403cc3336b1a7b8c3223",
+      "cases": 54,
+      "padded_single_max_abs": 0.0026314673013985157,
+      "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+      "dtype": "bfloat16"
+    },
+    "padded_reference": {
+      "max_abs": 0.002631467767059803,
+      "rmse": 0.00040978412751785804,
+      "relative_l2": 0.011356270860824292,
+      "bit_exact": false,
+      "cosine_min": 0.9997579763435483,
+      "unit_norm_error_max": 7.054260175998195e-08
+    },
+    "raw_hidden": {
+      "status": "FROZEN_T00_BIT_EXACT_EXTRA_STRESS_DIAGNOSTIC",
+      "by_stage": {
+        "embeddings": {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0
+        },
+        "ple": {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0
+        },
+        "layer": {
+          "max_abs": 7.5,
+          "rmse": 0.06283683605062292,
+          "relative_l2": 0.0453180056265962
+        },
+        "projected": {
+          "max_abs": 50.0,
+          "rmse": 0.7500418691108119,
+          "relative_l2": 0.04764296044239941
+        }
+      },
+      "non_exact_cases": [
+        "extra-5"
+      ]
+    },
+    "warm_forward": {
+      "samples": [
+        0.007744666000000001,
+        0.008302075,
+        0.007907615,
+        0.008304582000000001,
+        0.008463243
+      ],
+      "min": 0.007744666000000001,
+      "p10": 0.0078098456,
+      "median": 0.008302075,
+      "mean": 0.0081444362,
+      "p90": 0.008399778600000001,
+      "max": 0.008463243,
+      "std": 0.00030332941574581936,
+      "cv": 0.03724375859753427,
+      "std_population": 0.00027130607727317887,
+      "cv_population": 0.033311830384671545,
+      "verdict": "STABLE"
+    },
+    "frozen_t00_hidden_bit_exact": true
+  },
+  "image": {
+    "original_native_full_run": {
+      "completed": 56,
+      "total": 56,
+      "reports": [
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-0/report.json",
+          "bytes": 898,
+          "sha256": "a680f1e664e8347ae491a2072dd5eb2b07ab39dbae9af121e75fd0812d8fbee0"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-1/report.json",
+          "bytes": 1019,
+          "sha256": "1fc479313c0f84c151182c853bbb24f1538c0aac97dd5fa8a7621cc9e126f415"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-10/report.json",
+          "bytes": 911,
+          "sha256": "6d4621df417f9b1cbd4efa71706fb29591e89b0a93ba80bd36fda7d723a07737"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-11/report.json",
+          "bytes": 912,
+          "sha256": "4328e2f9d8ecd1679925a7c595efb7a2332a29f839f823518b4f50dd0f0f7ad0"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-12/report.json",
+          "bytes": 912,
+          "sha256": "6bb254e6a629a8362eea2764c3778e2189f7d3f386c6ceffc8b73baf1bd73015"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-13/report.json",
+          "bytes": 912,
+          "sha256": "02b86029b55e12b667213f2ccd0dd86e8048e9453af479ba8cfe43a1206aec37"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-14/report.json",
+          "bytes": 912,
+          "sha256": "f945ca08797f2cf9e03211f97751e2de07efbd2b69014cd7a4eb7a3d4f442b63"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-15/report.json",
+          "bytes": 912,
+          "sha256": "ed69877b805bff166526f7876e5e38e32a5f747968b4794e00eac27ce22f25c7"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-16/report.json",
+          "bytes": 912,
+          "sha256": "b721a7a8e8b7b9568f6f1690f241f6699623d3cbb7fc18fd50a7a1584959f95f"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-17/report.json",
+          "bytes": 912,
+          "sha256": "872daa613631594b154c4370a9965f28f8bd84f7a8b75eda42f41c69ffc66f9f"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-18/report.json",
+          "bytes": 911,
+          "sha256": "b161fdae200e30fdbe2f5d309ca561fcabef8f27f6434045574e66cb52c0532b"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-19/report.json",
+          "bytes": 912,
+          "sha256": "c7c6fcb66b712df0be4cc1185527f87041faa47ad8c6b525d64f0fa610316ba2"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-2/report.json",
+          "bytes": 1134,
+          "sha256": "dc2d57b4750b2678547106e7ddcbde87a9ae4ba78fe7fe42935e1d1c72cf2e25"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-20/report.json",
+          "bytes": 912,
+          "sha256": "69a7a51f2f1dc74bc61caaca2806982b2e1cec662170e2e15d44d705f51baa01"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-21/report.json",
+          "bytes": 912,
+          "sha256": "7c87d7cfb7c6c5ed84e9f3c006c9d18cabddfc5fdd785713f2c0b58fd1dfcb7c"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-22/report.json",
+          "bytes": 912,
+          "sha256": "2183b7d3432ce02040265e195ba1d46034d01aa0e31c72b1cad4ddd02188ee33"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-23/report.json",
+          "bytes": 912,
+          "sha256": "83f2a7292c1ab52d00cdbb9d69dcd39511e168bb24aeb70c291fe125efabd870"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-24/report.json",
+          "bytes": 912,
+          "sha256": "cd0a3c90bbfbc3ca5241ea8296179dce08166b5e8b753214f627c1932142dad1"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-25/report.json",
+          "bytes": 912,
+          "sha256": "32203f8913fb365c3530565325c8848630cc39e776f669ace0741297b1c428ed"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-26/report.json",
+          "bytes": 912,
+          "sha256": "1bf5dbb0bb4c620b30bbe26d58ae38090f5d64708e0826cbecee9a3dbc7ee1fd"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-27/report.json",
+          "bytes": 912,
+          "sha256": "5ed78adadb57e11fb7f91ac30639f4cdd7a5cf7d3c63498db3ee2b409b0a5ad6"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-28/report.json",
+          "bytes": 912,
+          "sha256": "2b5a1430a2a89e0120fcd7874cd9da8c53b516b7efff9cdfa0635c6abcdc3696"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-29/report.json",
+          "bytes": 912,
+          "sha256": "ada85ed5c007db70b5f747d30394e9dbdd3ce61b5d9f6f950ebab1141f2247ce"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-3/report.json",
+          "bytes": 1135,
+          "sha256": "f62668272b5131f95ccdac033496945087c66ebbddb4f6a1cc64fc3590281bd8"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-30/report.json",
+          "bytes": 912,
+          "sha256": "33933013ab5da7071de9d90fe1339a7767e8859c94b746bf162f9611d339a0c4"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-31/report.json",
+          "bytes": 912,
+          "sha256": "918a86050e26b8e4a60cf8a31e4cd8886966b005a1cfc8ef4972040d539ed65c"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-32/report.json",
+          "bytes": 912,
+          "sha256": "be52f684ff3a1c3f55b12449d9f0170b0ec993944fe3ea74daa8501656a9c176"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-33/report.json",
+          "bytes": 912,
+          "sha256": "44a95e7a38e3c52c4b54e563be6ed059540d2c0b2583a0fce5d35bf61fe8690b"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-34/report.json",
+          "bytes": 911,
+          "sha256": "ee0be933f5979ddd1803dc4d0d657529c39f58989779029d272d65427f3750d7"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-35/report.json",
+          "bytes": 912,
+          "sha256": "81b0d46600da25a2e6903727b7146957281e278f97f7b029d13cd52f55b2c069"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-36/report.json",
+          "bytes": 912,
+          "sha256": "c9ac9a2bcf2a9bb63b075ed70e18dc408dd342acc33d1fceecc8a56408b07f24"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-37/report.json",
+          "bytes": 912,
+          "sha256": "ad59ac3039e5ce4936dad7600505cfc512a005cc9e778d2640950b3de2c0b93b"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-38/report.json",
+          "bytes": 912,
+          "sha256": "cae4b55d82afdffd0a2972c1041371973180d8cd24b9bacee466599aa4db6386"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-39/report.json",
+          "bytes": 912,
+          "sha256": "40082c4260f904593abe59e61ecb665f50d137d79f80e42f3f2cccdcb5d800f4"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-4/report.json",
+          "bytes": 1020,
+          "sha256": "b35736ae31b51bdd01c8664be39c98bddc30bcd1a23e55a2dadbfe3aa20a253a"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-40/report.json",
+          "bytes": 1026,
+          "sha256": "a90589ddec86b6d6577ba31967c3a0e8d1933e32667fb6a00b1549f45509c8d2"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-41/report.json",
+          "bytes": 1027,
+          "sha256": "7c442a8a0106fdfe8f701cbed6ce2d271766850e448bd018411d913a6853bd4a"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-42/report.json",
+          "bytes": 1027,
+          "sha256": "9345c9b04d264a17ff3290f3c54bd53fbae806b844a2e757248663d089c8ff2a"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-43/report.json",
+          "bytes": 1027,
+          "sha256": "85cf724d3d54bfb1fb7db746a86e15d230dbc6074de21246b64d5bfc81ab2dad"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-44/report.json",
+          "bytes": 1027,
+          "sha256": "b9872e2b773fe23eeb1d17e23d74a03ef83e844413bc4d6530ccb10cdfa265e3"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-45/report.json",
+          "bytes": 1027,
+          "sha256": "469aee6dad78809a237947c4a322783cf1b5120ca823aa80de3df6e217bc21e9"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-46/report.json",
+          "bytes": 1027,
+          "sha256": "161f0f34320bb0fefbfcc979515ccaaeb75e1f9ca326035f92c227e605942b5f"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-47/report.json",
+          "bytes": 1027,
+          "sha256": "45963dc1fd1ae1d2ea3e56a2dbea3fb180adcfc2746d23a5be8f8e7491e8c578"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-48/report.json",
+          "bytes": 1141,
+          "sha256": "036be896e5923c33daab7b8e1322b1d91ce4ca03ba119383ca72dd60c155a22b"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-49/report.json",
+          "bytes": 1142,
+          "sha256": "4fe37edc49e2ab99ed4e8d4f5c0df4b341f6ecdf6b555de561367e71861aa14e"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-5/report.json",
+          "bytes": 1022,
+          "sha256": "5a32de784a37e3208ffb2943e4bed9e930cba92c2a82e6c5ee29fb388050b26f"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-50/report.json",
+          "bytes": 1142,
+          "sha256": "9dd9cf4ad41d20133dde2c653be2d4fc7bafc74c9c2088b1250cfe3640d0edb8"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-51/report.json",
+          "bytes": 1142,
+          "sha256": "c1584ab9391e92efbb2d0bd2a56caa85380dc1580fd2e825b9f49cb0e8e44bc3"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-52/report.json",
+          "bytes": 912,
+          "sha256": "6738646fef39eac66ec697172c3a1b5a47d3c6c1431a9b5485dd761fb8aee8d3"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-53/report.json",
+          "bytes": 912,
+          "sha256": "85980c5a79ee777babba2f56a04d7149c2bd29c236c9cb1ee9d6b0edb430c684"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-54/report.json",
+          "bytes": 912,
+          "sha256": "1e17236c91a906a063b2584c00289c2e52ef3d374c4f9553226accb9d62bb69d"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-55/report.json",
+          "bytes": 912,
+          "sha256": "4321a388fc8b7933381c1ef08ba9018b7068e8e80a6284d3abf535450794782e"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-6/report.json",
+          "bytes": 905,
+          "sha256": "b43bd0207e21f45a34eef536bc95045d3ed68b69841b6ebb86036a59baa8d563"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-7/report.json",
+          "bytes": 906,
+          "sha256": "f241e613fd84af18d34e9a111b34e797e1446cc0ef6e8650b392e9ce03ef6e37"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-8/report.json",
+          "bytes": 911,
+          "sha256": "5f8fb7abdd27fcdb5be1c823fabfc4c3b4394aae42d2022b855c0da0c1337364"
+        },
+        {
+          "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/native/case-9/report.json",
+          "bytes": 912,
+          "sha256": "e822da071deab27b20a6f5c7843d7336e2b658dfadf8940649f34a1c72c43429"
+        }
+      ],
+      "binary": {
+        "path": "performance-results/native-suite-t11-t12-20261021/probe-pipeline-full-v2",
+        "bytes": 2309464,
+        "sha256": "35d6f9e294a6bc811f9747aefe23fa945847f6351715935caf7ddb0cfde2a9e7"
+      },
+      "planner": "(62*N+14*Q)*D+64MiB; exact host/GPU prefix cache"
+    },
+    "full_corpus_numeric": "PASS",
+    "human_task_review": "NOT_VERIFIED",
+    "task_gates": {
+      "ocr": "NOT_VERIFIED",
+      "layout": "FAIL_OBSERVED_COUNT_AND_ROWS",
+      "reference_preservation": "NOT_VERIFIED"
+    },
+    "development_seven": {
+      "path": "performance-results/native-suite-t11-t12-20261021/image-qualification/verification.json",
+      "bytes": 19414,
+      "sha256": "bda785bb572f37244eb012f7cbd2d837567148a26b0e3bb38fcf4d687449b676"
+    },
+    "host_prefix_cache": {
+      "path": "performance-results/native-suite-t11-t12-20261021/dit-host-cache-comparison.json",
+      "bytes": 83595,
+      "sha256": "4b6de47348af6f4d617c9d83d8adb1eb9d7ebf5fb01552cbfc14f279caed73b2"
+    },
+    "regression_seven": {
+      "path": "performance-results/native-suite-t11-t12-20261021/pipeline-regression.json",
+      "bytes": 570,
+      "sha256": "0f0ddadc870fc2588e3da6ca685d478e478ab24511a7c31dcadc0e5ddb9b01f0"
+    },
+    "warm_whole_operation": {
+      "samples": [
+        13.145225360007316,
+        12.57667076499638,
+        13.226880283997161,
+        12.559927300004347,
+        12.900590741002816
+      ],
+      "min": 12.559927300004347,
+      "p10": 12.566624686001159,
+      "median": 12.900590741002816,
+      "mean": 12.881858890001604,
+      "p90": 13.194218314401223,
+      "max": 13.226880283997161,
+      "std": 0.3104562297499463,
+      "cv": 0.02410026630480406,
+      "std_population": 0.27768049350366897,
+      "cv_population": 0.021555933493355817,
+      "verdict": "STABLE"
+    },
+    "warm_workload": "256x256, one supplied 256x256 RGB reference, full operation including loads and host publication; five samples after explicit warm-up",
+    "historical_warm_text_256_baseline": {
+      "samples": [
+        11.926448357000481,
+        12.691135414999735,
+        12.641226596999331,
+        12.004644249000194,
+        12.479022576000716
+      ],
+      "min": 11.926448357000481,
+      "p10": 11.957726713800366,
+      "median": 12.479022576000716,
+      "mean": 12.348495438800091,
+      "p90": 12.671171887799574,
+      "max": 12.691135414999735,
+      "std": 0.3593356362090057,
+      "cv": 0.029099548037240276,
+      "std_population": 0.32139956372058864,
+      "cv_population": 0.026027427010315938,
+      "verdict": "STABLE"
+    },
+    "failed_baselines": {
+      "original_full_native_56": "completed; oracle interrupted after confirmed latent gate failure",
+      "image_large_softmax_fixed": {
+        "path": "performance-results/native-suite-t11-t12-20261021/image-large-softmax-fixed/verification.json",
+        "bytes": 12535,
+        "sha256": "618f193c4c73ba90476f71dee0c5ce51d1f98754bf176cff85d1ea98114678b1"
+      },
+      "image_large_bf16_fixed": {
+        "path": "performance-results/native-suite-t11-t12-20261021/image-large-bf16-fixed/verification.json",
+        "bytes": 8606,
+        "sha256": "db54b52cc41802e5786ef2073defecf5e32f8a1d3065790839ee21a3e520dbf6"
+      }
+    },
+    "encoder_copy_experiment": {
+      "baseline": "performance-results/native-suite-t11-t12-20261021/encoder-large-bf16-fixed",
+      "candidate": "performance-results/native-suite-t11-t12-20261021/encoder-large-qkv-batch",
+      "boundaries": 84,
+      "different": [],
+      "baseline_timing": {
+        "samples": [
+          9.173576914,
+          9.181330395,
+          9.546245233,
+          9.42100112,
+          9.327438577
+        ],
+        "median": 9.327438577,
+        "cv_percent": 1.7083740286889957
+      },
+      "candidate_timing": {
+        "samples": [
+          0.932557399,
+          0.861856726,
+          0.871948435,
+          0.900515773,
+          0.860810728
+        ],
+        "median": 0.871948435,
+        "cv_percent": 3.4769730798887157
+      },
+      "speedup": 10.697236444951015,
+      "verdict": "KEEP"
+    },
+    "multi_reference_encoder": {
+      "path": "performance-results/native-suite-t11-t12-20261021/encoder-large-multi-workspace-fixed.json",
+      "bytes": 7751,
+      "sha256": "5460ba6d2eade1e2ac5127a0e15b1180c381c7102bc8e19cd02aefafb06f950e"
+    },
+    "largest_corrected_pilot": {
+      "cases": [
+        {
+          "id": "qwen-heldout-20-20261020",
+          "latents": [
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            }
+          ],
+          "rgba": {
+            "max_abs": 0.0048828125,
+            "rmse": 0.0004974273560028127,
+            "relative_l2": 0.000525704304638766,
+            "bit_exact": false,
+            "ssim_rgb": 0.9996637773710098,
+            "alpha_mae": 2.4799257516860962e-05
+          },
+          "reference_latents_bit_exact": true,
+          "conditioning_bit_exact": true,
+          "runtime": {
+            "width": 1024,
+            "height": 1536,
+            "references": 2,
+            "seed": 20261020,
+            "variant": 1,
+            "victims": 0,
+            "total_seconds": 86.64435603,
+            "prepare_seconds": 0.098299023,
+            "load_seconds": [
+              4.903622065,
+              4.620344257,
+              0.753085741
+            ],
+            "phase_seconds": [
+              1.336505042,
+              1.657554148,
+              70.587237672,
+              2.588461241
+            ],
+            "loads": [
+              1,
+              1,
+              2
+            ],
+            "releases": [
+              1,
+              1,
+              1
+            ],
+            "peak_device_owned": 22226632704,
+            "live_device_owned": 684000512,
+            "pre_run_device_owned": 8519680,
+            "previous_device_peak": 8519680,
+            "plan_device": 22723084288,
+            "plan_host": 400922624,
+            "peak_bound_checked": true,
+            "recipe_version": 1,
+            "rng_version": 0,
+            "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+            "reference_resolution": 1024,
+            "prompt_sha256": "e66fedb34bfbe773973c3e179b031a52c587cc129856c98fc172b129d289e540",
+            "noise_sha256": "ea09f248d309afa1b95feadaf3e44e2745228cc33187565373b36776cae7afe8",
+            "reference_metadata": [
+              {
+                "latent_width": 74,
+                "latent_height": 56,
+                "sha256": "efe9f30a89bbb4017f06d329f32e6965ae5facfdbd94811d9c347c842164a3d4"
+              },
+              {
+                "latent_width": 74,
+                "latent_height": 56,
+                "sha256": "958bc5f8691b06a650b6dc6de2760857e556966bbfe2522989a1b4c3c4a12cbb"
+              }
+            ],
+            "sigmas": [
+              1,
+              0.978452981,
+              0.954180002,
+              0.926626027,
+              0.89507997,
+              0.845148027,
+              0.704533994,
+              0.414568007,
+              0
+            ]
+          },
+          "verdict": "PASS"
+        },
+        {
+          "id": "qwen-heldout-20-20261021",
+          "latents": [
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            },
+            {
+              "max_abs": 0.0,
+              "rmse": 0.0,
+              "relative_l2": 0.0,
+              "bit_exact": true
+            }
+          ],
+          "rgba": {
+            "max_abs": 0.005859375,
+            "rmse": 0.0005064950771437533,
+            "relative_l2": 0.0005408554285211553,
+            "bit_exact": false,
+            "ssim_rgb": 0.999650450107736,
+            "alpha_mae": 2.818678816159566e-05
+          },
+          "reference_latents_bit_exact": true,
+          "conditioning_bit_exact": true,
+          "runtime": {
+            "width": 1024,
+            "height": 1536,
+            "references": 2,
+            "seed": 20261021,
+            "variant": 1,
+            "victims": 0,
+            "total_seconds": 85.482876327,
+            "prepare_seconds": 0.059056097,
+            "load_seconds": [
+              4.940167782,
+              4.60285768,
+              0.0
+            ],
+            "phase_seconds": [
+              1.06775584,
+              1.619992334,
+              70.595138023,
+              2.502058879
+            ],
+            "loads": [
+              1,
+              1,
+              0
+            ],
+            "releases": [
+              1,
+              1,
+              0
+            ],
+            "peak_device_owned": 22902113536,
+            "live_device_owned": 684000512,
+            "pre_run_device_owned": 684000512,
+            "previous_device_peak": 22226632704,
+            "plan_device": 22723084288,
+            "plan_host": 400922624,
+            "peak_bound_checked": true,
+            "recipe_version": 1,
+            "rng_version": 0,
+            "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+            "reference_resolution": 1024,
+            "prompt_sha256": "e66fedb34bfbe773973c3e179b031a52c587cc129856c98fc172b129d289e540",
+            "noise_sha256": "4e721be796c574881f6234799f5bd41daec329070784e80047ff90550aa90f50",
+            "reference_metadata": [
+              {
+                "latent_width": 74,
+                "latent_height": 56,
+                "sha256": "efe9f30a89bbb4017f06d329f32e6965ae5facfdbd94811d9c347c842164a3d4"
+              },
+              {
+                "latent_width": 74,
+                "latent_height": 56,
+                "sha256": "958bc5f8691b06a650b6dc6de2760857e556966bbfe2522989a1b4c3c4a12cbb"
+              }
+            ],
+            "sigmas": [
+              1,
+              0.978452981,
+              0.954180002,
+              0.926626027,
+              0.89507997,
+              0.845148027,
+              0.704533994,
+              0.414568007,
+              0
+            ]
+          },
+          "verdict": "PASS"
+        }
+      ],
+      "verdict": "PASS",
+      "scope": "Two frozen largest cases only; CASES_ONLY skips fault matrix; full corpus pending",
+      "binary_sha256": "6c5cdfea8873bcd66afd816d38c4829a207b1f5a99deb30906153546d5e2f6a2"
+    },
+    "bf16_query_geometry": {
+      "id": "bf16-eager-bounded-full-query-geometry",
+      "hypothesis": "When the complete BF16 score fits128MiB, preserve the eager full-query GEMM geometry rather than splitting queries into256 rows. This may remove BF16 ties in the Qwen language encoder without changing equations, masks or precision, and reduce GEMM launches.",
+      "baseline": "numeric-before-bf16-query-geometry.cu; libsuite-before-bf16-query-geometry.so; encoder-single19-native; image-phase-final/native-refs/case-12",
+      "diagnosis": "Only frozen case19seed21 exceeds the latent relative gate at0.0101937. Reference latents and all27vision stages are exact; first difference at textlayer0. Exact-input replay: norm, Q/K/V, Q/Knorm, RoPE, projection and MLP primitives exact; attention differs90BF16 values. Scalar softmax replay exact. Manual layer using full eager attention matches oracle exactly.",
+      "source": "Frozen Transformers d4fcbccd Qwen3VL eager attention and exact-input tools/diagnose_qwen_image_encoder.py replay",
+      "variable": "Use full queries only for queries>256 and complete BF16 scores<=128MiB; all other existing query tiling unchanged. No new kernel.",
+      "decision": "KEEP",
+      "performance_claim": false,
+      "decision_scope": "Numerical correction, no independent speedup claim",
+      "primitive": "Actual textlayer0 replay4,390,912 BF16 attention values bit-exact; new1072query32head8KV causalGQA regression bit-exact to eager; final19CUDA groups PASS",
+      "model": "All56cases/448latents/RGBA PASS unchangedT00; onlyrecipe19conditioning changed among5uniqueaffectedinputs, nowexact. Bothseed19 endtoendrerun. FinalGemma v6T00all1296boundariesbitexact.",
+      "memory": "Encoder/Gemma reserve the extra score/result rows beyond256, request sized; completeBF16score cap128MiB; larger requests keep256querytiles"
+    },
+    "affected_encoder_identity": [
+      {
+        "id": "resized-reference",
+        "fixture": "performance-results/native-suite-t11-t12-20261021/encoder-affected-resized-reference.ds4e",
+        "output": "performance-results/native-suite-t11-t12-20261021/encoder-geometry-fixed/resized-reference",
+        "same_as_previous": true,
+        "bit_exact_oracle": true
+      },
+      {
+        "id": "qwen-heldout-16-20261020",
+        "fixture": "performance-results/native-suite-t11-t12-20261021/encoder-affected-qwen-heldout-16-20261020.ds4e",
+        "output": "performance-results/native-suite-t11-t12-20261021/encoder-geometry-fixed/qwen-heldout-16-20261020",
+        "same_as_previous": true,
+        "bit_exact_oracle": true
+      },
+      {
+        "id": "qwen-heldout-17-20261020",
+        "fixture": "performance-results/native-suite-t11-t12-20261021/encoder-affected-qwen-heldout-17-20261020.ds4e",
+        "output": "performance-results/native-suite-t11-t12-20261021/encoder-geometry-fixed/qwen-heldout-17-20261020",
+        "same_as_previous": true,
+        "bit_exact_oracle": true
+      },
+      {
+        "id": "qwen-heldout-18-20261020",
+        "fixture": "performance-results/native-suite-t11-t12-20261021/encoder-affected-qwen-heldout-18-20261020.ds4e",
+        "output": "performance-results/native-suite-t11-t12-20261021/encoder-geometry-fixed/qwen-heldout-18-20261020",
+        "same_as_previous": true,
+        "bit_exact_oracle": true
+      },
+      {
+        "id": "qwen-heldout-19-20261020",
+        "fixture": "performance-results/native-suite-t11-t12-20261021/encoder-affected-qwen-heldout-19-20261020.ds4e",
+        "output": "performance-results/native-suite-t11-t12-20261021/encoder-geometry-fixed/qwen-heldout-19-20261020",
+        "same_as_previous": false,
+        "bit_exact_oracle": true
+      }
+    ],
+    "vae-workspace-experiment": {
+      "id": "qwen-vae-activation-sized-cudnn-workspace",
+      "hypothesis": "The64MiB convolution workspace cap excludes the eager-compatible FP32-accumulating Tensor Core algorithm on megapixel VAE features. Bound workspace by64MiB plus twice the largest input/output activation, within the adapter request plan, instead of forcing another reduction.",
+      "baseline": "cudnn-before-activation-workspace.cu; libnumeric-before-activation-workspace.so; image-full-final-v2; vae-large-reference-native",
+      "diagnosis": "VAE encoded reference relative_l2=0.004309. Exact-input first96-channel3x3 convolution replay: algorithm0 differs2368 BF16 values; algorithm1 needs407,537,680 bytes and is bit-exact. Explicit versus implicit padding was equal for this first geometry only. The later all-operator replay found seven deeper geometries requiring explicit padding; the first control did not reject canonical padding generally.",
+      "source": "Frozen Diffusers aea7b70b QwenImage21VAE and cuDNN C API algorithm/workspace queries; no new numerical kernel",
+      "variable": "Convolution workspace admission only; no change to convolution equations, dtype, weights or input. Preferred workspace NOMEM fails instead of selecting another reduction.",
+      "evidence": [
+        "vae-cudnn-algorithms.json",
+        "vae-norm-conv-replay-baseline.log",
+        "vae-large-encoded-baseline.json"
+      ],
+      "decision": "KEEP",
+      "performance_claim": false,
+      "workspace_only_result": "image-big-activation-fixed FAIL: final latent relative_l2=0.0286428, RMSE=0.0423262. The workspace change alone was not sufficient and was not promoted alone.",
+      "decision_scope": "Retained for numerical correctness as part of the combined BF16 pipeline; no independent speedup claim",
+      "final_model_evidence": "image-phase-final/verification.json: all56 cases,448 latent boundaries and RGBA pass unchanged T00 thresholds; phase/binary provenance explicit",
+      "largest_pilot": "image-big-pixel-fixed-verification.json: both reference latents, conditioning and all8 denoising latents exact for both largest frozen seeds"
+    },
+    "channel-l2-experiment": {
+      "id": "qwen-vae-channel-axis-l2-order",
+      "hypothesis": "A transpose before L2 normalization changes the frozen eager channel-axis reduction's ordering. A generic channel-major input/spatial-major output L2 operator can preserve that ordering and BF16 ties, avoiding accumulated VAE drift without changing precision.",
+      "baseline": "numeric-before-channel-l2.c/.cu; vae-before-channel-l2.c; libnumeric-before-channel-l2.so; image-big-activation-fixed FAIL latent finalrelative0.028643",
+      "diagnosis": "With admitted cuDNN workspace, the first three convolution replays and first three complete norm/SiLU modules are bit-exact. The fourth norm has one BF16 tie; plain Torch transpose/normalize also differs, proving layout-dependent accumulation matters. Need verify all norm geometries and final pipeline, not infer success from the one primitive.",
+      "sources": [
+        "PyTorch5c488690 Reduce.cuh setReduceConfig/thread_reduce_impl/block_y_reduce",
+        "SharedReduceOps.h NormTwoOps",
+        "Frozen Diffusersaea7b70b QwenImage21RMS_norm",
+        "docs/research/cuda/ampere-sm86-primitives.md"
+      ],
+      "variable": "New generic L2 channel-axis layout operator used by VAE; existing RMS/row-L2/legacy kernels unchanged",
+      "target_metrics": [
+        "bit-exact BF16 primitive on actual and synthetic channel/spatial geometries",
+        "VAE normalized latents",
+        "eight frozen big2reference latents",
+        "RGBA",
+        "memory bounds"
+      ],
+      "decision": "KEEP",
+      "performance_claim": false,
+      "decision_scope": "Retained for numerical correctness as part of the combined BF16 pipeline; no independent speedup claim",
+      "final_model_evidence": "image-phase-final/verification.json: all56 cases,448 latent boundaries and RGBA pass unchanged T00 thresholds; phase/binary provenance explicit",
+      "largest_pilot": "image-big-pixel-fixed-verification.json: both reference latents, conditioning and all8 denoising latents exact for both largest frozen seeds"
+    },
+    "vae-attention-geometry-experiment": {
+      "id": "qwen-vae-single-head-full-math-geometry",
+      "hypothesis": "The frozen VAE uses one wide head and full query GEMMs when score<=512MiB. Preserving that geometry removes FP32 GEMM ties changed by256-query tiling; keep DiT32head tiling and its memory bound unchanged.",
+      "baseline": "attention-before-single-head-geometry.c; libsuite-before-single-head-geometry.so; vae-attention-replay-from-log.json and original baseline stdout. Generic vae-attention-replay.json was overwritten during replay; it is not baseline evidence.",
+      "diagnosis": "Actual VAE4144queries/keys, one768-dimhead: native and Torch query-tiled256 are bit-exact. Both differ from unmodified full PyTorch MATH in1510BF16 values,maxabs.015625,relative9.4865e-5. Therefore the remaining difference is the query GEMM geometry, not softmax accuracy.",
+      "source": "Frozen Diffusersaea7b70b QwenImage21AttentionBlock and actual captured q/k/v/full/tiled arrays",
+      "variable": "Use full single-head query geometry only while FP32score<=512MiB; typed registered interval buffer; no precision or attention mask changes",
+      "decision": "KEEP",
+      "performance_claim": false,
+      "decision_scope": "Retained for numerical correctness as part of the combined BF16 pipeline; no independent speedup claim",
+      "final_model_evidence": "image-phase-final/verification.json: all56 cases,448 latent boundaries and RGBA pass unchanged T00 thresholds; phase/binary provenance explicit",
+      "largest_pilot": "image-big-pixel-fixed-verification.json: both reference latents, conditioning and all8 denoising latents exact for both largest frozen seeds"
+    },
+    "vae-padding-geometry-experiment": {
+      "id": "qwen-vae-canonical-pad-then-convolve",
+      "hypothesis": "The frozen VAE materializes symmetric padding before calling convolution. Preserving that input geometry selects the matching cuDNN reduction on deeper layers too.",
+      "baseline": "cudnn-before-explicit-padding.cu; libnumeric-before-explicit-padding.so; vae-large-reference-geometry-fixed",
+      "diagnosis": "All exact-input norms/SiLU and most convolution replays pass. Seven stage2/3 convolutions differ with implicit symmetric padding (up to4752BF16 values), and each is bit-exact with explicit padding. Native stages0/1 already bit-exact; drift begins atstage2. Earlier first96channel convolution padding control was negative but did not cover these deeper geometries.",
+      "source": "Frozen Diffusersaea7b70b QwenImage21CausalConv3d.forward, existing native pad kernel, vae-padding-replay.json",
+      "variable": "Materialize all declared convolution padding using the existing bounded registered buffer; no new kernel or precision change",
+      "decision": "KEEP",
+      "performance_claim": false,
+      "decision_scope": "Retained for numerical correctness as part of the combined BF16 pipeline; no independent speedup claim",
+      "final_model_evidence": "image-phase-final/verification.json: all56 cases,448 latent boundaries and RGBA pass unchanged T00 thresholds; phase/binary provenance explicit",
+      "largest_pilot": "image-big-pixel-fixed-verification.json: both reference latents, conditioning and all8 denoising latents exact for both largest frozen seeds"
+    },
+    "pixel-normalization-experiment": {
+      "id": "qwen-vae-pixel-fp32-reciprocal",
+      "source_sha256": "6b1672264ac9ca63515e2002f6b714d7f9c7358273e70ef6b9fa9a2ee28fa26c",
+      "baseline": "vae-before-pixel-reciprocal.c; image-big-parity-fixed; vae-second-primitive-comparison.json",
+      "diagnosis": "955 BF16 input values differ on second frozen reference before first convolution; value127 crosses a BF16 tie when using division rather than eager FP32 reciprocal multiplication",
+      "exhaustive_uint8_values": 256,
+      "baseline_different_values": [
+        127
+      ],
+      "candidate_different_values": [],
+      "candidate_vs_cuda_eager_bit_exact": true,
+      "scope": "Standalone C replay of scalar conversion under production flags, plus actual full-pipeline largest pilot",
+      "full_pipeline_pilot": "image-big-pixel-fixed-verification.json",
+      "performance_claim": false,
+      "decision": "KEEP"
+    },
+    "largest_forced_host_cache": {
+      "verdict": "PASS",
+      "latents": [
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true
+      },
+      "runtime": {
+        "width": 1024,
+        "height": 1536,
+        "references": 2,
+        "seed": 20261020,
+        "variant": 3,
+        "victims": 0,
+        "total_seconds": 96.533872341,
+        "prepare_seconds": 0.058001845,
+        "load_seconds": [
+          4.940226017,
+          4.638092408,
+          0.672998997
+        ],
+        "phase_seconds": [
+          1.257418823,
+          1.6469869,
+          80.67229349,
+          2.547103424
+        ],
+        "loads": [
+          1,
+          1,
+          2
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 17864556544,
+        "live_device_owned": 684000512,
+        "pre_run_device_owned": 8519680,
+        "previous_device_peak": 8519680,
+        "plan_device": 18361008128,
+        "plan_host": 4371294328,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 1024,
+        "prompt_sha256": "e66fedb34bfbe773973c3e179b031a52c587cc129856c98fc172b129d289e540",
+        "noise_sha256": "ea09f248d309afa1b95feadaf3e44e2745228cc33187565373b36776cae7afe8",
+        "reference_metadata": [
+          {
+            "latent_width": 74,
+            "latent_height": 56,
+            "sha256": "efe9f30a89bbb4017f06d329f32e6965ae5facfdbd94811d9c347c842164a3d4"
+          },
+          {
+            "latent_width": 74,
+            "latent_height": 56,
+            "sha256": "958bc5f8691b06a650b6dc6de2760857e556966bbfe2522989a1b4c3c4a12cbb"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "scope": "20 GiB controlled budget on the same physical 24 GiB RTX 3090"
+    },
+    "layout_diagnostic": [
+      {
+        "id": "qwen-heldout-14-20261020",
+        "implementation": "native",
+        "rgba_path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/native-decode/case-36/rgba.f32",
+        "rgba_sha256": "9ab5cef7cf90f4d5e41f0e1ee1835c4d52bd00b374328396c05e0ba5e4b20330",
+        "png_path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/native-decode/case-36/result.png",
+        "png_sha256": "b88eb66922470e0c5c56b3feef16d76ef30d461b14dc329a8803b8ca3014f4a2",
+        "prompt": "Two rows of three black circles on white.",
+        "required_count": 6,
+        "required_rows": [
+          3,
+          3
+        ],
+        "observed_count": 3,
+        "observed_rows": [
+          3
+        ],
+        "centers": [
+          [
+            517.429192369328,
+            784.3444120036002
+          ],
+          [
+            823.9375667604037,
+            788.658252130883
+          ],
+          [
+            207.06420450811592,
+            789.1794922345622
+          ]
+        ],
+        "counts_at_thresholds_0_1_to_0_5": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "literal_count_and_rows_match": false,
+        "method": "Connected opaque dark regions, minimum area0.1%, row gap>height/8; count at threshold0.5, sensitivity sweep0.1..0.5",
+        "scope": "Count diagnostic; does not certify all T00 tasks or human review"
+      },
+      {
+        "id": "qwen-heldout-14-20261020",
+        "implementation": "oracle",
+        "rgba_path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/oracle/qwen-heldout-14-20261020/rgba.f32",
+        "rgba_sha256": "4cfba0e77deae0cf847c9d408bc082e739c7139987cbbdc915477e8bb6ff67fb",
+        "png_path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/oracle/qwen-heldout-14-20261020/result.png",
+        "png_sha256": "d03c558ae7b1d3c22bd70482306887eeb303202f5859d40fad3649106ffc0166",
+        "prompt": "Two rows of three black circles on white.",
+        "required_count": 6,
+        "required_rows": [
+          3,
+          3
+        ],
+        "observed_count": 3,
+        "observed_rows": [
+          3
+        ],
+        "centers": [
+          [
+            517.4296595473802,
+            784.3485084619268
+          ],
+          [
+            823.939854377398,
+            788.6596834670387
+          ],
+          [
+            207.0602151008696,
+            789.1824195562176
+          ]
+        ],
+        "counts_at_thresholds_0_1_to_0_5": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "literal_count_and_rows_match": false,
+        "method": "Connected opaque dark regions, minimum area0.1%, row gap>height/8; count at threshold0.5, sensitivity sweep0.1..0.5",
+        "scope": "Count diagnostic; does not certify all T00 tasks or human review"
+      },
+      {
+        "id": "qwen-heldout-14-20261021",
+        "implementation": "native",
+        "rgba_path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/native-decode/case-37/rgba.f32",
+        "rgba_sha256": "700cffbe3aaa72d18f44725c3ae05ab20d421f710546ec6d1104d4ca84842ba2",
+        "png_path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/native-decode/case-37/result.png",
+        "png_sha256": "03c321768a0757b540f97d8031f23da39e966dbab2e8eefbb6f0dbd68774c92b",
+        "prompt": "Two rows of three black circles on white.",
+        "required_count": 6,
+        "required_rows": [
+          3,
+          3
+        ],
+        "observed_count": 2,
+        "observed_rows": [
+          1,
+          1
+        ],
+        "centers": [
+          [
+            498.9288679993469,
+            357.7867361775248
+          ],
+          [
+            499.030956275386,
+            1181.686038958498
+          ]
+        ],
+        "counts_at_thresholds_0_1_to_0_5": [
+          4,
+          2,
+          2,
+          2,
+          2
+        ],
+        "literal_count_and_rows_match": false,
+        "method": "Connected opaque dark regions, minimum area0.1%, row gap>height/8; count at threshold0.5, sensitivity sweep0.1..0.5",
+        "scope": "Count diagnostic; does not certify all T00 tasks or human review"
+      },
+      {
+        "id": "qwen-heldout-14-20261021",
+        "implementation": "oracle",
+        "rgba_path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/oracle/qwen-heldout-14-20261021/rgba.f32",
+        "rgba_sha256": "1606cbf9f61f91d4bb62f023139079870ed3e6328b33d2d9863fee90d664b6e8",
+        "png_path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/oracle/qwen-heldout-14-20261021/result.png",
+        "png_sha256": "14810fb77b27a638286a5cc54101823ba4745d5ed8d186b051161a1670a7f8a9",
+        "prompt": "Two rows of three black circles on white.",
+        "required_count": 6,
+        "required_rows": [
+          3,
+          3
+        ],
+        "observed_count": 2,
+        "observed_rows": [
+          1,
+          1
+        ],
+        "centers": [
+          [
+            498.9292728629854,
+            357.7868078125243
+          ],
+          [
+            499.0337267270323,
+            1181.684853299107
+          ]
+        ],
+        "counts_at_thresholds_0_1_to_0_5": [
+          4,
+          2,
+          2,
+          2,
+          2
+        ],
+        "literal_count_and_rows_match": false,
+        "method": "Connected opaque dark regions, minimum area0.1%, row gap>height/8; count at threshold0.5, sensitivity sweep0.1..0.5",
+        "scope": "Count diagnostic; does not certify all T00 tasks or human review"
+      }
+    ],
+    "full_corpus_qualification": {
+      "path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/verification.json",
+      "bytes": 421889,
+      "sha256": "d26994e7af76fd44faae7bf7c59382337e86937f51223af9164470613f1eae5c"
+    },
+    "full_t00_corpus": true,
+    "failed_cases": [],
+    "coverage_scope": "Phase-isolated coverage of all56 requests; not a single full run of the final binary",
+    "phase_coverage": {
+      "reference_whole_pipeline": 17,
+      "largest_pilot": 2,
+      "corrected_conditioning_whole_pipeline": 2,
+      "warm_final_whole_pipeline": 1,
+      "preserved_after_conditioning_identity": 12,
+      "no_reference_unchanged_dit_new_decode": 39,
+      "latent_boundaries": 448
+    },
+    "latent_boundaries": 448,
+    "bit_exact_latent_boundaries": 432,
+    "latent_worst": {
+      "max_abs": 0.14453125,
+      "rmse": 0.006887889642090393,
+      "relative_l2": 0.004631884864333441
+    },
+    "worst_rgba": {
+      "rmse": 0.0017703280445746298,
+      "ssim_rgb_min": 0.9993100933493039,
+      "alpha_mae": 0.0002888217568397522
+    }
+  },
+  "sources": [
+    {
+      "path": "ds4_embedding_gemma2.c",
+      "bytes": 25555,
+      "sha256": "92ed9368c942275a847e33d6fe96fda4463de7d3be6f1374463a99d7361d80ca"
+    },
+    {
+      "path": "ds4_embedding_gemma2.h",
+      "bytes": 2445,
+      "sha256": "b283191ac1ef85c62898499d1bac01946027681dd12940669f1b5408103bd2d6"
+    },
+    {
+      "path": "ds4_gemma_tokenizer.c",
+      "bytes": 11016,
+      "sha256": "088fbfa7e09a4b24f3ebd304c0159d14ab4c5bd84f454020163a333756403730"
+    },
+    {
+      "path": "ds4_gemma_tokenizer.h",
+      "bytes": 898,
+      "sha256": "ad4d832ba6e440b3b23f743fca80250e5308f28f0a9470962eedb958cb501a96"
+    },
+    {
+      "path": "ds4_qwen_image_components.h",
+      "bytes": 981,
+      "sha256": "9bbc1bcc07e35b4bf49a3006fabf75231da4f886df0e38d18b3125a2d71ec386"
+    },
+    {
+      "path": "ds4_qwen_image_pipeline.c",
+      "bytes": 24611,
+      "sha256": "b31423274ae98fe0cdfd2464283ee7e384cf2cff79cee24dd123d5dece2f73ae"
+    },
+    {
+      "path": "ds4_qwen_image_pipeline.h",
+      "bytes": 3815,
+      "sha256": "506cd53771e8ddc037fb9180a33f59c03c918e87b53b44b272cdd16cb1dab4f1"
+    },
+    {
+      "path": "ds4_qwen_image_reference.c",
+      "bytes": 7140,
+      "sha256": "baac4c011375397e883bef785dcb99eb2654c0fae9ab9ea02e0e297d2d24bb85"
+    },
+    {
+      "path": "ds4_qwen_image_reference.h",
+      "bytes": 942,
+      "sha256": "8566174b0e9ecf182484728c88b6b5d4aba61a0ac500e32246b0f26559faf03d"
+    },
+    {
+      "path": "tests/probe_native_suite.c",
+      "bytes": 12469,
+      "sha256": "2a6ecf853b6c473fee4b74ea723fd42363c4e07ba49ba3d8517c6a8b5a323d77"
+    },
+    {
+      "path": "tests/probe_qwen_image_pipeline.c",
+      "bytes": 20059,
+      "sha256": "8ec9bf3f0c389a79bc9b67d2e918b27fdacb0576ae4e5a823763cb65f8211be2"
+    },
+    {
+      "path": "tests/test_embedding_gemma2.py",
+      "bytes": 6065,
+      "sha256": "91f525429bdfd93b75b2edffe4f85a7bad9f9721df4aa17048acc046db817747"
+    },
+    {
+      "path": "tests/test_qwen_image_reference.py",
+      "bytes": 2998,
+      "sha256": "5ea8bbcdf9e072359cadd9d766249b0cb72b1dbd4b027f70d3d0b09412ded0f9"
+    },
+    {
+      "path": "tests/test_suite_api.py",
+      "bytes": 3383,
+      "sha256": "5cf2bf49b5ea63315b8e9f9265c34108f0f0343e6d8fc768d345f2c2f2c404d6"
+    },
+    {
+      "path": "tests/test_suite_oracle_attention.py",
+      "bytes": 1796,
+      "sha256": "d6b459398a408538874b213e1604bd5a6860222127295ac37c05551582c8daca"
+    },
+    {
+      "path": "tools/compile_embedding_gemma2.py",
+      "bytes": 4530,
+      "sha256": "99f2b06a1a624aa50745c7f3004381541cb430ea7336c502b2bef23ab8b51ef4"
+    },
+    {
+      "path": "tools/qualify_embedding_gemma2.py",
+      "bytes": 10818,
+      "sha256": "1ba9f70d6526cab8a3b6e4feef732125021c3aaff244daaabfaf739146cc1f12"
+    },
+    {
+      "path": "tools/qualify_qwen_image_pipeline.py",
+      "bytes": 11974,
+      "sha256": "bf9afb589d0a2b4cece2a85588d7cf18614c63eeb0e919bc563be4f8fc59aa98"
+    },
+    {
+      "path": "tools/run_embedding_gemma2_oracle.py",
+      "bytes": 4844,
+      "sha256": "dfa25d8ad903a9b04f6eee9c32a2e6f313a68c1e55792de3914958275bdda01b"
+    },
+    {
+      "path": "tools/run_qwen_image_pipeline_oracle.py",
+      "bytes": 13521,
+      "sha256": "e39dc1d27ddc43c6a75255736edd3d6a0dc61c8ab0a7b0ea7e25ed9bb309f234"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 3358,
+      "sha256": "5d63767085999687f683946cd2b2c1718de5d3f9b7b3dbe19fae57ee31a6dbd7"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 77627,
+      "sha256": "db092e17afa51348543740108b5f40b09721f5306ab316aa8ea0dcdd11580d9e"
+    },
+    {
+      "path": "ds4_executor.c",
+      "bytes": 17452,
+      "sha256": "5e3517f9346718fcd60d7b02f4ebf94fe4127b06c381cf618be534f98fb5a47f"
+    },
+    {
+      "path": "ds4_executor.h",
+      "bytes": 4047,
+      "sha256": "72696fca33935832c35dfaa711039ec0116b1a728cbef1e4c992ad26a98498b2"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 36505,
+      "sha256": "eaf7c8addbb810be3d6475d3821b252a6510637acd01b05b0ecddc5548e9c593"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 8974,
+      "sha256": "ba970b600cb58a5dbe6d40abbd5616591a11d457b51ce665ab89bf5d8d6cb1c6"
+    },
+    {
+      "path": "ds4_numeric_cuda.cu",
+      "bytes": 47458,
+      "sha256": "9e181300fed431ce9d3ff655c05862d0241d92dc64609426b712cf5f4da0af91"
+    },
+    {
+      "path": "ds4_numeric_cudnn.cu",
+      "bytes": 10639,
+      "sha256": "3eb0783ac2033849522034b20135cfe72070fc8c21ad08660b8d44b7b77565da"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 2856,
+      "sha256": "b35fe405c4f5aa1cc160d0e9a0798c8d254376b942edb4f630267c9deab04b50"
+    },
+    {
+      "path": "ds4_qwen_image_attention.c",
+      "bytes": 5049,
+      "sha256": "963155dad381e682742639806b7fa9885e6bc0e7a972e34e1d18221554d39bac"
+    },
+    {
+      "path": "ds4_qwen_image_dit.c",
+      "bytes": 33100,
+      "sha256": "e682733d1daa0f8cc86313a0b549c6a1266763a310aac488f6d742aa6e44ff84"
+    },
+    {
+      "path": "ds4_qwen_image_dit.h",
+      "bytes": 3583,
+      "sha256": "1e1e076746d583834035e0a672720bb4ae1bf09561d321fb4aa0888f6f78daec"
+    },
+    {
+      "path": "ds4_qwen_image_encoder.c",
+      "bytes": 38000,
+      "sha256": "eedc601b27502367075937007d565eac44e21c53846c7fb180086e716ce14361"
+    },
+    {
+      "path": "ds4_qwen_image_input.c",
+      "bytes": 11235,
+      "sha256": "6b0062963ed4d249e0ca68b56ab19392959686354752e88a3f4ca1cce60ad119"
+    },
+    {
+      "path": "ds4_qwen_image_tokenizer.c",
+      "bytes": 12519,
+      "sha256": "3720c16d62b0acaeb3e34c04e9c5cda02b28ef7a60c68bbade0800101c467900"
+    },
+    {
+      "path": "ds4_qwen_image_vae.c",
+      "bytes": 31985,
+      "sha256": "129b6a15574b59c73ee9380e25d3fdc9042ec3b39b92aeeabfe8cc353df431f7"
+    },
+    {
+      "path": "tests/probe_qwen_image_graph.c",
+      "bytes": 20614,
+      "sha256": "72f82909ff5e77b9d6bbda54bccac8ac7199e97bd6aaafd2fe5d2042d30c0f60"
+    },
+    {
+      "path": "tests/test_executor.c",
+      "bytes": 14504,
+      "sha256": "de9dd73e4831e89908ed01078727c2dcc77f9ace42d43c1028088aedc62b0827"
+    },
+    {
+      "path": "tests/test_executor_cuda.c",
+      "bytes": 5108,
+      "sha256": "84aaf8c0c48605a26279aa7356275d8e0d68cb78b9ee7fedb6635a05732bc20a"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 37890,
+      "sha256": "8d123d8a6ccc29b44c68b7869f1e42811ee837b364a0476ea9b7d6b381fbd5b0"
+    },
+    {
+      "path": "tools/diagnose_qwen_image_encoder.py",
+      "bytes": 8005,
+      "sha256": "a1e99605369db7febee3418017ef7783b14b096ae8c4d8fe6d2e3ae97dd5db03"
+    },
+    {
+      "path": "tools/diagnose_qwen_image_vision.py",
+      "bytes": 8437,
+      "sha256": "c4fc7e32de9d948a5de83e6bc41781e4ae7019ee20d79fcbc85ba675bbdd904e"
+    },
+    {
+      "path": "tools/run_qwen_image_encoder_oracle.py",
+      "bytes": 11946,
+      "sha256": "d1cd9029743646b1466298b11a3cb8103594ac4bf680356c780e67232222fbbe"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "tests/probe_native_suite",
+      "bytes": 2432432,
+      "sha256": "4eb79e4d405663e3a1ef680285bb182475c4729345c401fc2b10a025defe1e97"
+    },
+    {
+      "path": "tests/probe_qwen_image_pipeline",
+      "bytes": 2456544,
+      "sha256": "86d369206ba5cf9ba0dcf1e49c8a90edf7afa3af233ed60445f068945f741e8d"
+    },
+    {
+      "path": "ds4",
+      "bytes": 71455024,
+      "sha256": "be155bde425efa19d53cc3d3f2e25713a4a8ded688c0d3c4bb8add53f31c8980"
+    },
+    {
+      "path": "ds4-server",
+      "bytes": 73714352,
+      "sha256": "fbe222126e1416c96feeff3dec75dfef7ba819e233fa83f7258ff04c4d75d097"
+    },
+    {
+      "path": "ds4-bench",
+      "bytes": 71190856,
+      "sha256": "76d7179593de39194fe47ff77ed7283546238f3e81ebbc28db8d7fe580c5bb02"
+    },
+    {
+      "path": "ds4-eval",
+      "bytes": 71530040,
+      "sha256": "ebf3aedd696c313fd1619c9ae0a512663c0847deb896ee0a81720a5713aefc5c"
+    }
+  ],
+  "logs": [
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/final-host-tests-v5.log",
+      "bytes": 3524,
+      "sha256": "24442f6f00eb141c699eb3d2348f73e56ef55b780cdb25a36e4b4957562affb7"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/final-python-tests-v7.log",
+      "bytes": 6052,
+      "sha256": "ce12f290fea73dbbaf71edcfd3a5445cb3b85230c3e20beb57fc7b5096371662"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/final-numeric-cuda-v4.log",
+      "bytes": 2048,
+      "sha256": "775e2a8c69e3dc991ea19311cdfc3542ddd201f14b245e44a1c5813266884403"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/legacy-executor-cuda-v2.log",
+      "bytes": 1132,
+      "sha256": "09de0ed53bc1a8d0ebcad41cd9b1fed662d46a4df86a8549609e44f7eb746d6a"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/build-current.log",
+      "bytes": 7195,
+      "sha256": "2324c8d0ae6705fe8beaba717cafe600298d925dc98ddfddcf7b669e5c342225"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/scratch-build.log",
+      "bytes": 3644,
+      "sha256": "5be585b30e0295bd1624dd6f8230a487b056d1a883c3631be5d0a53f3829e0e0"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/final-build-v6.log",
+      "bytes": 9511,
+      "sha256": "63289dced94bf7c0bc3ee3b1c0dd5291e48294bb7cd43a2111827d0b54edb8cc"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/final-vae-host-bound-build.log",
+      "bytes": 5618,
+      "sha256": "850da31db54923bab5e01bd2116bfdc5a91f7addbadcce319a2852ed4b815360"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/final-geometry-bounds-build.log",
+      "bytes": 5271,
+      "sha256": "5530ba06d9ead07aae4c8eedb10a780047ec84e8a201b3c7bd7a63c876ba32b8"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/executor-final-cache-faults-v2.log",
+      "bytes": 451,
+      "sha256": "8665743d4bd3aa5b6bea3dcc4dd05d36983114b2c706d69145c3d54945cb75d2"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/gemma-final-faults-v2.log",
+      "bytes": 28,
+      "sha256": "5e2f7bfc631a999bbbd9439eede59059763e92d2076905831a06da7d1a61bb79"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/image-full-final-v2/phase-final.log",
+      "bytes": 1213,
+      "sha256": "c62532b5c9d586dac65ef02436381c65467c390d25853d165e087b0f114f99ca"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/reference-native.log",
+      "bytes": 264,
+      "sha256": "aa3c3423c43e672291739d1cd8f4ea487c880171c02dd43d4ad2d5b5f3c45764"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/corrected-references.log",
+      "bytes": 81,
+      "sha256": "87ad13ea002b4d74ed6825152c592596d3f04c6ed3729c52100f0ee70dc42d48"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/warm-final.log",
+      "bytes": 96,
+      "sha256": "26cc24723370b86e58eaf3472aa0c39b603c817b1e06acdfa388f25ff47268db"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/decode-native.log",
+      "bytes": 3659,
+      "sha256": "f55a36aac1d4d57f0fb98d722328ec4ecc0e132f4b5781f2c256433284bae18c"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/image-phase-final/final-gpu-checks-v2.log",
+      "bytes": 320,
+      "sha256": "4d24dc221646b9a36e231e989b9b8a43964c08fb4ea54813084406c58ab4e2a0"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/finish-after-geometry.log",
+      "bytes": 3262,
+      "sha256": "521f6ace5e3b9f745c5e351c805325a4dbd7a29a28c83dacbf1ca8cf35b2e391"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/single19-text0-replay-v2.log",
+      "bytes": 6013,
+      "sha256": "9aee5670c0b56d8c03ac00f25e2f69eed99c23ad31ebc2e68c77075b7d4c688b"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/single19-text0-full-query-replay.log",
+      "bytes": 4861,
+      "sha256": "a3933d3da2a53ed4ca171131e6ab779bdd4d2636a7f74e15e74834401bd11552"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/bf16-full-query-regression.log",
+      "bytes": 222,
+      "sha256": "e80afc303a4f4f9e42060864c2a85db374487d449017fc9ded7382486a307664"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/resume-final-qualification.log",
+      "bytes": 738,
+      "sha256": "ead5c34dabd86a6c982cbcdfe40556c7b522fb424eb1f5de45b3bb9ecefe75e6"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/pixel-normalization-replay.log",
+      "bytes": 804,
+      "sha256": "09a5b40947a7469978bb8ec186ff1ab1ba6cefda965f63f70ad3658ea31536c5"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/final-python-lint-v2.log",
+      "bytes": 488,
+      "sha256": "67a8a32cd7bd57d7161ce2a51878182c86055d1f9c8de776cf35570af6dc94eb"
+    }
+  ],
+  "static_analysis": {
+    "results": {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-analyzer/results.json",
+      "bytes": 617,
+      "sha256": "9ee26ea662988343337b78b92223d84659d56a9fede219d112e4b9cf3a7f1325"
+    },
+    "scope": "Post-refactor scan of seven C modules",
+    "review": "Six modules without warnings; two reviewed GCC imprecise FP allocation-size diagnostics in bounded Lanczos tap counts."
+  },
+  "not_verified": [
+    "Metal",
+    "ROCm",
+    "TP/distributed",
+    "image batching",
+    "weight streaming",
+    "quantization",
+    "HTTP routing",
+    "Gemma image/video/audio",
+    "T00 human task review"
+  ],
+  "post_refactor_regression": {
+    "path": "docs/performance/native-suite-t11-t12-20261021/review-verification.json",
+    "bytes": 34866,
+    "sha256": "97c24888026161b757decd2bc3716b7695b1d6d74df3623fae39f680ed9bfe13"
+  }
+}

@@ -56,7 +56,8 @@ int main(int argc,char **argv) {
         assert(!ds4_resources_set_budget(resources,DS4_MEMORY_DEVICE,&budget));
         component c={.session=session};
         ds4_execution_group group={.memory.bytes={[DS4_MEMORY_DEVICE]=16u*1024u*1024u},.context=&c,.load=load,.release=release};
-        ds4_execution_step step={.id=1,.groups=1}; ds4_execution_variant variant={&step,1,0,false};
+        ds4_execution_step step = {.id = 1, .groups = 1};
+        ds4_execution_variant variant = {.steps = &step, .step_count = 1};
         ds4_execution_request request={.groups=&group,.group_count=1,.variants=&variant,.variant_count=1,.victims=victims,.victim_count=count};
         ds4_execution_ops ops={.context=&c,.execute=execute,.drain=drain,.commit=commit,.abort=abort_result};
         ds4_execution *job=NULL;

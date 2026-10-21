@@ -1,0 +1,1161 @@
+{
+  "version": 1,
+  "date": "2026-10-21",
+  "verdict": "PASS",
+  "scope": "Post-refactor regression; 54 Gemma texts and 8 image requests plus controlled host-KV and fault/lifetime matrix. Does not replace the original full T00 qualification or human quality gate.",
+  "source_base": "f87c2fe9f16e4379e28e2c0f82b20d609ae50baf",
+  "review": {
+    "path": "docs/architecture/native-suite-t11-t12-clean-code-review-20261021.md",
+    "bytes": 5952,
+    "sha256": "871107137a3be8f2cbbc0cb26c40a079bd8ef53a23aa61b9d20db65ec8bdfb1b"
+  },
+  "sources": [
+    {
+      "path": "ds4_embedding_gemma2.c",
+      "bytes": 25555,
+      "sha256": "92ed9368c942275a847e33d6fe96fda4463de7d3be6f1374463a99d7361d80ca"
+    },
+    {
+      "path": "ds4_embedding_gemma2.h",
+      "bytes": 2445,
+      "sha256": "b283191ac1ef85c62898499d1bac01946027681dd12940669f1b5408103bd2d6"
+    },
+    {
+      "path": "ds4_gemma_tokenizer.c",
+      "bytes": 11016,
+      "sha256": "088fbfa7e09a4b24f3ebd304c0159d14ab4c5bd84f454020163a333756403730"
+    },
+    {
+      "path": "ds4_gemma_tokenizer.h",
+      "bytes": 898,
+      "sha256": "ad4d832ba6e440b3b23f743fca80250e5308f28f0a9470962eedb958cb501a96"
+    },
+    {
+      "path": "ds4_qwen_image_components.h",
+      "bytes": 981,
+      "sha256": "9bbc1bcc07e35b4bf49a3006fabf75231da4f886df0e38d18b3125a2d71ec386"
+    },
+    {
+      "path": "ds4_qwen_image_pipeline.c",
+      "bytes": 24611,
+      "sha256": "b31423274ae98fe0cdfd2464283ee7e384cf2cff79cee24dd123d5dece2f73ae"
+    },
+    {
+      "path": "ds4_qwen_image_pipeline.h",
+      "bytes": 3815,
+      "sha256": "506cd53771e8ddc037fb9180a33f59c03c918e87b53b44b272cdd16cb1dab4f1"
+    },
+    {
+      "path": "ds4_qwen_image_reference.c",
+      "bytes": 7140,
+      "sha256": "baac4c011375397e883bef785dcb99eb2654c0fae9ab9ea02e0e297d2d24bb85"
+    },
+    {
+      "path": "ds4_qwen_image_reference.h",
+      "bytes": 942,
+      "sha256": "8566174b0e9ecf182484728c88b6b5d4aba61a0ac500e32246b0f26559faf03d"
+    },
+    {
+      "path": "tests/probe_native_suite.c",
+      "bytes": 12469,
+      "sha256": "2a6ecf853b6c473fee4b74ea723fd42363c4e07ba49ba3d8517c6a8b5a323d77"
+    },
+    {
+      "path": "tests/probe_qwen_image_pipeline.c",
+      "bytes": 20059,
+      "sha256": "8ec9bf3f0c389a79bc9b67d2e918b27fdacb0576ae4e5a823763cb65f8211be2"
+    },
+    {
+      "path": "tests/test_embedding_gemma2.py",
+      "bytes": 6065,
+      "sha256": "91f525429bdfd93b75b2edffe4f85a7bad9f9721df4aa17048acc046db817747"
+    },
+    {
+      "path": "tests/test_qwen_image_reference.py",
+      "bytes": 2998,
+      "sha256": "5ea8bbcdf9e072359cadd9d766249b0cb72b1dbd4b027f70d3d0b09412ded0f9"
+    },
+    {
+      "path": "tests/test_suite_api.py",
+      "bytes": 3383,
+      "sha256": "5cf2bf49b5ea63315b8e9f9265c34108f0f0343e6d8fc768d345f2c2f2c404d6"
+    },
+    {
+      "path": "tests/test_suite_oracle_attention.py",
+      "bytes": 1796,
+      "sha256": "d6b459398a408538874b213e1604bd5a6860222127295ac37c05551582c8daca"
+    },
+    {
+      "path": "tools/compile_embedding_gemma2.py",
+      "bytes": 4530,
+      "sha256": "99f2b06a1a624aa50745c7f3004381541cb430ea7336c502b2bef23ab8b51ef4"
+    },
+    {
+      "path": "tools/qualify_embedding_gemma2.py",
+      "bytes": 10818,
+      "sha256": "1ba9f70d6526cab8a3b6e4feef732125021c3aaff244daaabfaf739146cc1f12"
+    },
+    {
+      "path": "tools/qualify_qwen_image_pipeline.py",
+      "bytes": 11974,
+      "sha256": "bf9afb589d0a2b4cece2a85588d7cf18614c63eeb0e919bc563be4f8fc59aa98"
+    },
+    {
+      "path": "tools/run_embedding_gemma2_oracle.py",
+      "bytes": 4844,
+      "sha256": "dfa25d8ad903a9b04f6eee9c32a2e6f313a68c1e55792de3914958275bdda01b"
+    },
+    {
+      "path": "tools/run_qwen_image_pipeline_oracle.py",
+      "bytes": 13521,
+      "sha256": "e39dc1d27ddc43c6a75255736edd3d6a0dc61c8ab0a7b0ea7e25ed9bb309f234"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 3358,
+      "sha256": "5d63767085999687f683946cd2b2c1718de5d3f9b7b3dbe19fae57ee31a6dbd7"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 77627,
+      "sha256": "db092e17afa51348543740108b5f40b09721f5306ab316aa8ea0dcdd11580d9e"
+    },
+    {
+      "path": "ds4_executor.c",
+      "bytes": 17452,
+      "sha256": "5e3517f9346718fcd60d7b02f4ebf94fe4127b06c381cf618be534f98fb5a47f"
+    },
+    {
+      "path": "ds4_executor.h",
+      "bytes": 4047,
+      "sha256": "72696fca33935832c35dfaa711039ec0116b1a728cbef1e4c992ad26a98498b2"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 36505,
+      "sha256": "eaf7c8addbb810be3d6475d3821b252a6510637acd01b05b0ecddc5548e9c593"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 8974,
+      "sha256": "ba970b600cb58a5dbe6d40abbd5616591a11d457b51ce665ab89bf5d8d6cb1c6"
+    },
+    {
+      "path": "ds4_numeric_cuda.cu",
+      "bytes": 47458,
+      "sha256": "9e181300fed431ce9d3ff655c05862d0241d92dc64609426b712cf5f4da0af91"
+    },
+    {
+      "path": "ds4_numeric_cudnn.cu",
+      "bytes": 10639,
+      "sha256": "3eb0783ac2033849522034b20135cfe72070fc8c21ad08660b8d44b7b77565da"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 2856,
+      "sha256": "b35fe405c4f5aa1cc160d0e9a0798c8d254376b942edb4f630267c9deab04b50"
+    },
+    {
+      "path": "ds4_qwen_image_attention.c",
+      "bytes": 5049,
+      "sha256": "963155dad381e682742639806b7fa9885e6bc0e7a972e34e1d18221554d39bac"
+    },
+    {
+      "path": "ds4_qwen_image_dit.c",
+      "bytes": 33100,
+      "sha256": "e682733d1daa0f8cc86313a0b549c6a1266763a310aac488f6d742aa6e44ff84"
+    },
+    {
+      "path": "ds4_qwen_image_dit.h",
+      "bytes": 3583,
+      "sha256": "1e1e076746d583834035e0a672720bb4ae1bf09561d321fb4aa0888f6f78daec"
+    },
+    {
+      "path": "ds4_qwen_image_encoder.c",
+      "bytes": 38000,
+      "sha256": "eedc601b27502367075937007d565eac44e21c53846c7fb180086e716ce14361"
+    },
+    {
+      "path": "ds4_qwen_image_input.c",
+      "bytes": 11235,
+      "sha256": "6b0062963ed4d249e0ca68b56ab19392959686354752e88a3f4ca1cce60ad119"
+    },
+    {
+      "path": "ds4_qwen_image_tokenizer.c",
+      "bytes": 12519,
+      "sha256": "3720c16d62b0acaeb3e34c04e9c5cda02b28ef7a60c68bbade0800101c467900"
+    },
+    {
+      "path": "ds4_qwen_image_vae.c",
+      "bytes": 31985,
+      "sha256": "129b6a15574b59c73ee9380e25d3fdc9042ec3b39b92aeeabfe8cc353df431f7"
+    },
+    {
+      "path": "tests/probe_qwen_image_graph.c",
+      "bytes": 20614,
+      "sha256": "72f82909ff5e77b9d6bbda54bccac8ac7199e97bd6aaafd2fe5d2042d30c0f60"
+    },
+    {
+      "path": "tests/test_executor.c",
+      "bytes": 14504,
+      "sha256": "de9dd73e4831e89908ed01078727c2dcc77f9ace42d43c1028088aedc62b0827"
+    },
+    {
+      "path": "tests/test_executor_cuda.c",
+      "bytes": 5108,
+      "sha256": "84aaf8c0c48605a26279aa7356275d8e0d68cb78b9ee7fedb6635a05732bc20a"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 37890,
+      "sha256": "8d123d8a6ccc29b44c68b7869f1e42811ee837b364a0476ea9b7d6b381fbd5b0"
+    },
+    {
+      "path": "tools/diagnose_qwen_image_encoder.py",
+      "bytes": 8005,
+      "sha256": "a1e99605369db7febee3418017ef7783b14b096ae8c4d8fe6d2e3ae97dd5db03"
+    },
+    {
+      "path": "tools/diagnose_qwen_image_vision.py",
+      "bytes": 8437,
+      "sha256": "c4fc7e32de9d948a5de83e6bc41781e4ae7019ee20d79fcbc85ba675bbdd904e"
+    },
+    {
+      "path": "tools/run_qwen_image_encoder_oracle.py",
+      "bytes": 11946,
+      "sha256": "d1cd9029743646b1466298b11a3cb8103594ac4bf680356c780e67232222fbbe"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "tests/probe_native_suite",
+      "bytes": 2432432,
+      "sha256": "4eb79e4d405663e3a1ef680285bb182475c4729345c401fc2b10a025defe1e97"
+    },
+    {
+      "path": "tests/probe_qwen_image_pipeline",
+      "bytes": 2456544,
+      "sha256": "86d369206ba5cf9ba0dcf1e49c8a90edf7afa3af233ed60445f068945f741e8d"
+    },
+    {
+      "path": "ds4",
+      "bytes": 71455024,
+      "sha256": "be155bde425efa19d53cc3d3f2e25713a4a8ded688c0d3c4bb8add53f31c8980"
+    },
+    {
+      "path": "ds4-server",
+      "bytes": 73714352,
+      "sha256": "fbe222126e1416c96feeff3dec75dfef7ba819e233fa83f7258ff04c4d75d097"
+    },
+    {
+      "path": "ds4-bench",
+      "bytes": 71190856,
+      "sha256": "76d7179593de39194fe47ff77ed7283546238f3e81ebbc28db8d7fe580c5bb02"
+    },
+    {
+      "path": "ds4-eval",
+      "bytes": 71530040,
+      "sha256": "ebf3aedd696c313fd1619c9ae0a512663c0847deb896ee0a81720a5713aefc5c"
+    }
+  ],
+  "regression_manifest": {
+    "path": "performance-results/native-suite-t11-t12-20261021/review-v1/verification.json",
+    "bytes": 903145,
+    "sha256": "c63d3deb35da97863cfe2248f7738cb6397b91609c79f6e193d0975b9e9d6016"
+  },
+  "runs": [
+    {
+      "name": "build",
+      "returncode": 0,
+      "seconds": 32.09521640499588
+    },
+    {
+      "name": "host",
+      "returncode": 0,
+      "seconds": 1.578957324003568
+    },
+    {
+      "name": "python",
+      "returncode": 0,
+      "seconds": 5.849343788999249
+    },
+    {
+      "name": "numeric-cuda",
+      "returncode": 0,
+      "seconds": 2.722080152001581
+    },
+    {
+      "name": "gemma",
+      "returncode": 0,
+      "seconds": 5.144871444004821
+    },
+    {
+      "name": "gemma-faults",
+      "returncode": 0,
+      "seconds": 3.8656547809951007
+    },
+    {
+      "name": "image",
+      "returncode": 0,
+      "seconds": 416.6261703650016
+    },
+    {
+      "name": "host-cache",
+      "returncode": 0,
+      "seconds": 169.94599062799534
+    },
+    {
+      "name": "legacy-cuda",
+      "returncode": 0,
+      "seconds": 12.242254987002525
+    }
+  ],
+  "logs": [
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/build.log",
+      "bytes": 11363,
+      "sha256": "e0e476ab9c19ffa645d669fa033e8e0199c6f7b8186594cafed34bd5128b6908"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/host.log",
+      "bytes": 5146,
+      "sha256": "c37a6c8549b28f154408e7cbfc38a69b85ba63298774a2bf19600ce8def47d99"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/python.log",
+      "bytes": 7601,
+      "sha256": "e02757da2e909b4f0afb9c87d510546a551e653469ff05732660d37671f4eee4"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/numeric-cuda.log",
+      "bytes": 2048,
+      "sha256": "c337d72712332623ae991c8b72bf871826795c76563e441986a1596880d7bfaf"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/gemma.log",
+      "bytes": 28,
+      "sha256": "43d4f4faa800ca2dd3603151a72bd914518a948dfe3905c101e8ac17c8fe95b1"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/gemma-faults.log",
+      "bytes": 28,
+      "sha256": "5e2f7bfc631a999bbbd9439eede59059763e92d2076905831a06da7d1a61bb79"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/image.log",
+      "bytes": 180,
+      "sha256": "368cb51dcb21d097aa035dce3bead83477427765cb01708251b412267d6ee0cc"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/host-cache.log",
+      "bytes": 69,
+      "sha256": "3abd6c26eb65902a64b9b45856ac2d009e1666fe8337a36ded3107bd076cc35d"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/legacy-cuda.log",
+      "bytes": 1132,
+      "sha256": "85e8eee896a5d7af7c987a2a423453237bb0aa502f2923860ea2957fa443e1bc"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/tokenizer-pinned.log",
+      "bytes": 414,
+      "sha256": "3542690fd1556fb051fd7425c30f2916f8bbd4b0a735a11cb33b342a9959fefa"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/executor-asan.log",
+      "bytes": 96,
+      "sha256": "aa06e6bb2585028aed8617e8bf5e1f006dac675b3eb4e0aadd941e73330f4bbd"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/ruff-check.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/ruff-format.log",
+      "bytes": 27,
+      "sha256": "04eb0d6e6734823dcd2b2b704729e976f683df7a8f334da7216520ef1cb319bf"
+    }
+  ],
+  "host": {
+    "runtime": "PASS",
+    "resources": "PASS",
+    "executor": "PASS",
+    "bundle_tests": 11,
+    "input_output_lifetime": "PASS",
+    "read_queue": "PASS",
+    "qwen_expert_policy": "PASS",
+    "product_text_tests": 4
+  },
+  "python": {
+    "tests": 62,
+    "skipped": 2,
+    "skips": [
+      "CUDA-only query geometry, exercised by the CUDA suite",
+      "pinned processor env missing in initial batch, rerun separately with both tests PASS"
+    ],
+    "pinned_tokenizer_rerun": 2
+  },
+  "numeric_cuda": {
+    "tests": 19,
+    "verdict": "PASS"
+  },
+  "gemma": {
+    "cases": 54,
+    "bit_exact_files": 1514,
+    "vectors_and_tokens": "BIT_EXACT",
+    "hidden_boundaries": "BIT_EXACT",
+    "fault_cancel_lifetime": "PASS",
+    "warm_forward": {
+      "samples": [
+        0.009260577,
+        0.008273083,
+        0.008366644000000001,
+        0.008076572999999976,
+        0.008179323
+      ],
+      "median": 0.008273083,
+      "cv_sample": 0.05645461449082248,
+      "verdict": "NEED_MORE_DATA",
+      "scope": "Post-refactor regression, not a paired optimization experiment"
+    }
+  },
+  "image": {
+    "cases": [
+      {
+        "id": "reference",
+        "bit_exact": true,
+        "files_compared": 11,
+        "runtime": {
+          "width": 256,
+          "height": 256,
+          "references": 1,
+          "seed": 20261020,
+          "variant": 1,
+          "victims": 0,
+          "total_seconds": 14.010119878,
+          "prepare_seconds": 0.001361798,
+          "load_seconds": [
+            4.984209068,
+            4.659628685,
+            0.645645891
+          ],
+          "phase_seconds": [
+            0.322274289,
+            0.160171565,
+            2.907917047,
+            0.228036315
+          ],
+          "loads": [
+            1,
+            1,
+            2
+          ],
+          "releases": [
+            1,
+            1,
+            1
+          ],
+          "peak_device_owned": 15071931680,
+          "live_device_owned": 684000512,
+          "pre_run_device_owned": 8519680,
+          "previous_device_peak": 8519680,
+          "plan_device": 15080919776,
+          "plan_host": 13647872,
+          "peak_bound_checked": true,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 0,
+          "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+          "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+          "reference_metadata": [
+            {
+              "latent_width": 16,
+              "latent_height": 16,
+              "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+            }
+          ],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        }
+      },
+      {
+        "id": "text",
+        "bit_exact": true,
+        "files_compared": 10,
+        "runtime": {
+          "width": 256,
+          "height": 256,
+          "references": 0,
+          "seed": 20261020,
+          "variant": 1,
+          "victims": 0,
+          "total_seconds": 12.149874511,
+          "prepare_seconds": 2.7388e-05,
+          "load_seconds": [
+            4.592564091,
+            4.694816932,
+            0.0
+          ],
+          "phase_seconds": [
+            0.0,
+            0.063093108,
+            2.512969201,
+            0.194547308
+          ],
+          "loads": [
+            1,
+            1,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            0
+          ],
+          "peak_device_owned": 15071931680,
+          "live_device_owned": 684000512,
+          "pre_run_device_owned": 684000512,
+          "previous_device_peak": 15071931680,
+          "plan_device": 14393008128,
+          "plan_host": 1904672,
+          "peak_bound_checked": false,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 0,
+          "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+          "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+          "reference_metadata": [],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        }
+      },
+      {
+        "id": "multi",
+        "bit_exact": true,
+        "files_compared": 12,
+        "runtime": {
+          "width": 256,
+          "height": 256,
+          "references": 2,
+          "seed": 20261020,
+          "variant": 1,
+          "victims": 0,
+          "total_seconds": 13.845848892,
+          "prepare_seconds": 0.002492821,
+          "load_seconds": [
+            5.002585786,
+            4.700597923,
+            0.0
+          ],
+          "phase_seconds": [
+            0.195230891,
+            0.179289846,
+            3.477557538,
+            0.190519078
+          ],
+          "loads": [
+            1,
+            1,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            0
+          ],
+          "peak_device_owned": 15759133264,
+          "live_device_owned": 684000512,
+          "pre_run_device_owned": 684000512,
+          "previous_device_peak": 15071931680,
+          "plan_device": 15113519776,
+          "plan_host": 26181632,
+          "peak_bound_checked": true,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 0,
+          "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+          "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+          "reference_metadata": [
+            {
+              "latent_width": 16,
+              "latent_height": 16,
+              "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+            },
+            {
+              "latent_width": 16,
+              "latent_height": 16,
+              "sha256": "37453204cc19f156daa9dcf1244c1368d4da68d4d356923f72238cb829d66b99"
+            }
+          ],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        }
+      },
+      {
+        "id": "reversed",
+        "bit_exact": true,
+        "files_compared": 12,
+        "runtime": {
+          "width": 256,
+          "height": 256,
+          "references": 2,
+          "seed": 20261020,
+          "variant": 1,
+          "victims": 0,
+          "total_seconds": 13.769128142,
+          "prepare_seconds": 0.001884732,
+          "load_seconds": [
+            4.992917281,
+            4.682497311,
+            0.0
+          ],
+          "phase_seconds": [
+            0.199281943,
+            0.172237031,
+            3.427259783,
+            0.193921622
+          ],
+          "loads": [
+            1,
+            1,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            0
+          ],
+          "peak_device_owned": 15759133264,
+          "live_device_owned": 684000512,
+          "pre_run_device_owned": 684000512,
+          "previous_device_peak": 15759133264,
+          "plan_device": 15113519776,
+          "plan_host": 26181632,
+          "peak_bound_checked": false,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 0,
+          "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+          "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+          "reference_metadata": [
+            {
+              "latent_width": 16,
+              "latent_height": 16,
+              "sha256": "37453204cc19f156daa9dcf1244c1368d4da68d4d356923f72238cb829d66b99"
+            },
+            {
+              "latent_width": 16,
+              "latent_height": 16,
+              "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+            }
+          ],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        }
+      },
+      {
+        "id": "rgba",
+        "bit_exact": true,
+        "files_compared": 11,
+        "runtime": {
+          "width": 256,
+          "height": 256,
+          "references": 1,
+          "seed": 20261020,
+          "variant": 1,
+          "victims": 0,
+          "total_seconds": 12.969481344,
+          "prepare_seconds": 0.000672312,
+          "load_seconds": [
+            4.985498961,
+            4.691922344,
+            0.0
+          ],
+          "phase_seconds": [
+            0.095461916,
+            0.152744694,
+            2.760693461,
+            0.190261068
+          ],
+          "loads": [
+            1,
+            1,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            0
+          ],
+          "peak_device_owned": 15759133264,
+          "live_device_owned": 684000512,
+          "pre_run_device_owned": 684000512,
+          "previous_device_peak": 15759133264,
+          "plan_device": 15080919776,
+          "plan_host": 13647872,
+          "peak_bound_checked": false,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 0,
+          "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+          "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+          "reference_metadata": [
+            {
+              "latent_width": 16,
+              "latent_height": 16,
+              "sha256": "b47943f25b685bc1f38b785e8fa29c7bed1108561e5af80e017fcf503eecc066"
+            }
+          ],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        }
+      },
+      {
+        "id": "resized-reference",
+        "bit_exact": true,
+        "files_compared": 11,
+        "runtime": {
+          "width": 256,
+          "height": 256,
+          "references": 1,
+          "seed": 20261020,
+          "variant": 1,
+          "victims": 0,
+          "total_seconds": 13.136213625,
+          "prepare_seconds": 0.001756729,
+          "load_seconds": [
+            4.977288134,
+            4.680972423,
+            0.0
+          ],
+          "phase_seconds": [
+            0.096747181,
+            0.164325204,
+            2.926877644,
+            0.191631059
+          ],
+          "loads": [
+            1,
+            1,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            0
+          ],
+          "peak_device_owned": 15759133264,
+          "live_device_owned": 684000512,
+          "pre_run_device_owned": 684000512,
+          "previous_device_peak": 15759133264,
+          "plan_device": 15084190112,
+          "plan_host": 14804480,
+          "peak_bound_checked": false,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 256,
+          "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+          "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+          "reference_metadata": [
+            {
+              "latent_width": 20,
+              "latent_height": 14,
+              "sha256": "c2ded60da1c0ec92caab63dec1c4e2c10efaa0faf7953af5b9ddb2ad971100e4"
+            }
+          ],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        }
+      },
+      {
+        "id": "qwen-heldout-19-20261021",
+        "bit_exact": true,
+        "files_compared": 11,
+        "runtime": {
+          "width": 1536,
+          "height": 1024,
+          "references": 1,
+          "seed": 20261021,
+          "variant": 1,
+          "victims": 0,
+          "total_seconds": 68.761307187,
+          "prepare_seconds": 0.038505163,
+          "load_seconds": [
+            4.982867794,
+            4.685203965,
+            0.0
+          ],
+          "phase_seconds": [
+            0.529078644,
+            0.922959148,
+            54.935084087,
+            2.572066379
+          ],
+          "loads": [
+            1,
+            1,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            0
+          ],
+          "peak_device_owned": 19776610560,
+          "live_device_owned": 684000512,
+          "pre_run_device_owned": 684000512,
+          "previous_device_peak": 15759133264,
+          "plan_device": 19472076800,
+          "plan_host": 200887296,
+          "peak_bound_checked": true,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 1024,
+          "prompt_sha256": "79b076ced8d3615373af644a8168b9427ef565893b65ba2460f6bb3b9fce6c6b",
+          "noise_sha256": "4e721be796c574881f6234799f5bd41daec329070784e80047ff90550aa90f50",
+          "reference_metadata": [
+            {
+              "latent_width": 74,
+              "latent_height": 56,
+              "sha256": "efe9f30a89bbb4017f06d329f32e6965ae5facfdbd94811d9c347c842164a3d4"
+            }
+          ],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        }
+      },
+      {
+        "id": "qwen-heldout-20-20261020",
+        "bit_exact": true,
+        "files_compared": 12,
+        "runtime": {
+          "width": 1024,
+          "height": 1536,
+          "references": 2,
+          "seed": 20261020,
+          "variant": 1,
+          "victims": 0,
+          "total_seconds": 85.988267385,
+          "prepare_seconds": 0.059274527,
+          "load_seconds": [
+            5.041882313,
+            4.693280172,
+            0.0
+          ],
+          "phase_seconds": [
+            1.052842218,
+            1.670194111,
+            70.85819479,
+            2.521468976
+          ],
+          "loads": [
+            1,
+            1,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            0
+          ],
+          "peak_device_owned": 22902113536,
+          "live_device_owned": 684000512,
+          "pre_run_device_owned": 684000512,
+          "previous_device_peak": 19776610560,
+          "plan_device": 22723084288,
+          "plan_host": 400922624,
+          "peak_bound_checked": true,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 1024,
+          "prompt_sha256": "e66fedb34bfbe773973c3e179b031a52c587cc129856c98fc172b129d289e540",
+          "noise_sha256": "ea09f248d309afa1b95feadaf3e44e2745228cc33187565373b36776cae7afe8",
+          "reference_metadata": [
+            {
+              "latent_width": 74,
+              "latent_height": 56,
+              "sha256": "efe9f30a89bbb4017f06d329f32e6965ae5facfdbd94811d9c347c842164a3d4"
+            },
+            {
+              "latent_width": 74,
+              "latent_height": 56,
+              "sha256": "958bc5f8691b06a650b6dc6de2760857e556966bbfe2522989a1b4c3c4a12cbb"
+            }
+          ],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        }
+      }
+    ],
+    "latent_boundaries": 64,
+    "conditioning_references_latents_rgba": "BIT_EXACT",
+    "fault_cancel_restore_lifetime": "PASS",
+    "warm_whole_operation": {
+      "samples": [
+        13.18870811299712,
+        13.078474062000168,
+        13.022443997993832,
+        13.085472874001425,
+        13.22894826099946
+      ],
+      "median": 13.085472874001425,
+      "cv_sample": 0.00649180103519817,
+      "verdict": "STABLE",
+      "scope": "Post-refactor regression, not a paired optimization experiment"
+    },
+    "host_cache": {
+      "bit_exact": true,
+      "runtime": {
+        "width": 1024,
+        "height": 1536,
+        "references": 2,
+        "seed": 20261020,
+        "variant": 3,
+        "victims": 0,
+        "total_seconds": 97.88521932,
+        "prepare_seconds": 0.067070167,
+        "load_seconds": [
+          5.007401845,
+          4.735307021,
+          0.742234462
+        ],
+        "phase_seconds": [
+          1.285110138,
+          1.711015416,
+          81.648964428,
+          2.581662377
+        ],
+        "loads": [
+          1,
+          1,
+          2
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 17864556544,
+        "live_device_owned": 684000512,
+        "pre_run_device_owned": 8519680,
+        "previous_device_peak": 8519680,
+        "plan_device": 18361008128,
+        "plan_host": 4371294328,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 1024,
+        "prompt_sha256": "e66fedb34bfbe773973c3e179b031a52c587cc129856c98fc172b129d289e540",
+        "noise_sha256": "ea09f248d309afa1b95feadaf3e44e2745228cc33187565373b36776cae7afe8",
+        "reference_metadata": [
+          {
+            "latent_width": 74,
+            "latent_height": 56,
+            "sha256": "efe9f30a89bbb4017f06d329f32e6965ae5facfdbd94811d9c347c842164a3d4"
+          },
+          {
+            "latent_width": 74,
+            "latent_height": 56,
+            "sha256": "958bc5f8691b06a650b6dc6de2760857e556966bbfe2522989a1b4c3c4a12cbb"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      }
+    }
+  },
+  "legacy_cuda": {
+    "model": "Qwen3.8-27B-UD-Q4_K_S",
+    "executor_modes": [
+      0,
+      1,
+      2
+    ],
+    "continuation": "BIT_EXACT"
+  },
+  "asan_ubsan": {
+    "scope": "Executor host fault/cancellation/recovery matrix",
+    "verdict": "PASS"
+  },
+  "lint": {
+    "files": [
+      "tests/test_embedding_gemma2.py",
+      "tests/test_qwen_image_reference.py",
+      "tests/test_suite_api.py",
+      "tests/test_suite_oracle_attention.py",
+      "tools/compile_embedding_gemma2.py",
+      "tools/qualify_embedding_gemma2.py",
+      "tools/qualify_qwen_image_pipeline.py",
+      "tools/run_embedding_gemma2_oracle.py",
+      "tools/run_qwen_image_pipeline_oracle.py",
+      "tests/test_suite_numeric.py",
+      "tools/diagnose_qwen_image_encoder.py",
+      "tools/diagnose_qwen_image_vision.py",
+      "tools/run_qwen_image_encoder_oracle.py"
+    ],
+    "runs": [
+      {
+        "command": [
+          "agent/.venv/bin/python",
+          "-m",
+          "ruff",
+          "check",
+          "tests/test_embedding_gemma2.py",
+          "tests/test_qwen_image_reference.py",
+          "tests/test_suite_api.py",
+          "tests/test_suite_oracle_attention.py",
+          "tools/compile_embedding_gemma2.py",
+          "tools/qualify_embedding_gemma2.py",
+          "tools/qualify_qwen_image_pipeline.py",
+          "tools/run_embedding_gemma2_oracle.py",
+          "tools/run_qwen_image_pipeline_oracle.py",
+          "tests/test_suite_numeric.py",
+          "tools/diagnose_qwen_image_encoder.py",
+          "tools/diagnose_qwen_image_vision.py",
+          "tools/run_qwen_image_encoder_oracle.py"
+        ],
+        "returncode": 0
+      },
+      {
+        "command": [
+          "agent/.venv/bin/python",
+          "-m",
+          "ruff",
+          "format",
+          "--check",
+          "tests/test_embedding_gemma2.py",
+          "tests/test_qwen_image_reference.py",
+          "tests/test_suite_api.py",
+          "tests/test_suite_oracle_attention.py",
+          "tools/compile_embedding_gemma2.py",
+          "tools/qualify_embedding_gemma2.py",
+          "tools/qualify_qwen_image_pipeline.py",
+          "tools/run_embedding_gemma2_oracle.py",
+          "tools/run_qwen_image_pipeline_oracle.py",
+          "tests/test_suite_numeric.py",
+          "tools/diagnose_qwen_image_encoder.py",
+          "tools/diagnose_qwen_image_vision.py",
+          "tools/run_qwen_image_encoder_oracle.py"
+        ],
+        "returncode": 0
+      }
+    ]
+  },
+  "analyzer": {
+    "results": {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-analyzer/results.json",
+      "bytes": 617,
+      "sha256": "9ee26ea662988343337b78b92223d84659d56a9fede219d112e4b9cf3a7f1325"
+    },
+    "reviewed_warnings": 2,
+    "reason": "Only GCC imprecise floating-point allocation-size diagnostics in Lanczos; bounded, rounded-up tap count and pixel-exact tests. Other six modules have no warnings."
+  },
+  "header_comment_rebuild": {
+    "identity": {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/header-comment-binary-identity.json",
+      "bytes": 160,
+      "sha256": "0507f6040b42e1835553605389c8515b74f670d7b9f07caa101d70758d7ff64a"
+    },
+    "log": {
+      "path": "performance-results/native-suite-t11-t12-20261021/review-v1/header-comment-build.log",
+      "bytes": 6470,
+      "sha256": "c0eb2da612cff9668b2527c9a123bcfe13817238e809376fb975f0cea4fe19bc"
+    }
+  },
+  "t00_tolerances": "UNCHANGED",
+  "gate_status": {
+    "T11": "IN_PROGRESS: quality gate unchanged",
+    "T12": "DONE: local CUDA text gate"
+  }
+}
