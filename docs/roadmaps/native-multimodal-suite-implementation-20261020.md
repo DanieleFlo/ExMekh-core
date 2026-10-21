@@ -346,13 +346,13 @@ Qualifica locale: RGB/RGBA/trasparente 64×96, RGBA 256×768, encode normalizzat
 
 **Aree:** `ds4_server.c`, risorse testuali/configurazioni del dominio e suite HTTP.
 
-## 22. T18 — Client semplice e integrazione ExMekh
+## 22. T18 — Client semplice e integrazione ExMekh-lib
 
 **Dipendenze:** T17. **Priorità:** alta. **Stato:** `PLANNED`.
 
 - [ ] `T18.1` Fornire esempi con un solo client/base URL e chiamate images/embeddings per nome modello. Nessun comando load/unload/checkpoint richiesto all'utente.
 - [ ] `T18.2` Fornire helper opzionale per embeddings multimodali che gestisce file/media, ordine e serializzazione; mantenere gli embedding testo usabili con SDK OpenAI ordinario.
-- [ ] `T18.3` Integrare le capability nel client tipizzato ExMekh esistente senza creare un secondo frontend o modificare direttamente wheel compilate. Se serve una modifica alla libreria sorgente esterna, registrarla come dipendenza esplicita con contratto e test.
+- [ ] `T18.3` Integrare le capability nel client tipizzato ExMekh esistente senza creare un secondo frontend o modificare direttamente wheel compilate. Se serve una modifica alla libreria sorgente esterna, registrarla come dipendenza esplicita con contratto e test. Nel task "Funzionalità extra" prensente file "exmekh_lib/todo.md" del client, sono scritte alcune specifice me la modifca sul client stesso.
 - [ ] `T18.4` Collegare tool esplicitamente registrati di generazione/editing/embedding alle API; risultato strutturato con media ID, recipe, seed e dimensioni.
 - [ ] `T18.5` Mostrare i media con il percorso UI già previsto e mantenere la UI responsiva. L'analisi dei pixel da parte del LLM rimane una nuova invocazione esplicita del suo encoder.
 - [ ] `T18.6` Verificare che client e frontend non debbano sapere se il gestore ha tenuto la KV, parcheggiato la sessione o scaricato i pesi.

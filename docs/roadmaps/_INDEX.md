@@ -258,7 +258,7 @@ Una sola istanza DS4 deve servire LLM, Qwen-Image-2.1-Turbo ed EmbeddingGemma 2,
 - righe 307–319: **19. T15 — Encoder audio EmbeddingGemma 2** — **Dipendenze:** T12, T13.
 - righe 320–333: **20. T16 — Embedding multimodali composti e piano selettivo** — **Dipendenze:** T12, T14, T15.
 - righe 334–348: **21. T17 — Registro modelli, HTTP e gestione dei risultati** — **Dipendenze:** T01, T05, T11, T16.
-- righe 349–363: **22. T18 — Client semplice e integrazione ExMekh** — **Dipendenze:** T17.
+- righe 349–363: **22. T18 — Client semplice e integrazione ExMekh-lib** — **Dipendenze:** T17.
 - righe 364–380: **23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo** — **Dipendenze:** T05, T07, T11, T16, T17.
 - righe 381–395: **24. T20 — Quantizzazione e ottimizzazioni numeriche misurate** — **Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming.
 - righe 396–410: **25. T21 — Qualificazione integrata, guasti e regressioni** — **Dipendenze:** T17, T18, T19; tutti i profili promossi da T20.
