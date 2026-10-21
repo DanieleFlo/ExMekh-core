@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza anticipare l'inferenza dei nuovi modelli o promuovere profili quantizzati.
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md); T09–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza anticipare l'inferenza dei nuovi modelli o promuovere profili quantizzati.
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -177,31 +177,41 @@ Evidenze e comandi nel [report T05–T06](../performance/native-suite-t05-t06-20
 
 ## 11. T07 — Primitive numeriche e kernel CUDA comuni
 
-**Dipendenze:** T00, T02, T06. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T00, T02, T06. **Priorità:** alta. **Stato:** `DONE`.
 
-- [ ] `T07.1` Estrarre le shape reali dei due modelli e mappare ogni operazione a primitive DS4 già disponibili, cuBLAS o kernel mancante. Separare workload encoder/DiT dal decode GEMV dei LLM.
-- [ ] `T07.2` Fornire GEMM BF16/FP32 con accumulazioni dichiarate, dequantizzazione bounded e dispatch per shape. TF32/fast math hanno gate separati e non possono cambiare silenziosamente il profilo numerico.
-- [ ] `T07.3` Implementare/testare RMSNorm a scala diretta e zero-centered separatamente, norm senza scala, GELU tanh/esatta, SwiGLU, residui/gating e RoPE con le rispettive convenzioni.
-- [ ] `T07.4` Implementare attention tiled/segmentata con softmax online, GQA/MQA, padding e scale esplicite: causale Qwen3-VL, block-causal DiT, bidirezionale locale/full Gemma, forme audio/vision richieste.
-- [ ] `T07.5` Coprire head dimension 128/256/512 e confini di finestra, batch e lunghezze non multiple del tile; evitare la matrice N×N nel percorso di produzione.
-- [ ] `T07.6` Fornire convoluzioni e operatori audio/VAE mancanti solo dopo inventario, con reference piccoli e oracle indipendenti. Valutare prima librerie native già presenti e costo di nuove dipendenze C.
-- [ ] `T07.7` Per ciascun nuovo kernel registrare fonte Unsloth/llama/altro, differenze di dtype/layout/hardware, ipotesi, output completo e benchmark reale. Nessuna trasposizione meccanica di Triton o C++ nel core.
+- [x] `T07.1` Estrarre le shape reali dei due modelli e mappare ogni operazione a primitive DS4 già disponibili, cuBLAS o kernel mancante. Separare workload encoder/DiT dal decode GEMV dei LLM.
+- [x] `T07.2` Fornire GEMM BF16/FP32 con accumulazioni dichiarate, dequantizzazione bounded e dispatch per shape. TF32/fast math hanno gate separati e non possono cambiare silenziosamente il profilo numerico.
+- [x] `T07.3` Implementare/testare RMSNorm a scala diretta e zero-centered separatamente, norm senza scala, GELU tanh/esatta, SwiGLU, residui/gating e RoPE con le rispettive convenzioni.
+- [x] `T07.4` Implementare attention tiled/segmentata con softmax online, GQA/MQA, padding e scale esplicite: causale Qwen3-VL, block-causal DiT, bidirezionale locale/full Gemma, forme audio/vision richieste.
+- [x] `T07.5` Coprire head dimension 128/256/512 e confini di finestra, batch e lunghezze non multiple del tile; evitare la matrice N×N nel percorso di produzione.
+- [x] `T07.6` Fornire convoluzioni e operatori audio/VAE mancanti solo dopo inventario, con reference piccoli e oracle indipendenti. Valutare prima librerie native già presenti e costo di nuove dipendenze C.
+- [x] `T07.7` Per ciascun nuovo kernel registrare fonte Unsloth/llama/altro, differenze di dtype/layout/hardware, ipotesi, output completo e benchmark reale. Nessuna trasposizione meccanica di Triton o C++ nel core.
 
 **Gate di completamento:** tutte le primitive necessarie hanno reference indipendente, zero NaN/Inf e soglie T00 rispettate su shape reali e casi limite. Gemma non attraversa fallback FP16. Build sm_86 e reference CPU verdi; nessuna regressione sulle primitive LLM condivise. Le performance vengono misurate dopo la correttezza.
+
+Qualifica: reference CPU e CUDA RTX 3090 sm_86, profilo numerico esplicito;
+head geometry reali Qwen/Gemma e confini 257/513 verificati. Librerie suite
+separate dal link legacy; misure instabili non promuovono speedup.
+Evidenze, dipendenze native e limiti nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md).
 
 **Aree:** `ds4_gpu.h`, backend CUDA e moduli numerici specifici; nessun dettaglio kernel nel protocollo HTTP.
 
 ## 12. T08 — Encoder Qwen3-VL per Qwen Image
 
-**Dipendenze:** T06, T07. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T06, T07. **Priorità:** alta. **Stato:** `DONE`.
 
-- [ ] `T08.1` Implementare tokenizer e template esatti del bundle image, padding e token di sistema esclusi dall'output; conservare prompt originali e parametri effettivi.
-- [ ] `T08.2` Portare il backbone Qwen3-VL previsto dal checkpoint, senza riusare per equivalenza il Qwen27 conversazionale. Includere norm, attention, mRoPE e hidden state richiesti.
-- [ ] `T08.3` Implementare vision/deepstack, preprocessing e ordine delle reference. Per RGBA verificare compositing sul bianco solo nel ramo vision.
-- [ ] `T08.4` Esportare gli hidden state pre-normalizzazione finale come nell'oracle image; test esplicito che distingua output pre/post norm.
-- [ ] `T08.5` Descrivere lifetime di layer/gruppi, output conditioning e cache temporanee. Rilasciare un gruppo soltanto dopo il suo ultimo uso effettivo.
+- [x] `T08.1` Implementare tokenizer e template esatti del bundle image, padding e token di sistema esclusi dall'output; conservare prompt originali e parametri effettivi.
+- [x] `T08.2` Portare il backbone Qwen3-VL previsto dal checkpoint, senza riusare per equivalenza il Qwen27 conversazionale. Includere norm, attention, mRoPE e hidden state richiesti.
+- [x] `T08.3` Implementare vision/deepstack, preprocessing e ordine delle reference. Per RGBA verificare compositing sul bianco solo nel ramo vision.
+- [x] `T08.4` Esportare gli hidden state pre-normalizzazione finale come nell'oracle image; test esplicito che distingua output pre/post norm.
+- [x] `T08.5` Descrivere lifetime di layer/gruppi, output conditioning e cache temporanee. Rilasciare un gruppo soltanto dopo il suo ultimo uso effettivo.
 
 **Gate di completamento:** token, posizioni, maschere, shape e hidden state coincidono con le fixture T00 entro le tolleranze fissate; testo, una reference, multi-reference e RGBA verificati. Il riordino delle reference produce il conditioning corrispondente. Nessuna generazione autoregressiva superflua dell'encoder.
+
+Qualifica: richieste seriali native, otto casi completi e padding a sinistra;
+conditioning e confini confrontati con oracle senza allargare T00.
+Batching non qualificato, DiT/VAE e HTTP restano nei task successivi.
+Evidenze nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md).
 
 **Artefatti:** adapter encoder e dump intermedi, inclusa fixture sensibile alla norm finale.
 
@@ -473,4 +483,4 @@ Devono essere dimostrati: generazione/editing/RGBA nativi; embedding nativi dell
 
 La matrice dei backend e delle famiglie deve distinguere il supporto architetturale dalla qualificazione sperimentale. Funzioni richieste sul target di rilascio non possono essere omesse con `NOT_VERIFIED`; hardware aggiuntivo non disponibile resta esplicitamente fuori dalla dichiarazione di qualificazione, senza attribuirgli risultati della 3090.
 
-Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. Nessun nuovo endpoint image/embedding o kernel dei nuovi modelli è ancora abilitato: T07–T22 restano pianificati.
+Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato, qualificati su sm_86 in API C seriali. Nessun nuovo endpoint image/embedding è abilitato; DiT/VAE, Gemma completo e integrazione HTTP restano T09–T22. Evidenze e limiti nel report T07–T08.

@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "profile": "BF16 storage/output, FP32 accumulation; F32 pedantic; no FP16/TF32/fast-math fallback",
+  "research_entry_points": [
+    "docs/research/guides/problem-to-source.md",
+    "docs/research/platforms/llama-cpp.md",
+    "docs/research/forks/club3090-llama-moe-cache.md",
+    "docs/research/cuda/ampere-sm86-primitives.md"
+  ],
+  "decisions": [
+    {
+      "operations": "GEMM, bias epilogue, packed K/V and tiled BF16 attention",
+      "sources": ["NVIDIA native cuBLAS/cuBLASLt C API", "llama.cpp 2468576f241235452013308597e6de1b78866996 workload separation"],
+      "transfer": "Encoder/DiT use actual GEMM shapes; quantized LLM decode GEMV/MMVQ is not substituted. Tensor Core BF16 operations accumulate FP32 and preserve oracle output casts.",
+      "hypothesis": "Matching native library version, admitted workspace and BF16 boundaries removes amplified encoder drift without changing tolerance.",
+      "rejected": "cuBLAS 12.3 differed from the oracle at BF16 boundaries; merely increasing a score tile or changing algebraic form did not explain all drift.",
+      "qualified": "Native cuBLAS/cuBLASLt 13.1.1, 8519680-byte owned handle workspace; Lt bias workspace bounded at 1 MiB. Legacy binaries keep CUDA 12."
+    },
+    {
+      "operations": "FP32 online attention, relative audio score, softcap",
+      "sources": ["FlashAttention online softmax recurrence", "local llama.cpp attention platform card", "frozen Transformers Gemma audio equations"],
+      "transfer": "Independent CUDA C implementation with four query warps per CTA and two score passes; no Triton or C++ graph copied. GQA/MQA, head dimensions through 512, explicit bounds and scale.",
+      "hypothesis": "Linear workspace can preserve the declared score/probability casts without an N-by-N production allocation.",
+      "limitation": "Correctness baseline, not a claim of FlashAttention throughput on sm_86. BF16 eager oracle uses separately rounded QK and probabilities and therefore has its own bounded tile path."
+    },
+    {
+      "operations": "RMSNorm, LayerNorm, pointwise activations, RoPE",
+      "sources": ["PyTorch 5c4886908584029761b579af026dcfb627c84070 reduction conventions", "Transformers d4fcbccd0966ace9505b9cbd3041d28ad822d8a7", "Diffusers aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e"],
+      "transfer": "C equations and native CUDA reductions; explicit Welford FMA order, four-accumulator RMS reduction, normalization cast before direct scale where required. Split-half and adjacent rotations are distinct.",
+      "hypothesis": "Reduction and rounding order, including cosine/sine dtype, must match before judging end-to-end error.",
+      "license": "third_party/pytorch/LICENSE"
+    },
+    {
+      "operations": "Convolution, asymmetric padding, pooling, reorder, nearest-exact",
+      "sources": ["native cuDNN 9 C API", "frozen Transformers audio/vision and Diffusers VAE equations"],
+      "transfer": "Existing installed cuDNN is preferred over a new convolution implementation. CPU direct reference is independent. Padding and layout kernels are small C/CUDA implementations.",
+      "hypothesis": "Deterministic FP32 accumulation and post-cast convolution bias preserve real patch outputs within T00 with bounded workspace.",
+      "dependency_cost": "CUDA target needs native cuDNN 9.24.0 and its shared dependencies; CPU reference and legacy LLM links do not acquire that dependency."
+    },
+    {
+      "operations": "Vision uint8 resize, normalization and patch ordering",
+      "sources": ["PyTorch 5c4886908584029761b579af026dcfb627c84070 ATen native CPU UpSampleKernel", "pinned Qwen image fast processor"],
+      "transfer": "Independent separable C bicubic with quantized coefficients and uint8 intermediate, followed by strict FP32 normalization. Legacy vision keeps its original direct floating-point resize.",
+      "rejected": "Single floating-point 2D bicubic changed uint8 pixels and amplified vision hidden-state drift.",
+      "license": "third_party/pytorch/LICENSE"
+    },
+    {
+      "operations": "Image tokenizer NFC and character classes",
+      "sources": ["frozen tokenizers 0.23.1 regex engine", "unicode-normalization-alignments 0.1.12"],
+      "engine_sha256": "40de09860e5df1b00bbf432eb68632465125a3efaa074f85972f3ea000c06dfc",
+      "nfc_crate_url": "https://static.crates.io/crates/unicode-normalization-alignments/unicode-normalization-alignments-0.1.12.crate",
+      "nfc_crate_sha256": "43f613e4fa046e69818dd287fdc4bc78175ff20331479dab6e1b0f98d57062de",
+      "transfer": "Offline generation of data only, native strict UTF-8/NFC and byte BPE. No inference-time Python or tokenizers dependency. Class boundaries and all Unicode scalars for NFC are tested independently.",
+      "rejected": "Host NFC and newer legacy Qwen character classes are not equivalent to the frozen image tokenizer.",
+      "license": "third_party/unicode/LICENSE"
+    },
+    {
+      "operations": "Group lifetime and bounded dequantization",
+      "sources": ["existing DS4 bundle/resource/executor contracts", "club3090 resource admission principles", "GGML Q8_0/Q4_0 storage conventions"],
+      "transfer": "Selected execution groups reuse the verified mmap loader and resource ownership. Dense resident encoder weights do not benefit from mechanically importing MoE expert-cache scheduling.",
+      "limitation": "Unsloth Q4_K_M manifest remains a candidate for T20, not a qualified compute path."
+    }
+  ],
+  "evidence": {
+    "full_operands_outputs": "performance-results/native-suite-t07-t08-20261020/",
+    "numeric_limits": "docs/performance/native-suite-t00-20261020/tolerances.json",
+    "benchmark": "Five synchronized repetitions after warmup; full statistics and instability verdict in verification.json. No speedup claim."
+  }
+}

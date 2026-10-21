@@ -50,6 +50,11 @@ typedef struct {
 } ds4_weight_backend;
 ds4_status ds4_weight_group_create(ds4_weight_group **, ds4_bundle *, uint32_t component,
                                   uint32_t group, const ds4_weight_backend *);
+/* Architecture-defined execution groups may split an offline storage group.
+ * Indices must be unique and belong to component; the same upload/lifetime
+ * machinery applies. This avoids loading an unused autoregressive head. */
+ds4_status ds4_weight_group_create_selected(ds4_weight_group **, ds4_bundle *, uint32_t component,
+        const size_t *tensor_indices, size_t count, const ds4_weight_backend *);
 uint64_t ds4_weight_group_bytes(const ds4_weight_group *);
 bool ds4_weight_group_resident(const ds4_weight_group *);
 ds4_status ds4_weight_group_load(ds4_weight_group *);

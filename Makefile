@@ -1402,6 +1402,73 @@ clean-suite-runtime:
 .PHONY: clean-suite-runtime
 clean: clean-suite-runtime
 
+# Native multimodal suite has an explicit numerical profile; never inherit
+# legacy -ffast-math/--use_fast_math. CPU is a reference/debug backend only.
+SUITE_CFLAGS = -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math
+SUITE_NVCCFLAGS = -O2 -g -lineinfo -Xcompiler -fPIC --fmad=false $(NVCC_ARCH_FLAGS)
+SUITE_PYTHON ?= python3
+CUDNN_HOME ?= $(CUDA_HOME)
+SUITE_CUDA_LIBDIR ?= $(CUDA_HOME)/lib64
+SUITE_CUDA_LDLIBS = -lm -pthread -L$(SUITE_CUDA_LIBDIR) -l:libcudart.so.13 -l:libcublas.so.13 -l:libcublasLt.so.13 -Wl,-rpath,$(abspath $(SUITE_CUDA_LIBDIR))
+SUITE_CUDNN_LIBS = -L$(CUDNN_HOME)/lib -L$(CUDNN_HOME)/lib64 -l:libcudnn.so.9 -Wl,-rpath,$(abspath $(CUDNN_HOME)/lib)
+SUITE_API_HEADERS = ds4_numeric.h ds4_bundle.h ds4_resources.h ds4_runtime.h
+
+SUITE_OBJS = ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o
+libds4-suite-cpu.a: $(SUITE_OBJS)
+	$(AR) rcs $@ $^
+libds4-suite-cuda.a: $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
+	$(AR) rcs $@ $^
+tests/test_numeric_lifetime: tests/test_numeric_lifetime.c ds4_numeric.o ds4_resources.o
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
+.PHONY: test-numeric-lifetime clean-suite-numeric
+test-numeric-lifetime: tests/test_numeric_lifetime
+	./tests/test_numeric_lifetime
+tests/test_qwen_image_input: tests/test_qwen_image_input.c ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_resources.o ds4_image.o
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
+.PHONY: test-qwen-image-input
+test-qwen-image-input: tests/test_qwen_image_input
+	./tests/test_qwen_image_input
+clean-suite-numeric:
+	rm -f $(filter-out ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o,$(SUITE_OBJS)) ds4_numeric_cuda.o ds4_numeric_cudnn.o libds4-suite-cpu.a libds4-suite-cuda.a tests/probe_qwen_image_encoder tests/probe_qwen_image_encoder.o tests/test_numeric_lifetime tests/libds4_numeric_cpu.so tests/libds4_numeric_cuda.so tests/suite_resources.o tests/libds4_image_suite.so tests/libds4_qwen_image_tokenizer.so tests/test_qwen_image_input
+clean: clean-suite-numeric
+ds4_qwen_image_encoder.o: ds4_qwen_image_encoder.c ds4_qwen_image_encoder.h ds4_qwen_image_input.h ds4_qwen_image_input_internal.h ds4_qwen_image_tokenizer.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_qwen_image_input.o: ds4_qwen_image_input.c ds4_qwen_image_input.h ds4_qwen_image_input_internal.h ds4_qwen_image_tokenizer.h ds4_image.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_numeric_weights.o: ds4_numeric_weights.c ds4_numeric_weights.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_qwen_image_tokenizer.o: ds4_qwen_image_tokenizer.c ds4_qwen_image_tokenizer.h ds4_sha256.h third_party/unicode/image_classes.inc ds4_unicode_nfc.h
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_unicode_nfc.o: ds4_unicode_nfc.c ds4_unicode_nfc.h third_party/unicode/nfc9.inc
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+tests/probe_qwen_image_encoder: tests/probe_qwen_image_encoder.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
+	$(CC) $(SUITE_CFLAGS) -I. -c -o tests/probe_qwen_image_encoder.o $<
+	$(CC) -o $@ tests/probe_qwen_image_encoder.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+ds4_numeric.o: ds4_numeric.c ds4_numeric_internal.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_numeric_cuda.o: ds4_numeric_cuda.cu ds4_numeric_internal.h $(SUITE_API_HEADERS)
+	$(NVCC) $(SUITE_NVCCFLAGS) -c -o $@ $<
+ds4_numeric_cudnn.o: ds4_numeric_cudnn.cu ds4_numeric_internal.h $(SUITE_API_HEADERS)
+	$(NVCC) $(SUITE_NVCCFLAGS) -I$(CUDNN_HOME)/include -c -o $@ $<
+tests/libds4_numeric_cpu.so: ds4_numeric.c ds4_resources.c ds4_numeric.h ds4_numeric_internal.h ds4_resources.h
+	$(CC) $(SUITE_CFLAGS) -shared -I. -o $@ ds4_numeric.c ds4_resources.c -lm -pthread
+tests/libds4_qwen_image_tokenizer.so: ds4_qwen_image_tokenizer.c ds4_qwen_image_tokenizer.h ds4_sha256.h third_party/unicode/image_classes.inc ds4_unicode_nfc.h ds4_unicode_nfc.c third_party/unicode/nfc9.inc
+	$(CC) $(SUITE_CFLAGS) -shared -I. -o $@ ds4_qwen_image_tokenizer.c ds4_unicode_nfc.c
+tests/libds4_image_suite.so: ds4_image.c ds4_image.h ds4_image_resize.inc
+	$(CC) $(CFLAGS) -fPIC -shared -I. -o $@ ds4_image.c -lm
+.PHONY: test-qwen-image-tokenizer
+test-qwen-image-tokenizer: tests/libds4_qwen_image_tokenizer.so
+	$(SUITE_PYTHON) -m unittest tests.test_qwen_image_tokenizer -v
+tests/suite_resources.o: ds4_resources.c ds4_resources.h ds4_runtime.h
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+tests/libds4_numeric_cuda.so: ds4_numeric.o ds4_numeric_cuda.o ds4_numeric_cudnn.o tests/suite_resources.o
+	$(CC) -shared -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+.PHONY: test-suite-numeric test-suite-numeric-cuda
+test-suite-numeric: tests/libds4_numeric_cpu.so
+	$(SUITE_PYTHON) -m unittest tests.test_suite_numeric -v
+test-suite-numeric-cuda: tests/libds4_numeric_cuda.so
+	DS4_SUITE_NUMERIC_CUDA=1 $(SUITE_PYTHON) -m unittest tests.test_suite_numeric -v
+
 # Native suite resource and checkpoint gates run without a model.
 ds4_resources.o: ds4_resources.c ds4_resources.h ds4_runtime.h
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -1440,7 +1507,7 @@ tests/test_executor_cuda: tests/test_executor_cuda.o $(CORE_OBJS)
 	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
 
 ds4_cuda.o tests/qwen_iq4_dequant_probe.o: ds4_cuda_accounting.cuh ds4_resources.h
-ds4_image.o: ds4_sha256.h
+ds4_image.o: ds4_sha256.h ds4_image_resize.inc
 ds4.o ds4_cpu.o ds4_test_hooks.o ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o \
  tests/test_session_state.o tests/test_session_state_gpu.o \
  tests/test_qwen_mtp_callback.o tests/test_qwen_snapshot_drafts.o tests/test_qwen_memory_lifetime.o \

@@ -92,6 +92,14 @@ int ds4_image_preprocess_qwen4(
         char              *error,
         size_t             error_cap);
 
+/* Image suite Qwen3-VL: same spatial patch layout, processor ties-to-even
+ * resize rounding, unnormalized 0..255 values. The suite adapter applies its
+ * frozen float32 normalization and temporal duplication under strict math. */
+int ds4_image_preprocess_qwen3vl_raw(ds4_image_patches *, const ds4_image *,
+        uint32_t min_image_tokens, uint32_t max_image_tokens, char *, size_t);
+int ds4_image_qwen3vl_plan(uint32_t width,uint32_t height,uint32_t min_tokens,
+        uint32_t max_tokens,uint32_t *resized_width,uint32_t *resized_height);
+
 void ds4_image_patches_free(ds4_image_patches *patches);
 
 int ds4_image_preprocess_deepseek4(

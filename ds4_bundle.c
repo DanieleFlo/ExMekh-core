@@ -306,8 +306,8 @@ int ds4_bundle_dump(const ds4_bundle *b, FILE *fp) {
     return 0;
 }
 
-ds4_status ds4_weight_group_create(ds4_weight_group **out, ds4_bundle *b, uint32_t component,
-                                  uint32_t group, const ds4_weight_backend *backend) {
+static ds4_status weight_group_create(ds4_weight_group **out, ds4_bundle *b, uint32_t component,
+        uint32_t group, const size_t *indices, size_t count, const ds4_weight_backend *backend) {
     if (!out) return DS4_STATUS_INVALID;
     *out = NULL;
     if (!b || component >= b->component_count || !backend || !backend->allocate || !backend->write ||
@@ -325,9 +325,16 @@ ds4_status ds4_weight_group_create(ds4_weight_group **out, ds4_bundle *b, uint32
     g->offsets = calloc(b->tensor_count, sizeof(uint64_t));
     if (!g->offsets) { ds4_resource_release(account); free(g); return DS4_STATUS_NOMEM; }
     g->bundle=b; g->component=component; g->group=group; g->backend=*backend;
+    for (size_t i=0;i<b->tensor_count;i++) g->offsets[i]=UINT64_MAX;
+    for (size_t j=0;j<count;j++) {
+        if(indices[j]>=b->tensor_count || b->tensors[indices[j]].component!=component) goto invalid;
+        for(size_t k=0;k<j;k++) if(indices[k]==indices[j]) goto invalid;
+    }
     for (size_t i = 0; i < b->tensor_count; i++) {
         const ds4_weight_tensor *t=&b->tensors[i];
-        if (t->component != component || t->group != group) continue;
+        bool selected=!indices && t->component==component && t->group==group;
+        for(size_t j=0;j<count;j++) if(indices[j]==i) selected=true;
+        if (!selected) continue;
         uint64_t alignment = t->alignment > 32 ? t->alignment : 32;
         if (g->bytes > UINT64_MAX-(alignment-1)) goto invalid;
         g->bytes = (g->bytes+alignment-1) & ~(alignment-1); g->offsets[i]=g->bytes;
@@ -338,6 +345,17 @@ ds4_status ds4_weight_group_create(ds4_weight_group **out, ds4_bundle *b, uint32
     b->groups++; *out=g; return DS4_STATUS_OK;
 invalid:
     ds4_resource_release(g->metadata); free(g->offsets); free(g); return DS4_STATUS_INVALID;
+}
+ds4_status ds4_weight_group_create(ds4_weight_group **out, ds4_bundle *b, uint32_t component,
+                                  uint32_t group, const ds4_weight_backend *backend) {
+    return weight_group_create(out,b,component,group,NULL,0,backend);
+}
+ds4_status ds4_weight_group_create_selected(ds4_weight_group **out, ds4_bundle *b, uint32_t component,
+        const size_t *indices, size_t count, const ds4_weight_backend *backend) {
+    if (!out) return DS4_STATUS_INVALID;
+    *out = NULL;
+    if(!indices||!count) return DS4_STATUS_INVALID;
+    return weight_group_create(out,b,component,0,indices,count,backend);
 }
 uint64_t ds4_weight_group_bytes(const ds4_weight_group *g) { return g ? g->bytes : 0; }
 bool ds4_weight_group_resident(const ds4_weight_group *g) { return g && g->resident; }
@@ -351,7 +369,7 @@ ds4_status ds4_weight_group_load(ds4_weight_group *g) {
     if (!g->storage) return DS4_STATUS_NOMEM;
     for (size_t i=0; i<g->bundle->tensor_count && !status; i++) {
         const ds4_weight_tensor *t=&g->bundle->tensors[i];
-        if (t->component == g->component && t->group == g->group)
+        if (g->offsets[i]!=UINT64_MAX)
             status=g->backend.write(g->backend.context, g->storage, g->offsets[i], ds4_bundle_tensor_data(g->bundle,i), t->bytes);
     }
     if (!status) status=g->backend.quiesce(g->backend.context);
@@ -380,7 +398,7 @@ ds4_status ds4_weight_group_tensor(const ds4_weight_group *g, const char *name, 
     if (!g->resident) return DS4_STATUS_NOT_RESIDENT;
     for (size_t i=0; i<g->bundle->tensor_count; i++) {
         const ds4_weight_tensor *t=&g->bundle->tensors[i];
-        if (t->component==g->component && t->group==g->group && !strcmp(t->name,name)) {
+        if (g->offsets[i]!=UINT64_MAX && !strcmp(t->name,name)) {
             *storage=g->storage; *offset=g->offsets[i]; return DS4_STATUS_OK;
         }
     }

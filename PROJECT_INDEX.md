@@ -200,6 +200,38 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `ds4_bundle.c/.h` — directory binaria verificata SHA-256, mmap dei file GGUF e
   safetensors originali, inventario esaustivo e binding dell'adapter; caricamento
   e rilascio di gruppi mediante callback del backend, senza espandere i pesi.
+- `ds4_numeric.c/.h`, `ds4_numeric_internal.h`, `ds4_numeric_cuda.cu`,
+  `ds4_numeric_cudnn.cu` — API numerica C della suite BF16/FP32: buffer e
+  accounting, GEMM cuBLAS, norm, attivazioni, RoPE, attention online/tiled,
+  convoluzioni cuDNN e layout/audio/VAE. Reference CPU indipendente;
+  librerie statiche suite separate dal link dei binari LLM legacy.
+- `ds4_numeric_weights.c/.h` — bridge dei gruppi bundle verso il contesto
+  numerico tramite API pubbliche; il core dei buffer non conosce i modelli.
+- `ds4_qwen_image_encoder.c/.h`, `ds4_qwen_image_tokenizer.c/.h`,
+  `config/qwen-image-encoder.json` — conditioning Qwen3-VL dedicato, tokenizer
+  image, padding esplicito, vision/deepstack e output pre-norm finale.
+  `ds4_bundle` consente gruppi selettivi senza caricare la testa autoregressiva.
+- `ds4_qwen_image_input.c/.h`, `ds4_qwen_image_input_internal.h` — proprietario
+  opaco dell'input preparato, compositing vision, token/posizioni/padding e
+  snapshot pubblico di sola lettura; l'encoder orchestra soltanto il forward.
+- `ds4_unicode_nfc.c/.h`, `third_party/unicode/`,
+  `tools/generate_suite_nfc.py`, `tools/generate_suite_unicode.py` — NFC e
+  classi Unicode delle dipendenze congelate, con dati/provenienza dedicati.
+  `ds4_image_resize.inc` — resize uint8 antialiased del processor image,
+  distinto dalla preprocessing vision legacy; notice in `third_party/pytorch/`.
+- `tools/compile_qwen_image_tokenizer.py`,
+  `tools/run_qwen_image_encoder_oracle.py`, `tools/compare_qwen_image_encoder.py`,
+  `tools/diagnose_qwen_image_encoder.py`, `tools/diagnose_qwen_image_vision.py`,
+  `tools/inventory_suite_primitives.py`, `tools/bench_suite_numeric.py` —
+  conversione, inventario, oracle, diagnosi e benchmark offline T07/T08.
+- `tests/probe_qwen_image_encoder.c`, `tests/test_suite_numeric.py`,
+  `tests/test_numeric_lifetime.c`, `tests/test_qwen_image_input.c`, `tests/test_qwen_image_tokenizer.py`,
+  `tests/test_qwen_image_preprocess.py` — gate completi di primitive,
+  conditioning, padding, pixel, tokenizer, budget, cancellazione e recovery.
+- `docs/performance/native-suite-t07-t08-20261020/` — qualifica CUDA sm_86,
+  confronti con oracle, hash, fonti, misure e limiti del batching.
+  `review-verification.json` registra il riesame del 21 ottobre: API opache,
+  rilascio dopo gli eventi, cancellazione finale, aliasing e regressioni.
 - `tools/suite_bundle.py`, `tools/prepare_suite_bundles.py`,
   `config/suite-bundles/`, `schemas/ds4-suite-bundle-v1.schema.json` — compiler
   offline e conversione deterministica, profili con revisioni/hash fissati,

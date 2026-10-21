@@ -452,14 +452,47 @@ int ds4_image_preprocess_glm53(
     return 1;
 }
 
-int ds4_image_preprocess_qwen4(
+#include "ds4_image_resize.inc"
+
+static int ds4_qwen_resize_dimensions(uint32_t width, uint32_t height, uint32_t min_tokens,
+        uint32_t max_tokens, bool ties_even, uint32_t *out_width, uint32_t *out_height) {
+    if (!width || !height || !min_tokens || max_tokens < min_tokens || !out_width || !out_height)
+        return 0;
+    const double factor = 32, h = height, w = width;
+    if (fmax(h, w) / fmin(h, w) > 200) return 0;
+    const double min_pixels = (double)min_tokens * 1024;
+    const double max_pixels = (double)max_tokens * 1024;
+    double hb = fmax(factor, (ties_even ? nearbyint(h/factor) : round(h/factor)) * factor);
+    double wb = fmax(factor, (ties_even ? nearbyint(w/factor) : round(w/factor)) * factor);
+    if (hb * wb > max_pixels) {
+        double beta = sqrt(h * w / max_pixels);
+        hb = fmax(factor, floor(h / beta / factor) * factor);
+        wb = fmax(factor, floor(w / beta / factor) * factor);
+    } else if (hb * wb < min_pixels) {
+        double beta = sqrt(min_pixels / (h * w));
+        hb = ceil(h * beta / factor) * factor;
+        wb = ceil(w * beta / factor) * factor;
+    }
+    if (hb > DS4_IMAGE_MAX_DIMENSION || wb > DS4_IMAGE_MAX_DIMENSION ||
+        hb * wb > DS4_IMAGE_MAX_PIXELS) return 0;
+    *out_width = wb;
+    *out_height = hb;
+    return 1;
+}
+int ds4_image_qwen3vl_plan(uint32_t width, uint32_t height, uint32_t min_tokens,
+        uint32_t max_tokens, uint32_t *out_width, uint32_t *out_height) {
+    return ds4_qwen_resize_dimensions(width, height, min_tokens, max_tokens, true,
+                                      out_width, out_height);
+}
+
+static int ds4_image_preprocess_qwen(
         ds4_image_patches *out,
         const ds4_image *image,
         uint32_t min_image_tokens,
         uint32_t max_image_tokens,
         char *error,
-        size_t error_cap) {
-    const uint32_t patch = 16, factor = 32;
+        size_t error_cap, bool raw_pixels) {
+    const uint32_t patch = 16;
     if (!out) return 0;
     memset(out, 0, sizeof(*out));
     if (!image || !image->rgb || image->width == 0 || image->height == 0 ||
@@ -472,23 +505,9 @@ int ds4_image_preprocess_qwen4(
         ds4_image_error(error, error_cap, "image aspect ratio must be below 200");
         return 0;
     }
-    /* Qwen2VL smart_resize: round to the factor, then scale into [min, max] pixels */
-    const double min_pixels = (double)min_image_tokens * factor * factor;
-    const double max_pixels = (double)max_image_tokens * factor * factor;
-    double h_bar = fmax(factor, round(h / factor) * factor);
-    double w_bar = fmax(factor, round(w / factor) * factor);
-    if (h_bar * w_bar > max_pixels) {
-        const double beta = sqrt(h * w / max_pixels);
-        h_bar = fmax(factor, floor(h / beta / factor) * factor);
-        w_bar = fmax(factor, floor(w / beta / factor) * factor);
-    } else if (h_bar * w_bar < min_pixels) {
-        const double beta = sqrt(min_pixels / (h * w));
-        h_bar = ceil(h * beta / factor) * factor;
-        w_bar = ceil(w * beta / factor) * factor;
-    }
-    const uint32_t target_height = (uint32_t)h_bar, target_width = (uint32_t)w_bar;
-    if (target_width > DS4_IMAGE_MAX_DIMENSION || target_height > DS4_IMAGE_MAX_DIMENSION ||
-        (uint64_t)target_width * target_height > DS4_IMAGE_MAX_PIXELS) {
+    uint32_t target_height,target_width;
+    if (!ds4_qwen_resize_dimensions(image->width,image->height,min_image_tokens,
+            max_image_tokens,raw_pixels,&target_width,&target_height)) {
         ds4_image_error(error, error_cap, "resized image is too large");
         return 0;
     }
@@ -499,11 +518,15 @@ int ds4_image_preprocess_qwen4(
     }
     if (target_width == image->width && target_height == image->height) {
         for (size_t i = 0; i < (size_t)target_height * target_width * 3; i++) canvas[i] = image->rgb[i];
+    } else if(raw_pixels) {
+        if(!ds4_resize_qwen3vl_rgb(image->rgb,image->width,image->height,canvas,target_width,target_height)) {
+            free(canvas);return 0;
+        }
     } else {
         ds4_resize_rgb_bicubic(image->rgb, image->width, image->height,
                                canvas, target_width, target_height, target_width);
     }
-    for (size_t i = 0; i < (size_t)target_height * target_width * 3; i++) {
+    for (size_t i = 0; !raw_pixels && i < (size_t)target_height * target_width * 3; i++) {
         canvas[i] = (canvas[i] / 255.0f - 0.5f) / 0.5f;
     }
     const uint32_t grid_height = target_height / patch, grid_width = target_width / patch;
@@ -544,6 +567,16 @@ int ds4_image_preprocess_qwen4(
     out->image_token_count = patch_count / 4;
     out->patches = patches;
     return 1;
+}
+
+int ds4_image_preprocess_qwen4(ds4_image_patches *out, const ds4_image *image,
+        uint32_t min_tokens, uint32_t max_tokens, char *error, size_t error_cap) {
+    return ds4_image_preprocess_qwen(out,image,min_tokens,max_tokens,error,error_cap,false);
+}
+
+int ds4_image_preprocess_qwen3vl_raw(ds4_image_patches *out, const ds4_image *image,
+        uint32_t min_tokens, uint32_t max_tokens, char *error, size_t error_cap) {
+    return ds4_image_preprocess_qwen(out,image,min_tokens,max_tokens,error,error_cap,true);
 }
 
 void ds4_image_patches_free(ds4_image_patches *patches) {

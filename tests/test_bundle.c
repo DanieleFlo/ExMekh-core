@@ -74,6 +74,30 @@ int main(int argc,char **argv) {
         }
         free(expected);
     }
+    {
+        /* Execution groups can split storage groups; tensor zero must not be
+         * accidentally selected just because its packed offset is zero. */
+        const ds4_weight_tensor *t=ds4_bundle_tensor(b,0);
+        size_t ids[]={0,0};
+        backend stub={.resources=r};
+        ds4_weight_backend ops={&stub,allocate,write_tensor,fence,release};
+        ds4_weight_group *g=NULL;
+        assert(ds4_weight_group_create_selected(&g,b,t->component,ids,2,&ops)==DS4_STATUS_INVALID);
+        g=(ds4_weight_group *)&stub;
+        assert(ds4_weight_group_create_selected(&g,b,t->component,NULL,0,&ops)==DS4_STATUS_INVALID);
+        assert(!g);
+        ids[0]=ds4_bundle_tensor_count(b);
+        assert(ds4_weight_group_create_selected(&g,b,t->component,ids,1,&ops)==DS4_STATUS_INVALID);
+        ids[0]=0;
+        assert(!ds4_weight_group_create_selected(&g,b,t->component,ids,1,&ops));
+        assert(!ds4_weight_group_load(g));
+        const void *storage=NULL; uint64_t offset=0;
+        assert(!ds4_weight_group_tensor(g,t->name,&storage,&offset));
+        assert(!memcmp((const uint8_t*)storage+offset,ds4_bundle_tensor_data(b,0),t->bytes));
+        for(size_t i=1;i<ds4_bundle_tensor_count(b);i++)
+            assert(ds4_weight_group_tensor(g,ds4_bundle_tensor(b,i)->name,&storage,&offset)==DS4_STATUS_INVALID);
+        assert(!ds4_weight_group_close(g));
+    }
     for (size_t i=0;i<ds4_bundle_tensor_count(b);i++) {
         const ds4_weight_tensor *t=ds4_bundle_tensor(b,i);
         bool seen=false;
