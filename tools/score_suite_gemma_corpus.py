@@ -43,6 +43,9 @@ def main():
     from transformers import AutoModel, AutoProcessor
 
     torch.backends.cuda.matmul.allow_tf32 = False
+    # The native BF16 profile accumulates GEMMs in FP32. Record this explicitly;
+    # the historical T00 r2 run inherited PyTorch's reduced-precision default.
+    torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
     torch.backends.cudnn.allow_tf32 = False
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
@@ -215,7 +218,12 @@ def main():
         "prepared_sha256": hashlib.sha256(
             (args.prepared / "prepared.json").read_bytes()
         ).hexdigest(),
-        "profile": "bf16-eager-mean-f32-l2",
+        "profile": "bf16-eager-fp32-reduction-mean-f32-l2",
+        "numerics": {
+            "bf16_reduced_precision_reduction": False,
+            "matmul_tf32": False,
+            "cudnn_tf32": False,
+        },
         "decode": "wave mono PCM16, soxr HQ 16kHz; video frames selected at 1fps",
         "torch": torch.__version__,
         "soxr": soxr.__version__,

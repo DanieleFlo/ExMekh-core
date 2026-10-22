@@ -42,6 +42,18 @@ def write_fixture(path, cases):
             )
             stream.write(prompt)
             for media in case["media"]:
+                if "container" in media:
+                    data = Path(media["container"]).read_bytes()
+                    stream.write(
+                        struct.pack("<5I", 4, len(data), 0, 0, media.get("soft", 0))
+                    )
+                    stream.write(data)
+                    continue
+                if media["type"] == "audio":
+                    wave = audio(media)
+                    stream.write(struct.pack("<5I", 3, len(wave), 16000, 1, 0))
+                    stream.write(wave.astype("<f4").tobytes())
+                    continue
                 pixels, times = frames(media)
                 n, h, w, _ = pixels.shape
                 stream.write(
@@ -56,3 +68,22 @@ def write_fixture(path, cases):
                 )
                 for image, timestamp in zip(pixels, times):
                     stream.write(struct.pack("<d", timestamp) + image.tobytes())
+
+
+def audio(media):
+    import wave
+
+    import numpy as np
+
+    with wave.open(str(media["path"]), "rb") as f:
+        assert f.getsampwidth() == 2
+        values = np.frombuffer(f.readframes(f.getnframes()), "<i2").astype(np.float32)
+        values = values.reshape(-1, f.getnchannels()).mean(-1) / 32768
+        rate = f.getframerate()
+    if rate != 16000:
+        import soxr
+
+        values = soxr.resample(values, rate, 16000, quality="HQ")
+    start = round(media.get("start", 0) * 16000)
+    end = round(media["end"] * 16000) if "end" in media else len(values)
+    return values[start:end].copy()

@@ -1,0 +1,242 @@
+{
+  "model": "google/embeddinggemma-2",
+  "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+  "profile": "bf16-native-v1",
+  "transformers": "d4fcbccd0966ace9505b9cbd3041d28ad822d8a7",
+  "pytorch": "5c4886908584029761b579af026dcfb627c84070",
+  "numpy": {
+    "numpy-complex.c.src": {
+      "url": "https://raw.githubusercontent.com/numpy/numpy/v2.5.3/numpy/_core/src/umath/loops_unary_complex.dispatch.c.src",
+      "sha256": "a551bc5b449a8ea8fcec40212345ae3f91180dff6571d3480cc46dd042fb5702",
+      "bytes": 4573
+    },
+    "numpy-license.txt": {
+      "url": "https://raw.githubusercontent.com/numpy/numpy/v2.5.3/LICENSE.txt",
+      "sha256": "1be1df33863f97a7bc1c4d67980bd6c69c9a6fef0a5ee76e6ad6cb91e56e8491",
+      "bytes": 1543
+    }
+  },
+  "bf16_reduced_precision_reduction": false,
+  "tf32": false,
+  "cuda_arch": "sm_86",
+  "dependencies": {
+    "ffmpeg": {
+      "url": "https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz",
+      "sha256": "733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1",
+      "configure": [
+        "./configure",
+        "--prefix=/home/daniele/ds4/performance-results/native-suite-t13-t14-20261021/dependencies/installed",
+        "--disable-doc",
+        "--disable-programs",
+        "--disable-avdevice",
+        "--disable-avfilter",
+        "--disable-network",
+        "--disable-autodetect",
+        "--disable-x86asm",
+        "--disable-everything",
+        "--enable-shared",
+        "--disable-static",
+        "--enable-avformat",
+        "--enable-avcodec",
+        "--enable-swscale",
+        "--enable-swresample",
+        "--enable-decoder=h264,hevc,vp8,vp9,ffv1,rawvideo,aac,mp3,mp3float,flac,vorbis,opus,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_f64le",
+        "--enable-demuxer=mov,matroska,avi,nut,wav,flac,mp3,ogg,mpegts",
+        "--enable-parser=h264,hevc,vp8,vp9,aac,mpegaudio,flac,vorbis,opus"
+      ]
+    },
+    "soxr": [
+      {
+        "path": "performance-results/native-suite-t13-t14-20261021/dependencies/packages/libsoxr-dev_0.1.3-4build3_amd64.deb",
+        "sha256": "6fc0cf4cdd5afc009ef06e032cc4f51849820b636605ef6a4724c40d7eb1aa81",
+        "bytes": 16716
+      },
+      {
+        "path": "performance-results/native-suite-t13-t14-20261021/dependencies/packages/libsoxr0_0.1.3-4build3_amd64.deb",
+        "sha256": "2ddb6d21ad8ae0c850d380b551f109fc6b50c9a9b62c64ce37607c115bd3382a",
+        "bytes": 80038
+      }
+    ]
+  },
+  "frozen_sources": [
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/gemma4/modeling_gemma4.py",
+      "bytes": 127002,
+      "sha256": "8c8ee26ac3e003dd7bea51c7d74df4fd0d25efa57740cbe7c8c68be8c5577c14"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/gemma4/image_processing_gemma4.py",
+      "bytes": 10845,
+      "sha256": "5d280d5448b1c219183a27e95b6aa7178b350275772d07881c91c65f13fa815e"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/gemma4/feature_extraction_gemma4.py",
+      "bytes": 13988,
+      "sha256": "40545340a144aad4d74c6cedb4eae5daa4efd54ae432649583e19b5d756c02c7"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/embedding_gemma2/modeling_embedding_gemma2.py",
+      "bytes": 43757,
+      "sha256": "f0376b13fb5230b349ce269c4fb40906931744a84df57c1d208f46032941eda7"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/embedding_gemma2/processing_embedding_gemma2.py",
+      "bytes": 22089,
+      "sha256": "707c0fb79433c8760c55af239638fb03c20c267d7b0ac7eb65eee3ffc1baba2c"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/models/embedding_gemma2/video_processing_embedding_gemma2.py",
+      "bytes": 15308,
+      "sha256": "157287853317ea89d11356694687440f03245988439e74000843c95ff180acbf"
+    },
+    {
+      "path": "performance-results/native-suite-oracles-20261020/sources/transformers-d4fcbccd0966ace9505b9cbd3041d28ad822d8a7/src/transformers/audio_utils.py",
+      "bytes": 66954,
+      "sha256": "eaf95e79c399cadaaa951b5984803bf1931c08e78ee112cbe5f7750306d474d4"
+    }
+  ],
+  "additional_fixtures": {
+    "path": "tests/fixtures/native-suite-audio-v2/provenance.json",
+    "bytes": 3132,
+    "sha256": "214eb7a7ee586f2f13468d099b7aefc9c341c747dc365bfb04e83ed19214d274"
+  },
+  "model_weights": {
+    "path": "performance-results/native-suite-oracles-20261020/models/google/embeddinggemma-2/model.safetensors",
+    "bytes": 1488915288,
+    "sha256": "197a32965d4b1105faf060417baa899e193fb73cd401f42ec9295234d5553d79"
+  },
+  "tested_source_artifacts": [
+    {
+      "path": "Makefile",
+      "bytes": 80182,
+      "sha256": "56a1744e471862eabc47f2e797ad6ddf7e0051a4c7270788a3a6080a1c47fac6"
+    },
+    {
+      "path": "ds4_embedding_gemma2.c",
+      "bytes": 30460,
+      "sha256": "e240d4d6b236ec20435858fcf67b411ff6a0d0ae49eb928692d37be7e0f83339"
+    },
+    {
+      "path": "ds4_embedding_gemma2_internal.h",
+      "bytes": 929,
+      "sha256": "07ab67d191a758f30cb5e05f1a87da307dac69a2cd575380fb45aaaf4daa8c02"
+    },
+    {
+      "path": "ds4_gemma_audio.c",
+      "bytes": 37501,
+      "sha256": "5b7c8def03d2b1398daf1ec8cc2de081b6324f1825546a2f56cdc3ec6d1e3db6"
+    },
+    {
+      "path": "ds4_gemma_audio.h",
+      "bytes": 1351,
+      "sha256": "b507bbdde530c0a8f7b6b07f9489a82f2d89159fccf61296dee7b2f3357aa1b6"
+    },
+    {
+      "path": "ds4_gemma_media.c",
+      "bytes": 19683,
+      "sha256": "ab28c0a2a800b556b24873a70fd8845b3059670471586d01923e56f00f74cac2"
+    },
+    {
+      "path": "ds4_gemma_multimodal.h",
+      "bytes": 2799,
+      "sha256": "d03c04996b420db869f8c12025e4fd0ee4200e8f807c8a28f27c344c24f4f073"
+    },
+    {
+      "path": "ds4_gemma_vision.c",
+      "bytes": 25005,
+      "sha256": "7bfa44a25de2a99b3f06f38945e7f41eb5092b97faf5b42cd4112aa0d13490e3"
+    },
+    {
+      "path": "ds4_gemma_visual.c",
+      "bytes": 27143,
+      "sha256": "f1a0f060c04dd5d02bfb9aef4ef1cc684ca7c7c008f3612f4f8c5a64ce231d3f"
+    },
+    {
+      "path": "ds4_gemma_visual.h",
+      "bytes": 3547,
+      "sha256": "04f09de4b40eb99aeaf38cbc7251afb6f3266288f3322239d6453696a17fd608"
+    },
+    {
+      "path": "ds4_gemma_weights_internal.h",
+      "bytes": 474,
+      "sha256": "c418360523724cc196c7b7392e143f3d2135a224b7a9b6fdd21833a41ad67d46"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 38531,
+      "sha256": "f12986a91e4612da4aec101c0584e8ee41390a5b50dc2df586926b98a436da4c"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 9933,
+      "sha256": "dcea7148008b59f8014d5be3052d6df398f38c615fa1d151edf9954e521a4c62"
+    },
+    {
+      "path": "ds4_numeric_cuda.cu",
+      "bytes": 51972,
+      "sha256": "251a9540e0041d22c85822ba58ab7c53f287edff9dfe8eff4d4516020f5e949f"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 3025,
+      "sha256": "d81e691e1efab21111dce662703f8cf860cdbd15c3c0821e0933cdd7cc703aec"
+    },
+    {
+      "path": "tests/probe_gemma_visual.c",
+      "bytes": 20919,
+      "sha256": "6eaab0bb877c75c79b4b8d2f886ed09fa11b69752d251f6f1c0aabb31e7253fe"
+    },
+    {
+      "path": "tests/suite_media_api.py",
+      "bytes": 10188,
+      "sha256": "d6607cd65bd9b87111fe0426576f2cf1b54895fdb2ef00930d288c9782a90672"
+    },
+    {
+      "path": "tests/test_gemma_media.py",
+      "bytes": 42096,
+      "sha256": "4f82da43dd802233b2a596ea44560c9aa64ede9a4594ff0416dd2cbaff71bc61"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 43766,
+      "sha256": "0b1e007b6e3fd7ef41a6627c177516ecfe69a66a7c4453175cd07efdcfcaf9ac"
+    },
+    {
+      "path": "tools/qualify_gemma_multimodal.py",
+      "bytes": 21714,
+      "sha256": "f388df838f1c32ce8e530711eacb7ee636477237bf5176dfef66f2fb9a12d9eb"
+    },
+    {
+      "path": "tools/run_gemma_visual_oracle.py",
+      "bytes": 20615,
+      "sha256": "8a8b2da4fac6acb8ddbba63f5611ca86c7f33218d5a46de4989417734c06e4a3"
+    },
+    {
+      "path": "tools/score_suite_gemma_corpus.py",
+      "bytes": 9995,
+      "sha256": "1a8bc71058a2124539b7f818766ab99463c06288312254e0ffea7b1616a936cf"
+    },
+    {
+      "path": "tools/suite_visual_cases.py",
+      "bytes": 3044,
+      "sha256": "832a3141d57d74735af7bbccffd6e73522e4ef085e9af5fbf8ae01a78620ea4e"
+    }
+  ],
+  "licenses": [
+    {
+      "path": "third_party/transformers/LICENSE",
+      "bytes": 11418,
+      "sha256": "77fd4710def9ec3c0f6225800e0235f15a425abd4a8b03559127fcd782612049"
+    },
+    {
+      "path": "third_party/pytorch/LICENSE",
+      "bytes": 3464,
+      "sha256": "bd018feef8825e88181c84eb7e3aa4eafb8f08a20d9fd6ef948569610c4a3e43"
+    },
+    {
+      "path": "third_party/numpy/LICENSE",
+      "bytes": 1543,
+      "sha256": "1be1df33863f97a7bc1c4d67980bd6c69c9a6fef0a5ee76e6ad6cb91e56e8491"
+    }
+  ]
+}

@@ -18,11 +18,14 @@ from PIL import Image, ImageOps
 from tests.suite_media_api import (
     ROOT,
     Budget,
+    Content,
     DecodeOptions,
     Estimate,
     FrameInput,
     FrameView,
     MediaRecipe,
+    MultimodalRequest,
+    Segment,
     VideoRecipe,
     VisualRequest,
     codec_rgb_reference,
@@ -667,7 +670,7 @@ class Processor(_MediaCase):
                     )
                     self.assertEqual(
                         v.audio_soft_tokens,
-                        self.reference._compute_audio_num_tokens(x, 16000),
+                        int(expected["input_features_mask"][0][::4].sum()),
                     )
 
     def test_video_audio_plan_checks_complete_context(self):
@@ -762,6 +765,141 @@ class Processor(_MediaCase):
                 0,
             )
             self.assertIsNone(out.value)
+
+    def test_typed_multimodal_order_identity_segments_and_admission(self):
+        self.prepare(self.pixels(np.zeros((96, 144, 3), np.uint8)))
+        image = self.prepared[-1]
+        self.prepare(self.audio(np.zeros(16017, np.float32), 16000))
+        sound = self.prepared[-1]
+        runtime, numeric, adapter = C.c_void_p(), C.c_void_p(), C.c_void_p()
+        self.assertEqual(self.lib.ds4_runtime_create(C.byref(runtime), None, None), 0)
+        self.assertEqual(
+            self.lib.ds4_numeric_cpu(C.byref(numeric), self.resources, 84), 0
+        )
+        self.assertEqual(
+            self.lib.ds4_gemma_visual_open(
+                C.byref(adapter),
+                self.bundle,
+                numeric,
+                runtime,
+                os.fsencode(
+                    ROOT
+                    / "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g"
+                ),
+                self.processor,
+            ),
+            0,
+        )
+
+        def prepare(parts, task=0, segment=None, expected=0):
+            content = (Content * len(parts))(*parts)
+            request = MultimodalRequest(
+                content, len(parts), task, False, segment or Segment()
+            )
+            out = C.c_void_p(1)
+            self.assertEqual(
+                self.lib.ds4_gemma_multimodal_prepare(
+                    adapter, C.byref(request), 1, C.byref(out)
+                ),
+                expected,
+            )
+            if expected:
+                self.assertIsNone(out.value)
+            return out
+
+        def key(input, dim=768):
+            value = (C.c_ubyte * 32)()
+            self.assertEqual(self.lib.ds4_gemma_multimodal_key(input, 0, dim, value), 0)
+            return bytes(value)
+
+        order = [
+            Content(b"Prima ", None),
+            Content(None, image),
+            Content(b" poi ", None),
+            Content(None, sound),
+        ]
+        original = prepare(order)
+        self.assertEqual(key(original), key(original))
+        self.assertNotEqual(key(original), key(original, 128))
+        for parts, task, segment in (
+            (order, 1, None),
+            (list(reversed(order)), 0, None),
+            (order, 0, Segment(7, 1.25, 2.5)),
+        ):
+            value = prepare(parts, task, segment)
+            self.assertNotEqual(key(original), key(value))
+            meta = Segment()
+            self.assertEqual(
+                self.lib.ds4_gemma_multimodal_segment(value, 0, C.byref(meta)), 0
+            )
+            self.assertEqual(meta.id, segment.id if segment else 0)
+            self.assertEqual(self.lib.ds4_gemma_visual_input_free(value), 0)
+        for parts, segment in (
+            ([Content(b"<|audio|>", None)], None),
+            ([Content(b"both", image)], None),
+            ([Content(None, None)], None),
+            ([Content(b" x" * 8192, None)], None),
+            (order, Segment(1, 2, 1)),
+            (order, Segment(1, float("nan"), 3)),
+        ):
+            prepare(parts, segment=segment, expected=1)
+        text = prepare([Content(b"solo testo", None)])
+        self.assertEqual(self.lib.ds4_gemma_visual_input_free(text), 0)
+        source = (
+            ROOT / "tests/fixtures/native-suite-v1/media/audio-0.wav"
+        ).read_bytes()
+        segments = [Segment(11, 0, 0.5), Segment(12, 0.5, 1.4)]
+        requests = (MultimodalRequest * 2)()
+        contents = []
+        soft = []
+        for i, segment in enumerate(segments):
+            options = DecodeOptions(
+                self.limits,
+                VideoRecipe(1, 32, 0),
+                0,
+                segment.start_seconds,
+                segment.end_seconds,
+            )
+            decoded = self.decode(source, 3, options)
+            view = self.prepare(decoded)
+            soft.append(view.audio_soft_tokens)
+            contents.append((Content * 1)(Content(None, self.prepared[-1])))
+            requests[i] = MultimodalRequest(contents[-1], 1, 0, False, segment)
+        combined = C.c_void_p()
+        self.assertEqual(
+            self.lib.ds4_gemma_multimodal_prepare(
+                adapter, requests, 2, C.byref(combined)
+            ),
+            0,
+        )
+        lengths = []
+        for i, expected in enumerate(segments):
+            meta, ids, length = Segment(), C.POINTER(C.c_uint32)(), C.c_uint32()
+            self.assertEqual(
+                self.lib.ds4_gemma_multimodal_segment(combined, i, C.byref(meta)), 0
+            )
+            self.assertEqual(
+                (meta.id, meta.start_seconds, meta.end_seconds),
+                (expected.id, expected.start_seconds, expected.end_seconds),
+            )
+            self.assertEqual(
+                self.lib.ds4_gemma_visual_input_tokens(
+                    combined, i, C.byref(ids), C.byref(length)
+                ),
+                0,
+            )
+            lengths.append(length.value)
+        self.assertEqual(lengths[1] - lengths[0], soft[1] - soft[0])
+        self.assertNotEqual(lengths[0], lengths[1])
+        self.assertEqual(self.lib.ds4_gemma_visual_input_free(combined), 0)
+        live, peak = C.c_uint64(), C.c_uint64()
+        self.lib.ds4_numeric_memory(numeric, C.byref(live), C.byref(peak))
+        self.assertEqual((live.value, peak.value), (0, 0))
+        self.assertEqual(self.lib.ds4_gemma_visual_close(adapter), 5)
+        self.assertEqual(self.lib.ds4_gemma_visual_input_free(original), 0)
+        self.assertEqual(self.lib.ds4_gemma_visual_close(adapter), 0)
+        self.assertEqual(self.lib.ds4_numeric_close(numeric), 0)
+        self.lib.ds4_runtime_release(runtime)
 
     def test_visual_placeholder_admission_and_ownership(self):
         self.prepare(self.pixels(np.zeros((96, 144, 3), np.uint8)))

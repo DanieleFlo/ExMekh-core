@@ -1,0 +1,220 @@
+{
+  "cases": 161,
+  "dimensions": {
+    "128": {
+      "components": {
+        "max_abs": 8.940696716308594e-08,
+        "rmse": 6.5894816605691936e-09,
+        "relative_l2": 7.455147438614528e-08,
+        "bit_exact": false,
+        "cosine_min": 0.999999999999995,
+        "unit_norm_error_max": 7.613510377701971e-08,
+        "verdict": "PASS"
+      },
+      "official": {
+        "max_abs": 0.0010687708854675293,
+        "rmse": 4.027806024877764e-05,
+        "relative_l2": 0.0004556942304824377,
+        "bit_exact": false,
+        "cosine_min": 0.9999939451325788,
+        "unit_norm_error_max": 7.613510377701971e-08,
+        "verdict": "PASS"
+      },
+      "frozen": {
+        "max_abs": 0.01086285337805748,
+        "rmse": 0.0009702680883273054,
+        "relative_l2": 0.010977330369367554,
+        "bit_exact": false,
+        "cosine_min": 0.9991587785969143,
+        "unit_norm_error_max": 7.613510377701971e-08,
+        "verdict": "FAIL"
+      }
+    },
+    "256": {
+      "components": {
+        "max_abs": 8.940696716308594e-08,
+        "rmse": 4.624846603471677e-09,
+        "relative_l2": 7.399754531442207e-08,
+        "bit_exact": false,
+        "cosine_min": 0.9999999999999964,
+        "unit_norm_error_max": 8.947179386264992e-08,
+        "verdict": "PASS"
+      },
+      "official": {
+        "max_abs": 0.0008988631889224052,
+        "rmse": 3.490514523663885e-05,
+        "relative_l2": 0.0005584823211354407,
+        "bit_exact": false,
+        "cosine_min": 0.999991243235456,
+        "unit_norm_error_max": 8.947179386264992e-08,
+        "verdict": "PASS"
+      },
+      "frozen": {
+        "max_abs": 0.009759325534105301,
+        "rmse": 0.000841391370448053,
+        "relative_l2": 0.013462261949808485,
+        "bit_exact": false,
+        "cosine_min": 0.9987409852020579,
+        "unit_norm_error_max": 8.947179386264992e-08,
+        "verdict": "FAIL"
+      }
+    },
+    "512": {
+      "components": {
+        "max_abs": 5.960464477539063e-08,
+        "rmse": 3.1436762398732894e-09,
+        "relative_l2": 7.113327293362859e-08,
+        "bit_exact": false,
+        "cosine_min": 0.9999999999999956,
+        "unit_norm_error_max": 7.945696045563722e-08,
+        "verdict": "PASS"
+      },
+      "official": {
+        "max_abs": 0.0007330472581088543,
+        "rmse": 2.6293355199839238e-05,
+        "relative_l2": 0.000594950710550547,
+        "bit_exact": false,
+        "cosine_min": 0.9999899702513428,
+        "unit_norm_error_max": 7.945696045563722e-08,
+        "verdict": "PASS"
+      },
+      "frozen": {
+        "max_abs": 0.008702729130163789,
+        "rmse": 0.0006464973483809734,
+        "relative_l2": 0.01462856511198659,
+        "bit_exact": false,
+        "cosine_min": 0.9984049990971245,
+        "unit_norm_error_max": 7.945696045563722e-08,
+        "verdict": "FAIL"
+      }
+    },
+    "768": {
+      "components": {
+        "max_abs": 5.960464477539063e-08,
+        "rmse": 2.6509484559152155e-09,
+        "relative_l2": 7.34652366832323e-08,
+        "bit_exact": false,
+        "cosine_min": 0.9999999999999953,
+        "unit_norm_error_max": 8.996733802391077e-08,
+        "verdict": "PASS"
+      },
+      "official": {
+        "max_abs": 0.0006380379199981689,
+        "rmse": 2.1799823356402303e-05,
+        "relative_l2": 0.0006041344103501566,
+        "bit_exact": false,
+        "cosine_min": 0.9999900651605851,
+        "unit_norm_error_max": 8.996733802391077e-08,
+        "verdict": "PASS"
+      },
+      "frozen": {
+        "max_abs": 0.007685860327910632,
+        "rmse": 0.0005391484361849541,
+        "relative_l2": 0.01494131984178459,
+        "bit_exact": false,
+        "cosine_min": 0.9983471570760529,
+        "unit_norm_error_max": 8.996733802391077e-08,
+        "verdict": "FAIL"
+      }
+    }
+  },
+  "retrieval": {
+    "dev/text_to_audio/128": {
+      "recall_at_1": 0.6875,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8487118045281782,
+      "verdict": "PASS"
+    },
+    "dev/audio_to_text/128": {
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.723360468147677,
+      "verdict": "PASS"
+    },
+    "heldout/text_to_audio/128": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8408997232724515,
+      "verdict": "PASS"
+    },
+    "heldout/audio_to_text/128": {
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.75,
+      "ndcg_at_10": 0.7217525857326119,
+      "verdict": "PASS"
+    },
+    "dev/text_to_audio/256": {
+      "recall_at_1": 0.6875,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8432676793573903,
+      "verdict": "PASS"
+    },
+    "dev/audio_to_text/256": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.8080328858630988,
+      "verdict": "PASS"
+    },
+    "heldout/text_to_audio/256": {
+      "recall_at_1": 0.5625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.7971338985538226,
+      "verdict": "FAIL"
+    },
+    "heldout/audio_to_text/256": {
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.7618991050595311,
+      "verdict": "PASS"
+    },
+    "dev/text_to_audio/512": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8147228201007499,
+      "verdict": "PASS"
+    },
+    "dev/audio_to_text/512": {
+      "recall_at_1": 0.75,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.8570258983885028,
+      "verdict": "PASS"
+    },
+    "heldout/text_to_audio/512": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8202007889556064,
+      "verdict": "PASS"
+    },
+    "heldout/audio_to_text/512": {
+      "recall_at_1": 0.5,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.7483921175849351,
+      "verdict": "PASS"
+    },
+    "dev/text_to_audio/768": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8147228201007499,
+      "verdict": "PASS"
+    },
+    "dev/audio_to_text/768": {
+      "recall_at_1": 0.75,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.8705328858630988,
+      "verdict": "PASS"
+    },
+    "heldout/text_to_audio/768": {
+      "recall_at_1": 0.75,
+      "recall_at_5": 1.0,
+      "ndcg_at_10": 0.8663345697591742,
+      "verdict": "PASS"
+    },
+    "heldout/audio_to_text/768": {
+      "recall_at_1": 0.625,
+      "recall_at_5": 0.875,
+      "ndcg_at_10": 0.8272583367813673,
+      "verdict": "PASS"
+    }
+  },
+  "verdict": "FAIL"
+}

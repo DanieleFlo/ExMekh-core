@@ -260,8 +260,6 @@ static ds4_status plan(ds4_gemma_processor *p, const ds4_media *source,
     uint32_t valid =
         media.audio_samples > 160 ? (media.audio_samples - 161) / 160 + 1 : 0;
     v->audio_soft_tokens = (valid + 3) / 4;
-    if (v->audio_soft_tokens > 280)
-      v->audio_soft_tokens = 280;
     v->soft_tokens += v->audio_soft_tokens;
   }
   if ((uint64_t)v->soft_tokens + media.frames * 2ull + 2 > 8192)
@@ -302,7 +300,8 @@ static void media_key(ds4_gemma_processor *p, const ds4_media *source,
   ds4_sha256_update(&hash, p->identity, 32);
   ds4_sha256_update(&hash, media.source_sha256, 32);
   ds4_sha256_update(&hash, media.decoded_sha256, 32);
-  hash_u64(&hash, 1); /* FP32 preprocessing / BF16 model profile, recipe v1. */
+  /* v2 preserves SIMD complex magnitude rounding and uncapped audio masks. */
+  hash_u64(&hash, 2); /* FP32 preprocessing / BF16 model profile. */
   hash_u64(&hash, media.type);
   hash_u64(&hash, v->soft_token_budget);
   hash_u64(&hash, media.audio_policy);
@@ -396,8 +395,15 @@ static void spectrum(ds4_gemma_processor *p, const float *wave, uint64_t n,
       }
   /* NumPy 2.5 keeps rfft(float32) in complex64. Round FFT components before
    * magnitude, then multiply the frozen float64 mel bank, then round output. */
-  for (uint32_t k = 0; k < 257; k++)
-    magnitude[k] = hypotf((float)re[k], (float)im[k]);
+  for (uint32_t k = 0; k < 257; k++) {
+    /* NumPy's SIMD complex absolute uses a scaled FP32 ratio and FMA,
+     * rather than libc hypotf. One FP32 ulp here can cross a BF16 tie at
+     * the audio tower input. See the pinned NumPy provenance. */
+    float a = fabsf((float)re[k]), b = fabsf((float)im[k]);
+    float larger = fmaxf(a, b), smaller = fminf(a, b);
+    float ratio = larger ? smaller / larger : 0;
+    magnitude[k] = larger * sqrtf(fmaf(ratio, ratio, 1.f));
+  }
 }
 static void prepare_audio(ds4_gemma_processor *p, const ds4_media *source,
                           ds4_gemma_media *m) {

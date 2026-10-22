@@ -35,6 +35,8 @@ ds4_status ds4_embedding_gemma2_open(ds4_embedding_gemma2 **, ds4_bundle *,
                                      const char *compiled_asset);
 ds4_status ds4_embedding_gemma2_close(ds4_embedding_gemma2 *);
 ds4_status ds4_embedding_gemma2_release_weights(ds4_embedding_gemma2 *);
+/* Read-only owned weight storage, without exposing groups or tensor layout. */
+uint64_t ds4_embedding_gemma2_resident_weights(const ds4_embedding_gemma2 *);
 ds4_status ds4_gemma_prepare(ds4_embedding_gemma2 *, const ds4_gemma_text *,
                              size_t count, ds4_gemma_input **);
 void ds4_gemma_input_free(ds4_gemma_input *);

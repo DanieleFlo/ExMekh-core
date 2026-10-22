@@ -39,6 +39,17 @@ struct ds4_gemma_result {
   uint32_t count, dimensions;
   ds4_resource *account;
 };
+uint64_t ds4_embedding_gemma2_resident_weights(const ds4_embedding_gemma2 *e) {
+  uint64_t bytes = 0;
+  if (!e)
+    return 0;
+  for (unsigned i = 0; i < 25; i++) {
+    uint64_t n = ds4_weight_group_bytes(e->groups[i]);
+    if (ds4_weight_group_resident(e->groups[i]))
+      bytes += n;
+  }
+  return bytes;
+}
 static ds4_status bind(ds4_embedding_gemma2 *e, const char *name,
                        uint32_t group, uint32_t rank, uint64_t a, uint64_t b) {
   for (size_t i = 0; i < ds4_bundle_tensor_count(e->bundle); i++) {
@@ -360,40 +371,46 @@ ds4_status gemma_input_visual_clear(ds4_gemma_input *in) {
 }
 ds4_status gemma_input_visual_validate(const ds4_gemma_input *in, size_t item,
                                        uint32_t image_tokens,
-                                       uint32_t video_tokens) {
+                                       uint32_t video_tokens,
+                                       uint32_t audio_tokens) {
   if (!in || item >= in->count)
     return DS4_STATUS_INVALID;
-  uint32_t images = 0, videos = 0;
+  uint32_t images = 0, videos = 0, audio = 0;
   for (uint32_t i = 0; i < in->lengths[item]; i++) {
     images += in->tokens[item][i] == 258880;
     videos += in->tokens[item][i] == 258884;
-    if (in->tokens[item][i] == 258881)
-      return DS4_STATUS_UNSUPPORTED;
+    audio += in->tokens[item][i] == 258881;
   }
-  return images == image_tokens && videos == video_tokens ? DS4_STATUS_OK
-                                                          : DS4_STATUS_INVALID;
+  return images == image_tokens && videos == video_tokens &&
+                 audio == audio_tokens
+             ? DS4_STATUS_OK
+             : DS4_STATUS_INVALID;
 }
 ds4_status gemma_input_visual(ds4_gemma_input *in, size_t item,
                               gemma_visual_tokens features) {
   if ((features.image_tokens && !features.images) ||
-      (features.video_tokens && !features.videos))
+      (features.video_tokens && !features.videos) ||
+      (features.audio_tokens && !features.audio))
     return DS4_STATUS_INVALID;
-  ds4_status s = gemma_input_visual_validate(in, item, features.image_tokens,
-                                             features.video_tokens);
+  ds4_status s =
+      gemma_input_visual_validate(in, item, features.image_tokens,
+                                  features.video_tokens, features.audio_tokens);
   if (s)
     return s;
   ds4_host_buffer replacement = {0};
   s = ds4_host_alloc(in->resources, in->owner,
-                     ((uint64_t)features.image_tokens + features.video_tokens) *
+                     ((uint64_t)features.image_tokens + features.video_tokens +
+                      features.audio_tokens) *
                          512 * 2,
                      &replacement);
   if (s)
     return s;
-  uint32_t a = 0, b = 0, row = 0;
+  uint32_t a = 0, b = 0, c = 0, row = 0;
   for (uint32_t i = 0; i < in->lengths[item]; i++) {
     const uint16_t *source =
         in->tokens[item][i] == 258880   ? features.images + (uint64_t)a++ * 512
         : in->tokens[item][i] == 258884 ? features.videos + (uint64_t)b++ * 512
+        : in->tokens[item][i] == 258881 ? features.audio + (uint64_t)c++ * 512
                                         : NULL;
     if (source)
       memcpy((uint16_t *)replacement.data + (uint64_t)row++ * 512, source,
@@ -405,6 +422,10 @@ ds4_status gemma_input_visual(ds4_gemma_input *in, size_t item,
 }
 ds4_status ds4_gemma_input_tokens(const ds4_gemma_input *in, size_t i,
                                   const uint32_t **ids, uint32_t *count) {
+  if (ids)
+    *ids = NULL;
+  if (count)
+    *count = 0;
   if (!in || i >= in->count || !ids || !count)
     return DS4_STATUS_INVALID;
   *ids = in->tokens[i];
@@ -495,15 +516,12 @@ static ds4_status forward(ds4_embedding_gemma2 *e, const uint32_t *tokens,
   const uint16_t *table = ds4_bundle_tensor_data(e->bundle, e->embedding);
   for (uint32_t i = 0; i < n; i++) {
     uint32_t token = tokens[i];
-    if (token == 258880 || token == 258884) {
+    if (token == 258880 || token == 258884 || token == 258881) {
       if (!visual) {
         status = DS4_STATUS_INVALID;
         goto cleanup;
       }
       token = 0; /* Match the oracle's placeholder PAD before scaled lookup. */
-    } else if (token == 258881) {
-      status = DS4_STATUS_UNSUPPORTED;
-      goto cleanup;
     }
     memcpy(h + (uint64_t)i * 512, table + (uint64_t)token * 512, 1024);
   }
@@ -518,7 +536,7 @@ static ds4_status forward(ds4_embedding_gemma2 *e, const uint32_t *tokens,
     TRY(ds4_num_read(e->num, x, h, (uint64_t)n * 1024));
     uint32_t row = 0;
     for (uint32_t i = 0; i < n; i++)
-      if (tokens[i] == 258880 || tokens[i] == 258884)
+      if (tokens[i] == 258880 || tokens[i] == 258884 || tokens[i] == 258881)
         memcpy(h + (uint64_t)i * 512, visual + (uint64_t)row++ * 512, 1024);
     TRY(ds4_num_write(e->num, x, h, (uint64_t)n * 1024));
   }
@@ -675,15 +693,14 @@ static ds4_status forward(ds4_embedding_gemma2 *e, const uint32_t *tokens,
   float inv = 1.f / (float)sqrt(squared);
   for (uint32_t d = 0; d < dimensions; d++)
     result[d] *= inv;
-cleanup:
-  {
-    ds4_status s = clear(&w);
-    if (!status)
-      status = s;
-    ds4_host_free(&host);
-    ds4_host_free(&mask);
-    return status;
-  }
+cleanup: {
+  ds4_status s = clear(&w);
+  if (!status)
+    status = s;
+  ds4_host_free(&host);
+  ds4_host_free(&mask);
+  return status;
+}
 }
 void ds4_gemma_result_free(ds4_gemma_result *r) {
   if (r) {
@@ -711,9 +728,8 @@ ds4_status ds4_gemma_embed(ds4_embedding_gemma2 *e, const ds4_gemma_input *in,
   for (uint32_t i = 0; i < in->count; i++)
     for (uint32_t j = 0; j < in->lengths[i]; j++) {
       uint32_t token = in->tokens[i][j];
-      if (token == 258881)
-        return DS4_STATUS_UNSUPPORTED;
-      if ((token == 258880 || token == 258884) && !in->visual[i].data)
+      if ((token == 258880 || token == 258884 || token == 258881) &&
+          !in->visual[i].data)
         return DS4_STATUS_INVALID;
     }
   ds4_status status;

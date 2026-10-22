@@ -59,9 +59,11 @@ static bool partial_overlap(ds4_num_view a, ds4_num_view b) {
 ds4_status ds4_numeric_create(ds4_numeric **out, const ds4_numeric_ops *ops,
                               void *state, ds4_resources *r, uint64_t owner,
                               bool device) {
-  if (!out || !ops || !r || !owner)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!ops || !r || !owner)
+    return DS4_STATUS_INVALID;
   ds4_resource_spec spec = {.owner = owner,
                             .requested = sizeof(ds4_numeric),
                             .allocated = sizeof(ds4_numeric),
@@ -121,9 +123,11 @@ ds4_resources *ds4_numeric_resources(ds4_numeric *c, uint64_t *owner) {
 ds4_status ds4_num_alloc(ds4_numeric *c, uint64_t n, uint32_t type,
                          ds4_num_buffer **out) {
   uint32_t unit = ds4_num_type_bytes(type);
-  if (!c || !out || !n || !unit || n > SIZE_MAX / unit)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!c || !n || !unit || n > SIZE_MAX / unit)
+    return DS4_STATUS_INVALID;
   ds4_num_buffer *b = calloc(1, sizeof(*b));
   if (!b)
     return DS4_STATUS_NOMEM;
@@ -293,8 +297,7 @@ ds4_status ds4_num_matmul_batch_layout(ds4_numeric *c, ds4_num_view y,
       !product((uint64_t)rows * in, batch, &nx) ||
       !product((uint64_t)out * in, batch, &nw) ||
       !product((uint64_t)rows * out, batch, &ny) || !fits(x, nx) ||
-      !fits(w, nw) || !fits(y, ny) || x.type != DS4_NUM_F32 ||
-      w.type != DS4_NUM_F32 || y.type != DS4_NUM_F32)
+      !fits(w, nw) || !fits(y, ny) || x.type != w.type || x.type != y.type)
     return DS4_STATUS_INVALID;
   x = ds4_num_slice(x, 0, nx);
   w = ds4_num_slice(w, 0, nw);
@@ -334,6 +337,22 @@ ds4_status ds4_num_channel_l2(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
   return c->ops->channel_l2
              ? c->ops->channel_l2(c->state, y, x, channels, spatial, eps)
              : DS4_STATUS_UNSUPPORTED;
+}
+ds4_status ds4_num_channel_rms(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
+                               ds4_num_view scale, uint32_t channels,
+                               uint32_t spatial, float eps) {
+  if (!c || !channels || channels > INT_MAX || !spatial || spatial > INT_MAX ||
+      !valid(x) || x.count != (uint64_t)channels * spatial ||
+      !fits(y, x.count) || y.type != x.type || !fits(scale, channels) ||
+      !isfinite(eps) || eps <= 0)
+    return DS4_STATUS_INVALID;
+  y = ds4_num_slice(y, 0, x.count);
+  scale = ds4_num_slice(scale, 0, channels);
+  if (overlaps(y, x) || overlaps(y, scale))
+    return DS4_STATUS_INVALID;
+  return c->ops->channel_rms ? c->ops->channel_rms(c->state, y, x, scale,
+                                                   channels, spatial, eps)
+                             : DS4_STATUS_UNSUPPORTED;
 }
 ds4_status ds4_num_point(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
                          ds4_num_view b, uint32_t op, float scalar) {
@@ -566,6 +585,23 @@ static ds4_status cpu_channel_l2(void *s, ds4_num_view y, ds4_num_view x,
     for (uint32_t c = 0; c < channels; c++)
       put(y, (uint64_t)p * channels + c,
           get(x, (uint64_t)c * spatial + p) / divisor);
+  }
+  return DS4_STATUS_OK;
+}
+static ds4_status cpu_channel_rms(void *s, ds4_num_view y, ds4_num_view x,
+                                  ds4_num_view scale, uint32_t channels,
+                                  uint32_t spatial, float eps) {
+  (void)s;
+  for (uint32_t p = 0; p < spatial; p++) {
+    double sum = 0;
+    for (uint32_t c = 0; c < channels; c++) {
+      double v = get(x, (uint64_t)c * spatial + p);
+      sum += v * v;
+    }
+    float inv = 1 / sqrtf((float)sum / channels + eps);
+    for (uint32_t c = 0; c < channels; c++)
+      put(y, (uint64_t)p * channels + c,
+          get(x, (uint64_t)c * spatial + p) * inv * get(scale, c));
   }
   return DS4_STATUS_OK;
 }
@@ -903,10 +939,10 @@ ds4_status ds4_num_softmax(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
   return c->ops->softmax(c->state, y, x, bounds, rows, width, scale);
 }
 static const ds4_numeric_ops cpu_ops = {
-    cpu_alloc,        cpu_release,   cpu_copy,  cpu_fence,   NULL,
-    cpu_linear,       cpu_norm,      cpu_point, cpu_rope,    cpu_attend,
-    cpu_conv,         cpu_reorder,   cpu_pool,  cpu_nearest, cpu_softmax,
-    cpu_matmul_batch, cpu_channel_l2};
+    cpu_alloc,        cpu_release,    cpu_copy,       cpu_fence,   NULL,
+    cpu_linear,       cpu_norm,       cpu_point,      cpu_rope,    cpu_attend,
+    cpu_conv,         cpu_reorder,    cpu_pool,       cpu_nearest, cpu_softmax,
+    cpu_matmul_batch, cpu_channel_l2, cpu_channel_rms};
 ds4_status ds4_numeric_cpu(ds4_numeric **out, ds4_resources *r,
                            uint64_t owner) {
   return ds4_numeric_create(out, &cpu_ops, NULL, r, owner, false);

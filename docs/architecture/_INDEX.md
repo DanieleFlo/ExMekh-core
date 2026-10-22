@@ -250,6 +250,14 @@ Il decoder possiede byte originali, frame e waveform; il processor possiede
 - righe 21–34: **Confini conservati** — Il decoder possiede byte originali, frame e waveform; il processor possiede
 - righe 35–63: **Verifica e limiti** — Il report della revisione
 
+## [Revisione clean code di T15/T16](native-suite-t15-t16-clean-code-review-20261022.md)
+
+I nuovi test riproducono gli output non azzerati CPU/CUDA e il rifiuto
+
+- righe 9–28: **Correzioni e responsabilità** — I nuovi test riproducono gli output non azzerati CPU/CUDA e il rifiuto
+- righe 29–51: **Principi applicati e confini** — Nei moduli adiacenti il registro e l'executor possiedono già le scelte di budget
+- righe 52–89: **Verifica e limiti** — Il report della revisione
+
 ## [Contratti della suite nativa DS4, versione 1](native-suite-v1-contract.md)
 
 Il catalogo distingue `model_id`, `revision`, `profile` e `component`.

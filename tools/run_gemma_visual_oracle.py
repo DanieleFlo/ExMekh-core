@@ -3,11 +3,12 @@
 
 import argparse
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
-from suite_visual_cases import frames
+from suite_visual_cases import audio, frames
 
 
 def main():
@@ -39,6 +40,9 @@ def main():
     torch.set_num_threads(2)
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
+    torch.backends.cudnn.allow_tf32 = False
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
     modelpath = args.prepared / "models/google/embeddinggemma-2"
     processor = AutoProcessor.from_pretrained(modelpath, local_files_only=True)
     model = (
@@ -61,7 +65,7 @@ def main():
             for k in ("query", "document", "CodeRetrieval", "SentenceSimilarity")
         ),
     ]
-    current = {"item": 0, "frame": 0, "soft": [], "record": True}
+    current = {"item": 0, "frame": 0, "soft": [], "record": True, "clip": 0}
 
     def save(path, value):
         value.detach().cpu().contiguous().view(torch.uint16).numpy().tofile(
@@ -69,17 +73,133 @@ def main():
         )
 
     def dump(stage, layer, value):
+        if os.environ.get("DS4_GEMMA_AUDIO_TRACE_ONLY"):
+            return
         if not current["record"]:
             return
         save(f"item-{current['item']}-{stage}-{layer}.bf16", value)
 
     def vision(stage, layer, value):
+        if os.environ.get("DS4_GEMMA_AUDIO_TRACE_ONLY"):
+            return
         if not current["record"]:
             return
         if stage in ("vision-pooled", "vision-projected"):
             value = value.split(list(map(int, current["soft"])))
         for i, row in enumerate(value):
             save(f"frame-{current['frame'] + i}-{stage}-{layer}.bf16", row)
+
+    def sound(stage, layer, value):
+        if os.environ.get("DS4_GEMMA_AUDIO_TRACE_ONLY") == "1" and stage not in (
+            "audio-layer",
+            "audio-input",
+            "audio-output",
+            "audio-projected",
+            "audio-subsample",
+            "audio-probabilities",
+        ):
+            return
+        if current["record"]:
+            if value.dtype == torch.float32:
+                value.detach().cpu().contiguous().numpy().tofile(
+                    args.output / f"clip-{current['clip']}-{stage}-{layer}.f32"
+                )
+            else:
+                save(f"clip-{current['clip']}-{stage}-{layer}.bf16", value)
+
+    for i, layer in enumerate(model.audio_tower.layers):
+        layer.self_attn.register_forward_hook(
+            lambda m, a, o, i=i: sound("audio-probabilities", i, o[1])
+        )
+        for module, stage in (
+            (layer.feed_forward1, "audio-ff1"),
+            (layer.lconv1d, "audio-convolution"),
+            (layer, "audio-layer"),
+        ):
+            module.register_forward_hook(
+                lambda m, a, o, i=i, stage=stage: sound(stage, i, o)
+            )
+        layer.lconv1d.register_forward_pre_hook(
+            lambda m, a, i=i: sound("audio-attention", i, a[0])
+        )
+    for i, layer in enumerate(
+        (
+            model.audio_tower.subsample_conv_projection.layer0,
+            model.audio_tower.subsample_conv_projection.layer1,
+        )
+    ):
+        layer.register_forward_hook(
+            lambda m, a, o, i=i: sound(
+                "audio-subsample", i, o[0].permute(0, 2, 3, 1).contiguous()
+            )
+        )
+    model.audio_tower.subsample_conv_projection.register_forward_hook(
+        lambda m, a, o: sound("audio-input", 0, o[0])
+    )
+    model.audio_tower.output_proj.register_forward_hook(
+        lambda m, a, o: sound("audio-output", 12, o)
+    )
+    model.embed_audio.register_forward_hook(
+        lambda m, a, o: sound("audio-projected", 12, o)
+    )
+    model.audio_tower.rel_pos_enc.register_forward_hook(
+        lambda m, a, o: sound("audio-position", 0, o)
+    )
+    sa = model.audio_tower.layers[0].self_attn
+    sa.relative_k_proj.register_forward_hook(
+        lambda m, a, o: sound("audio-relative", 0, o)
+    )
+    sa.post.register_forward_pre_hook(lambda m, a: sound("audio-context", 0, a[0]))
+
+    def scaled(stage, value, scale):
+        if os.environ.get("DS4_GEMMA_AUDIO_TRACE_ONLY"):
+            return
+        if current["record"]:
+            value = value.float().view(1, -1, 8, 128)
+            if stage == "audio-query":
+                value = (
+                    value * sa.q_scale * torch.nn.functional.softplus(sa.per_dim_scale)
+                )
+            else:
+                value = value * scale
+            value.detach().cpu().numpy().tofile(
+                args.output / f"clip-{current['clip']}-{stage}-0.f32"
+            )
+
+    sa.q_proj.register_forward_hook(
+        lambda m, a, o: scaled(
+            "audio-query",
+            o,
+            sa.q_scale
+            * torch.ones(128, device="cuda")
+            * torch.nn.functional.softplus(sa.per_dim_scale),
+        )
+    )
+    sa.k_proj.register_forward_hook(lambda m, a, o: scaled("audio-key", o, sa.k_scale))
+    lc = model.audio_tower.layers[0].lconv1d
+    lc.depthwise_conv1d.register_forward_pre_hook(
+        lambda m, a: sound("audio-glu", 0, a[0].transpose(1, 2).contiguous())
+    )
+    lc.depthwise_conv1d.register_forward_hook(
+        lambda m, a, o: sound("audio-depthwise", 0, o.transpose(1, 2).contiguous())
+    )
+    lc.conv_norm.register_forward_hook(lambda m, a, o: sound("audio-convnorm", 0, o))
+    lc.linear_end.register_forward_pre_hook(lambda m, a: sound("audio-silu", 0, a[0]))
+    for i, layer in enumerate(model.audio_tower.layers):
+        layer.lconv1d.linear_end.register_forward_hook(
+            lambda m, a, o, i=i: sound("audio-conv-end", i, o)
+        )
+    for i, layer in enumerate(
+        (
+            model.audio_tower.subsample_conv_projection.layer0,
+            model.audio_tower.subsample_conv_projection.layer1,
+        )
+    ):
+        layer.conv.register_forward_hook(
+            lambda m, a, o, i=i: sound(
+                "audio-sscp-conv", i, o.permute(0, 2, 3, 1).contiguous()
+            )
+        )
 
     model.vision_tower.patch_embedder.register_forward_hook(
         lambda m, a, o: vision("vision-patches", 0, o)
@@ -182,12 +302,35 @@ def main():
                 or (prompt.startswith("title: ") and " | text: " in prompt)
             ):
                 prompt = prefixes[case.get("task", 0)] + prompt
-            parts = re.split(r"(<\|image\|>|<\|video\|>)", prompt)
+            parts = re.split(r"(<\|image\|>|<\|video\|>|<\|audio\|>)", prompt)
             slots = iter(
-                i for i, part in enumerate(parts) if part in ("<|image|>", "<|video|>")
+                i
+                for i, part in enumerate(parts)
+                if part in ("<|image|>", "<|video|>", "<|audio|>")
             )
-            image_features, video_features = [], []
+            image_features, video_features, audio_features = [], [], []
             for j, media in enumerate(case["media"]):
+                if media["type"] == "audio":
+                    inputs = processor.feature_extractor(
+                        [audio(media)], sampling_rate=16000, return_tensors="pt"
+                    )
+                    features, mask = (
+                        inputs["input_features"],
+                        inputs["input_features_mask"],
+                    )
+                    features.numpy().astype("<f4").tofile(
+                        args.output / f"item-{i}-media-{j}-features.f32"
+                    )
+                    mask.numpy().astype("u1").tofile(
+                        args.output / f"item-{i}-media-{j}-mask.u8"
+                    )
+                    parts[next(slots)] = processor.replace_audio_token(inputs, 0)
+                    result = model.get_audio_features(
+                        features.to("cuda", torch.bfloat16), mask.to("cuda")
+                    )
+                    audio_features.append(result.pooler_output[result.attention_mask])
+                    current["clip"] += 1
+                    continue
                 values, times = frames(media)
                 marker = f"<|{media['type']}|>"
                 if media["type"] == "image":
@@ -244,6 +387,19 @@ def main():
                     feature
                 )
                 current["frame"] += len(values)
+                if "audio_path" in media:
+                    sound_inputs = processor.feature_extractor(
+                        [audio({"path": media["audio_path"]})],
+                        sampling_rate=16000,
+                        return_tensors="pt",
+                    )
+                    parts[slot] += processor.replace_audio_token(sound_inputs, 0)
+                    result = model.get_audio_features(
+                        sound_inputs["input_features"].to("cuda", torch.bfloat16),
+                        sound_inputs["input_features_mask"].to("cuda"),
+                    )
+                    audio_features.append(result.pooler_output[result.attention_mask])
+                    current["clip"] += 1
             inputs = processor.tokenizer("".join(parts), return_tensors="pt").to("cuda")
             inputs["input_ids"].cpu().numpy().astype("<u4").tofile(
                 args.output / f"item-{i}-tokens.u32"
@@ -253,11 +409,13 @@ def main():
             masked[
                 (ids == model.config.image_token_id)
                 | (ids == model.config.video_token_id)
+                | (ids == model.config.audio_token_id)
             ] = 0
             embedded = model.language_model.embed_tokens(masked)
             for token, features in (
                 (model.config.image_token_id, image_features),
                 (model.config.video_token_id, video_features),
+                (model.config.audio_token_id, audio_features),
             ):
                 if features:
                     embedded[ids == token] = torch.cat(features)
@@ -273,6 +431,20 @@ def main():
             # batching and scatter performed by the original public entry point.
             current["record"] = False
             request = {"text": prompt, "return_tensors": "pt"}
+            selected_audio = [audio(m) for m in case["media"] if m["type"] == "audio"]
+            selected_audio += [
+                audio({"path": m["audio_path"]})
+                for m in case["media"]
+                if "audio_path" in m
+            ]
+            if selected_audio:
+                request.update(audio=selected_audio, sampling_rate=16000)
+                # Explicit container-audio expansion follows its frame block.
+                for m in case["media"]:
+                    if "audio_path" in m:
+                        request["text"] = request["text"].replace(
+                            "<|video|>", "<|video|><|audio|>", 1
+                        )
             for kind, key in (("image", "images"), ("video", "videos")):
                 selected = [m for m in case["media"] if m["type"] == kind]
                 if selected:

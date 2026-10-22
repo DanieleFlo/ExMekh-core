@@ -1,0 +1,428 @@
+[
+  {
+    "name": "native",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/native"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+    },
+    "seconds": 21.397798759000125,
+    "returncode": 0
+  },
+  {
+    "name": "oracle",
+    "command": [
+      "/home/daniele/ds4/agent/.venv/bin/python",
+      "tools/run_gemma_visual_oracle.py",
+      "--prepared",
+      "performance-results/native-suite-oracles-20261020",
+      "--cases",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.json",
+      "--output",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/oracle"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+    },
+    "seconds": 47.030903261000276,
+    "returncode": 0
+  },
+  {
+    "name": "dim-128",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/dim-128"
+    ],
+    "environment": {
+      "DS4_GEMMA_VISUAL_DIMENSIONS": "128",
+      "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+    },
+    "seconds": 21.660884608999822,
+    "returncode": 0
+  },
+  {
+    "name": "dim-256",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/dim-256"
+    ],
+    "environment": {
+      "DS4_GEMMA_VISUAL_DIMENSIONS": "256",
+      "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+    },
+    "seconds": 21.17512905400008,
+    "returncode": 0
+  },
+  {
+    "name": "dim-512",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/dim-512"
+    ],
+    "environment": {
+      "DS4_GEMMA_VISUAL_DIMENSIONS": "512",
+      "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+    },
+    "seconds": 21.1579158239997,
+    "returncode": 0
+  },
+  {
+    "name": "batch-1",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-1.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-1"
+    ],
+    "environment": {
+      "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+    },
+    "seconds": 4.259084176000215,
+    "returncode": 0
+  },
+  {
+    "name": "batch-2",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-2.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-2"
+    ],
+    "environment": {
+      "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+    },
+    "seconds": 4.574949197000024,
+    "returncode": 0
+  },
+  {
+    "name": "batch-3",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-3.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-3"
+    ],
+    "environment": {
+      "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+    },
+    "seconds": 4.954254315000071,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-audio-subsample",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-audio-subsample"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "audio-subsample"
+    },
+    "seconds": 3.839692012999876,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-audio-ff1",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-audio-ff1"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "audio-ff1"
+    },
+    "seconds": 3.8201075720003246,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-audio-probabilities",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-audio-probabilities"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "audio-probabilities"
+    },
+    "seconds": 3.8843340650000755,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-audio-layer",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-audio-layer"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "audio-layer"
+    },
+    "seconds": 3.9832111860000623,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-audio-projected",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-audio-projected"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "audio-projected"
+    },
+    "seconds": 4.148577297999964,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-vision-patches",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-vision-patches"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "vision-patches"
+    },
+    "seconds": 4.143880761999753,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-embeddings",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-embeddings"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "embeddings"
+    },
+    "seconds": 4.489316010000039,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-layer",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-layer"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "layer"
+    },
+    "seconds": 4.628282369000317,
+    "returncode": 0
+  },
+  {
+    "name": "cancel-complete",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/cancel-complete"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_CANCEL": "complete"
+    },
+    "seconds": 4.815799158999653,
+    "returncode": 0
+  },
+  {
+    "name": "faults",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/faults"
+    ],
+    "environment": {
+      "DS4_GEMMA_VISUAL_FAULTS": "1",
+      "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+    },
+    "seconds": 5.6158460920000834,
+    "returncode": 0
+  },
+  {
+    "name": "co-resident",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/co-resident"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_DEVICE_LIMIT": "16000000000",
+      "DS4_GEMMA_VISUAL_BENCH": "1"
+    },
+    "seconds": 6.595397343000059,
+    "returncode": 0
+  },
+  {
+    "name": "phase-release",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/phase-release"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+      "DS4_GEMMA_VISUAL_DEVICE_LIMIT": "2000000000",
+      "DS4_GEMMA_VISUAL_BENCH": "1"
+    },
+    "seconds": 9.768905385999915,
+    "returncode": 0
+  },
+  {
+    "name": "selective-text-0",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-text-0.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-text-0"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+    },
+    "seconds": 3.828032350000285,
+    "returncode": 0
+  },
+  {
+    "name": "selective-image-0",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-image-0.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-image-0"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+    },
+    "seconds": 4.147820809999757,
+    "returncode": 0
+  },
+  {
+    "name": "selective-audio-0",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-audio-0.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-audio-0"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+    },
+    "seconds": 4.216625785999895,
+    "returncode": 0
+  },
+  {
+    "name": "selective-video-0",
+    "command": [
+      "tests/probe_gemma_visual",
+      "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "performance-results/native-suite-oracles-20261020/models",
+      "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-video-0.bin",
+      "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-video-0"
+    ],
+    "environment": {
+      "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+    },
+    "seconds": 4.333802098999968,
+    "returncode": 0
+  }
+]

@@ -21,3 +21,6 @@ Transformers oracles are development tools; no Python serving dependency.
 Additional DS4 modifications: native uint8 bicubic patch preprocessing, bounded
 media/cache ownership, FP32/FP64 audio feature extraction, axial vision RoPE,
 position pooling and multimodal projection/insertion through opaque C APIs.
+Audio additions: two subsampling convolutions, 12 Conformer blocks, blocked
+relative attention, causal depthwise convolution, mask-selected audio projection
+and ordered typed four-modal composition with one backbone pooling operation.

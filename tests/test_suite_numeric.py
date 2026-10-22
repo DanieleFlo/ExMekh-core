@@ -118,6 +118,15 @@ class Numeric:
                 C.c_bool,
             ],
             "ds4_num_channel_l2": [ptr, View, View, C.c_uint32, C.c_uint32, C.c_float],
+            "ds4_num_channel_rms": [
+                ptr,
+                View,
+                View,
+                View,
+                C.c_uint32,
+                C.c_uint32,
+                C.c_float,
+            ],
             "ds4_num_norm": [
                 ptr,
                 View,
@@ -328,6 +337,47 @@ class SuiteNumeric(unittest.TestCase):
                     x=x,
                     w=w,
                 )
+
+    def test_matmul_bf16_stored_layout(self):
+        torch.manual_seed(41)
+        device = "cuda" if os.environ.get("DS4_SUITE_NUMERIC_CUDA") else "cpu"
+        for batch, rows, inner, out in ((1, 63, 1024, 1024), (3, 7, 65, 13)):
+            for left in (False, True):
+                for right in (False, True):
+                    x = torch.randn(batch, rows, inner).bfloat16().to(device)
+                    w = (
+                        (torch.randn(batch, inner, out) / math.sqrt(inner))
+                        .bfloat16()
+                        .to(device)
+                    )
+                    stored_x = x.transpose(-2, -1).contiguous() if left else x
+                    stored_w = w.transpose(-2, -1).contiguous() if right else w
+                    logical_x = stored_x.transpose(-2, -1) if left else stored_x
+                    logical_w = stored_w.transpose(-2, -1) if right else stored_w
+                    expected = (
+                        (logical_x[0] @ logical_w[0]).unsqueeze(0)
+                        if batch == 1
+                        else logical_x @ logical_w
+                    )
+                    result = self.n.tensor(
+                        torch.zeros(batch, rows, out, dtype=torch.bfloat16)
+                    )
+                    self.n.call(
+                        "matmul_batch_layout",
+                        result,
+                        self.n.tensor(stored_x.cpu()),
+                        self.n.tensor(stored_w.cpu()),
+                        batch,
+                        rows,
+                        inner,
+                        out,
+                        left,
+                        right,
+                    )
+                    self.compare(
+                        f"bf16-layout-{batch}-{left}-{right}", result, expected.cpu()
+                    )
+                    self.n.clear()
 
     def test_linear(self):
         for dtype in (torch.float32, torch.bfloat16):
@@ -576,6 +626,69 @@ class SuiteNumeric(unittest.TestCase):
                     1,
                 )
                 self.n.clear()
+
+    def test_channel_rms_audio_layout(self):
+        torch.manual_seed(47)
+        device = "cuda" if os.environ.get("DS4_SUITE_NUMERIC_CUDA") else "cpu"
+        for spatial in (1, 7, 12, 63, 64, 127, 280, 750):
+            for dtype in (torch.float32, torch.bfloat16):
+                x = torch.randn(1024, spatial).to(dtype)
+                weight = torch.randn(1024).to(dtype)
+                transposed = x.to(device).T
+                value = transposed.float()
+                expected = (
+                    (
+                        value
+                        * (value.pow(2).mean(-1, keepdim=True) + 1e-6).pow(-0.5)
+                        * weight.to(device).float()
+                    )
+                    .to(dtype)
+                    .cpu()
+                )
+                source = self.n.tensor(x)
+                scale = self.n.tensor(weight)
+                y = self.n.tensor(torch.zeros(spatial, 1024, dtype=dtype))
+                self.n.call("channel_rms", y, source, scale, 1024, spatial, 1e-6)
+                self.compare(
+                    f"channel-rms-{dtype}-{spatial}", y, expected, x=x, weight=weight
+                )
+                self.assertEqual(
+                    self.n.lib.ds4_num_channel_rms(
+                        self.n.ctx, source, source, scale, 1024, spatial, 1e-6
+                    ),
+                    1,
+                )
+                self.n.clear()
+
+    def test_channel_rms_ignores_unused_capacity_for_aliasing(self):
+        for dtype in (torch.float32, torch.bfloat16):
+            source = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=dtype)
+            tail = torch.tensor([2.0, 3.0, 99.0, 98.0], dtype=dtype)
+            backing = self.n.tensor(torch.cat((torch.zeros(6, dtype=dtype), tail)))
+            unit = 2 if dtype == torch.bfloat16 else 4
+            scale = View(backing.data + 6 * unit, 4, backing.type)
+            value = source.T.float()
+            expected = (
+                (
+                    value
+                    * torch.rsqrt(value.square().mean(-1, keepdim=True) + 1e-6)
+                    * tail[:2].float()
+                )
+                .to(dtype)
+                .flatten()
+            )
+            self.n.call(
+                "channel_rms", backing, self.n.tensor(source), scale, 2, 3, 1e-6
+            )
+            self.compare(
+                f"channel-rms-capacity-{dtype}",
+                backing,
+                torch.cat((expected, tail)).float(),
+            )
+            torch.testing.assert_close(
+                self.n.read(backing, (10,))[6:], tail.float(), rtol=0, atol=0
+            )
+            self.n.clear()
 
     def test_attention(self):
         torch.manual_seed(23)
@@ -977,6 +1090,18 @@ class SuiteNumeric(unittest.TestCase):
             if cuda and width > 2048:
                 self.assertTrue(torch.equal(actual, expected), f"wide softmax {width}")
             self.compare(f"long-softmax-{width}", y, expected, x=x)
+
+    def test_constructor_clears_failure_output(self):
+        name = (
+            "ds4_numeric_cuda"
+            if os.environ.get("DS4_SUITE_NUMERIC_CUDA") == "1"
+            else "ds4_numeric_cpu"
+        )
+        create = getattr(self.n.lib, name)
+        for resources, owner in ((None, 100), (self.n.resources, 0)):
+            output = C.c_void_p(1)
+            self.assertNotEqual(create(C.byref(output), resources, owner), 0)
+            self.assertIsNone(output.value, name)
 
     def test_invalid_dimensions_and_lifetime(self):
         x = self.n.tensor(torch.ones(64))

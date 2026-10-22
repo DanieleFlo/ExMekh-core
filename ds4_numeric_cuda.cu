@@ -298,7 +298,8 @@ typedef struct {
  * strided reduction; transposing first changes rare BF16 ties in the VAE. */
 __global__ static void channel_l2_kernel(ds4_num_view y, ds4_num_view x,
                                          uint32_t channels, uint32_t spatial,
-                                         float eps, uint32_t vec, bool split) {
+                                         float eps, uint32_t vec, bool split,
+                                         bool rms, ds4_num_view weight) {
   __shared__ float sums[512];
   uint64_t pixel = ((uint64_t)blockIdx.x * blockDim.x + threadIdx.x) * vec;
   if (!split)
@@ -314,7 +315,7 @@ __global__ static void channel_l2_kernel(ds4_num_view y, ds4_num_view x,
         for (uint32_t i = 0; i < vec; i++)
           if (pixel + i < spatial) {
             float v = readv(x, (uint64_t)c * spatial + pixel + i);
-            acc[j][i] = fmaf(v, v, acc[j][i]);
+            acc[j][i] = rms ? acc[j][i] + v * v : fmaf(v, v, acc[j][i]);
           }
     }
   uint32_t at = (threadIdx.y * blockDim.x + threadIdx.x) * vec;
@@ -337,12 +338,15 @@ __global__ static void channel_l2_kernel(ds4_num_view y, ds4_num_view x,
       sum[i] = sums[threadIdx.x * vec + i];
   }
   for (uint32_t i = 0; i < vec; i++)
-    sum[i] = fmaxf(sqrtf(sum[i]), eps);
+    sum[i] = rms ? rsqrtf(sum[i] * (1.f / channels) + eps)
+                 : fmaxf(sqrtf(sum[i]), eps);
   for (uint32_t c = first; c < channels; c += step)
     for (uint32_t i = 0; i < vec; i++)
       if (pixel + i < spatial)
         writev(y, (pixel + i) * channels + c,
-               readv(x, (uint64_t)c * spatial + pixel + i) / sum[i]);
+               rms ? (readv(x, (uint64_t)c * spatial + pixel + i) * sum[i]) *
+                         readv(weight, c)
+                   : readv(x, (uint64_t)c * spatial + pixel + i) / sum[i]);
 }
 static uint32_t floor_power(uint32_t n) {
   uint32_t p = 1;
@@ -350,9 +354,12 @@ static uint32_t floor_power(uint32_t n) {
     p *= 2;
   return p;
 }
-static ds4_status gpu_channel_l2(void *state, ds4_num_view y, ds4_num_view x,
-                                 uint32_t channels, uint32_t spatial,
-                                 float eps) {
+/* Both reductions consume the same channel-major storage. Share launch
+ * geometry while preserving the qualified kernel's arithmetic for each norm. */
+static ds4_status gpu_channel_reduce(void *state, ds4_num_view y,
+                                     ds4_num_view x, ds4_num_view weight,
+                                     uint32_t channels, uint32_t spatial,
+                                     float eps, bool rms) {
   uint32_t vec = spatial % 4 == 0 ? 4 : spatial % 2 == 0 ? 2 : 1;
   uint32_t limit = 512 / vec;
   uint32_t columns = floor_power(spatial / vec < limit ? spatial / vec : limit);
@@ -365,8 +372,19 @@ static ds4_status gpu_channel_l2(void *state, ds4_num_view y, ds4_num_view x,
   uint32_t span = bx * vec * (split ? 1 : by);
   channel_l2_kernel<<<(spatial + span - 1) / span, dim3(bx, by), 0,
                       ((numeric_cuda *)state)->stream>>>(
-      y, x, channels, spatial, eps, vec, split);
+      y, x, channels, spatial, eps, vec, split, rms, weight);
   return launch_status();
+}
+static ds4_status gpu_channel_l2(void *state, ds4_num_view y, ds4_num_view x,
+                                 uint32_t channels, uint32_t spatial,
+                                 float eps) {
+  return gpu_channel_reduce(state, y, x, ds4_num_view{}, channels, spatial, eps,
+                            false);
+}
+static ds4_status gpu_channel_rms(void *state, ds4_num_view y, ds4_num_view x,
+                                  ds4_num_view weight, uint32_t channels,
+                                  uint32_t spatial, float eps) {
+  return gpu_channel_reduce(state, y, x, weight, channels, spatial, eps, true);
 }
 /* The eager FP32 mean widens its row reduction when fewer than 16 rows
  * share a block. Match that order before normalization: rare BF16 ties in
@@ -1101,6 +1119,26 @@ static ds4_status gpu_matmul_batch(void *p, ds4_num_view y, ds4_num_view x,
                                    bool transpose_a, bool transpose_b) {
   numeric_cuda *s = (numeric_cuda *)p;
   float alpha = 1, beta = 0;
+  if (x.type == DS4_NUM_BF16) {
+    cublasStatus_t status;
+    if (batch == 1)
+      status = cublasGemmEx(s->blas, transpose_b ? CUBLAS_OP_T : CUBLAS_OP_N,
+                            transpose_a ? CUBLAS_OP_T : CUBLAS_OP_N, out, rows,
+                            in, &alpha, w.data, CUDA_R_16BF,
+                            transpose_b ? in : out, x.data, CUDA_R_16BF,
+                            transpose_a ? rows : in, &beta, y.data, CUDA_R_16BF,
+                            out, CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DEFAULT);
+    else
+      status = cublasGemmStridedBatchedEx(
+          s->blas, transpose_b ? CUBLAS_OP_T : CUBLAS_OP_N,
+          transpose_a ? CUBLAS_OP_T : CUBLAS_OP_N, out, rows, in, &alpha,
+          w.data, CUDA_R_16BF, transpose_b ? in : out, (long long)out * in,
+          x.data, CUDA_R_16BF, transpose_a ? rows : in, (long long)rows * in,
+          &beta, y.data, CUDA_R_16BF, out, (long long)rows * out, batch,
+          CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DEFAULT);
+    return status == CUBLAS_STATUS_SUCCESS ? DS4_STATUS_OK
+                                           : DS4_STATUS_INFERENCE;
+  }
   cublasStatus_t status = cublasSgemmStridedBatched(
       s->blas, transpose_b ? CUBLAS_OP_T : CUBLAS_OP_N,
       transpose_a ? CUBLAS_OP_T : CUBLAS_OP_N, out, rows, in, &alpha,
@@ -1110,15 +1148,17 @@ static ds4_status gpu_matmul_batch(void *p, ds4_num_view y, ds4_num_view x,
   return status == CUBLAS_STATUS_SUCCESS ? DS4_STATUS_OK : DS4_STATUS_INFERENCE;
 }
 static const ds4_numeric_ops gpu_ops = {
-    gpu_allocate,     gpu_release,   gpu_copy,  gpu_fence,   gpu_close,
-    gpu_linear,       gpu_norm,      gpu_point, gpu_rope,    gpu_attend,
-    gpu_conv,         gpu_reorder,   gpu_pool,  gpu_nearest, gpu_softmax,
-    gpu_matmul_batch, gpu_channel_l2};
+    gpu_allocate,     gpu_release,    gpu_copy,       gpu_fence,   gpu_close,
+    gpu_linear,       gpu_norm,       gpu_point,      gpu_rope,    gpu_attend,
+    gpu_conv,         gpu_reorder,    gpu_pool,       gpu_nearest, gpu_softmax,
+    gpu_matmul_batch, gpu_channel_l2, gpu_channel_rms};
 extern "C" ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r,
                                        uint64_t owner) {
-  if (!out || !r || !owner)
+  if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
+  if (!r || !owner)
+    return DS4_STATUS_INVALID;
   numeric_cuda *s = (numeric_cuda *)calloc(1, sizeof(*s));
   if (!s)
     return DS4_STATUS_NOMEM;

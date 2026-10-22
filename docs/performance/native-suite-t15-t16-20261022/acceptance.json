@@ -1,0 +1,380 @@
+{
+  "verdict": "PASS",
+  "scope": "T15/T16 C/CUDA sm_86; no HTTP/Metal/ROCm/TP release claim",
+  "host": {
+    "verdict": "PASS",
+    "tests": 47,
+    "passed": 45,
+    "skipped": 2,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/host-regression-v2.log",
+      "bytes": 6761,
+      "sha256": "3cb619bba108f8cd64190993b45ab257c50efbf45814bd280b5d5af36ea310cb"
+    }
+  },
+  "cuda": {
+    "verdict": "PASS",
+    "tests": 22,
+    "passed": 22,
+    "skipped": 0,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/numeric-cuda.log",
+      "bytes": 2377,
+      "sha256": "cac1b87a3a54ca3e07dda4a48a5f0af33f6793f25824068ff770e9cfaf3d98fb"
+    }
+  },
+  "explicit_segments": {
+    "verdict": "PASS",
+    "tests": 1,
+    "passed": 1,
+    "skipped": 0,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/segment-gate.log",
+      "bytes": 259,
+      "sha256": "0d4e1fb2c3b4920127b86fa9801c673d4fae0f158d09a2873d26f77cbcfd3a45"
+    }
+  },
+  "sanitizers": {
+    "verdict": "PASS",
+    "tests": 14,
+    "passed": 14,
+    "skipped": 0,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/asan-host-v2.log",
+      "bytes": 1961,
+      "sha256": "1a221236fc02a59c99ac78d8a06a5ba1e36d40773d2be6536936eaeab62eac2f"
+    },
+    "scope": "Host processor/typed admission/tokenizer/API with AddressSanitizer+UBSan; ownership counters separately validate release",
+    "detect_leaks": false,
+    "options": "halt_on_error=1; libasan and libstdc++ preloaded",
+    "initial_environment_failure": {
+      "path": "performance-results/native-suite-t15-t16-20261022/asan-host.log",
+      "bytes": 36095,
+      "sha256": "abf8a82149b061a9164e05c4eaea349f86eb78642fcbd401ca06fd23f7035029"
+    },
+    "initial_build_failure": {
+      "path": "performance-results/native-suite-t15-t16-20261022/asan-build.log",
+      "bytes": 1516,
+      "sha256": "d70b6fa44b95181df34e709e6702ce568717ccc888bc1c78bd4e49582c3b3778"
+    },
+    "build": {
+      "path": "performance-results/native-suite-t15-t16-20261022/asan-build-v2.log",
+      "bytes": 1375,
+      "sha256": "b7cafc58577bc4acc38cc2baaa115210a1604a670c2ff9611ff9119a8da32dd4"
+    }
+  },
+  "static_analysis": {
+    "verdict": "PASS",
+    "flags": "cc -Wall -Wextra -fanalyzer -fsyntax-only",
+    "sources": [
+      "ds4_gemma_audio.c",
+      "ds4_gemma_visual.c",
+      "ds4_gemma_media.c"
+    ],
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/analysis.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "runtime_resources_executor": {
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/lifetime-regression.log",
+      "bytes": 248,
+      "sha256": "be6be18454616c8b4210ba07c6e346984eca074603e1514da472f1e0c679e66a"
+    }
+  },
+  "final_native_build": {
+    "verdict": "PASS",
+    "warnings": 0,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/final-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "legacy_build": {
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/legacy-build.log",
+      "bytes": 280,
+      "sha256": "f60d273b307a947dee33cf10dd1be659406ce1652e0b5beda6a869b9f8859bf6"
+    },
+    "preexisting_warning": "ds4_read_queue_workers defined but unused (legacy ds4_read_queue.h)",
+    "binaries": {
+      "ds4": {
+        "artifact": {
+          "path": "ds4",
+          "bytes": 71457600,
+          "sha256": "69befbfe2431fdc252fddc92bfc455c9219bac941259ee4f39b3aee89845c9fd"
+        },
+        "media_libraries_absent": true
+      },
+      "ds4-server": {
+        "artifact": {
+          "path": "ds4-server",
+          "bytes": 73721040,
+          "sha256": "369cdb28c0379fe5b0ee181b1c720a80024f1af3c118ab3e7edc476bf8705b56"
+        },
+        "media_libraries_absent": true
+      },
+      "ds4-bench": {
+        "artifact": {
+          "path": "ds4-bench",
+          "bytes": 71193440,
+          "sha256": "921c399f5618dbef6c5f3e1aa2e76efe042f5e42dac6f39fa4bf2b2b736070a2"
+        },
+        "media_libraries_absent": true
+      },
+      "ds4-eval": {
+        "artifact": {
+          "path": "ds4-eval",
+          "bytes": 71532632,
+          "sha256": "87e0ca69ccbf376fd69b36035b11e1b592c9f83e34e745116a6f6998c6635b60"
+        },
+        "media_libraries_absent": true
+      }
+    }
+  },
+  "qualifier": {
+    "cases": 287,
+    "boundaries": 1450,
+    "inputs": 501,
+    "retrieval_groups": 64,
+    "all_pass": true,
+    "batch": [
+      {
+        "size": 1,
+        "bit_exact": true
+      },
+      {
+        "size": 2,
+        "bit_exact": true
+      },
+      {
+        "size": 3,
+        "bit_exact": true
+      }
+    ],
+    "sensitivity": {
+      "audio_order": true,
+      "audio_in_all_four": true,
+      "image_in_all_four": true,
+      "video_in_all_four": true,
+      "text_in_all_four": true
+    },
+    "peak_owned_device_bytes": 1751685530,
+    "full_report": {
+      "path": "performance-results/native-suite-t15-t16-20261022/qualification-v5/verification.json",
+      "bytes": 381680,
+      "sha256": "5d9f9e661c4407c2839b48a7769f1e04ba55b1585c6bf4a5776130d42826332d"
+    }
+  },
+  "timing": {
+    "co-resident": {
+      "cold_seconds": 1.066121458,
+      "samples_seconds": [
+        0.374833841,
+        0.389869188,
+        0.365751407,
+        0.364873254,
+        0.359233973
+      ],
+      "median_seconds": 0.365751407,
+      "cv_percent": 2.889261011360062,
+      "peak_owned_device_bytes": 1528533850,
+      "claim": "Descriptive latency only; no speedup promotion"
+    },
+    "phase-release": {
+      "cold_seconds": 1.196644331,
+      "samples_seconds": [
+        0.956899341,
+        0.946664126,
+        0.969096901,
+        0.957772261,
+        0.961599342
+      ],
+      "median_seconds": 0.957772261,
+      "cv_percent": 0.7596573931879602,
+      "peak_owned_device_bytes": 642939778,
+      "claim": "Descriptive latency only; no speedup promotion"
+    }
+  },
+  "source_head": "e90b452240a4e1f8e61f37ff32533c30a0fae904",
+  "source_artifacts": [
+    {
+      "path": "Makefile",
+      "bytes": 80182,
+      "sha256": "56a1744e471862eabc47f2e797ad6ddf7e0051a4c7270788a3a6080a1c47fac6"
+    },
+    {
+      "path": "ds4_embedding_gemma2.c",
+      "bytes": 30460,
+      "sha256": "e240d4d6b236ec20435858fcf67b411ff6a0d0ae49eb928692d37be7e0f83339"
+    },
+    {
+      "path": "ds4_embedding_gemma2_internal.h",
+      "bytes": 929,
+      "sha256": "07ab67d191a758f30cb5e05f1a87da307dac69a2cd575380fb45aaaf4daa8c02"
+    },
+    {
+      "path": "ds4_gemma_audio.c",
+      "bytes": 37501,
+      "sha256": "5b7c8def03d2b1398daf1ec8cc2de081b6324f1825546a2f56cdc3ec6d1e3db6"
+    },
+    {
+      "path": "ds4_gemma_audio.h",
+      "bytes": 1351,
+      "sha256": "b507bbdde530c0a8f7b6b07f9489a82f2d89159fccf61296dee7b2f3357aa1b6"
+    },
+    {
+      "path": "ds4_gemma_media.c",
+      "bytes": 19683,
+      "sha256": "ab28c0a2a800b556b24873a70fd8845b3059670471586d01923e56f00f74cac2"
+    },
+    {
+      "path": "ds4_gemma_multimodal.h",
+      "bytes": 2799,
+      "sha256": "d03c04996b420db869f8c12025e4fd0ee4200e8f807c8a28f27c344c24f4f073"
+    },
+    {
+      "path": "ds4_gemma_vision.c",
+      "bytes": 25005,
+      "sha256": "7bfa44a25de2a99b3f06f38945e7f41eb5092b97faf5b42cd4112aa0d13490e3"
+    },
+    {
+      "path": "ds4_gemma_visual.c",
+      "bytes": 27143,
+      "sha256": "f1a0f060c04dd5d02bfb9aef4ef1cc684ca7c7c008f3612f4f8c5a64ce231d3f"
+    },
+    {
+      "path": "ds4_gemma_visual.h",
+      "bytes": 3547,
+      "sha256": "04f09de4b40eb99aeaf38cbc7251afb6f3266288f3322239d6453696a17fd608"
+    },
+    {
+      "path": "ds4_gemma_weights_internal.h",
+      "bytes": 474,
+      "sha256": "c418360523724cc196c7b7392e143f3d2135a224b7a9b6fdd21833a41ad67d46"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 38531,
+      "sha256": "f12986a91e4612da4aec101c0584e8ee41390a5b50dc2df586926b98a436da4c"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 9933,
+      "sha256": "dcea7148008b59f8014d5be3052d6df398f38c615fa1d151edf9954e521a4c62"
+    },
+    {
+      "path": "ds4_numeric_cuda.cu",
+      "bytes": 51972,
+      "sha256": "251a9540e0041d22c85822ba58ab7c53f287edff9dfe8eff4d4516020f5e949f"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 3025,
+      "sha256": "d81e691e1efab21111dce662703f8cf860cdbd15c3c0821e0933cdd7cc703aec"
+    },
+    {
+      "path": "tests/probe_gemma_visual.c",
+      "bytes": 20919,
+      "sha256": "6eaab0bb877c75c79b4b8d2f886ed09fa11b69752d251f6f1c0aabb31e7253fe"
+    },
+    {
+      "path": "tests/suite_media_api.py",
+      "bytes": 10188,
+      "sha256": "d6607cd65bd9b87111fe0426576f2cf1b54895fdb2ef00930d288c9782a90672"
+    },
+    {
+      "path": "tests/test_gemma_media.py",
+      "bytes": 42096,
+      "sha256": "4f82da43dd802233b2a596ea44560c9aa64ede9a4594ff0416dd2cbaff71bc61"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 43766,
+      "sha256": "0b1e007b6e3fd7ef41a6627c177516ecfe69a66a7c4453175cd07efdcfcaf9ac"
+    },
+    {
+      "path": "tools/qualify_gemma_multimodal.py",
+      "bytes": 21714,
+      "sha256": "f388df838f1c32ce8e530711eacb7ee636477237bf5176dfef66f2fb9a12d9eb"
+    },
+    {
+      "path": "tools/run_gemma_visual_oracle.py",
+      "bytes": 20615,
+      "sha256": "8a8b2da4fac6acb8ddbba63f5611ca86c7f33218d5a46de4989417734c06e4a3"
+    },
+    {
+      "path": "tools/score_suite_gemma_corpus.py",
+      "bytes": 9995,
+      "sha256": "1a8bc71058a2124539b7f818766ab99463c06288312254e0ffea7b1616a936cf"
+    },
+    {
+      "path": "tools/suite_visual_cases.py",
+      "bytes": 3044,
+      "sha256": "832a3141d57d74735af7bbccffd6e73522e4ef085e9af5fbf8ae01a78620ea4e"
+    }
+  ],
+  "native_binary": {
+    "path": "tests/probe_gemma_visual",
+    "bytes": 2982784,
+    "sha256": "dd65a6c444158b238bf79715f9216ff615da6b33a2b3a493ef1f45af85238698"
+  },
+  "not_verified": [
+    "Metal",
+    "ROCm",
+    "TP/distributed",
+    "integrated LLM alternating stress (T21)",
+    "HTTP routing (T17)"
+  ],
+  "final_build_replay": {
+    "verdict": "PASS",
+    "bit_exact": true,
+    "invalid_dimensions_budget_denial_reload": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/final-native-v2.log",
+      "bytes": 47,
+      "sha256": "c302cfe3b25a8c1c2410e5dfc88fa673191529ac2aaa5b8d9a08b9125d91c1cf"
+    },
+    "vectors": {
+      "path": "performance-results/native-suite-t15-t16-20261022/final-native-v2/vectors.f32",
+      "bytes": 3072,
+      "sha256": "815cd465959a2fb665f8994f7ac25f4db229e92829aa5fc2c927e32d79da830d"
+    },
+    "warm_text_budget": {
+      "limit": 500000000,
+      "peak_bound": 341479424,
+      "reclaim": 1188866008,
+      "release": true,
+      "bit_exact": true
+    },
+    "incremental_build": {
+      "path": "performance-results/native-suite-t15-t16-20261022/warm-text-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "documentation": {
+    "verdict": "PASS",
+    "tests": 10,
+    "passed": 10,
+    "skipped": 0,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/docs-check.log",
+      "bytes": 1808,
+      "sha256": "4f825985597e4dc0e40e98c27743101f702f09903da9d0e9829ed3625bfbfeb1"
+    }
+  },
+  "lint": {
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/lint.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    }
+  }
+}

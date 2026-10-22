@@ -135,6 +135,28 @@ class Budget(C.Structure):
     ]
 
 
+class Content(C.Structure):
+    _fields_ = [("text", C.c_char_p), ("media", C.c_void_p)]
+
+
+class Segment(C.Structure):
+    _fields_ = [
+        ("id", C.c_uint64),
+        ("start_seconds", C.c_double),
+        ("end_seconds", C.c_double),
+    ]
+
+
+class MultimodalRequest(C.Structure):
+    _fields_ = [
+        ("content", C.POINTER(Content)),
+        ("count", C.c_size_t),
+        ("task", C.c_uint32),
+        ("add_timestamps", C.c_bool),
+        ("segment", Segment),
+    ]
+
+
 def load_library():
     lib = C.CDLL(
         os.environ.get("DS4_SUITE_CPU_LIBRARY", str(ROOT / "tests/libds4_suite_cpu.so"))
@@ -221,6 +243,15 @@ def load_library():
             C.c_int,
         ),
         "ds4_gemma_visual_input_free": ([ptr], C.c_int),
+        "ds4_gemma_multimodal_prepare": (
+            [ptr, C.POINTER(MultimodalRequest), C.c_size_t, out],
+            C.c_int,
+        ),
+        "ds4_gemma_multimodal_key": ([ptr, C.c_size_t, C.c_uint32, ptr], C.c_int),
+        "ds4_gemma_multimodal_segment": (
+            [ptr, C.c_size_t, C.POINTER(Segment)],
+            C.c_int,
+        ),
         "ds4_gemma_visual_input_tokens": (
             [ptr, C.c_size_t, C.POINTER(C.POINTER(C.c_uint32)), C.POINTER(C.c_uint32)],
             C.c_int,

@@ -2,6 +2,9 @@
 #define DS4_GEMMA_VISION_H
 #include "ds4_embedding_gemma2.h"
 #include "ds4_gemma_media.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef struct ds4_gemma_vision ds4_gemma_vision;
 typedef struct ds4_gemma_visual_features ds4_gemma_visual_features;
 typedef struct {
@@ -17,6 +20,7 @@ ds4_status ds4_gemma_vision_open(ds4_gemma_vision **, ds4_bundle *,
                                  const ds4_gemma_processor *);
 ds4_status ds4_gemma_vision_close(ds4_gemma_vision *);
 ds4_status ds4_gemma_vision_release_weights(ds4_gemma_vision *);
+uint64_t ds4_gemma_vision_resident_weights(const ds4_gemma_vision *);
 ds4_status ds4_gemma_vision_estimate(ds4_gemma_vision *,
                                      const ds4_gemma_media *,
                                      ds4_runtime_estimate *);
@@ -26,4 +30,7 @@ ds4_status ds4_gemma_vision_encode(ds4_gemma_vision *, const ds4_gemma_media *,
 ds4_gemma_visual_features_view
 ds4_gemma_visual_features_data(const ds4_gemma_visual_features *);
 void ds4_gemma_visual_features_free(ds4_gemma_visual_features *);
+#ifdef __cplusplus
+}
+#endif
 #endif

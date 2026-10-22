@@ -30,6 +30,7 @@ class FailureOutputs(unittest.TestCase):
             ("ds4_embedding_gemma2_open", 5),
             ("ds4_gemma_visual_open", 6),
             ("ds4_gemma_vision_open", 5),
+            ("ds4_gemma_audio_open", 4),
             ("ds4_gemma_processor_open", 6),
             ("ds4_media_decode", 7),
             ("ds4_qwen_image_pipeline_open", 5),
@@ -49,6 +50,8 @@ class FailureOutputs(unittest.TestCase):
             ("ds4_gemma_visual_prepare", 4),
             ("ds4_gemma_visual_embed", 5),
             ("ds4_gemma_vision_encode", 4),
+            ("ds4_gemma_audio_encode", 4),
+            ("ds4_gemma_multimodal_prepare", 4),
             ("ds4_gemma_media_prepare", 4),
             ("ds4_qwen_image_encode", 4),
             ("ds4_qwen_image_prepare", 5),
@@ -90,6 +93,56 @@ class FailureOutputs(unittest.TestCase):
                         self.assertIsNone(tokens.value)
                     if missing != "count":
                         self.assertEqual(count.value, 0)
+
+    def test_numeric_allocation_clears_output(self):
+        create = self.lib.ds4_numeric_cpu
+        create.argtypes = [C.POINTER(C.c_void_p), C.c_void_p, C.c_uint64]
+        alloc = self.lib.ds4_num_alloc
+        alloc.argtypes = [C.c_void_p, C.c_uint64, C.c_uint32, C.POINTER(C.c_void_p)]
+        for api in ("create", "alloc"):
+            output = C.c_void_p(1)
+            status = (
+                create(C.byref(output), None, 1)
+                if api == "create"
+                else alloc(None, 1, 30, C.byref(output))
+            )
+            self.assertNotEqual(status, 0)
+            self.assertIsNone(output.value, api)
+
+    def test_borrowed_token_queries_clear_independent_outputs(self):
+        for name in ("ds4_gemma_input_tokens", "ds4_gemma_visual_input_tokens"):
+            function = getattr(self.lib, name)
+            function.argtypes = [
+                C.c_void_p,
+                C.c_size_t,
+                C.POINTER(C.c_void_p),
+                C.POINTER(C.c_uint32),
+            ]
+            for missing in ("neither", "tokens", "count"):
+                tokens, count = C.c_void_p(1), C.c_uint32(99)
+                self.assertNotEqual(
+                    function(
+                        None,
+                        0,
+                        None if missing == "tokens" else C.byref(tokens),
+                        None if missing == "count" else C.byref(count),
+                    ),
+                    0,
+                )
+                if missing != "tokens":
+                    self.assertIsNone(tokens.value, (name, missing))
+                if missing != "count":
+                    self.assertEqual(count.value, 0, (name, missing))
+
+    def test_encoder_residency_queries_accept_null(self):
+        for name in (
+            "ds4_embedding_gemma2_resident_weights",
+            "ds4_gemma_vision_resident_weights",
+            "ds4_gemma_audio_resident_weights",
+        ):
+            function = getattr(self.lib, name)
+            function.argtypes, function.restype = [C.c_void_p], C.c_uint64
+            self.assertEqual(function(None), 0, name)
 
 
 if __name__ == "__main__":

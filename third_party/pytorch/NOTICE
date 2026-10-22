@@ -17,6 +17,9 @@ reduction geometry, four interleaved accumulators and vertical reduction tree:
 aten/src/ATen/native/cuda/Reduce.cuh
 aten/src/ATen/native/SharedReduceOps.h (NormTwoOps)
 
+The channel-major audio RMS reduction uses the same Reduce.cuh geometry with
+separate FP32 square/mean/affine operations before one BF16 output cast.
+
 DS4 modifications: C numeric API, explicit interval masks, in-place output,
 resource ownership and native CUDA dispatch. No PyTorch runtime dependency.
 PyTorch's BSD-style license and copyright notices are included in LICENSE.

@@ -1,0 +1,9 @@
+Native Gemma audio preprocessing
+
+The scaled FP32 complex magnitude and explicit fused multiply-add follow
+NumPy v2.5.3, numpy/_core/src/umath/loops_unary_complex.dispatch.c.src,
+simd_cabsolute_f32. The source URL and SHA-256 are recorded in T15/T16 provenance.
+This avoids libc hypotf's different rounding before the model's BF16 cast.
+
+DS4 modification: independent scalar C implementation for a bounded 512-point
+FFT. No NumPy runtime dependency. Copyright and BSD license are in LICENSE.

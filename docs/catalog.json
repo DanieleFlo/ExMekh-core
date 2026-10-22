@@ -1305,6 +1305,39 @@
           ]
         },
         {
+          "path": "docs/architecture/native-suite-t15-t16-clean-code-review-20261022.md",
+          "sections": [
+            {
+              "title": "Revisione clean code di T15/T16",
+              "level": 1,
+              "start": 1,
+              "end": 89,
+              "summary": "22 ottobre 2026."
+            },
+            {
+              "title": "Correzioni e responsabilità",
+              "level": 2,
+              "start": 9,
+              "end": 28,
+              "summary": "I nuovi test riproducono gli output non azzerati CPU/CUDA e il rifiuto"
+            },
+            {
+              "title": "Principi applicati e confini",
+              "level": 2,
+              "start": 29,
+              "end": 51,
+              "summary": "Nei moduli adiacenti il registro e l'executor possiedono già le scelte di budget"
+            },
+            {
+              "title": "Verifica e limiti",
+              "level": 2,
+              "start": 52,
+              "end": 89,
+              "summary": "Il report della revisione"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/native-suite-v1-contract.md",
           "sections": [
             {
@@ -6530,7 +6563,7 @@
               "title": "Piano di implementazione: suite multimodale nativa DS4",
               "level": 1,
               "start": 1,
-              "end": 513,
+              "end": 515,
               "summary": "Data: 20 ottobre 2026."
             },
             {
@@ -6670,91 +6703,91 @@
               "title": "20. T16 — Embedding multimodali composti e piano selettivo",
               "level": 2,
               "start": 343,
-              "end": 356,
+              "end": 358,
               "summary": "**Dipendenze:** T12, T14, T15."
             },
             {
               "title": "21. T17 — Registro modelli, HTTP e gestione dei risultati",
               "level": 2,
-              "start": 357,
-              "end": 371,
+              "start": 359,
+              "end": 373,
               "summary": "**Dipendenze:** T01, T05, T11, T16."
             },
             {
               "title": "22. T18 — Client semplice e integrazione ExMekh-lib",
               "level": 2,
-              "start": 372,
-              "end": 386,
+              "start": 374,
+              "end": 388,
               "summary": "**Dipendenze:** T17."
             },
             {
               "title": "23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo",
               "level": 2,
-              "start": 387,
-              "end": 403,
+              "start": 389,
+              "end": 405,
               "summary": "**Dipendenze:** T05, T07, T11, T16, T17."
             },
             {
               "title": "24. T20 — Quantizzazione e ottimizzazioni numeriche misurate",
               "level": 2,
-              "start": 404,
-              "end": 418,
+              "start": 406,
+              "end": 420,
               "summary": "**Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming."
             },
             {
               "title": "25. T21 — Qualificazione integrata, guasti e regressioni",
               "level": 2,
-              "start": 419,
-              "end": 433,
+              "start": 421,
+              "end": 435,
               "summary": "**Dipendenze:** T17, T18, T19; tutti i profili promossi da T20."
             },
             {
               "title": "26. T22 — Packaging, documentazione e consegna",
               "level": 2,
-              "start": 434,
-              "end": 445,
+              "start": 436,
+              "end": 447,
               "summary": "**Dipendenze:** T21."
             },
             {
               "title": "27. Matrice obbligatoria di memoria e ripristino",
               "level": 2,
-              "start": 446,
-              "end": 466,
+              "start": 448,
+              "end": 468,
               "summary": "La matrice usa budget controllati e allocazioni possedute; si aggiungono prove reali sulla memoria libera della 3090."
             },
             {
               "title": "28. Gate numerici, di qualità e prestazionali",
               "level": 2,
-              "start": 467,
-              "end": 504,
+              "start": 469,
+              "end": 506,
               "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
             },
             {
               "title": "28.1 Gate numerici",
               "level": 3,
-              "start": 469,
-              "end": 478,
+              "start": 471,
+              "end": 480,
               "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
             },
             {
               "title": "28.2 Corpus di accettazione proposto",
               "level": 3,
-              "start": 479,
-              "end": 495,
+              "start": 481,
+              "end": 497,
               "summary": "Il corpus minimo viene congelato in T00 prima delle ottimizzazioni; può essere ampliato con un nuovo manifest, mantenendo i casi precedenti."
             },
             {
               "title": "28.3 Gate prestazionali e memoria",
               "level": 3,
-              "start": 496,
-              "end": 504,
+              "start": 498,
+              "end": 506,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "29. Definizione di completamento globale",
               "level": 2,
-              "start": 505,
-              "end": 513,
+              "start": 507,
+              "end": 515,
               "summary": "Il lavoro di implementazione è completo quando T00–T19, T21 e T22 sono `DONE`, T20 ha una valutazione esplicita dei candidati e tutti i profili effettivamente pubblicati hanno superato i rispettivi gate."
             }
           ]

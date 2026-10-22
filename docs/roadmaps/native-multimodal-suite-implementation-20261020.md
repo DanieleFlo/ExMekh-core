@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13/T14 sono `DONE` nei gate locali del [report T13–T14](../performance/native-suite-t13-t14-20261021/README.md); T15–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13/T14 sono `DONE` nei gate locali del [report T13–T14](../performance/native-suite-t13-t14-20261021/README.md); T15/T16 sono `DONE` nei gate C/CUDA locali del [report T15–T16](../performance/native-suite-t15-t16-20261022/README.md), con rettifica esplicita del riferimento di accumulo T00. T17–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -325,16 +325,16 @@ ma vettori entro T00, come diagnostica esplicita. Evidenze e limiti nel
 
 **Artefatti:** adapter vision/video e report oracle per ciascuna modalità.
 
-**Evidenze T13–T14:** [report, comandi e limiti](../performance/native-suite-t13-t14-20261021/README.md), [gate completi](../performance/native-suite-t13-t14-20261021/verification.json), [regressioni e memoria](../performance/native-suite-t13-t14-20261021/acceptance.json). Decode/preprocess C con libav/soxr, cache bounded e vision/video BF16 nativi; nessun endpoint nuovo o encoder audio dichiarato. T15–T22 restano aperti.
+**Evidenze T13–T14:** [report, comandi e limiti](../performance/native-suite-t13-t14-20261021/README.md), [gate completi](../performance/native-suite-t13-t14-20261021/verification.json), [regressioni e memoria](../performance/native-suite-t13-t14-20261021/acceptance.json). Decode/preprocess C con libav/soxr, cache bounded e vision/video BF16 nativi; nessun endpoint nuovo o encoder audio dichiarato. T15/T16 sono completati nella qualifica locale successiva; T17–T22 restano aperti.
 
 ## 19. T15 — Encoder audio EmbeddingGemma 2
 
-**Dipendenze:** T12, T13. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T12, T13. **Priorità:** alta. **Stato:** `DONE` (gate locali C/CUDA sm_86).
 
-- [ ] `T15.1` Inventariare e portare gli operatori della rete audio del checkpoint, inclusi subsampling, convoluzioni, attenzione e proiezione richiesti dalla configurazione fissata.
-- [ ] `T15.2` Riprodurre maschere dei frame e selezione dei soft token validi, escludendo padding e rispettando le convenzioni di posizione.
-- [ ] `T15.3` Implementare audio-only, più clip e testo+audio; descrivere caricamento selettivo della torre audio e durata delle feature.
-- [ ] `T15.4` Collegare video+audio esplicito senza confondere durata della traccia e ordine dei frame. Nessuna trascrizione usata al posto dell'encoder audio.
+- [x] `T15.1` Inventariare e portare gli operatori della rete audio del checkpoint, inclusi subsampling, convoluzioni, attenzione e proiezione richiesti dalla configurazione fissata.
+- [x] `T15.2` Riprodurre maschere dei frame e selezione dei soft token validi, escludendo padding e rispettando le convenzioni di posizione.
+- [x] `T15.3` Implementare audio-only, più clip e testo+audio; descrivere caricamento selettivo della torre audio e durata delle feature.
+- [x] `T15.4` Collegare video+audio esplicito senza confondere durata della traccia e ordine dei frame. Nessuna trascrizione usata al posto dell'encoder audio.
 
 **Gate di completamento:** feature/audio hidden e vettori finali entro soglie T00; retrieval testo↔audio e casi silenzio/non-speech/lingue diverse. Lunghezze variabili e padding non contaminano gli altri elementi del batch. Zero NaN/Inf anche sui limiti di durata supportati.
 
@@ -342,17 +342,19 @@ ma vettori entro T00, come diagnostica esplicita. Evidenze e limiti nel
 
 ## 20. T16 — Embedding multimodali composti e piano selettivo
 
-**Dipendenze:** T12, T14, T15. **Priorità:** bloccante per M4. **Stato:** `PLANNED`.
+**Dipendenze:** T12, T14, T15. **Priorità:** bloccante per M4. **Stato:** `DONE` (gate locali C/CUDA sm_86).
 
-- [ ] `T16.1` Comporre text/image/video/audio interleaved in una sola sequenza con posizioni, separatori e maschere conformi al modello.
-- [ ] `T16.2` Produrre un vettore per elemento composto e batch eterogenei. Pooling unico secondo il checkpoint, non media arbitraria di vettori già normalizzati.
-- [ ] `T16.3` Creare piani che caricano solo gli encoder usati; consentire rilascio degli encoder dopo la produzione delle feature prima del backbone quando il budget lo richiede.
-- [ ] `T16.4` Gestire contesto comune, errori oltre limite e segmentazione esplicita con output/timestamp corrispondenti. Non dichiarare il massimo posizionale come limite operativo.
-- [ ] `T16.5` Rendere revisioni, task, dimensioni, profilo e preprocess parte dell'identità degli embedding/cache; evitare mescolamento di spazi differenti negli indici del client.
+- [x] `T16.1` Comporre text/image/video/audio interleaved in una sola sequenza con posizioni, separatori e maschere conformi al modello.
+- [x] `T16.2` Produrre un vettore per elemento composto e batch eterogenei. Pooling unico secondo il checkpoint, non media arbitraria di vettori già normalizzati.
+- [x] `T16.3` Creare piani che caricano solo gli encoder usati; consentire rilascio degli encoder dopo la produzione delle feature prima del backbone quando il budget lo richiede.
+- [x] `T16.4` Gestire contesto comune, errori oltre limite e segmentazione esplicita con output/timestamp corrispondenti. Non dichiarare il massimo posizionale come limite operativo.
+- [x] `T16.5` Rendere revisioni, task, dimensioni, profilo e preprocess parte dell'identità degli embedding/cache; evitare mescolamento di spazi differenti negli indici del client.
 
 **Gate di completamento:** tutte le quattro modalità e almeno una combinazione di tutte passano oracle e retrieval. Batch di 1/2/3 elementi, input non multipli dei tile, media ripetuti e ordine diverso verificati. Trace dimostra che gli encoder inutilizzati non vengono caricati e che il vettore deriva realmente da tutti i contenuti richiesti.
 
 **Artefatti:** entry point C embeddings completo e matrice funzionale a quattro modalità.
+
+**Evidenze T15–T16:** [report, precisione del riferimento e limiti](../performance/native-suite-t15-t16-20261022/README.md), [287 casi e gate numerici/retrieval](../performance/native-suite-t15-t16-20261022/verification.json), [regressioni e memoria](../performance/native-suite-t15-t16-20261022/acceptance.json). Audio C/CUDA, composizione tipizzata v2 e piani selettivi verificati; 1450 frontiere audio con errore numerico zero. Il riferimento storico T00 r2 con riduzioni BF16 e i relativi FAIL restano conservati; la qualifica usa un nuovo riferimento separato con accumulo FP32 e soglie T00 invariate. Nessun nuovo endpoint HTTP.
 
 ## 21. T17 — Registro modelli, HTTP e gestione dei risultati
 
@@ -510,4 +512,4 @@ Devono essere dimostrati: generazione/editing/RGBA nativi; embedding nativi dell
 
 La matrice dei backend e delle famiglie deve distinguere il supporto architetturale dalla qualificazione sperimentale. Funzioni richieste sul target di rilascio non possono essere omesse con `NOT_VERIFIED`; hardware aggiuntivo non disponibile resta esplicitamente fuori dalla dichiarazione di qualificazione, senza attribuirgli risultati della 3090.
 
-Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Nessun nuovo endpoint image/embedding è abilitato; T13/T14 aggiungono media/preprocess nativi e vision/video Gemma, con gate e limiti nel report T13–T14. Encoder audio, composizione completa e integrazione HTTP restano T15–T22. Evidenze nei report T07–T08, T09–T10, T11–T12 e T13–T14.
+Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Nessun nuovo endpoint image/embedding è abilitato; T13/T14 aggiungono media/preprocess nativi e vision/video Gemma, con gate e limiti nel report T13–T14. T15/T16 aggiungono encoder audio e composizione completa con piani selettivi, qualificati su C/CUDA sm_86; integrazione HTTP e task successivi restano T17–T22. Evidenze nei report T07–T08, T09–T10, T11–T12 e T13–T14.

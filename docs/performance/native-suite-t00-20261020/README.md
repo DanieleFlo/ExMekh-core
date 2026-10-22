@@ -11,6 +11,12 @@ Il server C conserva le proprie dipendenze e i modelli predefiniti.
 
 ## Evidenze congelate
 
+Rettifica del 22 ottobre: il corpus Gemma r2 ereditava da PyTorch le riduzioni
+interne BF16, mentre il profilo nativo richiede accumulo FP32. Il
+[report T15/T16](../native-suite-t15-t16-20261022/README.md) conserva la diagnosi,
+i confronti FAIL contro r2 e un riferimento FP32 separato sullo stesso corpus.
+Gli artefatti storici e tutte le soglie di questo report rimangono invariati.
+
 | Area | Evidenza |
 | --- | --- |
 | Sorgenti e binari originali | [sources.json](sources.json): HEAD, hash dei file C/backend, otto repository con SHA fisse e file consultati, binari e modelli locali |

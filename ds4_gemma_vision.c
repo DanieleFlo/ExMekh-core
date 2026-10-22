@@ -35,6 +35,17 @@ struct ds4_gemma_visual_features {
   ds4_gemma_visual_features_view view;
   ds4_host_buffer account, tokens, counts;
 };
+uint64_t ds4_gemma_vision_resident_weights(const ds4_gemma_vision *e) {
+  uint64_t bytes = 0;
+  if (!e)
+    return 0;
+  for (unsigned i = 0; i < GROUPS; i++) {
+    uint64_t n = ds4_weight_group_bytes(e->groups[i]);
+    if (ds4_weight_group_resident(e->groups[i]))
+      bytes += n;
+  }
+  return bytes;
+}
 typedef struct {
   ds4_numeric *num;
   ds4_num_buffer *buffers[28];
@@ -305,7 +316,7 @@ ds4_status ds4_gemma_vision_estimate(ds4_gemma_vision *e,
   if (!e || !media || !out)
     return DS4_STATUS_INVALID;
   ds4_gemma_media_view v = ds4_gemma_media_data(media);
-  if (!v.frames || !v.max_patches || v.audio_frames || v.soft_tokens > 8192)
+  if (!v.frames || !v.max_patches || v.soft_tokens > 8192)
     return DS4_STATUS_INVALID;
   uint64_t rows = (uint64_t)v.max_patches * v.frames;
   /* One media group executes at a time. Preserve eager frame batching, since
@@ -513,16 +524,15 @@ static ds4_status media_forward(ds4_gemma_vision *e, ds4_gemma_media_view media,
              pooled_bits, soft, 768, 512));
   TRY(observe_batch(e, o, "vision-projected", 16, projected, media, true));
   TRY(ds4_num_read(e->num, projected, output, projected.count * 2));
-cleanup:
-  {
-    ds4_status s = clear(&w);
-    if (!status)
-      status = s;
-    ds4_host_free(&host);
-    ds4_host_free(&bounds);
-    ds4_host_free(&pool_weights);
-    return status;
-  }
+cleanup: {
+  ds4_status s = clear(&w);
+  if (!status)
+    status = s;
+  ds4_host_free(&host);
+  ds4_host_free(&bounds);
+  ds4_host_free(&pool_weights);
+  return status;
+}
 #undef ALLOC
 }
 ds4_gemma_visual_features_view
@@ -561,6 +571,7 @@ ds4_status ds4_gemma_vision_encode(ds4_gemma_vision *e,
   TRY(ds4_resources_reserve(e->resources, e->owner, bytes, &lease));
   working = ds4_reservation_enter(lease);
   ds4_gemma_media_view v = ds4_gemma_media_data(media);
+  v.soft_tokens -= v.audio_soft_tokens;
   TRY(ds4_host_alloc(e->resources, e->owner, sizeof(*f), &account));
   f = account.data;
   f->account = account;

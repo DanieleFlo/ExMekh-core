@@ -1,0 +1,150 @@
+{
+  "verdict": "REFERENCE_MISMATCH_DIAGNOSED",
+  "reason": "Historical T00 r2 inherited PyTorch BF16 reduced-precision reduction=True; native bf16-native-v1 and component oracles require FP32 reduction=False.",
+  "historical_unchanged": [
+    {
+      "path": "performance-results/native-suite-gemma-corpus-20261020-r2/vectors.npz",
+      "bytes": 345302,
+      "sha256": "f2225d2a1b81d5ff8ea6c97d64449ab02673a0be1a7921a4ffb3d6706855d41e"
+    },
+    {
+      "path": "performance-results/native-suite-gemma-corpus-20261020-r2/retrieval.json",
+      "bytes": 122481,
+      "sha256": "93540805c1ff53c19bd090015447eaa96948c4bc5f813389c6bd80909fc5a8e4"
+    }
+  ],
+  "historical_flag_replay": {
+    "allow_bf16_reduced_precision_reduction": true,
+    "cases": [
+      {
+        "id": "audio-0",
+        "max_abs": 7.450580596923828e-09
+      },
+      {
+        "id": "audio-1",
+        "max_abs": 2.9802322387695312e-08
+      },
+      {
+        "id": "audio-2",
+        "max_abs": 1.4901161193847656e-08
+      },
+      {
+        "id": "audio-3",
+        "max_abs": 1.4901161193847656e-08
+      },
+      {
+        "id": "audio-4",
+        "max_abs": 1.4901161193847656e-08
+      },
+      {
+        "id": "audio-5",
+        "max_abs": 1.4901161193847656e-08
+      },
+      {
+        "id": "audio-6",
+        "max_abs": 2.9802322387695312e-08
+      },
+      {
+        "id": "audio-7",
+        "max_abs": 2.9802322387695312e-08
+      },
+      {
+        "id": "audio-8",
+        "max_abs": 2.9802322387695312e-08
+      },
+      {
+        "id": "audio-9",
+        "max_abs": 7.450580596923828e-09
+      },
+      {
+        "id": "audio-10",
+        "max_abs": 2.9802322387695312e-08
+      },
+      {
+        "id": "audio-11",
+        "max_abs": 1.4901161193847656e-08
+      },
+      {
+        "id": "audio-12",
+        "max_abs": 2.9802322387695312e-08
+      },
+      {
+        "id": "audio-13",
+        "max_abs": 7.450580596923828e-09
+      },
+      {
+        "id": "audio-14",
+        "max_abs": 2.9802322387695312e-08
+      },
+      {
+        "id": "audio-15",
+        "max_abs": 1.4901161193847656e-08
+      }
+    ],
+    "vectors": {
+      "path": "performance-results/native-suite-t15-t16-20261022/legacy-reduction-oracle/official-vectors.npy",
+      "bytes": 49280,
+      "sha256": "16517c5f6acb3d3cdcadc3134cdc663b27aff06fc03c8e97299609adb2e3f4ec"
+    },
+    "script": {
+      "path": "performance-results/native-suite-t15-t16-20261022/oracle-legacy-reduction.py",
+      "bytes": 830,
+      "sha256": "906454e4a595cccc9a63b1de0422ad18d1276bfd2d7a67a5d9694263f4b8904e"
+    }
+  },
+  "native_against_historical": {
+    "verdict": "FAIL",
+    "retained_full_run": {
+      "path": "performance-results/native-suite-t15-t16-20261022/qualification-v4/verification.json",
+      "bytes": 279455,
+      "sha256": "90ec054d52806e3067cc32e787d48c34b7ecba6b225b29258647e45be9cf0105"
+    },
+    "details": "historical-reference-failure.json"
+  },
+  "separate_reference": {
+    "allow_bf16_reduced_precision_reduction": false,
+    "matmul_tf32": false,
+    "cudnn_tf32": false,
+    "corpus_unchanged": {
+      "path": "tests/fixtures/native-suite-v1/corpus.json",
+      "bytes": 89849,
+      "sha256": "024c98ad1bd17ce977a42864146f99ca8fa0e4540d64153e11fe62adccfbf620"
+    },
+    "artifacts": [
+      {
+        "path": "performance-results/native-suite-gemma-corpus-20261022-fp32-reduction/vectors.npz",
+        "bytes": 345302,
+        "sha256": "41d768500edf9f7b69e9ac5afe206346df29ab2bf6ddd07a63d46294f2d282fe"
+      },
+      {
+        "path": "performance-results/native-suite-gemma-corpus-20261022-fp32-reduction/retrieval.json",
+        "bytes": 122613,
+        "sha256": "f8ef48132b0eb8a444a79b6b247c7fc092024b4267cd1d3259ee4a6d1c7eaeda"
+      }
+    ],
+    "script": {
+      "path": "tools/score_suite_gemma_corpus.py",
+      "bytes": 9995,
+      "sha256": "1a8bc71058a2124539b7f818766ab99463c06288312254e0ffea7b1616a936cf"
+    },
+    "run_log": {
+      "path": "performance-results/native-suite-t15-t16-20261022/fp32-reference.log",
+      "bytes": 416,
+      "sha256": "da5340dd5270f74f2a4962642d9a0cce8c15e267f3547947dadb88f440b0099c"
+    }
+  },
+  "thresholds_unchanged": {
+    "path": "docs/performance/native-suite-t00-20261020/tolerances.json",
+    "bytes": 1639,
+    "sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+  },
+  "failed_native_diagnosis_v3": {
+    "verdict": "FAIL",
+    "report": {
+      "path": "performance-results/native-suite-t15-t16-20261022/qualification-v3/verification.json",
+      "bytes": 309517,
+      "sha256": "da6adf5d8ac0cf5c99b78c0354c630131c4eceadb0591d58f8d446b03d047730"
+    },
+    "cause": "FFT complex absolute rounding and contiguous packing of transposed linear_end."
+  }
+}

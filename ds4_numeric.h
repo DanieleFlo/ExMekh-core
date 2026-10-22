@@ -58,7 +58,7 @@ ds4_status ds4_num_copy(ds4_numeric *, ds4_num_view, ds4_num_view);
 ds4_status ds4_num_linear(ds4_numeric *, ds4_num_view y, ds4_num_view x,
                           ds4_num_view w, ds4_num_view bias, uint32_t rows,
                           uint32_t in, uint32_t out);
-/* Contiguous independent FP32 matrices. B is [batch,out,in] if transposed,
+/* Contiguous independent F32/BF16 matrices. B is [batch,out,in] if transposed,
  * otherwise [batch,in,out]. Used by math SDPA with FP32 intermediates. */
 ds4_status ds4_num_matmul_batch(ds4_numeric *, ds4_num_view y, ds4_num_view x,
                                 ds4_num_view w, uint32_t batch, uint32_t rows,
@@ -82,6 +82,11 @@ ds4_status ds4_num_norm(ds4_numeric *, ds4_num_view y, ds4_num_view x,
  * a transpose can change BF16 ties. Input/output storage must not overlap. */
 ds4_status ds4_num_channel_l2(ds4_numeric *, ds4_num_view y, ds4_num_view x,
                               uint32_t channels, uint32_t spatial, float eps);
+/* Channel-major RMS, affine in FP32 before casting/transposing. Audio norms
+ * following a convolution retain this reduction layout in the checkpoint. */
+ds4_status ds4_num_channel_rms(ds4_numeric *, ds4_num_view y, ds4_num_view x,
+                               ds4_num_view scale, uint32_t channels,
+                               uint32_t spatial, float eps);
 enum {
   DS4_NUM_ADD,
   DS4_NUM_MUL,

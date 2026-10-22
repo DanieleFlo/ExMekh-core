@@ -1,0 +1,1126 @@
+{
+  "verdict": "PASS_WITH_REVIEWED_STATIC_WARNINGS",
+  "date": "2026-10-22",
+  "source_head_before_task_commit": "e90b452240a4e1f8e61f37ff32533c30a0fae904",
+  "scope": "Clean-code review of uncommitted T15/T16 implementation and adjacent suite APIs, ownership, admission and numerical dispatch. C/CUDA sm_86 only.",
+  "review": "docs/architecture/native-suite-t15-t16-clean-code-review-20261022.md",
+  "changes": [
+    "Each encoder owns its resident-weight query; remove cross-encoder private header and dead total.",
+    "Collect branch estimates once; shared co-resident/fallback planning with checked sums.",
+    "Per-item staging and feature cleanup belong to encode_item; request owns transaction/reservation/result.",
+    "Explicit audio linear layout enum replaces tensor-name based behavior.",
+    "Audio relative-position work shares the owner workspace; extract weight lookup/scalar access.",
+    "CPU/CUDA constructors, allocation and token getters clear independent output parameters before validation.",
+    "RMS alias validation uses only active prefixes, preserving unused capacity.",
+    "Share CUDA channel-reduction launch geometry; add vision C ABI guard."
+  ],
+  "regression_reproduction": {
+    "api_output_failures_before_fix": {
+      "failures": 2,
+      "log": {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/api-before.log",
+        "bytes": 1917,
+        "sha256": "413fbbf2f4a368134a9cd61bac16b14a15e53b0c034d2bbffe88532302c2e6ad"
+      }
+    },
+    "unused_capacity_error_before_fix": {
+      "failures": 1,
+      "log": {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/capacity-before.log",
+        "bytes": 1254,
+        "sha256": "d521c52c9c817e901bcf00f5e11a56e95f03251f39669b10adb41df508ccd282"
+      }
+    },
+    "cuda_constructor_failure_before_fix": {
+      "failures": 1,
+      "log": {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/cuda-api-before.log",
+        "bytes": 785,
+        "sha256": "5a3f26088d41ecd2e932263d869d9c422e000b57c5cd4290c398c166026259b0"
+      }
+    }
+  },
+  "host": {
+    "verdict": "PASS",
+    "run": 54,
+    "passed": 52,
+    "skipped": 2,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/host-release.log",
+      "bytes": 7726,
+      "sha256": "81b185fc1a25771eb48c3b387527d1319ff46f5f76c4c5dc5ee14e68ebc01467"
+    },
+    "reproduction_command": [
+      "agent/.venv/bin/python",
+      "-m",
+      "unittest",
+      "tests.test_gemma_media",
+      "tests.test_embedding_gemma2",
+      "tests.test_suite_api",
+      "tests.test_suite_numeric",
+      "tests.test_suite_oracle_attention",
+      "-v"
+    ],
+    "environment": {
+      "DS4_MEDIA_CODEC_PREFIX": "performance-results/native-suite-t13-t14-20261021/dependencies/installed"
+    },
+    "skipped_reason": "Two numeric cases require CUDA; covered by the CUDA run."
+  },
+  "cuda": {
+    "verdict": "PASS",
+    "run": 24,
+    "passed": 24,
+    "skipped": 0,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/cuda-release.log",
+      "bytes": 2657,
+      "sha256": "d63c799aead2e4fa319cba577a494cb187c4497a59dd41fb5955707a46d36540"
+    },
+    "reproduction_command": [
+      "agent/.venv/bin/python",
+      "-m",
+      "unittest",
+      "tests.test_suite_numeric",
+      "-v"
+    ],
+    "environment": {
+      "DS4_SUITE_NUMERIC_CUDA": "1"
+    }
+  },
+  "ownership": {
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/lifetime-final.log",
+      "bytes": 248,
+      "sha256": "e27473055934e6c26c3e22386427ae226581ad5cecfc8db53754b85da9edc753"
+    },
+    "reproduction_command": [
+      "make",
+      "-s",
+      "test-resources",
+      "test-executor",
+      "test-runtime",
+      "test-numeric-lifetime"
+    ]
+  },
+  "sanitizers": {
+    "host": {
+      "verdict": "PASS",
+      "run": 17,
+      "passed": 17,
+      "skipped": 0,
+      "log": {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/asan.log",
+        "bytes": 2366,
+        "sha256": "a28c248e73a685f688137e5968e88620cb4cab6669b45e2b7da09de45742a0ce"
+      }
+    },
+    "numeric_rms_and_unused_capacity": {
+      "verdict": "PASS",
+      "run": 2,
+      "passed": 2,
+      "skipped": 0,
+      "log": {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/asan-numeric-v2.log",
+        "bytes": 360,
+        "sha256": "5f0e723fe7d71b4f3b519759f27643caf1291329473e762482a8d0b4f4f932c9"
+      }
+    },
+    "options": "AddressSanitizer + UBSan, halt_on_error=1; detect_leaks=0 for Python host. Release counters verified separately.",
+    "commands": [
+      [
+        "agent/.venv/bin/python",
+        "performance-results/native-suite-t15-t16-review-20261022/sanitize.py"
+      ],
+      [
+        "agent/.venv/bin/python",
+        "performance-results/native-suite-t15-t16-review-20261022/asan-numeric.py"
+      ]
+    ],
+    "scripts": [
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/sanitize.py",
+        "bytes": 1619,
+        "sha256": "94e3e6e8fa872f97c1a6b82b056ea9c7e9f702706e004d429870e70e201a7df4"
+      },
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/asan-numeric.py",
+        "bytes": 1403,
+        "sha256": "3c86fd9cf1da9b909d582f1216746cfaea9c85b8c645059b99f4c5375d1a04a9"
+      }
+    ],
+    "build": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/asan-build.log",
+      "bytes": 1375,
+      "sha256": "b7cafc58577bc4acc38cc2baaa115210a1604a670c2ff9611ff9119a8da32dd4"
+    },
+    "preexisting_build_warnings": "Qwen Image tensor-name snprintf format truncation, ds4_qwen_image_graph.h:117.",
+    "initial_numeric_harness_import_failure": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/asan-numeric.log",
+      "bytes": 246,
+      "sha256": "dbc3ca1cf8e6e726c9a2b25451e3478fa4dd35aa90489ddc8722aa100d1cf730"
+    },
+    "sequence": "Host sanitizer run precedes the final RMS capacity correction; both RMS regressions were then run with a freshly sanitized numeric library."
+  },
+  "numeric_replay": {
+    "verdict": "PASS",
+    "reference": {
+      "path": "performance-results/native-suite-t15-t16-20261022/qualification-v5/verification.json",
+      "bytes": 381680,
+      "sha256": "5d9f9e661c4407c2839b48a7769f1e04ba55b1585c6bf4a5776130d42826332d"
+    },
+    "reference_cases": 287,
+    "reference_audio_boundaries": 1450,
+    "reference_thresholds": {
+      "path": "docs/performance/native-suite-t00-20261020/tolerances.json",
+      "bytes": 1639,
+      "sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+    },
+    "full_suite": {
+      "full": {
+        "files_bit_exact": 1952
+      },
+      "128": {
+        "files_bit_exact": 502
+      },
+      "256": {
+        "files_bit_exact": 502
+      },
+      "512": {
+        "files_bit_exact": 502
+      },
+      "faults": {
+        "files_bit_exact": 8,
+        "plan_bit_exact": true,
+        "warm_text": {
+          "limit": 500000000,
+          "peak_bound": 341479424,
+          "reclaim": 1188866008,
+          "release": true,
+          "bit_exact": true
+        }
+      },
+      "co-resident": {
+        "files_bit_exact": 37,
+        "plan_bit_exact": true,
+        "timing": {
+          "cold_seconds": 1.047971351,
+          "samples_seconds": [
+            0.364722991,
+            0.348951149,
+            0.351292792,
+            0.362426698,
+            0.378027914
+          ]
+        }
+      },
+      "phase-release": {
+        "files_bit_exact": 37,
+        "plan_bit_exact": true,
+        "timing": {
+          "cold_seconds": 1.16518566,
+          "samples_seconds": [
+            0.985563723,
+            0.955167278,
+            0.954304744,
+            0.979469173,
+            0.980137056
+          ]
+        }
+      },
+      "batch-1": {
+        "files_bit_exact": 4
+      },
+      "batch-2": {
+        "files_bit_exact": 7
+      },
+      "batch-3": {
+        "files_bit_exact": 14
+      },
+      "selective-text-0": {
+        "files_bit_exact": 2
+      },
+      "selective-image-0": {
+        "files_bit_exact": 4
+      },
+      "selective-audio-0": {
+        "files_bit_exact": 33
+      },
+      "selective-video-0": {
+        "files_bit_exact": 4
+      },
+      "verdict": "PASS"
+    },
+    "commands": [
+      {
+        "name": "native",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/native"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+        },
+        "seconds": 21.959249194999757,
+        "returncode": 0
+      },
+      {
+        "name": "dim-128",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/dim-128"
+        ],
+        "environment": {
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1",
+          "DS4_GEMMA_VISUAL_DIMENSIONS": "128"
+        },
+        "seconds": 21.4971625649996,
+        "returncode": 0
+      },
+      {
+        "name": "dim-256",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/dim-256"
+        ],
+        "environment": {
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1",
+          "DS4_GEMMA_VISUAL_DIMENSIONS": "256"
+        },
+        "seconds": 22.173939986000732,
+        "returncode": 0
+      },
+      {
+        "name": "dim-512",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/cases.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/dim-512"
+        ],
+        "environment": {
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1",
+          "DS4_GEMMA_VISUAL_DIMENSIONS": "512"
+        },
+        "seconds": 22.51792865399966,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-audio-subsample",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-audio-subsample"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "audio-subsample"
+        },
+        "seconds": 3.7265078829996128,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-audio-ff1",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-audio-ff1"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "audio-ff1"
+        },
+        "seconds": 3.88038624300043,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-audio-probabilities",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-audio-probabilities"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "audio-probabilities"
+        },
+        "seconds": 3.952217147000738,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-audio-layer",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-audio-layer"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "audio-layer"
+        },
+        "seconds": 3.9181706209992626,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-audio-projected",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-audio-projected"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "audio-projected"
+        },
+        "seconds": 4.200746737999907,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-vision-patches",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-vision-patches"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "vision-patches"
+        },
+        "seconds": 4.140501236999626,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-embeddings",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-embeddings"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "embeddings"
+        },
+        "seconds": 4.743773600000168,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-layer",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-layer"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "layer"
+        },
+        "seconds": 4.585948881000149,
+        "returncode": 0
+      },
+      {
+        "name": "cancel-complete",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/cancel-complete"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_CANCEL": "complete"
+        },
+        "seconds": 4.4997058569997535,
+        "returncode": 0
+      },
+      {
+        "name": "faults",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/faults"
+        ],
+        "environment": {
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1",
+          "DS4_GEMMA_VISUAL_FAULTS": "1"
+        },
+        "seconds": 5.839762505999715,
+        "returncode": 0
+      },
+      {
+        "name": "co-resident",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/co-resident"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_BENCH": "1",
+          "DS4_GEMMA_VISUAL_DEVICE_LIMIT": "16000000000"
+        },
+        "seconds": 6.559456929000589,
+        "returncode": 0
+      },
+      {
+        "name": "phase-release",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/fault.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/phase-release"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1",
+          "DS4_GEMMA_VISUAL_BENCH": "1",
+          "DS4_GEMMA_VISUAL_DEVICE_LIMIT": "2000000000"
+        },
+        "seconds": 9.778509191000012,
+        "returncode": 0
+      },
+      {
+        "name": "batch-1",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-1.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/batch-1"
+        ],
+        "environment": {
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+        },
+        "seconds": 4.398966949000169,
+        "returncode": 0
+      },
+      {
+        "name": "batch-2",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-2.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/batch-2"
+        ],
+        "environment": {
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+        },
+        "seconds": 4.498053641000297,
+        "returncode": 0
+      },
+      {
+        "name": "batch-3",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/batch-3.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/batch-3"
+        ],
+        "environment": {
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+        },
+        "seconds": 4.892828534000728,
+        "returncode": 0
+      },
+      {
+        "name": "selective-text-0",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-text-0.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/selective-text-0"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+        },
+        "seconds": 3.9060423230002925,
+        "returncode": 0
+      },
+      {
+        "name": "selective-image-0",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-image-0.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/selective-image-0"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+        },
+        "seconds": 4.17336534199967,
+        "returncode": 0
+      },
+      {
+        "name": "selective-audio-0",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-audio-0.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/selective-audio-0"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+        },
+        "seconds": 4.295234829999572,
+        "returncode": 0
+      },
+      {
+        "name": "selective-video-0",
+        "command": [
+          "tests/probe_gemma_visual",
+          "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+          "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p",
+          "performance-results/native-suite-t15-t16-20261022/qualification-v5/selective-video-0.bin",
+          "performance-results/native-suite-t15-t16-review-20261022/selective-video-0"
+        ],
+        "environment": {
+          "DS4_GEMMA_AUDIO_TRACE_ONLY": "1"
+        },
+        "seconds": 4.318565212000067,
+        "returncode": 0
+      }
+    ],
+    "comparison_script": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/replay.py",
+      "bytes": 3700,
+      "sha256": "413a1de7b18cd55feb54b2456e011eb597408f4a329702dfecce9af9cab99304"
+    },
+    "final_build": {
+      "release-native": {
+        "bit_exact_files": 1952
+      },
+      "release-faults": {
+        "bit_exact_files": 8,
+        "warm_text": {
+          "limit": 500000000,
+          "peak_bound": 341479424,
+          "reclaim": 1188866008,
+          "release": true,
+          "bit_exact": true
+        }
+      },
+      "verdict": "PASS"
+    },
+    "final_build_command_script": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/final-replay.py",
+      "bytes": 1757,
+      "sha256": "38ddb63e762fe15a6bec21eaf55bc840033c32617f832a0682bb01c03914360d"
+    },
+    "vectors": [
+      {
+        "path": "performance-results/native-suite-t15-t16-20261022/qualification-v5/native/vectors.f32",
+        "bytes": 881664,
+        "sha256": "9223d0d9f86b5a6a3bf71b4154fbefa381dfd1afee882889fa7b9b3154994f30"
+      },
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/release-native/vectors.f32",
+        "bytes": 881664,
+        "sha256": "9223d0d9f86b5a6a3bf71b4154fbefa381dfd1afee882889fa7b9b3154994f30"
+      }
+    ],
+    "reports": [
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/replay.json",
+        "bytes": 1336,
+        "sha256": "0f38265044a6026b4f6c3b43d23a6fb3834b8086b27f5d145b012cfd2fbcfa7c"
+      },
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/final-replay.json",
+        "bytes": 286,
+        "sha256": "a83216518d397363e462061aa3253f88da518e085f2f43d4958c247a66c2cf52"
+      },
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/release-replay.json",
+        "bytes": 290,
+        "sha256": "b05e89fa59141c168a82a3238bac8371d715f71e98ac6db9c38f109302d8a14d"
+      }
+    ],
+    "final_build_reproduction_command": [
+      "python3",
+      "performance-results/native-suite-t15-t16-review-20261022/final-replay.py",
+      "release"
+    ],
+    "sequence": "Full suite after structural refactoring. After RMS capacity and CUDA invalid-constructor corrections, repeat all 1952 full-corpus files and fault/budget recovery on the final binary; no source edits since.",
+    "oracle_policy": "Reuses frozen successful v5 output. Raw input/output files must be byte-identical; no tolerance, corpus or reference changes."
+  },
+  "build": {
+    "verdict": "PASS",
+    "reproduction_command": [
+      "make",
+      "-s",
+      "-j4",
+      "tests/probe_gemma_visual",
+      "tests/libds4_suite_cpu.so",
+      "tests/libds4_suite_cuda.so",
+      "tests/libds4_numeric_cpu.so",
+      "tests/libds4_numeric_cuda.so",
+      "SUITE_MEDIA_PREFIX=performance-results/native-suite-t13-t14-20261021/dependencies/installed",
+      "CUDA_ARCH=sm_86",
+      "SUITE_CUDA_LIBDIR=agent/.venv/lib/python3.13/site-packages/nvidia/cu13/lib",
+      "CUDNN_HOME=agent/.venv/lib/python3.13/site-packages/nvidia/cudnn"
+    ],
+    "logs": [
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/build-final.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/build-headers.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/capacity-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "performance-results/native-suite-t15-t16-review-20261022/final-api-build.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "warnings_in_native_incremental_builds": 0
+  },
+  "legacy": {
+    "verdict": "PASS",
+    "reproduction_command": [
+      "make",
+      "-s",
+      "-j4",
+      "cuda",
+      "CUDA_ARCH=sm_86"
+    ],
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/legacy-build.log",
+      "bytes": 280,
+      "sha256": "f60d273b307a947dee33cf10dd1be659406ce1652e0b5beda6a869b9f8859bf6"
+    },
+    "binaries": {
+      "ds4": {
+        "artifact": {
+          "path": "ds4",
+          "bytes": 71457600,
+          "sha256": "0033aef13e20b37a6faa94a9efb1fe5ee575640d3cf48b82d2159054a5d4425d"
+        },
+        "media_libraries_absent": true
+      },
+      "ds4-server": {
+        "artifact": {
+          "path": "ds4-server",
+          "bytes": 73721040,
+          "sha256": "0d56c27025d46ff56aefd75da1875d080b432c6c4e209b849ff1820bc36bcc57"
+        },
+        "media_libraries_absent": true
+      },
+      "ds4-bench": {
+        "artifact": {
+          "path": "ds4-bench",
+          "bytes": 71193440,
+          "sha256": "1dc699d99d49bb3ad2d59c7f9b7590ff256dadbf9d6e930c679a4106fef6fad4"
+        },
+        "media_libraries_absent": true
+      },
+      "ds4-eval": {
+        "artifact": {
+          "path": "ds4-eval",
+          "bytes": 71532632,
+          "sha256": "3c118f26fbcd1c116de299c337ade825635b974054f95e4bf7ad2725dc9b1025"
+        },
+        "media_libraries_absent": true
+      }
+    },
+    "linkage": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/legacy-linkage.log",
+      "bytes": 3586,
+      "sha256": "1a767f47c7e6734c191bfaaf00c0ac933e9b4506eef56c1e40d6d2246e779262"
+    },
+    "preexisting_warning": "ds4_read_queue_workers defined but unused, ds4_read_queue.h:105."
+  },
+  "static_analysis": {
+    "verdict": "FOUR_FALSE_POSITIVES_REVIEWED",
+    "flags": "-O0 -Wall -Wextra -fanalyzer -c",
+    "runs": [
+      {
+        "command": [
+          "cc",
+          "-std=c11",
+          "-D_GNU_SOURCE",
+          "-I.",
+          "-O0",
+          "-Wall",
+          "-Wextra",
+          "-fanalyzer",
+          "-c",
+          "ds4_gemma_audio.c",
+          "-o",
+          "performance-results/native-suite-t15-t16-review-20261022/ds4_gemma_audio.c.o"
+        ],
+        "returncode": 0
+      },
+      {
+        "command": [
+          "cc",
+          "-std=c11",
+          "-D_GNU_SOURCE",
+          "-I.",
+          "-O0",
+          "-Wall",
+          "-Wextra",
+          "-fanalyzer",
+          "-c",
+          "ds4_gemma_visual.c",
+          "-o",
+          "performance-results/native-suite-t15-t16-review-20261022/ds4_gemma_visual.c.o"
+        ],
+        "returncode": 0
+      },
+      {
+        "command": [
+          "cc",
+          "-std=c11",
+          "-D_GNU_SOURCE",
+          "-I.",
+          "-O0",
+          "-Wall",
+          "-Wextra",
+          "-fanalyzer",
+          "-c",
+          "ds4_embedding_gemma2.c",
+          "-o",
+          "performance-results/native-suite-t15-t16-review-20261022/ds4_embedding_gemma2.c.o"
+        ],
+        "returncode": 0
+      },
+      {
+        "command": [
+          "cc",
+          "-std=c11",
+          "-D_GNU_SOURCE",
+          "-I.",
+          "-O0",
+          "-Wall",
+          "-Wextra",
+          "-fanalyzer",
+          "-c",
+          "ds4_gemma_vision.c",
+          "-o",
+          "performance-results/native-suite-t15-t16-review-20261022/ds4_gemma_vision.c.o"
+        ],
+        "returncode": 0
+      },
+      {
+        "command": [
+          "cc",
+          "-std=c11",
+          "-D_GNU_SOURCE",
+          "-I.",
+          "-O0",
+          "-Wall",
+          "-Wextra",
+          "-fanalyzer",
+          "-c",
+          "ds4_numeric.c",
+          "-o",
+          "performance-results/native-suite-t15-t16-review-20261022/ds4_numeric.c.o"
+        ],
+        "returncode": 0
+      }
+    ],
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/analyzer-final.log",
+      "bytes": 60801,
+      "sha256": "0cbce9f6ff95ccb8dc9eec5336fd8b01a2b892ad6d0c51ce7c7e1763fd6014be"
+    },
+    "warnings": [
+      {
+        "diagnostic": "ds4_gemma_visual.c:691:21: warning: dereference of NULL ‘request’ [CWE-476] [-Wanalyzer-null-dereference]",
+        "reason": "count is 1..1024; count*sizeof(request) cannot be zero or overflow. Analyzer assumes zero allocation."
+      },
+      {
+        "diagnostic": "ds4_gemma_visual.c:711:48: warning: dereference of NULL ‘0’ [CWE-476] [-Wanalyzer-null-dereference]",
+        "reason": "Both passes read unchanged const content. Each media write has a corresponding earlier increment; maximum count 1024^2. Analyzer loses cross-loop count relation."
+      },
+      {
+        "diagnostic": "ds4_embedding_gemma2.c:526:5: warning: use of NULL where non-null expected [CWE-476] [-Wanalyzer-null-argument]",
+        "reason": "Analyzer assumes zero token allocation then enters i<n. Additionally input is opaque and tokenizer always emits BOS/content/EOS."
+      },
+      {
+        "diagnostic": "ds4_gemma_vision.c:582:3: warning: use of NULL where non-null expected [CWE-476] [-Wanalyzer-null-argument]",
+        "reason": "estimate rejects zero frames in the same immutable media before this allocation. Analyzer loses callee validation."
+      }
+    ],
+    "earlier_syntax_only_check": "The original acceptance.json used -fsyntax-only; that was syntax validation, not an actual GCC analyzer compilation."
+  },
+  "lint": {
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/lint-release.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    }
+  },
+  "timing": {
+    "co-resident": {
+      "cold_seconds": 1.047971351,
+      "samples_seconds": [
+        0.364722991,
+        0.348951149,
+        0.351292792,
+        0.362426698,
+        0.378027914
+      ],
+      "median_seconds": 0.362426698,
+      "claim": "Descriptive latency only; no speedup claim"
+    },
+    "phase-release": {
+      "cold_seconds": 1.16518566,
+      "samples_seconds": [
+        0.985563723,
+        0.955167278,
+        0.954304744,
+        0.979469173,
+        0.980137056
+      ],
+      "median_seconds": 0.979469173,
+      "claim": "Descriptive latency only; no speedup claim"
+    }
+  },
+  "source_artifacts": [
+    {
+      "path": "Makefile",
+      "bytes": 80093,
+      "sha256": "737fd2222b5daa18f8a1c9cc93a9a8bd403aace4c28003a94228631b9cd9a774"
+    },
+    {
+      "path": "ds4_embedding_gemma2.c",
+      "bytes": 30483,
+      "sha256": "0f11abd7b3e16491aaad7cbe2e34a14d3ac8101f7875e9d8b73f5567280d2d9b"
+    },
+    {
+      "path": "ds4_embedding_gemma2.h",
+      "bytes": 2603,
+      "sha256": "738dc9558091a724ed9dffebde14d3c74c7de9a57007db6834a0e5a05d8fdcef"
+    },
+    {
+      "path": "ds4_embedding_gemma2_internal.h",
+      "bytes": 929,
+      "sha256": "07ab67d191a758f30cb5e05f1a87da307dac69a2cd575380fb45aaaf4daa8c02"
+    },
+    {
+      "path": "ds4_gemma_audio.c",
+      "bytes": 37876,
+      "sha256": "12243e5734102fb16fade285657d92ca11709d97b70b7745f4cec8131ddda8b0"
+    },
+    {
+      "path": "ds4_gemma_audio.h",
+      "bytes": 1419,
+      "sha256": "5f50378acf2f79a2f3a48641c70119678f817cfeb40ede62072f8bb3be65c8ed"
+    },
+    {
+      "path": "ds4_gemma_media.c",
+      "bytes": 19683,
+      "sha256": "ab28c0a2a800b556b24873a70fd8845b3059670471586d01923e56f00f74cac2"
+    },
+    {
+      "path": "ds4_gemma_multimodal.h",
+      "bytes": 2799,
+      "sha256": "d03c04996b420db869f8c12025e4fd0ee4200e8f807c8a28f27c344c24f4f073"
+    },
+    {
+      "path": "ds4_gemma_vision.c",
+      "bytes": 24965,
+      "sha256": "869ce190f033a8e09cc3a5faba84f11a3ecfbdbe9c7a4357b96519095bc14446"
+    },
+    {
+      "path": "ds4_gemma_vision.h",
+      "bytes": 1589,
+      "sha256": "0873f94b5ef21b8f866c716b822e603c840a525a48a52eb2116532d95a08a69e"
+    },
+    {
+      "path": "ds4_gemma_visual.c",
+      "bytes": 27807,
+      "sha256": "865446f8456a600b1b7dbcc3d6c715135af4612e54740fd96effb0f112c50f11"
+    },
+    {
+      "path": "ds4_gemma_visual.h",
+      "bytes": 3547,
+      "sha256": "04f09de4b40eb99aeaf38cbc7251afb6f3266288f3322239d6453696a17fd608"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 38709,
+      "sha256": "6710ba2bab87c5bfff8ba213c31f8a52b1e8f97fe2e38c4f419984b5c93f331b"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 9933,
+      "sha256": "dcea7148008b59f8014d5be3052d6df398f38c615fa1d151edf9954e521a4c62"
+    },
+    {
+      "path": "ds4_numeric_cuda.cu",
+      "bytes": 51872,
+      "sha256": "f15e2ef1d910eb51e6070af6fca6fdf5a369b776b006a1273f56bac5d21d2af3"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 3025,
+      "sha256": "d81e691e1efab21111dce662703f8cf860cdbd15c3c0821e0933cdd7cc703aec"
+    },
+    {
+      "path": "tests/probe_gemma_visual.c",
+      "bytes": 20919,
+      "sha256": "6eaab0bb877c75c79b4b8d2f886ed09fa11b69752d251f6f1c0aabb31e7253fe"
+    },
+    {
+      "path": "tests/suite_media_api.py",
+      "bytes": 10188,
+      "sha256": "d6607cd65bd9b87111fe0426576f2cf1b54895fdb2ef00930d288c9782a90672"
+    },
+    {
+      "path": "tests/test_gemma_media.py",
+      "bytes": 42096,
+      "sha256": "4f82da43dd802233b2a596ea44560c9aa64ede9a4594ff0416dd2cbaff71bc61"
+    },
+    {
+      "path": "tests/test_suite_api.py",
+      "bytes": 5968,
+      "sha256": "3cbbae7851245f2f3ee22d4285e3ae8638ede4877cc09c522dcd3abee4df28fc"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 45492,
+      "sha256": "2139902f0994c26649794da7dbbb9d8873568ba1cec3b3e30acfa147fb858ad6"
+    },
+    {
+      "path": "tools/qualify_gemma_multimodal.py",
+      "bytes": 21714,
+      "sha256": "f388df838f1c32ce8e530711eacb7ee636477237bf5176dfef66f2fb9a12d9eb"
+    },
+    {
+      "path": "tools/run_gemma_visual_oracle.py",
+      "bytes": 20615,
+      "sha256": "8a8b2da4fac6acb8ddbba63f5611ca86c7f33218d5a46de4989417734c06e4a3"
+    },
+    {
+      "path": "tools/score_suite_gemma_corpus.py",
+      "bytes": 9995,
+      "sha256": "1a8bc71058a2124539b7f818766ab99463c06288312254e0ffea7b1616a936cf"
+    },
+    {
+      "path": "tools/suite_visual_cases.py",
+      "bytes": 3044,
+      "sha256": "832a3141d57d74735af7bbccffd6e73522e4ef085e9af5fbf8ae01a78620ea4e"
+    }
+  ],
+  "native_binary": {
+    "path": "tests/probe_gemma_visual",
+    "bytes": 2983064,
+    "sha256": "fa75431f6be6414b7815e563a56cae12cbfdd499036afc79c5bcfe75e13989f8"
+  },
+  "not_verified": [
+    "Metal",
+    "ROCm",
+    "TP/distributed",
+    "integrated alternating LLM stress",
+    "HTTP routing (T17)",
+    "all files of the repository"
+  ],
+  "documentation": {
+    "verdict": "PASS",
+    "run": 10,
+    "passed": 10,
+    "skipped": 0,
+    "log": {
+      "path": "performance-results/native-suite-t15-t16-review-20261022/docs-check.log",
+      "bytes": 1808,
+      "sha256": "c3b5749f25c0d9f35fb5e9ce3f6aebe72e30ff8366d07acf94a5a0ee4197277e"
+    },
+    "reproduction_command": [
+      "make",
+      "docs-check"
+    ]
+  }
+}

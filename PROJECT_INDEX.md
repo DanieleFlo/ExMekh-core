@@ -310,6 +310,14 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   possiede validazione e scatter dei soft token prima della PLE; il builder
   visual misura lo spazio effettivo dei prompt. Sin/cos delle fasi RoPE
   FP32 vengono valutati sul backend numerico anche per le sequenze lunghe.
+- `ds4_gemma_audio.c/.h` — torre audio BF16 nativa: subsampling, Conformer,
+  attenzione relativa a blocchi, depthwise causale e proiezione dei token validi.
+- `ds4_gemma_multimodal.h` — composizione C v2
+  tipizzata a quattro modalità nel wrapper visual condiviso; segmenti espliciti,
+  identità completa, query di residenza esposte dai rispettivi encoder,
+  raccolta unica delle stime e piano di co-residenza o rilascio
+  selettivo delle torri prima del backbone. Le primitive numeriche riusano GEMM
+  a layout esplicito anche BF16 e RMS channel-major con scala.
 - `tools/compile_gemma_media.py`, `tools/build_suite_media_dependencies.py` —
   asset processor vincolato al bundle e build isolata FFmpeg/soxr con hash;
   `third_party/ffmpeg/`, `third_party/soxr/` conservano licenze e provenienza.
@@ -317,9 +325,20 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `tools/suite_visual_cases.py`, `tests/probe_gemma_visual.c`,
   `tests/test_gemma_media.py`, `tests/suite_media_api.py` — fixture, oracle e
   gate pixel/feature/hidden/vettori/retrieval, budget, cache e lifetime T13/T14.
+- `tools/qualify_gemma_multimodal.py`, `tests/fixtures/native-suite-audio-v2/` —
+  qualifica sequenziale T15/T16, clip/lingue/silenzio, quattro modalità,
+  retrieval e trace dei pesi; waveform sintetiche con provenienza e SHA.
+- `docs/performance/native-suite-t15-t16-20261022/`, `third_party/numpy/` —
+  gate C/CUDA audio/composizione, diagnosi della baseline T00 con riduzioni BF16,
+  nuovo riferimento FP32 separato, inventario e provenienza del rounding FFT.
+- `docs/architecture/native-suite-t15-t16-clean-code-review-20261022.md` —
+  riesame di responsabilità e API, cleanup unico delle feature e workspace,
+  layout audio esplicito, output d'errore e aliasing delle primitive;
+  `review-verification.json` nel report T15/T16 conserva test e replay esatti.
 - `docs/performance/native-suite-t13-t14-20261021/` — qualifica locale media,
   vision/video e regressione testuale; limiti, dipendenze, risultati e sviluppi
-  successivi. Encoder audio e routing HTTP restano nei task successivi.
+  successivi. Audio e composizione sono qualificati nel report T15/T16;
+  routing HTTP resta T17.
 - `tests/test_suite_api.py` — output di ownership azzerati su input invalidi,
   comprese le uscite indipendenti dei tokenizer; nessun modello richiesto.
 - `docs/architecture/native-suite-t11-t12-clean-code-review-20261021.md` —
