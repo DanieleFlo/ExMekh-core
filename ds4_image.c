@@ -33,42 +33,89 @@ static uint32_t ds4_exif_u32(const uint8_t *p, int little) {
            ((uint32_t)p[2] << 8) | (uint32_t)p[3];
 }
 
+static int ds4_exif_orientation(const uint8_t *tiff, size_t tiff_len) {
+    if (tiff_len < 8) return 1;
+    int little = tiff[0] == 'I' && tiff[1] == 'I';
+    int big = tiff[0] == 'M' && tiff[1] == 'M';
+    if ((!little && !big) || ds4_exif_u16(tiff + 2, little) != 42) return 1;
+    uint32_t ifd = ds4_exif_u32(tiff + 4, little);
+    if (ifd > tiff_len || tiff_len - ifd < 2) return 1;
+    uint16_t count = ds4_exif_u16(tiff + ifd, little);
+    size_t entries = (size_t)count * 12;
+    if (entries > tiff_len - ifd - 2) return 1;
+    for (uint16_t i = 0; i < count; i++) {
+        const uint8_t *entry = tiff + ifd + 2 + (size_t)i * 12;
+        if (ds4_exif_u16(entry, little) == 0x0112 &&
+            ds4_exif_u16(entry + 2, little) == 3 &&
+            ds4_exif_u32(entry + 4, little) == 1) {
+            int orientation = ds4_exif_u16(entry + 8, little);
+            return orientation >= 1 && orientation <= 8 ? orientation : 1;
+        }
+    }
+    return 1;
+}
 static int ds4_jpeg_orientation(const uint8_t *data, size_t len) {
     size_t pos = 2;
     while (pos + 4 <= len && data[pos] == 0xff) {
         uint8_t marker = data[pos + 1];
         pos += 2;
         if (marker == 0xd8 || (marker >= 0xd0 && marker <= 0xd9)) continue;
-        if (pos + 2 > len) break;
         size_t segment = ((size_t)data[pos] << 8) | data[pos + 1];
         if (segment < 2 || segment > len - pos) break;
         if (marker == 0xe1 && segment >= 14 &&
-            memcmp(data + pos + 2, "Exif\0\0", 6) == 0) {
-            const uint8_t *tiff = data + pos + 8;
-            size_t tiff_len = segment - 8;
-            if (tiff_len < 8) break;
-            int little = tiff[0] == 'I' && tiff[1] == 'I';
-            int big = tiff[0] == 'M' && tiff[1] == 'M';
-            if ((!little && !big) || ds4_exif_u16(tiff + 2, little) != 42) break;
-            uint32_t ifd = ds4_exif_u32(tiff + 4, little);
-            if (ifd > tiff_len || tiff_len - ifd < 2) break;
-            uint16_t count = ds4_exif_u16(tiff + ifd, little);
-            size_t entries = (size_t)count * 12;
-            if (entries > tiff_len - ifd - 2) break;
-            for (uint16_t i = 0; i < count; i++) {
-                const uint8_t *entry = tiff + ifd + 2 + (size_t)i * 12;
-                if (ds4_exif_u16(entry, little) == 0x0112 &&
-                    ds4_exif_u16(entry + 2, little) == 3 &&
-                    ds4_exif_u32(entry + 4, little) == 1) {
-                    int orientation = ds4_exif_u16(entry + 8, little);
-                    return orientation >= 1 && orientation <= 8 ? orientation : 1;
-                }
-            }
-        }
+            memcmp(data + pos + 2, "Exif\0\0", 6) == 0)
+            return ds4_exif_orientation(data + pos + 8, segment - 8);
         if (marker == 0xda) break;
         pos += segment;
     }
     return 1;
+}
+static uint32_t ds4_image_be32(const uint8_t *p) {
+    return (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 |
+           (uint32_t)p[2] << 8 | p[3];
+}
+static int ds4_png_orientation(const uint8_t *data, size_t len) {
+    for (size_t pos = 8; pos + 12 <= len;) {
+        uint32_t n = ds4_image_be32(data + pos);
+        if (n > len - pos - 12) break;
+        if (!memcmp(data + pos + 4, "eXIf", 4))
+            return ds4_exif_orientation(data + pos + 8, n);
+        pos += (size_t)n + 12;
+    }
+    return 1;
+}
+int ds4_image_encoded_size(const uint8_t *data, size_t len,
+                           uint32_t *width, uint32_t *height) {
+    if (!data || !width || !height || len > DS4_IMAGE_MAX_ENCODED_BYTES)
+        return 0;
+    *width = *height = 0;
+    if (len >= 24 && !memcmp(data, "\x89PNG\r\n\x1a\n", 8) &&
+        !memcmp(data + 12, "IHDR", 4)) {
+        *width = ds4_image_be32(data + 16);
+        *height = ds4_image_be32(data + 20);
+    } else if (len >= 2 && data[0] == 0xff && data[1] == 0xd8) {
+        for (size_t pos = 2; pos + 4 <= len;) {
+            if (data[pos++] != 0xff) break;
+            while (pos < len && data[pos] == 0xff) pos++;
+            if (pos >= len) break;
+            uint8_t marker = data[pos++];
+            if (marker == 0xd8 || (marker >= 0xd0 && marker <= 0xd9)) continue;
+            if (pos + 2 > len) break;
+            size_t n = (size_t)data[pos] << 8 | data[pos + 1];
+            if (n < 2 || n > len - pos) break;
+            if (marker >= 0xc0 && marker <= 0xcf &&
+                marker != 0xc4 && marker != 0xc8 && marker != 0xcc && n >= 8) {
+                *height = (uint32_t)data[pos + 3] << 8 | data[pos + 4];
+                *width = (uint32_t)data[pos + 5] << 8 | data[pos + 6];
+                break;
+            }
+            if (marker == 0xda) break;
+            pos += n;
+        }
+    }
+    return *width && *height && *width <= DS4_IMAGE_MAX_DIMENSION &&
+           *height <= DS4_IMAGE_MAX_DIMENSION &&
+           (uint64_t)*width * *height <= DS4_IMAGE_MAX_PIXELS;
 }
 
 static int ds4_oriented_rgb(
@@ -142,7 +189,8 @@ int ds4_image_decode_memory(
         int ok = ds4_oriented_rgb(out, decoded->data,
                                   (uint32_t)decoded->width,
                                   (uint32_t)decoded->height,
-                                  (uint32_t)decoded->channels, 1);
+                                  (uint32_t)decoded->channels,
+                                  ds4_png_orientation(encoded, encoded_len));
         png_free(decoded);
         if (!ok) ds4_image_error(error, error_cap, "unable to allocate decoded PNG pixels");
         return ok;
@@ -453,6 +501,17 @@ int ds4_image_preprocess_glm53(
 }
 
 #include "ds4_image_resize.inc"
+int ds4_image_resize_rgb_u8(const ds4_image *image, uint32_t width,
+                            uint32_t height, float *pixels, uint64_t count) {
+    if (!image || !image->rgb || !image->width || !image->height ||
+        !width || !height || width > 65536 || height > 65536 ||
+        (uint64_t)width * height > DS4_IMAGE_MAX_PIXELS ||
+        count != (uint64_t)width * height * 3 || !pixels)
+        return 0;
+    return ds4_resize_qwen3vl_rgb(image->rgb, image->width, image->height,
+                                 pixels, width, height);
+}
+
 
 static int ds4_qwen_resize_dimensions(uint32_t width, uint32_t height, uint32_t min_tokens,
         uint32_t max_tokens, bool ties_even, uint32_t *out_width, uint32_t *out_height) {

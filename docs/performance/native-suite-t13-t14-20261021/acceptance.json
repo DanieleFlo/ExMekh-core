@@ -1,0 +1,212 @@
+{
+  "verdict": "PASS",
+  "scope": "T13/T14 frozen local Linux/sm_86 gates; other codec/backend/large-budget qualification is explicit in README",
+  "host": {
+    "tests": 67,
+    "passed": 65,
+    "skipped": 2,
+    "skip_reason": "Two CUDA geometry tests execute in the CUDA suite",
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/acceptance-host.log",
+      "bytes": 9408,
+      "sha256": "c23be586f6f56829be302db84ec592cd6667fe26bbe54df5736d7f5da84f29ab"
+    }
+  },
+  "cuda": {
+    "tests": 20,
+    "passed": 20,
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/acceptance-cuda.log",
+      "bytes": 2161,
+      "sha256": "d828ee1f3f377e95180e449418e34b2f0716b7a580c85a043358c225a2d1d5eb"
+    }
+  },
+  "timestamp_tokens": {
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/visual-timestamps.log",
+      "bytes": 235,
+      "sha256": "caf9645844164564f1a2f8f35cb9f6f07c7984ee9633af5f1a9a659e5191a88e"
+    }
+  },
+  "media_f32": {
+    "cases": 26,
+    "max_abs": 4.76837158203125e-07,
+    "relative_l2_max": 2.847874085799912e-08,
+    "frozen_max_abs": 2e-05,
+    "frozen_relative_l2": 1e-05
+  },
+  "visual": {
+    "cases": 29,
+    "frames": 88,
+    "boundaries": 3479,
+    "boundary_max_abs": 0.0,
+    "input_tensors_exact": true,
+    "retrieval_metric_groups": 32,
+    "full_current_build_replay_bit_exact": true,
+    "replay_files": 3573,
+    "device_peak_owned_bytes": 1140448450,
+    "final_input_outlives_processor": true,
+    "full_corpus_weight_reload_budget_failure_retry": "PASS",
+    "final_native_log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/acceptance-native.log",
+      "bytes": 47,
+      "sha256": "f8058ab9bac34acd974b0e81c55d88c91faf4c9d75c4204eb3f317f6d69ddc96"
+    }
+  },
+  "text_regression": {
+    "verdict": "PASS",
+    "cases": 54,
+    "hidden_t00": {
+      "cases": 48,
+      "boundaries": 1296,
+      "criterion": "bit_exact",
+      "verdict": "PASS"
+    },
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/text-regression.log",
+      "bytes": 193,
+      "sha256": "fc88c101a45484b54eb123a1b386c629cfe70fb1974552519c93907a20f20fc2"
+    }
+  },
+  "native_c_tests": {
+    "verdict": "PASS",
+    "tests": [
+      "test_runtime",
+      "test_executor",
+      "test_resources",
+      "test_numeric_lifetime",
+      "test_image_decode",
+      "test_qwen_image_input"
+    ]
+  },
+  "legacy_build": {
+    "verdict": "PASS",
+    "media_dependencies_absent": {
+      "ds4": true,
+      "ds4-server": true,
+      "ds4-bench": true,
+      "ds4-eval": true
+    },
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/legacy-build.log",
+      "bytes": 2598,
+      "sha256": "a6699abb55b15da24a5c95b7d814a533a0ccbf8bcb33d367804a57679ef6a16c"
+    }
+  },
+  "dependencies_replay": {
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/dependencies-replay.log",
+      "bytes": 32810,
+      "sha256": "ec1dd04e5fb7e6a3daa86ff2d6c93bce5df2c43d93c0f6e10b7f17c067c69a3d"
+    },
+    "manifest": {
+      "path": "performance-results/native-suite-t13-t14-20261021/dependencies-replay/provenance.json",
+      "bytes": 1218,
+      "sha256": "3baf96f2b2da0555db66b32e01e9d8d243030f3364ca224b00a4b795ff183eb2"
+    }
+  },
+  "timing_scope": "Vision + backbone only on preprocessed data; one cold warmup then five warm samples. No profiler. No speedup claim. Video CV>5% stays NEED_MORE_DATA.",
+  "timing": {
+    "bench-image": {
+      "cold_seconds": 0.549859548,
+      "samples_seconds": [
+        0.116555687,
+        0.115127943,
+        0.114769861,
+        0.11464377,
+        0.116902911
+      ],
+      "min_seconds": 0.11464377,
+      "p10_seconds": 0.1146942064,
+      "median_seconds": 0.115127943,
+      "mean_seconds": 0.11560003440000002,
+      "p90_seconds": 0.1167640214,
+      "max_seconds": 0.116902911,
+      "stddev_seconds": 0.0009420466117388455,
+      "cv": 0.008149189718051203,
+      "verdict": "STABLE_BASELINE",
+      "artifact": {
+        "path": "performance-results/native-suite-t13-t14-20261021/bench-image/timing.json",
+        "bytes": 109,
+        "sha256": "5045d16624d6b4e3becea4dd8d338cb1391d079f5b6213e57553e165558f6455"
+      }
+    },
+    "bench-video": {
+      "cold_seconds": 0.61629516,
+      "samples_seconds": [
+        0.269334739,
+        0.233208572,
+        0.234161465,
+        0.233063425,
+        0.230498394
+      ],
+      "min_seconds": 0.230498394,
+      "p10_seconds": 0.2315244064,
+      "median_seconds": 0.233208572,
+      "mean_seconds": 0.240053319,
+      "p90_seconds": 0.2552654294,
+      "max_seconds": 0.269334739,
+      "stddev_seconds": 0.014690958254345327,
+      "cv": 0.061198729996919256,
+      "verdict": "NEED_MORE_DATA",
+      "artifact": {
+        "path": "performance-results/native-suite-t13-t14-20261021/bench-video/timing.json",
+        "bytes": 109,
+        "sha256": "da77b08b03ffa012fc363fd441c664c4059e384e8fdc365e6cd53a7d7b9a4f05"
+      }
+    },
+    "bench-video-v2": {
+      "cold_seconds": 0.659956375,
+      "samples_seconds": [
+        0.228825651,
+        0.228510588,
+        0.261727451,
+        0.225757069,
+        0.226926948
+      ],
+      "min_seconds": 0.225757069,
+      "p10_seconds": 0.2262250206,
+      "median_seconds": 0.228510588,
+      "mean_seconds": 0.2343495414,
+      "p90_seconds": 0.24856673099999999,
+      "max_seconds": 0.261727451,
+      "stddev_seconds": 0.013733769699181952,
+      "cv": 0.05860378312300786,
+      "verdict": "NEED_MORE_DATA",
+      "artifact": {
+        "path": "performance-results/native-suite-t13-t14-20261021/bench-video-v2/timing.json",
+        "bytes": 109,
+        "sha256": "6b687d181610640f4236080ec27653f25aec420db85829a9b4eb4f9f4352e662"
+      }
+    }
+  },
+  "docs": {
+    "tests": 10,
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/docs-check.log",
+      "bytes": 1808,
+      "sha256": "7798130eb50ffef101166cc8eec98f961587c5feea8cf83c35a5b353a434234b"
+    }
+  },
+  "processor_asset_replay": {
+    "verdict": "PASS",
+    "bit_exact": true,
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/asset-replay.log",
+      "bytes": 467,
+      "sha256": "cad0cba532345fc944e05b7af8685026e6b8457ab6bc75680e1e5c6681d9ba93"
+    }
+  },
+  "final_build": {
+    "verdict": "PASS",
+    "warnings": 0,
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/acceptance-build.log",
+      "bytes": 332,
+      "sha256": "ee60f823604c32f2b8e7d48385ac81fb014c3a9c346646e6695fbe71e1e00e13"
+    }
+  }
+}

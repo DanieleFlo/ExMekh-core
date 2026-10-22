@@ -297,10 +297,36 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `third_party/transformers/` conserva licenza e attribuzioni.
 - `tools/compile_embedding_gemma2.py` — compilazione offline di tokenizer e
   configurazione per layer con hash delle sorgenti e checksum del payload.
+- `ds4_media.c/.h`, `ds4_media_internal.h`, `ds4_media_av.c` — originali e
+  media decodificati con ownership e limiti, decoder immagini condiviso,
+  libav C in memoria, piano di campionamento comune a raw/container,
+  frame/VFR/segmenti espliciti, traccia audio e soxr HQ.
+- `ds4_gemma_media.c/.h`, `ds4_host_memory.h` — processor host deterministico,
+  patch/posizioni, feature audio e maschere, piano token/memoria e cache LRU
+  limitata; buffer host sincroni registrati senza ereditare eventi GPU.
+- `ds4_gemma_vision.c/.h`, `ds4_gemma_visual.c/.h`,
+  `ds4_embedding_gemma2_internal.h` — torre vision Gemma con frame raggruppati,
+  pooling/proiezione, input ordinati e batch ragged isolati; il backbone
+  possiede validazione e scatter dei soft token prima della PLE; il builder
+  visual misura lo spazio effettivo dei prompt. Sin/cos delle fasi RoPE
+  FP32 vengono valutati sul backend numerico anche per le sequenze lunghe.
+- `tools/compile_gemma_media.py`, `tools/build_suite_media_dependencies.py` —
+  asset processor vincolato al bundle e build isolata FFmpeg/soxr con hash;
+  `third_party/ffmpeg/`, `third_party/soxr/` conservano licenze e provenienza.
+- `tools/qualify_gemma_visual.py`, `tools/run_gemma_visual_oracle.py`,
+  `tools/suite_visual_cases.py`, `tests/probe_gemma_visual.c`,
+  `tests/test_gemma_media.py`, `tests/suite_media_api.py` — fixture, oracle e
+  gate pixel/feature/hidden/vettori/retrieval, budget, cache e lifetime T13/T14.
+- `docs/performance/native-suite-t13-t14-20261021/` — qualifica locale media,
+  vision/video e regressione testuale; limiti, dipendenze, risultati e sviluppi
+  successivi. Encoder audio e routing HTTP restano nei task successivi.
 - `tests/test_suite_api.py` — output di ownership azzerati su input invalidi,
   comprese le uscite indipendenti dei tokenizer; nessun modello richiesto.
 - `docs/architecture/native-suite-t11-t12-clean-code-review-20261021.md` —
   revisione di responsabilità, API opache, errori e regressione del refactoring.
+- `docs/architecture/native-suite-t13-t14-clean-code-review-20261022.md` —
+  revisione di decoder/processor/vision/backbone, admission coerente,
+  validazione delegata al proprietario dei token e regressione numerica.
 - `tools/qualify_embedding_gemma2.py`, `tools/run_embedding_gemma2_oracle.py`,
   `tools/qualify_qwen_image_pipeline.py`, `tools/run_qwen_image_pipeline_oracle.py`,
   `tests/probe_native_suite.c`, `tests/probe_qwen_image_pipeline.c`,

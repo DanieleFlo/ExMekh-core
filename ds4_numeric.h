@@ -63,6 +63,14 @@ ds4_status ds4_num_linear(ds4_numeric *, ds4_num_view y, ds4_num_view x,
 ds4_status ds4_num_matmul_batch(ds4_numeric *, ds4_num_view y, ds4_num_view x,
                                 ds4_num_view w, uint32_t batch, uint32_t rows,
                                 uint32_t in, uint32_t out, bool transpose_b);
+/* Explicit stored layouts: transposed A is [batch,in,rows], transposed B
+ * is [batch,out,in]. Keeping these strides avoids changing BF16 pooling ties.
+ */
+ds4_status ds4_num_matmul_batch_layout(ds4_numeric *, ds4_num_view y,
+                                       ds4_num_view x, ds4_num_view w,
+                                       uint32_t batch, uint32_t rows,
+                                       uint32_t in, uint32_t out,
+                                       bool transpose_a, bool transpose_b);
 enum { DS4_NUM_RMS, DS4_NUM_LAYER, DS4_NUM_L2 };
 enum { DS4_NUM_SCALE_NONE, DS4_NUM_SCALE_DIRECT, DS4_NUM_SCALE_ZERO_CENTERED };
 ds4_status ds4_num_norm(ds4_numeric *, ds4_num_view y, ds4_num_view x,
@@ -107,8 +115,9 @@ ds4_status ds4_num_rope_complex(ds4_numeric *, ds4_num_view y, ds4_num_view x,
  * causal, block-causal, local/full and segmented vision need no score mask.
  * q/k/v layout: [batch,tokens,heads,dim]; GQA maps contiguous query groups.
  * Empty rows produce zero. FP32 uses online softmax with O(dim) per query;
- * BF16 preserves rounded scores/probabilities in 256-query tiles and packed
- * K/V. Scratch grows linearly with key length, never quadratically in N. */
+ * BF16 preserves rounded scores/probabilities. Dense GEMM geometry is retained
+ * below 128 MiB of scores per batch item; larger inputs use 256-query tiles.
+ * Packed K/V and complete batch score storage are included in admission. */
 typedef struct {
   uint32_t batch, queries, keys, q_heads, kv_heads, dim;
   float scale, softcap;

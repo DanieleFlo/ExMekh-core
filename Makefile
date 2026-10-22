@@ -1412,26 +1412,45 @@ SUITE_CUDA_LIBDIR ?= $(CUDA_HOME)/lib64
 SUITE_CUDA_LDLIBS = -lm -pthread -L$(SUITE_CUDA_LIBDIR) -l:libcudart.so.13 -l:libcublas.so.13 -l:libcublasLt.so.13 -Wl,-rpath,$(abspath $(SUITE_CUDA_LIBDIR))
 SUITE_CUDNN_LIBS = -L$(CUDNN_HOME)/lib -L$(CUDNN_HOME)/lib64 -l:libcudnn.so.9 -Wl,-rpath,$(abspath $(CUDNN_HOME)/lib)
 SUITE_API_HEADERS = ds4_numeric.h ds4_bundle.h ds4_resources.h ds4_runtime.h
+# Native media codecs are linked only into the multimodal suite.
+# Use a system installation or set this prefix to an isolated dependency build.
+SUITE_MEDIA_PREFIX ?= build/suite-media
+SUITE_MEDIA_CFLAGS ?= -I$(SUITE_MEDIA_PREFIX)/include -I$(SUITE_MEDIA_PREFIX)/usr/include
+SUITE_MEDIA_LDLIBS ?= -L$(SUITE_MEDIA_PREFIX)/lib -L$(SUITE_MEDIA_PREFIX)/usr/lib/x86_64-linux-gnu -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,$(abspath $(SUITE_MEDIA_PREFIX)/lib) -Wl,-rpath,$(abspath $(SUITE_MEDIA_PREFIX)/usr/lib/x86_64-linux-gnu)
 
-ds4_embedding_gemma2.o: ds4_embedding_gemma2.c ds4_embedding_gemma2.h ds4_gemma_tokenizer.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
+ds4_gemma_vision.o: ds4_gemma_vision.c ds4_gemma_vision.h ds4_gemma_media.h ds4_embedding_gemma2.h ds4_host_memory.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_gemma_visual.o: ds4_gemma_visual.c ds4_gemma_visual.h ds4_gemma_vision.h ds4_gemma_media.h ds4_embedding_gemma2_internal.h ds4_host_memory.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_media.o: ds4_media.c ds4_media.h ds4_media_internal.h ds4_host_memory.h ds4_image.h ds4_sha256.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) $(SUITE_MEDIA_CFLAGS) -c -o $@ $<
+ds4_media_av.o: ds4_media_av.c ds4_media.h ds4_media_internal.h ds4_host_memory.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) $(SUITE_MEDIA_CFLAGS) -c -o $@ $<
+ds4_gemma_media.o: ds4_gemma_media.c ds4_gemma_media.h ds4_media.h ds4_host_memory.h ds4_image.h ds4_sha256.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+
+
+ds4_embedding_gemma2.o: ds4_embedding_gemma2.c ds4_embedding_gemma2_internal.h ds4_host_memory.h ds4_embedding_gemma2.h ds4_gemma_tokenizer.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_gemma_tokenizer.o: ds4_gemma_tokenizer.c ds4_gemma_tokenizer.h ds4_embedding_gemma2.h ds4_sha256.h
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_qwen_image_reference.o: ds4_qwen_image_reference.c ds4_qwen_image_reference.h ds4_qwen_image_input.h ds4_image.h
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 
-SUITE_OBJS = ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_executor.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o
+SUITE_OBJS = ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_executor.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o
 ds4_qwen_image_pipeline.o: ds4_qwen_image_pipeline.c ds4_qwen_image_pipeline.h ds4_qwen_image_components.h ds4_qwen_image_reference.h ds4_sha256.h ds4_executor.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_qwen_image_encoder.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o: ds4_qwen_image_components.h
 tests/libds4_suite_cuda.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o ds4_numeric_cuda.o ds4_numeric_cudnn.o
-	$(CC) -shared -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+	$(CC) -shared -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
 tests/libds4_suite_cpu.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o
-	$(CC) -shared -o $@ $^ -lm -pthread
+	$(CC) -shared -o $@ $^ -lm -pthread $(SUITE_MEDIA_LDLIBS)
 tests/probe_native_suite: tests/probe_native_suite.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
-	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
 tests/probe_qwen_image_pipeline: tests/probe_qwen_image_pipeline.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
-	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
+tests/probe_gemma_visual: tests/probe_gemma_visual.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
 libds4-suite-cpu.a: $(SUITE_OBJS)
 	$(AR) rcs $@ $^
 libds4-suite-cuda.a: $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
@@ -1447,7 +1466,7 @@ tests/test_qwen_image_input: tests/test_qwen_image_input.c ds4_qwen_image_input.
 test-qwen-image-input: tests/test_qwen_image_input
 	./tests/test_qwen_image_input
 clean-suite-numeric:
-	rm -f tests/probe_native_suite tests/probe_qwen_image_pipeline tests/libds4_suite_cpu.so tests/libds4_suite_cuda.so
+	rm -f tests/probe_native_suite tests/probe_gemma_visual tests/probe_qwen_image_pipeline tests/libds4_suite_cpu.so tests/libds4_suite_cuda.so
 	rm -f tests/test_qwen_image_output
 	rm -f tests/probe_qwen_image_graph tests/probe_qwen_image_graph.o tests/libds4_qwen_image_graph_cpu.so
 	rm -f $(filter-out ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o,$(SUITE_OBJS)) ds4_numeric_cuda.o ds4_numeric_cudnn.o libds4-suite-cpu.a libds4-suite-cuda.a tests/probe_qwen_image_encoder tests/probe_qwen_image_encoder.o tests/test_numeric_lifetime tests/libds4_numeric_cpu.so tests/libds4_numeric_cuda.so tests/suite_resources.o tests/libds4_image_suite.so tests/libds4_qwen_image_tokenizer.so tests/test_qwen_image_input
@@ -1479,12 +1498,12 @@ ds4_unicode_nfc.o: ds4_unicode_nfc.c ds4_unicode_nfc.h third_party/unicode/nfc9.
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 tests/probe_qwen_image_encoder: tests/probe_qwen_image_encoder.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
 	$(CC) $(SUITE_CFLAGS) -I. -c -o tests/probe_qwen_image_encoder.o $<
-	$(CC) -o $@ tests/probe_qwen_image_encoder.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+	$(CC) -o $@ tests/probe_qwen_image_encoder.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
 tests/probe_qwen_image_graph: tests/probe_qwen_image_graph.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
 	$(CC) $(SUITE_CFLAGS) -I. -c -o tests/probe_qwen_image_graph.o $<
-	$(CC) -o $@ tests/probe_qwen_image_graph.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+	$(CC) -o $@ tests/probe_qwen_image_graph.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
 tests/libds4_qwen_image_graph_cpu.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o
-	$(CC) -shared -o $@ $^ -lm -pthread
+	$(CC) -shared -o $@ $^ -lm -pthread $(SUITE_MEDIA_LDLIBS)
 .PHONY: test-qwen-image-graph
 test-qwen-image-graph: tests/libds4_qwen_image_graph_cpu.so
 	$(SUITE_PYTHON) -m unittest tests.test_qwen_image_graph -v
@@ -1516,6 +1535,9 @@ test-suite-numeric-cuda: tests/libds4_numeric_cuda.so
 .PHONY: test-embedding-gemma2 test-qwen-image-reference
 test-embedding-gemma2: tests/libds4_suite_cpu.so
 	$(SUITE_PYTHON) -m unittest tests.test_embedding_gemma2 -v
+.PHONY: test-gemma-media
+test-gemma-media: tests/libds4_suite_cpu.so
+	$(SUITE_PYTHON) -m unittest tests.test_gemma_media -v
 test-qwen-image-reference: tests/libds4_suite_cpu.so
 	$(SUITE_PYTHON) -m unittest tests.test_qwen_image_reference -v
 

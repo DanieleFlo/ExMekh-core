@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13/T14 sono `DONE` nei gate locali del [report T13–T14](../performance/native-suite-t13-t14-20261021/README.md); T15–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -299,14 +299,14 @@ ma vettori entro T00, come diagnostica esplicita. Evidenze e limiti nel
 
 ## 17. T13 — Media e preprocessing deterministico
 
-**Dipendenze:** T00, T01, T06. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T00, T01, T06. **Priorità:** alta. **Stato:** `DONE` (qualifica locale Ubuntu/RTX 3090; profilo e limiti nel report).
 
-- [ ] `T13.1` Definire oggetto media interno e contenuti ordinati, separando byte originali, decodificati e tensor preprocessati. Integrare il decoder immagini esistente dove compatibile.
-- [ ] `T13.2` Implementare resize/crop/normalizzazione e patch position per Gemma, con EXIF, alpha e aspect ratio conformi all'oracle.
-- [ ] `T13.3` Integrare decode video e campionamento frame/timestamp attraverso una libreria nativa con API C, valutando libav o alternativa prima di introdurre dipendenze. Nessun processo di inferenza esterno.
-- [ ] `T13.4` Integrare audio decode, canali, resampling e feature extractor esatti; testare impulsi, toni, silenzio e sample rate diversi.
-- [ ] `T13.5` Stimare token e working set prima di ammettere il backbone; limite alle dimensioni decodificate e alle code di frame/audio per evitare espansioni host illimitate.
-- [ ] `T13.6` Rendere espliciti segmentazione, traccia audio del video e budget visivo. Nessun resize/campionamento/troncamento aggiuntivo invisibile rispetto alla recipe.
+- [x] `T13.1` Definire oggetto media interno e contenuti ordinati, separando byte originali, decodificati e tensor preprocessati. Integrare il decoder immagini esistente dove compatibile.
+- [x] `T13.2` Implementare resize/crop/normalizzazione e patch position per Gemma, con EXIF, alpha e aspect ratio conformi all'oracle.
+- [x] `T13.3` Integrare decode video e campionamento frame/timestamp attraverso una libreria nativa con API C, valutando libav o alternativa prima di introdurre dipendenze. Nessun processo di inferenza esterno.
+- [x] `T13.4` Integrare audio decode, canali, resampling e feature extractor esatti; testare impulsi, toni, silenzio e sample rate diversi.
+- [x] `T13.5` Stimare token e working set prima di ammettere il backbone; limite alle dimensioni decodificate e alle code di frame/audio per evitare espansioni host illimitate.
+- [x] `T13.6` Rendere espliciti segmentazione, traccia audio del video e budget visivo. Nessun resize/campionamento/troncamento aggiuntivo invisibile rispetto alla recipe.
 
 **Gate di completamento:** pixel, patch, feature audio, tempi e token count coincidono con i processor fissati. Durate variabili e video a frame rate variabile testati. La pipeline consuma memoria host bounded e rilascia i buffer; errori decode non toccano le sessioni LLM.
 
@@ -314,16 +314,18 @@ ma vettori entro T00, come diagnostica esplicita. Evidenze e limiti nel
 
 ## 18. T14 — Encoder vision e video EmbeddingGemma 2
 
-**Dipendenze:** T12, T13. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T12, T13. **Priorità:** alta. **Stato:** `DONE` (qualifica locale Ubuntu/RTX 3090; profilo e limiti nel report).
 
-- [ ] `T14.1` Portare vision encoder, posizioni patch, riduzione e proiezioni verso lo spazio del backbone; rispettare padding e soft token validi.
-- [ ] `T14.2` Implementare immagini singole/multiple e video come frame raggruppati per elemento, con conteggi e ordine originali.
-- [ ] `T14.3` Inserire i token visivi nelle posizioni previste; validare numero placeholder vs feature prima del forward testuale.
-- [ ] `T14.4` Esporre fasi encoder/backbone e cache preprocessate con chiavi per revisione, media, resize e precisione. Caricare soltanto il ramo vision quando serve.
+- [x] `T14.1` Portare vision encoder, posizioni patch, riduzione e proiezioni verso lo spazio del backbone; rispettare padding e soft token validi.
+- [x] `T14.2` Implementare immagini singole/multiple e video come frame raggruppati per elemento, con conteggi e ordine originali.
+- [x] `T14.3` Inserire i token visivi nelle posizioni previste; validare numero placeholder vs feature prima del forward testuale.
+- [x] `T14.4` Esporre fasi encoder/backbone e cache preprocessate con chiavi per revisione, media, resize e precisione. Caricare soltanto il ramo vision quando serve.
 
 **Gate di completamento:** feature intermedie, vettori image-only/video-only e retrieval testo↔immagine/testo↔video rispettano T00. Cambiare un frame o l'immagine modifica il vettore secondo fixture; impossibile accettare media e ignorarli. Batch con numero di frame diverso mantiene isolamento.
 
 **Artefatti:** adapter vision/video e report oracle per ciascuna modalità.
+
+**Evidenze T13–T14:** [report, comandi e limiti](../performance/native-suite-t13-t14-20261021/README.md), [gate completi](../performance/native-suite-t13-t14-20261021/verification.json), [regressioni e memoria](../performance/native-suite-t13-t14-20261021/acceptance.json). Decode/preprocess C con libav/soxr, cache bounded e vision/video BF16 nativi; nessun endpoint nuovo o encoder audio dichiarato. T15–T22 restano aperti.
 
 ## 19. T15 — Encoder audio EmbeddingGemma 2
 
@@ -508,4 +510,4 @@ Devono essere dimostrati: generazione/editing/RGBA nativi; embedding nativi dell
 
 La matrice dei backend e delle famiglie deve distinguere il supporto architetturale dalla qualificazione sperimentale. Funzioni richieste sul target di rilascio non possono essere omesse con `NOT_VERIFIED`; hardware aggiuntivo non disponibile resta esplicitamente fuori dalla dichiarazione di qualificazione, senza attribuirgli risultati della 3090.
 
-Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Nessun nuovo endpoint image/embedding è abilitato; Gemma multimodale e integrazione HTTP restano T13–T22. Evidenze nei report T07–T08, T09–T10 e T11–T12.
+Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Nessun nuovo endpoint image/embedding è abilitato; T13/T14 aggiungono media/preprocess nativi e vision/video Gemma, con gate e limiti nel report T13–T14. Encoder audio, composizione completa e integrazione HTTP restano T15–T22. Evidenze nei report T07–T08, T09–T10, T11–T12 e T13–T14.

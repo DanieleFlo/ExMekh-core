@@ -279,6 +279,14 @@ ds4_status ds4_num_linear(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
 ds4_status ds4_num_matmul_batch(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
                                 ds4_num_view w, uint32_t batch, uint32_t rows,
                                 uint32_t in, uint32_t out, bool transpose_b) {
+  return ds4_num_matmul_batch_layout(c, y, x, w, batch, rows, in, out, false,
+                                     transpose_b);
+}
+ds4_status ds4_num_matmul_batch_layout(ds4_numeric *c, ds4_num_view y,
+                                       ds4_num_view x, ds4_num_view w,
+                                       uint32_t batch, uint32_t rows,
+                                       uint32_t in, uint32_t out,
+                                       bool transpose_a, bool transpose_b) {
   uint64_t nx, nw, ny;
   if (!c || !batch || batch > INT_MAX || !rows || rows > INT_MAX || !in ||
       in > INT_MAX || !out || out > INT_MAX ||
@@ -293,9 +301,10 @@ ds4_status ds4_num_matmul_batch(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
   y = ds4_num_slice(y, 0, ny);
   if (overlaps(y, x) || overlaps(y, w))
     return DS4_STATUS_INVALID;
-  return c->ops->matmul_batch ? c->ops->matmul_batch(c->state, y, x, w, batch,
-                                                     rows, in, out, transpose_b)
-                              : DS4_STATUS_UNSUPPORTED;
+  return c->ops->matmul_batch
+             ? c->ops->matmul_batch(c->state, y, x, w, batch, rows, in, out,
+                                    transpose_a, transpose_b)
+             : DS4_STATUS_UNSUPPORTED;
 }
 ds4_status ds4_num_norm(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
                         ds4_num_view w, ds4_num_view b, uint32_t width,
@@ -495,14 +504,16 @@ static ds4_status cpu_linear(void *s, ds4_num_view y, ds4_num_view x,
 static ds4_status cpu_matmul_batch(void *state, ds4_num_view y, ds4_num_view x,
                                    ds4_num_view w, uint32_t batch,
                                    uint32_t rows, uint32_t in, uint32_t out,
-                                   bool transpose_b) {
+                                   bool transpose_a, bool transpose_b) {
   (void)state;
   for (uint32_t b = 0; b < batch; b++)
     for (uint32_t row = 0; row < rows; row++)
       for (uint32_t j = 0; j < out; j++) {
         double sum = 0;
         for (uint32_t k = 0; k < in; k++)
-          sum += (double)get(x, ((uint64_t)b * rows + row) * in + k) *
+          sum += (double)get(x, (uint64_t)b * rows * in +
+                                    (transpose_a ? (uint64_t)k * rows + row
+                                                 : (uint64_t)row * in + k)) *
                  get(w, (uint64_t)b * in * out + (transpose_b
                                                       ? (uint64_t)j * in + k
                                                       : (uint64_t)k * out + j));

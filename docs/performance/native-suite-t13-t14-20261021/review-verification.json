@@ -1,0 +1,506 @@
+{
+  "date": "2026-10-22",
+  "verdict": "PASS",
+  "scope": "Review/refactoring of uncommitted T13/T14 and adjacent shared APIs/build paths; local Linux/sm_86",
+  "base_commit": "a6089d749030eb128dd1964482396046fc241256",
+  "original_qualification_provenance": {
+    "path": "docs/performance/native-suite-t13-t14-20261021/provenance.json",
+    "bytes": 11781,
+    "sha256": "755444f9760ccbb1a2dfdad06b6f5fec53b183a122980e2caab061d99a69a7e0"
+  },
+  "changes": [
+    "Shared raw/container video sampling plan and effective count admission before allocation/casts",
+    "Defined first index at subnormal target fps without NaN-to-integer conversion",
+    "Complete visual+audio context check before processor tensor allocation",
+    "Backbone owns placeholder validation; visual caller does not inspect numeric token IDs",
+    "Expanded prompt measured/written through one builder; exact host allocation instead of fixed 256 KiB/item",
+    "Text forward uses shared synchronous host buffer owner",
+    "EXIF indentation and processor/reference-count serialization contracts"
+  ],
+  "host": {
+    "verdict": "PASS",
+    "tests": 69,
+    "passed": 67,
+    "skipped": 2,
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-host.log",
+      "bytes": 9684,
+      "sha256": "febda999272a1af8e8ce385cec780d2110650596d0afd2424e0749b0308e5fe2"
+    }
+  },
+  "cuda": {
+    "verdict": "PASS",
+    "tests": 20,
+    "passed": 20,
+    "skipped": 0,
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-cuda.log",
+      "bytes": 2161,
+      "sha256": "847472764f14f23dbf5c71b91fa356419e127fdf808cc0579bf8c2c40a571d05"
+    }
+  },
+  "sanitizers": {
+    "verdict": "PASS",
+    "tests": 17,
+    "passed": 17,
+    "skipped": 0,
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-ubsan.log",
+      "bytes": 3322,
+      "sha256": "1a333fbba171ae01822c7efa7e457328085d559989d88fa4b6053a4d09b60023"
+    },
+    "instrumented_modules": 6,
+    "flags": [
+      "-fsanitize=undefined,float-cast-overflow",
+      "-fno-sanitize-recover=all"
+    ],
+    "build_log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-ubsan-build.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "media_f32": {
+    "cases": 26,
+    "max_abs": 4.76837158203125e-07,
+    "relative_l2_max": 2.847874085799912e-08,
+    "frozen_max_abs": 2e-05,
+    "frozen_relative_l2": 1e-05,
+    "artifact": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-media-metrics.json",
+      "bytes": 3587,
+      "sha256": "c279463a642d8630db109cd657c4c25152fdc7c3af473de70e82ed5b8a0247f4"
+    }
+  },
+  "visual": {
+    "cases": 29,
+    "frames": 88,
+    "boundaries": 3479,
+    "all_outputs": 3573,
+    "criterion": "byte_exact",
+    "reference": "acceptance-native",
+    "replay": "review-native-final",
+    "dimensions": [
+      128,
+      256,
+      512,
+      768
+    ],
+    "extra_runs": [
+      {
+        "name": "dim-128",
+        "verdict": "PASS",
+        "seconds": 10.552719583999988,
+        "environment": {
+          "DS4_GEMMA_VISUAL_DIMENSIONS": "128",
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+        }
+      },
+      {
+        "name": "dim-256",
+        "verdict": "PASS",
+        "seconds": 10.519777904999955,
+        "environment": {
+          "DS4_GEMMA_VISUAL_DIMENSIONS": "256",
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+        }
+      },
+      {
+        "name": "dim-512",
+        "verdict": "PASS",
+        "seconds": 10.518953772000032,
+        "environment": {
+          "DS4_GEMMA_VISUAL_DIMENSIONS": "512",
+          "DS4_GEMMA_VISUAL_NO_TRACE": "1"
+        }
+      },
+      {
+        "name": "cancel-vision-patches",
+        "verdict": "PASS",
+        "seconds": 3.7569896779998544,
+        "environment": {
+          "DS4_GEMMA_VISUAL_CANCEL": "vision-patches"
+        }
+      },
+      {
+        "name": "cancel-vision-layer",
+        "verdict": "PASS",
+        "seconds": 3.750234214999864,
+        "environment": {
+          "DS4_GEMMA_VISUAL_CANCEL": "vision-layer"
+        }
+      },
+      {
+        "name": "cancel-vision-projected",
+        "verdict": "PASS",
+        "seconds": 4.130754453999998,
+        "environment": {
+          "DS4_GEMMA_VISUAL_CANCEL": "vision-projected"
+        }
+      },
+      {
+        "name": "cancel-embeddings",
+        "verdict": "PASS",
+        "seconds": 4.049038770999914,
+        "environment": {
+          "DS4_GEMMA_VISUAL_CANCEL": "embeddings"
+        }
+      },
+      {
+        "name": "cancel-layer",
+        "verdict": "PASS",
+        "seconds": 4.112557616000004,
+        "environment": {
+          "DS4_GEMMA_VISUAL_CANCEL": "layer"
+        }
+      },
+      {
+        "name": "cancel-complete",
+        "verdict": "PASS",
+        "seconds": 4.35928887,
+        "environment": {
+          "DS4_GEMMA_VISUAL_CANCEL": "complete"
+        }
+      }
+    ],
+    "faults": [
+      "Invalid dimension",
+      "Denied budget before model loading",
+      "Release/reload both towers and retry",
+      "Input outlives processor",
+      "Result outlives adapter"
+    ],
+    "device_peak_owned_bytes": 1140448450,
+    "final_replay": {
+      "verdict": "PASS",
+      "files": 3573,
+      "log": {
+        "path": "performance-results/native-suite-t13-t14-20261021/review-native-final.log",
+        "bytes": 47,
+        "sha256": "f8058ab9bac34acd974b0e81c55d88c91faf4c9d75c4204eb3f317f6d69ddc96"
+      }
+    }
+  },
+  "text_regression": {
+    "verdict": "PASS",
+    "cases": 54,
+    "hidden_t00": {
+      "cases": 48,
+      "boundaries": 1296,
+      "criterion": "bit_exact",
+      "verdict": "PASS"
+    },
+    "artifact": {
+      "path": "docs/performance/native-suite-t13-t14-20261021/review-text-regression.json",
+      "bytes": 274078,
+      "sha256": "f3381c434d4a46a8afb093e915e3cced2e9ee1d2542375909d4ae6c6e525dc54"
+    },
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-text.log",
+      "bytes": 193,
+      "sha256": "8d3c1c84e50b5e79d267433fdf2a1ea70a1c5c4747affa72cf947a9b836279ae"
+    }
+  },
+  "native_c_tests": {
+    "verdict": "PASS",
+    "tests": [
+      "test_runtime",
+      "test_executor",
+      "test_resources",
+      "test_numeric_lifetime",
+      "test_image_decode",
+      "test_qwen_image_input"
+    ],
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-c-tests.log",
+      "bytes": 469,
+      "sha256": "198b0936b19c711a2778a46bce503deab924bb8eefb64dd794b49ea60dbb134e"
+    }
+  },
+  "legacy_build": {
+    "verdict": "PASS",
+    "codec_dependencies_absent": {
+      "ds4": true,
+      "ds4-server": true,
+      "ds4-bench": true,
+      "ds4-eval": true
+    },
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-legacy-build.log",
+      "bytes": 3076,
+      "sha256": "a30348856c787fc06206705a1b5398f2850fa9156aea9e68addcc0bc04cb1fd1"
+    }
+  },
+  "static_analysis": {
+    "modules": 6,
+    "warnings": [
+      "ds4_gemma_vision.c:571:3: warning: use of NULL where non-null expected [CWE-476] [-Wanalyzer-null-argument]",
+      "ds4_embedding_gemma2.c:508:5: warning: use of NULL where non-null expected [CWE-476] [-Wanalyzer-null-argument]"
+    ],
+    "verdict": "REVIEWED",
+    "assessment": "Analyzer combines zero-sized allocation paths with nonempty forward operations; immutable opaque media and BOS/EOS tokenization exclude those zero counts. No warning suppressed.",
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-analysis.log",
+      "bytes": 30780,
+      "sha256": "5ff107fd8f6bac5998d333fb213e78471ad49a0c6c555668d41229a4a93b829d"
+    }
+  },
+  "lint": {
+    "ruff": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-ruff.log",
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    }
+  },
+  "build": {
+    "path": "performance-results/native-suite-t13-t14-20261021/review-final-build.log",
+    "bytes": 7648,
+    "sha256": "2e143e0d6b4cc0f69ac4d36f216eab3d76764392cbf9699670848914c4503217"
+  },
+  "reproduction_before_fixes": {
+    "sampling_and_prompt": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-before.log",
+      "bytes": 4995,
+      "sha256": "b9aec3ef623fe7b7b81e7dbb6cbc5906e0ca9807e54abda385a9da6603131e27"
+    },
+    "complete_context": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-context-before.log",
+      "bytes": 1005,
+      "sha256": "f617dce999bf1d263fe3e8bb7adbbc2f5fb75fd2b20cbe711d8af2f47edc17b3"
+    },
+    "notes": "Initial combined-context fixture had one unsupported 30-second audio packet; corrected to one-second packets in the second log. Initial prompt assertion failure also caused fixture cleanup diagnostics; final passing tests close the registry."
+  },
+  "native_sources": [
+    {
+      "path": "ds4_embedding_gemma2.c",
+      "bytes": 29969,
+      "sha256": "bcc3e7281e789e45b214ff2221567913e73be452b89d3ba9f4c629eb53456d71"
+    },
+    {
+      "path": "ds4_embedding_gemma2.h",
+      "bytes": 2445,
+      "sha256": "b283191ac1ef85c62898499d1bac01946027681dd12940669f1b5408103bd2d6"
+    },
+    {
+      "path": "ds4_embedding_gemma2_internal.h",
+      "bytes": 846,
+      "sha256": "a837422ec81d04a1ef6c91e1b81cb9860038a1cec7bb3100f995cdef8235cf70"
+    },
+    {
+      "path": "ds4_gemma_media.c",
+      "bytes": 19299,
+      "sha256": "6d502f5a70b97dd3ab3a74314d90ca736ed9b5855803a11d2797a4f17636e300"
+    },
+    {
+      "path": "ds4_gemma_media.h",
+      "bytes": 2860,
+      "sha256": "c2b9a3fff219fa7bd08309ecbc5e1cc80214997641faf5f363188bce3476c590"
+    },
+    {
+      "path": "ds4_gemma_tokenizer.c",
+      "bytes": 11016,
+      "sha256": "088fbfa7e09a4b24f3ebd304c0159d14ab4c5bd84f454020163a333756403730"
+    },
+    {
+      "path": "ds4_gemma_tokenizer.h",
+      "bytes": 898,
+      "sha256": "ad4d832ba6e440b3b23f743fca80250e5308f28f0a9470962eedb958cb501a96"
+    },
+    {
+      "path": "ds4_gemma_vision.c",
+      "bytes": 24657,
+      "sha256": "18dc4327ed1f77d6a5c7a30eb7a5ec547d479ffd68d5597f030e32d1a6ab64d5"
+    },
+    {
+      "path": "ds4_gemma_vision.h",
+      "bytes": 1452,
+      "sha256": "5e7d3edb501359e82ea1a4d6f12f438ada27b5bae733b5449ce15b3ae7f8275b"
+    },
+    {
+      "path": "ds4_gemma_visual.c",
+      "bytes": 14969,
+      "sha256": "acea43e58411a3670e81256183da0b0f6e0760bc16d3b3102d15d6dcb1b87b92"
+    },
+    {
+      "path": "ds4_gemma_visual.h",
+      "bytes": 2556,
+      "sha256": "52546e55e67fc6631a59356b14bfe883e28074689a4c945aef7912a60f735397"
+    },
+    {
+      "path": "ds4_host_memory.h",
+      "bytes": 993,
+      "sha256": "30cf98524e58696c8f926448884a562c3566341317fda0c2bbf95289c4aeb4ce"
+    },
+    {
+      "path": "ds4_image.c",
+      "bytes": 44703,
+      "sha256": "920ab7af9773c13a7c49c05d4fda239e5827dc176fe70afe72a1110000e4c394"
+    },
+    {
+      "path": "ds4_image.h",
+      "bytes": 5498,
+      "sha256": "77ec8c964ffd76b845056070dd562ad8009868090f78fbf67d5e2c68776e0702"
+    },
+    {
+      "path": "ds4_image_resize.inc",
+      "bytes": 4868,
+      "sha256": "d655808d3edaead57b27043e0b5921a057095dfbd9df2db2828454dec125280c"
+    },
+    {
+      "path": "ds4_media.c",
+      "bytes": 15186,
+      "sha256": "9810c4b1204f614081a57dbb4e5e803699615cd6a2d21cfc38490808b389e64b"
+    },
+    {
+      "path": "ds4_media.h",
+      "bytes": 3901,
+      "sha256": "fbc50ec6f5da3bb66342962ab48f03c7abfeeb18da02ed04d90458c4451153a8"
+    },
+    {
+      "path": "ds4_media_av.c",
+      "bytes": 16798,
+      "sha256": "aeec7801b198d845f8cafc71ec8eda1a54aa96809d12536bfeafd5c3e1fc1028"
+    },
+    {
+      "path": "ds4_media_internal.h",
+      "bytes": 1599,
+      "sha256": "4a9efb95c92eef31c3dcbc15808749a6ad901bdd62807447c68fe36b05a6ff74"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 37142,
+      "sha256": "9cb70ee9016ee90b33e912a28bf7c726ef11b7ad10246487a1cab9e2e31d3858"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 9565,
+      "sha256": "1074f37a112ae59c5b4f25b7e0892ce7924d02527555c4f35839d6f18fadcd00"
+    },
+    {
+      "path": "ds4_numeric_cuda.cu",
+      "bytes": 49532,
+      "sha256": "1400c7d32a9f2ece8e1cf1afd18ac2aed0bb81b725ccb9e0ae79f6005b74f5a6"
+    },
+    {
+      "path": "ds4_numeric_cudnn.cu",
+      "bytes": 10639,
+      "sha256": "3eb0783ac2033849522034b20135cfe72070fc8c21ad08660b8d44b7b77565da"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 2891,
+      "sha256": "c4fdac03ac512fe6e9b77e11be23121054a334eeaced4baa735119547024f312"
+    },
+    {
+      "path": "ds4_numeric_weights.c",
+      "bytes": 1196,
+      "sha256": "a480cc3caa8f824a31d41a6d26eab8afcc9cb80914d00e9347fdb619260cda35"
+    },
+    {
+      "path": "ds4_numeric_weights.h",
+      "bytes": 548,
+      "sha256": "7d30208fd7cb70a464a870e29976722d5c1021210c80a4ddc9e81d4261eb9d47"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 79722,
+      "sha256": "f1e193517810474a1b6e691ff87bb678baff6bd9dfda65e576f0a4de049943f7"
+    },
+    {
+      "path": "tools/build_suite_media_dependencies.py",
+      "bytes": 4002,
+      "sha256": "772133f16d4bb6e1eac5da6de4dbcbc59b7cec5c28da4aa7de0a6c9f721f02dd"
+    },
+    {
+      "path": "tools/compile_gemma_media.py",
+      "bytes": 3975,
+      "sha256": "18d19f797d66efd875093f0f6eee4ef309ed39349752be29f09c4a6f3b71b99f"
+    },
+    {
+      "path": "tools/run_gemma_visual_oracle.py",
+      "bytes": 13352,
+      "sha256": "d76009abf68eae0e233163f967c8e2c76abbbf2fbf94eef096fd3337dc4bac2d"
+    },
+    {
+      "path": "tools/qualify_gemma_visual.py",
+      "bytes": 13301,
+      "sha256": "cb273045aeb464bf875150830053cbc05d4dc889eebb70b2c111be372579d63f"
+    },
+    {
+      "path": "tools/suite_visual_cases.py",
+      "bytes": 1866,
+      "sha256": "41e1e3b8a7a1d999397f87fde2fab15c51b5822ea85ef9edb44151684eb9575b"
+    },
+    {
+      "path": "tests/probe_gemma_visual.c",
+      "bytes": 11384,
+      "sha256": "a2ea550572a6c02c77ed6c4f60eaa07b38a1ff57ea2385f9f68e7cfb17d268b0"
+    },
+    {
+      "path": "tests/test_gemma_media.py",
+      "bytes": 36446,
+      "sha256": "d52ccaecb84e36e2ca98cdde3269fa770ed02794830973306bb48320c4a19da6"
+    },
+    {
+      "path": "tests/suite_media_api.py",
+      "bytes": 9359,
+      "sha256": "ecf386e9b7adfbeba11eabfc05007a55007ec72586094be2b7ecb0ee51e37b6d"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 40256,
+      "sha256": "f7a771d3d7567d8a2ead588cf76551c491a172c89de8ac9a0519bd2f084876f7"
+    },
+    {
+      "path": "tests/test_suite_api.py",
+      "bytes": 3725,
+      "sha256": "3ad49c8963cc709f77e0569f326d72c98a223188eae77b7c3f93be9ca1f9fe61"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 3437,
+      "sha256": "970381da54428212b1d4309b25cfd6569063dee7422c3b540c9a8703f91095cd"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 79722,
+      "sha256": "f1e193517810474a1b6e691ff87bb678baff6bd9dfda65e576f0a4de049943f7"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "tests/probe_gemma_visual",
+      "bytes": 2748616,
+      "sha256": "a082e232818a83dea87674f429b6c5dc7ec52159bdade1c715ecce5833bb0eea"
+    },
+    {
+      "path": "tests/probe_native_suite",
+      "bytes": 2745008,
+      "sha256": "e70e8aca3972fdebd9f54b9cf2a19685a727182ac804d674721e8e9d05f0f265"
+    },
+    {
+      "path": "tests/libds4_suite_cpu.so",
+      "bytes": 1656320,
+      "sha256": "c5f57bb0b499d0e3db2f9f219f27d162a26b08f9522d494430279209df72051e"
+    },
+    {
+      "path": "tests/libds4_suite_cuda.so",
+      "bytes": 2730496,
+      "sha256": "e3bdf3564b428b28d53ae5e2164ce203ecefcaf2ff4e91f113c757084675b0ad"
+    }
+  ],
+  "limits": [
+    "Other backends and additional codecs not qualified",
+    "Large-budget/extreme-aspect encoder qualification remains future work",
+    "Video warm benchmark remains NEED_MORE_DATA; no new speedup claim",
+    "Full repository clean-code conformance is not asserted"
+  ],
+  "docs_check": {
+    "verdict": "PASS",
+    "log": {
+      "path": "performance-results/native-suite-t13-t14-20261021/review-docs-check.log",
+      "bytes": 1808,
+      "sha256": "c9dcdf99402fb3d7a3b58fde8b7d79dd2b01f855f7d0c51a2655839c0dae3901"
+    }
+  }
+}

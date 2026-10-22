@@ -265,11 +265,19 @@ __global__ static void rms_rows_kernel(ds4_num_view y, ds4_num_view x,
     return;
   uint32_t lane = threadIdx.x % 32;
   float acc[4] = {0};
-  for (uint32_t j = lane * 4; j < width; j += 128)
-    for (uint32_t k = 0; k < 4; k++) {
-      float value = readv(x, row * width + j + k);
-      acc[k] += value * value;
+  /* ATen Reduce.cuh vectorizes input at width >=128. Short 64-wide
+   * vision heads instead sum lane and lane+32 before the warp tree. */
+  if (width < 128) {
+    for (uint32_t j = lane; j < width; j += 32) {
+      float value = readv(x, row * width + j);
+      acc[0] += value * value;
     }
+  } else
+    for (uint32_t j = lane * 4; j < width; j += 128)
+      for (uint32_t k = 0; k < 4; k++) {
+        float value = readv(x, row * width + j + k);
+        acc[k] += value * value;
+      }
   float sum = ((acc[0] + acc[1]) + acc[2]) + acc[3];
   sum = warp_sum(sum);
   float inv = rsqrtf(sum * (1.0f / width) + eps);
@@ -467,9 +475,11 @@ static ds4_status gpu_norm(void *p, ds4_num_view y, ds4_num_view x,
   }
   /* The vectorized mean also matters for short embedding batches: switching
    * reduction order at 16 rows changes BF16 ties in direct-scale Gemma norm. */
-  if (kind == DS4_NUM_RMS && width >= 128 && width % 4 == 0) {
+  if (kind == DS4_NUM_RMS &&
+      (width >= 128 || (width == 64 && x.count / width >= 16)) &&
+      width % 4 == 0) {
     uint64_t rows = x.count / width;
-    if (rows < 16) {
+    if (rows < 16 && width >= 128) {
       uint32_t height = 1, threads = 32;
       while (height * 2 <= rows)
         height *= 2;
@@ -727,7 +737,7 @@ static ds4_status bf16_attention(numeric_cuda *s, ds4_num_view y,
                                  const uint32_t *bounds,
                                  const ds4_num_attention *a) {
   ds4_num_buffer *scratch = NULL, *packed_v = NULL, *packed_k = NULL,
-                 *result = NULL;
+                 *packed_q = NULL, *result = NULL;
   /* Preserve eager GEMM geometry when a complete BF16 score is bounded.
    * Splitting these rows changes rare BF16 ties in the language encoder. */
   uint64_t row_bytes = (uint64_t)a->q_heads * a->keys * 2;
@@ -735,8 +745,15 @@ static ds4_status bf16_attention(numeric_cuda *s, ds4_num_view y,
       a->queries > 256 && row_bytes <= (128ull * 1024 * 1024) / a->queries
           ? a->queries
           : 256;
+  /* Eager flattens batch and heads for both GEMMs. Preserve that geometry
+   * whenever rows fit the bounded dense path; splitting batch changes rare
+   * BF16 ties in P@V even when scores and probabilities are identical. */
+  uint32_t batches = a->queries > 256 && tile_rows == a->queries ? a->batch : 1;
+  if ((uint64_t)batches * a->q_heads > INT_MAX)
+    return DS4_STATUS_UNSUPPORTED;
+  uint32_t heads = batches * a->q_heads;
   ds4_status st =
-      ds4_num_alloc(s->context, (uint64_t)a->q_heads * tile_rows * a->keys,
+      ds4_num_alloc(s->context, (uint64_t)heads * tile_rows * a->keys,
                     DS4_NUM_BF16, &scratch);
   if (st)
     return st;
@@ -744,25 +761,39 @@ static ds4_status bf16_attention(numeric_cuda *s, ds4_num_view y,
   st = ds4_num_alloc(s->context, packed_count, v.type, &packed_v);
   if (!st)
     st = ds4_num_alloc(s->context, packed_count, k.type, &packed_k);
+  uint64_t query_count = (uint64_t)a->batch * a->q_heads * a->queries * a->dim;
+  if (!st && batches > 1)
+    st = ds4_num_alloc(s->context, query_count, q.type, &packed_q);
   if (!st)
-    st = ds4_num_alloc(s->context, (uint64_t)a->q_heads * tile_rows * a->dim,
-                       y.type, &result);
+    st = ds4_num_alloc(s->context, (uint64_t)heads * tile_rows * a->dim, y.type,
+                       &result);
   ds4_num_view vv = ds4_num_data(packed_v), kk = ds4_num_data(packed_k),
-               yy = ds4_num_data(result);
+               qq = ds4_num_data(packed_q), yy = ds4_num_data(result);
   if (!st) {
     pack_attention_kv<<<blocks(packed_count), 256, 0, s->stream>>>(vv, v, *a);
     pack_attention_kv<<<blocks(packed_count), 256, 0, s->stream>>>(kk, k, *a);
+    if (batches > 1) {
+      ds4_num_attention query_layout = *a;
+      query_layout.keys = a->queries;
+      query_layout.kv_heads = a->q_heads;
+      pack_attention_kv<<<blocks(query_count), 256, 0, s->stream>>>(
+          qq, q, query_layout);
+    }
     st = launch_status();
   }
   ds4_num_view scores = ds4_num_data(scratch);
   float alpha = 1, beta = 0;
-  for (uint32_t batch = 0; batch < a->batch && !st; batch++)
+  for (uint32_t batch = 0; batch < a->batch && !st; batch += batches)
     for (uint32_t first = 0; first < a->queries && !st; first += tile_rows) {
       uint32_t rows =
           a->queries - first < tile_rows ? a->queries - first : tile_rows;
       const char *qp =
-          (const char *)q.data +
-          ((uint64_t)batch * a->queries + first) * a->q_heads * a->dim * 2;
+          batches > 1
+              ? (const char *)qq.data +
+                    ((uint64_t)batch * a->q_heads * a->queries + first) *
+                        a->dim * 2
+              : (const char *)q.data + ((uint64_t)batch * a->queries + first) *
+                                           a->q_heads * a->dim * 2;
       const char *kp = (const char *)kk.data +
                        (uint64_t)batch * a->q_heads * a->keys * a->dim * 2;
       const char *vp = (const char *)vv.data +
@@ -770,23 +801,26 @@ static ds4_status bf16_attention(numeric_cuda *s, ds4_num_view y,
       cublasStatus_t e = cublasGemmStridedBatchedEx(
           s->blas, CUBLAS_OP_T, CUBLAS_OP_N, a->keys, rows, a->dim, &alpha, kp,
           CUDA_R_16BF, a->dim, (long long)a->keys * a->dim, qp, CUDA_R_16BF,
-          a->q_heads * a->dim, a->dim, &beta, scores.data, CUDA_R_16BF, a->keys,
-          (long long)rows * a->keys, a->q_heads, CUBLAS_COMPUTE_32F,
-          CUBLAS_GEMM_DEFAULT);
+          batches > 1 ? a->dim : a->q_heads * a->dim,
+          batches > 1 ? (long long)a->queries * a->dim : a->dim, &beta,
+          scores.data, CUDA_R_16BF, a->keys, (long long)rows * a->keys, heads,
+          CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DEFAULT);
       if (e != CUBLAS_STATUS_SUCCESS) {
         st = DS4_STATUS_INFERENCE;
         break;
       }
-      for (uint32_t h = 0; h < a->q_heads; h++) {
-        ds4_num_view head = ds4_num_slice(scores, (uint64_t)h * rows * a->keys,
-                                          (uint64_t)rows * a->keys);
-        if (a->keys > 2048)
-          softmax_wide_kernel<<<rows, 1024, 0, s->stream>>>(head, bounds, batch,
-                                                            first, h, *a);
-        else
-          softmax_rows_kernel<<<(rows + 3) / 4, 128, 0, s->stream>>>(
-              head, bounds, batch, first, rows, *a);
-      }
+      for (uint32_t b = 0; b < batches; b++)
+        for (uint32_t h = 0; h < a->q_heads; h++) {
+          ds4_num_view head = ds4_num_slice(
+              scores, ((uint64_t)b * a->q_heads + h) * rows * a->keys,
+              (uint64_t)rows * a->keys);
+          if (a->keys > 2048)
+            softmax_wide_kernel<<<rows, 1024, 0, s->stream>>>(
+                head, bounds, batch + b, first, h, *a);
+          else
+            softmax_rows_kernel<<<(rows + 3) / 4, 128, 0, s->stream>>>(
+                head, bounds, batch + b, first, rows, *a);
+        }
       st = launch_status();
       if (st)
         break;
@@ -794,18 +828,29 @@ static ds4_status bf16_attention(numeric_cuda *s, ds4_num_view y,
           s->blas, CUBLAS_OP_N, CUBLAS_OP_N, a->dim, rows, a->keys, &alpha, vp,
           CUDA_R_16BF, a->dim, (long long)a->keys * a->dim, scores.data,
           CUDA_R_16BF, a->keys, (long long)rows * a->keys, &beta, yy.data,
-          CUDA_R_16BF, a->dim, (long long)rows * a->dim, a->q_heads,
+          CUDA_R_16BF, a->dim, (long long)rows * a->dim, heads,
           CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DEFAULT);
       if (e != CUBLAS_STATUS_SUCCESS)
         st = DS4_STATUS_INFERENCE;
       if (!st) {
-        scatter_attention<<<blocks((uint64_t)a->q_heads * rows * a->dim), 256,
-                            0, s->stream>>>(y, yy, *a, batch, first, rows);
-        st = launch_status();
+        for (uint32_t b = 0; b < batches; b++) {
+          ds4_num_view temp =
+              ds4_num_slice(yy, (uint64_t)b * a->q_heads * rows * a->dim,
+                            (uint64_t)a->q_heads * rows * a->dim);
+          scatter_attention<<<blocks((uint64_t)a->q_heads * rows * a->dim), 256,
+                              0, s->stream>>>(y, temp, *a, batch + b, first,
+                                              rows);
+          st = launch_status();
+          if (st)
+            break;
+        }
       }
     }
   ds4_status cleanup = ds4_num_dispose(result),
              other = ds4_num_dispose(packed_k);
+  if (!cleanup)
+    cleanup = other;
+  other = ds4_num_dispose(packed_q);
   if (!cleanup)
     cleanup = other;
   other = ds4_num_dispose(packed_v);
@@ -1053,13 +1098,14 @@ static ds4_status gpu_softmax(void *state, ds4_num_view y, ds4_num_view x,
 static ds4_status gpu_matmul_batch(void *p, ds4_num_view y, ds4_num_view x,
                                    ds4_num_view w, uint32_t batch,
                                    uint32_t rows, uint32_t in, uint32_t out,
-                                   bool transpose_b) {
+                                   bool transpose_a, bool transpose_b) {
   numeric_cuda *s = (numeric_cuda *)p;
   float alpha = 1, beta = 0;
   cublasStatus_t status = cublasSgemmStridedBatched(
-      s->blas, transpose_b ? CUBLAS_OP_T : CUBLAS_OP_N, CUBLAS_OP_N, out, rows,
-      in, &alpha, (const float *)w.data, transpose_b ? in : out,
-      (long long)out * in, (const float *)x.data, in, (long long)rows * in,
+      s->blas, transpose_b ? CUBLAS_OP_T : CUBLAS_OP_N,
+      transpose_a ? CUBLAS_OP_T : CUBLAS_OP_N, out, rows, in, &alpha,
+      (const float *)w.data, transpose_b ? in : out, (long long)out * in,
+      (const float *)x.data, transpose_a ? rows : in, (long long)rows * in,
       &beta, (float *)y.data, out, (long long)rows * out, batch);
   return status == CUBLAS_STATUS_SUCCESS ? DS4_STATUS_OK : DS4_STATUS_INFERENCE;
 }

@@ -1,7 +1,9 @@
 /* Projection-only PLE and bidirectional encoder semantics follow the frozen
  * Transformers d4fcbccd reference (Apache-2.0); see the T11/T12 provenance.
  * This graph uses the suite's qualified C numeric API, never causal LLM KV. */
+#include "ds4_embedding_gemma2_internal.h"
 #include "ds4_gemma_tokenizer.h"
+#include "ds4_host_memory.h"
 #include "ds4_numeric_weights.h"
 #include <math.h>
 #include <stdlib.h>
@@ -28,36 +30,15 @@ struct ds4_embedding_gemma2 {
 struct ds4_gemma_input {
   uint32_t **tokens, *lengths, count;
   ds4_resource *account;
+  ds4_resources *resources;
+  uint64_t owner;
+  ds4_host_buffer *visual;
 };
 struct ds4_gemma_result {
   float *vectors;
   uint32_t count, dimensions;
   ds4_resource *account;
 };
-static uint16_t bf16(float f) {
-  uint32_t u;
-  memcpy(&u, &f, 4);
-  return (u + 0x7fff + ((u >> 16) & 1)) >> 16;
-}
-static ds4_status host(ds4_numeric *n, uint64_t bytes, void **p,
-                       ds4_resource **r) {
-  uint64_t owner;
-  ds4_resources *rs = ds4_numeric_resources(n, &owner);
-  *p = NULL;
-  *r = NULL;
-  ds4_status s = ds4_resource_register_host(rs, owner, bytes, r);
-  if (!s && !(*p = calloc(1, bytes))) {
-    ds4_resource_release(*r);
-    *r = NULL;
-    s = DS4_STATUS_NOMEM;
-  }
-  return s;
-}
-static void unhost(void *p, ds4_resource *r) {
-  free(p);
-  if (r)
-    ds4_resource_release(r);
-}
 static ds4_status bind(ds4_embedding_gemma2 *e, const char *name,
                        uint32_t group, uint32_t rank, uint64_t a, uint64_t b) {
   for (size_t i = 0; i < ds4_bundle_tensor_count(e->bundle); i++) {
@@ -296,6 +277,10 @@ void ds4_gemma_input_free(ds4_gemma_input *in) {
         free(in->tokens[i]);
     free(in->tokens);
     free(in->lengths);
+    if (in->visual)
+      for (uint32_t i = 0; i < in->count; i++)
+        ds4_host_free(in->visual + i);
+    free(in->visual);
     ds4_resource *r = in->account;
     free(in);
     if (r)
@@ -316,14 +301,19 @@ ds4_status ds4_gemma_prepare(ds4_embedding_gemma2 *e,
   in->count = count;
   in->tokens = calloc(count, sizeof(uint32_t *));
   in->lengths = calloc(count, 4);
+  in->visual = calloc(count, sizeof(*in->visual));
   ds4_status status = DS4_STATUS_NOMEM;
   ds4_reservation *temporary = NULL;
   ds4_reservation_scope staging = {0};
-  if (!in->tokens || !in->lengths)
+  if (!in->tokens || !in->lengths || !in->visual)
     goto cleanup;
-  uint64_t bytes = sizeof(*in) + count * (sizeof(uint32_t *) + 4 + 8192 * 4);
+  uint64_t bytes =
+      sizeof(*in) +
+      count * (sizeof(uint32_t *) + sizeof(ds4_host_buffer) + 4 + 8192 * 4);
   uint64_t owner;
   ds4_resources *rs = ds4_numeric_resources(e->num, &owner);
+  in->resources = rs;
+  in->owner = owner;
   TRY(ds4_resource_register_host(rs, owner, bytes, &in->account));
   uint64_t max_text = 0;
   for (size_t i = 0; i < count; i++) {
@@ -361,6 +351,58 @@ cleanup:
     *out = in;
   return status;
 }
+ds4_status gemma_input_visual_clear(ds4_gemma_input *in) {
+  if (!in)
+    return DS4_STATUS_INVALID;
+  for (uint32_t i = 0; i < in->count; i++)
+    ds4_host_free(in->visual + i);
+  return DS4_STATUS_OK;
+}
+ds4_status gemma_input_visual_validate(const ds4_gemma_input *in, size_t item,
+                                       uint32_t image_tokens,
+                                       uint32_t video_tokens) {
+  if (!in || item >= in->count)
+    return DS4_STATUS_INVALID;
+  uint32_t images = 0, videos = 0;
+  for (uint32_t i = 0; i < in->lengths[item]; i++) {
+    images += in->tokens[item][i] == 258880;
+    videos += in->tokens[item][i] == 258884;
+    if (in->tokens[item][i] == 258881)
+      return DS4_STATUS_UNSUPPORTED;
+  }
+  return images == image_tokens && videos == video_tokens ? DS4_STATUS_OK
+                                                          : DS4_STATUS_INVALID;
+}
+ds4_status gemma_input_visual(ds4_gemma_input *in, size_t item,
+                              gemma_visual_tokens features) {
+  if ((features.image_tokens && !features.images) ||
+      (features.video_tokens && !features.videos))
+    return DS4_STATUS_INVALID;
+  ds4_status s = gemma_input_visual_validate(in, item, features.image_tokens,
+                                             features.video_tokens);
+  if (s)
+    return s;
+  ds4_host_buffer replacement = {0};
+  s = ds4_host_alloc(in->resources, in->owner,
+                     ((uint64_t)features.image_tokens + features.video_tokens) *
+                         512 * 2,
+                     &replacement);
+  if (s)
+    return s;
+  uint32_t a = 0, b = 0, row = 0;
+  for (uint32_t i = 0; i < in->lengths[item]; i++) {
+    const uint16_t *source =
+        in->tokens[item][i] == 258880   ? features.images + (uint64_t)a++ * 512
+        : in->tokens[item][i] == 258884 ? features.videos + (uint64_t)b++ * 512
+                                        : NULL;
+    if (source)
+      memcpy((uint16_t *)replacement.data + (uint64_t)row++ * 512, source,
+             1024);
+  }
+  ds4_host_free(in->visual + item);
+  in->visual[item] = replacement;
+  return DS4_STATUS_OK;
+}
 ds4_status ds4_gemma_input_tokens(const ds4_gemma_input *in, size_t i,
                                   const uint32_t **ids, uint32_t *count) {
   if (!in || i >= in->count || !ids || !count)
@@ -397,16 +439,20 @@ typedef struct {
   ds4_num_buffer *buffers[24];
   uint32_t count;
 } work;
-static ds4_status alloc(work *w, uint64_t count, ds4_num_view *v) {
+static ds4_status alloc_type(work *w, uint64_t count, uint32_t type,
+                             ds4_num_view *v) {
   if (w->count == 24)
     return DS4_STATUS_INVALID;
   ds4_num_buffer *b = NULL;
-  ds4_status s = ds4_num_alloc(w->num, count, DS4_NUM_BF16, &b);
+  ds4_status s = ds4_num_alloc(w->num, count, type, &b);
   if (!s) {
     w->buffers[w->count++] = b;
     *v = ds4_num_data(b);
   }
   return s;
+}
+static ds4_status alloc(work *w, uint64_t count, ds4_num_view *v) {
+  return alloc_type(w, count, DS4_NUM_BF16, v);
 }
 static ds4_status clear(work *w) {
   ds4_status s = 0;
@@ -431,24 +477,51 @@ static ds4_status observe(ds4_embedding_gemma2 *e, const ds4_gemma_observer *o,
 }
 static ds4_status forward(ds4_embedding_gemma2 *e, const uint32_t *tokens,
                           uint32_t n, uint32_t item, uint32_t dimensions,
-                          const ds4_gemma_observer *o, float *result) {
+                          const uint16_t *visual, const ds4_gemma_observer *o,
+                          float *result) {
   ds4_status status = 0;
   work w = {.num = e->num};
   uint16_t *h = NULL;
   uint32_t *bounds = NULL;
-  ds4_resource *hr = NULL, *br = NULL;
+  ds4_host_buffer host = {0}, mask = {0};
+  uint64_t owner;
+  ds4_resources *resources = ds4_numeric_resources(e->num, &owner);
   ds4_num_view x, y, z, ple, pi, q, k, v, qr, kr, attn, gate, up, co, si,
-      projected;
-  TRY(host(e->num, (uint64_t)n * 768 * 2, (void **)&h, &hr));
-  TRY(host(e->num, (uint64_t)n * 8, (void **)&bounds, &br));
+      projected, phase, trig;
+  TRY(ds4_host_alloc(resources, owner, (uint64_t)n * 768 * 2, &host));
+  TRY(ds4_host_alloc(resources, owner, (uint64_t)n * 8, &mask));
+  h = host.data;
+  bounds = mask.data;
   const uint16_t *table = ds4_bundle_tensor_data(e->bundle, e->embedding);
-  for (uint32_t i = 0; i < n; i++)
-    memcpy(h + (uint64_t)i * 512, table + (uint64_t)tokens[i] * 512, 1024);
+  for (uint32_t i = 0; i < n; i++) {
+    uint32_t token = tokens[i];
+    if (token == 258880 || token == 258884) {
+      if (!visual) {
+        status = DS4_STATUS_INVALID;
+        goto cleanup;
+      }
+      token = 0; /* Match the oracle's placeholder PAD before scaled lookup. */
+    } else if (token == 258881) {
+      status = DS4_STATUS_UNSUPPORTED;
+      goto cleanup;
+    }
+    memcpy(h + (uint64_t)i * 512, table + (uint64_t)token * 512, 1024);
+  }
   TRY(alloc(&w, (uint64_t)n * 512, &x));
   TRY(alloc(&w, (uint64_t)n * 512, &y));
   TRY(alloc(&w, (uint64_t)n * 512, &z));
   TRY(ds4_num_write(e->num, x, h, (uint64_t)n * 1024));
   TRY(ds4_num_point(e->num, x, x, NONE, DS4_NUM_SCALE, 22.625f));
+  if (visual) {
+    /* Vision projections already inhabit the scaled backbone embedding space.
+     * Scatter after text scaling, before PLE; never scale soft tokens again. */
+    TRY(ds4_num_read(e->num, x, h, (uint64_t)n * 1024));
+    uint32_t row = 0;
+    for (uint32_t i = 0; i < n; i++)
+      if (tokens[i] == 258880 || tokens[i] == 258884)
+        memcpy(h + (uint64_t)i * 512, visual + (uint64_t)row++ * 512, 1024);
+    TRY(ds4_num_write(e->num, x, h, (uint64_t)n * 1024));
+  }
   TRY(observe(e, o, "embeddings", item, 0, x));
   TRY(alloc(&w, (uint64_t)n * 12288, &ple));
   TRY(alloc(&w, (uint64_t)n * 512, &pi));
@@ -469,6 +542,8 @@ static ds4_status forward(ds4_embedding_gemma2 *e, const uint32_t *tokens,
   TRY(alloc(&w, (uint64_t)n * 2048, &up));
   TRY(alloc(&w, (uint64_t)n * 256, &co));
   TRY(alloc(&w, (uint64_t)n * 256, &si));
+  TRY(alloc_type(&w, (uint64_t)n * 256, DS4_NUM_F32, &phase));
+  TRY(alloc_type(&w, (uint64_t)n * 256, DS4_NUM_F32, &trig));
   for (uint32_t i = 0; i < 24; i++) {
     const gemma_layer *l = e->config->layers + i;
     uint32_t dim = l->dim;
@@ -480,26 +555,41 @@ static ds4_status forward(ds4_embedding_gemma2 *e, const uint32_t *tokens,
                  krv = ds4_num_slice(kr, 0, kv.count),
                  av = ds4_num_slice(attn, 0, qv.count),
                  cv = ds4_num_slice(co, 0, (uint64_t)n * dim / 2),
-                 sv = ds4_num_slice(si, 0, cv.count);
+                 sv = ds4_num_slice(si, 0, cv.count),
+                 pv = ds4_num_slice(phase, 0, cv.count),
+                 tv = ds4_num_slice(trig, 0, cv.count);
 #define NAME(s)                                                                \
   (snprintf(key, sizeof(key), "language_model.layers.%u.%s", i, s), key)
     TRY(norm(e, NAME("input_layernorm.weight"), y, x, 512));
+    if (!i)
+      TRY(observe(e, o, "backbone-norm", item, i, y));
     TRY(linear(e, NAME("self_attn.q_proj.weight"), qv, y, n, 512, 4 * dim));
     TRY(linear(e, NAME("self_attn.k_proj.weight"), kv, y, n, 512, l->kv * dim));
     TRY(linear(e, NAME("self_attn.v_proj.weight"), vv, y, n, 512, l->kv * dim));
     TRY(norm(e, NAME("self_attn.q_norm.weight"), qv, qv, dim));
     TRY(norm(e, NAME("self_attn.k_norm.weight"), kv, kv, dim));
     TRY(norm(e, NULL, vv, vv, dim));
+    if (!i) {
+      TRY(observe(e, o, "backbone-q", item, i, qv));
+      TRY(observe(e, o, "backbone-k", item, i, kv));
+      TRY(observe(e, o, "backbone-v", item, i, vv));
+    }
     for (uint32_t t = 0; t < n; t++)
       for (uint32_t d = 0; d < dim / 2; d++)
-        h[(uint64_t)t * dim / 2 + d] = bf16(cosf((float)t * l->frequency[d]));
-    TRY(ds4_num_write(e->num, cv, h, cv.count * 2));
-    for (uint32_t t = 0; t < n; t++)
-      for (uint32_t d = 0; d < dim / 2; d++)
-        h[(uint64_t)t * dim / 2 + d] = bf16(sinf((float)t * l->frequency[d]));
-    TRY(ds4_num_write(e->num, sv, h, sv.count * 2));
+        ((float *)h)[(uint64_t)t * dim / 2 + d] = (float)t * l->frequency[d];
+    /* Evaluate FP32 trigonometry on the compute backend. Host libm and CUDA
+     * differ at rare BF16 ties on long positions; those ties amplify in PLE. */
+    TRY(ds4_num_write(e->num, pv, h, pv.count * 4));
+    TRY(ds4_num_point(e->num, tv, pv, NONE, DS4_NUM_COS, 0));
+    TRY(ds4_num_point(e->num, cv, tv, NONE, DS4_NUM_CAST, 0));
+    TRY(ds4_num_point(e->num, tv, pv, NONE, DS4_NUM_SIN, 0));
+    TRY(ds4_num_point(e->num, sv, tv, NONE, DS4_NUM_CAST, 0));
     TRY(ds4_num_rope(e->num, qrv, qv, cv, sv, 4, dim, false, true));
     TRY(ds4_num_rope(e->num, krv, kv, cv, sv, l->kv, dim, false, true));
+    if (!i) {
+      TRY(observe(e, o, "backbone-rope-q", item, i, qrv));
+      TRY(observe(e, o, "backbone-rope-k", item, i, krv));
+    }
     /* Symmetric local mask includes keys exactly +/- window. Full layers
      * have no causal mask. Ragged items never share an attention invocation. */
     for (uint32_t t = 0; t < n; t++) {
@@ -518,9 +608,13 @@ static ds4_status forward(ds4_embedding_gemma2 *e, const uint32_t *tokens,
                            .round_scores = true,
                            .round_probabilities = true};
     TRY(ds4_num_attend(e->num, av, qrv, krv, vv, bounds, &a));
+    if (!i)
+      TRY(observe(e, o, "backbone-attention", item, i, av));
     TRY(linear(e, NAME("self_attn.o_proj.weight"), z, av, n, 4 * dim, 512));
     TRY(norm(e, NAME("post_attention_layernorm.weight"), z, z, 512));
     TRY(ds4_num_point(e->num, x, x, z, DS4_NUM_ADD, 0));
+    if (!i)
+      TRY(observe(e, o, "backbone-attn-out", item, i, x));
     TRY(norm(e, NAME("pre_feedforward_layernorm.weight"), y, x, 512));
     TRY(linear(e, NAME("mlp.gate_proj.weight"), gate, y, n, 512, 2048));
     TRY(linear(e, NAME("mlp.up_proj.weight"), up, y, n, 512, 2048));
@@ -586,8 +680,8 @@ cleanup:
     ds4_status s = clear(&w);
     if (!status)
       status = s;
-    unhost(h, hr);
-    unhost(bounds, br);
+    ds4_host_free(&host);
+    ds4_host_free(&mask);
     return status;
   }
 }
@@ -614,6 +708,14 @@ ds4_status ds4_gemma_embed(ds4_embedding_gemma2 *e, const ds4_gemma_input *in,
       (dimensions != 128 && dimensions != 256 && dimensions != 512 &&
        dimensions != 768))
     return DS4_STATUS_INVALID;
+  for (uint32_t i = 0; i < in->count; i++)
+    for (uint32_t j = 0; j < in->lengths[i]; j++) {
+      uint32_t token = in->tokens[i][j];
+      if (token == 258881)
+        return DS4_STATUS_UNSUPPORTED;
+      if ((token == 258880 || token == 258884) && !in->visual[i].data)
+        return DS4_STATUS_INVALID;
+    }
   ds4_status status;
   ds4_runtime_scope scope = {0};
   ds4_reservation *lease = NULL;
@@ -641,8 +743,9 @@ ds4_status ds4_gemma_embed(ds4_embedding_gemma2 *e, const ds4_gemma_input *in,
   if (!status && !(r->vectors = calloc(1, vector_bytes)))
     status = DS4_STATUS_NOMEM;
   for (uint32_t i = 0; i < in->count && !status; i++)
-    status = forward(e, in->tokens[i], in->lengths[i], i, dimensions, o,
-                     r->vectors + (uint64_t)i * dimensions);
+    status =
+        forward(e, in->tokens[i], in->lengths[i], i, dimensions,
+                in->visual[i].data, o, r->vectors + (uint64_t)i * dimensions);
   if (!status)
     status = observe(e, o, "complete", in->count, 0, NONE);
 finish:

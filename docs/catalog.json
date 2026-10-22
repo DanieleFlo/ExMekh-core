@@ -1232,6 +1232,79 @@
           ]
         },
         {
+          "path": "docs/architecture/native-suite-t11-t12-clean-code-review-20261021.md",
+          "sections": [
+            {
+              "title": "Revisione clean code di T11/T12",
+              "level": 1,
+              "start": 1,
+              "end": 76,
+              "summary": "21 ottobre 2026."
+            },
+            {
+              "title": "Correzioni e responsabilità",
+              "level": 2,
+              "start": 9,
+              "end": 24,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
+            },
+            {
+              "title": "Contratti conservati",
+              "level": 2,
+              "start": 25,
+              "end": 38,
+              "summary": "Runtime ed executor possiedono serializzazione, admission, recupero e commit."
+            },
+            {
+              "title": "Verifica",
+              "level": 2,
+              "start": 39,
+              "end": 60,
+              "summary": "Il report T11/T12"
+            },
+            {
+              "title": "Debito e limiti",
+              "level": 2,
+              "start": 61,
+              "end": 76,
+              "summary": "completa di workspace nel backend numerico potrebbe eliminare la duplicazione"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/native-suite-t13-t14-clean-code-review-20261022.md",
+          "sections": [
+            {
+              "title": "Revisione clean code di T13/T14",
+              "level": 1,
+              "start": 1,
+              "end": 63,
+              "summary": "22 ottobre 2026."
+            },
+            {
+              "title": "Correzioni",
+              "level": 2,
+              "start": 9,
+              "end": 20,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
+            },
+            {
+              "title": "Confini conservati",
+              "level": 2,
+              "start": 21,
+              "end": 34,
+              "summary": "Il decoder possiede byte originali, frame e waveform; il processor possiede"
+            },
+            {
+              "title": "Verifica e limiti",
+              "level": 2,
+              "start": 35,
+              "end": 63,
+              "summary": "Il report della revisione"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/native-suite-v1-contract.md",
           "sections": [
             {
@@ -6457,7 +6530,7 @@
               "title": "Piano di implementazione: suite multimodale nativa DS4",
               "level": 1,
               "start": 1,
-              "end": 490,
+              "end": 513,
               "summary": "Data: 20 ottobre 2026."
             },
             {
@@ -6562,126 +6635,126 @@
               "title": "15. T11 — Pipeline image nativa funzionale",
               "level": 2,
               "start": 251,
-              "end": 264,
+              "end": 275,
               "summary": "**Dipendenze:** T08, T09, T10."
             },
             {
               "title": "16. T12 — Backbone testuale EmbeddingGemma 2 e pooling",
               "level": 2,
-              "start": 265,
-              "end": 278,
+              "start": 276,
+              "end": 299,
               "summary": "**Dipendenze:** T06, T07."
             },
             {
               "title": "17. T13 — Media e preprocessing deterministico",
               "level": 2,
-              "start": 279,
-              "end": 293,
+              "start": 300,
+              "end": 314,
               "summary": "**Dipendenze:** T00, T01, T06."
             },
             {
               "title": "18. T14 — Encoder vision e video EmbeddingGemma 2",
               "level": 2,
-              "start": 294,
-              "end": 306,
+              "start": 315,
+              "end": 329,
               "summary": "**Dipendenze:** T12, T13."
             },
             {
               "title": "19. T15 — Encoder audio EmbeddingGemma 2",
               "level": 2,
-              "start": 307,
-              "end": 319,
+              "start": 330,
+              "end": 342,
               "summary": "**Dipendenze:** T12, T13."
             },
             {
               "title": "20. T16 — Embedding multimodali composti e piano selettivo",
               "level": 2,
-              "start": 320,
-              "end": 333,
+              "start": 343,
+              "end": 356,
               "summary": "**Dipendenze:** T12, T14, T15."
             },
             {
               "title": "21. T17 — Registro modelli, HTTP e gestione dei risultati",
               "level": 2,
-              "start": 334,
-              "end": 348,
+              "start": 357,
+              "end": 371,
               "summary": "**Dipendenze:** T01, T05, T11, T16."
             },
             {
               "title": "22. T18 — Client semplice e integrazione ExMekh-lib",
               "level": 2,
-              "start": 349,
-              "end": 363,
+              "start": 372,
+              "end": 386,
               "summary": "**Dipendenze:** T17."
             },
             {
               "title": "23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo",
               "level": 2,
-              "start": 364,
-              "end": 380,
+              "start": 387,
+              "end": 403,
               "summary": "**Dipendenze:** T05, T07, T11, T16, T17."
             },
             {
               "title": "24. T20 — Quantizzazione e ottimizzazioni numeriche misurate",
               "level": 2,
-              "start": 381,
-              "end": 395,
+              "start": 404,
+              "end": 418,
               "summary": "**Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming."
             },
             {
               "title": "25. T21 — Qualificazione integrata, guasti e regressioni",
               "level": 2,
-              "start": 396,
-              "end": 410,
+              "start": 419,
+              "end": 433,
               "summary": "**Dipendenze:** T17, T18, T19; tutti i profili promossi da T20."
             },
             {
               "title": "26. T22 — Packaging, documentazione e consegna",
               "level": 2,
-              "start": 411,
-              "end": 422,
+              "start": 434,
+              "end": 445,
               "summary": "**Dipendenze:** T21."
             },
             {
               "title": "27. Matrice obbligatoria di memoria e ripristino",
               "level": 2,
-              "start": 423,
-              "end": 443,
+              "start": 446,
+              "end": 466,
               "summary": "La matrice usa budget controllati e allocazioni possedute; si aggiungono prove reali sulla memoria libera della 3090."
             },
             {
               "title": "28. Gate numerici, di qualità e prestazionali",
               "level": 2,
-              "start": 444,
-              "end": 481,
+              "start": 467,
+              "end": 504,
               "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
             },
             {
               "title": "28.1 Gate numerici",
               "level": 3,
-              "start": 446,
-              "end": 455,
+              "start": 469,
+              "end": 478,
               "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
             },
             {
               "title": "28.2 Corpus di accettazione proposto",
               "level": 3,
-              "start": 456,
-              "end": 472,
+              "start": 479,
+              "end": 495,
               "summary": "Il corpus minimo viene congelato in T00 prima delle ottimizzazioni; può essere ampliato con un nuovo manifest, mantenendo i casi precedenti."
             },
             {
               "title": "28.3 Gate prestazionali e memoria",
               "level": 3,
-              "start": 473,
-              "end": 481,
+              "start": 496,
+              "end": 504,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "29. Definizione di completamento globale",
               "level": 2,
-              "start": 482,
-              "end": 490,
+              "start": 505,
+              "end": 513,
               "summary": "Il lavoro di implementazione è completo quando T00–T19, T21 e T22 sono `DONE`, T20 ha una valutazione esplicita dei candidati e tutti i profili effettivamente pubblicati hanno superato i rispettivi gate."
             }
           ]

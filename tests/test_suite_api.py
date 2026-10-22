@@ -28,6 +28,10 @@ class FailureOutputs(unittest.TestCase):
     def test_adapter_constructors_clear_output(self):
         for name, count in (
             ("ds4_embedding_gemma2_open", 5),
+            ("ds4_gemma_visual_open", 6),
+            ("ds4_gemma_vision_open", 5),
+            ("ds4_gemma_processor_open", 6),
+            ("ds4_media_decode", 7),
             ("ds4_qwen_image_pipeline_open", 5),
             ("ds4_qwen_image_encoder_open", 5),
             ("ds4_qwen_image_dit_open", 4),
@@ -42,6 +46,10 @@ class FailureOutputs(unittest.TestCase):
         for name, count in (
             ("ds4_gemma_prepare", 4),
             ("ds4_gemma_embed", 5),
+            ("ds4_gemma_visual_prepare", 4),
+            ("ds4_gemma_visual_embed", 5),
+            ("ds4_gemma_vision_encode", 4),
+            ("ds4_gemma_media_prepare", 4),
             ("ds4_qwen_image_encode", 4),
             ("ds4_qwen_image_prepare", 5),
             ("ds4_qwen_image_prepare_padded", 6),

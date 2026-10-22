@@ -1,0 +1,82 @@
+{
+  "policy": "Frozen T00 thresholds unchanged. KEEP here denotes correctness repair, not a speedup promotion.",
+  "sources_reviewed": [
+    "docs/performance/agent_performance_contract.md",
+    "docs/research/guides/problem-to-source.md",
+    "docs/research/guides/rtx3090-transfer-checklist.md",
+    "docs/research/platforms/llama-cpp.md",
+    "docs/research/forks/syv-ai-qwen38-27b-rtx3090.md"
+  ],
+  "transfer_decision": "Quantized/MoE/FP8/approximate attention paths do not reproduce this dense BF16 eager graph. Reuse existing numeric operations, resource groups, bounded cache and explicit admission.",
+  "experiments": [
+    {
+      "name": "vision-head-rms-64",
+      "hypothesis": "Match the scalar strided ATen 64-wide reduction before the warp tree",
+      "baseline": "smoke-native-v3",
+      "baseline_last_layer_max_abs": 42.0,
+      "result": "KEEP",
+      "evidence": "First layer and final vision layers then exact; pooling isolated separately"
+    },
+    {
+      "name": "position-pooling-layout",
+      "hypothesis": "Preserve full output budget and transpose the one-hot matrix in FP32 GEMM",
+      "rejected": [
+        "Repacking contiguous left matrix",
+        "Changing output budget alone",
+        "Transposing result"
+      ],
+      "baseline_pooled_max_abs": 16.0,
+      "candidate": "smoke-native-v7",
+      "candidate_pooled_max_abs": 0.0,
+      "result": "KEEP"
+    },
+    {
+      "name": "video-attention-batch",
+      "hypothesis": "Preserve flattened batch/head geometry in the dense P@V GEMM",
+      "diagnostic": "QK and probabilities exact; isolated P@V differed by one BF16 value in video0 frame1",
+      "rejected": [
+        "Packing Q alone",
+        "Serial frames",
+        "Serial P@V batches"
+      ],
+      "candidate": "video0-batch-attention",
+      "candidate_vision_max_abs": 0.0,
+      "result": "KEEP"
+    },
+    {
+      "name": "single-kv-zero-stride",
+      "hypothesis": "Eager broadcast KV stride explains long backbone drift",
+      "candidate": "video1-gqa",
+      "result": "REJECT",
+      "reason": "No improvement; removed"
+    },
+    {
+      "name": "backend-f32-trigonometry",
+      "hypothesis": "Host libm differs from CUDA at rare long-position BF16 ties",
+      "baseline": "video1-backbone-debug",
+      "baseline_rope_q_max_abs": 0.0078125,
+      "candidate": "video1-rope",
+      "candidate_last_backbone_max_abs": 0.0,
+      "final": "qualification-v4 all 3479 boundaries numeric exact",
+      "result": "KEEP"
+    },
+    {
+      "name": "soxr-output-length",
+      "result": "KEEP",
+      "decision": "Keep actual produced sample count, matching T00 soxr.resample. Reject ceil padding"
+    },
+    {
+      "name": "codec-color-reference",
+      "result": "KEEP",
+      "decision": "Honor source matrix/range. PyAV16/FFmpeg8 conversion shortcuts/rounding are unsuitable as a golden for the pinned FFmpeg7 C profile. Compare to its separate public swscale API without widening pixel equality."
+    }
+  ],
+  "future": [
+    "T15 audio encoder",
+    "T16 full interleaving/selective phase planning",
+    "T17 HTTP",
+    "T19 group streaming/prefetch and GPU compaction",
+    "More video timing samples; current CV is unstable",
+    "Additional codec fixtures, HDR/rotation/SAR and large-budget/extreme-aspect vision gates"
+  ]
+}

@@ -233,6 +233,23 @@ Il runtime possiede mutex ricorsivo, fence e teardown condiviso.
 - righe 49–78: **Inventario dello stato globale** — La classificazione si applica anche alle cache statiche interne alle funzioni:
 - righe 79–110: **Compatibilità e verifiche** — Per Metal e ROCm il riferimento runtime resta interno all'engine e non si
 
+## [Revisione clean code di T11/T12](native-suite-t11-t12-clean-code-review-20261021.md)
+
+Runtime ed executor possiedono serializzazione, admission, recupero e commit.
+
+- righe 9–24: **Correzioni e responsabilità** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 25–38: **Contratti conservati** — Runtime ed executor possiedono serializzazione, admission, recupero e commit.
+- righe 39–60: **Verifica** — Il report T11/T12
+- righe 61–76: **Debito e limiti** — completa di workspace nel backend numerico potrebbe eliminare la duplicazione
+
+## [Revisione clean code di T13/T14](native-suite-t13-t14-clean-code-review-20261022.md)
+
+Il decoder possiede byte originali, frame e waveform; il processor possiede
+
+- righe 9–20: **Correzioni** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 21–34: **Confini conservati** — Il decoder possiede byte originali, frame e waveform; il processor possiede
+- righe 35–63: **Verifica e limiti** — Il report della revisione
+
 ## [Contratti della suite nativa DS4, versione 1](native-suite-v1-contract.md)
 
 Il catalogo distingue `model_id`, `revision`, `profile` e `component`.

@@ -1,0 +1,16 @@
+DS4 native media decoder links FFmpeg 7.1.1 dynamically.
+Copyright the FFmpeg developers; individual notices remain in upstream sources.
+https://ffmpeg.org/releases/ffmpeg-7.1.1.tar.xz
+SHA-256: 733984395e0dbbe5c046abda2dc49a5544e7e0e1e2366bba849222ae9e3a03b1
+
+The isolated build disables GPL, nonfree, version3, network, programs and
+external autodetection. Selected libavformat/libavcodec/libavutil/libswscale/
+libswresample components are LGPL-2.1-or-later; LICENSE contains LGPL 2.1.
+No upstream sources are modified. tools/build_suite_media_dependencies.py
+records the exact configure invocation and downloads/checks the corresponding
+source archive. Binaries and model weights are not vendored in this repository.
+Binary redistributors must preserve the notices, provide corresponding source
+and allow replacement/relinking of the shared LGPL libraries.
+
+The C wrapper uses custom memory AVIO and denies external resource opening.
+FFmpeg performs decode and pixel/sample-format conversion, never inference.

@@ -29,7 +29,8 @@ typedef struct {
   ds4_status (*softmax)(void *, ds4_num_view, ds4_num_view, const uint32_t *,
                         uint32_t, uint32_t, float);
   ds4_status (*matmul_batch)(void *, ds4_num_view, ds4_num_view, ds4_num_view,
-                             uint32_t, uint32_t, uint32_t, uint32_t, bool);
+                             uint32_t, uint32_t, uint32_t, uint32_t, bool,
+                             bool);
   ds4_status (*channel_l2)(void *, ds4_num_view, ds4_num_view, uint32_t,
                            uint32_t, float);
 } ds4_numeric_ops;

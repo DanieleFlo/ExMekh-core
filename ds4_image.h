@@ -74,6 +74,13 @@ int ds4_image_decode_file(
 
 void ds4_image_free(ds4_image *image);
 
+/* Header-only decoded geometry preflight; no decompression or allocations. */
+int ds4_image_encoded_size(const uint8_t *, size_t, uint32_t *, uint32_t *);
+/* Strict torchvision uint8 bicubic, returned as unscaled FP32 HWC pixels.
+ * Requested geometry is explicit; model-specific planning stays in its owner. */
+int ds4_image_resize_rgb_u8(const ds4_image *, uint32_t width, uint32_t height,
+                           float *, uint64_t count);
+
 int ds4_image_preprocess_glm53(
         ds4_image_patches *out,
         const ds4_image   *image,

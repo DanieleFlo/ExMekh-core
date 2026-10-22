@@ -1,0 +1,12 @@
+DS4 native media resampling links libsoxr dynamically, HQ FP32 mono, one thread.
+The qualified Ubuntu 24.04 package is libsoxr 0.1.3-4build3 (amd64).
+Copyright 2007-2013 Rob Sykes and the additional authors listed in COPYRIGHT.
+LGPL-2.1-or-later; LICENSE contains LGPL 2.1. COPYRIGHT preserves the complete
+Ubuntu/Debian package notices, including embedded FFT code and license terms.
+
+Upstream source: https://sourceforge.net/projects/soxr/files/
+Package source: https://launchpad.net/ubuntu/+source/libsoxr/0.1.3-4build3
+tools/build_suite_media_dependencies.py checks the exact package hashes and
+extracts to a private prefix without changing the system installation.
+The library is unmodified. Binary redistributors must supply corresponding
+source and permit replacement/relinking under its LGPL terms.

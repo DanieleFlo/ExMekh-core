@@ -1,10 +1,16 @@
-EmbeddingGemma 2 text adapter
+EmbeddingGemma 2 text, vision and media processor adapters
 
 Model equations and configuration conventions follow huggingface/transformers
 d4fcbccd0966ace9505b9cbd3041d28ad822d8a7:
 src/transformers/models/embedding_gemma2/modeling_embedding_gemma2.py
 src/transformers/models/gemma4/modeling_gemma4.py
+src/transformers/models/gemma4/image_processing_gemma4.py
+src/transformers/models/gemma4/feature_extraction_gemma4.py
+src/transformers/models/embedding_gemma2/processing_embedding_gemma2.py
+src/transformers/models/embedding_gemma2/video_processing_embedding_gemma2.py
+src/transformers/audio_utils.py
 Copyright 2026 the HuggingFace Team. All rights reserved.
+Copyright 2026 Google LLC.
 Licensed under Apache License 2.0, included in LICENSE.
 
 DS4 modifications: independent native C tokenizer, projection-only PLE,
@@ -12,3 +18,6 @@ bidirectional local/full attention using the existing numeric C API, ragged
 batch isolation, host mean/L2 pooling and explicit resource ownership.
 The pinned checkpoint supplies tokenizer/configuration data. Compilation and
 Transformers oracles are development tools; no Python serving dependency.
+Additional DS4 modifications: native uint8 bicubic patch preprocessing, bounded
+media/cache ownership, FP32/FP64 audio feature extraction, axial vision RoPE,
+position pooling and multimodal projection/insertion through opaque C APIs.

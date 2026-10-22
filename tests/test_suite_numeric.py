@@ -105,6 +105,18 @@ class Numeric:
                 C.c_uint32,
                 C.c_bool,
             ],
+            "ds4_num_matmul_batch_layout": [
+                ptr,
+                View,
+                View,
+                View,
+                C.c_uint32,
+                C.c_uint32,
+                C.c_uint32,
+                C.c_uint32,
+                C.c_bool,
+                C.c_bool,
+            ],
             "ds4_num_channel_l2": [ptr, View, View, C.c_uint32, C.c_uint32, C.c_float],
             "ds4_num_norm": [
                 ptr,
@@ -295,6 +307,27 @@ class SuiteNumeric(unittest.TestCase):
             False,
         )
         self.compare("matmul-batch", y, x @ w.transpose(-2, -1), x=x, w=w)
+        for left in (False, True):
+            for right in (False, True):
+                self.n.call(
+                    "matmul_batch_layout",
+                    y,
+                    self.n.tensor(x.transpose(-2, -1).contiguous() if left else x),
+                    self.n.tensor(w if right else w.transpose(-2, -1).contiguous()),
+                    3,
+                    7,
+                    65,
+                    13,
+                    left,
+                    right,
+                )
+                self.compare(
+                    f"matmul-layout-{left}-{right}",
+                    y,
+                    x @ w.transpose(-2, -1),
+                    x=x,
+                    w=w,
+                )
 
     def test_linear(self):
         for dtype in (torch.float32, torch.bfloat16):
@@ -616,6 +649,40 @@ class SuiteNumeric(unittest.TestCase):
                         v=v,
                     )
                     self.n.clear()
+
+    @unittest.skipUnless(
+        os.environ.get("DS4_SUITE_NUMERIC_CUDA"), "CUDA eager GEMM geometry"
+    )
+    def test_attention_dense_video_batch(self):
+        torch.manual_seed(37)
+        batch, rows, heads, dim = 4, 1260, 12, 64
+        q, k, v = [
+            (torch.randn(batch, rows, heads, dim) * 0.3).bfloat16() for _ in range(3)
+        ]
+        bounds = np.array(
+            [[(0, valid)] * rows for valid in (1134, 1080, 1170, 1134)], np.uint32
+        )
+        scores = q.cuda().transpose(1, 2) @ k.cuda().transpose(1, 2).transpose(-2, -1)
+        for b in range(batch):
+            scores[b, :, :, int(bounds[b, 0, 1]) :] = -float("inf")
+        expected = (
+            (scores.float().softmax(-1).bfloat16() @ v.cuda().transpose(1, 2))
+            .transpose(1, 2)
+            .cpu()
+        )
+        y = self.n.tensor(torch.zeros_like(q))
+        a = Attention(batch, rows, rows, heads, heads, dim, 1, 0, True, True)
+        self.n.call(
+            "attend",
+            y,
+            self.n.tensor(q),
+            self.n.tensor(k),
+            self.n.tensor(v),
+            bounds.ctypes.data_as(C.POINTER(C.c_uint32)),
+            C.byref(a),
+        )
+        self.compare("dense-video-batch", y, expected, q=q, k=k, v=v)
+        self.assertTrue(torch.equal(self.n.read(y, expected.shape), expected))
 
     def test_attention_long_bf16_softmax(self):
         # Vision and image editing cross both eager softmax reduction regimes.
