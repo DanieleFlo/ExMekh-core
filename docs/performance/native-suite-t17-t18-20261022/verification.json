@@ -1,0 +1,488 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-22",
+  "tasks": {
+    "T17": "PASS_LOCAL",
+    "T18": "PASS_LOCAL"
+  },
+  "scope": "Ubuntu 24.04 WSL / RTX 3090 sm86 / serial CUDA / BF16 native suite / Qwen3.8-27B Q4_K_S no-MTP ctx2048",
+  "root_base_commit": "d240f1ad1f9f264163a8a4c332afcf0d430ce790",
+  "external_dependency": {
+    "path": "exmekh_lib",
+    "base_commit": "9e8d696ebd9cb61b1458bde73db961ffc772cdae",
+    "patch": "docs/performance/native-suite-t17-t18-20261022/exmekh-lib.patch",
+    "patch_sha256": "fcbcd5f139a89f1596df8c6dc47dc9f07cc0b0c021dd7b21651ec9e425ec6214",
+    "sources": {
+      "README.md": "8ee91d5b5eca109086775ce0e405b4851f1e71a32949bb905edc69336a76b218",
+      "docs/11-deep-thinking.md": "d6e1a7df56587eb335d225fbefddcae2cead9c7b33fd4886bc4dfb038c2a2035",
+      "docs/22-native-suite.md": "22a27ae0b3c55b53f986f16408ecff0d21a70ae55c48cd02c3473893e469e94a",
+      "evaluations/workflow_prompts.py": "512e07e94213b59d715d5e9c2aa2b1c94fcbddb89dab25b6c1322975a0ca0396",
+      "pyproject.toml": "06a0e2cf7893a77e552f73db39d4116dde29f02bd36793551ca83e635bd87268",
+      "src/exmekh_lib/capabilities/hds/main.md": "fef8e8dad1f9765b8ca909a60b887072ce92cede909e1cb639d59ab76e09774c",
+      "src/exmekh_lib/capabilities/tools/embed-content/main.py": "4a57a577e9c636a418323bc8e047146615bd4b50f3b5e98700be1e9b1d861d89",
+      "src/exmekh_lib/capabilities/tools/generate-image/main.py": "c7979e2939fc63046bdfda4bd1bff8aab28fbea83d04b7442ed416710bb000b8",
+      "src/exmekh_lib/config/default_capabilities.py": "f7470c2d54755d2e7257a50f4d14a048a0c6b1d891e4e70c9acdb5032a0f14e3",
+      "src/exmekh_lib/config/native_suite.py": "5dfc8f00b554fca48f483962debe1c0d0ad57d00717b58836f8f0cfa5a8fed74",
+      "src/exmekh_lib/config/web.py": "8efadd6a23b658daf81146a1f1ce2951d10e296a767dac59ee967d7781cba1bd",
+      "src/exmekh_lib/config/web_text.py": "a4bac2e4a321a10980bd7e2498bc73df367da0a1731dbf0a4427833f8e8d4012",
+      "src/exmekh_lib/core/agents/node/tool_call_executor.py": "d58e0ad7ed199bf15b972a6b531c2b7d49c8095d576b720796bd069946b86716",
+      "src/exmekh_lib/core/models/client.py": "13c7c133ea2bf9a67914e4d5a390f2666e5ddcc07518930d2c2f88d788468071",
+      "src/exmekh_lib/core/models/native_media_tools.py": "aac3ee4e79e1c05d130c76e0e36b15ad41ed0d1bd722032ba4882d5128979bae",
+      "src/exmekh_lib/core/models/native_suite.py": "966683ea8eebe9119053126c3ea312e5abe74b3b667fb4e61f995150233f50f7",
+      "src/exmekh_lib/core/web_navigation/ranking.py": "a425e636148c838bf440c8e817c56e67f390085cca0b099fa0fcb0e2c8417587",
+      "src/exmekh_lib/interfaces/provider.py": "454e673bc51abd56a9f9804dd12bc493ecab0b8b9d6b8d18df27485b69080a7a",
+      "src/exmekh_lib/providers/local.py": "fa639c4d8b29f046981d2f64366892b5654c0706bdc3b3aac860051cbe7cadc2",
+      "tests/core/agents/capabilities/test_builtin_capabilities.py": "6042c0492dc59b1857d6d56a250e3cc656cb2e7f89292fce83cabed5f1ccfe49",
+      "tests/core/agents/capabilities/test_default_capabilities.py": "00c2ce8da30681895414250065b45db326c56ce7ecd5b899d9723f2a976428f7",
+      "tests/core/models/test_native_suite.py": "0756cccb9b9f35bb79f7c67a26eb0abfe99504009bb849f616b87bf196e3dc08",
+      "tests/core/web_navigation/test_ranking_extended.py": "38a0bc6393e59f663b13b22099c711929a9c98b677ba786f2cecc12be626f517",
+      "tests/providers/test_local.py": "54afd8c331e6b1fc72bb92d0a57045bc239f08734eff442c64a257dee2ffd1db",
+      "uv.lock": "77acd16e10ab7ff4f440f11834bf74bd5f989f4e194297e3d7bb03a2182df67d"
+    }
+  },
+  "wheel_source_check": {
+    "status": "PASS",
+    "changed_package_files_checked": 14,
+    "lock_matches": true
+  },
+  "source_sha256": {
+    ".gitignore": "b0fd8c730524140ef6400bd76559cce59fa228a6d9a7fa6b6dea7181d88c093c",
+    "Makefile": "86392d800271fed5aaefff5e8e78925656a0af561049bf840bbd27c3988f916a",
+    "PROJECT_INDEX.md": "74e3ec660ed31a41ce523bdcfe40e491d98e1fea0823eacb1ddfdf5be099adf2",
+    "agent/src/exmekh_agent/exmekh_bridge/agents/cancellation.py": "c529966793ea4421a80fa2a2e55591d34e7dd329d8c0752fc2195531332c9e26",
+    "agent/src/exmekh_agent/exmekh_bridge/agents/collector.py": "7ed6ceeb2191d0b1212e365d566894fe9af6659dcd61c25c9af8d9ecc39c5ffa",
+    "agent/src/exmekh_agent/exmekh_bridge/history/converter.py": "0dd31b35d07d20f5f149fc2c7c9f27f35a45f0ad81c27ace7c60a05a72cc9070",
+    "agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py": "102a587ace19708581d6fd4c42b517377a816d1103091db10cdb334afc9babcd",
+    "agent/src/exmekh_agent/exmekh_bridge/providers/provider_health.py": "1513a266f77bb63bcb85534451a3a1605b2ba62288bda3ed9041c74f76d2bda1",
+    "agent/src/exmekh_agent/ui/chat/chat_view.py": "24ed8cb3034418a71b98bb1a90257c309d2d85f4dc93c8e3dbd5d8790e4283b0",
+    "agent/tests/run_native_media_preview_agent.py": "64e71c3f925c333a6565ae6cdd12b6c765cdac1d12f72a1af8b9d9f830ab2c55",
+    "agent/tests/test_clean_review_contracts.py": "9de2b09134bcc2c839c716706389fa337338e175de6b919c9854cc38a9ae2866",
+    "agent/tests/test_native_media_preview.py": "4af7f6d39798e0253347623b7858e538518d6452ccccea4c042a049c39032028",
+    "agent/tests/test_native_media_preview_e2e.py": "34babdccd63c365ac7a8052fca654e13e87bd8496c2ddfc9d2cc13d01ee9a24a",
+    "agent/uv.lock": "6711c3ac2a822b3330c10cfdcb4a5fa8d9fa6e15bde3cd34a7997c76c57e3b53",
+    "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl": "bd33c25f919d7615184f4896e55a9840784a82fbb10919d0d1f157b3d376bbdf",
+    "config/native-suite.example.json": "a5d5c3e8547675b5a91263c18c5bf68b706a4db87c207ca7750d1d0d17784e92",
+    "docs/architecture/_INDEX.md": "9f8aca5be9b7eb42441ae8aa0e4e7db8115ece8aceca13199b771f68826349de",
+    "docs/architecture/native-suite-client.md": "ab02b8f61de6896ae0a37bfeee8296142fe88cb097808ebc69da7f70c603c0c2",
+    "docs/architecture/native-suite-t17-t18-clean-code-review-20261022.md": "79539bba75d1c1a4d74785fc41584f3c5103527ffb4b0db38bf47b45560e06b8",
+    "docs/architecture/native-suite-v1-contract.md": "6f68dda6bfa5a13fa7fee3a3bd34748025f7109f21642625fe7f5cdfbce82455",
+    "docs/catalog.json": "7a2864c6b937974032e60b09c45b6a30938930e293e3d86d9ac08191a3023a3b",
+    "docs/roadmaps/_INDEX.md": "240f84ab4e7ff9287890ae142cf6c9c40a26281e5b1386bcc906face44298c35",
+    "docs/roadmaps/native-multimodal-suite-implementation-20261020.md": "5d7c5ec6095684b2f3954ced81d37d11cc059d53413701442a7f4fa4810536ab",
+    "ds4_embedding_gemma2.c": "7b81499abef2b490d02be8fdb1250cae7ee00693dd1ae56358fd85e88470fac6",
+    "ds4_embedding_gemma2.h": "eaaa2f58089d6ec5bd5d701e0941ed3c9e61205585dffb2a195f0a434258b4cd",
+    "ds4_gemma_multimodal.h": "229b1a0283b4640d27bc63fbec9b82a25f9587256cc78d5accfa80e5efdb6624",
+    "ds4_gemma_tokenizer.c": "aa14406a910ab9b577a31af32ef74481a881be4faa2cc37e0827342b06e642d0",
+    "ds4_gemma_visual.c": "687a1757f9c8d6527b0d52ee18637885a111966a4782c831bed67a33d7701c21",
+    "ds4_numeric.c": "3b9f73042f55780f92f3c3872fe548a7e317edd897545d0e5d712328b6244c18",
+    "ds4_numeric.h": "f576bf79ffda1c7185dbdf0c105650e48d120ee5b41471458f9e62b9e9a970a0",
+    "ds4_numeric_internal.h": "b508037887ca03b3714244396177091bab6629bb9fa99fbc95c8cd32a147c83f",
+    "ds4_qwen_image_pipeline.c": "358bf4d56a2c9b6264c386afe0be7a19c607e2e976a13fac5973c312d494a2a0",
+    "ds4_qwen_image_pipeline.h": "7d6e373b67cdef0ff7848b6a17cefda47bff33e51edd9abc6d7f3cadb6b41399",
+    "ds4_qwen_image_rgba.c": "5e99bfab12cc8a16ec225e2e9cd03a475cddc44cd2198cacecea2cf425e821c3",
+    "ds4_qwen_image_rgba.h": "1dbe9df7e66ed178c4cb5baca533dcd9695f68cdc9fccc65388e7759d43f2c40",
+    "ds4_resources.c": "3e0ac969c20494173ad1548b0bf6bc6705c5c3b39a667ac3db5317c5b9228913",
+    "ds4_runtime.c": "3e934d3671bac18da2728406f884a0629d4b865aeae88c84c362952d06d28c3c",
+    "ds4_runtime.h": "1fb7bcd1de5c8c01f41b9c2a90e5421c6205cc396f2299498d0440cb558980c8",
+    "ds4_server.c": "8c3620768ff5d7f03ddf339ae2c2dcce941a1e8141aef8478853bad8bc9e80a8",
+    "ds4_server_suite.inc": "87a606561e75cadef77ac484914bdad3ec15c07ab91071deb349cd1c919fd1f9",
+    "ds4_server_suite_http.inc": "1ba8fa2ac1a20cf4b5340a53de263c7a1572f842cb72ee08204269f33225fba5",
+    "ds4_server_suite_operations.inc": "66ccf78549f73de24288e358811d661471ab3dbf3d7399c88bb5514896b41c89",
+    "ds4_server_suite_types.h": "0c07a49af51e78ea00b50a455b66b00e665f0ff691c35564eeccbcb34def1408",
+    "ds4_suite_text.h": "c4010056a6d1410df9e3af83b0eb69b8d8287b37af6ab3256a56d1020d06678c",
+    "schemas/ds4-suite-catalog-v1.schema.json": "d80124f5de9dfc0943e04faeb9bc539a843cf7803b9eb8a044aa1d5a1fdbf949",
+    "tests/test_gemma_media.py": "7378d1b7fd34cba1a56c6e8bc6b7c7d2b2d8437109b33eeed1d800866182b01a",
+    "tests/test_resources.c": "544d336b6ae022b1ad908836fb3ecdb6067578732fb1a0a6ea9518bd09365b98",
+    "tests/test_runtime.c": "f28eef95bfcd109729a140ba03fb9538acc5c2af83f4a2389dc43b88f14c9529",
+    "tests/test_suite_exmekh_live.py": "d2219a01aa42d5fef16e5b77aff0a91f25d54e91eee193e741151a7951be433e",
+    "tests/test_suite_http.c": "631eff70532216cf30d45a7aa1c987d81d8285928d723aaf4d1002e36a7064e8",
+    "tests/test_suite_http_live.py": "707bfc2537c0b16c3d3f02799430de8c9a2b9c588e4a5c7c0c283f774aa299a0",
+    "tools/record_suite_service_qualification.py": "d8314e1d9261c38904b11aaba0abdadb303e940878342cf4d90d5bc090a0bb9c"
+  },
+  "artifact_sha256": {
+    "ds4-server-suite": "22d0684d70b8135a3e268416a6244681c266bd77d584d6dc21f5c6a89906bd5b",
+    "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl": "bd33c25f919d7615184f4896e55a9840784a82fbb10919d0d1f157b3d376bbdf",
+    "config/native-suite.example.json": "a5d5c3e8547675b5a91263c18c5bf68b706a4db87c207ca7750d1d0d17784e92",
+    "performance-results/native-suite-t05-t06-20261020/bundles/qwen-image-2.1-turbo-bf16/bundle.ds4b": "8fdbe2b02a80483ebd90db73a96517762cf75b8dd709b77be3c8253066117969",
+    "performance-results/native-suite-t07-t08-20261020/tokenizer.ds4q": "670ded5ceddd425cebde28e918cffcc71205a3cc311cc781ae2b20d114acb4d8",
+    "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b": "99429e21c2c26885bde829e215025a93867e71477479f73fbdd2a6994cc47207",
+    "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g": "be58e6ada847ee632fbdb03a834624728db7f6b4bed19285a7ba1c188d4490f3",
+    "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p": "0d270a50c66ca44271d489f7560668735f75159d547fa997b694fc3008cc4c29"
+  },
+  "logs": {
+    "build_protocol": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/build_protocol.log",
+      "sha256": "d72b99711c206cdd80aaed43681de7fa0ca9539f3c26f435abf4ffb523bf2897",
+      "bytes": 3369,
+      "tail": [
+        "cc -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math -DDS4_NATIVE_SUITE -c -o ds4_server_suite.o ds4_server.c",
+        "cc -o ds4-server-suite ds4_server_suite.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_cuda.o ds4_layer_pack.o ds4_engram.o cuda/mmq/ds4_ggml_stubs.o cuda/mmq/ds4_mmq.o cuda/mmq/ds4_mmq_d2r.o cuda/mmq/quantize.o cuda/mmq/mmid.o cuda/mmq/mmvq.o cuda/mmq/ds4_repack.o ds4_qwen4_cpu.o ds4_resources.o ds4_gemma_audio.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_numeric_cuda.o ds4_numeric_cudnn.o -lm -pthread -Lagent/.venv/lib/python3.13/site-packages/nvidia/cu13/lib -l:libcudart.so.13 -l:libcublas.so.13 -l:libcublasLt.so.13 -Wl,-rpath,/home/daniele/ds4/agent/.venv/lib/python3.13/site-packages/nvidia/cu13/lib -Lagent/.venv/lib/python3.13/site-packages/nvidia/cudnn/lib -Lagent/.venv/lib/python3.13/site-packages/nvidia/cudnn/lib64 -l:libcudnn.so.9 -Wl,-rpath,/home/daniele/ds4/agent/.venv/lib/python3.13/site-packages/nvidia/cudnn/lib -Lperformance-results/native-suite-t13-t14-20261021/dependencies/installed/lib -Lperformance-results/native-suite-t13-t14-20261021/dependencies/installed/usr/lib/x86_64-linux-gnu -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,/home/daniele/ds4/performance-results/native-suite-t13-t14-20261021/dependencies/installed/lib -Wl,-rpath,/home/daniele/ds4/performance-results/native-suite-t13-t14-20261021/dependencies/installed/usr/lib/x86_64-linux-gnu -L/usr/local/cuda/lib64 -lcudart -lstdc++",
+        "cc -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math -Wno-unused-function -I. -o tests/test_suite_http tests/test_suite_http.c ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o ds4_gemma_audio.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o -lm -pthread -Lperformance-results/native-suite-t13-t14-20261021/dependencies/installed/lib -Lperformance-results/native-suite-t13-t14-20261021/dependencies/installed/usr/lib/x86_64-linux-gnu -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,/home/daniele/ds4/performance-results/native-suite-t13-t14-20261021/dependencies/installed/lib -Wl,-rpath,/home/daniele/ds4/performance-results/native-suite-t13-t14-20261021/dependencies/installed/usr/lib/x86_64-linux-gnu",
+        "./tests/test_suite_http",
+        "suite HTTP: PASS integers, canonical receipts, multipart, limits, lifetime and deadlines"
+      ]
+    },
+    "protocol": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/protocol.log",
+      "sha256": "2274125089bd89fd3ae07168716afd04b3490af764cd6c2b5a2216dee9d0b985",
+      "bytes": 113,
+      "tail": [
+        "./tests/test_suite_http",
+        "suite HTTP: PASS integers, canonical receipts, multipart, limits, lifetime and deadlines"
+      ]
+    },
+    "host": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/host.log",
+      "sha256": "27c0fd2e7939f2a58cd9a28f975e00deb2a10dd1ad0c44e1aa2d4a6413da34da",
+      "bytes": 453,
+      "tail": [
+        "./tests/test_executor",
+        "executor: PASS admission, repeated visits, cancellation, faults, recovery and reservation reuse",
+        "./tests/test_numeric_lifetime",
+        "numeric failed-fence ownership: PASS",
+        "make: 'tests/test_runtime' is up to date.",
+        "make: 'ds4_server_test' is up to date.",
+        "make: 'tests/libds4_suite_cpu.so' is up to date.",
+        "runtime: PASS"
+      ]
+    },
+    "legacy_server": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/legacy_server.log",
+      "sha256": "462d58c86a7cf647e03dcf6b72a94c3c04950ae807d6fac55abdb90a5af28163",
+      "bytes": 574,
+      "tail": [
+        "1022 14:42:55 ds4-server: removed orphan agentic checkpoints files=1 bytes=5",
+        "ds4-server: thinking not closed, ignoring incomplete Qwen tool calls in reasoning",
+        "1022 14:42:56 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen",
+        "1022 14:42:56 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen",
+        "1022 14:42:56 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4",
+        "1022 14:42:56 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4",
+        "ds4-server tests: ok"
+      ]
+    },
+    "cpu_regression": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/cpu_regression.log",
+      "sha256": "1591d1f82a6d81e300cfe7cbbb9f86c7109704cdb214e3723974875324fcb7af",
+      "bytes": 6738,
+      "tail": [
+        "test_typed_multimodal_order_identity_segments_and_admission (tests.test_gemma_media.Processor.test_typed_multimodal_order_identity_segments_and_admission) ... ok",
+        "test_video_audio_plan_checks_complete_context (tests.test_gemma_media.Processor.test_video_audio_plan_checks_complete_context) ... ok",
+        "test_visual_placeholder_admission_and_ownership (tests.test_gemma_media.Processor.test_visual_placeholder_admission_and_ownership) ... ok",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 44 tests in 33.224s",
+        "",
+        "OK"
+      ],
+      "tests": 44,
+      "seconds": 33.224,
+      "status": "PASS"
+    },
+    "openai_live": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/openai_live.log",
+      "sha256": "5970d43ac838dc2d59027909885246bf5476ccad092b1f9e8e6272f1443f5dbe",
+      "bytes": 868,
+      "tail": [
+        "test_04_generation_retry_edit_and_chat_resume (tests.test_suite_http_live.SuiteHttpLive.test_04_generation_retry_edit_and_chat_resume) ... ok",
+        "test_05_multiple_outputs_and_image_only (tests.test_suite_http_live.SuiteHttpLive.test_05_multiple_outputs_and_image_only) ... ok",
+        "test_06_disconnect_drains_and_recovers (tests.test_suite_http_live.SuiteHttpLive.test_06_disconnect_drains_and_recovers) ... ok",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 6 tests in 114.172s",
+        "",
+        "OK"
+      ],
+      "tests": 6,
+      "seconds": 114.172,
+      "status": "PASS"
+    },
+    "exmekh_live": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/exmekh_live.log",
+      "sha256": "75767d2b94683ea891ce7af7705c7e87326b7d3ffdf7213a7165c9fd8e30d4c8",
+      "bytes": 250,
+      "tail": [
+        "test_registered_image_tool_retains_conversation (tests.test_suite_exmekh_live.ExmekhNativeLive.test_registered_image_tool_retains_conversation) ... ok",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 1 test in 188.726s",
+        "",
+        "OK"
+      ],
+      "tests": 1,
+      "seconds": 188.726,
+      "status": "PASS"
+    },
+    "library_offline": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/library_offline.log",
+      "sha256": "26e882bd04ba6bb7d056795083a79184bcf31fe48bdf2ba380afe33140692261",
+      "bytes": 20090,
+      "tail": [
+        "tests/utils/test_file.py ..............                                  [ 97%]",
+        "tests/utils/test_image.py .......                                        [ 97%]",
+        "tests/utils/test_time.py .....................................           [ 98%]",
+        "tests/utils/test_tool_errors.py ...................                      [ 98%]",
+        "tests/utils/test_tool_result_support.py .............................    [ 99%]",
+        "tests/utils/test_xml.py ........                                         [100%]",
+        "",
+        "===================== 3622 passed, 76 deselected in 24.69s ====================="
+      ],
+      "tests": 3622,
+      "skipped": 0,
+      "deselected": 76,
+      "seconds": 24.69,
+      "status": "PASS"
+    },
+    "frontend": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/frontend.log",
+      "sha256": "3c899f98b0aaaad167fe7fcb2a10bc1328a11d7e64438cfb2432b0aed8cb7634",
+      "bytes": 1125,
+      "tail": [
+        "tests/test_image_input.py ......................                         [ 24%]",
+        "tests/test_images_e2e.py .                                               [ 25%]",
+        "tests/test_provider_context.py ..........................                [ 52%]",
+        "tests/test_clean_review_contracts.py ........................            [ 77%]",
+        "tests/test_turn_cancellation.py ..........s                              [ 88%]",
+        "tests/test_settings_lifecycle.py ...........                             [100%]",
+        "",
+        "======================== 96 passed, 1 skipped in 16.47s ========================"
+      ],
+      "tests": 96,
+      "skipped": 1,
+      "deselected": 0,
+      "seconds": 16.47,
+      "status": "PASS"
+    },
+    "history": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/history.log",
+      "sha256": "bbd517ab666c477318a8a61b5c82ca62e1a26b8606588e5118bb4f1776ef0acc",
+      "bytes": 1046,
+      "tail": [
+        "tests/test_execution_restore.py ...................                      [ 24%]",
+        "tests/test_chat_history_preservation.py ...............                  [ 37%]",
+        "tests/test_recorded_history_contracts.py .........................       [ 59%]",
+        "tests/test_raw_history.py ................                               [ 74%]",
+        "tests/test_steering.py .........................                         [ 96%]",
+        "tests/test_steering_recovery.py ....                                     [100%]",
+        "",
+        "============================= 112 passed in 4.40s =============================="
+      ],
+      "tests": 112,
+      "skipped": 0,
+      "deselected": 0,
+      "seconds": 4.4,
+      "status": "PASS"
+    },
+    "types": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/types.log",
+      "sha256": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332",
+      "bytes": 37,
+      "tail": [
+        "0 errors, 0 warnings, 0 informations"
+      ]
+    },
+    "lint": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/lint.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "bytes": 19,
+      "tail": [
+        "All checks passed!"
+      ]
+    },
+    "frontend_lint": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/frontend_lint.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "bytes": 19,
+      "tail": [
+        "All checks passed!"
+      ]
+    },
+    "docs": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/docs.log",
+      "sha256": "1741909ab251df7b0a58be504eafa16cbbdd019a15e1ce1c3f6c49828fc4e2a1",
+      "bytes": 1808,
+      "tail": [
+        "test_catalog_ranges_point_to_declared_headings (tests.test_docs_wiki.DocsWikiTests.test_catalog_ranges_point_to_declared_headings) ... ok",
+        "test_no_markdown_is_orphaned_or_flat_at_docs_root (tests.test_docs_wiki.DocsWikiTests.test_no_markdown_is_orphaned_or_flat_at_docs_root) ... ok",
+        "test_root_and_index_of_indexes_reach_every_group (tests.test_docs_wiki.DocsWikiTests.test_root_and_index_of_indexes_reach_every_group) ... ok",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 10 tests in 0.062s",
+        "",
+        "OK"
+      ],
+      "tests": 10,
+      "seconds": 0.062,
+      "status": "PASS"
+    },
+    "product_text": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/product_text.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "tail": []
+    },
+    "wheel": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/wheel.log",
+      "sha256": "e8fdf566b1d2bff824e6844825e5da84a5749db53b04159e9aeece892c8dd6e5",
+      "bytes": 241,
+      "tail": [
+        "Building wheel...",
+        "warning: `build_system.requires = [\"uv-build>=0.11.7,<0.12.0\"]` does not contain the current uv version 0.12.3",
+        "Successfully built ../performance-results/native-suite-t17-t18-20261022/wheel/exmekh_lib-0.1.0-py3-none-any.whl"
+      ]
+    },
+    "wheel_install": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/wheel_install.log",
+      "sha256": "85ee1547db5c3636fd9c4b145740618891b7ef4cd7967ac982f45b2d525a1908",
+      "bytes": 248,
+      "tail": [
+        "Resolved 167 packages in 83ms",
+        "Resolved 167 packages in 0.67ms",
+        "Prepared 1 package in 0.38ms",
+        "Uninstalled 1 package in 27ms",
+        "Installed 1 package in 8ms",
+        " ~ exmekh-lib==0.1.0 (from file:///home/daniele/ds4/agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl)"
+      ]
+    },
+    "native_server": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/native_server.log",
+      "sha256": "abe0673d749692f0d3764ab07c568cc90a2b6a24e46586e48f7be4cfac7b5e87",
+      "bytes": 6990,
+      "tail": [
+        "ds4: CUDA model copy complete in 4.985s (pipelined, 14.30 GiB tensors)",
+        "ds4: CUDA preparing model tensor mappings",
+        "ds4: CUDA startup model preparation covered 14.29 GiB of tensor spans in 0.000s",
+        "ds4: CUDA pipelined-copying 14.30 GiB model image (4 x 64 MiB pinned staging)",
+        "ds4: CUDA model copy complete in 4.959s (pipelined, 14.30 GiB tensors)",
+        "ds4: CUDA preparing model tensor mappings",
+        "ds4: CUDA startup model preparation covered 14.29 GiB of tensor spans in 0.000s",
+        "1022 15:00:11 suite status=7 path=/v1/images/generations"
+      ]
+    },
+    "extended_before_fix": {
+      "path": "performance-results/native-suite-t17-t18-20261022/logs/extended_before_fix.log",
+      "sha256": "d3aefd61591b9977aa1a7d8d695cb9618d1d7da026066ef4d0fcb7a2fd7c8024",
+      "bytes": 4263,
+      "tail": [
+        "  File \"/home/daniele/ds4/agent/.venv/lib/python3.13/site-packages/openai/_base_client.py\", line 1213, in request",
+        "    raise self._make_status_error_from_response(err.response) from None",
+        "openai.InternalServerError: Error code: 500 - {'error': {'message': 'Native inference failed.', 'type': 'invalid_request_error', 'code': 'inference_failed', 'param': None}, 'ds4': {'version': 1, 'request_id': 'req-c0de6ae535becf683e7175961b060b1b', 'recovery_required': False}}",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 6 tests in 89.547s",
+        "",
+        "FAILED (errors=2)"
+      ],
+      "tests": 6,
+      "seconds": 89.547,
+      "status": "FAIL"
+    }
+  },
+  "committed_response_samples": [
+    {
+      "response_bytes": 2344,
+      "response_sha256": "e44bb062c969c4b174691d0ba2a509f86b703ec039c01e4ee331f02892577ad6",
+      "model": "google/embeddinggemma-2",
+      "metadata": {
+        "version": 1,
+        "request_id": "req-347f3708fc8710dc11d151198e96facc",
+        "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+        "profile": "bf16-native-v1",
+        "plan": {
+          "variant": 0,
+          "victims": 0
+        },
+        "reclaimed_device_bytes": 0,
+        "cache_hits": 0,
+        "total_seconds": 0.008852439,
+        "usage": {
+          "processed_tokens": 3,
+          "image_soft_tokens": 0,
+          "video_soft_tokens": 0,
+          "audio_soft_tokens": 0
+        },
+        "transfers": {
+          "native_h2d_bytes": 46656,
+          "native_d2h_bytes": 4608
+        },
+        "load_seconds": null,
+        "phase_seconds": null
+      },
+      "items": [
+        {
+          "index": 0,
+          "dimensions": 128,
+          "l2_norm": 1.0000000130443019,
+          "float32_sha256": "0eea2feed7e5f8c02463f970518a8c656ebcd69706c12ae3bc877bb48f37b309"
+        }
+      ]
+    },
+    {
+      "response_bytes": 350803,
+      "response_sha256": "7c08ea7b34e65bdcc12e81cbfd1a241e516bf5e4df4ca9ab686bed3eb7d0d46a",
+      "model": null,
+      "metadata": {
+        "version": 1,
+        "request_id": "req-f50c8eff2bf8959078cf15b528224341",
+        "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "profile": "bf16-native-v1",
+        "plan": {
+          "variant": 1,
+          "victims": 2
+        },
+        "reclaimed_device_bytes": 15358213024,
+        "cache_hits": 0,
+        "total_seconds": 17.898072385,
+        "usage": {
+          "processed_tokens": 0,
+          "image_soft_tokens": 0,
+          "video_soft_tokens": 0,
+          "audio_soft_tokens": 0
+        },
+        "transfers": {
+          "native_h2d_bytes": 28815435640,
+          "native_d2h_bytes": 638976
+        },
+        "load_seconds": [
+          4.601779212,
+          4.794313922,
+          0.239376154
+        ],
+        "phase_seconds": [
+          0.0,
+          0.061138946,
+          2.549333665,
+          0.25393506
+        ]
+      },
+      "items": [
+        {
+          "png_bytes": 262488,
+          "png_sha256": "804532e7581db440b2c8f9e9e2e477e277bafed4505ad3f3b8243ee46a05df53",
+          "metadata": {
+            "file_id": "file-77ca965150cb9ed0a13dc0229507be26",
+            "seed": 18446744073709551614,
+            "width": 256,
+            "height": 256,
+            "recipe": {
+              "version": 1,
+              "rng_version": 1,
+              "steps": 8,
+              "guidance": 1,
+              "reference_resolution": 0,
+              "background": "auto"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Service transport acceptance does not close T11 image quality or T19-T22 release gates.",
+    "No Metal/ROCm/TP/distributed/SSD suite qualification; legacy compile-time path remains separate.",
+    "No hardware device-loss or HTTP restore-failure injection in this task; executor host recovery faults are tested.",
+    "PNG only. References preserve supplied aligned geometry; implicit resizing is rejected.",
+    "Receipt durability is process-local for 600 seconds. No cross-restart replay guarantee.",
+    "Transfer counters cover native host/device copy calls, excluding kernels and legacy model restoration.",
+    "Gemma separate load/phase timings remain null. Wall times are descriptive, no speedup claim."
+  ]
+}

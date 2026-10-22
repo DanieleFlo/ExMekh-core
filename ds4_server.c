@@ -47,6 +47,9 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef DS4_NATIVE_SUITE
+#include "ds4_server_suite_types.h"
+#endif
 
 static volatile sig_atomic_t g_stop_requested = 0;
 static volatile sig_atomic_t g_listen_fd = -1;
@@ -574,7 +577,13 @@ static schema_json_value *schema_json_parse_value(const char **p, int depth,
         return v;
     }
     v->kind = SCHEMA_JSON_NUMBER;
+#ifdef DS4_NATIVE_SUITE
+    const char *number_start = *p;
+#endif
     if (!schema_json_number_strict(p, &v->number)) goto fail;
+#ifdef DS4_NATIVE_SUITE
+    v->string = xstrndup(number_start, (size_t)(*p - number_start));
+#endif
     return v;
 fail:
     schema_json_free(v);
@@ -9239,6 +9248,14 @@ static bool http_response(int fd, bool enable_cors, int code, const char *type, 
         buf_puts(&h, "\r\n");
     }
     if (enable_cors) append_cors_headers(&h);
+#ifdef DS4_NATIVE_SUITE
+    uint8_t request_id[16];
+    if (random_bytes(request_id, sizeof(request_id))) {
+        buf_puts(&h, "x-request-id: req-");
+        for (size_t i = 0; i < sizeof(request_id); i++) buf_printf(&h, "%02x", request_id[i]);
+        buf_puts(&h, "\r\n");
+    }
+#endif
     buf_puts(&h, "Connection: close\r\n\r\n");
     bool ok = send_all(fd, h.ptr, h.len);
     if (ok && body_len) ok = send_all(fd, body, body_len);
@@ -14914,6 +14931,9 @@ typedef struct {
 } constraint_token_partition;
 
 struct server {
+#ifdef DS4_NATIVE_SUITE
+    suite_state *suite;
+#endif
     interactive_entry *interactive_entries; /* Protected by tool_mu. */
     ds4_engine *engine;
     ds4_tp *tp_leader;
@@ -15590,6 +15610,9 @@ static bool server_encode_image(server *s, const server_image_input *input,
  * completion after it has written the response, so request data and the socket
  * remain valid without heap-allocating per-request job objects. */
 struct job {
+#ifdef DS4_NATIVE_SUITE
+    suite_http *suite_request;
+#endif
     int fd;
     request req;
     resident_kv_frontier response_frontier;
@@ -23021,11 +23044,20 @@ static job *dequeue(server *s) {
     return j;
 }
 
+#ifdef DS4_NATIVE_SUITE
+#include "ds4_server_suite.inc"
+#endif
+
 static void *worker_main(void *arg) {
     server *s = arg;
     for (;;) {
         job *j = dequeue(s);
         if (!j) break;
+#ifdef DS4_NATIVE_SUITE
+        if (j->suite_request) suite_worker(s, j);
+        else if (suite_recover(s)) suite_unavailable(s, j);
+        else
+#endif
         generate_job(s, &s->slots[0], j);
         job_complete(j);
         /* Mirror slot_worker_main: the checkpoint may have changed in any way
@@ -23076,9 +23108,21 @@ typedef struct {
     char path[256];
     char *body;
     size_t body_len;
+#ifdef DS4_NATIVE_SUITE
+    char content_type[256], idempotency_key[129];
+    FILE *spool;
+#endif
 } http_request;
 
 static void http_request_free(http_request *r) {
+#ifdef DS4_NATIVE_SUITE
+    if (r->spool) {
+        if (r->body) munmap(r->body, r->body_len + 1);
+        fclose(r->spool);
+        memset(r, 0, sizeof(*r));
+        return;
+    }
+#endif
     free(r->body);
     memset(r, 0, sizeof(*r));
 }
@@ -23138,6 +23182,36 @@ static bool read_http_request(int fd, http_request *r) {
     if (q) *q = '\0';
 
     long clen = content_length(b.ptr, (size_t)hend);
+#ifdef DS4_NATIVE_SUITE
+    if (!suite_read_headers(b.ptr, (size_t)hend, r->content_type,
+                            sizeof(r->content_type), r->idempotency_key,
+                            sizeof(r->idempotency_key))) goto fail;
+    bool multipart = !strncmp(r->content_type, "multipart/form-data;", 20);
+    if (multipart) {
+        if (clen <= 0 || (uint64_t)clen > SUITE_UPLOAD_MAX + 65536) goto fail;
+        r->spool = tmpfile();
+        if (!r->spool) goto fail;
+        size_t received = b.len - (size_t)hend;
+        if (received > (size_t)clen) received = clen;
+        if (fwrite(b.ptr + hend, 1, received, r->spool) != received) goto fail;
+        while (received < (size_t)clen) {
+            char tmp[65536];
+            size_t want = (size_t)clen - received;
+            if (want > sizeof(tmp)) want = sizeof(tmp);
+            ssize_t n = recv(fd, tmp, want, 0);
+            if (n < 0 && errno == EINTR) continue;
+            if (n <= 0 || fwrite(tmp, 1, n, r->spool) != (size_t)n) goto fail;
+            received += n;
+        }
+        if (fputc(0, r->spool) == EOF || fflush(r->spool)) goto fail;
+        r->body_len = clen;
+        r->body = mmap(NULL, r->body_len + 1, PROT_READ, MAP_PRIVATE,
+                       fileno(r->spool), 0);
+        if (r->body == MAP_FAILED) { r->body = NULL; goto fail; }
+        buf_free(&b);
+        return true;
+    }
+#endif
     if (clen < 0 || (size_t)clen > max_body) goto fail;
     while (b.len < (size_t)hend + (size_t)clen) {
         char tmp[8192];
@@ -23155,6 +23229,7 @@ static bool read_http_request(int fd, http_request *r) {
     return true;
 fail:
     buf_free(&b);
+    http_request_free(r);
     return false;
 }
 
@@ -23260,6 +23335,11 @@ static bool send_models(server *s, int fd) {
         buf_putc(&b, ',');
         append_model_json(&b, s, "deepseek-v4-pro");
     }
+#ifdef DS4_NATIVE_SUITE
+    pthread_mutex_lock(&s->inference_mu);
+    suite_append_models(s, &b);
+    pthread_mutex_unlock(&s->inference_mu);
+#endif
     buf_puts(&b, "]}\n");
     bool ok = http_response(fd, s->enable_cors, 200, "application/json", b.ptr);
     buf_free(&b);
@@ -23350,6 +23430,9 @@ static void server_cancel_job(server *s, job *j) {
     pthread_mutex_unlock(&s->model_mu);
 
     if (detached) {
+#ifdef DS4_NATIVE_SUITE
+        if (!j->suite_request)
+#endif
         interactive_finish_request(s, &j->req, true);
         job_complete(j);
     }
@@ -23372,6 +23455,9 @@ static void wait_for_job_or_disconnect(server *s, job *j) {
     pthread_mutex_unlock(&j->mu);
 }
 
+#ifdef DS4_NATIVE_SUITE
+#include "ds4_server_suite_http.inc"
+#endif
 static void *client_main(void *arg) {
     client_arg *ca = arg;
     server *s = ca->srv;
@@ -23389,6 +23475,12 @@ static void *client_main(void *arg) {
         http_request_free(&hr);
         goto done;
     }
+#ifdef DS4_NATIVE_SUITE
+    if (suite_route(s, fd, &hr)) {
+        http_request_free(&hr);
+        goto done;
+    }
+#endif
 
     if (!strcmp(hr.method, "GET") && !strcmp(hr.path, "/v1/models")) {
         send_models(s, fd);
@@ -23546,6 +23638,9 @@ static void set_client_socket_nonblocking(int fd) {
 
 typedef struct {
     ds4_engine_options engine;
+#ifdef DS4_NATIVE_SUITE
+    const char *suite_config;
+#endif
     const char *gpu_vram_arg;
     const char *gpu_devices_arg;
     const char *host;
@@ -23634,6 +23729,14 @@ static void log_context_memory(ds4_backend backend, int ctx_size,
     }
 }
 static void server_close_resources(server *s) {
+#ifdef DS4_NATIVE_SUITE
+    if (s->suite && !suite_close(s)) {
+        /* Failed restore owns live callback contexts. Preserve the checkpoint
+         * files and stop without pretending these sessions are ready. */
+        fprintf(stderr, "%s\n", DS4_SUITE_RESTORE);
+        exit(1);
+    }
+#endif
     interactive_close(s);
     if (s->trace) {
         fclose(s->trace);
@@ -23789,6 +23892,10 @@ static server_config parse_options(int argc, char **argv) {
 
         if (!strcmp(arg, "-m") || !strcmp(arg, "--model")) {
             c.engine.model_path = need_arg(&i, argc, argv, arg);
+#ifdef DS4_NATIVE_SUITE
+        } else if (!strcmp(arg, "--suite-config")) {
+            c.suite_config = need_arg(&i, argc, argv, arg);
+#endif
         } else if (!strcmp(arg, "--vision")) {
             c.engine.vision_path = need_arg(&i, argc, argv, arg);
         } else if (!strcmp(arg, "--no-mtp")) {
@@ -24181,6 +24288,20 @@ int main(int argc, char **argv) {
     pthread_mutex_init(&s.model_mu, NULL);
     pthread_cond_init(&s.model_cv, NULL);
     pthread_mutex_init(&s.trace_mu, NULL);
+#ifdef DS4_NATIVE_SUITE
+    if (cfg.suite_config && (cfg.engine.backend != DS4_BACKEND_CUDA ||
+        cfg.batched_sessions || cfg.engine.ssd_streaming || tp_leader ||
+        cfg.engine.distributed.role != DS4_DISTRIBUTED_NONE)) {
+        fprintf(stderr, "%s\n", DS4_SUITE_CONFIG);
+        server_close_resources(&s);
+        return 2;
+    }
+    if (suite_open(&s, cfg.suite_config)) {
+        fprintf(stderr, "%s\n", DS4_SUITE_CONFIG);
+        server_close_resources(&s);
+        return 2;
+    }
+#endif
 
     for (int i = 0; i < slot_count; i++) {
         server_slot *slot = &s.slots[i];
@@ -24333,6 +24454,13 @@ int main(int argc, char **argv) {
         ca->srv = &s;
         ca->fd = fd;
         pthread_mutex_lock(&s.mu);
+#ifdef DS4_NATIVE_SUITE
+        if (s.suite && s.clients >= 8) {
+            pthread_mutex_unlock(&s.mu);
+            http_error(fd, s.enable_cors, 503, DS4_SUITE_RESOURCES);
+            close(fd); free(ca); continue;
+        }
+#endif
         s.clients++;
         pthread_mutex_unlock(&s.mu);
         pthread_t th;

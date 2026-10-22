@@ -59,6 +59,12 @@ void ds4_qwen_image_rgba_free(ds4_qwen_image_rgba *image) {
     free(image);
   }
 }
+ds4_status ds4_qwen_image_rgba_opaque(ds4_qwen_image_rgba *image) {
+  if (!image) return DS4_STATUS_INVALID;
+  for (uint64_t i = 0; i < (uint64_t)image->width * image->height; i++)
+    image->pixels[4 * i + 3] = 1;
+  return DS4_STATUS_OK;
+}
 ds4_status ds4_qwen_image_rgba_save_png(const ds4_qwen_image_rgba *image,
                                         const char *path) {
   if (!image || !path)

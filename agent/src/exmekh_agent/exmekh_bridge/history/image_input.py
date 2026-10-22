@@ -10,6 +10,10 @@ from threading import Lock
 from typing import Any
 
 import pypdfium2 as pdfium
+from exmekh_lib.core.cache.user_message_codec import (
+    deserialize_user_message,
+    user_message_image_urls,
+)
 from exmekh_lib.core.models.user_message import (
     ImagesUserMessage,
     UserMessage,
@@ -149,6 +153,30 @@ def deserialize_user_content(content: Any) -> UserMessageContent:
                 )
             )
     return parts
+
+
+def deserialize_tool_attachments(content: Any) -> UserMessage | None:
+    """Accept lossless library snapshots and previously saved UI payloads."""
+    if not content:
+        return None
+    if isinstance(content, dict):
+        return deserialize_user_message(content)
+    return UserMessage(deserialize_user_content(content))
+
+
+def tool_attachment_image_urls(content: Any) -> list[str]:
+    """Read preview URLs without decoding pixels on each streaming update."""
+    if isinstance(content, dict):
+        return user_message_image_urls(content)
+    if not isinstance(content, list):
+        return []
+    urls = []
+    for part in content:
+        if not isinstance(part, dict):
+            continue
+        if part.get("type") == "image_url":
+            urls.append(part["image_url"]["url"])
+    return urls
 
 
 def content_text(content: Any) -> str:

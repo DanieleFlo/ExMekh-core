@@ -186,7 +186,24 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/architecture/native-suite-runtime-lifecycle.md` — inventario dello stato
   globale, confini del bridge legacy, teardown selettivo e matrice di qualifica.
 - `docs/architecture/native-suite-v1-contract.md`, `schemas/ds4-suite-*.schema.json`
-  — contratti C/HTTP e catalogo congelati; nuovi endpoint previsti da T17.
+  — contratti C/HTTP e catalogo congelati; implementazione nel target CUDA
+  esplicito `ds4-server-suite`, con limiti dichiarati nella discovery.
+- `ds4_server_suite_types.h`, `ds4_server_suite.inc`, `ds4_server_suite_http.inc`,
+  `ds4_server_suite_operations.inc`, `ds4_suite_text.h` — registro dei due bundle,
+  HTTP Images/Embeddings/Files, multipart spooled, media/receipt su disco,
+  validazione, cancellazione, osservabilità e transazioni sul worker LLM esistente.
+  Pubblicazione dopo restore; recovery conserva handle e checkpoint fino al recupero.
+- `config/native-suite.example.json`, `docs/architecture/native-suite-client.md` —
+  configurazione locale seriale CUDA ed esempi con un solo client/base URL;
+  helper e tool usano width/height interi e nessuna scelta per modello unico.
+- `tests/test_suite_http.c`, `tests/test_suite_http_live.py`,
+  `tests/test_suite_exmekh_live.py` — protocollo host, SDK reale sulle quattro
+  modalità, retry/editing/disconnessione e conversazione ExMekh con KV riusata.
+- `tools/record_suite_service_qualification.py`,
+  `docs/performance/native-suite-t17-t18-20261022/` — evidenze, hash dei sorgenti,
+  binary/wheel, patch riproducibile della dipendenza esterna e limiti T17/T18.
+- `docs/architecture/native-suite-t17-t18-clean-code-review-20261022.md` —
+  revisione dei confini HTTP/executor, lifetime, validazione e integrazione client.
 - `docs/performance/native-suite-t00-20261020/` — source/model/tensor manifest,
   baseline dei LLM, oracle multimodali, soglie e registro provenienza/licenze.
 - `ds4_resources.c/.h` — registro C di storage e view, ownership, refcount,
@@ -338,7 +355,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `docs/performance/native-suite-t13-t14-20261021/` — qualifica locale media,
   vision/video e regressione testuale; limiti, dipendenze, risultati e sviluppi
   successivi. Audio e composizione sono qualificati nel report T15/T16;
-  routing HTTP resta T17.
+  routing HTTP è ora nel target esplicito `ds4-server-suite` (T17).
 - `tests/test_suite_api.py` — output di ownership azzerati su input invalidi,
   comprese le uscite indipendenti dei tokenizer; nessun modello richiesto.
 - `docs/architecture/native-suite-t11-t12-clean-code-review-20261021.md` —
@@ -354,7 +371,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `tests/test_suite_oracle_attention.py` verifica i mask del tiling per query
   dell'oracle math, con asse delle chiavi intero e nessuna approssimazione.
 - `docs/performance/native-suite-t11-t12-20261021/` — qualifica locale dei due
-  adapter, comandi, hash, provenienza e limiti; nuovi endpoint restano T17.
+  adapter, comandi, hash, provenienza e limiti; il servizio T17 è qualificato separatamente.
 - `tools/suite_bundle.py`, `tools/prepare_suite_bundles.py`,
   `config/suite-bundles/`, `schemas/ds4-suite-bundle-v1.schema.json` — compiler
   offline e conversione deterministica, profili con revisioni/hash fissati,
@@ -590,6 +607,33 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   Il converter usa l'API pubblica dei metadati Message, senza esporre snapshot
   al provider; l'adapter dei tool conserva lo stato di errore emesso da ExMekh-Lib per
   root, conversazioni figlie e UI.
+- `exmekh_lib/src/exmekh_lib/core/models/native_suite.py`, `native_media_tools.py`,
+  `config/native_suite.py` e capability `generate-image` —
+  dipendenza sorgente esterna: API tipizzate con Literal per le identità,
+  trasporto OpenAI condiviso, riferimenti ordinati e allegati configurabili.
+  Gli embedding restano un servizio interno della ricerca web, senza capability
+  autonoma. Il provider possiede il trasporto; il fallback standalone ne gestisce
+  la chiusura. Il ranking usa cache per chiamata e API del backend condiviso.
+  `core/web_navigation/ranking.py` usa il servizio embedding nativo al posto
+  dell'inferenza client OpenVINO/SigLIP. Contratto in `exmekh_lib/docs/22-native-suite.md`;
+  patch dal commit base e hash sono conservati nel report T17/T18.
+- `agent/tests/test_native_media_preview.py`, `test_native_media_preview_e2e.py`,
+  `run_native_media_preview_agent.py` — conservazione degli allegati tool,
+  miniature assistant, dialog e persistenza dopo reload; nessun encoder implicito UI.
+- `exmekh_lib/src/exmekh_lib/core/models/message_snapshot.py` — export lossless
+  degli allegati tool tramite il codec cache esistente, condiviso da history,
+  snapshot del nodo e skill chiuse; il dump compatto dei messaggi resta invariato.
+  Il frontend ripristina sia questi snapshot sia gli allegati UI preesistenti,
+  tramite il codec della libreria che possiede anche l’estrazione delle URL.
+- `agent/tests/test_native_image_generation_e2e.py`,
+  `run_native_image_generation_agent.py`, `tests/test_suite_image_tools_e2e.py` —
+  prove opt-in con LLM, tool registrato, generazione GPU e ranking nativo reali;
+  output multipli, preview, responsività, reload e secondo turno con pixel ripristinati.
+  `tools/record_native_image_e2e.py` registra l'audit di `Funzionalità extra` in
+  `docs/performance/native-suite-image-e2e-20261022/`, con patch esterna e hash wheel.
+- `docs/performance/native-suite-clean-review-20261022/` — revisione successiva:
+  ownership HTTP, API pubbliche, codec allegati uniforme, ranking interno senza
+  tool embedding, timestamp file stabili e chiusura incrementale dei modelli.
 - `agent/src/exmekh_agent/config/application.py`, `agent/src/exmekh_agent/exmekh_bridge/providers/provider_health.py`,
   `agent/src/exmekh_agent/ui/settings/settings_drawer.py` — discovery del modello attivo e del
   contesto allocato: il probe legge e valida i metadati, AppConfig sceglie il

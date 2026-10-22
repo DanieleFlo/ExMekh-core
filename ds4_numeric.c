@@ -235,6 +235,19 @@ ds4_num_view ds4_num_reinterpret(ds4_num_view storage, uint64_t off, uint64_t n,
     return (ds4_num_view){0};
   return (ds4_num_view){(char *)storage.data + off, n, type};
 }
+void ds4_numeric_transfers(const ds4_numeric *c, uint64_t *h2d, uint64_t *d2h) {
+  if (h2d) *h2d = c ? c->h2d_bytes : 0;
+  if (d2h) *d2h = c ? c->d2h_bytes : 0;
+}
+static ds4_status copy_counted(ds4_numeric *c, void *destination,
+                               const void *source, uint64_t bytes, int direction) {
+  ds4_status s = c->ops->copy(c->state, destination, source, bytes, direction);
+  if (!s && c->device) {
+    uint64_t *count = direction ? &c->d2h_bytes : &c->h2d_bytes;
+    *count = bytes > UINT64_MAX - *count ? UINT64_MAX : *count + bytes;
+  }
+  return s;
+}
 ds4_status ds4_num_buffer_write(ds4_num_buffer *b, uint64_t off,
                                 const void *source, uint64_t bytes) {
   if (!b || !source)
@@ -242,20 +255,19 @@ ds4_status ds4_num_buffer_write(ds4_num_buffer *b, uint64_t off,
   uint64_t capacity = b->view.count * ds4_num_type_bytes(b->view.type);
   if (off > capacity || bytes > capacity - off)
     return DS4_STATUS_INVALID;
-  return b->ctx->ops->copy(b->ctx->state, (char *)b->view.data + off, source,
-                           bytes, 0);
+  return copy_counted(b->ctx, (char *)b->view.data + off, source, bytes, 0);
 }
 ds4_status ds4_num_write(ds4_numeric *c, ds4_num_view v, const void *p,
                          uint64_t bytes) {
   if (!c || !valid(v) || !p || bytes > v.count * ds4_num_type_bytes(v.type))
     return DS4_STATUS_INVALID;
-  return c->ops->copy(c->state, v.data, p, bytes, 0);
+  return copy_counted(c, v.data, p, bytes, 0);
 }
 ds4_status ds4_num_read(ds4_numeric *c, ds4_num_view v, void *p,
                         uint64_t bytes) {
   if (!c || !valid(v) || !p || bytes > v.count * ds4_num_type_bytes(v.type))
     return DS4_STATUS_INVALID;
-  return c->ops->copy(c->state, p, v.data, bytes, 1);
+  return copy_counted(c, p, v.data, bytes, 1);
 }
 ds4_status ds4_num_copy(ds4_numeric *c, ds4_num_view y, ds4_num_view x) {
   if (!c || !valid(x) || !fits(y, x.count) || y.type != x.type)

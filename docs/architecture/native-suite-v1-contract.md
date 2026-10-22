@@ -1,7 +1,10 @@
 # Contratti della suite nativa DS4, versione 1
 
-Stato: specifica congelata per T01, 20 ottobre 2026. Questi contratti non
-abilitano nuovi endpoint nel server corrente. La loro implementazione HTTP è T17.
+Stato: specifica congelata per T01, 20 ottobre 2026; implementazione HTTP
+T17/T18 del 22 ottobre nel target esplicito `ds4-server-suite`, CUDA single GPU.
+Il [client e i limiti operativi](native-suite-client.md) e il
+[report di qualifica](../performance/native-suite-t17-t18-20261022/README.md)
+distinguono disponibilità del servizio e qualifica numerica dei componenti.
 Il contratto C è [ds4_runtime.h](../../ds4_runtime.h); lo schema delle richieste
 è [ds4-suite-v1.schema.json](../../schemas/ds4-suite-v1.schema.json).
 
@@ -79,7 +82,7 @@ rifiutati prima del compute, non trasformati in media impliciti.
 
 La versione è dichiarata da `ds4.version=1`; il campo `input` contiene un
 array non vuoto di elementi `{content:[...]}`. Questa è un'estensione DS4,
-non un input standard dell'API OpenAI. Un helper futuro nasconderà upload e
+non un input standard dell'API OpenAI. L'helper ExMekh nasconde upload e
 serializzazione; una chiamata HTTP valida non richiede testo o placeholder
 fittizi per gli input media-only.
 
@@ -177,16 +180,19 @@ MP4, WebM, WAV, MPEG audio, FLAC e Ogg, elencati nello schema; il decoder
 verifica i byte, non si fida dell'estensione. Le capability dichiarano i
 codec effettivamente decodificabili. Un formato ammesso ma non disponibile
 produce `unsupported_media_format`. Il nome è solo metadato, mai un percorso.
-Il media vive almeno 3600 secondi dall'upload, ed è mantenuto più a lungo
-finché referenziato da una richiesta, ricevuta idempotente, sessione/conversazione
-o checkpoint conservato per il ripristino. File scaduti
+Il media vive 3600 secondi dall'upload, con scadenza rinnovata quando è usato
+dal compute. La ricevuta dura meno del TTL del media; l'operazione seriale
+impedisce che la scadenza elimini file in uso. Il frontend conserva su disco
+gli output e nelle proprie history gli allegati necessari oltre il TTL server.
+Il servizio non conserva riferimenti file ID in conversazioni persistenti. File scaduti
 producono HTTP 404 `media_not_found`. Quota e limite richieste sono
 configurazioni server; la discovery li restituisce esplicitamente.
 
 ## Esempi client e matrice delle capability
 
-Le chiamate seguenti descrivono il contratto futuro T17: non sono test live
-del server attuale. Con un client OpenAI configurato su DS4:
+Le chiamate seguenti usano il servizio T17. Esempi completi con una sola base
+URL e con il client tipizzato sono nella [guida client](native-suite-client.md).
+Con un client OpenAI configurato su DS4:
 
 ```python
 client.images.generate(model="Qwen/Qwen-Image-2.1-Turbo", prompt="Un quadrato rosso")
@@ -197,7 +203,7 @@ client.embeddings.create(model="google/embeddinggemma-2", input=["ciao", "hello"
                          dimensions=512, encoding_format="float")
 with open("clip.mp4", "rb") as video:
     media = client.files.create(file=video, purpose="ds4_media")
-client.post("/embeddings", cast_to=dict, body={
+client.post("/embeddings", cast_to=dict[str, object], body={
     "model": "google/embeddinggemma-2",
     "input": [{"content": [{"type": "video", "file_id": media.id,
                              "audio": "include"}]}],
@@ -216,11 +222,11 @@ I limiti e l'estensione DS4 descritti qui sono decisioni del servizio locale.
 | Identità | Operazione prevista | Modalità input | Stato attuale |
 | --- | --- | --- | --- |
 | LLM catalogati esistenti | chat | Quelle già qualificate per ciascun LLM/backend | Invariato |
-| Qwen/Qwen-Image-2.1-Turbo | image_generate, image_edit | Testo, immagini di riferimento | Contratto, non disponibile |
-| google/embeddinggemma-2 | embed | Testo, immagini, video, audio, interleaving | Contratto, non disponibile |
+| Qwen/Qwen-Image-2.1-Turbo | image_generate, image_edit | Testo, immagini di riferimento | Servizio seriale CUDA, PNG; gate qualità T11 ancora aperti |
+| google/embeddinggemma-2 | embed | Testo, immagini, video, audio, interleaving | Servizio seriale CUDA sm_86 |
 
-Nessuna nuova riga viene aggiunta alla discovery reale prima dei gate del
-modello. I default dei launcher restano invariati. Gli esempi JSON sono
+La discovery aggiunge solo i modelli configurati con bundle verificato;
+la qualifica del trasporto non promuove i gate qualità T11. I default dei launcher restano invariati. Gli esempi JSON sono
 validati da `tests/test_suite_contracts.py`; token-vocabulary, codec, limite
 operativo e capability richiedono anche validazione semantica dell'adapter.
 
@@ -238,7 +244,7 @@ fallita invalida il contesto attivo e richiede una nuova attivazione. Il
 rilascio di un modello libera solo le risorse del suo adapter; lo shutdown
 runtime avviene soltanto dopo l'ultima reference. Stime ignote non valgono
 zero; le fasi dichiarano gruppi e dipendenze senza esporre tensor al server.
-Checkpoint, ammissione e scheduling delle fasi saranno implementati in T03–T05.
+Checkpoint, ammissione e scheduling delle fasi appartengono a T03–T05.
 
 L'apertura CUDA single GPU può precedere il LLM con
 `ds4_compute_runtime_open`; `ds4_engine_open_with_runtime` collega un engine
@@ -253,4 +259,4 @@ aciclico; gli ID gruppo sono locali al modello proprietario. In caso di errore
 restituisce piano NULL e conteggio zero. `execute` esegue una fase del piano;
 `release_plan` libera il piano dopo successo/errore/cancellazione. Le stime
 sconosciute richiedono known=false, mai byte zero inventati. La validazione
-operativa del DAG e l'ammissione dei gruppi saranno implementate da T03/T05.
+operativa del DAG e l'ammissione dei gruppi appartengono a T03/T05.

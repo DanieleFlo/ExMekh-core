@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13/T14 sono `DONE` nei gate locali del [report T13–T14](../performance/native-suite-t13-t14-20261021/README.md); T15/T16 sono `DONE` nei gate C/CUDA locali del [report T15–T16](../performance/native-suite-t15-t16-20261022/README.md), con rettifica esplicita del riferimento di accumulo T00. T17–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13/T14 sono `DONE` nei gate locali del [report T13–T14](../performance/native-suite-t13-t14-20261021/README.md); T15/T16 sono `DONE` nei gate C/CUDA locali del [report T15–T16](../performance/native-suite-t15-t16-20261022/README.md), con rettifica esplicita del riferimento di accumulo T00. T17/T18 sono `DONE` nei gate di servizio/client CUDA locali del [report T17–T18](../performance/native-suite-t17-t18-20261022/README.md); T19–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -325,7 +325,7 @@ ma vettori entro T00, come diagnostica esplicita. Evidenze e limiti nel
 
 **Artefatti:** adapter vision/video e report oracle per ciascuna modalità.
 
-**Evidenze T13–T14:** [report, comandi e limiti](../performance/native-suite-t13-t14-20261021/README.md), [gate completi](../performance/native-suite-t13-t14-20261021/verification.json), [regressioni e memoria](../performance/native-suite-t13-t14-20261021/acceptance.json). Decode/preprocess C con libav/soxr, cache bounded e vision/video BF16 nativi; nessun endpoint nuovo o encoder audio dichiarato. T15/T16 sono completati nella qualifica locale successiva; T17–T22 restano aperti.
+**Evidenze T13–T14:** [report, comandi e limiti](../performance/native-suite-t13-t14-20261021/README.md), [gate completi](../performance/native-suite-t13-t14-20261021/verification.json), [regressioni e memoria](../performance/native-suite-t13-t14-20261021/acceptance.json). Decode/preprocess C con libav/soxr, cache bounded e vision/video BF16 nativi; nessun endpoint nuovo o encoder audio dichiarato. T15/T16 sono completati nella qualifica locale successiva; T17/T18 sono qualificati nel report successivo; T19–T22 restano aperti.
 
 ## 19. T15 — Encoder audio EmbeddingGemma 2
 
@@ -358,33 +358,62 @@ ma vettori entro T00, come diagnostica esplicita. Evidenze e limiti nel
 
 ## 21. T17 — Registro modelli, HTTP e gestione dei risultati
 
-**Dipendenze:** T01, T05, T11, T16. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T01, T05, T11, T16. **Priorità:** alta. **Stato:** `DONE` nei gate locali di servizio CUDA single GPU; gate qualità T11 invariati.
 
-- [ ] `T17.1` Estendere il server a un registro di modelli configurati e routing per operazione/capability, preservando gli alias LLM e i comportamenti di thinking esistenti.
-- [ ] `T17.2` Collegare Images generation/edit e Embeddings al medesimo executor di risorse; richieste accodate non modificano il contesto attivo durante un'altra esecuzione.
-- [ ] `T17.3` Implementare upload/riferimenti media e risposta immagini/embedding; dimensionare limiti e lifetime per evitare di trattenere output GPU o interi video in memoria.
-- [ ] `T17.4` Implementare errori strutturati, cancellazione, timeout, request ID e idempotenza. Un retry di trasporto non deve duplicare una generazione già committata.
-- [ ] `T17.5` Separare progressi da risultato finale. Inviare il successo soltanto dopo il restore; un media calcolato con restore fallito non diventa un falso successo.
-- [ ] `T17.6` Rendere osservabili modello/profilo eseguito, piano scelto, cache hit, byte spostati e tempi; discovery distingue configurato/residente senza imporre gestione manuale al client.
+- [x] `T17.1` Estendere il server a un registro di modelli configurati e routing per operazione/capability, preservando gli alias LLM e i comportamenti di thinking esistenti.
+- [x] `T17.2` Collegare Images generation/edit e Embeddings al medesimo executor di risorse; richieste accodate non modificano il contesto attivo durante un'altra esecuzione.
+- [x] `T17.3` Implementare upload/riferimenti media e risposta immagini/embedding; dimensionare limiti e lifetime per evitare di trattenere output GPU o interi video in memoria.
+- [x] `T17.4` Implementare errori strutturati, cancellazione, timeout, request ID e idempotenza. Un retry di trasporto non deve duplicare una generazione già committata.
+- [x] `T17.5` Separare progressi da risultato finale. Inviare il successo soltanto dopo il restore; un media calcolato con restore fallito non diventa un falso successo.
+- [x] `T17.6` Rendere osservabili modello/profilo eseguito, piano scelto, cache hit, byte spostati e tempi; discovery distingue configurato/residente senza imporre gestione manuale al client.
 
 **Gate di completamento:** veri client OpenAI funzionano per i contratti standard supportati; client DS4 multimodale passa le quattro modalità. Richieste invalide non mutano sessioni. Chat/Responses/Anthropic e SSE esistenti conservano i propri contratti. Nessun parametro supportato solo nominalmente e poi ignorato.
 
 **Aree:** `ds4_server.c`, risorse testuali/configurazioni del dominio e suite HTTP.
 
+**Evidenze T17:** [report e limiti](../performance/native-suite-t17-t18-20261022/README.md),
+[hash e verifiche](../performance/native-suite-t17-t18-20261022/verification.json),
+[guida client](../architecture/native-suite-client.md). Sei scenari SDK live:
+discovery, quattro modalità, token/PAD/base64, retry concorrenti, editing e
+cancellazione per disconnessione. Successo dopo restore e recovery con handle
+conservati; fault/restore e deadline verificati nei gate host, senza simulare
+perdita hardware HTTP. PNG e riferimenti con geometria nativa ammessa; nessuna
+promozione dei gate qualità T11 o dei backend non qualificati.
+
 ## 22. T18 — Client semplice e integrazione ExMekh-lib
 
-**Dipendenze:** T17. **Priorità:** alta. **Stato:** `PLANNED`.
+**Dipendenze:** T17. **Priorità:** alta. **Stato:** `DONE` nei gate locali client/ExMekh e frontend.
 
-- [ ] `T18.1` Fornire esempi con un solo client/base URL e chiamate images/embeddings per nome modello. Nessun comando load/unload/checkpoint richiesto all'utente.
-- [ ] `T18.2` Fornire helper opzionale per embeddings multimodali che gestisce file/media, ordine e serializzazione; mantenere gli embedding testo usabili con SDK OpenAI ordinario.
-- [ ] `T18.3` Integrare le capability nel client tipizzato ExMekh esistente senza creare un secondo frontend o modificare direttamente wheel compilate. Se serve una modifica alla libreria sorgente esterna, registrarla come dipendenza esplicita con contratto e test. Nel task "Funzionalità extra" prensente file "exmekh_lib/todo.md" del client, sono scritte alcune specifice me la modifca sul client stesso.
-- [ ] `T18.4` Collegare tool esplicitamente registrati di generazione/editing/embedding alle API; risultato strutturato con media ID, recipe, seed e dimensioni.
-- [ ] `T18.5` Mostrare i media con il percorso UI già previsto e mantenere la UI responsiva. L'analisi dei pixel da parte del LLM rimane una nuova invocazione esplicita del suo encoder.
-- [ ] `T18.6` Verificare che client e frontend non debbano sapere se il gestore ha tenuto la KV, parcheggiato la sessione o scaricato i pesi.
+- [x] `T18.1` Fornire esempi con un solo client/base URL e chiamate images/embeddings per nome modello. Nessun comando load/unload/checkpoint richiesto all'utente.
+- [x] `T18.2` Fornire helper opzionale per embeddings multimodali che gestisce file/media, ordine e serializzazione; mantenere gli embedding testo usabili con SDK OpenAI ordinario.
+- [x] `T18.3` Integrare le capability nel client tipizzato ExMekh esistente senza creare un secondo frontend o modificare direttamente wheel compilate. Se serve una modifica alla libreria sorgente esterna, registrarla come dipendenza esplicita con contratto e test. Nel task "Funzionalità extra" prensente file "exmekh_lib/todo.md" del client, sono scritte alcune specifice me la modifca sul client stesso.
+- [x] `T18.4` Collegare tool esplicitamente registrati di generazione/editing/embedding alle API; risultato strutturato con media ID, recipe, seed e dimensioni.
+- [x] `T18.5` Mostrare i media con il percorso UI già previsto e mantenere la UI responsiva. L'analisi dei pixel da parte del LLM rimane una nuova invocazione esplicita del suo encoder.
+- [x] `T18.6` Verificare che client e frontend non debbano sapere se il gestore ha tenuto la KV, parcheggiato la sessione o scaricato i pesi.
 
-**Gate di completamento:** scenario conversazionale reale: LLM → tool image/embedding → risultato → continuazione dal contesto precedente. Nessun full-prefill quando un checkpoint completo valido era disponibile; nessuna gestione risorse lato client. Le estensioni restano dichiarate e versionate.
+**Gate di completamento:** scenario conversazionale reale: LLM → tool image oppure ricerca web con ranking embedding interno → risultato → continuazione dal contesto precedente. Nessun full-prefill quando un checkpoint completo valido era disponibile; nessuna gestione risorse lato client. Le estensioni restano dichiarate e versionate.
 
 **Aree:** esempi client e integrazioni ExMekh già possedute dal progetto; rispettare anche `agent/AGENTS.md` quando applicabile.
+
+**Evidenze T18:** [report](../performance/native-suite-t17-t18-20261022/README.md) e
+[patch sorgente ExMekh](../performance/native-suite-t17-t18-20261022/exmekh-lib.patch).
+Client/LocalProvider reali, tool registrato e continuazione con codice ricordato
+e token cached; anteprima reale True con scala 0.5. Modelli Literal, nessuna
+scelta per modello unico, width/height interi. Libreria: 3622 test offline;
+frontend/browser: 96 PASS e 1 live preesistente skipped; history/restore: 112 PASS.
+Wheel ricostruita dai sorgenti, lock aggiornato e dipendenza esterna registrata.
+
+L'[audit E2E di «Funzionalità extra»](../performance/native-suite-image-e2e-20261022/README.md)
+verifica il browser con LLM e generazione GPU reali e corregge la perdita degli
+allegati negli snapshot DeepAgent e lo schema image-only. Quattro prove live
+passate; miniature, dialog, reload e secondo turno con due anteprime reali.
+Libreria offline 3624 PASS e regressioni frontend 162 PASS. Limiti dell'attesa
+tool e replay falliti conservati nel follow-up; gate qualità T11 invariati.
+
+Il [riesame clean code successivo](../performance/native-suite-clean-review-20261022/README.md)
+uniforma ownership HTTP e serializzazione e, dopo il chiarimento dell'utente,
+rimuove la capability embedding autonoma: gli embedding nativi sono interni
+alla ricerca web e restano disponibili nell'API tipizzata.
 
 ## 23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo
 
@@ -512,4 +541,4 @@ Devono essere dimostrati: generazione/editing/RGBA nativi; embedding nativi dell
 
 La matrice dei backend e delle famiglie deve distinguere il supporto architetturale dalla qualificazione sperimentale. Funzioni richieste sul target di rilascio non possono essere omesse con `NOT_VERIFIED`; hardware aggiuntivo non disponibile resta esplicitamente fuori dalla dichiarazione di qualificazione, senza attribuirgli risultati della 3090.
 
-Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing comune HTTP è T17. Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Nessun nuovo endpoint image/embedding è abilitato; T13/T14 aggiungono media/preprocess nativi e vision/video Gemma, con gate e limiti nel report T13–T14. T15/T16 aggiungono encoder audio e composizione completa con piani selettivi, qualificati su C/CUDA sm_86; integrazione HTTP e task successivi restano T17–T22. Evidenze nei report T07–T08, T09–T10, T11–T12 e T13–T14.
+Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing HTTP è ora nel target esplicito ds4-server-suite (T17). Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Gli endpoint Images/Embeddings sono abilitati nel target esplicito T17; T13/T14 aggiungono media/preprocess nativi e vision/video Gemma, con gate e limiti nel report T13–T14. T15/T16 aggiungono encoder audio e composizione completa con piani selettivi, qualificati su C/CUDA sm_86; T17/T18 aggiungono servizio HTTP e integrazione ExMekh con modelli Literal, width/height interi, tool registrati e anteprime persistenti. Restano T19–T22 e i gate qualità T11. Evidenze nei report T07–T08, T09–T10, T11–T12 e T13–T14.

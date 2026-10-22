@@ -962,6 +962,20 @@ class ChatViewComponent:
                         "render_message_body.classes.msg_assistant_w_full_gap_2_5"
                     ]
                 ):
+                    if msg.image_urls:
+                        with ui.row().classes(
+                            UI_PRESENTATION[
+                                "render_message_body.classes.exmekh_message_images_gap_2_flex_wrap_mt_2"
+                            ]
+                        ):
+                            for index, url in enumerate(msg.image_urls):
+                                render_image_thumbnail(
+                                    url,
+                                    app_text(
+                                        "chat.chat_view.attached_image_value_1",
+                                        value_1=index + 1,
+                                    ),
+                                )
                     if msg.error == "cancelled":
                         with ui.row().classes(
                             UI_PRESENTATION[

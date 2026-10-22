@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable
 from threading import Event
 
+from exmekh_lib.core.models.native_suite import NativeSuiteClient
 from exmekh_lib.core.models.provider_request import ProviderRequest
 from exmekh_lib.core.models.provider_response import ProviderResponse
 from exmekh_lib.core.models.provider_stream_event import ProviderStreamEvent
@@ -48,6 +49,10 @@ class CancellableProvider(Provider):
 
     def get_tools_text(self, tools: Tools | None) -> str:
         return self._provider.get_tools_text(tools)
+
+    def native_suite(self) -> NativeSuiteClient:
+        raise_if_cancelled(self._cancellation)
+        return self._provider.native_suite()
 
     def call(self, request: ProviderRequest) -> ProviderResponse:
         raise_if_cancelled(self._cancellation)

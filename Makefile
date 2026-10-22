@@ -1460,6 +1460,22 @@ libds4-suite-cpu.a: $(SUITE_OBJS)
 	$(AR) rcs $@ $^
 libds4-suite-cuda.a: $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
 	$(AR) rcs $@ $^
+
+# Explicit serial CUDA service. The legacy binary and launchers keep their
+# existing link dependencies and model defaults.
+ds4_server_suite.o: ds4_server.c ds4_server_suite_types.h ds4_server_suite.inc ds4_server_suite_http.inc ds4_server_suite_operations.inc ds4_suite_text.h $(DS4_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -DDS4_NATIVE_SUITE -c -o $@ $<
+ds4-server-suite: ds4_server_suite.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o $(CORE_OBJS) $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
+	$(CC) -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS) -L$(CUDA_HOME)/lib64 -lcudart -lstdc++
+tests/test_suite_http: tests/test_suite_http.c ds4_server.c ds4_server_suite.inc ds4_server_suite_http.inc ds4_server_suite_operations.inc ds4_server_suite_types.h ds4_suite_text.h ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS) $(SUITE_OBJS)
+	$(CC) $(SUITE_CFLAGS) -Wno-unused-function -I. -o $@ tests/test_suite_http.c $(filter %.o,$^) $(LDLIBS) $(SUITE_MEDIA_LDLIBS)
+.PHONY: test-suite-http
+test-suite-http: tests/test_suite_http
+	./tests/test_suite_http
+.PHONY: clean-suite-http
+clean-suite-http:
+	rm -f ds4-server-suite tests/test_suite_http
+clean: clean-suite-http
 tests/test_numeric_lifetime: tests/test_numeric_lifetime.c ds4_numeric.o ds4_resources.o
 	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
 .PHONY: test-numeric-lifetime clean-suite-numeric

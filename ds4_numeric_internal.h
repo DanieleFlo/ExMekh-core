@@ -44,6 +44,7 @@ struct ds4_numeric {
   size_t buffers;
   bool device;
   uint64_t live_bytes, peak_bytes;
+  uint64_t h2d_bytes, d2h_bytes;
   uint64_t backend_bytes;
   ds4_resource *metadata;
   ds4_num_buffer *deferred;

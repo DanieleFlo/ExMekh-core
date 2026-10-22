@@ -406,7 +406,9 @@ def build_compacted_context_messages(
     resumed = replay_model_context(chat_messages)
     if resumed is None:
         sys_prompt = _resolve_system_prompt_for_session(session, chat_messages)
-        context_messages: list[dict[str, Any]] = [{"role": "system", "content": sys_prompt}]
+        context_messages: list[dict[str, Any]] = [
+            {"role": "system", "content": sys_prompt}
+        ]
     else:
         context_messages = []
         chat_messages = resumed

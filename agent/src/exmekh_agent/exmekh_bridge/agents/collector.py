@@ -13,6 +13,7 @@ from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
 from exmekh_agent.exmekh_bridge.history.compaction import ModelContextCheckpoint
+from exmekh_agent.exmekh_bridge.history.image_input import tool_attachment_image_urls
 from exmekh_agent.exmekh_bridge.history.skill_history import skill_opening_call_id
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
@@ -253,6 +254,12 @@ class TurnStreamCollector:
             tool_events=self.tools,
             skills=self.skills,
             raw_history=self.raw_history,
+            image_urls=[
+                url
+                for item in self.turn_raw_history()
+                if item.get("role") == "tool"
+                for url in tool_attachment_image_urls(item.get("attachments"))
+            ],
             model_context=self.model_context,
             skill_history_tree=self.skill_history_tree,
             context_usage=self.context_usage,

@@ -26,6 +26,8 @@ typedef struct {
   uint32_t reference_resolution; /* 0: supplied aligned size; otherwise the
                                   * official square-area Lanczos recipe. */
 } ds4_qwen_image_request;
+/* Pure request/geometry validation; no allocation, loading or session changes. */
+ds4_status ds4_qwen_image_request_validate(const ds4_qwen_image_request *);
 typedef struct {
   uint32_t recipe_version, rng_version, width, height, references, steps;
   uint64_t seed;
@@ -46,6 +48,9 @@ ds4_status ds4_qwen_image_pipeline_open(ds4_qwen_image_pipeline **,
                                         ds4_bundle *, ds4_numeric *,
                                         ds4_runtime *, const char *tokenizer);
 ds4_status ds4_qwen_image_pipeline_close(ds4_qwen_image_pipeline *);
+/* Encoder/DiT/VAE owned weight bytes; read-only, no loading or mutation. */
+ds4_status ds4_qwen_image_pipeline_residency(const ds4_qwen_image_pipeline *,
+                                            uint64_t resident[3], uint64_t total[3]);
 /* Prepare copies inputs and builds resident/serial component plans with
  * device/host prefix cache entirely on host. Victims are explicit lifecycle
  * descriptors (e.g. LLM sessions/weights); their contexts must outlive job

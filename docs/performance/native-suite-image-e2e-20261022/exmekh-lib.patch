@@ -1,0 +1,1833 @@
+diff --git a/README.md b/README.md
+index 7957335..89b29ab 100644
+--- a/README.md
++++ b/README.md
+@@ -50,6 +50,7 @@ Explore the detailed documentation in the [`docs/`](docs) directory:
+ 19. **[Harness Workflows](docs/19-harness-workflows.md)**: Illustrated scenarios for skill entry/exit, nested scopes, result handoffs, subagents, background work, file evidence, steering, compaction and recovery.
+ 20. **[Harness Prompts & Evaluation](docs/20-harness-prompts-and-evaluation.md)**: Compact navigation and handoff instructions, a standalone 20-case scored benchmark with varied domains and separate holdout results.
+ 21. **[Agent Benchmark Platform](docs/21-agent-benchmark-platform.md)**: Extensible end-to-end tasks, analytical checks and a library-built evaluator, fixed grading weights, token costs and compaction accounting.
++22. **[Native DS4 Suite](docs/22-native-suite.md)**: Typed images/embeddings, registered media tools, shared transport and native web ranking.
+ 
+ ---
+ 
+@@ -76,8 +77,8 @@ regular dependencies include the Deep Thinking tools. Install the wheel as a
+ dependency in that project's environment. Browser-backed tools install the
+ headless Chromium binary on first use if needed. For offline deployments,
+ preinstall it with `uv run python -m playwright install chromium --only-shell`
+-in that environment. The wheel also declares the ranking libraries; model
+-weights download on first use or can be preloaded during deployment. See
++in that environment. Semantic and visual ranking use the configured native
++DS4 embedding service, with no client-side ranking model download. See
+ [Deep Thinking](docs/11-deep-thinking.md).
+ 
+ ---
+diff --git a/docs/11-deep-thinking.md b/docs/11-deep-thinking.md
+index a615d4e..830df60 100644
+--- a/docs/11-deep-thinking.md
++++ b/docs/11-deep-thinking.md
+@@ -15,7 +15,7 @@ Application HDS files expose it by adding `deep-thinking` to `sub-skills`.
+ 
+ The regular `ExMekh-Lib` wheel declares the runtime dependencies for all eight tools
+ and their ranking stages: DDGS, Crawl4AI, Playwright, aiohttp, lxml, NumPy,
+-SymPy, Z3, OpenVINO, Hugging Face, Transformers, PyTorch, and the IANA timezone
++SymPy, Z3, Hugging Face, Transformers, PyTorch, and the IANA timezone
+ database `tzdata` (also needed on Windows). Install the
+ wheel in the frontend project's Python environment with dependency resolution
+ enabled. Copying the wheel into the project without installing it does not
+@@ -35,17 +35,16 @@ Preserve the Playwright browser cache in the deployed environment. If the
+ download fails, the tool returns `browser_unavailable` with the install error.
+ 
+ The `deep-thinking` extra remains as an empty compatibility alias for existing
+-frontend dependency declarations. A plain `exmekh_lib` installation includes Granite
+-semantic ranking and SigLIP2 visual ranking dependencies. The model weights
+-still download on first use. For an offline frontend deployment, initialize
+-`get_embedding_backend()` and `get_image_embedding_backend()` from
+-`exmekh_lib.core.web_navigation.ranking` during image creation and preserve the model
+-cache in the runtime environment. Text search falls back to BM25 if
+-Granite cannot initialize; image-assisted search reports whether SigLIP2 ran.
++frontend dependency declarations. Semantic and visual ranking use the native
++DS4 embedding service on the calling provider's transport. There is no
++client-side ranking model download. See [Native DS4 Suite](22-native-suite.md)
++for configuration, embedding identity and service lifetime. Text search falls
++back to BM25 if native embeddings fail; image-assisted search reports whether
++native visual ranking ran.
+ 
+ Text search uses DDGS and a bounded result set. BM25 and provider order still
+-rank results if the optional Granite embedding model cannot load. Image search
+-uses a work-root-local image to rerank candidates with SigLIP2; this is not
++rank results if the embedding service is unavailable. Image search
++uses a work-root-local image to rerank candidates with native embeddings; this is not
+ reverse-image search. The result reports whether visual ranking actually ran.
+ 
+ | Tool | Inputs | Result |
+@@ -152,5 +151,5 @@ provider and live web access.
+ 
+ Set `EXMEKH_LIB_LIVE_DEEP_THINKING_MODEL` to a configured local model to also run the
+ model-driven full-skill task. Set `EXMEKH_LIB_REQUIRE_LIVE_VISUAL_RANKING=1` to require
+-the actual SigLIP2 stage in the image-assisted search test; this needs the
+-model weights to be available in the deployment environment.
++the actual native embedding stage in the image-assisted search test; this
++requires a configured DS4 service with EmbeddingGemma 2.
+diff --git a/evaluations/workflow_prompts.py b/evaluations/workflow_prompts.py
+index cd57333..e4fd058 100644
+--- a/evaluations/workflow_prompts.py
++++ b/evaluations/workflow_prompts.py
+@@ -8,6 +8,7 @@ from xml.etree import ElementTree as ET
+ 
+ from pydantic import BaseModel
+ 
++from exmekh_lib.core.agents.capabilities.defaults import DefaultCapabilities
+ from exmekh_lib.core.agents.deep_agent.deep_agent import DeepAgent
+ from exmekh_lib.core.agents.node import Node
+ from exmekh_lib.core.models.assistant_message import AssistantMessage
+@@ -61,12 +62,17 @@ def capture_prompts(
+ ) -> PromptBundle:
+     """Use the real node composition, contextual descriptions and skill catalogs."""
+     provider = PromptCaptureProvider()
++    # Keep the tool set paired with the frozen 2026-10-20 baseline. New media
++    # capabilities have separate acceptance tests, outside this prompt study.
++    defaults = DefaultCapabilities(
++        include={"main"}, exclude={"generate-image", "embed-content"}
++    )
+     child = Node(
+-        name_hds="main", default_capabilities=True, agent_context_id="capture-child"
++        name_hds="main", default_capabilities=defaults, agent_context_id="capture-child"
+     )
+     node = Node(
+         name_hds="main",
+-        default_capabilities=True,
++        default_capabilities=defaults,
+         children=[child],
+         agent_context_id="capture-root",
+     )
+diff --git a/pyproject.toml b/pyproject.toml
+index 49e03aa..87540b2 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -15,7 +15,6 @@ dependencies = [
+     "lxml>=5.3.0",
+     "numpy>=2.4.0",
+     "openai>=3.3.0",
+-    "openvino>=2026.1.0",
+     "pillow>=12.3.0",
+     "playwright>=1.53.0",
+     "psutil>=7.2.2",
+diff --git a/src/exmekh_lib/capabilities/hds/main.md b/src/exmekh_lib/capabilities/hds/main.md
+index 5f42fc7..f675bb1 100644
+--- a/src/exmekh_lib/capabilities/hds/main.md
++++ b/src/exmekh_lib/capabilities/hds/main.md
+@@ -8,6 +8,9 @@ agent-context-id: main
+ optional-sub-skills:
+   - deep-thinking
+   - file-processing
++optional-sub-tools:
++  - generate-image
++  - embed-content
+ ---
+ You are a clear, concise, and collaborative assistant.
+ 
+diff --git a/src/exmekh_lib/config/default_capabilities.py b/src/exmekh_lib/config/default_capabilities.py
+index 1f5aef5..616b314 100644
+--- a/src/exmekh_lib/config/default_capabilities.py
++++ b/src/exmekh_lib/config/default_capabilities.py
+@@ -12,6 +12,8 @@ class DefaultCapabilityNames:
+     read_web_page: str = "read-web-page"
+     interact_web_page: str = "interact-web-page"
+     calculate: str = "calculate"
++    generate_image: str = "generate-image"
++    embed_content: str = "embed-content"
+     date_time: str = "date-time"
+     inspect_file: str = "inspect-file"
+     read_file: str = "read-file"
+diff --git a/src/exmekh_lib/config/web.py b/src/exmekh_lib/config/web.py
+index f4fcdbf..ed9585e 100644
+--- a/src/exmekh_lib/config/web.py
++++ b/src/exmekh_lib/config/web.py
+@@ -71,10 +71,6 @@ class WebNavigationSettings:
+ class WebRankingSettings:
+     """Model defaults, embedding cache capacity, and ranking weights."""
+ 
+-    granite_model_name: str = "ibm-granite/granite-embedding-311m-multilingual-r2"
+-    siglip_model_name: str = "google/siglip2-base-patch16-224"
+-    openvino_device: str = "CPU"
+-    siglip_text_max_length: int = 64
+     embedding_cache_size: int = 2_048
+     rrf_k: int = 60
+     bm25_rrf_weight: float = 1.0
+@@ -98,8 +94,6 @@ class WebFormat:
+     page_cache_folder: str = "page-cache"
+     cache_format_version: int = 2
+     crawler_directory_env_var: str = "CRAWL4_AI_BASE_DIRECTORY"
+-    openvino_model_xml: str = "openvino/openvino_model_qint8_quantized.xml"
+-    openvino_model_bin: str = "openvino/openvino_model_qint8_quantized.bin"
+     allowed_image_formats: frozenset[str] = frozenset({"JPEG", "PNG", "WEBP"})
+     allowed_image_mime_types: frozenset[str] = frozenset(
+         {"image/jpeg", "image/png", "image/webp"}
+diff --git a/src/exmekh_lib/config/web_text.py b/src/exmekh_lib/config/web_text.py
+index 0076321..e31e4d8 100644
+--- a/src/exmekh_lib/config/web_text.py
++++ b/src/exmekh_lib/config/web_text.py
+@@ -87,9 +87,7 @@ class WebText:
+     only_jpeg_png_and_webp_images_are_supported: str = (
+         "Only JPEG, PNG, and WebP images are supported."
+     )
+-    openvino_granite_semantic_ranking_unavailable: str = (
+-        "OpenVINO Granite semantic ranking unavailable: %s"
+-    )
++    native_semantic_ranking_unavailable: str = "Native semantic ranking unavailable: %s"
+     output_mode_must_be_markdown_ast_or_hybrid: str = (
+         "output_mode must be markdown, ast, or hybrid."
+     )
+diff --git a/src/exmekh_lib/core/agents/deep_skill/execution.py b/src/exmekh_lib/core/agents/deep_skill/execution.py
+index 55329a7..1f57823 100644
+--- a/src/exmekh_lib/core/agents/deep_skill/execution.py
++++ b/src/exmekh_lib/core/agents/deep_skill/execution.py
+@@ -8,6 +8,7 @@ from typing import Any
+ 
+ from exmekh_lib.config.agent_text import AGENT_TEXT
+ from exmekh_lib.core.agents.deep_skill.deep_skill import DeepSkill
++from exmekh_lib.core.models.message_snapshot import snapshot_message
+ from exmekh_lib.core.models.tool_message import ToolMessage
+ from exmekh_lib.core.models.tool_output_reference import ToolOutputReference
+ from exmekh_lib.interfaces.message import Message
+@@ -111,7 +112,7 @@ class DeepSkillExecution:
+         return {
+             "skill": self.name,
+             "output": self.output,
+-            "history": [message.message_dump() for message in history],
++            "history": [snapshot_message(message) for message in history],
+             "children": [
+                 child.history_tree(current_history) for child in self.children
+             ],
+diff --git a/src/exmekh_lib/core/agents/node/tool_call_executor.py b/src/exmekh_lib/core/agents/node/tool_call_executor.py
+index 5d01da2..cdd5cef 100644
+--- a/src/exmekh_lib/core/agents/node/tool_call_executor.py
++++ b/src/exmekh_lib/core/agents/node/tool_call_executor.py
+@@ -27,6 +27,8 @@ from exmekh_lib.core.file_inspection.runtime import FileToolRuntime
+ from exmekh_lib.core.file_inspection.tokenization import inspection_tokenizer_context
+ from exmekh_lib.core.models.assistant_message import ToolCall
+ from exmekh_lib.core.models.client import Client
++from exmekh_lib.core.models.message_snapshot import snapshot_message
++from exmekh_lib.core.models.native_suite import native_suite_context
+ from exmekh_lib.core.models.tool import CalledTool, PreformattedToolResult
+ from exmekh_lib.core.models.tool_message import ToolMessage
+ from exmekh_lib.core.models.tool_output_presentation import ToolOutputPresentation
+@@ -151,7 +153,7 @@ class ToolCallExecutor:
+         return NodeExecutionSnapshot(
+             depth=self._depth,
+             skill_path=self._skill_executions.active_path,
+-            history=[message.message_dump() for message in messages],
++            history=[snapshot_message(message) for message in messages],
+             history_tree=self._skill_executions.history_tree(messages),
+         )
+ 
+@@ -318,7 +320,12 @@ class ToolCallExecutor:
+ 
+         @contextmanager
+         def enter_contexts() -> Iterator[FileReadContext]:
+-            with tokenizer_context, output_context, read_context as context:
++            with (
++                tokenizer_context,
++                output_context,
++                read_context as context,
++                native_suite_context(self._client.native_suite),
++            ):
+                 yield context
+ 
+         return enter_contexts()
+diff --git a/src/exmekh_lib/core/models/client.py b/src/exmekh_lib/core/models/client.py
+index 8d333b6..dfea1e9 100644
+--- a/src/exmekh_lib/core/models/client.py
++++ b/src/exmekh_lib/core/models/client.py
+@@ -3,7 +3,7 @@ from __future__ import annotations
+ import logging
+ from collections.abc import Callable, Mapping, Sequence
+ from contextlib import AbstractContextManager
+-from typing import TYPE_CHECKING
++from typing import TYPE_CHECKING, Any
+ 
+ from pydantic import BaseModel
+ 
+@@ -33,6 +33,7 @@ from exmekh_lib.interfaces.tokenizer import Tokenizer
+ 
+ if TYPE_CHECKING:
+     from exmekh_lib.core.cache.session_cache import SessionCache
++    from exmekh_lib.core.models.native_suite import NativeSuiteClient
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -67,6 +68,9 @@ class Client:
+     def get_tokenizer(self) -> Tokenizer:
+         return self._provider.get_tokenizer()
+ 
++    def native_suite(self) -> NativeSuiteClient:
++        return self._provider.native_suite()
++
+     def generate_id(self) -> str:
+         return self._provider.generate_id()
+ 
+@@ -76,7 +80,7 @@ class Client:
+     def get_history(self) -> list[HistoryMessage]:
+         return self._history.get_history()
+ 
+-    def dump_history(self) -> list[dict[str, str]]:
++    def dump_history(self) -> list[dict[str, Any]]:
+         return self._history.dump_history()
+ 
+     def copy_history(self) -> list[HistoryMessage]:
+diff --git a/src/exmekh_lib/core/models/history.py b/src/exmekh_lib/core/models/history.py
+index b92f4f8..29937dd 100644
+--- a/src/exmekh_lib/core/models/history.py
++++ b/src/exmekh_lib/core/models/history.py
+@@ -5,9 +5,11 @@ from collections import Counter
+ from collections.abc import Generator, Sequence
+ from contextlib import contextmanager
+ from dataclasses import dataclass
++from typing import Any
+ 
+ from exmekh_lib.config.model_text import MODEL_TEXT
+ from exmekh_lib.core.models.assistant_message import AssistantMessage, ToolCall
++from exmekh_lib.core.models.message_snapshot import snapshot_message
+ from exmekh_lib.core.models.tool_message import ToolMessage
+ from exmekh_lib.interfaces.message import Message
+ 
+@@ -215,5 +217,5 @@ class MessageHistory:
+                 retained.append(message)
+         self.replace_from(0, list(reversed(retained)))
+ 
+-    def dump_history(self) -> list[dict[str, str]]:
+-        return [message.message_dump() for message in self._history]
++    def dump_history(self) -> list[dict[str, Any]]:
++        return [snapshot_message(message) for message in self._history]
+diff --git a/src/exmekh_lib/core/web_navigation/ranking.py b/src/exmekh_lib/core/web_navigation/ranking.py
+index aa70cdd..3f30806 100644
+--- a/src/exmekh_lib/core/web_navigation/ranking.py
++++ b/src/exmekh_lib/core/web_navigation/ranking.py
+@@ -9,29 +9,25 @@ import re
+ import threading
+ from collections import Counter, OrderedDict
+ from collections.abc import Mapping, Sequence
+-from typing import TYPE_CHECKING, Protocol, cast
++from typing import Protocol
+ from urllib.parse import urlparse
+ 
+ import numpy as np
+ from numpy.typing import NDArray
+ from PIL import Image
+ 
+-from exmekh_lib.config.web import WEB_FORMAT, WEB_RANKING
++from exmekh_lib.config.web import WEB_RANKING
+ from exmekh_lib.config.web_text import WEB_TEXT
++from exmekh_lib.core.models.native_suite import EmbeddingItem, suite_from_environment
+ 
+ from .image_discovery import DiscoveredImage, decode_image
+ 
+-if TYPE_CHECKING:
+-    from torch import Tensor
+-
+-GRANITE_MODEL_NAME = WEB_RANKING.granite_model_name
+ EMBEDDING_CACHE_SIZE = WEB_RANKING.embedding_cache_size
+ RRF_K = WEB_RANKING.rrf_k
+ BM25_RRF_WEIGHT = WEB_RANKING.bm25_rrf_weight
+ SEMANTIC_RRF_WEIGHT = WEB_RANKING.semantic_rrf_weight
+ PROVIDER_RRF_WEIGHT = WEB_RANKING.provider_rrf_weight
+ IMAGE_RRF_WEIGHT = WEB_RANKING.image_rrf_weight
+-SIGLIP_MODEL_NAME = WEB_RANKING.siglip_model_name
+ 
+ Embedding = NDArray[np.float32]
+ _LOGGER = logging.getLogger(__name__)
+@@ -57,101 +53,25 @@ class ImageEmbeddingBackend(Protocol):
+         ...
+ 
+ 
+-class OpenVINOEmbeddingBackend:
+-    """Encode text with IBM's published INT8 OpenVINO Granite artifact."""
+-
+-    def __init__(
+-        self,
+-        model_name: str = GRANITE_MODEL_NAME,
+-        *,
+-        device: str = WEB_RANKING.openvino_device,
+-    ) -> None:
+-        """Download the official INT8 IR and compile it with OpenVINO Runtime."""
+-        import openvino as ov
+-        from huggingface_hub import hf_hub_download
+-        from transformers import AutoTokenizer
+-
+-        selected_device = device.upper()
+-        model_xml = hf_hub_download(
+-            repo_id=model_name,
+-            filename=WEB_FORMAT.openvino_model_xml,
+-        )
+-        hf_hub_download(
+-            repo_id=model_name,
+-            filename=WEB_FORMAT.openvino_model_bin,
+-        )
+-        self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+-        core = ov.Core()
+-        self._model = core.compile_model(core.read_model(model_xml), selected_device)
+-        self._input_names = {
+-            model_input.get_any_name() for model_input in self._model.inputs
+-        }
++class NativeEmbeddingBackend:
++    """Text and image vectors come from one versioned native model space."""
+ 
+     def encode(self, texts: Sequence[str]) -> Embedding:
+-        """Tokenize, run the INT8 graph, then CLS-pool and L2-normalize."""
+-        encoded = self._tokenizer(
+-            list(texts),
+-            padding=True,
+-            truncation=True,
+-            return_tensors="np",
+-        )
+-        inputs = {
+-            name: np.asarray(value)
+-            for name, value in encoded.items()
+-            if name in self._input_names
+-        }
+-        outputs = self._model(inputs)
+-        token_embeddings = np.asarray(
+-            outputs[self._model.output(0)],
+-            dtype=np.float32,
+-        )
+-        vectors = token_embeddings[:, 0, :]
+-        norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+-        return np.divide(
+-            vectors,
+-            np.maximum(norms, np.finfo(np.float32).eps),
+-            dtype=np.float32,
+-        )
+-
+-
+-class SigLIPEmbeddingBackend:
+-    """Encode images and text with one lazily loaded SigLIP2 model."""
+-
+-    def __init__(self, model_name: str = SIGLIP_MODEL_NAME) -> None:
+-        """Load SigLIP2 and select CUDA when available, otherwise CPU."""
+-        import torch
+-        from transformers import AutoModel, AutoProcessor
+-
+-        self._torch = torch
+-        self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+-        self._processor = AutoProcessor.from_pretrained(model_name)
+-        self._model = AutoModel.from_pretrained(model_name, dtype="auto")
+-        self._model.to(self._device)
+-        self._model.eval()
++        return self.encode_texts(texts)
+ 
+     def encode_texts(self, texts: Sequence[str]) -> Embedding:
+-        """Batch and L2-normalize SigLIP2 text features."""
+-        inputs = self._processor(
+-            text=list(texts),
+-            padding="max_length",
+-            max_length=WEB_RANKING.siglip_text_max_length,
+-            truncation=True,
+-            return_tensors="pt",
+-        ).to(self._device)
+-        with self._torch.inference_mode():
+-            vectors = _extract_feature_tensor(self._model.get_text_features(**inputs))
+-            vectors = self._torch.nn.functional.normalize(vectors, dim=-1)
+-        return vectors.detach().float().cpu().numpy().astype(np.float32, copy=False)
++        result = suite_from_environment().embeddings(texts, task="similarity")
++        return np.asarray(
++            [row["embedding"] for row in result["data"]], dtype=np.float32
++        )
+ 
+     def encode_images(self, images: Sequence[Image.Image]) -> Embedding:
+-        """Batch and L2-normalize SigLIP2 image features."""
+-        inputs = self._processor(images=list(images), return_tensors="pt").to(
+-            self._device
++        suite = suite_from_environment()
++        items = [EmbeddingItem(content=[suite.upload_image(image)]) for image in images]
++        result = suite.embeddings(items, task="similarity")
++        return np.asarray(
++            [row["embedding"] for row in result["data"]], dtype=np.float32
+         )
+-        with self._torch.inference_mode():
+-            vectors = _extract_feature_tensor(self._model.get_image_features(**inputs))
+-            vectors = self._torch.nn.functional.normalize(vectors, dim=-1)
+-        return vectors.detach().float().cpu().numpy().astype(np.float32, copy=False)
+ 
+ 
+ class EmbeddingLRUCache:
+@@ -188,7 +108,7 @@ class EmbeddingLRUCache:
+ 
+ 
+ class _ImageEmbeddingCache:
+-    """Cache SigLIP vectors for one image embedding backend."""
++    """Cache vectors for one image embedding space."""
+ 
+     def __init__(self) -> None:
+         self._local_images = EmbeddingLRUCache()
+@@ -259,22 +179,22 @@ _IMAGE_EMBEDDING_CACHE = _ImageEmbeddingCache()
+ 
+ 
+ def get_embedding_backend() -> EmbeddingBackend:
+-    """Return the process-wide OpenVINO INT8 Granite backend, loading it once."""
++    """Return the native HTTP backend; the server owns model residency."""
+     global _BACKEND
+     if _BACKEND is None:
+         with _BACKEND_LOCK:
+             if _BACKEND is None:
+-                _BACKEND = OpenVINOEmbeddingBackend()
++                _BACKEND = NativeEmbeddingBackend()
+     return _BACKEND
+ 
+ 
+ def get_image_embedding_backend() -> ImageEmbeddingBackend:
+-    """Return the process-wide SigLIP2 backend, loading it only once."""
++    """Return the native image/text backend."""
+     global _IMAGE_BACKEND
+     if _IMAGE_BACKEND is None:
+         with _IMAGE_BACKEND_LOCK:
+             if _IMAGE_BACKEND is None:
+-                _IMAGE_BACKEND = SigLIPEmbeddingBackend()
++                _IMAGE_BACKEND = NativeEmbeddingBackend()
+     return _IMAGE_BACKEND
+ 
+ 
+@@ -347,7 +267,9 @@ def compute_semantic_similarity(
+         return []
+     if cache is not None:
+         resolved_cache = cache
+-    elif backend is None:
++    elif backend is None and not isinstance(
++        get_embedding_backend(), NativeEmbeddingBackend
++    ):
+         resolved_cache = _EMBEDDING_CACHE
+     else:
+         resolved_cache = EmbeddingLRUCache()
+@@ -391,7 +313,9 @@ def compute_image_similarity(
+         return None
+     resolved_backend = backend or get_image_embedding_backend()
+     embedding_cache = (
+-        _IMAGE_EMBEDDING_CACHE if backend is None else _ImageEmbeddingCache()
++        _IMAGE_EMBEDDING_CACHE
++        if backend is None and not isinstance(resolved_backend, NativeEmbeddingBackend)
++        else _ImageEmbeddingCache()
+     )
+     with _IMAGE_INFERENCE_LOCK:
+         image_embedding = embedding_cache.local_image(local_image, resolved_backend)
+@@ -407,10 +331,12 @@ def compute_siglip_ranking(
+     discovered_images: Sequence[DiscoveredImage],
+     backend: ImageEmbeddingBackend | None = None,
+ ) -> tuple[list[int], dict[int, str]]:
+-    """Fuse image-to-text, text-to-image, and image-to-image SigLIP rankings."""
++    """Fuse image-to-text, text-to-image, and image-to-image native rankings."""
+     resolved_backend = backend or get_image_embedding_backend()
+     embedding_cache = (
+-        _IMAGE_EMBEDDING_CACHE if backend is None else _ImageEmbeddingCache()
++        _IMAGE_EMBEDDING_CACHE
++        if backend is None and not isinstance(resolved_backend, NativeEmbeddingBackend)
++        else _ImageEmbeddingCache()
+     )
+     with _IMAGE_INFERENCE_LOCK:
+         local_embedding = embedding_cache.local_image(local_image, resolved_backend)
+@@ -479,7 +405,7 @@ def rank_results(
+     try:
+         semantic_scores = compute_semantic_similarity(query, results)
+     except Exception as error:  # noqa: BLE001 - semantic ranking is an optional signal.
+-        _LOGGER.warning(WEB_TEXT.openvino_granite_semantic_ranking_unavailable, error)
++        _LOGGER.warning(WEB_TEXT.native_semantic_ranking_unavailable, error)
+     else:
+         rankings.append((_ranking_from_scores(semantic_scores), SEMANTIC_RRF_WEIGHT))
+     if image_ranking is not None:
+@@ -494,12 +420,6 @@ def _ranking_from_scores(scores: Sequence[int | float]) -> list[int]:
+     return sorted(range(len(scores)), key=lambda index: (-scores[index], index))
+ 
+ 
+-def _extract_feature_tensor(value: object) -> Tensor:
+-    """Return a feature tensor across supported Transformers output variants."""
+-    pooled = getattr(value, "pooler_output", None)
+-    return cast("Tensor", pooled if pooled is not None else value)
+-
+-
+ def _ranking_from_indexed_scores(scores: Sequence[tuple[int, float]]) -> list[int]:
+     """Convert candidate-indexed scores into a stable partial ranking."""
+     return [index for index, _ in sorted(scores, key=lambda item: (-item[1], item[0]))]
+diff --git a/src/exmekh_lib/interfaces/provider.py b/src/exmekh_lib/interfaces/provider.py
+index 4452f89..8aaf5fe 100644
+--- a/src/exmekh_lib/interfaces/provider.py
++++ b/src/exmekh_lib/interfaces/provider.py
+@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
+ from pydantic import BaseModel
+ 
+ from exmekh_lib.config.interface_text import INTERFACE_TEXT
++from exmekh_lib.config.native_suite import NATIVE_SUITE
+ from exmekh_lib.core.models.provider_request import ProviderRequest
+ from exmekh_lib.core.models.provider_response import ProviderResponse
+ from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
+@@ -17,6 +18,7 @@ from exmekh_lib.interfaces.tokenizer import Tokenizer
+ 
+ if TYPE_CHECKING:
+     from exmekh_lib.core.cache.session_cache import SessionCache
++    from exmekh_lib.core.models.native_suite import NativeSuiteClient
+ 
+ 
+ class ProviderRequestRejectedError(RuntimeError):
+@@ -36,6 +38,9 @@ class Provider(ABC):
+     def get_tokenizer(self) -> Tokenizer:
+         return self._tokenizer
+ 
++    def native_suite(self) -> NativeSuiteClient:
++        raise NotImplementedError(NATIVE_SUITE.unsupported_provider)
++
+     def generate_id(self) -> str:
+         return self._tokenizer.generate_id()
+ 
+diff --git a/src/exmekh_lib/providers/local.py b/src/exmekh_lib/providers/local.py
+index 350ebd7..30bd42c 100644
+--- a/src/exmekh_lib/providers/local.py
++++ b/src/exmekh_lib/providers/local.py
+@@ -11,6 +11,7 @@ from pydantic import BaseModel
+ 
+ from exmekh_lib.config.provider import DEFAULT_PROVIDER_SETTINGS
+ from exmekh_lib.config.provider_text import PROVIDER_TEXT
++from exmekh_lib.core.models.native_suite import NativeSuiteClient
+ from exmekh_lib.core.models.provider_request import ProviderRequest
+ from exmekh_lib.core.models.provider_response import ProviderResponse
+ from exmekh_lib.core.models.reasoning_effort import ReasoningEffort
+@@ -115,6 +116,9 @@ class LocalProvider(Provider):
+         client = OpenAI(api_key=api_key, base_url=base_url)
+         return client
+ 
++    def native_suite(self) -> NativeSuiteClient:
++        return NativeSuiteClient(self.client)
++
+     def _resolve_api_key(self) -> str:
+         api_key = (
+             self._api_key
+@@ -172,6 +176,10 @@ class LocalProvider(Provider):
+             raise TypeError(PROVIDER_TEXT.provider_model_catalog_data_must_be_a_list)
+ 
+         for model in model_data:
++            capabilities = getattr(model, "ds4", None)
++            if isinstance(capabilities, dict) and "operations" in capabilities:
++                if "chat" not in capabilities["operations"]:
++                    continue
+             model_id = getattr(model, "id", None)
+             if not isinstance(model_id, str) or not model_id.strip():
+                 raise RuntimeError(
+diff --git a/tests/core/agents/capabilities/test_builtin_capabilities.py b/tests/core/agents/capabilities/test_builtin_capabilities.py
+index 2a5975c..3f3ce01 100644
+--- a/tests/core/agents/capabilities/test_builtin_capabilities.py
++++ b/tests/core/agents/capabilities/test_builtin_capabilities.py
+@@ -97,6 +97,8 @@ def test_loads_builtin_assistant_capabilities(tmp_path: Path) -> None:
+         "file-processing",
+     }
+     assert {tool.name for tool in capabilities.tools} == {
++        "generate-image",
++        "embed-content",
+         "calculate",
+         "date-time",
+         "inspect-file",
+@@ -118,7 +120,7 @@ def test_loads_builtin_assistant_capabilities(tmp_path: Path) -> None:
+         "deep-thinking",
+         "file-processing",
+     )
+-    assert main_hds.get_sub_tool_names() == ()
++    assert main_hds.get_sub_tool_names() == ("generate-image", "embed-content")
+     assert main_hds.get_exit_tool_name() == "exit_agent"
+ 
+ 
+diff --git a/tests/core/agents/capabilities/test_default_capabilities.py b/tests/core/agents/capabilities/test_default_capabilities.py
+index 947434a..13b902b 100644
+--- a/tests/core/agents/capabilities/test_default_capabilities.py
++++ b/tests/core/agents/capabilities/test_default_capabilities.py
+@@ -46,6 +46,7 @@ DEEP_THINKING_TOOLS = {
+     "logic-consistency",
+     "logic-counterexample",
+ }
++NATIVE_MEDIA_TOOLS = {"generate-image", "embed-content"}
+ 
+ 
+ def test_runtime_tool_sources_use_the_bundled_tools_directory(tmp_path: Path) -> None:
+@@ -336,7 +337,9 @@ def test_harness_defaults_support_an_application_hds_with_real_tools(
+         "deep-thinking",
+         "file-processing",
+     }
+-    assert {tool.name for tool in loaded.tools} == DEEP_THINKING_TOOLS | {
++    assert {
++        tool.name for tool in loaded.tools
++    } == DEEP_THINKING_TOOLS | NATIVE_MEDIA_TOOLS | {
+         "inspect-file",
+         "read-file",
+         "edit-file",
+@@ -374,7 +377,7 @@ def test_main_selection_works_without_application_paths_and_deduplicates_builtin
+             "deep-thinking",
+             "file-processing",
+         }
+-    assert len(loaded.tools) == 13
++    assert len(loaded.tools) == 15
+ 
+ 
+ @pytest.mark.parametrize("paths", [None, []])
+@@ -386,7 +389,9 @@ def test_node_uses_bundled_path_when_no_paths_are_supplied(
+     loaded = node.load_capabilities(work_root=tmp_path)
+ 
+     assert {resource.name for resource in loaded.hds} == {"main"}
+-    assert {tool.name for tool in loaded.tools} == DEEP_THINKING_TOOLS | {
++    assert {
++        tool.name for tool in loaded.tools
++    } == DEEP_THINKING_TOOLS | NATIVE_MEDIA_TOOLS | {
+         "inspect-file",
+         "read-file",
+         "edit-file",
+@@ -403,7 +408,7 @@ def test_direct_capabilities_loader_adds_bundled_path_once(tmp_path: Path) -> No
+             work_root=tmp_path
+         )
+         assert {hds.name for hds in loaded.hds} == {"main"}
+-    assert len(loaded.tools) == 13
++    assert len(loaded.tools) == 15
+ 
+ 
+ def test_direct_capabilities_loader_uses_bundled_path_when_paths_are_none(
+@@ -681,7 +686,7 @@ def test_excluding_memory_readers_preserves_internal_cache(tmp_path: Path) -> No
+         "file-processing",
+         "control_tool_execution",
+         "bash",
+-    } | DEEP_THINKING_TOOLS | {
++    } | DEEP_THINKING_TOOLS | NATIVE_MEDIA_TOOLS | {
+         "inspect-file",
+         "read-file",
+         "edit-file",
+@@ -783,7 +788,10 @@ def test_application_tool_override_uses_names_from_every_capabilities_path(
+     assert defaults.overrides["first-tool"] == ToolOverride("first-tool", "second-tool")
+ 
+     tools = {tool.name: tool for tool in loaded.tools}
+-    assert set(tools) == {"first-tool", "second-tool"} | DEEP_THINKING_TOOLS | {
++    assert set(tools) == {
++        "first-tool",
++        "second-tool",
++    } | DEEP_THINKING_TOOLS | NATIVE_MEDIA_TOOLS | {
+         "inspect-file",
+         "read-file",
+         "edit-file",
+@@ -824,7 +832,7 @@ def test_named_tool_override_replaces_a_bundled_tool(tmp_path: Path) -> None:
+     assert {tool.name for tool in loaded.tools} == {
+         "calculate",
+         "replacement-tool",
+-    } | DEEP_THINKING_TOOLS | {
++    } | DEEP_THINKING_TOOLS | NATIVE_MEDIA_TOOLS | {
+         "inspect-file",
+         "read-file",
+         "edit-file",
+@@ -1081,7 +1089,7 @@ def test_missing_bundled_resource_is_reported(tmp_path: Path, monkeypatch) -> No
+     node = Node(name_hds="main", default_capabilities=DefaultCapabilities())
+     with pytest.raises(
+         ValueError,
+-        match="Selected default capabilities are missing: calculate, date-time, deep-thinking, delete-file, edit-file, exit_agent",
++        match="Selected default capabilities are missing: calculate, date-time, deep-thinking, delete-file, edit-file, embed-content, exit_agent",
+     ):
+         node.load_capabilities(work_root=tmp_path)
+ 
+diff --git a/tests/core/agents/deep_skill/test_execution.py b/tests/core/agents/deep_skill/test_execution.py
+index 8b4e22c..94b340b 100644
+--- a/tests/core/agents/deep_skill/test_execution.py
++++ b/tests/core/agents/deep_skill/test_execution.py
+@@ -1,13 +1,16 @@
+ from pathlib import Path
+ 
+ import pytest
++from PIL import Image
+ 
+ from exmekh_lib.core.agents.deep_skill import execution as execution_module
+ from exmekh_lib.core.agents.deep_skill.deep_skill import DeepSkill
+ from exmekh_lib.core.agents.deep_skill.execution import DeepSkillExecutionTracker
+ from exmekh_lib.core.agents.deep_skill.metadata import DeepSkillMetadata
+ from exmekh_lib.core.models.assistant_message import AssistantMessage
++from exmekh_lib.core.models.tool_message import ToolMessage
+ from exmekh_lib.core.models.tool_output_reference import ToolOutputReference
++from exmekh_lib.core.models.user_message import ImagesUserMessage, UserMessage
+ 
+ 
+ def _skill(name: str) -> DeepSkill:
+@@ -25,6 +28,21 @@ def _skill(name: str) -> DeepSkill:
+     )
+ 
+ 
++def test_closed_skill_history_keeps_generated_tool_images():
++    tracker = DeepSkillExecutionTracker()
++    execution = tracker.open(_skill("images"), "open-images", 0)
++    message = ToolMessage(
++        "generated",
++        "image-call",
++        "generate-image",
++        attachments=UserMessage(ImagesUserMessage([Image.new("RGB", (32, 32), "red")])),
++    )
++    tracker.close(end_index=1, output="done", history=[message])
++    payload = execution.history_tree()["history"][0]["attachments"]
++    assert payload["parts"][0]["type"] == "image"
++    assert payload["parts"][0]["data"].startswith("data:image/png;base64,")
++
++
+ def test_tracks_nested_executions_and_copies_skills() -> None:
+     parent_skill = _skill("parent")
+     child_skill = _skill("child")
+diff --git a/tests/core/models/test_tool_attachments.py b/tests/core/models/test_tool_attachments.py
+index d56e9ab..86b77e8 100644
+--- a/tests/core/models/test_tool_attachments.py
++++ b/tests/core/models/test_tool_attachments.py
+@@ -3,11 +3,13 @@ import base64
+ import pytest
+ from PIL import Image
+ 
++from exmekh_lib.core.cache.user_message_codec import deserialize_user_message
+ from exmekh_lib.core.models.assistant_message import (
+     AssistantMessage,
+     FunctionCall,
+     ToolCall,
+ )
++from exmekh_lib.core.models.history import MessageHistory
+ from exmekh_lib.core.models.provider_request import ProviderRequest
+ from exmekh_lib.core.models.system_message import SystemMessage
+ from exmekh_lib.core.models.tool import PreformattedToolResult
+@@ -107,3 +109,20 @@ def test_provider_sends_restored_attachments_after_complete_tool_batch(mapper):
+ def test_tool_attachments_require_a_user_message(factory):
+     with pytest.raises(TypeError, match="attachments must be a UserMessage"):
+         factory("invalid")
++
++
++def test_history_export_preserves_tool_pixels_without_changing_message_dump():
++    image = Image.new("RGB", (32, 32), "red")
++    message = ToolMessage(
++        "complete",
++        "image-call",
++        "generate-image",
++        attachments=UserMessage(["Generated previews", ImagesUserMessage([image])]),
++    )
++    snapshot = MessageHistory([message]).dump_history()[0]
++    assert "attachments" in snapshot
++    restored = deserialize_user_message(snapshot["attachments"])
++    parts = list(restored.iter_content_parts())
++    assert parts[0] == "Generated previews"
++    assert parts[1].tobytes() == image.tobytes()
++    assert message.message_dump() == {"role": "tool", "content": "complete"}
+diff --git a/tests/core/web_navigation/test_ranking_extended.py b/tests/core/web_navigation/test_ranking_extended.py
+index a05275b..41d459e 100644
+--- a/tests/core/web_navigation/test_ranking_extended.py
++++ b/tests/core/web_navigation/test_ranking_extended.py
+@@ -1,14 +1,13 @@
+ """Ranking and embedding adapters exercised without downloading model weights."""
+ 
+ import io
+-import sys
+-from contextlib import nullcontext
+ from types import SimpleNamespace
+ 
+ import numpy as np
+ import pytest
+ from PIL import Image
+ 
++from exmekh_lib.core.models.native_suite import MediaContent
+ from exmekh_lib.core.web_navigation import ranking
+ from exmekh_lib.core.web_navigation.image_discovery import DiscoveredImage
+ 
+@@ -151,25 +150,19 @@ def test_rank_results_uses_semantic_signal_and_recovers_when_unavailable(
+ 
+ 
+ def test_backend_singletons_load_once(monkeypatch: pytest.MonkeyPatch) -> None:
+-    text_instances: list[object] = []
+-    image_instances: list[object] = []
++    instances: list[object] = []
+     monkeypatch.setattr(ranking, "_BACKEND", None)
+     monkeypatch.setattr(ranking, "_IMAGE_BACKEND", None)
+     monkeypatch.setattr(
+         ranking,
+-        "OpenVINOEmbeddingBackend",
+-        lambda: text_instances.append(object()) or text_instances[-1],
+-    )
+-    monkeypatch.setattr(
+-        ranking,
+-        "SigLIPEmbeddingBackend",
+-        lambda: image_instances.append(object()) or image_instances[-1],
++        "NativeEmbeddingBackend",
++        lambda: instances.append(object()) or instances[-1],
+     )
+     assert ranking.get_embedding_backend() is ranking.get_embedding_backend()
+     assert (
+         ranking.get_image_embedding_backend() is ranking.get_image_embedding_backend()
+     )
+-    assert len(text_instances) == len(image_instances) == 1
++    assert len(instances) == 2
+ 
+ 
+ def test_backend_double_check_reuses_an_instance_loaded_by_another_thread(
+@@ -210,104 +203,15 @@ def test_default_semantic_backend_uses_process_cache(
+     assert [len(batch) for batch in backend.calls] == [3, 1]
+ 
+ 
+-def test_openvino_adapter_normalizes_cls_vectors(
+-    monkeypatch: pytest.MonkeyPatch,
+-) -> None:
+-    output_key = object()
+-
+-    class CompiledModel:
+-        inputs = [SimpleNamespace(get_any_name=lambda: "input_ids")]
+-
+-        def output(self, index: int) -> object:
+-            return output_key
+-
+-        def __call__(self, inputs: object) -> dict[object, np.ndarray]:
+-            return {
+-                output_key: np.asarray([[[3.0, 4.0], [0.0, 0.0]]], dtype=np.float32)
+-            }
++def test_native_adapter_uses_server_vectors(monkeypatch: pytest.MonkeyPatch) -> None:
++    class Suite:
++        def embeddings(self, items: object, **kwargs: object) -> dict[str, object]:
++            return {"data": [{"embedding": [0.6, 0.8]}]}
+ 
+-    class Core:
+-        def read_model(self, path: str) -> str:
+-            return path
++        def upload_image(self, image: object) -> object:
++            return MediaContent(type="image", file_id="file-test")
+ 
+-        def compile_model(self, model: str, device: str) -> CompiledModel:
+-            assert device == "CPU"
+-            return CompiledModel()
+-
+-    def tokenizer(texts: list[str], **kwargs: object) -> dict[str, np.ndarray]:
+-        return {"input_ids": np.asarray([[1]]), "ignored": np.asarray([[2]])}
+-
+-    monkeypatch.setitem(sys.modules, "openvino", SimpleNamespace(Core=Core))
+-    monkeypatch.setitem(
+-        sys.modules,
+-        "huggingface_hub",
+-        SimpleNamespace(hf_hub_download=lambda **kwargs: "model.xml"),
+-    )
+-    monkeypatch.setitem(
+-        sys.modules,
+-        "transformers",
+-        SimpleNamespace(
+-            AutoTokenizer=SimpleNamespace(from_pretrained=lambda name: tokenizer)
+-        ),
+-    )
+-    backend = ranking.OpenVINOEmbeddingBackend()
++    monkeypatch.setattr(ranking, "suite_from_environment", lambda: Suite())
++    backend = ranking.NativeEmbeddingBackend()
+     assert np.allclose(backend.encode(["text"]), [[0.6, 0.8]])
+-
+-
+-def test_siglip_adapter_uses_processor_and_feature_outputs(
+-    monkeypatch: pytest.MonkeyPatch,
+-) -> None:
+-    class Tensor:
+-        def to(self, device: object) -> "Tensor":
+-            return self
+-
+-        def detach(self) -> "Tensor":
+-            return self
+-
+-        def float(self) -> "Tensor":
+-            return self
+-
+-        def cpu(self) -> "Tensor":
+-            return self
+-
+-        def numpy(self) -> np.ndarray:
+-            return np.asarray([[1.0, 0.0]], dtype=np.float32)
+-
+-    class Inputs(dict[str, object]):
+-        def to(self, device: object) -> "Inputs":
+-            return self
+-
+-    class Model:
+-        def to(self, device: object) -> None:
+-            pass
+-
+-        def eval(self) -> None:
+-            pass
+-
+-        def get_text_features(self, **kwargs: object) -> object:
+-            return SimpleNamespace(pooler_output=Tensor())
+-
+-        def get_image_features(self, **kwargs: object) -> Tensor:
+-            return Tensor()
+-
+-    torch = SimpleNamespace(
+-        cuda=SimpleNamespace(is_available=lambda: False),
+-        device=lambda name: name,
+-        inference_mode=nullcontext,
+-        nn=SimpleNamespace(
+-            functional=SimpleNamespace(normalize=lambda value, dim: value)
+-        ),
+-    )
+-    processor = SimpleNamespace(from_pretrained=lambda name: lambda **kwargs: Inputs())
+-    monkeypatch.setitem(sys.modules, "torch", torch)
+-    monkeypatch.setitem(
+-        sys.modules,
+-        "transformers",
+-        SimpleNamespace(
+-            AutoModel=SimpleNamespace(from_pretrained=lambda *args, **kwargs: Model()),
+-            AutoProcessor=processor,
+-        ),
+-    )
+-    backend = ranking.SigLIPEmbeddingBackend()
+-    assert backend.encode_texts(["topic"]).tolist() == [[1.0, 0.0]]
+-    assert backend.encode_images([Image.new("RGB", (1, 1))]).tolist() == [[1.0, 0.0]]
++    assert np.allclose(backend.encode_images([Image.new("RGB", (1, 1))]), [[0.6, 0.8]])
+diff --git a/tests/providers/test_local.py b/tests/providers/test_local.py
+index d7753a2..e477fb5 100644
+--- a/tests/providers/test_local.py
++++ b/tests/providers/test_local.py
+@@ -304,6 +304,9 @@ def test_get_available_models_returns_unique_model_ids() -> None:
+     provider.client.models.list.return_value = SimpleNamespace(
+         data=[
+             SimpleNamespace(id="first"),
++            SimpleNamespace(id="embed", ds4={"operations": ["embed"]}),
++            SimpleNamespace(id="image", ds4={"operations": ["image_generate"]}),
++            SimpleNamespace(id="second", ds4={"operations": ["chat"]}),
+             SimpleNamespace(id="second"),
+             SimpleNamespace(id="first"),
+         ]
+diff --git a/uv.lock b/uv.lock
+index 68e29f5..3ba6ef7 100644
+--- a/uv.lock
++++ b/uv.lock
+@@ -805,7 +805,6 @@ dependencies = [
+     { name = "lxml" },
+     { name = "numpy" },
+     { name = "openai" },
+-    { name = "openvino" },
+     { name = "pillow" },
+     { name = "playwright" },
+     { name = "psutil" },
+@@ -842,7 +841,6 @@ requires-dist = [
+     { name = "lxml", specifier = ">=5.3.0" },
+     { name = "numpy", specifier = ">=2.4.0" },
+     { name = "openai", specifier = ">=3.3.0" },
+-    { name = "openvino", specifier = ">=2026.1.0" },
+     { name = "pillow", specifier = ">=12.3.0" },
+     { name = "playwright", specifier = ">=1.53.0" },
+     { name = "psutil", specifier = ">=7.2.2" },
+@@ -1919,38 +1917,6 @@ wheels = [
+     { url = "https://files.pythonhosted.org/packages/82/83/d44980712bf51dddaca090cd772b3102e75377ddac877eaa4b2cb58d886a/openai-3.3.0-py3-none-any.whl", hash = "sha256:ded6b2112e6d299c7a2573ff6f165dc92fb64ceaa4d7daa42345f091157bd373", size = 1690265, upload-time = "2026-08-18T21:17:51.351Z" },
+ ]
+ 
+-[[package]]
+-name = "openvino"
+-version = "2026.4.0"
+-source = { registry = "https://pypi.org/simple" }
+-dependencies = [
+-    { name = "numpy" },
+-    { name = "openvino-telemetry" },
+-]
+-wheels = [
+-    { url = "https://files.pythonhosted.org/packages/51/59/f6cf3e684a31ddf4db3df645cc452b18f33edac6a4becff1c141692fab4c/openvino-2026.4.0-22959-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:2483df2786ab9c5b63f5f712d2aed38d6d227dc5f400dbbeb49dc2c84c2109e3", size = 33344519, upload-time = "2026-09-16T14:54:45.242Z" },
+-    { url = "https://files.pythonhosted.org/packages/75/b0/692a6f0aa313791126a0d646b7c0ba88ee368c7f76d1b8c8cd50b977975a/openvino-2026.4.0-22959-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:186abfe5f355c33f19b50fe48340f9af0110e92fd279b7358a023fcbd225c380", size = 59128449, upload-time = "2026-09-16T14:54:49.963Z" },
+-    { url = "https://files.pythonhosted.org/packages/31/61/fc2344dbcd86c4b1e9b9afa98b20f9e4c1bf9a31171785d894657e5691c0/openvino-2026.4.0-22959-cp313-cp313-manylinux_2_35_aarch64.whl", hash = "sha256:7a335edb34838d9d19a4d6cd79267f0d086e40b0847373e1cee82fc96cff758f", size = 30292247, upload-time = "2026-09-16T14:54:53.22Z" },
+-    { url = "https://files.pythonhosted.org/packages/be/bf/a18d0a0a67b572b76445fbd2fa7a5fe955de882010eb0f316d298ca42c16/openvino-2026.4.0-22959-cp313-cp313-win_amd64.whl", hash = "sha256:e822141285804444ef5fa5e916f5d42e50f7fafebfbfc5d0d7c3a335de1aa5fb", size = 84025941, upload-time = "2026-09-16T14:54:58.136Z" },
+-    { url = "https://files.pythonhosted.org/packages/49/ba/1bbe576c6996bc1fc51c81a7f89f66fd0eb30ba10ffe086cd1683a53a4d1/openvino-2026.4.0-22959-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:82741b9ef682ff736161fdad30e7fa4593de512ae7750b032e6a8aa3f0725252", size = 33320261, upload-time = "2026-09-16T14:55:01.69Z" },
+-    { url = "https://files.pythonhosted.org/packages/e2/99/a62c8957f7ef1b8a78a526abc710e7c7fdd43d2bdb3456610b3c5377c0b5/openvino-2026.4.0-22959-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:5ac6b16b3072f4c5f20ab308db598098bcd1c346108e93f4b36d8548b95707bf", size = 59130968, upload-time = "2026-09-16T14:55:06.289Z" },
+-    { url = "https://files.pythonhosted.org/packages/b3/ff/9c73e1a03e6fa79d38eeac5793c9de117fe10db4b71b81477d17ee225ea6/openvino-2026.4.0-22959-cp314-cp314-manylinux_2_35_aarch64.whl", hash = "sha256:b67541153cc2ef7181472f780a9094a096c4b75e1438f68facfe2b2b5054cdd0", size = 30302839, upload-time = "2026-09-16T14:55:09.6Z" },
+-    { url = "https://files.pythonhosted.org/packages/c5/82/b7f7a3c88622e47647d3bb6c9f04e98a5227c4f928cc29984f4a4538f850/openvino-2026.4.0-22959-cp314-cp314-win_amd64.whl", hash = "sha256:eab8a6c71210b2596765e3c9ffbdbe05c1d3b279793806e55162befa898a548f", size = 84027824, upload-time = "2026-09-16T14:55:14.733Z" },
+-    { url = "https://files.pythonhosted.org/packages/ad/6c/0d081a3e036e9c57552135ad9d9e3d40bc4112054709998136f6bead96a0/openvino-2026.4.0-22959-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:97a2c9dfb8e000483467463e9354876c4b08630aae4f2e24a639388d4c4de343", size = 33555730, upload-time = "2026-09-16T14:55:19.111Z" },
+-    { url = "https://files.pythonhosted.org/packages/80/a3/4183d541bc11a33ea8a7885e5a4ccf5f26b934251b63f7f223189d09cbe1/openvino-2026.4.0-22959-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:b1faae0787283f94fde354453246b8ca1126fa9d52ab9496dcc43a98925f03a4", size = 59176056, upload-time = "2026-09-16T14:55:23.197Z" },
+-    { url = "https://files.pythonhosted.org/packages/ab/83/f0ee3431b31f268057ffac0449014fbfd853afba040fe23aed6ddb3e721f/openvino-2026.4.0-22959-cp314-cp314t-manylinux_2_35_aarch64.whl", hash = "sha256:6b3e9a00c1b57222c976af12f53bee79c4df0367aff7843be4b7c12d6a002fa8", size = 27414169, upload-time = "2026-09-16T14:55:26.672Z" },
+-    { url = "https://files.pythonhosted.org/packages/2d/50/6eba8fac1ff4fdc05da1dbe2d61964220c9eeefecf385595b3e8bd5fe05b/openvino-2026.4.0-22959-cp314-cp314t-win_amd64.whl", hash = "sha256:8515a86ffe12b830733511d8b2848d1b7eb6a7c2bb0a69ac7e7aae518ddb2101", size = 84193984, upload-time = "2026-09-16T14:55:32.087Z" },
+-]
+-
+-[[package]]
+-name = "openvino-telemetry"
+-version = "2025.2.0"
+-source = { registry = "https://pypi.org/simple" }
+-sdist = { url = "https://files.pythonhosted.org/packages/71/8a/89d82f1a9d913fb266c2e6dc2f6030935db24b7152963a8db6c4f039787f/openvino_telemetry-2025.2.0.tar.gz", hash = "sha256:8bf8127218e51e99547bf38b8fb85a8b31c9bf96e6f3a82eb0b3b6a34155977c", size = 18894, upload-time = "2025-07-07T10:29:51.159Z" }
+-wheels = [
+-    { url = "https://files.pythonhosted.org/packages/3b/ac/5ab0ca0aa269ad3c73f7bfc3801b10e5f56f75a31bf68c1ae8bd51cf70a4/openvino_telemetry-2025.2.0-py3-none-any.whl", hash = "sha256:bcb667e83a44f202ecf4cfa49281715c6d7e21499daec04ff853b7f964833599", size = 25227, upload-time = "2025-07-07T10:29:50.189Z" },
+-]
+-
+ [[package]]
+ name = "packaging"
+ version = "26.3"
+diff --git a/docs/22-native-suite.md b/docs/22-native-suite.md
+new file mode 100644
+index 0000000..8453be1
+--- /dev/null
++++ b/docs/22-native-suite.md
+@@ -0,0 +1,108 @@
++# Native DS4 images and embeddings
++
++`Client.native_suite()` exposes the configured native DS4 service on the same
++OpenAI transport, URL and credentials as `LocalProvider`. No client residency,
++checkpoint or load/unload operations are needed. Providers without this
++capability raise the configured unsupported-provider error.
++
++```python
++from pathlib import Path
++from exmekh_lib.core.models.client import Client
++from exmekh_lib.core.models.native_suite import EmbeddingItem, TextContent
++from exmekh_lib.core.models.system_message import SystemMessage
++from exmekh_lib.providers.local import LocalProvider
++
++with LocalProvider(model="Qwen3.8-27B-UD-Q4_K_S", base_url="http://localhost:18091/v1") as provider:
++    client = Client(provider, SystemMessage("Help the user."))
++    suite = client.native_suite()
++    image = suite.upload(Path("reference.png"), kind="image")
++    vectors = suite.embeddings([
++        EmbeddingItem(content=[TextContent(text="A reference"), image])
++    ], dimensions=256, task="similarity")
++    result = suite.images("A red square", width=256, height=256, seed=17)
++    Path("result.png").write_bytes(suite.content(result.data[0].ds4.file_id))
++```
++
++The only implemented identities are `Literal["Qwen/Qwen-Image-2.1-Turbo"]`
++and `Literal["google/embeddinggemma-2"]`. Each operation has one available
++model, so methods and tools expose no model selector. Image dimensions are
++integer `width` and `height`; serialization to the standard `size` field stays
++inside the transport adapter. `models()` returns typed native catalog entries;
++the provider's chat model selection excludes non-chat capabilities.
++
++`embeddings` accepts ordered `EmbeddingItem` objects or a sequence of strings.
++Parts are `TextContent` and uploaded `MediaContent` with type image/video/audio;
++video `audio` is `exclude` by default and can explicitly be `include`. One
++vector is returned per item. Supported dimensions are 128/256/512/768; task is
++raw/search_query/document/code_query/similarity, with optional title for document.
++The DS4 extension declares version 1 and rejects context overflow rather than
++silently truncating. Standard OpenAI text/token embeddings remain available
++through `provider.client.embeddings.create`.
++
++`images` supports ordered image references, prompt-only, image-only with an empty
++prompt, or both. It exposes count, integer dimensions, PNG format,
++auto/opaque/transparent background, seed and idempotency key. The server fixes
++the Turbo recipe at eight steps/CFG 1. Width/height are multiples of 32 from
++32 to 2048; count 1–8 is bounded by 4,194,304 total pixels. Unknown options are
++rejected. An automatic per-call idempotency key protects transport retries;
++pass a stable key yourself when retrying the same logical call later.
++References preserve their supplied dimensions (`reference_resolution=0`) and
++must already satisfy the native Qwen3-VL geometry plan, such as 256×256.
++References requiring an implicit resize are rejected before compute.
++
++## Registered tools and results
++
++`generate-image` and `embed-content` are discoverable bundled capabilities.
++Their normal registration and per-node selection use `DefaultCapabilities`.
++Tool execution propagates the calling `Client.native_suite` factory, including
++background workers. Direct standalone tools/ranking use the provider environment
++URL/key settings when no calling context exists.
++
++`generate-image` accepts an ordered `images: list[str]` of workspace paths and
++all implemented image options. It saves original PNGs under
++`.exmekh_lib/generated-media/` and returns structured file IDs, paths, seeds,
++width, height, recipe and service metadata. `include_image_in_result` defaults
++to True in `config/native_suite.py`: an `AttachedToolResult` carries previews
++through the existing message attachment path. `preview_scale` must be in `(0,1]`
++and changes previews only. False returns structured metadata without pixels.
++Previews include a short context label identifying the completed tool result.
++History exports preserve their actual pixels using the existing cache codec,
++including closed skill histories. Compact message dumps used for identity and
++wire mapping retain their previous shape. The frontend accepts both these
++lossless snapshots and its previously saved attachment format.
++Structured results use the shared XML renderer at the presentation boundary;
++Python values, HTTP bodies and stored records retain their existing types.
++
++`embed-content` accepts ordered dictionaries with `type=text,text=...`, or
++`type=image|video|audio,path=...`; video additionally supports `audio=include|exclude`.
++The complete list forms one embedding item. Paths must resolve inside the
++workspace. The caller can use the typed client for multiple items and tasks.
++
++Web text and image ranking now share native EmbeddingGemma 2 similarity vectors.
++OpenVINO, Granite and SigLIP2 ranking inference have been removed from the
++client; Transformers/PyTorch remain dependencies of other existing features.
++The native backend does not reuse client embedding caches across endpoints.
++The existing BM25/provider fallbacks remain when semantic service calls fail.
++
++## Service lifetime and verification
++
++DS4 file IDs are temporary (3600 seconds, renewed on compute use); generated
++local PNGs survive that server TTL. Receipt replay is bounded to 600 seconds
++within the current service process. Generation/editing returns only after the
++server restores any parked LLM state. A restore failure is an error and leaves
++server recovery state intact. API/UI clients do not distinguish residency plans.
++
++Offline tests cover serialization, order, dimensions, no model selector,
++uploads, preview scaling, multiple outputs, path constraints, tool registration
++and ranking backend replacement. DS4 live acceptance covers the actual OpenAI
++SDK, all four embedding modalities, generation/editing and an actual ExMekh
++LLM → registered tool → continuation with cached-token reuse. Frontend tests
++cover thumbnails, the preview dialog and persistence after browser reload.
++The DS4 T17/T18 report records commands, source/wheel hashes and limits.
++The follow-up `docs/performance/native-suite-image-e2e-20261022/README.md` in the
++DS4 repository audits every requirement in the `Funzionalità extra` checklist.
++Its opt-in browser test uses a real LocalProvider, real registered tool and GPU
++generation, then verifies two previews, the dialog, reload and a second model
++turn with restored image attachments. A separate live matrix covers all three
++input modes, preview suppression/scaling, original bytes, retry and native web
++ranking. These tests qualify integration, not the separate image quality gates.
+diff --git a/src/exmekh_lib/capabilities/tools/embed-content/main.py b/src/exmekh_lib/capabilities/tools/embed-content/main.py
+new file mode 100644
+index 0000000..c154caf
+--- /dev/null
++++ b/src/exmekh_lib/capabilities/tools/embed-content/main.py
+@@ -0,0 +1,20 @@
++"""Registered multimodal embedding entrypoint."""
++
++from pathlib import Path
++
++from exmekh_lib.config.default_capabilities import DEFAULT_CAPABILITIES
++from exmekh_lib.config.native_suite import NATIVE_SUITE
++from exmekh_lib.core.agents.tools.decorator import deep_tool
++from exmekh_lib.core.models.native_media_tools import embed_content
++
++
++@deep_tool(
++    name=DEFAULT_CAPABILITIES.embed_content,
++    description=NATIVE_SUITE.embedding_description,
++)
++def run(
++    work_root: Path,
++    content: list[dict[str, str]],
++    dimensions: int = NATIVE_SUITE.dimensions,
++) -> dict[str, object]:
++    return embed_content(work_root, content, dimensions)
+diff --git a/src/exmekh_lib/capabilities/tools/generate-image/main.py b/src/exmekh_lib/capabilities/tools/generate-image/main.py
+new file mode 100644
+index 0000000..a7b7497
+--- /dev/null
++++ b/src/exmekh_lib/capabilities/tools/generate-image/main.py
+@@ -0,0 +1,42 @@
++"""Registered image generation/editing entrypoint."""
++
++from pathlib import Path
++from typing import Literal
++
++from exmekh_lib.config.default_capabilities import DEFAULT_CAPABILITIES
++from exmekh_lib.config.native_suite import NATIVE_SUITE
++from exmekh_lib.core.agents.tools.decorator import deep_tool
++from exmekh_lib.core.models.native_media_tools import generate_images
++
++
++@deep_tool(
++    name=DEFAULT_CAPABILITIES.generate_image, description=NATIVE_SUITE.image_description
++)
++def run(
++    work_root: Path,
++    prompt: str = "",
++    images: list[str] | None = None,
++    n: int = 1,
++    width: int = 1024,
++    height: int = 1024,
++    output_format: Literal["png"] = "png",
++    background: Literal["auto", "opaque", "transparent"] = "auto",
++    seed: int | None = None,
++    idempotency_key: str | None = None,
++    include_image_in_result: bool = NATIVE_SUITE.include_image_in_result,
++    preview_scale: float = NATIVE_SUITE.preview_scale,
++) -> dict[str, object]:
++    return generate_images(
++        work_root,
++        prompt,
++        images,
++        n,
++        width,
++        height,
++        output_format,
++        background,
++        seed,
++        idempotency_key,
++        include_image_in_result,
++        preview_scale,
++    )
+diff --git a/src/exmekh_lib/config/native_suite.py b/src/exmekh_lib/config/native_suite.py
+new file mode 100644
+index 0000000..1e6928a
+--- /dev/null
++++ b/src/exmekh_lib/config/native_suite.py
+@@ -0,0 +1,36 @@
++"""Native DS4 service identities and tool presentation settings."""
++
++from dataclasses import dataclass
++from typing import Literal
++
++
++@dataclass(frozen=True, slots=True)
++class NativeSuiteSettings:
++    image_model: Literal["Qwen/Qwen-Image-2.1-Turbo"] = "Qwen/Qwen-Image-2.1-Turbo"
++    embedding_model: Literal["google/embeddinggemma-2"] = "google/embeddinggemma-2"
++    dimensions: int = 768
++    include_image_in_result: bool = True
++    preview_scale: float = 1.0
++    timeout_seconds: float = 600
++    image_description: str = (
++        "Generate or edit images using the configured native image model. Supply an "
++        "ordered list of reference paths for editing. Returns media IDs, local PNG "
++        "paths, seeds, recipe and dimensions. include_image_in_result attaches "
++        "labeled previews to the next model request; preview_scale changes previews only."
++    )
++    image_result_context: str = (
++        "These images are previews from the completed generate-image tool call. "
++        "The original PNGs, file IDs, seeds and recipe are in its tool result. "
++        "Continue the current request using that completed result."
++    )
++    embedding_description: str = (
++        "Embed ordered text, image, video or audio content in one shared vector "
++        "space using the native service. Returns vectors and their model identity."
++    )
++    unsupported_provider: str = "This provider does not expose the native suite."
++    invalid_response: str = "The native service returned an invalid response."
++    invalid_scale: str = "preview_scale must be greater than zero and at most one."
++    invalid_path: str = "Media paths must stay inside the workspace."
++
++
++NATIVE_SUITE = NativeSuiteSettings()
+diff --git a/src/exmekh_lib/core/models/message_snapshot.py b/src/exmekh_lib/core/models/message_snapshot.py
+new file mode 100644
+index 0000000..fdad75b
+--- /dev/null
++++ b/src/exmekh_lib/core/models/message_snapshot.py
+@@ -0,0 +1,17 @@
++"""Lossless tool attachments for exported history, separate from compact dumps."""
++
++from typing import Any
++
++from exmekh_lib.core.cache.user_message_codec import serialize_user_message
++from exmekh_lib.core.models.tool_message import ToolMessage
++from exmekh_lib.interfaces.message import Message
++
++
++def snapshot_message(message: Message[object]) -> dict[str, Any]:
++    snapshot: dict[str, Any] = dict(message.message_dump())
++    if (
++        isinstance(message, ToolMessage)
++        and (attachments := message.get_attachments()) is not None
++    ):
++        snapshot["attachments"] = serialize_user_message(attachments)
++    return snapshot
+diff --git a/src/exmekh_lib/core/models/native_media_tools.py b/src/exmekh_lib/core/models/native_media_tools.py
+new file mode 100644
+index 0000000..2b06e49
+--- /dev/null
++++ b/src/exmekh_lib/core/models/native_media_tools.py
+@@ -0,0 +1,123 @@
++"""Explicit native media tools using the existing attachment delivery path."""
++
++from __future__ import annotations
++
++import base64
++import io
++import uuid
++from pathlib import Path
++from typing import Literal
++
++from PIL import Image
++
++from exmekh_lib.config.native_suite import NATIVE_SUITE
++from exmekh_lib.core.models.native_suite import (
++    EmbeddingItem,
++    TextContent,
++    suite_from_environment,
++)
++from exmekh_lib.core.models.tool import AttachedToolResult
++from exmekh_lib.core.models.user_message import ImagesUserMessage, UserMessage
++
++
++def workspace_media(work_root: Path, path: str) -> Path:
++    root = work_root.resolve()
++    resolved = (root / path).resolve()
++    if not resolved.is_relative_to(root):
++        raise ValueError(NATIVE_SUITE.invalid_path)
++    return resolved
++
++
++def generate_images(
++    work_root: Path,
++    prompt: str,
++    images: list[str] | None = None,
++    n: int = 1,
++    width: int = 1024,
++    height: int = 1024,
++    output_format: Literal["png"] = "png",
++    background: Literal["auto", "opaque", "transparent"] = "auto",
++    seed: int | None = None,
++    idempotency_key: str | None = None,
++    include_image_in_result: bool = NATIVE_SUITE.include_image_in_result,
++    preview_scale: float = NATIVE_SUITE.preview_scale,
++) -> dict[str, object]:
++    if not 0 < preview_scale <= 1:
++        raise ValueError(NATIVE_SUITE.invalid_scale)
++    suite = suite_from_environment()
++    references = [
++        suite.upload(workspace_media(work_root, path), kind="image")
++        for path in images or []
++    ]
++    response = suite.images(
++        prompt,
++        images=references,
++        n=n,
++        width=width,
++        height=height,
++        output_format=output_format,
++        background=background,
++        seed=seed,
++        idempotency_key=idempotency_key,
++    )
++    directory = workspace_media(
++        work_root, f".exmekh_lib/generated-media/{uuid.uuid4().hex}"
++    )
++    directory.mkdir(parents=True)
++    outputs: list[dict[str, object]] = []
++    previews: list[Image.Image] = []
++    for i, item in enumerate(response.data):
++        raw = base64.b64decode(item.b64_json, validate=True)
++        path = directory / f"{i}.png"
++        path.write_bytes(raw)
++        outputs.append({**item.ds4.model_dump(), "path": str(path)})
++        if include_image_in_result:
++            with Image.open(io.BytesIO(raw)) as decoded:
++                preview = decoded.copy()
++            if preview_scale != 1:
++                preview = preview.resize(
++                    (
++                        max(1, round(preview.width * preview_scale)),
++                        max(1, round(preview.height * preview_scale)),
++                    ),
++                    Image.Resampling.LANCZOS,
++                )
++            previews.append(preview)
++    result: dict[str, object] = {"images": outputs, "ds4": response.ds4}
++    if previews:
++        return AttachedToolResult(
++            result,
++            UserMessage(
++                [NATIVE_SUITE.image_result_context, ImagesUserMessage(images=previews)]
++            ),
++        )
++    return result
++
++
++def embed_content(
++    work_root: Path,
++    content: list[dict[str, str]],
++    dimensions: int = NATIVE_SUITE.dimensions,
++) -> dict[str, object]:
++    suite = suite_from_environment()
++    parts = []
++    for item in content:
++        allowed = {"type", "text"} if item.get("type") == "text" else {"type", "path"}
++        if item.get("type") == "video":
++            allowed.add("audio")
++        if set(item) - allowed or item.get("audio", "exclude") not in (
++            "include",
++            "exclude",
++        ):
++            raise ValueError(NATIVE_SUITE.invalid_response)
++        if item["type"] == "text":
++            parts.append(TextContent(text=item["text"]))
++        else:
++            kind = item["type"]
++            if kind not in ("image", "video", "audio"):
++                raise ValueError(NATIVE_SUITE.invalid_response)
++            media = suite.upload(workspace_media(work_root, item["path"]), kind=kind)
++            if kind == "video":
++                media.audio = item.get("audio", "exclude")  # type: ignore[assignment]
++            parts.append(media)
++    return suite.embeddings([EmbeddingItem(content=parts)], dimensions=dimensions)
+diff --git a/src/exmekh_lib/core/models/native_suite.py b/src/exmekh_lib/core/models/native_suite.py
+new file mode 100644
+index 0000000..53de111
+--- /dev/null
++++ b/src/exmekh_lib/core/models/native_suite.py
+@@ -0,0 +1,216 @@
++"""Versioned DS4 media operations on the same OpenAI transport as chat."""
++
++from __future__ import annotations
++
++import io
++import mimetypes
++import os
++import uuid
++from collections.abc import Callable, Iterator, Sequence
++from contextlib import contextmanager
++from contextvars import ContextVar
++from pathlib import Path
++from typing import Any, Literal
++
++from openai import OpenAI
++from PIL import Image
++from pydantic import BaseModel, Field
++
++from exmekh_lib.config.native_suite import NATIVE_SUITE
++from exmekh_lib.config.provider import DEFAULT_PROVIDER_SETTINGS
++
++
++class TextContent(BaseModel):
++    model_config = {"extra": "forbid"}
++    type: Literal["text"] = "text"
++    text: str = Field(min_length=1)
++
++
++class MediaContent(BaseModel):
++    model_config = {"extra": "forbid"}
++    type: Literal["image", "video", "audio"]
++    file_id: str
++    audio: Literal["include", "exclude"] | None = None
++
++
++class EmbeddingItem(BaseModel):
++    model_config = {"extra": "forbid"}
++    content: list[TextContent | MediaContent] = Field(min_length=1)
++
++
++class GeneratedMedia(BaseModel):
++    file_id: str
++    seed: int
++    width: int
++    height: int
++    recipe: dict[str, Any]
++
++
++class GeneratedImage(BaseModel):
++    b64_json: str
++    ds4: GeneratedMedia
++
++
++class ImageBatch(BaseModel):
++    created: int
++    data: list[GeneratedImage]
++    ds4: dict[str, Any]
++
++
++class NativeCapabilities(BaseModel):
++    version: Literal[1]
++    revision: str
++    profile: Literal["bf16-native-v1"]
++    operations: list[Literal["image_generate", "image_edit", "embed"]]
++    input_modalities: list[Literal["text", "image", "video", "audio"]]
++    configured: bool
++    resident: bool
++    ready: bool
++
++
++class NativeModel(BaseModel):
++    id: Literal["Qwen/Qwen-Image-2.1-Turbo", "google/embeddinggemma-2"]
++    ds4: NativeCapabilities
++
++
++class NativeSuiteClient:
++    """No residency operations: each method waits for restored service state."""
++
++    def __init__(self, client: OpenAI) -> None:
++        self.transport = client
++
++    def models(self) -> list[NativeModel]:
++        data = self.transport.get("/models", cast_to=dict[str, Any])["data"]
++        return [
++            NativeModel.model_validate(item)
++            for item in data
++            if item["id"] in (NATIVE_SUITE.image_model, NATIVE_SUITE.embedding_model)
++        ]
++
++    def upload(
++        self, path: Path, *, kind: Literal["image", "video", "audio"]
++    ) -> MediaContent:
++        mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
++        mime = {"audio/x-wav": "audio/wav", "audio/x-flac": "audio/flac"}.get(
++            mime, mime
++        )
++        with path.open("rb") as source:
++            response = self.transport.files.create(
++                file=(path.name, source, mime),
++                purpose="ds4_media",  # type: ignore[arg-type]
++            )
++        return MediaContent(type=kind, file_id=response.id)
++
++    def upload_image(self, image: Image.Image) -> MediaContent:
++        stream = io.BytesIO()
++        image.save(stream, format="PNG")
++        response = self.transport.files.create(
++            file=("image.png", stream.getvalue(), "image/png"),
++            purpose="ds4_media",  # type: ignore[arg-type]
++        )
++        return MediaContent(type="image", file_id=response.id)
++
++    def content(self, file_id: str) -> bytes:
++        return self.transport.files.content(file_id).read()
++
++    def embeddings(
++        self,
++        items: Sequence[EmbeddingItem] | Sequence[str],
++        *,
++        dimensions: int = NATIVE_SUITE.dimensions,
++        task: Literal[
++            "raw", "search_query", "document", "code_query", "similarity"
++        ] = "raw",
++        title: str | None = None,
++    ) -> dict[str, Any]:
++        extension: dict[str, Any] = {"version": 1, "task": task, "overflow": "error"}
++        if title is not None:
++            extension["title"] = title
++        response = self.transport.post(
++            "/embeddings",
++            cast_to=dict[str, Any],
++            body={
++                "model": NATIVE_SUITE.embedding_model,
++                "dimensions": dimensions,
++                "encoding_format": "float",
++                "input": [
++                    item.model_dump(exclude_none=True)
++                    if isinstance(item, EmbeddingItem)
++                    else item
++                    for item in items
++                ],
++                "ds4": extension,
++            },
++        )
++        if len(response["data"]) != len(items) or any(
++            row["index"] != i or len(row["embedding"]) != dimensions
++            for i, row in enumerate(response["data"])
++        ):
++            raise ValueError(NATIVE_SUITE.invalid_response)
++        return response
++
++    def images(
++        self,
++        prompt: str,
++        *,
++        images: Sequence[MediaContent] = (),
++        n: int = 1,
++        width: int = 1024,
++        height: int = 1024,
++        output_format: Literal["png"] = "png",
++        background: Literal["auto", "opaque", "transparent"] = "auto",
++        seed: int | None = None,
++        idempotency_key: str | None = None,
++    ) -> ImageBatch:
++        extension: dict[str, Any] = {"version": 1, "sampling": "checkpoint"}
++        if seed is not None:
++            extension["seed"] = seed
++        body: dict[str, Any] = {
++            "model": NATIVE_SUITE.image_model,
++            "prompt": prompt,
++            "n": n,
++            "size": f"{width}x{height}",
++            "output_format": output_format,
++            "background": background,
++            "ds4": extension,
++        }
++        if images:
++            body["images"] = [item.file_id for item in images]
++        response = self.transport.post(
++            "/images/edits" if images else "/images/generations",
++            cast_to=dict[str, Any],
++            body=body,
++            options={
++                "headers": {"Idempotency-Key": idempotency_key or str(uuid.uuid4())}
++            },
++        )
++        return ImageBatch.model_validate(response)
++
++
++_suite_factory: ContextVar[Callable[[], NativeSuiteClient] | None] = ContextVar(
++    "native_suite_factory", default=None
++)
++
++
++@contextmanager
++def native_suite_context(factory: Callable[[], NativeSuiteClient]) -> Iterator[None]:
++    token = _suite_factory.set(factory)
++    try:
++        yield
++    finally:
++        _suite_factory.reset(token)
++
++
++def suite_from_environment() -> NativeSuiteClient:
++    """Tools and web ranking share the existing provider URL/key settings."""
++    factory = _suite_factory.get()
++    if factory is not None:
++        return factory()
++    settings = DEFAULT_PROVIDER_SETTINGS
++    return NativeSuiteClient(
++        OpenAI(
++            base_url=os.environ[settings.base_url_env_var],
++            api_key=os.getenv(settings.api_key_env_var) or settings.fallback_api_key,
++            timeout=NATIVE_SUITE.timeout_seconds,
++        )
++    )
+diff --git a/tests/core/models/test_native_suite.py b/tests/core/models/test_native_suite.py
+new file mode 100644
+index 0000000..697cfc4
+--- /dev/null
++++ b/tests/core/models/test_native_suite.py
+@@ -0,0 +1,181 @@
++"""Native media transport, explicit tools and attachment behavior."""
++
++import base64
++import inspect
++import io
++import json
++from pathlib import Path
++
++import httpx2
++import pytest
++from openai import OpenAI
++from PIL import Image
++
++from exmekh_lib.config.capabilities import CAPABILITY_FORMAT
++from exmekh_lib.core.agents.tools.deep_tools import DeepTools
++from exmekh_lib.core.models.native_media_tools import generate_images, workspace_media
++from exmekh_lib.core.models.native_suite import (
++    EmbeddingItem,
++    MediaContent,
++    NativeSuiteClient,
++    TextContent,
++    native_suite_context,
++    suite_from_environment,
++)
++from exmekh_lib.core.models.tool import AttachedToolResult
++
++
++def transport(handler):
++    return NativeSuiteClient(
++        OpenAI(
++            base_url="http://native/v1",
++            api_key="test",
++            http_client=httpx2.Client(transport=httpx2.MockTransport(handler)),
++        )
++    )
++
++
++def test_order_task_and_no_residency_commands():
++    requests = []
++
++    def handler(request):
++        requests.append(request)
++        body = json.loads(request.content)
++        assert body["input"][0]["content"] == [
++            {"type": "text", "text": "first"},
++            {"type": "video", "file_id": "file-video", "audio": "include"},
++            {"type": "text", "text": "last"},
++        ]
++        assert body["ds4"] == {
++            "version": 1,
++            "task": "document",
++            "overflow": "error",
++            "title": "Title",
++        }
++        return httpx2.Response(
++            200, json={"data": [{"index": 0, "embedding": [1.0] * 128}]}
++        )
++
++    suite = transport(handler)
++    result = suite.embeddings(
++        [
++            EmbeddingItem(
++                content=[
++                    TextContent(text="first"),
++                    MediaContent(type="video", file_id="file-video", audio="include"),
++                    TextContent(text="last"),
++                ]
++            )
++        ],
++        dimensions=128,
++        task="document",
++        title="Title",
++    )
++    assert len(result["data"]) == 1
++    assert [r.url.path for r in requests] == ["/v1/embeddings"]
++    with native_suite_context(lambda: suite):
++        assert suite_from_environment() is suite
++
++
++def test_registered_tools_have_their_own_entrypoints(tmp_path):
++    tools = DeepTools(
++        [
++            CAPABILITY_FORMAT.bundled_root / "tools" / name
++            for name in ("generate-image", "embed-content")
++        ],
++        work_root=tmp_path,
++    )
++    loaded = tools.load()
++    assert len(loaded) == 2
++    tools.unload()
++    for method in (
++        NativeSuiteClient.images,
++        NativeSuiteClient.embeddings,
++        generate_images,
++    ):
++        assert "model" not in inspect.signature(method).parameters
++    assert "size" not in inspect.signature(NativeSuiteClient.images).parameters
++    assert {"width", "height"} <= inspect.signature(
++        NativeSuiteClient.images
++    ).parameters.keys()
++
++
++def test_multiple_images_preview_configuration_and_workspace_paths(tmp_path):
++    stream = io.BytesIO()
++    Image.new("RGBA", (32, 32), "red").save(stream, "PNG")
++    encoded = base64.b64encode(stream.getvalue()).decode()
++    requests = []
++
++    def handler(request):
++        requests.append(request)
++        assert request.headers["Idempotency-Key"]
++        body = json.loads(request.content)
++        assert body["n"] == 2
++        return httpx2.Response(
++            200,
++            json={
++                "created": 1,
++                "ds4": {"revision": "test", "profile": "bf16"},
++                "data": [
++                    {
++                        "b64_json": encoded,
++                        "ds4": {
++                            "file_id": f"file-{i}",
++                            "seed": 17 + i,
++                            "width": 32,
++                            "height": 32,
++                            "recipe": {"steps": 8},
++                        },
++                    }
++                    for i in range(2)
++                ],
++            },
++        )
++
++    suite = transport(handler)
++    with native_suite_context(lambda: suite):
++        result = generate_images(
++            tmp_path, "red", n=2, width=32, height=32, preview_scale=0.5
++        )
++        assert isinstance(result, AttachedToolResult)
++        parts = list(result.attachments.iter_content_parts())
++        assert isinstance(parts[0], str)
++        previews = [part for part in parts if isinstance(part, Image.Image)]
++        assert [item.size for item in previews] == [(16, 16), (16, 16)]
++        for row in result["images"]:
++            assert Path(row["path"]).read_bytes() == stream.getvalue()
++        no_pixels = generate_images(tmp_path, "red", n=2, include_image_in_result=False)
++        assert not isinstance(no_pixels, AttachedToolResult)
++    with pytest.raises(ValueError):
++        workspace_media(tmp_path, "../escape.png")
++    assert all(r.url.path == "/v1/images/generations" for r in requests)
++
++
++def test_upload_uses_native_file_purpose_and_returns_reference(tmp_path):
++    path = tmp_path / "clip.wav"
++    path.write_bytes(b"RIFF-fixture")
++
++    def handler(request):
++        assert request.url.path == "/v1/files"
++        assert b"ds4_media" in request.content
++        assert b"RIFF-fixture" in request.content
++        return httpx2.Response(
++            200,
++            json={
++                "id": "file-audio",
++                "object": "file",
++                "bytes": 12,
++                "created_at": 1,
++                "filename": "clip.wav",
++                "purpose": "ds4_media",
++            },
++        )
++
++    media = transport(handler).upload(path, kind="audio")
++    assert media.type == "audio" and media.file_id == "file-audio"
++
++
++def test_invalid_embedding_shape_is_rejected():
++    suite = transport(lambda r: httpx2.Response(200, json={"data": []}))
++    with pytest.raises(ValueError):
++        suite.embeddings(["text"])

@@ -225,6 +225,16 @@ l'engine conosce shape e modello; il backend possiede stream e allocazioni;
 - righe 142–186: **Riesame di T07–T08, 21 ottobre 2026** — Riletti i nuovi moduli numerici, encoder/tokenizer, preprocessing, bridge dei
 - righe 187–226: **Riesame di T09–T10, 21 ottobre 2026** — Riletti DiT, VAE, primitive e helper, risultati, risorse/runtime, bridge dei
 
+## [Servizio e client multimodale nativo](native-suite-client.md)
+
+`ds4-server-suite` è un target esplicito.
+
+- righe 8–30: **Avvio** — `ds4-server-suite` è un target esplicito.
+- righe 31–63: **SDK standard** — Un solo client e una sola base URL servono chat, immagini ed embedding:
+- righe 64–96: **Client tipizzato ExMekh** — `Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`.
+- righe 97–120: **Tool e frontend** — `generate-image` è la capability registrata nel catalogo ExMekh.
+- righe 121–147: **Lifetime e osservabilità** — Discovery espone revision/profilo, configured/resident/ready, componenti e limiti.
+
 ## [Runtime e contesti della suite nativa](native-suite-runtime-lifecycle.md)
 
 Il runtime possiede mutex ricorsivo, fence e teardown condiviso.
@@ -258,16 +268,24 @@ I nuovi test riproducono gli output non azzerati CPU/CUDA e il rifiuto
 - righe 29–51: **Principi applicati e confini** — Nei moduli adiacenti il registro e l'executor possiedono già le scelte di budget
 - righe 52–89: **Verifica e limiti** — Il report della revisione
 
+## [Revisione di T17/T18](native-suite-t17-t18-clean-code-review-20261022.md)
+
+già quella esterna.
+
+- righe 11–24: **Responsabilità** — Sezione strutturale; consultare il contenuto locale indicato.
+- righe 25–64: **Correzioni verificate** — già quella esterna.
+- righe 65–79: **Verifica e limiti** — La revisione comprende build, protocollo host, runtime/risorse/executor,
+
 ## [Contratti della suite nativa DS4, versione 1](native-suite-v1-contract.md)
 
 Il catalogo distingue `model_id`, `revision`, `profile` e `component`.
 
-- righe 8–31: **Identità e discovery** — Il catalogo distingue `model_id`, `revision`, `profile` e `component`.
-- righe 32–77: **Operazioni e input standard** — Le immagini usano `model`, `prompt`, `n` (default 1, intervallo 1–8), `size` (default
-- righe 78–126: **Estensione embedding multimodali** — La versione è dichiarata da `ds4.version=1`; il campo `input` contiene un
-- righe 127–185: **Risultati, idempotenza e completamento** — Embedding mantiene `{object:"list",data:[{object:"embedding",index,embedding}],
-- righe 186–226: **Esempi client e matrice delle capability** — Le chiamate seguenti descrivono il contratto futuro T17: non sono test live
-- righe 227–256: **Confine C e lifecycle** — `ds4_runtime` possiede serializzazione e teardown condiviso.
+- righe 11–34: **Identità e discovery** — Il catalogo distingue `model_id`, `revision`, `profile` e `component`.
+- righe 35–80: **Operazioni e input standard** — Le immagini usano `model`, `prompt`, `n` (default 1, intervallo 1–8), `size` (default
+- righe 81–129: **Estensione embedding multimodali** — La versione è dichiarata da `ds4.version=1`; il campo `input` contiene un
+- righe 130–190: **Risultati, idempotenza e completamento** — Embedding mantiene `{object:"list",data:[{object:"embedding",index,embedding}],
+- righe 191–232: **Esempi client e matrice delle capability** — Le chiamate seguenti usano il servizio T17.
+- righe 233–262: **Confine C e lifecycle** — `ds4_runtime` possiede serializzazione e teardown condiviso.
 
 ## [Qwen Flash: esperti ibridi, PCIe e KV paginato](qwen-flash-hybrid-kv-20261006.md)
 

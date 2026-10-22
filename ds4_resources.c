@@ -137,7 +137,15 @@ ds4_status ds4_resources_can_reserve(ds4_resources *r, const uint64_t bytes[DS4_
                                     const uint64_t reclaimed[DS4_MEMORY_COUNT]) {
     if (!r || !bytes) return DS4_STATUS_INVALID;
     pthread_mutex_lock(&r->mutex);
-    ds4_status status = can_reserve(r, bytes, reclaimed);
+    ds4_reservation *parent = current_reservation;
+    ds4_status status = DS4_STATUS_OK;
+    if (parent && parent->registry == r) {
+        /* Nested adapters plan against their operation's reserved capacity,
+         * which is already excluded from globally available memory. */
+        for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++)
+            if (bytes[i] > add(parent->bytes[i], reclaimed ? reclaimed[i] : 0))
+                status = DS4_STATUS_NOMEM;
+    } else status = can_reserve(r, bytes, reclaimed);
     pthread_mutex_unlock(&r->mutex);
     return status;
 }

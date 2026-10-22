@@ -118,6 +118,16 @@ ds4_status ds4_qwen_image_pipeline_close(ds4_qwen_image_pipeline *p) {
     ds4_resource_release(r);
   return DS4_STATUS_OK;
 }
+ds4_status ds4_qwen_image_pipeline_residency(const ds4_qwen_image_pipeline *p,
+                                            uint64_t resident[3], uint64_t total[3]) {
+  if (!p || !resident || !total) return DS4_STATUS_INVALID;
+  ds4_qwen_image_dit_memory memory;
+  qi_encoder_memory(p->encoder, true, total + ENCODER, resident + ENCODER);
+  qi_dit_memory(p->dit, 1, 1, 0, 1, &memory, resident + DIT);
+  total[DIT] = memory.weights;
+  qi_vae_memory(p->vae, total + VAE, resident + VAE);
+  return DS4_STATUS_OK;
+}
 static bool cancelled(void *opaque) {
   ds4_qwen_image_job *j = opaque;
   return j->observer.cancelled && j->observer.cancelled(j->observer.opaque);
@@ -244,8 +254,8 @@ cleanup:
     return status;
   }
 }
-static ds4_status validate_request(const ds4_qwen_image_request *r) {
-  if (!r || !r->prompt || !r->prompt[0] || r->width < 32 || r->height < 32 ||
+ds4_status ds4_qwen_image_request_validate(const ds4_qwen_image_request *r) {
+  if (!r || !r->prompt || (!r->prompt[0] && !r->reference_count) || r->width < 32 || r->height < 32 ||
       r->width > 2048 || r->height > 2048 || r->width % 32 || r->height % 32 ||
       r->reference_count > 64 || (r->reference_count && !r->references) ||
       r->reference_resolution > 2048 || r->reference_resolution % 32)
@@ -514,7 +524,7 @@ ds4_status ds4_qwen_image_job_create(ds4_qwen_image_job **out,
     return DS4_STATUS_INVALID;
   if (p->job_open)
     return DS4_STATUS_BUSY;
-  ds4_status status = validate_request(r);
+  ds4_status status = ds4_qwen_image_request_validate(r);
   if (status)
     return status;
   double start = now();

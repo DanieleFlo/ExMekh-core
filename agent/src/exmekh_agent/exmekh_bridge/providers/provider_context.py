@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 
+from exmekh_lib.core.models.native_suite import NativeSuiteClient
 from exmekh_lib.core.models.provider_request import ProviderRequest
 from exmekh_lib.core.models.provider_response import ProviderResponse
 from exmekh_lib.core.models.structured_provider_request import StructuredProviderRequest
@@ -63,6 +64,9 @@ class ContextTrackingProvider(Provider):
 
     def get_tools_text(self, tools: Tools | None) -> str:
         return self._provider.get_tools_text(tools)
+
+    def native_suite(self) -> NativeSuiteClient:
+        return self._provider.native_suite()
 
     def invalidate_context(self, context_id: str | None) -> None:
         self._last_totals.pop(context_id or "", None)

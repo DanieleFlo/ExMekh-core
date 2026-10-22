@@ -140,7 +140,11 @@ class SuiteContracts(unittest.TestCase):
         validator("image_edit").validate(
             dict(request, images=["file-1", "file-2"], ds4={"version": 1})
         )
+        validator("image_edit").validate(
+            dict(request, prompt="", images=["file-1"], ds4={"version": 1})
+        )
         for change in (
+            {"prompt": ""},
             {"n": 0},
             {"n": 9},
             {"size": "0x1024"},

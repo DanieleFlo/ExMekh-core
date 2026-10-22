@@ -838,11 +838,11 @@ class Processor(_MediaCase):
             ([Content(b"<|audio|>", None)], None),
             ([Content(b"both", image)], None),
             ([Content(None, None)], None),
-            ([Content(b" x" * 8192, None)], None),
             (order, Segment(1, 2, 1)),
             (order, Segment(1, float("nan"), 3)),
         ):
             prepare(parts, segment=segment, expected=1)
+        prepare([Content(b" x" * 8192, None)], expected=11)
         text = prepare([Content(b"solo testo", None)])
         self.assertEqual(self.lib.ds4_gemma_visual_input_free(text), 0)
         source = (

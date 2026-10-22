@@ -177,6 +177,9 @@ static void scoped_lifetime(void) {
     ds4_reservation *lease;
     assert(!ds4_resources_reserve(r, 7, bytes, &lease));
     ds4_reservation_scope outer = ds4_reservation_enter(lease);
+    assert(!ds4_resources_can_reserve(r, bytes, NULL));
+    uint64_t excessive[DS4_MEMORY_COUNT] = {[DS4_MEMORY_DEVICE]=81};
+    assert(ds4_resources_can_reserve(r, excessive, NULL) == DS4_STATUS_NOMEM);
     ds4_reservation_scope inner = ds4_reservation_enter(NULL);
     cancel_attempt attempt = {.lease=lease};
     pthread_t thread;

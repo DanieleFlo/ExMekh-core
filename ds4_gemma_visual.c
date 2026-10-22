@@ -153,6 +153,28 @@ typedef struct {
   char *data;
   size_t count, capacity;
 } text_builder;
+ds4_status ds4_gemma_multimodal_prepare_tokens(ds4_gemma_multimodal *e,
+    const uint32_t *const *ids, const uint32_t *lengths, size_t count,
+    ds4_gemma_multimodal_input **out) {
+  if (!out) return DS4_STATUS_INVALID;
+  *out = NULL;
+  if (!e || !count || count > 1024) return DS4_STATUS_INVALID;
+  if (e->running) return DS4_STATUS_BUSY;
+  ds4_host_buffer account = {0};
+  ds4_status s = ds4_host_alloc(e->resources, e->owner,
+                                sizeof(ds4_gemma_visual_input), &account);
+  if (s) return s;
+  ds4_gemma_visual_input *in = account.data;
+  in->account = account;
+  in->adapter = e;
+  in->count = count;
+  e->inputs++;
+  s = ds4_host_alloc(e->resources, e->owner, count * sizeof(visual_item), &in->items);
+  if (!s) s = ds4_gemma_prepare_tokens(e->text, ids, lengths, count, &in->backbone);
+  if (s) ds4_gemma_visual_input_free(in);
+  else *out = in;
+  return s;
+}
 static bool append(text_builder *b, const char *s, size_t n) {
   if (n >= SIZE_MAX - b->count)
     return false;
@@ -548,8 +570,11 @@ ds4_status ds4_gemma_visual_embed(ds4_gemma_visual *e,
   ds4_runtime_transaction transaction = {0};
   ds4_reservation *lease = NULL;
   ds4_reservation_scope working = {0};
-  TRY(ds4_runtime_transaction_begin(e->runtime, &transaction));
+  bool started = false;
+  if (!ds4_runtime_transaction_held(e->runtime))
+    TRY(ds4_runtime_transaction_begin(e->runtime, &transaction));
   e->running = true;
+  started = true;
   ds4_gemma_plan plan;
   TRY(ds4_gemma_visual_plan(e, in, &plan));
   ds4_runtime_estimate estimate = plan.peak;
@@ -579,7 +604,7 @@ cleanup:
     ds4_gemma_result_free(*out);
     *out = NULL;
   }
-  if (transaction.runtime)
+  if (started)
     e->running = false;
   ds4_runtime_transaction_end(&transaction);
   return status;

@@ -328,7 +328,7 @@ static ds4_status segment(const gemma_tokenizer *t, const uint8_t *s,
   }
   for (uint32_t i = 0; i != UINT32_MAX; i = a[i].next) {
     if (*count >= 8191) {
-      status = DS4_STATUS_INVALID;
+      status = DS4_STATUS_CONTEXT_LENGTH;
       goto done;
     }
     result[(*count)++] = a[i].id;
@@ -385,7 +385,7 @@ ds4_status gemma_tokenize(const gemma_tokenizer *t, const char *text,
     if (status)
       goto done;
     if (used >= 8191) {
-      status = DS4_STATUS_INVALID;
+      status = DS4_STATUS_CONTEXT_LENGTH;
       goto done;
     }
     ids[used++] = best->id;

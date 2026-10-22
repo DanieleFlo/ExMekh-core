@@ -79,7 +79,16 @@ async def test_health_probe_rejects_malformed_model_lists(body):
 async def test_health_probe_ignores_bad_entries_and_deduplicates_model_ids():
     response = MagicMock(status_code=200)
     response.json.return_value = {
-        "data": [None, {"id": 1}, {"id": ""}, {"id": "flash"}, {"id": "flash"}]
+        "data": [
+            None,
+            {"id": 1},
+            {"id": ""},
+            {"id": "flash"},
+            {"id": "flash"},
+            {"id": "embed", "ds4": {"operations": ["embed"]}},
+            {"id": "image", "ds4": {"operations": ["image_generate"]}},
+            {"id": "flash", "ds4": {"operations": ["chat"]}},
+        ]
     }
     with patch("httpx.AsyncClient.get", new_callable=AsyncMock, return_value=response):
         assert await check_provider_health("http://local/v1", "") == (True, ["flash"])

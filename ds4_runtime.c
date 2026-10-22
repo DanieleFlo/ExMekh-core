@@ -198,6 +198,13 @@ ds4_status ds4_runtime_transaction_begin(ds4_runtime *runtime, ds4_runtime_trans
     return DS4_STATUS_OK;
 }
 
+bool ds4_runtime_transaction_held(ds4_runtime *runtime) {
+    if (!runtime) return false;
+    pthread_mutex_lock(&runtime->mutex);
+    bool held = runtime->transaction && !runtime->depth;
+    pthread_mutex_unlock(&runtime->mutex);
+    return held;
+}
 void ds4_runtime_transaction_end(ds4_runtime_transaction *lease) {
     if (!lease || !lease->runtime) return;
     ds4_runtime *runtime = lease->runtime;

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "media_directory": "/tmp",
+  "storage_bytes": 4294967296,
+  "timeout_seconds": 600,
+  "models": [
+    {
+      "model": "Qwen/Qwen-Image-2.1-Turbo",
+      "index": "performance-results/native-suite-t05-t06-20261020/bundles/qwen-image-2.1-turbo-bf16/bundle.ds4b",
+      "root": "performance-results/native-suite-oracles-20261020/models",
+      "text_asset": "performance-results/native-suite-t07-t08-20261020/tokenizer.ds4q"
+    },
+    {
+      "model": "google/embeddinggemma-2",
+      "index": "performance-results/native-suite-t05-t06-20261020/bundles/embeddinggemma-2-bf16/bundle.ds4b",
+      "root": "performance-results/native-suite-oracles-20261020/models",
+      "text_asset": "performance-results/native-suite-t11-t12-20261021/gemma-f32-rope.ds4g",
+      "media_asset": "performance-results/native-suite-t13-t14-20261021/gemma-media.ds4p"
+    }
+  ]
+}

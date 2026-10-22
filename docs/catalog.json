@@ -1199,6 +1199,53 @@
           ]
         },
         {
+          "path": "docs/architecture/native-suite-client.md",
+          "sections": [
+            {
+              "title": "Servizio e client multimodale nativo",
+              "level": 1,
+              "start": 1,
+              "end": 147,
+              "summary": "Implementazione T17/T18 del 22 ottobre 2026."
+            },
+            {
+              "title": "Avvio",
+              "level": 2,
+              "start": 8,
+              "end": 30,
+              "summary": "`ds4-server-suite` è un target esplicito."
+            },
+            {
+              "title": "SDK standard",
+              "level": 2,
+              "start": 31,
+              "end": 63,
+              "summary": "Un solo client e una sola base URL servono chat, immagini ed embedding:"
+            },
+            {
+              "title": "Client tipizzato ExMekh",
+              "level": 2,
+              "start": 64,
+              "end": 96,
+              "summary": "`Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`."
+            },
+            {
+              "title": "Tool e frontend",
+              "level": 2,
+              "start": 97,
+              "end": 120,
+              "summary": "`generate-image` è la capability registrata nel catalogo ExMekh."
+            },
+            {
+              "title": "Lifetime e osservabilità",
+              "level": 2,
+              "start": 121,
+              "end": 147,
+              "summary": "Discovery espone revision/profilo, configured/resident/ready, componenti e limiti."
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/native-suite-runtime-lifecycle.md",
           "sections": [
             {
@@ -1338,55 +1385,88 @@
           ]
         },
         {
+          "path": "docs/architecture/native-suite-t17-t18-clean-code-review-20261022.md",
+          "sections": [
+            {
+              "title": "Revisione di T17/T18",
+              "level": 1,
+              "start": 1,
+              "end": 79,
+              "summary": "22 ottobre 2026."
+            },
+            {
+              "title": "Responsabilità",
+              "level": 2,
+              "start": 11,
+              "end": 24,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
+            },
+            {
+              "title": "Correzioni verificate",
+              "level": 2,
+              "start": 25,
+              "end": 64,
+              "summary": "già quella esterna."
+            },
+            {
+              "title": "Verifica e limiti",
+              "level": 2,
+              "start": 65,
+              "end": 79,
+              "summary": "La revisione comprende build, protocollo host, runtime/risorse/executor,"
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/native-suite-v1-contract.md",
           "sections": [
             {
               "title": "Contratti della suite nativa DS4, versione 1",
               "level": 1,
               "start": 1,
-              "end": 256,
-              "summary": "Stato: specifica congelata per T01, 20 ottobre 2026."
+              "end": 262,
+              "summary": "Stato: specifica congelata per T01, 20 ottobre 2026; implementazione HTTP"
             },
             {
               "title": "Identità e discovery",
               "level": 2,
-              "start": 8,
-              "end": 31,
+              "start": 11,
+              "end": 34,
               "summary": "Il catalogo distingue `model_id`, `revision`, `profile` e `component`."
             },
             {
               "title": "Operazioni e input standard",
               "level": 2,
-              "start": 32,
-              "end": 77,
+              "start": 35,
+              "end": 80,
               "summary": "Le immagini usano `model`, `prompt`, `n` (default 1, intervallo 1–8), `size` (default"
             },
             {
               "title": "Estensione embedding multimodali",
               "level": 2,
-              "start": 78,
-              "end": 126,
+              "start": 81,
+              "end": 129,
               "summary": "La versione è dichiarata da `ds4.version=1`; il campo `input` contiene un"
             },
             {
               "title": "Risultati, idempotenza e completamento",
               "level": 2,
-              "start": 127,
-              "end": 185,
+              "start": 130,
+              "end": 190,
               "summary": "Embedding mantiene `{object:\"list\",data:[{object:\"embedding\",index,embedding}],"
             },
             {
               "title": "Esempi client e matrice delle capability",
               "level": 2,
-              "start": 186,
-              "end": 226,
-              "summary": "Le chiamate seguenti descrivono il contratto futuro T17: non sono test live"
+              "start": 191,
+              "end": 232,
+              "summary": "Le chiamate seguenti usano il servizio T17."
             },
             {
               "title": "Confine C e lifecycle",
               "level": 2,
-              "start": 227,
-              "end": 256,
+              "start": 233,
+              "end": 262,
               "summary": "`ds4_runtime` possiede serializzazione e teardown condiviso."
             }
           ]
@@ -6563,7 +6643,7 @@
               "title": "Piano di implementazione: suite multimodale nativa DS4",
               "level": 1,
               "start": 1,
-              "end": 515,
+              "end": 544,
               "summary": "Data: 20 ottobre 2026."
             },
             {
@@ -6710,84 +6790,84 @@
               "title": "21. T17 — Registro modelli, HTTP e gestione dei risultati",
               "level": 2,
               "start": 359,
-              "end": 373,
+              "end": 382,
               "summary": "**Dipendenze:** T01, T05, T11, T16."
             },
             {
               "title": "22. T18 — Client semplice e integrazione ExMekh-lib",
               "level": 2,
-              "start": 374,
-              "end": 388,
+              "start": 383,
+              "end": 417,
               "summary": "**Dipendenze:** T17."
             },
             {
               "title": "23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo",
               "level": 2,
-              "start": 389,
-              "end": 405,
+              "start": 418,
+              "end": 434,
               "summary": "**Dipendenze:** T05, T07, T11, T16, T17."
             },
             {
               "title": "24. T20 — Quantizzazione e ottimizzazioni numeriche misurate",
               "level": 2,
-              "start": 406,
-              "end": 420,
+              "start": 435,
+              "end": 449,
               "summary": "**Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming."
             },
             {
               "title": "25. T21 — Qualificazione integrata, guasti e regressioni",
               "level": 2,
-              "start": 421,
-              "end": 435,
+              "start": 450,
+              "end": 464,
               "summary": "**Dipendenze:** T17, T18, T19; tutti i profili promossi da T20."
             },
             {
               "title": "26. T22 — Packaging, documentazione e consegna",
               "level": 2,
-              "start": 436,
-              "end": 447,
+              "start": 465,
+              "end": 476,
               "summary": "**Dipendenze:** T21."
             },
             {
               "title": "27. Matrice obbligatoria di memoria e ripristino",
               "level": 2,
-              "start": 448,
-              "end": 468,
+              "start": 477,
+              "end": 497,
               "summary": "La matrice usa budget controllati e allocazioni possedute; si aggiungono prove reali sulla memoria libera della 3090."
             },
             {
               "title": "28. Gate numerici, di qualità e prestazionali",
               "level": 2,
-              "start": 469,
-              "end": 506,
+              "start": 498,
+              "end": 535,
               "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
             },
             {
               "title": "28.1 Gate numerici",
               "level": 3,
-              "start": 471,
-              "end": 480,
+              "start": 500,
+              "end": 509,
               "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
             },
             {
               "title": "28.2 Corpus di accettazione proposto",
               "level": 3,
-              "start": 481,
-              "end": 497,
+              "start": 510,
+              "end": 526,
               "summary": "Il corpus minimo viene congelato in T00 prima delle ottimizzazioni; può essere ampliato con un nuovo manifest, mantenendo i casi precedenti."
             },
             {
               "title": "28.3 Gate prestazionali e memoria",
               "level": 3,
-              "start": 498,
-              "end": 506,
+              "start": 527,
+              "end": 535,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "29. Definizione di completamento globale",
               "level": 2,
-              "start": 507,
-              "end": 515,
+              "start": 536,
+              "end": 544,
               "summary": "Il lavoro di implementazione è completo quando T00–T19, T21 e T22 sono `DONE`, T20 ha una valutazione esplicita dei candidati e tutti i profili effettivamente pubblicati hanno superato i rispettivi gate."
             }
           ]

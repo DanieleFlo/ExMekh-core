@@ -8,6 +8,7 @@ from typing import Any
 from exmekh_lib.core.agents.deep_skill.execution import DeepSkillExecution
 from exmekh_lib.core.agents.node import Node
 from exmekh_lib.core.cache.node_cache import NodeCache
+from exmekh_lib.core.cache.user_message_codec import serialize_user_message
 from exmekh_lib.core.models.assistant_message import (
     AssistantMessage,
     FunctionCall,
@@ -23,8 +24,10 @@ from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.agents.execution_restore import ExecutionHistoryRestorer
 from exmekh_agent.exmekh_bridge.history.compaction import replay_model_context
 from exmekh_agent.exmekh_bridge.history.image_input import (
+    deserialize_tool_attachments,
     deserialize_user_content,
     serialize_user_content,
+    tool_attachment_image_urls,
     user_content,
 )
 from exmekh_agent.exmekh_bridge.history.tool_calls import parse_tool_calls
@@ -198,7 +201,10 @@ def raw_dict_to_exmekh_message(
             name = "tool_default"
 
         exmekh_msg = ToolMessage(
-            content=str(content or ""), tool_call_id=tool_call_id, name=name
+            content=str(content or ""),
+            tool_call_id=tool_call_id,
+            name=name,
+            attachments=deserialize_tool_attachments(data.get("attachments")),
         )
 
     else:
@@ -252,6 +258,8 @@ def exmekh_message_to_raw_dict(
             "tool_call_id": msg.get_tool_call_id(),
             "content": str(msg.get_message() or ""),
         }
+        if (attachments := msg.get_attachments()) is not None:
+            res["attachments"] = serialize_user_message(attachments)
 
     else:
         res = {"role": role, "content": str(msg.get_message() or "")}
@@ -486,6 +494,15 @@ def exmekh_messages_to_chat_messages(
                 tool_events=tool_events,
                 skills=skills,
                 raw_history=raw_hist,
+                image_urls=[
+                    url
+                    for message in current_assistant_exmekh
+                    if isinstance(message, ToolMessage)
+                    and (attachments := message.get_attachments()) is not None
+                    for url in tool_attachment_image_urls(
+                        serialize_user_message(attachments)
+                    )
+                ],
             )
         )
         current_assistant_exmekh = []

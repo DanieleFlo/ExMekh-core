@@ -28,6 +28,9 @@ ds4_status ds4_numeric_fence(ds4_numeric *);
  * sample. Peak includes weights and transient kernel workspace in this context.
  */
 void ds4_numeric_memory(const ds4_numeric *, uint64_t *live, uint64_t *peak);
+/* Successful host/device copies through this context, including weight
+ * uploads. Excludes device/device backend work and legacy LLM transfers. */
+void ds4_numeric_transfers(const ds4_numeric *, uint64_t *h2d, uint64_t *d2h);
 ds4_resources *ds4_numeric_resources(ds4_numeric *, uint64_t *owner);
 ds4_status ds4_num_alloc(ds4_numeric *, uint64_t count, uint32_t type,
                          ds4_num_buffer **);

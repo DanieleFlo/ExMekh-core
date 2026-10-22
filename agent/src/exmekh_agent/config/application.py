@@ -164,9 +164,9 @@ class AppConfig:
     ) -> None:
         if model and type(length) is int and length > 0:
             endpoint = self.base_url if base_url is None else base_url
-            self.server_context_lengths[
-                self._model_endpoint_key(model, endpoint)
-            ] = length
+            self.server_context_lengths[self._model_endpoint_key(model, endpoint)] = (
+                length
+            )
             if endpoint.rstrip("/") != self.base_url.rstrip("/"):
                 return
             self.model_context_lengths[model] = length

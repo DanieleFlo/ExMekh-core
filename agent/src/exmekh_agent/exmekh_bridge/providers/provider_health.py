@@ -61,6 +61,10 @@ async def check_provider_health(
                 for m in entries:
                     if not isinstance(m, dict):
                         continue
+                    capabilities = m.get("ds4")
+                    if isinstance(capabilities, dict) and "operations" in capabilities:
+                        if "chat" not in capabilities["operations"]:
+                            continue
                     m_id = m.get("id")
                     if isinstance(m_id, str) and m_id:
                         models.append(m_id)

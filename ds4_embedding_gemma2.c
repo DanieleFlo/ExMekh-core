@@ -362,6 +362,52 @@ cleanup:
     *out = in;
   return status;
 }
+ds4_status ds4_gemma_prepare_tokens(ds4_embedding_gemma2 *e,
+                                    const uint32_t *const *ids,
+                                    const uint32_t *lengths, size_t count,
+                                    ds4_gemma_input **out) {
+  if (!out) return DS4_STATUS_INVALID;
+  *out = NULL;
+  if (!e || !ids || !lengths || !count || count > 1024)
+    return DS4_STATUS_INVALID;
+  ds4_gemma_input *in = calloc(1, sizeof(*in));
+  if (!in) return DS4_STATUS_NOMEM;
+  in->count = count;
+  in->tokens = calloc(count, sizeof(*in->tokens));
+  in->lengths = calloc(count, sizeof(*in->lengths));
+  in->visual = calloc(count, sizeof(*in->visual));
+  ds4_status status = DS4_STATUS_NOMEM;
+  if (!in->tokens || !in->lengths || !in->visual) goto cleanup;
+  uint64_t bytes = sizeof(*in) + count *
+      (sizeof(*in->tokens) + sizeof(*in->lengths) + sizeof(*in->visual));
+  for (size_t i = 0; i < count; i++) {
+    if (lengths[i] > 8192) { status = DS4_STATUS_CONTEXT_LENGTH; goto cleanup; }
+    if (!ids[i] || !lengths[i]) {
+      status = DS4_STATUS_INVALID; goto cleanup;
+    }
+    bytes += (uint64_t)lengths[i] * 4;
+  }
+  in->resources = ds4_numeric_resources(e->num, &in->owner);
+  status = ds4_resource_register_host(in->resources, in->owner, bytes, &in->account);
+  if (status) goto cleanup;
+  for (size_t i = 0; i < count; i++) {
+    in->tokens[i] = malloc((size_t)lengths[i] * 4);
+    if (!in->tokens[i]) { status = DS4_STATUS_NOMEM; goto cleanup; }
+    for (uint32_t j = 0; j < lengths[i]; j++) {
+      uint32_t token = ids[i][j];
+      if (token >= 262144 || (token >= 258878 && token <= 258885)) {
+        status = DS4_STATUS_INVALID; goto cleanup;
+      }
+      if (token) in->tokens[i][in->lengths[i]++] = token;
+    }
+    if (!in->lengths[i]) { status = DS4_STATUS_INVALID; goto cleanup; }
+  }
+  *out = in;
+  return DS4_STATUS_OK;
+cleanup:
+  ds4_gemma_input_free(in);
+  return status;
+}
 ds4_status gemma_input_visual_clear(ds4_gemma_input *in) {
   if (!in)
     return DS4_STATUS_INVALID;

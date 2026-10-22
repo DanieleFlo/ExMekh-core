@@ -15,6 +15,8 @@ ds4_qwen_image_rgba_view ds4_qwen_image_rgba_data(const ds4_qwen_image_rgba *);
 void ds4_qwen_image_rgba_free(ds4_qwen_image_rgba *);
 ds4_status ds4_qwen_image_rgba_save_png(const ds4_qwen_image_rgba *,
                                         const char *);
+/* Explicit output conversion: preserve straight RGB, replace alpha with one. */
+ds4_status ds4_qwen_image_rgba_opaque(ds4_qwen_image_rgba *);
 #ifdef __cplusplus
 }
 #endif

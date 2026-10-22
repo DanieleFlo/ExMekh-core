@@ -22,7 +22,8 @@ typedef enum {
     DS4_STATUS_CANCELLED,
     DS4_STATUS_INFERENCE,
     DS4_STATUS_RESTORE,
-    DS4_STATUS_DEVICE_LOST
+    DS4_STATUS_DEVICE_LOST,
+    DS4_STATUS_CONTEXT_LENGTH
 } ds4_status;
 
 enum {
@@ -103,6 +104,9 @@ void ds4_runtime_scope_leave(ds4_runtime_scope *scope);
  * scopes on this thread while excluding inference on other threads. */
 typedef struct { ds4_runtime *runtime; } ds4_runtime_transaction;
 ds4_status ds4_runtime_transaction_begin(ds4_runtime *, ds4_runtime_transaction *);
+/* True only when this thread owns a serial operation lease between model
+ * scopes. An adapter may borrow that lease without ending its caller's work. */
+bool ds4_runtime_transaction_held(ds4_runtime *);
 void ds4_runtime_transaction_end(ds4_runtime_transaction *);
 
 /* Adapter contract for T03–T05. No HTTP or tensor layout appears here.

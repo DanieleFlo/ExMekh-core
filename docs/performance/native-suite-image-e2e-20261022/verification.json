@@ -1,0 +1,993 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-22",
+  "status": "PASS_LOCAL_CUDA",
+  "scope": "Funzionalit\u00e0 extra: registered image tool, real model/UI continuation and native web ranking",
+  "environment": {
+    "platform": "Ubuntu 24.04 WSL / RTX 3090 sm_86",
+    "server": "ds4-server-suite",
+    "chat_model": "Qwen3.8-27B-UD-Q4_K_S",
+    "vision": "mmproj-Qwen3.8-27B-F16.gguf",
+    "context": 8192,
+    "mtp": false,
+    "native_config": "config/native-suite.example.json",
+    "execution": "serial CUDA; one large server process"
+  },
+  "main_base": "d240f1ad1f9f264163a8a4c332afcf0d430ce790",
+  "external_base": "9e8d696ebd9cb61b1458bde73db961ffc772cdae",
+  "main_changed_sources": {
+    ".gitignore": "b0fd8c730524140ef6400bd76559cce59fa228a6d9a7fa6b6dea7181d88c093c",
+    "Makefile": "86392d800271fed5aaefff5e8e78925656a0af561049bf840bbd27c3988f916a",
+    "PROJECT_INDEX.md": "a30b362d177649669a7d83bb44900cb072b6d365d62c0c87c391f393849a23ad",
+    "agent/src/exmekh_agent/exmekh_bridge/agents/cancellation.py": "c529966793ea4421a80fa2a2e55591d34e7dd329d8c0752fc2195531332c9e26",
+    "agent/src/exmekh_agent/exmekh_bridge/agents/collector.py": "430acf8e35a6c83457ccf2b7567f9340c7ec2ac0d4e6f2608d0cb9870908e474",
+    "agent/src/exmekh_agent/exmekh_bridge/history/converter.py": "b5a745aa0891417c2c8d343e935288f00e2828ce27c5647ad6a94630c84be410",
+    "agent/src/exmekh_agent/exmekh_bridge/history/image_input.py": "8e4ab74c745e9593b46b7c71a592d039e25ee839c4a3f657eb6115349079203c",
+    "agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py": "102a587ace19708581d6fd4c42b517377a816d1103091db10cdb334afc9babcd",
+    "agent/src/exmekh_agent/exmekh_bridge/providers/provider_health.py": "1513a266f77bb63bcb85534451a3a1605b2ba62288bda3ed9041c74f76d2bda1",
+    "agent/src/exmekh_agent/ui/chat/chat_view.py": "24ed8cb3034418a71b98bb1a90257c309d2d85f4dc93c8e3dbd5d8790e4283b0",
+    "agent/tests/run_native_image_generation_agent.py": "7f1cf8dd5a233d38acf62625f1087e3db2ca889d8a2f0f52de80478772a5a9bb",
+    "agent/tests/run_native_media_preview_agent.py": "64e71c3f925c333a6565ae6cdd12b6c765cdac1d12f72a1af8b9d9f830ab2c55",
+    "agent/tests/test_clean_review_contracts.py": "9de2b09134bcc2c839c716706389fa337338e175de6b919c9854cc38a9ae2866",
+    "agent/tests/test_native_image_generation_e2e.py": "22f6dd6ee9930c129b8e2b99400361d6cdead673f3688b654396ef8662b477ef",
+    "agent/tests/test_native_media_preview.py": "b0a4b85b6d7a05d2758b87c75ab445a613c58484591b73bb8de8f6de0815a62a",
+    "agent/tests/test_native_media_preview_e2e.py": "34babdccd63c365ac7a8052fca654e13e87bd8496c2ddfc9d2cc13d01ee9a24a",
+    "agent/uv.lock": "600d9756a0ddbc1dd86f94c5ccc3912515a18109c8313871b45917041b35930b",
+    "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl": "e79c4e44929ceba6d88718737c57cfc86c3c7581d7252b619119a7454569adf7",
+    "config/native-suite.example.json": "a5d5c3e8547675b5a91263c18c5bf68b706a4db87c207ca7750d1d0d17784e92",
+    "docs/architecture/_INDEX.md": "9f8aca5be9b7eb42441ae8aa0e4e7db8115ece8aceca13199b771f68826349de",
+    "docs/architecture/native-suite-client.md": "ab02b8f61de6896ae0a37bfeee8296142fe88cb097808ebc69da7f70c603c0c2",
+    "docs/architecture/native-suite-t17-t18-clean-code-review-20261022.md": "79539bba75d1c1a4d74785fc41584f3c5103527ffb4b0db38bf47b45560e06b8",
+    "docs/architecture/native-suite-v1-contract.md": "6f68dda6bfa5a13fa7fee3a3bd34748025f7109f21642625fe7f5cdfbce82455",
+    "docs/catalog.json": "1104afaf603e705e317175cb9b0722b88d6f0c75448918e35086d419d8071a6b",
+    "docs/roadmaps/_INDEX.md": "1131380a3026279b757a16f01332d7e940f24c41bc14d20c59806dacd40e6595",
+    "docs/roadmaps/native-multimodal-suite-implementation-20261020.md": "be9bbfe113c9a7396979ef33df1528f98f0ccbf79a60236e756dcde614d3f424",
+    "ds4_embedding_gemma2.c": "7b81499abef2b490d02be8fdb1250cae7ee00693dd1ae56358fd85e88470fac6",
+    "ds4_embedding_gemma2.h": "eaaa2f58089d6ec5bd5d701e0941ed3c9e61205585dffb2a195f0a434258b4cd",
+    "ds4_gemma_multimodal.h": "229b1a0283b4640d27bc63fbec9b82a25f9587256cc78d5accfa80e5efdb6624",
+    "ds4_gemma_tokenizer.c": "aa14406a910ab9b577a31af32ef74481a881be4faa2cc37e0827342b06e642d0",
+    "ds4_gemma_visual.c": "687a1757f9c8d6527b0d52ee18637885a111966a4782c831bed67a33d7701c21",
+    "ds4_numeric.c": "3b9f73042f55780f92f3c3872fe548a7e317edd897545d0e5d712328b6244c18",
+    "ds4_numeric.h": "f576bf79ffda1c7185dbdf0c105650e48d120ee5b41471458f9e62b9e9a970a0",
+    "ds4_numeric_internal.h": "b508037887ca03b3714244396177091bab6629bb9fa99fbc95c8cd32a147c83f",
+    "ds4_qwen_image_pipeline.c": "358bf4d56a2c9b6264c386afe0be7a19c607e2e976a13fac5973c312d494a2a0",
+    "ds4_qwen_image_pipeline.h": "7d6e373b67cdef0ff7848b6a17cefda47bff33e51edd9abc6d7f3cadb6b41399",
+    "ds4_qwen_image_rgba.c": "5e99bfab12cc8a16ec225e2e9cd03a475cddc44cd2198cacecea2cf425e821c3",
+    "ds4_qwen_image_rgba.h": "1dbe9df7e66ed178c4cb5baca533dcd9695f68cdc9fccc65388e7759d43f2c40",
+    "ds4_resources.c": "3e0ac969c20494173ad1548b0bf6bc6705c5c3b39a667ac3db5317c5b9228913",
+    "ds4_runtime.c": "3e934d3671bac18da2728406f884a0629d4b865aeae88c84c362952d06d28c3c",
+    "ds4_runtime.h": "1fb7bcd1de5c8c01f41b9c2a90e5421c6205cc396f2299498d0440cb558980c8",
+    "ds4_server.c": "8c3620768ff5d7f03ddf339ae2c2dcce941a1e8141aef8478853bad8bc9e80a8",
+    "ds4_server_suite.inc": "87a606561e75cadef77ac484914bdad3ec15c07ab91071deb349cd1c919fd1f9",
+    "ds4_server_suite_http.inc": "1ba8fa2ac1a20cf4b5340a53de263c7a1572f842cb72ee08204269f33225fba5",
+    "ds4_server_suite_operations.inc": "66ccf78549f73de24288e358811d661471ab3dbf3d7399c88bb5514896b41c89",
+    "ds4_server_suite_types.h": "0c07a49af51e78ea00b50a455b66b00e665f0ff691c35564eeccbcb34def1408",
+    "ds4_suite_text.h": "c4010056a6d1410df9e3af83b0eb69b8d8287b37af6ab3256a56d1020d06678c",
+    "schemas/ds4-suite-catalog-v1.schema.json": "d80124f5de9dfc0943e04faeb9bc539a843cf7803b9eb8a044aa1d5a1fdbf949",
+    "schemas/ds4-suite-v1.schema.json": "9f0a55fa84ff69e8eb6e828e66be1ce1aa51118b67583e36d2d46b640e8aa9c1",
+    "tests/test_gemma_media.py": "7378d1b7fd34cba1a56c6e8bc6b7c7d2b2d8437109b33eeed1d800866182b01a",
+    "tests/test_resources.c": "544d336b6ae022b1ad908836fb3ecdb6067578732fb1a0a6ea9518bd09365b98",
+    "tests/test_runtime.c": "f28eef95bfcd109729a140ba03fb9538acc5c2af83f4a2389dc43b88f14c9529",
+    "tests/test_suite_contracts.py": "5c45de31122814820037e111c20e6c8b6c156f45811e26258dc4564985d6c8ec",
+    "tests/test_suite_exmekh_live.py": "56ffd3071c998b07e9cccc203c7b0cb601b0073489c75288fcf885a92fabcc2c",
+    "tests/test_suite_http.c": "631eff70532216cf30d45a7aa1c987d81d8285928d723aaf4d1002e36a7064e8",
+    "tests/test_suite_http_live.py": "707bfc2537c0b16c3d3f02799430de8c9a2b9c588e4a5c7c0c283f774aa299a0",
+    "tests/test_suite_image_tools_e2e.py": "4b0d71a6c30f99cad74870063d807ff0ef8cafaff7739adc7e4efbf38feb954b",
+    "tools/record_native_image_e2e.py": "7a2a2966a8382904d4e2efd8fa38419d579b01f08ee1b98211772077bc596467",
+    "tools/record_suite_service_qualification.py": "d8314e1d9261c38904b11aaba0abdadb303e940878342cf4d90d5bc090a0bb9c"
+  },
+  "external_changed_sources": {
+    "README.md": "8ee91d5b5eca109086775ce0e405b4851f1e71a32949bb905edc69336a76b218",
+    "docs/11-deep-thinking.md": "d6e1a7df56587eb335d225fbefddcae2cead9c7b33fd4886bc4dfb038c2a2035",
+    "docs/22-native-suite.md": "f46ea44cbb8a30c7e80cdff3f684c3d335c952ad675249c2998a3ea75b7be6a7",
+    "evaluations/workflow_prompts.py": "512e07e94213b59d715d5e9c2aa2b1c94fcbddb89dab25b6c1322975a0ca0396",
+    "pyproject.toml": "06a0e2cf7893a77e552f73db39d4116dde29f02bd36793551ca83e635bd87268",
+    "src/exmekh_lib/capabilities/hds/main.md": "fef8e8dad1f9765b8ca909a60b887072ce92cede909e1cb639d59ab76e09774c",
+    "src/exmekh_lib/capabilities/tools/embed-content/main.py": "4a57a577e9c636a418323bc8e047146615bd4b50f3b5e98700be1e9b1d861d89",
+    "src/exmekh_lib/capabilities/tools/generate-image/main.py": "c7979e2939fc63046bdfda4bd1bff8aab28fbea83d04b7442ed416710bb000b8",
+    "src/exmekh_lib/config/default_capabilities.py": "f7470c2d54755d2e7257a50f4d14a048a0c6b1d891e4e70c9acdb5032a0f14e3",
+    "src/exmekh_lib/config/native_suite.py": "13edb99bc125d6b8a2ed66ea3f69c8e2a61756497678a503ccfe196a4afdedc4",
+    "src/exmekh_lib/config/web.py": "8efadd6a23b658daf81146a1f1ce2951d10e296a767dac59ee967d7781cba1bd",
+    "src/exmekh_lib/config/web_text.py": "4d108b7652da4ca4b31d13a6e466a16dfc942ab2498229ea4eaef45b555e5ba3",
+    "src/exmekh_lib/core/agents/deep_skill/execution.py": "e977f1eb813c70780949522f029ee5b4577f6ebdd135d11c859417a0f73af722",
+    "src/exmekh_lib/core/agents/node/tool_call_executor.py": "a69a9269090408e293f7eb35c785aeb6b842e5c6f93a3acc38f6d362af4f056b",
+    "src/exmekh_lib/core/models/client.py": "b812c225b9e9851f6fa4201177b151133d409225556b7dbd516bd1e16392ea3a",
+    "src/exmekh_lib/core/models/history.py": "6f8f0059869f3d6371f9b6896b2ca04166b8370912c8503981bd84ac6225cd1e",
+    "src/exmekh_lib/core/models/message_snapshot.py": "bcefb5bd72c0245d899c647cf4c616fdf221b6fc60ba8e456ec4b9983f2bb912",
+    "src/exmekh_lib/core/models/native_media_tools.py": "77ff17090780b22bb9872fc0988d15aa418fa8f0897f12451d88265cddd7c36a",
+    "src/exmekh_lib/core/models/native_suite.py": "966683ea8eebe9119053126c3ea312e5abe74b3b667fb4e61f995150233f50f7",
+    "src/exmekh_lib/core/web_navigation/ranking.py": "a425e636148c838bf440c8e817c56e67f390085cca0b099fa0fcb0e2c8417587",
+    "src/exmekh_lib/interfaces/provider.py": "454e673bc51abd56a9f9804dd12bc493ecab0b8b9d6b8d18df27485b69080a7a",
+    "src/exmekh_lib/providers/local.py": "fa639c4d8b29f046981d2f64366892b5654c0706bdc3b3aac860051cbe7cadc2",
+    "tests/core/agents/capabilities/test_builtin_capabilities.py": "6042c0492dc59b1857d6d56a250e3cc656cb2e7f89292fce83cabed5f1ccfe49",
+    "tests/core/agents/capabilities/test_default_capabilities.py": "00c2ce8da30681895414250065b45db326c56ce7ecd5b899d9723f2a976428f7",
+    "tests/core/agents/deep_skill/test_execution.py": "d5e0ed810dfdf4e3d433216154b0b6fafcf00371a1c09253c688c5f74d8a9c78",
+    "tests/core/models/test_native_suite.py": "3edca1d0fd6e97b21b0331927309a9030c28e1cf22450089667f7163b550d8e6",
+    "tests/core/models/test_tool_attachments.py": "ef1cdcb49f55f22d01e7f513393a7425bb433ef2141ac4d9757e26e4c0a350f8",
+    "tests/core/web_navigation/test_ranking_extended.py": "38a0bc6393e59f663b13b22099c711929a9c98b677ba786f2cecc12be626f517",
+    "tests/providers/test_local.py": "54afd8c331e6b1fc72bb92d0a57045bc239f08734eff442c64a257dee2ffd1db",
+    "uv.lock": "77acd16e10ab7ff4f440f11834bf74bd5f989f4e194297e3d7bb03a2182df67d"
+  },
+  "external_patch_sha256": "4efcc27256d1cc579cc43aef398657ff854049ee7a28729b407c1adc337eadad",
+  "external_patch_reverse_check": "PASS",
+  "wheel": {
+    "status": "PASS",
+    "changed_package_files_checked": 17,
+    "lock_matches": true
+  },
+  "logs": {
+    "browser": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/browser.log",
+      "sha256": "46b8727fa5761f770cc406422bcbe31ab17a52e9dd50817e7c99814526766202",
+      "tail": [
+        "configfile: pyproject.toml",
+        "plugins: xdist-3.8.0, anyio-4.15.1, cov-7.1.0, asyncio-1.4.0",
+        "asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function",
+        "collected 1 item",
+        "",
+        "tests/test_native_image_generation_e2e.py .                              [100%]",
+        "",
+        "========================= 1 passed in 73.89s (0:01:13) ========================="
+      ],
+      "status": "PASS",
+      "tests": 1,
+      "seconds": 73.89
+    },
+    "tools_and_ranking": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/tools_and_ranking.log",
+      "sha256": "b12979d19cf86113141b0b524f0fea006961f71f8f3969fd95f87fc438913a43",
+      "tail": [
+        "test_01_registered_tool_input_modes_parameters_and_attachments (tests.test_suite_image_tools_e2e.ImageToolsE2E.test_01_registered_tool_input_modes_parameters_and_attachments) ... ok",
+        "test_02_invalid_preview_and_paths_do_not_generate (tests.test_suite_image_tools_e2e.ImageToolsE2E.test_02_invalid_preview_and_paths_do_not_generate) ... ok",
+        "test_03_text_and_visual_web_ranking_use_native_embeddings (tests.test_suite_image_tools_e2e.ImageToolsE2E.test_03_text_and_visual_web_ranking_use_native_embeddings) ... ok",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 3 tests in 316.155s",
+        "",
+        "OK"
+      ],
+      "status": "PASS",
+      "tests": 3,
+      "seconds": 316.155
+    },
+    "library_offline": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/library_offline.log",
+      "sha256": "ae9f33405c5931774214b88557aa3d84c2ef97c9f722acd575cbe32aca03f407",
+      "tail": [
+        "tests/utils/test_file.py ..............                                  [ 97%]",
+        "tests/utils/test_image.py .......                                        [ 97%]",
+        "tests/utils/test_time.py .....................................           [ 98%]",
+        "tests/utils/test_tool_errors.py ...................                      [ 98%]",
+        "tests/utils/test_tool_result_support.py .............................    [ 99%]",
+        "tests/utils/test_xml.py ........                                         [100%]",
+        "",
+        "===================== 3624 passed, 76 deselected in 23.96s ====================="
+      ],
+      "status": "PASS",
+      "tests": 3624,
+      "seconds": 23.96
+    },
+    "frontend": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/frontend.log",
+      "sha256": "062b1b105a4eb2d34d0b8788716fe5e787849aa351a58376c8d1c916cc6dbdf5",
+      "tail": [
+        "tests/test_chat_history_preservation.py ...............                  [ 45%]",
+        "tests/test_execution_restore.py ...................                      [ 56%]",
+        "tests/test_recorded_history_contracts.py .........................       [ 72%]",
+        "tests/test_raw_history.py ................                               [ 82%]",
+        "tests/test_steering.py .........................                         [ 97%]",
+        "tests/test_steering_recovery.py ....                                     [100%]",
+        "",
+        "============================= 162 passed in 10.77s ============================="
+      ],
+      "status": "PASS",
+      "tests": 162,
+      "seconds": 10.77
+    },
+    "schema": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/schema.log",
+      "sha256": "1adc0f856f9550f49d7e38a0acafcf361ac2273c9529173bbbb5d429564360f3",
+      "tail": [
+        "test_schema (tests.test_suite_contracts.SuiteContracts.test_schema) ... ok",
+        "test_standard_embeddings (tests.test_suite_contracts.SuiteContracts.test_standard_embeddings) ... ok",
+        "test_upload (tests.test_suite_contracts.SuiteContracts.test_upload) ... ok",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 7 tests in 0.034s",
+        "",
+        "OK"
+      ],
+      "status": "PASS",
+      "tests": 7,
+      "seconds": 0.034
+    },
+    "types": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/types.log",
+      "sha256": "6d88a1b220adb7a3d62092b6e38431f0b3fe8babe9864fab90e5849766260332",
+      "tail": [
+        "0 errors, 0 warnings, 0 informations"
+      ]
+    },
+    "lint": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/lint.log",
+      "sha256": "74d96006f16693a6f23ea6d2cf7a0a2043a8d32d9d173ef08cd48dd094f23ba9",
+      "tail": [
+        "All checks passed!",
+        "8 files already formatted",
+        "All checks passed!",
+        "1 file already formatted",
+        "All checks passed!",
+        "2 files already formatted"
+      ]
+    },
+    "library_lint": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/library_lint.log",
+      "sha256": "5088ea3ebd6e5446bc984b91ae136651170ee6398fd4a39b4fedc2cf35373975",
+      "tail": [
+        "All checks passed!",
+        "523 files already formatted"
+      ]
+    },
+    "product_text": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/product_text.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tail": []
+    },
+    "docs": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/docs.log",
+      "sha256": "d1ba469889402f512cc140bfc3914dfc6cbc5de28bab43ea253efafa4d96ace7",
+      "tail": [
+        "test_catalog_ranges_point_to_declared_headings (tests.test_docs_wiki.DocsWikiTests.test_catalog_ranges_point_to_declared_headings) ... ok",
+        "test_no_markdown_is_orphaned_or_flat_at_docs_root (tests.test_docs_wiki.DocsWikiTests.test_no_markdown_is_orphaned_or_flat_at_docs_root) ... ok",
+        "test_root_and_index_of_indexes_reach_every_group (tests.test_docs_wiki.DocsWikiTests.test_root_and_index_of_indexes_reach_every_group) ... ok",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 10 tests in 0.057s",
+        "",
+        "OK"
+      ]
+    },
+    "wheel": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/wheel.log",
+      "sha256": "7087ac3b6d074e9948822bf7e674dbff4c9e814c86acad4e04f4c3fc9da7c29f",
+      "tail": [
+        "Building wheel...",
+        "warning: `build_system.requires = [\"uv-build>=0.11.7,<0.12.0\"]` does not contain the current uv version 0.12.3",
+        "Successfully built ../performance-results/native-suite-image-e2e-20261022/wheel/exmekh_lib-0.1.0-py3-none-any.whl"
+      ]
+    },
+    "wheel_install": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/wheel_install.log",
+      "sha256": "af5ef68930deef5c0cd56b380f60e02795bb6afdd90f23c31541814a36418a7e",
+      "tail": [
+        "Resolved 167 packages in 64ms",
+        "Resolved 167 packages in 0.65ms",
+        "Prepared 1 package in 0.28ms",
+        "Uninstalled 1 package in 12ms",
+        "Installed 1 package in 5ms",
+        " ~ exmekh-lib==0.1.0 (from file:///home/daniele/ds4/agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl)"
+      ]
+    },
+    "native_server": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/native_server.log",
+      "sha256": "bb5b380c5701744e02ae5d343854ffaa5ef7eb04b070c1938d5154c54683cf31",
+      "tail": [
+        "1022 15:48:57 ds4-server: chat ctx=0..3118:3118 RESPPROTO TOOLS prompt start",
+        "1022 15:48:59 ds4-server: chat ctx=0..3118:3118 RESPPROTO TOOLS prefill chunk 2048/3118 (65.7%) chunk=0.00 t/s avg=780.18 t/s 2.625s",
+        "1022 15:49:01 ds4-server: chat ctx=0..3118:3118 RESPPROTO TOOLS prefill chunk 3118/3118 (100.0%) chunk=632.91 t/s avg=722.49 t/s 4.316s",
+        "1022 15:49:01 ds4-server: chat ctx=0..3118:3118 RESPPROTO TOOLS prompt done 4.316s",
+        "1022 15:49:01 ds4-server: response frontier captured tokens=3118 bytes=542.25 MiB location=host 422.044ms",
+        "1022 15:49:02 ds4-server: chat ctx=3118..3125:7 gen=7 RESPPROTO TOOLS decoding chunk=30.75 t/s avg=30.75 t/s 0.228s",
+        "1022 15:49:02 ds4-server: chat ctx=0..3118:3118 gen=7 RESPPROTO TOOLS finish=stop 4.966s",
+        "1022 15:49:02 ds4-server: post-response checkpoint rebuilt source=memory-request cached=3118 response_prefill=9 target=3127 location=host 472.635ms"
+      ]
+    },
+    "schema_before_fix": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/schema_before_fix.log",
+      "sha256": "fe2eb79ff656c955c46b0d161a299dd0a11060381addc68a5ee4934b1f99e609",
+      "tail": [
+        "",
+        "On instance['prompt']:",
+        "    ''",
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 1 test in 0.001s",
+        "",
+        "FAILED (errors=1)"
+      ]
+    },
+    "history_before_fix": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/history_before_fix.log",
+      "sha256": "755a51f20e18caabe75fe86404f8195bf75ebae9c5040ff0519144b72b8e2cb4",
+      "tail": [
+        "        snapshot = MessageHistory([message]).dump_history()[0]",
+        ">       assert \"attachments\" in snapshot",
+        "E       AssertionError: assert 'attachments' in {'role': 'tool', 'content': 'complete'}",
+        "",
+        "tests/core/models/test_tool_attachments.py:119: AssertionError",
+        "=========================== short test summary info ============================",
+        "FAILED tests/core/models/test_tool_attachments.py::test_history_export_preserves_tool_pixels_without_changing_message_dump",
+        "============================== 1 failed in 0.05s ==============================="
+      ]
+    },
+    "preview_before_fix": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/preview_before_fix.log",
+      "sha256": "e6e4d116370541cb8f626cc22320ff2fc1400bf6525d771ab11d54989d675b05",
+      "tail": [
+        ">           assert isinstance(parts[0], str)",
+        "E           assert False",
+        "E            +  where False = isinstance(<PIL.Image.Image image mode=RGBA size=16x16 at 0x748B6A8EAE70>, str)",
+        "",
+        "tests/core/models/test_native_suite.py:142: AssertionError",
+        "=========================== short test summary info ============================",
+        "FAILED tests/core/models/test_native_suite.py::test_multiple_images_preview_configuration_and_workspace_paths",
+        "============================== 1 failed in 0.84s ==============================="
+      ]
+    },
+    "browser_initial_fixture": {
+      "path": "performance-results/native-suite-image-e2e-20261022/logs/browser_initial_fixture.log",
+      "sha256": "995af44c10dea9bbb88f0375aafb72294b50e768722c7348da82a3ee6b46876c",
+      "tail": [
+        "E                   - text: 2m 23s 15:12",
+        "E                   - button \"Copy message\"",
+        "",
+        "tests/test_native_image_generation_e2e.py:80: AssertionError",
+        "=========================== short test summary info ============================",
+        "FAILED tests/test_native_image_generation_e2e.py::test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui",
+        "!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!",
+        "======================== 1 failed in 147.39s (0:02:27) ========================="
+      ]
+    }
+  },
+  "browser": {
+    "image_requests": [
+      {
+        "path": "/v1/images/generations",
+        "body": {
+          "model": "Qwen/Qwen-Image-2.1-Turbo",
+          "prompt": "A red square on white",
+          "n": 2,
+          "size": "256x256",
+          "output_format": "png",
+          "background": "opaque",
+          "ds4": {
+            "version": 1,
+            "sampling": "checkpoint",
+            "seed": 171
+          }
+        },
+        "idempotency_key": "53769479-5c74-4227-8c0d-ef411db9cd6b"
+      }
+    ],
+    "image_responses": [
+      {
+        "status": 200,
+        "ds4": {
+          "version": 1,
+          "request_id": "req-e6c458329a7f904d4b8fb95ca616ef1c",
+          "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "profile": "bf16-native-v1",
+          "plan": {
+            "variant": 1,
+            "victims": 2
+          },
+          "reclaimed_device_bytes": 15358213024,
+          "cache_hits": 0,
+          "total_seconds": 35.672220848,
+          "usage": {
+            "processed_tokens": 0,
+            "image_soft_tokens": 0,
+            "video_soft_tokens": 0,
+            "audio_soft_tokens": 0
+          },
+          "transfers": {
+            "native_h2d_bytes": 57630820016,
+            "native_d2h_bytes": 1261568
+          },
+          "load_seconds": [
+            9.166226962,
+            10.339756292,
+            0.47637268
+          ],
+          "phase_seconds": [
+            0.0,
+            0.105536564,
+            5.091138903,
+            0.436721728
+          ]
+        },
+        "error": null,
+        "images": [
+          {
+            "file_id": "file-8cdf348436bcef7c2176da643aa5a5f0",
+            "seed": 171,
+            "width": 256,
+            "height": 256,
+            "recipe": {
+              "version": 1,
+              "rng_version": 1,
+              "steps": 8,
+              "guidance": 1,
+              "reference_resolution": 0,
+              "background": "opaque"
+            },
+            "png_sha256": "886709487269736235f3e8a3732965fa4cd148d799a739a953b716b1bcb7bcab"
+          },
+          {
+            "file_id": "file-e41c40a9c0897418db6413449d0d04c0",
+            "seed": 172,
+            "width": 256,
+            "height": 256,
+            "recipe": {
+              "version": 1,
+              "rng_version": 1,
+              "steps": 8,
+              "guidance": 1,
+              "reference_resolution": 0,
+              "background": "opaque"
+            },
+            "png_sha256": "7b21345648c4c745277a65976895628cde4f16ba1703c26a374147ac847b3b32"
+          }
+        ]
+      }
+    ],
+    "original_files": [
+      {
+        "path": "/tmp/pytest-of-daniele/pytest-30/test_real_image_generation_del0/state/work/.exmekh_lib/generated-media/f5d522719deb449bb35c2d49d034ea5b/0.png",
+        "size": [
+          256,
+          256
+        ],
+        "sha256": "886709487269736235f3e8a3732965fa4cd148d799a739a953b716b1bcb7bcab"
+      },
+      {
+        "path": "/tmp/pytest-of-daniele/pytest-30/test_real_image_generation_del0/state/work/.exmekh_lib/generated-media/f5d522719deb449bb35c2d49d034ea5b/1.png",
+        "size": [
+          256,
+          256
+        ],
+        "sha256": "7b21345648c4c745277a65976895628cde4f16ba1703c26a374147ac847b3b32"
+      }
+    ],
+    "provider_calls": [
+      {
+        "input_image_sizes": [],
+        "tool_attachment_counts": [],
+        "output_text": null,
+        "tool_calls": [
+          {
+            "name": "generate-image",
+            "arguments": {
+              "prompt": "A red square on white",
+              "images": null,
+              "n": 2,
+              "width": 256,
+              "height": 256,
+              "output_format": "png",
+              "background": "opaque",
+              "seed": 171,
+              "idempotency_key": null,
+              "include_image_in_result": true,
+              "preview_scale": 0.5,
+              "execution_mode": "wait",
+              "wait_seconds": 300.0
+            }
+          }
+        ]
+      },
+      {
+        "input_image_sizes": [
+          [
+            128,
+            128
+          ],
+          [
+            128,
+            128
+          ]
+        ],
+        "tool_attachment_counts": [
+          2
+        ],
+        "output_text": "IMAGE-E2E-17",
+        "tool_calls": []
+      },
+      {
+        "input_image_sizes": [
+          [
+            128,
+            128
+          ],
+          [
+            128,
+            128
+          ]
+        ],
+        "tool_attachment_counts": [
+          2
+        ],
+        "output_text": "IMAGE-E2E-17",
+        "tool_calls": []
+      }
+    ],
+    "ui_heartbeat_seconds": [
+      0.0021122599973750766,
+      0.0017354909978166688,
+      0.003508246001729276
+    ]
+  },
+  "tools_and_ranking": [
+    {
+      "case": "text_only",
+      "request": {
+        "path": "/v1/images/generations",
+        "body": {
+          "model": "Qwen/Qwen-Image-2.1-Turbo",
+          "prompt": "A red square on white",
+          "n": 2,
+          "size": "256x256",
+          "output_format": "png",
+          "background": "opaque",
+          "ds4": {
+            "version": 1,
+            "sampling": "checkpoint",
+            "seed": 201
+          }
+        }
+      },
+      "service": {
+        "version": 1,
+        "request_id": "req-ecc0634fa214d61d5fdba6daccaeee8f",
+        "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "profile": "bf16-native-v1",
+        "plan": {
+          "variant": 1,
+          "victims": 2
+        },
+        "reclaimed_device_bytes": 15358213024,
+        "cache_hits": 0,
+        "total_seconds": 53.569644156,
+        "usage": {
+          "processed_tokens": 0,
+          "image_soft_tokens": 0,
+          "video_soft_tokens": 0,
+          "audio_soft_tokens": 0
+        },
+        "transfers": {
+          "native_h2d_bytes": 57630820016,
+          "native_d2h_bytes": 1261568
+        },
+        "load_seconds": [
+          10.589072198,
+          27.066750842,
+          0.452612389
+        ],
+        "phase_seconds": [
+          0.0,
+          0.125776002,
+          4.800476694,
+          0.412198042
+        ]
+      },
+      "outputs": [
+        {
+          "file_id": "file-10b56ab5d02aa61c121cc3f57e15645c",
+          "seed": 201,
+          "width": 256,
+          "height": 256,
+          "recipe": {
+            "version": 1,
+            "rng_version": 1,
+            "steps": 8,
+            "guidance": 1,
+            "reference_resolution": 0,
+            "background": "opaque"
+          },
+          "path": "/tmp/ds4-image-tools-st3hb6v4/.exmekh_lib/generated-media/29eca04b323b4f3e9a62d4f5d147433f/0.png",
+          "png_sha256": "28099dc16662e6cb1a9c9f09550ea341e6101d67be802229126099f4e2a3ca1b",
+          "artifact": "/home/daniele/ds4/performance-results/native-suite-image-e2e-20261022/tools/text_only-0.png"
+        },
+        {
+          "file_id": "file-f7a39bc1ebca49b309b7b11ca0204c83",
+          "seed": 202,
+          "width": 256,
+          "height": 256,
+          "recipe": {
+            "version": 1,
+            "rng_version": 1,
+            "steps": 8,
+            "guidance": 1,
+            "reference_resolution": 0,
+            "background": "opaque"
+          },
+          "path": "/tmp/ds4-image-tools-st3hb6v4/.exmekh_lib/generated-media/29eca04b323b4f3e9a62d4f5d147433f/1.png",
+          "png_sha256": "846a206cb870da0b94bbd43a863faeab6742f8900e94473806d2a2a601bbc6e3",
+          "artifact": "/home/daniele/ds4/performance-results/native-suite-image-e2e-20261022/tools/text_only-1.png"
+        }
+      ],
+      "preview_size": [
+        128,
+        128
+      ]
+    },
+    {
+      "case": "image_only",
+      "request": {
+        "path": "/v1/images/edits",
+        "body": {
+          "model": "Qwen/Qwen-Image-2.1-Turbo",
+          "prompt": "",
+          "n": 1,
+          "size": "256x256",
+          "output_format": "png",
+          "background": "auto",
+          "ds4": {
+            "version": 1,
+            "sampling": "checkpoint",
+            "seed": 211
+          },
+          "images": [
+            "file-7d5d68ca1e89d2b73586cd199d8cd171",
+            "file-df0a23f170e4d279a7c5752e1739c704"
+          ]
+        }
+      },
+      "service": {
+        "version": 1,
+        "request_id": "req-9a32f3c053753384e664d0bc5a51d374",
+        "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "profile": "bf16-native-v1",
+        "plan": {
+          "variant": 1,
+          "victims": 2
+        },
+        "reclaimed_device_bytes": 15358213024,
+        "cache_hits": 0,
+        "total_seconds": 227.361875421,
+        "usage": {
+          "processed_tokens": 0,
+          "image_soft_tokens": 0,
+          "video_soft_tokens": 0,
+          "audio_soft_tokens": 0
+        },
+        "transfers": {
+          "native_h2d_bytes": 30654677280,
+          "native_d2h_bytes": 1810432
+        },
+        "load_seconds": [
+          5.030393007,
+          81.463848504,
+          0.511828755
+        ],
+        "phase_seconds": [
+          0.251544072,
+          0.233427553,
+          3.622323138,
+          0.19836592
+        ]
+      },
+      "outputs": [
+        {
+          "file_id": "file-ba6118f96681abca5ce6a056404d7f67",
+          "seed": 211,
+          "width": 256,
+          "height": 256,
+          "recipe": {
+            "version": 1,
+            "rng_version": 1,
+            "steps": 8,
+            "guidance": 1,
+            "reference_resolution": 0,
+            "background": "auto"
+          },
+          "path": "/tmp/ds4-image-tools-st3hb6v4/.exmekh_lib/generated-media/b75a209099f74a6099f9c4422b4530b1/0.png",
+          "png_sha256": "95f1e617121955885de5a6deedd1630bfd6498799264e07a8aab26c98ca60651",
+          "artifact": "/home/daniele/ds4/performance-results/native-suite-image-e2e-20261022/tools/image_only-0.png"
+        }
+      ],
+      "preview_size": null
+    },
+    {
+      "case": "text_and_image",
+      "request": {
+        "path": "/v1/images/edits",
+        "body": {
+          "model": "Qwen/Qwen-Image-2.1-Turbo",
+          "prompt": "Make the square blue",
+          "n": 1,
+          "size": "256x256",
+          "output_format": "png",
+          "background": "transparent",
+          "ds4": {
+            "version": 1,
+            "sampling": "checkpoint",
+            "seed": 221
+          },
+          "images": [
+            "file-7848964cb2d755ec7b235532ea78f4d2"
+          ]
+        }
+      },
+      "service": {
+        "version": 1,
+        "request_id": "req-21e89c47a51d717075627a1bec10eb76",
+        "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "profile": "bf16-native-v1",
+        "plan": {
+          "variant": 1,
+          "victims": 2
+        },
+        "reclaimed_device_bytes": 15358213024,
+        "cache_hits": 0,
+        "total_seconds": 31.069447016,
+        "usage": {
+          "processed_tokens": 0,
+          "image_soft_tokens": 0,
+          "video_soft_tokens": 0,
+          "audio_soft_tokens": 0
+        },
+        "transfers": {
+          "native_h2d_bytes": 30649198016,
+          "native_d2h_bytes": 1228800
+        },
+        "load_seconds": [
+          5.315996088,
+          16.691067187,
+          0.634288389
+        ],
+        "phase_seconds": [
+          0.102535663,
+          0.18859746,
+          2.816865744,
+          0.185246173
+        ]
+      },
+      "outputs": [
+        {
+          "file_id": "file-ef4b22f413d806d15edb1ea054dd32c2",
+          "seed": 221,
+          "width": 256,
+          "height": 256,
+          "recipe": {
+            "version": 1,
+            "rng_version": 1,
+            "steps": 8,
+            "guidance": 1,
+            "reference_resolution": 0,
+            "background": "transparent"
+          },
+          "path": "/tmp/ds4-image-tools-st3hb6v4/.exmekh_lib/generated-media/93191a88a8ef420cb4565201f86dee02/0.png",
+          "png_sha256": "4bc143ccddb0a38955684f44f2f3dd976c2d07d663f5c3b087b191205f9474b2",
+          "artifact": "/home/daniele/ds4/performance-results/native-suite-image-e2e-20261022/tools/text_and_image-0.png"
+        }
+      ],
+      "preview_size": [
+        256,
+        256
+      ]
+    },
+    {
+      "case": "invalid_arguments",
+      "compute_requests": 0
+    },
+    {
+      "case": "native_ranking",
+      "scores": [
+        0.8674463033676147,
+        0.8143746852874756
+      ],
+      "order": [
+        0,
+        1
+      ],
+      "requests": [
+        {
+          "path": "/v1/embeddings",
+          "body": {
+            "model": "google/embeddinggemma-2",
+            "dimensions": 768,
+            "encoding_format": "float",
+            "input": [
+              "red square",
+              "Title: Red square\nDomain: example.org\nSnippet: A red square on white",
+              "Title: Blue square\nDomain: example.org\nSnippet: A blue square"
+            ],
+            "ds4": {
+              "version": 1,
+              "task": "similarity",
+              "overflow": "error"
+            }
+          }
+        },
+        {
+          "path": "/v1/embeddings",
+          "body": {
+            "model": "google/embeddinggemma-2",
+            "dimensions": 768,
+            "encoding_format": "float",
+            "input": [
+              {
+                "content": [
+                  {
+                    "type": "image",
+                    "file_id": "file-bb0ef7d18458951493efef774d770aea"
+                  }
+                ]
+              }
+            ],
+            "ds4": {
+              "version": 1,
+              "task": "similarity",
+              "overflow": "error"
+            }
+          }
+        },
+        {
+          "path": "/v1/embeddings",
+          "body": {
+            "model": "google/embeddinggemma-2",
+            "dimensions": 768,
+            "encoding_format": "float",
+            "input": [
+              "Title: Red square\nDomain: example.org\nSnippet: A red square on white",
+              "Title: Blue square\nDomain: example.org\nSnippet: A blue square"
+            ],
+            "ds4": {
+              "version": 1,
+              "task": "similarity",
+              "overflow": "error"
+            }
+          }
+        },
+        {
+          "path": "/v1/embeddings",
+          "body": {
+            "model": "google/embeddinggemma-2",
+            "dimensions": 768,
+            "encoding_format": "float",
+            "input": [
+              {
+                "content": [
+                  {
+                    "type": "image",
+                    "file_id": "file-c084763794f37e0e90239e91d4fd6f82"
+                  }
+                ]
+              },
+              {
+                "content": [
+                  {
+                    "type": "image",
+                    "file_id": "file-f9935a9acf1dd0b93ca4ea8e4d3570da"
+                  }
+                ]
+              }
+            ],
+            "ds4": {
+              "version": 1,
+              "task": "similarity",
+              "overflow": "error"
+            }
+          }
+        },
+        {
+          "path": "/v1/embeddings",
+          "body": {
+            "model": "google/embeddinggemma-2",
+            "dimensions": 768,
+            "encoding_format": "float",
+            "input": [
+              "red square"
+            ],
+            "ds4": {
+              "version": 1,
+              "task": "similarity",
+              "overflow": "error"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "artifacts": {
+    "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl": {
+      "sha256": "e79c4e44929ceba6d88718737c57cfc86c3c7581d7252b619119a7454569adf7",
+      "bytes": 405280
+    },
+    "config/native-suite.example.json": {
+      "sha256": "a5d5c3e8547675b5a91263c18c5bf68b706a4db87c207ca7750d1d0d17784e92",
+      "bytes": 877
+    },
+    "ds4-server-suite": {
+      "sha256": "22d0684d70b8135a3e268416a6244681c266bd77d584d6dc21f5c6a89906bd5b",
+      "bytes": 75663584
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser/browser.json": {
+      "sha256": "bf149727766c6da9645da81dc0b4bfee970102364fdfd6e039ad631001628bb4",
+      "bytes": 125419
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser/generated-images.png": {
+      "sha256": "68e30cd2b7cf58f2f2cc991dcde2d4f80cd9ad739198e6736c8ac2b968666a98",
+      "bytes": 76552
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser/image-preview.png": {
+      "sha256": "de9bccca6758694b66a389f3b24c263889a1404091436dce11ccb5cc99ff9e49",
+      "bytes": 145940
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser/last-page.png": {
+      "sha256": "e3af3e9c99bfad6836d7d0bcf60bb63f31ab88ea19d9e891e2cf668dc50c76fd",
+      "bytes": 85645
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser/last-state.json": {
+      "sha256": "4d601306edb0ca121dde81f11592a8f2eacfd22475dcd32c01751ce4598b083f",
+      "bytes": 125307
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-before-context/last-page.png": {
+      "sha256": "c943def5e96a2ee5390f31de416adad01304eaf19097671e9f73ee0dbffd7f68",
+      "bytes": 106725
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-before-context/last-state.json": {
+      "sha256": "dffd4afa43d82b32c86cb026fe287b5a30c1308dd6a48ab305773de65380265c",
+      "bytes": 25939
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-before-history/last-page.png": {
+      "sha256": "f4337732c2358cb8032667e86a2ab6aa3dd7e375eb1eecfbea5df4a097a7e7c4",
+      "bytes": 68798
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-before-history/last-state.json": {
+      "sha256": "5657dc8b94b5ede1aaebdda3e2c9e9832b9cd2d6896aafaf56d62b24934ac8de",
+      "bytes": 24999
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-slow-default-wait/browser.json": {
+      "sha256": "7f8d0143f5de960864fd5565c887303b9bcb564c0c3d3b333d7dc22c375a2fa4",
+      "bytes": 80499
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-slow-default-wait/generated-images.png": {
+      "sha256": "86d6b84f689d8b17f2b5cd9ceae4ebd842a4202ad16d8baf9da44a2f14392586",
+      "bytes": 88280
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-slow-default-wait/image-preview.png": {
+      "sha256": "c37822f8c6f98d37cf98b806fb60eb34a459207ae2d68495281d849b2e6d1697",
+      "bytes": 168054
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-slow-default-wait/last-page.png": {
+      "sha256": "61ec7d03f0f852cb77e82c75b1a94c9905532dedcdde3c6cc56b266bce2f7c00",
+      "bytes": 89077
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-slow-default-wait/last-state.json": {
+      "sha256": "0f761a10dff0b537ac8c5be90ba693329c4b0a5cace033d06024347ebc261d5f",
+      "bytes": 92549
+    },
+    "performance-results/native-suite-image-e2e-20261022/browser-slow-default-wait/pytest.log": {
+      "sha256": "68c2b2cbb30a3eb43ebb6d72013cee467b3af528fac068a70070f9acb26b52ff",
+      "bytes": 5732
+    },
+    "performance-results/native-suite-image-e2e-20261022/tools/image_only-0.png": {
+      "sha256": "95f1e617121955885de5a6deedd1630bfd6498799264e07a8aab26c98ca60651",
+      "bytes": 262488
+    },
+    "performance-results/native-suite-image-e2e-20261022/tools/text_and_image-0.png": {
+      "sha256": "4bc143ccddb0a38955684f44f2f3dd976c2d07d663f5c3b087b191205f9474b2",
+      "bytes": 262488
+    },
+    "performance-results/native-suite-image-e2e-20261022/tools/text_only-0.png": {
+      "sha256": "28099dc16662e6cb1a9c9f09550ea341e6101d67be802229126099f4e2a3ca1b",
+      "bytes": 262488
+    },
+    "performance-results/native-suite-image-e2e-20261022/tools/text_only-1.png": {
+      "sha256": "846a206cb870da0b94bbd43a863faeab6742f8900e94473806d2a2a601bbc6e3",
+      "bytes": 262488
+    },
+    "performance-results/native-suite-image-e2e-20261022/tools/tools-and-ranking.json": {
+      "sha256": "7c735b9a58b8e30daf04ae23fe71471039238b861fd5f7088462466e5283370e",
+      "bytes": 9852
+    }
+  },
+  "limits": [
+    "No image quality or other-backend qualification; T11 image quality gates remain open.",
+    "Multiple images share one request but the native recipe executes serially.",
+    "The browser uses a test AgentDesign and a fixed auxiliary title; chat, tool and native APIs are real.",
+    "The first browser fixture had an incorrect root exit instruction and insufficient context; its failed artifacts are retained separately.",
+    "A slow 285-second generation exceeded the default 60-second tool wait and the model regenerated; the failed replay is retained. Final browser qualification explicitly uses wait_seconds=300, not asynchronous job retrieval."
+  ]
+}

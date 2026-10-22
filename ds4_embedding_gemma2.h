@@ -39,6 +39,11 @@ ds4_status ds4_embedding_gemma2_release_weights(ds4_embedding_gemma2 *);
 uint64_t ds4_embedding_gemma2_resident_weights(const ds4_embedding_gemma2 *);
 ds4_status ds4_gemma_prepare(ds4_embedding_gemma2 *, const ds4_gemma_text *,
                              size_t count, ds4_gemma_input **);
+/* Complete tokenizer sequences, without implicit BOS/EOS or task prefixes.
+ * PAD is excluded; media control tokens require the typed media interface. */
+ds4_status ds4_gemma_prepare_tokens(ds4_embedding_gemma2 *,
+                                    const uint32_t *const *, const uint32_t *,
+                                    size_t count, ds4_gemma_input **);
 void ds4_gemma_input_free(ds4_gemma_input *);
 /* Borrowed BOS/content/EOS ids, including task prefix. No padding is stored;
  * execution isolates ragged items, equivalent to right-padded attention. */

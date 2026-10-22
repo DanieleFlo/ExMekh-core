@@ -123,6 +123,13 @@ int main(void) {
     assert(ds4_runtime_create(&runtime, &ops, &update_backend) == DS4_STATUS_OK);
     update_backend.runtime = runtime;
     ds4_runtime_scope update = {0};
+    assert(!ds4_runtime_transaction_held(runtime));
+    ds4_runtime_transaction lease = {0}, nested = {0};
+    assert(ds4_runtime_transaction_begin(runtime, &lease) == DS4_STATUS_OK);
+    assert(ds4_runtime_transaction_held(runtime));
+    assert(ds4_runtime_transaction_begin(runtime, &nested) == DS4_STATUS_BUSY);
+    ds4_runtime_transaction_end(&lease);
+    assert(!ds4_runtime_transaction_held(runtime));
     assert(ds4_runtime_begin_update(runtime, &update) == DS4_STATUS_OK);
     ds4_runtime_release(runtime);
     assert(!update_backend.shutdowns);

@@ -44,6 +44,9 @@ typedef struct {
 ds4_status ds4_gemma_multimodal_prepare(ds4_gemma_multimodal *,
                                         const ds4_gemma_multimodal_request *,
                                         size_t, ds4_gemma_multimodal_input **);
+ds4_status ds4_gemma_multimodal_prepare_tokens(ds4_gemma_multimodal *,
+    const uint32_t *const *, const uint32_t *, size_t,
+    ds4_gemma_multimodal_input **);
 ds4_status ds4_gemma_multimodal_segment(const ds4_gemma_multimodal_input *,
                                         size_t, ds4_gemma_segment *);
 /* Stable SHA-256 identity includes revision/profile/composition version,
