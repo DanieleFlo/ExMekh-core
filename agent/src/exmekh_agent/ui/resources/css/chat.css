@@ -484,3 +484,15 @@
     width: 100%;
     height: 78vh;
 }
+
+.generated-image-slot { position: relative; width: min(320px, 100%); overflow: hidden; border: 1px solid #3f3f46; border-radius: 12px; background: #18181b; margin: 0; padding: 0; }
+.generated-image-slot .exmekh-image-thumbnail { width: 100%; height: 100%; border: 0; border-radius: 0; }
+.generated-image-loading, .generated-image-unavailable { position: absolute; inset: 0; background: #27272a; }
+.generated-image-loading::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 20%, #ffffff18 50%, transparent 80%); animation: image-shimmer 1.8s ease-in-out infinite; }
+.generated-image-label { position: absolute; inset: 0; display: grid; place-items: center; color: #a1a1aa; font-size: 12px; text-align: center; padding: 16px; }
+.tool-approval-pending { color: #a1a1aa; animation: approval-pulse 1.4s ease-in-out infinite; }
+.tool-approval-approved { color: #34d399; }
+.tool-approval-denied { color: #fb7185; }
+@keyframes image-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+@keyframes approval-pulse { 50% { opacity: .4; box-shadow: 0 0 0 5px #a1a1aa20; } }
+@media (prefers-reduced-motion: reduce) { .generated-image-loading::after, .tool-approval-pending { animation: none; } }

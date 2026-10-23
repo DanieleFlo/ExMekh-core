@@ -40,6 +40,7 @@ class SettingsDrawerComponent:
         self.select_api_type: ui.select | None = None
         self.select_reasoning: ui.select | None = None
         self.compaction_threshold: ui.number | None = None
+        self.generated_images_switch: ui.switch | None = None
         self.model_select: ui.select | None = None
         self.status_badge: ui.badge | None = None
         self.status_spinner: ui.spinner | None = None
@@ -175,6 +176,10 @@ class SettingsDrawerComponent:
                 self.compaction_threshold.tooltip(
                     ui_text("settings.settings_drawer.compaction_help")
                 )
+                self.generated_images_switch = ui.switch(
+                    ui_text("settings.settings_drawer.include_generated_images"),
+                    value=config.include_generated_images_in_context,
+                ).tooltip(ui_text("settings.settings_drawer.generated_images_help"))
                 self.save_button = (
                     ui.button(
                         ui_text("settings.settings_drawer.save_global_settings"),
@@ -482,6 +487,10 @@ class SettingsDrawerComponent:
             self.drawer.hide()
 
     def _sync_inputs_from_config(self) -> None:
+        if self.generated_images_switch is not None:
+            self.generated_images_switch.value = (
+                config.include_generated_images_in_context
+            )
         if self.compaction_threshold:
             self.compaction_threshold.value = config.auto_compaction_threshold_percent
         if self.input_base_url:
@@ -503,6 +512,7 @@ class SettingsDrawerComponent:
             self.select_api_type,
             self.select_reasoning,
             self.compaction_threshold,
+            self.generated_images_switch,
             self.model_select,
             self.save_button,
         ):
@@ -541,6 +551,10 @@ class SettingsDrawerComponent:
                 return
             values["auto_compaction_threshold_percent"] = int(
                 self.compaction_threshold.value
+            )
+        if self.generated_images_switch is not None:
+            values["include_generated_images_in_context"] = (
+                self.generated_images_switch.value
             )
         with client:
             self._set_saving(True)

@@ -9,6 +9,7 @@ from exmekh_lib.core.agents.deep_agent import (
     DeepAgentStreamEvent,
 )
 from exmekh_lib.core.models.assistant_message import AssistantMessage
+from exmekh_lib.core.models.provider_response import ProviderResponse
 from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
@@ -23,6 +24,7 @@ from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     serialize_skill_execution,
 )
 from exmekh_agent.exmekh_bridge.models import ChatMessage
+from tests.mock_client import MockProvider
 
 
 def _execution_event(
@@ -154,8 +156,8 @@ def test_deep_agent_correlates_tool_events_inside_skill() -> None:
     )
     assert tokens == ["answer"]
     assert [(event.tool_name, event.status) for event in tools] == [
-        ("skill", "completed"),
-        ("read", "completed"),
+        ("skill", "running"),
+        ("read", "running"),
         ("read", "completed"),
         ("orphan", "completed"),
         ("other", "completed"),
@@ -216,26 +218,19 @@ def test_deep_agent_runs_without_skill_observer_or_tool_ids() -> None:
 
 
 @pytest.mark.parametrize("observer_fails", [False, True])
-def test_quick_chat_recovers_from_history_seed_failure_and_captures_raw_history(
-    observer_fails: bool,
-) -> None:
-    response = MagicMock()
-    response.get_message.return_value = "answer"
+def test_quick_chat_restores_history_and_captures_raw_history(observer_fails):
     captured = []
+    provider = MockProvider()
 
     def capture(raw, tree):
         captured.append((raw, tree))
         if observer_fails:
             raise RuntimeError("observer failed")
 
-    with (
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider"),
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.Client") as client_class,
+    with patch(
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
+        return_value=provider,
     ):
-        client = client_class.return_value
-        client.replace_history_from.side_effect = ValueError("legacy history")
-        client.call.return_value = response
-        client.get_history.return_value = [AssistantMessage("answer")]
         result = execute_agent_turn_sync(
             user_prompt="task",
             model="model",
@@ -250,11 +245,17 @@ def test_quick_chat_recovers_from_history_seed_failure_and_captures_raw_history(
             on_reasoning=lambda _: None,
             on_tool_event=lambda _: None,
             on_raw_history=capture,
-            history=[{"role": "user", "content": "earlier"}],
+            history=[
+                {"role": "user", "content": "earlier"},
+                {"role": "assistant", "content": "previous"},
+            ],
         )
-    assert result == "answer"
-    client.replace_history_from.assert_called_once()
-    assert captured == [([{"role": "assistant", "content": "answer"}], [])]
+    assert result == "Mock response for: task"
+    assert any(
+        message.get_message() == "earlier"
+        for message in provider.last_request.get_messages()
+    )
+    assert captured[-1][0][-1]["content"] == result
 
 
 def test_empty_structured_title_falls_back_to_user_prompt() -> None:
@@ -277,20 +278,18 @@ def test_deep_agent_ignores_unknown_stream_event() -> None:
 
 
 def test_quick_chat_ignores_noncontent_provider_event() -> None:
-    response = MagicMock()
-    response.get_message.return_value = "answer"
+    class EndProvider(MockProvider):
+        def call(self, request):
+            request.execute_on_stream_event(
+                ProviderStreamEvent(type=ProviderStreamEventType.END)
+            )
+            return ProviderResponse(AssistantMessage("answer"))
 
-    def call(request):
-        request.on_event.handle(ProviderStreamEvent(type=ProviderStreamEventType.END))
-        return response
-
-    tokens = []
-    with (
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider"),
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.Client") as client_class,
+    with patch(
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
+        return_value=EndProvider(),
     ):
-        client_class.return_value.call.side_effect = call
-        execute_agent_turn_sync(
+        result = execute_agent_turn_sync(
             user_prompt="task",
             model="model",
             base_url="http://localhost:8080/v1",
@@ -300,11 +299,11 @@ def test_quick_chat_ignores_noncontent_provider_event() -> None:
             agent_mode="quick_chat",
             capabilities_path_str="",
             name_hds="main",
-            on_token=tokens.append,
+            on_token=lambda _: None,
             on_reasoning=lambda _: None,
             on_tool_event=lambda _: None,
         )
-    assert tokens == ["answer"]
+    assert result == "answer"
 
 
 @pytest.mark.parametrize("failure", [RuntimeError("failed"), asyncio.CancelledError()])

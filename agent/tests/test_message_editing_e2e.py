@@ -376,11 +376,7 @@ async def test_text_upload_remains_available_after_edit_and_reload(
     edited = data["session"]["messages"][0]
     assert edited["attachment_paths"] == original["attachment_paths"]
     assert "Old text instruction" not in data["calls"][-1]["prompt"]
-    if mode == "quick_chat":
-        assert "Content from the retained attachment" in data["calls"][-1]["prompt"]
-        assert "<user_input_file" not in data["calls"][-1]["prompt"]
-    else:
-        assert original["attachment_paths"][0] in data["calls"][-1]["prompt"]
+    assert original["attachment_paths"][0] in data["calls"][-1]["prompt"]
     await page.reload(wait_until="networkidle")
     await expect(page.locator(".chat-message-user")).to_contain_text(
         "New text instruction"
@@ -436,8 +432,9 @@ async def test_edit_replaces_attachments_and_cancel_keeps_original(
     assert original["attachment_paths"][0] not in edited["attachment_paths"]
     assert data["calls"][-1]["image_count"] == 1
     assert "old.png" not in data["calls"][-1]["prompt"]
-    if mode == "quick_chat":
-        assert "New attachment content" in data["calls"][-1]["prompt"]
+    assert all(
+        path in data["calls"][-1]["prompt"] for path in edited["attachment_paths"]
+    )
     await page.reload(wait_until="networkidle")
     await expect(page.locator(".chat-message-user")).to_contain_text(
         "Updated attachments"

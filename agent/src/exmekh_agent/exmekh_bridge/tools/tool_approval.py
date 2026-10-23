@@ -352,9 +352,11 @@ class CommandApprovalHook(BeforeTool):
         api_type: str | None = None,
         evaluator: CommandApprovalEvaluator | None = None,
         get_mode: Callable[[], str] | None = None,
+        on_state: Callable[[str, str], None] | None = None,
     ) -> None:
         self.mode = normalize_tool_approval_mode(mode)
         self.get_mode = get_mode
+        self.on_state = on_state
         self.evaluator = evaluator or CommandApprovalEvaluator(
             history=history,
             model=model,
@@ -376,6 +378,8 @@ class CommandApprovalHook(BeforeTool):
             return None
 
         command_str = str(command)
+        if self.on_state:
+            self.on_state(context.call_id, "pending")
 
         while True:
             mode = self._current_mode()
@@ -385,6 +389,10 @@ class CommandApprovalHook(BeforeTool):
                 continue
             if self._current_mode() != mode:
                 continue
+            if self.on_state:
+                self.on_state(
+                    context.call_id, "approved" if decision.approved else "denied"
+                )
             if not decision.approved:
                 return ToolResponse(result=decision.reason)
             self._record_approval(command_str, reason=decision.reason)

@@ -9,6 +9,9 @@ from dataclasses import dataclass
 from typing import Any
 
 from exmekh_agent.config.formatting import DEFAULTS as FORMAT_DEFAULTS
+from exmekh_agent.exmekh_bridge.history.tool_attachments import (
+    tool_attachment_image_urls,
+)
 from exmekh_agent.exmekh_bridge.history.tool_calls import (
     extract_tool_arguments,
     restore_tool_call_ids,
@@ -48,30 +51,53 @@ class RecordedHistory:
                 return arguments
         return {}
 
+    def tool_image_urls(self, *, exclude_calls: set[str] | None = None) -> list[str]:
+        """Read generated attachments across root and retained skill transcripts."""
+        return [
+            url
+            for message in self._tool_messages()
+            if message.get("tool_call_id") not in (exclude_calls or set())
+            for url in tool_attachment_image_urls(message.get("attachments"))
+        ]
+
+    def images_for_call(self, call_id: str | None) -> list[str]:
+        """Resolve image attachments using the same legacy correlation as outputs."""
+        if call_id is None:
+            return []
+        return [
+            url
+            for message in self._tool_messages()
+            if message.get("tool_call_id") == call_id
+            for url in tool_attachment_image_urls(message.get("attachments"))
+        ]
+
+    def _tool_messages(self) -> Iterator[dict[str, Any]]:
+        for scope in self.scopes():
+            correlated = deepcopy(scope)
+            restore_tool_call_ids(correlated)
+            yield from (
+                message
+                for message in correlated
+                if str(message.get("role", "")).lower() in {"tool", "function"}
+            )
+
     def output_for_call(self, call_id: str | None) -> str | None:
         if call_id is None:
             return None
-        for scope in self.scopes():
-            # Saved legacy transcripts may omit call IDs. Correlate an owned copy
-            # so reading an output never rewrites the retained transcript.
-            correlated = deepcopy(scope)
-            restore_tool_call_ids(correlated)
-            for message in correlated:
-                if str(message.get("role", "")).lower() not in {"tool", "function"}:
-                    continue
-                if message.get("tool_call_id") != call_id:
-                    continue
-                content = message.get("content")
-                if content is not None:
-                    return (
-                        content
-                        if isinstance(content, str)
-                        else json.dumps(
-                            content,
-                            ensure_ascii=False,
-                            indent=FORMAT_DEFAULTS["indent_spaces"],
-                        )
+        for message in self._tool_messages():
+            if message.get("tool_call_id") != call_id:
+                continue
+            content = message.get("content")
+            if content is not None:
+                return (
+                    content
+                    if isinstance(content, str)
+                    else json.dumps(
+                        content,
+                        ensure_ascii=False,
+                        indent=FORMAT_DEFAULTS["indent_spaces"],
                     )
+                )
         return None
 
     def restored_snapshot(

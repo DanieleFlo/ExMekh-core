@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 from uuid import uuid4
 
@@ -29,6 +29,7 @@ from exmekh_agent.exmekh_bridge.history.converter import (
 )
 from exmekh_agent.exmekh_bridge.models import SubAgentConversation, ToolEvent
 from exmekh_agent.exmekh_bridge.tools.tool_events import tool_event_from_execution
+from exmekh_agent.exmekh_bridge.tools.tool_feedback import ToolFeedback
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,8 +53,14 @@ class SubAgentEvent:
 class SubAgentEventRouter:
     """Route a shared DeepAgent stream to the child currently running."""
 
-    def __init__(self, on_event: Callable[[SubAgentEvent], None] | None) -> None:
+    def __init__(
+        self,
+        on_event: Callable[[SubAgentEvent], None] | None,
+        *,
+        feedback: ToolFeedback | None = None,
+    ) -> None:
         self._on_event = on_event
+        self._feedback = feedback
         self._active_nodes: list[ObservedNode] = []
 
     def enter(self, node: ObservedNode) -> None:
@@ -69,6 +76,15 @@ class SubAgentEventRouter:
         self._active_nodes.pop()
 
     def publish(self, event: SubAgentEvent) -> None:
+        if self._feedback is not None and event.tool_event is not None:
+            self._feedback.publish(
+                event.tool_event,
+                lambda tool: self._notify(replace(event, tool_event=tool)),
+            )
+        else:
+            self._notify(event)
+
+    def _notify(self, event: SubAgentEvent) -> None:
         if self._on_event:
             self._on_event(event)
 

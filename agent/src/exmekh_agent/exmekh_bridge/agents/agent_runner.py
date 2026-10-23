@@ -33,7 +33,6 @@ from exmekh_agent.exmekh_bridge.agents.cancellation import (
 )
 from exmekh_agent.exmekh_bridge.agents.event_handlers import (
     DeepAgentTurnEventHandler,
-    QuickChatEventHandler,
     publish_raw_history,
 )
 from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
@@ -45,6 +44,7 @@ from exmekh_agent.exmekh_bridge.agents.turn_request import AgentTurnRequest
 from exmekh_agent.exmekh_bridge.capabilities.agent_design import (
     build_designed_agent,
     build_generic_agent,
+    build_quick_agent,
 )
 from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
@@ -87,6 +87,11 @@ from exmekh_agent.exmekh_bridge.tools.tool_approval import (
     DEFAULT_TOOL_APPROVAL_MODE,
     CommandApprovalHook,
     CommandApprovedCallback,
+)
+from exmekh_agent.exmekh_bridge.tools.tool_feedback import (
+    ImageArguments,
+    ImagePreviews,
+    ToolFeedback,
 )
 from exmekh_agent.state.agent_design import AgentDesign
 
@@ -210,21 +215,20 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
     )
     context_provider = None
     if (
-        (
-            request.agent_mode == "deep_agent"
-            and config.get_server_context_length(request.model, request.base_url)
-            is not None
-        )
+        config.get_server_context_length(request.model, request.base_url) is not None
         or request.on_context
-        or (request.steering is not None and request.agent_mode == "deep_agent")
+        or request.steering is not None
     ):
         context_provider = ContextTrackingProvider(
             provider,
             on_context=request.on_context,
             context_id=request.agent_context_id
-            or request.name_hds
-            or AGENT_DEFAULTS["name_hds"],
-            agentic_only=request.agent_mode == "deep_agent",
+            or (
+                AGENT_DEFAULTS["quick_chat_hds"]
+                if request.agent_mode == "quick_chat"
+                else request.name_hds or AGENT_DEFAULTS["name_hds"]
+            ),
+            agentic_only=True,
             ds4_qwen=config.uses_ds4_qwen_prompt(request.model, request.base_url),
             thinking=request.reasoning_effort_str.strip().lower() != "none",
             api_type=request.api_type,
@@ -234,237 +238,202 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
     if request.cancellation_event is not None:
         provider = CancellableProvider(provider, request.cancellation_event)
 
-    if request.agent_mode == "deep_agent":
-        effective_approval_mode = (
-            request.tool_approval_mode
-            if request.tool_approval_mode is not None
-            else DEFAULT_TOOL_APPROVAL_MODE
+    feedback = ToolFeedback()
+    effective_approval_mode = (
+        request.tool_approval_mode
+        if request.tool_approval_mode is not None
+        else DEFAULT_TOOL_APPROVAL_MODE
+    )
+    approval_hook = CommandApprovalHook(
+        mode=effective_approval_mode,
+        get_mode=request.get_tool_approval_mode,
+        on_state=feedback.approval,
+        history=request.tool_approval_raw_history
+        or request.approved_commands_history
+        or [],
+        request_manual_approval=request.on_request_manual_approval,
+        on_command_approved=request.on_command_approved,
+        model=request.model,
+        base_url=request.base_url,
+        api_key=request.api_key,
+        api_type=request.api_type,
+    )
+    tool_hooks = {
+        AGENT_DEFAULTS["shell_tool"]: ToolHooks(before=approval_hook),
+        AGENT_DEFAULTS["image_tool"]: ToolHooks(
+            before=ImageArguments(config.include_generated_images_in_context, feedback),
+            after=ImagePreviews(feedback),
+        ),
+    }
+    cap_path = Path(request.capabilities_path_str or config.capabilities_path)
+    cap_paths = (
+        [Path(path) for path in request.capabilities_paths]
+        if request.capabilities_paths
+        else [cap_path]
+    )
+    event_router = SubAgentEventRouter(request.on_sub_agent_event, feedback=feedback)
+    if request.agent_mode == "quick_chat":
+        root_node = build_quick_agent(tool_hooks, request.agent_context_id)
+        children = []
+    elif (
+        request.agent_design is not None
+        or request.agent_profile != AGENT_DEFAULTS["generic_profile"]
+    ):
+        design = request.agent_design or CapabilityRepository().default_design(
+            request.agent_profile, [str(path) for path in cap_paths]
         )
-        approval_hook = CommandApprovalHook(
-            mode=effective_approval_mode,
-            get_mode=request.get_tool_approval_mode,
-            history=request.tool_approval_raw_history
-            or request.approved_commands_history
-            or [],
-            request_manual_approval=request.on_request_manual_approval,
-            on_command_approved=request.on_command_approved,
-            model=request.model,
-            base_url=request.base_url,
-            api_key=request.api_key,
-            api_type=request.api_type,
+        root_node, children = build_designed_agent(
+            design, event_router, tool_hooks, request.agent_context_id
         )
-        approval_tool_hooks = {
-            AGENT_DEFAULTS["shell_tool"]: ToolHooks(before=approval_hook)
-        }
-        cap_path = Path(request.capabilities_path_str or config.capabilities_path)
-        cap_paths = (
-            [Path(path) for path in request.capabilities_paths]
-            if request.capabilities_paths
-            else [cap_path]
-        )
-        event_router = SubAgentEventRouter(request.on_sub_agent_event)
-        if (
-            request.agent_design is not None
-            or request.agent_profile != AGENT_DEFAULTS["generic_profile"]
-        ):
-            design = request.agent_design or CapabilityRepository().default_design(
-                request.agent_profile, [str(path) for path in cap_paths]
-            )
-            root_node, children = build_designed_agent(
-                design, event_router, approval_tool_hooks, request.agent_context_id
-            )
-        else:
-            root_node, children = build_generic_agent(
-                cap_paths,
-                event_router,
-                approval_tool_hooks,
-                root_name=request.name_hds or AGENT_DEFAULTS["name_hds"],
-                coding_persistent_history=config.coding_agent_persistent_history
-                if request.coding_agent_persistent_history is None
-                else request.coding_agent_persistent_history,
-                agent_context_id=request.agent_context_id,
-            )
-
-        prior_exmekh = convert_to_exmekh_messages(
-            request.history, current_user_prompt=request.user_prompt
-        )
-        content_by_dump = {
-            message.message_dump()["content"]: serialize_user_content(message)
-            for message in [*prior_exmekh, UserMessage(content)]
-            if isinstance(message, UserMessage)
-            and not isinstance(message.get_message(), str)
-        }
-
-        archive = HistoryArchive(latest_model_context(request.history))
-        archive.begin_turn([exmekh_message_to_raw_dict(m) for m in prior_exmekh])
-
-        def publish_multimodal_history(raw_history, skill_tree):
-            restored_history, restored_tree = restore_image_history(
-                raw_history, skill_tree, content_by_dump
-            )
-            expanded_history = archive.update(restored_history)
-            expanded_history, expanded_tree = restore_image_history(
-                expanded_history, archive.expand_tree(restored_tree), content_by_dump
-            )
-            checkpoint = archive.checkpoint()
-            if checkpoint is not None and request.on_model_context:
-                try:
-                    request.on_model_context(checkpoint)
-                except Exception as error:
-                    logger.warning(
-                        app_text(
-                            "errors_agents.event_handlers.unable_to_publish_model_context_s"
-                        ),
-                        error,
-                    )
-            if request.on_raw_history:
-                publish_raw_history(
-                    request.on_raw_history,
-                    expanded_history,
-                    expanded_tree,
-                )
-
-        def on_compaction(event):
-            if context_provider is not None:
-                context_provider.invalidate_context(event.agent_context_id)
-            if event.agent_context_id != root_node.agent_context_id:
-                return
-            archive.record_compaction(
-                event.replaced_history,
-                history=event.history,
-                skill_path=event.skill_path,
-                depth=event.depth,
-            )
-            publish_multimodal_history(event.history, event.history_tree)
-
-        event_handler = DeepAgentTurnEventHandler(
-            event_router,
-            request.on_token,
-            request.on_reasoning,
-            request.on_tool_event,
-            request.on_skill_event,
-            publish_multimodal_history
-            if request.on_raw_history or request.on_model_context
-            else None,
-            request.steering,
-            request.on_steering_added,
-            on_compaction,
-            request.on_compaction_progress,
-        )
-        if context_provider is not None:
-            context_provider.set_request_observer(event_handler.begin_request)
-
-        agent = DeepAgent(
-            provider=provider,
-            node=root_node,
-            work_root=Path(request.work_root or config.work_root),
-            on_stream=event_handler,
-            parameter_descriptions_in_schema=request.parameter_descriptions_in_schema,
-        )
-        if context_provider is not None:
-            for node in agent.capabilities_by_node:
-                policy = AutoCompactionPolicy(
-                    context_provider, model=request.model, base_url=request.base_url
-                )
-                node.set_history_compaction_policy(
-                    policy, budget=policy.request_budget()
-                )
-
-        for child in children:
-            if not child.persistent_history or not request.sub_agent_history:
-                continue
-            previous = next(
-                (
-                    item
-                    for item in reversed(request.sub_agent_history)
-                    if item.path == child.path and item.persistent_history
-                ),
-                None,
-            )
-            if previous:
-                child.restore_conversation(
-                    previous,
-                    prior_exmekh=convert_to_exmekh_messages(previous.replay_history()),
-                )
-
-        if request.history:
-            restore_node_history(root_node, request.history, prior_exmekh=prior_exmekh)
-            if context_provider is not None:
-                for message in reversed(request.history):
-                    usage = getattr(message, "context_usage", None)
-                    if usage is not None:
-                        context_provider.restore_context_usage(
-                            root_node.agent_context_id, usage
-                        )
-                        break
-
-        try:
-            if request.steering is not None:
-                # Restored messages follow one system message and precede the
-                # initial user message. Skill compaction preserves that prefix.
-                archived_prefix = archive.expand(
-                    [exmekh_message_to_raw_dict(m) for m in prior_exmekh]
-                )
-                request.steering.bind(
-                    agent.steer, history_start=len(archived_prefix) + 2
-                )
-            response = agent.run(user_message=content)
-        except BaseException:
-            event_handler.finish("error")
-            raise
-        else:
-            event_handler.finish()
-        finally:
-            if request.steering is not None:
-                request.steering.close()
-
-        if request.on_raw_history or request.on_model_context:
-            publish_multimodal_history(
-                response.history,
-                [serialize_skill_execution(s) for s in response.skill_executions],
-            )
-
-        return str(response.get_message() or "")
-
     else:
-        # Quick chat using Client
-        client = Client(
-            provider=provider,
-            system_message=SystemMessage(load_prompt("quick_chat")),
+        root_node, children = build_generic_agent(
+            cap_paths,
+            event_router,
+            tool_hooks,
+            root_name=request.name_hds or AGENT_DEFAULTS["name_hds"],
+            coding_persistent_history=config.coding_agent_persistent_history
+            if request.coding_agent_persistent_history is None
+            else request.coding_agent_persistent_history,
+            agent_context_id=request.agent_context_id,
         )
-        prior_exmekh = convert_to_exmekh_messages(
-            request.history, current_user_prompt=request.user_prompt
+
+    prior_exmekh = convert_to_exmekh_messages(
+        request.history, current_user_prompt=request.user_prompt
+    )
+    content_by_dump = {
+        message.message_dump()["content"]: serialize_user_content(message)
+        for message in [*prior_exmekh, UserMessage(content)]
+        if isinstance(message, UserMessage)
+        and not isinstance(message.get_message(), str)
+    }
+
+    archive = HistoryArchive(latest_model_context(request.history))
+    archive.begin_turn([exmekh_message_to_raw_dict(m) for m in prior_exmekh])
+
+    def publish_multimodal_history(raw_history, skill_tree):
+        restored_history, restored_tree = restore_image_history(
+            raw_history, skill_tree, content_by_dump
         )
-        if prior_exmekh:
+        expanded_history = archive.update(restored_history)
+        expanded_history, expanded_tree = restore_image_history(
+            expanded_history, archive.expand_tree(restored_tree), content_by_dump
+        )
+        checkpoint = archive.checkpoint()
+        if checkpoint is not None and request.on_model_context:
             try:
-                client.replace_history_from(1, prior_exmekh)
-            except Exception as e:  # noqa: BLE001 - legacy history is best-effort
+                request.on_model_context(checkpoint)
+            except Exception as error:
                 logger.warning(
                     app_text(
-                        "errors_agents.agent_runner.failed_to_seed_history_into_client",
-                        value_1=e,
-                    )
+                        "errors_agents.event_handlers.unable_to_publish_model_context_s"
+                    ),
+                    error,
                 )
-
-        event_handler = QuickChatEventHandler(request.on_token, request.on_reasoning)
-
-        response = client.call(
-            ClientRequest(
-                UserMessage(content),
-                streaming=True,
-                on_event=event_handler,
-            )
-        )
-        final_text = event_handler.finish(str(response.get_message() or ""))
-
         if request.on_raw_history:
             publish_raw_history(
                 request.on_raw_history,
-                [exmekh_message_to_raw_dict(item) for item in client.get_history()],
-                [],
+                expanded_history,
+                expanded_tree,
             )
 
-        return final_text
+    def on_compaction(event):
+        if context_provider is not None:
+            context_provider.invalidate_context(event.agent_context_id)
+        if event.agent_context_id != root_node.agent_context_id:
+            return
+        archive.record_compaction(
+            event.replaced_history,
+            history=event.history,
+            skill_path=event.skill_path,
+            depth=event.depth,
+        )
+        publish_multimodal_history(event.history, event.history_tree)
+
+    event_handler = DeepAgentTurnEventHandler(
+        event_router,
+        request.on_token,
+        request.on_reasoning,
+        lambda event: feedback.publish(event, request.on_tool_event),
+        request.on_skill_event,
+        publish_multimodal_history
+        if request.on_raw_history or request.on_model_context
+        else None,
+        request.steering if request.agent_mode == "deep_agent" else None,
+        request.on_steering_added,
+        on_compaction,
+        request.on_compaction_progress,
+    )
+    if context_provider is not None:
+        context_provider.set_request_observer(event_handler.begin_request)
+
+    agent = DeepAgent(
+        provider=provider,
+        node=root_node,
+        work_root=Path(request.work_root or config.work_root),
+        on_stream=event_handler,
+        parameter_descriptions_in_schema=request.parameter_descriptions_in_schema,
+    )
+    if context_provider is not None:
+        for node in agent.capabilities_by_node:
+            policy = AutoCompactionPolicy(
+                context_provider, model=request.model, base_url=request.base_url
+            )
+            node.set_history_compaction_policy(policy, budget=policy.request_budget())
+
+    for child in children:
+        if not child.persistent_history or not request.sub_agent_history:
+            continue
+        previous = next(
+            (
+                item
+                for item in reversed(request.sub_agent_history)
+                if item.path == child.path and item.persistent_history
+            ),
+            None,
+        )
+        if previous:
+            child.restore_conversation(
+                previous,
+                prior_exmekh=convert_to_exmekh_messages(previous.replay_history()),
+            )
+
+    if request.history:
+        restore_node_history(root_node, request.history, prior_exmekh=prior_exmekh)
+        if context_provider is not None:
+            for message in reversed(request.history):
+                usage = getattr(message, "context_usage", None)
+                if usage is not None:
+                    context_provider.restore_context_usage(
+                        root_node.agent_context_id, usage
+                    )
+                    break
+
+    try:
+        if request.steering is not None and request.agent_mode == "deep_agent":
+            # Restored messages follow one system message and precede the
+            # initial user message. Skill compaction preserves that prefix.
+            archived_prefix = archive.expand(
+                [exmekh_message_to_raw_dict(m) for m in prior_exmekh]
+            )
+            request.steering.bind(agent.steer, history_start=len(archived_prefix) + 2)
+        response = agent.run(user_message=content)
+        feedback.wait_for_images(request.cancellation_event, agent.capabilities_by_node)
+    except BaseException:
+        event_handler.finish("error")
+        raise
+    else:
+        event_handler.finish()
+    finally:
+        if request.steering is not None:
+            request.steering.close()
+
+    if request.on_raw_history or request.on_model_context:
+        publish_multimodal_history(
+            response.history,
+            [serialize_skill_execution(s) for s in response.skill_executions],
+        )
+
+    return str(response.get_message() or "")
 
 
 async def run_agent_turn(

@@ -12,7 +12,6 @@ from typing import Any
 import pypdfium2 as pdfium
 from exmekh_lib.core.cache.user_message_codec import (
     deserialize_user_message,
-    user_message_image_urls,
 )
 from exmekh_lib.core.models.user_message import (
     ImagesUserMessage,
@@ -35,6 +34,9 @@ from exmekh_agent.config.attachments import (
 )
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
+from exmekh_agent.exmekh_bridge.history.tool_attachments import (
+    tool_attachment_image_urls as tool_attachment_image_urls,
+)
 
 # PDFium is not thread-safe; uploads run in the shared executor.
 _pdf_render_lock = Lock()
@@ -162,21 +164,6 @@ def deserialize_tool_attachments(content: Any) -> UserMessage | None:
     if isinstance(content, dict):
         return deserialize_user_message(content)
     return UserMessage(deserialize_user_content(content))
-
-
-def tool_attachment_image_urls(content: Any) -> list[str]:
-    """Read preview URLs without decoding pixels on each streaming update."""
-    if isinstance(content, dict):
-        return user_message_image_urls(content)
-    if not isinstance(content, list):
-        return []
-    urls = []
-    for part in content:
-        if not isinstance(part, dict):
-            continue
-        if part.get("type") == "image_url":
-            urls.append(part["image_url"]["url"])
-    return urls
 
 
 def content_text(content: Any) -> str:

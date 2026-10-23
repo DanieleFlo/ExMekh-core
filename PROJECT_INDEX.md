@@ -690,9 +690,25 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `agent/src/exmekh_agent/exmekh_bridge/history/converter.py` — serializzazione delle skill, conversione della history e
   deduplicazione del prompt corrente tramite le API pubbliche Message;
   `agent_runner.py` coordina l'esecuzione e mantiene gli import di compatibilità.
+- `exmekh_lib/src/exmekh_lib/capabilities/hds/quick.md` e relativo catalogo —
+  HDS Quick con ricerca/lettura web, ispezione/lettura file e generazione immagini;
+  le Quick Chat usano lo stesso ciclo DeepAgent e la stessa persistenza dei progetti,
+  selezionando solo queste capacità. `ToolContext.call_id` identifica anche gli hook
+  prima/dopo gli override degli argomenti.
+- `agent/src/exmekh_agent/exmekh_bridge/tools/tool_feedback.py` — feedback per
+  invocazione e per turno: stato delle approvazioni, originali PNG indipendenti
+  dagli allegati inviati al modello e attesa cancellabile delle generazioni in
+  background. La preferenza globale `include_generated_images_in_context`
+  controlla `include_image_in_result` tramite hook, anche nei grafi personalizzati.
+  `ChatMessage` espone immagini e galleria per tool; `chat_view.py` mantiene i box
+  nella sequenza delle attività e conserva le immagini delle skill richiuse.
+  `ui/shared/image_preview.py` gestisce navigazione, copia dei pixel e download.
+  Regressioni in `agent/tests/test_feature_updates.py`,
+  `agent/tests/test_feature_updates_e2e.py` e
+  `exmekh_lib/tests/core/agents/test_quick_hds.py`.
 - `agent/src/exmekh_agent/exmekh_bridge/agents/turn_request.py` — input tipizzato del turno, passato come valore unico al worker; il runner conserva il punto di ingresso pubblico compatibile.
 - `agent/src/exmekh_agent/config/execution.py`, `agent/src/exmekh_agent/config/resources/execution.json` — policy dei titoli: sampling, budget, normalizzazione e fallback tramite metodi del tipo di configurazione.
-- `agent/src/exmekh_agent/exmekh_bridge/history/recorded_history.py` — query pubbliche sulle trascrizioni; il prompt del root è restituito come copia indipendente tramite ChatMessage, senza interpretazione duplicata nella UI.
+- `agent/src/exmekh_agent/exmekh_bridge/history/recorded_history.py` — query pubbliche sulle trascrizioni, sugli output e sulle immagini; la correlazione degli ID legacy è condivisa e non modifica la cronologia. `history/tool_attachments.py` legge i riferimenti alle immagini senza decodificarle. ChatMessage espone raccolta e galleria, senza interpretazione duplicata nel collector o nella UI.
 - `tools/check_product_text.py`, `tests/test_product_text_configuration.py` — gate contro prosa, messaggi, descrizioni, log e tooltip inline nel server di produzione e nei sorgenti Python di agente/libreria, incluse le capability. È eseguito da `make test-product-text` e dalla suite `make test`.
 - `docs/performance/text-configuration-20261014.json` — migrazione aggiuntiva dei testi, confronto dei token C preprocessati CPU/GPU e verifiche di server, agente e gate.
 - `docs/architecture/clean-code-live-review-20261014.md`, `docs/performance/clean-code-live-review-20261014.json` — revisione successiva con modifiche anche alla libreria, wheel verificata, copertura completa, test UI e qualifica CUDA live; include la regressione cancel/auxiliary/steering e il suo fix.

@@ -73,6 +73,15 @@ class AppConfig:
         )
     )  # none, low, medium, xhigh
 
+    include_generated_images_in_context: bool = field(
+        default_factory=lambda: (
+            os.getenv(
+                ENVIRONMENT_FIELDS["include_generated_images_in_context"], "true"
+            ).lower()
+            in {"1", "true", "yes"}
+        )
+    )
+
     # Agent settings
     name_hds: str = AGENT_DEFAULTS["name_hds"]
     capabilities_path: str = field(

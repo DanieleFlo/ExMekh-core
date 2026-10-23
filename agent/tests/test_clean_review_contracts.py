@@ -3,6 +3,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from exmekh_lib.core.agents.deep_agent import DeepAgentStreamEvent
 from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
@@ -12,9 +13,10 @@ from exmekh_lib.core.models.user_message import UserMessage
 
 from exmekh_agent.config import AppConfig
 from exmekh_agent.exmekh_bridge.agents.event_handlers import (
-    QuickChatEventHandler,
+    DeepAgentTurnEventHandler,
     scoped_reasoning_callback,
 )
+from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter
 from exmekh_agent.exmekh_bridge.history.converter import convert_to_exmekh_messages
 from exmekh_agent.exmekh_bridge.models import ChatMessage
 from exmekh_agent.exmekh_bridge.providers.provider_context import (
@@ -96,12 +98,22 @@ async def test_health_probe_ignores_bad_entries_and_deduplicates_model_ids():
 
 def test_quick_chat_supports_the_same_scoped_reasoning_callback_as_deep_agent():
     received = []
-    handler = QuickChatEventHandler(
+    handler = DeepAgentTurnEventHandler(
+        SubAgentEventRouter(None),
         lambda _: None,
         lambda content, path, depth: received.append((content, path, depth)),
+        lambda _: None,
+        None,
+        None,
     )
     handler.handle(
-        ProviderStreamEvent(type=ProviderStreamEventType.REASONING, content="thought")
+        DeepAgentStreamEvent(
+            ProviderStreamEvent(
+                type=ProviderStreamEventType.REASONING, content="thought"
+            ),
+            depth=0,
+            skill_path="/",
+        )
     )
     assert received == [("thought", "/", 0)]
 

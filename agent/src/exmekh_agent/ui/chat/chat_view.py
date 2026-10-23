@@ -12,6 +12,7 @@ from typing import Any, Literal
 from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 from nicegui import ui
 
+from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
 from exmekh_agent.exmekh_bridge.history.image_input import IMAGE_SUFFIXES
@@ -962,20 +963,6 @@ class ChatViewComponent:
                         "render_message_body.classes.msg_assistant_w_full_gap_2_5"
                     ]
                 ):
-                    if msg.image_urls:
-                        with ui.row().classes(
-                            UI_PRESENTATION[
-                                "render_message_body.classes.exmekh_message_images_gap_2_flex_wrap_mt_2"
-                            ]
-                        ):
-                            for index, url in enumerate(msg.image_urls):
-                                render_image_thumbnail(
-                                    url,
-                                    app_text(
-                                        "chat.chat_view.attached_image_value_1",
-                                        value_1=index + 1,
-                                    ),
-                                )
                     if msg.error == "cancelled":
                         with ui.row().classes(
                             UI_PRESENTATION[
@@ -1015,6 +1002,15 @@ class ChatViewComponent:
                     ):
                         self._render_turn_activity(
                             msg,
+                        )
+                    for index, url in enumerate(msg.unplaced_images()):
+                        render_image_thumbnail(
+                            url,
+                            app_text(
+                                "chat.chat_view.attached_image_value_1",
+                                value_1=index + 1,
+                            ),
+                            gallery=msg.image_gallery(),
                         )
 
                     # Response Parsed HTML (with LaTeX MathML support)
@@ -1464,12 +1460,39 @@ class ChatViewComponent:
                     ):
                         self._render_output_panel(node.opening_tool_call_id, skill=True)
 
+                image_tools = [
+                    tool
+                    for skill in node.iter_nodes()
+                    for tool in skill.tool_events
+                    if tool.tool_name == AGENT_DEFAULTS["image_tool"]
+                    or tool.image_urls
+                    or (
+                        self._rendering_message
+                        and self._rendering_message.images_for_tool(tool)
+                    )
+                ]
+                collapsed_images = None
+                if image_tools:
+                    with ui.column().classes(
+                        UI_PRESENTATION["image_generation.classes.collapsed_skill"]
+                    ) as collapsed_images:
+                        for tool in sorted(
+                            image_tools, key=lambda event: event.timestamp
+                        ):
+                            self._render_tool_images(tool)
+                    collapsed_images.set_visibility(not expanded)
+
+                def change_expansion(value: bool) -> None:
+                    self._disclosures.set_expanded(expansion_key, value)
+                    if collapsed_images is not None:
+                        collapsed_images.set_visibility(not value)
+
                 Disclosure(
                     header,
                     body_ref,
                     label=app_text("chat.chat_view.show_skill_name", name=node.name),
                     expanded=expanded,
-                    on_change=partial(self._disclosures.set_expanded, expansion_key),
+                    on_change=change_expansion,
                     chevron=chevron_ref,
                 )
 
@@ -1533,6 +1556,8 @@ class ChatViewComponent:
         return panel
 
     def _render_tool_event(self, ev: ToolEvent) -> None:
+        if self._rendering_message is not None:
+            ev = self._rendering_message.display_tool(ev)
         is_running = ev.is_running
         with ui.row().classes(
             UI_PRESENTATION[
@@ -1592,6 +1617,12 @@ class ChatViewComponent:
                     "render_tool_event.classes.tool_event_meta_items_center_gap_2_text_11px_"
                 ]
             ):
+                if ev.approval_state:
+                    ui.icon(UI_PRESENTATION["approval.icon"], size="xs").classes(
+                        UI_PRESENTATION["approval.classes_template"].format(
+                            state=ev.approval_state
+                        )
+                    ).tooltip(app_text(f"chat.chat_view.approval_{ev.approval_state}"))
                 if not is_running:
                     ui.icon(
                         "error" if ev.execution_status == "error" else "check_circle",
@@ -1632,6 +1663,55 @@ class ChatViewComponent:
                 expanded=self._disclosures.is_expanded(expansion_key),
                 on_change=partial(self._disclosures.set_expanded, expansion_key),
             )
+
+        self._render_tool_images(ev)
+
+    def _render_tool_images(self, event: ToolEvent) -> None:
+        message = self._rendering_message
+        urls = message.images_for_tool(event) if message else event.image_urls
+        if not urls and event.tool_name != AGENT_DEFAULTS["image_tool"]:
+            return
+        arguments = message.arguments_for_tool(event) if message else event.arguments
+        count = arguments.get("n", 1)
+        count = count if type(count) is int and 1 <= count <= 8 else 1
+        width, height = arguments.get("width", 2048), arguments.get("height", 2048)
+        width = width if type(width) is int and 32 <= width <= 2048 else 2048
+        height = height if type(height) is int and 32 <= height <= 2048 else 2048
+        gallery = message.image_gallery() if message else urls
+        generating = (
+            event.image_state == "running"
+            if event.image_state is not None
+            else event.is_running
+        )
+        with ui.row().classes(UI_PRESENTATION["image_generation.classes.gallery"]):
+            for index in range(len(urls) if urls else count):
+                with (
+                    ui.column()
+                    .classes(UI_PRESENTATION["image_generation.classes.slot"])
+                    .style(f"aspect-ratio: {width} / {height}")
+                ):
+                    if urls:
+                        render_image_thumbnail(
+                            urls[index],
+                            app_text(
+                                "chat.chat_view.attached_image_value_1",
+                                value_1=index + 1,
+                            ),
+                            gallery=gallery,
+                        )
+                    else:
+                        ui.element("div").classes(
+                            UI_PRESENTATION["image_generation.classes.loading"]
+                            if generating
+                            else UI_PRESENTATION["image_generation.classes.unavailable"]
+                        )
+                        ui.label(
+                            app_text(
+                                "chat.chat_view.image_generating"
+                                if generating
+                                else "chat.chat_view.image_unavailable"
+                            )
+                        ).classes(UI_PRESENTATION["image_generation.classes.label"])
 
     def _render_turn_activity(self, message: ChatMessage) -> None:
         """Render the model's timeline identically during streaming and after reload."""
@@ -2026,6 +2106,12 @@ class ChatViewComponent:
             self.stream_session_id or "", after_revision=-1
         )
         recorded = self._streaming_history or (snapshot.message if snapshot else None)
+        display_tools = []
+        for event in [
+            *self.streaming_root_tools,
+            *(recorded.tool_events if recorded else []),
+        ]:
+            record_tool_event(display_tools, event)
         with self.current_skills_container:
             self.current_skills_container.clear()
             self._render_turn_activity(
@@ -2034,7 +2120,7 @@ class ChatViewComponent:
                     raw_history=recorded.raw_history if recorded else [],
                     skill_history_tree=recorded.skill_history_tree if recorded else [],
                     skills=self.streaming_skills,
-                    tool_events=self.streaming_root_tools,
+                    tool_events=display_tools,
                     steering_insertions=self.streaming_steering_insertions,
                 ),
             )

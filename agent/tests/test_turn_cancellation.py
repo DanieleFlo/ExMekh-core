@@ -37,7 +37,6 @@ from exmekh_agent.exmekh_bridge.agents.cancellation import (
     CancellationEventHandler,
 )
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
-from exmekh_agent.exmekh_bridge.agents.event_handlers import QuickChatEventHandler
 from exmekh_agent.exmekh_bridge.models import ChatSession, ChatSettings, ChatTitle
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager
@@ -77,7 +76,9 @@ def test_cancellable_provider_preserves_public_request_options_and_streams() -> 
     cancellation = Event()
     guarded = CancellableProvider(provider, cancellation)
     tokens: list[str] = []
-    handler = QuickChatEventHandler(tokens.append, lambda *_: None)
+    handler = CancellationEventHandler(
+        cancellation, lambda event: tokens.append(event.content or "")
+    )
     request = ProviderRequest(
         [UserMessage("hello")],
         extra={"temperature": 0.2},

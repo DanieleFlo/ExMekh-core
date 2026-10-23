@@ -356,3 +356,42 @@ def test_prompt_query_does_not_borrow_the_system_prompt_of_a_child_skill():
     )
     assert history.system_prompt_message() is None
     assert ChatMessage(role="assistant").system_prompt_message() is None
+
+
+def test_image_queries_share_legacy_call_correlation_and_preserve_history():
+    history = [
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "id": "image",
+                    "type": "function",
+                    "function": {"name": "generate-image", "arguments": "{}"},
+                }
+            ],
+        },
+        {
+            "role": "FUNCTION",
+            "attachments": [{"type": "image_url", "image_url": {"url": "legacy"}}],
+        },
+    ]
+    recorded = RecordedHistory(
+        history,
+        [
+            {
+                "history": [
+                    {
+                        "role": "TOOL",
+                        "tool_call_id": "child",
+                        "attachments": [
+                            {"type": "image_url", "image_url": {"url": "nested"}}
+                        ],
+                    }
+                ]
+            }
+        ],
+    )
+    assert recorded.images_for_call("image") == ["legacy"]
+    assert recorded.images_for_call(None) == []
+    assert recorded.tool_image_urls(exclude_calls={"image"}) == ["nested"]
+    assert "tool_call_id" not in history[1]

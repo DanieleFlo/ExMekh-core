@@ -2,6 +2,7 @@ from playwright.async_api import async_playwright, expect
 
 from tests.browser_support import (
     get_edge_executable,
+    send_command,
     start_mock_server,
     wait_turn_completion,
 )
@@ -18,8 +19,8 @@ async def test_assistant_tool_image_preview_is_visible_and_persistent():
             try:
                 page = await browser.new_page()
                 await page.goto(url, wait_until="networkidle")
-                await page.locator("textarea").fill("Generate a red image")
-                await page.locator("textarea").press("Enter")
+                await send_command(page, "Generate a red image")
+                await expect(page.locator(".generated-image-loading")).to_have_count(1)
                 await wait_turn_completion(page)
                 preview = page.locator(".msg-assistant .exmekh-image-thumbnail")
                 await expect(preview).to_have_count(1)

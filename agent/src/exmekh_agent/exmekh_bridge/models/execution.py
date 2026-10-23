@@ -20,6 +20,9 @@ class ToolEvent(BaseModel):
     status: Literal["running", "completed", "error"] = "completed"
     tool_name: str
     arguments: dict[str, Any] = Field(default_factory=dict)
+    approval_state: Literal["pending", "approved", "denied"] | None = None
+    image_urls: list[str] = Field(default_factory=list)
+    image_state: Literal["running", "completed", "error"] | None = None
     depth: int = 0
     skill_path: str = "/"
     timestamp: float = Field(default_factory=time.time)
@@ -92,10 +95,18 @@ class ToolEvent(BaseModel):
 
     def merge_update(self, incoming: ToolEvent) -> None:
         """Keep the first terminal result while accepting missing arguments later."""
+        if incoming.approval_state is not None:
+            self.approval_state = incoming.approval_state
+        if incoming.image_state is not None:
+            self.image_state = incoming.image_state
+        if incoming.image_urls:
+            self.image_urls = list(incoming.image_urls)
         if self.is_running and not incoming.is_running:
             self.complete_from(incoming)
         elif not self.arguments:
             self.arguments = deepcopy(incoming.arguments)
+        if self.execution_status == "error":
+            self.finalize_timing("error")
 
     def normalized_copy(self) -> ToolEvent:
         """Normalize an incoming event without mutating the publisher's instance."""
@@ -115,6 +126,11 @@ class ToolEvent(BaseModel):
         self, status: TerminalStatus | None = None, *, now: float | None = None
     ) -> None:
         """Close a running tool when requested, preserving recorded terminal results."""
+        if status == "error":
+            if self.image_state == "running":
+                self.image_state = "error"
+            if self.approval_state == "pending":
+                self.approval_state = None
         if self.is_running and status is not None:
             self.status = status
             self.event_type = "tool_end"

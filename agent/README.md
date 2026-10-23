@@ -11,6 +11,9 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - **Collapsible Thinking Block**: visualization of reasoning tokens with an expandable animated view, identical to DeepSeek-R1 / LM Studio.
   - **Tool & Skill Execution Cards**: monitoring of hierarchical tools invoked by `DeepAgent` with depth tracking and skill paths.
   - **Turn Steering**: send a queued message as guidance to the active DeepAgent run. Accepted guidance and its delivery position remain visible after a page refresh and in saved conversation history. Guidance delivered inside a skill retains its canonical output ID in `get_execution_history` and `read_tool_output` across later turns, including its attached images and rendered PDF pages.
+- **Generated images**: each `generate-image` invocation has animated placeholders matching the requested count and aspect ratio. Original PNGs replace those placeholders at the tool's position in the chat. Images remain visible when their skill is collapsed and survive saved-chat reloads. The gallery supports previous/next images, arrow keys, download, copying PNG pixels, and Escape to close against a blurred backdrop. Background generations keep the turn open until their image feedback arrives, and cancellation stops that wait.
+  Global Settings → **Send generated images to the agent** controls the library's `include_image_in_result` parameter (enabled by default). Disabling it preserves the original images in the UI while omitting model attachments. `INCLUDE_GENERATED_IMAGES_IN_CONTEXT` persists the setting.
+
 - **Images and PDFs**:
   - Pick, drop, or paste several images in one message, including queued guidance.
   - Click thumbnails in the composer or saved chat for a large preview with a blurred backdrop; close it with the button or Escape.
@@ -25,6 +28,8 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - Customize a profile on a draggable canvas. Purple connections represent HDS sub-agents, while blue and green connections assign skills and tools to an HDS or skill. Dashed connections show skill dependencies, including nested skills and shared tools. Select cards to connect, disconnect, remove, choose the root, or configure sub-agent history. Connect to lists only valid new connections. Lines follow nodes during dragging; arrow controls pan smoothly in small steps. Undo or Ctrl+Z / Cmd+Z restores every board edit while text fields keep their native undo.
   - The palette includes bundled resources and capabilities discovered in the configured project paths. Create HDS instructions or edit a capability as a named copy; library originals remain available. Skill and HDS editors separate the description from the instructions and hide the YAML front matter. Sub-skills and sub-tools are read-only in the editor and generated from the canvas connections when saving and running the agent. Copies live under `data/agent-capabilities/`, and generated runtime configurations under `data/agent-designs/`.
   - Deep Thinking retains provider thinking in direct tool output headers, up to 200 tokens before summarizing. A renamed copy follows ordinary skill behavior; the editor explains this distinction.
+- **Tool approvals**: a pulsing grey shield marks an approval in progress; it turns green when approved and red when denied. The decision belongs to the tool invocation, including tools inside skills and child agents, and remains visible in saved chats.
+
 - **Readable execution results**: tool rows remain compact until clicked or activated with Enter/Space. Expanded results scroll within a bounded panel; completed skills offer their result in the last row of the expanded skill. Raw History preserves the XML header at the top of content with readable indentation while copying the original JSON. Archived read_tool_output results are matched by output ID and summary mode, including older saved chats.
 - **Responsive tabs**: chat, execution graph, history, dialogs, and the agent editor adapt to desktop, tablet, and phone widths.
 - **Automatic context compaction**: each DeepAgent node compacts its working history before the next inference at 80% of the server-reported context limit. Change the percentage (1–99) in Global Settings. Unknown server limits do not activate compaction. Graph and Raw retain original calls and outputs; a switch in Raw selects the complete execution archive or the current model context. Saved chats resume from the compact context while keeping their inspectable archive.
@@ -48,7 +53,7 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
 - **Local Provider Control**:
   - Dynamic health check of the local server endpoint (LM Studio, Ollama, llama.cpp, vLLM).
   - Dynamic discovery and selection of installed models.
-  - Project conversations automatically use **DeepAgent**; standalone **Quick Chats** use the typed client without skills or tools.
+  - Project conversations automatically use **DeepAgent**; standalone **Quick Chats** use the library's `quick` HDS with web search, page reading, file inspection/reading and image generation. Shell commands, file writes and delegated agents are unavailable.
 - **Projects and Quick Chats**:
   - Projects are named after their selected work folder. The folder is fixed after creation.
   - Project settings prioritize agent selection, then default bash approvals. The less frequently changed capabilities folders stay in a collapsed section. Sub-agent history is configured on the agent canvas.
@@ -56,7 +61,7 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - Bash approval changes inside a chat stay local; the project default applies to newly created conversations.
   - Persistent chat history lives under `data/chats/`, and project settings under `data/projects/`.
   - Temporary uploads and pasted files use `<work_root>/tmp/projects/<project_id>/`; Quick Chats use the frontend code folder and `tmp/quickchats/`.
-  - Input drafts and uploads stay with their original conversation when switching chats. Quick Chats include text attachments directly in the prompt and send images and rendered PDF pages as native vision inputs.
+  - Input drafts and uploads stay with their original conversation when switching chats. Quick Chats keep attachments as scoped file references for their read tools and send images and rendered PDF pages as native vision inputs.
   - Deleting a project deletes its conversations and stops their active turns. The selected work folder remains available.
   - Existing agent conversations are automatically grouped by work folder. When their previous settings differ, the most recently updated chat supplies the shared project settings; each chat keeps its bash approval mode and approval history.
 - **Automatic `exmekh_lib` Wheel Synchronization**:

@@ -16,12 +16,10 @@ from exmekh_lib.core.agents.deep_agent import (
     DeepAgentStreamEvent,
 )
 from exmekh_lib.core.models.provider_stream_event import (
-    ProviderStreamEvent,
     ProviderStreamEventType,
 )
 from exmekh_lib.interfaces.event_handler import (
     DeepAgentEventHandler,
-    ProviderEventHandler,
 )
 
 from exmekh_agent.config.catalogs import message as app_text
@@ -66,31 +64,6 @@ def publish_raw_history(
             app_text("errors_agents.event_handlers.unable_to_publish_raw_history_s"),
             error,
         )
-
-
-class QuickChatEventHandler(ProviderEventHandler):
-    """Forward quick chat events and provide a final token when streaming is empty."""
-
-    def __init__(
-        self,
-        on_token: Callable[[str], None],
-        on_reasoning: Callable[..., None],
-    ) -> None:
-        self._on_token = on_token
-        self._on_reasoning = scoped_reasoning_callback(on_reasoning)
-        self._received_tokens = False
-
-    def handle(self, event: ProviderStreamEvent) -> None:
-        if event.type == ProviderStreamEventType.RESPONSE and event.content:
-            self._received_tokens = True
-            self._on_token(event.content)
-        elif event.type == ProviderStreamEventType.REASONING and event.content:
-            self._on_reasoning(event.content, "/", 0)
-
-    def finish(self, final_text: str) -> str:
-        if not self._received_tokens:
-            self._on_token(final_text)
-        return final_text
 
 
 class DeepAgentTurnEventHandler(DeepAgentEventHandler):

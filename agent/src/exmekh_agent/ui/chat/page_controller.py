@@ -585,7 +585,7 @@ class ChatPageController:
                     message,
                     text.strip(),
                     storage=self.sessions.temp_storage(session),
-                    use_file_references=session.agent_mode == "deep_agent",
+                    use_file_references=True,
                     attachment_paths=attachment_paths,
                     attachments=attachments,
                 ),
@@ -651,7 +651,7 @@ class ChatPageController:
                     user_text,
                     storage=storage,
                     attachments=attachments,
-                    use_file_references=session.agent_mode == "deep_agent",
+                    use_file_references=True,
                 ),
             )
         except (OSError, ValueError) as error:

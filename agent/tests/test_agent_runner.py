@@ -11,6 +11,8 @@ from exmekh_lib.core.agents.deep_agent import (
     DeepAgentStreamEvent,
 )
 from exmekh_lib.core.agents.node import DefaultCapabilities
+from exmekh_lib.core.models.assistant_message import AssistantMessage
+from exmekh_lib.core.models.provider_response import ProviderResponse
 from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
     ProviderStreamEventType,
@@ -27,6 +29,7 @@ from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
 )
 from exmekh_agent.exmekh_bridge.models import ChatSettings
+from tests.mock_client import MockProvider
 
 
 @pytest.mark.asyncio
@@ -82,24 +85,13 @@ async def test_check_provider_health_exception() -> None:
 
 
 def test_execute_agent_turn_sync_quick_chat() -> None:
+    provider = MockProvider()
     tokens = []
-    reasoning = []
-    tools = []
-
-    mock_response = MagicMock()
-    mock_response.get_message.return_value = "Quick chat answer"
-
-    with (
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider"),
-        patch(
-            "exmekh_agent.exmekh_bridge.agents.agent_runner.Client"
-        ) as mock_client_cls,
+    with patch(
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
+        return_value=provider,
     ):
-        mock_client_instance = MagicMock()
-        mock_client_instance.call.return_value = mock_response
-        mock_client_cls.return_value = mock_client_instance
-
-        res = execute_agent_turn_sync(
+        result = execute_agent_turn_sync(
             user_prompt="Hello",
             model="test-model",
             base_url="http://localhost:8080/v1",
@@ -109,41 +101,44 @@ def test_execute_agent_turn_sync_quick_chat() -> None:
             agent_mode="quick_chat",
             capabilities_path_str="",
             name_hds="main",
-            on_token=lambda t: tokens.append(t),
-            on_reasoning=lambda t, p="/", d=0: reasoning.append(t),
-            on_tool_event=lambda ev: tools.append(ev),
+            on_token=tokens.append,
+            on_reasoning=lambda _: None,
+            on_tool_event=lambda _: None,
         )
-
-        assert res == "Quick chat answer"
-        assert tokens == ["Quick chat answer"]
+    assert result == "Mock response for: Hello"
+    assert tokens == [result]
+    names = set(provider.last_request.get_tools().list_tools())
+    assert {
+        "search-web",
+        "read-web-page",
+        "inspect-file",
+        "read-file",
+        "generate-image",
+    } <= names
+    assert (
+        not {"bash", "edit-file", "new-file", "delete-file", "call_sub_agent"} & names
+    )
 
 
 def test_quick_chat_forwards_provider_stream_events() -> None:
-    tokens: list[str] = []
-    reasoning: list[str] = []
-    response = MagicMock()
-    response.get_message.return_value = "Hello world"
+    tokens, reasoning = [], []
 
-    def call_with_events(request):
-        assert request.streaming is True
-        request.on_event.handle(
-            ProviderStreamEvent(
-                type=ProviderStreamEventType.REASONING, content="Thinking"
-            )
-        )
-        for chunk in ("Hello ", "world"):
-            request.on_event.handle(
-                ProviderStreamEvent(
-                    type=ProviderStreamEventType.RESPONSE, content=chunk
+    class StreamingProvider(MockProvider):
+        def call(self, request):
+            for kind, text in [
+                (ProviderStreamEventType.REASONING, "Thinking"),
+                (ProviderStreamEventType.RESPONSE, "Hello "),
+                (ProviderStreamEventType.RESPONSE, "world"),
+            ]:
+                request.execute_on_stream_event(
+                    ProviderStreamEvent(type=kind, content=text)
                 )
-            )
-        return response
+            return ProviderResponse(AssistantMessage("Hello world"))
 
-    with (
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider"),
-        patch("exmekh_agent.exmekh_bridge.agents.agent_runner.Client") as client_class,
+    with patch(
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
+        return_value=StreamingProvider(),
     ):
-        client_class.return_value.call.side_effect = call_with_events
         result = execute_agent_turn_sync(
             user_prompt="Hi",
             model="test-model",
@@ -158,7 +153,6 @@ def test_quick_chat_forwards_provider_stream_events() -> None:
             on_reasoning=reasoning.append,
             on_tool_event=lambda _: None,
         )
-
     assert result == "Hello world"
     assert tokens == ["Hello ", "world"]
     assert reasoning == ["Thinking"]
@@ -403,11 +397,11 @@ def test_execute_agent_turn_sync_reasoning_effort_mapping(
             "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider"
         ) as mock_provider_cls,
         patch(
-            "exmekh_agent.exmekh_bridge.agents.agent_runner.Client"
+            "exmekh_agent.exmekh_bridge.agents.agent_runner.DeepAgent"
         ) as mock_client_cls,
     ):
         mock_client = MagicMock()
-        mock_client.call.return_value = mock_response
+        mock_client.run.return_value = mock_response
         mock_client_cls.return_value = mock_client
 
         execute_agent_turn_sync(

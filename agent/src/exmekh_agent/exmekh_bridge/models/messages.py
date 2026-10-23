@@ -142,6 +142,54 @@ class ChatMessage(BaseModel):
             self.raw_history, self.skill_history_tree
         ).arguments_for_call(event.tool_call_id)
 
+    def display_tool(self, event: ToolEvent) -> ToolEvent:
+        return next(
+            (
+                tool
+                for tool in self.tool_events
+                if tool.invocation_key == event.invocation_key
+            ),
+            event,
+        )
+
+    def images_for_tool(self, event: ToolEvent) -> list[str]:
+        tool = self.display_tool(event)
+        if tool.image_urls:
+            return list(tool.image_urls)
+        return RecordedHistory(
+            self.raw_history, self.skill_history_tree
+        ).images_for_call(tool.tool_call_id)
+
+    def generated_image_urls(self) -> list[str]:
+        """Collect this turn's originals, falling back to retained model previews."""
+        originals = [url for tool in self.tool_events for url in tool.image_urls]
+        original_calls = {
+            tool.tool_call_id
+            for tool in self.tool_events
+            if tool.tool_call_id is not None and tool.image_urls
+        }
+        return originals + RecordedHistory(
+            self.turn_raw_history(), self.skill_history_tree
+        ).tool_image_urls(exclude_calls=original_calls)
+
+    def image_gallery(self) -> list[str]:
+        """Keep tool order and include retained images without an invocation."""
+        return [
+            url for tool in self.tool_events for url in self.images_for_tool(tool)
+        ] + self.unplaced_images()
+
+    def unplaced_images(self) -> list[str]:
+        history = RecordedHistory(self.raw_history, self.skill_history_tree)
+        assigned = {
+            url
+            for tool in self.tool_events
+            for url in [
+                *self.images_for_tool(tool),
+                *history.images_for_call(tool.tool_call_id),
+            ]
+        }
+        return [url for url in self.image_urls if url not in assigned]
+
     def output_for_call(self, call_id: str | None) -> str | None:
         """Resolve one invocation without exposing how its transcripts are stored."""
         return RecordedHistory(

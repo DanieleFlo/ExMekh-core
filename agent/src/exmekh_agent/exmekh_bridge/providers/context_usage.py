@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any
 
+from exmekh_lib.core.agents.node import DefaultCapabilities
 from exmekh_lib.tokenizers.qwen import QwenTokenizer
 
 from exmekh_agent.config import config
@@ -384,7 +385,10 @@ def _resolve_system_prompt_for_session(
         if hds_prompt:
             return hds_prompt
 
-    return load_prompt("quick_chat")
+    return load_real_hds_system_prompt(
+        name_hds="quick",
+        capability_paths=(str(DefaultCapabilities().capabilities_path),),
+    ) or load_prompt("quick_chat")
 
 
 def build_compacted_context_messages(

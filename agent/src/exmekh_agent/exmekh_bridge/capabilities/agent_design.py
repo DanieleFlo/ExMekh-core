@@ -18,10 +18,29 @@ from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
 from exmekh_agent.state.agent_design import AgentDesign
 
 
+def build_quick_agent(
+    tool_hooks: dict[str, ToolHooks], agent_context_id: str | None = None
+) -> Node:
+    """Keep QuickChat's capability selection at the node construction boundary."""
+    included = AGENT_DEFAULTS["quick_chat_tools"]
+    return Node(
+        capabilities_paths=[],
+        name_hds=AGENT_DEFAULTS["quick_chat_hds"],
+        agent_context_id=agent_context_id,
+        default_capabilities=DefaultCapabilities(
+            harness=False,
+            include=included,
+            tool_hooks={
+                name: hook for name, hook in tool_hooks.items() if name in included
+            },
+        ),
+    )
+
+
 def build_generic_agent(
     capabilities_paths: list[Path],
     router: SubAgentEventRouter,
-    approval_hooks: dict[str, ToolHooks],
+    tool_hooks: dict[str, ToolHooks],
     *,
     root_name: str,
     coding_persistent_history: bool,
@@ -29,7 +48,7 @@ def build_generic_agent(
 ) -> tuple[Node, list[ObservedNode]]:
     """Build the bundled hierarchy through the same boundary as custom designs."""
     defaults = CapabilityRepository().default_capabilities_for(
-        root_name, capabilities_paths, approval_hooks
+        root_name, capabilities_paths, tool_hooks
     )
     child_name = AGENT_DEFAULTS["coding_capability"]
     children = [
@@ -55,7 +74,7 @@ def build_generic_agent(
 def build_designed_agent(
     design: AgentDesign,
     router: SubAgentEventRouter,
-    approval_hooks: dict[str, ToolHooks],
+    tool_hooks: dict[str, ToolHooks],
     agent_context_id: str | None = None,
 ) -> tuple[Node, list[ObservedNode]]:
     compiled = CapabilityRepository().compile(design)
@@ -67,7 +86,9 @@ def build_designed_agent(
         defaults = DefaultCapabilities(
             harness=False,
             include=included,
-            tool_hooks=approval_hooks if "bash" in included else None,
+            tool_hooks={
+                name: hook for name, hook in tool_hooks.items() if name in included
+            },
         )
         path = f"{parent_path}/{item.name}" if parent_path else item.name
         children = [

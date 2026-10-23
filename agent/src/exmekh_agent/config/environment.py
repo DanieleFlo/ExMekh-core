@@ -6,6 +6,7 @@ ENVIRONMENT_FIELDS = {
     "default_model": "DEFAULT_MODEL",
     "context_length": "CONTEXT_LENGTH",
     "auto_compaction_threshold_percent": "AUTO_COMPACTION_THRESHOLD_PERCENT",
+    "include_generated_images_in_context": "INCLUDE_GENERATED_IMAGES_IN_CONTEXT",
     "api_type": "API_TYPE",
     "reasoning_effort": "REASONING_EFFORT",
     "coding_agent_persistent_history": "CODING_AGENT_PERSISTENT_HISTORY",
