@@ -3,33 +3,85 @@
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
+from exmekh_lib.core.models.creation_document import CreationDocument, CreationElement
 from exmekh_lib.core.models.edit_document import EditDocument
+from exmekh_lib.utils.tool_errors import ToolInputError
 
 from exmekh_agent.exmekh_bridge.history.recorded_output import RecordedToolOutput
 from exmekh_agent.exmekh_bridge.models import ChatMessage, ToolEvent
 
 
-def _deletion_outcomes(
-    event: ToolEvent, history: ChatMessage
-) -> list[tuple[str, bool]]:
+def _operation_outcomes(event: ToolEvent, history: ChatMessage) -> list[ET.Element]:
     output = history.output_for_call(event.tool_call_id)
-    assert output is not None, "IMPLEMENTATION: missing deletion receipt"
+    assert output is not None, "IMPLEMENTATION: missing file operation receipt"
     envelope = RecordedToolOutput.split_header(output)
     root = ET.fromstring(envelope[1] if envelope else output)
     outcomes = root.find("results")
     if outcomes is None:
         assert root.findtext("ok") == "false", (
-            "IMPLEMENTATION: missing per-path outcomes"
+            "IMPLEMENTATION: missing per-resource outcomes"
         )
         return []
-    observed = [
-        (item.findtext("path"), item.findtext("ok") == "true") for item in outcomes
-    ]
-    assert [path for path, _ in observed] == event.arguments["paths"], (
-        "IMPLEMENTATION: deletion receipt order differs from arguments"
+    assert (root.findtext("ok") == "true") == all(
+        item.findtext("ok") == "true" for item in outcomes
     )
-    assert (root.findtext("ok") == "true") == all(ok for _, ok in observed)
+    return list(outcomes)
+
+
+def _deletion_outcomes(
+    event: ToolEvent, history: ChatMessage
+) -> list[tuple[str, bool]]:
+    observed = [
+        (item.findtext("path"), item.findtext("ok") == "true")
+        for item in _operation_outcomes(event, history)
+    ]
+    if observed:
+        assert [path for path, _ in observed] == event.arguments["paths"], (
+            "IMPLEMENTATION: deletion receipt order differs from arguments"
+        )
     return observed
+
+
+def _verify_creation(
+    event: ToolEvent,
+    history: ChatMessage,
+    root: Path,
+    expected: dict[Path, bytes | None],
+) -> bool:
+    outcomes = _operation_outcomes(event, history)
+    try:
+        elements = CreationDocument.parse(event.arguments["document"]).elements
+    except ToolInputError:
+        assert not outcomes, "IMPLEMENTATION: invalid document has resource outcomes"
+        return False
+    assert outcomes, "IMPLEMENTATION: valid document has no resource outcomes"
+    assert [item.findtext("index") for item in outcomes] == [
+        str(index) for index in range(1, len(elements) + 1)
+    ], "IMPLEMENTATION: creation receipt order differs from document"
+    for element, outcome in zip(elements, outcomes, strict=True):
+        ok = outcome.findtext("ok") == "true"
+        if not isinstance(element, CreationElement):
+            assert not ok, "IMPLEMENTATION: malformed creation block succeeded"
+            continue
+        assert outcome.findtext("path") == element.path
+        path = (root / element.path).resolve()
+        if ok:
+            if element.resource_type == "directory":
+                assert path.is_dir(), "IMPLEMENTATION: successful directory is missing"
+            else:
+                assert expected.get(path) is None, (
+                    "IMPLEMENTATION: creation overwrote an existing file"
+                )
+                expected[path] = element.content.encode()
+        elif element.resource_type == "file" and path in expected:
+            valid = (
+                expected[path] is None
+                and path.parent.is_dir()
+                and len(element.content) >= 2
+                and "\x00" not in element.content
+            )
+            assert not valid, "IMPLEMENTATION: valid new-file call failed"
+    return all(item.findtext("ok") == "true" for item in outcomes)
 
 
 def verify_file_effects(
@@ -48,25 +100,13 @@ def verify_file_effects(
             terminal[event.invocation_key] = event
     calls = []
     for event in terminal.values():
-        if event.execution_status == "error" and event.tool_name in {
-            "new-file",
-            "delete-file",
-        }:
-            args = event.arguments
-            if isinstance(args.get("path"), str):
-                path = (root / args["path"]).resolve()
-                if path in expected:
-                    valid = (
-                        expected[path] is not None
-                        if event.tool_name == "delete-file"
-                        else expected[path] is None
-                        and isinstance(args.get("content"), str)
-                        and len(args["content"]) >= 2
-                        and "\x00" not in args["content"]
-                    )
-                    assert not valid, (
-                        f"IMPLEMENTATION: valid {event.tool_name} call failed"
-                    )
+        if event.tool_name == "new-file":
+            assert history is not None, (
+                "IMPLEMENTATION: creation verification requires recorded outcomes"
+            )
+            if _verify_creation(event, history, root, expected):
+                calls.append(event)
+            continue
         if event.execution_status != "completed":
             continue
         args = event.arguments
@@ -114,8 +154,6 @@ def verify_file_effects(
                 for start, end, replacement in sorted(changes, reverse=True):
                     text = text[:start] + replacement + text[end:]
                 expected[path] = text.encode()
-        else:
-            expected[(root / args["path"]).resolve()] = args["content"].encode()
     for path, content in expected.items():
         if content is None:
             assert not path.exists(), (

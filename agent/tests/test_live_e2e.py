@@ -207,11 +207,12 @@ async def test_live_e2e_deep_agent_tool_execution() -> None:
 async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
     """Exercise the runtime handler through both frontend provider wrappers."""
     tool_events: list[ToolEvent] = []
+    snapshots: list[ChatMessage] = []
     response = await run_agent_turn(
         user_prompt=(
             "Open the file-processing skill, then use new-file to create the missing "
             "file probe.txt with exactly the text FRONTEND_INTERACTIVE_OK. "
-            'Use path="probe.txt" and content="FRONTEND_INTERACTIVE_OK". '
+            "Use document='<new-exmekh-file path=\"probe.txt\"/>FRONTEND_INTERACTIVE_OK'. "
             "Do not use bash, delegate, or create other files. "
             "Exit the skill and confirm completion."
         ),
@@ -221,10 +222,16 @@ async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
         on_token=lambda _: None,
         on_reasoning=lambda *_: None,
         on_tool_event=tool_events.append,
+        on_raw_history=lambda raw, tree: snapshots.append(
+            ChatMessage(role="assistant", raw_history=raw, skill_history_tree=tree)
+        ),
         on_context=lambda _: None,
     )
     successful = verify_file_effects(
-        tool_events, tmp_path, {tmp_path / "probe.txt": None}
+        tool_events,
+        tmp_path,
+        {tmp_path / "probe.txt": None},
+        history=snapshots[-1] if snapshots else ChatMessage(role="assistant"),
     )
     if not any(event.tool_name == "new-file" for event in successful):
         pytest.skip(
@@ -445,6 +452,7 @@ async def test_live_e2e_file_edit_and_delete(tmp_path: Path, initial: str) -> No
     path.write_text(initial)
     expected = initial + "APPENDED"
     events: list[ToolEvent] = []
+    snapshots: list[ChatMessage] = []
     response = await run_agent_turn(
         user_prompt=(
             "Enter the file-processing skill. Inspect and read the existing probe.txt, "
@@ -459,9 +467,17 @@ async def test_live_e2e_file_edit_and_delete(tmp_path: Path, initial: str) -> No
         on_token=lambda _: None,
         on_reasoning=lambda *_: None,
         on_tool_event=events.append,
+        on_raw_history=lambda raw, tree: snapshots.append(
+            ChatMessage(role="assistant", raw_history=raw, skill_history_tree=tree)
+        ),
         on_context=lambda _: None,
     )
-    successful = verify_file_effects(events, tmp_path, {path: initial.encode()})
+    successful = verify_file_effects(
+        events,
+        tmp_path,
+        {path: initial.encode()},
+        history=snapshots[-1] if snapshots else ChatMessage(role="assistant"),
+    )
     if not any(event.tool_name == "edit-file" for event in successful):
         pytest.skip(
             "MODEL_LIMITATION: edit-file not selected; frontend edit not verified"
@@ -475,7 +491,7 @@ async def test_live_e2e_file_edit_and_delete(tmp_path: Path, initial: str) -> No
     assert response.strip()
     before_delete = path.read_bytes()
     events.clear()
-    snapshots: list[ChatMessage] = []
+    snapshots.clear()
     response = await run_agent_turn(
         user_prompt=(
             'Enter the file-processing skill and use delete-file with paths=["probe.txt"]. '
