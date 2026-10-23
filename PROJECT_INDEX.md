@@ -697,8 +697,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   prima/dopo gli override degli argomenti.
 - `agent/src/exmekh_agent/exmekh_bridge/tools/tool_feedback.py` — feedback per
   invocazione e per turno: stato delle approvazioni, originali PNG indipendenti
-  dagli allegati inviati al modello e attesa cancellabile delle generazioni in
-  background. La preferenza globale `include_generated_images_in_context`
+  dagli allegati inviati al modello e attesa cancellabile per capability
+  personalizzate con esecuzione in background. La preferenza globale `include_generated_images_in_context`
   controlla `include_image_in_result` tramite hook, anche nei grafi personalizzati.
   `ChatMessage` espone immagini e galleria per tool; `chat_view.py` mantiene i box
   nella sequenza delle attività e conserva le immagini delle skill richiuse.
@@ -706,6 +706,14 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   Regressioni in `agent/tests/test_feature_updates.py`,
   `agent/tests/test_feature_updates_e2e.py` e
   `exmekh_lib/tests/core/agents/test_quick_hds.py`.
+- `agent/src/exmekh_agent/ui/chat/page_controller.py` — task posseduti per chat e
+  ripristino del pannello di streaming al cambio di chat, con steering isolato.
+  `input_bar.py` espone `stage_image` per riusare un risultato come allegato alla
+  bozza; la policy effettiva `ToolEvent.images_in_context` è persistita per risultato.
+  La capability nativa `generate-image` attende il risultato completo prima di
+  riprendere l'inferenza, evitando sovrapposizioni sul servizio nativo. Regressioni
+  in `agent/tests/test_request_bugs.py`, `test_concurrent_requests_e2e.py` e
+  `test_feature_updates_e2e.py`; server controllato `run_concurrent_requests_agent.py`.
 - `agent/src/exmekh_agent/exmekh_bridge/agents/turn_request.py` — input tipizzato del turno, passato come valore unico al worker; il runner conserva il punto di ingresso pubblico compatibile.
 - `agent/src/exmekh_agent/config/execution.py`, `agent/src/exmekh_agent/config/resources/execution.json` — policy dei titoli: sampling, budget, normalizzazione e fallback tramite metodi del tipo di configurazione.
 - `agent/src/exmekh_agent/exmekh_bridge/history/recorded_history.py` — query pubbliche sulle trascrizioni, sugli output e sulle immagini; la correlazione degli ID legacy è condivisa e non modifica la cronologia. `history/tool_attachments.py` legge i riferimenti alle immagini senza decodificarle. ChatMessage espone raccolta e galleria, senza interpretazione duplicata nel collector o nella UI.

@@ -37,11 +37,13 @@ class _InvocationFeedback:
     approval_state: ApprovalState | None = None
     image_state: ImageState | None = None
     image_urls: list[str] | None = None
+    images_in_context: bool | None = None
 
     def apply_to(self, event: ToolEvent) -> ToolEvent:
         updated = event.model_copy(deep=True)
         updated.approval_state = self.approval_state
         updated.image_state = self.image_state
+        updated.images_in_context = self.images_in_context
         if self.image_urls is not None:
             updated.image_urls = list(self.image_urls)
         return updated
@@ -65,6 +67,7 @@ class ToolFeedback:
                     _InvocationFeedback(
                         approval_state=event.approval_state,
                         image_state=event.image_state,
+                        images_in_context=event.images_in_context,
                     ),
                 )
                 # Observe the launch before its worker starts, including background calls.
@@ -92,6 +95,7 @@ class ToolFeedback:
         approval_state: ApprovalState | None = None,
         image_state: ImageState | None = None,
         image_urls: list[str] | None = None,
+        images_in_context: bool | None = None,
     ) -> None:
         with self._lock:
             state = self._updates.setdefault(call_id, _InvocationFeedback())
@@ -99,6 +103,8 @@ class ToolFeedback:
                 state.approval_state = approval_state
             if image_state is not None:
                 state.image_state = image_state
+            if images_in_context is not None:
+                state.images_in_context = images_in_context
             if image_urls is not None:
                 state.image_urls = list(image_urls)
             if call_id in self._calls:
@@ -169,7 +175,11 @@ class ImageArguments(BeforeTool):
         self.include_in_context = include_in_context
 
     def handle(self, context: ToolContext) -> ToolArguments:
-        self.feedback.update(context.call_id, image_state="running")
+        self.feedback.update(
+            context.call_id,
+            image_state="running",
+            images_in_context=self.include_in_context,
+        )
         return ToolArguments(
             {**context.arguments, "include_image_in_result": self.include_in_context}
         )

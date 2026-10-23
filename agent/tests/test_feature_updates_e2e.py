@@ -126,6 +126,11 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                 await page.get_by_role(
                     "button", name="Close image preview", exact=True
                 ).click()
+                if not include:
+                    await expect(page.locator(".generated-image-attach")).to_have_count(
+                        2
+                    )
+                    await page.request.post(url + "/test/legacy-image-policy")
                 await page.reload(wait_until="networkidle")
                 await expect(
                     page.locator(".msg-assistant .exmekh-image-thumbnail")
@@ -139,6 +144,25 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                     )
                     == 2
                 )
+                await expect(page.locator(".generated-image-attach")).to_have_count(
+                    0 if include else 2
+                )
+                if not include:
+                    await page.locator(".generated-image-attach").first.click()
+                    await expect(page.locator(".exmekh-attachment-chip")).to_have_count(
+                        1
+                    )
+                    await send_command(page, "Describe attached image")
+                    await wait_turn_completion(page)
+                    await expect(page.locator(".msg-assistant").last).to_contain_text(
+                        "Attachment received"
+                    )
+                    state = await (
+                        await page.request.get(url + "/test/media-state")
+                    ).json()
+                    assert state["generated_calls"] == [False]
+                    assert state["user_image_counts"][-1] == 1
+                    assert len(state["session"]["messages"][-2]["image_urls"]) == 1
                 assert not errors
             finally:
                 await browser.close()
@@ -172,7 +196,7 @@ async def test_approval_shield_changes_during_the_real_tool_lifecycle(
                 await browser.close()
 
 
-async def test_failed_background_image_finishes_and_retains_the_error(tmp_path):
+async def test_failed_image_finishes_and_retains_the_error(tmp_path):
     with BrowserTestServer(
         tmp_path / "state", module="tests.run_native_media_preview_agent"
     ) as url:
@@ -183,9 +207,7 @@ async def test_failed_background_image_finishes_and_retains_the_error(tmp_path):
             try:
                 page = await browser.new_page()
                 await page.goto(url, wait_until="networkidle")
-                await send_command(
-                    page, "Generate two images in background with failure"
-                )
+                await send_command(page, "Generate two images with failure")
                 await expect(page.locator(".generated-image-loading")).to_have_count(2)
                 await wait_turn_completion(page)
                 await expect(
@@ -195,6 +217,45 @@ async def test_failed_background_image_finishes_and_retains_the_error(tmp_path):
                 await page.reload(wait_until="networkidle")
                 await expect(
                     page.locator(".generated-image-unavailable")
+                ).to_have_count(2)
+            finally:
+                await browser.close()
+
+
+@pytest.mark.parametrize("include", [False, True])
+async def test_multiple_image_tool_calls_finish_and_persist(tmp_path, include):
+    with BrowserTestServer(
+        tmp_path / "state",
+        module="tests.run_native_media_preview_agent",
+        environment={"INCLUDE_GENERATED_IMAGES_IN_CONTEXT": str(include).lower()},
+    ) as url:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable(), headless=True
+            )
+            try:
+                page = await browser.new_page()
+                await page.goto(url, wait_until="networkidle")
+                await send_command(page, "Generate multiple images")
+                await wait_turn_completion(page)
+                await expect(
+                    page.locator(".msg-assistant .exmekh-image-thumbnail")
+                ).to_have_count(2)
+                state = await (await page.request.get(url + "/test/media-state")).json()
+                assert state["generated_calls"] == [include, include]
+                tools = state["session"]["messages"][-1]["tool_events"]
+                images = [
+                    tool for tool in tools if tool["tool_name"] == "generate-image"
+                ]
+                assert len(images) == 2
+                assert all(
+                    tool["status"] == "completed" and tool["image_state"] == "completed"
+                    for tool in images
+                )
+                assert state["provider_calls"][-1][:2] == [include, include]
+                await page.reload(wait_until="networkidle")
+                await expect(
+                    page.locator(".msg-assistant .exmekh-image-thumbnail")
                 ).to_have_count(2)
             finally:
                 await browser.close()

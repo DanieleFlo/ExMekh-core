@@ -50,13 +50,16 @@ def image_data_url(image: Image.Image) -> str:
     )
 
 
-def image_from_url(url: str) -> Image.Image:
+def image_bytes_from_url(url: str) -> bytes:
     if not url.startswith("data:image/png;base64,"):
         raise ValueError(
             app_text("errors_history.image_input.saved_images_must_be_png_data_urls")
         )
-    data = base64.b64decode(url.split(",", 1)[1], validate=True)
-    with Image.open(BytesIO(data)) as source:
+    return base64.b64decode(url.split(",", 1)[1], validate=True)
+
+
+def image_from_url(url: str) -> Image.Image:
+    with Image.open(BytesIO(image_bytes_from_url(url))) as source:
         return source.copy()
 
 

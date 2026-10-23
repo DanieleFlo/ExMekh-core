@@ -92,7 +92,7 @@ class ChatPageController:
     def __init__(self, client: Client, sessions: SessionManager | None = None) -> None:
         self._sessions = sessions
         self._client = client
-        self._active_task: asyncio.Task[None] | None = None
+        self._active_tasks: dict[str, asyncio.Task[None]] = {}
         self._followed_session_id: str | None = None
         self._snapshot_session_id: str | None = None
         self._followed_revision = -1
@@ -162,6 +162,7 @@ class ChatPageController:
                 on_edit_message=self.edit_message,
                 on_split_message=self.split_conversation,
                 on_agent_settings=self.open_chat_agent_settings,
+                on_attach_image=self.attach_generated_image,
             )
             self.chat_view.build()
             self.input_bar = InputBarComponent(
@@ -193,6 +194,14 @@ class ChatPageController:
             self._check_temp_storage_alert,
             once=True,
         )
+
+    async def attach_generated_image(self, url: str) -> None:
+        """Stage an existing result through the same input API as an uploaded image."""
+        if self.input_bar:
+            await self.input_bar.stage_image(url)
+            if not self._client.is_deleted:
+                with self._client:
+                    self.input_bar.focus()
 
     def _get_temp_storage(self, session_id: str | None = None) -> TempStorage:
         session = (
@@ -248,11 +257,14 @@ class ChatPageController:
         snapshot = active_turns.snapshot(
             session.id, after_revision=self._followed_revision
         )
-        owns_turn = self._active_task is not None and active_turns.is_task(
-            session.id, self._active_task
+        owned_task = self._active_tasks.get(session.id)
+        owns_turn = owned_task is not None and active_turns.is_task(
+            session.id, owned_task
         )
         with self._client:
             if self.input_bar:
+                if self.input_bar.is_busy != (snapshot is not None):
+                    self.input_bar.set_busy(snapshot is not None)
                 self._render_queue_ui(session)
             if (
                 owns_turn
@@ -282,7 +294,11 @@ class ChatPageController:
                 with self._client:
                     self._check_and_dispatch_next_queued(session)
             return
-        if owns_turn:
+        if (
+            owns_turn
+            and self.chat_view
+            and self.chat_view.is_streaming_session(session.id)
+        ):
             return
         with self._client:
             if self.chat_view and not self.chat_view.is_streaming_session(session.id):
@@ -723,6 +739,8 @@ class ChatPageController:
                 if self.sidebar:
                     self.sidebar.clear_sub_agent_selection()
                 if self.chat_view:
+                    if self.chat_view.has_active_stream():
+                        self.chat_view.finalize_stream()
                     self.chat_view.show_main()
             self._render_session_lists()
             collector = TurnStreamCollector()
@@ -734,7 +752,7 @@ class ChatPageController:
             if self.chat_view and self._is_session_visible(session):
                 self.chat_view.start_assistant_stream(started_at=started_at)
 
-            self._active_task = asyncio.create_task(
+            task = asyncio.create_task(
                 self._run_turn(
                     session=session,
                     user_text=prepared_input.prompt,
@@ -745,9 +763,10 @@ class ChatPageController:
                     title_text=prepared_input.title_text,
                 )
             )
+            self._active_tasks[session.id] = task
             active_turns.start(
                 session.id,
-                self._active_task,
+                task,
                 collector,
                 started_at=started_at,
             )
@@ -1067,8 +1086,8 @@ class ChatPageController:
                             )
                         )
             finally:
-                if self._active_task is turn_task:
-                    self._active_task = None
+                if self._active_tasks.get(session.id) is turn_task:
+                    self._active_tasks.pop(session.id, None)
                 if turn_task is not None:
                     active_turns.finish(
                         session.id,

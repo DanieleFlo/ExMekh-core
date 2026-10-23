@@ -265,7 +265,7 @@ async def test_real_exmekh_turn_stops_before_another_inference_when_approval_is_
                 generate_title=False,
             )
         )
-        controller._active_task = turn
+        controller._active_tasks[session.id] = turn
         active_turns.start(session.id, turn, collector, started_at=0)
         try:
             async with asyncio.timeout(5):

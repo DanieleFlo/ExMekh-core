@@ -257,11 +257,11 @@ async def test_controller_edits_and_regenerates_without_stale_events(running: bo
             if running:
                 await started.wait()
             else:
-                await controller._active_task
+                await controller._active_tasks.get(session.id)
             old = session.messages[2]
             session.add_queued_message("Obsolete queue")
             assert await controller.edit_message(session.id, old.id, "Revised prompt")
-            await controller._active_task
+            await controller._active_tasks.get(session.id)
             assert [item.content for item in session.messages] == [
                 "First",
                 "Earlier reply",
@@ -286,7 +286,7 @@ async def test_controller_edits_and_regenerates_without_stale_events(running: bo
             assert "LATE obsolete" not in labels
             # Editing a preceding message discards both later turns.
             assert await controller.edit_message(session.id, first.id, "New first")
-            await controller._active_task
+            await controller._active_tasks.get(session.id)
             assert not calls[-1]["history"]
             assert len(session.messages) == 2
     finally:
@@ -345,7 +345,7 @@ async def test_simultaneous_edits_serialize_their_turn_replacement():
                 controller.edit_message(session.id, user.id, "First edit"),
                 controller.edit_message(session.id, user.id, "Second edit"),
             ) == [True, True]
-            task = controller._active_task
+            task = controller._active_tasks.get(session.id)
             if task is not None:
                 await task
             assert [message.content for message in session.messages] == [
@@ -523,7 +523,7 @@ async def test_stop_and_send_are_scoped_to_the_selected_session():
     active_turns.start(session_a.id, task_a, TurnStreamCollector(), started_at=0)
     with client:
         controller = ChatPageController(client)
-        controller._active_task = task_a
+        controller._active_tasks[session_a.id] = task_a
     try:
         with patch("exmekh_agent.ui.chat.page_controller.ui.notify"):
             controller.stop()

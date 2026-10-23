@@ -167,7 +167,9 @@ def start_mock_server(
 
 async def send_command(page: Page, text: str) -> None:
     """Wait for the server to publish the input, including queued messages."""
-    previous_inputs = await page.locator(".msg-user, .exmekh-queue-item").count()
+    previous_inputs = await page.locator(
+        ".msg-user:visible, .exmekh-queue-item:visible"
+    ).count()
     textarea = page.locator("textarea").first
     await textarea.wait_for(state="visible", timeout=8000)
     await textarea.click()
@@ -179,7 +181,7 @@ async def send_command(page: Page, text: str) -> None:
     else:
         await textarea.press("Enter")
     await page.wait_for_function(
-        "previous => document.querySelectorAll('.msg-user, .exmekh-queue-item').length > previous",
+        "previous => [...document.querySelectorAll('.msg-user, .exmekh-queue-item')].filter(node => node.getClientRects().length > 0).length > previous",
         arg=previous_inputs,
         timeout=15000,
     )

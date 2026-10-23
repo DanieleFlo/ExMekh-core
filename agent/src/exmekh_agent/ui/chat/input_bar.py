@@ -15,6 +15,7 @@ from exmekh_agent.config.approvals import (
 )
 from exmekh_agent.config.attachments import DEFAULTS as ATTACHMENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
+from exmekh_agent.exmekh_bridge.history.image_input import image_bytes_from_url
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
@@ -989,6 +990,22 @@ class InputBarComponent:
                 )
                 .tooltip(ui_text("chat.input_bar.remove_attachment"))
             )
+
+    async def stage_image(self, url: str) -> StagedAttachment:
+        """Attach a generated PNG to the current draft without sending it."""
+        session_id = self.session_id
+        storage = self.get_temp_storage()
+        client = ui.context.client
+        attachment = await asyncio.get_running_loop().run_in_executor(
+            None,
+            lambda: create_staged_attachment_from_file(
+                "generated-image.png", image_bytes_from_url(url), storage=storage
+            ),
+        )
+        if not client.is_deleted:
+            with client:
+                self._accept_attachments([attachment], session_id)
+        return attachment
 
     async def stage_file(
         self,

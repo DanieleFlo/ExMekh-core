@@ -50,7 +50,7 @@ async def test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui
                     "Remember code IMAGE-E2E-17. Generate exactly two images by calling generate-image exactly once "
                     "with prompt 'A red square on white', n 2, width 256, height 256, seed 171, "
                     "background opaque, include_image_in_result true, preview_scale 0.5. "
-                    "Set execution_mode wait and wait_seconds 300 for the generation. "
+                    "Wait for the generation to complete. "
                     "After success finish with IMAGE-E2E-17.",
                 )
                 deadline = time.monotonic() + 120

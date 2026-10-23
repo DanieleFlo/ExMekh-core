@@ -1122,7 +1122,7 @@ async def test_controller_steers_real_exmekh_after_refresh_and_preserves_next_tu
                 controllers.append(controller)
         original, refreshed = controllers
         original._send_prepared(session, PreparedUserInput("Start", None, "Start"))
-        turn = original._active_task
+        turn = original._active_tasks.get(session.id)
         try:
             async with asyncio.timeout(5):
                 while not provider.started.is_set():
@@ -1133,7 +1133,7 @@ async def test_controller_steers_real_exmekh_after_refresh_and_preserves_next_tu
             refreshed.input_bar._trigger_steer(guidance.id)
             refreshed.steer_queued_message(guidance.id)  # A repeated click is harmless.
             assert not session.queued_messages
-            assert original._active_task is turn
+            assert original._active_tasks.get(session.id) is turn
             assert len(provider.requests) == 1
             assert original.input_bar.is_busy
             assert refreshed.chat_view.current_steering_container is not None
@@ -1169,7 +1169,7 @@ async def test_controller_steers_real_exmekh_after_refresh_and_preserves_next_tu
             manager.load_all()
             session = manager.get_current_session()
             await refreshed.send("Continue")
-            await asyncio.wait_for(refreshed._active_task, 5)
+            await asyncio.wait_for(refreshed._active_tasks.get(session.id), 5)
             follow_up = provider.requests[2]
             assert sum(item.get("content") == guidance.text for item in follow_up) == 1
             assert any(
@@ -1180,7 +1180,10 @@ async def test_controller_steers_real_exmekh_after_refresh_and_preserves_next_tu
             provider.release.set()
             provider.release_second.set()
             for controller in controllers:
-                if controller._active_task and not controller._active_task.done():
+                if (
+                    controller._active_tasks.get(session.id)
+                    and not controller._active_tasks.get(session.id).done()
+                ):
                     controller.stop()
             await asyncio.gather(turn, return_exceptions=True)
             for client in clients:

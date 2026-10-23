@@ -655,7 +655,7 @@ async def test_page_controller_send_with_attachments(
                 assert last_msg.display_content == "Here is my code:"
         finally:
             active_turns.cancel_and_forget(session.id)
-            ctrl._active_task = None
+            ctrl._active_tasks.clear()
 
         # 3. Send with attachment where file does not exist on disk
         att_nofile = StagedAttachment(
@@ -672,7 +672,7 @@ async def test_page_controller_send_with_attachments(
                 assert last_msg.display_content == ""
         finally:
             active_turns.cancel_and_forget(session.id)
-            ctrl._active_task = None
+            ctrl._active_tasks.clear()
 
         # 4. Send with empty attachments list (user inlined attachment into text)
         try:
@@ -683,7 +683,7 @@ async def test_page_controller_send_with_attachments(
                 assert last_msg.display_content is None
         finally:
             active_turns.cancel_and_forget(session.id)
-            ctrl._active_task = None
+            ctrl._active_tasks.clear()
 
         # 5. Send while turn is running -> queues processed prompt
         running_task = asyncio.create_task(asyncio.sleep(10))

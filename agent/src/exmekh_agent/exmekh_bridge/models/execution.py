@@ -22,6 +22,7 @@ class ToolEvent(BaseModel):
     arguments: dict[str, Any] = Field(default_factory=dict)
     approval_state: Literal["pending", "approved", "denied"] | None = None
     image_urls: list[str] = Field(default_factory=list)
+    images_in_context: bool | None = None
     image_state: Literal["running", "completed", "error"] | None = None
     depth: int = 0
     skill_path: str = "/"
@@ -99,6 +100,8 @@ class ToolEvent(BaseModel):
             self.approval_state = incoming.approval_state
         if incoming.image_state is not None:
             self.image_state = incoming.image_state
+        if incoming.images_in_context is not None:
+            self.images_in_context = incoming.images_in_context
         if incoming.image_urls:
             self.image_urls = list(incoming.image_urls)
         if self.is_running and not incoming.is_running:

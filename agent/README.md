@@ -366,3 +366,8 @@ for measured scenarios and remaining limits.
 [Component responsibilities](docs/architecture.md) documents the public APIs for
 agent designs, capability storage, profile selection, message editing, and output
 expansion, together with the regression checks performed during the review.
+
+Native image generation completes before inference resumes, so the shared native
+service can restore the text model and deliver the generated images as one tool
+result. Multiple image calls run in order. When images are excluded from model
+context, the icon below each preview stages it as an attachment to the next input.

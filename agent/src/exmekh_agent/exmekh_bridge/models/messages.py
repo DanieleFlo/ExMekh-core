@@ -160,6 +160,17 @@ class ChatMessage(BaseModel):
             self.raw_history, self.skill_history_tree
         ).images_for_call(tool.tool_call_id)
 
+    def has_model_images_for_tool(self, event: ToolEvent) -> bool:
+        """Use the saved delivery policy, inferring it from legacy attachments."""
+        tool = self.display_tool(event)
+        if tool.images_in_context is not None:
+            return tool.images_in_context
+        return bool(
+            RecordedHistory(self.raw_history, self.skill_history_tree).images_for_call(
+                tool.tool_call_id
+            )
+        )
+
     def generated_image_urls(self) -> list[str]:
         """Collect this turn's originals, falling back to retained model previews."""
         originals = [url for tool in self.tool_events for url in tool.image_urls]

@@ -177,7 +177,7 @@ async def test_manual_approval_releases_the_worker_on_every_ui_exit(
                 generate_title=False,
             )
         )
-        controller._active_task = turn
+        controller._active_tasks[session.id] = turn
         active_turns.start(session.id, turn, collector, started_at=0)
         try:
             for _ in range(100):

@@ -464,8 +464,8 @@ async def test_live_ui_controller_stop_generation_flow(
 
             # Assert UI state during execution
             assert input_bar.is_busy is True
-            assert controller._active_task is not None
-            assert not controller._active_task.done()
+            assert controller._active_tasks.get(session.id) is not None
+            assert not controller._active_tasks.get(session.id).done()
 
             session.add_queued_message("Keep queued after stop")
             if switch_session:
@@ -477,7 +477,7 @@ async def test_live_ui_controller_stop_generation_flow(
                 controller.stop()
                 await asyncio.sleep(0)
                 assert active_turns.is_running(session.id)
-                assert not controller._active_task.cancelling()
+                assert not controller._active_tasks.get(session.id).cancelling()
                 assert other_conversation.status == "active"
                 session_manager.switch_session(session.id)
                 controller.session_switched(session.id)
@@ -487,7 +487,7 @@ async def test_live_ui_controller_stop_generation_flow(
 
             # Assert UI state after stop
             assert input_bar.is_busy is False
-            assert controller._active_task is None
+            assert controller._active_tasks.get(session.id) is None
 
             # Assert partial message is preserved in session
             current_sess = session

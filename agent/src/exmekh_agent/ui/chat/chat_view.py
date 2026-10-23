@@ -103,12 +103,14 @@ class ChatViewComponent:
         on_agent_settings: Callable[[], None] | None = None,
         sessions: SessionManager | None = None,
         on_split_message: Callable[[str, str], object] | None = None,
+        on_attach_image: Callable[[str], object] | None = None,
     ) -> None:
         self._sessions = sessions
         self.on_suggested_prompt = on_suggested_prompt
         self.on_edit_message = on_edit_message
         self.on_agent_settings = on_agent_settings
         self.on_split_message = on_split_message
+        self.on_attach_image = on_attach_image
         self.agent_settings_button: ui.button | None = None
         self.chat_container: ui.column | None = None
         self.child_chat_container: ui.column | None = None
@@ -1668,6 +1670,7 @@ class ChatViewComponent:
 
     def _render_tool_images(self, event: ToolEvent) -> None:
         message = self._rendering_message
+        event = message.display_tool(event) if message else event
         urls = message.images_for_tool(event) if message else event.image_urls
         if not urls and event.tool_name != AGENT_DEFAULTS["image_tool"]:
             return
@@ -1678,6 +1681,11 @@ class ChatViewComponent:
         width = width if type(width) is int and 32 <= width <= 2048 else 2048
         height = height if type(height) is int and 32 <= height <= 2048 else 2048
         gallery = message.image_gallery() if message else urls
+        images_in_context = (
+            message.has_model_images_for_tool(event)
+            if message
+            else event.images_in_context
+        )
         generating = (
             event.image_state == "running"
             if event.image_state is not None
@@ -1699,6 +1707,15 @@ class ChatViewComponent:
                             ),
                             gallery=gallery,
                         )
+                        if images_in_context is False and self.on_attach_image:
+                            ui.button(
+                                icon=UI_PRESENTATION["image_generation.attach_icon"],
+                                on_click=partial(self.on_attach_image, urls[index]),
+                            ).props(
+                                UI_PRESENTATION["image_generation.attach_props"]
+                            ).classes(
+                                UI_PRESENTATION["image_generation.attach_classes"]
+                            ).tooltip(ui_text("chat.chat_view.attach_generated_image"))
                     else:
                         ui.element("div").classes(
                             UI_PRESENTATION["image_generation.classes.loading"]

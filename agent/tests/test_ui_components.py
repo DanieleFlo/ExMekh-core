@@ -774,7 +774,7 @@ async def test_page_controller_message_queue_flow(ui_context: Client) -> None:
 
         # Simulate busy agent turn
         fake_task = asyncio.create_task(asyncio.sleep(10))
-        controller._active_task = fake_task
+        controller._active_tasks[session.id] = fake_task
         active_turns.start(session.id, fake_task, TurnStreamCollector(), started_at=0)
 
         # Send while busy -> message queued
@@ -814,7 +814,7 @@ async def test_page_controller_message_queue_flow(ui_context: Client) -> None:
         fake_task.cancel()
         active_turns.finish(session.id, fake_task)
         await asyncio.gather(fake_task, return_exceptions=True)
-        controller._active_task = None
+        controller._active_tasks.clear()
 
         with patch.object(controller, "_send_prepared") as mock_send_prepared:
             controller._check_and_dispatch_next_queued(session)
@@ -830,7 +830,7 @@ async def test_page_controller_message_queue_flow(ui_context: Client) -> None:
 
         # Stop while active task running
         fake_task2 = asyncio.create_task(asyncio.sleep(10))
-        controller._active_task = fake_task2
+        controller._active_tasks[session.id] = fake_task2
         active_turns.start(session.id, fake_task2, TurnStreamCollector(), started_at=0)
         session.add_queued_message("Kept in queue")
         controller.stop()
