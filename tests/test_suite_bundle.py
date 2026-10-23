@@ -111,6 +111,19 @@ class SuiteBundleTests(unittest.TestCase):
                 + tensor["shape"],
             )
 
+    def test_native_bounded_weight_cache(self):
+        compile_bundle(self.spec, self.root, self.root / "cache")
+        subprocess.run(
+            [
+                "./tests/test_weight_cache",
+                str(self.root / "cache/bundle.ds4b"),
+                str(self.root),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
     def test_lossless_conversion_repeated_and_mixed_types(self):
         for target in ("one.gguf", "two.gguf"):
             convert_safetensors(

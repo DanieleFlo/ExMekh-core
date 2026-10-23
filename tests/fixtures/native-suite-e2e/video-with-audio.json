@@ -1,0 +1,67 @@
+{
+  "origin": "DS4 synthetic fixture, no recordings or external content",
+  "generator": "tools/build_suite_e2e_video.py",
+  "sha256": "63dc498dd92133c1e24462e9282a1bf3f1aaa9bbdd33edf5d0af81f0d78c5a2e",
+  "bytes": 15440,
+  "video": {
+    "codec": "h264",
+    "frames": 4,
+    "fps": 2,
+    "size": [
+      48,
+      48
+    ],
+    "rgb_levels": [
+      0,
+      60,
+      120,
+      180
+    ]
+  },
+  "audio": {
+    "codec": "aac",
+    "sample_rate": 16000,
+    "channels": 1,
+    "frequency": 440,
+    "samples": 32000,
+    "pcm_amplitude": 6000
+  },
+  "pyav": "16.0.1",
+  "libraries": {
+    "libavutil": [
+      60,
+      8,
+      100
+    ],
+    "libavcodec": [
+      62,
+      11,
+      100
+    ],
+    "libavformat": [
+      62,
+      3,
+      100
+    ],
+    "libavdevice": [
+      62,
+      1,
+      100
+    ],
+    "libavfilter": [
+      11,
+      4,
+      100
+    ],
+    "libswscale": [
+      9,
+      1,
+      100
+    ],
+    "libswresample": [
+      6,
+      1,
+      100
+    ]
+  }
+}

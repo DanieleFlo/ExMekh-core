@@ -6,6 +6,8 @@
 extern "C" {
 #endif
 typedef struct ds4_gemma_audio ds4_gemma_audio;
+ds4_status ds4_gemma_audio_weights(ds4_gemma_audio *, uint64_t limit,
+                                   ds4_weight_budget *);
 typedef struct ds4_gemma_audio_features ds4_gemma_audio_features;
 typedef struct {
   const uint16_t *tokens; /* Detached valid BF16 rows, width 512. */

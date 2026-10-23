@@ -227,13 +227,24 @@ l'engine conosce shape e modello; il backend possiede stream e allocazioni;
 
 ## [Servizio e client multimodale nativo](native-suite-client.md)
 
-`ds4-server-suite` è un target esplicito.
+`ds4-server-suite` è un target esplicito, selezionato dal launcher Qwen27
 
-- righe 8–30: **Avvio** — `ds4-server-suite` è un target esplicito.
-- righe 31–63: **SDK standard** — Un solo client e una sola base URL servono chat, immagini ed embedding:
-- righe 64–96: **Client tipizzato ExMekh** — `Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`.
-- righe 97–120: **Tool e frontend** — `generate-image` è la capability registrata nel catalogo ExMekh.
-- righe 121–147: **Lifetime e osservabilità** — Discovery espone revision/profilo, configured/resident/ready, componenti e limiti.
+- righe 8–31: **Avvio** — `ds4-server-suite` è un target esplicito, selezionato dal launcher Qwen27
+- righe 32–64: **SDK standard** — Un solo client e una sola base URL servono chat, immagini ed embedding:
+- righe 65–97: **Client tipizzato ExMekh** — `Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`.
+- righe 98–121: **Tool e frontend** — `generate-image` è la capability registrata nel catalogo ExMekh.
+- righe 122–150: **Accettazione live della libreria e del frontend** — La suite completa usa la wheel installata nell'agente e un solo server reale,
+- righe 151–177: **Lifetime e osservabilità** — Discovery espone revision/profilo, configured/resident/ready, componenti e limiti.
+
+## [Suite nativa: build, streaming e accettazione](native-suite-release.md)
+
+Revisioni, dimensioni e SHA-256 sono nei manifest
+
+- righe 13–29: **Modelli e profili** — Revisioni, dimensioni e SHA-256 sono nei manifest
+- righe 30–87: **Preparazione offline e build** — Scaricare solo gli artefatti del manifest esplicito; il downloader verifica
+- righe 88–146: **Policy e misure** — Il planner valuta l'intera operazione, incluso il ritorno al LLM.
+- righe 147–190: **Ricette e accettazione** — La guida client contiene generazione, editing,
+- righe 191–236: **Pacchetto e recupero** — `tools/package_native_suite.py` copia eseguibile, codec nativi, indici,
 
 ## [Runtime e contesti della suite nativa](native-suite-runtime-lifecycle.md)
 

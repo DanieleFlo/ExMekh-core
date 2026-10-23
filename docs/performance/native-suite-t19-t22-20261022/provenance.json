@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "date": "2026-10-22",
+  "source_head": "fc5ad4a",
+  "implementation": "Independent C orchestration using existing DS4 numeric kernels, resource registry and ds4_read_queue.h",
+  "imported_external_code": false,
+  "references": [
+    "docs/architecture/native-multimodal-suite-analysis-20261020.md",
+    "docs/research/guides/problem-to-source.md",
+    "docs/research/platforms/sglang.md",
+    "docs/research/forks/club3090-llama-moe-cache.md",
+    "docs/research/guides/rtx3090-transfer-checklist.md",
+    "docs/performance/native-suite-t00-20261020/sources.json",
+    "docs/performance/native-suite-t00-20261020/provenance.json"
+  ],
+  "not_imported": ["Unsloth Studio orchestration", "Diffusers hooks", "SGLang Python runtime", "new third-party kernels"],
+  "native_dependencies": ["third_party/ffmpeg/LICENSE", "third_party/soxr/LICENSE", "third_party/iris/LICENSE"],
+  "weight_licenses": "Pinned model manifests retain original LICENSE files; no weights are bundled by package_native_suite.py"
+}

@@ -35,6 +35,11 @@ typedef struct {
                            uint32_t, float);
   ds4_status (*channel_rms)(void *, ds4_num_view, ds4_num_view, ds4_num_view,
                             uint32_t, uint32_t, float);
+  ds4_status (*weight_copy)(void *, void *, const void *, uint64_t);
+  ds4_status (*weight_ready)(void *);
+  /* Fallible shutdown retains a usable backend on failure. close() runs only
+   * after this succeeds and the context metadata event has completed. */
+  ds4_status (*prepare_close)(void *);
 } ds4_numeric_ops;
 struct ds4_numeric {
   const ds4_numeric_ops *ops;

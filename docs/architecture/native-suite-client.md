@@ -7,8 +7,9 @@ Qualifica e limiti nel [report](../performance/native-suite-t17-t18-20261022/REA
 
 ## Avvio
 
-`ds4-server-suite` è un target esplicito. I launcher e `ds4-server` mantengono
-dipendenze e default precedenti. Servono i bundle BF16 e gli asset verificati
+`ds4-server-suite` è un target esplicito, selezionato dal launcher Qwen27
+`./agent/start-ds4-server.sh` con MTP, visione e contesto 26000. Il launcher
+LLM della root e quello Flash conservano i propri default. Servono i bundle BF16 e gli asset verificati
 nei task precedenti; [la configurazione](../../config/native-suite.example.json)
 mostra i percorsi della qualifica locale. I percorsi sono relativi alla directory
 di avvio. `media_directory` deve esistere ed essere scrivibile; il server crea
@@ -117,6 +118,35 @@ spazio; OpenVINO e i due precedenti modelli di ranking non vengono caricati.
 Gli embedding sono interni alla skill di ricerca web e all'API tipizzata;
 non esiste una capability `embed-content` esposta al modello.
 Se il servizio non è disponibile, restano i fallback dichiarati dal ranking.
+
+## Accettazione live della libreria e del frontend
+
+La suite completa usa la wheel installata nell'agente e un solo server reale,
+già avviato. La fixture MP4 sintetica con traccia audio è versionata con
+checksum in `tests/fixtures/native-suite-e2e/`: PyAV serve soltanto al suo
+generatore offline, non ai test. `DS4_SUITE_HTTP_VIDEO` può indicare un altro
+MP4 con traccia audio valida.
+Non avviare un altro processo modello per questi test.
+
+```sh
+DS4_SUITE_HTTP_URL=http://127.0.0.1:8080/v1 \
+DS4_SUITE_E2E_ARTIFACTS=/absolute/path/to/new-evidence \
+make test-suite-agent-live SUITE_PYTHON=agent/.venv/bin/python
+```
+
+`tests/test_suite_image_tools_e2e.py` copre testo, editing con riferimenti
+ordinati, input solo immagine, output multipli, alpha, seed, retry idempotente,
+anteprime e il paesaggio 1024×768. Un LLM con history nuova riceve soltanto
+i pixel generati e deve riconoscere colore e forma, senza conoscere il prompt.
+`tests/test_suite_embedding_tools_e2e.py` attraversa `Client.native_suite()` e
+i consumer reali del ranking: dimensioni/task, quattro modalità, ordine del
+batch e delle parti, audio incluso/escluso dal video, cache esplicita,
+validazione/overflow, ripresa cached della conversazione. Le fixture del ranking
+sono locali; trasporto ed embedding usano il servizio reale.
+`agent/tests/test_native_image_generation_e2e.py` aggiunge browser → DeepAgent
+→ tool → GPU → allegati vision, responsività e persistenza dopo reload.
+Il target rifiuta l'avvio senza URL; errori dei modelli e del restore fanno
+fallire l'accettazione.
 
 ## Lifetime e osservabilità
 

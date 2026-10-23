@@ -1,0 +1,583 @@
+{
+  "version": 1,
+  "date": "2026-10-22",
+  "scope": "Functional C/CUDA single-GPU acceptance, RTX 3090 sm_86 / Ubuntu 24.04 WSL; no performance or image-quality promotion",
+  "source_head": "fc5ad4ad3c608b9f76262b9fd81f2fc66d373774",
+  "functional_status": "PASS",
+  "release_qualified": false,
+  "source_sha256": {
+    "Makefile": "a2a77e85fdc49daa54d595a7843bac0d71cfe1afdb3b02f76e50628e181adfab",
+    "config/native-suite-candidates.json": "aeefdfc7f7ea14fc606326c4af378cb4b7dd8e7f898e6a3addf2ae5ac3bfee34",
+    "ds4_bundle.c": "7654fc52396a1b3a14e1c06a50f8e44251b37ab67cd3293bb1b00d7589538ca8",
+    "ds4_bundle.h": "1460987d6fb6211a2334e224ea49ddb63fbfb47b84caf2e93c757efd945fc986",
+    "ds4_embedding_gemma2.c": "66f4bf6547a3fff007220c6414bcb9b1a8b8e5cf8a9596f1123f2bb8697fa7d3",
+    "ds4_embedding_gemma2.h": "d94b5869c1a97d09e8b8804db29f317654b510bb074ee64e8b2ca90639072d02",
+    "ds4_gemma_audio.c": "d8405dbc641e7b8db15ad43ddb65a622a0aea5c9f7628d90fdf66457c64e1dc4",
+    "ds4_gemma_audio.h": "14afbabde900044220911d0d9ca1a698c42f7206b46ab9f6721f77345db92b5e",
+    "ds4_gemma_vision.c": "179105808629a3127a13bdef727dd3cd5f8b00a87ac35b61fe4117f0e1cba1bf",
+    "ds4_gemma_vision.h": "56f90667ac08fb9346964d8315c80cc132a815ac061562faea673f33bd1dc869",
+    "ds4_gemma_visual.c": "309b4b2636e86b8fff1d353e6d30f4d0fec2e8f4b1ec19148b56abf51c333073",
+    "ds4_numeric.c": "d62e07f8bfcb1d9b83a39bb919bdcfe210ede102f198a265d23978e615169f5a",
+    "ds4_numeric.h": "cd87272c12949386d6e2377fbc3883dc97a3c5de32acb54b9ce81247cb3ecf5a",
+    "ds4_numeric_cuda.cu": "bd675093fc86eaa65f20b9345d5a59ed59c7008c29e4d01a262920d8c7cb6b21",
+    "ds4_numeric_internal.h": "a7ca66b6195629483ada9da2fbdc44293ac24ff92c5148afebd2ca4ed2e37dc6",
+    "ds4_numeric_weights.c": "825efe5247d0d447d4d329e163da131b09d7408665fb9691649e4a2b6bee4fce",
+    "ds4_numeric_weights.h": "45cbd5f31ea8301ceedfa701b03169a326a524a01a17c9f001b78bb70e93719a",
+    "ds4_qwen_image_dit.c": "d53ba9abd960ec3c2a10c89bb4bb008e254fc4d9635cf61fa7c58d1db24b1525",
+    "ds4_qwen_image_dit.h": "81b813d2609befc03286d1bb88a23ae055a04bd44f2e04c784c746d5f17e4d3c",
+    "ds4_qwen_image_encoder.c": "ebed53cef95655f673aca3916db49344a49b965c7fb002983e2f9bb7683d01fb",
+    "ds4_qwen_image_encoder.h": "149011448bf09c5486ef966a0457c9aa67b7a857af1dfe02a8fe3866e3745cc4",
+    "ds4_qwen_image_graph.h": "ac0721b55dd6ddf3a1b8540acf21c18294c5626b69ffbb7e3c2d2f56f91f0edd",
+    "ds4_qwen_image_pipeline.c": "85de269a1482665d947544f9d129bb7834b57c678fca47b1d20285dbd32bc0f8",
+    "ds4_qwen_image_pipeline.h": "f424a7c63ed816ee7e4e63108562c041c8e69238561071f44fc438494abd827f",
+    "ds4_qwen_image_vae.c": "92d4830b14a504f58cc1f043e658266b65402d3d3136ae472405bb388b40d6a0",
+    "ds4_qwen_image_vae.h": "46785c7ac51862c0175877820aa0b78f65305351c64be59ce0fb93d1179cfb7d",
+    "ds4_resources.c": "8b25fadbe205d636afe42b315e5394377403f41fdd8056a9e2b6eeb68271ba3e",
+    "ds4_resources.h": "4e7a71c7fd3c463b07fe18ef80e8447c9ccc00becc8c41457a54c829bf362a14",
+    "ds4_server_suite.inc": "ccc00eb335e282430c49177679dc75ec7ca60470a6f0c81e389a83892db9afa5",
+    "ds4_server_suite_operations.inc": "12e956d3ba64f6d871169471e73782a65fb17c0ce4566fe09dc12cb5991cc8bc",
+    "ds4_transfer.c": "b2dec2ae02e088f4a8290c4c1ab636081e486ca0c56179e081980e3e0c929a28",
+    "ds4_transfer.h": "0c23f48ae51430b4b6dc1199c5e734d31195a3a133e17e2dbd12dd865ccb5d01",
+    "ds4_weight_cache.c": "3a8ba65dcb23ef390698c91b9c2a2b8cbe2853b44c8613349161ba279bb61a8f",
+    "ds4_weight_cache.h": "231514a9a1fb8d6da00eb307530e257613bc74f7a422a2ef5fbf3c6fd30249cc",
+    "tests/probe_qwen_image_pipeline.c": "d2521134d2b265f849d0b994f5c1cbea7d9dcc51678bb040040895072d3c3390",
+    "tests/probe_suite_phase_server.c": "0bad396f87d9640376b8b76d4673c38c43c1520c1e9b470d62b2d0dc90e395dc",
+    "tests/test_bundle.c": "8b221bb89aee5f751036502fb7449a0c1398841f83d335aab2bd6d0f69fc0d72",
+    "tests/test_resources.c": "d9ff6bcf450f550e15bc99be3660ddce751e09fdf5590f3a9f150e8a7ea15452",
+    "tests/test_suite_api.py": "0888e37e7a4a51ebb1ff1f4c155c21d46a3d52d50dbe5bd3f1505d9628b3d9ef",
+    "tests/test_suite_bundle.py": "02610bce0081698df36666fd8f8069a3ebe0ff755a3673f3d8943d5e41c25399",
+    "tests/test_suite_http.c": "7574867838aa628f75cba989c3132d3c8ff2cfefd4f1d12273b5046d6686c63d",
+    "tests/test_suite_http_live.py": "2cd7381f7af35b6c86f7c0b849e504173543fc33fa5fcaa46ce73288becfdcad",
+    "tests/test_suite_numeric.py": "6798c952c9b922354ed47261cbeeaf87f3ed2a8451c306d1047c6ee4b689da30",
+    "tests/test_suite_release.py": "a4b0ee1dc1e2f957c90e0a9fffaa49881eef29259a684dfbbe3ed0c442759f14",
+    "tests/test_transfer.c": "f8411b2791c045a83356a5fedd75085b0b0e2028ed4a0942717853205f58587a",
+    "tests/test_weight_cache.c": "00eee274bcbb3de075666ca89a5970a106849cd22f802536f7ed81aaed705f55",
+    "tools/evaluate_suite_profiles.py": "a7e3dda86480f688f524029747a785a3360dcbbed73453d515624a2767cedd40",
+    "tools/package_native_suite.py": "feaa03ecd9a38996feb385a35b85b08117e9c3ad380d844fa330c2456bb7aabe",
+    "tools/qualify_suite_disconnects.py": "e80494979ff018920e3ef46baa2631c9b5db96027aec5f12e2c65df4ff92f055",
+    "tools/qualify_suite_release.py": "594b0084393f52f14bf93185615f65dcc8d47589ace7e4e7dfc982e6881818ef"
+  },
+  "binaries": {
+    "stress-server": {
+      "path": "performance-results/native-suite-t19-t22-20261022/stress-server",
+      "bytes": 75845544,
+      "sha256": "586567a325a29efcc2ae8ce1d3a98bcd7b0de68586fd111414625f70fc405491"
+    },
+    "final-server": {
+      "path": "performance-results/native-suite-t19-t22-20261022/final-server",
+      "bytes": 75855232,
+      "sha256": "5d146bef576ce13a2c763726cacc809cc742e8fbbec7bcdd21ec86469ce1aa47"
+    },
+    "package-functional/ds4-server-suite": {
+      "path": "performance-results/native-suite-t19-t22-20261022/package-functional/ds4-server-suite",
+      "bytes": 75855456,
+      "sha256": "1ba4fed5021119e0d8962f6fc32408590fc71acf0c49f5aba94319ea0e0ec3e2"
+    }
+  },
+  "stress_binary_scope": "Stress predates final ABI-preserving public layout fixes/profile guards, opt-in detailed ledgers/live telemetry and the CUDA global-free sample refresh. The final package repeats eight live tests; 17 additional native HTTP disconnect cycles and 25 CUDA tests cover the final refresh. The 50-cycle result is retained for its recorded binary, not claimed as a rerun of the final binary.",
+  "models": "config/suite-bundles/*.json and docs/performance/native-suite-t00-20261020/models.json (unchanged locked identities)",
+  "model_manifests": {
+    "config/native-suite.example.json": "a5d5c3e8547675b5a91263c18c5bf68b706a4db87c207ca7750d1d0d17784e92",
+    "config/suite-bundles/qwen-image-2.1-turbo-bf16.json": "70d46c939eaae830d1663d5c000b6a9a15de8546f107a42d62f1936a8d1905c8",
+    "config/suite-bundles/embeddinggemma-2-bf16.json": "178f2f6043f26f13ca2b7c89a0406043344183bfa4c9abcfefea78810e35356c",
+    "docs/performance/native-suite-t00-20261020/models.json": "ad30a8596d5d9a9368ff4e5c538274e7fe255d194da30e43f05c4ebf75cf399d"
+  },
+  "exmekh_wheel": {
+    "path": "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl",
+    "bytes": 404218,
+    "sha256": "15bb5a74804627156b23312b4a561012c1e764f75db0f830e4928f6bc731d192"
+  },
+  "image_residency": {
+    "comparisons": [
+      {
+        "file": "latent-0.f32",
+        "bit_exact": true,
+        "bytes": 65536,
+        "sha256": "bdb23c736d8e040ba5d514b0e93c11879a52a98b8d8d90ddfa9823491055c812"
+      },
+      {
+        "file": "latent-1.f32",
+        "bit_exact": true,
+        "bytes": 65536,
+        "sha256": "3191a7c4154e30f3a39bd2e8d0bb8b3666e60f695cd8965a021cd30914381253"
+      },
+      {
+        "file": "latent-2.f32",
+        "bit_exact": true,
+        "bytes": 65536,
+        "sha256": "c71c600db9a77691446b9b1b4277786aebfbef8c86b15c684e15a25cb51d7baf"
+      },
+      {
+        "file": "latent-3.f32",
+        "bit_exact": true,
+        "bytes": 65536,
+        "sha256": "3ad8ecb70857617d5ce9e0ecccf0f8e9c54cba1c424432f5e36aaa4a25357013"
+      },
+      {
+        "file": "latent-4.f32",
+        "bit_exact": true,
+        "bytes": 65536,
+        "sha256": "a2b71236491a6f170321b78c245bce2e44a8f9c8eee2e6670c2be1ca6e4bbd5f"
+      },
+      {
+        "file": "latent-5.f32",
+        "bit_exact": true,
+        "bytes": 65536,
+        "sha256": "50fdb06601a6f8b74d8773d36c240769b1f4315ecc3fda8a318d8bcb2e2fc845"
+      },
+      {
+        "file": "latent-6.f32",
+        "bit_exact": true,
+        "bytes": 65536,
+        "sha256": "c5f3873e001b3756f4bd5b84c90a381d847ab8619e738de020f82240168d12fc"
+      },
+      {
+        "file": "latent-7.f32",
+        "bit_exact": true,
+        "bytes": 65536,
+        "sha256": "e9cca36969f29deacbe1b1be672a4ca89231a12d22f50423e3d911070f8efd2f"
+      },
+      {
+        "file": "rgba.f32",
+        "bit_exact": true,
+        "bytes": 1048576,
+        "sha256": "ac5320532fcd6120a6e0a8dffcfd25ea40fcf63881f87d1f43f9a7ade183ba2a"
+      }
+    ],
+    "baseline": {
+      "width": 256,
+      "height": 256,
+      "references": 0,
+      "seed": 20261020,
+      "variant": 1,
+      "victims": 0,
+      "total_seconds": 12.802603264,
+      "prepare_seconds": 6.2444e-05,
+      "load_seconds": [
+        4.673457313,
+        4.624794368,
+        0.226264452
+      ],
+      "phase_seconds": [
+        0.0,
+        0.165520718,
+        2.556234869,
+        0.467430203
+      ],
+      "loads": [
+        1,
+        1,
+        1
+      ],
+      "releases": [
+        1,
+        1,
+        0
+      ],
+      "peak_device_owned": 14334216192,
+      "live_device_owned": 684000512,
+      "pre_run_device_owned": 8519680,
+      "previous_device_peak": 8519680,
+      "plan_device": 14393008128,
+      "plan_host": 1904672,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 0,
+      "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+      "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+      "reference_metadata": [],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    },
+    "streamed": {
+      "width": 256,
+      "height": 256,
+      "references": 0,
+      "seed": 20261020,
+      "variant": 6,
+      "victims": 0,
+      "total_seconds": 40.463573719,
+      "prepare_seconds": 4.5537e-05,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        0.0,
+        5.018526848,
+        34.950409438,
+        0.494525543
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        6,
+        6,
+        6
+      ],
+      "peak_device_owned": 3488326928,
+      "live_device_owned": 8519680,
+      "pre_run_device_owned": 8519680,
+      "previous_device_peak": 8519680,
+      "plan_device": 3720321024,
+      "plan_host": 1904672,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 0,
+      "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+      "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+      "reference_metadata": [],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    },
+    "pinned_zero": {
+      "width": 256,
+      "height": 256,
+      "references": 0,
+      "seed": 20261020,
+      "variant": 1,
+      "victims": 0,
+      "total_seconds": 12.654626969,
+      "prepare_seconds": 6.6459e-05,
+      "load_seconds": [
+        4.637033203,
+        4.519463178,
+        0.23703707
+      ],
+      "phase_seconds": [
+        0.0,
+        0.149294683,
+        2.609032118,
+        0.411265097
+      ],
+      "loads": [
+        1,
+        1,
+        1
+      ],
+      "releases": [
+        1,
+        1,
+        0
+      ],
+      "peak_device_owned": 14334216192,
+      "live_device_owned": 684000512,
+      "pre_run_device_owned": 8519680,
+      "previous_device_peak": 8519680,
+      "plan_device": 14393008128,
+      "plan_host": 1904672,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 0,
+      "h2d_bytes": 28815589432,
+      "d2h_bytes": 1376256,
+      "weight_groups": [
+        {
+          "limit": 18446744073709551615,
+          "loads": 36,
+          "hits": 396,
+          "evictions": 0,
+          "payload_h2d": 13892143104
+        },
+        {
+          "limit": 18446744073709551615,
+          "loads": 33,
+          "hits": 2619,
+          "evictions": 0,
+          "payload_h2d": 14230249472
+        },
+        {
+          "limit": 18446744073709551615,
+          "loads": 2,
+          "hits": 128,
+          "evictions": 0,
+          "payload_h2d": 675480808
+        }
+      ],
+      "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+      "noise_sha256": "100d1a38507fedd13844ee030e37d24307b7f31739526a876f1d7a503356c83e",
+      "reference_metadata": [],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    },
+    "scope": "256x256 text fixture, same BF16 weights/noise/schedule; complete latent and RGBA byte comparison, not full T11 quality"
+  },
+  "gemma_residency": {
+    "bit_exact": true,
+    "vectors": {
+      "path": "performance-results/native-suite-t19-t22-20261022/gemma-functional/vectors.f32",
+      "bytes": 9216,
+      "sha256": "c3a18889e34bf1f2381686fb3cb1afb6f9e43d52aa096a79b709ea1d4eab9456"
+    },
+    "streamed_vectors": {
+      "path": "performance-results/native-suite-t19-t22-20261022/gemma-streamed-1250MB/vectors.f32",
+      "bytes": 9216,
+      "sha256": "c3a18889e34bf1f2381686fb3cb1afb6f9e43d52aa096a79b709ea1d4eab9456"
+    },
+    "plan": {
+      "device_bytes": 1241480320,
+      "host_bytes": 123589632,
+      "reclaim_device_bytes": 0,
+      "modalities": 15,
+      "release_encoders": true
+    },
+    "owned_peak_device_bytes": 630264792
+  },
+  "faults": {
+    "native_image_cases": 64,
+    "raw": {
+      "path": "performance-results/native-suite-t19-t22-20261022/phase-faults/faults.jsonl",
+      "bytes": 4183,
+      "sha256": "bcac1127b30c9b83ea9af7cccae887b184bd5707cafbc1652ecaa5cead42f476"
+    },
+    "publication": "No result published on injected cancellation/inference error; final output bit-exact",
+    "http_scope": "17 actual socket disconnects: conditioning, first/last DiT block and latent, all named VAE encoder/decoder frontiers, posterior/encoded; every DiT block and latent separately covered by native injection",
+    "http_evidence": "disconnects.json"
+  },
+  "stress": "stress.json",
+  "package_storage": {
+    "files_before_shutdown": 17,
+    "bytes_before_shutdown": 2300504,
+    "files_after_shutdown": 0,
+    "status": "PASS"
+  },
+  "package_integrity": {
+    "status": "PASS",
+    "manifest_files_verified": 287,
+    "source_build_objects": 0,
+    "unused_staging_files": 0,
+    "unlisted_files": 0,
+    "release_qualified": false,
+    "evidence": {
+      "path": "performance-results/native-suite-t19-t22-20261022/package-audit.json",
+      "bytes": 168,
+      "sha256": "3ee059db2b1561d99bedb32af2745ed995bece9dc948891eb9f3ba258af1097a"
+    }
+  },
+  "logs": {
+    "host-core-final": {
+      "path": "performance-results/native-suite-t19-t22-20261022/host-core-final.log",
+      "bytes": 961,
+      "sha256": "4d1fee21c2b7f56db1e5f83789be6115b54ed62466d72daa852f0f751f9fe41e"
+    },
+    "host-stream-tests": {
+      "path": "performance-results/native-suite-t19-t22-20261022/host-stream-tests.log",
+      "bytes": 1851,
+      "sha256": "227202bc7ed34aa6a119622b7b04d4f84033a29f3386b26e6b56fdefe01817b1"
+    },
+    "host-regressions": {
+      "path": "performance-results/native-suite-t19-t22-20261022/host-regressions.log",
+      "bytes": 7612,
+      "sha256": "5e6cc7194bd04c9137d40fce70d68b6f0f29fe819e40a89ffcf9f3ccc8228c96"
+    },
+    "abi-tests": {
+      "path": "performance-results/native-suite-t19-t22-20261022/abi-tests.log",
+      "bytes": 2069,
+      "sha256": "853d16bbb9a3a6ac24592fd493f0ab54fa4925fdc4e07857f087c35b134058cd"
+    },
+    "numeric-cuda": {
+      "path": "performance-results/native-suite-t19-t22-20261022/numeric-cuda.log",
+      "bytes": 2657,
+      "sha256": "1d3f4ebf00f85d8c15b7a2a737afbbb5f3392248d2125a38eac2e92184000e4e"
+    },
+    "executor-cuda": {
+      "path": "performance-results/native-suite-t19-t22-20261022/executor-cuda.log",
+      "bytes": 1132,
+      "sha256": "7ff85d443a42ebf6b33b916b3b9effda4f317a140966fda2ec4bc475438fc9f5"
+    },
+    "runtime-cuda": {
+      "path": "performance-results/native-suite-t19-t22-20261022/runtime-cuda.log",
+      "bytes": 2072,
+      "sha256": "2e0a4f1b11a60aabccfce024f9c5af48ce94fe1389bf445e01a9095e0276fb86"
+    },
+    "lifecycle-mtp-vision": {
+      "path": "performance-results/native-suite-t19-t22-20261022/lifecycle-mtp-vision.log",
+      "bytes": 2494,
+      "sha256": "73d9d7b1e04a13646ebd2a7f3d1fbb63fc2ef42d677583fad9bd974742398dd3"
+    },
+    "http-live-initial": {
+      "path": "performance-results/native-suite-t19-t22-20261022/http-live-initial.log",
+      "bytes": 868,
+      "sha256": "f3261afa85f35364a475924ace4ae361caeab5305303b2352d0b51af97d529ac"
+    },
+    "image-fallback-recovery": {
+      "path": "performance-results/native-suite-t19-t22-20261022/image-fallback-recovery.log",
+      "bytes": 96,
+      "sha256": "ce4de0151620cda436a59ec9c29e739dbac0a7371696745f2c03cf8d0b86f11b"
+    },
+    "gemma-functional": {
+      "path": "performance-results/native-suite-t19-t22-20261022/gemma-functional.log",
+      "bytes": 47,
+      "sha256": "c302cfe3b25a8c1c2410e5dfc88fa673191529ac2aaa5b8d9a08b9125d91c1cf"
+    },
+    "gemma-streamed-1250MB": {
+      "path": "performance-results/native-suite-t19-t22-20261022/gemma-streamed-1250MB.log",
+      "bytes": 46,
+      "sha256": "8161999a614711c9a90a3761404edd9c8dda1161e7368fc876974f799beb830b"
+    },
+    "phase-faults": {
+      "path": "performance-results/native-suite-t19-t22-20261022/phase-faults.log",
+      "bytes": 2013,
+      "sha256": "7ec85b1462d8fbcf5c5905bd27891d15a3391248e3a3f0cf4016ecb83509009d"
+    },
+    "package-clean-build": {
+      "path": "performance-results/native-suite-t19-t22-20261022/package-clean-build.log",
+      "bytes": 9590,
+      "sha256": "a01d794f0b0915faa262fa3769d43b9d78fd2d1a2f4b9291f63252c83014e89e"
+    },
+    "package-acceptance": {
+      "path": "performance-results/native-suite-t19-t22-20261022/package-acceptance.log",
+      "bytes": 1145,
+      "sha256": "9b4d5fc1f7cb996d761a3d5e4352f4d6f3c530ca8409a6422988632620b1b5d8"
+    },
+    "docs-check-final": {
+      "path": "performance-results/native-suite-t19-t22-20261022/docs-check-final.log",
+      "bytes": 1808,
+      "sha256": "3c6206c101ff0604021a0898e193d094ea5cfe1e692ab4e067a869a0b78f4749"
+    },
+    "transfer-asan": {
+      "path": "performance-results/native-suite-t19-t22-20261022/transfer-asan.log",
+      "bytes": 87,
+      "sha256": "3ff1c87328ff2922f6fc7f060c1a6cc1be7ff767c120394a98092453ee49a113"
+    },
+    "static-analysis": {
+      "path": "performance-results/native-suite-t19-t22-20261022/static-analysis.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "release-blocked": {
+      "path": "performance-results/native-suite-t19-t22-20261022/release-blocked.log",
+      "bytes": 444,
+      "sha256": "667940f412eed2749451f707220f3b89485affb6680802e996853b6fe607a292"
+    },
+    "compact-response-build": {
+      "path": "performance-results/native-suite-t19-t22-20261022/compact-response-build.log",
+      "bytes": 3437,
+      "sha256": "94418a0f8b7d999d8ac364aeed68f5d5e08ab1718053841f09ef353c38b08744"
+    },
+    "package-compact-build": {
+      "path": "performance-results/native-suite-t19-t22-20261022/package-compact-build.log",
+      "bytes": 2348,
+      "sha256": "5fa3367b1ec282665edbf42f016c08b7eb346ea3a3ea4d3ebeda75e217a378b2"
+    },
+    "global-free-build": {
+      "path": "performance-results/native-suite-t19-t22-20261022/global-free-build.log",
+      "bytes": 4914,
+      "sha256": "ebec01079cfd1a4e3d26ed87f6b424f145f5f12adea24de4a2a03af9ad1758e9"
+    },
+    "global-free-numeric": {
+      "path": "performance-results/native-suite-t19-t22-20261022/global-free-numeric.log",
+      "bytes": 2800,
+      "sha256": "727e0ca5b7e081aa6d1de64748abdc67c575fcaf4f26881911cecacf980176b2"
+    },
+    "final-protocol": {
+      "path": "performance-results/native-suite-t19-t22-20261022/final-protocol.log",
+      "bytes": 1420,
+      "sha256": "7361154e2a69c35567bc55e9aeee88607ec6edd4ffaa8005fe03b4c9215612af"
+    },
+    "disconnect-phases-v3": {
+      "path": "performance-results/native-suite-t19-t22-20261022/disconnect-phases-v3.log",
+      "bytes": 461,
+      "sha256": "067305b102f60c33ff04c3249a5ad2d7f4a2a4fc7e488cceb327f20e0e1fffce"
+    },
+    "package-handoff-build": {
+      "path": "performance-results/native-suite-t19-t22-20261022/package-handoff-build.log",
+      "bytes": 2603,
+      "sha256": "8b954ffc43dbfc2b8ea05155a72d8b68565063cfb40dddafafbb3102ee56e88a"
+    }
+  },
+  "commands": {
+    "run-functional-gates.sh": {
+      "path": "performance-results/native-suite-t19-t22-20261022/run-functional-gates.sh",
+      "bytes": 1497,
+      "sha256": "ea70d206a766b8325ac7c4c48f56a330222a53b2c681c810ae57bafa23be8f0a"
+    },
+    "build-functional-package.sh": {
+      "path": "performance-results/native-suite-t19-t22-20261022/build-functional-package.sh",
+      "bytes": 1128,
+      "sha256": "55b034724d8a4c256374653d2063e9613d8c8d4908e340051fd163560a62528b"
+    },
+    "accept-functional-package.sh": {
+      "path": "performance-results/native-suite-t19-t22-20261022/accept-functional-package.sh",
+      "bytes": 2220,
+      "sha256": "7e43c028a3f446799ee8c11d7069a2f9f5aa2cef0fdeb493b401ca44dea54c95"
+    },
+    "accept-disconnect-phases.sh": {
+      "path": "performance-results/native-suite-t19-t22-20261022/accept-disconnect-phases.sh",
+      "bytes": 1485,
+      "sha256": "6e2320dc29566625748812abb55f64e3d45c331916f45d6dbea82006132d6da5"
+    },
+    "update-handoff-package.sh": {
+      "path": "performance-results/native-suite-t19-t22-20261022/update-handoff-package.sh",
+      "bytes": 1236,
+      "sha256": "d6b2f201b80820b5065489f4787df024780d5461b7de7aa7fe42092ec86187ff"
+    }
+  },
+  "historical_attempts": {
+    "stress_initial": "Canonical assistant reconstruction caused token-mismatch; replaced with registered tool call IDs, cached-token gate retained",
+    "gemma_768MB": "NOMEM before compute: declared scratch exceeds capacity; retained as admission evidence",
+    "package_context": {
+      "path": "performance-results/native-suite-t19-t22-20261022/package-acceptance-metrics-context-failure.log",
+      "bytes": 4361,
+      "sha256": "43c259131923c4d676d55fc0a16fd68d86ab1cda5d9baead8220f060607d3961",
+      "reason": "Detailed ledger in tool output exceeded ctx2048; made diagnostic opt-in, repeated same test/workload/context"
+    },
+    "cancelled_studies": "Repeated performance comparisons and quantization screening excluded per user request"
+  },
+  "initial_cold_llm_failure": {
+    "log": {
+      "path": "performance-results/native-suite-t19-t22-20261022/disconnect-phases-v2.log",
+      "bytes": 1460,
+      "sha256": "a8db8cb444b90d286a9942f73e24b7b4d9dc788628541eabce42d3185d001650"
+    },
+    "reason": "Physical memory had been freed but native frees did not refresh the shared global-free sample; returning idle weights alone did not fix it. Final fix refreshes the sample after successful cudaFree and adds a zero-budget regression."
+  },
+  "not_qualified": [
+    "complete T11 image-quality corpus",
+    "HTTP disconnect on every DiT layer/step (native exhaustive coverage and HTTP first/last only)",
+    "Metal",
+    "ROCm",
+    "TP/distributed",
+    "other LLM families",
+    "quantized native-suite profiles",
+    "performance comparisons"
+  ],
+  "thresholds_changed": false
+}

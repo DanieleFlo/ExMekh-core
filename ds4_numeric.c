@@ -98,6 +98,11 @@ ds4_status ds4_numeric_close(ds4_numeric *c) {
   ds4_status s = c->ops->fence(c->state);
   if (s)
     return s;
+  if (c->ops->prepare_close) {
+    s = c->ops->prepare_close(c->state);
+    if (s)
+      return s;
+  }
   s = ds4_resource_release(c->metadata);
   if (s)
     return s;
@@ -105,6 +110,21 @@ ds4_status ds4_numeric_close(ds4_numeric *c) {
     c->ops->close(c->state);
   free(c);
   return DS4_STATUS_OK;
+}
+ds4_status ds4_num_buffer_stage(ds4_num_buffer *b, uint64_t off,
+                                const void *src, uint64_t bytes) {
+  if (!b || !src || !bytes || off > b->view.count * ds4_num_type_bytes(b->view.type) ||
+      bytes > b->view.count * ds4_num_type_bytes(b->view.type) - off)
+    return DS4_STATUS_INVALID;
+  ds4_numeric *c = b->ctx;
+  if (!c->ops->weight_copy) return ds4_num_buffer_write(b, off, src, bytes);
+  ds4_status s = c->ops->weight_copy(c->state, (char *)b->view.data + off, src, bytes);
+  if (!s && c->device) c->h2d_bytes += bytes;
+  return s;
+}
+ds4_status ds4_numeric_weights_ready(ds4_numeric *c) {
+  if (!c) return DS4_STATUS_INVALID;
+  return c->ops->weight_ready ? c->ops->weight_ready(c->state) : ds4_numeric_fence(c);
 }
 ds4_status ds4_numeric_fence(ds4_numeric *c) {
   return c ? c->ops->fence(c->state) : DS4_STATUS_INVALID;
@@ -954,7 +974,7 @@ static const ds4_numeric_ops cpu_ops = {
     cpu_alloc,        cpu_release,    cpu_copy,       cpu_fence,   NULL,
     cpu_linear,       cpu_norm,       cpu_point,      cpu_rope,    cpu_attend,
     cpu_conv,         cpu_reorder,    cpu_pool,       cpu_nearest, cpu_softmax,
-    cpu_matmul_batch, cpu_channel_l2, cpu_channel_rms};
+    cpu_matmul_batch, cpu_channel_l2, cpu_channel_rms, NULL, NULL, NULL};
 ds4_status ds4_numeric_cpu(ds4_numeric **out, ds4_resources *r,
                            uint64_t owner) {
   return ds4_numeric_create(out, &cpu_ops, NULL, r, owner, false);

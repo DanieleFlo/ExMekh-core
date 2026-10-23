@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 typedef struct {
-  int failed, live, allocation_failed, closed;
+  int failed, live, allocation_failed, close_failed, closed;
 } state;
 static ds4_status allocate(void *p, uint64_t n, void **out) {
   if (((state *)p)->allocation_failed) {
@@ -29,6 +29,9 @@ static ds4_status fence(void *p) {
   return ((state *)p)->failed ? DS4_STATUS_DEVICE_LOST : DS4_STATUS_OK;
 }
 static void close_backend(void *p) { ((state *)p)->closed++; }
+static ds4_status prepare_close(void *p) {
+  return ((state *)p)->close_failed ? DS4_STATUS_INFERENCE : DS4_STATUS_OK;
+}
 int main(void) {
   assert(!ds4_numeric_close(NULL));
   ds4_resources *r = NULL;
@@ -38,7 +41,8 @@ int main(void) {
   const ds4_numeric_ops ops = {.allocate = allocate,
                                .release = release,
                                .fence = fence,
-                               .close = close_backend};
+                               .close = close_backend,
+                               .prepare_close = prepare_close};
   assert(!ds4_resources_create(&r));
   assert(!ds4_numeric_create(&n, &ops, &s, r, 901, false));
   assert(!ds4_num_alloc(n, 128, DS4_NUM_F32, &a));
@@ -82,6 +86,11 @@ int main(void) {
   ds4_resources_complete(r, 8);
   assert(!ds4_numeric_recover(n));
   assert(!ds4_reservation_cancel(lease));
+  s.close_failed = 1;
+  assert(ds4_numeric_close(n) == DS4_STATUS_INFERENCE && !s.closed);
+  ds4_resources_totals(r, 901, &totals);
+  assert(totals.roots == 1 && totals.allocated[DS4_MEMORY_HOST]);
+  s.close_failed = 0;
   assert(!ds4_numeric_close(n));
   assert(s.closed == 1);
   /* A context created under an in-flight lease must preserve its backend

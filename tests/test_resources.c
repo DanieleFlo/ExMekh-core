@@ -233,7 +233,22 @@ static void checkpoints(void) {
     assert(ds4_checkpoint_validate(fp, identity, config, &payload, &got, &bytes) == DS4_STATUS_INVALID && got == 999);
     fclose(fp);
 }
+static void working_capacity(void) {
+    ds4_resources *r = NULL; assert(!ds4_resources_create(&r));
+    ds4_resource_budget budget = {.limit = 100};
+    assert(!ds4_resources_set_budget(r, DS4_MEMORY_DEVICE, &budget));
+    uint64_t bytes[DS4_MEMORY_COUNT] = {[DS4_MEMORY_DEVICE] = 80}, capacity;
+    ds4_reservation *lease = NULL;
+    assert(!ds4_resources_reserve(r, 42, bytes, &lease));
+    assert(!ds4_resources_working_capacity(r, DS4_MEMORY_DEVICE, &capacity) && capacity == 20);
+    ds4_reservation_scope scope = ds4_reservation_enter(lease);
+    assert(!ds4_resources_working_capacity(r, DS4_MEMORY_DEVICE, &capacity) && capacity == 80);
+    assert(!ds4_resources_available(r, DS4_MEMORY_DEVICE, &capacity) && capacity == 20);
+    ds4_reservation_leave(&scope);
+    assert(!ds4_reservation_cancel(lease)); assert(!ds4_resources_close(r));
+}
 int main(void) {
+    working_capacity();
     lifetime(); budgets(); trimming(); concurrency(); admission(); scoped_lifetime(); checkpoints();
     puts("PASS: resource lifetime, aliases, events, budgets, concurrent reservations and checkpoint validation");
     return 0;

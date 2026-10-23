@@ -67356,6 +67356,10 @@ int ds4_session_load_payload(ds4_session *s, FILE *fp, uint64_t bytes, char *err
     if (!s || !fp || bytes < 4u) {
         payload_set_err(err, errlen, "invalid checkpoint payload"); return 1;
     }
+    /* Lazy vision buffers restored below belong to the session just like its
+     * initial graph. Charging the caller would undercount the next park/restore. */
+    ds4_resource_owner_scope resource_owner __attribute__((cleanup(ds4_resource_owner_leave))) =
+        ds4_resource_owner_enter((uint64_t)(uintptr_t)s);
     off_t start = ftello(fp);
     uint64_t remaining = bytes;
     uint32_t h[8] = {0};

@@ -20,6 +20,7 @@ typedef struct {
   ds4_runtime_model *model;
   uint32_t component, group_count;
   ds4_weight_group *groups[34];
+  ds4_weight_cache cache;
   struct {
     size_t index;
     uint32_t group;
@@ -131,7 +132,7 @@ static inline ds4_status qi_weight(qi_graph *g, const char *name,
     if (strcmp(t->name, name))
       continue;
     ds4_weight_group *group = g->groups[g->weights[j].group];
-    ds4_status s = ds4_weight_group_load(group);
+    ds4_status s = ds4_weight_cache_acquire(&g->cache, g->weights[j].group);
     if (s)
       return s;
     const void *p;
@@ -191,17 +192,18 @@ static inline ds4_status qi_finish(qi_graph *g, ds4_runtime *runtime,
       count++;
   if (count != g->count)
     return DS4_STATUS_UNSUPPORTED;
-  ds4_weight_backend backend = ds4_numeric_weight_backend(g->num);
   for (uint32_t k = 0; k < g->group_count; k++) {
     size_t ids[1024], n = 0;
     for (size_t j = 0; j < g->count; j++)
       if (g->weights[j].group == k)
         ids[n++] = g->weights[j].index;
-    ds4_status s = ds4_weight_group_create_selected(
-        &g->groups[k], g->bundle, g->component, ids, n, &backend);
+    ds4_status s = ds4_numeric_weight_group_selected(
+        &g->groups[k], g->bundle, g->component, ids, n, g->num);
     if (s)
       return s;
   }
+  ds4_status cache_status = ds4_weight_cache_init(&g->cache, g->groups, g->group_count);
+  if (cache_status) return cache_status;
   ds4_runtime_descriptor d = {DS4_SUITE_ABI,
                               ds4_bundle_model(g->bundle),
                               ds4_bundle_revision(g->bundle),
@@ -220,18 +222,12 @@ static inline ds4_status qi_release(qi_graph *g) {
   ds4_status s = ds4_runtime_model_enter_exclusive(g->model, &scope);
   if (s)
     return s;
-  for (uint32_t i = 0; i < g->group_count && !s; i++)
-    s = ds4_weight_group_release(g->groups[i]);
+  s = ds4_weight_cache_release(&g->cache);
   ds4_runtime_scope_leave(&scope);
   return s;
 }
 static inline ds4_status qi_load_all(qi_graph *g) {
-  for (uint32_t i = 0; i < g->group_count; i++) {
-    ds4_status status = ds4_weight_group_load(g->groups[i]);
-    if (status)
-      return status;
-  }
-  return DS4_STATUS_OK;
+  return ds4_weight_cache_preload(&g->cache, g->group_count);
 }
 static inline uint64_t qi_group_bytes(qi_graph *g, uint32_t group) {
   return group < g->group_count ? ds4_weight_group_bytes(g->groups[group]) : 0;

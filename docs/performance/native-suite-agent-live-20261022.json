@@ -1,0 +1,405 @@
+{
+  "recorded_at": "2026-10-22T19:04:53.646541+00:00",
+  "scope": "Ubuntu 24.04 WSL / RTX 3090 / CUDA serial / Qwen27 Q4_K_S + MTP + vision F16 / ctx26000 / bf16-native-v1",
+  "result": "PASS",
+  "library_live_tests": 11,
+  "browser_live_tests": 1,
+  "launcher_tests": 8,
+  "docs_tests": 10,
+  "cuda": {
+    "lifecycle_repeated_bounded_restore": "PASS",
+    "executor_modes_0_1_2_bit_exact": "PASS"
+  },
+  "cpu_http_regressions": "PASS",
+  "pyav_needed_for_tests": false,
+  "sources_sha256": {
+    "Makefile": "573144e3da3e6b1af2b81c970c29cc99d8557e42b9a4accff441baac37f1c153",
+    "ds4.c": "5c36fd95672944e74a8bf691fa710eb67c7c20ba4ab77f7e95d6364bde4cfe24",
+    "ds4_server_suite_operations.inc": "9eb90b6face67503111d3457f8e7c36c6e2b1b6ca7ee419f2bebfa5165c79888",
+    "start-ds4-server.sh": "3363b07356d058a8f7633939859cf766b526c856deeed6da4c48baab0d2b6ab6",
+    "agent/start-ds4-server.sh": "78700b86b49a9ed3bdd3c39a62c172e5f1aa1ee18fc6e5d6e443c7c2b348f0b8",
+    "config/native-suite.env.example": "070b79bcfce454650f2a4c7c12998de73782ca6efcfaf698024b7266e11c07e8",
+    "config/native-suite.example.json": "a5d5c3e8547675b5a91263c18c5bf68b706a4db87c207ca7750d1d0d17784e92",
+    "tests/test_flash_launcher.py": "13e093768b8b974711d31d2ccad83700361e214becd0f0bb5894c606b546eeaf",
+    "tests/test_lifecycle_cuda.c": "4901297c9f967dbb1bfc68b40d229e5f417cb33032a415105eba73d824e51252",
+    "tests/test_suite_image_tools_e2e.py": "3420a29005e3d2852970e94998626687673355948e9c832e61356c4652891f93",
+    "tests/test_suite_embedding_tools_e2e.py": "4f45490d0162e3cdf6f165ca7e1260c27131da1fe50e77dc164870361cb1db5e",
+    "agent/tests/test_native_image_generation_e2e.py": "22f6dd6ee9930c129b8e2b99400361d6cdead673f3688b654396ef8662b477ef",
+    "agent/tests/run_native_image_generation_agent.py": "fb7c4ba2cc3c20319a4db8f4d63ea3966e8764904aac045ba4b86345aeb96e9d",
+    "tools/build_suite_e2e_video.py": "19ed6b6703316f8e69dc4dcb7ee60e4a7598281f8592bc5856b97e61c45c7a67",
+    "tests/fixtures/native-suite-e2e/video-with-audio.mp4": "63dc498dd92133c1e24462e9282a1bf3f1aaa9bbdd33edf5d0af81f0d78c5a2e",
+    "tests/fixtures/native-suite-e2e/video-with-audio.json": "5b322ec5818c528c3b94dd1d59288bae235ba0c1873934f59f96418924d9555f",
+    "agent/uv.lock": "d6bbeb417ca35b799faaacb3eb7876f40eaaeefed965d19d825d48f73ed30cad"
+  },
+  "server_sha256": "80dcd2891b884e0a09e891e6e9bfa340f00a53d7e924bae6acc12f719fe72737",
+  "wheel_sha256": "15bb5a74804627156b23312b4a561012c1e764f75db0f830e4928f6bc731d192",
+  "installed_matches_wheel": {
+    "core/models/native_suite.py": "d1cf3cf80a5fb4105f3b3665356e685624364ed5f4a17f3b27d9c9a57953f2c7",
+    "core/models/native_media_tools.py": "97de3cc2e4fabc0410cdde0626afae80a5ff2f754597a157c7f16ee40c2436cb",
+    "core/web_navigation/ranking.py": "6ea1ad097cd5f5a440fd7ebce52b4ad025c0fa4607beabcfcf0f71e4905f3b50",
+    "core/models/user_message.py": "2e2dd2c04cec65c6e23a0693604184fe4fffbc829019633ce668b42829d30f68",
+    "core/models/client.py": "b812c225b9e9851f6fa4201177b151133d409225556b7dbd516bd1e16392ea3a"
+  },
+  "artifacts_sha256": {
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/browser-output-0.png": "886709487269736235f3e8a3732965fa4cd148d799a739a953b716b1bcb7bcab",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/browser-output-1.png": "7b21345648c4c745277a65976895628cde4f16ba1703c26a374147ac847b3b32",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/browser.json": "e7439cc6b58d649cebaf3f734ddb10bce601d10b308e09f357e2da43b7f3c63a",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/embeddings-and-consumers.json": "c8a67edb1f3da113bf8cbc5b5a1b2227688bd825a4816ea0025e11527f282930",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/generated-images.png": "014562b672abb96b37bc99dbb2b4296a3026a517de2563512bcfb01a80d6584c",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/image-preview.png": "06b5fbcfd42f757ef251cd60d817fe7d5c82ffabbbece88ef0765c3f1566a760",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/image_only-0.png": "95f1e617121955885de5a6deedd1630bfd6498799264e07a8aab26c98ca60651",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/last-page.png": "c5ffb3f44c0b75cb6ca3ae8784c346dae40eca2e05d495c5eb1727f50d0501d1",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/last-state.json": "9c5ad1bca48e8a6990ab97c84a5f9288e1761a35dedeb6e84850c36d12220a0a",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/text_and_image-0.png": "4bc143ccddb0a38955684f44f2f3dd976c2d07d663f5c3b087b191205f9474b2",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/text_only-0.png": "28099dc16662e6cb1a9c9f09550ea341e6101d67be802229126099f4e2a3ca1b",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/text_only-1.png": "846a206cb870da0b94bbd43a863faeab6742f8900e94473806d2a2a601bbc6e3",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/tools-and-ranking.json": "4cae507a857a9c863e393227c70ba68e0dcb0987feb094672074fb581e56765e",
+    "performance-results/native-suite-agent-repair-20261022/acceptance-final/winter-alps-1024x768.png": "8ee6e164a8c14db38829bf80a5ada13f6503778d430f15ee23ae0a1393cbb85b"
+  },
+  "logs_sha256": {
+    "acceptance-final.log": "dd4351024f5aaf950593fc61b28e2bf55a30588f5875101bece4f3600a707bc3",
+    "lifecycle-fixed.log": "329687bf41ca35fd93ee85008c7dfaa5224d343728058fc9e0cd66f0ec2fdc09",
+    "executor-fixed.log": "d7f2e1615b691eb5fb565766af783ae085e1fd39d691f0aa696628fa5ec71b60",
+    "cpu-regression.log": "c3b0ee4dec2464119dc02e6364caa36aa2045ebf59111c84f5fa525d07637f5b",
+    "http-regression.log": "7361154e2a69c35567bc55e9aeee88607ec6edd4ffaa8005fe03b4c9215612af",
+    "launcher-fixed.log": "faa33cdab19f202ddaa7c94838f3179e7bd59a92bc7a69563985eb0b1a2aa5d8",
+    "docs-final.log": "56b5870c21ebe69ffa6d372bf362284da95a9879388f35d02d694372f0da42a3"
+  },
+  "models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "Qwen3.8-27B-UD-Q4_K_S",
+        "object": "model",
+        "created": 1767225600,
+        "owned_by": "ds4.c",
+        "name": "Qwen3.8-27B-UD-Q4_K_S",
+        "context_length": 26000,
+        "top_provider": {
+          "context_length": 26000,
+          "max_completion_tokens": 26000,
+          "is_moderated": false
+        },
+        "supported_parameters": [
+          "tools",
+          "tool_choice",
+          "max_tokens",
+          "temperature",
+          "top_p",
+          "top_k",
+          "min_p",
+          "ignore_eos",
+          "stop",
+          "seed",
+          "stream",
+          "reasoning_effort"
+        ]
+      },
+      {
+        "object": "model",
+        "id": "Qwen/Qwen-Image-2.1-Turbo",
+        "owned_by": "ds4.c",
+        "created": 1792454400,
+        "ds4": {
+          "version": 1,
+          "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "profile": "bf16-native-v1",
+          "configured": true,
+          "resident": false,
+          "ready": true,
+          "qualified_backends": [
+            "cuda-sm86"
+          ],
+          "operations": [
+            "image_generate",
+            "image_edit"
+          ],
+          "input_modalities": [
+            "text",
+            "image"
+          ],
+          "context_tokens": 262144,
+          "embedding_dimensions": [],
+          "limits": {
+            "file_bytes": 536870912,
+            "storage_bytes": 4294967296,
+            "files": 256,
+            "receipts": 64,
+            "max_inflight_requests": 8,
+            "receipt_bytes": 67108864,
+            "receipt_ttl_seconds": 600,
+            "media_ttl_seconds": 3600,
+            "timeout_seconds": 600,
+            "batch_items": 32,
+            "image_total_pixels": 4194304,
+            "reference_resolution": 0,
+            "output_formats": [
+              "png"
+            ]
+          },
+          "components": [
+            {
+              "id": "text_encoder",
+              "optional": false,
+              "input_modalities": [
+                "image"
+              ],
+              "storage_format": "safetensors",
+              "compute_dtype": "bfloat16",
+              "host_loaded": true,
+              "device_resident": false
+            },
+            {
+              "id": "dit",
+              "optional": false,
+              "input_modalities": [
+                "image"
+              ],
+              "storage_format": "safetensors",
+              "compute_dtype": "bfloat16",
+              "host_loaded": true,
+              "device_resident": false
+            },
+            {
+              "id": "vae",
+              "optional": false,
+              "input_modalities": [
+                "image"
+              ],
+              "storage_format": "safetensors",
+              "compute_dtype": "bfloat16",
+              "host_loaded": true,
+              "device_resident": false
+            }
+          ]
+        }
+      },
+      {
+        "object": "model",
+        "id": "google/embeddinggemma-2",
+        "owned_by": "ds4.c",
+        "created": 1792454400,
+        "ds4": {
+          "version": 1,
+          "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+          "profile": "bf16-native-v1",
+          "configured": true,
+          "resident": false,
+          "ready": true,
+          "qualified_backends": [
+            "cuda-sm86"
+          ],
+          "operations": [
+            "embed"
+          ],
+          "input_modalities": [
+            "text",
+            "image",
+            "video",
+            "audio"
+          ],
+          "context_tokens": 8192,
+          "embedding_dimensions": [
+            768,
+            512,
+            256,
+            128
+          ],
+          "limits": {
+            "file_bytes": 536870912,
+            "storage_bytes": 4294967296,
+            "files": 256,
+            "receipts": 64,
+            "max_inflight_requests": 8,
+            "receipt_bytes": 67108864,
+            "receipt_ttl_seconds": 600,
+            "media_ttl_seconds": 3600,
+            "timeout_seconds": 600,
+            "batch_items": 32,
+            "image_total_pixels": 4194304,
+            "reference_resolution": 0,
+            "output_formats": [
+              "png"
+            ]
+          },
+          "components": [
+            {
+              "id": "text",
+              "optional": false,
+              "input_modalities": [
+                "text"
+              ],
+              "storage_format": "safetensors",
+              "compute_dtype": "bfloat16",
+              "host_loaded": true,
+              "device_resident": false
+            },
+            {
+              "id": "vision",
+              "optional": true,
+              "input_modalities": [
+                "image",
+                "video"
+              ],
+              "storage_format": "safetensors",
+              "compute_dtype": "bfloat16",
+              "host_loaded": true,
+              "device_resident": false
+            },
+            {
+              "id": "vision_projection",
+              "optional": true,
+              "input_modalities": [
+                "audio"
+              ],
+              "storage_format": "safetensors",
+              "compute_dtype": "bfloat16",
+              "host_loaded": true,
+              "device_resident": false
+            },
+            {
+              "id": "audio",
+              "optional": true,
+              "input_modalities": [
+                "audio"
+              ],
+              "storage_format": "safetensors",
+              "compute_dtype": "bfloat16",
+              "host_loaded": true,
+              "device_resident": false
+            },
+            {
+              "id": "audio_projection",
+              "optional": true,
+              "input_modalities": [
+                "audio"
+              ],
+              "storage_format": "safetensors",
+              "compute_dtype": "bfloat16",
+              "host_loaded": true,
+              "device_resident": false
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "embedding_cases": [
+    {
+      "case": "typed_discovery_dimensions_tasks",
+      "dimensions": [
+        128,
+        256,
+        512,
+        768
+      ],
+      "tasks": [
+        "raw",
+        "similarity",
+        "search_query",
+        "code_query",
+        "document"
+      ]
+    },
+    {
+      "case": "four_modalities_batch_interleaving",
+      "items": 5,
+      "usage": {
+        "processed_tokens": 601,
+        "image_soft_tokens": 260,
+        "video_soft_tokens": 242,
+        "audio_soft_tokens": 73
+      }
+    },
+    {
+      "case": "video_audio_include_exclude",
+      "usage_included": {
+        "processed_tokens": 314,
+        "image_soft_tokens": 0,
+        "video_soft_tokens": 242,
+        "audio_soft_tokens": 51
+      }
+    },
+    {
+      "case": "semantic_ranking_cache",
+      "scores": [
+        1.0,
+        0.835390031337738
+      ],
+      "ranking": [
+        [
+          0,
+          0.036885245901639344
+        ],
+        [
+          1,
+          0.03629032258064516
+        ]
+      ]
+    },
+    {
+      "case": "native_visual_ranking",
+      "order": [
+        0,
+        1
+      ],
+      "requests": 5
+    },
+    {
+      "case": "validation_overflow_missing_media_recovery",
+      "errors": 4
+    },
+    {
+      "case": "llm_embedding_consumers_llm",
+      "cached_tokens": 519
+    }
+  ],
+  "image_cases": [
+    {
+      "case": "blind_llm_reads_generated_pixels",
+      "answer": "red square",
+      "png_sha256": null
+    },
+    {
+      "case": "text_only",
+      "answer": null,
+      "png_sha256": null
+    },
+    {
+      "case": "image_only",
+      "answer": null,
+      "png_sha256": null
+    },
+    {
+      "case": "text_and_image",
+      "answer": null,
+      "png_sha256": null
+    },
+    {
+      "case": "invalid_arguments",
+      "answer": null,
+      "png_sha256": null
+    },
+    {
+      "case": "native_ranking",
+      "answer": null,
+      "png_sha256": null
+    },
+    {
+      "case": "user_landscape_1024x768",
+      "answer": null,
+      "png_sha256": "8ee6e164a8c14db38829bf80a5ada13f6503778d430f15ee23ae0a1393cbb85b"
+    }
+  ],
+  "open": [
+    "full image quality T11",
+    "cross-request Gemma weight retention with a bounded LLM working set",
+    "performance and quantization studies"
+  ],
+  "historical_failures": [
+    "404 from the LLM-only launcher",
+    "restore ownership assertion before the fix",
+    "retained Gemma caches obstructing a later LLM prefill",
+    "initial test incorrectly requiring a cache hit for a fresh vision request"
+  ]
+}

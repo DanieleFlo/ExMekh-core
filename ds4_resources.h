@@ -61,6 +61,9 @@ ds4_status ds4_resources_set_budget(ds4_resources *, ds4_memory_location,
                                      const ds4_resource_budget *);
 ds4_status ds4_resources_get_budget(ds4_resources *, ds4_memory_location, ds4_resource_budget *);
 ds4_status ds4_resources_available(ds4_resources *, ds4_memory_location, uint64_t *);
+/* Capacity visible to a nested adapter: the active operation lease, or
+ * globally available capacity when no lease is active on this thread. */
+ds4_status ds4_resources_working_capacity(ds4_resources *, ds4_memory_location, uint64_t *);
 /* Atomic, read-only admission using the registry's own budget policy. Reclaimed
  * bytes are a projection, not an eviction; NULL means no reclamation. */
 ds4_status ds4_resources_can_reserve(ds4_resources *, const uint64_t bytes[DS4_MEMORY_COUNT],

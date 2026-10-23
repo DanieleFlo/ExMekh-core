@@ -1411,7 +1411,7 @@ CUDNN_HOME ?= $(CUDA_HOME)
 SUITE_CUDA_LIBDIR ?= $(CUDA_HOME)/lib64
 SUITE_CUDA_LDLIBS = -lm -pthread -L$(SUITE_CUDA_LIBDIR) -l:libcudart.so.13 -l:libcublas.so.13 -l:libcublasLt.so.13 -Wl,-rpath,$(abspath $(SUITE_CUDA_LIBDIR))
 SUITE_CUDNN_LIBS = -L$(CUDNN_HOME)/lib -L$(CUDNN_HOME)/lib64 -l:libcudnn.so.9 -Wl,-rpath,$(abspath $(CUDNN_HOME)/lib)
-SUITE_API_HEADERS = ds4_numeric.h ds4_bundle.h ds4_resources.h ds4_runtime.h
+SUITE_API_HEADERS = ds4_numeric.h ds4_bundle.h ds4_resources.h ds4_runtime.h ds4_weight_cache.h
 # Native media codecs are linked only into the multimodal suite.
 # Use a system installation or set this prefix to an isolated dependency build.
 SUITE_MEDIA_PREFIX ?= build/suite-media
@@ -1443,6 +1443,11 @@ ds4_qwen_image_reference.o: ds4_qwen_image_reference.c ds4_qwen_image_reference.
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 
 SUITE_OBJS = ds4_gemma_audio.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_executor.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o
+SUITE_OBJS += ds4_weight_cache.o ds4_transfer.o
+ds4_transfer.o: ds4_transfer.c ds4_transfer.h ds4_read_queue.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+ds4_weight_cache.o: ds4_weight_cache.c ds4_weight_cache.h ds4_bundle.h
+	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_qwen_image_pipeline.o: ds4_qwen_image_pipeline.c ds4_qwen_image_pipeline.h ds4_qwen_image_components.h ds4_qwen_image_reference.h ds4_sha256.h ds4_executor.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_qwen_image_encoder.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o: ds4_qwen_image_components.h
@@ -1467,21 +1472,36 @@ ds4_server_suite.o: ds4_server.c ds4_server_suite_types.h ds4_server_suite.inc d
 	$(CC) $(SUITE_CFLAGS) -DDS4_NATIVE_SUITE -c -o $@ $<
 ds4-server-suite: ds4_server_suite.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o $(CORE_OBJS) $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
 	$(CC) -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS) -L$(CUDA_HOME)/lib64 -lcudart -lstdc++
+
+tests/probe_suite_phase_server.o: tests/probe_suite_phase_server.c ds4_server.c ds4_server_suite_types.h ds4_server_suite.inc ds4_server_suite_http.inc ds4_server_suite_operations.inc ds4_suite_text.h $(DS4_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -I. -c -o $@ $<
+tests/probe_suite_phase_server: tests/probe_suite_phase_server.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o $(CORE_OBJS) $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
+	$(CC) -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS) -L$(CUDA_HOME)/lib64 -lcudart -lstdc++
 tests/test_suite_http: tests/test_suite_http.c ds4_server.c ds4_server_suite.inc ds4_server_suite_http.inc ds4_server_suite_operations.inc ds4_server_suite_types.h ds4_suite_text.h ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS) $(SUITE_OBJS)
 	$(CC) $(SUITE_CFLAGS) -Wno-unused-function -I. -o $@ tests/test_suite_http.c $(filter %.o,$^) $(LDLIBS) $(SUITE_MEDIA_LDLIBS)
 .PHONY: test-suite-http
 test-suite-http: tests/test_suite_http
 	./tests/test_suite_http
+
+# Exercise the installed ExMekh wheel and real browser against one existing
+# native server. A missing URL must fail, never turn acceptance into skips.
+.PHONY: test-suite-agent-live
+test-suite-agent-live:
+	@test -n "$(DS4_SUITE_HTTP_URL)" || { echo "Set DS4_SUITE_HTTP_URL to the running native server's /v1 URL" >&2; exit 2; }
+	$(SUITE_PYTHON) -m unittest tests.test_suite_image_tools_e2e tests.test_suite_embedding_tools_e2e -v -f
+	@suite_python="$$($(SUITE_PYTHON) -c 'import sys; print(sys.executable)')"; \
+		cd agent && "$$suite_python" -m pytest -n 0 --no-cov --run-live tests/test_native_image_generation_e2e.py -x
+
 .PHONY: clean-suite-http
 clean-suite-http:
-	rm -f ds4-server-suite tests/test_suite_http
+	rm -f ds4-server-suite tests/test_suite_http tests/probe_suite_phase_server
 clean: clean-suite-http
 tests/test_numeric_lifetime: tests/test_numeric_lifetime.c ds4_numeric.o ds4_resources.o
 	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
 .PHONY: test-numeric-lifetime clean-suite-numeric
 test-numeric-lifetime: tests/test_numeric_lifetime
 	./tests/test_numeric_lifetime
-tests/test_qwen_image_input: tests/test_qwen_image_input.c ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_resources.o ds4_image.o
+tests/test_qwen_image_input: tests/test_qwen_image_input.c ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_weight_cache.o ds4_bundle.o ds4_runtime.o ds4_resources.o ds4_image.o
 	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
 .PHONY: test-qwen-image-input
 test-qwen-image-input: tests/test_qwen_image_input
@@ -1530,7 +1550,7 @@ test-qwen-image-graph: tests/libds4_qwen_image_graph_cpu.so
 	$(SUITE_PYTHON) -m unittest tests.test_qwen_image_graph -v
 ds4_numeric.o: ds4_numeric.c ds4_numeric_internal.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
-ds4_numeric_cuda.o: ds4_numeric_cuda.cu ds4_numeric_internal.h $(SUITE_API_HEADERS)
+ds4_numeric_cuda.o: ds4_numeric_cuda.cu ds4_numeric_internal.h ds4_transfer.h $(SUITE_API_HEADERS)
 	$(NVCC) $(SUITE_NVCCFLAGS) -c -o $@ $<
 ds4_numeric_cudnn.o: ds4_numeric_cudnn.cu ds4_numeric_internal.h $(SUITE_API_HEADERS)
 	$(NVCC) $(SUITE_NVCCFLAGS) -I$(CUDNN_HOME)/include -c -o $@ $<
@@ -1545,7 +1565,7 @@ test-qwen-image-tokenizer: tests/libds4_qwen_image_tokenizer.so
 	$(SUITE_PYTHON) -m unittest tests.test_qwen_image_tokenizer -v
 tests/suite_resources.o: ds4_resources.c ds4_resources.h ds4_runtime.h
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
-tests/libds4_numeric_cuda.so: ds4_numeric.o ds4_numeric_cuda.o ds4_numeric_cudnn.o tests/suite_resources.o
+tests/libds4_numeric_cuda.so: ds4_numeric.o ds4_numeric_cuda.o ds4_numeric_cudnn.o ds4_transfer.o tests/suite_resources.o
 	$(CC) -shared -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
 .PHONY: test-suite-numeric test-suite-numeric-cuda
 test-suite-numeric: tests/libds4_numeric_cpu.so
@@ -1576,8 +1596,25 @@ ds4_bundle.o: ds4_bundle.c ds4_bundle.h ds4_resources.h ds4_runtime.h ds4_sha256
 tests/test_bundle: tests/test_bundle.c ds4_bundle.o ds4_resources.o
 	$(CC) $(CFLAGS) -I. -o $@ $^ $(LDLIBS)
 .PHONY: test-bundle
-test-bundle: tests/test_bundle
+test-bundle: tests/test_bundle tests/test_weight_cache
 	python3 -m unittest tests.test_suite_bundle -v
+
+tests/test_weight_cache: tests/test_weight_cache.c ds4_weight_cache.o ds4_bundle.o ds4_resources.o
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
+tests/test_transfer: tests/test_transfer.c ds4_transfer.o ds4_resources.o
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
+.PHONY: test-transfer
+test-transfer: tests/test_transfer
+	./tests/test_transfer
+test: test-transfer
+.PHONY: test-suite-release
+test-suite-release:
+	$(SUITE_PYTHON) -m unittest tests.test_suite_release -v
+test: test-suite-release
+.PHONY: clean-suite-transfer
+clean-suite-transfer:
+	rm -f tests/test_transfer tests/test_weight_cache
+clean: clean-suite-transfer
 test: test-bundle
 tests/test_executor: tests/test_executor.c ds4_executor.o ds4_resources.o ds4_runtime.o
 	$(CC) $(CFLAGS) -I. -o $@ $^ $(LDLIBS)

@@ -193,12 +193,18 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   HTTP Images/Embeddings/Files, multipart spooled, media/receipt su disco,
   validazione, cancellazione, osservabilità e transazioni sul worker LLM esistente.
   Pubblicazione dopo restore; recovery conserva handle e checkpoint fino al recupero.
+  I ledger estesi sono opt-in (`DS4_SUITE_RESOURCE_METRICS=1`) per conservare
+  risposte tool compatte nei contesti LLM brevi.
 - `config/native-suite.example.json`, `docs/architecture/native-suite-client.md` —
   configurazione locale seriale CUDA ed esempi con un solo client/base URL;
   helper e tool usano width/height interi e nessuna scelta per modello unico.
 - `tests/test_suite_http.c`, `tests/test_suite_http_live.py`,
   `tests/test_suite_exmekh_live.py` — protocollo host, SDK reale sulle quattro
   modalità, retry/editing/disconnessione e conversazione ExMekh con KV riusata.
+- `tests/probe_suite_phase_server.c`, `tools/qualify_suite_disconnects.py` —
+  server di sola qualifica con barriera compilata alle frontiere image;
+  disconnessioni socket reali, ripresa del LLM con cache, owner bounded e
+  nessun output parziale. Il binario ordinario non include la barriera.
 - `tools/record_suite_service_qualification.py`,
   `docs/performance/native-suite-t17-t18-20261022/` — evidenze, hash dei sorgenti,
   binary/wheel, patch riproducibile della dipendenza esterna e limiti T17/T18.
@@ -235,7 +241,30 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   attivazioni effettive, con margine di 64 MiB e accounting nel piano adapter.
   Test a 2048–14461 chiavi e attribuzioni in `third_party/pytorch/`.
 - `ds4_numeric_weights.c/.h` — bridge dei gruppi bundle verso il contesto
-  numerico tramite API pubbliche; il core dei buffer non conosce i modelli.
+  numerico tramite API pubbliche; disponibilità asincrona opt-in senza cambiare
+  il layout ABI v1 del backend. Il core dei buffer non conosce i modelli.
+- `ds4_weight_cache.c/.h`, `tests/test_weight_cache.c` — cache seriale generica
+  con cap in byte, gruppi mantenuti in base alle visite, eviction dopo l'ultimo
+  uso e contatori di payload trasferito; condivisa da encoder, DiT, VAE e Gemma.
+- `ds4_transfer.c/.h`, `tests/test_transfer.c` — coda mmap/host bounded con due
+  slot, worker persistente e protocollo DMA/riuso; accounting di entrambi gli
+  staging, drain recuperabile e trace diagnostica. Binding CUDA nel contesto
+  numerico, separato dal runtime legacy.
+  Le liberazioni CUDA native aggiornano il campione globale del registro
+  condiviso, anche prima della prima allocazione transitoria del LLM.
+- `tools/qualify_suite_release.py`, `tests/test_suite_release.py` — stress
+  HTTP di almeno 50 alternanze dopo warm-up, tool registrati e continuazioni
+  Responses, quattro modalità/interleaving, hash, tempi e owner dopo cleanup.
+- `tools/evaluate_suite_profiles.py`, `config/native-suite-candidates.json` —
+  registro e gate dei candidati numerici; nessuna promozione con dati mancanti,
+  CV instabile, regressioni o profili senza binding nativo.
+- `tools/package_native_suite.py` — pacchetto nativo con indici/asset, codec,
+  dipendenze dichiarate e albero sorgenti per build isolata; rifiuta il rilascio
+  quando un gate obbligatorio non è PASS. Staging temporaneo e pubblicazione
+  atomica evitano directory parziali; i pacchetti di sviluppo sono etichettati.
+- `docs/architecture/native-suite-release.md`,
+  `docs/performance/native-suite-t19-t22-20261022/` — ricette, qualifica,
+  candidati, provenance e limiti residui T19–T22.
 - `ds4_qwen_image_encoder.c/.h`, `ds4_qwen_image_tokenizer.c/.h`,
   `config/qwen-image-encoder.json` — conditioning Qwen3-VL dedicato, tokenizer
   image, padding esplicito, vision/deepstack e output pre-norm finale.
@@ -542,7 +571,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `start-ds4-server.sh`, `agent/start-ds4-server.sh`,
   `agent/start-ds4-server-flash.sh`, `agent/run.sh` —
   launcher eseguibili nativi per server CUDA e frontend ExMekh Agent dalla copia WSL2
-  `/home/daniele/ds4`; il launcher principale mantiene Qwen27 come default e aggiunge il profilo Flash esplicito; i due launcher in `agent/` selezionano rispettivamente Qwen27B e Flash Next, con proiettore corretto e `--print-command`, MTP attivo per entrambi e contesto Flash 64K; il progetto non modifica proxy o firewall Windows.
+  `/home/daniele/ds4`; il launcher principale mantiene Qwen27 come default e aggiunge il profilo Flash esplicito; i due launcher in `agent/` selezionano rispettivamente Qwen27B e Flash Next, con proiettore corretto e `--print-command`, MTP attivo per entrambi e contesto Flash 64K. Il launcher agent Qwen27 avvia `ds4-server-suite`, contesto 26000 e bundle scelti da `DS4_SUITE_CONFIG`, per immagini/embedding sulla stessa URL. `config/native-suite.env.example` documenta i percorsi delle dipendenze native nel file locale ignorato `config/native-suite.env`; il progetto non modifica proxy o firewall Windows.
 - `ds4_cli.c` — eseguibile `ds4`: parsing opzioni, modalità one-shot e REPL,
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
   argomento seleziona il sidecar Qwen auditato; `--mtp FILE` e l'alias
@@ -914,7 +943,27 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   La qualifica numerica resta distinta dai benchmark e dai gate di stato/vision.
 - `tests/test_flash_launcher.py` — esamina i comandi reali dei launcher senza
   modelli: profilo Flash standard/legacy, override, errori di configurazione
-  e isolamento del launcher 27B.
+  e isolamento del launcher 27B, selezione suite e conservazione di contesto/MTP/visione.
+- `tests/test_suite_embedding_tools_e2e.py` — accettazione live della wheel ExMekh:
+  quattro modalità, batch/interleaving, task/dimensioni, audio dei video,
+  ranking reale, cache, errori e ritorno al LLM. `make test-suite-agent-live`
+  unisce queste prove ai tool immagini (inclusa lettura dei pixel generati
+  con history nuova e paesaggio 1024×768) e al browser reale dell'agente.
+- `tests/test_lifecycle_cuda.c` — verifica anche ownership dei buffer visivi
+  ricreati dal payload e tre park/restore entro la capienza device dichiarata;
+  `ds4_session_load_payload` attribuisce ogni allocazione lazy alla sessione.
+  Il servizio libera i pesi Gemma a fine richiesta per lasciare spazio ai futuri
+  transitori del LLM; la conservazione fra richieste richiede un bound completo.
+- `tests/fixtures/native-suite-e2e/`, `tools/build_suite_e2e_video.py` — MP4 H264/AAC
+  sintetico con checksum e provenienza; il generatore offline usa PyAV, i test
+  live consumano la fixture versionata senza dipendenze codec Python.
+- `docs/performance/native-suite-agent-live-20261022.md` e relativo JSON —
+  riproduzione del 404 dell'agente, correzioni di restore/headroom e accettazione
+  di 12 test live consecutivi con Qwen27, MTP, visione e contesto 26000.
+- `docs/performance/native-suite-refactor-review-20261022.md` e relativo JSON —
+  revisione T19–T22: API della cache proprietaria di budget/preload/rilascio,
+  lifetime dello staging, shutdown fallibile e packaging atomico; regressioni
+  negative, sanitizer, suite frontend completa e nuova accettazione live.
 - `tools/qwen_flash_launcher.py` — legge i default dal dry-run del launcher;
   benchmark e qualifica non mantengono copie della configurazione Flash.
 - `tools/qwen_flash_metrics.py`, `tests/test_qwen_flash_tools.py` — confronto

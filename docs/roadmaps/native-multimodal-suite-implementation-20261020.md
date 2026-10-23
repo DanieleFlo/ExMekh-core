@@ -1,6 +1,6 @@
 # Piano di implementazione: suite multimodale nativa DS4
 
-Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13/T14 sono `DONE` nei gate locali del [report T13–T14](../performance/native-suite-t13-t14-20261021/README.md); T15/T16 sono `DONE` nei gate C/CUDA locali del [report T15–T16](../performance/native-suite-t15-t16-20261022/README.md), con rettifica esplicita del riferimento di accumulo T00. T17/T18 sono `DONE` nei gate di servizio/client CUDA locali del [report T17–T18](../performance/native-suite-t17-t18-20261022/README.md); T19–T22 restano `PLANNED`. Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
+Data: 20 ottobre 2026. Stato: `IN_PROGRESS`. T00, T01, T05 e T06 sono `DONE` nei rispettivi gate locali; T02 è implementato e verificato su CUDA single GPU, ma resta aperto per la qualifica degli altri backend. T03/T04 sono `IN_PROGRESS`, con accounting e lifecycle Qwen27 CUDA verificati localmente; T07/T08 sono `DONE` nella qualifica locale CPU/CUDA descritta nel [report T07–T08](../performance/native-suite-t07-t08-20261020/README.md). T09/T10 sono `DONE` nei gate di componente CUDA sm_86 del [report T09–T10](../performance/native-suite-t09-t10-20261021/README.md). T11 è implementato e `IN_PROGRESS` per i gate image; T12 è `DONE` nei gate testuali CUDA sm_86 del [report T11–T12](../performance/native-suite-t11-t12-20261021/README.md); T13/T14 sono `DONE` nei gate locali del [report T13–T14](../performance/native-suite-t13-t14-20261021/README.md); T15/T16 sono `DONE` nei gate C/CUDA locali del [report T15–T16](../performance/native-suite-t15-t16-20261022/README.md), con rettifica esplicita del riferimento di accumulo T00. T17/T18 sono `DONE` nei gate di servizio/client CUDA locali del [report T17–T18](../performance/native-suite-t17-t18-20261022/README.md); T19–T22 sono `IN_PROGRESS`, con streaming bounded e strumenti di qualifica/consegna nel [report T19–T22](../performance/native-suite-t19-t22-20261022/README.md). Evidenze e limiti nei report [T00–T02](../performance/native-suite-t00-20261020/README.md), [T03–T04](../performance/native-suite-t03-t04-20261020/README.md) e [T05–T06](../performance/native-suite-t05-t06-20261020/README.md). T05 qualifica il core generico e l'adapter Qwen27 CUDA; T06 qualifica inventario e caricamento dei bundle BF16, senza promuovere profili quantizzati.
 
 La [analisi architetturale](../architecture/native-multimodal-suite-analysis-20261020.md) contiene requisiti, audit del fork, fonti esterne e motivazioni. Leggerla prima dei task, insieme a `AGENT.md`, `PROJECT_INDEX.md` e al [contratto prestazionale](../performance/agent_performance_contract.md).
 
@@ -417,15 +417,19 @@ alla ricerca web e restano disponibili nell'API tipizzata.
 
 ## 23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo
 
-**Dipendenze:** T05, T07, T11, T16, T17. **Priorità:** alta dopo la baseline seriale. **Stato:** `PLANNED`.
+**Perimetro concordato il 22 ottobre:** completare la consegna funzionale e
+lasciare aperti gli studi di ottimizzazione. T19.5/T19.8, T20.1–T20.5 e T21.6
+restano aperti; nessun profilo alternativo viene promosso senza i propri gate.
 
-- [ ] `T19.1` Implementare coda disco→host bounded, riuso mmap/page cache e staging pinned limitato; niente pinning di tutti i modelli come default.
-- [ ] `T19.2` Implementare copie host→GPU con stream dedicato, eventi di disponibilità/ultimo uso e buffer doppi conteggiati. Il compute aspetta solo il gruppo necessario.
-- [ ] `T19.3` Scegliere dinamicamente DiT interamente residente, insieme residente più gruppi streamed o streaming completo. Non fissare due blocchi per ogni GPU e workload.
-- [ ] `T19.4` Applicare lo stesso contratto ai layer encoder e ai componenti Gemma; ogni adapter dichiara gruppi e visite, senza policy Qwen nel gestore.
+**Dipendenze:** T05, T07, T11, T16, T17. **Priorità:** alta dopo la baseline seriale. **Stato:** `IN_PROGRESS`.
+
+- [x] `T19.1` Implementare coda disco→host bounded, riuso mmap/page cache e staging pinned limitato; niente pinning di tutti i modelli come default.
+- [x] `T19.2` Implementare copie host→GPU con stream dedicato, eventi di disponibilità/ultimo uso e buffer doppi conteggiati. Il compute aspetta solo il gruppo necessario.
+- [x] `T19.3` Scegliere dinamicamente DiT interamente residente, insieme residente più gruppi streamed o streaming completo. Non fissare due blocchi per ogni GPU e workload.
+- [x] `T19.4` Applicare lo stesso contratto ai layer encoder e ai componenti Gemma; ogni adapter dichiara gruppi e visite, senza policy Qwen nel gestore.
 - [ ] `T19.5` Sperimentare wavefront Qwen3-VL→DiT e VAE→LLM solo con riserva per la fase corrente e il restore. Rilasciare gruppi encoder consumati soltanto dopo aver verificato tutti gli usi, inclusi deepstack/output intermedi.
-- [ ] `T19.6` Integrare prefetch CPU anticipato su eventi strutturati di tool registrati o hint espliciti; annullarlo se la call non è completata/validata. Non eseguire né caricare risorse arbitrarie da testo parziale.
-- [ ] `T19.7` Conservare modelli/componenti caldi se compatibili con il ritorno al LLM; applicare costi/isteresi e misure per decidere cosa espellere alla richiesta successiva.
+- [x] `T19.6` Integrare prefetch CPU anticipato su eventi strutturati di tool registrati o hint espliciti; annullarlo se la call non è completata/validata. Non eseguire né caricare risorse arbitrarie da testo parziale.
+- [x] `T19.7` Conservare modelli/componenti caldi se compatibili con il ritorno al LLM; applicare costi/isteresi e misure per decidere cosa espellere alla richiesta successiva.
 - [ ] `T19.8` Misurare seriale vs overlap, resident vs streaming e prima vs successive richieste. Confrontare policy leading/strided soltanto se la trace mostra un vantaggio plausibile.
 
 **Gate di completamento:** resident e streamed rispettano gli stessi gate numerici; zero use-after-free/eventi stale e nessuna crescita di memoria. Caso capiente: zero eviction, zero ritrasferimenti DiT fra passi. Caso streamed: byte realmente trasferiti coerenti col piano. Overlap promosso solo se migliora la latenza totale oltre il rumore e non peggiora il LLM in corso oltre il gate prestazionale.
@@ -434,14 +438,14 @@ alla ricerca web e restano disponibili nell'API tipizzata.
 
 ## 24. T20 — Quantizzazione e ottimizzazioni numeriche misurate
 
-**Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming. **Priorità:** dopo la correttezza nativa. **Stato:** `PLANNED`.
+**Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming. **Priorità:** dopo la correttezza nativa. **Stato:** `IN_PROGRESS`.
 
 - [ ] `T20.1` Valutare encoder Qwen3-VL BF16, Q8/INT8 realmente disponibili e layout misti. Distinguere INT8 storage con compute BF16 da W8A8 Tensor Core; nessun guadagno assunto.
 - [ ] `T20.2` Valutare DiT BF16 e profili GGUF Unsloth sulla schedule Turbo, mantenendo encoder/VAE fissi nel confronto. Separare errore di kernel su pesi quantizzati da qualità rispetto a BF16.
 - [ ] `T20.3` Confrontare sensibilità per tensore con la proposta ultimi 2–4 layer BF16; scegliere solo su dati held-out, includendo tipografia, editing e alpha.
 - [ ] `T20.4` Valutare profili quantizzati Gemma solo con compute BF16/FP32 e gate retrieval per ogni modalità/dimensione; niente fallback FP16 nascosto.
 - [ ] `T20.5` Ottimizzare i soli hotspot provati: fusioni norm/RoPE/gating, proiezioni GEMM, attenzione e VAE/audio. CUDA Graph soltanto per shape e indirizzi stabili, con invalidazione al reload.
-- [ ] `T20.6` Dichiarare fuori dal percorso iniziale step skipping, cache approssimate DiT, KV LLM lossy e dipendenze da istruzioni Hopper/Blackwell. Eventuali ricerche future sono task separati.
+- [x] `T20.6` Dichiarare fuori dal percorso iniziale step skipping, cache approssimate DiT, KV LLM lossy e dipendenze da istruzioni Hopper/Blackwell. Eventuali ricerche future sono task separati.
 
 **Gate di completamento:** ogni candidato ha `KEEP`, `REJECT` o `NEED_MORE_DATA` con fonti e misure. Un profilo viene offerto al client solo con tutti i gate numerici/qualità/performance superati. Non è obbligatorio promuovere ogni ottimizzazione; è obbligatorio consegnare un percorso nativo corretto, la scelta dei profili supportati e i risultati della valutazione richiesta.
 
@@ -449,30 +453,45 @@ alla ricerca web e restano disponibili nell'API tipizzata.
 
 ## 25. T21 — Qualificazione integrata, guasti e regressioni
 
-**Dipendenze:** T17, T18, T19; tutti i profili promossi da T20. **Priorità:** bloccante per la consegna. **Stato:** `PLANNED`.
+**Dipendenze:** T17, T18, T19; tutti i profili promossi da T20. **Priorità:** bloccante per la consegna. **Stato:** `IN_PROGRESS`.
 
 - [ ] `T21.1` Eseguire la matrice funzionale/numerica/memoria dei capitoli successivi, inclusi restore e ripresa agentica su LLM locali qualificati.
-- [ ] `T21.2` Iniettare fallimenti in checkpoint, allocazione, caricamento, decode media, encoder, ogni frontiera DiT/VAE, output e restore. Verificare cancellazione e disconnessione in ciascuna fase.
-- [ ] `T21.3` Eseguire almeno 50 alternanze miste dopo warm-up: LLM → image → LLM → embedding di tutte le modalità → LLM, incluse richieste ripetute e nuove.
-- [ ] `T21.4` Verificare contatori delle allocazioni e risorse per proprietario, file temporanei, handle e cache bounded. Correlare memoria globale con quella posseduta senza attribuire rumore esterno a un leak.
-- [ ] `T21.5` Eseguire suite esistenti pertinenti CPU/CUDA, server, checkpoint, MTP e vision; verificare build/regressioni degli altri backend disponibili. TP/distribuito secondo le regole del repository, senza avviare prove non autorizzate.
+- [x] `T21.2` Iniettare fallimenti in checkpoint, allocazione, caricamento, decode media, encoder, ogni frontiera DiT/VAE, output e restore. Verificare cancellazione e disconnessione in ciascuna fase.
+- [x] `T21.3` Eseguire almeno 50 alternanze miste dopo warm-up: LLM → image → LLM → embedding di tutte le modalità → LLM, incluse richieste ripetute e nuove.
+- [x] `T21.4` Verificare contatori delle allocazioni e risorse per proprietario, file temporanei, handle e cache bounded. Correlare memoria globale con quella posseduta senza attribuire rumore esterno a un leak.
+- [x] `T21.5` Eseguire suite esistenti pertinenti CPU/CUDA, server, checkpoint, MTP e vision; verificare build/regressioni degli altri backend disponibili. TP/distribuito secondo le regole del repository, senza avviare prove non autorizzate.
 - [ ] `T21.6` Congelare benchmark finali con cinque campioni o più dopo warm-up, cold start separato e misure fuori profiler; registrare i risultati instabili senza promuoverli.
 
 **Gate di completamento:** tutti i casi obbligatori sulla piattaforma di rilascio sono `PASS`; nessun `FAIL` o `NOT_VERIFIED` nascosto nel riepilogo. In ogni guasto recuperabile la sessione continua correttamente; nei guasti non recuperabili l'indisponibilità è esplicita e il checkpoint non viene eliminato prematuramente. Regressioni legacy oltre soglia bloccano il rilascio.
 
 **Artefatti:** report JSON/Markdown, trace, manifest binari/modelli e matrice di qualificazione per backend/famiglia.
 
+**Esito locale del 22 ottobre:** 50 alternanze, equivalenza di residenza,
+64 iniezioni alle frontiere native e regressioni CPU/CUDA Qwen27/MTP/vision
+PASS. T21.1 resta aperto per la qualità image T11. T21.2 comprende inoltre
+17 distacchi socket reali: conditioning, estremi DiT/latenti e tutte le
+frontiere VAE nominate, con LLM cached, nessun output parziale e PNG finale
+identico. Ogni layer/passo DiT ha iniezione nativa; non si dichiara un
+distacco socket distinto per ciascuna ripetizione dello stesso layer/passo.
+T21.6 è rinviato su richiesta dell'utente. [Dettagli e limiti](../performance/native-suite-t19-t22-20261022/README.md).
+
 ## 26. T22 — Packaging, documentazione e consegna
 
-**Dipendenze:** T21. **Priorità:** bloccante. **Stato:** `PLANNED`.
+**Dipendenze:** T21. **Priorità:** bloccante. **Stato:** `IN_PROGRESS`.
 
-- [ ] `T22.1` Documentare modelli/profili supportati, download, API standard/estese, limiti e metriche sulla macchina reale. Non presentare stime di memoria come misure.
-- [ ] `T22.2` Documentare dipendenze native per media, build sm_86, assenza di Python runtime e troubleshooting del recupero sessioni.
-- [ ] `T22.3` Aggiornare `PROJECT_INDEX.md`, wiki generata e note di provenienza/licenze; preservare frontend unico e default dei launcher correnti.
-- [ ] `T22.4` Fornire ricette riproducibili per generazione/editing/RGBA, quattro modalità embedding, scenario senza eviction e scenario con checkpoint+reload.
-- [ ] `T22.5` Eseguire build pulita e comandi di accettazione dal pacchetto finale. Elencare separatamente estensioni e backend non qualificati.
+- [x] `T22.1` Documentare modelli/profili supportati, download, API standard/estese, limiti e metriche sulla macchina reale. Non presentare stime di memoria come misure.
+- [x] `T22.2` Documentare dipendenze native per media, build sm_86, assenza di Python runtime e troubleshooting del recupero sessioni.
+- [x] `T22.3` Aggiornare `PROJECT_INDEX.md`, wiki generata e note di provenienza/licenze; preservare frontend unico e default dei launcher correnti.
+- [x] `T22.4` Fornire ricette riproducibili per generazione/editing/RGBA, quattro modalità embedding, scenario senza eviction e scenario con checkpoint+reload.
+- [x] `T22.5` Eseguire build pulita e comandi di accettazione dal pacchetto finale. Elencare separatamente estensioni e backend non qualificati.
 
 **Gate di completamento:** un utilizzatore esegue gli scenari previsti con un solo server e un solo client configurato, senza controllare la memoria manualmente. Ogni funzionalità dichiarata è collegata a una prova riproducibile; nessun worker esterno necessario. Documentazione e indici passano i controlli.
+
+**Consegna locale:** pacchetto nativo di sviluppo, build da sorgenti isolati,
+sette scenari SDK e tool ExMekh con anteprima reale PASS, contesto 2048 invariato;
+zero file temporanei alla chiusura. T22 resta `IN_PROGRESS` per la distribuzione
+completa finché i gate di rilascio T11/T21 non sono chiusi. Il packager rifiuta
+correttamente la promozione a release con gate mancanti.
 
 ## 27. Matrice obbligatoria di memoria e ripristino
 
@@ -541,4 +560,4 @@ Devono essere dimostrati: generazione/editing/RGBA nativi; embedding nativi dell
 
 La matrice dei backend e delle famiglie deve distinguere il supporto architetturale dalla qualificazione sperimentale. Funzioni richieste sul target di rilascio non possono essere omesse con `NOT_VERIFIED`; hardware aggiuntivo non disponibile resta esplicitamente fuori dalla dichiarazione di qualificazione, senza attribuirgli risultati della 3090.
 
-Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing HTTP è ora nel target esplicito ds4-server-suite (T17). Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Gli endpoint Images/Embeddings sono abilitati nel target esplicito T17; T13/T14 aggiungono media/preprocess nativi e vision/video Gemma, con gate e limiti nel report T13–T14. T15/T16 aggiungono encoder audio e composizione completa con piani selettivi, qualificati su C/CUDA sm_86; T17/T18 aggiungono servizio HTTP e integrazione ExMekh con modelli Literal, width/height interi, tool registrati e anteprime persistenti. Restano T19–T22 e i gate qualità T11. Evidenze nei report T07–T08, T09–T10, T11–T12 e T13–T14.
+Aggiornamento di implementazione: T00/T01 e i gate locali T05/T06 completati; runtime T02 e adapter T03/T04 verificati su RTX 3090 single GPU, con le qualifiche residue esplicite nei report. T05 espone planner/executor C e adapter lifecycle; T06 espone bundle pinning, conversione offline e loader mmap nativo. Il wrapper vision legacy conserva il proprio percorso; il routing HTTP è ora nel target esplicito ds4-server-suite (T17). Oracle Qwen/Gemma restano strumenti di sviluppo. T07/T08 aggiungono primitive C/CUDA comuni e conditioning Qwen3-VL dedicato; T09/T10 aggiungono DiT Turbo residente con prefix cache e VAE RGB/RGBA completo/tiled, qualificati su sm_86 in API C seriali. T11/T12 implementano la pipeline image seriale con ammissione completa, cache host/device e backbone Gemma testuale, con gate e limiti nel report T11–T12. Gli endpoint Images/Embeddings sono abilitati nel target esplicito T17; T13/T14 aggiungono media/preprocess nativi e vision/video Gemma, con gate e limiti nel report T13–T14. T15/T16 aggiungono encoder audio e composizione completa con piani selettivi, qualificati su C/CUDA sm_86; T17/T18 aggiungono servizio HTTP e integrazione ExMekh con modelli Literal, width/height interi, tool registrati e anteprime persistenti. T19 aggiunge streaming bounded e mantenimento adattivo; T21/T22 aggiungono stress, recupero e pacchetto nativo locale. Restano aperti gli studi di ottimizzazione, la qualifica estesa e i gate qualità T11, come documentato nel report T19–T22. Evidenze nei report T07–T08, T09–T10, T11–T12 e T13–T14.

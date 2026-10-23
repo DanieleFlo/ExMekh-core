@@ -11,6 +11,7 @@ extern "C" {
 #define DS4_WEIGHT_MAX_DIMS 8u
 typedef struct ds4_bundle ds4_bundle;
 typedef struct ds4_weight_group ds4_weight_group;
+typedef struct ds4_bundle_hint ds4_bundle_hint;
 typedef struct {
     const char *name;
     uint32_t file, component, group, type, rank, block_elements, block_bytes, alignment;
@@ -38,6 +39,12 @@ const void *ds4_bundle_file_data(const ds4_bundle *, size_t);
 ds4_status ds4_bundle_validate_component(const ds4_bundle *, size_t component,
         const ds4_weight_tensor *expected, size_t count);
 int ds4_bundle_dump(const ds4_bundle *, FILE *);
+/* Explicit, cancellable CPU/page-cache hint on an already verified bundle.
+ * No paths or partial generated tool text are accepted. The byte bound is
+ * advisory I/O, not a promise of resident RAM. close drains before unmapping. */
+ds4_status ds4_bundle_hint_start(ds4_bundle_hint **, ds4_bundle *, uint32_t component,
+                                 uint64_t max_bytes);
+ds4_status ds4_bundle_hint_close(ds4_bundle_hint *);
 
 /* Backend allocation is responsible for resource accounting. Original mapped
  * bytes are authoritative and never dequantized by the loader. */
@@ -48,6 +55,9 @@ typedef struct {
     ds4_status (*quiesce)(void *);
     ds4_status (*release)(void *, void *);
 } ds4_weight_backend;
+/* Optional availability barrier for newly created, unloaded groups. Keeps the
+ * v1 backend layout intact. quiesce still drains last use/failed uploads. */
+ds4_status ds4_weight_group_availability(ds4_weight_group *, ds4_status (*ready)(void *));
 ds4_status ds4_weight_group_create(ds4_weight_group **, ds4_bundle *, uint32_t component,
                                   uint32_t group, const ds4_weight_backend *);
 /* Architecture-defined execution groups may split an offline storage group.
@@ -56,6 +66,7 @@ ds4_status ds4_weight_group_create(ds4_weight_group **, ds4_bundle *, uint32_t c
 ds4_status ds4_weight_group_create_selected(ds4_weight_group **, ds4_bundle *, uint32_t component,
         const size_t *tensor_indices, size_t count, const ds4_weight_backend *);
 uint64_t ds4_weight_group_bytes(const ds4_weight_group *);
+uint64_t ds4_weight_group_payload(const ds4_weight_group *);
 bool ds4_weight_group_resident(const ds4_weight_group *);
 ds4_status ds4_weight_group_load(ds4_weight_group *);
 ds4_status ds4_weight_group_release(ds4_weight_group *);

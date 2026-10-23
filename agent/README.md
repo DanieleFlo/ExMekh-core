@@ -101,6 +101,16 @@ set `UV_BIN=/path/to/uv` to choose another executable.
 
 ## Starting the Frontend
 
+Start `./agent/start-ds4-server.sh` for Qwen27 and the native Images/Embeddings
+endpoints on the same `http://localhost:8080/v1` URL. It builds and runs
+`ds4-server-suite` with `config/native-suite.example.json`, keeping context
+26000, MTP and the matching vision encoder. Set `DS4_SUITE_CONFIG` to use your
+own bundle configuration. Configure installed native libraries in
+`config/native-suite.env` using `config/native-suite.env.example`; the
+[native suite guide](../docs/architecture/native-suite-release.md) describes
+the offline model and dependency preparation. An LLM-only `ds4-server` returns
+`404 unknown endpoint` when the image tool calls `/v1/images/generations`.
+
 For Qwen Flash CUDA, start `./agent/start-ds4-server-flash.sh` from the repository
 root. Its standard profile enables the qualified expert ring, explicit KV
 streaming with 32768 resident cells, CUDA decode graphs/ranking and prefill

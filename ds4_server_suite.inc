@@ -282,13 +282,17 @@ struct suite_operation {
     ds4_execution_step step;
     ds4_execution_variant variant;
     ds4_execution_request request;
+    ds4_bundle_hint *hint;
     uint32_t dimensions;
     bool media_decode_error;
     double load_seconds[3], phase_seconds[4];
     uint64_t media_tokens[3];
 };
 static ds4_status suite_operation_close(suite_operation *o) {
-    ds4_status s = ds4_qwen_image_job_close(o->image);
+    ds4_status s = ds4_bundle_hint_close(o->hint);
+    if (s) return s;
+    o->hint = NULL;
+    s = ds4_qwen_image_job_close(o->image);
     if (s) return s;
     o->image = NULL;
     s = ds4_execution_close(o->execution);

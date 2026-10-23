@@ -83,6 +83,8 @@ typedef struct {
   bool cancel;
   const char *cancel_stage;
   uint32_t phase;
+  uint32_t target_layer;
+  bool match_layer, inference_error;
 } observer;
 static int save(const char *directory, const char *name, const void *data,
                 size_t bytes) {
@@ -98,8 +100,11 @@ static bool cancelled(void *p) { return ((observer *)p)->cancel; }
 static ds4_status trace(void *p, const char *stage, uint32_t layer,
                         ds4_num_view v) {
   observer *o = p;
-  if (o->cancel_stage && !strcmp(stage, o->cancel_stage))
+  if (o->cancel_stage && !strcmp(stage, o->cancel_stage) &&
+      (!o->match_layer || layer == o->target_layer)) {
+    if (o->inference_error) return DS4_STATUS_INFERENCE;
     o->cancel = true;
+  }
   if (!strcmp(stage, "latent") && o->out) {
     char name[128];
     snprintf(name, sizeof(name), "latent-%u.f32", layer);
@@ -176,6 +181,19 @@ static int write_report(const char *out, const ds4_qwen_image_report *r,
                   r->recipe_version, r->rng_version, r->model_revision,
                   r->reference_resolution);
   const uint8_t *hashes[] = {r->prompt_sha256, r->noise_sha256};
+  uint64_t h2d, d2h;
+  ds4_numeric_transfers(n, &h2d, &d2h);
+  len += snprintf(json + len, sizeof(json) - len, ",\"h2d_bytes\":%llu,\"d2h_bytes\":%llu,\"weight_groups\":[",
+                  (unsigned long long)h2d, (unsigned long long)d2h);
+  for (unsigned i = 0; i < 3; i++) {
+    const ds4_weight_budget *w = r->weights + i;
+    len += snprintf(json + len, sizeof(json) - len,
+        "%s{\"limit\":%llu,\"loads\":%llu,\"hits\":%llu,\"evictions\":%llu,\"payload_h2d\":%llu}",
+        i ? "," : "", (unsigned long long)w->limit, (unsigned long long)w->loads,
+        (unsigned long long)w->hits, (unsigned long long)w->evictions,
+        (unsigned long long)w->transferred);
+  }
+  len += snprintf(json + len, sizeof(json) - len, "]");
   const char *names[] = {"prompt_sha256", "noise_sha256"};
   for (uint32_t i = 0; i < 2; i++) {
     len += snprintf(json + len, sizeof(json) - len, ",\"%s\":\"", names[i]);
@@ -236,6 +254,65 @@ static ds4_status restore_victim(void *p) {
   return ds4_resource_register(v->rs, &spec, &v->allocation);
 }
 static void discard(void *p) { (void)p; }
+static int phase_faults(ds4_qwen_image_pipeline *pipeline, ds4_numeric *num,
+                        const fixture *f, const char *directory) {
+  char path[4096];
+  snprintf(path, sizeof(path), "%s/faults.jsonl", directory);
+  FILE *log = fopen(path, "w");
+  if (!log) return 1;
+  const char *stages[] = {"conditioning", "block", "latent", "encoder", "decoder", "posterior", "encoded"};
+  const uint32_t counts[] = {1, 32, 8, 6, 6, 1, 1};
+  for (unsigned failure = 0; failure < 2; failure++) {
+    for (unsigned stage = 0; stage < sizeof(counts) / sizeof(*counts); stage++) {
+      if (!f->request.reference_count && (stage == 3 || stage >= 5)) continue;
+      for (unsigned layer = 0; layer < counts[stage]; layer++) {
+        if ((stage == 3 || stage == 4) && layer == 4) continue;
+        /* Cancellation covers every boundary. Inference-error injection uses
+         * both ends of each phase; host executor tests cover allocation,
+         * checkpoint, output and restore failures independently. */
+        if (failure && layer && layer + 1 < counts[stage]) continue;
+        observer state = {.num = num, .cancel_stage = stages[stage], .target_layer = layer,
+                          .match_layer = true, .inference_error = failure != 0};
+        ds4_qwen_image_observer obs = {&state, cancelled, trace};
+        ds4_qwen_image_job *job = NULL;
+        ds4_qwen_image_rgba *result = NULL;
+        CHECK(ds4_qwen_image_job_create(&job, pipeline, &f->request, NULL, 0, &obs));
+        ds4_status actual = ds4_qwen_image_job_run(job);
+        ds4_status expected = failure ? DS4_STATUS_INFERENCE : DS4_STATUS_CANCELLED;
+        assert(actual == expected);
+        assert(ds4_qwen_image_job_take(job, &result) == DS4_STATUS_NOT_READY && !result);
+        CHECK(ds4_qwen_image_job_close(job));
+        CHECK(ds4_numeric_recover(num));
+        ds4_resource_totals totals;
+        ds4_resources_totals(ds4_numeric_resources(num, NULL), 0, &totals);
+        for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++) assert(!totals.reserved[i]);
+        fprintf(log, "{\"stage\":\"%s\",\"layer\":%u,\"status\":%u,\"reservations_zero\":true}\n", stages[stage], layer, actual);
+        fflush(log);
+        printf("fault %s/%u status=%u PASS\n", stages[stage], layer, actual); fflush(stdout);
+      }
+    }
+  }
+  assert(!fclose(log));
+  ds4_qwen_image_job *job = NULL;
+  ds4_qwen_image_rgba *result = NULL;
+  CHECK(ds4_qwen_image_job_create(&job, pipeline, &f->request, NULL, 0, NULL));
+  CHECK(ds4_qwen_image_job_run(job));
+  CHECK(ds4_qwen_image_job_take(job, &result));
+  ds4_qwen_image_rgba_view image = ds4_qwen_image_rgba_data(result);
+  snprintf(path, sizeof(path), "%s/case-0/rgba.f32", directory);
+  FILE *baseline = fopen(path, "rb"); assert(baseline);
+  uint8_t chunk[65536];
+  uint64_t bytes = (uint64_t)image.width * image.height * 16;
+  for (uint64_t at = 0; at < bytes;) {
+    size_t n = bytes - at < sizeof(chunk) ? bytes - at : sizeof(chunk);
+    assert(fread(chunk, 1, n, baseline) == n && !memcmp(chunk, (const char *)image.pixels + at, n));
+    at += n;
+  }
+  assert(fgetc(baseline) == EOF && !fclose(baseline));
+  CHECK(ds4_qwen_image_job_close(job)); ds4_qwen_image_rgba_free(result);
+  puts("phase fault recovery: bit-exact output PASS");
+  return 0;
+}
 int main(int argc, char **argv) {
   if (argc < 6)
     return 2;
@@ -246,6 +323,13 @@ int main(int argc, char **argv) {
   ds4_qwen_image_pipeline *pipeline = NULL;
   CHECK(ds4_resources_create(&rs));
   CHECK(ds4_runtime_create(&rt, NULL, NULL));
+  const char *pinned = getenv("DS4_SUITE_PINNED_LIMIT");
+  if (pinned) {
+    char *end;
+    ds4_resource_budget host_budget = {.limit = strtoull(pinned, &end, 10)};
+    if (!*pinned || *end) return 2;
+    CHECK(ds4_resources_set_budget(rs, DS4_MEMORY_PINNED, &host_budget));
+  }
   CHECK(ds4_numeric_cuda(&n, rs, 200));
   uint64_t baseline, peak;
   ds4_numeric_memory(n, &baseline, &peak);
@@ -336,6 +420,10 @@ int main(int argc, char **argv) {
     } else
       free_fixture(&f);
   }
+  if (getenv("DS4_SUITE_PHASE_FAULTS")) {
+    if (phase_faults(pipeline, n, &first, argv[4])) return 1;
+    goto finish;
+  }
   if (getenv("DS4_SUITE_PLAN_ONLY") || getenv("DS4_SUITE_CASES_ONLY"))
     goto finish;
   if (getenv("DS4_SUITE_REPEATS")) {
@@ -361,6 +449,7 @@ int main(int argc, char **argv) {
     if (!save(argv[4], "timings.f64", samples, repeats * sizeof(double)))
       return 1;
   }
+  if (getenv("DS4_SUITE_BENCH_ONLY")) goto finish;
   /* Invalid/unsupported requests and admission rejection cannot touch GPU
    * compute or publish a result. Restoration failure keeps the job alive. */
   ds4_qwen_image_job *j = NULL;
@@ -451,7 +540,10 @@ int main(int argc, char **argv) {
   CHECK(ds4_qwen_image_job_create(&j, pipeline, &first.request, &descriptor, 1,
                                   NULL));
   ds4_resource_budget constrained = budget;
-  constrained.limit = 20ull << 30;
+  /* T19 can stream without evicting an 8 GiB victim under the old 20 GiB
+   * budget. Force less than its remaining largest-group minimum, while
+   * retaining enough capacity for the explicit 8 GiB restore itself. */
+  constrained.limit = (8ull << 30) + (512ull << 20);
   CHECK(ds4_resources_set_budget(rs, DS4_MEMORY_DEVICE, &constrained));
   assert(ds4_qwen_image_job_run(j) == DS4_STATUS_RESTORE);
   ds4_execution_recovery recovery;
@@ -476,8 +568,12 @@ finish:
   CHECK(ds4_numeric_close(n));
   ds4_runtime_release(rt);
   CHECK(ds4_resources_close(rs));
-  if (getenv("DS4_SUITE_PLAN_ONLY"))
+  if (getenv("DS4_SUITE_PHASE_FAULTS"))
+    fprintf(stdout, "pipeline: PASS phase faults, bit-exact recovery and lifetime peak=%llu\n", (unsigned long long)peak);
+  else if (getenv("DS4_SUITE_PLAN_ONLY"))
     fprintf(stdout, "pipeline: admission recorded, inference not run\n");
+  else if (getenv("DS4_SUITE_BENCH_ONLY"))
+    fprintf(stdout, "pipeline: benchmark/lifetime completed\n");
   else if (getenv("DS4_SUITE_CASES_ONLY"))
     fprintf(stdout,
             "pipeline: cases/lifetime completed; fault matrix not run\n");

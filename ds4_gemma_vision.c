@@ -28,6 +28,7 @@ struct ds4_gemma_vision {
   size_t positions;
   binding bindings[256];
   ds4_weight_group *groups[GROUPS];
+  ds4_weight_cache cache;
   float rope[16];
   ds4_host_buffer account;
 };
@@ -36,15 +37,7 @@ struct ds4_gemma_visual_features {
   ds4_host_buffer account, tokens, counts;
 };
 uint64_t ds4_gemma_vision_resident_weights(const ds4_gemma_vision *e) {
-  uint64_t bytes = 0;
-  if (!e)
-    return 0;
-  for (unsigned i = 0; i < GROUPS; i++) {
-    uint64_t n = ds4_weight_group_bytes(e->groups[i]);
-    if (ds4_weight_group_resident(e->groups[i]))
-      bytes += n;
-  }
-  return bytes;
+  return e ? ds4_weight_cache_resident(&e->cache) : 0;
 }
 typedef struct {
   ds4_numeric *num;
@@ -111,7 +104,7 @@ static ds4_status weight(ds4_gemma_vision *e, const char *name,
     if (strcmp(t->name, name))
       continue;
     ds4_weight_group *g = e->groups[e->bindings[i].group];
-    ds4_status s = ds4_weight_group_load(g);
+    ds4_status s = ds4_weight_cache_acquire(&e->cache, e->bindings[i].group);
     const void *storage;
     uint64_t off;
     if (!s)
@@ -169,6 +162,11 @@ static ds4_status observe_batch(ds4_gemma_vision *e,
 static ds4_status activate(void *opaque) {
   return ds4_numeric_fence(((ds4_gemma_vision *)opaque)->num);
 }
+ds4_status ds4_gemma_vision_weights(ds4_gemma_vision *e, uint64_t limit,
+                                    ds4_weight_budget *out) {
+  return e ? ds4_weight_cache_configure(&e->cache, e->model, limit, out)
+           : DS4_STATUS_INVALID;
+}
 ds4_status ds4_gemma_vision_release_weights(ds4_gemma_vision *e) {
   if (!e)
     return DS4_STATUS_INVALID;
@@ -176,8 +174,7 @@ ds4_status ds4_gemma_vision_release_weights(ds4_gemma_vision *e) {
   ds4_status s = ds4_runtime_model_enter_exclusive(e->model, &scope);
   if (s)
     return s;
-  for (uint32_t i = 0; i < GROUPS && !s; i++)
-    s = ds4_weight_group_release(e->groups[i]);
+  s = ds4_weight_cache_release(&e->cache);
   ds4_runtime_scope_leave(&scope);
   return s;
 }
@@ -281,16 +278,16 @@ ds4_status ds4_gemma_vision_open(ds4_gemma_vision **out, ds4_bundle *b,
     status = DS4_STATUS_UNSUPPORTED;
     goto cleanup;
   }
-  ds4_weight_backend backend = ds4_numeric_weight_backend(n);
   for (uint32_t g = 0; g < GROUPS; g++) {
     size_t indices[256], used = 0;
     for (uint32_t j = 0; j < e->count; j++)
       if (e->bindings[j].group == g && e->bindings[j].index != e->positions)
         indices[used++] = e->bindings[j].index;
-    TRY(ds4_weight_group_create_selected(e->groups + g, b,
+    TRY(ds4_numeric_weight_group_selected(e->groups + g, b,
                                          g == 17 ? e->projection : e->vision,
-                                         indices, used, &backend));
+                                         indices, used, n));
   }
+  TRY(ds4_weight_cache_init(&e->cache, e->groups, GROUPS));
   ds4_runtime_descriptor descriptor = {DS4_SUITE_ABI,
                                        ds4_bundle_model(b),
                                        ds4_bundle_revision(b),
@@ -329,9 +326,7 @@ ds4_status ds4_gemma_vision_estimate(ds4_gemma_vision *e,
       12ull * v.max_patches * v.max_patches * 2 <= 128ull * 1024 * 1024)
     out->device_bytes += (uint64_t)v.frames * (v.max_patches - 256) * 12 *
                          (v.max_patches + 64) * 2;
-  for (uint32_t i = 0; i < GROUPS; i++)
-    if (!ds4_weight_group_resident(e->groups[i]))
-      out->device_bytes += ds4_weight_group_bytes(e->groups[i]);
+  out->device_bytes += ds4_weight_cache_missing(&e->cache);
   return DS4_STATUS_OK;
 }
 static ds4_status rotary(ds4_gemma_vision *e, ds4_num_view out,

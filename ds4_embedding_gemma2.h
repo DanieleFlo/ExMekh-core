@@ -1,11 +1,14 @@
 #ifndef DS4_EMBEDDING_GEMMA2_H
 #define DS4_EMBEDDING_GEMMA2_H
+#include "ds4_numeric_weights.h"
 #include "ds4_bundle.h"
 #include "ds4_numeric.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
 typedef struct ds4_embedding_gemma2 ds4_embedding_gemma2;
+ds4_status ds4_embedding_gemma2_weights(ds4_embedding_gemma2 *, uint64_t limit,
+                                        ds4_weight_budget *);
 typedef struct ds4_gemma_input ds4_gemma_input;
 typedef struct ds4_gemma_result ds4_gemma_result;
 enum {

@@ -2,6 +2,7 @@
  * online softmax: FlashAttention/llama.cpp, independently implemented here.
  * No legacy LLM kernels, global quality flags or offset caches are changed. */
 #include "ds4_numeric_internal.h"
+#include "ds4_transfer.h"
 #include <cublasLt.h>
 #include <cublas_v2.h>
 #include <cuda_bf16.h>
@@ -11,6 +12,10 @@
 
 typedef struct {
   cudaStream_t stream;
+  cudaStream_t copy_stream;
+  cudaEvent_t copied[2], available;
+  bool pending[2];
+  ds4_transfer *transfer;
   cublasHandle_t blas;
   cublasLtHandle_t lt;
   ds4_numeric *context;
@@ -48,11 +53,61 @@ static ds4_status gpu_allocate(void *p, uint64_t n, void **out) {
   return status(cudaMalloc(out, n));
 }
 static ds4_status gpu_release(void *p, void *storage) {
-  (void)p;
-  return status(cudaFree(storage));
+  numeric_cuda *s = (numeric_cuda *)p;
+  ds4_status st = status(cudaFree(storage));
+  if (!st) {
+    /* The legacy allocator shares this registry and samples global free
+     * memory while suite tensors are alive. A native free must refresh that
+     * sample too, or a later lazy LLM allocation can see a stale zero budget. */
+    size_t available = 0, total = 0;
+    if (cudaMemGetInfo(&available, &total) == cudaSuccess)
+      ds4_resources_reconcile(s->context->resources, DS4_MEMORY_DEVICE, available, true);
+  }
+  return st;
 }
 static ds4_status gpu_fence(void *p) {
-  return status(cudaStreamSynchronize(((numeric_cuda *)p)->stream));
+  numeric_cuda *s = (numeric_cuda *)p;
+  ds4_status st = s->copy_stream ? status(cudaStreamSynchronize(s->copy_stream)) : DS4_STATUS_OK;
+  return st ? st : status(cudaStreamSynchronize(s->stream));
+}
+static ds4_status host_allocate(void *p, uint64_t n, void **out) {
+  (void)p;
+  return status(cudaHostAlloc(out, n, cudaHostAllocDefault));
+}
+static void host_release(void *p, void *storage) {
+  (void)p;
+  cudaFreeHost(storage);
+}
+static ds4_status copy_wait(void *p, unsigned slot) {
+  numeric_cuda *s = (numeric_cuda *)p;
+  ds4_status st = s->pending[slot] ? status(cudaEventSynchronize(s->copied[slot])) : DS4_STATUS_OK;
+  if (!st) s->pending[slot] = false;
+  return st;
+}
+static ds4_status copy_submit(void *p, unsigned slot, void *out, const void *in, uint64_t n) {
+  numeric_cuda *s = (numeric_cuda *)p;
+  ds4_status st = status(cudaMemcpyAsync(out, in, n, cudaMemcpyHostToDevice, s->copy_stream));
+  if (!st) st = status(cudaEventRecord(s->copied[slot], s->copy_stream));
+  if (!st) s->pending[slot] = true;
+  /* A failed event record still owns an enqueued DMA. Drain before the host
+   * slot can be reused, even though no usable event was published. */
+  else cudaStreamSynchronize(s->copy_stream);
+  return st;
+}
+static ds4_status copy_publish(void *p) {
+  numeric_cuda *s = (numeric_cuda *)p;
+  ds4_status st = status(cudaEventRecord(s->available, s->copy_stream));
+  return st ? st : status(cudaStreamWaitEvent(s->stream, s->available, 0));
+}
+static ds4_status gpu_weight_copy(void *p, void *out, const void *in, uint64_t n) {
+  numeric_cuda *s = (numeric_cuda *)p;
+  if (s->transfer) return ds4_transfer_write(s->transfer, out, in, n);
+  ds4_status st = status(cudaMemcpyAsync(out, in, n, cudaMemcpyHostToDevice, s->stream));
+  return st ? st : gpu_fence(p);
+}
+static ds4_status gpu_weight_ready(void *p) {
+  numeric_cuda *s = (numeric_cuda *)p;
+  return s->transfer ? ds4_transfer_publish(s->transfer) : gpu_fence(p);
 }
 static ds4_status gpu_copy(void *p, void *out, const void *in, uint64_t n,
                            int kind) {
@@ -64,8 +119,17 @@ static ds4_status gpu_copy(void *p, void *out, const void *in, uint64_t n,
   /* Host bytes may be temporary. Complete transfers before returning. */
   return s ? s : gpu_fence(p);
 }
+static ds4_status gpu_prepare_close(void *p) {
+  numeric_cuda *s = (numeric_cuda *)p;
+  ds4_status st = ds4_transfer_close(s->transfer);
+  if (!st) s->transfer = NULL;
+  return st;
+}
 static void gpu_close(void *p) {
   numeric_cuda *s = (numeric_cuda *)p;
+  for (unsigned i = 0; i < 2; i++) if (s->copied[i]) cudaEventDestroy(s->copied[i]);
+  if (s->available) cudaEventDestroy(s->available);
+  if (s->copy_stream) cudaStreamDestroy(s->copy_stream);
   if (s->workspace)
     cudaFree(s->workspace);
   if (s->workspace_account)
@@ -1151,7 +1215,8 @@ static const ds4_numeric_ops gpu_ops = {
     gpu_allocate,     gpu_release,    gpu_copy,       gpu_fence,   gpu_close,
     gpu_linear,       gpu_norm,       gpu_point,      gpu_rope,    gpu_attend,
     gpu_conv,         gpu_reorder,    gpu_pool,       gpu_nearest, gpu_softmax,
-    gpu_matmul_batch, gpu_channel_l2, gpu_channel_rms};
+    gpu_matmul_batch, gpu_channel_l2, gpu_channel_rms, gpu_weight_copy, gpu_weight_ready,
+    gpu_prepare_close};
 extern "C" ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r,
                                        uint64_t owner) {
   if (!out)
@@ -1224,6 +1289,26 @@ extern "C" ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r,
     } else {
       s->context->backend_bytes = bytes;
       s->context->peak_bytes = bytes;
+    }
+  }
+  if (!st && !getenv("DS4_SUITE_TRANSFER_SYNC")) {
+    uint64_t available = 0;
+    st = ds4_resources_available(r, DS4_MEMORY_PINNED, &available);
+    uint64_t slot = available / 2;
+    if (slot > (2u << 20)) slot = 2u << 20;
+    /* Low pinned budgets retain the bounded mmap/synchronous path. No
+     * fallback changes the stored dtype or arithmetic. */
+    if (!st && slot >= 65536) {
+      st = status(cudaStreamCreateWithFlags(&s->copy_stream, cudaStreamNonBlocking));
+      for (unsigned i = 0; i < 2 && !st; i++)
+        st = status(cudaEventCreateWithFlags(s->copied + i, cudaEventDisableTiming));
+      if (!st) st = status(cudaEventCreateWithFlags(&s->available, cudaEventDisableTiming));
+      ds4_transfer_ops ops = {s, host_allocate, host_release, copy_submit, copy_wait, copy_publish};
+      if (!st) st = ds4_transfer_create(&s->transfer, r, owner, slot, DS4_MEMORY_PINNED, &ops);
+    }
+    if (st) {
+      ds4_numeric_close(*out);
+      *out = NULL;
     }
   }
   return st;

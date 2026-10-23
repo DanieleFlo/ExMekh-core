@@ -1205,43 +1205,97 @@
               "title": "Servizio e client multimodale nativo",
               "level": 1,
               "start": 1,
-              "end": 147,
+              "end": 177,
               "summary": "Implementazione T17/T18 del 22 ottobre 2026."
             },
             {
               "title": "Avvio",
               "level": 2,
               "start": 8,
-              "end": 30,
-              "summary": "`ds4-server-suite` è un target esplicito."
+              "end": 31,
+              "summary": "`ds4-server-suite` è un target esplicito, selezionato dal launcher Qwen27"
             },
             {
               "title": "SDK standard",
               "level": 2,
-              "start": 31,
-              "end": 63,
+              "start": 32,
+              "end": 64,
               "summary": "Un solo client e una sola base URL servono chat, immagini ed embedding:"
             },
             {
               "title": "Client tipizzato ExMekh",
               "level": 2,
-              "start": 64,
-              "end": 96,
+              "start": 65,
+              "end": 97,
               "summary": "`Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`."
             },
             {
               "title": "Tool e frontend",
               "level": 2,
-              "start": 97,
-              "end": 120,
+              "start": 98,
+              "end": 121,
               "summary": "`generate-image` è la capability registrata nel catalogo ExMekh."
+            },
+            {
+              "title": "Accettazione live della libreria e del frontend",
+              "level": 2,
+              "start": 122,
+              "end": 150,
+              "summary": "La suite completa usa la wheel installata nell'agente e un solo server reale,"
             },
             {
               "title": "Lifetime e osservabilità",
               "level": 2,
-              "start": 121,
-              "end": 147,
+              "start": 151,
+              "end": 177,
               "summary": "Discovery espone revision/profilo, configured/resident/ready, componenti e limiti."
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/native-suite-release.md",
+          "sections": [
+            {
+              "title": "Suite nativa: build, streaming e accettazione",
+              "level": 1,
+              "start": 1,
+              "end": 236,
+              "summary": "La suite usa un server C/CUDA e un client configurato con una sola base URL."
+            },
+            {
+              "title": "Modelli e profili",
+              "level": 2,
+              "start": 13,
+              "end": 29,
+              "summary": "Revisioni, dimensioni e SHA-256 sono nei manifest"
+            },
+            {
+              "title": "Preparazione offline e build",
+              "level": 2,
+              "start": 30,
+              "end": 87,
+              "summary": "Scaricare solo gli artefatti del manifest esplicito; il downloader verifica"
+            },
+            {
+              "title": "Policy e misure",
+              "level": 2,
+              "start": 88,
+              "end": 146,
+              "summary": "Il planner valuta l'intera operazione, incluso il ritorno al LLM."
+            },
+            {
+              "title": "Ricette e accettazione",
+              "level": 2,
+              "start": 147,
+              "end": 190,
+              "summary": "La guida client contiene generazione, editing,"
+            },
+            {
+              "title": "Pacchetto e recupero",
+              "level": 2,
+              "start": 191,
+              "end": 236,
+              "summary": "`tools/package_native_suite.py` copia eseguibile, codec nativi, indici,"
             }
           ]
         },
@@ -2867,49 +2921,49 @@
               "title": "ExMekh Agent",
               "level": 1,
               "start": 1,
-              "end": 176,
+              "end": 182,
               "summary": "L'agente del progetto e il frontend NiceGUI in `agent/`."
             },
             {
               "title": "Avvio in WSL / Linux",
               "level": 2,
               "start": 8,
-              "end": 31,
+              "end": 37,
               "summary": "Da root, avviare il server in un terminale:"
             },
             {
               "title": "Configurazione e stato",
               "level": 2,
-              "start": 32,
-              "end": 48,
+              "start": 38,
+              "end": 54,
               "summary": "Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider."
             },
             {
               "title": "Modifica dei messaggi",
               "level": 2,
-              "start": 49,
-              "end": 76,
+              "start": 55,
+              "end": 82,
               "summary": "Il pulsante con la matita compare accanto a quello di copia quando si passa"
             },
             {
               "title": "Confini dell'integrazione",
               "level": 2,
-              "start": 77,
-              "end": 96,
+              "start": 83,
+              "end": 102,
               "summary": "ExMekh-Lib possiede i messaggi e il risultato dell'esecuzione dei tool."
             },
             {
               "title": "Dipendenza ExMekh-Lib",
               "level": 2,
-              "start": 97,
-              "end": 148,
+              "start": 103,
+              "end": 154,
               "summary": "`agent/pyproject.toml` installa ExMekh-Lib dalla wheel versionata in `agent/wheels/`."
             },
             {
               "title": "Verifica",
               "level": 2,
-              "start": 149,
-              "end": 176,
+              "start": 155,
+              "end": 182,
               "summary": "Da `agent/`:"
             }
           ]
@@ -3105,6 +3159,72 @@
               "start": 123,
               "end": 137,
               "summary": "Il primo tentativo MTP usava `--batched-session 1`: il runtime disabilitava MTP."
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/native-suite-agent-live-20261022.md",
+          "sections": [
+            {
+              "title": "Suite nativa nell'agente: launcher e accettazione live",
+              "level": 1,
+              "start": 1,
+              "end": 55,
+              "summary": "La chat di generazione immagini restituiva `404 unknown endpoint`: il launcher"
+            },
+            {
+              "title": "Correzioni emerse dai test",
+              "level": 2,
+              "start": 14,
+              "end": 28,
+              "summary": "Il caricamento di un payload multimodale creava il buffer RoPE visivo con"
+            },
+            {
+              "title": "Scenari verificati",
+              "level": 2,
+              "start": 29,
+              "end": 47,
+              "summary": "Le fixture di ricerca sono locali."
+            },
+            {
+              "title": "Riproduzione",
+              "level": 2,
+              "start": 48,
+              "end": 55,
+              "summary": "Preparare i bundle e le dipendenze secondo la"
+            },
+            {
+              "title": "In un altro terminale, dopo il log listening:",
+              "level": 1,
+              "start": 56,
+              "end": 74,
+              "summary": "DS4_SUITE_HTTP_URL=http://127.0.0.1:8080/v1 \\"
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/native-suite-refactor-review-20261022.md",
+          "sections": [
+            {
+              "title": "Revisione clean code T19–T22 e integrazione multimodale",
+              "level": 1,
+              "start": 1,
+              "end": 72,
+              "summary": "Revisione del 22–23 ottobre 2026 delle modifiche native, dei launcher, del"
+            },
+            {
+              "title": "Responsabilità e comportamenti corretti",
+              "level": 2,
+              "start": 8,
+              "end": 31,
+              "summary": "I test della cache leggono lo snapshot pubblico."
+            },
+            {
+              "title": "Verifiche",
+              "level": 2,
+              "start": 32,
+              "end": 72,
+              "summary": "Risultati e hash della nuova esecuzione sono registrati nel"
             }
           ]
         },
@@ -6643,7 +6763,7 @@
               "title": "Piano di implementazione: suite multimodale nativa DS4",
               "level": 1,
               "start": 1,
-              "end": 544,
+              "end": 563,
               "summary": "Data: 20 ottobre 2026."
             },
             {
@@ -6804,70 +6924,70 @@
               "title": "23. T19 — Prefetch, streaming per gruppi e mantenimento adattivo",
               "level": 2,
               "start": 418,
-              "end": 434,
-              "summary": "**Dipendenze:** T05, T07, T11, T16, T17."
+              "end": 438,
+              "summary": "**Perimetro concordato il 22 ottobre:** completare la consegna funzionale e"
             },
             {
               "title": "24. T20 — Quantizzazione e ottimizzazioni numeriche misurate",
               "level": 2,
-              "start": 435,
-              "end": 449,
+              "start": 439,
+              "end": 453,
               "summary": "**Dipendenze:** T00, T07, T11, T16; T19 per confronti su streaming."
             },
             {
               "title": "25. T21 — Qualificazione integrata, guasti e regressioni",
               "level": 2,
-              "start": 450,
-              "end": 464,
+              "start": 454,
+              "end": 477,
               "summary": "**Dipendenze:** T17, T18, T19; tutti i profili promossi da T20."
             },
             {
               "title": "26. T22 — Packaging, documentazione e consegna",
               "level": 2,
-              "start": 465,
-              "end": 476,
+              "start": 478,
+              "end": 495,
               "summary": "**Dipendenze:** T21."
             },
             {
               "title": "27. Matrice obbligatoria di memoria e ripristino",
               "level": 2,
-              "start": 477,
-              "end": 497,
+              "start": 496,
+              "end": 516,
               "summary": "La matrice usa budget controllati e allocazioni possedute; si aggiungono prove reali sulla memoria libera della 3090."
             },
             {
               "title": "28. Gate numerici, di qualità e prestazionali",
               "level": 2,
-              "start": 498,
-              "end": 535,
+              "start": 517,
+              "end": 554,
               "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
             },
             {
               "title": "28.1 Gate numerici",
               "level": 3,
-              "start": 500,
-              "end": 509,
+              "start": 519,
+              "end": 528,
               "summary": "Le soglie full-vocabulary dei LLM esistenti restano valide e non vengono allargate da questo piano."
             },
             {
               "title": "28.2 Corpus di accettazione proposto",
               "level": 3,
-              "start": 510,
-              "end": 526,
+              "start": 529,
+              "end": 545,
               "summary": "Il corpus minimo viene congelato in T00 prima delle ottimizzazioni; può essere ampliato con un nuovo manifest, mantenendo i casi precedenti."
             },
             {
               "title": "28.3 Gate prestazionali e memoria",
               "level": 3,
-              "start": 527,
-              "end": 535,
+              "start": 546,
+              "end": 554,
               "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             },
             {
               "title": "29. Definizione di completamento globale",
               "level": 2,
-              "start": 536,
-              "end": 544,
+              "start": 555,
+              "end": 563,
               "summary": "Il lavoro di implementazione è completo quando T00–T19, T21 e T22 sono `DONE`, T20 ha una valutazione esplicita dei candidati e tutti i profili effettivamente pubblicati hanno superato i rispettivi gate."
             }
           ]

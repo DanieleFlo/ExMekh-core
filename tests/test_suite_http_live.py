@@ -73,6 +73,75 @@ class SuiteHttpLive(unittest.TestCase):
                 file=(path.name, f, mime), purpose="ds4_media"
             )
 
+    def test_00_edit_before_first_llm_prefill(self):
+        pixels = io.BytesIO()
+        Image.new("RGBA", (256, 256), (220, 40, 30, 128)).save(pixels, format="PNG")
+        reference = self.client.files.create(
+            file=("reference.png", pixels.getvalue(), "image/png"), purpose="ds4_media"
+        )
+        image = self.post(
+            "/images/edits",
+            {
+                "model": IMAGE_MODEL,
+                "prompt": "A red square on white.",
+                "size": "64x96",
+                "images": [reference.id],
+                "ds4": {"version": 1, "seed": 20261020},
+            },
+        )
+        self.assertEqual(len(image["data"]), 1)
+        llm = next(
+            m.id
+            for m in self.client.models.list().data
+            if m.id not in (IMAGE_MODEL, EMBED_MODEL)
+        )
+        tools = [
+            {
+                "type": "function",
+                "name": "suite_image",
+                "description": "Run the requested image operation.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": False,
+                },
+            }
+        ]
+        response = self.client.responses.create(
+            model=llm,
+            input=[
+                {
+                    "role": "user",
+                    "content": "Remember BETA21. Call suite_image. After its result reply only BETA21.",
+                }
+            ],
+            tools=tools,
+            tool_choice="required",
+            max_output_tokens=128,
+            temperature=0,
+            reasoning={"effort": "none"},
+        )
+        calls = [o for o in response.output if o.type == "function_call"]
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0].name, "suite_image")
+        final = self.client.responses.create(
+            model=llm,
+            input=[
+                {
+                    "type": "function_call_output",
+                    "call_id": calls[0].call_id,
+                    "output": "Image complete. Reply only BETA21.",
+                }
+            ],
+            tools=tools,
+            tool_choice="auto",
+            max_output_tokens=24,
+            temperature=0,
+            reasoning={"effort": "none"},
+        )
+        self.assertIn("BETA21", final.output_text)
+        self.assertGreater(final.usage.input_tokens_details.cached_tokens, 0)
+
     def test_01_sdk_text_tokens_and_identity(self):
         catalog = self.root / "schemas/ds4-suite-catalog-v1.schema.json"
         schema = json.loads(catalog.read_text())

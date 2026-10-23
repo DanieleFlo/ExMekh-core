@@ -6,6 +6,8 @@
 extern "C" {
 #endif
 typedef struct ds4_gemma_vision ds4_gemma_vision;
+ds4_status ds4_gemma_vision_weights(ds4_gemma_vision *, uint64_t limit,
+                                    ds4_weight_budget *);
 typedef struct ds4_gemma_visual_features ds4_gemma_visual_features;
 typedef struct {
   const uint16_t *tokens; /* Detached BF16, [soft_tokens,512]. */

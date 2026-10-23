@@ -19,7 +19,13 @@ In un altro terminale:
 ./agent/run.sh
 ```
 
-Il launcher server usa Qwen3.8 e MTP con `--ctx 28000`, porta 8080.
+Il launcher server usa `ds4-server-suite`, Qwen3.8, MTP, visione e `--ctx 26000`,
+porta 8080. Carica `config/native-suite.example.json` (sostituibile con
+`DS4_SUITE_CONFIG`) per servire anche immagini ed embedding dalla stessa URL.
+I percorsi delle librerie native possono essere impostati in
+`config/native-suite.env`, copiando `config/native-suite.env.example`;
+la [guida suite](../architecture/native-suite-release.md) descrive i prerequisiti.
+Il launcher LLM della root e quello Flash conservano i propri default.
 Il frontend si apre su [http://127.0.0.1:8000](http://127.0.0.1:8000).
 Il launcher installa le dipendenze dal lockfile quando necessario. Da `agent/`,
 il comando equivalente è `uv run --frozen exmekh-agent`. La distribuzione si

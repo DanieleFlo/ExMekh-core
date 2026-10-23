@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from threading import Event
-from unittest.mock import patch
+from unittest.mock import patch, sentinel
 
 import pytest
 from exmekh_lib.core.models.assistant_message import (
@@ -59,6 +60,29 @@ from exmekh_agent.exmekh_bridge.providers.provider_context import (
 
 class StructuredAnswer(BaseModel):
     text: str
+
+
+@pytest.mark.parametrize("cancellation_outermost", [False, True])
+def test_native_suite_preserves_shared_client_and_cancellation(cancellation_outermost):
+    provider = StubProvider()
+    cancellation = Event()
+
+    def track(wrapped):
+        return ContextTrackingProvider(
+            wrapped, on_context=None, context_id="root", ds4_qwen=True, thinking=False
+        )
+
+    wrapped = (
+        CancellableProvider(track(provider), cancellation)
+        if cancellation_outermost
+        else track(CancellableProvider(provider, cancellation))
+    )
+    with patch.object(provider, "native_suite", return_value=sentinel.suite) as native:
+        assert wrapped.native_suite() is sentinel.suite
+        cancellation.set()
+        with pytest.raises(asyncio.CancelledError):
+            wrapped.native_suite()
+    native.assert_called_once_with()
 
 
 @pytest.mark.parametrize("with_tools", [False, True])

@@ -365,6 +365,12 @@ cleanup:
   return status;
 }
 enum { TEXT_BRANCH, VISION_BRANCH, AUDIO_BRANCH, BRANCH_COUNT };
+static ds4_status branch_weights(ds4_gemma_visual *e, unsigned branch,
+                                  uint64_t limit, ds4_weight_budget *out) {
+  return branch == TEXT_BRANCH ? ds4_embedding_gemma2_weights(e->text, limit, out)
+       : branch == VISION_BRANCH ? ds4_gemma_vision_weights(e->vision, limit, out)
+                                 : ds4_gemma_audio_weights(e->audio, limit, out);
+}
 typedef struct {
   ds4_runtime_estimate phase[BRANCH_COUNT];
   uint64_t detached_host_bytes;
@@ -444,12 +450,15 @@ ds4_status ds4_gemma_visual_estimate(ds4_gemma_visual *e,
   return status ? status : co_resident_cost(&cost, out);
 }
 
-ds4_status ds4_gemma_visual_plan(ds4_gemma_visual *e,
+static ds4_status plan_full(ds4_gemma_visual *e,
                                  const ds4_gemma_visual_input *in,
-                                 ds4_gemma_plan *out) {
+                                 ds4_gemma_plan *out, uint64_t weight_limits[3],
+                                 bool *streamed) {
   if (!out)
     return DS4_STATUS_INVALID;
   *out = (ds4_gemma_plan){0};
+  memset(weight_limits, 0, 3 * sizeof(*weight_limits));
+  *streamed = false;
   request_cost cost;
   ds4_status status = collect_cost(e, in, &cost);
   if (!status)
@@ -485,7 +494,35 @@ ds4_status ds4_gemma_visual_plan(ds4_gemma_visual *e,
   uint64_t reclaim[DS4_MEMORY_COUNT] = {[DS4_MEMORY_DEVICE] =
                                             out->reclaim_device_bytes};
   bytes[DS4_MEMORY_DEVICE] = peak;
+  status = ds4_resources_can_reserve(e->resources, bytes, reclaim);
+  if (status != DS4_STATUS_NOMEM) return status;
+  uint64_t available;
+  status = ds4_resources_working_capacity(e->resources, DS4_MEMORY_DEVICE, &available);
+  if (status || !add_bytes(&available, out->reclaim_device_bytes))
+    return status ? status : DS4_STATUS_INVALID;
+  peak = 0;
+  for (unsigned i = 0; i < BRANCH_COUNT; i++) {
+    if (!cost.phase[i].known) continue;
+    ds4_weight_budget weights;
+    status = branch_weights(e, i, 0, &weights);
+    if (status) return status;
+    uint64_t scratch = cost.phase[i].device_bytes + resident[i] - weights.total;
+    if (scratch > available || weights.minimum > available - scratch)
+      return DS4_STATUS_NOMEM;
+    uint64_t cap = available - scratch;
+    if (cap > weights.total) cap = weights.total;
+    weight_limits[i] = cap;
+    if (peak < scratch + cap) peak = scratch + cap;
+  }
+  *streamed = true;
+  out->peak.device_bytes = bytes[DS4_MEMORY_DEVICE] = peak;
   return ds4_resources_can_reserve(e->resources, bytes, reclaim);
+}
+ds4_status ds4_gemma_visual_plan(ds4_gemma_visual *e,
+                                 const ds4_gemma_visual_input *in,
+                                 ds4_gemma_plan *out) {
+  uint64_t limits[3]; bool streamed;
+  return plan_full(e, in, out, limits, &streamed);
 }
 
 /* Encoder outputs are detached host rows. This scope owns staging until
@@ -571,18 +608,25 @@ ds4_status ds4_gemma_visual_embed(ds4_gemma_visual *e,
   ds4_reservation *lease = NULL;
   ds4_reservation_scope working = {0};
   bool started = false;
+  bool stream_active = false;
+  uint64_t weight_limits[3];
+  bool streamed;
+  ds4_gemma_plan plan = {0};
   if (!ds4_runtime_transaction_held(e->runtime))
     TRY(ds4_runtime_transaction_begin(e->runtime, &transaction));
   e->running = true;
   started = true;
-  ds4_gemma_plan plan;
-  TRY(ds4_gemma_visual_plan(e, in, &plan));
+  TRY(plan_full(e, in, &plan, weight_limits, &streamed));
+  stream_active = streamed;
   ds4_runtime_estimate estimate = plan.peak;
   if (plan.release_encoders) {
     TRY(ds4_embedding_gemma2_release_weights(e->text));
     TRY(ds4_gemma_vision_release_weights(e->vision));
     TRY(ds4_gemma_audio_release_weights(e->audio));
   }
+  if (streamed)
+    for (unsigned i = 0; i < BRANCH_COUNT; i++)
+      if (weight_limits[i]) TRY(branch_weights(e, i, weight_limits[i], NULL));
   uint64_t bytes[DS4_MEMORY_COUNT] = {[DS4_MEMORY_DEVICE] =
                                           estimate.device_bytes,
                                       [DS4_MEMORY_HOST] = estimate.host_bytes};
@@ -592,6 +636,14 @@ ds4_status ds4_gemma_visual_embed(ds4_gemma_visual *e,
     TRY(encode_item(e, in, i, plan.release_encoders, o));
   TRY(ds4_gemma_embed(e->text, in->backbone, dimensions, o, out));
 cleanup:
+  if (stream_active) {
+    ds4_status s = ds4_embedding_gemma2_release_weights(e->text);
+    if (!s) s = ds4_gemma_vision_release_weights(e->vision);
+    if (!s) s = ds4_gemma_audio_release_weights(e->audio);
+    for (unsigned i = 0; i < BRANCH_COUNT && !s; i++)
+      s = branch_weights(e, i, UINT64_MAX, NULL);
+    if (!status) status = s;
+  }
   if (in)
     gemma_input_visual_clear(in->backbone);
   ds4_reservation_leave(&working);

@@ -49,6 +49,12 @@ ds4_num_view ds4_num_reinterpret(ds4_num_view, uint64_t byte_offset,
 /* Storage owns its context; writers need not know the buffer representation. */
 ds4_status ds4_num_buffer_write(ds4_num_buffer *, uint64_t byte_offset,
                                 const void *, uint64_t bytes);
+/* Immutable mmap weights may use bounded asynchronous staging. The caller
+ * keeps source bytes alive until weights_ready/fence, and fences before free.
+ * Ordinary host writes retain their synchronous lifetime contract. */
+ds4_status ds4_num_buffer_stage(ds4_num_buffer *, uint64_t byte_offset,
+                                const void *, uint64_t bytes);
+ds4_status ds4_numeric_weights_ready(ds4_numeric *);
 ds4_status ds4_num_write(ds4_numeric *, ds4_num_view, const void *,
                          uint64_t bytes);
 ds4_status ds4_num_read(ds4_numeric *, ds4_num_view, void *, uint64_t bytes);

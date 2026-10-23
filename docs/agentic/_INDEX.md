@@ -54,12 +54,12 @@ Una skill viene chiamata dal modello esattamente come un normale tool.
 
 Da root, avviare il server in un terminale:
 
-- righe 8–31: **Avvio in WSL / Linux** — Da root, avviare il server in un terminale:
-- righe 32–48: **Configurazione e stato** — Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider.
-- righe 49–76: **Modifica dei messaggi** — Il pulsante con la matita compare accanto a quello di copia quando si passa
-- righe 77–96: **Confini dell'integrazione** — ExMekh-Lib possiede i messaggi e il risultato dell'esecuzione dei tool.
-- righe 97–148: **Dipendenza ExMekh-Lib** — `agent/pyproject.toml` installa ExMekh-Lib dalla wheel versionata in `agent/wheels/`.
-- righe 149–176: **Verifica** — Da `agent/`:
+- righe 8–37: **Avvio in WSL / Linux** — Da root, avviare il server in un terminale:
+- righe 38–54: **Configurazione e stato** — Copiare `agent/.env.example` in `agent/.env` per personalizzare il provider.
+- righe 55–82: **Modifica dei messaggi** — Il pulsante con la matita compare accanto a quello di copia quando si passa
+- righe 83–102: **Confini dell'integrazione** — ExMekh-Lib possiede i messaggi e il risultato dell'esecuzione dei tool.
+- righe 103–154: **Dipendenza ExMekh-Lib** — `agent/pyproject.toml` installa ExMekh-Lib dalla wheel versionata in `agent/wheels/`.
+- righe 155–182: **Verifica** — Da `agent/`:
 
 ## [Chiamate interattive: edit letterali v3](interactive-calls.md)
 

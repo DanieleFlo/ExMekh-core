@@ -27,6 +27,7 @@ struct ds4_gemma_audio {
   uint32_t audio, projection, count;
   binding bindings[1024];
   ds4_weight_group *groups[GROUPS];
+  ds4_weight_cache cache;
   ds4_host_buffer account;
 };
 struct ds4_gemma_audio_features {
@@ -34,15 +35,7 @@ struct ds4_gemma_audio_features {
   ds4_host_buffer account, tokens;
 };
 uint64_t ds4_gemma_audio_resident_weights(const ds4_gemma_audio *e) {
-  uint64_t bytes = 0;
-  if (!e)
-    return 0;
-  for (unsigned i = 0; i < GROUPS; i++) {
-    uint64_t n = ds4_weight_group_bytes(e->groups[i]);
-    if (ds4_weight_group_resident(e->groups[i]))
-      bytes += n;
-  }
-  return bytes;
+  return e ? ds4_weight_cache_resident(&e->cache) : 0;
 }
 typedef struct {
   ds4_numeric *num;
@@ -122,7 +115,7 @@ static ds4_status weight(ds4_gemma_audio *e, const char *name,
     return DS4_STATUS_INVALID;
   const ds4_weight_tensor *t = ds4_bundle_tensor(e->bundle, b->index);
   ds4_weight_group *g = e->groups[b->group];
-  ds4_status s = ds4_weight_group_load(g);
+  ds4_status s = ds4_weight_cache_acquire(&e->cache, b->group);
   const void *storage;
   uint64_t off;
   if (!s)
@@ -218,6 +211,11 @@ static ds4_status observe(ds4_gemma_audio *e, const ds4_gemma_observer *o,
 static ds4_status activate(void *opaque) {
   return ds4_numeric_fence(((ds4_gemma_audio *)opaque)->num);
 }
+ds4_status ds4_gemma_audio_weights(ds4_gemma_audio *e, uint64_t limit,
+                                   ds4_weight_budget *out) {
+  return e ? ds4_weight_cache_configure(&e->cache, e->model, limit, out)
+           : DS4_STATUS_INVALID;
+}
 ds4_status ds4_gemma_audio_release_weights(ds4_gemma_audio *e) {
   if (!e)
     return DS4_STATUS_INVALID;
@@ -225,8 +223,7 @@ ds4_status ds4_gemma_audio_release_weights(ds4_gemma_audio *e) {
   ds4_status s = ds4_runtime_model_enter_exclusive(e->model, &scope);
   if (s)
     return s;
-  for (uint32_t i = 0; i < GROUPS && !s; i++)
-    s = ds4_weight_group_release(e->groups[i]);
+  s = ds4_weight_cache_release(&e->cache);
   ds4_runtime_scope_leave(&scope);
   return s;
 }
@@ -370,16 +367,16 @@ ds4_status ds4_gemma_audio_open(ds4_gemma_audio **out, ds4_bundle *b,
     status = DS4_STATUS_UNSUPPORTED;
     goto cleanup;
   }
-  ds4_weight_backend backend = ds4_numeric_weight_backend(n);
   for (uint32_t g = 0; g < GROUPS; g++) {
     size_t indices[1024], used = 0;
     for (uint32_t j = 0; j < e->count; j++)
       if (e->bindings[j].group == g)
         indices[used++] = e->bindings[j].index;
-    TRY(ds4_weight_group_create_selected(e->groups + g, b,
+    TRY(ds4_numeric_weight_group_selected(e->groups + g, b,
                                          g == 13 ? e->projection : e->audio,
-                                         indices, used, &backend));
+                                         indices, used, n));
   }
+  TRY(ds4_weight_cache_init(&e->cache, e->groups, GROUPS));
   ds4_runtime_descriptor descriptor = {DS4_SUITE_ABI,
                                        ds4_bundle_model(b),
                                        ds4_bundle_revision(b),
@@ -414,9 +411,7 @@ ds4_status ds4_gemma_audio_estimate(ds4_gemma_audio *e,
       .known = true,
       .device_bytes = (uint64_t)v.audio_frames * 300000 + (64ull << 20),
       .host_bytes = (uint64_t)v.audio_frames * 32768 + (1ull << 20)};
-  for (uint32_t i = 0; i < GROUPS; i++)
-    if (!ds4_weight_group_resident(e->groups[i]))
-      out->device_bytes += ds4_weight_group_bytes(e->groups[i]);
+  out->device_bytes += ds4_weight_cache_missing(&e->cache);
   return DS4_STATUS_OK;
 }
 

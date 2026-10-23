@@ -1,5 +1,6 @@
 #ifndef DS4_QWEN_IMAGE_ENCODER_H
 #define DS4_QWEN_IMAGE_ENCODER_H
+#include "ds4_numeric_weights.h"
 #include "ds4_bundle.h"
 #include "ds4_numeric.h"
 #include "ds4_qwen_image_input.h"
@@ -8,6 +9,8 @@
 extern "C" {
 #endif
 typedef struct ds4_qwen_image_encoder ds4_qwen_image_encoder;
+ds4_status ds4_qwen_image_encoder_weights(ds4_qwen_image_encoder *, uint64_t limit,
+                                          ds4_weight_budget *);
 typedef struct ds4_qwen_image_conditioning ds4_qwen_image_conditioning;
 typedef struct {
   ds4_num_view hidden; /* borrowed [count,4096] BF16, pre-final RMSNorm */

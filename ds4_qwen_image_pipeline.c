@@ -14,10 +14,15 @@
   } while (0)
 enum { ENCODER, DIT, VAE, COMPONENT_COUNT };
 enum { ENCODE_REFERENCES, ENCODE_PROMPT, DENOISE, DECODE, PHASE_COUNT };
-enum { VARIANT_COUNT = 4 };
+enum { RESIDENT_VARIANTS = 4, STREAM_LEVELS = 5,
+       VARIANT_COUNT = RESIDENT_VARIANTS + STREAM_LEVELS * 2 };
 static uint64_t component_bit(uint32_t id) { return UINT64_C(1) << id; }
-static bool host_cache(size_t variant) { return variant >= 2; }
-static bool retain_components(size_t variant) { return variant % 2 == 0; }
+static bool host_cache(size_t variant) {
+  return variant < RESIDENT_VARIANTS ? variant >= 2 : variant % 2 != 0;
+}
+static bool retain_components(size_t variant) {
+  return variant < RESIDENT_VARIANTS && variant % 2 == 0;
+}
 struct ds4_qwen_image_pipeline {
   ds4_qwen_image_encoder *encoder;
   ds4_qwen_image_dit *dit;
@@ -53,8 +58,10 @@ struct ds4_qwen_image_job {
   component components[COMPONENT_COUNT];
   ds4_execution_step steps[VARIANT_COUNT][PHASE_COUNT];
   ds4_execution_variant variants[VARIANT_COUNT];
+  uint64_t weight_limits[VARIANT_COUNT][COMPONENT_COUNT];
   ds4_execution_victim victims[DS4_EXECUTOR_MAX_VICTIMS];
   uint64_t resident[COMPONENT_COUNT];
+  ds4_weight_budget weights_before[COMPONENT_COUNT];
   bool cache_fallback;
   bool committed;
 };
@@ -118,23 +125,31 @@ ds4_status ds4_qwen_image_pipeline_close(ds4_qwen_image_pipeline *p) {
     ds4_resource_release(r);
   return DS4_STATUS_OK;
 }
+
+static ds4_status weight_limit(const ds4_qwen_image_pipeline *p, uint32_t id,
+                                uint64_t limit, ds4_weight_budget *out) {
+  return id == ENCODER ? ds4_qwen_image_encoder_weights(p->encoder, limit, out)
+       : id == DIT ? ds4_qwen_image_dit_weights(p->dit, limit, out)
+                   : ds4_qwen_image_vae_weights(p->vae, limit, out);
+}
 ds4_status ds4_qwen_image_pipeline_residency(const ds4_qwen_image_pipeline *p,
                                             uint64_t resident[3], uint64_t total[3]) {
   if (!p || !resident || !total) return DS4_STATUS_INVALID;
-  ds4_qwen_image_dit_memory memory;
-  qi_encoder_memory(p->encoder, true, total + ENCODER, resident + ENCODER);
-  qi_dit_memory(p->dit, 1, 1, 0, 1, &memory, resident + DIT);
-  total[DIT] = memory.weights;
-  qi_vae_memory(p->vae, total + VAE, resident + VAE);
+  for (uint32_t i = 0; i < COMPONENT_COUNT; i++) {
+    ds4_weight_budget weights;
+    ds4_status s = weight_limit(p, i, 0, &weights);
+    if (s)
+      return s;
+    total[i] = weights.total;
+    resident[i] = weights.resident;
+  }
   return DS4_STATUS_OK;
 }
 static bool cancelled(void *opaque) {
   ds4_qwen_image_job *j = opaque;
   return j->observer.cancelled && j->observer.cancelled(j->observer.opaque);
 }
-static ds4_status drain(void *opaque) {
-  return ds4_numeric_fence(((ds4_qwen_image_job *)opaque)->pipeline->num);
-}
+static ds4_status drain(void *opaque);
 static ds4_status load(void *opaque) {
   component *c = opaque;
   ds4_qwen_image_job *j = c->job;
@@ -153,12 +168,29 @@ static ds4_status release(void *opaque) {
   component *c = opaque;
   ds4_qwen_image_job *j = c->job;
   ds4_qwen_image_pipeline *p = j->pipeline;
-  ds4_status s = c->id == ENCODER
+  ds4_weight_budget before;
+  ds4_status s = weight_limit(p, c->id, 0, &before);
+  if (s)
+    return s;
+  s = c->id == ENCODER
                      ? ds4_qwen_image_encoder_release_weights(p->encoder)
                  : c->id == DIT ? ds4_qwen_image_dit_release_weights(p->dit)
                                 : ds4_qwen_image_vae_release_weights(p->vae);
-  if (!s)
+  if (!s && before.resident)
     j->report.releases[c->id]++;
+  return s;
+}
+static ds4_status drain(void *opaque) {
+  ds4_qwen_image_job *j = opaque;
+  ds4_status s = ds4_numeric_fence(j->pipeline->num);
+  if (s || !ds4_execution_get_plan(j->execution) ||
+      ds4_execution_get_plan(j->execution)->variant < RESIDENT_VARIANTS) return s;
+  /* Streamed groups are phase temporaries rather than executor groups. They
+   * must also survive a failed drain/free so recovery can retry their release. */
+  for (uint32_t i = 0; i < COMPONENT_COUNT && !s; i++) {
+    s = release(j->components + i);
+    if (!s) s = weight_limit(j->pipeline, i, UINT64_MAX, NULL);
+  }
   return s;
 }
 static void abort_result(void *opaque) {
@@ -185,6 +217,10 @@ static ds4_status stage(void *opaque, uint32_t id) {
   ds4_qwen_image_conditioning *conditioning = NULL;
   ds4_qwen_image_dit_input *input = NULL;
   const ds4_qwen_image_observer *o = &j->observer;
+  size_t variant = ds4_execution_get_plan(j->execution)->variant;
+  uint32_t active = id == ENCODE_PROMPT ? ENCODER : id == DENOISE ? DIT : VAE;
+  if (variant >= RESIDENT_VARIANTS)
+    TRY(weight_limit(p, active, j->weight_limits[variant][active], NULL));
   if (id == ENCODE_REFERENCES) {
     uint64_t offset = 0;
     for (uint32_t i = 0; i < j->references; i++) {
@@ -246,6 +282,11 @@ cleanup:
       s = t;
     if (!status)
       status = s;
+    if (variant >= RESIDENT_VARIANTS) {
+      s = release(j->components + active);
+      if (!s) s = weight_limit(p, active, UINT64_MAX, NULL);
+      if (!status) status = s;
+    }
     if (status && j->latent) {
       ds4_num_dispose(j->latent);
       j->latent = NULL;
@@ -428,7 +469,18 @@ static ds4_status configure_plan(ds4_qwen_image_job *j,
                       j->decode.host};
   uint64_t bits[] = {component_bit(VAE), component_bit(ENCODER),
                      component_bit(DIT), component_bit(VAE)};
+  ds4_weight_budget budgets[COMPONENT_COUNT];
+  for (uint32_t i = 0; i < COMPONENT_COUNT; i++)
+    TRY(weight_limit(p, i, 0, budgets + i));
   for (uint32_t variant = 0; variant < VARIANT_COUNT; variant++) {
+    bool streamed = variant >= RESIDENT_VARIANTS;
+    if (streamed) {
+      uint32_t level = (variant - RESIDENT_VARIANTS) / 2;
+      for (uint32_t i = 0; i < COMPONENT_COUNT; i++) {
+        uint64_t cap = level == STREAM_LEVELS - 1 ? 0 : weights[i] >> (level + 1);
+        j->weight_limits[variant][i] = cap < budgets[i].minimum ? budgets[i].minimum : cap;
+      }
+    }
     uint64_t live = 0;
     uint32_t k = 0;
     for (uint32_t i = j->references ? ENCODE_REFERENCES : ENCODE_PROMPT;
@@ -437,10 +489,14 @@ static ds4_status configure_plan(ds4_qwen_image_job *j,
       ds4_execution_step *s = &j->steps[variant][k++];
       *s =
           (ds4_execution_step){.id = i,
-                               .groups = bits[i],
+                               .groups = streamed ? 0 : bits[i],
                                .retain = retain_components(variant) ? live : 0};
       s->working.bytes[DS4_MEMORY_DEVICE] = devices[i];
       s->working.bytes[DS4_MEMORY_HOST] = hosts[i];
+      if (streamed) {
+        uint32_t active = i == ENCODE_PROMPT ? ENCODER : i == DENOISE ? DIT : VAE;
+        s->working.bytes[DS4_MEMORY_DEVICE] += j->weight_limits[variant][active];
+      }
       if (host_cache(variant) && i == DENOISE) {
         s->working.bytes[DS4_MEMORY_DEVICE] -= dm.prefix_cache;
         s->working.bytes[DS4_MEMORY_HOST] += dm.prefix_cache;
@@ -449,9 +505,11 @@ static ds4_status configure_plan(ds4_qwen_image_job *j,
     j->variants[variant] = (ds4_execution_variant){
         .steps = j->steps[variant],
         .step_count = k,
-        .cost = host_cache(variant) ? dm.prefix_cache * 8 + variant : variant,
-        .streamed = false,
-        .keep = retain_components(variant) ? live : component_bit(VAE)};
+        .cost = (host_cache(variant) ? dm.prefix_cache * 8 : 0) + variant +
+                (streamed ? weights[ENCODER] + weights[VAE] * (j->references + 1) +
+                    dm.weights + 7 * (dm.weights - j->weight_limits[variant][DIT] + budgets[DIT].minimum) : 0),
+        .streamed = streamed,
+        .keep = streamed ? 0 : retain_components(variant) ? live : component_bit(VAE)};
     /* Serial execution retains only the final VAE cache. Every intermediate
      * release follows admission of this complete request. */
     j->steps[variant][k - 1].retain |= j->variants[variant].keep;
@@ -596,9 +654,21 @@ ds4_status ds4_qwen_image_job_run(ds4_qwen_image_job *j) {
   if (planned)
     return planned;
   double start = now();
+  for (uint32_t i = 0; i < COMPONENT_COUNT; i++)
+    weight_limit(j->pipeline, i, 0, j->weights_before + i);
   ds4_status s = ds4_execution_run(j->execution);
   j->report.total_seconds = now() - start + j->report.prepare_seconds;
   j->report.plan = *ds4_execution_get_plan(j->execution);
+  for (uint32_t i = 0; i < COMPONENT_COUNT; i++) {
+    ds4_weight_budget *w = j->report.weights + i;
+    weight_limit(j->pipeline, i, 0, w);
+    w->loads -= j->weights_before[i].loads;
+    w->hits -= j->weights_before[i].hits;
+    w->evictions -= j->weights_before[i].evictions;
+    w->transferred -= j->weights_before[i].transferred;
+    if (j->report.plan.variant >= RESIDENT_VARIANTS)
+      w->limit = j->weight_limits[j->report.plan.variant][i];
+  }
   return s;
 }
 ds4_status ds4_qwen_image_job_recover(ds4_qwen_image_job *j) {

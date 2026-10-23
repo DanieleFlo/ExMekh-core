@@ -39,6 +39,7 @@ typedef struct {
   double prepare_seconds, load_seconds[3], phase_seconds[4], total_seconds;
   uint32_t loads[3], releases[3];
   ds4_execution_plan plan;
+  ds4_weight_budget weights[3]; /* Per-request loads/hits/evictions/payload H2D */
 } ds4_qwen_image_report;
 /* Serial, explicit-size recipe. reference_resolution declares any resize;
  * zero preserves supplied aligned dimensions. Reference order is unchanged.

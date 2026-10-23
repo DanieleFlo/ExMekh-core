@@ -14,6 +14,26 @@ ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r, uint64_t owner)
     return DS4_STATUS_UNSUPPORTED;
 }
 int main(void) {
+    ds4_resources *resources = NULL;
+    assert(!ds4_resources_create(&resources));
+    suite_state diagnostic = {.resources = resources};
+    buf ledger = {0};
+    unsetenv("DS4_SUITE_RESOURCE_METRICS");
+    suite_append_resources(&ledger, &diagnostic);
+    assert(!ledger.len);
+    setenv("DS4_SUITE_RESOURCE_METRICS", "0", 1);
+    suite_append_resources(&ledger, &diagnostic);
+    assert(!ledger.len);
+    setenv("DS4_SUITE_RESOURCE_METRICS", "1", 1);
+    buf_puts(&ledger, "{\"version\":1");
+    suite_append_resources(&ledger, &diagnostic);
+    buf_putc(&ledger, '}');
+    schema_json_value *metrics = schema_json_parse(ledger.ptr);
+    assert(metrics && suite_get(metrics, "resources"));
+    assert(suite_get(suite_get(metrics, "resources"), "owners")->len == 5);
+    schema_json_free(metrics); buf_free(&ledger);
+    unsetenv("DS4_SUITE_RESOURCE_METRICS");
+    assert(!ds4_resources_close(resources));
     schema_json_value *a = schema_json_parse("{\"z\":[3,2],\"a\":18446744073709551615}");
     schema_json_value *b = schema_json_parse("{\"a\":18446744073709551615,\"z\":[3,2]}");
     uint64_t seed;

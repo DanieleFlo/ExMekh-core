@@ -78,4 +78,8 @@ def test_old_ui_attachments_and_library_snapshots_restore_the_same_pixels():
     assert tool_attachment_image_urls(old["attachments"]) == tool_attachment_image_urls(
         current["attachments"]
     )
+    preview_parts = [None, {"type": "text", "text": "Caption"}, *old["attachments"]]
+    assert tool_attachment_image_urls(preview_parts) == tool_attachment_image_urls(
+        current["attachments"]
+    )
     assert restored.get_attachments() is not None

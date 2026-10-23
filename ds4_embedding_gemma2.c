@@ -22,6 +22,7 @@ struct ds4_embedding_gemma2 {
   gemma_tokenizer *tokenizer;
   const gemma_config *config;
   ds4_weight_group *groups[25];
+  ds4_weight_cache cache;
   size_t indices[512];
   uint32_t group[512], count, component;
   size_t embedding;
@@ -40,15 +41,7 @@ struct ds4_gemma_result {
   ds4_resource *account;
 };
 uint64_t ds4_embedding_gemma2_resident_weights(const ds4_embedding_gemma2 *e) {
-  uint64_t bytes = 0;
-  if (!e)
-    return 0;
-  for (unsigned i = 0; i < 25; i++) {
-    uint64_t n = ds4_weight_group_bytes(e->groups[i]);
-    if (ds4_weight_group_resident(e->groups[i]))
-      bytes += n;
-  }
-  return bytes;
+  return e ? ds4_weight_cache_resident(&e->cache) : 0;
 }
 static ds4_status bind(ds4_embedding_gemma2 *e, const char *name,
                        uint32_t group, uint32_t rank, uint64_t a, uint64_t b) {
@@ -79,7 +72,7 @@ static ds4_status weight(ds4_embedding_gemma2 *e, const char *name,
     if (strcmp(t->name, name))
       continue;
     ds4_weight_group *g = e->groups[e->group[i]];
-    ds4_status s = ds4_weight_group_load(g);
+    ds4_status s = ds4_weight_cache_acquire(&e->cache, e->group[i]);
     const void *storage;
     uint64_t off;
     if (!s)
@@ -109,6 +102,11 @@ static ds4_status norm(ds4_embedding_gemma2 *e, const char *name,
 static ds4_status activate(void *p) {
   return ds4_numeric_fence(((ds4_embedding_gemma2 *)p)->num);
 }
+ds4_status ds4_embedding_gemma2_weights(ds4_embedding_gemma2 *e, uint64_t limit,
+                                        ds4_weight_budget *out) {
+  return e ? ds4_weight_cache_configure(&e->cache, e->model, limit, out)
+           : DS4_STATUS_INVALID;
+}
 ds4_status ds4_embedding_gemma2_release_weights(ds4_embedding_gemma2 *e) {
   if (!e)
     return DS4_STATUS_INVALID;
@@ -116,8 +114,7 @@ ds4_status ds4_embedding_gemma2_release_weights(ds4_embedding_gemma2 *e) {
   ds4_status s = ds4_runtime_model_enter_exclusive(e->model, &scope);
   if (s)
     return s;
-  for (uint32_t i = 0; i < 25 && !s; i++)
-    s = ds4_weight_group_release(e->groups[i]);
+  s = ds4_weight_cache_release(&e->cache);
   ds4_runtime_scope_leave(&scope);
   return s;
 }
@@ -248,15 +245,15 @@ ds4_status ds4_embedding_gemma2_open(ds4_embedding_gemma2 **out, ds4_bundle *b,
     status = DS4_STATUS_UNSUPPORTED;
     goto cleanup;
   }
-  ds4_weight_backend backend = ds4_numeric_weight_backend(n);
   for (uint32_t g = 0; g < 25; g++) {
     size_t ids[512], count = 0;
     for (uint32_t j = 0; j < e->count; j++)
       if (e->group[j] == g && e->indices[j] != e->embedding)
         ids[count++] = e->indices[j];
-    TRY(ds4_weight_group_create_selected(&e->groups[g], b, e->component, ids,
-                                         count, &backend));
+    TRY(ds4_numeric_weight_group_selected(&e->groups[g], b, e->component, ids,
+                                         count, n));
   }
+  TRY(ds4_weight_cache_init(&e->cache, e->groups, 25));
   uint64_t owner;
   ds4_resources *rs = ds4_numeric_resources(n, &owner);
   TRY(ds4_resource_register_host(
@@ -496,9 +493,7 @@ ds4_status ds4_gemma_estimate(ds4_embedding_gemma2 *e,
    * under the numeric backend's bounded score cap. Full layers use dim 512. */
   if (max > 256 && 4ull * max * max * 2 <= 128ull * 1024 * 1024)
     out->device_bytes += (max - 256) * 4ull * (max + 512) * 2;
-  for (uint32_t i = 0; i < 25; i++)
-    if (!ds4_weight_group_resident(e->groups[i]))
-      out->device_bytes += ds4_weight_group_bytes(e->groups[i]);
+  out->device_bytes += ds4_weight_cache_missing(&e->cache);
   return DS4_STATUS_OK;
 }
 typedef struct {

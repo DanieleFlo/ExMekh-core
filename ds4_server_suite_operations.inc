@@ -132,11 +132,19 @@ static ds4_status suite_run_embedding(suite_operation *o, buf *body, sj *root,
     ds4_runtime_estimate estimate;
     ds4_status status = ds4_gemma_multimodal_estimate(o->model->embed, o->input, &estimate);
     if (status) return status;
+    ds4_gemma_plan native_plan;
+    /* Admit a bounded native plan before considering LLM victims. The inner
+     * adapter makes the same read-only decision under the operation lease. */
+    ds4_status bounded = ds4_gemma_multimodal_plan(o->model->embed, o->input, &native_plan);
+    if (!bounded && !native_plan.reclaim_device_bytes) estimate = native_plan.peak;
     o->group = (ds4_execution_group){.context = o->model, .load = suite_noop, .release = suite_drop_gemma};
     o->step = (ds4_execution_step){.id = 0, .groups = 1, .retain = 1};
     o->step.working.bytes[DS4_MEMORY_DEVICE] = estimate.device_bytes;
     o->step.working.bytes[DS4_MEMORY_HOST] = estimate.host_bytes;
-    o->variant = (ds4_execution_variant){.steps = &o->step, .step_count = 1, .keep = 1};
+    /* Session capacity excludes future LLM prefill/vision transients. Until
+     * that working set is bounded, retain Gemma weights only inside this
+     * request; publication must leave the original LLM headroom available. */
+    o->variant = (ds4_execution_variant){.steps = &o->step, .step_count = 1};
     o->request = (ds4_execution_request){.groups = &o->group, .group_count = 1,
         .variants = &o->variant, .variant_count = 1, .victims = o->victims, .victim_count = o->victim_count};
     ds4_execution_ops ops = {.context = o, .execute = suite_embed_step, .drain = suite_drain,
@@ -239,6 +247,9 @@ static ds4_status suite_run_images(suite_operation *o, suite_image_request *r, b
     buf_printf(body, "{\"created\":%lld,\"data\":[", (long long)time(NULL));
     for (uint32_t i = 0; i < r->count; i++) {
         ds4_qwen_image_observer observer = {o, suite_operation_cancel, NULL};
+#ifdef DS4_SUITE_TEST_PHASE_OBSERVER
+        observer.trace = DS4_SUITE_TEST_PHASE_OBSERVER;
+#endif
         ds4_status status = ds4_qwen_image_job_create(&o->image, o->model->image,
             &r->native, o->victims, o->victim_count, &observer);
         if (!status) status = ds4_qwen_image_job_run(o->image);
@@ -338,6 +349,30 @@ static bool suite_receipt_lookup(server *s, job *j, sj *root, suite_receipt **re
     *receipt = empty;
     return false;
 }
+/* Detailed ledgers are for qualification. Keeping them opt-in prevents
+ * diagnostic arrays from consuming the agent's conversation context. */
+static void suite_append_resources(buf *body, suite_state *q) {
+    const char *enabled = getenv("DS4_SUITE_RESOURCE_METRICS");
+    if (!enabled || strcmp(enabled, "1")) return;
+    buf_puts(body, ",\"resources\":{\"locations\":[\"device\",\"mmap\",\"resident\",\"host\",\"pinned\",\"checkpoint\",\"managed\"],\"owners\":[");
+    const uint64_t owners[] = {0, 500, 501, 502, 503};
+    for (unsigned i = 0; i < sizeof(owners) / sizeof(*owners); i++) {
+        ds4_resource_totals totals;
+        ds4_resources_totals(q->resources, owners[i], &totals);
+        buf_printf(body, "%s{\"owner\":%llu,\"roots\":%zu,\"views\":%zu,\"allocated\":[",
+            i ? "," : "", (unsigned long long)owners[i], totals.roots, totals.views);
+        for (unsigned j = 0; j < DS4_MEMORY_COUNT; j++)
+            buf_printf(body, "%s%llu", j ? "," : "", (unsigned long long)totals.allocated[j]);
+        buf_puts(body, "],\"live\":[");
+        for (unsigned j = 0; j < DS4_MEMORY_COUNT; j++)
+            buf_printf(body, "%s%llu", j ? "," : "", (unsigned long long)totals.live[j]);
+        buf_puts(body, "],\"reserved\":[");
+        for (unsigned j = 0; j < DS4_MEMORY_COUNT; j++)
+            buf_printf(body, "%s%llu", j ? "," : "", (unsigned long long)totals.reserved[j]);
+        buf_puts(body, "]}");
+    }
+    buf_puts(body, "]}");
+}
 static void suite_worker(server *s, job *j) {
     pthread_mutex_lock(&s->inference_mu);
     suite_state *q = s->suite;
@@ -399,6 +434,10 @@ static void suite_worker(server *s, job *j) {
     if (q->quota - q->stored < output_reserve || (!embed && free_files < image.count)) {
         suite_status_error(s, j, DS4_STATUS_NOMEM); goto cleanup;
     }
+    /* A complete, validated API operation is a structured hint. Partial LLM
+     * output never reaches this path. Advisory CPU I/O is cancellable and
+     * bounded to 16 MiB of the configured bundle, with no GPU allocation. */
+    (void)ds4_bundle_hint_start(&o->hint, m->bundle, 0, 16u << 20);
     status = suite_victims(s, o);
     uint64_t h2d_before, d2h_before;
     ds4_numeric_transfers(q->numeric, &h2d_before, &d2h_before);
@@ -429,10 +468,13 @@ static void suite_worker(server *s, job *j) {
     else buf_printf(&body, ",\"load_seconds\":[%.9f,%.9f,%.9f],\"phase_seconds\":[%.9f,%.9f,%.9f,%.9f]",
         o->load_seconds[0], o->load_seconds[1], o->load_seconds[2],
         o->phase_seconds[0], o->phase_seconds[1], o->phase_seconds[2], o->phase_seconds[3]);
-    buf_puts(&body, "}}");
     status = suite_operation_close(o);
     if (status) { o->client = NULL; q->recovery = o; o = NULL; suite_status_error(s, j, DS4_STATUS_RESTORE); goto cleanup; }
     o = NULL;
+    /* Snapshot after request cleanup. Host media caches have their own owner;
+     * native buffers, legacy weights and unowned global memory stay distinct. */
+    suite_append_resources(&body, q);
+    buf_puts(&body, "}}");
     if (body.len > SUITE_RECEIPT_MAX) { suite_status_error(s, j, DS4_STATUS_NOMEM); goto cleanup; }
     if (receipt) {
         char id[38]; suite_id(id, "rcp-");

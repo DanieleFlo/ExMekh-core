@@ -1,5 +1,6 @@
 #ifndef DS4_QWEN_IMAGE_VAE_H
 #define DS4_QWEN_IMAGE_VAE_H
+#include "ds4_numeric_weights.h"
 #include "ds4_bundle.h"
 #include "ds4_qwen_image_input.h"
 #include "ds4_qwen_image_observer.h"
@@ -8,6 +9,8 @@
 extern "C" {
 #endif
 typedef struct ds4_qwen_image_vae ds4_qwen_image_vae;
+ds4_status ds4_qwen_image_vae_weights(ds4_qwen_image_vae *, uint64_t limit,
+                                      ds4_weight_budget *);
 /* Read-only plan snapshot; use the constructors below to choose a tile.
  * Decode rejects edited/stale byte estimates or decoder geometry. */
 typedef struct {

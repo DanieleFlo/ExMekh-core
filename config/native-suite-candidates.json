@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "baseline": "bf16-native-v1",
+  "thresholds": "docs/performance/native-suite-t00-20261020/tolerances.json",
+  "candidates": [
+    {"id":"qwen-encoder-q8-storage-bf16-compute","component":"text_encoder","objective":"memory","offer_when_qualified":true},
+    {"id":"qwen-encoder-w8a8","component":"text_encoder","objective":"latency","offer_when_qualified":true},
+    {"id":"qwen-dit-unsloth-q4-k-m","component":"dit","objective":"memory","offer_when_qualified":true},
+    {"id":"qwen-dit-last-2-bf16","component":"dit","objective":"memory","offer_when_qualified":true},
+    {"id":"qwen-dit-last-4-bf16","component":"dit","objective":"memory","offer_when_qualified":true},
+    {"id":"gemma-q8-bf16-fp32","component":"gemma","objective":"memory","offer_when_qualified":true},
+    {"id":"stable-address-cuda-graphs","component":"numeric","objective":"latency","offer_when_qualified":false},
+    {"id":"encoder-dit-wavefront","component":"transfers","objective":"latency","offer_when_qualified":false},
+    {"id":"vae-llm-wavefront","component":"transfers","objective":"latency","offer_when_qualified":false}
+  ],
+  "excluded": ["step-skipping","approximate-dit-cache","lossy-llm-kv","implicit-float16","hopper-blackwell-only-instructions"]
+}

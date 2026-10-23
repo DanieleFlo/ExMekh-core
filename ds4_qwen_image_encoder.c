@@ -36,6 +36,7 @@ struct ds4_qwen_image_encoder {
   size_t bound;
   size_t embedding, positions; /* Validated mmap table indices. */
   ds4_weight_group *groups[GROUPS];
+  ds4_weight_cache cache;
   uint32_t component;
   ds4_resources *resources;
   uint64_t owner;
@@ -226,7 +227,8 @@ ds4_status ds4_qwen_image_encoder_open(ds4_qwen_image_encoder **out,
     return DS4_STATUS_INVALID;
   if (strcmp(ds4_bundle_model(b), "Qwen/Qwen-Image-2.1-Turbo") ||
       strcmp(ds4_bundle_revision(b),
-             "fc13ba1986fcb905854dc8de2f52eee395f49b5b"))
+             "fc13ba1986fcb905854dc8de2f52eee395f49b5b") ||
+      strcmp(ds4_bundle_profile(b), "bf16-native-v1"))
     return DS4_STATUS_UNSUPPORTED;
   ds4_qwen_image_encoder *e = calloc(1, sizeof(*e));
   if (!e)
@@ -254,15 +256,15 @@ ds4_status ds4_qwen_image_encoder_open(ds4_qwen_image_encoder **out,
   TRY(ds4_qwen_image_tokenizer_open(&e->tokenizer, tokenizer, sha));
   TRY(host_account(e, sizeof(*e) + ds4_qwen_image_tokenizer_bytes(e->tokenizer),
                    &e->metadata));
-  ds4_weight_backend backend = ds4_numeric_weight_backend(num);
   for (uint32_t g = 0; g < GROUPS; g++) {
     size_t ids[16], count = 0;
     for (size_t i = 0; i < e->bound; i++)
       if (e->weights[i].group == g)
         ids[count++] = e->weights[i].index;
-    TRY(ds4_weight_group_create_selected(&e->groups[g], b, e->component, ids,
-                                         count, &backend));
+    TRY(ds4_numeric_weight_group_selected(&e->groups[g], b, e->component, ids,
+                                         count, num));
   }
+  TRY(ds4_weight_cache_init(&e->cache, e->groups, GROUPS));
   ds4_runtime_descriptor d = {DS4_SUITE_ABI,
                               ds4_bundle_model(b),
                               ds4_bundle_revision(b),
@@ -286,6 +288,11 @@ cleanup:
   free(e);
   return status;
 }
+ds4_status ds4_qwen_image_encoder_weights(ds4_qwen_image_encoder *e, uint64_t limit,
+                                          ds4_weight_budget *out) {
+  return e ? ds4_weight_cache_configure(&e->cache, e->model, limit, out)
+           : DS4_STATUS_INVALID;
+}
 ds4_status ds4_qwen_image_encoder_release_weights(ds4_qwen_image_encoder *e) {
   if (!e)
     return DS4_STATUS_INVALID;
@@ -293,11 +300,7 @@ ds4_status ds4_qwen_image_encoder_release_weights(ds4_qwen_image_encoder *e) {
   ds4_status status = ds4_runtime_model_enter_exclusive(e->model, &scope);
   if (status)
     return status;
-  for (uint32_t i = 0; i < GROUPS; i++) {
-    status = ds4_weight_group_release(e->groups[i]);
-    if (status)
-      break;
-  }
+  status = ds4_weight_cache_release(&e->cache);
   ds4_runtime_scope_leave(&scope);
   return status;
 }
@@ -380,7 +383,7 @@ static ds4_status weight(ds4_qwen_image_encoder *e, const char *prefix,
   const binding *b = lookup(e, name);
   if (!b || b->group == EMBED_GROUP)
     return DS4_STATUS_INVALID;
-  ds4_status s = ds4_weight_group_load(e->groups[b->group]);
+  ds4_status s = ds4_weight_cache_acquire(&e->cache, b->group);
   if (s)
     return s;
   const void *storage;
@@ -645,9 +648,7 @@ ds4_status qi_encoder_load(ds4_qwen_image_encoder *e, bool vision) {
   ds4_status s = ds4_runtime_model_enter(e->model, &scope);
   if (s)
     return s;
-  for (uint32_t i = 0; i < GROUPS && !s; i++)
-    if (vision || i < TEXT_LAYERS)
-      s = ds4_weight_group_load(e->groups[i]);
+  s = ds4_weight_cache_preload(&e->cache, vision ? GROUPS : TEXT_LAYERS);
   ds4_runtime_scope_leave(&scope);
   return s;
 }

@@ -6,6 +6,19 @@ SERVER_PORT="${DS4_SERVER_PORT:-8080}"
 profile="${DS4_MODEL_PROFILE:-qwen27}"
 cd "$SCRIPT_DIR"
 
+server=ds4-server
+suite_args=()
+if [[ -n "${DS4_SUITE_CONFIG:-}" ]]; then
+    # Keep native dependencies explicit and local to the suite build.
+    if [[ -f config/native-suite.env ]]; then
+        set -a
+        source config/native-suite.env
+        set +a
+    fi
+    server=ds4-server-suite
+    suite_args=(--suite-config "$DS4_SUITE_CONFIG")
+fi
+
 profile_env=()
 prefill_args=()
 case "$profile" in
@@ -64,17 +77,18 @@ if [[ -n "$kv_dir" ]]; then
     kv_args=(--kv-disk-dir "$kv_dir" --kv-disk-space-mb "${DS4_KV_DISK_SPACE_MB:-8192}")
 fi
 server_args=(--cuda -m "$model" "${vision_args[@]}" --ctx "$context"
-    "${prefill_args[@]}" --host 0.0.0.0 --mtp --port "$SERVER_PORT" "${kv_args[@]}")
+    "${prefill_args[@]}" --host 0.0.0.0 --mtp --port "$SERVER_PORT" "${kv_args[@]}"
+    "${suite_args[@]}")
 
 # Review the exact command without building, allocating a context or loading weights.
 if [[ "${1:-}" == --print-command ]]; then
     shift
-    printf '%q ' env "${profile_env[@]}" ./ds4-server "${server_args[@]}" "$@"
+    printf '%q ' env "${profile_env[@]}" "./$server" "${server_args[@]}" "$@"
     printf '\n'
     exit 0
 fi
 [[ -f "$model" ]] || { echo "Model not found: $model" >&2; exit 2; }
-echo "Checking ds4-server build..."
-make --no-print-directory -j2 ds4-server CUDA_ARCH="${CUDA_ARCH:-native}"
+echo "Checking $server build..."
+make --no-print-directory -j2 "$server" CUDA_ARCH="${CUDA_ARCH:-native}"
 echo "Starting $profile on http://0.0.0.0:${SERVER_PORT} (ctx=$context) ..."
-exec env "${profile_env[@]}" ./ds4-server "${server_args[@]}" "$@"
+exec env "${profile_env[@]}" "./$server" "${server_args[@]}" "$@"

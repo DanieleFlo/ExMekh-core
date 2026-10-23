@@ -1,0 +1,11 @@
+{
+  "qwen-encoder-q8-storage-bf16-compute": {"native_binding":"UNSUPPORTED","sources":["ds4_qwen_image_encoder.c","tests/test_suite_api.py"],"note":"Storage INT8 is distinct from W8A8; the qualified binding accepts BF16 tensors only."},
+  "qwen-encoder-w8a8": {"native_binding":"UNSUPPORTED","sources":["ds4_numeric_cuda.cu"],"note":"No W8A8 numeric primitive or held-out qualification; no Tensor Core gain assumed."},
+  "qwen-dit-unsloth-q4-k-m": {"native_binding":"UNSUPPORTED","sources":["config/suite-bundles/qwen-image-2.1-turbo-dit-q4-k-m.json","ds4_qwen_image_graph.h","tests/test_suite_api.py"],"note":"Pinned storage inventory does not supply a qualified native DiT quantized binding."},
+  "qwen-dit-last-2-bf16": {"sources":["tests/fixtures/native-suite-v1/corpus.json"],"note":"No exported sensitivity candidate or held-out typography/edit/alpha ablation. No profile promoted."},
+  "qwen-dit-last-4-bf16": {"sources":["tests/fixtures/native-suite-v1/corpus.json"],"note":"No exported sensitivity candidate or held-out typography/edit/alpha ablation. No profile promoted."},
+  "gemma-q8-bf16-fp32": {"native_binding":"UNSUPPORTED","sources":["ds4_embedding_gemma2.c","ds4_gemma_vision.c","ds4_gemma_audio.c","tests/test_suite_api.py"],"note":"BF16/FP32 only. Quantized storage is not silently expanded into an unqualified profile or FP16 compute."},
+  "stable-address-cuda-graphs": {"sources":["ds4_weight_cache.c","ds4_numeric.c"],"note":"Streaming frees/reloads weight addresses. No stable-address graph candidate measured; not enabled."},
+  "encoder-dit-wavefront": {"sources":["ds4_qwen_image_pipeline.c"],"note":"No measured whole-operation gain with phase/restore reservation. Serial compute retained; NEED_MORE_DATA."},
+  "vae-llm-wavefront": {"sources":["ds4_qwen_image_pipeline.c","ds4_executor.c"],"note":"No measured whole-operation gain with phase/restore reservation. Serial compute retained; NEED_MORE_DATA."}
+}

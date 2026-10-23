@@ -14,8 +14,12 @@ import numpy as np
 from exmekh_lib.config.capabilities import CAPABILITY_FORMAT
 from exmekh_lib.config.native_suite import NATIVE_SUITE
 from exmekh_lib.core.agents.tools.deep_tools import DeepTools
+from exmekh_lib.core.models.client import Client
+from exmekh_lib.core.models.client_request import ClientRequest
 from exmekh_lib.core.models.native_suite import native_suite_context
+from exmekh_lib.core.models.system_message import SystemMessage
 from exmekh_lib.core.models.tool import AttachedToolResult
+from exmekh_lib.core.models.user_message import ImagesUserMessage, UserMessage
 from exmekh_lib.core.web_navigation import ranking
 from exmekh_lib.core.web_navigation.image_discovery import DiscoveredImage
 from exmekh_lib.providers.local import LocalProvider
@@ -38,6 +42,7 @@ class ImageToolsE2E(unittest.TestCase):
             base_url=URL,
             api_key="local",
             api="responses",
+            reasoning_effort="none",
             http_client=HTTPClient(event_hooks={"request": [cls.capture_request]}),
         )
         cls.provider.client.max_retries = 0
@@ -196,6 +201,35 @@ class ImageToolsE2E(unittest.TestCase):
                         [r["file_id"] for r in result["images"]],
                         [r["file_id"] for r in retry["images"]],
                     )
+                    # A fresh reader gets only pixels: neither the generation
+                    # prompt nor result metadata can supply the answer.
+                    reader = Client(
+                        self.provider,
+                        SystemMessage("Describe the supplied image in English."),
+                    )
+                    with Image.open(result["images"][0]["path"]) as generated:
+                        answer = (
+                            reader.call(
+                                ClientRequest(
+                                    UserMessage(
+                                        [
+                                            "Name the main object's color and geometric shape. Reply with only those words.",
+                                            ImagesUserMessage(
+                                                images=[generated.copy()]
+                                            ),
+                                        ]
+                                    ),
+                                    extra={"max_output_tokens": 48, "temperature": 0},
+                                )
+                            )
+                            .get_message()
+                            .lower()
+                        )
+                    self.assertIn("red", answer)
+                    self.assertIn("square", answer)
+                    self.observations.append(
+                        {"case": "blind_llm_reads_generated_pixels", "answer": answer}
+                    )
                 self.observations.append(
                     {
                         "case": name,
@@ -272,6 +306,41 @@ class ImageToolsE2E(unittest.TestCase):
                 "scores": scores,
                 "order": order,
                 "requests": list(self.requests),
+            }
+        )
+
+    def test_04_user_landscape_resolution(self):
+        result = self.invoke(
+            prompt="A realistic photograph of the Italian Alps in winter, snow-covered peaks, blue sky and natural sunlight",
+            width=1024,
+            height=768,
+            n=1,
+            background="opaque",
+            seed=20261022,
+            include_image_in_result=True,
+        )
+        self.assertIsInstance(result, AttachedToolResult)
+        row = result["images"][0]
+        raw = Path(row["path"]).read_bytes()
+        self.assertEqual(raw, self.provider.native_suite().content(row["file_id"]))
+        with Image.open(io.BytesIO(raw)) as image:
+            self.assertEqual(image.size, (1024, 768))
+            self.assertEqual(image.getchannel("A").getextrema(), (255, 255))
+        previews = [
+            part
+            for part in result.attachments.iter_content_parts()
+            if isinstance(part, Image.Image)
+        ]
+        self.assertEqual([image.size for image in previews], [(1024, 768)])
+        destination = os.getenv("DS4_SUITE_E2E_ARTIFACTS")
+        if destination:
+            (Path(destination) / "winter-alps-1024x768.png").write_bytes(raw)
+        self.observations.append(
+            {
+                "case": "user_landscape_1024x768",
+                "service": result["ds4"],
+                "output": row,
+                "png_sha256": hashlib.sha256(raw).hexdigest(),
             }
         )
 

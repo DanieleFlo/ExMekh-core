@@ -56,6 +56,13 @@ int main(int argc,char **argv) {
     assert(accounted.allocated[DS4_MEMORY_HOST] && accounted.allocated[DS4_MEMORY_MMAP]);
     assert(!ds4_bundle_dump(b,stdout));
     if (!strcmp(argv[3],"dump")) { assert(!ds4_bundle_close(b)); goto end; }
+    {
+        ds4_bundle_hint *hint = NULL;
+        assert(ds4_bundle_hint_start(&hint, b, 0, (16u << 20) + 1) == DS4_STATUS_INVALID && !hint);
+        assert(!ds4_bundle_hint_start(&hint, b, 0, 4096));
+        assert(ds4_bundle_close(b) == DS4_STATUS_BUSY);
+        assert(!ds4_bundle_hint_close(hint));
+    }
     for (size_t component=0;component<ds4_bundle_component_count(b);component++) {
         size_t count=0;
         ds4_weight_tensor *expected=calloc(ds4_bundle_tensor_count(b),sizeof(*expected)); assert(expected);

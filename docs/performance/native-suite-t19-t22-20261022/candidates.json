@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "registry_sha256": "aeefdfc7f7ea14fc606326c4af378cb4b7dd8e7f898e6a3addf2ae5ac3bfee34",
+  "measurements_sha256": "31892e60acb63505df6c89d7481c3db56d2b498454603d0df71383e27c0236d1",
+  "candidates": [
+    {
+      "id": "qwen-encoder-q8-storage-bf16-compute",
+      "public": false,
+      "verdict": "REJECT",
+      "missing": [],
+      "reason": "No native binding for this storage/compute profile"
+    },
+    {
+      "id": "qwen-encoder-w8a8",
+      "public": false,
+      "verdict": "REJECT",
+      "missing": [],
+      "reason": "No native binding for this storage/compute profile"
+    },
+    {
+      "id": "qwen-dit-unsloth-q4-k-m",
+      "public": false,
+      "verdict": "REJECT",
+      "missing": [],
+      "reason": "No native binding for this storage/compute profile"
+    },
+    {
+      "id": "qwen-dit-last-2-bf16",
+      "public": false,
+      "verdict": "NEED_MORE_DATA",
+      "missing": [
+        "input_identity",
+        "kernel",
+        "model",
+        "heldout",
+        "retrieval_or_image_quality",
+        "memory",
+        "llm_regression",
+        "native_binding",
+        "artifact_and_sources",
+        "heldout_split",
+        "warmup_and_platform",
+        "baseline_stable_five_samples",
+        "candidate_stable_five_samples"
+      ]
+    },
+    {
+      "id": "qwen-dit-last-4-bf16",
+      "public": false,
+      "verdict": "NEED_MORE_DATA",
+      "missing": [
+        "input_identity",
+        "kernel",
+        "model",
+        "heldout",
+        "retrieval_or_image_quality",
+        "memory",
+        "llm_regression",
+        "native_binding",
+        "artifact_and_sources",
+        "heldout_split",
+        "warmup_and_platform",
+        "baseline_stable_five_samples",
+        "candidate_stable_five_samples"
+      ]
+    },
+    {
+      "id": "gemma-q8-bf16-fp32",
+      "public": false,
+      "verdict": "REJECT",
+      "missing": [],
+      "reason": "No native binding for this storage/compute profile"
+    },
+    {
+      "id": "stable-address-cuda-graphs",
+      "public": false,
+      "verdict": "NEED_MORE_DATA",
+      "missing": [
+        "input_identity",
+        "kernel",
+        "model",
+        "heldout",
+        "retrieval_or_image_quality",
+        "memory",
+        "llm_regression",
+        "native_binding",
+        "artifact_and_sources",
+        "heldout_split",
+        "warmup_and_platform",
+        "baseline_stable_five_samples",
+        "candidate_stable_five_samples"
+      ]
+    },
+    {
+      "id": "encoder-dit-wavefront",
+      "public": false,
+      "verdict": "NEED_MORE_DATA",
+      "missing": [
+        "input_identity",
+        "kernel",
+        "model",
+        "heldout",
+        "retrieval_or_image_quality",
+        "memory",
+        "llm_regression",
+        "native_binding",
+        "artifact_and_sources",
+        "heldout_split",
+        "warmup_and_platform",
+        "baseline_stable_five_samples",
+        "candidate_stable_five_samples"
+      ]
+    },
+    {
+      "id": "vae-llm-wavefront",
+      "public": false,
+      "verdict": "NEED_MORE_DATA",
+      "missing": [
+        "input_identity",
+        "kernel",
+        "model",
+        "heldout",
+        "retrieval_or_image_quality",
+        "memory",
+        "llm_regression",
+        "native_binding",
+        "artifact_and_sources",
+        "heldout_split",
+        "warmup_and_platform",
+        "baseline_stable_five_samples",
+        "candidate_stable_five_samples"
+      ]
+    }
+  ],
+  "excluded": [
+    "step-skipping",
+    "approximate-dit-cache",
+    "lossy-llm-kv",
+    "implicit-float16",
+    "hopper-blackwell-only-instructions"
+  ]
+}

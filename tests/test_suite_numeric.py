@@ -1103,6 +1103,44 @@ class SuiteNumeric(unittest.TestCase):
             self.assertNotEqual(create(C.byref(output), resources, owner), 0)
             self.assertIsNone(output.value, name)
 
+    @unittest.skipUnless(
+        os.environ.get("DS4_SUITE_NUMERIC_CUDA"), "CUDA allocation accounting"
+    )
+    def test_native_free_refreshes_shared_device_budget(self):
+        class Budget(C.Structure):
+            _fields_ = [
+                ("limit", C.c_uint64),
+                ("margin", C.c_uint64),
+                ("global_free", C.c_uint64),
+                ("global_known", C.c_bool),
+            ]
+
+        lib = self.n.lib
+        lib.ds4_resources_reconcile.argtypes = [
+            C.c_void_p,
+            C.c_uint32,
+            C.c_uint64,
+            C.c_bool,
+        ]
+        lib.ds4_resources_get_budget.argtypes = [
+            C.c_void_p,
+            C.c_uint32,
+            C.POINTER(Budget),
+        ]
+        original = Budget()
+        self.n.ok(lib.ds4_resources_get_budget(self.n.resources, 0, C.byref(original)))
+        self.n.tensor(torch.ones(16))
+        self.n.ok(lib.ds4_resources_reconcile(self.n.resources, 0, 0, True))
+        self.n.clear()
+        current = Budget()
+        self.n.ok(lib.ds4_resources_get_budget(self.n.resources, 0, C.byref(current)))
+        self.assertTrue(current.global_known)
+        self.assertGreater(current.global_free, 0)
+        self.assertEqual(
+            (current.limit, current.margin), (original.limit, original.margin)
+        )
+        self.n.tensor(torch.ones(16))
+
     def test_invalid_dimensions_and_lifetime(self):
         x = self.n.tensor(torch.ones(64))
         self.assertEqual(

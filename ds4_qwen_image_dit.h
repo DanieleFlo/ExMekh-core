@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 typedef struct ds4_qwen_image_dit ds4_qwen_image_dit;
+ds4_status ds4_qwen_image_dit_weights(ds4_qwen_image_dit *, uint64_t limit,
+                                      ds4_weight_budget *);
 typedef struct ds4_qwen_image_dit_input ds4_qwen_image_dit_input;
 typedef struct {
   uint32_t height, width;

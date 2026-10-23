@@ -80,6 +80,11 @@ cleanup:
   qi_host_free(e, account);
   return status;
 }
+ds4_status ds4_qwen_image_dit_weights(ds4_qwen_image_dit *e, uint64_t limit,
+                                      ds4_weight_budget *out) {
+  return e ? ds4_weight_cache_configure(&e->g.cache, e->g.model, limit, out)
+           : DS4_STATUS_INVALID;
+}
 ds4_status ds4_qwen_image_dit_release_weights(ds4_qwen_image_dit *e) {
   return e ? qi_release(&e->g) : DS4_STATUS_INVALID;
 }

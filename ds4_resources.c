@@ -133,6 +133,14 @@ ds4_status ds4_resources_available(ds4_resources *r, ds4_memory_location l, uint
     pthread_mutex_lock(&r->mutex); *out = available(r, l);
     pthread_mutex_unlock(&r->mutex); return DS4_STATUS_OK;
 }
+ds4_status ds4_resources_working_capacity(ds4_resources *r, ds4_memory_location l, uint64_t *out) {
+    if (!r || !out || !location_valid(l)) return DS4_STATUS_INVALID;
+    pthread_mutex_lock(&r->mutex);
+    ds4_reservation *p = current_reservation;
+    *out = p && p->registry == r ? p->bytes[l] : available(r, l);
+    pthread_mutex_unlock(&r->mutex);
+    return DS4_STATUS_OK;
+}
 ds4_status ds4_resources_can_reserve(ds4_resources *r, const uint64_t bytes[DS4_MEMORY_COUNT],
                                     const uint64_t reclaimed[DS4_MEMORY_COUNT]) {
     if (!r || !bytes) return DS4_STATUS_INVALID;

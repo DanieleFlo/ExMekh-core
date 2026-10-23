@@ -10,10 +10,21 @@
 static void progress(void *opaque, const char *event, int current, int total) {
     (void)event; (void)current; (void)total; (*(int *)opaque)++;
 }
-static void restore(ds4_session *s, ds4_session_checkpoint *p, uint64_t expected) {
+static void restore(ds4_session *s, ds4_session_checkpoint *p, uint64_t expected,
+                    ds4_resources *registry) {
+    ds4_resource_totals total_before, total_after;
+    ds4_session_memory owned_before, owned_after;
+    ds4_resources_totals(registry, 0, &total_before);
+    assert(!ds4_session_memory_query(s, &owned_before));
     uint64_t rng = 0; size_t size = sizeof(rng);
     assert(!ds4_session_checkpoint_restore(s, p, &rng, &size));
     assert(size == sizeof(rng) && rng == expected);
+    ds4_resources_totals(registry, 0, &total_after);
+    assert(!ds4_session_memory_query(s, &owned_after));
+    /* A restored graph's lazy vision buffers belong to that session too.
+     * Otherwise the next executor lease undercounts its restore capacity. */
+    assert(total_before.allocated[DS4_MEMORY_DEVICE] - owned_before.device_capacity ==
+           total_after.allocated[DS4_MEMORY_DEVICE] - owned_after.device_capacity);
 }
 int main(int argc, char **argv) {
     if (argc < 2 || argc > 4) return 2;
@@ -85,7 +96,7 @@ int main(int argc, char **argv) {
     const int count = ds4_session_eval_speculative_argmax(s, token, 4, -1, expected_tokens, 8, error, sizeof(error));
     assert(count > 0 && ds4_session_copy_logits(s, reference, vocab) == vocab);
     for (int mode = 0; mode < 3; mode++) {
-        restore(s, p, rng);
+        restore(s, p, rng, registry);
         ds4_session_memory before, during, after;
         assert(!ds4_session_memory_query(s, &before) && before.capacity_known && before.device_capacity);
         ds4_resource_totals owned;
@@ -110,7 +121,18 @@ int main(int argc, char **argv) {
             if (mode == 0) assert(during.device_capacity == before.device_capacity && !during.weights_resident);
             assert(!ds4_engine_weights_load(e));
         }
-        if (mode != 0) assert(!ds4_session_resume(s));
+        if (mode != 0) for (unsigned repeat = 0; repeat < 3; repeat++) {
+            uint64_t demand[DS4_MEMORY_COUNT] = {[DS4_MEMORY_DEVICE]=before.device_capacity};
+            ds4_reservation *lease = NULL;
+            assert(!ds4_resources_reserve(registry, 900, demand, &lease));
+            ds4_reservation_scope working = ds4_reservation_enter(lease);
+            assert(!ds4_session_resume(s));
+            ds4_reservation_leave(&working);
+            assert(!ds4_reservation_cancel(lease));
+            assert(!ds4_session_memory_query(s, &after));
+            assert(after.device_capacity == before.device_capacity);
+            if (repeat != 2) assert(!ds4_session_park(s, "/tmp"));
+        }
         assert(!ds4_session_memory_query(s, &after) && !after.parked);
         assert(ds4_session_eval_speculative_argmax(s, token, 4, -1, actual_tokens, 8, error, sizeof(error)) == count);
         assert(!memcmp(expected_tokens, actual_tokens, (size_t)count * sizeof(int)));
@@ -123,7 +145,7 @@ int main(int argc, char **argv) {
         fflush(stdout);
     }
     ds4_session_report_progress(s, "test", 1, 1); assert(callback_count == 1);
-    restore(s, p, rng);
+    restore(s, p, rng, registry);
     /* SSD admission failure keeps authoritative graph and logits. */
     ds4_resource_budget budget = {.limit=0};
     assert(!ds4_resources_set_budget(registry, DS4_MEMORY_CHECKPOINT, &budget));

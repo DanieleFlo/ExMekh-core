@@ -32,6 +32,22 @@ Uno stream batch terminava con `incomplete_generation`: il parser ammetteva
 - righe 101–122: **Responsabilità e controlli ancora aperti** — Una riscrittura valida o il mancato adempimento di una richiesta delete non
 - righe 123–137: **Tentativi e limiti conservati** — Il primo tentativo MTP usava `--batched-session 1`: il runtime disabilitava MTP.
 
+## [Suite nativa nell'agente: launcher e accettazione live](native-suite-agent-live-20261022.md)
+
+Il caricamento di un payload multimodale creava il buffer RoPE visivo con
+
+- righe 14–28: **Correzioni emerse dai test** — Il caricamento di un payload multimodale creava il buffer RoPE visivo con
+- righe 29–47: **Scenari verificati** — Le fixture di ricerca sono locali.
+- righe 48–55: **Riproduzione** — Preparare i bundle e le dipendenze secondo la
+- righe 56–74: **In un altro terminale, dopo il log listening:** — DS4_SUITE_HTTP_URL=http://127.0.0.1:8080/v1 \
+
+## [Revisione clean code T19–T22 e integrazione multimodale](native-suite-refactor-review-20261022.md)
+
+I test della cache leggono lo snapshot pubblico.
+
+- righe 8–31: **Responsabilità e comportamenti corretti** — I test della cache leggono lo snapshot pubblico.
+- righe 32–72: **Verifiche** — Risultati e hash della nuova esecuzione sono registrati nel
+
 ## [Draft dello snapshot old_text da 32/64 token — 12 ottobre 2026](old-text-snapshot-chunks-20261012.md)
 
 La policy parte da 32 e passa a 64 dopo un batch pieno.

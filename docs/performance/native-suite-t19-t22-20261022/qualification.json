@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "platform": "RTX 3090 sm_86 / CUDA single GPU / Ubuntu 24.04 WSL",
+  "status": "NOT_RELEASE_QUALIFIED",
+  "functional_status": "PASS",
+  "gates": {
+    "image_quality": "NOT_VERIFIED",
+    "embedding_quality": "PASS",
+    "residency": "PASS",
+    "fault_recovery": "PASS",
+    "stress_50": "PASS",
+    "legacy_regressions": "PASS",
+    "clean_build": "PASS"
+  },
+  "inherited_evidence": {"embedding_quality": "docs/performance/native-suite-t15-t16-20261022/verification.json"},
+  "functional_fault_recovery": "PASS",
+  "image_first_llm_handoff": "PASS",
+  "package_acceptance": {"status":"PASS","sdk_scenarios":7,"exmekh_registered_tool":true,"total_tests":8,"context_tokens":2048,"temporary_files_after_shutdown":0,"kind":"development"},
+  "stress_50_scope": "Recorded pre-final binary; final global-free refresh is covered by 25 CUDA tests, 17 phase-specific HTTP disconnects and 8 live package tests. The 50-cycle run is not claimed as a rerun of the final binary.",
+  "fault_scope": "64 native image injections plus 17 real HTTP socket disconnects: all named VAE frontiers, conditioning and first/last DiT block/latent. Every DiT block/latent covered natively; full socket sweep of all repeated layers/steps not claimed.",
+  "release_blockers": ["T11 complete image quality gate"],
+  "not_qualified": ["Metal", "ROCm", "TP", "distributed", "suite batching", "quantized numerical profiles", "encoder-DiT wavefront", "VAE-LLM wavefront"],
+  "public_profile": "bf16-native-v1",
+  "deferred_by_user": ["T19.5 wavefront", "T19.8 performance comparisons", "T20.1-T20.5 numerical optimization studies", "T21.6 final comparative benchmarks"],
+  "residency_scope": "Local image latent/RGBA and Gemma vector equivalence; controlled budgets on RTX 3090, not qualification of smaller hardware",
+  "thresholds_changed": false
+}
