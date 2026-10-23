@@ -42,7 +42,7 @@ from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from exmekh_agent.ui.chat.page_controller import ChatPageController
-from exmekh_agent.ui.history.raw_history_view import format_json_to_highlighted_html
+from exmekh_agent.ui.history.json_format import format_json_to_highlighted_html
 from exmekh_agent.ui.shared.output_format import format_output_html
 from tests.test_provider_context import StructuredAnswer, StubProvider
 

@@ -6,7 +6,7 @@ from copy import deepcopy
 import pytest
 
 from exmekh_agent.exmekh_bridge.models import ChatMessage
-from exmekh_agent.ui.history.raw_history_view import format_json_to_highlighted_html
+from exmekh_agent.ui.history.json_format import format_json_to_highlighted_html
 from exmekh_agent.ui.shared.output_format import (
     format_output_html,
     format_raw_output_text,

@@ -10,6 +10,7 @@ from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
+from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
@@ -209,8 +210,8 @@ async def test_settings_drawer_component(ui_context: Client) -> None:
             mock_health.return_value = (True, ["alpha-model", "beta-model"])
             await drawer.refresh_models()
             assert drawer.status_badge.text == "Online (2 models)"
-            assert "alpha-model" in drawer.model_select.options
-            assert "beta-model" in drawer.model_select.options
+            assert drawer.model_display.value == config.default_model
+            assert drawer.model_display.value in ["alpha-model", "beta-model"]
 
         # Test toggle
         drawer.toggle()

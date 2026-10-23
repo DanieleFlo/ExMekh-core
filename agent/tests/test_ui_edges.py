@@ -56,7 +56,7 @@ async def test_settings_refresh_handles_offline_and_empty_models(client) -> None
     drawer.refresh_btn = MagicMock()
     drawer.status_spinner = MagicMock()
     drawer.status_badge = MagicMock()
-    drawer.model_select = MagicMock()
+    drawer.model_display = MagicMock(value="unchanged model")
     with (
         client,
         patch(
@@ -71,7 +71,7 @@ async def test_settings_refresh_handles_offline_and_empty_models(client) -> None
     drawer.refresh_btn.props.assert_any_call(remove="loading")
     drawer.status_spinner.set_visibility.assert_any_call(True)
     drawer.status_spinner.set_visibility.assert_any_call(False)
-    assert drawer.model_select.options != [config.default_model]
+    assert drawer.model_display.value == "unchanged model"
 
 
 @pytest.mark.asyncio
@@ -84,7 +84,7 @@ async def test_settings_save_handles_sync_callback_and_restores_button_on_failur
     drawer.input_api_key = MagicMock(value="secret")
     drawer.select_api_type = MagicMock(value="responses")
     drawer.select_reasoning = MagicMock(value="low")
-    drawer.model_select = MagicMock(value="model")
+    drawer.model_display = MagicMock(value="model")
     drawer.save_button = MagicMock()
     drawer.close = MagicMock()
     with (
@@ -156,7 +156,7 @@ async def test_settings_discovery_tracks_loaded_qwen_and_allocated_context(
             (config.default_model, config.get_context_length())
         ),
     )
-    drawer.model_select = MagicMock(value=previous_model)
+    drawer.model_display = MagicMock(value=previous_model)
     response = MagicMock(status_code=200)
     response.json.return_value = {
         "data": [
@@ -171,8 +171,7 @@ async def test_settings_discovery_tracks_loaded_qwen_and_allocated_context(
         await drawer.refresh_models()
     expected_model = previous_model if previous_model in models else models[0]
     assert config.default_model == expected_model
-    assert drawer.model_select.options == models
-    assert drawer.model_select.value == expected_model
+    assert drawer.model_display.value == expected_model
     assert refreshed == [(expected_model, context_length)]
     assert config.uses_ds4_qwen_prompt(expected_model, config.base_url)
     # Discovery is runtime metadata, not an explicit settings save.

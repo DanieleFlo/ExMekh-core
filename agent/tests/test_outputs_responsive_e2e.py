@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 from playwright.async_api import async_playwright, expect
 
@@ -225,5 +227,79 @@ async def test_all_tabs_responsive_and_composer_remains_usable(output_server, vi
                 await chat_dialog.get_by_role(
                     "button", name="Cancel", exact=True
                 ).click()
+        finally:
+            await browser.close()
+
+
+@pytest.mark.serial(reason="Reads and writes the shared system clipboard")
+async def test_raw_history_image_data_buttons_copy_original_values(
+    output_server, tmp_path
+):
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            executable_path=get_edge_executable(), headless=True
+        )
+        try:
+            context = await browser.new_context(
+                permissions=["clipboard-read", "clipboard-write"],
+                viewport={"width": 1360, "height": 900},
+            )
+            page = await context.new_page()
+            errors = []
+            page.on("pageerror", lambda error: errors.append(str(error)))
+            await page.goto(output_server, wait_until="networkidle")
+            await page.get_by_role("tab", name="Raw History", exact=True).click()
+            raw = page.locator(".raw-history-container:visible")
+            buttons = raw.get_by_role("button", name="Copy image data", exact=True)
+            await expect(buttons).to_have_count(2)
+            assert "data:image/png;base64," not in await raw.inner_text()
+            await expect(raw).to_contain_text(
+                "These images are previews from generate-image."
+            )
+            originals = await buttons.evaluate_all(
+                "elements => elements.map(el => el.dataset.imageData)"
+            )
+            assert all(len(value) > 10000 for value in originals)
+            assert originals[0] != originals[1]
+            await page.evaluate("navigator.clipboard.writeText('before image copy')")
+            await buttons.first.click()
+            await page.wait_for_function(
+                "expected => navigator.clipboard.readText().then(value => value === expected)",
+                arg=originals[0],
+            )
+            await expect(
+                page.get_by_text("Image data copied", exact=True)
+            ).to_be_visible()
+            await buttons.nth(1).focus()
+            await buttons.nth(1).press("Enter")
+            await page.wait_for_function(
+                "expected => navigator.clipboard.readText().then(value => value === expected)",
+                arg=originals[1],
+            )
+            await page.get_by_role("button", name="Copy full JSON", exact=True).click()
+            await page.wait_for_function(
+                "navigator.clipboard.readText().then(value => value.startsWith('['))"
+            )
+            copied = json.loads(await page.evaluate("navigator.clipboard.readText()"))
+            attachment = next(
+                item["attachments"] for item in copied if item.get("attachments")
+            )
+            assert [
+                part["data"] for part in attachment["parts"] if part["type"] == "image"
+            ] == originals
+            await buttons.first.scroll_into_view_if_needed()
+            await page.screenshot(
+                path=str(tmp_path / "raw-history-copy-image-data.png")
+            )
+            await page.reload(wait_until="networkidle")
+            await page.get_by_role("tab", name="Raw History", exact=True).click()
+            await expect(buttons).to_have_count(2)
+            assert "data:image/png;base64," not in await raw.inner_text()
+            await buttons.first.click()
+            await page.wait_for_function(
+                "expected => navigator.clipboard.readText().then(value => value === expected)",
+                arg=originals[0],
+            )
+            assert not errors
         finally:
             await browser.close()

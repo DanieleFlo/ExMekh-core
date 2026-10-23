@@ -25,7 +25,7 @@ def settings_view():
         "input_api_key": "test-key",
         "select_api_type": "responses",
         "select_reasoning": "low",
-        "model_select": "test-model",
+        "model_display": "test-model",
     }.items():
         setattr(drawer, name, MagicMock(value=value))
     drawer.save_button = MagicMock()
@@ -277,3 +277,15 @@ async def test_explicit_provider_probe_caches_capacity_for_the_probed_endpoint(
     assert config.get_server_context_length("shared", "http://other.test/v1") == 32768
     config.set_model_context_length("invalid", True)
     assert config.get_server_context_length("invalid", config.base_url) is None
+
+
+async def test_saving_settings_does_not_replace_runtime_model_with_stale_display(
+    settings_view, monkeypatch
+):
+    client, drawer, callback = settings_view
+    monkeypatch.setattr(config, "default_model", "currently-loaded-model")
+    drawer.model_display.value = "previously-loaded-model"
+    with patch.object(config, "update_async", AsyncMock(return_value=True)) as update:
+        await in_client(client, drawer._save_settings)
+    assert "default_model" not in update.call_args.kwargs
+    assert config.default_model == "currently-loaded-model"

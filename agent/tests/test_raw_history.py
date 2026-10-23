@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import json
 from unittest.mock import MagicMock, patch
+from xml.etree import ElementTree
 
 import pytest
 from nicegui import ui
 from nicegui.client import Client
+from nicegui.events import GenericEventArguments
 from nicegui.page import page
 
 from exmekh_agent.exmekh_bridge.history.compaction import ModelContextCheckpoint
+from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
@@ -18,10 +21,11 @@ from exmekh_agent.exmekh_bridge.models import (
 )
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.chat.chat_view import ChatViewComponent
+from exmekh_agent.ui.history.json_block import RawJsonBlock
+from exmekh_agent.ui.history.json_format import format_json_to_highlighted_html
 from exmekh_agent.ui.history.raw_history_view import (
     RawHistoryComponent,
     build_raw_history_from_session,
-    format_json_to_highlighted_html,
 )
 
 
@@ -99,6 +103,47 @@ def test_format_json_embedded_json_string() -> None:
     html_out = format_json_to_highlighted_html(data)
     assert "param_a" in html_out
     assert 'class="json-val-num">100<' in html_out
+
+
+@pytest.mark.parametrize(
+    "data_url",
+    [
+        "data:image/png;base64," + "iVBORw0KGgoA" * 10000,
+        "data:image/jpeg;base64,/9j/4AAQSkZJRg==",
+        'data:image/svg+xml,<svg onload="alert(1)"><text>test</text></svg>',
+    ],
+)
+def test_raw_image_data_renders_as_copy_button_with_exact_escaped_value(data_url):
+    button = ElementTree.fromstring(format_json_to_highlighted_html(data_url))
+    assert button.tag == "button"
+    assert button.attrib == {
+        "type": "button",
+        "class": "raw-json-copy-image",
+        "data-image-data": data_url,
+    }
+    assert list(button.itertext()) == ["Copy image data"]
+    assert len(button) == 0
+
+
+def test_nested_image_data_and_embedded_json_keep_other_attachment_fields():
+    data_url = "data:image/webp;base64,UklGRg=="
+    attachment = {
+        "name": "",
+        "parts": [
+            {"type": "text", "text": "Preview from generate-image"},
+            {"type": "image", "data": data_url},
+            {"type": "image_url", "image_url": {"url": data_url}},
+        ],
+    }
+    original = json.dumps(attachment)
+    rendered = format_json_to_highlighted_html({"attachments": original})
+    assert rendered.count('class="raw-json-copy-image"') == 2
+    assert "Preview from generate-image" in rendered
+    assert "attachments" in rendered and "parts" in rendered and "data" in rendered
+    assert json.dumps(attachment) == original
+    ordinary_url = format_json_to_highlighted_html("https://example.com/image.png")
+    assert 'class="json-val-str"' in ordinary_url
+    assert "raw-json-copy-image" not in ordinary_url
 
 
 # =============================================================================
@@ -593,3 +638,67 @@ def test_repeated_skill_disclosures_are_scoped_to_invocation_and_session(ui_cont
         view.toggle_all(False)
         view.render_session(session)
         assert not any(exp.value for exp in view.expansions)
+
+
+@pytest.mark.parametrize(
+    "field, first, second",
+    [
+        ("tool_calls", [{"id": "first"}], [{"id": "second"}]),
+        (
+            "attachments",
+            {"parts": [{"type": "image", "data": "original"}]},
+            {"parts": [{"type": "image", "data": "new"}]},
+        ),
+    ],
+)
+def test_recorded_history_does_not_deduplicate_distinct_calls_or_attachments(
+    field, first, second
+):
+    previous = [{"role": "assistant", "content": None, field: first}]
+    current = [{"role": "assistant", "content": None, field: second}]
+    assert RecordedHistory(current, []).messages_after(previous) == current
+    cumulative = RecordedHistory([*previous, *current], [])
+    suffix = cumulative.messages_after(previous)
+    assert suffix == current
+    suffix[0][field] = "caller mutation"
+    assert cumulative.messages[-1][field] == second
+
+
+def test_raw_history_retains_distinct_recorded_messages_with_equal_role_and_content():
+    first = {"role": "assistant", "content": None, "tool_calls": [{"id": "first"}]}
+    second = {"role": "assistant", "content": None, "tool_calls": [{"id": "second"}]}
+    session = ChatSession(
+        system_prompt="system",
+        messages=[
+            ChatMessage(role="assistant", raw_history=[first]),
+            ChatMessage(role="assistant", raw_history=[second]),
+        ],
+    )
+    messages, _ = build_raw_history_from_session(session)
+    assert [
+        item["tool_calls"][0]["id"] for item in messages if item.get("tool_calls")
+    ] == ["first", "second"]
+
+
+@pytest.mark.parametrize(
+    "result, expected_type",
+    [
+        ({"copied": True}, "positive"),
+        ({"copied": False}, "negative"),
+        (None, "negative"),
+    ],
+)
+def test_json_block_owns_updates_and_image_copy_feedback(
+    ui_context, result, expected_type
+):
+    with ui_context:
+        block = RawJsonBlock({"data": "data:image/png;base64,AAAA"})
+        assert "raw-json-copy-image" in block.content
+        block.set_data({"content": "Updated output"})
+        assert "Updated output" in block.content
+        assert "raw-json-copy-image" not in block.content
+        with patch.object(ui, "notify") as notify:
+            block._handle_image_copy(
+                GenericEventArguments(sender=block, client=ui_context, args=result)
+            )
+        assert notify.call_args.kwargs["type"] == expected_type

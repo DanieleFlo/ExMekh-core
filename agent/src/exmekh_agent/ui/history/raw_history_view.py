@@ -5,7 +5,6 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from markupsafe import Markup
 from nicegui import ui
 
 import exmekh_agent.exmekh_bridge.providers.context_usage as context_usage
@@ -13,6 +12,7 @@ from exmekh_agent.config import config
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
 from exmekh_agent.exmekh_bridge.agents.system_prompt import load_real_hds_system_prompt
+from exmekh_agent.exmekh_bridge.history.recorded_history import RecordedHistory
 from exmekh_agent.exmekh_bridge.history.skill_history import (
     skill_opening_call_id,
     take_skill_for_call,
@@ -26,8 +26,11 @@ from exmekh_agent.exmekh_bridge.models import (
     record_tool_event,
 )
 from exmekh_agent.exmekh_bridge.resources import load_prompt
-from exmekh_agent.ui.history.json_format import format_json_to_highlighted_html
-from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
+from exmekh_agent.ui.history.json_block import RawJsonBlock
+from exmekh_agent.ui.resources import (
+    presentation_config,
+    ui_text,
+)
 from exmekh_agent.ui.shared.disclosure import DisclosureState
 
 UI_PRESENTATION = presentation_config("controls/raw_history_view")
@@ -114,29 +117,9 @@ def build_raw_history_from_session(
                 existing_non_sys = [
                     m for m in raw_messages if m.get("role") != "system"
                 ]
-                if len(existing_non_sys) > 0 and len(new_entries) >= len(
-                    existing_non_sys
-                ):
-                    match = True
-                    for em, nm in zip(
-                        existing_non_sys,
-                        new_entries[: len(existing_non_sys)],
-                        strict=True,
-                    ):
-                        if em.get("role") != nm.get("role") or em.get(
-                            "content"
-                        ) != nm.get("content"):
-                            match = False
-                            break
-                    if match:
-                        for nm in new_entries[len(existing_non_sys) :]:
-                            raw_messages.append(nm)
-                    else:
-                        for nm in new_entries:
-                            raw_messages.append(nm)
-                else:
-                    for nm in new_entries:
-                        raw_messages.append(nm)
+                raw_messages.extend(
+                    RecordedHistory(new_entries, []).messages_after(existing_non_sys)
+                )
             else:
                 # Legacy messages have only a summary, not a provider transcript.
                 if not has_system_message:
@@ -216,7 +199,7 @@ class RawHistoryComponent:
         self.live_container: ui.column | None = None
         self.live_events_container: ui.column | None = None
         self.live_assistant_card: ui.column | None = None
-        self.live_json_html: ui.html | None = None
+        self.live_json_html: RawJsonBlock | None = None
         self.live_status_badge: ui.row | None = None
         self.live_response_text: str = ""
         self.live_reasoning_text: str = ""
@@ -560,15 +543,9 @@ class RawHistoryComponent:
                     ]
                 )
 
-            # Formatted and syntax highlighted JSON code block
-            highlighted_html = format_json_to_highlighted_html(msg)
-            ui.html(
-                render_html(
-                    "shared/raw_json.html",
-                    content=Markup(highlighted_html),
-                    extra_classes="",
-                )
-            ).classes(UI_PRESENTATION["render_single_raw_message.classes.w_full"])
+            RawJsonBlock(msg).classes(
+                UI_PRESENTATION["render_single_raw_message.classes.w_full"]
+            )
 
     def _render_skill_compaction(
         self,
@@ -957,15 +934,8 @@ class RawHistoryComponent:
                             ]
                         )
 
-                    # Live syntax-highlighted pre/code element
-                    initial_dict = self._build_current_live_assistant_dict()
-                    initial_html = format_json_to_highlighted_html(initial_dict)
-                    self.live_json_html = ui.html(
-                        render_html(
-                            "shared/raw_json.html",
-                            content=Markup(initial_html),
-                            extra_classes="",
-                        )
+                    self.live_json_html = RawJsonBlock(
+                        self._build_current_live_assistant_dict()
                     ).classes(UI_PRESENTATION["start_live_turn.classes.w_full"])
 
         if self.status_label:
@@ -1063,11 +1033,7 @@ class RawHistoryComponent:
             return
 
         self._last_token_render_time = now
-        msg_dict = self._build_current_live_assistant_dict()
-        highlighted = format_json_to_highlighted_html(msg_dict)
-        self.live_json_html.content = render_html(
-            "shared/raw_json.html", content=Markup(highlighted), extra_classes=""
-        )
+        self.live_json_html.set_data(self._build_current_live_assistant_dict())
 
     def _build_current_live_assistant_dict(self) -> dict[str, Any]:
         """Constructs a dict representing the assistant message currently in generation."""

@@ -12,7 +12,7 @@ from exmekh_agent.ui.navigation.sidebar import SidebarComponent
 
 
 @pytest.mark.parametrize("has_messages", [False, True])
-def test_new_quick_chat_notifies_after_deleting_the_button_parent(
+def test_new_quick_chat_notifies_with_persistent_sidebar_controls(
     has_messages: bool,
 ) -> None:
     client = Client(page("/test-new-quick-chat"))
@@ -40,7 +40,7 @@ def test_new_quick_chat_notifies_after_deleting_the_button_parent(
             with button.parent_slot:
                 sidebar._handle_new_chat()
 
-            assert button.is_deleted
+            assert not button.is_deleted
             assert sidebar.selected_sub_agent_id is None
             target_id, message_type, payload = client.outbox.messages[-1]
             assert target_id == client.id

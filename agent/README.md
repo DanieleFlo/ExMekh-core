@@ -61,7 +61,7 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - Bash approval changes inside a chat stay local; the project default applies to newly created conversations.
   - Persistent chat history lives under `data/chats/`, and project settings under `data/projects/`.
   - Temporary uploads and pasted files use `<work_root>/tmp/projects/<project_id>/`; Quick Chats use the frontend code folder and `tmp/quickchats/`.
-  - Input drafts and uploads stay with their original conversation when switching chats. Quick Chats keep attachments as scoped file references for their read tools and send images and rendered PDF pages as native vision inputs.
+  - Input drafts and uploads stay with their original conversation when switching chats. Unsent text is saved separately under `data/drafts/` and restored after closing a window or restarting the frontend; sending the message or clearing the input removes its saved text draft. Quick Chats keep attachments as scoped file references for their read tools and send images and rendered PDF pages as native vision inputs.
   - Deleting a project deletes its conversations and stops their active turns. The selected work folder remains available.
   - Existing agent conversations are automatically grouped by work folder. When their previous settings differ, the most recently updated chat supplies the shared project settings; each chat keeps its bash approval mode and approval history.
 - **Automatic `exmekh_lib` Wheel Synchronization**:

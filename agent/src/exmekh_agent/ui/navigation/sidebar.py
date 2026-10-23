@@ -35,6 +35,8 @@ class SidebarComponent:
         self.selected_sub_agent_id: str | None = None
         self.container: ui.column | None = None
         self.drawer: ui.left_drawer | None = None
+        self._project_list: ui.column | None = None
+        self._quick_chat_list: ui.column | None = None
         self._project_expansion: dict[str, bool] = {}
 
     @property
@@ -105,9 +107,29 @@ class SidebarComponent:
         if not self.container:
             return
 
-        self.container.clear()
-        projects = self.sessions.list_projects()
+        if self._project_list is None or self._quick_chat_list is None:
+            self._build_session_lists()
+        assert self._project_list is not None and self._quick_chat_list is not None
 
+        # Keep the scroll containers mounted when selection or history changes.
+        self._project_list.clear()
+        with self._project_list:
+            projects = self.sessions.list_projects()
+            for project in projects:
+                self._render_project(project, self.sessions.list_sessions(project.id))
+            if not projects:
+                ui.label(ui_text("navigation.sidebar.no_projects_yet")).classes(
+                    UI_PRESENTATION[
+                        "render_sessions.classes.text_xs_text_zinc_500_italic_px_2"
+                    ]
+                )
+
+        self._quick_chat_list.clear()
+        with self._quick_chat_list:
+            for session in self.sessions.list_sessions(None):
+                self._render_session(session)
+
+    def _build_session_lists(self) -> None:
         with self.container:
             # Projects section with scrollable list
             with ui.column().classes(
@@ -136,21 +158,11 @@ class SidebarComponent:
                         UI_PRESENTATION["render_sessions.classes.sidebar_section_btn"]
                     ).tooltip(ui_text("navigation.sidebar.new_project"))
 
-                with ui.column().classes(
+                self._project_list = ui.column().classes(
                     UI_PRESENTATION[
                         "render_sessions.classes.sidebar_list_scroll_w_full_overflow_y_auto_fl"
                     ]
-                ):
-                    for project in projects:
-                        self._render_project(
-                            project, self.sessions.list_sessions(project.id)
-                        )
-                    if not projects:
-                        ui.label(ui_text("navigation.sidebar.no_projects_yet")).classes(
-                            UI_PRESENTATION[
-                                "render_sessions.classes.text_xs_text_zinc_500_italic_px_2"
-                            ]
-                        )
+                )
 
             # Generous spacing between PROJECTS and QUICK CHATS
             ui.element("div").classes(
@@ -184,13 +196,11 @@ class SidebarComponent:
                         UI_PRESENTATION["render_sessions.classes.sidebar_section_btn"]
                     ).tooltip(ui_text("navigation.sidebar.new_quick_chat"))
 
-                with ui.column().classes(
+                self._quick_chat_list = ui.column().classes(
                     UI_PRESENTATION[
                         "render_sessions.classes.sidebar_list_scroll_w_full_overflow_y_auto_fl"
                     ]
-                ):
-                    for session in self.sessions.list_sessions(None):
-                        self._render_session(session)
+                )
 
     def _render_project(self, project: Project, sessions: list[ChatSession]) -> None:
         is_expanded = self.is_project_expanded(project.id)

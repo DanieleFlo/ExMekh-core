@@ -176,6 +176,8 @@ class ChatPageController:
                 on_steer_queued=self.steer_queued_message,
                 temp_storage_getter=self._get_temp_storage,
                 on_approval_mode_changed=self.approval_mode_changed,
+                draft_text_getter=self.sessions.draft_text,
+                on_draft_changed=self._input_draft_changed,
             )
             self.input_bar.build()
             session = self.sessions.get_current_session()
@@ -194,6 +196,22 @@ class ChatPageController:
             self._check_temp_storage_alert,
             once=True,
         )
+
+    def _input_draft_changed(self, session_id: str, text: str) -> None:
+        self._track_task(asyncio.create_task(self._save_input_draft(session_id, text)))
+
+    async def _save_input_draft(self, session_id: str, text: str) -> None:
+        saved = await self.sessions.save_draft_text(session_id, text)
+        if (
+            not saved
+            and not self._client.is_deleted
+            and self.sessions.is_current_session(session_id)
+        ):
+            with self._client:
+                ui.notify(
+                    ui_text("chat.page_controller.unable_to_save_draft"),
+                    type="negative",
+                )
 
     async def attach_generated_image(self, url: str) -> None:
         """Stage an existing result through the same input API as an uploaded image."""

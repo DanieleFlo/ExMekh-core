@@ -12,7 +12,6 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
-from exmekh_agent.state.json_store import JsonRecordStore
 from exmekh_agent.state.session_manager import SessionManager
 from exmekh_agent.state.sub_agent_conversations import apply_sub_agent_event
 from exmekh_agent.ui.chat.input_bar import InputBarComponent
@@ -77,13 +76,11 @@ def test_tool_event_without_payload_does_not_change_child() -> None:
 
 
 def test_session_deletion_handles_missing_file_and_noncurrent_session(tmp_path) -> None:
-    manager = object.__new__(SessionManager)
-    manager.storage_dir = tmp_path
-    manager._session_store = JsonRecordStore(tmp_path, ChatSession)
-    current = ChatSession()
-    other = ChatSession()
-    manager.sessions = {current.id: current, other.id: other}
-    manager.current_session_id = current.id
+    manager = SessionManager(tmp_path / "chats")
+    current = manager.get_current_session()
+    other = manager.create_session()
+    manager.switch_session(current.id)
+    (manager.storage_dir / f"{other.id}.json").unlink()
     manager.delete_session(other.id)
     assert manager.current_session_id == current.id
     assert other.id not in manager.sessions

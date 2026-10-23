@@ -102,3 +102,19 @@
 .json-readable-string { display: block; white-space: normal; border-left: 2px solid #3f3f46; padding: 8px 10px; margin: 6px 0 6px 16px; background: #111114; border-radius: 4px; max-height: 320px; overflow: auto; }
 .raw-json-block { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
 .raw-history-container .nicegui-column { min-width: 0; max-width: 100%; }
+
+.raw-json-copy-image {
+    display: inline-flex;
+    padding: 2px 8px;
+    border: 1px solid #3f3f46;
+    border-radius: 4px;
+    background: #18181b;
+    color: #a5d8ff;
+    font: inherit;
+    white-space: nowrap;
+    vertical-align: baseline;
+    cursor: pointer;
+}
+
+.raw-json-copy-image:hover { background: #27272a; }
+.raw-json-copy-image:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }

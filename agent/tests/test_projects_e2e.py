@@ -6,7 +6,11 @@ import httpx
 import pytest
 from playwright.async_api import Page, async_playwright, expect
 
+from exmekh_agent.exmekh_bridge.models import ChatMessage
+from exmekh_agent.state.session_manager import SessionManager
+from exmekh_agent.ui.navigation.chat_routes import ChatRoutes
 from tests.browser_support import (
+    BrowserTestServer,
     get_edge_executable,
     send_command,
     start_mock_server,
@@ -197,3 +201,86 @@ async def test_new_quick_chat_shows_confirmation_after_sidebar_refresh(
             await expect(page.locator(".sidebar-item-selected")).to_have_count(1)
         finally:
             await browser.close()
+
+
+@pytest.mark.parametrize("height", [650, 920])
+async def test_switching_old_chats_preserves_both_sidebar_scroll_positions(
+    tmp_path: Path, height: int
+) -> None:
+    storage = tmp_path / "state"
+    sessions = SessionManager(storage / "chats")
+    folder = tmp_path / "Old project"
+    folder.mkdir()
+    project = sessions.create_project(folder)
+    for index in range(12):
+        folder = tmp_path / f"Recent project {index}"
+        folder.mkdir()
+        sessions.create_project(folder)
+    project_chats = []
+    quick_chats = []
+    for index in range(24):
+        for group, project_id, title in (
+            (project_chats, project.id, f"Project conversation {index:02}"),
+            (quick_chats, None, f"Quick conversation {index:02}"),
+        ):
+            session = sessions.create_session(title, project_id)
+            session.messages.append(ChatMessage(role="user", content=title))
+            sessions.save_session(session)
+            group.append(session)
+
+    with BrowserTestServer(storage, module="tests.run_projects_agent") as url:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable(), headless=True
+            )
+            try:
+                page = await browser.new_page(
+                    viewport={"width": 1360, "height": height}
+                )
+                errors = []
+                page.on("pageerror", lambda error: errors.append(str(error)))
+                await page.goto(
+                    url + ChatRoutes(sessions).path_for(project_chats[-1]),
+                    wait_until="networkidle",
+                )
+                lists = page.locator(".sidebar-list-scroll")
+                await expect(lists).to_have_count(2)
+                await lists.evaluate_all(
+                    "elements => elements.forEach(el => el.scrollTop = el.scrollHeight)"
+                )
+                for session in (
+                    quick_chats[0],
+                    project_chats[0],
+                    quick_chats[1],
+                    project_chats[1],
+                ):
+                    target = page.locator(".sidebar-item").filter(
+                        has_text=session.title
+                    )
+                    await target.scroll_into_view_if_needed()
+                    positions = await lists.evaluate_all(
+                        "elements => elements.map(el => el.scrollTop)"
+                    )
+                    assert all(position > 100 for position in positions)
+                    await target.click()
+                    selected = page.locator(".sidebar-item-selected")
+                    await expect(selected).to_contain_text(session.title)
+                    await expect(page.locator(".msg-user")).to_contain_text(
+                        session.title
+                    )
+                    await page.wait_for_function(
+                        """positions => [...document.querySelectorAll('.sidebar-list-scroll')]
+                            .every((el, index) => Math.abs(el.scrollTop - positions[index]) < 1)""",
+                        arg=positions,
+                    )
+                    assert await selected.evaluate("""el => {
+                        const list = el.closest('.sidebar-list-scroll').getBoundingClientRect();
+                        const card = el.getBoundingClientRect();
+                        return card.top >= list.top - 1 && card.bottom <= list.bottom + 1;
+                    }""")
+                await page.screenshot(
+                    path=str(tmp_path / f"sidebar-scroll-{height}.png")
+                )
+                assert not errors
+            finally:
+                await browser.close()

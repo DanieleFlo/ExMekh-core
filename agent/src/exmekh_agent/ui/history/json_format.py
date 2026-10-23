@@ -9,7 +9,7 @@ from typing import Any
 from markupsafe import Markup
 
 from exmekh_agent.exmekh_bridge.history.recorded_output import RecordedToolOutput
-from exmekh_agent.ui.resources import render_html
+from exmekh_agent.ui.resources import render_html, ui_text
 from exmekh_agent.ui.shared.output_format import format_raw_output_html
 
 
@@ -33,6 +33,12 @@ def format_json_to_highlighted_html(data: Any, indent_level: int = 0) -> str:
         return _span("json-val-num", str(data))
     if isinstance(data, str):
         trimmed = data.strip()
+        if trimmed.startswith("data:image/") and "," in trimmed:
+            return render_html(
+                "history/image_data.html",
+                data=data,
+                label=ui_text("history.raw_history_view.copy_image_data"),
+            )
         if (trimmed.startswith("{") and trimmed.endswith("}")) or (
             trimmed.startswith("[") and trimmed.endswith("]")
         ):

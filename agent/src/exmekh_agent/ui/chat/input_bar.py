@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from functools import partial
 
 from nicegui import ui
+from nicegui.events import ValueChangeEventArguments
 
 from exmekh_agent.config import config
 from exmekh_agent.config.approvals import (
@@ -62,6 +63,8 @@ class InputBarComponent:
         ) = None,
         on_approval_mode_changed: Callable[[str], None] | None = None,
         on_steer_queued: Callable[[str], None] | None = None,
+        draft_text_getter: Callable[[str], str] | None = None,
+        on_draft_changed: Callable[[str, str], None] | None = None,
     ) -> None:
         self.on_send = on_send
         self.on_send_with_attachments = on_send_with_attachments
@@ -73,6 +76,8 @@ class InputBarComponent:
         self.temp_storage_getter = temp_storage_getter
         self.on_approval_mode_changed = on_approval_mode_changed
         self.on_steer_queued = on_steer_queued
+        self.draft_text_getter = draft_text_getter
+        self.on_draft_changed = on_draft_changed
 
         self.root_container: ui.column | None = None
         self.queue_container: ui.column | None = None
@@ -89,6 +94,7 @@ class InputBarComponent:
         self.input_container: ui.column | None = None
         self.session_id: str | None = None
         self._drafts: dict[str, _InputDraft] = {}
+        self._restoring_draft = False
 
         self.approval_mode: str = DEFAULT_TOOL_APPROVAL_MODE
         self.approval_select: ui.select | None = None
@@ -264,7 +270,8 @@ class InputBarComponent:
                         ui.textarea(
                             placeholder=ui_text(
                                 "chat.input_bar.send_a_message_to_exmekh_agent_enter"
-                            )
+                            ),
+                            on_change=self._handle_draft_change,
                         )
                         .props(
                             UI_PRESENTATION[
@@ -1030,19 +1037,55 @@ class InputBarComponent:
                 self._accept_attachments([att], session_id)
         return att
 
+    def _handle_draft_change(self, event: ValueChangeEventArguments) -> None:
+        if self.session_id is not None and not self._restoring_draft:
+            self._update_draft_text(self.session_id, event.value or "")
+
+    def _update_draft_text(self, session_id: str, text: str) -> None:
+        self._drafts.setdefault(session_id, _InputDraft()).text = text
+        if self.on_draft_changed:
+            self.on_draft_changed(session_id, text)
+
     def set_session_id(self, session_id: str) -> None:
-        if self.session_id != session_id and self.session_id is not None:
+        if self.session_id != session_id:
+            self._remember_current_draft()
+            draft = self._draft_for_session(session_id)
+            self.session_id = session_id
+            self._restore_draft(draft)
+        if self.input_container:
+            self.input_container.props(f"data-session-id={session_id}")
+
+    def _remember_current_draft(self) -> None:
+        if self.session_id is not None:
             self._drafts[self.session_id] = _InputDraft(
                 text=self.textarea.value or "" if self.textarea else "",
                 attachments=list(self.staged_attachments),
             )
-            draft = self._drafts.get(session_id, _InputDraft())
+
+    def _draft_for_session(self, session_id: str) -> _InputDraft:
+        draft = self._drafts.get(session_id)
+        if draft is None:
+            initial_text = self.textarea.value or "" if self.textarea else ""
+            draft = _InputDraft(
+                text=initial_text if self.session_id is None else "",
+                attachments=list(self.staged_attachments)
+                if self.session_id is None
+                else [],
+            )
+            self._drafts[session_id] = draft
+        if self.draft_text_getter:
+            draft.text = self.draft_text_getter(session_id)
+        return draft
+
+    def _restore_draft(self, draft: _InputDraft) -> None:
+        # Loading a draft is a read: another window may own a newer edit.
+        self._restoring_draft = True
+        try:
             self.set_text(draft.text)
-            self.staged_attachments = list(draft.attachments)
-            self.render_attachments()
-        self.session_id = session_id
-        if self.input_container:
-            self.input_container.props(f"data-session-id={session_id}")
+        finally:
+            self._restoring_draft = False
+        self.staged_attachments = list(draft.attachments)
+        self.render_attachments()
 
     def _accept_attachments(
         self, attachments: list[StagedAttachment], session_id: str | None
@@ -1202,9 +1245,8 @@ class InputBarComponent:
                 if self.session_id == session_id and self.textarea:
                     self.textarea.set_value((self.textarea.value or "") + pasted_text)
                 elif session_id is not None:
-                    self._drafts.setdefault(
-                        session_id, _InputDraft()
-                    ).text += pasted_text
+                    draft = self._drafts.setdefault(session_id, _InputDraft())
+                    self._update_draft_text(session_id, draft.text + pasted_text)
 
     def _trigger_send(self) -> None:
         if not self.textarea:

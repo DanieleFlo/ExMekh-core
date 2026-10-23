@@ -72,11 +72,27 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                         .filter(box => box.width > 0 && box.height > 0);
                     return boxes.length === 2 && boxes.every(box => Math.abs(box.width / box.height - 2) < 0.02);
                 }""")
+                placeholder = await page.locator(
+                    ".generated-image-slot"
+                ).first.bounding_box()
+                assert placeholder is not None
+                assert placeholder["width"] == pytest.approx(160, abs=1)
+                assert placeholder["height"] == pytest.approx(80, abs=1)
                 await page.request.post(url + "/test/release-images")
                 await wait_turn_completion(page)
                 previews = page.locator(".msg-assistant .exmekh-image-thumbnail")
                 await expect(previews).to_have_count(2)
                 await expect(page.locator(".generated-image-loading")).to_have_count(0)
+                generated = await page.locator(
+                    ".generated-image-slot"
+                ).first.bounding_box()
+                assert generated is not None
+                assert generated["width"] == pytest.approx(
+                    placeholder["width"] * 2, abs=1
+                )
+                assert generated["height"] == pytest.approx(
+                    placeholder["height"] * 2, abs=1
+                )
                 order = await page.locator(".msg-assistant").evaluate(
                     "el => [...el.querySelectorAll('.tool-event-card,.generated-images')].map(node => node.classList.contains('generated-images') ? 'images' : node.textContent)"
                 )
@@ -218,6 +234,12 @@ async def test_failed_image_finishes_and_retains_the_error(tmp_path):
                 await expect(
                     page.locator(".generated-image-unavailable")
                 ).to_have_count(2)
+                placeholder = await page.locator(
+                    ".generated-image-slot"
+                ).first.bounding_box()
+                assert placeholder is not None
+                assert placeholder["width"] == pytest.approx(160, abs=1)
+                assert placeholder["height"] == pytest.approx(80, abs=1)
             finally:
                 await browser.close()
 

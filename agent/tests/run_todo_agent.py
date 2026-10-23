@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import base64
+
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
+from tests.image_samples import png_bytes
 from tests.run_message_edit_agent import provider
 
 
@@ -106,6 +109,20 @@ def seed() -> None:
             "content": "Results are ready. Click a tool row to inspect the output.",
         },
     ]
+    history[3]["attachments"] = {
+        "name": "",
+        "parts": [
+            {"type": "text", "text": "These images are previews from generate-image."},
+            *[
+                {
+                    "type": "image",
+                    "data": "data:image/png;base64,"
+                    + base64.b64encode(png_bytes(color, (2048, 2048))).decode(),
+                }
+                for color in ("red", "blue")
+            ],
+        ],
+    }
     inner_history = [
         history[-3],
         {"role": "user", "content": "Analyze"},

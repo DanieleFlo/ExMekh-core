@@ -23,6 +23,16 @@ class RecordedHistory:
     messages: list[dict[str, Any]]
     skills: list[dict[str, Any]]
 
+    def messages_after(self, previous: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Return a cumulative suffix, or all independent messages, as owned data.
+
+        Matching includes call IDs, arguments and attachments: equal role/text
+        alone does not establish that two recorded messages are the same.
+        """
+        if self.messages[: len(previous)] == previous:
+            return deepcopy(self.messages[len(previous) :])
+        return deepcopy(self.messages)
+
     def system_prompt_message(self) -> dict[str, Any] | None:
         """Return the first nonempty root prompt without sharing retained data."""
         for message in self.messages:

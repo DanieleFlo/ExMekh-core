@@ -21,6 +21,7 @@ from exmekh_agent.exmekh_bridge.models import (
 )
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.agent_design import AgentDesign, AgentProfile
+from exmekh_agent.state.input_drafts import InputDraftStore
 from exmekh_agent.state.json_store import JsonRecordStore
 from exmekh_agent.state.temp_storage import TempStorage
 
@@ -50,6 +51,9 @@ class SessionManager:
         )
         self._session_store = JsonRecordStore(self.storage_dir, ChatSession)
         self._project_store = JsonRecordStore(self.projects_dir, Project)
+        self._input_drafts = InputDraftStore(
+            self.storage_dir.parent / STORAGE_DEFAULTS["drafts_directory"]
+        )
         self._split_lock = asyncio.Lock()
         self.projects: dict[str, Project] = {}
         self.sessions: dict[str, ChatSession] = {}
@@ -67,6 +71,7 @@ class SessionManager:
             self.projects_dir,
             self._session_store,
             self._project_store,
+            self._input_drafts,
             self._split_lock,
             self.projects,
             self.sessions,
@@ -81,6 +86,7 @@ class SessionManager:
                 self.projects_dir,
                 self._session_store,
                 self._project_store,
+                self._input_drafts,
                 self._split_lock,
                 self.projects,
                 self.sessions,
@@ -374,6 +380,26 @@ class SessionManager:
         settings.record_command_approval(command, raw_history)
         return self._save_chat_settings(session, settings)
 
+    def draft_text(self, session_id: str) -> str:
+        return (
+            self._input_drafts.text(session_id) if session_id in self.sessions else ""
+        )
+
+    async def save_draft_text(self, session_id: str, text: str) -> bool:
+        """Persist an owned chat's draft through a single operation."""
+        if session_id not in self.sessions:
+            return False
+        try:
+            await self._input_drafts.save_text(session_id, text)
+        except (OSError, ValueError) as error:
+            logger.warning(
+                app_text("errors_state.session_manager.could_not_save_draft"),
+                session_id,
+                error,
+            )
+            return False
+        return True
+
     def switch_session(self, session_id: str) -> ChatSession | None:
         if session_id in self.sessions:
             self.current_session_id = session_id
@@ -397,6 +423,15 @@ class SessionManager:
         self._session_store.delete(session.id)
         active_turns.cancel_and_forget(session.id)
         del self.sessions[session.id]
+        try:
+            self._input_drafts.delete(session.id)
+        except (OSError, ValueError) as error:
+            # Draft cleanup cannot undo an already completed chat deletion.
+            logger.warning(
+                app_text("errors_state.session_manager.could_not_delete_draft"),
+                session.id,
+                error,
+            )
 
     def _select_fallback(self, project_id: str | None = None) -> None:
         candidates = self.list_sessions(project_id) or self.list_sessions_sorted()

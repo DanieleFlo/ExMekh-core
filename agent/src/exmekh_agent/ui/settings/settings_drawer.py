@@ -41,7 +41,7 @@ class SettingsDrawerComponent:
         self.select_reasoning: ui.select | None = None
         self.compaction_threshold: ui.number | None = None
         self.generated_images_switch: ui.switch | None = None
-        self.model_select: ui.select | None = None
+        self.model_display: ui.input | None = None
         self.status_badge: ui.badge | None = None
         self.status_spinner: ui.spinner | None = None
         self.refresh_btn: ui.button | None = None
@@ -94,14 +94,11 @@ class SettingsDrawerComponent:
                         ui_text("settings.settings_drawer.checking"),
                         color=UI_PRESENTATION["build.color.grey_8"],
                     ).classes(UI_PRESENTATION["build.classes.text_xs"])
-                    self.model_select = (
-                        ui.select(
-                            options=[config.default_model],
-                            value=config.default_model,
-                        )
+                    self.model_display = (
+                        ui.input(value=config.default_model)
                         .props(
                             UI_PRESENTATION[
-                                "build.props.dense_borderless_dark_options_dense"
+                                "build.props.dense_borderless_dark_readonly"
                             ]
                         )
                         .classes(
@@ -318,12 +315,8 @@ class SettingsDrawerComponent:
                     self.status_badge.update()
                 if is_alive and models:
                     config.select_available_model(models)
-                    if self.model_select:
-                        selected = self.model_select.value
-                        self.model_select.options = models
-                        self.model_select.value = (
-                            selected if selected in models else config.default_model
-                        )
+                    if self.model_display:
+                        self.model_display.value = config.default_model
                 if self.on_models_refreshed:
                     self.on_models_refreshed()
         finally:
@@ -501,8 +494,8 @@ class SettingsDrawerComponent:
             self.select_api_type.value = config.api_type
         if self.select_reasoning:
             self.select_reasoning.value = config.reasoning_effort
-        if self.model_select:
-            self.model_select.value = config.default_model
+        if self.model_display:
+            self.model_display.value = config.default_model
 
     def _set_saving(self, saving: bool) -> None:
         self._saving = saving
@@ -513,7 +506,6 @@ class SettingsDrawerComponent:
             self.select_reasoning,
             self.compaction_threshold,
             self.generated_images_switch,
-            self.model_select,
             self.save_button,
         ):
             if control is not None:
@@ -542,9 +534,6 @@ class SettingsDrawerComponent:
             "api_key": self.input_api_key.value,
             "api_type": self.select_api_type.value,
             "reasoning_effort": self.select_reasoning.value,
-            "default_model": (self.model_select.value or config.default_model)
-            if self.model_select
-            else config.default_model,
         }
         if self.compaction_threshold is not None:
             if not self.compaction_threshold.validate():
