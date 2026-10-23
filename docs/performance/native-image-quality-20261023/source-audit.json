@@ -1,0 +1,643 @@
+{
+  "date": "2026-10-23",
+  "visual_quality_status": "UNRESOLVED_USER_FEEDBACK",
+  "production_recipe_changed_in_followup": false,
+  "official_vae_stats_equal_native": {
+    "means": 64,
+    "standard_deviations": 64
+  },
+  "source_manifest": {
+    "vae-config": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/raw/main/vae/config.json",
+      "sha256": "42bfdec412459bbb7bc38a0617ab70edcfc873f84ec47e0c7d01c53ba09885a5",
+      "bytes": 2172,
+      "equals_frozen_local": true
+    },
+    "scheduler-config": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/raw/main/scheduler/scheduler_config.json",
+      "sha256": "16c948c71f9152a34cce6e3a2f309e97ad2dca32beecbe5e2fd3a7925b7eb4bb",
+      "bytes": 486,
+      "equals_frozen_local": true
+    },
+    "model-index": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/raw/main/model_index.json",
+      "sha256": "97e2febeb19d93cb41fa44807cde8bd42757950b5dffeacdb0331fb2d390cf20",
+      "bytes": 578,
+      "equals_frozen_local": true
+    },
+    "turbo-card": {
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo/raw/main/README.md",
+      "sha256": "9a262724d564444f1fd41a1a3fc1aae75bfb7873cd623abb3acd3d59f02ee4c5",
+      "bytes": 15116
+    },
+    "texture-fix-config": {
+      "url": "https://huggingface.co/madebyollin/texture-fix-vae-for-qwen-image-2.1/raw/main/config.json",
+      "sha256": "9785d527b278cb8b210e9f48a8028d92a4190968ce7e24c8fc85d9d1b82f6ba2",
+      "bytes": 2079
+    },
+    "texture-fix-card": {
+      "url": "https://huggingface.co/madebyollin/texture-fix-vae-for-qwen-image-2.1/raw/main/README.md",
+      "sha256": "4093d42c7d40780586b251233b09e5c5dc12ed8093e3adfead87e33b5f7cdc53",
+      "bytes": 7388
+    }
+  },
+  "diffusers_files_equal_frozen_local": [
+    {
+      "path": "src/diffusers/pipelines/qwenimage21/pipeline_qwenimage21.py",
+      "blob_sha": "7cb519cde4a2e79a0bfc97abefc892490bde137e",
+      "equal_normalizing_newlines": true
+    },
+    {
+      "path": "src/diffusers/models/autoencoders/autoencoder_kl_qwenimage21.py",
+      "blob_sha": "ac6af47ab493932a6b9bdb9f88d06d55130874a7",
+      "equal_normalizing_newlines": true
+    },
+    {
+      "path": "src/diffusers/models/transformers/transformer_qwenimage21.py",
+      "blob_sha": "1a9ef250c51919d65204321eead686d42f1d39a8",
+      "equal_normalizing_newlines": true
+    }
+  ],
+  "frozen_diffusers_revision": "aea7b70be0f594bcdc15a6f2677ee2ca85e49e8e",
+  "whole_pipeline_and_precision": {
+    "cases": [
+      {
+        "id": "alps",
+        "width": 1024,
+        "height": 768,
+        "conditioning_bit_exact": true,
+        "latents": [
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          }
+        ],
+        "rgba": {
+          "max_abs": 0.052490234375,
+          "rmse": 0.0013871104176285416,
+          "relative_l2": 0.0019457330848110443,
+          "bit_exact": false
+        },
+        "png_sha256": {
+          "native": "eba543c496943a4fb43e1c48ca22f855f3afb1d79010f77db1c7bc58d56e224c",
+          "official": "5a2540e42da8a5f860db6f77e1e7b768f64ac552a6764ec5e794c16dd04d4322"
+        },
+        "decoder_precision": [
+          {
+            "mode": "bf16-f32-normalization",
+            "rgba_against_bf16": {
+              "max_abs": 0.16845703125,
+              "rmse": 0.0037281974921976493,
+              "relative_l2": 0.005231186490636506,
+              "bit_exact": false
+            },
+            "checkerboard_phase_bias": 0.005388577003031969,
+            "bias_ratio_against_bf16": 0.9983294288059652
+          },
+          {
+            "mode": "f32",
+            "rgba_against_bf16": {
+              "max_abs": 0.13625681400299072,
+              "rmse": 0.0032663521315495123,
+              "relative_l2": 0.004583152362497674,
+              "bit_exact": false
+            },
+            "checkerboard_phase_bias": 0.005383989308029413,
+            "bias_ratio_against_bf16": 0.9974794769673145
+          }
+        ]
+      },
+      {
+        "id": "cyberpunk",
+        "width": 1024,
+        "height": 768,
+        "conditioning_bit_exact": true,
+        "latents": [
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          }
+        ],
+        "rgba": {
+          "max_abs": 0.10791015625,
+          "rmse": 0.001118679037988174,
+          "relative_l2": 0.0019851094166575493,
+          "bit_exact": false
+        },
+        "png_sha256": {
+          "native": "7f6e8bb9b7d8787f1cc868f23a3a1b864ae8b7841fa2ca2d53051a28963ce86a",
+          "official": "f4f284bfc5eb8e048b030dfe791b4681013edc6004ba536884074bd876a5c720"
+        },
+        "decoder_precision": [
+          {
+            "mode": "bf16-f32-normalization",
+            "rgba_against_bf16": {
+              "max_abs": 0.1884765625,
+              "rmse": 0.003958028084811048,
+              "relative_l2": 0.007023981831886173,
+              "bit_exact": false
+            },
+            "checkerboard_phase_bias": 0.003948570694774389,
+            "bias_ratio_against_bf16": 0.9981325091026203
+          },
+          {
+            "mode": "f32",
+            "rgba_against_bf16": {
+              "max_abs": 0.18650823831558228,
+              "rmse": 0.0034456389824363684,
+              "relative_l2": 0.0061146876912641195,
+              "bit_exact": false
+            },
+            "checkerboard_phase_bias": 0.0039408705197274685,
+            "bias_ratio_against_bf16": 0.9961860338754491
+          }
+        ]
+      },
+      {
+        "id": "alps-2048x1536",
+        "width": 2048,
+        "height": 1536,
+        "conditioning_bit_exact": true,
+        "latents": [
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          },
+          {
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true
+          }
+        ],
+        "rgba": {
+          "max_abs": 0.07080078125,
+          "rmse": 0.0013347106542888824,
+          "relative_l2": 0.0019587993549517804,
+          "bit_exact": false
+        },
+        "png_sha256": {
+          "native": "9c39699e5788507dc693ed6d759f8afe4eac067a4dc1344385a41b66be85792b",
+          "official": "f5d9500d6acacc28151459386b95f155b04deed64f937343c0fa5b280a132e2c"
+        }
+      }
+    ],
+    "visual_quality_status": "UNRESOLVED_USER_FEEDBACK",
+    "scope": "Numeric parity excludes additional native denoising drift on these cases; it does not certify perceptual recovery."
+  },
+  "texture_fix_provenance": {
+    "repository": "madebyollin/texture-fix-vae-for-qwen-image-2.1",
+    "revision": "9a10df811f183323e4e94d255c18add1924ce340",
+    "files": {
+      "config.json": {
+        "url": "https://huggingface.co/madebyollin/texture-fix-vae-for-qwen-image-2.1/resolve/9a10df811f183323e4e94d255c18add1924ce340/config.json",
+        "sha256": "9785d527b278cb8b210e9f48a8028d92a4190968ce7e24c8fc85d9d1b82f6ba2",
+        "bytes": 2079
+      },
+      "diffusion_pytorch_model.safetensors": {
+        "url": "https://huggingface.co/madebyollin/texture-fix-vae-for-qwen-image-2.1/resolve/9a10df811f183323e4e94d255c18add1924ce340/diffusion_pytorch_model.safetensors",
+        "sha256": "9c4a3e6b970fe82e99fae227b70529646427333c4378a51b2e853c93f492a6a8",
+        "bytes": 1350989544
+      }
+    }
+  },
+  "texture_fix_comparison": [
+    {
+      "id": "alps",
+      "finite": true,
+      "size": [
+        768,
+        1024,
+        4
+      ],
+      "alpha_mae_to_official": 0.0016676709055900574,
+      "checkerboard_phase_bias_official": 0.005397594068199396,
+      "checkerboard_phase_bias_candidate": 0.0018568570958450437,
+      "png_sha256": "7e436b9b5f721d017515af986a46f7b97ea408cc373c223678193a6652a6343b"
+    },
+    {
+      "id": "cyberpunk",
+      "finite": true,
+      "size": [
+        768,
+        1024,
+        4
+      ],
+      "alpha_mae_to_official": 0.000644893676508218,
+      "checkerboard_phase_bias_official": 0.0039559584110975266,
+      "checkerboard_phase_bias_candidate": 0.0018423486035317183,
+      "png_sha256": "2cc976b09f4606a4ec003fbc2802a13ca5b37919bc035d4b50b9c830ccf92e24"
+    }
+  ],
+  "community_schedules": {
+    "records": [
+      {
+        "id": "alps",
+        "schedule": "official",
+        "sigmas": [
+          1.0,
+          0.9784529805183411,
+          0.9541800022125244,
+          0.9266260266304016,
+          0.8950799703598022,
+          0.8451480269432068,
+          0.7045339941978455,
+          0.4145680069923401,
+          0.0
+        ],
+        "normalized_times": [
+          1.0,
+          0.98046875,
+          0.95703125,
+          0.9296875,
+          0.89453125,
+          0.84375,
+          0.703125,
+          0.4140625
+        ],
+        "steps": 8,
+        "official_control_bit_exact": true
+      },
+      {
+        "id": "alps",
+        "schedule": "community-roscosmos",
+        "sigmas": [
+          1.0,
+          0.9846000075340271,
+          0.9728000164031982,
+          0.9538000226020813,
+          0.9168999791145325,
+          0.8379999995231628,
+          0.7009999752044678,
+          0.430400013923645,
+          0.0
+        ],
+        "normalized_times": [
+          1.0,
+          0.984375,
+          0.97265625,
+          0.953125,
+          0.9140625,
+          0.83984375,
+          0.69921875,
+          0.4296875
+        ],
+        "steps": 8
+      },
+      {
+        "id": "alps",
+        "schedule": "community-low-sigma",
+        "sigmas": [
+          1.0,
+          0.96875,
+          0.9375,
+          0.90625,
+          0.875,
+          0.75,
+          0.5,
+          0.25,
+          0.0
+        ],
+        "normalized_times": [
+          1.0,
+          0.96875,
+          0.9375,
+          0.90625,
+          0.875,
+          0.75390625,
+          0.5,
+          0.25
+        ],
+        "steps": 8
+      },
+      {
+        "id": "cyberpunk",
+        "schedule": "official",
+        "sigmas": [
+          1.0,
+          0.9784529805183411,
+          0.9541800022125244,
+          0.9266260266304016,
+          0.8950799703598022,
+          0.8451480269432068,
+          0.7045339941978455,
+          0.4145680069923401,
+          0.0
+        ],
+        "normalized_times": [
+          1.0,
+          0.98046875,
+          0.95703125,
+          0.9296875,
+          0.89453125,
+          0.84375,
+          0.703125,
+          0.4140625
+        ],
+        "steps": 8,
+        "official_control_bit_exact": true
+      },
+      {
+        "id": "cyberpunk",
+        "schedule": "community-roscosmos",
+        "sigmas": [
+          1.0,
+          0.9846000075340271,
+          0.9728000164031982,
+          0.9538000226020813,
+          0.9168999791145325,
+          0.8379999995231628,
+          0.7009999752044678,
+          0.430400013923645,
+          0.0
+        ],
+        "normalized_times": [
+          1.0,
+          0.984375,
+          0.97265625,
+          0.953125,
+          0.9140625,
+          0.83984375,
+          0.69921875,
+          0.4296875
+        ],
+        "steps": 8
+      },
+      {
+        "id": "cyberpunk",
+        "schedule": "community-low-sigma",
+        "sigmas": [
+          1.0,
+          0.96875,
+          0.9375,
+          0.90625,
+          0.875,
+          0.75,
+          0.5,
+          0.25,
+          0.0
+        ],
+        "normalized_times": [
+          1.0,
+          0.96875,
+          0.9375,
+          0.90625,
+          0.875,
+          0.75390625,
+          0.5,
+          0.25
+        ],
+        "steps": 8
+      }
+    ],
+    "production_recipe_changed": false,
+    "purpose": "Diagnostic comparison only; community grids are not qualified for this checkpoint."
+  },
+  "community_schedule_and_texture_fix": {
+    "scope": "Compare candidate decoder to official decoder with the same community-low-sigma latents, not to official-schedule pixels.",
+    "cases": [
+      {
+        "id": "alps",
+        "finite": true,
+        "size": [
+          768,
+          1024,
+          4
+        ],
+        "alpha_mae_to_official": 0.0013672882923856378,
+        "checkerboard_phase_bias_official": 0.005054071079939604,
+        "checkerboard_phase_bias_candidate": 0.0012966265203431249,
+        "png_sha256": "a51633d0b63641e8462d7cd653e03903b614b51807dd063b1cb1fb26a615dc49"
+      },
+      {
+        "id": "cyberpunk",
+        "finite": true,
+        "size": [
+          768,
+          1024,
+          4
+        ],
+        "alpha_mae_to_official": 0.0004538173379842192,
+        "checkerboard_phase_bias_official": 0.0037386566400527954,
+        "checkerboard_phase_bias_candidate": 0.0013412109110504389,
+        "png_sha256": "45fb1920bb289ac23270d74c190a627c24f495f58126509b322d3e800838cadc"
+      }
+    ]
+  },
+  "diagnostic_scripts": {
+    "performance-results/image-quality-20261023/source-audit/whole_pipeline.py": {
+      "sha256": "547a453818bbaeaf39eb5f3c479aa2ca5aa1e1566af2128ba2a393561c117be1"
+    },
+    "performance-results/image-quality-20261023/source-audit/decoder_precision.py": {
+      "sha256": "3847ac7c2fc6452a372705089116489a5b817b04bbabe2f4b1ac35623325c9e3"
+    },
+    "performance-results/image-quality-20261023/source-audit/schedule_diagnostic.py": {
+      "sha256": "9689fbfe99badc61d9ca88ea74cc2054361441ef28b36f8b6d3d8e74c360dfe0"
+    },
+    "performance-results/image-quality-20261023/source-audit/compare_vae.py": {
+      "sha256": "6d82ca00e5bf392824ea35eeb3e383d0b8980a14993cff873ab9d0b08256d18d"
+    },
+    "performance-results/image-quality-20261023/source-audit/compare_followup.py": {
+      "sha256": "df0114d6a832bd60e4b520816a7199e6aeaa3f30436830602dacf5e81739d573"
+    },
+    "performance-results/image-quality-20261023/source-audit/combined_diagnostic.py": {
+      "sha256": "4e72f9448bcce6b962ff2965bf30e16a7663d4f25bf98e8220f74b5426c46fd4"
+    }
+  },
+  "commands": [
+    "agent/.venv/bin/python performance-results/image-quality-20261023/source-audit/whole_pipeline.py",
+    "agent/.venv/bin/python performance-results/image-quality-20261023/source-audit/decoder_precision.py",
+    "DS4_SUITE_CASES_ONLY=1 tests/probe_qwen_image_pipeline performance-results/native-suite-t05-t06-20261020/bundles/qwen-image-2.1-turbo-bf16/bundle.ds4b performance-results/native-suite-oracles-20261020/models performance-results/native-suite-t07-t08-20261020/tokenizer.ds4q performance-results/image-quality-20261023/source-audit/native-2048x1536 performance-results/image-quality-20261023/source-audit/alps-2048x1536.ds4p",
+    "agent/.venv/bin/python performance-results/image-quality-20261023/source-audit/compare_followup.py",
+    "agent/.venv/bin/python performance-results/image-quality-20261023/source-audit/schedule_diagnostic.py",
+    "agent/.venv/bin/python performance-results/image-quality-20261023/source-audit/combined_diagnostic.py"
+  ],
+  "image_artifacts": {
+    "performance-results/image-quality-20261023/source-audit/cyberpunk-low-sigma-texture-fix/result.png": {
+      "sha256": "45fb1920bb289ac23270d74c190a627c24f495f58126509b322d3e800838cadc"
+    },
+    "performance-results/image-quality-20261023/source-audit/cyberpunk-texture-fix/result.png": {
+      "sha256": "2cc976b09f4606a4ec003fbc2802a13ca5b37919bc035d4b50b9c830ccf92e24"
+    },
+    "performance-results/image-quality-20261023/source-audit/alps-low-sigma-texture-fix/result.png": {
+      "sha256": "a51633d0b63641e8462d7cd653e03903b614b51807dd063b1cb1fb26a615dc49"
+    },
+    "performance-results/image-quality-20261023/source-audit/alps-texture-fix/result.png": {
+      "sha256": "7e436b9b5f721d017515af986a46f7b97ea408cc373c223678193a6652a6343b"
+    },
+    "performance-results/image-quality-20261023/source-audit/native-2048x1536/case-0/result.png": {
+      "sha256": "9c39699e5788507dc693ed6d759f8afe4eac067a4dc1344385a41b66be85792b"
+    },
+    "performance-results/image-quality-20261023/source-audit/schedule-diagnostic/alps-community-roscosmos/result.png": {
+      "sha256": "b3be03256c3498a3cc11ed73a4a5c4285d88042ad30864866f1a6bc47a6816ae"
+    },
+    "performance-results/image-quality-20261023/source-audit/schedule-diagnostic/alps-official/result.png": {
+      "sha256": "08a8b82f08a627bd5660182e8fd6c132b8f61dbfde2f90ea57c6b8132c191579"
+    },
+    "performance-results/image-quality-20261023/source-audit/schedule-diagnostic/cyberpunk-community-roscosmos/result.png": {
+      "sha256": "5bec0d6c7cbc3f5898917d32e9e883193f4740a74f5e3eb4c9003ae2f64857e9"
+    },
+    "performance-results/image-quality-20261023/source-audit/schedule-diagnostic/cyberpunk-official/result.png": {
+      "sha256": "b322c4173be089ad22b6fe775f95885a669760beb26f151c8dd1dda68bfcf6a0"
+    },
+    "performance-results/image-quality-20261023/source-audit/schedule-diagnostic/alps-community-low-sigma/result.png": {
+      "sha256": "4f0cb9b5b41cb7bb47c14fe57b69fb47a2447194203382e32bd8b7205c3fc083"
+    },
+    "performance-results/image-quality-20261023/source-audit/schedule-diagnostic/cyberpunk-community-low-sigma/result.png": {
+      "sha256": "3e5b9f51e1c96bf7b32479606201760d194308602abc41363bdceae36f9a9429"
+    },
+    "performance-results/image-quality-20261023/source-audit/decoder-precision/cyberpunk-f32/result.png": {
+      "sha256": "0a089b4fe939954f02cfdfc59e80dbea04b653ac8cb71332a446bbec2c6d0c13"
+    },
+    "performance-results/image-quality-20261023/source-audit/decoder-precision/alps-f32/result.png": {
+      "sha256": "0b071658efcff19e6db2f6bf0b7ec15a468fcb7f35c6f9a780cc5e587356b0ba"
+    },
+    "performance-results/image-quality-20261023/source-audit/decoder-precision/cyberpunk-bf16-f32-normalization/result.png": {
+      "sha256": "c2fecd28f23521255c43fe950be57ced827d5fa355d1fa055623efc14ce9b88b"
+    },
+    "performance-results/image-quality-20261023/source-audit/decoder-precision/alps-bf16-f32-normalization/result.png": {
+      "sha256": "1581a4630bcb320ae76a14126fae69ce0efa7135fdb21a1675e939d161158661"
+    },
+    "performance-results/image-quality-20261023/source-audit/whole-pipeline/cyberpunk/result.png": {
+      "sha256": "f4f284bfc5eb8e048b030dfe791b4681013edc6004ba536884074bd876a5c720"
+    },
+    "performance-results/image-quality-20261023/source-audit/whole-pipeline/alps-2048x1536/result.png": {
+      "sha256": "f5d9500d6acacc28151459386b95f155b04deed64f937343c0fa5b280a132e2c"
+    },
+    "performance-results/image-quality-20261023/source-audit/whole-pipeline/alps/result.png": {
+      "sha256": "5a2540e42da8a5f860db6f77e1e7b768f64ac552a6764ec5e794c16dd04d4322"
+    }
+  },
+  "limits": [
+    "No extra native denoising drift on three cases; not a full corpus qualification.",
+    "Checkerboard phase bias is not a perceptual quality metric.",
+    "Community grids are not evaluated or recommended by Qwen for this checkpoint.",
+    "The VAE candidate is unofficial and is not integrated into the release path."
+  ]
+}

@@ -44,6 +44,12 @@ static inline float qi_float(uint16_t b) {
   memcpy(&f, &u, 4);
   return f;
 }
+/* QwenImage21Pipeline casts scheduler time to BF16 before dividing by 1000.
+ * Rounding sigma directly changes three Turbo steps and their time embeddings. */
+static inline float qi_image_timestep(float sigma) {
+  float time = qi_float(qi_bf16(sigma * 1000.f));
+  return qi_float(qi_bf16(time * (1.f / 1000.f)));
+}
 static inline ds4_status qi_alloc(qi_work *w, uint64_t n, uint32_t type,
                                   ds4_num_view *v) {
   if (w->count == 40)

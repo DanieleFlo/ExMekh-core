@@ -333,7 +333,7 @@ static ds4_status timestep(qi_graph *g, float sigma, ds4_num_view temb,
   ds4_status status;
   ds4_num_view t, h, act, one;
   uint16_t host[512];
-  float ts[] = {qi_float(qi_bf16(sigma)), 0};
+  float ts[] = {qi_image_timestep(sigma), 0};
   for (uint32_t r = 0; r < 2; r++)
     for (uint32_t j = 0; j < 128; j++) {
       float a = 1000.f * ts[r] * qi_dit_time_frequency[j];

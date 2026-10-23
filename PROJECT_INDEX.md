@@ -197,7 +197,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   risposte tool compatte nei contesti LLM brevi.
 - `config/native-suite.example.json`, `docs/architecture/native-suite-client.md` —
   configurazione locale seriale CUDA ed esempi con un solo client/base URL;
-  helper e tool usano width/height interi e nessuna scelta per modello unico.
+  helper e tool usano width/height Literal indipendenti (32..2048, passo 32),
+  validazione locale del limite batch e nessuna scelta per modello unico.
 - `tests/test_suite_http.c`, `tests/test_suite_http_live.py`,
   `tests/test_suite_exmekh_live.py` — protocollo host, SDK reale sulle quattro
   modalità, retry/editing/disconnessione e conversazione ExMekh con KV riusata.
@@ -262,6 +263,17 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   dipendenze dichiarate e albero sorgenti per build isolata; rifiuta il rilascio
   quando un gate obbligatorio non è PASS. Staging temporaneo e pubblicazione
   atomica evitano directory parziali; i pacchetti di sviluppo sono etichettati.
+- `docs/performance/native-image-quality-20261023/` — diagnosi sulle immagini
+  originali, correzione del doppio arrotondamento BF16 del timestep, confronto
+  di latenti/RGBA/alte frequenze con Diffusers e geometria Literal esaustiva;
+  `source-audit.md/.json` conservano fonti Hugging Face, pipeline completa fino
+  a 2048×1536 e prove VAE/precisione/griglie; `unsloth-audit.md/.json`
+  registrano parità della ricetta, ottimizzazioni isolate, nuove generazioni
+  native e precisione del denoiser. Default ExMekh 2048×2048, dimensioni
+  minori esplicite rispettate. `clean-code-review.md` registra il riesame dei
+  confini: configurazione dichiarativa, validazione posseduta dal client e dai
+  modelli della risposta, preflight dei file e commit della dipendenza.
+  Diagnosi percettiva degli originali ancora aperta.
 - `docs/architecture/native-suite-release.md`,
   `docs/performance/native-suite-t19-t22-20261022/` — ricette, qualifica,
   candidati, provenance e limiti residui T19–T22.
@@ -314,6 +326,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `tools/compile_qwen_image_constants.py`, `tools/run_qwen_image_graph_oracle.py`,
   `tools/compare_qwen_image_graph.py`, `tools/diagnose_qwen_image_dit.py` — dati
   numerici congelati, oracle Diffusers e diagnosi offline DiT/VAE T09/T10.
+  Gli oracle conservano il cast BF16 del timestep prima della divisione per
+  1000 della pipeline ufficiale; `tests/test_qwen_image_timestep.c` protegge
+  lo stesso ordine nel forward nativo (regressione del 23 ottobre).
 - `tests/probe_qwen_image_graph.c`, `tests/test_qwen_image_graph.py`,
   `docs/performance/native-suite-t09-t10-20261021/` — gate di ogni blocco/passo,
   cache/full recompute, RNG, VAE/alpha/tile, budget e rilascio; report locale
@@ -639,7 +654,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `exmekh_lib/src/exmekh_lib/core/models/native_suite.py`, `native_media_tools.py`,
   `config/native_suite.py` e capability `generate-image` —
   dipendenza sorgente esterna: API tipizzate con Literal per le identità,
-  trasporto OpenAI condiviso, riferimenti ordinati e allegati configurabili.
+  trasporto OpenAI condiviso, dimensioni/count Literal enumerati nel tool,
+  rifiuto locale della geometria prima degli upload, riferimenti ordinati e
+  allegati configurabili.
   Gli embedding restano un servizio interno della ricerca web, senza capability
   autonoma. Il provider possiede il trasporto; il fallback standalone ne gestisce
   la chiusura. Il ranking usa cache per chiamata e API del backend condiviso.

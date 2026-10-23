@@ -40,13 +40,13 @@ def main():
     sys.path.insert(0, str(args.prepared / "deps"))
     import numpy as np
     import torch
-    from torch.nn.attention import sdpa_kernel, SDPBackend
     from diffusers import (
-        QwenImage21Transformer2DModel,
         AutoencoderKLQwenImage21,
         FlowMatchEulerDiscreteScheduler,
+        QwenImage21Transformer2DModel,
     )
     from diffusers.models.transformers.transformer_qwenimage21 import QwenImage21KVCache
+    from torch.nn.attention import SDPBackend, sdpa_kernel
 
     torch.set_num_threads(2)
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -135,6 +135,7 @@ def main():
             (directory / "sigmas.f32").write_bytes(
                 scheduler.sigmas.cpu().numpy().tobytes()
             )
+            # Pipeline rounds scheduler time to BF16 before dividing by 1000.
             cache = QwenImage21KVCache(32)
             latent = torch.tensor(noise, device="cuda", dtype=torch.bfloat16)
             with torch.inference_mode(), sdpa_kernel(SDPBackend.MATH):
@@ -144,7 +145,7 @@ def main():
                     velocity = model(
                         full,
                         hidden,
-                        (t / 1000).expand(1),
+                        t.expand(1).to(torch.bfloat16) / 1000,
                         [[(1, *s) for s in shapes]],
                         mask,
                         kv_cache=cache,
@@ -159,7 +160,7 @@ def main():
                         recomputed = model(
                             full,
                             hidden,
-                            (t / 1000).expand(1),
+                            t.expand(1).to(torch.bfloat16) / 1000,
                             [[(1, *s) for s in shapes]],
                             mask,
                         ).sample[:, -th * tw :]

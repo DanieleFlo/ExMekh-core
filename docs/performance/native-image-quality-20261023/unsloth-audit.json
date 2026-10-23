@@ -1,0 +1,1049 @@
+{
+  "date": "2026-10-23",
+  "checkpoint": "Qwen/Qwen-Image-2.1-Turbo",
+  "checkpoint_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+  "unsloth_model_revision": "5d1f9f759ea877ae556cda88dbec958b62ad3809",
+  "unsloth_source_revision": "9f59a73ff9084f848fe600d87c4c21e17e666f97",
+  "process_comparison": [
+    {
+      "process": "Turbo sampling",
+      "native": "8 grid entries from model_index, CFG 1, Euler, terminal sigma 0",
+      "unsloth": "Same default grid; generic Comfy static shift skipped when checkpoint has sample_sigmas",
+      "different": false
+    },
+    {
+      "process": "Denoiser and pipeline source",
+      "native_reference": "aea7b70b",
+      "unsloth_reference": "d42ebf9c default main overlay",
+      "different": false,
+      "scope": "Qwen pipeline, VAE, transformer files equal after newline normalization"
+    },
+    {
+      "process": "VAE source weights",
+      "native": "Turbo BF16-valued tensors",
+      "unsloth": "base FP32 weights cast to selected compute dtype or BF16 single-file repack",
+      "different": false,
+      "scope": "All 238 tensors equal after BF16 cast. FP32 source decode tested separately."
+    },
+    {
+      "process": "Text encoder",
+      "native": "Qwen3-VL BF16, pre-final RMSNorm hidden state",
+      "unsloth": "same architecture, selectable int8/FP8 or GGUF; same pre-final-norm pipeline in default main overlay",
+      "different": true,
+      "scope": "Precision and backend differ if text encoder quantized."
+    },
+    {
+      "process": "Random noise",
+      "native": "SplitMix64/Box-Muller, FP32 noise rounded BF16",
+      "unsloth": "torch.Generator on compute device for Diffusers; sd.cpp own RNG",
+      "different": true,
+      "scope": "Same seed does not imply same initial noise across runtimes."
+    },
+    {
+      "process": "Geometry",
+      "native": "max side 2048, batch pixels 4194304",
+      "unsloth": "family code max side 2752, max output pixels 4300800; guide currently reports 2048",
+      "different": true,
+      "scope": "Runtime family source differs from prose guide."
+    },
+    {
+      "process": "Weight layout",
+      "native": "separate gate_layer/proj from original BF16 tensors",
+      "unsloth": "GGUF fused gate_up split gate first then proj; 1D norms dequantized",
+      "different": true,
+      "scope": "Equivalent logical layout, different storage and arithmetic."
+    },
+    {
+      "process": "Optional optimizations",
+      "native": "explicit BF16 graph, own operators",
+      "unsloth": "forward layout/KV compaction and fused VAE norms, optional compilation/attention",
+      "different": true,
+      "scope": "Isolated direct A/B completed: fast step and 120 fused VAE modules installed; all 8 denoising latents bit-exact. Not a complete Studio GGUF render."
+    }
+  ],
+  "pinned_diffusers_comparison": [
+    {
+      "path": "src/diffusers/pipelines/qwenimage21/pipeline_qwenimage21.py",
+      "revision": "d42ebf9c6e0b46103b74283f5324357a67acaa04",
+      "sha256": "e75e4ce38d38e194edaac818bba99b2115b4bb2bfdbd15ce03a2813b0fe8856c",
+      "equals_local": true,
+      "pre_norm_hook": true
+    },
+    {
+      "path": "src/diffusers/models/autoencoders/autoencoder_kl_qwenimage21.py",
+      "revision": "d42ebf9c6e0b46103b74283f5324357a67acaa04",
+      "sha256": "1e29f252dbddd044b84c8b794589001ce94bb125a8f13eb5b226ef30c1e2ea11",
+      "equals_local": true,
+      "pre_norm_hook": false
+    },
+    {
+      "path": "src/diffusers/models/transformers/transformer_qwenimage21.py",
+      "revision": "d42ebf9c6e0b46103b74283f5324357a67acaa04",
+      "sha256": "7a3393f89b1eb71d79c8669a719a21a616e6c8b188b2c1f5a2faca2cc701f171",
+      "equals_local": true,
+      "pre_norm_hook": false
+    }
+  ],
+  "precision_selection": {
+    "native": "BF16 model, mixed FP32 operations as specified by the reference",
+    "unsloth_rtx_3090": "BF16 compute default because NVIDIA compute capability major >= 8",
+    "gguf_f16_storage_is_not_uniform_compute_precision": true,
+    "vae_tensors_equal_after_bf16_cast": 238,
+    "vae_fp32_source_results": [
+      {
+        "id": "alps",
+        "mode": "base-bf16",
+        "finite": true,
+        "checkerboard_phase_bias": 0.005388577003031969
+      },
+      {
+        "id": "cyberpunk",
+        "mode": "base-bf16",
+        "finite": true,
+        "checkerboard_phase_bias": 0.003948570694774389
+      },
+      {
+        "id": "alps",
+        "mode": "base-f32",
+        "finite": true,
+        "checkerboard_phase_bias": 0.00538981519639492
+      },
+      {
+        "id": "cyberpunk",
+        "mode": "base-f32",
+        "finite": true,
+        "checkerboard_phase_bias": 0.003940879367291927
+      }
+    ]
+  },
+  "isolated_unsloth_optimizations": {
+    "latents": [
+      {
+        "step": 0,
+        "bit_exact": true
+      },
+      {
+        "step": 1,
+        "bit_exact": true
+      },
+      {
+        "step": 2,
+        "bit_exact": true
+      },
+      {
+        "step": 3,
+        "bit_exact": true
+      },
+      {
+        "step": 4,
+        "bit_exact": true
+      },
+      {
+        "step": 5,
+        "bit_exact": true
+      },
+      {
+        "step": 6,
+        "bit_exact": true
+      },
+      {
+        "step": 7,
+        "bit_exact": true
+      }
+    ],
+    "rgba": {
+      "rmse": 0.0009843452836794616,
+      "max_abs": 0.08203125
+    },
+    "installed": {
+      "fast_step": true,
+      "fused_vae_modules": 120
+    }
+  },
+  "reference_visual_feedback": {
+    "accepted_cases": [
+      "official-red-panda 2048x2048",
+      "unsloth-honeybee-optimized 1024x1024"
+    ],
+    "user_text": "Mi sembra corretto in entrambi i casi",
+    "scope": "User feedback concerned Diffusers reference cases. Later native renders are separate evidence and are not marked user-accepted."
+  },
+  "native_cases": [
+    {
+      "id": "red-panda",
+      "png": "performance-results/image-quality-20261023/source-audit/native-showcase/case-0/result.png",
+      "png_sha256": "1e644e2d7245e8942c89108fd4b57a82e50a334167c8781117687b660e85c484",
+      "execution": {
+        "command": [
+          "tests/probe_qwen_image_pipeline",
+          "performance-results/native-suite-t05-t06-20261020/bundles/qwen-image-2.1-turbo-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t07-t08-20261020/tokenizer.ds4q",
+          "performance-results/image-quality-20261023/source-audit/native-showcase",
+          "performance-results/image-quality-20261023/source-audit/official-showcase/red-panda.ds4p"
+        ],
+        "start_UTC": "2026-10-23T08:32:37.747655+00:00",
+        "status": "complete",
+        "end_UTC": "2026-10-23T08:37:13.627577+00:00",
+        "elapsed_seconds": 289.5835727899994,
+        "exit_code": 0
+      },
+      "comparison": {
+        "conditioning": {
+          "bit_exact": false,
+          "rmse": 0.3401335232642803,
+          "max_abs": 24.0,
+          "relative_l2": 0.029463134776618348
+        },
+        "latents": [
+          {
+            "bit_exact": false,
+            "rmse": 0.0009863827496170668,
+            "max_abs": 0.015625,
+            "relative_l2": 0.0010075428398727193
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.0022675540260563946,
+            "max_abs": 0.03125,
+            "relative_l2": 0.002372351298531103
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.003340604633056357,
+            "max_abs": 0.05078125,
+            "relative_l2": 0.0035899300568687856
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.005069559625609555,
+            "max_abs": 0.08984375,
+            "relative_l2": 0.005611877349907437
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.008837083557609648,
+            "max_abs": 0.21875,
+            "relative_l2": 0.010229618660008849
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.0208283300959101,
+            "max_abs": 0.62109375,
+            "relative_l2": 0.026579347483520845
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.045960716050781066,
+            "max_abs": 1.453125,
+            "relative_l2": 0.05733453235019909
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.08217970113251163,
+            "max_abs": 2.7109375,
+            "relative_l2": 0.07023280727527072
+          }
+        ],
+        "rgba": {
+          "bit_exact": false,
+          "rmse": 0.017549875967809325,
+          "max_abs": 0.6865234375,
+          "relative_l2": 0.030336024152509036
+        },
+        "scope": "Native eager/math versus default SDPA reference; initial noise identical. Not a bit-exact backend test."
+      }
+    },
+    {
+      "id": "honeybee",
+      "png": "performance-results/image-quality-20261023/source-audit/native-honeybee/case-0/result.png",
+      "png_sha256": "152e3be3722bee66ed882df37c1f92aa4973f53d0c62b53ce120b93429842293",
+      "execution": {
+        "command": [
+          "tests/probe_qwen_image_pipeline",
+          "performance-results/native-suite-t05-t06-20261020/bundles/qwen-image-2.1-turbo-bf16/bundle.ds4b",
+          "performance-results/native-suite-oracles-20261020/models",
+          "performance-results/native-suite-t07-t08-20261020/tokenizer.ds4q",
+          "performance-results/image-quality-20261023/source-audit/native-honeybee",
+          "performance-results/image-quality-20261023/source-audit/official-showcase/honeybee.ds4p"
+        ],
+        "start_UTC": "2026-10-23T08:38:40.270446+00:00",
+        "status": "complete",
+        "end_UTC": "2026-10-23T08:40:37.338634+00:00",
+        "elapsed_seconds": 123.19146592300058,
+        "exit_code": 0
+      },
+      "comparison": {
+        "conditioning": {
+          "bit_exact": false,
+          "rmse": 0.40216144387442476,
+          "max_abs": 44.0,
+          "relative_l2": 0.03264572952047247
+        },
+        "latents": [
+          {
+            "bit_exact": false,
+            "rmse": 0.0008720034323192169,
+            "max_abs": 0.015625,
+            "relative_l2": 0.0008919160087261333
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.0014917553864051368,
+            "max_abs": 0.0234375,
+            "relative_l2": 0.001562818781826326
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.002027550210907353,
+            "max_abs": 0.03125,
+            "relative_l2": 0.002181661145958759
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.00250803462641695,
+            "max_abs": 0.03125,
+            "relative_l2": 0.0027801906402057618
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.003293494436841337,
+            "max_abs": 0.046875,
+            "relative_l2": 0.003820694822243372
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.005869180207086085,
+            "max_abs": 0.09375,
+            "relative_l2": 0.0075604514624765355
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.013220366094341907,
+            "max_abs": 0.2421875,
+            "relative_l2": 0.017262819753392993
+          },
+          {
+            "bit_exact": false,
+            "rmse": 0.025927240733669837,
+            "max_abs": 0.4921875,
+            "relative_l2": 0.023689181124689027
+          }
+        ],
+        "rgba": {
+          "bit_exact": false,
+          "rmse": 0.011231436766033664,
+          "max_abs": 0.611328125,
+          "relative_l2": 0.020219984820468048
+        },
+        "scope": "Native eager/math versus default SDPA reference; initial noise identical. Not a bit-exact backend test."
+      }
+    }
+  ],
+  "quality_default": {
+    "installed_config": "/home/daniele/ds4/agent/.venv/lib/python3.13/site-packages/exmekh_lib/config/native_suite.py",
+    "loaded_tool_defaults": {
+      "width": 2048,
+      "height": 2048
+    },
+    "client_and_helper_defaults": 2048,
+    "tool_description": "Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit."
+  },
+  "perceptual_quality_of_original_cases_resolved": false,
+  "limitations": [
+    "Direct optimizations test used original BF16 weights to isolate process changes; no complete Unsloth Studio GGUF generation was performed.",
+    "Official published example PNG could not be reproduced pixel for pixel from its early model card prompt/seed; reference environment and complete recipe are not known.",
+    "New native cases compare eager/MATH against SDPA. They are not bit-exact, and do not replace the controlled MATH parity gate.",
+    "Changing default resolution does not prove resolution is the complete cause of the original 1024x768 complaint."
+  ],
+  "source_manifest": {
+    "revision": "9f59a73ff9084f848fe600d87c4c21e17e666f97",
+    "files": [
+      {
+        "path": "studio/backend/core/inference/diffusion_flow_shift.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_flow_shift.py",
+        "sha256": "522b9f863950a1976ed0157661844c9070f9a16def9ae3deaa0e1c62031d752e",
+        "bytes": 11912
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_precision.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_precision.py",
+        "sha256": "dff9b61e5785316d0e35880ce1a2bc7cb8b2829e63ad287efb730ce6ecd067c5",
+        "bytes": 37870
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_prefix_kv.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_prefix_kv.py",
+        "sha256": "1ade5dfbf602d37093998a2b7732e15cb7f854b20503083a35a2f6dcb83a300e",
+        "bytes": 2904
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_qwenimage21.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_qwenimage21.py",
+        "sha256": "80777a7d9fa32af5873310a26656e443eea7a52e90147a5c5f184817425e989c",
+        "bytes": 25890
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_qwenimage21_fused.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_qwenimage21_fused.py",
+        "sha256": "66de6fc1790fef5ba9128726eb18cbe791c4474d8e31824f415e7ecb66a50832",
+        "bytes": 10713
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_qwenimage21_math.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_qwenimage21_math.py",
+        "sha256": "a3fc6a3d752e4accdd03c859913e5861da1a91fdc606ccece72e2613aec9790f",
+        "bytes": 9358
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_qwenimage21_rocm.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_qwenimage21_rocm.py",
+        "sha256": "b6235b7773495b5962b3e2f1e6a3720672c1bc6dd3497036c74109d3aa3cf2b7",
+        "bytes": 5526
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_qwenimage21_rope.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_qwenimage21_rope.py",
+        "sha256": "025324aefd0e812c8b2469f9486f47424b6ccc329a02618764b4fe59590c7f11",
+        "bytes": 9793
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_qwenimage21_vision.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_qwenimage21_vision.py",
+        "sha256": "3eb764995bda59923429fb175e43eb87e8efa25a6fda6508a95a7d86c6fb4da1",
+        "bytes": 3351
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_vae_fp16.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_vae_fp16.py",
+        "sha256": "78031e6d8c030568d5381b3c8ba45770b076171b58e6ae01c7ba1f1a2ac5f299",
+        "bytes": 6998
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_vae_fused.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_vae_fused.py",
+        "sha256": "79f2f0a2323b50032c6368a5547139e6a36c8f228b047f503620bf4941a68317",
+        "bytes": 111693
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_vae_single_frame.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_vae_single_frame.py",
+        "sha256": "a0baf7a6f618115c30055f69ad89d2ed547637006018a93843f8558140e7b275",
+        "bytes": 5304
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion.py",
+        "sha256": "f365c48252e8f118b9787106817fcfeef6a62f57e390a992d5afc7758eaf01a4",
+        "bytes": 748837
+      },
+      {
+        "path": "studio/backend/core/inference/diffusion_families.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/diffusion_families.py",
+        "sha256": "f7a92f35a21684a4f89ecf5b5666c584b154a84aa512fd2eab97dcb73129c9fa",
+        "bytes": 203136
+      },
+      {
+        "path": "studio/backend/core/inference/sd_cpp_backend.py",
+        "url": "https://raw.githubusercontent.com/unslothai/unsloth/9f59a73ff9084f848fe600d87c4c21e17e666f97/studio/backend/core/inference/sd_cpp_backend.py",
+        "sha256": "2bfbc443c2ccec315d163b8e90de95bdb0e4e536cb6ad5395129b5cf76c309d8",
+        "bytes": 264452
+      }
+    ]
+  },
+  "artifact_manifest_sha256": {
+    "performance-results/image-quality-20261023/source-audit/unsloth/inference-source-manifest.json": "36de1f3d261800d12a3a58218bc5b7fec3679aea42d9161bbc8202309b65eafe",
+    "performance-results/image-quality-20261023/source-audit/current-weight-integrity.json": "7516d07b523ec5b56f1bd410e8f986456e02caa02c3794e2a269ca6dc188c863",
+    "performance-results/image-quality-20261023/source-audit/original_vae_precision.py": "b1b72ce8f60334d77c704868f1ff2b85a6e5fb8e0939194a797a799435a62c2b",
+    "performance-results/image-quality-20261023/source-audit/unsloth_runtime.py": "9da89e4ead084eaf64f2ca0a548b6a70a77f1e171e6f4baea8e638ea56916ea8",
+    "performance-results/image-quality-20261023/source-audit/unsloth-runtime/comparison.json": "c166e0920b341e6fcb9216ccaee51a4dbce08fc9e9d433226dbc19f4af483e14",
+    "performance-results/image-quality-20261023/source-audit/official-showcase/red-panda-comparison.json": "c9121669e33b86b81be52b258c78e46915e37c24b2f99f03f7bddb8cb522acdb",
+    "performance-results/image-quality-20261023/source-audit/dit_precision.py": "820838d20ff45a3ec986a6d8b73fc2f7c0eecf0ab11e8bf6d28fe311f86d3a3f",
+    "performance-results/image-quality-20261023/source-audit/dit-precision/execution.json": "605c1e673b2d0960a3fc56c38011fbfe6cfc89ace5b65d56e6ec35cf4f358201",
+    "performance-results/image-quality-20261023/source-audit/dit-precision.log": "aa2146870fa209b4fa451fb53b885cc708293bac3d04463df7f55df8bde39e76"
+  },
+  "denoiser_precision": {
+    "records": [
+      {
+        "id": "alps",
+        "mode": "bf16",
+        "start_utc": "2026-10-23T08:51:24.660065+00:00",
+        "steps": [
+          {
+            "step": 0,
+            "normalized_time": 1.0,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.0,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 2.0146300260003045
+          },
+          {
+            "step": 1,
+            "normalized_time": 0.98046875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.801684357999875
+          },
+          {
+            "step": 2,
+            "normalized_time": 0.95703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.21875,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.7754611979999027
+          },
+          {
+            "step": 3,
+            "normalized_time": 0.9296875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.34375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.6677559659992767
+          },
+          {
+            "step": 4,
+            "normalized_time": 0.89453125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.40625,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.6200065259999974
+          },
+          {
+            "step": 5,
+            "normalized_time": 0.84375,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.753812857000412
+          },
+          {
+            "step": 6,
+            "normalized_time": 0.703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.28125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.7401886509996984
+          },
+          {
+            "step": 7,
+            "normalized_time": 0.4140625,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.7580762319994392
+          }
+        ],
+        "offload": false,
+        "complete": true,
+        "elapsed_seconds": 14.161054733999663,
+        "end_utc": "2026-10-23T08:51:37.297358+00:00",
+        "rgba_rmse_against_bf16": 0.0,
+        "checkerboard_phase_bias": 0.005397594068199396,
+        "png_sha256": "08a8b82f08a627bd5660182e8fd6c132b8f61dbfde2f90ea57c6b8132c191579"
+      },
+      {
+        "id": "cyberpunk",
+        "mode": "bf16",
+        "start_utc": "2026-10-23T08:51:37.428953+00:00",
+        "steps": [
+          {
+            "step": 0,
+            "normalized_time": 1.0,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.3125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.693381914999918
+          },
+          {
+            "step": 1,
+            "normalized_time": 0.98046875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.84375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.656161219999376
+          },
+          {
+            "step": 2,
+            "normalized_time": 0.95703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.03125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.6317489220000425
+          },
+          {
+            "step": 3,
+            "normalized_time": 0.9296875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.96875,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.8042175660002613
+          },
+          {
+            "step": 4,
+            "normalized_time": 0.89453125,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.09375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.7625244330001806
+          },
+          {
+            "step": 5,
+            "normalized_time": 0.84375,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.25,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.7783190000000104
+          },
+          {
+            "step": 6,
+            "normalized_time": 0.703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.3125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.6804985240005408
+          },
+          {
+            "step": 7,
+            "normalized_time": 0.4140625,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.40625,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0,
+            "bit_exact_against_bf16": true,
+            "elapsed_seconds": 1.6860285849998036
+          }
+        ],
+        "offload": false,
+        "complete": true,
+        "elapsed_seconds": 13.697841664999942,
+        "end_utc": "2026-10-23T08:51:51.126794+00:00",
+        "rgba_rmse_against_bf16": 0.0,
+        "checkerboard_phase_bias": 0.0039559584110975266,
+        "png_sha256": "b322c4173be089ad22b6fe775f95885a669760beb26f151c8dd1dda68bfcf6a0"
+      },
+      {
+        "id": "alps",
+        "mode": "fp16",
+        "start_utc": "2026-10-23T08:52:01.139754+00:00",
+        "steps": [
+          {
+            "step": 0,
+            "normalized_time": 1.0,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.00390625,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0016982240678854194,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.91502067699912
+          },
+          {
+            "step": 1,
+            "normalized_time": 0.98046875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.140625,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0024072045896244595,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.6489188040004592
+          },
+          {
+            "step": 2,
+            "normalized_time": 0.95703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.24609375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.002941066981340229,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.637138799999775
+          },
+          {
+            "step": 3,
+            "normalized_time": 0.9296875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.359375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0034127380460487475,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.6381473740002548
+          },
+          {
+            "step": 4,
+            "normalized_time": 0.89453125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.421875,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0039002937597218917,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7323301899996295
+          },
+          {
+            "step": 5,
+            "normalized_time": 0.84375,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.39453125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.004952597040009025,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7633759130003455
+          },
+          {
+            "step": 6,
+            "normalized_time": 0.703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.30078125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.009146332820002167,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7775901830000294
+          },
+          {
+            "step": 7,
+            "normalized_time": 0.4140625,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.15234375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.012403957718040199,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.6213445849998607
+          }
+        ],
+        "offload": false,
+        "complete": true,
+        "elapsed_seconds": 13.7387556019994,
+        "end_utc": "2026-10-23T08:52:13.280609+00:00",
+        "rgba_rmse_against_bf16": 0.008008695383429708,
+        "checkerboard_phase_bias": 0.005408663768321276,
+        "png_sha256": "b2330c9cf45bbd22e71fd022405e36381ed820b954180bc815cddd4f5621cabb"
+      },
+      {
+        "id": "cyberpunk",
+        "mode": "fp16",
+        "start_utc": "2026-10-23T08:52:13.408426+00:00",
+        "steps": [
+          {
+            "step": 0,
+            "normalized_time": 1.0,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.27734375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.001702178126328744,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7142518099999506
+          },
+          {
+            "step": 1,
+            "normalized_time": 0.98046875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.8671875,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.002428131804356852,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7699173290002364
+          },
+          {
+            "step": 2,
+            "normalized_time": 0.95703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.015625,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.003000862838322197,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7651158990001932
+          },
+          {
+            "step": 3,
+            "normalized_time": 0.9296875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.90234375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0036432766228138413,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7623654230001193
+          },
+          {
+            "step": 4,
+            "normalized_time": 0.89453125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.72265625,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.005989697312984326,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.6874731850002718
+          },
+          {
+            "step": 5,
+            "normalized_time": 0.84375,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.46484375,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.02217919153414346,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7064462570006071
+          },
+          {
+            "step": 6,
+            "normalized_time": 0.703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.6796875,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.057450232248950336,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.7606089430000793
+          },
+          {
+            "step": 7,
+            "normalized_time": 0.4140625,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.1015625,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.07810600516526571,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 1.8000788910003394
+          }
+        ],
+        "offload": false,
+        "complete": true,
+        "elapsed_seconds": 13.96919203699963,
+        "end_utc": "2026-10-23T08:52:27.377619+00:00",
+        "rgba_rmse_against_bf16": 0.04767883719710784,
+        "checkerboard_phase_bias": 0.003987443167716265,
+        "png_sha256": "9e894a04bc02344f0445fd8996fb7757c8c8dc65f6a52c08faf63d062b2714a0"
+      },
+      {
+        "id": "alps",
+        "mode": "fp32",
+        "start_utc": "2026-10-23T08:52:34.677697+00:00",
+        "steps": [
+          {
+            "step": 0,
+            "normalized_time": 1.0,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.00128173828125,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0016789673689719604,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 23.215480707000097
+          },
+          {
+            "step": 1,
+            "normalized_time": 0.98046875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.139141082763672,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0023801000034423675,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.94274242099982
+          },
+          {
+            "step": 2,
+            "normalized_time": 0.95703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.24567985534668,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.002907690659973017,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.89486555900021
+          },
+          {
+            "step": 3,
+            "normalized_time": 0.9296875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.356154441833496,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0033711621505104115,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.855430765000165
+          },
+          {
+            "step": 4,
+            "normalized_time": 0.89453125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.423918724060059,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.003840344585762062,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.519056711999838
+          },
+          {
+            "step": 5,
+            "normalized_time": 0.84375,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.395517349243164,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.004759377300433415,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.598522617000526
+          },
+          {
+            "step": 6,
+            "normalized_time": 0.703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.301347255706787,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.008550157475454444,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.651266415000464
+          },
+          {
+            "step": 7,
+            "normalized_time": 0.4140625,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.149199962615967,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.011628977952102154,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.821212627000023
+          }
+        ],
+        "offload": true,
+        "complete": true,
+        "elapsed_seconds": 182.50555527899996,
+        "end_utc": "2026-10-23T08:55:29.723212+00:00",
+        "rgba_rmse_against_bf16": 0.007550223241272721,
+        "checkerboard_phase_bias": 0.0054048821330070496,
+        "png_sha256": "42c45908df12df20f96275acb26da9b89012195af098e7a0eec1a06eb8959393"
+      },
+      {
+        "id": "cyberpunk",
+        "mode": "fp32",
+        "start_utc": "2026-10-23T08:55:29.885797+00:00",
+        "steps": [
+          {
+            "step": 0,
+            "normalized_time": 1.0,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.274895668029785,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.001684812576121521,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 23.44693163000011
+          },
+          {
+            "step": 1,
+            "normalized_time": 0.98046875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.868121147155762,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0024081771226597552,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.713787841999874
+          },
+          {
+            "step": 2,
+            "normalized_time": 0.95703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 7.014644145965576,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.002983575798253469,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.499932033999357
+          },
+          {
+            "step": 3,
+            "normalized_time": 0.9296875,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.9038190841674805,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.0036415409483527917,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.80862168600015
+          },
+          {
+            "step": 4,
+            "normalized_time": 0.89453125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.689604759216309,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.006105721396583395,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.960707495999486
+          },
+          {
+            "step": 5,
+            "normalized_time": 0.84375,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.449872970581055,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.02261565700445949,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.728921312999773
+          },
+          {
+            "step": 6,
+            "normalized_time": 0.703125,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.687060832977295,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.05840564790188866,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.818391566000173
+          },
+          {
+            "step": 7,
+            "normalized_time": 0.4140625,
+            "velocity_finite": true,
+            "max_abs_velocity": 6.09890079498291,
+            "latent_finite": true,
+            "relative_l2_against_bf16": 0.07930408019616833,
+            "bit_exact_against_bf16": false,
+            "elapsed_seconds": 22.50287760900028
+          }
+        ],
+        "offload": true,
+        "complete": true,
+        "elapsed_seconds": 182.48425185900032,
+        "end_utc": "2026-10-23T08:58:23.287105+00:00",
+        "rgba_rmse_against_bf16": 0.04833925482523899,
+        "checkerboard_phase_bias": 0.003983462695032358,
+        "png_sha256": "0a61f9e9767c02ad11376990a2b7b92e495ad186a9e809f3e4b96f5ac6f4c639"
+      }
+    ],
+    "production_recipe_changed": false,
+    "source_checkpoint": "performance-results/native-suite-oracles-20261020/models/Qwen/Qwen-Image-2.1-Turbo",
+    "scope": "Denoiser compute dtype A/B only. Source weights contain BF16 values. Same saved BF16 conditioning, BF16-rounded initial noise, official sigmas and BF16-rounded normalized times in every mode. VAE fixed BF16. FP32 does not recreate precision absent from source weights; text encoder precision is not tested.",
+    "torch": "2.14.1+cu130",
+    "script_sha256": "820838d20ff45a3ec986a6d8b73fc2f7c0eecf0ab11e8bf6d28fe311f86d3a3f",
+    "visual_inspection": "Assistant inspection of all six PNGs: no evident general recovery of high-frequency detail; periodic texture remains. Not a new user acceptance result.",
+    "initial_harness_control_failure": {
+      "log": "performance-results/image-quality-20261023/source-audit/dit-precision-initial-harness-error.log",
+      "cause": "Casting an already-loaded whole model to BF16 also rounded the FP32 sinusoidal timestep frequency buffer. Corrected diagnostic loads weights independently at each target dtype and preserves the FP32 frequency buffer. This error was in the new diagnostic harness, not the native production path.",
+      "first_step_relative_l2": 0.0012629105860567107,
+      "corrected_bf16_control_bit_exact_steps": 16
+    },
+    "user_feedback": {
+      "text": "no non cambia niente",
+      "meaning": "User sees no perceptual improvement in the BF16/FP16/FP32 comparison."
+    }
+  }
+}

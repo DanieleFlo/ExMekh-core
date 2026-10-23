@@ -1,0 +1,672 @@
+diff --git a/docs/22-native-suite.md b/docs/22-native-suite.md
+index 95e31b9..8dc778d 100644
+--- a/docs/22-native-suite.md
++++ b/docs/22-native-suite.md
+@@ -26,7 +26,8 @@ with LocalProvider(model="Qwen3.8-27B-UD-Q4_K_S", base_url="http://localhost:180
+ The only implemented identities are `Literal["Qwen/Qwen-Image-2.1-Turbo"]`
+ and `Literal["google/embeddinggemma-2"]`. Each operation has one available
+ model, so methods and tools expose no model selector. Image dimensions are
+-integer `width` and `height`; serialization to the standard `size` field stays
++independent `ImageDimension` Literals for `width` and `height`, enumerating
++every multiple of 32 from 32 to 2048; serialization to the standard `size` field stays
+ inside the transport adapter. `models()` returns typed native catalog entries;
+ the provider's chat model selection excludes non-chat capabilities.
+ 
+@@ -42,8 +43,18 @@ through `provider.client.embeddings.create`.
+ `images` supports ordered image references, prompt-only, image-only with an empty
+ prompt, or both. It exposes count, integer dimensions, PNG format,
+ auto/opaque/transparent background, seed and idempotency key. The server fixes
+-the Turbo recipe at eight steps/CFG 1. Width/height are multiples of 32 from
+-32 to 2048; count 1–8 is bounded by 4,194,304 total pixels. Unknown options are
++the Turbo recipe at eight steps/CFG 1. Client, helper and registered tool default
++to 2048×2048 for fine detail; explicit smaller sizes remain supported. Full-resolution
++images use separate calls when a batch would exceed the pixel limit.
++Width/height are multiples of 32 from
++32 to 2048; count 1–8 is bounded by 4,194,304 total pixels. The same Literals
++are exposed by the registered tool, helper and client; invalid geometry is
++rejected locally before uploading references or sending generation requests.
++For 16:9, 1024×576 and 2048×1152 are valid. 1920×1080 fails the 32-pixel
++alignment and 2560×1440 exceeds the current DS4 per-axis limit. These are
++service limits, not architectural maxima of the Qwen checkpoint: its model
++card also lists larger presets such as 2752×1536, outside this service contract.
++Unknown options are
+ rejected. An automatic per-call idempotency key protects transport retries;
+ pass a stable key yourself when retrying the same logical call later.
+ References preserve their supplied dimensions (`reference_resolution=0`) and
+@@ -113,3 +124,19 @@ ranking. These tests qualify integration, not the separate image quality gates.
+ The subsequent `docs/performance/native-suite-clean-review-20261022/README.md`
+ records the ownership/codec refactoring and removal of the embedding capability
+ after clarifying that native embeddings belong inside web search.
++
++
++## Image request and response ownership
++
++`NativeSuiteClient.validate_image_options()` validates the native contract
++without opening a connection. Both the client and the workspace tool use this
++public entry point: configuration contains settings and messages only. Options
++are checked before reference uploads, including batch geometry, PNG output,
++background and uint64 seed room for every generated image.
++
++`ImageBatch.validate_geometry()` checks the returned count and dimensions
++against the request. `GeneratedImage.png_bytes()` owns base64 decoding and PNG
++verification, including declared dimensions. Workspace persistence uses this
++public method rather than knowing the encoded payload layout. Every PNG is
++verified before the tool creates an output directory, including when previews
++are disabled. All reference paths must point to files before any upload starts.
+diff --git a/src/exmekh_lib/capabilities/tools/generate-image/main.py b/src/exmekh_lib/capabilities/tools/generate-image/main.py
+index a7b7497..666b6be 100644
+--- a/src/exmekh_lib/capabilities/tools/generate-image/main.py
++++ b/src/exmekh_lib/capabilities/tools/generate-image/main.py
+@@ -4,7 +4,7 @@ from pathlib import Path
+ from typing import Literal
+ 
+ from exmekh_lib.config.default_capabilities import DEFAULT_CAPABILITIES
+-from exmekh_lib.config.native_suite import NATIVE_SUITE
++from exmekh_lib.config.native_suite import NATIVE_SUITE, ImageCount, ImageDimension
+ from exmekh_lib.core.agents.tools.decorator import deep_tool
+ from exmekh_lib.core.models.native_media_tools import generate_images
+ 
+@@ -16,9 +16,9 @@ def run(
+     work_root: Path,
+     prompt: str = "",
+     images: list[str] | None = None,
+-    n: int = 1,
+-    width: int = 1024,
+-    height: int = 1024,
++    n: ImageCount = 1,
++    width: ImageDimension = NATIVE_SUITE.image_default_dimension,
++    height: ImageDimension = NATIVE_SUITE.image_default_dimension,
+     output_format: Literal["png"] = "png",
+     background: Literal["auto", "opaque", "transparent"] = "auto",
+     seed: int | None = None,
+@@ -29,14 +29,14 @@ def run(
+     return generate_images(
+         work_root,
+         prompt,
+-        images,
+-        n,
+-        width,
+-        height,
+-        output_format,
+-        background,
+-        seed,
+-        idempotency_key,
+-        include_image_in_result,
+-        preview_scale,
++        images=images,
++        n=n,
++        width=width,
++        height=height,
++        output_format=output_format,
++        background=background,
++        seed=seed,
++        idempotency_key=idempotency_key,
++        include_image_in_result=include_image_in_result,
++        preview_scale=preview_scale,
+     )
+diff --git a/src/exmekh_lib/config/native_suite.py b/src/exmekh_lib/config/native_suite.py
+index 13e0f18..1755a18 100644
+--- a/src/exmekh_lib/config/native_suite.py
++++ b/src/exmekh_lib/config/native_suite.py
+@@ -3,6 +3,74 @@
+ from dataclasses import dataclass
+ from typing import Literal
+ 
++ImageDimension = Literal[
++    32,
++    64,
++    96,
++    128,
++    160,
++    192,
++    224,
++    256,
++    288,
++    320,
++    352,
++    384,
++    416,
++    448,
++    480,
++    512,
++    544,
++    576,
++    608,
++    640,
++    672,
++    704,
++    736,
++    768,
++    800,
++    832,
++    864,
++    896,
++    928,
++    960,
++    992,
++    1024,
++    1056,
++    1088,
++    1120,
++    1152,
++    1184,
++    1216,
++    1248,
++    1280,
++    1312,
++    1344,
++    1376,
++    1408,
++    1440,
++    1472,
++    1504,
++    1536,
++    1568,
++    1600,
++    1632,
++    1664,
++    1696,
++    1728,
++    1760,
++    1792,
++    1824,
++    1856,
++    1888,
++    1920,
++    1952,
++    1984,
++    2016,
++    2048,
++]
++ImageCount = Literal[1, 2, 3, 4, 5, 6, 7, 8]
++
+ 
+ @dataclass(frozen=True, slots=True)
+ class NativeSuiteSettings:
+@@ -12,11 +80,19 @@ class NativeSuiteSettings:
+     include_image_in_result: bool = True
+     preview_scale: float = 1.0
+     timeout_seconds: float = 600
++    image_default_dimension: ImageDimension = 2048
++    image_batch_pixels: int = 4_194_304
+     image_description: str = (
+         "Generate or edit images using the configured native image model. Supply an "
+         "ordered list of reference paths for editing. Returns media IDs, local PNG "
+         "paths, seeds, recipe and dimensions. include_image_in_result attaches "
+-        "labeled previews to the next model request; preview_scale changes previews only."
++        "labeled previews to the next model request; preview_scale changes previews only. "
++        "Width and height are independent multiples of 32 from 32 through 2048, "
++        "listed in their enums; n * width * height must not exceed 4194304 pixels. "
++        "Use 2K for fine detail unless the user requests a smaller image: "
++        "2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. "
++        "Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. "
++        "Generate multiple full-resolution images in separate calls to respect the batch pixel limit."
+     )
+     image_result_context: str = (
+         "These images are previews from the completed generate-image tool call. "
+@@ -27,6 +103,17 @@ class NativeSuiteSettings:
+     invalid_response: str = "The native service returned an invalid response."
+     invalid_scale: str = "preview_scale must be greater than zero and at most one."
+     invalid_path: str = "Media paths must stay inside the workspace."
++    invalid_dimensions: str = "Width and height must each be a supported integer multiple of 32 from 32 to 2048."
++    invalid_count: str = "n must be an integer from 1 to 8."
++    invalid_image_batch: str = "n * width * height must not exceed 4194304 pixels."
++    invalid_image_format: str = "The native image service supports PNG output only."
++    invalid_image_background: str = "background must be auto, opaque or transparent."
++    invalid_image_seed: str = (
++        "seed must be a uint64 integer and leave room for all images in the batch."
++    )
++    invalid_reference: str = (
++        "Every image reference must be an existing file inside the workspace."
++    )
+ 
+ 
+ NATIVE_SUITE = NativeSuiteSettings()
+diff --git a/src/exmekh_lib/core/models/native_media_tools.py b/src/exmekh_lib/core/models/native_media_tools.py
+index d59f652..8ea2e5d 100644
+--- a/src/exmekh_lib/core/models/native_media_tools.py
++++ b/src/exmekh_lib/core/models/native_media_tools.py
+@@ -2,7 +2,6 @@
+ 
+ from __future__ import annotations
+ 
+-import base64
+ import io
+ import uuid
+ from pathlib import Path
+@@ -10,9 +9,10 @@ from typing import Literal
+ 
+ from PIL import Image
+ 
+-from exmekh_lib.config.native_suite import NATIVE_SUITE
++from exmekh_lib.config.native_suite import NATIVE_SUITE, ImageCount, ImageDimension
+ from exmekh_lib.core.models.native_suite import (
+     ImageBatch,
++    NativeSuiteClient,
+     native_suite_client,
+ )
+ from exmekh_lib.core.models.tool import AttachedToolResult
+@@ -31,9 +31,9 @@ def generate_images(
+     work_root: Path,
+     prompt: str,
+     images: list[str] | None = None,
+-    n: int = 1,
+-    width: int = 1024,
+-    height: int = 1024,
++    n: ImageCount = 1,
++    width: ImageDimension = NATIVE_SUITE.image_default_dimension,
++    height: ImageDimension = NATIVE_SUITE.image_default_dimension,
+     output_format: Literal["png"] = "png",
+     background: Literal["auto", "opaque", "transparent"] = "auto",
+     seed: int | None = None,
+@@ -41,9 +41,19 @@ def generate_images(
+     include_image_in_result: bool = NATIVE_SUITE.include_image_in_result,
+     preview_scale: float = NATIVE_SUITE.preview_scale,
+ ) -> dict[str, object]:
++    NativeSuiteClient.validate_image_options(
++        n=n,
++        width=width,
++        height=height,
++        output_format=output_format,
++        background=background,
++        seed=seed,
++    )
+     if not 0 < preview_scale <= 1:
+         raise ValueError(NATIVE_SUITE.invalid_scale)
+     paths = [workspace_media(work_root, path) for path in images or []]
++    if any(not path.is_file() for path in paths):
++        raise ValueError(NATIVE_SUITE.invalid_reference)
+     directory = workspace_media(
+         work_root, f".exmekh_lib/generated-media/{uuid.uuid4().hex}"
+     )
+@@ -69,11 +79,12 @@ def _save_images(
+     include_image_in_result: bool,
+     preview_scale: float,
+ ) -> dict[str, object]:
++    # Verify the complete batch before publishing any local file.
++    payloads = [item.png_bytes() for item in response.data]
+     directory.mkdir(parents=True)
+     outputs: list[dict[str, object]] = []
+     previews: list[Image.Image] = []
+-    for i, item in enumerate(response.data):
+-        raw = base64.b64decode(item.b64_json, validate=True)
++    for i, (item, raw) in enumerate(zip(response.data, payloads, strict=True)):
+         path = directory / f"{i}.png"
+         path.write_bytes(raw)
+         outputs.append({**item.ds4.model_dump(), "path": str(path)})
+diff --git a/src/exmekh_lib/core/models/native_suite.py b/src/exmekh_lib/core/models/native_suite.py
+index 453daf4..322e7f7 100644
+--- a/src/exmekh_lib/core/models/native_suite.py
++++ b/src/exmekh_lib/core/models/native_suite.py
+@@ -2,6 +2,8 @@
+ 
+ from __future__ import annotations
+ 
++import base64
++import binascii
+ import io
+ import mimetypes
+ import os
+@@ -10,13 +12,13 @@ from collections.abc import Callable, Iterator, Sequence
+ from contextlib import contextmanager
+ from contextvars import ContextVar
+ from pathlib import Path
+-from typing import Any, Literal
++from typing import Any, Literal, get_args
+ 
+ from openai import OpenAI
+ from PIL import Image
+ from pydantic import BaseModel, Field
+ 
+-from exmekh_lib.config.native_suite import NATIVE_SUITE
++from exmekh_lib.config.native_suite import NATIVE_SUITE, ImageCount, ImageDimension
+ from exmekh_lib.config.provider import DEFAULT_PROVIDER_SETTINGS
+ 
+ 
+@@ -50,12 +52,34 @@ class GeneratedImage(BaseModel):
+     b64_json: str
+     ds4: GeneratedMedia
+ 
++    def png_bytes(self) -> bytes:
++        """Decode the wire payload and verify its declared format and geometry."""
++        try:
++            raw = base64.b64decode(self.b64_json, validate=True)
++            with Image.open(io.BytesIO(raw)) as image:
++                if image.format != "PNG" or image.size != (
++                    self.ds4.width,
++                    self.ds4.height,
++                ):
++                    raise ValueError(NATIVE_SUITE.invalid_response)
++                image.verify()
++        except (binascii.Error, OSError, SyntaxError, ValueError) as error:
++            raise ValueError(NATIVE_SUITE.invalid_response) from error
++        return raw
++
+ 
+ class ImageBatch(BaseModel):
+     created: int
+     data: list[GeneratedImage]
+     ds4: dict[str, Any]
+ 
++    def validate_geometry(self, *, n: int, width: int, height: int) -> None:
++        if len(self.data) != n or any(
++            image.ds4.width != width or image.ds4.height != height
++            for image in self.data
++        ):
++            raise ValueError(NATIVE_SUITE.invalid_response)
++
+ 
+ class NativeCapabilities(BaseModel):
+     version: Literal[1]
+@@ -149,19 +173,54 @@ class NativeSuiteClient:
+             raise ValueError(NATIVE_SUITE.invalid_response)
+         return response
+ 
++    @staticmethod
++    def validate_image_options(
++        *,
++        n: int,
++        width: int,
++        height: int,
++        output_format: str,
++        background: str,
++        seed: int | None,
++    ) -> None:
++        """Check native request options before transport or reference uploads."""
++        if any(
++            type(value) is not int or value not in get_args(ImageDimension)
++            for value in (width, height)
++        ):
++            raise ValueError(NATIVE_SUITE.invalid_dimensions)
++        if type(n) is not int or n not in get_args(ImageCount):
++            raise ValueError(NATIVE_SUITE.invalid_count)
++        if n * width * height > NATIVE_SUITE.image_batch_pixels:
++            raise ValueError(NATIVE_SUITE.invalid_image_batch)
++        if output_format != "png":
++            raise ValueError(NATIVE_SUITE.invalid_image_format)
++        if background not in ("auto", "opaque", "transparent"):
++            raise ValueError(NATIVE_SUITE.invalid_image_background)
++        if seed is not None and (type(seed) is not int or not 0 <= seed <= 2**64 - n):
++            raise ValueError(NATIVE_SUITE.invalid_image_seed)
++
+     def images(
+         self,
+         prompt: str,
+         *,
+         images: Sequence[MediaContent] = (),
+-        n: int = 1,
+-        width: int = 1024,
+-        height: int = 1024,
++        n: ImageCount = 1,
++        width: ImageDimension = NATIVE_SUITE.image_default_dimension,
++        height: ImageDimension = NATIVE_SUITE.image_default_dimension,
+         output_format: Literal["png"] = "png",
+         background: Literal["auto", "opaque", "transparent"] = "auto",
+         seed: int | None = None,
+         idempotency_key: str | None = None,
+     ) -> ImageBatch:
++        self.validate_image_options(
++            n=n,
++            width=width,
++            height=height,
++            output_format=output_format,
++            background=background,
++            seed=seed,
++        )
+         extension: dict[str, Any] = {"version": 1, "sampling": "checkpoint"}
+         if seed is not None:
+             extension["seed"] = seed
+@@ -184,7 +243,9 @@ class NativeSuiteClient:
+                 "headers": {"Idempotency-Key": idempotency_key or str(uuid.uuid4())}
+             },
+         )
+-        return ImageBatch.model_validate(response)
++        batch = ImageBatch.model_validate(response)
++        batch.validate_geometry(n=n, width=width, height=height)
++        return batch
+ 
+ 
+ _suite_factory: ContextVar[Callable[[], NativeSuiteClient] | None] = ContextVar(
+diff --git a/tests/core/models/test_native_suite.py b/tests/core/models/test_native_suite.py
+index 37bb86d..2c60e0c 100644
+--- a/tests/core/models/test_native_suite.py
++++ b/tests/core/models/test_native_suite.py
+@@ -6,13 +6,16 @@ import io
+ import json
+ from contextlib import nullcontext
+ from pathlib import Path
++from typing import get_args, get_type_hints
+ 
+ import httpx2
+ import pytest
+ from openai import OpenAI
+ from PIL import Image
++from pydantic import TypeAdapter
+ 
+ from exmekh_lib.config.capabilities import CAPABILITY_FORMAT
++from exmekh_lib.config.native_suite import NATIVE_SUITE, ImageDimension
+ from exmekh_lib.config.provider import DEFAULT_PROVIDER_SETTINGS
+ from exmekh_lib.core.agents.tools.deep_tools import DeepTools
+ from exmekh_lib.core.models import native_suite
+@@ -41,6 +44,32 @@ def transport(handler):
+     )
+ 
+ 
++def image_response(width=32, height=32, *, n=1, raw=b""):
++    return {
++        "created": 1,
++        "ds4": {},
++        "data": [
++            {
++                "b64_json": base64.b64encode(raw).decode(),
++                "ds4": {
++                    "file_id": f"file-{i}",
++                    "seed": i,
++                    "width": width,
++                    "height": height,
++                    "recipe": {},
++                },
++            }
++            for i in range(n)
++        ],
++    }
++
++
++def png_payload(width=32, height=32, *, image_format="PNG"):
++    stream = io.BytesIO()
++    Image.new("RGB", (width, height), "red").save(stream, image_format)
++    return stream.getvalue()
++
++
+ def test_order_task_and_no_residency_commands():
+     requests = []
+ 
+@@ -152,7 +181,9 @@ def test_multiple_images_preview_configuration_and_workspace_paths(tmp_path):
+         assert [item.size for item in previews] == [(16, 16), (16, 16)]
+         for row in result["images"]:
+             assert Path(row["path"]).read_bytes() == stream.getvalue()
+-        no_pixels = generate_images(tmp_path, "red", n=2, include_image_in_result=False)
++        no_pixels = generate_images(
++            tmp_path, "red", n=2, width=32, height=32, include_image_in_result=False
++        )
+         assert not isinstance(no_pixels, AttachedToolResult)
+     with pytest.raises(ValueError):
+         workspace_media(tmp_path, "../escape.png")
+@@ -228,3 +259,177 @@ def test_all_reference_paths_are_checked_before_upload(tmp_path):
+     with native_suite_context(lambda: suite), pytest.raises(ValueError):
+         generate_images(tmp_path, "red", images=["reference.png", "../escape.png"])
+     assert requests == []
++
++
++def test_registered_image_dimensions_are_exhaustive_enums(tmp_path):
++    tools = DeepTools(
++        [CAPABILITY_FORMAT.bundled_root / "tools/generate-image"], work_root=tmp_path
++    )
++    try:
++        tool = tools.load()[0]
++        hints = tool.get_type_hints()
++        for axis in ("width", "height"):
++            schema = TypeAdapter(hints[axis]).json_schema()
++            assert schema["type"] == "integer"
++            assert schema["enum"] == list(range(32, 2049, 32))
++            assert tool.get_work_signature().parameters[axis].default == 2048
++            for method in (NativeSuiteClient.images, generate_images):
++                assert get_type_hints(method)[axis] == hints[axis]
++    finally:
++        tools.unload()
++
++
++def test_all_advertised_image_dimensions_reach_transport():
++    sent = []
++
++    def handler(request):
++        sent.append(json.loads(request.content)["size"])
++        width, height = map(int, json.loads(request.content)["size"].split("x"))
++        return httpx2.Response(200, json=image_response(width, height))
++
++    suite = transport(handler)
++    for width in get_args(ImageDimension):
++        for height in get_args(ImageDimension):
++            suite.images("test", width=width, height=height)
++    assert len(sent) == 4096
++    assert sent[0] == "32x32" and sent[-1] == "2048x2048"
++
++
++@pytest.mark.parametrize(
++    "arguments",
++    [
++        {"width": 2560, "height": 1440},
++        {"width": 1920, "height": 1080},
++        {"width": 0},
++        {"height": 31},
++        {"width": 1024.0},
++        {"height": True},
++        {"n": 0},
++        {"n": 9},
++        {"n": True},
++        {"n": 2, "width": 2048, "height": 2048},
++        {"output_format": "jpeg"},
++        {"background": "invalid"},
++        {"seed": -1},
++        {"seed": 2**64},
++        {"seed": True},
++        {"seed": 1.5},
++        {"seed": 2**64 - 1, "n": 2, "width": 32, "height": 32},
++    ],
++)
++def test_invalid_image_geometry_rejected_before_transport_or_upload(
++    tmp_path, arguments
++):
++    suite = transport(lambda request: pytest.fail("Invalid request reached transport"))
++    with pytest.raises(ValueError):
++        suite.images("test", **arguments)
++    with native_suite_context(lambda: suite), pytest.raises(ValueError):
++        generate_images(tmp_path, "test", images=["missing-reference.png"], **arguments)
++    assert not (tmp_path / ".exmekh_lib").exists()
++
++
++def test_image_default_is_2k_on_client_helper_and_loaded_tool(tmp_path):
++    sizes = []
++
++    def handler(request):
++        sizes.append(json.loads(request.content)["size"])
++        width, height = map(int, sizes[-1].split("x"))
++        return httpx2.Response(
++            200, json=image_response(width, height, raw=png_payload(width, height))
++        )
++
++    suite = transport(handler)
++    tools = DeepTools(
++        [CAPABILITY_FORMAT.bundled_root / "tools/generate-image"], work_root=tmp_path
++    )
++    try:
++        tool = tools.load()[0]
++        suite.images("fine fur")
++        with native_suite_context(lambda: suite):
++            generate_images(tmp_path, "fine fur", include_image_in_result=False)
++            tool.execute(prompt="fine fur", include_image_in_result=False)
++            tool.execute(
++                prompt="requested smaller image",
++                width=1024,
++                height=768,
++                include_image_in_result=False,
++            )
++        assert sizes == ["2048x2048", "2048x2048", "2048x2048", "1024x768"]
++    finally:
++        tools.unload()
++
++
++@pytest.mark.parametrize("reference", ["missing.png", "directory"])
++def test_missing_or_directory_reference_is_rejected_before_any_upload(
++    tmp_path, reference
++):
++    (tmp_path / "reference.png").write_bytes(png_payload())
++    (tmp_path / "directory").mkdir()
++    suite = transport(
++        lambda request: pytest.fail("Reference validation reached transport")
++    )
++    with (
++        native_suite_context(lambda: suite),
++        pytest.raises(ValueError, match=NATIVE_SUITE.invalid_reference),
++    ):
++        generate_images(tmp_path, "red", images=["reference.png", reference])
++    assert not (tmp_path / ".exmekh_lib").exists()
++
++
++@pytest.mark.parametrize(
++    "width,height,n", [(32, 32, 0), (32, 32, 2), (64, 32, 1), (32, 64, 1)]
++)
++def test_image_response_must_match_the_request(width, height, n):
++    suite = transport(
++        lambda request: httpx2.Response(200, json=image_response(width, height, n=n))
++    )
++    with pytest.raises(ValueError, match=NATIVE_SUITE.invalid_response):
++        suite.images("red", width=32, height=32)
++
++
++@pytest.mark.parametrize("include_preview", [False, True])
++@pytest.mark.parametrize(
++    "invalid_payload", ["base64", "not-image", "jpeg", "geometry", "crc"]
++)
++def test_invalid_png_batch_is_rejected_before_saving_any_image(
++    tmp_path, invalid_payload, include_preview
++):
++    raw = png_payload()
++    response = image_response(n=2, raw=raw)
++    if invalid_payload == "base64":
++        response["data"][1]["b64_json"] = "%%%"
++    else:
++        bad = {
++            "not-image": b"not an image",
++            "jpeg": png_payload(image_format="JPEG"),
++            "geometry": png_payload(64, 32),
++            "crc": raw[:33] + b"bad!" + raw[37:],
++        }[invalid_payload]
++        response["data"][1]["b64_json"] = base64.b64encode(bad).decode()
++    suite = transport(lambda request: httpx2.Response(200, json=response))
++    with (
++        native_suite_context(lambda: suite),
++        pytest.raises(ValueError, match=NATIVE_SUITE.invalid_response),
++    ):
++        generate_images(
++            tmp_path,
++            "red",
++            n=2,
++            width=32,
++            height=32,
++            include_image_in_result=include_preview,
++        )
++    assert not (tmp_path / ".exmekh_lib").exists()
++
++
++@pytest.mark.parametrize("n", [1, 2, 8])
++def test_maximum_seed_leaves_room_for_the_entire_batch(n):
++    seed = 2**64 - n
++
++    def handler(request):
++        body = json.loads(request.content)
++        assert body["ds4"]["seed"] == seed
++        return httpx2.Response(200, json=image_response(n=n))
++
++    suite = transport(handler)
++    assert len(suite.images("red", width=32, height=32, n=n, seed=seed).data) == n

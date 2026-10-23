@@ -62,6 +62,19 @@ int main(void) {
     a = schema_json_parse("{\"prompt\":\"red\",\"size\":\"32x32\",\"ds4\":{\"version\":1,\"seed\":18446744073709551615}}");
     assert(!suite_prepare_image(NULL, a, false, &image) && image.native.seed == UINT64_MAX);
     schema_json_free(a);
+    /* Every independently advertised dimension is accepted in either axis. */
+    for (unsigned w = 32; w <= 2048; w += 32)
+        for (unsigned h = 32; h <= 2048; h += 32) {
+            char request[128];
+            snprintf(request, sizeof(request), "{\"prompt\":\"red\",\"size\":\"%ux%u\"}", w, h);
+            a = schema_json_parse(request);
+            assert(!suite_prepare_image(NULL, a, false, &image));
+            assert(image.native.width == w && image.native.height == h);
+            schema_json_free(a);
+        }
+    a = schema_json_parse("{\"prompt\":\"red\",\"size\":\"2048x2048\",\"n\":2}");
+    assert(suite_prepare_image(NULL, a, false, &image) == DS4_STATUS_INVALID);
+    schema_json_free(a);
     uint8_t pixel = 0;
     ds4_qwen_image_reference reference = {&pixel, 64, 96, 3};
     image.native.references = &reference; image.native.reference_count = 1;

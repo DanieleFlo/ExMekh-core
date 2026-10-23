@@ -1509,7 +1509,7 @@ test-qwen-image-input: tests/test_qwen_image_input
 clean-suite-numeric:
 	rm -f tests/probe_native_suite tests/probe_gemma_visual tests/probe_qwen_image_pipeline tests/libds4_suite_cpu.so tests/libds4_suite_cuda.so
 	rm -f tests/test_qwen_image_output
-	rm -f tests/probe_qwen_image_graph tests/probe_qwen_image_graph.o tests/libds4_qwen_image_graph_cpu.so
+	rm -f tests/probe_qwen_image_graph tests/probe_qwen_image_graph.o tests/libds4_qwen_image_graph_cpu.so tests/test_qwen_image_timestep
 	rm -f $(filter-out ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o,$(SUITE_OBJS)) ds4_numeric_cuda.o ds4_numeric_cudnn.o libds4-suite-cpu.a libds4-suite-cuda.a tests/probe_qwen_image_encoder tests/probe_qwen_image_encoder.o tests/test_numeric_lifetime tests/libds4_numeric_cpu.so tests/libds4_numeric_cuda.so tests/suite_resources.o tests/libds4_image_suite.so tests/libds4_qwen_image_tokenizer.so tests/test_qwen_image_input
 clean: clean-suite-numeric
 ds4_qwen_image_encoder.o: ds4_qwen_image_encoder.c ds4_qwen_image_encoder.h ds4_qwen_image_observer.h ds4_qwen_image_input.h ds4_qwen_image_input_internal.h ds4_qwen_image_tokenizer.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
@@ -1545,8 +1545,11 @@ tests/probe_qwen_image_graph: tests/probe_qwen_image_graph.c $(SUITE_OBJS) ds4_n
 	$(CC) -o $@ tests/probe_qwen_image_graph.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
 tests/libds4_qwen_image_graph_cpu.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o
 	$(CC) -shared -o $@ $^ -lm -pthread $(SUITE_MEDIA_LDLIBS)
+tests/test_qwen_image_timestep: tests/test_qwen_image_timestep.c ds4_qwen_image_graph.h
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $< -lm
 .PHONY: test-qwen-image-graph
-test-qwen-image-graph: tests/libds4_qwen_image_graph_cpu.so
+test-qwen-image-graph: tests/libds4_qwen_image_graph_cpu.so tests/test_qwen_image_timestep
+	./tests/test_qwen_image_timestep
 	$(SUITE_PYTHON) -m unittest tests.test_qwen_image_graph -v
 ds4_numeric.o: ds4_numeric.c ds4_numeric_internal.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<

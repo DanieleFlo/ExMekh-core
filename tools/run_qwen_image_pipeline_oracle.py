@@ -291,12 +291,14 @@ def main():
                     device="cuda",
                     mu=0.5,
                 )
+                # Match the actual pipeline: cast t before normalizing it.
+                # Casting only t / 1000 hides the native timestep regression.
                 cache = QwenImage21KVCache(32)
                 for i, t in enumerate(scheduler.timesteps):
                     velocity = model(
                         torch.cat([reference, latent.to(torch.bfloat16)], 1),
                         conditioning,
-                        (t / 1000).expand(1),
+                        t.expand(1).to(torch.bfloat16) / 1000,
                         [shapes],
                         mask,
                         kv_cache=cache,

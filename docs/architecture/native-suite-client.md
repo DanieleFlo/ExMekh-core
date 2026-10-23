@@ -53,10 +53,15 @@ with OpenAI(base_url="http://localhost:18091/v1", api_key="local", timeout=600) 
 ```
 
 `size` appartiene al protocollo standard. L'helper ExMekh e i tool espongono
-invece `width: int` e `height: int`. PNG è l'unico formato output implementato;
+invece `width: ImageDimension` e `height: ImageDimension`, due Literal indipendenti. PNG è l'unico formato output implementato;
 `quality`, `style`, `mask` e campi non mappati producono errore esplicito.
 Larghezza/altezza devono essere multipli di 32 fra 32 e 2048; `n` è fra 1 e 8,
-con al massimo 4.194.304 pixel totali. La recipe Turbo resta otto step e CFG 1.
+con al massimo 4.194.304 pixel totali. Client, helper e tool ExMekh usano
+2048×2048 per default; accettano le dimensioni minori richieste esplicitamente.
+La descrizione del tool suggerisce 2048×1536 per paesaggi, 1536×2048 per
+ritratti e 2048×1152 per 16:9. Per più immagini 2048×2048 servono chiamate
+separate, dato il limite totale del batch. Il default del protocollo HTTP
+resta indipendente. La recipe Turbo resta otto step e CFG 1.
 I riferimenti di editing mantengono la geometria fornita (`reference_resolution=0`):
 devono essere allineati e già ammessi dal piano Qwen3-VL. Geometrie che richiedono
 un resize implicito vengono rifiutate prima del compute; per esempio usare
@@ -102,7 +107,12 @@ riferimenti ordinati `list[str]` di percorsi
 nel workspace oppure entrambi; usa `n`, `width`, `height`, PNG, background,
 seed uint64 e chiave idempotente. Salva gli output originali in
 `.exmekh_lib/generated-media/` e restituisce percorso, file ID, seed, dimensioni
-e recipe. `include_image_in_result=True` allega anche le immagini al risultato
+e recipe. Le opzioni native sono validate dal client prima degli upload;
+i riferimenti devono essere file esistenti. La risposta deve rispettare numero
+e dimensioni richiesti. `GeneratedImage.png_bytes()` possiede decodifica base64
+e verifica PNG; il salvataggio usa questa API e verifica l'intero batch prima
+di creare la directory degli output, anche con anteprime disabilitate.
+`include_image_in_result=True` allega anche le immagini al risultato
 tool; `preview_scale` nell'intervallo `(0,1]` riduce solo le anteprime.
 
 Le risposte strutturate passano dal renderer XML esistente. L'allegato usa il
@@ -175,3 +185,17 @@ successo prima del restore; se il restore fallisce l'operazione conserva gli
 handle e i checkpoint e il worker tenta il recupero prima di accettare altro
 compute. Il client non deve gestire load, unload o checkpoint. I file server
 sono temporanei: il client conserva su disco gli output necessari oltre il TTL.
+
+
+## Geometria delle immagini
+
+Il client e il tool `generate-image` espongono due `ImageDimension` Literal
+indipendenti, con tutti i 64 multipli di 32 da 32 a 2048 nello schema.
+Non ci sono coppie riservate; il batch deve rispettare
+`n * width * height <= 4194304`. La validazione locale precede gli upload.
+Questi sono limiti operativi di DS4: il checkpoint Qwen pubblica anche preset
+più larghi, fino a 2752×1536. Non sono dichiarati dal contratto DS4 corrente.
+1920×1080 non è allineato a 32; 2560×1440 supera il limite DS4 per lato.
+Per 16:9 sono supportati, per esempio, 1024×576 e 2048×1152.
+La regressione host verifica tutte le 4096 coppie contro il parser del server;
+la regressione client verifica gli enum del tool caricato e il trasporto.
