@@ -1,4 +1,4 @@
-Contributing to ExMekh Core
+# Contributing to ExMekh Core
 
 Thank you for your interest in contributing to ExMekh Core.
 
