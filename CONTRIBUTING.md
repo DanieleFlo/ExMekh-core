@@ -1,144 +1,208 @@
-# Contributing
+Contributing to ExMekh Core
 
-DwarfStar4 changes should be tested against the failure mode they can realistically
-affect. The project has two regression tracks: correctness and speed. Please
-include the commands you ran, the machine/backend, the model quant, and any
-notable failures in the PR or commit notes.
+Thank you for your interest in contributing to ExMekh Core.
 
-Do not send PRs affecting one or more inference backends without checking if the
-resulting code is still correct and fast. The only acceptable regression speed
-is when an important correctness bug is fixed and it requires some speed penalty.
+ExMekh is an independently maintained fork of DwarfStar (DS4). It preserves DS4’s preference for small, carefully engineered, model-specific inference paths while extending the system toward capable, multimodal local agents on consumer hardware.
 
-## Correctness Regression Tests
+The primary development target is an NVIDIA RTX 3090 with 24 GB of VRAM. Contributions for other hardware are welcome, but their validation status must be documented separately.
 
-Build the default backend first:
+Project principles
 
-```sh
+ExMekh has two connected objectives:
+
+1. Make long-running agent workflows practical with a limited active context. Hierarchical skills, isolated histories, and inference checkpoints should reduce unnecessary context accumulation without silently losing information needed by the parent agent.
+2. Extend agent capabilities across modalities. The goal is a small number of well-engineered models for language, vision, image generation, embeddings, and eventually additional media capabilities—not superficial support for every available model.
+
+Contributions should preserve these principles:
+
+* Correctness before performance. Do not accept unexplained numerical drift, altered model behavior, or broken checkpoint semantics in exchange for higher throughput.
+* Measure complete workflows. Tokens per second matter, but so do task success, peak VRAM, latency, context pressure, and recovery after agent or native-media operations.
+* Respect component boundaries. Agent policy belongs to ExMekh-Lib; frontend interaction belongs to ExMekh Agent; inference state and model execution belong to ExMekh Core.
+* Prefer explicit resource ownership. GPU memory, model residency, temporary buffers, sessions, and cancellation paths must have clear lifecycles.
+* Keep implementation focused. Prefer readable, specialized implementations over large compatibility layers or unqualified generic abstractions.
+* Distinguish evidence from expectations. A build, unit test, live inference test, quality evaluation, and release qualification are different results.
+
+Areas of contribution
+
+Inference engine and accelerator backends
+
+Relevant areas include C inference, model-specific execution, quantized kernels, CUDA, Metal, ROCm, tokenization, speculative decoding, GGUF handling, KV caches, and server APIs.
+
+Before changing a backend, identify the model layouts and platforms affected. Preserve unchanged paths, including those that cannot be exercised on your local hardware.
+
+Do not assume that an optimization for one quantization, GPU architecture, or model family transfers to another.
+
+Agentic execution and context management
+
+Contributions may improve skill checkpointing, nested execution, allowed-tool decoding, Responses API integration, session isolation, context restoration, or error recovery.
+
+Tests should cover both normal and adversarial lifecycle transitions:
+
+* Parent-to-child checkpoint and exact parent restoration.
+* Nested skill execution and correct return values.
+* Cancellation, timeout, malformed input, and rejected tool calls.
+* Session isolation and corrupted or incompatible checkpoints.
+* Long workflows with compact results and unfavorable workflows requiring substantial shared context.
+
+An agent-context optimization should be evaluated for information retained and task completion, not only tokens removed.
+
+ExMekh Agent and ExMekh-Lib integration
+
+The frontend lives under agent/ and uses the separately developed ExMekh-Lib package.
+
+Contributions should preserve project and chat persistence, the execution archive, tool approvals, streaming, message editing, attachments, and recovery after interruption.
+
+ExMekh-Lib is distributed here through a versioned wheel. Changes to its behavior must be coordinated with its source repository and the wheel synchronization process. Do not replace a packaged wheel without recording the corresponding source revision.
+
+Native multimodal suite
+
+The native suite covers specialized media and embedding operations alongside language inference.
+
+Changes should explicitly test model admission, VRAM allocation, cleanup, cancellation, and restoration of the language-model session. Model loading and functional HTTP responses alone do not establish output quality.
+
+Changes involving image, audio, video, or embedding preprocessing must preserve model-specific numerical and media-processing conventions and cite their reference implementations.
+
+Documentation and reproducibility
+
+Documentation improvements, minimal bug reproductions, portability reports, benchmark harnesses, and negative experimental results are valuable contributions.
+
+The technical entry points are:
+
+* Project documentation
+* Agentic API contract
+* Frontend guide
+* Native suite status
+* Performance references
+
+Before opening a pull request
+
+Describe:
+
+1. Problem: What fails, under which conditions, or which capability is missing?
+2. Scope: Which files, model families, platforms, and API contracts change?
+3. Approach: Why is the proposed solution appropriate for ExMekh’s architecture?
+4. Correctness: Which tests and numerical comparisons passed?
+5. Performance: What changes in speed, memory, or end-to-end workflow behavior?
+6. Provenance: Which external implementations, papers, or repositories informed the work?
+7. Limitations: What remains untested, unsupported, slower, or potentially incompatible?
+
+Provide the commit revision, GPU, driver, runtime/toolchain, model artifact and quantization, context size, and relevant configuration.
+
+A result measured on one configuration must not be presented as universal.
+
+Build and regression checks
+
+Start with the checks relevant to the changed component.
+
+For the native engine:
+
 make clean
 make
-```
-
-The C test runner is `ds4_test`. Running it without arguments is equivalent to
-`--all`:
-
-```sh
 make test
-```
 
-Useful narrower checks:
+For the locally developed CUDA path:
 
-```sh
+make cuda CUDA_ARCH=sm_86
+make cuda-regression
+
+For relevant model-specific changes:
+
+make test-qwen38
+
+For documentation:
+
+make docs-check
+
+For frontend tests:
+
+cd agent
+uv run --frozen pytest
+
+Some tests require large model artifacts, specific accelerators, live services, or explicit environment configuration. Report skipped checks as not verified, not passed.
+
+For focused DS4 regressions, the inherited test runner provides checks including:
+
 ./ds4_test --server
 ./ds4_test --logprob-vectors
 ./ds4_test --long-context
 ./ds4_test --tool-call-quality
-./ds4_test --metal-kernels
-```
 
-What they cover:
+Backend-specific tests, such as Metal kernel checks, must run on suitable hardware.
 
-- `--server`: request parsing, chat rendering, streaming, tool-call parsing,
-  thinking controls, KV disk-cache bookkeeping, and other server-side logic.
-  This is the best quick check for API and prompt-rendering changes.
-- `--logprob-vectors`: compares local token bytes and top-logprob slices against
-  official DeepSeek V4 Flash continuation vectors. This catches tokenizer,
-  template, attention, and logits regressions.
-- `--long-context`: runs a long-context story fact-recall regression from
-  `tests/long_context_story_prompt.txt`. The model must retrieve spelled-out
-  person-number assignments from a long prose prompt and return `Name=number`
-  lines that the test parses.
-- `--tool-call-quality`: exercises actual model behavior for DSML tool-call
-  emission in both fast and exact paths.
-- `--metal-kernels`: isolated Metal kernel numeric checks.
+Quantization and model-quality changes
 
-The runner defaults to `ds4flash.gguf`. Override paths when needed:
+A change that affects quantization, attention, logits, tokenization, or model execution needs a correctness comparison against an appropriate baseline.
 
-```sh
-DS4_TEST_MODEL=/path/to/model.gguf ./ds4_test --logprob-vectors
-DS4_TEST_VECTOR_FILE=/path/to/official.vec ./ds4_test --logprob-vectors
-DS4_TEST_LONG_PROMPT=/path/to/prompt.txt ./ds4_test --long-context
-```
+For supported official-continuation evaluations, the repository retains the scorer under gguf-tools/quality-testing:
 
-For CUDA-specific changes, test on a CUDA machine:
-
-```sh
-make
-make cuda-regression
-```
-
-For CPU portability, at least verify that the CPU target still builds:
-
-```sh
-make cpu
-```
-
-The CPU backend is a reference/debug path, not the production performance
-target. Remember that executing the CPU path on Metal can crash the system
-because of a kernel bug in macOS.
-
-## Quality Checks For Quantization Changes
-
-For GGUF or quantization work, use the official-continuation scorer in
-`gguf-tools/quality-testing`. The test compares how much probability a local
-GGUF assigns to official DeepSeek V4 Flash continuations, token by token.
-
-Build the scorer:
-
-```sh
 make -C gguf-tools quality-score
-```
 
-Then score old and new GGUFs against the same manifest and compare:
+Use the same manifest, model inputs, token limits, and evaluation settings for old and new implementations.
 
-```sh
-gguf-tools/quality-testing/score_official OLD.gguf \
-  gguf-tools/quality-testing/data/manifest.tsv /tmp/old.tsv 4096
+Do not weaken numerical tolerances or update reference outputs merely to make a regression disappear. Document intentional numerical differences and why they are acceptable.
 
-gguf-tools/quality-testing/score_official NEW.gguf \
-  gguf-tools/quality-testing/data/manifest.tsv /tmp/new.tsv 4096
+Performance changes
 
-python3 gguf-tools/quality-testing/compare_scores.py /tmp/old.tsv /tmp/new.tsv
-```
+Performance comparisons should use the same machine and workload, with consistent:
 
-Lower `avg_nll` is better. See
-`gguf-tools/quality-testing/README.md` for collecting or refreshing official
-continuations.
+* Model artifact, quantization, and context length.
+* GPU memory budget, backend, and kernel configuration.
+* Warm-up, sampling method, and number of repetitions.
+* CPU/GPU utilization, thermal state, and competing workloads.
+* Exact baseline and candidate revisions.
 
-## Speed Regression Tests
+For inference throughput, use the repository’s ds4-bench and relevant model-specific performance harnesses.
 
-Use `ds4-bench` for throughput regressions. It reports instantaneous prefill and
-generation speed at context frontiers, not one whole-run average. Prefill is
-incremental: each row measures only the newly processed suffix since the
-previous frontier.
+For agentic or multimodal changes, also report end-to-end latency, task success, peak VRAM, model loading and restoration costs, and context-management overhead.
 
-Default linear sweep:
+A faster isolated kernel is not automatically a faster agent workflow.
 
-```sh
-./ds4-bench \
-  -m ds4flash.gguf \
-  --prompt-file speed-bench/promessi_sposi.txt \
-  --ctx-start 2048 \
-  --ctx-max 65536 \
-  --step-incr 2048 \
-  --gen-tokens 128 \
-  --csv /tmp/ds4-speed.csv
-```
+Negative results and experiments that fail numerical gates should be documented rather than silently omitted.
 
-Use the same machine, backend, model file, context sweep, power/thermal state,
-and background load when comparing two commits. For backend work, run at least
-one before/after CSV and compare both `prefill_tps` and `gen_tps`. Generation is
-greedy and skips EOS so each frontier gets the same number of generated tokens.
+External sources, inspiration, and attribution
 
-To generate a graph for a CSV:
+ExMekh builds on upstream implementations and studies other projects to inform engineering decisions.
 
-```sh
-python3 speed-bench/plot_speed.py /tmp/ds4-speed.csv --title "Machine t/s"
-```
+Significant external influences must be credited where they affect the implementation, not only in a general acknowledgment list.
 
-## Reporting sessions bugs
+For any external idea or implementation reference, document:
 
-For debugging a failing generation, keep the trace:
+* Project name and canonical repository URL.
+* Exact source commit or release, where available.
+* Relevant source files, documentation, or paper.
+* Whether the contribution is a conceptual inspiration, independently reimplemented technique, adapted implementation, copied component, or runtime dependency.
+* Applicable copyright and license obligations.
+* Differences between the external reference and ExMekh’s implementation.
+* Local correctness and performance validation.
 
-```sh
+In particular, Strata has informed Qwen Flash engineering work involving expert residency, CPU/GPU scheduling, PCIe staging, prefill, and CUDA execution. The documented experiments describe independently implemented approaches, not wholesale importation of Strata kernels. See the Strata performance reports under docs/performance/.
+
+Other important source and reference projects include DwarfStar, llama.cpp/GGML, Hugging Face Transformers and Diffusers, PyTorch, NumPy, Pillow, FFmpeg, and libsoxr. Their relationships to this repository differ; consult third_party/ for component-specific notices.
+
+Research references such as vLLM, Marlin, and NVIDIA GatedDeltaNet should be cited when a particular contribution derives an idea from them. Merely studying a repository does not imply its code has been incorporated.
+
+Contributors must have the right to submit any external material. Preserve required copyright statements, licenses, source references, and redistribution conditions. Never remove notices from inherited or adapted files.
+
+Issues, traces, and security
+
+A useful bug report includes a minimal reproducer, expected and actual behavior, exact revision, model and backend information, and a relevant trace.
+
+For server-side inference debugging, the inherited trace facility can be useful:
+
 ./ds4-server --trace /tmp/ds4-trace.txt ...
-```
+
+Review traces and attached files before publishing them. Remove secrets, private prompts, local paths, credentials, access tokens, and confidential user data.
+
+Report potentially exploitable vulnerabilities privately rather than publishing a working exploit in a public issue.
+
+Upstream collaboration
+
+When a bug or optimization also applies to DwarfStar without relying on ExMekh-specific agent or multimodal behavior, consider contributing the general fix upstream.
+
+ExMekh is intended to remain technically compatible with useful upstream developments wherever practical. Fork-specific changes should have a clear reason to exist.
+
+Licensing
+
+Contributions to the repository must comply with its LICENSE and any additional notices applying to inherited, adapted, or third-party components.
+
+AI-assisted development is welcome, but contributors remain responsible for correctness, provenance, licensing, reproducibility, and the final submitted changes.
