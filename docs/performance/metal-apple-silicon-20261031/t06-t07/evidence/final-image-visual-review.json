@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "cases": [
+    {
+      "case": "text",
+      "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/native/case-0/result.png",
+      "sha256": "429da2de68041eb008c27f9efa3da9c08455ad57e98822fecfedfa4fef23f960",
+      "reviewer": "Codex visual inspection of original local PNG via view_image",
+      "observed": "Red square on the left and blue circle on the right, clean white background, no visible tiling/corruption; RGB and RGBA reference cases consistent with fixed prompt.",
+      "scope": "Local 256px fixture review; extended preservation corpus and separate human approval not claimed."
+    },
+    {
+      "case": "reference",
+      "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/native/case-0/result.png",
+      "sha256": "90521ee53004d56fc8dedcfc39559660001e27d37689b9cac0da12fdb56b0359",
+      "reviewer": "Codex visual inspection of original local PNG via view_image",
+      "observed": "Red square on the left and blue circle on the right, clean white background, no visible tiling/corruption; RGB and RGBA reference cases consistent with fixed prompt.",
+      "scope": "Local 256px fixture review; extended preservation corpus and separate human approval not claimed."
+    },
+    {
+      "case": "rgba",
+      "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/native/case-0/result.png",
+      "sha256": "d15a8fce0adc361f99add015007d9eaefa625811de022adfefb5d3d27b5de5f1",
+      "reviewer": "Codex visual inspection of original local PNG via view_image",
+      "observed": "Red square on the left and blue circle on the right, clean white background, no visible tiling/corruption; RGB and RGBA reference cases consistent with fixed prompt.",
+      "scope": "Local 256px fixture review; extended preservation corpus and separate human approval not claimed."
+    }
+  ]
+}

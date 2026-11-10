@@ -1,0 +1,1195 @@
+{
+  "status": "CORRECTNESS_PASS",
+  "operational_acceptance": {
+    "date": "2026-11-02",
+    "decision": "KEEP_ACTIVE_BY_DEFAULT",
+    "scope": "Flash Metal streamed inference, parallel selected-expert reads",
+    "basis": "User confirms inference improvement and reports concurrent PC activity during post-refactor measurements.",
+    "verification": "make -j2 all test-file-reader test-read-queue: production binaries up to date; both host tests PASS",
+    "implementation_change": false,
+    "new_benchmark": false,
+    "measurement_verdict_changed": false
+  },
+  "tested_base": "1544bb91eafaefefe32862ab408c412f0beed354",
+  "source_sha256": {
+    "ds4_file_reader.h": "68c1c0ca25aedf1c47fbc31f7c6154ae9114ec540f5781bdbb1da8068c33bb35",
+    "ds4_qwen4_metal_stream.inc": "0a24aa626eb94c287694725284b7e18b47c059ee92e880a1200c96227190921d",
+    "tests/test_file_reader.c": "c284264237df97c8e053ab7c45d3ea68f075b0d3afaef783710a3a56032c15d9",
+    "tests/test_qwen4_kernels.c": "b670ca1b55cc901263b37d8a74f6f98a4bf511f0e55d69ef17c91f083254106e",
+    "tests/probe_qwen_metal_stream.c": "59162d9e42dfeca030ee2cbca1af5e258a21007311e7b719a98ad206b0f62a3c",
+    "Makefile": "4b4c92e0c31724cc652f5dc878b86e533e8916d2fed27cb427671da72c08d61f"
+  },
+  "initial_snapshot": {
+    "head": "1544bb91eafaefefe32862ab408c412f0beed354",
+    "files": {
+      ".gitignore": "13f10b02e6aac0e9cfaa432da510c81fc97e43e1c512d00b66aa4b52e84a1a56",
+      "Makefile": "a545ec0ac7190bbc401687e6a33447fc5d0772582e93676e646048ca049066c6",
+      "ds4_qwen4_metal_stream.inc": "434db1b8c6872c460c3023fe997ec88c9aea3607979cdf173702bee9519c37d6",
+      "tests/probe_qwen_metal_stream.c": "59162d9e42dfeca030ee2cbca1af5e258a21007311e7b719a98ad206b0f62a3c",
+      "tests/test_qwen4_kernels.c": "aa574e0fec538ac15ec14f1d70d2d3b1f44392d85eefa054750797e877353583"
+    }
+  },
+  "discarded_run": {
+    "status": "INVALID_STALE_BINARIES",
+    "reason": "Qualification began after an unsuccessful build prerequisite; discarded regardless of individual PASS output. Missing local owned declaration in extracted fixture corrected and all binaries rebuilt before verified run.",
+    "raw_gates": "gates.json",
+    "build_failure_log": "build.log",
+    "final_build_log": "build-final.log"
+  },
+  "host_tests": {
+    "file_reader": "PASS",
+    "file_reader_asan_ubsan": "PASS",
+    "shared_read_queue": "PASS",
+    "python": "48 PASS plus1 loopback bind restricted by sandbox; targeted outside-sandbox rerun PASS,49 cases covered"
+  },
+  "gates": [
+    {
+      "name": "metal-stream",
+      "command": [
+        "tests/test_qwen4_kernels"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/test_qwen4_kernels": "bed6768b52134fac6fe3464659ac26a6bf043f8932af689123755ab53ce69051"
+      },
+      "elapsed_seconds": 1.0600576249998994,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "metal-resident",
+      "command": [
+        "tests/test_qwen4_kernels"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/test_qwen4_kernels": "bed6768b52134fac6fe3464659ac26a6bf043f8932af689123755ab53ce69051"
+      },
+      "elapsed_seconds": 1.0590219579971745,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "flash-graph",
+      "command": [
+        "tests/test_flash_metal_stream_graph"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/test_flash_metal_stream_graph": "2db75201ce763857413e08e669fbf5f420cabc06f687b34f7bc49d2597eb3382"
+      },
+      "elapsed_seconds": 1.048107415997947,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "qwen27-primitives",
+      "command": [
+        "tests/test_qwen35_metal"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/test_qwen35_metal": "34507413d08260d6f61377280d6266e50c1b8cbd34e3a4a2b7d8320ccca71d39"
+      },
+      "elapsed_seconds": 3.0674992089989246,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "qwen27-graph",
+      "command": [
+        "tests/test_qwen35_metal_graph"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/test_qwen35_metal_graph": "9826f7bd22dea4ae87418606792a59c764de122fbb7481d33d3ab89aef21238b"
+      },
+      "elapsed_seconds": 1.0605524580023484,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "qwen27-lifecycle",
+      "command": [
+        "tests/test_qwen_metal_lifecycle",
+        "qwen27"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/test_qwen_metal_lifecycle": "6c755f686cfd3b642522ac664cc6ce1ca9d0ab015ceb46569928b03416d27d17"
+      },
+      "elapsed_seconds": 2.0532344579987694,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "qwen27-stream-lifecycle",
+      "command": [
+        "tests/test_qwen_metal_lifecycle",
+        "qwen27-stream"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/test_qwen_metal_lifecycle": "6c755f686cfd3b642522ac664cc6ce1ca9d0ab015ceb46569928b03416d27d17"
+      },
+      "elapsed_seconds": 2.03508512499684,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "flash-lifecycle",
+      "command": [
+        "tests/test_qwen_metal_lifecycle",
+        "flash"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/test_qwen_metal_lifecycle": "6c755f686cfd3b642522ac664cc6ce1ca9d0ab015ceb46569928b03416d27d17"
+      },
+      "elapsed_seconds": 1.032598167003016,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "flash-full",
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-perf-flash-20261102/clean-review/verified/flash-full-logits"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "b62be77a63ae960af7f4092adcdc450828aaf613ef3b3afd09f01c14e8534f07"
+      },
+      "elapsed_seconds": 12.208764834002068,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    {
+      "name": "flash-mtp",
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-perf-flash-20261102/clean-review/verified/flash-mtp-logits"
+      ],
+      "status": "PASS",
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "b62be77a63ae960af7f4092adcdc450828aaf613ef3b3afd09f01c14e8534f07"
+      },
+      "elapsed_seconds": 32.41127200000483,
+      "cleanup_forced": false,
+      "cleanup_error": null
+    }
+  ],
+  "full_model_comparison": [
+    {
+      "gate": "flash-full-logits",
+      "full_vocabulary_files": 9,
+      "logits_bit_exact": true,
+      "prefill_state_bit_exact": true,
+      "state_sha256": "3402b5c030303937e7a665ddef6b98059a55009afe729690394218a994385baf"
+    },
+    {
+      "gate": "flash-mtp-logits",
+      "full_vocabulary_files": 9,
+      "logits_bit_exact": true,
+      "prefill_state_bit_exact": true,
+      "state_sha256": "3402b5c030303937e7a665ddef6b98059a55009afe729690394218a994385baf"
+    }
+  ],
+  "performance_attempt": {
+    "status": "NOT_VERIFIED_RESOURCE_LIMIT",
+    "log": "performance-0-before/command.log",
+    "observed": "baseline admission refused:1.89GiB required,1.11GiB available after2GiB reserve; no forward executed"
+  },
+  "raw_directory": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/clean-review",
+  "log_hashes": {
+    "build.log": "ec35be229ca238762371a96f72ee749f5fb4342c788cf945673032f21130ba11",
+    "build-final.log": "1c6d8eb45590d8923834ee95885a4371b9f075249893c2aa49e6393cc14c27d2",
+    "host-reader-asan.log": "2dcd32fe6e0aa7016c68c0db6eb973fb66d970c2109d09d1ab042cee663c9ee8",
+    "host-python-initial.log": "270eb456db01cf059cdf3e1c315b3682e057f2dd05ef14cc7d0466bd9e1102ee",
+    "host-loopback.log": "9dca1fed4c0939ea08b64c5b83ca353b755be79c724893d2686c995fa56f41c2"
+  },
+  "performance": {
+    "status": "NEED_MORE_DATA",
+    "reason": "Five matched pairs show noisy samples (CV>5%); medians do not reproduce the initial ~5% decode loss. No new performance promotion or strict non-regression certification. Historical five-pair optimization evidence unchanged.",
+    "short_directional_samples": [
+      {
+        "pair": 0,
+        "warmup": true,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "4",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/recheck-performance-0-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.33",
+            "gen_tokens": "4",
+            "gen_tps": "1.08",
+            "gen_first_ms": "1137.320",
+            "gen_steady_tokens": "3",
+            "gen_steady_tps": "1.16",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 0,
+        "warmup": true,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "4",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/recheck-performance-0-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "18.60",
+            "gen_tokens": "4",
+            "gen_tps": "0.97",
+            "gen_first_ms": "1423.676",
+            "gen_steady_tokens": "3",
+            "gen_steady_tps": "1.10",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 1,
+        "warmup": false,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "4",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/recheck-performance-1-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "16.92",
+            "gen_tokens": "4",
+            "gen_tps": "0.91",
+            "gen_first_ms": "1419.205",
+            "gen_steady_tokens": "3",
+            "gen_steady_tps": "1.01",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 1,
+        "warmup": false,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "4",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/recheck-performance-1-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.08",
+            "gen_tokens": "4",
+            "gen_tps": "0.98",
+            "gen_first_ms": "1284.224",
+            "gen_steady_tokens": "3",
+            "gen_steady_tps": "1.07",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 2,
+        "warmup": false,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "4",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/recheck-performance-2-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.93",
+            "gen_tokens": "4",
+            "gen_tps": "0.98",
+            "gen_first_ms": "1293.977",
+            "gen_steady_tokens": "3",
+            "gen_steady_tps": "1.08",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 2,
+        "warmup": false,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "4",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/recheck-performance-2-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "18.21",
+            "gen_tokens": "4",
+            "gen_tps": "0.97",
+            "gen_first_ms": "1201.673",
+            "gen_steady_tokens": "3",
+            "gen_steady_tps": "1.03",
+            "kvcache_bytes": "0"
+          }
+        ]
+      }
+    ],
+    "confirmation": [
+      {
+        "pair": 0,
+        "warmup": true,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-0-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "16.89",
+            "gen_tokens": "8",
+            "gen_tps": "1.11",
+            "gen_first_ms": "1168.453",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "1.16",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 0,
+        "warmup": true,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-0-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "18.97",
+            "gen_tokens": "8",
+            "gen_tps": "0.93",
+            "gen_first_ms": "1318.312",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "0.96",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 1,
+        "warmup": false,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-1-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "16.99",
+            "gen_tokens": "8",
+            "gen_tps": "1.01",
+            "gen_first_ms": "1233.430",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "1.05",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 1,
+        "warmup": false,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-1-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.17",
+            "gen_tokens": "8",
+            "gen_tps": "0.99",
+            "gen_first_ms": "1426.066",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "1.06",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 2,
+        "warmup": false,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-2-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.73",
+            "gen_tokens": "8",
+            "gen_tps": "0.97",
+            "gen_first_ms": "1350.156",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "1.02",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 2,
+        "warmup": false,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-2-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.52",
+            "gen_tokens": "8",
+            "gen_tps": "0.96",
+            "gen_first_ms": "1341.603",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "1.00",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 3,
+        "warmup": false,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-3-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "18.09",
+            "gen_tokens": "8",
+            "gen_tps": "1.00",
+            "gen_first_ms": "1207.035",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "1.03",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 3,
+        "warmup": false,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-3-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.68",
+            "gen_tokens": "8",
+            "gen_tps": "0.88",
+            "gen_first_ms": "1333.121",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "0.90",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 4,
+        "warmup": false,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-4-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "18.21",
+            "gen_tokens": "8",
+            "gen_tps": "1.06",
+            "gen_first_ms": "1185.669",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "1.10",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 4,
+        "warmup": false,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-4-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.48",
+            "gen_tokens": "8",
+            "gen_tps": "0.99",
+            "gen_first_ms": "1215.524",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "1.02",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 5,
+        "warmup": false,
+        "variant": "after",
+        "status": "PASS",
+        "command": [
+          "./ds4-bench",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-5-after.csv"
+        ],
+        "binary": {
+          "./ds4-bench": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "14.51",
+            "gen_tokens": "8",
+            "gen_tps": "0.86",
+            "gen_first_ms": "1473.529",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "0.90",
+            "kvcache_bytes": "0"
+          }
+        ]
+      },
+      {
+        "pair": 5,
+        "warmup": false,
+        "variant": "before",
+        "status": "PASS",
+        "command": [
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before",
+          "--backend",
+          "metal",
+          "-m",
+          "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+          "--ssd-streaming",
+          "--ssd-streaming-cold",
+          "--ssd-streaming-cache-experts",
+          "1GB",
+          "--ctx-alloc",
+          "8192",
+          "--prefill-chunk",
+          "64",
+          "--prompt-file",
+          "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+          "--ctx-start",
+          "64",
+          "--ctx-max",
+          "64",
+          "--gen-tokens",
+          "8",
+          "--teacher-forced-decode",
+          "--csv",
+          "build/metal-perf-flash-20261102/clean-review/confirmation-performance-5-before.csv"
+        ],
+        "binary": {
+          "build/metal-perf-flash-20261102/clean-review/ds4-bench-before": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+        },
+        "rows": [
+          {
+            "ctx_tokens": "64",
+            "prefill_tokens": "64",
+            "prefill_tps": "17.32",
+            "gen_tokens": "8",
+            "gen_tps": "0.76",
+            "gen_first_ms": "1323.452",
+            "gen_steady_tokens": "7",
+            "gen_steady_tps": "0.76",
+            "kvcache_bytes": "0"
+          }
+        ]
+      }
+    ],
+    "summary": {
+      "prefill_tps": {
+        "stats": {
+          "before": {
+            "samples": [
+              17.17,
+              17.73,
+              17.68,
+              18.21,
+              17.32
+            ],
+            "median": 17.68,
+            "mean": 17.622,
+            "cv_percent": 2.2985787750861606
+          },
+          "after": {
+            "samples": [
+              16.99,
+              17.52,
+              18.09,
+              17.48,
+              14.51
+            ],
+            "median": 17.48,
+            "mean": 16.918,
+            "cv_percent": 8.283375465617244
+          }
+        },
+        "median_change_percent": -1.1312217194570096,
+        "paired_mean_change_ci95": [
+          -12.939755872000894,
+          4.881126422308068
+        ]
+      },
+      "gen_tps": {
+        "stats": {
+          "before": {
+            "samples": [
+              0.99,
+              0.97,
+              0.88,
+              1.06,
+              0.76
+            ],
+            "median": 0.97,
+            "mean": 0.932,
+            "cv_percent": 12.406514609066317
+          },
+          "after": {
+            "samples": [
+              1.01,
+              0.96,
+              1.0,
+              0.99,
+              0.86
+            ],
+            "median": 0.99,
+            "mean": 0.964,
+            "cv_percent": 6.335448748797706
+          }
+        },
+        "median_change_percent": 2.0618556701030855,
+        "paired_mean_change_ci95": [
+          -6.837122931979765,
+          15.309026521359984
+        ]
+      },
+      "gen_steady_tps": {
+        "stats": {
+          "before": {
+            "samples": [
+              1.06,
+              1.02,
+              0.9,
+              1.1,
+              0.76
+            ],
+            "median": 1.02,
+            "mean": 0.9680000000000001,
+            "cv_percent": 14.284616543341823
+          },
+          "after": {
+            "samples": [
+              1.05,
+              1.0,
+              1.03,
+              1.02,
+              0.9
+            ],
+            "median": 1.02,
+            "mean": 1.0,
+            "cv_percent": 5.873670062235366
+          }
+        },
+        "median_change_percent": 0.0,
+        "paired_mean_change_ci95": [
+          -9.381246572127372,
+          18.456682277389575
+        ]
+      }
+    },
+    "resource_recheck": {
+      "monotonic": 59420.334806916,
+      "pressure": 1,
+      "host_available_bytes": 6839123968,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 11092352,
+      "resident_bytes": 22937600
+    }
+  },
+  "source_ownership_check": "Metal caller and host tests use file-reader methods only; no reader/queue internals accessed"
+}

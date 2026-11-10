@@ -1,0 +1,81 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-audio-block.py",
+    "audio-channel-cascade-v2",
+    "6"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "CPU outer reduction geometry:32-position vector groups use per-channel cascade, residual positions use four-stream row_sum; identical frozen audio layer6 inputs.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 6.1279844579985365,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 19604.075962916,
+      "pressure": 1,
+      "host_available_bytes": 6171721728,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 19605.087347208,
+      "pressure": 1,
+      "host_available_bytes": 6173966336,
+      "swap_bytes": 262144,
+      "footprint_bytes": 159810232,
+      "resident_bytes": 206077952
+    },
+    {
+      "monotonic": 19606.105153666,
+      "pressure": 1,
+      "host_available_bytes": 5961875456,
+      "swap_bytes": 262144,
+      "footprint_bytes": 179618512,
+      "resident_bytes": 211206144
+    },
+    {
+      "monotonic": 19607.123082333,
+      "pressure": 1,
+      "host_available_bytes": 6177406976,
+      "swap_bytes": 262144,
+      "footprint_bytes": 249987840,
+      "resident_bytes": 284278784
+    },
+    {
+      "monotonic": 19608.136064458,
+      "pressure": 1,
+      "host_available_bytes": 6494306304,
+      "swap_bytes": 262144,
+      "footprint_bytes": 467633208,
+      "resident_bytes": 500301824
+    },
+    {
+      "monotonic": 19609.164995541,
+      "pressure": 1,
+      "host_available_bytes": 6135922688,
+      "swap_bytes": 262144,
+      "footprint_bytes": 487998640,
+      "resident_bytes": 534593536
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "86e733831e46e08e418e712add33689fa25704a822376bb61bf002371dfa6e79"
+}

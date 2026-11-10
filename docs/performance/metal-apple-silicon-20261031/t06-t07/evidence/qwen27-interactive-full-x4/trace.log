@@ -1,0 +1,1321 @@
+
+===== request 1 2026-11-01 21:10:44 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 363
+effective_prompt_tokens: 363
+cached_tokens: 0
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 363
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"KEEP\" and new body is \"hello\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:18a0a637a49f4e2b831a2a01307b8136", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "KEEP" and new body is "hello". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7829 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="patch">
+<｜DSML｜parameter name="payload" string="true"><exmekh_edit path="src.py"
+===== request 2 2026-11-01 21:28:14 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 362
+effective_prompt_tokens: 362
+cached_tokens: 259
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 406
+prompt_tokens: 362
+live_prompt_common: 295
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 259
+disk_cached_tokens: 0
+
+first_mismatch_token: 295
+token_window: [287..304)
+    287 ==          live 8306 " opening" | prompt 8306 " opening"
+    288 ==          live 2937 " ID" | prompt 2937 " ID"
+    289 ==          live 13 "." | prompt 13 "."
+    290 ==          live 561 " The" | prompt 561 " The"
+    291 ==          live 4581 " exact" | prompt 4581 " exact"
+    292 ==          live 2235 " old" | prompt 2235 " old"
+    293 ==          live 2407 " body" | prompt 2407 " body"
+    294 ==          live 369 " is" | prompt 369 " is"
+    295 !=          live 328 " \"" | prompt 1535 " \"\""
+    296 !=          live 50057 "KEEP" | prompt 321 " and"
+    297 !=          live 1 "\"" | prompt 491 " new"
+    298 !=          live 321 " and" | prompt 2407 " body"
+    299 !=          live 491 " new" | prompt 369 " is"
+    300 !=          live 2407 " body" | prompt 328 " \""
+    301 !=          live 369 " is" | prompt 37 "F"
+    302 !=          live 328 " \"" | prompt 77158 "ILLED"
+    303 !=          live 14556 "hello" | prompt 3158 "\"."
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"\" and new body is \"FILLED\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:177b7672fbae481ebaa28c7f222f07b3", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "" and new body is "FILLED". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7830 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="patch">
+<｜DSML｜parameter name="payload" string="true"><exmekh_edit path="src.py"
+===== request 3 2026-11-01 21:37:55 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 405
+effective_prompt_tokens: 362
+cached_tokens: 405
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 405
+prompt_tokens: 405
+live_prompt_common: 405
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 405
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"\" and new body is \"FILLED\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:177b7672fbae481ebaa28c7f222f07b3", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "" and new body is "FILLED". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7787 ---
+
+ id="237" /><exmekh_new_text id="237"/>FILLED</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 88 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 88
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 2717.850
+
+tool_call[0]:
+id: call_e639959e4b32bcc12e9c4725
+name: patch
+arguments:
+{"payload":"<exmekh_edit path=\"src.py\" id=\"237\" /><exmekh_new_text id=\"237\"/>FILLED"}
+
+===== end request 3 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=405 response_prefill=89 target=494 ---
+
+
+===== request 4 2026-11-01 22:23:23 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 375
+effective_prompt_tokens: 375
+cached_tokens: 259
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 494
+prompt_tokens: 375
+live_prompt_common: 295
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 259
+disk_cached_tokens: 0
+
+first_mismatch_token: 295
+token_window: [287..304)
+    287 ==          live 8306 " opening" | prompt 8306 " opening"
+    288 ==          live 2937 " ID" | prompt 2937 " ID"
+    289 ==          live 13 "." | prompt 13 "."
+    290 ==          live 561 " The" | prompt 561 " The"
+    291 ==          live 4581 " exact" | prompt 4581 " exact"
+    292 ==          live 2235 " old" | prompt 2235 " old"
+    293 ==          live 2407 " body" | prompt 2407 " body"
+    294 ==          live 369 " is" | prompt 369 " is"
+    295 !=          live 1535 " \"\"" | prompt 328 " \""
+    296 !=          live 321 " and" | prompt 220 " "
+    297 !=          live 491 " new" | prompt 2235 " old"
+    298 !=          live 2407 " body" | prompt 1 "\""
+    299 !=          live 369 " is" | prompt 321 " and"
+    300 !=          live 328 " \"" | prompt 491 " new"
+    301 !=          live 37 "F" | prompt 2407 " body"
+    302 !=          live 77158 "ILLED" | prompt 369 " is"
+    303 !=          live 3158 "\"." | prompt 3919 " \"<"
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"  old\" and new body is \"<all/><delete/>&lt;<![CDATA[raw]]>\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:9836521436ff4f2f8bd939fba97ac34b", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "  old" and new body is "<all/><delete/>&lt;<![CDATA[raw]]>". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7817 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="patch">
+<｜DSML｜parameter name="payload" string="true"><exmekh_edit path="src.py"
+===== request 5 2026-11-01 22:25:27 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 418
+effective_prompt_tokens: 375
+cached_tokens: 418
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 418
+prompt_tokens: 418
+live_prompt_common: 418
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 418
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"  old\" and new body is \"<all/><delete/>&lt;<![CDATA[raw]]>\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:9836521436ff4f2f8bd939fba97ac34b", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "  old" and new body is "<all/><delete/>&lt;<![CDATA[raw]]>". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7774 ---
+
+ id="215" />  old<exmekh_new_text id="215"/><all/><delete/>&lt;<![CDATA[raw]]></｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 101 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 101
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 155.218
+
+tool_call[0]:
+id: call_40983a1b234d019b9e26815c
+name: patch
+arguments:
+{"payload":"<exmekh_edit path=\"src.py\" id=\"215\" />  old<exmekh_new_text id=\"215\"/><all/><delete/>&lt;<![CDATA[raw]]>"}
+
+===== end request 5 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=418 response_prefill=101 target=519 ---
+
+
+===== request 6 2026-11-01 22:28:13 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 1
+tools: 1
+think_mode: none
+prompt_tokens: 375
+effective_prompt_tokens: 375
+cached_tokens: 259
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 519
+prompt_tokens: 375
+live_prompt_common: 375
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 259
+disk_cached_tokens: 0
+
+first_mismatch_token: 375
+token_window: [367..384)
+    367 ==          live 198 "\n" | prompt 198 "\n"
+    368 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    369 ==          live 74455 "assistant" | prompt 74455 "assistant"
+    370 ==          live 198 "\n" | prompt 198 "\n"
+    371 ==          live 248068 "<think>" | prompt 248068 "<think>"
+    372 ==          live 271 "\n\n" | prompt 271 "\n\n"
+    373 ==          live 248069 "</think>" | prompt 248069 "</think>"
+    374 ==          live 271 "\n\n" | prompt 271 "\n\n"
+    375 live-only   live 27 "<" | prompt - <none>
+    376 live-only   live 158819 "｜" | prompt - <none>
+    377 live-only   live 5751 "DS" | prompt - <none>
+    378 live-only   live 2581 "ML" | prompt - <none>
+    379 live-only   live 158819 "｜" | prompt - <none>
+    380 live-only   live 13766 "tool" | prompt - <none>
+    381 live-only   live 44116 "_calls" | prompt - <none>
+    382 live-only   live 29 ">" | prompt - <none>
+    383 live-only   live 198 "\n" | prompt - <none>
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": true, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"  old\" and new body is \"<all/><delete/>&lt;<![CDATA[raw]]>\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:4bbf5f61b677467a894f6795fe327f3f", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "  old" and new body is "<all/><delete/>&lt;<![CDATA[raw]]>". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7817 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="patch">
+<｜DSML｜parameter name="payload" string="true"><exmekh_edit path="src.py"
+===== request 7 2026-11-01 22:30:15 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 1
+tools: 1
+think_mode: none
+prompt_tokens: 418
+effective_prompt_tokens: 375
+cached_tokens: 418
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 418
+prompt_tokens: 418
+live_prompt_common: 418
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 418
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": true, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"  old\" and new body is \"<all/><delete/>&lt;<![CDATA[raw]]>\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:4bbf5f61b677467a894f6795fe327f3f", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "  old" and new body is "<all/><delete/>&lt;<![CDATA[raw]]>". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7774 ---
+
+ id="941" />  old<exmekh_new_text id="941"/><all/><delete/>&lt;<![CDATA[raw]]></｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 101 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 101
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 150.388
+
+tool_call[0]:
+id: call_46ea0aab14ff8d74c057efb2
+name: patch
+arguments:
+{"payload":"<exmekh_edit path=\"src.py\" id=\"941\" />  old<exmekh_new_text id=\"941\"/><all/><delete/>&lt;<![CDATA[raw]]>"}
+
+===== end request 7 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=418 response_prefill=101 target=519 ---
+
+
+===== request 8 2026-11-01 22:32:56 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 347
+effective_prompt_tokens: 347
+cached_tokens: 259
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 519
+prompt_tokens: 347
+live_prompt_common: 264
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 259
+disk_cached_tokens: 0
+
+first_mismatch_token: 264
+token_window: [256..273)
+    256 ==          live 29 ">" | prompt 29 ">"
+    257 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    258 ==          live 198 "\n" | prompt 198 "\n"
+    259 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    260 ==          live 846 "user" | prompt 846 "user"
+    261 ==          live 198 "\n" | prompt 198 "\n"
+    262 ==          live 6994 "Call" | prompt 6994 "Call"
+    263 ==          live 10582 " patch" | prompt 10582 " patch"
+    264 !=          live 6681 " exactly" | prompt 2957 " once"
+    265 !=          live 2957 " once" | prompt 364 " for"
+    266 !=          live 364 " for" | prompt 2212 " src"
+    267 !=          live 2212 " src" | prompt 6971 ".py"
+    268 !=          live 6971 ".py" | prompt 13 "."
+    269 !=          live 13 "." | prompt 6558 " Let"
+    270 !=          live 18037 " Begin" | prompt 279 " the"
+    271 !=          live 361 " <" | prompt 3421 " server"
+    272 !=          live 325 "ex" | prompt 7892 " supply"
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch once for src.py. Let the server supply the opening ID. Select exactly KEEP and replace it with exactly hello. For this test the separator MUST be exactly <exmekh_new_text/> with NO id attribute. The optional separator ID is deliberately omitted. Do not copy the opening ID into it. Do not add whitespace or closing tags. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "missing-id:ce7952c4fea74b848ffa5129b51307f6", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch once for src.py. Let the server supply the opening ID. Select exactly KEEP and replace it with exactly hello. For this test the separator MUST be exactly <exmekh_new_text/> with NO id attribute. The optional separator ID is deliberately omitted. Do not copy the opening ID into it. Do not add whitespace or closing tags. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7845 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="patch">
+<｜DSML｜parameter name="payload" string="true">
+<exmekh_edit path="src.py"
+===== request 9 2026-11-01 22:35:05 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 392
+effective_prompt_tokens: 347
+cached_tokens: 392
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 392
+prompt_tokens: 392
+live_prompt_common: 392
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 392
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch once for src.py. Let the server supply the opening ID. Select exactly KEEP and replace it with exactly hello. For this test the separator MUST be exactly <exmekh_new_text/> with NO id attribute. The optional separator ID is deliberately omitted. Do not copy the opening ID into it. Do not add whitespace or closing tags. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "missing-id:ce7952c4fea74b848ffa5129b51307f6", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch once for src.py. Let the server supply the opening ID. Select exactly KEEP and replace it with exactly hello. For this test the separator MUST be exactly <exmekh_new_text/> with NO id attribute. The optional separator ID is deliberately omitted. Do not copy the opening ID into it. Do not add whitespace or closing tags. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7800 ---
+
+ id="513" />KEEP<exmekh_new_text/>hello
+</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 86 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 86
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 107.030
+
+tool_call[0]:
+id: call_6aad1a25c60a062fb33fb380
+name: patch
+arguments:
+{"payload":"\n<exmekh_edit path=\"src.py\" id=\"513\" />KEEP<exmekh_new_text/>hello\n"}
+
+===== end request 9 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=392 response_prefill=88 target=480 ---
+
+
+===== request 10 2026-11-01 22:37:01 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 402
+effective_prompt_tokens: 402
+cached_tokens: 259
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 480
+prompt_tokens: 402
+live_prompt_common: 264
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 259
+disk_cached_tokens: 0
+
+first_mismatch_token: 264
+token_window: [256..273)
+    256 ==          live 29 ">" | prompt 29 ">"
+    257 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    258 ==          live 198 "\n" | prompt 198 "\n"
+    259 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    260 ==          live 846 "user" | prompt 846 "user"
+    261 ==          live 198 "\n" | prompt 198 "\n"
+    262 ==          live 6994 "Call" | prompt 6994 "Call"
+    263 ==          live 10582 " patch" | prompt 10582 " patch"
+    264 !=          live 2957 " once" | prompt 6681 " exactly"
+    265 !=          live 364 " for" | prompt 2957 " once"
+    266 !=          live 2212 " src" | prompt 13 "."
+    267 !=          live 6971 ".py" | prompt 11116 " Its"
+    268 !=          live 13 "." | prompt 7484 " payload"
+    269 !=          live 6558 " Let" | prompt 1902 " must"
+    270 !=          live 279 " the" | prompt 6435 " contain"
+    271 !=          live 3421 " server" | prompt 411 " this"
+    272 !=          live 7892 " supply" | prompt 4307 " entire"
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"src.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "multiple:db230d98216a4b3cbb4344fe9a2bbec4", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="src.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7790 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="patch">
+<｜DSML｜parameter name="payload" string="true"><exmekh_edit path="src.py"
+===== request 11 2026-11-01 22:39:11 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 445
+effective_prompt_tokens: 402
+cached_tokens: 445
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 445
+prompt_tokens: 445
+live_prompt_common: 445
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 445
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"src.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "multiple:db230d98216a4b3cbb4344fe9a2bbec4", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="src.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7747 ---
+
+ id="940" />ONE<exmekh_new_text id="940"/>FIRST<exmekh_edit path="src.py"
+===== request 12 2026-11-01 22:40:31 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 476
+effective_prompt_tokens: 402
+cached_tokens: 476
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 476
+prompt_tokens: 476
+live_prompt_common: 476
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 476
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"src.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "multiple:db230d98216a4b3cbb4344fe9a2bbec4", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="src.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7716 ---
+
+ id="197" />TWO<exmekh_new_text id="197"/>SECOND</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 120 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 120
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 118.965
+
+tool_call[0]:
+id: call_be72829f9e3a4ae920ecc9f1
+name: patch
+arguments:
+{"payload":"<exmekh_edit path=\"src.py\" id=\"940\" />ONE<exmekh_new_text id=\"940\"/>FIRST<exmekh_edit path=\"src.py\" id=\"197\" />TWO<exmekh_new_text id=\"197\"/>SECOND"}
+
+===== end request 12 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=476 response_prefill=122 target=598 ---
+
+
+===== request 13 2026-11-01 22:42:42 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 307
+effective_prompt_tokens: 307
+cached_tokens: 259
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 598
+prompt_tokens: 307
+live_prompt_common: 262
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 259
+disk_cached_tokens: 0
+
+first_mismatch_token: 262
+token_window: [254..271)
+    254 ==          live 510 "</" | prompt 510 "</"
+    255 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    256 ==          live 29 ">" | prompt 29 ">"
+    257 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    258 ==          live 198 "\n" | prompt 198 "\n"
+    259 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    260 ==          live 846 "user" | prompt 846 "user"
+    261 ==          live 198 "\n" | prompt 198 "\n"
+    262 !=          live 6994 "Call" | prompt 5423 "Return"
+    263 !=          live 10582 " patch" | prompt 23287 " ONE"
+    264 !=          live 6681 " exactly" | prompt 10582 " patch"
+    265 !=          live 2957 " once" | prompt 1562 " call"
+    266 !=          live 13 "." | prompt 440 " with"
+    267 !=          live 11116 " Its" | prompt 1330 " two"
+    268 !=          live 7484 " payload" | prompt 23173 " consecutive"
+    269 !=          live 1902 " must" | prompt 4351 " edit"
+    270 !=          live 6435 " contain" | prompt 9714 " blocks"
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Return ONE patch call with two consecutive edit blocks. First src.py old ONE new FIRST; then other.py old TWO new SECOND. Use the literal two-marker framing and supplied IDs."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "reject:90c5b4fb516a4012bce250ab7d92e1a5", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Return ONE patch call with two consecutive edit blocks. First src.py old ONE new FIRST; then other.py old TWO new SECOND. Use the literal two-marker framing and supplied IDs.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7885 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="patch">
+<｜DSML｜parameter name="payload" string="true">
+<exmekh_edit path="src.py"
+===== request 14 2026-11-01 22:45:00 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 358
+effective_prompt_tokens: 307
+cached_tokens: 358
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 358
+prompt_tokens: 358
+live_prompt_common: 358
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 358
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Return ONE patch call with two consecutive edit blocks. First src.py old ONE new FIRST; then other.py old TWO new SECOND. Use the literal two-marker framing and supplied IDs."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "reject:90c5b4fb516a4012bce250ab7d92e1a5", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Return ONE patch call with two consecutive edit blocks. First src.py old ONE new FIRST; then other.py old TWO new SECOND. Use the literal two-marker framing and supplied IDs.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7834 ---
+
+ id="283" />ONE<exmekh_new_text id="283"/>FIRST</eexmehk_edi>
+<eexmehk_edi path="other.py" id="284"  />TWO<eexmehk_edi_text  id="284"
+
+--- trace: progress gen=128 dsml_start=1 dsml_end=0 ---
+
+  />SECOND</eexmehk_edi>
+</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 165 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 165
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 300.714
+
+tool_call[0]:
+id: call_48156a110ea5f4c6adcef120
+name: patch
+arguments:
+{"payload":"\n<exmekh_edit path=\"src.py\" id=\"283\" />ONE<exmekh_new_text id=\"283\"/>FIRST</eexmehk_edi>\n<eexmehk_edi path=\"other.py\" id=\"284\"  />TWO<eexmehk_edi_text  id=\"284\"  />SECOND</eexmehk_edi>\n"}
+
+===== end request 14 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=358 response_prefill=154 target=512 ---
+

@@ -1,5 +1,8 @@
 #ifndef DS4_SUITE_TEXT_H
 #define DS4_SUITE_TEXT_H
+#define DS4_SUITE_METAL_EXECUTE "ds4: Metal suite execution failed: %s\n"
+#define DS4_SUITE_METAL_COMPILE "ds4: Metal suite compilation failed: %s\n"
+#define DS4_SUITE_METAL_QUALIFICATION "Local Metal numerical subsets pass; full backend qualification, extended quality and stress verification remain pending."
 #define DS4_SUITE_INVALID "Invalid suite request or configuration."
 #define DS4_SUITE_PARAMETER "Unsupported parameter for this operation."
 #define DS4_SUITE_MODEL "The requested model is not configured for this operation."
@@ -9,6 +12,6 @@
 #define DS4_SUITE_RESTORE "Session restoration failed; checkpoints are retained."
 #define DS4_SUITE_CANCELLED "The request was cancelled or its deadline expired."
 #define DS4_SUITE_CONFLICT "The idempotency key was used with a different request."
-#define DS4_SUITE_CONFIG "Native suite requires a valid catalog and serial CUDA single GPU."
+#define DS4_SUITE_CONFIG "Native suite requires a valid catalog and serial CUDA or Metal execution."
 #define DS4_SUITE_STATUS "suite status=%u path=%s"
 #endif

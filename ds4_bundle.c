@@ -1,3 +1,6 @@
+#ifdef __APPLE__
+#define _DARWIN_C_SOURCE
+#endif
 #define _POSIX_C_SOURCE 200809L
 #include "ds4_bundle.h"
 #include "ds4_sha256.h"
@@ -13,6 +16,8 @@
 #ifdef __linux__
 #include "ds4_linux_memory.h"
 #endif
+
+enum { HINT_CHUNK_BYTES = 1u << 20 };
 
 typedef struct { int fd; void *map; ds4_resource *account; struct stat identity; } mapping;
 struct ds4_bundle {
@@ -36,6 +41,7 @@ struct ds4_weight_group {
     void *storage;
     bool resident;
     ds4_status (*ready)(void *);
+    ds4_weight_file_read file_read;
 };
 struct ds4_bundle_hint {
     ds4_bundle *bundle;
@@ -288,6 +294,16 @@ const void *ds4_bundle_tensor_data(const ds4_bundle *b, size_t i) {
     const ds4_weight_tensor *t = ds4_bundle_tensor(b, i);
     return t ? (const uint8_t *)b->maps[t->file].map + t->offset : NULL;
 }
+static void hint_range(const ds4_bundle *b, const ds4_weight_tensor *t,
+                       uint64_t offset, uint32_t bytes) {
+#ifdef __APPLE__
+    struct radvisory advice = {.ra_offset = (off_t)(t->offset + offset),
+                              .ra_count = (int)bytes};
+    (void)fcntl(b->maps[t->file].fd, F_RDADVISE, &advice);
+#else
+    (void)posix_fadvise(b->maps[t->file].fd, t->offset + offset, bytes, POSIX_FADV_WILLNEED);
+#endif
+}
 static void *hint_worker(void *opaque) {
     ds4_bundle_hint *h = opaque;
     uint64_t left = h->max_bytes;
@@ -297,10 +313,10 @@ static void *hint_worker(void *opaque) {
         uint64_t n = t->bytes < left ? t->bytes : left;
         for (uint64_t at = 0; at < n && !atomic_load(&h->cancelled);) {
             uint64_t chunk = n - at;
-            if (chunk > (1u << 20)) chunk = 1u << 20;
+            if (chunk > HINT_CHUNK_BYTES) chunk = HINT_CHUNK_BYTES;
             /* Page-cache reuse stays with the kernel. No eager anonymous copy
              * or model-wide pinning, and no arbitrary media is acquired. */
-            (void)posix_fadvise(h->bundle->maps[t->file].fd, t->offset + at, chunk, POSIX_FADV_WILLNEED);
+            hint_range(h->bundle, t, at, (uint32_t)chunk);
             at += chunk;
         }
         if (atomic_load(&h->cancelled)) break;
@@ -312,7 +328,7 @@ ds4_status ds4_bundle_hint_start(ds4_bundle_hint **out, ds4_bundle *b, uint32_t 
                                  uint64_t max_bytes) {
     if (!out) return DS4_STATUS_INVALID;
     *out = NULL;
-    if (!b || component >= b->component_count || !max_bytes || max_bytes > (16u << 20) ||
+    if (!b || component >= b->component_count || !max_bytes || max_bytes > DS4_BUNDLE_HINT_MAX_BYTES ||
         !bundle_unchanged(b)) return DS4_STATUS_INVALID;
     ds4_bundle_hint *h = calloc(1, sizeof(*h));
     if (!h) return DS4_STATUS_NOMEM;
@@ -422,10 +438,32 @@ uint64_t ds4_weight_group_payload(const ds4_weight_group *g) {
     return bytes;
 }
 bool ds4_weight_group_resident(const ds4_weight_group *g) { return g && g->resident; }
+ds4_status ds4_weight_group_hint(const ds4_weight_group *g, uint64_t max_bytes) {
+    if (!g || !max_bytes || max_bytes > DS4_BUNDLE_HINT_MAX_BYTES) return DS4_STATUS_INVALID;
+    if (g->storage) return DS4_STATUS_OK;
+    uint64_t left = max_bytes;
+    for (size_t i = 0; i < g->bundle->tensor_count && left; i++) {
+        if (g->offsets[i] == UINT64_MAX) continue;
+        const ds4_weight_tensor *t = g->bundle->tensors + i;
+        uint64_t bytes = t->bytes < left ? t->bytes : left;
+        for (uint64_t at = 0; at < bytes;) {
+            uint32_t chunk = bytes - at > HINT_CHUNK_BYTES ? HINT_CHUNK_BYTES : (uint32_t)(bytes - at);
+            hint_range(g->bundle, t, at, chunk);
+            at += chunk;
+        }
+        left -= bytes;
+    }
+    return DS4_STATUS_OK;
+}
 ds4_status ds4_weight_group_availability(ds4_weight_group *g, ds4_status (*ready)(void *)) {
     if (!g || !ready) return DS4_STATUS_INVALID;
     if (g->storage) return DS4_STATUS_BUSY;
     g->ready = ready; return DS4_STATUS_OK;
+}
+ds4_status ds4_weight_group_file_transport(ds4_weight_group *g, ds4_weight_file_read read) {
+    if (!g || !read) return DS4_STATUS_INVALID;
+    if (g->storage) return DS4_STATUS_BUSY;
+    g->file_read = read; return DS4_STATUS_OK;
 }
 ds4_status ds4_weight_group_load(ds4_weight_group *g) {
     if (!g) return DS4_STATUS_INVALID;
@@ -437,8 +475,12 @@ ds4_status ds4_weight_group_load(ds4_weight_group *g) {
     if (!g->storage) return DS4_STATUS_NOMEM;
     for (size_t i=0; i<g->bundle->tensor_count && !status; i++) {
         const ds4_weight_tensor *t=&g->bundle->tensors[i];
-        if (g->offsets[i]!=UINT64_MAX)
-            status=g->backend.write(g->backend.context, g->storage, g->offsets[i], ds4_bundle_tensor_data(g->bundle,i), t->bytes);
+        if (g->offsets[i]!=UINT64_MAX) {
+            status = g->file_read ? g->file_read(g->backend.context, g->storage, g->offsets[i],
+                g->bundle->maps[t->file].fd, t->offset, t->bytes) : DS4_STATUS_UNSUPPORTED;
+            if (status == DS4_STATUS_UNSUPPORTED)
+                status=g->backend.write(g->backend.context, g->storage, g->offsets[i], ds4_bundle_tensor_data(g->bundle,i), t->bytes);
+        }
     }
     if (!status) status=g->ready ? g->ready(g->backend.context)
                                        : g->backend.quiesce(g->backend.context);

@@ -19579,6 +19579,34 @@ static bool canonical_rewrite_has_safe_prompt_prefix(const request *r,
                              r->prompt_text, strlen(r->prompt_text));
 }
 
+/* Generation adds an empty think block which ordinary historical Qwen turns
+ * omit. The visible prefix may alias sampled KV without changing its tokens. */
+static size_t qwen_visible_prompt_prefix_length(const request *r) {
+    if (!r || !r->prompt_text) return 0;
+    size_t len = strlen(r->prompt_text);
+    const char *empty_think = "<think>\n\n</think>\n\n";
+    size_t tail = strlen(empty_think);
+    if (r->model_syntax == SERVER_MODEL_SYNTAX_QWEN &&
+        !ds4_think_mode_enabled(r->think_mode) && len >= tail &&
+        !memcmp(r->prompt_text + len - tail, empty_think, tail)) {
+        return len - tail;
+    }
+    return len;
+}
+
+static char *build_responses_visible_text(const request *r, const char *content,
+                                          const tool_calls *calls) {
+    buf visible = {0};
+    size_t prefix = r && r->prompt_text ? strlen(r->prompt_text) : 0;
+    if (r && !r->has_tools && (!calls || !calls->len))
+        prefix = qwen_visible_prompt_prefix_length(r);
+    if (prefix) buf_append(&visible, r->prompt_text, prefix);
+    char *suffix = build_responses_visible_assistant_suffix(r, content, NULL, calls);
+    buf_puts(&visible, suffix ? suffix : "");
+    free(suffix);
+    return buf_take(&visible);
+}
+
 /* In thinking mode without tools, old assistant reasoning is intentionally not
  * rendered back into later prompts.  After publishing the response, restore the
  * pre-thinking device frontier and evaluate the visible assistant suffix below:
@@ -19621,11 +19649,10 @@ static char *build_qwen_vision_visible_text(const request *r, const char *conten
     if (!r || !r->prompt_text || !r->image_count || r->kind != REQ_CHAT ||
         r->api != API_OPENAI || r->model_syntax != SERVER_MODEL_SYNTAX_QWEN ||
         ds4_think_mode_enabled(r->think_mode)) return NULL;
-    const char *empty_think = "<think>\n\n</think>\n\n";
-    size_t len = strlen(r->prompt_text), tail = strlen(empty_think);
-    if (len < tail || memcmp(r->prompt_text + len - tail, empty_think, tail)) return NULL;
+    size_t len = strlen(r->prompt_text), prefix = qwen_visible_prompt_prefix_length(r);
+    if (prefix == len) return NULL;
     buf visible = {0};
-    buf_append(&visible, r->prompt_text, len - tail);
+    buf_append(&visible, r->prompt_text, prefix);
     append_qwen_trimmed_content(&visible, content);
     return buf_take(&visible);
 }
@@ -22496,16 +22523,14 @@ decode_again:
     const bool post_canonicalize_responses =
         j->req.api == API_RESPONSES &&
         strcmp(final_finish, "error") && strcmp(final_finish, "length");
-    char *responses_visible_suffix = NULL;
+    char *responses_visible_text = NULL;
     buf responses_visible = {0};
     if (post_canonicalize_responses) {
-        responses_visible_suffix =
-            build_responses_visible_assistant_suffix(&j->req,
-                parsed_content ? parsed_content : "", NULL, &parsed_calls);
+        responses_visible_text =
+            build_responses_visible_text(&j->req,
+                parsed_content ? parsed_content : "", &parsed_calls);
         buf_puts(&responses_visible,
-                 j->req.prompt_text ? j->req.prompt_text : "");
-        buf_puts(&responses_visible,
-                 responses_visible_suffix ? responses_visible_suffix : "");
+                 responses_visible_text ? responses_visible_text : "");
         /* Publish the call-id binding before the final SSE/HTTP bytes.  A
          * client is then free to submit a tool result as soon as it receives
          * response.completed; the worker will canonicalize the KV frontier
@@ -22749,7 +22774,7 @@ decode_again:
     }
 
     buf_free(&responses_visible);
-    free(responses_visible_suffix);
+    free(responses_visible_text);
     free(parsed_content);
     free(parsed_reasoning);
     tool_calls_free(&parsed_calls);
@@ -23110,6 +23135,7 @@ typedef struct {
     size_t body_len;
 #ifdef DS4_NATIVE_SUITE
     char content_type[256], idempotency_key[129];
+    bool suite_stream;
     FILE *spool;
 #endif
 } http_request;
@@ -23185,7 +23211,7 @@ static bool read_http_request(int fd, http_request *r) {
 #ifdef DS4_NATIVE_SUITE
     if (!suite_read_headers(b.ptr, (size_t)hend, r->content_type,
                             sizeof(r->content_type), r->idempotency_key,
-                            sizeof(r->idempotency_key))) goto fail;
+                            sizeof(r->idempotency_key), &r->suite_stream)) goto fail;
     bool multipart = !strncmp(r->content_type, "multipart/form-data;", 20);
     if (multipart) {
         if (clen <= 0 || (uint64_t)clen > SUITE_UPLOAD_MAX + 65536) goto fail;
@@ -23336,9 +23362,7 @@ static bool send_models(server *s, int fd) {
         append_model_json(&b, s, "deepseek-v4-pro");
     }
 #ifdef DS4_NATIVE_SUITE
-    pthread_mutex_lock(&s->inference_mu);
     suite_append_models(s, &b);
-    pthread_mutex_unlock(&s->inference_mu);
 #endif
     buf_puts(&b, "]}\n");
     bool ok = http_response(fd, s->enable_cors, 200, "application/json", b.ptr);
@@ -24289,8 +24313,10 @@ int main(int argc, char **argv) {
     pthread_cond_init(&s.model_cv, NULL);
     pthread_mutex_init(&s.trace_mu, NULL);
 #ifdef DS4_NATIVE_SUITE
-    if (cfg.suite_config && (cfg.engine.backend != DS4_BACKEND_CUDA ||
-        cfg.batched_sessions || cfg.engine.ssd_streaming || tp_leader ||
+    if (cfg.suite_config && ((cfg.engine.backend != DS4_BACKEND_CUDA && cfg.engine.backend != DS4_BACKEND_METAL) ||
+        cfg.batched_sessions || (cfg.engine.ssd_streaming &&
+            !(cfg.engine.backend == DS4_BACKEND_METAL &&
+              (ds4_engine_is_qwen4(engine) || ds4_engine_is_qwen(engine)))) || tp_leader ||
         cfg.engine.distributed.role != DS4_DISTRIBUTED_NONE)) {
         fprintf(stderr, "%s\n", DS4_SUITE_CONFIG);
         server_close_resources(&s);
@@ -29343,6 +29369,44 @@ static void test_responses_visible_suffix_matches_client_replay(void) {
 
     tool_calls_free(&calls);
     request_free(&r);
+}
+
+static void test_qwen_non_thinking_responses_visible_text_matches_render(void) {
+    chat_msgs history = {0};
+    chat_msg user = {0};
+    user.role = xstrdup("user");
+    user.content = xstrdup("Remember PREFIX27.");
+    chat_msgs_push(&history, user);
+    request r;
+    request_init(&r, REQ_CHAT, 128);
+    r.api = API_RESPONSES;
+    r.model_syntax = SERVER_MODEL_SYNTAX_QWEN;
+    r.think_mode = DS4_THINK_NONE;
+    r.prompt_text = render_chat_prompt_text_for_syntax(
+        r.model_syntax, &history, NULL, NULL, r.think_mode);
+    TEST_ASSERT(qwen_visible_prompt_prefix_length(&r) < strlen(r.prompt_text));
+    char *visible = build_responses_visible_text(&r, "PREFIX27", NULL);
+    TEST_ASSERT(strstr(visible, "<think>") == NULL);
+    chat_msg assistant = {0};
+    assistant.role = xstrdup("assistant");
+    assistant.content = xstrdup("PREFIX27");
+    chat_msgs_push(&history, assistant);
+    chat_msg followup = {0};
+    followup.role = xstrdup("user");
+    followup.content = xstrdup("Repeat the code.");
+    chat_msgs_push(&history, followup);
+    char *future = render_chat_prompt_text_for_syntax(
+        r.model_syntax, &history, NULL, NULL, r.think_mode);
+    TEST_ASSERT(strlen(future) > strlen(visible));
+    TEST_ASSERT(!memcmp(future, visible, strlen(visible)));
+    free(future);
+    free(visible);
+    r.has_tools = true;
+    visible = build_responses_visible_text(&r, "PREFIX27", NULL);
+    TEST_ASSERT(!strncmp(visible, r.prompt_text, strlen(r.prompt_text)));
+    free(visible);
+    request_free(&r);
+    chat_msgs_free(&history);
 }
 
 static void test_canonical_rewrite_accepts_only_matching_prompt_bytes(void) {
@@ -34522,6 +34586,7 @@ static void ds4_server_unit_tests_run(void) {
     test_responses_tool_output_id_validation();
     test_responses_stateless_tool_replay_ignores_reasoning();
     test_responses_visible_suffix_matches_client_replay();
+    test_qwen_non_thinking_responses_visible_text_matches_render();
     test_canonical_rewrite_accepts_only_matching_prompt_bytes();
     test_responses_input_filters_historical_reasoning();
     test_exact_dsml_tool_replay_can_be_disabled();

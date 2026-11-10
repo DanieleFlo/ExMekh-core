@@ -1,0 +1,93 @@
+{
+  "command": [
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+    "tools/run_qwen_image_pipeline_oracle.py",
+    "--prepared",
+    "build/metal-oracles",
+    "--cases",
+    "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps/cases.json",
+    "--output",
+    "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps/oracle",
+    "--stage",
+    "encode",
+    "--device",
+    "mps",
+    "--offload"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {
+    "DS4_METAL_TIMEOUT_MULTIPLIER": "4"
+  },
+  "timeout_seconds": 1200,
+  "base_timeout_seconds": 300,
+  "timeout_multiplier": 4,
+  "reason": "Independent pinned HF/Diffusers component reference: CPU encoder/DiT, MPS VAE, unchanged BF16 recipe/noise/8steps/256px and frozen acceptance thresholds. Prior scalar CPU VAE attempt retained NOT_VERIFIED after measured slow_conv2d. Serial models,2GiBhostreserve,user4x deadlines.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 6.1104055420000805,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 19010.723043416,
+      "pressure": 1,
+      "host_available_bytes": 9250226176,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 19011.733616375,
+      "pressure": 1,
+      "host_available_bytes": 9043378176,
+      "swap_bytes": 262144,
+      "footprint_bytes": 167510688,
+      "resident_bytes": 217169920
+    },
+    {
+      "monotonic": 19012.741959041,
+      "pressure": 1,
+      "host_available_bytes": 8865284096,
+      "swap_bytes": 262144,
+      "footprint_bytes": 275628872,
+      "resident_bytes": 332038144
+    },
+    {
+      "monotonic": 19013.752916625,
+      "pressure": 1,
+      "host_available_bytes": 8857354240,
+      "swap_bytes": 262144,
+      "footprint_bytes": 283214688,
+      "resident_bytes": 340410368
+    },
+    {
+      "monotonic": 19014.764376958,
+      "pressure": 1,
+      "host_available_bytes": 8856895488,
+      "swap_bytes": 262144,
+      "footprint_bytes": 346915752,
+      "resident_bytes": 417054720
+    },
+    {
+      "monotonic": 19015.776930541,
+      "pressure": 1,
+      "host_available_bytes": 8420147200,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1548158152,
+      "resident_bytes": 514867200
+    }
+  ],
+  "executables_sha256": {
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/run_qwen_image_pipeline_oracle.py": "c625ada174b32eca2343500e5b6e8ff6db62fc6b31fabd123e4009b1f54df6ef"
+  },
+  "log_sha256": "4e990ab9f9d4d8309eeb9f0667d5d4855255729111fc66053a0166a02c28e575"
+}

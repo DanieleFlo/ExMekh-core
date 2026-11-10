@@ -6,6 +6,7 @@
 #include "../ds4_server.c"
 #undef main
 #include <assert.h>
+#include "suite_progress_cases.inc"
 
 /* The protocol test intentionally cannot construct a device adapter. */
 ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r, uint64_t owner) {
@@ -13,7 +14,92 @@ ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r, uint64_t owner)
     if (out) *out = NULL;
     return DS4_STATUS_UNSUPPORTED;
 }
+typedef struct {
+    server *srv;
+    int fd;
+    const char *path;
+} catalog_client;
+static void *catalog_request(void *opaque) {
+    catalog_client *request = opaque;
+    if (request->path) {
+        http_request http = {.method = "GET"};
+        snprintf(http.path, sizeof(http.path), "%s", request->path);
+        assert(suite_route(request->srv, request->fd, &http));
+    } else {
+        assert(send_models(request->srv, request->fd));
+    }
+    return NULL;
+}
+static void test_catalog_during_inference(void) {
+    suite_state q = {0};
+    server s = {.suite = &q, .ctx_size = 8192, .default_tokens = 32};
+    assert(suite_catalog_init(&q.catalog));
+    assert(!pthread_mutex_init(&s.inference_mu, NULL));
+    suite_catalog_model snapshot[SUITE_MODELS] = {
+        {xstrdup("Qwen/Qwen-Image-2.1-Turbo"),
+         xstrdup("{\"id\":\"Qwen/Qwen-Image-2.1-Turbo\"}")},
+        {xstrdup("google/embeddinggemma-2"),
+         xstrdup("{\"id\":\"google/embeddinggemma-2\"}")},
+    };
+    suite_catalog_replace(&q.catalog, snapshot);
+    static const struct {
+        const char *path;
+        const char *model_id;
+        int status;
+    } cases[] = {
+        {NULL, NULL, 200},
+        {"/v1/models/Qwen/Qwen-Image-2.1-Turbo", "Qwen/Qwen-Image-2.1-Turbo", 200},
+        {"/v1/models/google/embeddinggemma-2", "google/embeddinggemma-2", 200},
+        {"/v1/models/Qwen-Image-missing", NULL, 404},
+    };
+    pthread_mutex_lock(&s.inference_mu);
+    /* More polls than the connection limit must complete while compute owns
+     * the inference lock. An abandoned discovery must not retain a client. */
+    for (unsigned i = 0; i < 12; i++) {
+        int pair[2]; assert(!socketpair(AF_UNIX, SOCK_STREAM, 0, pair));
+        unsigned route = i % (sizeof(cases) / sizeof(*cases));
+        catalog_client request = {.srv = &s, .fd = pair[0], .path = cases[route].path};
+        pthread_t client;
+        assert(!pthread_create(&client, NULL, catalog_request, &request));
+        struct pollfd readable = {.fd = pair[1], .events = POLLIN};
+        assert(poll(&readable, 1, 1000) == 1);
+        pthread_join(client, NULL);
+        shutdown(pair[0], SHUT_WR);
+        buf response = {0}; char block[4096]; ssize_t bytes;
+        while ((bytes = recv(pair[1], block, sizeof(block), 0)) > 0)
+            buf_append(&response, block, bytes);
+        char status_line[32];
+        snprintf(status_line, sizeof(status_line), "HTTP/1.1 %d", cases[route].status);
+        assert(strstr(response.ptr, status_line));
+        const char *body = strstr(response.ptr, "\r\n\r\n");
+        assert(body);
+        schema_json_value *catalog = schema_json_parse(body + 4);
+        assert(catalog);
+        if (!cases[route].path) {
+            sj *models = suite_get(catalog, "data");
+            assert(models && models->kind == SCHEMA_JSON_ARRAY && models->len == 4);
+            assert(!strcmp(suite_str(models->item[2], "id"), "Qwen/Qwen-Image-2.1-Turbo"));
+            assert(!strcmp(suite_str(models->item[3], "id"), "google/embeddinggemma-2"));
+        } else if (cases[route].model_id) {
+            assert(!strcmp(suite_str(catalog, "id"), cases[route].model_id));
+        } else {
+            assert(!strcmp(suite_str(suite_get(catalog, "error"), "code"), "model_not_found"));
+        }
+        schema_json_free(catalog); buf_free(&response);
+        close(pair[0]); close(pair[1]);
+    }
+    pthread_mutex_unlock(&s.inference_mu);
+    buf current = {0};
+    suite_append_models(&s, &current);
+    assert(!current.len); /* Refresh once the owner is idle. */
+    assert(!suite_catalog_append_model(&q.catalog, "Qwen/Qwen-Image-2.1-Turbo", &current));
+    buf_free(&current);
+    suite_catalog_close(&q.catalog);
+    pthread_mutex_destroy(&s.inference_mu);
+}
 int main(void) {
+    test_catalog_during_inference();
+    test_progress_contract();
     ds4_resources *resources = NULL;
     assert(!ds4_resources_create(&resources));
     suite_state diagnostic = {.resources = resources};
@@ -44,14 +130,14 @@ int main(void) {
     assert(!strcmp(first.ptr, second.ptr));
     buf_free(&first); buf_free(&second); schema_json_free(a); schema_json_free(b);
     const char headers[] = "POST /v1/files HTTP/1.1\r\nContent-Length: 42\r\nContent-Type: multipart/form-data; boundary=x\r\nIdempotency-Key: key\r\n\r\n";
-    char type[256] = {0}, key[129] = {0};
-    assert(suite_read_headers(headers, sizeof(headers)-1, type, sizeof(type), key, sizeof(key)));
+    char type[256] = {0}, key[129] = {0}; bool stream = false;
+    assert(suite_read_headers(headers, sizeof(headers)-1, type, sizeof(type), key, sizeof(key), &stream));
     assert(!strcmp(key, "key") && strstr(type, "boundary=x"));
     const char duplicate[] = "Content-Length: 1\r\nContent-Length: 2\r\n";
     memset(type, 0, sizeof(type)); memset(key, 0, sizeof(key));
-    assert(!suite_read_headers(duplicate, sizeof(duplicate)-1, type, sizeof(type), key, sizeof(key)));
+    assert(!suite_read_headers(duplicate, sizeof(duplicate)-1, type, sizeof(type), key, sizeof(key), &stream));
     const char chunked[] = "Transfer-Encoding: chunked\r\n";
-    assert(!suite_read_headers(chunked, sizeof(chunked)-1, type, sizeof(type), key, sizeof(key)));
+    assert(!suite_read_headers(chunked, sizeof(chunked)-1, type, sizeof(type), key, sizeof(key), &stream));
     suite_image_request image = {0};
     a = schema_json_parse("{\"model\":\"Qwen/Qwen-Image-2.1-Turbo\",\"prompt\":\"red\",\"size\":\"33x32\"}");
     assert(suite_prepare_image(NULL, a, false, &image) == DS4_STATUS_INVALID);
@@ -109,6 +195,17 @@ int main(void) {
     schema_json_free(a); buf_free(&metadata);
     f->expires = time(NULL) - 1; suite_expire(&q);
     assert(!q.stored && !*f->id);
+    suite_file *kept = suite_new_file(&q, "reference.png", "image/png", "ABC", 3);
+    suite_file *pending = suite_new_file(&q, "output.png", "image/png", "ABCD", 4);
+    assert(kept && pending && q.stored == 7);
+    char removed_path[PATH_MAX];
+    snprintf(removed_path, sizeof(removed_path), "%s", pending->path);
+    suite_remove_file(&q, pending);
+    suite_remove_file(&q, pending);
+    assert(access(removed_path, F_OK) == -1 && errno == ENOENT);
+    assert(q.stored == 3 && *kept->id && !*pending->id);
+    suite_remove_file(&q, kept);
+    assert(!q.stored);
     suite_http request = {.path = "/v1/embeddings", .key = "key"};
     suite_id(request.request_id, "req-");
     job j = {.suite_request = &request};

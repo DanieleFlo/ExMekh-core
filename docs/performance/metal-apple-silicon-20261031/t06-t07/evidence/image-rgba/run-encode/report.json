@@ -1,0 +1,74 @@
+{
+  "command": [
+    "env",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+    "tools/run_qwen_image_pipeline_oracle.py",
+    "--prepared",
+    "build/metal-oracles",
+    "--cases",
+    "build/metal-qualification/t06-t07-20261031/image-rgba/cases.json",
+    "--output",
+    "build/metal-qualification/t06-t07-20261031/image-rgba/oracle",
+    "--stage",
+    "encode",
+    "--device",
+    "mps",
+    "--offload"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 300,
+  "reason": "S3 256px image or independent reference component",
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 5.074669083000117,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 12002.658145333,
+      "pressure": 1,
+      "host_available_bytes": 16954130432,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 12003.66551525,
+      "pressure": 1,
+      "host_available_bytes": 16758833152,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 172622568,
+      "resident_bytes": 222789632
+    },
+    {
+      "monotonic": 12004.677204,
+      "pressure": 1,
+      "host_available_bytes": 16581230592,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 275727224,
+      "resident_bytes": 332103680
+    },
+    {
+      "monotonic": 12005.688340958,
+      "pressure": 1,
+      "host_available_bytes": 16573579264,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 283231120,
+      "resident_bytes": 340393984
+    },
+    {
+      "monotonic": 12006.69867,
+      "pressure": 1,
+      "host_available_bytes": 16449650688,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 361333720,
+      "resident_bytes": 431439872
+    }
+  ],
+  "executables_sha256": {
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/run_qwen_image_pipeline_oracle.py": "1e77663c171c378566c5ebcb8ba9b1c6073c5dfcd2674aa33708d1ab3190f33d"
+  },
+  "log_sha256": "e6bb2325c7826741e75249855b2b269a9c6a2356d94cb253e30c156a3862cb39"
+}

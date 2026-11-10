@@ -1,0 +1,244 @@
+
+===== request 1 2026-10-31 22:15:50 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 421
+effective_prompt_tokens: 421
+cached_tokens: 0
+max_tokens: 256
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 421
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","stream":false,"input":[{"role":"system","content":"Use the requested tool and remember the user's code."},{"role":"user","content":"Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code."}],"reasoning":{"effort":"none"},"tool_choice":"required","tools":[{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}],"max_output_tokens":256,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "rank_local_results", "parameters": {"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]}, "description": "Rank fixed search candidates using the production native embedding consumer."}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT>
+
+Use the requested tool and remember the user's code.<|im_end|>
+<|im_start|>user
+Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=256 ctx_room=7771 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=rank_local_results>
+<parameter=query>
+snow
+</parameter>
+<parameter=execution_mode>
+background
+</parameter>
+<parameter=wait_seconds>
+null
+</parameter></function>
+</tool_call>
+
+--- trace: closed tool-call block after 50 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 50
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 95.796
+
+tool_call[0]:
+id: call_6997e52dfc84165af1356df031e88b70
+name: rank_local_results
+arguments:
+{"query": "snow", "execution_mode": "background", "wait_seconds": null}
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=421 response_prefill=51 target=472 ---
+
+
+===== request 2 2026-10-31 22:17:46 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 570
+effective_prompt_tokens: 570
+cached_tokens: 472
+max_tokens: 48
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 472
+prompt_tokens: 570
+live_prompt_common: 472
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=1 disk=0 canonical=0 missing_ids=0
+cache_source: responses-visible
+cached_tokens: 472
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","stream":false,"input":[{"role":"system","content":"Use the requested tool and remember the user's code."},{"role":"user","content":"Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code."},{"type":"function_call","call_id":"call_6997e52dfc84165af1356df031e88b70","name":"rank_local_results","arguments":"{\"query\":\"snow\",\"execution_mode\":\"background\"}"},{"type":"function_call_output","call_id":"call_6997e52dfc84165af1356df031e88b70","output":"<tool-result type=\"object\">\n  <scores type=\"array\">\n    <item type=\"number\">0.832023024559021</item>\n    <item type=\"number\">0.743124783039093</item>\n  </scores>\n</tool-result>"}],"reasoning":{"effort":"none"},"tools":[{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}],"max_output_tokens":48,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "rank_local_results", "parameters": {"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]}, "description": "Rank fixed search candidates using the production native embedding consumer."}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT>
+
+Use the requested tool and remember the user's code.<|im_end|>
+<|im_start|>user
+Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<tool_call>
+<function=rank_local_results>
+<parameter=query>
+snow
+</parameter>
+<parameter=execution_mode>
+background
+</parameter>
+<parameter=wait_seconds>
+null
+</parameter></function>
+</tool_call><|im_end|>
+<|im_start|>user
+<tool_response>
+<tool-result type="object">
+  <scores type="array">
+    <item type="number">0.832023024559021</item>
+    <item type="number">0.743124783039093</item>
+  </scores>
+</tool-result>
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=48 ctx_room=7622 ---
+
+EMBEDDING-E2E-27
+
+
+--- parsed message ---
+finish: stop
+generated_tokens: 11
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 22.526
+
+content:
+EMBEDDING-E2E-27
+
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=570 response_prefill=11 target=581 ---
+

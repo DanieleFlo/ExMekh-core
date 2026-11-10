@@ -1,0 +1,47 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/verify-neon-erf-v2.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Same complete BF16 erf GELU sweep and all real merger inputs, now preserving tiny x/2 via previously audited integer RNE instead of Metal FTZ.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.0635729159985203,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 21197.382623291,
+      "pressure": 1,
+      "host_available_bytes": 13093601280,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 21198.399574791,
+      "pressure": 1,
+      "host_available_bytes": 12904235008,
+      "swap_bytes": 262144,
+      "footprint_bytes": 169608032,
+      "resident_bytes": 227459072
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "4a336dd85ec289e7b47f7640a932697aef76db795ce60044ef491baf8f39c237"
+}

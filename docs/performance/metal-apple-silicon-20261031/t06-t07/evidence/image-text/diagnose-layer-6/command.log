@@ -1,0 +1,16 @@
+{"name": "input_layernorm.weight", "max_abs": 0.0, "rmse": 0.0, "different": 0, "elements": 139264}
+{"name": "self_attn.q_proj.weight", "max_abs": 0.001953125, "rmse": 9.583623977960087e-06, "different": 44, "elements": 139264}
+{"name": "self_attn.k_proj.weight", "max_abs": 3.0517578125e-05, "rmse": 2.454514458349877e-07, "different": 12, "elements": 34816}
+{"name": "self_attn.v_proj.weight", "max_abs": 0.00048828125, "rmse": 2.6599564080243e-06, "different": 10, "elements": 34816}
+{"name": "self_attn.q_norm.weight", "max_abs": 0.0, "rmse": 0.0, "different": 0, "elements": 139264}
+{"name": "self_attn.k_norm.weight", "max_abs": 0.0, "rmse": 0.0, "different": 0, "elements": 34816}
+{"name": "rope-q", "max_abs": 0.0, "rmse": 0.0, "different": 0, "elements": 139264}
+{"name": "rope-k", "max_abs": 0.0, "rmse": 0.0, "different": 0, "elements": 34816}
+{"name": "attention", "max_abs": 9.313225746154785e-10, "rmse": 2.4956328236597214e-12, "different": 1, "elements": 139264}
+{"name": "self_attn.o_proj.weight", "max_abs": 0.001953125, "rmse": 8.07276137493318e-06, "different": 55, "elements": 139264}
+{"name": "post_attention_layernorm.weight", "max_abs": 0.0, "rmse": 0.0, "different": 0, "elements": 139264}
+{"name": "mlp.gate_proj.weight", "max_abs": 0.03125, "rmse": 0.00016421970212832093, "different": 105, "elements": 417792}
+{"name": "mlp.up_proj.weight", "max_abs": 0.00390625, "rmse": 1.2421778592397459e-05, "different": 134, "elements": 417792}
+{"name": "silu", "max_abs": 0.0, "rmse": 0.0, "different": 0, "elements": 417792}
+{"name": "mlp.down_proj.weight", "max_abs": 0.015625, "rmse": 4.805807111551985e-05, "different": 117, "elements": 139264}
+{"name": "manual-vs-oracle", "max_abs": 0.0, "rmse": 0.0, "different": 0, "elements": 139264}

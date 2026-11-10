@@ -1,0 +1,56 @@
+{
+  "command": [
+    "env",
+    "DS4_GEMMA_DIMENSIONS=128",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_native_suite",
+    "build/metal-models/gemma.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/gemma.ds4g",
+    "gemma",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/gemma",
+    "Il gatto dorme sul divano.",
+    "A cat sleeps on the sofa.",
+    "The train arrives at the station."
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200,
+  "base_timeout_seconds": 300,
+  "timeout_multiplier": 4,
+  "reason": "Combined isolated candidate after exact identical-input GELU and softmax/attention replay; unchanged frozen oracles, serial full models, user4x deadlines and2GiB host reserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.077095625001675,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 12078.382045708,
+      "pressure": 1,
+      "host_available_bytes": 13061177344,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 12079.393507375,
+      "pressure": 1,
+      "host_available_bytes": 13025329152,
+      "swap_bytes": 262144,
+      "footprint_bytes": 7389736,
+      "resident_bytes": 17121280
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_native_suite": "ec9e7c50631c86aee65a4efeec07f799ee9122f39d97ddd53db4c71550eb6aa3"
+  },
+  "log_sha256": "2cddd197b69f1df22f09edf8dad878aa6ff5a057a7c87843cdd864b3077dbc56"
+}

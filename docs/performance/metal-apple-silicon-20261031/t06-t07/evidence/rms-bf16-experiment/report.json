@@ -1,0 +1,1000 @@
+{
+  "scope": "Same-input primitive diagnosis; no production change or gate promotion.",
+  "cases": [
+    {
+      "name": "gemma-0",
+      "shape": [
+        11,
+        512
+      ],
+      "production": {
+        "different": 1,
+        "elements": 5632,
+        "max_abs": 0.015625,
+        "rmse": 0.00020820382633246481
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 1,
+            "elements": 5632,
+            "max_abs": 0.015625,
+            "rmse": 0.00020820382633246481
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 1,
+            "elements": 5632,
+            "max_abs": 0.015625,
+            "rmse": 0.00020820382633246481
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 1,
+            "elements": 5632,
+            "max_abs": 0.015625,
+            "rmse": 0.00020820382633246481
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 1,
+            "elements": 5632,
+            "max_abs": 0.015625,
+            "rmse": 0.00020820382633246481
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 1,
+            "elements": 5632,
+            "max_abs": 0.03125,
+            "rmse": 0.00041640765266492963
+          },
+          "vs_production": {
+            "different": 2,
+            "elements": 5632,
+            "max_abs": 0.03125,
+            "rmse": 0.00046555791050195694
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 1,
+            "elements": 5632,
+            "max_abs": 0.015625,
+            "rmse": 0.00020820382633246481
+          }
+        }
+      }
+    },
+    {
+      "name": "gemma-6",
+      "shape": [
+        11,
+        512
+      ],
+      "production": {
+        "different": 0,
+        "elements": 5632,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "gemma-18",
+      "shape": [
+        11,
+        512
+      ],
+      "production": {
+        "different": 0,
+        "elements": 5632,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "gemma-23",
+      "shape": [
+        11,
+        512
+      ],
+      "production": {
+        "different": 0,
+        "elements": 5632,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 5632,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "qwen-0",
+      "shape": [
+        34,
+        4096
+      ],
+      "production": {
+        "different": 0,
+        "elements": 139264,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "qwen-qnorm-0",
+      "shape": [
+        1088,
+        128
+      ],
+      "production": {
+        "different": 5,
+        "elements": 139264,
+        "max_abs": 0.0078125,
+        "rmse": 4.6811830543447286e-05
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 5,
+            "elements": 139264,
+            "max_abs": 0.0078125,
+            "rmse": 4.6811830543447286e-05
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 5,
+            "elements": 139264,
+            "max_abs": 0.0078125,
+            "rmse": 4.6811830543447286e-05
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 5,
+            "elements": 139264,
+            "max_abs": 0.0078125,
+            "rmse": 4.6811830543447286e-05
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 5,
+            "elements": 139264,
+            "max_abs": 0.0078125,
+            "rmse": 4.6811830543447286e-05
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 5,
+            "elements": 139264,
+            "max_abs": 0.0078125,
+            "rmse": 4.6811830543447286e-05
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 5,
+            "elements": 139264,
+            "max_abs": 0.0078125,
+            "rmse": 4.6811830543447286e-05
+          }
+        }
+      }
+    },
+    {
+      "name": "qwen-6",
+      "shape": [
+        34,
+        4096
+      ],
+      "production": {
+        "different": 0,
+        "elements": 139264,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "qwen-qnorm-6",
+      "shape": [
+        1088,
+        128
+      ],
+      "production": {
+        "different": 0,
+        "elements": 139264,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 1,
+            "elements": 139264,
+            "max_abs": 0.00390625,
+            "rmse": 1.0467442734807264e-05
+          },
+          "vs_production": {
+            "different": 1,
+            "elements": 139264,
+            "max_abs": 0.00390625,
+            "rmse": 1.0467442734807264e-05
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 1,
+            "elements": 139264,
+            "max_abs": 0.00390625,
+            "rmse": 1.0467442734807264e-05
+          },
+          "vs_production": {
+            "different": 1,
+            "elements": 139264,
+            "max_abs": 0.00390625,
+            "rmse": 1.0467442734807264e-05
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "qwen-18",
+      "shape": [
+        34,
+        4096
+      ],
+      "production": {
+        "different": 0,
+        "elements": 139264,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        }
+      }
+    },
+    {
+      "name": "qwen-35",
+      "shape": [
+        34,
+        4096
+      ],
+      "production": {
+        "different": 0,
+        "elements": 139264,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      "variants": {
+        "divide-sqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-rsqrt": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "multiply-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-reciprocal": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        },
+        "cpu-mean-pow": {
+          "vs_cpu": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          },
+          "vs_production": {
+            "different": 0,
+            "elements": 139264,
+            "max_abs": 0.0,
+            "rmse": 0.0
+          }
+        }
+      }
+    }
+  ],
+  "sources_sha256": {
+    "build/metal-qualification/t06-t07-20261031/probe-simd-bf16.m": "7273869d877ca7ef7fbaba987f54f4f550ddb81cb71fea4c946264f36edb8346",
+    "build/metal-qualification/t06-t07-20261031/probe-rms-bf16.metal": "05710e984e8c2472ee93f39dacb9706feb2ea7081c97bbd7450de108f4bde3b4",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/compare-rms-bf16.py": "02262fb88365c3132a52ab510b4d0f966f7cb2236f73f68500eb52d4587d4e0c"
+  }
+}

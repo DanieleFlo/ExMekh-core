@@ -1,6 +1,7 @@
 #ifndef DS4_QWEN_IMAGE_OBSERVER_H
 #define DS4_QWEN_IMAGE_OBSERVER_H
 #include "ds4_numeric.h"
+#include "ds4_operation_progress.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -8,6 +9,7 @@ typedef struct {
   void *opaque;
   bool (*cancelled)(void *);
   ds4_status (*trace)(void *, const char *stage, uint32_t layer, ds4_num_view);
+  ds4_operation_observer progress;
 } ds4_qwen_image_observer;
 /* Trace receives a fenced borrowed view. A cancellation requested by trace
  * is observed before the adapter can publish its result. */

@@ -34,3 +34,22 @@ Makefile text eol=lf
 # Archived measurements and recovery patches retain their original bytes.
 docs/experiments/qwen27-4bis-20261008/results/** -text whitespace=cr-at-eol
 docs/experiments/qwen27-4bis-20261008/shared-integration.patch -text -whitespace
+
+# Metal verification logs are hashed evidence, including literal shell/pytest
+# trailing spaces. Keep those bytes; JSON identities use LF on every platform.
+docs/performance/metal-apple-silicon-20261029/**/*.log -text -whitespace
+docs/performance/metal-apple-silicon-20261029/**/*.json text eol=lf
+
+docs/performance/metal-apple-silicon-20261031/**/*.log -text -whitespace
+docs/performance/metal-apple-silicon-20261031/**/*.json text eol=lf
+
+# Diagnostic prompts include tokenizer-significant final newlines.
+docs/performance/metal-apple-silicon-20261031/t08-20261106/fixtures/*.prompt.txt -text -whitespace
+
+# Preserve archived patch context, test reports and upstream diagnostic sources.
+agent/vendor-patches/*.patch -text -whitespace
+docs/performance/metal-apple-silicon-20261031/t06-t07/diagnostics/probe-sleef-tanh.metal -text -whitespace
+docs/performance/metal-apple-silicon-20261031/t06-t07/evidence/**/*-junit.xml -text -whitespace
+docs/performance/metal-apple-silicon-20261031/t06-t07/local-dependency/*.patch -text -whitespace
+docs/performance/metal-apple-silicon-20261031/t06-t07/upstream-audit/apple/clock_gettime.c -text -whitespace
+docs/performance/metal-clean-code-review-20261102/evidence/*.log -text -whitespace

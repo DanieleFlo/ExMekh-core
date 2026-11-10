@@ -1,0 +1,10 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal model views created in 0.037 ms, residency requested in 0.078 ms, warmup 2.561 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+ds4: Qwen3.8 27B graph allocation failed for context 16
+ds4: Metal model views created in 0.025 ms, residency requested in 0.046 ms, warmup 0.747 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+Metal memory: host_available=11670077440 allocated=1769472 recommended=19069665280 max_buffer=14302248960
+Qwen27 Metal lifecycle: payload bit-exact in new session; OOM/corrupt/truncated/missing restore atomic; park/release/resume and empty session PASS (1 GiB device cap)

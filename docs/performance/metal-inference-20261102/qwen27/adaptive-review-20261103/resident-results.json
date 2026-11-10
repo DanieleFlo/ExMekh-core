@@ -1,0 +1,130 @@
+{
+  "summary": {
+    "pairs": 5,
+    "distribution": {
+      "before": {
+        "mean_ms": {
+          "mean": 0.244074,
+          "stddev": 0.008524783281702818,
+          "median": 0.244265,
+          "p10": 0.236037,
+          "p90": 0.251583,
+          "cv": 0.03492704377239205
+        }
+      },
+      "after": {
+        "mean_ms": {
+          "mean": 0.24285500000000002,
+          "stddev": 0.005808707902795603,
+          "median": 0.242295,
+          "p10": 0.238015,
+          "p90": 0.24873,
+          "cv": 0.023918420056394156
+        }
+      }
+    },
+    "paired": {
+      "mean_ms": {
+        "geomean_delta_percent": -0.4728922699079181,
+        "bootstrap95_percent": [
+          -3.85606485267581,
+          2.710708549347482
+        ],
+        "individual_percent": [
+          -1.8174082178458506,
+          3.3469635014387267,
+          3.6416291823279314,
+          -6.797888415723053,
+          -0.36435838126624986
+        ]
+      }
+    }
+  },
+  "rows": [
+    {
+      "name": "resident-0-before",
+      "variant": "before",
+      "rep": 0,
+      "warmup": true,
+      "mean_ms": 0.2321
+    },
+    {
+      "name": "resident-0-after",
+      "variant": "after",
+      "rep": 0,
+      "warmup": true,
+      "mean_ms": 0.25108
+    },
+    {
+      "name": "resident-1-after",
+      "variant": "after",
+      "rep": 1,
+      "warmup": false,
+      "mean_ms": 0.242295
+    },
+    {
+      "name": "resident-1-before",
+      "variant": "before",
+      "rep": 1,
+      "warmup": false,
+      "mean_ms": 0.24678
+    },
+    {
+      "name": "resident-2-before",
+      "variant": "before",
+      "rep": 2,
+      "warmup": false,
+      "mean_ms": 0.231105
+    },
+    {
+      "name": "resident-2-after",
+      "variant": "after",
+      "rep": 2,
+      "warmup": false,
+      "mean_ms": 0.23884
+    },
+    {
+      "name": "resident-3-after",
+      "variant": "after",
+      "rep": 3,
+      "warmup": false,
+      "mean_ms": 0.2523
+    },
+    {
+      "name": "resident-3-before",
+      "variant": "before",
+      "rep": 3,
+      "warmup": false,
+      "mean_ms": 0.243435
+    },
+    {
+      "name": "resident-4-before",
+      "variant": "before",
+      "rep": 4,
+      "warmup": false,
+      "mean_ms": 0.254785
+    },
+    {
+      "name": "resident-4-after",
+      "variant": "after",
+      "rep": 4,
+      "warmup": false,
+      "mean_ms": 0.237465
+    },
+    {
+      "name": "resident-5-after",
+      "variant": "after",
+      "rep": 5,
+      "warmup": false,
+      "mean_ms": 0.243375
+    },
+    {
+      "name": "resident-5-before",
+      "variant": "before",
+      "rep": 5,
+      "warmup": false,
+      "mean_ms": 0.244265
+    }
+  ],
+  "oracle": "BIT_EXACT"
+}

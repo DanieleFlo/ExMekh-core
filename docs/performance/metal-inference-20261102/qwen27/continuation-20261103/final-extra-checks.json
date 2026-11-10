@@ -1,0 +1,38 @@
+[
+  {
+    "case": "final-reader-threshold-sanitized",
+    "status": "PASS",
+    "elapsed_uptime_seconds": 2.0780042499973206,
+    "executable_sha256": {
+      "build/metal-perf-qwen27-20261102/continuation-20261103/file-reader-final-sanitized": "c4cc835939f7f94f5e08bf09cef426ccab0a375062c1923d2dbea798e0fc5f49"
+    },
+    "measurement_status": "VALID_SCREEN_OR_TEST"
+  },
+  {
+    "case": "native-final-target",
+    "status": "PASS",
+    "elapsed_uptime_seconds": 18.708320582998567,
+    "executable_sha256": {
+      "./ds4-bench": "3f617d499c61bffb1b8dc3b5bba00ab21ac70c275fb6c19b890b58b5a7b24142"
+    },
+    "measurement_status": "EXCLUDE_INITIAL_PREFILL_SUSPEND"
+  },
+  {
+    "case": "native-final-target-repeat",
+    "status": "PASS",
+    "elapsed_uptime_seconds": 13.21483775001252,
+    "executable_sha256": {
+      "./ds4-bench": "3f617d499c61bffb1b8dc3b5bba00ab21ac70c275fb6c19b890b58b5a7b24142"
+    },
+    "measurement_status": "VALID_SCREEN_OR_TEST"
+  },
+  {
+    "case": "native-final-mtp4",
+    "status": "PASS",
+    "elapsed_uptime_seconds": 14.245638082997175,
+    "executable_sha256": {
+      "./ds4-bench": "3f617d499c61bffb1b8dc3b5bba00ab21ac70c275fb6c19b890b58b5a7b24142"
+    },
+    "measurement_status": "VALID_SCREEN_OR_TEST"
+  }
+]

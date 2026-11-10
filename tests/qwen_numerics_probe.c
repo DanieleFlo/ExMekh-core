@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "ds4_gpu.h"
+#include "qwen_half_reference.h"
 
 #include <float.h>
 #include <math.h>
@@ -112,17 +113,6 @@ _Static_assert(sizeof(probe_block_iq4_xs) == 136, "IQ4_XS block layout");
 #include "ds4_iq_ud_tables_cuda.inc"
 #undef DS4_IQ_UD_TABLE_STORAGE
 
-static float f16_to_f32(uint16_t h) {
-    const uint32_t sign = (uint32_t)(h & 0x8000u) << 16;
-    const uint32_t exp = (h >> 10) & 0x1fu;
-    const uint32_t frac = h & 0x3ffu;
-    uint32_t bits = exp == 0 ? sign :
-                    exp == 31 ? sign | 0x7f800000u | (frac << 13) :
-                    sign | ((exp + 112u) << 23) | (frac << 13);
-    float value;
-    memcpy(&value, &bits, sizeof(value));
-    return value;
-}
 
 static float f32_round_to_f16(float value) {
     const _Float16 half = (_Float16)value;
@@ -192,9 +182,9 @@ static float q4_k_value(const probe_block_q4_k *block, uint32_t i) {
     const uint32_t shift = (group & 1u) * 4u;
     uint8_t scale, minimum;
     q4_k_scale_min(group, block->scales, &scale, &minimum);
-    return f16_to_f32(block->d) * (float)scale *
+    return qwen_reference_f16_to_f32(block->d) * (float)scale *
            (float)((block->qs[byte] >> shift) & 15u) -
-           f16_to_f32(block->dmin) * (float)minimum;
+           qwen_reference_f16_to_f32(block->dmin) * (float)minimum;
 }
 
 static float q5_k_value(const probe_block_q5_k *block, uint32_t i) {
@@ -205,8 +195,8 @@ static float q5_k_value(const probe_block_q5_k *block, uint32_t i) {
     q4_k_scale_min(group, block->scales, &scale, &minimum);
     const uint32_t high = (block->qh[i & 31u] >> group) & 1u;
     const uint32_t q = ((block->qs[byte] >> shift) & 15u) | (high << 4u);
-    return f16_to_f32(block->d) * (float)scale * (float)q -
-           f16_to_f32(block->dmin) * (float)minimum;
+    return qwen_reference_f16_to_f32(block->d) * (float)scale * (float)q -
+           qwen_reference_f16_to_f32(block->dmin) * (float)minimum;
 }
 
 static float q6_k_value(const probe_block_q6_k *block, uint32_t i) {
@@ -232,7 +222,7 @@ static float q6_k_value(const probe_block_q6_k *block, uint32_t i) {
             (((high >> 6u) & 3u) << 4u);
         scale = half * 8u + 6u + (lane >> 4u);
     }
-    return f16_to_f32(block->d) * (float)block->scales[scale] *
+    return qwen_reference_f16_to_f32(block->d) * (float)block->scales[scale] *
            (float)((int)q - 32);
 }
 
@@ -268,7 +258,7 @@ static float q3_k_value(const probe_block_q3_k *block, uint32_t i) {
     const uint32_t mask = 1u << (4u * n + j);
     const int q = (int)((block->qs[32u * n + l] >> (2u * j)) & 3u) -
                   ((block->hmask[l] & mask) ? 0 : 4);
-    return f16_to_f32(block->d) * (float)((int)scale - 32) * (float)q;
+    return qwen_reference_f16_to_f32(block->d) * (float)((int)scale - 32) * (float)q;
 }
 
 static float iq2_xs_value(const probe_block_iq2_xs *block, uint32_t i) {
@@ -280,7 +270,7 @@ static float iq2_xs_value(const probe_block_iq2_xs *block, uint32_t i) {
     const uint8_t signs = cuda_ksigns_iq2xs[q >> 9u];
     const uint32_t scale =
         (block->scales[ib] >> (4u * (il >> 1u))) & 0x0fu;
-    const float d = f16_to_f32(block->d) * (0.5f + (float)scale) * 0.25f;
+    const float d = qwen_reference_f16_to_f32(block->d) * (0.5f + (float)scale) * 0.25f;
     return d * (float)grid * ((signs & (1u << j)) ? -1.0f : 1.0f);
 }
 
@@ -294,7 +284,7 @@ static float iq2_s_value(const probe_block_iq2_s *block, uint32_t i) {
     const uint8_t signs = block->qs[32u + 4u * ib + il];
     const uint32_t scale =
         (block->scales[ib] >> (4u * (il >> 1u))) & 0x0fu;
-    const float d = f16_to_f32(block->d) * (0.5f + (float)scale) * 0.25f;
+    const float d = qwen_reference_f16_to_f32(block->d) * (0.5f + (float)scale) * 0.25f;
     return d * (float)grid * ((signs & (1u << j)) ? -1.0f : 1.0f);
 }
 
@@ -310,7 +300,7 @@ static float iq3_xxs_value(const probe_block_iq3_xxs *block, uint32_t i) {
     const uint8_t grid =
         (uint8_t)(cuda_iq3xxs_grid[code] >> (8u * (j & 3u)));
     const uint8_t signs = cuda_ksigns_iq2xs[(aux >> (7u * il)) & 127u];
-    const float d = f16_to_f32(block->d) *
+    const float d = qwen_reference_f16_to_f32(block->d) *
                     (0.5f + (float)(aux >> 28u)) * 0.5f;
     return d * (float)grid * ((signs & (1u << j)) ? -1.0f : 1.0f);
 }
@@ -330,14 +320,14 @@ static float iq3_s_value(const probe_block_iq3_s *block, uint32_t i) {
     const uint8_t signs = block->signs[4u * ib + il];
     const uint32_t scale =
         (block->scales[ib >> 1u] >> (4u * (ib & 1u))) & 0x0fu;
-    const float d = f16_to_f32(block->d) * (float)(1u + 2u * scale);
+    const float d = qwen_reference_f16_to_f32(block->d) * (float)(1u + 2u * scale);
     return d * (float)grid * ((signs & (1u << j)) ? -1.0f : 1.0f);
 }
 
 static float iq4_nl_value(const probe_block_iq4_nl *block, uint32_t i) {
     const uint8_t q = block->qs[i & 15u];
     const uint8_t code = i < 16u ? (q & 0x0fu) : (q >> 4u);
-    return f16_to_f32(block->d) * (float)cuda_kvalues_iq4nl[code];
+    return qwen_reference_f16_to_f32(block->d) * (float)cuda_kvalues_iq4nl[code];
 }
 
 static float iq4_xs_value(const probe_block_iq4_xs *block, uint32_t i) {
@@ -348,7 +338,7 @@ static float iq4_xs_value(const probe_block_iq4_xs *block, uint32_t i) {
     const uint32_t scale =
         ((block->scales_l[ib >> 1u] >> (4u * (ib & 1u))) & 0x0fu) |
         (((block->scales_h >> (2u * ib)) & 3u) << 4u);
-    return f16_to_f32(block->d) * (float)((int)scale - 32) *
+    return qwen_reference_f16_to_f32(block->d) * (float)((int)scale - 32) *
            (float)cuda_kvalues_iq4nl[code];
 }
 

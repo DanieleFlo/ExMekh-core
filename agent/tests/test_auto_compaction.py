@@ -445,12 +445,29 @@ def test_nested_skills_keep_original_outputs_after_compaction_and_reload(
 
 def test_final_provider_usage_is_restored_before_the_next_turn(probe, tmp_path):
     probe.rounds = 0
+    # The next turn must have useful material to shrink, beyond wrapper overhead.
+    probe.script = [AssistantMessage("Detailed evidence from the first turn. " * 80)]
     session = ChatSession()
     run_turn(tmp_path, session)
     assert session.messages[-1].model_context is None
+    probe.script = [AssistantMessage("Done")]
     run_turn(tmp_path, session, "Next")
     assert probe.summary_requests
     assert session.messages[-1].model_context is not None
+
+
+def test_nonshrinking_compaction_preserves_the_short_previous_answer(probe, tmp_path):
+    probe.rounds = 0
+    session = ChatSession()
+    run_turn(tmp_path, session)
+    previous_answer = session.messages[-1].content
+    run_turn(tmp_path, session, "Next")
+    assert probe.summary_requests
+    assert session.messages[-1].model_context is None
+    assert any(
+        message.get_message() == previous_answer
+        for message in probe.requests[-1].get_messages()
+    )
 
 
 def test_original_output_is_readable_after_serialization_and_new_runtime(

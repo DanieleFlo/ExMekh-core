@@ -1,0 +1,61 @@
+{
+  "command": [
+    "./ds4",
+    "--metal",
+    "-m",
+    "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--ctx",
+    "4096",
+    "--prefill-chunk",
+    "64",
+    "--no-mtp",
+    "--raw",
+    "--temp",
+    "0",
+    "-p",
+    "1+1=",
+    "-n",
+    "4"
+  ],
+  "source_base": "8e8ac45a7b463f7d4d72d859234f794b815019ef",
+  "exit_code": 1,
+  "elapsed_seconds": 1.044,
+  "stop_reason": null,
+  "forced": false,
+  "before": {
+    "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 90%",
+    "swap": "vm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)"
+  },
+  "samples": [
+    {
+      "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 90%",
+      "swap": "vm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+      "rss_bytes": 32768
+    }
+  ],
+  "after": {
+    "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 90%",
+    "swap": "vm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)"
+  },
+  "output": "ds4: Metal device Apple M5 Pro, 24.00 GiB RAM\nds4: Metal 4 tensor API enabled for Tensor kernels\nds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on\nds4: Metal memory admission refused: model/state/runtime 15.22 GiB, available budget 8.78 GiB (2 GiB safety reserve)\n",
+  "status": "SKIP_RESOURCE_LIMIT",
+  "inference_status": "NOT_VERIFIED",
+  "binary_sha256": "2e8be948ff6d74a9c419c8a97d9e5dfa155c11cd4eb7be26d1e0871a6e922a98",
+  "diagnosis": {
+    "estimated_need_gib": 15.22,
+    "usable_budget_gib": 8.78,
+    "host_reserve_gib": 2,
+    "additional_headroom_gib_approx": 6.44,
+    "code_audit": "Metal model_open does not invoke CPU mapping prefetch; qwen_metal_memory_admit runs before engine_warm_full_model and weight binding. No guard changed.",
+    "activity_monitor_user_screenshot": {
+      "physical_memory_display_GB": 24,
+      "memory_used_display_GB": 14.04,
+      "cached_files_display_GB": 10.26,
+      "app_memory_display_GB": 10.65,
+      "wired_display_GB": 2.08,
+      "compressed_bytes": 0,
+      "swap_bytes": 0
+    },
+    "cached_files_reference": "https://support.apple.com/guide/activity-monitor/view-memory-usage-actmntr1004/mac"
+  }
+}

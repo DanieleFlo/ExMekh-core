@@ -24,13 +24,18 @@ except ImportError:
 URL = os.getenv("DS4_SUITE_HTTP_URL")
 IMAGE_MODEL = "Qwen/Qwen-Image-2.1-Turbo"
 EMBED_MODEL = "google/embeddinggemma-2"
+LLM_MODEL = os.getenv("DS4_SUITE_LLM_MODEL", "Qwen3.8-27B-UD-Q4_K_S")
 
 
 @unittest.skipUnless(URL, "set DS4_SUITE_HTTP_URL for live native acceptance")
 class SuiteHttpLive(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.client = OpenAI(base_url=URL, api_key="local", timeout=600, max_retries=0)
+        cls.client = OpenAI(
+            base_url=URL, api_key="local",
+            timeout=float(os.getenv("DS4_SUITE_HTTP_TIMEOUT_SECONDS", "600")),
+            max_retries=0,
+        )
         cls.root = Path(__file__).resolve().parents[1]
         path = os.getenv("DS4_SUITE_HTTP_VIDEO")
         if path:
@@ -291,7 +296,7 @@ class SuiteHttpLive(unittest.TestCase):
             "content": "Remember code ALFA17. Call generate_image with prompt 'A red square on white.'. After its result, reply with the code.",
         }
         before = self.client.responses.create(
-            model="Qwen3.8-27B-UD-Q4_K_S",
+            model=LLM_MODEL,
             input=[user],
             tools=tools,
             tool_choice="required",
@@ -332,7 +337,7 @@ class SuiteHttpLive(unittest.TestCase):
         )
         self.assertEqual(len(edit.data), 1)
         after = self.client.responses.create(
-            model="Qwen3.8-27B-UD-Q4_K_S",
+            model=LLM_MODEL,
             input=[
                 {
                     "type": "function_call_output",

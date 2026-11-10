@@ -1,0 +1,11 @@
+usage: diagnose_qwen_image_vision.py [-h] --model MODEL --oracle ORACLE
+                                     [--layer LAYER] [--native NATIVE]
+
+Independent real-patch comparison of Conv3d/GEMM casting boundaries.
+
+options:
+  -h, --help       show this help message and exit
+  --model MODEL
+  --oracle ORACLE
+  --layer LAYER
+  --native NATIVE  Native trace directory for frequency controls

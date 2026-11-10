@@ -1,0 +1,15 @@
+{
+  "finding": "Native API/registered SDK/browser live cases use explicit temperature0; generic and Custom file runner requests omit temperature and resolve to server default1. Root optional search is active (Flash197/Qwen25search_static_steps), so required-tool flag is not sticky. Model actually chooses reopening after success.",
+  "sources": {
+    "tests/test_agentic_api.py": "b3eb055ec25032a7a0044db36791472d2a3217bd1c12870954882b3c090bec8e",
+    "tests/test_interactive_api.py": "6cc43baf3b17c4aebb87ede36d1a107c560a9a7af9ef125b1e7cab9e5096ffaa",
+    "agent/tests/run_native_image_generation_agent.py": "417be76e95f02d17416d261ec5eb5ad32f96b8d5ff78a986e8eb19d436248360",
+    "tests/test_suite_exmekh_live.py": "434cb559fbe91aecf480afc92b7127dfca7e60bc89ac89a5e38e6b0ad9012843",
+    "ds4_help.c": "605ad255dc929ef01a1b2b343a23f838f06e956772dcbce9c05bccc4fdc59451",
+    "ds4_interactive_grammar.h": "38e708ff0ce18ed2aeeaf3086427a201f4d12a9877089b3fc1fd8f1496df3b3f"
+  },
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05 plus uncommitted changes",
+  "selected_method": "Use the same real LocalProvider request.with_extra temperature0 adaptation as existing passing native image browser. No fake provider responses; preserve agentic metadata and event/interactive handlers. Ordinary frontend defaults unchanged.",
+  "scope": "Distinct greedy qualification profile; explicit literal parameter input remains separate from original temp1/default cases. Model weights/precision, native image recipe, context8192/64 and file expected contents/assertions unchanged.",
+  "before_implementation": true
+}

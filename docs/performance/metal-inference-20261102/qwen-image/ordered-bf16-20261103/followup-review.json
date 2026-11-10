@@ -1,0 +1,115 @@
+{
+  "base_head": "b2d94a8",
+  "scope": "Second review, diagnostic bindings and test coverage. Production sources and binaries are unchanged.",
+  "cpu": {
+    "tests": 45,
+    "passed": 33,
+    "skipped": 12,
+    "status": "PASS"
+  },
+  "metal": {
+    "tests": 45,
+    "passed": 41,
+    "skipped": 3,
+    "failed_tests": 1,
+    "failed_subtests": 2,
+    "status": "PREEXISTING_FAILURE",
+    "case": "test_vision_trigonometric_boundaries op13/op14"
+  },
+  "new_regressions": {
+    "native_slice": "PASS",
+    "tile_offsets_capacity_alias": "PASS",
+    "oracle": "CPU BF16 bit-exact",
+    "shape": [
+      65,
+      1024,
+      1030
+    ],
+    "padding_elements": 16
+  },
+  "production_identity": [
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/numeric-reviewed.so",
+      "bytes": 173272,
+      "sha256": "f5dd26fb42fd1a1e380853375eb869242f89eb07631f28dd4a36c0a49156ecdf"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/probe-reviewed",
+      "bytes": 585048,
+      "sha256": "f02ea6273c1e65d3571d96503af8218d1c90673439d89b76610c6ea0a16a65a2"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 40500,
+      "sha256": "94fd694d7dc0094d518cad46ef7ff00b126c1e521297786c038da8428a1aa048"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 3661,
+      "sha256": "8b31866ce87f20fcd93c1138acffadb53ff4453d82cd0d4d718d936ffe1c43dd"
+    },
+    {
+      "path": "ds4_numeric_metal.m",
+      "bytes": 28485,
+      "sha256": "e932e40f36704638dbfaa7dd0b1fd51578c5f44045e33bcf1194bc4b58334137"
+    },
+    {
+      "path": "ds4_numeric_metal_args.h",
+      "bytes": 744,
+      "sha256": "40e24d4ab68aef78cede3c18e3d593a491dd4ce1637aa8259a4b689bb0573b29"
+    },
+    {
+      "path": "metal/numeric_ordered.metal",
+      "bytes": 30959,
+      "sha256": "c0e23b6db50760e5d3bcfe970f5b2978f546c90acffc3e7e19e192732dc97a93"
+    }
+  ],
+  "logs": [
+    {
+      "path": "build/metal-perf-image-20261103/review-followup/api-cpu.log",
+      "sha256": "31a802dbbb5b893caf205b7931ea5d5e9806a4d9c2fbc2110ea67abc98104b2d"
+    },
+    {
+      "path": "build/metal-perf-image-20261103/review-followup/build.log",
+      "sha256": "b2c3dc36843e9d6144314914b69cad8b000a2fa1118b7226bde7590a7a81c989"
+    },
+    {
+      "path": "build/metal-perf-image-20261103/review-followup/final-cpu.log",
+      "sha256": "d10acc3465b46411284dc3e210f37eb4391965d776ec09470771f55d737bb950"
+    },
+    {
+      "path": "build/metal-perf-image-20261103/review-followup/final-metal.log",
+      "sha256": "cc36e0319ace86ae91bc2a63cd530fe0e228efe1ee933da4c7b90ed7fd34a8da"
+    },
+    {
+      "path": "build/metal-perf-image-20261103/review-followup/numeric-cpu.log",
+      "sha256": "d6aef1d844bc561a4daa880c9e8663dcdc835fb175e16b028b4ddb15fa7bea07"
+    },
+    {
+      "path": "build/metal-perf-image-20261103/review-followup/numeric-metal.log",
+      "sha256": "97d973b92bced23519602dc637d64eebd2ecca4ea8c68079e8edb5f750eef2c2"
+    },
+    {
+      "path": "build/metal-perf-image-20261103/review-followup/tile-views.log",
+      "sha256": "f1398fc42bc5797499921fcef6c69d1cba4a1f7fc8e0526b848891346645cf4c"
+    }
+  ],
+  "review_commits": [
+    "e42497b",
+    "9e38b1b"
+  ],
+  "tested_sources": [
+    {
+      "path": "tests/suite_numeric_api.py",
+      "sha256": "05994f7adba5e66b2e03fd829f029af4965122423e36ff24600e46fbd1d8ef52"
+    },
+    {
+      "path": "tests/test_suite_numeric_api.py",
+      "sha256": "f76f60d5b74f51192e07aa5f8c89de4b9ff7fc8ed2bf198b53605dc3cf963d19"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "sha256": "6c9780dc39ee873d993b4f2c9ecad4fdfdfa452a841db8aefc2424de530aa715"
+    }
+  ]
+}

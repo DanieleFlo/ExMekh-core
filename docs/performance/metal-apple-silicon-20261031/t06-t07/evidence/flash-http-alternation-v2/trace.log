@@ -1,0 +1,740 @@
+
+===== request 1 2026-10-31 21:49:41 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 348
+effective_prompt_tokens: 348
+cached_tokens: 0
+max_tokens: 128
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 348
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"role":"user","content":"Remember DS4CODE000. First call suite_image. After its result call suite_embedding. After the embedding result reply only with the remembered code."}],"max_output_tokens":128,"reasoning":{"effort":"none"},"temperature":0,"tool_choice":"required","tools":[{"type":"function","name":"suite_image","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}},{"type":"function","name":"suite_embedding","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}}]}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "suite_image", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "suite_embedding", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Remember DS4CODE000. First call suite_image. After its result call suite_embedding. After the embedding result reply only with the remembered code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=128 ctx_room=7844 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=suite_image>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 14 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 14
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 55.691
+
+tool_call[0]:
+id: call_58550f9ef402516a18dfd7623e03396f
+name: suite_image
+arguments:
+{}
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=348 response_prefill=15 target=363 ---
+
+
+===== request 2 2026-10-31 21:52:25 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 329
+effective_prompt_tokens: 389
+cached_tokens: 363
+max_tokens: 128
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 363
+prompt_tokens: 329
+live_prompt_common: 308
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: responses-tool-output
+cached_tokens: 363
+disk_cached_tokens: 0
+
+first_mismatch_token: 308
+token_window: [300..317)
+    300 ==          live 510 "</" | prompt 510 "</"
+    301 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    302 ==          live 29 ">" | prompt 29 ">"
+    303 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    304 ==          live 198 "\n" | prompt 198 "\n"
+    305 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    306 ==          live 846 "user" | prompt 846 "user"
+    307 ==          live 198 "\n" | prompt 198 "\n"
+    308 !=          live 27656 "Remember" | prompt 248066 "<tool_response>"
+    309 !=          live 19953 " DS" | prompt 198 "\n"
+    310 !=          live 19 "4" | prompt 1841 "Image"
+    311 !=          live 14436 "CODE" | prompt 4434 " complete"
+    312 !=          live 15 "0" | prompt 13 "."
+    313 !=          live 15 "0" | prompt 6920 " Call"
+    314 !=          live 15 "0" | prompt 15705 " suite"
+    315 !=          live 13 "." | prompt 49766 "_embedding"
+    316 !=          live 5339 " First" | prompt 1727 " next"
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"type":"function_call_output","call_id":"call_58550f9ef402516a18dfd7623e03396f","output":"Image complete. Call suite_embedding next."}],"max_output_tokens":128,"reasoning":{"effort":"none"},"temperature":0,"tool_choice":"required","tools":[{"type":"function","name":"suite_image","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}},{"type":"function","name":"suite_embedding","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}}]}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "suite_image", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "suite_embedding", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+<tool_response>
+Image complete. Call suite_embedding next.
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=128 ctx_room=7803 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=suite_embedding>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 14 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 14
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 17.856
+
+tool_call[0]:
+id: call_6670c89e3994c0211cb57a4f599fa8d3
+name: suite_embedding
+arguments:
+{}
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=389 response_prefill=15 target=404 ---
+
+
+===== request 3 2026-10-31 21:53:12 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 330
+effective_prompt_tokens: 431
+cached_tokens: 404
+max_tokens: 128
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 404
+prompt_tokens: 330
+live_prompt_common: 308
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: responses-tool-output
+cached_tokens: 404
+disk_cached_tokens: 0
+
+first_mismatch_token: 308
+token_window: [300..317)
+    300 ==          live 510 "</" | prompt 510 "</"
+    301 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    302 ==          live 29 ">" | prompt 29 ">"
+    303 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    304 ==          live 198 "\n" | prompt 198 "\n"
+    305 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    306 ==          live 846 "user" | prompt 846 "user"
+    307 ==          live 198 "\n" | prompt 198 "\n"
+    308 !=          live 27656 "Remember" | prompt 248066 "<tool_response>"
+    309 !=          live 19953 " DS" | prompt 198 "\n"
+    310 !=          live 19 "4" | prompt 24676 "Embed"
+    311 !=          live 14436 "CODE" | prompt 6751 "ding"
+    312 !=          live 15 "0" | prompt 4434 " complete"
+    313 !=          live 15 "0" | prompt 13 "."
+    314 !=          live 15 "0" | prompt 3301 " Return"
+    315 !=          live 13 "." | prompt 279 " the"
+    316 !=          live 5339 " First" | prompt 25624 " remembered"
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"type":"function_call_output","call_id":"call_6670c89e3994c0211cb57a4f599fa8d3","output":"Embedding complete. Return the remembered code."}],"max_output_tokens":128,"reasoning":{"effort":"none"},"temperature":0,"tool_choice":"auto","tools":[{"type":"function","name":"suite_image","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}},{"type":"function","name":"suite_embedding","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}}]}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "suite_image", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "suite_embedding", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+<tool_response>
+Embedding complete. Return the remembered code.
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=128 ctx_room=7761 ---
+
+DS4CODE000
+
+--- parsed message ---
+finish: stop
+generated_tokens: 6
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 10.772
+
+content:
+DS4CODE000
+
+===== end request 3 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=431 response_prefill=7 target=438 ---
+
+
+===== request 4 2026-10-31 21:53:25 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 348
+effective_prompt_tokens: 348
+cached_tokens: 0
+max_tokens: 128
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 438
+prompt_tokens: 348
+live_prompt_common: 314
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 314
+token_window: [306..323)
+    306 ==          live 846 "user" | prompt 846 "user"
+    307 ==          live 198 "\n" | prompt 198 "\n"
+    308 ==          live 27656 "Remember" | prompt 27656 "Remember"
+    309 ==          live 19953 " DS" | prompt 19953 " DS"
+    310 ==          live 19 "4" | prompt 19 "4"
+    311 ==          live 14436 "CODE" | prompt 14436 "CODE"
+    312 ==          live 15 "0" | prompt 15 "0"
+    313 ==          live 15 "0" | prompt 15 "0"
+    314 !=          live 15 "0" | prompt 16 "1"
+    315 ==          live 13 "." | prompt 13 "."
+    316 ==          live 5339 " First" | prompt 5339 " First"
+    317 ==          live 1562 " call" | prompt 1562 " call"
+    318 ==          live 15705 " suite" | prompt 15705 " suite"
+    319 ==          live 4794 "_image" | prompt 4794 "_image"
+    320 ==          live 13 "." | prompt 13 "."
+    321 ==          live 4486 " After" | prompt 4486 " After"
+    322 ==          live 1141 " its" | prompt 1141 " its"
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"role":"user","content":"Remember DS4CODE001. First call suite_image. After its result call suite_embedding. After the embedding result reply only with the remembered code."}],"max_output_tokens":128,"reasoning":{"effort":"none"},"temperature":0,"tool_choice":"required","tools":[{"type":"function","name":"suite_image","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}},{"type":"function","name":"suite_embedding","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}}]}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "suite_image", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "suite_embedding", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Remember DS4CODE001. First call suite_image. After its result call suite_embedding. After the embedding result reply only with the remembered code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=128 ctx_room=7844 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=suite_image>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 14 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 14
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 57.732
+
+tool_call[0]:
+id: call_0bc26f7f2b497726ecfae7e932b4d321
+name: suite_image
+arguments:
+{}
+
+===== end request 4 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=348 response_prefill=15 target=363 ---
+
+
+===== request 5 2026-10-31 21:56:14 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 329
+effective_prompt_tokens: 389
+cached_tokens: 363
+max_tokens: 128
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 363
+prompt_tokens: 329
+live_prompt_common: 308
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: responses-tool-output
+cached_tokens: 363
+disk_cached_tokens: 0
+
+first_mismatch_token: 308
+token_window: [300..317)
+    300 ==          live 510 "</" | prompt 510 "</"
+    301 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    302 ==          live 29 ">" | prompt 29 ">"
+    303 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    304 ==          live 198 "\n" | prompt 198 "\n"
+    305 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    306 ==          live 846 "user" | prompt 846 "user"
+    307 ==          live 198 "\n" | prompt 198 "\n"
+    308 !=          live 27656 "Remember" | prompt 248066 "<tool_response>"
+    309 !=          live 19953 " DS" | prompt 198 "\n"
+    310 !=          live 19 "4" | prompt 1841 "Image"
+    311 !=          live 14436 "CODE" | prompt 4434 " complete"
+    312 !=          live 15 "0" | prompt 13 "."
+    313 !=          live 15 "0" | prompt 6920 " Call"
+    314 !=          live 16 "1" | prompt 15705 " suite"
+    315 !=          live 13 "." | prompt 49766 "_embedding"
+    316 !=          live 5339 " First" | prompt 1727 " next"
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"type":"function_call_output","call_id":"call_0bc26f7f2b497726ecfae7e932b4d321","output":"Image complete. Call suite_embedding next."}],"max_output_tokens":128,"reasoning":{"effort":"none"},"temperature":0,"tool_choice":"required","tools":[{"type":"function","name":"suite_image","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}},{"type":"function","name":"suite_embedding","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}}]}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "suite_image", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "suite_embedding", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+<tool_response>
+Image complete. Call suite_embedding next.
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=128 ctx_room=7803 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=suite_embedding>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 14 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 14
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 19.097
+
+tool_call[0]:
+id: call_857131fa3f0490d296696127062955d3
+name: suite_embedding
+arguments:
+{}
+
+===== end request 5 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=389 response_prefill=15 target=404 ---
+
+
+===== request 6 2026-10-31 21:57:03 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 330
+effective_prompt_tokens: 431
+cached_tokens: 404
+max_tokens: 128
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 404
+prompt_tokens: 330
+live_prompt_common: 308
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: responses-tool-output
+cached_tokens: 404
+disk_cached_tokens: 0
+
+first_mismatch_token: 308
+token_window: [300..317)
+    300 ==          live 510 "</" | prompt 510 "</"
+    301 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    302 ==          live 29 ">" | prompt 29 ">"
+    303 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    304 ==          live 198 "\n" | prompt 198 "\n"
+    305 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    306 ==          live 846 "user" | prompt 846 "user"
+    307 ==          live 198 "\n" | prompt 198 "\n"
+    308 !=          live 27656 "Remember" | prompt 248066 "<tool_response>"
+    309 !=          live 19953 " DS" | prompt 198 "\n"
+    310 !=          live 19 "4" | prompt 24676 "Embed"
+    311 !=          live 14436 "CODE" | prompt 6751 "ding"
+    312 !=          live 15 "0" | prompt 4434 " complete"
+    313 !=          live 15 "0" | prompt 13 "."
+    314 !=          live 16 "1" | prompt 3301 " Return"
+    315 !=          live 13 "." | prompt 279 " the"
+    316 !=          live 5339 " First" | prompt 25624 " remembered"
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"type":"function_call_output","call_id":"call_857131fa3f0490d296696127062955d3","output":"Embedding complete. Return the remembered code."}],"max_output_tokens":128,"reasoning":{"effort":"none"},"temperature":0,"tool_choice":"auto","tools":[{"type":"function","name":"suite_image","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}},{"type":"function","name":"suite_embedding","description":"Perform the explicitly requested native suite operation.","parameters":{"type":"object","properties":{},"additionalProperties":false}}]}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "suite_image", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "suite_embedding", "description": "Perform the explicitly requested native suite operation.", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+<tool_response>
+Embedding complete. Return the remembered code.
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=128 ctx_room=7761 ---
+
+DS4CODE001
+
+--- parsed message ---
+finish: stop
+generated_tokens: 6
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 10.874
+
+content:
+DS4CODE001
+
+===== end request 6 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=431 response_prefill=7 target=438 ---
+

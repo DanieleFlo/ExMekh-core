@@ -15,7 +15,7 @@
       return 1;                                                                \
     }                                                                          \
   } while (0)
-extern int cudaMemGetInfo(size_t *, size_t *);
+#include "suite_accelerator.h"
 typedef struct {
   ds4_qwen_image_request request;
   ds4_qwen_image_reference refs[64];
@@ -85,7 +85,20 @@ typedef struct {
   uint32_t phase;
   uint32_t target_layer;
   bool match_layer, inference_error;
+  uint32_t progress_events, evaluations;
+  double progress_fraction;
 } observer;
+static void progress(void *opaque, const ds4_operation_progress *update) {
+  observer *o = opaque;
+  o->progress_events++;
+  if (update->overall_fraction >= 0) {
+    assert(update->overall_fraction >= o->progress_fraction);
+    o->progress_fraction = update->overall_fraction;
+  }
+  if (update->unit && !strcmp(update->unit, "evaluation")) {
+    assert(update->completed_units == ++o->evaluations && update->total_units == 8);
+  }
+}
 static int save(const char *directory, const char *name, const void *data,
                 size_t bytes) {
   char path[4096];
@@ -273,7 +286,7 @@ static int phase_faults(ds4_qwen_image_pipeline *pipeline, ds4_numeric *num,
         if (failure && layer && layer + 1 < counts[stage]) continue;
         observer state = {.num = num, .cancel_stage = stages[stage], .target_layer = layer,
                           .match_layer = true, .inference_error = failure != 0};
-        ds4_qwen_image_observer obs = {&state, cancelled, trace};
+        ds4_qwen_image_observer obs = {.opaque = &state, .cancelled = cancelled, .trace = trace};
         ds4_qwen_image_job *job = NULL;
         ds4_qwen_image_rgba *result = NULL;
         CHECK(ds4_qwen_image_job_create(&job, pipeline, &f->request, NULL, 0, &obs));
@@ -313,9 +326,27 @@ static int phase_faults(ds4_qwen_image_pipeline *pipeline, ds4_numeric *num,
   puts("phase fault recovery: bit-exact output PASS");
   return 0;
 }
+static int save_batch_image(const char *out, uint32_t item, ds4_qwen_image_rgba *result) {
+  char rgba[32] = "rgba.f32", png[32] = "result.png", path[8192];
+  if (item) {
+    snprintf(rgba, sizeof(rgba), "rgba-%u.f32", item);
+    snprintf(png, sizeof(png), "result-%u.png", item);
+  }
+  ds4_qwen_image_rgba_view image = ds4_qwen_image_rgba_data(result);
+  snprintf(path, sizeof(path), "%s/%s", out, png);
+  return save(out, rgba, image.pixels, (uint64_t)image.width * image.height * 16) &&
+         ds4_qwen_image_rgba_save_png(result, path) == DS4_STATUS_OK;
+}
 int main(int argc, char **argv) {
   if (argc < 6)
     return 2;
+  const char *batch = getenv("DS4_SUITE_IMAGE_BATCH");
+  uint32_t images = 1;
+  if (batch) {
+    if (strcmp(batch, "2") || !getenv("DS4_SUITE_CASES_ONLY"))
+      return 2;
+    images = 2;
+  }
   ds4_resources *rs = NULL;
   ds4_runtime *rt = NULL;
   ds4_numeric *n = NULL;
@@ -330,14 +361,19 @@ int main(int argc, char **argv) {
     if (!*pinned || *end) return 2;
     CHECK(ds4_resources_set_budget(rs, DS4_MEMORY_PINNED, &host_budget));
   }
-  CHECK(ds4_numeric_cuda(&n, rs, 200));
+  CHECK(suite_numeric_create(&n, rs, 200));
   uint64_t baseline, peak;
   ds4_numeric_memory(n, &baseline, &peak);
   size_t available, total;
-  if (cudaMemGetInfo(&available, &total))
+  if (suite_memory_info(n, &available, &total))
     return 1;
   ds4_resource_budget budget = {.limit = baseline + available,
                                 .margin = 256u * 1024u * 1024u};
+#ifdef __APPLE__
+  /* Availability is sampled again at admission. Keep a ceiling rather than
+   * freezing the first sample, including when the desktop returns RAM. */
+  budget.limit = total;
+#endif
   const char *limit = getenv("DS4_SUITE_DEVICE_LIMIT");
   if (limit) {
     char *end;
@@ -359,10 +395,13 @@ int main(int argc, char **argv) {
     snprintf(out, sizeof(out), "%s/case-%d", argv[4], arg - 5);
     mkdir(out, 0755);
     observer obs = {.num = n, .out = out};
-    ds4_qwen_image_observer o = {&obs, cancelled, trace};
+    ds4_qwen_image_observer o = {.opaque = &obs, .cancelled = cancelled, .trace = trace};
+    if (getenv("DS4_SUITE_PROGRESS"))
+      o.progress = (ds4_operation_observer){&obs, progress};
     ds4_qwen_image_job *j = NULL;
     ds4_qwen_image_rgba *result = NULL;
-    CHECK(ds4_qwen_image_job_create(&j, pipeline, &f.request, NULL, 0, &o));
+    CHECK(ds4_qwen_image_job_create_batch(&j, pipeline, &f.request, images, NULL, 0, &o));
+    assert(ds4_qwen_image_job_admission_pending(j));
     if (getenv("DS4_SUITE_PLAN_ONLY")) {
       ds4_execution_plan plan = {0};
       ds4_status s = ds4_qwen_image_job_plan(j, &plan);
@@ -383,11 +422,15 @@ int main(int argc, char **argv) {
       continue;
     }
     assert(ds4_qwen_image_pipeline_close(pipeline) == DS4_STATUS_BUSY);
-    assert(ds4_qwen_image_job_take(j, &result) == DS4_STATUS_NOT_READY &&
-           !result);
+    assert(ds4_qwen_image_pipeline_release_weights(pipeline) == DS4_STATUS_BUSY);
+    for (uint32_t item = 0; item < images; item++)
+      assert(ds4_qwen_image_job_take_at(j, item, &result) == DS4_STATUS_NOT_READY &&
+             !result);
+    assert(ds4_qwen_image_job_take_at(j, images, &result) == DS4_STATUS_INVALID);
     uint64_t before, previous_peak;
     ds4_numeric_memory(n, &before, &previous_peak);
     CHECK(ds4_qwen_image_job_run(j));
+    assert(!ds4_qwen_image_job_admission_pending(j));
     ds4_execution_plan completed_plan;
     CHECK(ds4_qwen_image_job_plan(j, &completed_plan));
     const ds4_qwen_image_report *completed = ds4_qwen_image_job_report(j);
@@ -398,18 +441,29 @@ int main(int argc, char **argv) {
     double completed_seconds = completed->total_seconds;
     assert(ds4_qwen_image_job_run(j) == DS4_STATUS_INVALID &&
            completed->total_seconds == completed_seconds);
-    CHECK(ds4_qwen_image_job_take(j, &result));
-    ds4_qwen_image_rgba_view image = ds4_qwen_image_rgba_data(result);
-    if (!save(out, "rgba.f32", image.pixels,
-              (uint64_t)image.width * image.height * 16) ||
-        !write_report(out, ds4_qwen_image_job_report(j), n, before,
-                      previous_peak))
+    for (uint32_t item = 0; item < images; item++) {
+      CHECK(ds4_qwen_image_job_take_at(j, item, &result));
+      bool saved = save_batch_image(out, item, result);
+      ds4_qwen_image_rgba_free(result);
+      if (!saved) return 1;
+      assert(ds4_qwen_image_job_take_at(j, item, &result) == DS4_STATUS_NOT_READY &&
+             !result);
+    }
+    if (!write_report(out, ds4_qwen_image_job_report(j), n, before, previous_peak))
       return 1;
-    char path[8192];
-    snprintf(path, sizeof(path), "%s/result.png", out);
-    CHECK(ds4_qwen_image_rgba_save_png(result, path));
     CHECK(ds4_qwen_image_job_close(j));
-    ds4_qwen_image_rgba_free(result);
+    if (getenv("DS4_SUITE_PROGRESS")) {
+      assert(obs.evaluations == 8 && obs.progress_events >= 11);
+      char summary[128];
+      int bytes = snprintf(summary, sizeof(summary),
+          "{\"events\":%u,\"evaluations\":%u}\n", obs.progress_events, obs.evaluations);
+      assert(save(out, "progress.json", summary, bytes));
+    }
+    CHECK(ds4_qwen_image_pipeline_release_weights(pipeline));
+    CHECK(ds4_qwen_image_pipeline_release_weights(pipeline));
+    uint64_t resident[3], total[3];
+    CHECK(ds4_qwen_image_pipeline_residency(pipeline, resident, total));
+    for (unsigned i = 0; i < 3; i++) assert(!resident[i] && total[i]);
     fprintf(stdout, "case-%d PASS\n", arg - 5);
     fflush(stdout);
     if (arg == 5) {
@@ -515,7 +569,7 @@ int main(int argc, char **argv) {
   CHECK(ds4_qwen_image_job_close(j));
   CHECK(ds4_resources_set_budget(rs, DS4_MEMORY_DEVICE, &budget));
   observer cancelled_obs = {.num = n, .cancel_stage = "latent"};
-  ds4_qwen_image_observer cancel_observer = {&cancelled_obs, cancelled, trace};
+  ds4_qwen_image_observer cancel_observer = {.opaque = &cancelled_obs, .cancelled = cancelled, .trace = trace};
   CHECK(ds4_qwen_image_job_create(&j, pipeline, &first.request, NULL, 0,
                                   &cancel_observer));
   assert(ds4_qwen_image_job_run(j) == DS4_STATUS_CANCELLED);
@@ -563,8 +617,9 @@ finish:
   free_fixture(&first);
   CHECK(ds4_qwen_image_pipeline_close(pipeline));
   CHECK(ds4_bundle_close(b));
-  ds4_numeric_memory(n, &available, &peak);
-  assert(available == baseline);
+  uint64_t live = 0;
+  ds4_numeric_memory(n, &live, &peak);
+  assert(live == baseline);
   CHECK(ds4_numeric_close(n));
   ds4_runtime_release(rt);
   CHECK(ds4_resources_close(rs));

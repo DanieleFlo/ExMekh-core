@@ -119,6 +119,14 @@ i file temporanei predefiniti sono univoci e vengono rimossi anche in caso di er
 
 ## Regole per le modifiche successive
 
+- Il progresso della generazione/editing immagini segue il
+  [contratto comune](../../docs/architecture/native-image-progress.md):
+  heartbeat, fasi e percentuale sullo skeleton devono supportare CPU, Metal,
+  CUDA, backend futuri e ogni modello image presente o futuro. Il renderer
+  non interpreta nomi di modelli o dettagli dei kernel. Lo skeleton mostra
+  solo percentuale e tempo, senza testo di fase o barra. Il contratto distingue
+  il timeout di inattività dalla deadline totale e non presume otto passi,
+  diffusione o VAE.
 - Il modello della lavagna non importa ExMekh-Lib e non esegue operazioni su file.
   I cambiamenti strutturali passano dai suoi metodi: aggiunta, sostituzione e cambio
   del root ripristinano lo stato precedente se la validazione fallisce.

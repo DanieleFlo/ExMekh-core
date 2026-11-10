@@ -1,0 +1,203 @@
+{
+  "cases": [
+    {
+      "id": "rgba",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [
+        "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps/fixtures/rgba.ds4i"
+      ],
+      "fixture_sha256": "e3c96a8fe71baf621be3d440c583c9cd61a2358491ee57beaf8cc22f7444ce98",
+      "conditioning": {
+        "max_abs": 62.0,
+        "rmse": 0.7672201318367017,
+        "relative_l2": 0.07551220293880605,
+        "bit_exact": false,
+        "verdict": "FAIL"
+      },
+      "references_encoded": {
+        "max_abs": 0.1015625,
+        "rmse": 0.005613435374323408,
+        "relative_l2": 0.0054394122604195265,
+        "bit_exact": false,
+        "verdict": "PASS"
+      },
+      "latents": [
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0012332173810864595,
+          "relative_l2": 0.001257600823329147,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0014402898430216314,
+          "relative_l2": 0.001500863499433526,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0016890176183000873,
+          "relative_l2": 0.0018004688338498895,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0018577870281345442,
+          "relative_l2": 0.0020270972844851813,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0020851329776825213,
+          "relative_l2": 0.0023462790601372777,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.002472740112562073,
+          "relative_l2": 0.0028771484459178035,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0390625,
+          "rmse": 0.0037087879541686376,
+          "relative_l2": 0.0036503876192855783,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.00589155988244377,
+          "relative_l2": 0.0038094065849432804,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.07666015625,
+        "rmse": 0.0019734332393810173,
+        "relative_l2": 0.0021328142798828654,
+        "bit_exact": false,
+        "ssim_rgb": 0.9993063132949253,
+        "alpha_mae": 4.988908767700195e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 237.679654,
+        "prepare_seconds": 0.000388,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          10.145172,
+          19.913189,
+          150.711762,
+          56.909075
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 7528562112,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7776563696,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 84936146392,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 7522459888,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 43,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "b47943f25b685bc1f38b785e8fa29c7bed1108561e5af80e017fcf503eecc066"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "FAIL"
+    }
+  ],
+  "verdict": "FAIL",
+  "oracle_devices": {
+    "encoder": "cpu",
+    "dit": "cpu",
+    "encode": "mps",
+    "decode": "mps"
+  },
+  "full_t00_corpus": false,
+  "excluded": [],
+  "human_task_review": "NOT_VERIFIED",
+  "tolerance_sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87",
+  "oracle_profile": {
+    "devices": {
+      "encoder": "cpu",
+      "dit": "cpu",
+      "encode": "mps",
+      "decode": "mps"
+    },
+    "reused_stages": {},
+    "scope": "Explicit independent component-device profile; CPU-only VAE remains NOT_VERIFIED. No precision/recipe/tolerance changes."
+  }
+}

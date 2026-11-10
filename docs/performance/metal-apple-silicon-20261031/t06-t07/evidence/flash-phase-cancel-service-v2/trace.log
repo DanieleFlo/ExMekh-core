@@ -1,0 +1,136 @@
+
+===== request 1 2026-11-01 22:50:41 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 25
+effective_prompt_tokens: 25
+cached_tokens: 0
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 25
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":"Remember PHASE27. Reply only PHASE27.","max_output_tokens":16,"reasoning":{"effort":"none"},"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Remember PHASE27. Reply only PHASE27.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8167 ---
+
+PHASE27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 4
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 7.781
+
+content:
+PHASE27
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=25 response_prefill=5 target=30 ---
+
+
+===== request 2 2026-11-01 22:51:30 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 49
+effective_prompt_tokens: 49
+cached_tokens: 30
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 30
+prompt_tokens: 49
+live_prompt_common: 30
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: responses-visible
+cached_tokens: 30
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"role":"user","content":"Remember PHASE27. Reply only PHASE27."},{"id":"msg_7c7678bbbd15d7e4a40260a2","content":[{"annotations":[],"text":"PHASE27","type":"output_text"}],"role":"assistant","status":"completed","type":"message"},{"role":"user","content":"Repeat the code you remembered."}],"max_output_tokens":16,"reasoning":{"effort":"none"},"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Remember PHASE27. Reply only PHASE27.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+PHASE27<|im_end|>
+<|im_start|>user
+Repeat the code you remembered.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8143 ---
+
+PHASE27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 4
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 7.002
+
+content:
+PHASE27
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=49 response_prefill=5 target=54 ---
+

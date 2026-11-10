@@ -1,0 +1,168 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-first-block.py",
+    "gemm-cpu-gelu-sleef"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "One frozen Gemma block on identical inputs after pinned SLEEF tanh adaptation; no full second model.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 17.213600125000085,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 9931.880833125,
+      "pressure": 1,
+      "host_available_bytes": 11635687424,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 9932.89170775,
+      "pressure": 1,
+      "host_available_bytes": 11520376832,
+      "swap_bytes": 262144,
+      "footprint_bytes": 90817136,
+      "resident_bytes": 137297920
+    },
+    {
+      "monotonic": 9933.901575791,
+      "pressure": 1,
+      "host_available_bytes": 11508318208,
+      "swap_bytes": 262144,
+      "footprint_bytes": 110477936,
+      "resident_bytes": 159678464
+    },
+    {
+      "monotonic": 9934.910736583,
+      "pressure": 1,
+      "host_available_bytes": 11498209280,
+      "swap_bytes": 262144,
+      "footprint_bytes": 134922912,
+      "resident_bytes": 184385536
+    },
+    {
+      "monotonic": 9935.918803208,
+      "pressure": 1,
+      "host_available_bytes": 11423875072,
+      "swap_bytes": 262144,
+      "footprint_bytes": 166773408,
+      "resident_bytes": 216940544
+    },
+    {
+      "monotonic": 9936.928736541,
+      "pressure": 1,
+      "host_available_bytes": 11351195648,
+      "swap_bytes": 262144,
+      "footprint_bytes": 176685752,
+      "resident_bytes": 227672064
+    },
+    {
+      "monotonic": 9937.9376365,
+      "pressure": 1,
+      "host_available_bytes": 10955702272,
+      "swap_bytes": 262144,
+      "footprint_bytes": 177259192,
+      "resident_bytes": 228245504
+    },
+    {
+      "monotonic": 9938.949593458,
+      "pressure": 1,
+      "host_available_bytes": 11292901376,
+      "swap_bytes": 262144,
+      "footprint_bytes": 177603256,
+      "resident_bytes": 228589568
+    },
+    {
+      "monotonic": 9939.962079458,
+      "pressure": 1,
+      "host_available_bytes": 11399446528,
+      "swap_bytes": 262144,
+      "footprint_bytes": 178078392,
+      "resident_bytes": 229064704
+    },
+    {
+      "monotonic": 9940.973094625,
+      "pressure": 1,
+      "host_available_bytes": 11468587008,
+      "swap_bytes": 262144,
+      "footprint_bytes": 179307192,
+      "resident_bytes": 230293504
+    },
+    {
+      "monotonic": 9941.988920208,
+      "pressure": 1,
+      "host_available_bytes": 11343708160,
+      "swap_bytes": 262144,
+      "footprint_bytes": 204915384,
+      "resident_bytes": 257015808
+    },
+    {
+      "monotonic": 9942.997936875,
+      "pressure": 1,
+      "host_available_bytes": 11441766400,
+      "swap_bytes": 262144,
+      "footprint_bytes": 228655848,
+      "resident_bytes": 280723456
+    },
+    {
+      "monotonic": 9944.009491166,
+      "pressure": 1,
+      "host_available_bytes": 11339186176,
+      "swap_bytes": 262144,
+      "footprint_bytes": 263570176,
+      "resident_bytes": 316882944
+    },
+    {
+      "monotonic": 9945.021807625,
+      "pressure": 1,
+      "host_available_bytes": 11259281408,
+      "swap_bytes": 262144,
+      "footprint_bytes": 282870624,
+      "resident_bytes": 340066304
+    },
+    {
+      "monotonic": 9946.033317125,
+      "pressure": 1,
+      "host_available_bytes": 11314003968,
+      "swap_bytes": 262144,
+      "footprint_bytes": 306103160,
+      "resident_bytes": 369672192
+    },
+    {
+      "monotonic": 9947.048266208,
+      "pressure": 1,
+      "host_available_bytes": 11202822144,
+      "swap_bytes": 262144,
+      "footprint_bytes": 319767464,
+      "resident_bytes": 386121728
+    },
+    {
+      "monotonic": 9948.057731916,
+      "pressure": 1,
+      "host_available_bytes": 11001872384,
+      "swap_bytes": 262144,
+      "footprint_bytes": 347407368,
+      "resident_bytes": 430882816
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "aa84d516e429444c601c4490126960ae558961d6c6c2f0279bf7f4698bddf2d8"
+}

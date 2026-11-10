@@ -1,0 +1,6096 @@
+{
+  "scope": "Saved local full-model experimental traces; inference success and numerical acceptance are independent. No production qualification.",
+  "variants": [
+    {
+      "variant": "gemm",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "NOT_VERIFIED"
+      },
+      "encoder": {
+        "status": "NOT_VERIFIED"
+      }
+    },
+    {
+      "variant": "gemm-rms",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "NOT_VERIFIED"
+      },
+      "encoder": {
+        "status": "NOT_VERIFIED"
+      }
+    },
+    {
+      "variant": "gemm-cpu-pow",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "FAIL",
+        "execution": {
+          "command": [
+            "env",
+            "DS4_GEMMA_DIMENSIONS=128",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-pow/probe_native_suite",
+            "build/metal-models/gemma.ds4b/bundle.ds4b",
+            "build/metal-oracles/models",
+            "build/metal-models/gemma.ds4g",
+            "gemma",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-pow/gemma",
+            "Il gatto dorme sul divano.",
+            "A cat sleeps on the sofa.",
+            "The train arrives at the station."
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 300.0,
+          "reason": "Full Gemma3text experimental CPU-order BF16 GEMM/RMS, serial after Qwenencoder, unchanged independent oracle and strict internal criteria;2GiBhostreserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 2.049838500000078,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 7172.872961375,
+              "pressure": 1,
+              "host_available_bytes": 11338039296,
+              "swap_bytes": 0,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 7173.883418916,
+              "pressure": 1,
+              "host_available_bytes": 11124981760,
+              "swap_bytes": 0,
+              "footprint_bytes": 214188920,
+              "resident_bytes": 303808512
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-pow/probe_native_suite": "39ce0f56db3e43425bc66fa0e4a68811aa083e3642569f6acb608b3cd6d7acd7"
+          },
+          "log_sha256": "2cddd197b69f1df22f09edf8dad878aa6ff5a057a7c87843cdd864b3077dbc56"
+        },
+        "internal_boundaries": {
+          "criterion": "bit_exact",
+          "status": "FAIL",
+          "exact": 4,
+          "count": 81,
+          "boundaries": [
+            {
+              "file": "item-0-embeddings-0.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-0.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.001708984375,
+              "rmse": 3.220745329951263e-05
+            },
+            {
+              "file": "item-0-layer-1.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0078125,
+              "rmse": 0.0007903257209906066
+            },
+            {
+              "file": "item-0-layer-10.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.0186886610889369
+            },
+            {
+              "file": "item-0-layer-11.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.013458185717779507
+            },
+            {
+              "file": "item-0-layer-12.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.0180514728981644
+            },
+            {
+              "file": "item-0-layer-13.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02267853594711245
+            },
+            {
+              "file": "item-0-layer-14.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02004393881797032
+            },
+            {
+              "file": "item-0-layer-15.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.625,
+              "rmse": 0.022651722963421154
+            },
+            {
+              "file": "item-0-layer-16.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.75,
+              "rmse": 0.016845333227210088
+            },
+            {
+              "file": "item-0-layer-17.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017727351674498588
+            },
+            {
+              "file": "item-0-layer-18.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01667965028792446
+            },
+            {
+              "file": "item-0-layer-19.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017418972928442713
+            },
+            {
+              "file": "item-0-layer-2.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0034231583582519766
+            },
+            {
+              "file": "item-0-layer-20.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.018878570962534147
+            },
+            {
+              "file": "item-0-layer-21.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.75,
+              "rmse": 0.020019595794048804
+            },
+            {
+              "file": "item-0-layer-22.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.018350077739592064
+            },
+            {
+              "file": "item-0-layer-23.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.008426804796297104
+            },
+            {
+              "file": "item-0-layer-3.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0625,
+              "rmse": 0.00825502918645584
+            },
+            {
+              "file": "item-0-layer-4.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0703125,
+              "rmse": 0.01424068943872759
+            },
+            {
+              "file": "item-0-layer-5.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.109375,
+              "rmse": 0.01602645114636872
+            },
+            {
+              "file": "item-0-layer-6.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.00881895622347258
+            },
+            {
+              "file": "item-0-layer-7.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.012054127166418047
+            },
+            {
+              "file": "item-0-layer-8.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.017590902497189306
+            },
+            {
+              "file": "item-0-layer-9.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.021038203015534142
+            },
+            {
+              "file": "item-0-ple-0.bf16",
+              "elements": 135168,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.00033999542178847237
+            },
+            {
+              "file": "item-0-projected-24.bf16",
+              "elements": 8448,
+              "bit_exact": false,
+              "max_abs": 16.0,
+              "rmse": 0.8268739396183659
+            },
+            {
+              "file": "item-1-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.00390625,
+              "rmse": 0.00013859483432453117
+            },
+            {
+              "file": "item-1-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0011805518686484725
+            },
+            {
+              "file": "item-1-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.021613441480490592
+            },
+            {
+              "file": "item-1-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.015420257581940962
+            },
+            {
+              "file": "item-1-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01960207603878915
+            },
+            {
+              "file": "item-1-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02115669327519213
+            },
+            {
+              "file": "item-1-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.020186951637092155
+            },
+            {
+              "file": "item-1-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.019496317516473124
+            },
+            {
+              "file": "item-1-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01573791816836463
+            },
+            {
+              "file": "item-1-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017094335642801946
+            },
+            {
+              "file": "item-1-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01599368450722738
+            },
+            {
+              "file": "item-1-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01779244577698375
+            },
+            {
+              "file": "item-1-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.003942734008649199
+            },
+            {
+              "file": "item-1-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01846203509409121
+            },
+            {
+              "file": "item-1-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.75,
+              "rmse": 0.020777126335615664
+            },
+            {
+              "file": "item-1-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.026390712252169827
+            },
+            {
+              "file": "item-1-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.0034335117985997685
+            },
+            {
+              "file": "item-1-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.064453125,
+              "rmse": 0.00879000811563808
+            },
+            {
+              "file": "item-1-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0625,
+              "rmse": 0.014899809531155257
+            },
+            {
+              "file": "item-1-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.01683136175007531
+            },
+            {
+              "file": "item-1-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.00891673714890678
+            },
+            {
+              "file": "item-1-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014544361685709259
+            },
+            {
+              "file": "item-1-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017971447502809032
+            },
+            {
+              "file": "item-1-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.022140606961005945
+            },
+            {
+              "file": "item-1-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": false,
+              "max_abs": 8.0,
+              "rmse": 0.901299475922795
+            },
+            {
+              "file": "item-2-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0078125,
+              "rmse": 0.00041035635453037214
+            },
+            {
+              "file": "item-2-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0013672966119034756
+            },
+            {
+              "file": "item-2-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.024950629702077405
+            },
+            {
+              "file": "item-2-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.018370462862207455
+            },
+            {
+              "file": "item-2-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.02179424097683817
+            },
+            {
+              "file": "item-2-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.027523062861167638
+            },
+            {
+              "file": "item-2-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.02454153011302803
+            },
+            {
+              "file": "item-2-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.026069914500585635
+            },
+            {
+              "file": "item-2-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.012193136056730444
+            },
+            {
+              "file": "item-2-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017484023692513406
+            },
+            {
+              "file": "item-2-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.019106348516127452
+            },
+            {
+              "file": "item-2-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.020275588183429945
+            },
+            {
+              "file": "item-2-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.0045648946433827055
+            },
+            {
+              "file": "item-2-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.022125393437343276
+            },
+            {
+              "file": "item-2-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.02296345437011998
+            },
+            {
+              "file": "item-2-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.75,
+              "rmse": 0.02054934284072337
+            },
+            {
+              "file": "item-2-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.3125,
+              "rmse": 0.0060340210797629155
+            },
+            {
+              "file": "item-2-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.009146398090644376
+            },
+            {
+              "file": "item-2-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.0152891246308798
+            },
+            {
+              "file": "item-2-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0966796875,
+              "rmse": 0.01611912119858603
+            },
+            {
+              "file": "item-2-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.00858692967756348
+            },
+            {
+              "file": "item-2-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.013367200940618107
+            },
+            {
+              "file": "item-2-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.021291001016137217
+            },
+            {
+              "file": "item-2-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.375,
+              "rmse": 0.0262994522784254
+            },
+            {
+              "file": "item-2-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 9.470106366488269e-05
+            },
+            {
+              "file": "item-2-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": false,
+              "max_abs": 16.0,
+              "rmse": 1.1950366484356596
+            }
+          ]
+        },
+        "output_vectors": {
+          "metrics": {
+            "max_abs": 0.002000708132982254,
+            "rmse": 0.0005958033691938683,
+            "relative_l2": 0.006740745452987606,
+            "bit_exact": false,
+            "cosine_min": 0.9999717681190557,
+            "unit_norm_error_max": 9.82278014483029e-09
+          },
+          "tolerances": {
+            "cosine_min": 0.999,
+            "max_abs": 0.005,
+            "rmse_max": 0.0015,
+            "unit_norm_error_max": 1e-05,
+            "dimensions": [
+              128,
+              256,
+              512,
+              768
+            ],
+            "float16": "REJECT"
+          },
+          "status": "PASS"
+        }
+      },
+      "encoder": {
+        "status": "FAIL",
+        "execution": {
+          "command": [
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-pow/probe_qwen_image_encoder",
+            "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+            "build/metal-models",
+            "build/metal-models/image-tokenizer.ds4q",
+            "build/metal-qualification/t06-t07-20261031/image-text/encoder.ds4i",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-pow/encoder"
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 300.0,
+          "reason": "Full native QwenImage encoder with isolated BF16 CPU-order GEMM and RMS cascade/pow experiment. Previous controllers are gone and verified orphan server/client stopped. No concurrent large model; production binaries and frozen oracle/tolerances unchanged;2GiBhostreserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 25.309244959000353,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 7130.124927125,
+              "pressure": 1,
+              "host_available_bytes": 12290260992,
+              "swap_bytes": 0,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 7131.134270791,
+              "pressure": 1,
+              "host_available_bytes": 12139560960,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7132.144918041,
+              "pressure": 1,
+              "host_available_bytes": 12855312384,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7133.157133958,
+              "pressure": 1,
+              "host_available_bytes": 13362446336,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7134.167435708,
+              "pressure": 1,
+              "host_available_bytes": 13351223296,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7135.17887075,
+              "pressure": 1,
+              "host_available_bytes": 13359448064,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7136.19079125,
+              "pressure": 1,
+              "host_available_bytes": 13409959936,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7137.2037415,
+              "pressure": 1,
+              "host_available_bytes": 13415366656,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7138.214941625,
+              "pressure": 1,
+              "host_available_bytes": 13442924544,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7139.226135125,
+              "pressure": 1,
+              "host_available_bytes": 13471154176,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7140.234456291,
+              "pressure": 1,
+              "host_available_bytes": 13486735360,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7141.245279291,
+              "pressure": 1,
+              "host_available_bytes": 13488979968,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7142.257701458,
+              "pressure": 1,
+              "host_available_bytes": 13476593664,
+              "swap_bytes": 0,
+              "footprint_bytes": 6963752,
+              "resident_bytes": 16596992
+            },
+            {
+              "monotonic": 7143.266799875,
+              "pressure": 1,
+              "host_available_bytes": 12770131968,
+              "swap_bytes": 0,
+              "footprint_bytes": 368510224,
+              "resident_bytes": 727711744
+            },
+            {
+              "monotonic": 7144.276734291,
+              "pressure": 1,
+              "host_available_bytes": 10556489728,
+              "swap_bytes": 0,
+              "footprint_bytes": 1478019880,
+              "resident_bytes": 2837315584
+            },
+            {
+              "monotonic": 7145.284038125,
+              "pressure": 1,
+              "host_available_bytes": 10049634304,
+              "swap_bytes": 0,
+              "footprint_bytes": 1834930040,
+              "resident_bytes": 3880779776
+            },
+            {
+              "monotonic": 7146.295647083,
+              "pressure": 1,
+              "host_available_bytes": 9629532160,
+              "swap_bytes": 0,
+              "footprint_bytes": 1897976608,
+              "resident_bytes": 4166451200
+            },
+            {
+              "monotonic": 7147.306599416,
+              "pressure": 1,
+              "host_available_bytes": 9461137408,
+              "swap_bytes": 0,
+              "footprint_bytes": 2007308000,
+              "resident_bytes": 5440929792
+            },
+            {
+              "monotonic": 7148.316373,
+              "pressure": 1,
+              "host_available_bytes": 9390456832,
+              "swap_bytes": 0,
+              "footprint_bytes": 2026592856,
+              "resident_bytes": 6636011520
+            },
+            {
+              "monotonic": 7149.327807333,
+              "pressure": 1,
+              "host_available_bytes": 9583984640,
+              "swap_bytes": 0,
+              "footprint_bytes": 1831378312,
+              "resident_bytes": 7788101632
+            },
+            {
+              "monotonic": 7150.336362166,
+              "pressure": 1,
+              "host_available_bytes": 9514582016,
+              "swap_bytes": 0,
+              "footprint_bytes": 1994547600,
+              "resident_bytes": 9270788096
+            },
+            {
+              "monotonic": 7151.350187875,
+              "pressure": 1,
+              "host_available_bytes": 9425764352,
+              "swap_bytes": 0,
+              "footprint_bytes": 2009785608,
+              "resident_bytes": 10457776128
+            },
+            {
+              "monotonic": 7152.361982416,
+              "pressure": 1,
+              "host_available_bytes": 9405759488,
+              "swap_bytes": 0,
+              "footprint_bytes": 2010277920,
+              "resident_bytes": 11615584256
+            },
+            {
+              "monotonic": 7153.371671166,
+              "pressure": 1,
+              "host_available_bytes": 9506881536,
+              "swap_bytes": 0,
+              "footprint_bytes": 1894493104,
+              "resident_bytes": 12403933184
+            },
+            {
+              "monotonic": 7154.379484958,
+              "pressure": 1,
+              "host_available_bytes": 9326542848,
+              "swap_bytes": 0,
+              "footprint_bytes": 2116415224,
+              "resident_bytes": 12458147840
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-pow/probe_qwen_image_encoder": "7ee3e3707c8dc6acc57022cf33d46a0762ad87597626d5ba488ca807fdce7581"
+          },
+          "log_sha256": "635a84fd0297afdaac111d08b184ee67d004fc5e401732f5cbb81e8b010a630b"
+        },
+        "input_identity": {
+          "tokens": true,
+          "positions": true,
+          "image_mask": true,
+          "complete_layers": true
+        },
+        "conditioning": {
+          "max_abs": 70.0,
+          "rmse": 0.45258418823614194,
+          "relative_l2": 0.03634739079395956,
+          "bit_exact": false,
+          "verdict": "FAIL"
+        },
+        "layers": [
+          {
+            "stage": "embeddings-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-1",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-2",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-3",
+            "max_abs": 0.00390625,
+            "rmse": 2.3907615022395862e-05,
+            "relative_l2": 4.727066961626857e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-4",
+            "max_abs": 0.0078125,
+            "rmse": 0.0002754565172268307,
+            "relative_l2": 0.0004512345706847185,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-5",
+            "max_abs": 0.125,
+            "rmse": 0.0011053317710084131,
+            "relative_l2": 0.0016323604623303663,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-6",
+            "max_abs": 0.25,
+            "rmse": 0.0019553294737013737,
+            "relative_l2": 5.398619483370078e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-7",
+            "max_abs": 0.125,
+            "rmse": 0.002565771675362191,
+            "relative_l2": 7.08383334975677e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-8",
+            "max_abs": 0.25,
+            "rmse": 0.003634789649821317,
+            "relative_l2": 0.00010034906355462414,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-9",
+            "max_abs": 0.25,
+            "rmse": 0.0042047561314950185,
+            "relative_l2": 0.00011608313466622994,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-10",
+            "max_abs": 0.25,
+            "rmse": 0.004560406222996048,
+            "relative_l2": 0.00012589759775883904,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-11",
+            "max_abs": 0.5,
+            "rmse": 0.005269435857380452,
+            "relative_l2": 0.00014546698352056162,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-12",
+            "max_abs": 0.5,
+            "rmse": 0.005983514597057163,
+            "relative_l2": 0.00016516908851590706,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-13",
+            "max_abs": 0.5,
+            "rmse": 0.006818886658344443,
+            "relative_l2": 0.00018822661208642272,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-14",
+            "max_abs": 0.5,
+            "rmse": 0.007561840059063362,
+            "relative_l2": 0.00020871554204004953,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-15",
+            "max_abs": 0.5,
+            "rmse": 0.008978409877780591,
+            "relative_l2": 0.00024780577036759424,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-16",
+            "max_abs": 4.0,
+            "rmse": 0.020278134282325628,
+            "relative_l2": 0.00045595707509648453,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-17",
+            "max_abs": 4.0,
+            "rmse": 0.02144181313173803,
+            "relative_l2": 0.0004810794777319658,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-18",
+            "max_abs": 4.0,
+            "rmse": 0.0225756073695111,
+            "relative_l2": 0.000506501343287134,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-19",
+            "max_abs": 4.0,
+            "rmse": 0.024053827664289394,
+            "relative_l2": 0.0005395685733894504,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-20",
+            "max_abs": 4.0,
+            "rmse": 0.02534016167625952,
+            "relative_l2": 0.000568380092515255,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-21",
+            "max_abs": 4.0,
+            "rmse": 0.027253622878373195,
+            "relative_l2": 0.0006112112023687006,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-22",
+            "max_abs": 4.0,
+            "rmse": 0.02964753776672749,
+            "relative_l2": 0.0006646744562899038,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-23",
+            "max_abs": 4.0,
+            "rmse": 0.03340678551284014,
+            "relative_l2": 0.0007485345291016696,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-24",
+            "max_abs": 4.0,
+            "rmse": 0.03962347771732518,
+            "relative_l2": 0.0008870678723612174,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-25",
+            "max_abs": 4.0,
+            "rmse": 0.04469190441901901,
+            "relative_l2": 0.0009995911174154794,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-26",
+            "max_abs": 4.0,
+            "rmse": 0.05081320683277882,
+            "relative_l2": 0.001135135573403065,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-27",
+            "max_abs": 4.0,
+            "rmse": 0.0590397047400957,
+            "relative_l2": 0.001316863224088566,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-28",
+            "max_abs": 4.0,
+            "rmse": 0.07030580163894157,
+            "relative_l2": 0.0015642607755869515,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-29",
+            "max_abs": 4.0,
+            "rmse": 0.08242408136812542,
+            "relative_l2": 0.0018286636748234598,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-30",
+            "max_abs": 4.0,
+            "rmse": 0.09504937403103024,
+            "relative_l2": 0.002098797660355042,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-31",
+            "max_abs": 4.0,
+            "rmse": 0.11216229035573076,
+            "relative_l2": 0.002464134374691813,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-32",
+            "max_abs": 4.0,
+            "rmse": 0.13334938169843075,
+            "relative_l2": 0.0029117989881649923,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-33",
+            "max_abs": 4.0,
+            "rmse": 0.15697251915129093,
+            "relative_l2": 0.0034077592541184665,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-34",
+            "max_abs": 128.0,
+            "rmse": 0.3978535420949502,
+            "relative_l2": 0.01293961277020667,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-35",
+            "max_abs": 70.0,
+            "rmse": 0.36079243509206216,
+            "relative_l2": 0.01983468996378514,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          }
+        ]
+      }
+    },
+    {
+      "variant": "gemm-cpu-attention",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "NOT_VERIFIED"
+      },
+      "encoder": {
+        "status": "NOT_VERIFIED"
+      }
+    },
+    {
+      "variant": "gemm-cpu-precise",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "NOT_VERIFIED"
+      },
+      "encoder": {
+        "status": "NOT_VERIFIED"
+      }
+    },
+    {
+      "variant": "gemm-cpu-precise-rsqrt",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "FAIL",
+        "execution": {
+          "command": [
+            "env",
+            "DS4_GEMMA_DIMENSIONS=128",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/probe_native_suite",
+            "build/metal-models/gemma.ds4b/bundle.ds4b",
+            "build/metal-oracles/models",
+            "build/metal-models/gemma.ds4g",
+            "gemma",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/gemma",
+            "Il gatto dorme sul divano.",
+            "A cat sleeps on the sofa.",
+            "The train arrives at the station."
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 1200.0,
+          "base_timeout_seconds": 300.0,
+          "timeout_multiplier": 4,
+          "reason": "FullGemma3text after30primitivechecks andcompleteQwenencoder; preciseFP32/CPU-orderarithmetic experiment, independent81BF16boundaries unchanged,2GiBhostreserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 2.0834152500001437,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 8089.618787833,
+              "pressure": 1,
+              "host_available_bytes": 10972725248,
+              "swap_bytes": 0,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 8090.631482083,
+              "pressure": 1,
+              "host_available_bytes": 11015995392,
+              "swap_bytes": 0,
+              "footprint_bytes": 6816320,
+              "resident_bytes": 16449536
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/probe_native_suite": "8ec3ea43623e70167d9eef920b20e20663fc6505c7259773803a06386f9b0712"
+          },
+          "log_sha256": "2cddd197b69f1df22f09edf8dad878aa6ff5a057a7c87843cdd864b3077dbc56"
+        },
+        "internal_boundaries": {
+          "criterion": "bit_exact",
+          "status": "FAIL",
+          "exact": 6,
+          "count": 81,
+          "boundaries": [
+            {
+              "file": "item-0-embeddings-0.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-0.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.001708984375,
+              "rmse": 3.220745329951263e-05
+            },
+            {
+              "file": "item-0-layer-1.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0078125,
+              "rmse": 0.0007903257209906066
+            },
+            {
+              "file": "item-0-layer-10.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.01970385026517043
+            },
+            {
+              "file": "item-0-layer-11.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.013371088661249076
+            },
+            {
+              "file": "item-0-layer-12.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01730380823626329
+            },
+            {
+              "file": "item-0-layer-13.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02034094594865599
+            },
+            {
+              "file": "item-0-layer-14.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017388880131933335
+            },
+            {
+              "file": "item-0-layer-15.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.019346173580825996
+            },
+            {
+              "file": "item-0-layer-16.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01196118720879586
+            },
+            {
+              "file": "item-0-layer-17.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014211306288147861
+            },
+            {
+              "file": "item-0-layer-18.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014095972362851317
+            },
+            {
+              "file": "item-0-layer-19.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01455570579136631
+            },
+            {
+              "file": "item-0-layer-2.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0034231583582519766
+            },
+            {
+              "file": "item-0-layer-20.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.015070683912719388
+            },
+            {
+              "file": "item-0-layer-21.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01612936131122197
+            },
+            {
+              "file": "item-0-layer-22.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.015736731968357662
+            },
+            {
+              "file": "item-0-layer-23.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.006198369437750488
+            },
+            {
+              "file": "item-0-layer-3.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0625,
+              "rmse": 0.00825502918645584
+            },
+            {
+              "file": "item-0-layer-4.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0703125,
+              "rmse": 0.014248339046575015
+            },
+            {
+              "file": "item-0-layer-5.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.016265181197104232
+            },
+            {
+              "file": "item-0-layer-6.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.007978534768100204
+            },
+            {
+              "file": "item-0-layer-7.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0703125,
+              "rmse": 0.011335903770971973
+            },
+            {
+              "file": "item-0-layer-8.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.01667719722306365
+            },
+            {
+              "file": "item-0-layer-9.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.021240128547724293
+            },
+            {
+              "file": "item-0-ple-0.bf16",
+              "elements": 135168,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-projected-24.bf16",
+              "elements": 8448,
+              "bit_exact": false,
+              "max_abs": 32.0,
+              "rmse": 0.9871863377810467
+            },
+            {
+              "file": "item-1-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.00390625,
+              "rmse": 0.00013859483432453117
+            },
+            {
+              "file": "item-1-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0011805518686484725
+            },
+            {
+              "file": "item-1-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.021491917741988376
+            },
+            {
+              "file": "item-1-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.015129116133199927
+            },
+            {
+              "file": "item-1-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.019763044940396636
+            },
+            {
+              "file": "item-1-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02393255928450741
+            },
+            {
+              "file": "item-1-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.020413541388937133
+            },
+            {
+              "file": "item-1-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.021168081578707757
+            },
+            {
+              "file": "item-1-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017945713619492855
+            },
+            {
+              "file": "item-1-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.75,
+              "rmse": 0.0202891758539188
+            },
+            {
+              "file": "item-1-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01464366633709848
+            },
+            {
+              "file": "item-1-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.016711850259059278
+            },
+            {
+              "file": "item-1-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.003942734008649199
+            },
+            {
+              "file": "item-1-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01831231676965262
+            },
+            {
+              "file": "item-1-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.75,
+              "rmse": 0.020558898896807978
+            },
+            {
+              "file": "item-1-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.020696159019239557
+            },
+            {
+              "file": "item-1-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.003547478079770681
+            },
+            {
+              "file": "item-1-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.064453125,
+              "rmse": 0.00879000811563808
+            },
+            {
+              "file": "item-1-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0625,
+              "rmse": 0.014899809531155257
+            },
+            {
+              "file": "item-1-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.016833329015526963
+            },
+            {
+              "file": "item-1-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.008905395534851158
+            },
+            {
+              "file": "item-1-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.013254185837838115
+            },
+            {
+              "file": "item-1-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.016823045306468585
+            },
+            {
+              "file": "item-1-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02195469636213593
+            },
+            {
+              "file": "item-1-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": false,
+              "max_abs": 8.0,
+              "rmse": 0.9647067914412538
+            },
+            {
+              "file": "item-2-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0078125,
+              "rmse": 0.00041035635453037214
+            },
+            {
+              "file": "item-2-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0013672966119034756
+            },
+            {
+              "file": "item-2-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.024709667983196532
+            },
+            {
+              "file": "item-2-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.017755279498883184
+            },
+            {
+              "file": "item-2-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.020053781651574898
+            },
+            {
+              "file": "item-2-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.025001515831637903
+            },
+            {
+              "file": "item-2-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.02124729245733482
+            },
+            {
+              "file": "item-2-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.022662393951833126
+            },
+            {
+              "file": "item-2-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.009814476360178837
+            },
+            {
+              "file": "item-2-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.012945406692354642
+            },
+            {
+              "file": "item-2-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014707098090529168
+            },
+            {
+              "file": "item-2-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01566449534382158
+            },
+            {
+              "file": "item-2-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.0045648946433827055
+            },
+            {
+              "file": "item-2-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01646450512707226
+            },
+            {
+              "file": "item-2-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.021546111038031338
+            },
+            {
+              "file": "item-2-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.016412639051877172
+            },
+            {
+              "file": "item-2-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.1875,
+              "rmse": 0.004809874766384533
+            },
+            {
+              "file": "item-2-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.009146398090644376
+            },
+            {
+              "file": "item-2-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.015289142820482547
+            },
+            {
+              "file": "item-2-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0966796875,
+              "rmse": 0.01613729489329714
+            },
+            {
+              "file": "item-2-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.007860572614597416
+            },
+            {
+              "file": "item-2-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.012793722146570279
+            },
+            {
+              "file": "item-2-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.018906403241567324
+            },
+            {
+              "file": "item-2-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.025645639633993876
+            },
+            {
+              "file": "item-2-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": false,
+              "max_abs": 8.0,
+              "rmse": 1.0104577952020923
+            }
+          ]
+        },
+        "output_vectors": {
+          "metrics": {
+            "max_abs": 0.0021579470485448837,
+            "rmse": 0.0005826077612095664,
+            "relative_l2": 0.006591454194967466,
+            "bit_exact": false,
+            "cosine_min": 0.9999742216750372,
+            "unit_norm_error_max": 6.544890118753699e-08
+          },
+          "tolerances": {
+            "cosine_min": 0.999,
+            "max_abs": 0.005,
+            "rmse_max": 0.0015,
+            "unit_norm_error_max": 1e-05,
+            "dimensions": [
+              128,
+              256,
+              512,
+              768
+            ],
+            "float16": "REJECT"
+          },
+          "status": "PASS"
+        }
+      },
+      "encoder": {
+        "status": "FAIL",
+        "execution": {
+          "command": [
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/probe_qwen_image_encoder",
+            "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+            "build/metal-models",
+            "build/metal-models/image-tokenizer.ds4q",
+            "build/metal-qualification/t06-t07-20261031/image-text/encoder.ds4i",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/encoder"
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 1200.0,
+          "base_timeout_seconds": 300.0,
+          "timeout_multiplier": 4,
+          "reason": "Fullencoderexperiment after pinnedHF/ATen/ggml/Strata/localresearch audit and30primitivePASS: CPU-orderBF16GEMM,RMS-cascade/precisereciprocalsqrt,QK32/PV4. Flashbatchcompletedwithgracefulcleanup; noothermodel,2GiBreserve,unchangedfrozenconditioninglimits.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 25.318505875000483,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 8026.519251458,
+              "pressure": 1,
+              "host_available_bytes": 11678466048,
+              "swap_bytes": 0,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 8027.53095175,
+              "pressure": 1,
+              "host_available_bytes": 11658805248,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8028.540601958,
+              "pressure": 1,
+              "host_available_bytes": 11863064576,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8029.550874666,
+              "pressure": 1,
+              "host_available_bytes": 11850727424,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8030.562114833,
+              "pressure": 1,
+              "host_available_bytes": 11844042752,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8031.573442041,
+              "pressure": 1,
+              "host_available_bytes": 12312068096,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8032.584205125,
+              "pressure": 1,
+              "host_available_bytes": 12314640384,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8033.597328833,
+              "pressure": 1,
+              "host_available_bytes": 12333416448,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8034.605744208,
+              "pressure": 1,
+              "host_available_bytes": 12342263808,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8035.615696416,
+              "pressure": 1,
+              "host_available_bytes": 12356026368,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8036.623158875,
+              "pressure": 1,
+              "host_available_bytes": 12313313280,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8037.634642958,
+              "pressure": 1,
+              "host_available_bytes": 12318179328,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8038.647907458,
+              "pressure": 1,
+              "host_available_bytes": 12362465280,
+              "swap_bytes": 0,
+              "footprint_bytes": 7143976,
+              "resident_bytes": 16793600
+            },
+            {
+              "monotonic": 8039.660674791,
+              "pressure": 1,
+              "host_available_bytes": 11549261824,
+              "swap_bytes": 0,
+              "footprint_bytes": 460621144,
+              "resident_bytes": 804765696
+            },
+            {
+              "monotonic": 8040.670147583,
+              "pressure": 1,
+              "host_available_bytes": 9717252096,
+              "swap_bytes": 0,
+              "footprint_bytes": 1561562040,
+              "resident_bytes": 2998747136
+            },
+            {
+              "monotonic": 8041.680785375,
+              "pressure": 1,
+              "host_available_bytes": 10026024960,
+              "swap_bytes": 0,
+              "footprint_bytes": 1781485360,
+              "resident_bytes": 3492773888
+            },
+            {
+              "monotonic": 8042.692099458,
+              "pressure": 1,
+              "host_available_bytes": 10096902144,
+              "swap_bytes": 0,
+              "footprint_bytes": 1820152512,
+              "resident_bytes": 4516118528
+            },
+            {
+              "monotonic": 8043.707680375,
+              "pressure": 1,
+              "host_available_bytes": 9457451008,
+              "swap_bytes": 0,
+              "footprint_bytes": 1962202800,
+              "resident_bytes": 5347770368
+            },
+            {
+              "monotonic": 8044.714405208,
+              "pressure": 1,
+              "host_available_bytes": 9435987968,
+              "swap_bytes": 0,
+              "footprint_bytes": 1934973408,
+              "resident_bytes": 6450053120
+            },
+            {
+              "monotonic": 8045.725523458,
+              "pressure": 1,
+              "host_available_bytes": 9363488768,
+              "swap_bytes": 0,
+              "footprint_bytes": 2007735640,
+              "resident_bytes": 7752138752
+            },
+            {
+              "monotonic": 8046.736798291,
+              "pressure": 1,
+              "host_available_bytes": 9586212864,
+              "swap_bytes": 0,
+              "footprint_bytes": 1835671736,
+              "resident_bytes": 8950448128
+            },
+            {
+              "monotonic": 8047.74770775,
+              "pressure": 1,
+              "host_available_bytes": 9583804416,
+              "swap_bytes": 0,
+              "footprint_bytes": 1891214432,
+              "resident_bytes": 10217979904
+            },
+            {
+              "monotonic": 8048.757422,
+              "pressure": 1,
+              "host_available_bytes": 9485975552,
+              "swap_bytes": 0,
+              "footprint_bytes": 1969891288,
+              "resident_bytes": 11531862016
+            },
+            {
+              "monotonic": 8049.771814916,
+              "pressure": 1,
+              "host_available_bytes": 9426305024,
+              "swap_bytes": 0,
+              "footprint_bytes": 2010868584,
+              "resident_bytes": 12477661184
+            },
+            {
+              "monotonic": 8050.7828705,
+              "pressure": 1,
+              "host_available_bytes": 9506258944,
+              "swap_bytes": 0,
+              "footprint_bytes": 2011393640,
+              "resident_bytes": 12596264960
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/probe_qwen_image_encoder": "428109a9c65c2c18d118eb3190b4d014911359a2cccff570dbf20688fec62cc2"
+          },
+          "log_sha256": "6a15f8f8c4b7d2edc0976313c416409643bdfb34469d6597dddd44a03dc32754"
+        },
+        "input_identity": {
+          "tokens": true,
+          "positions": true,
+          "image_mask": true,
+          "complete_layers": true
+        },
+        "conditioning": {
+          "max_abs": 20.0,
+          "rmse": 0.17974279587302927,
+          "relative_l2": 0.014435284779739412,
+          "bit_exact": false,
+          "verdict": "FAIL"
+        },
+        "layers": [
+          {
+            "stage": "embeddings-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-1",
+            "max_abs": 0.001953125,
+            "rmse": 1.5374267513028614e-05,
+            "relative_l2": 4.26325324907937e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-2",
+            "max_abs": 0.00390625,
+            "rmse": 8.375411878184906e-05,
+            "relative_l2": 0.00018428614268196418,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-3",
+            "max_abs": 0.0078125,
+            "rmse": 0.0002773078070455006,
+            "relative_l2": 0.000548299180682815,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-4",
+            "max_abs": 0.0078125,
+            "rmse": 0.00037825326363242,
+            "relative_l2": 0.0006196293728810842,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-5",
+            "max_abs": 0.0126953125,
+            "rmse": 0.000456918283140317,
+            "relative_l2": 0.0006747796086904011,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-6",
+            "max_abs": 0.03125,
+            "rmse": 0.0005308164841373928,
+            "relative_l2": 1.4655720439448514e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-7",
+            "max_abs": 0.03125,
+            "rmse": 0.0007717546149315933,
+            "relative_l2": 2.130735611269612e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-8",
+            "max_abs": 0.03125,
+            "rmse": 0.0009223651190029809,
+            "relative_l2": 2.546460314476484e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-9",
+            "max_abs": 0.03125,
+            "rmse": 0.0009471654028292187,
+            "relative_l2": 2.6148943141852317e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-10",
+            "max_abs": 0.25,
+            "rmse": 0.0012139567377189686,
+            "relative_l2": 3.351329455944118e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-11",
+            "max_abs": 0.0390625,
+            "rmse": 0.0010210587506849884,
+            "relative_l2": 2.8187141940704066e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-12",
+            "max_abs": 0.0625,
+            "rmse": 0.0010885216482538979,
+            "relative_l2": 3.0047579153622225e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-13",
+            "max_abs": 0.0625,
+            "rmse": 0.0011728338910868279,
+            "relative_l2": 3.237457387405938e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-14",
+            "max_abs": 0.0625,
+            "rmse": 0.0012618338221337608,
+            "relative_l2": 3.482807466093598e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-15",
+            "max_abs": 0.0625,
+            "rmse": 0.0014159312333253983,
+            "relative_l2": 3.907996347215912e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-16",
+            "max_abs": 0.25,
+            "rmse": 0.0017018994519789894,
+            "relative_l2": 3.826747990859315e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-17",
+            "max_abs": 0.5,
+            "rmse": 0.002281747205000845,
+            "relative_l2": 5.119444642829053e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-18",
+            "max_abs": 0.25,
+            "rmse": 0.002289788396179057,
+            "relative_l2": 5.137318697676752e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-19",
+            "max_abs": 0.75,
+            "rmse": 0.0031794964930859132,
+            "relative_l2": 7.132155475687816e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-20",
+            "max_abs": 0.75,
+            "rmse": 0.00342105899570727,
+            "relative_l2": 7.673438920091637e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-21",
+            "max_abs": 0.5,
+            "rmse": 0.0038908833907689575,
+            "relative_l2": 8.726001405983559e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-22",
+            "max_abs": 0.5,
+            "rmse": 0.005613420686899959,
+            "relative_l2": 0.00012584847255609277,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-23",
+            "max_abs": 0.5,
+            "rmse": 0.008100785885535899,
+            "relative_l2": 0.00018151156584198834,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-24",
+            "max_abs": 1.0,
+            "rmse": 0.011352239476344563,
+            "relative_l2": 0.0002541474776812142,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-25",
+            "max_abs": 1.0,
+            "rmse": 0.014296659485880332,
+            "relative_l2": 0.0003197629194051118,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-26",
+            "max_abs": 1.0,
+            "rmse": 0.01781795648331793,
+            "relative_l2": 0.00039804211365999855,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-27",
+            "max_abs": 1.0,
+            "rmse": 0.021796730240072348,
+            "relative_l2": 0.00048616964778004906,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-28",
+            "max_abs": 2.0,
+            "rmse": 0.026586387364238486,
+            "relative_l2": 0.0005915307406921548,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-29",
+            "max_abs": 2.0,
+            "rmse": 0.03141395965420225,
+            "relative_l2": 0.0006969512543966844,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-30",
+            "max_abs": 2.0,
+            "rmse": 0.038264213958096774,
+            "relative_l2": 0.0008449171133348049,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-31",
+            "max_abs": 2.0,
+            "rmse": 0.04535178683915429,
+            "relative_l2": 0.0009963499902652087,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-32",
+            "max_abs": 4.0,
+            "rmse": 0.05421269745942254,
+            "relative_l2": 0.0011837810989257782,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-33",
+            "max_abs": 4.0,
+            "rmse": 0.06608765559577558,
+            "relative_l2": 0.0014347149498342379,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-34",
+            "max_abs": 6.0,
+            "rmse": 0.08550996869606631,
+            "relative_l2": 0.002781088430414244,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-35",
+            "max_abs": 20.0,
+            "rmse": 0.13785643143215306,
+            "relative_l2": 0.007578705402381424,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          }
+        ]
+      }
+    },
+    {
+      "variant": "gemm-cpu-norm-precise",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "FAIL",
+        "execution": {
+          "command": [
+            "env",
+            "DS4_GEMMA_DIMENSIONS=128",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/probe_native_suite",
+            "build/metal-models/gemma.ds4b/bundle.ds4b",
+            "build/metal-oracles/models",
+            "build/metal-models/gemma.ds4g",
+            "gemma",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/gemma",
+            "Il gatto dorme sul divano.",
+            "A cat sleeps on the sofa.",
+            "The train arrives at the station."
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 1200,
+          "base_timeout_seconds": 300,
+          "timeout_multiplier": 4,
+          "reason": "Separate precise::sqrt only after new layer1 same-input audit; all original gates frozen, serial models and2GiBhostreserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 2.055331292000119,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 8254.964737875,
+              "pressure": 1,
+              "host_available_bytes": 11421990912,
+              "swap_bytes": 0,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 8255.982171875,
+              "pressure": 1,
+              "host_available_bytes": 11191779328,
+              "swap_bytes": 0,
+              "footprint_bytes": 214025080,
+              "resident_bytes": 303661056
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/probe_native_suite": "e89a1c2df129c60f75dfcb5ed302992db33bbd3ea11894bf0f62a655415162fc"
+          },
+          "log_sha256": "2cddd197b69f1df22f09edf8dad878aa6ff5a057a7c87843cdd864b3077dbc56"
+        },
+        "internal_boundaries": {
+          "criterion": "bit_exact",
+          "status": "FAIL",
+          "exact": 6,
+          "count": 81,
+          "boundaries": [
+            {
+              "file": "item-0-embeddings-0.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-0.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.001708984375,
+              "rmse": 3.220745329951263e-05
+            },
+            {
+              "file": "item-0-layer-1.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0078125,
+              "rmse": 0.0007903257209906066
+            },
+            {
+              "file": "item-0-layer-10.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.01970385026517043
+            },
+            {
+              "file": "item-0-layer-11.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.013371088661249076
+            },
+            {
+              "file": "item-0-layer-12.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01730380823626329
+            },
+            {
+              "file": "item-0-layer-13.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02034094594865599
+            },
+            {
+              "file": "item-0-layer-14.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017388880131933335
+            },
+            {
+              "file": "item-0-layer-15.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.019346173580825996
+            },
+            {
+              "file": "item-0-layer-16.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01196118720879586
+            },
+            {
+              "file": "item-0-layer-17.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014211306288147861
+            },
+            {
+              "file": "item-0-layer-18.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014095972362851317
+            },
+            {
+              "file": "item-0-layer-19.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01455570579136631
+            },
+            {
+              "file": "item-0-layer-2.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0034231583582519766
+            },
+            {
+              "file": "item-0-layer-20.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.015070683912719388
+            },
+            {
+              "file": "item-0-layer-21.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01612936131122197
+            },
+            {
+              "file": "item-0-layer-22.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.015736731968357662
+            },
+            {
+              "file": "item-0-layer-23.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.006198369437750488
+            },
+            {
+              "file": "item-0-layer-3.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0625,
+              "rmse": 0.00825502918645584
+            },
+            {
+              "file": "item-0-layer-4.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0703125,
+              "rmse": 0.014248339046575015
+            },
+            {
+              "file": "item-0-layer-5.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.016265181197104232
+            },
+            {
+              "file": "item-0-layer-6.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.007978534768100204
+            },
+            {
+              "file": "item-0-layer-7.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0703125,
+              "rmse": 0.011335903770971973
+            },
+            {
+              "file": "item-0-layer-8.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.01667719722306365
+            },
+            {
+              "file": "item-0-layer-9.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.021240128547724293
+            },
+            {
+              "file": "item-0-ple-0.bf16",
+              "elements": 135168,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-projected-24.bf16",
+              "elements": 8448,
+              "bit_exact": false,
+              "max_abs": 32.0,
+              "rmse": 0.9871863377810467
+            },
+            {
+              "file": "item-1-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.00390625,
+              "rmse": 0.00013859483432453117
+            },
+            {
+              "file": "item-1-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0011805518686484725
+            },
+            {
+              "file": "item-1-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.02096279935807795
+            },
+            {
+              "file": "item-1-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.0137121081223407
+            },
+            {
+              "file": "item-1-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.015498568257182738
+            },
+            {
+              "file": "item-1-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.021292459176860932
+            },
+            {
+              "file": "item-1-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.017425858941691203
+            },
+            {
+              "file": "item-1-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01803165925754982
+            },
+            {
+              "file": "item-1-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.013696550439607394
+            },
+            {
+              "file": "item-1-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.016757698012858226
+            },
+            {
+              "file": "item-1-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.015816083936246905
+            },
+            {
+              "file": "item-1-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01791611554971478
+            },
+            {
+              "file": "item-1-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.003942734008649199
+            },
+            {
+              "file": "item-1-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.018147368004290097
+            },
+            {
+              "file": "item-1-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.75,
+              "rmse": 0.020368962986235348
+            },
+            {
+              "file": "item-1-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.02265786451865376
+            },
+            {
+              "file": "item-1-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.0041195182295038655
+            },
+            {
+              "file": "item-1-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.064453125,
+              "rmse": 0.00879000811563808
+            },
+            {
+              "file": "item-1-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0625,
+              "rmse": 0.014899809531155257
+            },
+            {
+              "file": "item-1-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.01683136175007531
+            },
+            {
+              "file": "item-1-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.00891673714890678
+            },
+            {
+              "file": "item-1-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014544361685709259
+            },
+            {
+              "file": "item-1-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017985042601431293
+            },
+            {
+              "file": "item-1-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.022018861313839653
+            },
+            {
+              "file": "item-1-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": false,
+              "max_abs": 8.0,
+              "rmse": 0.8516730967795797
+            },
+            {
+              "file": "item-2-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0078125,
+              "rmse": 0.00041035635453037214
+            },
+            {
+              "file": "item-2-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0013672966119034756
+            },
+            {
+              "file": "item-2-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.025252345602645325
+            },
+            {
+              "file": "item-2-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.01859644074776186
+            },
+            {
+              "file": "item-2-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.021253775768799908
+            },
+            {
+              "file": "item-2-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02633411134142289
+            },
+            {
+              "file": "item-2-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25390625,
+              "rmse": 0.024042313508755415
+            },
+            {
+              "file": "item-2-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02637113451130616
+            },
+            {
+              "file": "item-2-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.012775588485666487
+            },
+            {
+              "file": "item-2-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.0180740178442906
+            },
+            {
+              "file": "item-2-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01749606215806912
+            },
+            {
+              "file": "item-2-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.018375560284319727
+            },
+            {
+              "file": "item-2-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.0045648946433827055
+            },
+            {
+              "file": "item-2-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.018033847309469754
+            },
+            {
+              "file": "item-2-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.019939436961536258
+            },
+            {
+              "file": "item-2-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01815792984100408
+            },
+            {
+              "file": "item-2-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.0052322308089956925
+            },
+            {
+              "file": "item-2-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.009146398090644376
+            },
+            {
+              "file": "item-2-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.0152891246308798
+            },
+            {
+              "file": "item-2-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0966796875,
+              "rmse": 0.01611912119858603
+            },
+            {
+              "file": "item-2-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.00858692967756348
+            },
+            {
+              "file": "item-2-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.013367200940618107
+            },
+            {
+              "file": "item-2-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.021266442101028318
+            },
+            {
+              "file": "item-2-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.375,
+              "rmse": 0.02617400992599739
+            },
+            {
+              "file": "item-2-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": false,
+              "max_abs": 6.0,
+              "rmse": 0.9597376259705092
+            }
+          ]
+        },
+        "output_vectors": {
+          "metrics": {
+            "max_abs": 0.0018531084060668945,
+            "rmse": 0.0005597969110217383,
+            "relative_l2": 0.006333378892556159,
+            "bit_exact": false,
+            "cosine_min": 0.9999761110220812,
+            "unit_norm_error_max": 1.914071701136777e-08
+          },
+          "tolerances": {
+            "cosine_min": 0.999,
+            "max_abs": 0.005,
+            "rmse_max": 0.0015,
+            "unit_norm_error_max": 1e-05,
+            "dimensions": [
+              128,
+              256,
+              512,
+              768
+            ],
+            "float16": "REJECT"
+          },
+          "status": "PASS"
+        }
+      },
+      "encoder": {
+        "status": "FAIL",
+        "execution": {
+          "command": [
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/probe_qwen_image_encoder",
+            "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+            "build/metal-models",
+            "build/metal-models/image-tokenizer.ds4q",
+            "build/metal-qualification/t06-t07-20261031/image-text/encoder.ds4i",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/encoder"
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 1200,
+          "base_timeout_seconds": 300,
+          "timeout_multiplier": 4,
+          "reason": "Separate precise::sqrt only after new layer1 same-input audit; all original gates frozen, serial models and2GiBhostreserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 25.371263792001628,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 8229.603729208,
+              "pressure": 1,
+              "host_available_bytes": 11698913280,
+              "swap_bytes": 0,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 8230.61297225,
+              "pressure": 1,
+              "host_available_bytes": 12107104256,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8231.629013833,
+              "pressure": 1,
+              "host_available_bytes": 12606947328,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8232.645231458,
+              "pressure": 1,
+              "host_available_bytes": 13223624704,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8233.659776375,
+              "pressure": 1,
+              "host_available_bytes": 13757579264,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8234.668166,
+              "pressure": 1,
+              "host_available_bytes": 14331543552,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8235.677509,
+              "pressure": 1,
+              "host_available_bytes": 13964754944,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8236.692556208,
+              "pressure": 1,
+              "host_available_bytes": 13993492480,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8237.708743708,
+              "pressure": 1,
+              "host_available_bytes": 13964410880,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8238.717835916,
+              "pressure": 1,
+              "host_available_bytes": 13959331840,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8239.733795083,
+              "pressure": 1,
+              "host_available_bytes": 14333313024,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8240.753081666,
+              "pressure": 1,
+              "host_available_bytes": 14355464192,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8241.759226458,
+              "pressure": 1,
+              "host_available_bytes": 14318682112,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8242.767686833,
+              "pressure": 1,
+              "host_available_bytes": 14312931328,
+              "swap_bytes": 0,
+              "footprint_bytes": 6799936,
+              "resident_bytes": 16433152
+            },
+            {
+              "monotonic": 8243.775669333,
+              "pressure": 1,
+              "host_available_bytes": 12015665152,
+              "swap_bytes": 0,
+              "footprint_bytes": 1174866272,
+              "resident_bytes": 2231812096
+            },
+            {
+              "monotonic": 8244.7915005,
+              "pressure": 1,
+              "host_available_bytes": 9912025088,
+              "swap_bytes": 0,
+              "footprint_bytes": 2227687312,
+              "resident_bytes": 4335271936
+            },
+            {
+              "monotonic": 8245.800657166,
+              "pressure": 1,
+              "host_available_bytes": 9702916096,
+              "swap_bytes": 0,
+              "footprint_bytes": 1999671952,
+              "resident_bytes": 4250583040
+            },
+            {
+              "monotonic": 8246.810279333,
+              "pressure": 1,
+              "host_available_bytes": 9318154240,
+              "swap_bytes": 0,
+              "footprint_bytes": 2010912264,
+              "resident_bytes": 5060395008
+            },
+            {
+              "monotonic": 8247.826490333,
+              "pressure": 1,
+              "host_available_bytes": 9361506304,
+              "swap_bytes": 0,
+              "footprint_bytes": 2071239016,
+              "resident_bytes": 6337593344
+            },
+            {
+              "monotonic": 8248.842707041,
+              "pressure": 1,
+              "host_available_bytes": 9374416896,
+              "swap_bytes": 0,
+              "footprint_bytes": 2122063120,
+              "resident_bytes": 7580696576
+            },
+            {
+              "monotonic": 8249.859766458,
+              "pressure": 1,
+              "host_available_bytes": 9297756160,
+              "swap_bytes": 0,
+              "footprint_bytes": 2286264576,
+              "resident_bytes": 9065463808
+            },
+            {
+              "monotonic": 8250.877320375,
+              "pressure": 1,
+              "host_available_bytes": 9426059264,
+              "swap_bytes": 0,
+              "footprint_bytes": 2029904872,
+              "resident_bytes": 10095558656
+            },
+            {
+              "monotonic": 8251.885750541,
+              "pressure": 1,
+              "host_available_bytes": 9698476032,
+              "swap_bytes": 0,
+              "footprint_bytes": 2077894424,
+              "resident_bytes": 11199987712
+            },
+            {
+              "monotonic": 8252.904680625,
+              "pressure": 1,
+              "host_available_bytes": 9691938816,
+              "swap_bytes": 0,
+              "footprint_bytes": 1856072312,
+              "resident_bytes": 12446941184
+            },
+            {
+              "monotonic": 8253.920774791,
+              "pressure": 1,
+              "host_available_bytes": 9618882560,
+              "swap_bytes": 0,
+              "footprint_bytes": 1867476392,
+              "resident_bytes": 12508282880
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/probe_qwen_image_encoder": "3392747331506965e069607ab3d679e8525177b954fb121b9415b0a42b424b02"
+          },
+          "log_sha256": "ebb9c1d44a15e322e6d2bdbd726395a0e2b6001c0dc6c44f58f25d4c74a3186a"
+        },
+        "input_identity": {
+          "tokens": true,
+          "positions": true,
+          "image_mask": true,
+          "complete_layers": true
+        },
+        "conditioning": {
+          "max_abs": 26.0,
+          "rmse": 0.2590090114818643,
+          "relative_l2": 0.02080121666684573,
+          "bit_exact": false,
+          "verdict": "FAIL"
+        },
+        "layers": [
+          {
+            "stage": "embeddings-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-1",
+            "max_abs": 0.001953125,
+            "rmse": 1.5374267513028614e-05,
+            "relative_l2": 4.26325324907937e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-2",
+            "max_abs": 0.00390625,
+            "rmse": 8.375411878184906e-05,
+            "relative_l2": 0.00018428614268196418,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-3",
+            "max_abs": 0.0078125,
+            "rmse": 0.0002773078070455006,
+            "relative_l2": 0.000548299180682815,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-4",
+            "max_abs": 0.0078125,
+            "rmse": 0.00037825326363242,
+            "relative_l2": 0.0006196293728810842,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-5",
+            "max_abs": 0.0126953125,
+            "rmse": 0.000456918283140317,
+            "relative_l2": 0.0006747796086904011,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-6",
+            "max_abs": 0.03125,
+            "rmse": 0.0005308164841373928,
+            "relative_l2": 1.4655720439448514e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-7",
+            "max_abs": 0.03125,
+            "rmse": 0.0007717546149315933,
+            "relative_l2": 2.130735611269612e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-8",
+            "max_abs": 0.03125,
+            "rmse": 0.000932653922979742,
+            "relative_l2": 2.5748655853073786e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-9",
+            "max_abs": 0.03125,
+            "rmse": 0.001193599473286168,
+            "relative_l2": 3.295239106905231e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-10",
+            "max_abs": 0.25,
+            "rmse": 0.001485092417513238,
+            "relative_l2": 4.0998445899837e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-11",
+            "max_abs": 0.0390625,
+            "rmse": 0.0014533819616723684,
+            "relative_l2": 4.012176931076202e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-12",
+            "max_abs": 0.0625,
+            "rmse": 0.0016227865020153524,
+            "relative_l2": 4.479543971123905e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-13",
+            "max_abs": 0.125,
+            "rmse": 0.0018586626307851187,
+            "relative_l2": 5.1305995763428694e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-14",
+            "max_abs": 0.25,
+            "rmse": 0.002267357708312047,
+            "relative_l2": 6.258169828940417e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-15",
+            "max_abs": 0.25,
+            "rmse": 0.0025231955817923753,
+            "relative_l2": 6.96406639310981e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-16",
+            "max_abs": 0.25,
+            "rmse": 0.0025815013349151238,
+            "relative_l2": 5.804546816969682e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-17",
+            "max_abs": 0.25,
+            "rmse": 0.0031259337167446172,
+            "relative_l2": 7.013504644578284e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-18",
+            "max_abs": 0.25,
+            "rmse": 0.0035004923880801453,
+            "relative_l2": 7.85362744713334e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-19",
+            "max_abs": 0.25,
+            "rmse": 0.004221429275174789,
+            "relative_l2": 9.469389252555837e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-20",
+            "max_abs": 0.25,
+            "rmse": 0.004848378738136184,
+            "relative_l2": 0.00010874918601299208,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-21",
+            "max_abs": 0.5,
+            "rmse": 0.006135956556618157,
+            "relative_l2": 0.0001376097923343893,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-22",
+            "max_abs": 0.5,
+            "rmse": 0.007472563926885429,
+            "relative_l2": 0.00016752900035996353,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-23",
+            "max_abs": 0.5,
+            "rmse": 0.009849554114491831,
+            "relative_l2": 0.00022069562329242343,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-24",
+            "max_abs": 1.0,
+            "rmse": 0.013268564754652452,
+            "relative_l2": 0.00029704907757377794,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-25",
+            "max_abs": 1.0,
+            "rmse": 0.016858048273904337,
+            "relative_l2": 0.0003770516278197575,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-26",
+            "max_abs": 1.0,
+            "rmse": 0.021547227797764378,
+            "relative_l2": 0.00048135172538812466,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-27",
+            "max_abs": 1.0,
+            "rmse": 0.026681027089430816,
+            "relative_l2": 0.0005951124503358294,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-28",
+            "max_abs": 2.0,
+            "rmse": 0.03323846252535334,
+            "relative_l2": 0.0007395353151115822,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-29",
+            "max_abs": 2.0,
+            "rmse": 0.03957266549874396,
+            "relative_l2": 0.0008779605997705096,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-30",
+            "max_abs": 2.0,
+            "rmse": 0.047629070689553424,
+            "relative_l2": 0.0010517037397372551,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-31",
+            "max_abs": 2.0,
+            "rmse": 0.059340536852942674,
+            "relative_l2": 0.0013036739550186202,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-32",
+            "max_abs": 2.0,
+            "rmse": 0.0695370242672105,
+            "relative_l2": 0.0015184010178552693,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-33",
+            "max_abs": 4.0,
+            "rmse": 0.0834964769468719,
+            "relative_l2": 0.0018126478031976717,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-34",
+            "max_abs": 4.0,
+            "rmse": 0.10819002822920398,
+            "relative_l2": 0.0035187246631312495,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-35",
+            "max_abs": 26.0,
+            "rmse": 0.19865084360255647,
+            "relative_l2": 0.010920899416573624,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          }
+        ]
+      }
+    },
+    {
+      "variant": "gemm-cpu-tail",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "FAIL",
+        "execution": {
+          "command": [
+            "env",
+            "DS4_GEMMA_DIMENSIONS=128",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-tail/probe_native_suite",
+            "build/metal-models/gemma.ds4b/bundle.ds4b",
+            "build/metal-oracles/models",
+            "build/metal-models/gemma.ds4g",
+            "gemma",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-tail/gemma",
+            "Il gatto dorme sul divano.",
+            "A cat sleeps on the sofa.",
+            "The train arrives at the station."
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 1200,
+          "base_timeout_seconds": 300,
+          "timeout_multiplier": 4,
+          "reason": "Fullmodel recheck after documentedPVtailcorrection andexactlayer1replay; serialafterQwenservercleanup, frozenoracles and2GiBhostreserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 2.06885604099989,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 8819.137032083,
+              "pressure": 1,
+              "host_available_bytes": 11473174528,
+              "swap_bytes": 262144,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 8820.156922833,
+              "pressure": 1,
+              "host_available_bytes": 11227217920,
+              "swap_bytes": 262144,
+              "footprint_bytes": 127943400,
+              "resident_bytes": 131661824
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-tail/probe_native_suite": "3184c0d56d716a37abb87e825d21cfcc673f966c50569405393b09d0d33f8439"
+          },
+          "log_sha256": "2cddd197b69f1df22f09edf8dad878aa6ff5a057a7c87843cdd864b3077dbc56"
+        },
+        "internal_boundaries": {
+          "criterion": "bit_exact",
+          "status": "FAIL",
+          "exact": 6,
+          "count": 81,
+          "boundaries": [
+            {
+              "file": "item-0-embeddings-0.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-0.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.001708984375,
+              "rmse": 3.220745329951263e-05
+            },
+            {
+              "file": "item-0-layer-1.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0078125,
+              "rmse": 0.0007903257209906066
+            },
+            {
+              "file": "item-0-layer-10.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.01970385026517043
+            },
+            {
+              "file": "item-0-layer-11.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.013371088661249076
+            },
+            {
+              "file": "item-0-layer-12.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01730380823626329
+            },
+            {
+              "file": "item-0-layer-13.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02034094594865599
+            },
+            {
+              "file": "item-0-layer-14.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017388880131933335
+            },
+            {
+              "file": "item-0-layer-15.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.019346173580825996
+            },
+            {
+              "file": "item-0-layer-16.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01196118720879586
+            },
+            {
+              "file": "item-0-layer-17.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014211306288147861
+            },
+            {
+              "file": "item-0-layer-18.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014095972362851317
+            },
+            {
+              "file": "item-0-layer-19.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01455570579136631
+            },
+            {
+              "file": "item-0-layer-2.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0034231583582519766
+            },
+            {
+              "file": "item-0-layer-20.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.015070683912719388
+            },
+            {
+              "file": "item-0-layer-21.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01612936131122197
+            },
+            {
+              "file": "item-0-layer-22.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.015736731968357662
+            },
+            {
+              "file": "item-0-layer-23.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.006198369437750488
+            },
+            {
+              "file": "item-0-layer-3.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0625,
+              "rmse": 0.00825502918645584
+            },
+            {
+              "file": "item-0-layer-4.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0703125,
+              "rmse": 0.014248339046575015
+            },
+            {
+              "file": "item-0-layer-5.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.016265181197104232
+            },
+            {
+              "file": "item-0-layer-6.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.007978534768100204
+            },
+            {
+              "file": "item-0-layer-7.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.0703125,
+              "rmse": 0.011335903770971973
+            },
+            {
+              "file": "item-0-layer-8.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.01667719722306365
+            },
+            {
+              "file": "item-0-layer-9.bf16",
+              "elements": 5632,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.021240128547724293
+            },
+            {
+              "file": "item-0-ple-0.bf16",
+              "elements": 135168,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-projected-24.bf16",
+              "elements": 8448,
+              "bit_exact": false,
+              "max_abs": 32.0,
+              "rmse": 0.9871863377810467
+            },
+            {
+              "file": "item-1-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.00390625,
+              "rmse": 0.00013859483432453117
+            },
+            {
+              "file": "item-1-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0011805518686484725
+            },
+            {
+              "file": "item-1-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.02096279935807795
+            },
+            {
+              "file": "item-1-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.0137121081223407
+            },
+            {
+              "file": "item-1-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.015498568257182738
+            },
+            {
+              "file": "item-1-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.021292459176860932
+            },
+            {
+              "file": "item-1-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.017425858941691203
+            },
+            {
+              "file": "item-1-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01803165925754982
+            },
+            {
+              "file": "item-1-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.013696550439607394
+            },
+            {
+              "file": "item-1-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.016757698012858226
+            },
+            {
+              "file": "item-1-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.015816083936246905
+            },
+            {
+              "file": "item-1-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01791611554971478
+            },
+            {
+              "file": "item-1-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.003942734008649199
+            },
+            {
+              "file": "item-1-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.018147368004290097
+            },
+            {
+              "file": "item-1-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.75,
+              "rmse": 0.020368962986235348
+            },
+            {
+              "file": "item-1-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 1.0,
+              "rmse": 0.02265786451865376
+            },
+            {
+              "file": "item-1-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.0041195182295038655
+            },
+            {
+              "file": "item-1-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.064453125,
+              "rmse": 0.00879000811563808
+            },
+            {
+              "file": "item-1-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0625,
+              "rmse": 0.014899809531155257
+            },
+            {
+              "file": "item-1-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.125,
+              "rmse": 0.01683136175007531
+            },
+            {
+              "file": "item-1-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.00891673714890678
+            },
+            {
+              "file": "item-1-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.014544361685709259
+            },
+            {
+              "file": "item-1-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.017985042601431293
+            },
+            {
+              "file": "item-1-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.022018861313839653
+            },
+            {
+              "file": "item-1-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": false,
+              "max_abs": 8.0,
+              "rmse": 0.8516730967795797
+            },
+            {
+              "file": "item-2-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0078125,
+              "rmse": 0.00041035635453037214
+            },
+            {
+              "file": "item-2-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.03125,
+              "rmse": 0.0013672966119034756
+            },
+            {
+              "file": "item-2-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.025252345602645325
+            },
+            {
+              "file": "item-2-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.01859644074776186
+            },
+            {
+              "file": "item-2-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.021253775768799908
+            },
+            {
+              "file": "item-2-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02633411134142289
+            },
+            {
+              "file": "item-2-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25390625,
+              "rmse": 0.024042313508755415
+            },
+            {
+              "file": "item-2-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.02637113451130616
+            },
+            {
+              "file": "item-2-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.012775588485666487
+            },
+            {
+              "file": "item-2-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.0180740178442906
+            },
+            {
+              "file": "item-2-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01749606215806912
+            },
+            {
+              "file": "item-2-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.018375560284319727
+            },
+            {
+              "file": "item-2-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.0045648946433827055
+            },
+            {
+              "file": "item-2-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.018033847309469754
+            },
+            {
+              "file": "item-2-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.019939436961536258
+            },
+            {
+              "file": "item-2-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.01815792984100408
+            },
+            {
+              "file": "item-2-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.0052322308089956925
+            },
+            {
+              "file": "item-2-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.046875,
+              "rmse": 0.009146398090644376
+            },
+            {
+              "file": "item-2-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.09375,
+              "rmse": 0.0152891246308798
+            },
+            {
+              "file": "item-2-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.0966796875,
+              "rmse": 0.01611912119858603
+            },
+            {
+              "file": "item-2-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.00858692967756348
+            },
+            {
+              "file": "item-2-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.25,
+              "rmse": 0.013367200940618107
+            },
+            {
+              "file": "item-2-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.5,
+              "rmse": 0.021266442101028318
+            },
+            {
+              "file": "item-2-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": false,
+              "max_abs": 0.375,
+              "rmse": 0.02617400992599739
+            },
+            {
+              "file": "item-2-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": false,
+              "max_abs": 6.0,
+              "rmse": 0.9597376259705092
+            }
+          ]
+        },
+        "output_vectors": {
+          "metrics": {
+            "max_abs": 0.0018531084060668945,
+            "rmse": 0.0005597969110217383,
+            "relative_l2": 0.006333378892556159,
+            "bit_exact": false,
+            "cosine_min": 0.9999761110220812,
+            "unit_norm_error_max": 1.914071701136777e-08
+          },
+          "tolerances": {
+            "cosine_min": 0.999,
+            "max_abs": 0.005,
+            "rmse_max": 0.0015,
+            "unit_norm_error_max": 1e-05,
+            "dimensions": [
+              128,
+              256,
+              512,
+              768
+            ],
+            "float16": "REJECT"
+          },
+          "status": "PASS"
+        }
+      },
+      "encoder": {
+        "status": "FAIL",
+        "execution": {
+          "command": [
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-tail/probe_qwen_image_encoder",
+            "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+            "build/metal-models",
+            "build/metal-models/image-tokenizer.ds4q",
+            "build/metal-qualification/t06-t07-20261031/image-text/encoder.ds4i",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-tail/encoder"
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 1200,
+          "base_timeout_seconds": 300,
+          "timeout_multiplier": 4,
+          "reason": "Fullmodel recheck after documentedPVtailcorrection andexactlayer1replay; serialafterQwenservercleanup, frozenoracles and2GiBhostreserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 25.31530854199991,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 8793.835237166,
+              "pressure": 1,
+              "host_available_bytes": 13283606528,
+              "swap_bytes": 262144,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 8794.842907375,
+              "pressure": 1,
+              "host_available_bytes": 13241745408,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8795.85407625,
+              "pressure": 1,
+              "host_available_bytes": 13477199872,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8796.864880333,
+              "pressure": 1,
+              "host_available_bytes": 13347061760,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8797.875866875,
+              "pressure": 1,
+              "host_available_bytes": 13334462464,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8798.886542375,
+              "pressure": 1,
+              "host_available_bytes": 13177978880,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8799.898683333,
+              "pressure": 1,
+              "host_available_bytes": 13468794880,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8800.909845,
+              "pressure": 1,
+              "host_available_bytes": 13503430656,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8801.920465708,
+              "pressure": 1,
+              "host_available_bytes": 13492666368,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8802.92971175,
+              "pressure": 1,
+              "host_available_bytes": 13530611712,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8803.938196166,
+              "pressure": 1,
+              "host_available_bytes": 13602340864,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8804.94619975,
+              "pressure": 1,
+              "host_available_bytes": 13579272192,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8805.955438041,
+              "pressure": 1,
+              "host_available_bytes": 13568999424,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6980136,
+              "resident_bytes": 16629760
+            },
+            {
+              "monotonic": 8806.962677625,
+              "pressure": 1,
+              "host_available_bytes": 13460783104,
+              "swap_bytes": 262144,
+              "footprint_bytes": 76268336,
+              "resident_bytes": 143884288
+            },
+            {
+              "monotonic": 8807.975766083,
+              "pressure": 1,
+              "host_available_bytes": 11226333184,
+              "swap_bytes": 262144,
+              "footprint_bytes": 1233176976,
+              "resident_bytes": 2348187648
+            },
+            {
+              "monotonic": 8808.988248666,
+              "pressure": 1,
+              "host_available_bytes": 9679896576,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2005995336,
+              "resident_bytes": 4009132032
+            },
+            {
+              "monotonic": 8810.000497083,
+              "pressure": 1,
+              "host_available_bytes": 9536765952,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2059064000,
+              "resident_bytes": 4380295168
+            },
+            {
+              "monotonic": 8811.013116708,
+              "pressure": 1,
+              "host_available_bytes": 9323872256,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2178717360,
+              "resident_bytes": 5395791872
+            },
+            {
+              "monotonic": 8812.024611,
+              "pressure": 1,
+              "host_available_bytes": 9353969664,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2227968552,
+              "resident_bytes": 6650232832
+            },
+            {
+              "monotonic": 8813.036161291,
+              "pressure": 1,
+              "host_available_bytes": 9477259264,
+              "swap_bytes": 262144,
+              "footprint_bytes": 1993088296,
+              "resident_bytes": 7723106304
+            },
+            {
+              "monotonic": 8814.045168541,
+              "pressure": 1,
+              "host_available_bytes": 9282732032,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2098471168,
+              "resident_bytes": 9090285568
+            },
+            {
+              "monotonic": 8815.053398666,
+              "pressure": 1,
+              "host_available_bytes": 9306980352,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2192745640,
+              "resident_bytes": 10435280896
+            },
+            {
+              "monotonic": 8816.062379083,
+              "pressure": 1,
+              "host_available_bytes": 9338142720,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2240079928,
+              "resident_bytes": 11686428672
+            },
+            {
+              "monotonic": 8817.072267458,
+              "pressure": 1,
+              "host_available_bytes": 9364914176,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2012261152,
+              "resident_bytes": 12598476800
+            },
+            {
+              "monotonic": 8818.084547208,
+              "pressure": 1,
+              "host_available_bytes": 9404268544,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2015669840,
+              "resident_bytes": 12613730304
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-tail/probe_qwen_image_encoder": "a1ac05c679fcab8f0527421aac536b96b407dcc785953c6373cd961043a8042d"
+          },
+          "log_sha256": "9355236942fb4029a1a463a61551061a56dcf79b32d9d92f84ac0dcb4087fae5"
+        },
+        "input_identity": {
+          "tokens": true,
+          "positions": true,
+          "image_mask": true,
+          "complete_layers": true
+        },
+        "conditioning": {
+          "max_abs": 26.0,
+          "rmse": 0.257135677880774,
+          "relative_l2": 0.020650767777432123,
+          "bit_exact": false,
+          "verdict": "FAIL"
+        },
+        "layers": [
+          {
+            "stage": "embeddings-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-1",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-2",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-3",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-4",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-5",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-6",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-7",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-8",
+            "max_abs": 0.0078125,
+            "rmse": 0.00013815182697351258,
+            "relative_l2": 3.8140876916588468e-06,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-9",
+            "max_abs": 0.03125,
+            "rmse": 0.0007468084846652,
+            "relative_l2": 2.0617573810267536e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-10",
+            "max_abs": 0.0625,
+            "rmse": 0.0009390988123439778,
+            "relative_l2": 2.592538443968087e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-11",
+            "max_abs": 0.25,
+            "rmse": 0.001328702528025792,
+            "relative_l2": 3.667989401129956e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-12",
+            "max_abs": 0.25,
+            "rmse": 0.0016083481092146988,
+            "relative_l2": 4.4396881950605944e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-13",
+            "max_abs": 0.25,
+            "rmse": 0.0018470436104325205,
+            "relative_l2": 5.09852676231455e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-14",
+            "max_abs": 0.25,
+            "rmse": 0.0021924466579721818,
+            "relative_l2": 6.0514066555017665e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-15",
+            "max_abs": 0.25,
+            "rmse": 0.0024166138129845657,
+            "relative_l2": 6.669898743313353e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-16",
+            "max_abs": 0.125,
+            "rmse": 0.002403829138239377,
+            "relative_l2": 5.405048056411371e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-17",
+            "max_abs": 0.25,
+            "rmse": 0.0029566828363906017,
+            "relative_l2": 6.633764719479023e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-18",
+            "max_abs": 0.25,
+            "rmse": 0.0033267339327499234,
+            "relative_l2": 7.463786812541544e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-19",
+            "max_abs": 0.25,
+            "rmse": 0.004035607275650958,
+            "relative_l2": 9.052558664980365e-05,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-20",
+            "max_abs": 0.25,
+            "rmse": 0.004702028068127494,
+            "relative_l2": 0.0001054665389477549,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-21",
+            "max_abs": 0.25,
+            "rmse": 0.005949619202193756,
+            "relative_l2": 0.00013343084412804576,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-22",
+            "max_abs": 0.5,
+            "rmse": 0.007476323069800256,
+            "relative_l2": 0.00016761327738467593,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-23",
+            "max_abs": 0.5,
+            "rmse": 0.00998808208884664,
+            "relative_l2": 0.00022379957269848735,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-24",
+            "max_abs": 1.0,
+            "rmse": 0.013453332049502107,
+            "relative_l2": 0.00030118554263354615,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-25",
+            "max_abs": 1.0,
+            "rmse": 0.017344969236844213,
+            "relative_l2": 0.00038794223263432793,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-26",
+            "max_abs": 1.0,
+            "rmse": 0.021962385988723812,
+            "relative_l2": 0.0004906261022779476,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-27",
+            "max_abs": 1.0,
+            "rmse": 0.026988914056430616,
+            "relative_l2": 0.000601979778446684,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-28",
+            "max_abs": 2.0,
+            "rmse": 0.0335865081689047,
+            "relative_l2": 0.0007472791162720791,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-29",
+            "max_abs": 2.0,
+            "rmse": 0.039757534826547376,
+            "relative_l2": 0.0008820621174184074,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-30",
+            "max_abs": 2.0,
+            "rmse": 0.048208181282549736,
+            "relative_l2": 0.001064491156488371,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-31",
+            "max_abs": 4.0,
+            "rmse": 0.06056026586647429,
+            "relative_l2": 0.0013304706277730708,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-32",
+            "max_abs": 2.0,
+            "rmse": 0.07038689093160773,
+            "relative_l2": 0.0015369585909159635,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-33",
+            "max_abs": 4.0,
+            "rmse": 0.08464421992067966,
+            "relative_l2": 0.0018375644686209564,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-34",
+            "max_abs": 4.0,
+            "rmse": 0.10972516323731532,
+            "relative_l2": 0.0035686527156762946,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          },
+          {
+            "stage": "text-35",
+            "max_abs": 26.0,
+            "rmse": 0.19721406231808886,
+            "relative_l2": 0.010841911864309916,
+            "bit_exact": false,
+            "verdict": "FAIL"
+          }
+        ]
+      }
+    },
+    {
+      "variant": "gemm-cpu-compatible",
+      "scope": "Experimental binary; production numeric code unchanged",
+      "gemma": {
+        "status": "PASS",
+        "execution": {
+          "command": [
+            "env",
+            "DS4_GEMMA_DIMENSIONS=128",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_native_suite",
+            "build/metal-models/gemma.ds4b/bundle.ds4b",
+            "build/metal-oracles/models",
+            "build/metal-models/gemma.ds4g",
+            "gemma",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/gemma",
+            "Il gatto dorme sul divano.",
+            "A cat sleeps on the sofa.",
+            "The train arrives at the station."
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 1200,
+          "base_timeout_seconds": 300,
+          "timeout_multiplier": 4,
+          "reason": "Combined isolated candidate after exact identical-input GELU and softmax/attention replay; unchanged frozen oracles, serial full models, user4x deadlines and2GiB host reserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 2.077095625001675,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 12078.382045708,
+              "pressure": 1,
+              "host_available_bytes": 13061177344,
+              "swap_bytes": 262144,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 12079.393507375,
+              "pressure": 1,
+              "host_available_bytes": 13025329152,
+              "swap_bytes": 262144,
+              "footprint_bytes": 7389736,
+              "resident_bytes": 17121280
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_native_suite": "ec9e7c50631c86aee65a4efeec07f799ee9122f39d97ddd53db4c71550eb6aa3"
+          },
+          "log_sha256": "2cddd197b69f1df22f09edf8dad878aa6ff5a057a7c87843cdd864b3077dbc56"
+        },
+        "internal_boundaries": {
+          "criterion": "bit_exact",
+          "status": "PASS",
+          "exact": 81,
+          "count": 81,
+          "boundaries": [
+            {
+              "file": "item-0-embeddings-0.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-0.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-1.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-10.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-11.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-12.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-13.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-14.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-15.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-16.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-17.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-18.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-19.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-2.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-20.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-21.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-22.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-23.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-3.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-4.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-5.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-6.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-7.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-8.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-layer-9.bf16",
+              "elements": 5632,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-ple-0.bf16",
+              "elements": 135168,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-0-projected-24.bf16",
+              "elements": 8448,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-1-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-embeddings-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-0.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-1.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-10.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-11.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-12.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-13.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-14.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-15.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-16.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-17.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-18.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-19.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-2.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-20.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-21.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-22.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-23.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-3.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-4.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-5.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-6.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-7.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-8.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-layer-9.bf16",
+              "elements": 4608,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-ple-0.bf16",
+              "elements": 110592,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            },
+            {
+              "file": "item-2-projected-24.bf16",
+              "elements": 6912,
+              "bit_exact": true,
+              "max_abs": 0.0,
+              "rmse": 0.0
+            }
+          ]
+        },
+        "output_vectors": {
+          "metrics": {
+            "max_abs": 5.960464477539063e-08,
+            "rmse": 5.255476710519912e-09,
+            "relative_l2": 5.9458929860787946e-08,
+            "bit_exact": false,
+            "cosine_min": 0.9999999999999988,
+            "unit_norm_error_max": 2.366376894435973e-08
+          },
+          "tolerances": {
+            "cosine_min": 0.999,
+            "max_abs": 0.005,
+            "rmse_max": 0.0015,
+            "unit_norm_error_max": 1e-05,
+            "dimensions": [
+              128,
+              256,
+              512,
+              768
+            ],
+            "float16": "REJECT"
+          },
+          "status": "PASS"
+        }
+      },
+      "encoder": {
+        "status": "PASS",
+        "execution": {
+          "command": [
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_qwen_image_encoder",
+            "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+            "build/metal-models",
+            "build/metal-models/image-tokenizer.ds4q",
+            "build/metal-qualification/t06-t07-20261031/image-text/encoder.ds4i",
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/encoder"
+          ],
+          "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+          "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+          "environment": {},
+          "timeout_seconds": 1200,
+          "base_timeout_seconds": 300,
+          "timeout_multiplier": 4,
+          "reason": "Combined isolated candidate after exact identical-input GELU and softmax/attention replay; unchanged frozen oracles, serial full models, user4x deadlines and2GiB host reserve.",
+          "footprint_limit_gib": null,
+          "memory_policy": {
+            "host_reserve_bytes": 2147483648,
+            "critical_pressure": 4,
+            "swap_growth_bytes": 268435456,
+            "unsafe_samples": 2
+          },
+          "exit_code": 0,
+          "elapsed_seconds": 25.300101500000892,
+          "status": "PASS",
+          "cleanup_error": null,
+          "cleanup_forced": false,
+          "samples": [
+            {
+              "monotonic": 12080.444897666,
+              "pressure": 1,
+              "host_available_bytes": 13120012288,
+              "swap_bytes": 262144,
+              "footprint_bytes": 81992,
+              "resident_bytes": 32768
+            },
+            {
+              "monotonic": 12081.454554625,
+              "pressure": 1,
+              "host_available_bytes": 13108035584,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12082.462764166,
+              "pressure": 1,
+              "host_available_bytes": 13087277056,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12083.473140708,
+              "pressure": 1,
+              "host_available_bytes": 13494337536,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12084.481919625,
+              "pressure": 1,
+              "host_available_bytes": 13544210432,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12085.490154125,
+              "pressure": 1,
+              "host_available_bytes": 13573505024,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12086.500411666,
+              "pressure": 1,
+              "host_available_bytes": 13596688384,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12087.511476875,
+              "pressure": 1,
+              "host_available_bytes": 13608222720,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12088.524931,
+              "pressure": 1,
+              "host_available_bytes": 13630996480,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12089.536550458,
+              "pressure": 1,
+              "host_available_bytes": 13645725696,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12090.547125291,
+              "pressure": 1,
+              "host_available_bytes": 13941751808,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12091.557428208,
+              "pressure": 1,
+              "host_available_bytes": 13945192448,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12092.56494375,
+              "pressure": 1,
+              "host_available_bytes": 13929988096,
+              "swap_bytes": 262144,
+              "footprint_bytes": 6668864,
+              "resident_bytes": 16351232
+            },
+            {
+              "monotonic": 12093.579464625,
+              "pressure": 1,
+              "host_available_bytes": 12779831296,
+              "swap_bytes": 262144,
+              "footprint_bytes": 597362200,
+              "resident_bytes": 1078165504
+            },
+            {
+              "monotonic": 12094.586401166,
+              "pressure": 1,
+              "host_available_bytes": 10612654080,
+              "swap_bytes": 262144,
+              "footprint_bytes": 1684442232,
+              "resident_bytes": 3250094080
+            },
+            {
+              "monotonic": 12095.598523708,
+              "pressure": 1,
+              "host_available_bytes": 9832857600,
+              "swap_bytes": 262144,
+              "footprint_bytes": 1930350888,
+              "resident_bytes": 4317954048
+            },
+            {
+              "monotonic": 12096.611872166,
+              "pressure": 1,
+              "host_available_bytes": 9610903552,
+              "swap_bytes": 262144,
+              "footprint_bytes": 1969181832,
+              "resident_bytes": 4694081536
+            },
+            {
+              "monotonic": 12097.623970375,
+              "pressure": 1,
+              "host_available_bytes": 9420767232,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2016090160,
+              "resident_bytes": 5845041152
+            },
+            {
+              "monotonic": 12098.635684916,
+              "pressure": 1,
+              "host_available_bytes": 9324478464,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2049989472,
+              "resident_bytes": 7069630464
+            },
+            {
+              "monotonic": 12099.648758208,
+              "pressure": 1,
+              "host_available_bytes": 9363013632,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2138890040,
+              "resident_bytes": 8403828736
+            },
+            {
+              "monotonic": 12100.663827708,
+              "pressure": 1,
+              "host_available_bytes": 9426649088,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2009096928,
+              "resident_bytes": 9686614016
+            },
+            {
+              "monotonic": 12101.675013125,
+              "pressure": 1,
+              "host_available_bytes": 9419522048,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2021975544,
+              "resident_bytes": 10869047296
+            },
+            {
+              "monotonic": 12102.687631208,
+              "pressure": 1,
+              "host_available_bytes": 9321381888,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2077469088,
+              "resident_bytes": 12136431616
+            },
+            {
+              "monotonic": 12103.694372958,
+              "pressure": 1,
+              "host_available_bytes": 9286041600,
+              "swap_bytes": 262144,
+              "footprint_bytes": 2150313216,
+              "resident_bytes": 12417662976
+            },
+            {
+              "monotonic": 12104.710949333,
+              "pressure": 1,
+              "host_available_bytes": 10662510592,
+              "swap_bytes": 262144,
+              "footprint_bytes": 853044336,
+              "resident_bytes": 12244467712
+            }
+          ],
+          "executables_sha256": {
+            "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_qwen_image_encoder": "ba290cce134f19aa6d8ae4b62277357609284800c8058802bb2f10e0345b0c83"
+          },
+          "log_sha256": "9602c80d0dfda23bdacf56ee201a96fd31f03f19247ba490bba7663cd30a4062"
+        },
+        "input_identity": {
+          "tokens": true,
+          "positions": true,
+          "image_mask": true,
+          "complete_layers": true
+        },
+        "conditioning": {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        "layers": [
+          {
+            "stage": "embeddings-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-0",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-1",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-2",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-3",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-4",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-5",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-6",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-7",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-8",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-9",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-10",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-11",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-12",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-13",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-14",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-15",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-16",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-17",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-18",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-19",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-20",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-21",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-22",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-23",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-24",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-25",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-26",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-27",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-28",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-29",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-30",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-31",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-32",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-33",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-34",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          },
+          {
+            "stage": "text-35",
+            "max_abs": 0.0,
+            "rmse": 0.0,
+            "relative_l2": 0.0,
+            "bit_exact": true,
+            "verdict": "PASS"
+          }
+        ]
+      }
+    }
+  ]
+}

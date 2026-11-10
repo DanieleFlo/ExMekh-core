@@ -1,0 +1,63 @@
+F
+=================================== FAILURES ===================================
+____ test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui ____
+
+tmp_path = PosixPath('/private/var/folders/43/31sxwsnx5yj0nkg_09p0dyvc0000gn/T/pytest-of-danieleflorio/pytest-15/test_real_image_generation_del0')
+
+    async def test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui(
+        tmp_path,
+    ):
+        image_count = int(os.getenv("DS4_SUITE_E2E_IMAGE_COUNT", "2"))
+        compact_reply = os.getenv("DS4_SUITE_E2E_COMPACT_REPLY", "0") == "1"
+        assert image_count in (1, 2), (
+            "explicit native development subset supports one or two images"
+        )
+        artifacts = Path(os.getenv("DS4_SUITE_E2E_ARTIFACTS", str(tmp_path / "evidence")))
+        artifacts.mkdir(parents=True, exist_ok=True)
+        with BrowserTestServer(
+            tmp_path / "state", module="tests.run_native_image_generation_agent"
+        ) as url:
+            async with async_playwright() as playwright:
+                browser = await playwright.chromium.launch(
+                    executable_path=get_edge_executable(), headless=True
+                )
+                page = await browser.new_page(viewport={"width": 1360, "height": 900})
+                errors = []
+                page.on("pageerror", lambda error: errors.append(str(error)))
+                try:
+                    await page.goto(url, wait_until="networkidle")
+                    await send_command(
+                        page,
+                        f"Remember code IMAGE-E2E-17. Generate exactly {image_count} images by calling generate-image exactly once "
+                        f"with prompt 'A red square on white', n {image_count}, width 256, height 256, seed 171, "
+                        "background opaque, include_image_in_result true, preview_scale 0.5. "
+                        "Wait for the generation to complete. "
+                        + (
+                            "Omit unspecified optional arguments. After success reply exactly IMAGE-E2E-17 "
+                            "and no other text. Do not describe the image or repeat its metadata."
+                            if compact_reply
+                            else "After success finish with IMAGE-E2E-17."
+                        ),
+                        published_text=f"Remember code IMAGE-E2E-17. Generate exactly {image_count} images",
+                    )
+                    deadline = time.monotonic() + float(
+                        os.getenv("DS4_SUITE_LLM_START_TIMEOUT_SECONDS", "120")
+                    )
+                    while True:
+                        state = await (
+                            await page.request.get(
+                                f"{url}/test/native-image-stats", timeout=2000
+                            )
+                        ).json()
+                        if state["image_requests"]:
+                            break
+>                       assert time.monotonic() < deadline, state
+E                       AssertionError: {'image_requests': [], 'image_responses': [], 'provider_calls': [{'tool_names': ['generate-image', 'exit_agent'], 'too...iled or partially delivered work, check effects already applied.</harness-output-guidance>"}], ...}], 'files': [], ...}
+E                       assert 21896.4155105 < 21896.353468791
+E                        +  where 21896.4155105 = <built-in function monotonic>()
+E                        +    where <built-in function monotonic> = time.monotonic
+
+agent/tests/test_native_image_generation_e2e.py:79: AssertionError
+=========================== short test summary info ============================
+FAILED agent/tests/test_native_image_generation_e2e.py::test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui
+1 failed in 484.14s (0:08:04)

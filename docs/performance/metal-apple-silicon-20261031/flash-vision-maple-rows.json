@@ -1,0 +1,44 @@
+{
+  "kind": "encoder-implementation-parity",
+  "backend": "metal",
+  "tokens": 128,
+  "projection": 2560,
+  "min_cos": 0.99,
+  "mmproj": "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+  "mmproj_sha256": "b2e9b5e4a44c107f8867e67dbf09b607fd99ae33c1a97a60a6720aeb252a9dad",
+  "image": "tests/vision-fixtures/qwen38/maple.png",
+  "image_sha256": "76198c864eef7eb35103bb599c227a0d1258d5c67b058f76f62437ef464fa9bf",
+  "source_sha256": {
+    "ds4.c": "c1fe44fc3a2cffb5804f746cee37c6e4f4b7490de0847e2dcae429897f69420b",
+    "ds4_metal.m": "4b4e989bd8f4f66d45012afac533691f3bec0197a08d2d464961ffc8c964924f",
+    "ds4_qwen4_vision.h": "2c2337d53eb772818c58a90f4017a54715116bc7129b1b1aafccf6d7076bb53f",
+    "metal/qwen4_vision.metal": "b37c7fc2c66131bf5817621920a6b5b30271af21160e7da33edc71e2d5c7fb4b",
+    "tests/qwen4_vision_ref.py": "6f0c30c0d6a0f43bb037a0b68680a8da2f6bdd2eed2d304c60766ca05aa49cea",
+    "tools/qualify_qwen_metal_vision.py": "f65129be941b636600f17185fbf20fd53a19398d248e063006cd0f305d58e373"
+  },
+  "binary_sha256": "2bd64031d6ce30be106f4cd847f149d9d3c54865ee6a46df91f9949165dc44e8",
+  "versions": {
+    "torch": "2.15.0",
+    "transformers": "5.21.0.dev0",
+    "numpy": "2.5.4",
+    "gguf": "0.19.0",
+    "pillow": "12.3.0"
+  },
+  "llm_multimodal_gate": "NOT_VERIFIED",
+  "shape": [
+    117,
+    2560
+  ],
+  "grid": [
+    9,
+    13
+  ],
+  "implementation": {
+    "pass": true,
+    "min_cos": 0.9972996942543941,
+    "mean_cos": 0.9998290403891106,
+    "worst_token": 110,
+    "max_abs": 0.009756304323673248,
+    "mean_abs": 0.00035388713070366414
+  }
+}

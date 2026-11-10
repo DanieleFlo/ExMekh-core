@@ -186,6 +186,140 @@ Il frontend non interpreta più gli elementi XML degli header della libreria.
 - righe 29–51: **Memoria che rimane intenzionalmente disponibile** — non più visibili possono restare nello spazio prenotato dal contesto e vengono
 - righe 52–94: **Verifica e limiti delle misure** — Qwen3.8-27B UD-Q4_K_S, sidecar MTP, RTX 3090, CUDA/Linux su WSL.
 
+## [Riesame del porting Metal: responsabilità, lifetime e leggibilità](metal-clean-code-review-20261029.md)
+
+La semantica e la preparazione delle operazioni restano nel dominio numerico
+
+- righe 12–39: **Correzioni e confini** — La semantica e la preparazione delle operazioni restano nel dominio numerico
+- righe 40–74: **Verifiche e limiti** — Le primitive Metal e CPU sono confrontate con PyTorch usando i gate
+- righe 75–90: **Debito residuo** — I principi di responsabilità singola, incapsulamento, nomi espliciti,
+
+## [Riesame della continuazione Metal: binding, ownership e diagnostici](metal-diagnostics-clean-code-review-20261029.md)
+
+La semantica Gemma resta nel diagnostico: scala PLE, ordine delle frontiere,
+
+- righe 13–34: **Problemi corretti** — La semantica Gemma resta nel diagnostico: scala PLE, ordine delle frontiere,
+- righe 35–67: **Verifiche dopo il refactoring** — cap sintetico di 1 MiB, NOMEM seguito da nuova allocazione riuscita, wrapper,
+- righe 68–82: **Valutazione Clean Code e debito residuo** — Nel perimetro rivisto sono stati applicati responsabilità singola,
+
+## [Riesame Clean Code dello streaming Flash, 2 novembre 2026](metal-flash-stream-clean-code-review-20261102.md)
+
+GPU.
+
+- righe 7–34: **Responsabilità individuate prima del refactoring** — GPU.
+- righe 35–105: **Modifiche e verifica** — Separato `ds4_file_reader.h`: un proprietario C privato, con API di apertura,
+- righe 106–112: **Limiti** — Il riesame può verificare e migliorare questi confini, non certificare ogni
+
+## [Riesame Clean Code delle fondamenta Metal](metal-foundations-clean-code-review-20261029.md)
+
+Il test lifecycle continua a costruire descrittori interni sintetici perché
+
+- righe 8–27: **Responsabilità e interfacce** — Il test lifecycle continua a costruire descrittori interni sintetici perché
+- righe 28–55: **Correzioni di coerenza** — pressione elevata azzera l'ammissione, conservando il dato diagnostico.
+- righe 56–67: **Verifica e limiti** — Il registro del riesame
+
+## [Riesame delle proiezioni BF16 Metal](metal-image-ordered-projection-clean-code-review-20261103.md)
+
+Letti `ds4_numeric.c` (validazione linear/matmul, slicing, overlap, lifetime),
+
+- righe 8–29: **Responsabilità e problema trovato** — Letti `ds4_numeric.c` (validazione linear/matmul, slicing, overlap, lifetime),
+- righe 30–64: **Audit prima del refactoring del dispatch** — Riletti i pin della scheda I-P01.
+- righe 65–73: **Verifiche previste** — Replay BF16 su input identici, incluso il tile con una riga parziale e
+- righe 74–97: **Nuova differenza di tempo e controllo** — Il primo testo riesaminato passa tutti i gate ma misura 137,131 s, DiT
+- righe 98–140: **Risultati del riesame** — acceleratore PASS dopo il refactoring.
+- righe 141–146: **Commit di integrazione** — `9634c83` contiene il kernel e la regressione BF16.
+- righe 147–186: **Secondo riesame dopo b2d94a8** — Riletti i tre commit integrati, il validatore pubblico linear/matmul, il
+
+## [Riesame di convoluzione, memoria e prefetch Image](metal-image-prefetch-clean-code-review-20261105.md)
+
+Il riesame del 5 novembre comprende tutte le modifiche ancora da integrare
+
+
+## [Riesame della cache adattiva Qwen Metal — 3 novembre 2026](metal-qwen27-adaptive-cache-clean-code-review-20261103.md)
+
+Riletti diff, core, engine/session creation, checkpoint/park/release/load, API GPU, cache, reader/resource registry, sampler e consumer Numeric, launcher/config/test e report della campagna.
+
+- righe 11–22: **Ispezione prima degli interventi** — Riletti diff, core, engine/session creation, checkpoint/park/release/load, API GPU, cache, reader/resource registry, sampler e consumer Numeric, launcher/config/test e report della campagna.
+- righe 23–34: **Audit specifico prima del fix del workflow** — Fonti rilette ai pin della campagna, con percorsi esatti:
+- righe 35–42: **Correzione dopo il primo gate completo** — Il fixture prima del fix riproduce `weights_load` rifiutato con cap zero (riga223, `repro-zero-reload`).
+- righe 43–64: **Verifica finale di correttezza** — Zero-cap lifecycle Qwen27 e Flash, constructor invalidi senza mutazione,
+- righe 65–96: **Controllo prestazionale** — P25 è congelato prima del riesame: il suo profilo è425CB/5997encoder,
+- righe 97–101: **Integrazione** — Il commit `53193ef` contiene il trasporto dei layer e la gestione dei buffer
+
+## [Riesame Clean Code della continuazione Qwen27 Metal](metal-qwen27-kernel-stream-clean-code-review-20261103.md)
+
+Letti core, API GPU, lifecycle, cache/reader/coda, wrapper UD, shader, test,
+
+- righe 8–35: **Riesame prima del codice** — Letti core, API GPU, lifecycle, cache/reader/coda, wrapper UD, shader, test,
+- righe 36–68: **Audit specifico prima del refactoring e del fix** — Riletti i sorgenti locali ai pin verificati della campagna:
+- righe 69–90: **Correzioni e verifica numerica** — Il probe pubblico pre-fix fallisce sul batch UD11 con `tokens=NULL`,
+- righe 91–130: **Controllo prestazionale dopo il riesame** — Warmup escluso e5 coppie alternate, cap1536MiB,8192/64,64 input e16 output
+- righe 131–147: **Esito e limiti** — Riesame locale completato: responsabilità separate senza nuove policy,
+
+## [Riesame Clean Code Qwen27 streamed, 2 novembre 2026](metal-qwen27-stream-clean-code-review-20261102.md)
+
+Letti reader, coda, cache Metal, consumer CUDA/PLE/transfer, test host e UD,
+
+- righe 8–37: **Riesame prima del codice** — Letti reader, coda, cache Metal, consumer CUDA/PLE/transfer, test host e UD,
+- righe 38–60: **Riesame delle fonti pertinente a questo refactoring (prima del codice)** — Riletti i file locali verificati contro i blob Git dei pin seguenti:
+- righe 61–73: **Piano di verifica** — Test host e ASan/UBSan, casi originali inclusi; fixture Metal resident/streamed,
+- righe 74–115: **Modifiche applicate** — `ds4_file_reader_run_batch` possiede avvio, submit, drain e pubblicazione.
+- righe 116–168: **Risultati finali** — Tutti i dieci gruppi di verifica successivi alla build passano: 49 test host
+- righe 169–177: **Commit** — Il commit finale separa report, roadmap, indice, profilo documentato e ignore
+
+## [Riesame di trasporto pesi, handoff e ripresa delle prove](metal-swap-resume-clean-code-review-20261109.md)
+
+verificarla tramite API prima di distruggere lo stato del backend: oggi
+
+- righe 8–32: **Responsabilità e difetti individuati prima dell'intervento** — verificarla tramite API prima di distruggere lo stato del backend: oggi
+- righe 33–51: **Riaudit dei confini prima della correzione lifetime** — Pin/hash rilette e verificate tutte le19fonti di
+- righe 52–66: **Verifica prevista** — Riprodurre il rilascio anticipato prima della correzione; test CPU del
+- righe 67–127: **Esiti e limiti,10novembre** — Il test CPU fallisce sul codice precedente perché prepare_close viene
+- righe 128–141: **Integrazione per responsabilità** — rifiutabile senza perdere il backend e dtype pubblici coerenti.
+
+## [Riesame Clean Code T06–T07, 2 novembre 2026](metal-t06-t07-clean-code-review-20261102.md)
+
+L'adattatore greedy usa `ProviderRequest.with_extra`, così non deve conoscere
+
+- righe 9–37: **Responsabilità e correzioni** — L'adattatore greedy usa `ProviderRequest.with_extra`, così non deve conoscere
+- righe 38–51: **Verifica** — Gli esiti, i comandi, gli hash dei sorgenti e i log sono conservati in
+- righe 52–65: **Limiti architetturali residui** — Non si può certificare che l'intero repository soddisfi ogni principio Clean
+
+## [Riesame di policy e qualificatori T08](metal-t08-clean-code-review-20261106.md)
+
+senza leggere implicitamente l'ambiente.
+
+- righe 8–27: **Responsabilità e interventi** — senza leggere implicitamente l'ambiente.
+- righe 28–52: **Confronto prima del refactoring** — Riletti policy, ammissione/rebalance e wrapper in `ds4_metal_memory.h`,
+- righe 53–62: **Verifica prevista** — Policy e parser su CPU, report/cleanup del controller, fixture/oracle,
+- righe 63–96: **Esiti del riesame** — Gli 86 test Python mirati passano in 14,761 s.
+- righe 97–106: **Integrazione locale** — Commit separati per responsabilità: `6bd07b0` per i proprietari della
+
+## [Implementazione del progresso image — 10 novembre 2026](native-image-progress-implementation-20261110.md)
+
+Baseline core `4a03d05c94bcaf88ff295875b8b5ea0e2ca467dd`; sorgente SDK locale
+
+- righe 3–61: **Audit prima dell'implementazione** — Baseline core `4a03d05c94bcaf88ff295875b8b5ea0e2ca467dd`; sorgente SDK locale
+- righe 62–209: **Verifiche** — `ds4_operation_progress.h` definisce metadati e callback comuni senza dipendenze
+  - righe 64–98: **Implementazione e copertura** — `ds4_operation_progress.h` definisce metadati e callback comuni senza dipendenze
+  - righe 99–123: **Prove host, SDK e frontend** — HTTP CPU: PASS; bundle 12 test e testi di prodotto 4 test: PASS.
+  - righe 124–159: **Confronto numerico isolato e gate indipendente** — Fixture Image512 originale, SHA256
+  - righe 160–176: **HTTP reale con compute nativo** — Server locale isolato con il binario aggiornato, Qwen27 SSD512/64 senza richieste
+  - righe 177–209: **Verifica del percorso CUDA** — Nel ramo Linux, `Makefile:ds4-server-suite` collega gli stessi oggetti C del
+- righe 210–252: **Revisione delle responsabilità** — SSE.
+
+## [Progresso della generazione immagini](native-image-progress.md)
+
+**Progresso, heartbeat e visualizzazione sullo skeleton appartengono al
+
+- righe 7–26: **Requisito di portabilità** — **Progresso, heartbeat e visualizzazione sullo skeleton appartengono al
+- righe 27–71: **Motivazione e punti di integrazione verificati** — Baseline ispezionata: ExMekh-core
+- righe 72–106: **Contratto comune degli eventi** — Il servizio pubblica eventi versionati `operation.started`,
+- righe 107–140: **Percentuale e skeleton** — Lo skeleton mostra **soltanto percentuale e tempo trascorso**, come richiesto
+- righe 141–200: **Trasporto v1 e timeout** — La prima implementazione usa SSE opt-in sulle chiamate image native,
+- righe 201–219: **Responsabilità dell'implementazione** — 1.
+- righe 220–242: **Gate di accettazione** — e non Qwen: passi, token, fasi mancanti e totali sconosciuti.
+
 ## [Suite multimodale nativa DS4: analisi e decisioni](native-multimodal-suite-analysis-20261020.md)
 
 Le istruzioni della conversazione corrente definiscono il perimetro del lavoro.
@@ -230,11 +364,12 @@ l'engine conosce shape e modello; il backend possiede stream e allocazioni;
 `ds4-server-suite` è un target esplicito, selezionato dal launcher Qwen27
 
 - righe 8–31: **Avvio** — `ds4-server-suite` è un target esplicito, selezionato dal launcher Qwen27
-- righe 32–64: **SDK standard** — Un solo client e una sola base URL servono chat, immagini ed embedding:
-- righe 65–97: **Client tipizzato ExMekh** — `Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`.
-- righe 98–121: **Tool e frontend** — `generate-image` è la capability registrata nel catalogo ExMekh.
-- righe 122–150: **Accettazione live della libreria e del frontend** — La suite completa usa la wheel installata nell'agente e un solo server reale,
-- righe 151–177: **Lifetime e osservabilità** — Discovery espone revision/profilo, configured/resident/ready, componenti e limiti.
+- righe 32–73: **SDK standard** — Un solo client e una sola base URL servono chat, immagini ed embedding:
+- righe 74–106: **Client tipizzato ExMekh** — `Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`.
+- righe 107–135: **Tool e frontend** — `generate-image` è la capability registrata nel catalogo ExMekh.
+- righe 136–164: **Accettazione live della libreria e del frontend** — La suite completa usa la wheel installata nell'agente e un solo server reale,
+- righe 165–209: **Lifetime e osservabilità** — Il contratto del progresso image definisce SSE,
+- righe 210–221: **Geometria delle immagini** — Il client e il tool `generate-image` espongono due `ImageDimension` Literal
 
 ## [Suite nativa: build, streaming e accettazione](native-suite-release.md)
 

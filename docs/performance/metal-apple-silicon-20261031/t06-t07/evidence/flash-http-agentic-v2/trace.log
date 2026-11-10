@@ -1,0 +1,1007 @@
+
+===== request 1 2026-10-31 21:57:31 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 708
+effective_prompt_tokens: 708
+cached_tokens: 0
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 708
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "input": [{"role": "user", "content": "Both safe_tool and safe_tool/child occur here. Call safe_tool/child exactly."}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "auto", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": ["safe_tool/child"], "allowed_skills": []}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Both safe_tool and safe_tool/child occur here. Call safe_tool/child exactly.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7484 ---
+
+I'll call `safe_tool/child` exactly as requested.
+
+<tool_call>
+
+--- trace: entered tool-call block after 15 generated tokens ---
+
+
+<function=safe_tool/child>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 30 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 30
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 117.630
+
+content:
+I'll call `safe_tool/child` exactly as requested.
+
+tool_call[0]:
+id: call_b4620042a88623a4a822a72df3d653ef
+name: safe_tool/child
+arguments:
+{}
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=708 response_prefill=31 target=739 ---
+
+
+===== request 2 2026-10-31 21:59:32 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 695
+effective_prompt_tokens: 695
+cached_tokens: 678
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 739
+prompt_tokens: 695
+live_prompt_common: 681
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 678
+disk_cached_tokens: 0
+
+first_mismatch_token: 681
+token_window: [673..690)
+    673 ==          live 510 "</" | prompt 510 "</"
+    674 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    675 ==          live 29 ">" | prompt 29 ">"
+    676 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    677 ==          live 198 "\n" | prompt 198 "\n"
+    678 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    679 ==          live 846 "user" | prompt 846 "user"
+    680 ==          live 198 "\n" | prompt 198 "\n"
+    681 !=          live 20003 "Both" | prompt 6994 "Call"
+    682 ==          live 5902 " safe" | prompt 5902 " safe"
+    683 ==          live 22076 "_tool" | prompt 22076 "_tool"
+    684 !=          live 321 " and" | prompt 6681 " exactly"
+    685 !=          live 5902 " safe" | prompt 13 "."
+    686 !=          live 22076 "_tool" | prompt 248046 "<|im_end|>"
+    687 !=          live 14 "/" | prompt 198 "\n"
+    688 !=          live 2950 "child" | prompt 248045 "<|im_start|>"
+    689 !=          live 11822 " occur" | prompt 74455 "assistant"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "input": [{"role": "user", "content": "Call safe_tool exactly."}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "required", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": ["safe_tool"], "allowed_skills": []}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call safe_tool exactly.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7497 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=safe_tool>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 14 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 14
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 15.542
+
+tool_call[0]:
+id: call_da7a60eed5f6411c33b6c89417d5d771
+name: safe_tool
+arguments:
+{}
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=695 response_prefill=15 target=710 ---
+
+
+===== request 3 2026-10-31 21:59:49 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 702
+effective_prompt_tokens: 736
+cached_tokens: 710
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 710
+prompt_tokens: 702
+live_prompt_common: 681
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: responses-tool-output
+cached_tokens: 710
+disk_cached_tokens: 0
+
+first_mismatch_token: 681
+token_window: [673..690)
+    673 ==          live 510 "</" | prompt 510 "</"
+    674 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    675 ==          live 29 ">" | prompt 29 ">"
+    676 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    677 ==          live 198 "\n" | prompt 198 "\n"
+    678 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    679 ==          live 846 "user" | prompt 846 "user"
+    680 ==          live 198 "\n" | prompt 198 "\n"
+    681 !=          live 6994 "Call" | prompt 248066 "<tool_response>"
+    682 !=          live 5902 " safe" | prompt 198 "\n"
+    683 !=          live 22076 "_tool" | prompt 6820 "Now"
+    684 !=          live 6681 " exactly" | prompt 1562 " call"
+    685 !=          live 13 "." | prompt 5902 " safe"
+    686 !=          live 248046 "<|im_end|>" | prompt 22076 "_tool"
+    687 !=          live 198 "\n" | prompt 14 "/"
+    688 !=          live 248045 "<|im_start|>" | prompt 2950 "child"
+    689 !=          live 74455 "assistant" | prompt 6681 " exactly"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "input": [{"type": "function_call_output", "call_id": "call_da7a60eed5f6411c33b6c89417d5d771", "output": "Now call safe_tool/child exactly."}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "required", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": ["safe_tool/child"], "allowed_skills": []}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+<tool_response>
+Now call safe_tool/child exactly.
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7456 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=safe_tool/child>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 16 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 16
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 18.280
+
+tool_call[0]:
+id: call_d6e23d0e75bde61053ad3d64624958eb
+name: safe_tool/child
+arguments:
+{}
+
+===== end request 3 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=736 response_prefill=17 target=753 ---
+
+
+===== request 4 2026-10-31 22:00:09 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 705
+effective_prompt_tokens: 705
+cached_tokens: 678
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 753
+prompt_tokens: 705
+live_prompt_common: 681
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 678
+disk_cached_tokens: 0
+
+first_mismatch_token: 681
+token_window: [673..690)
+    673 ==          live 510 "</" | prompt 510 "</"
+    674 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    675 ==          live 29 ">" | prompt 29 ">"
+    676 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    677 ==          live 198 "\n" | prompt 198 "\n"
+    678 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    679 ==          live 846 "user" | prompt 846 "user"
+    680 ==          live 198 "\n" | prompt 198 "\n"
+    681 !=          live 6994 "Call" | prompt 4841 "Open"
+    682 !=          live 5902 " safe" | prompt 9653 " skill"
+    683 !=          live 22076 "_tool" | prompt 6481 "-A"
+    684 !=          live 6681 " exactly" | prompt 1381 " now"
+    685 !=          live 13 "." | prompt 539 " by"
+    686 !=          live 248046 "<|im_end|>" | prompt 7842 " calling"
+    687 !=          live 198 "\n" | prompt 424 " it"
+    688 !=          live 248045 "<|im_start|>" | prompt 13 "."
+    689 !=          live 74455 "assistant" | prompt 3054 " Do"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "input": [{"role": "user", "content": "Open skill-A now by calling it. Do not call any other capability."}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "auto", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": ["execute"], "allowed_skills": ["skill-A"]}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Open skill-A now by calling it. Do not call any other capability.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7487 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=skill-A>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 14 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 14
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 17.004
+
+tool_call[0]:
+id: call_4113e206d1fb505397bdc91f495af573
+name: skill-A
+arguments:
+{}
+
+===== end request 4 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=705 response_prefill=15 target=720 ---
+
+
+===== request 5 2026-10-31 22:00:28 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 696
+effective_prompt_tokens: 739
+cached_tokens: 719
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 720
+prompt_tokens: 696
+live_prompt_common: 681
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: agentic-return
+cached_tokens: 719
+disk_cached_tokens: 0
+
+first_mismatch_token: 681
+token_window: [673..690)
+    673 ==          live 510 "</" | prompt 510 "</"
+    674 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    675 ==          live 29 ">" | prompt 29 ">"
+    676 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    677 ==          live 198 "\n" | prompt 198 "\n"
+    678 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    679 ==          live 846 "user" | prompt 846 "user"
+    680 ==          live 198 "\n" | prompt 198 "\n"
+    681 !=          live 4841 "Open" | prompt 248066 "<tool_response>"
+    682 !=          live 9653 " skill" | prompt 198 "\n"
+    683 !=          live 6481 "-A" | prompt 28493 "skill"
+    684 !=          live 1381 " now" | prompt 7807 " finished"
+    685 !=          live 539 " by" | prompt 198 "\n"
+    686 !=          live 7842 " calling" | prompt 248067 "</tool_response>"
+    687 !=          live 424 " it" | prompt 248046 "<|im_end|>"
+    688 !=          live 13 "." | prompt 198 "\n"
+    689 !=          live 3054 " Do" | prompt 248045 "<|im_start|>"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "input": [{"type": "function_call_output", "call_id": "call_4113e206d1fb505397bdc91f495af573", "output": "skill finished"}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "auto", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": ["safe_tool"], "allowed_skills": ["skill-A"], "operation": "return", "skill_call_id": "call_4113e206d1fb505397bdc91f495af573"}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+<tool_response>
+skill finished
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7453 ---
+
+The skill-A capability has been invoked and completed successfully. No other capabilities were called.
+
+--- parsed message ---
+finish: stop
+generated_tokens: 17
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 18.136
+
+content:
+The skill-A capability has been invoked and completed successfully. No other capabilities were called.
+
+===== end request 5 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=739 response_prefill=18 target=757 ---
+
+
+===== request 6 2026-10-31 22:00:48 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 695
+effective_prompt_tokens: 695
+cached_tokens: 678
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 757
+prompt_tokens: 695
+live_prompt_common: 681
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 678
+disk_cached_tokens: 0
+
+first_mismatch_token: 681
+token_window: [673..690)
+    673 ==          live 510 "</" | prompt 510 "</"
+    674 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    675 ==          live 29 ">" | prompt 29 ">"
+    676 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    677 ==          live 198 "\n" | prompt 198 "\n"
+    678 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    679 ==          live 846 "user" | prompt 846 "user"
+    680 ==          live 198 "\n" | prompt 198 "\n"
+    681 !=          live 4841 "Open" | prompt 6994 "Call"
+    682 ==          live 9653 " skill" | prompt 9653 " skill"
+    683 ==          live 6481 "-A" | prompt 6481 "-A"
+    684 !=          live 1381 " now" | prompt 6681 " exactly"
+    685 !=          live 539 " by" | prompt 13 "."
+    686 !=          live 7842 " calling" | prompt 248046 "<|im_end|>"
+    687 !=          live 424 " it" | prompt 198 "\n"
+    688 !=          live 13 "." | prompt 248045 "<|im_start|>"
+    689 !=          live 3054 " Do" | prompt 74455 "assistant"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "input": [{"role": "user", "content": "Call skill-A exactly."}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "auto", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": [], "allowed_skills": ["skill-A"]}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+{"type": "function", "function": {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type":"object","properties":{},"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call skill-A exactly.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7497 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=skill-A>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 14 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 14
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 15.655
+
+tool_call[0]:
+id: call_a402642e409ab835f5c9608c50a6f68c
+name: skill-A
+arguments:
+{}
+
+===== end request 6 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=695 response_prefill=15 target=710 ---
+
+
+===== request 7 2026-10-31 22:01:05 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 361
+effective_prompt_tokens: 361
+cached_tokens: 0
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 710
+prompt_tokens: 361
+live_prompt_common: 38
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 38
+token_window: [30..47)
+     30 ==          live 763 "\":" | prompt 763 "\":"
+     31 ==          live 328 " \"" | prompt 328 " \""
+     32 ==          live 1628 "function" | prompt 1628 "function"
+     33 ==          live 487 "\"," | prompt 487 "\","
+     34 ==          live 328 " \"" | prompt 328 " \""
+     35 ==          live 591 "name" | prompt 591 "name"
+     36 ==          live 763 "\":" | prompt 763 "\":"
+     37 ==          live 328 " \"" | prompt 328 " \""
+     38 !=          live 9951 "execute" | prompt 3291 "patch"
+     39 ==          live 487 "\"," | prompt 487 "\","
+     40 ==          live 328 " \"" | prompt 328 " \""
+     41 ==          live 4532 "description" | prompt 4532 "description"
+     42 ==          live 763 "\":" | prompt 763 "\":"
+     43 ==          live 328 " \"" | prompt 328 " \""
+     44 !=          live 35904 "Syn" | prompt 3900 "Edit"
+     45 !=          live 17034 "thetic" | prompt 6149 " existing"
+     46 !=          live 17066 " integration" | prompt 1414 " text"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"\" and new body is \"FILLED\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:8d69f607ea944121a2c5d1f5e99b12d4", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "" and new body is "FILLED". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7831 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+<exmekh_edit path="src.py"
+===== request 8 2026-10-31 22:02:11 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 385
+effective_prompt_tokens: 361
+cached_tokens: 385
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 385
+prompt_tokens: 385
+live_prompt_common: 385
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 385
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"\" and new body is \"FILLED\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:8d69f607ea944121a2c5d1f5e99b12d4", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "" and new body is "FILLED". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7807 ---
+
+ id="463" /><exmekh_new_text id="463"/>
+</parameter>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 54 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 54
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 28.034
+
+tool_call[0]:
+id: call_e8df1199382b781e4497d7a0
+name: patch
+arguments:
+{"payload":"\n<exmekh_edit path=\"src.py\" id=\"463\" /><exmekh_new_text id=\"463\"/>\n"}
+
+===== end request 8 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=385 response_prefill=53 target=438 ---
+

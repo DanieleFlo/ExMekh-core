@@ -77,7 +77,7 @@ dal server v2.
 
 DS4 deve generare prima i campi dichiarati nella configurazione, sospendere la tool call quando sono tutti completi, ricevere dati di controllo dal runtime e completare la stessa chiamata con vincoli dinamici sugli argomenti. Per edit il gruppo prioritario contiene `path`; il protocollo generico non conosce questo nome. `edit-file` è il primo comportamento di una categoria estendibile di chiamate interattive.
 
-La fonte delle attività client è [exmekh_lib/todo.md](../../exmekh_lib/todo.md), macro task «Manipolazione file». Sanificazione persistita, inspect/read, hash filesystem, autorizzazione, hook, scrittura e cancellazione appartengono alla libreria. Il server non apre il path ricevuto e non applica modifiche ai file.
+La fonte delle attività client è il backlog esterno `exmekh_lib/todo.md`, macro task «Manipolazione file». Sanificazione persistita, inspect/read, hash filesystem, autorizzazione, hook, scrittura e cancellazione appartengono alla libreria. Il server non apre il path ricevuto e non applica modifiche ai file.
 
 Prima di edit su un file esistente, il modello deve averne visto il contenuto tramite una lettura valida nella history. Lo snapshot ricevuto durante la sospensione serve al masking: non viene inserito nel prompt, non produce un nuovo tool result e non richiede un prefill aggiuntivo del file. Per un file inesistente il client autorizza direttamente la creazione; un file esistente vuoto resta distinto dalla creazione.
 

@@ -1,0 +1,151 @@
+{
+  "head": "4fef55feed35b79c20677d404f293ad49ffd13f5",
+  "worktree": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core",
+  "state": "uncommitted",
+  "sources": [
+    {
+      "path": "ds4_bundle.c",
+      "bytes": 26401,
+      "sha256": "a3231b0d43fc126b55703b6fc372a9faaaa22685f2aefe7c5f241052a0715c45"
+    },
+    {
+      "path": "ds4_bundle.h",
+      "bytes": 4628,
+      "sha256": "55628ee41641033629c93b8ba03990f3b2488b271a7470bbd626aa86387606aa"
+    },
+    {
+      "path": "ds4_weight_cache.c",
+      "bytes": 5455,
+      "sha256": "ab0afcfeb6b68c625cf79efe1dc20b1d8a384897f4666b822e3387fcbbb1333c"
+    },
+    {
+      "path": "ds4_weight_cache.h",
+      "bytes": 2120,
+      "sha256": "84d0d3ccb9aed02cbf1bc51e0ec373292b887ec7654508a233783e25d86a877c"
+    },
+    {
+      "path": "ds4_qwen_image_dit.c",
+      "bytes": 33793,
+      "sha256": "f5492e8a9706e86ad4b3cd0b6392c4004f7c623a8d6b6de817d7a71f802579bb"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 40269,
+      "sha256": "95e6d8581c4aa2667e690d62575c9a4883cb57d9dc5a19d4e28210e54fc84e5a"
+    },
+    {
+      "path": "ds4_numeric.h",
+      "bytes": 11407,
+      "sha256": "95a207c919af6bad37624d4c779c576f3d869541e4d75470a06b3d154d48e85b"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 4394,
+      "sha256": "3256e93f5e77ed2a1f9513342acffddba9ac91858def2a813f5c5b831b8cb69e"
+    },
+    {
+      "path": "ds4_numeric_metal.m",
+      "bytes": 30203,
+      "sha256": "c1143fecf246a88cc3fa20c1644537e6abe58c386838a5800983a6f0d01d0d77"
+    },
+    {
+      "path": "ds4_metal_device.h",
+      "bytes": 4010,
+      "sha256": "5f1b92c1cd5caf5db8246ab9cf15af4fb4c086c58c07b605dc50bf07fac22bbb"
+    },
+    {
+      "path": "ds4_metal_memory.h",
+      "bytes": 6743,
+      "sha256": "a8b6814bedb9b02f7b0a1b2bf115ffb9bfd30de260601329dfa96551841ee357"
+    },
+    {
+      "path": "ds4_qwen_image_pipeline.c",
+      "bytes": 31573,
+      "sha256": "17eb394a4b0d18dbd6f42e1eb76d65422e7a0a3d5d5838f8b02194dcf08042fc"
+    },
+    {
+      "path": "metal/numeric_ordered.metal",
+      "bytes": 33879,
+      "sha256": "d0d0424a6476555cf4800bc56160bb7322a7903e465c0fc0adc5986f09e405af"
+    },
+    {
+      "path": "tests/test_bundle_group_hint.c",
+      "bytes": 2944,
+      "sha256": "c92b56988be5b498bc852b0d379501219771f421f5dd2a68efb7617de4344813"
+    },
+    {
+      "path": "tests/test_qwen_image_cache_budget.c",
+      "bytes": 7708,
+      "sha256": "9c7929f7d1e4aa7e557f89da61bcb5a43e7c12794819d584baaae82971348fad"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 55126,
+      "sha256": "63dcfe09a83bcd75f1091e4ba59855a5de6e56545eb5299fb8fa76f6fb257f4c"
+    },
+    {
+      "path": "tests/probe_qwen_image_pipeline.c",
+      "bytes": 25411,
+      "sha256": "b7ebae4bf7f800b7cb92984cf51e044195070748d4c01eb1a5dd0c7ec7933450"
+    },
+    {
+      "path": "Makefile",
+      "bytes": 92779,
+      "sha256": "107c4ceca5d7beb638d2df51261997216f326806e781780ae24bd4dec1933669"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "build/metal-perf-image-20261105/probe-final",
+      "bytes": 585752,
+      "sha256": "8218cbeaeb733eb89bb40cc424b6354fdd5b80957d688f5232677b8ed46d865b"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/probe-baseline",
+      "bytes": 585512,
+      "sha256": "5bfca70065843ad723783484558b2d5a38fb90f3c3323755be4156078401099e"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/probe-prefetch",
+      "bytes": 585752,
+      "sha256": "8218cbeaeb733eb89bb40cc424b6354fdd5b80957d688f5232677b8ed46d865b"
+    },
+    {
+      "path": "tests/libds4_numeric_metal.so",
+      "bytes": 173720,
+      "sha256": "ed2083a7a525759950e2cecb8de1eeffac19667d4ce5dddb8b828a2672799c68"
+    },
+    {
+      "path": "libds4-suite-metal.a",
+      "bytes": 1663344,
+      "sha256": "204e6e70dbce359e0490747bfd4fa5d71b146c2204eefd8bc9fbe7b04214dfb4"
+    },
+    {
+      "path": "ds4-server-suite",
+      "bytes": 4180944,
+      "sha256": "71274d129aae847995a6e58f92f0411b5a25e72f65d6fea8953e1d9917e264ff"
+    }
+  ],
+  "reports": [
+    {
+      "path": "docs/performance/metal-inference-20261102/qwen-image/group-prefetch-20261105/confirmation.json",
+      "bytes": 33361,
+      "sha256": "e880e07e3241d8041ec94189276dc4b7baa035950a29c0108d6b958e4e113e6f"
+    },
+    {
+      "path": "docs/performance/metal-inference-20261102/qwen-image/group-prefetch-20261105/final-validation.json",
+      "bytes": 9214,
+      "sha256": "683aba69b184b6bd8c93e2cb74021455b9e70bfb7979c7c5ac76c416e564147f"
+    },
+    {
+      "path": "docs/performance/metal-inference-20261102/qwen-image/group-prefetch-20261105/large512.json",
+      "bytes": 5262,
+      "sha256": "a3036940060cc3a1704faccecd6de67152543926c4becdecfa16a596fd661c8f"
+    },
+    {
+      "path": "docs/performance/metal-inference-20261102/qwen-image/group-prefetch-20261105/sources.json",
+      "bytes": 9300,
+      "sha256": "b574a2a8dea8e42b2ea6f9d35a57c5c47e893711bb0f1b0ed22d72dc1a9be3ef"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "-c",
+    "import sys,json;from pathlib import Path;import numpy as np;import torch;sys.path.insert(0,\"tests\");from suite_numeric_api import Numeric,View;torch.set_num_threads(2);root=Path(\"build/metal-qualification/t06-t07-20261031/neon-model-experiment\");records=[]\nfor variant in (\"gemm-cpu-gelu\",\"gemm-cpu-gelu-precise\"):\n with Numeric(\"metal\",library_path=(root/variant/\"libnumeric.so\").resolve()) as n:\n  for stage in (\"mlp.act_fn\",\"ple_block.act_fn\"):\n   x=torch.from_numpy(np.fromfile(root/\"gemm-cpu-tail\"/(stage+\"-input.bf16\"),dtype=np.uint16)).view(torch.bfloat16);expected=torch.from_numpy(np.fromfile(root/\"gemm-cpu-tail\"/(stage+\"-output.bf16\"),dtype=np.uint16)).view(torch.bfloat16);y=n.tensor(torch.zeros_like(x));n.call(\"point\",y,n.tensor(x),View(),4,0);actual=n.read(y,x.shape).bfloat16();diff=actual.view(torch.int16)!=expected.view(torch.int16);indices=torch.nonzero(diff).flatten()[:5];r=dict(variant=variant,stage=stage,elements=x.numel(),different=int(diff.sum()),examples=[dict(x=float(x[i]),cpu=float(expected[i]),native=float(actual[i])) for i in indices]);records.append(r);n.clear()\n(root/\"gelu-experiment.json\").write_text(json.dumps(records,indent=2)+\"\\n\");print(json.dumps(records,indent=2))"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 240.0,
+  "base_timeout_seconds": 60.0,
+  "timeout_multiplier": 4,
+  "reason": "IdenticalsavedGELUoperands, compareATencubegroupingandggmlprecisetanh; nofullmodel and2GiBhostreserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 3.05824579199907,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 9182.42736375,
+      "pressure": 1,
+      "host_available_bytes": 11511283712,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 9183.437614791,
+      "pressure": 1,
+      "host_available_bytes": 11258609664,
+      "swap_bytes": 262144,
+      "footprint_bytes": 134529696,
+      "resident_bytes": 183992320
+    },
+    {
+      "monotonic": 9184.449893875,
+      "pressure": 1,
+      "host_available_bytes": 11181490176,
+      "swap_bytes": 262144,
+      "footprint_bytes": 206209888,
+      "resident_bytes": 216956928
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "540e15ac4dee57054ea7afad4655d04d2db7f8d615327383b6846f921e2f8c10"
+}

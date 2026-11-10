@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="7" time="495.040" timestamp="2026-11-01T10:15:20.756694+00:00" hostname="Danieles-MacBook-Pro.local"><testcase classname="tests.test_qwen_metal_api_live.QwenMetalApiLive" name="test_anthropic_messages_uses_the_matching_family" time="6.020" /><testcase classname="tests.test_qwen_metal_api_live.QwenMetalApiLive" name="test_chat_repetition_and_sse_match_ordinary_decode" time="17.157" /><testcase classname="tests.test_qwen_metal_api_live.QwenMetalApiLive" name="test_responses_output_items_keep_live_prefix" time="26.568"><failure message="AssertionError: 0 not greater than 0">self = &lt;test_qwen_metal_api_live.QwenMetalApiLive testMethod=test_responses_output_items_keep_live_prefix&gt;
+
+    def test_responses_output_items_keep_live_prefix(self):
+        original = {
+            "role": "user",
+            "content": "Remember PREFIX27. Reply only PREFIX27.",
+        }
+        arguments = {
+            "model": MODEL,
+            "reasoning": {"effort": "none"},
+            "max_output_tokens": 16,
+            "temperature": 0,
+        }
+        first = self.client.responses.create(input=[original], **arguments)
+        self.assertIn("PREFIX27", first.output_text)
+        final = self.client.responses.create(
+            input=[
+                original,
+                *[item.model_dump(exclude_unset=True) for item in first.output],
+                {"role": "user", "content": "Repeat the remembered code only."},
+            ],
+            **arguments,
+        )
+        self.assertIn("PREFIX27", final.output_text)
+&gt;       self.assertGreater(final.usage.input_tokens_details.cached_tokens, 0)
+E       AssertionError: 0 not greater than 0
+
+tests/test_qwen_metal_api_live.py:138: AssertionError</failure></testcase><testcase classname="tests.test_qwen_metal_api_live.QwenMetalApiLive" name="test_small_strict_json_schema" time="16.011" /><testcase classname="tests.test_qwen_metal_api_live.QwenMetalApiLive" name="test_typed_client_returns_the_declared_pydantic_model" time="17.251" /><testcase classname="tests.test_qwen_metal_compaction_live.QwenMetalCompactionLive" name="test_real_compaction_keeps_original_and_continues_from_new_client" time="193.603" /><testcase classname="tests.test_agentic_api.AgenticResponsesApiTests" name="test_nested_skill_files_are_consumed_in_return_order" time="215.702" /></testsuite></testsuites>

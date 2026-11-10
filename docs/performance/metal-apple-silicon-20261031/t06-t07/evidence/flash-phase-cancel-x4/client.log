@@ -1,0 +1,70 @@
+F
+=================================== FAILURES ===================================
+_ SuitePhaseLive.test_cancel_after_real_latent_restores_llm_and_retry_commits_once _
+
+self = <test_suite_phase_live.SuitePhaseLive testMethod=test_cancel_after_real_latent_restores_llm_and_retry_commits_once>
+
+    def test_cancel_after_real_latent_restores_llm_and_retry_commits_once(self):
+        control = Path(CONTROL)
+        signal = control.with_name(control.name + ".ready")
+        model = os.environ["DS4_SUITE_LLM_MODEL"]
+        observed = {}
+        remember = "Remember PHASE27. Reply only PHASE27."
+        with OpenAI(
+            base_url=URL,
+            api_key="local",
+            timeout=float(os.getenv("DS4_SUITE_HTTP_TIMEOUT_SECONDS", "300")),
+            max_retries=0,
+        ) as client:
+            first = client.responses.create(
+                model=model,
+                input=remember,
+                reasoning={"effort": "none"},
+                max_output_tokens=16,
+                temperature=0,
+            )
+            self.assertIn("PHASE27", first.output_text)
+            # The qualification server stores media beneath this private
+            # parent. The public API intentionally has no Files list endpoint.
+            media = control.parent / "media"
+            files_before = {
+                str(path) for path in media.rglob("file-*") if path.is_file()
+            }
+            control.write_text("latent 0\n")
+            key = "phase-cancel-" + os.urandom(8).hex()
+            body = {
+                "model": "Qwen/Qwen-Image-2.1-Turbo",
+                "prompt": "A red square on white.",
+                "size": "256x256",
+                "n": 1,
+                "ds4": {"version": 1, "seed": 20261020},
+            }
+            encoded = json.dumps(body).encode()
+            target = urlparse(URL)
+            try:
+                with socket.create_connection(
+                    (target.hostname, target.port or 80)
+                ) as peer:
+                    peer.sendall(
+                        (
+                            "POST /v1/images/generations HTTP/1.1\r\nHost: local\r\n"
+                            f"Idempotency-Key: {key}\r\nContent-Length: {len(encoded)}\r\n"
+                            "Content-Type: application/json\r\n\r\n"
+                        ).encode()
+                        + encoded
+                    )
+                    deadline = time.monotonic() + float(
+                        os.getenv("DS4_SUITE_PHASE_TIMEOUT_SECONDS", "180")
+                    )
+                    while not signal.exists():
+>                       self.assertLess(
+                            time.monotonic(),
+                            deadline,
+                            "native latent boundary not reached",
+                        )
+E                       AssertionError: 22727.751428791 not less than 22727.672349291 : native latent boundary not reached
+
+tests/test_suite_phase_live.py:74: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_suite_phase_live.py::SuitePhaseLive::test_cancel_after_real_latent_restores_llm_and_retry_commits_once
+1 failed in 729.35s (0:12:09)

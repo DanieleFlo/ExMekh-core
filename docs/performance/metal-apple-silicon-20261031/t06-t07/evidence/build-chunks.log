@@ -1,0 +1,3 @@
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -I. -c -o tests/test_qwen4_kernels.o tests/test_qwen4_kernels.c
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -fobjc-arc -c -o ds4_metal.o ds4_metal.m
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_qwen4_kernels tests/test_qwen4_kernels.o ds4_metal.o ds4_image.o ds4_resources.o -lm -pthread -framework Foundation -framework Metal

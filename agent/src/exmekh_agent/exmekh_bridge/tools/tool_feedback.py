@@ -8,9 +8,11 @@ import threading
 from collections import deque
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
+from functools import partial
 from typing import Any, Literal
 
 from exmekh_lib.core.agents.node import Node
+from exmekh_lib.interfaces.operation_progress import OperationProgress
 from exmekh_lib.interfaces.tool_hook import (
     AfterTool,
     BeforeTool,
@@ -38,12 +40,20 @@ class _InvocationFeedback:
     image_state: ImageState | None = None
     image_urls: list[str] | None = None
     images_in_context: bool | None = None
+    image_progress: OperationProgress | None = None
+
+    def advance_progress(self, progress: OperationProgress) -> bool:
+        if not progress.follows(self.image_progress):
+            return False
+        self.image_progress = progress
+        return True
 
     def apply_to(self, event: ToolEvent) -> ToolEvent:
         updated = event.model_copy(deep=True)
         updated.approval_state = self.approval_state
         updated.image_state = self.image_state
         updated.images_in_context = self.images_in_context
+        updated.image_progress = self.image_progress
         if self.image_urls is not None:
             updated.image_urls = list(self.image_urls)
         return updated
@@ -68,6 +78,7 @@ class ToolFeedback:
                         approval_state=event.approval_state,
                         image_state=event.image_state,
                         images_in_context=event.images_in_context,
+                        image_progress=event.image_progress,
                     ),
                 )
                 # Observe the launch before its worker starts, including background calls.
@@ -107,32 +118,47 @@ class ToolFeedback:
                 state.images_in_context = images_in_context
             if image_urls is not None:
                 state.image_urls = list(image_urls)
-            if call_id in self._calls:
-                event, callback = self._calls[call_id]
-                event = state.apply_to(event)
-                self._calls[call_id] = (event, callback)
-                self._notifications.append((event.model_copy(deep=True), callback))
-            self._lock.notify_all()
+            self._queue_update(call_id, state)
         self._notify_observers()
+
+    def _queue_update(self, call_id: str, state: _InvocationFeedback) -> None:
+        """Queue feedback and wake waiters while holding the condition lock."""
+        if call_id in self._calls:
+            event, callback = self._calls[call_id]
+            event = state.apply_to(event)
+            self._calls[call_id] = (event, callback)
+            self._notifications.append((event.model_copy(deep=True), callback))
+        self._lock.notify_all()
 
     def _notify_observers(self) -> None:
         with self._lock:
             if self._notifying:
                 return
             self._notifying = True
+        failure: Exception | None = None
         try:
             while True:
                 with self._lock:
                     if not self._notifications:
                         self._notifying = False
                         self._lock.notify_all()
-                        return
+                        break
                     event, callback = self._notifications.popleft()
-                callback(event)
+                try:
+                    callback(event)
+                except Exception as error:
+                    # Another publisher can have queued updates during the callback.
+                    if failure is None:
+                        failure = error
+                    else:
+                        failure.add_note(str(error))
         except BaseException:
             with self._lock:
                 self._notifying = False
+                self._lock.notify_all()
             raise
+        if failure is not None:
+            raise failure
 
     def wait_for_images(
         self, cancellation: threading.Event | None, nodes: Iterable[Node] = ()
@@ -168,6 +194,14 @@ class ToolFeedback:
     def approval(self, call_id: str, state: ApprovalState) -> None:
         self.update(call_id, approval_state=state)
 
+    def progress(self, call_id: str, event: OperationProgress) -> None:
+        with self._lock:
+            state = self._updates.setdefault(call_id, _InvocationFeedback())
+            if not state.advance_progress(event):
+                return
+            self._queue_update(call_id, state)
+        self._notify_observers()
+
 
 class ImageArguments(BeforeTool):
     def __init__(self, include_in_context: bool, feedback: ToolFeedback) -> None:
@@ -181,7 +215,8 @@ class ImageArguments(BeforeTool):
             images_in_context=self.include_in_context,
         )
         return ToolArguments(
-            {**context.arguments, "include_image_in_result": self.include_in_context}
+            {**context.arguments, "include_image_in_result": self.include_in_context},
+            on_progress=partial(self.feedback.progress, context.call_id),
         )
 
 

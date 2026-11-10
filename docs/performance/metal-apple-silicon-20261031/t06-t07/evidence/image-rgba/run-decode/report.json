@@ -1,0 +1,82 @@
+{
+  "command": [
+    "env",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+    "tools/run_qwen_image_pipeline_oracle.py",
+    "--prepared",
+    "build/metal-oracles",
+    "--cases",
+    "build/metal-qualification/t06-t07-20261031/image-rgba/cases.json",
+    "--output",
+    "build/metal-qualification/t06-t07-20261031/image-rgba/oracle",
+    "--stage",
+    "decode",
+    "--device",
+    "mps",
+    "--offload"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 300,
+  "reason": "S3 256px image or independent reference component",
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 6.107198333998895,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 12105.881724333,
+      "pressure": 1,
+      "host_available_bytes": 16872652800,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 12106.893158208,
+      "pressure": 1,
+      "host_available_bytes": 16677879808,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 169394896,
+      "resident_bytes": 219103232
+    },
+    {
+      "monotonic": 12107.904287291,
+      "pressure": 1,
+      "host_available_bytes": 16529522688,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 275301264,
+      "resident_bytes": 331661312
+    },
+    {
+      "monotonic": 12108.912415291,
+      "pressure": 1,
+      "host_available_bytes": 16499490816,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 282952640,
+      "resident_bytes": 340082688
+    },
+    {
+      "monotonic": 12109.924835625,
+      "pressure": 1,
+      "host_available_bytes": 16364257280,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 348865496,
+      "resident_bytes": 418971648
+    },
+    {
+      "monotonic": 12110.935665041,
+      "pressure": 1,
+      "host_available_bytes": 15115714560,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 1587987704,
+      "resident_bytes": 589676544
+    }
+  ],
+  "executables_sha256": {
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/run_qwen_image_pipeline_oracle.py": "1e77663c171c378566c5ebcb8ba9b1c6073c5dfcd2674aa33708d1ab3190f33d"
+  },
+  "log_sha256": "dd781b9f1c7f24e0cb1fa2d74cffe34249b7a77854e55f65af50959815585ca9"
+}

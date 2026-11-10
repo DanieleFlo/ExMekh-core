@@ -18,6 +18,7 @@ static ds4_resource_spec spec(uint64_t owner, uint64_t bytes) {
     return s;
 }
 static void lifetime(void) {
+    assert(!ds4_resource_can_release(NULL));
     ds4_resources *r = NULL; assert(!ds4_resources_create(&r));
     ds4_resource *base, *view, *nested;
     ds4_resource_spec s = spec(17, 1024); s.destroy = destroy; s.opaque = &destroyed;
@@ -31,9 +32,14 @@ static void lifetime(void) {
     ds4_resource_totals totals; ds4_resources_totals(r, 17, &totals);
     assert(totals.roots == 1 && totals.views == 2 && totals.allocated[0] == 1024);
     assert(!ds4_resource_use(nested, 9));
+    assert(ds4_resource_can_release(base) == DS4_STATUS_BUSY);
+    assert(ds4_resource_can_release(nested) == DS4_STATUS_BUSY);
     assert(ds4_resource_release(base) == DS4_STATUS_BUSY);
     ds4_resources_complete(r, 8); assert(ds4_resource_release(view) == DS4_STATUS_BUSY);
     ds4_resources_complete(r, 9);
+    assert(!ds4_resource_can_release(base) && !ds4_resource_can_release(nested));
+    ds4_resources_totals(r, 17, &totals);
+    assert(totals.roots == 1 && totals.views == 2 && !destroyed);
     assert(!ds4_resource_release(base) && !destroyed);
     assert(!ds4_resource_release(view) && !destroyed);
     fail_destroy = 1;
@@ -247,7 +253,36 @@ static void working_capacity(void) {
     ds4_reservation_leave(&scope);
     assert(!ds4_reservation_cancel(lease)); assert(!ds4_resources_close(r));
 }
+static void unified_memory(void) {
+    ds4_resources *r=NULL;
+    assert(!ds4_resources_create(&r));
+    assert(!ds4_resources_set_unified_memory(r,true));
+    ds4_resource_budget budget={.limit=1000};
+    assert(!ds4_resources_set_budget(r,DS4_MEMORY_HOST,&budget));
+    ds4_resource *gpu=NULL,*host=NULL,*view=NULL;
+    ds4_resource_spec s=spec(42,600);
+    assert(!ds4_resource_register(r,&s,&gpu));
+    assert(ds4_resources_set_unified_memory(r,false)==DS4_STATUS_BUSY);
+    assert(!ds4_resource_view(gpu,0,600,&view));
+    s=spec(42,401);s.location=DS4_MEMORY_HOST;
+    assert(ds4_resource_register(r,&s,&host)==DS4_STATUS_NOMEM);
+    uint64_t demand[DS4_MEMORY_COUNT]={[DS4_MEMORY_DEVICE]=200,[DS4_MEMORY_HOST]=201};
+    assert(ds4_resources_can_reserve(r,demand,NULL)==DS4_STATUS_NOMEM);
+    demand[DS4_MEMORY_HOST]=200;
+    ds4_reservation *lease=NULL;
+    assert(!ds4_resources_reserve(r,42,demand,&lease));
+    uint64_t free=99;
+    assert(!ds4_resources_available(r,DS4_MEMORY_DEVICE,&free)&&free==0);
+    assert(!ds4_resources_available(r,DS4_MEMORY_HOST,&free)&&free==0);
+    assert(!ds4_reservation_cancel(lease));
+    assert(!ds4_resource_release(gpu));
+    assert(!ds4_resources_available(r,DS4_MEMORY_HOST,&free)&&free==400);
+    assert(!ds4_resource_release(view));
+    assert(!ds4_resources_available(r,DS4_MEMORY_DEVICE,&free)&&free==1000);
+    assert(!ds4_resources_close(r));
+}
 int main(void) {
+    unified_memory();
     working_capacity();
     lifetime(); budgets(); trimming(); concurrency(); admission(); scoped_lifetime(); checkpoints();
     puts("PASS: resource lifetime, aliases, events, budgets, concurrent reservations and checkpoint validation");

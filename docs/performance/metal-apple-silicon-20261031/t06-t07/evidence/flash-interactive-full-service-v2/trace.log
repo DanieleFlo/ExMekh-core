@@ -1,0 +1,1611 @@
+
+===== request 1 2026-11-01 23:00:29 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 362
+effective_prompt_tokens: 362
+cached_tokens: 0
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 362
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"KEEP\" and new body is \"hello\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:02e8a2d4858045c3ab9c431ca6b2ed1e", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "KEEP" and new body is "hello". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7830 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+<exmekh_edit path="src.py"
+===== request 2 2026-11-01 23:01:34 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 361
+effective_prompt_tokens: 361
+cached_tokens: 258
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 386
+prompt_tokens: 361
+live_prompt_common: 294
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 258
+disk_cached_tokens: 0
+
+first_mismatch_token: 294
+token_window: [286..303)
+    286 ==          live 8306 " opening" | prompt 8306 " opening"
+    287 ==          live 2937 " ID" | prompt 2937 " ID"
+    288 ==          live 13 "." | prompt 13 "."
+    289 ==          live 561 " The" | prompt 561 " The"
+    290 ==          live 4581 " exact" | prompt 4581 " exact"
+    291 ==          live 2235 " old" | prompt 2235 " old"
+    292 ==          live 2407 " body" | prompt 2407 " body"
+    293 ==          live 369 " is" | prompt 369 " is"
+    294 !=          live 328 " \"" | prompt 1535 " \"\""
+    295 !=          live 50057 "KEEP" | prompt 321 " and"
+    296 !=          live 1 "\"" | prompt 491 " new"
+    297 !=          live 321 " and" | prompt 2407 " body"
+    298 !=          live 491 " new" | prompt 369 " is"
+    299 !=          live 2407 " body" | prompt 328 " \""
+    300 !=          live 369 " is" | prompt 37 "F"
+    301 !=          live 328 " \"" | prompt 77158 "ILLED"
+    302 !=          live 14556 "hello" | prompt 3158 "\"."
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"\" and new body is \"FILLED\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:1cb48142924947a89349296a2f98deee", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "" and new body is "FILLED". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7831 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+<exmekh_edit path="src.py"
+===== request 3 2026-11-01 23:02:07 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 385
+effective_prompt_tokens: 361
+cached_tokens: 385
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 385
+prompt_tokens: 385
+live_prompt_common: 385
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 385
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"\" and new body is \"FILLED\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:1cb48142924947a89349296a2f98deee", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "" and new body is "FILLED". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7807 ---
+
+ id="909" /><exmekh_new_text id="909"/>FILLED</exmekh_new_text>
+</parameter>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 63 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 63
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 35.527
+
+tool_call[0]:
+id: call_08d27a4ecad6ba8e41f3d436
+name: patch
+arguments:
+{"payload":"\n<exmekh_edit path=\"src.py\" id=\"909\" /><exmekh_new_text id=\"909\"/>FILLED</exmekh_new_text>\n"}
+
+===== end request 3 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=385 response_prefill=62 target=447 ---
+
+
+===== request 4 2026-11-01 23:02:48 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 374
+effective_prompt_tokens: 374
+cached_tokens: 258
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 447
+prompt_tokens: 374
+live_prompt_common: 294
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 258
+disk_cached_tokens: 0
+
+first_mismatch_token: 294
+token_window: [286..303)
+    286 ==          live 8306 " opening" | prompt 8306 " opening"
+    287 ==          live 2937 " ID" | prompt 2937 " ID"
+    288 ==          live 13 "." | prompt 13 "."
+    289 ==          live 561 " The" | prompt 561 " The"
+    290 ==          live 4581 " exact" | prompt 4581 " exact"
+    291 ==          live 2235 " old" | prompt 2235 " old"
+    292 ==          live 2407 " body" | prompt 2407 " body"
+    293 ==          live 369 " is" | prompt 369 " is"
+    294 !=          live 1535 " \"\"" | prompt 328 " \""
+    295 !=          live 321 " and" | prompt 220 " "
+    296 !=          live 491 " new" | prompt 2235 " old"
+    297 !=          live 2407 " body" | prompt 1 "\""
+    298 !=          live 369 " is" | prompt 321 " and"
+    299 !=          live 328 " \"" | prompt 491 " new"
+    300 !=          live 37 "F" | prompt 2407 " body"
+    301 !=          live 77158 "ILLED" | prompt 369 " is"
+    302 !=          live 3158 "\"." | prompt 3919 " \"<"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"  old\" and new body is \"<all/><delete/>&lt;<![CDATA[raw]]>\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:d0fd3a300c8b4f8ca207374df318ce0f", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "  old" and new body is "<all/><delete/>&lt;<![CDATA[raw]]>". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7818 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+<exmekh_edit path="src.py"
+===== request 5 2026-11-01 23:03:23 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 398
+effective_prompt_tokens: 374
+cached_tokens: 398
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 398
+prompt_tokens: 398
+live_prompt_common: 398
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 398
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"  old\" and new body is \"<all/><delete/>&lt;<![CDATA[raw]]>\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:d0fd3a300c8b4f8ca207374df318ce0f", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "  old" and new body is "<all/><delete/>&lt;<![CDATA[raw]]>". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7794 ---
+
+ id="189" />  old<exmekh_new_text id="189"/><all/><delete/>&lt;<![CDATA[raw]]>
+</parameter>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 69 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 69
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 41.660
+
+tool_call[0]:
+id: call_8ab1236e42a122f0df213d46
+name: patch
+arguments:
+{"payload":"\n<exmekh_edit path=\"src.py\" id=\"189\" />  old<exmekh_new_text id=\"189\"/><all/><delete/>&lt;<![CDATA[raw]]>\n"}
+
+===== end request 5 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=398 response_prefill=69 target=467 ---
+
+
+===== request 6 2026-11-01 23:04:11 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 1
+tools: 1
+think_mode: none
+prompt_tokens: 374
+effective_prompt_tokens: 374
+cached_tokens: 258
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 467
+prompt_tokens: 374
+live_prompt_common: 374
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 258
+disk_cached_tokens: 0
+
+first_mismatch_token: 374
+token_window: [366..383)
+    366 ==          live 198 "\n" | prompt 198 "\n"
+    367 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    368 ==          live 74455 "assistant" | prompt 74455 "assistant"
+    369 ==          live 198 "\n" | prompt 198 "\n"
+    370 ==          live 248068 "<think>" | prompt 248068 "<think>"
+    371 ==          live 271 "\n\n" | prompt 271 "\n\n"
+    372 ==          live 248069 "</think>" | prompt 248069 "</think>"
+    373 ==          live 271 "\n\n" | prompt 271 "\n\n"
+    374 live-only   live 248058 "<tool_call>" | prompt - <none>
+    375 live-only   live 198 "\n" | prompt - <none>
+    376 live-only   live 27 "<" | prompt - <none>
+    377 live-only   live 1628 "function" | prompt - <none>
+    378 live-only   live 28 "=" | prompt - <none>
+    379 live-only   live 3291 "patch" | prompt - <none>
+    380 live-only   live 29 ">" | prompt - <none>
+    381 live-only   live 198 "\n" | prompt - <none>
+    382 live-only   live 27 "<" | prompt - <none>
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": true, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"  old\" and new body is \"<all/><delete/>&lt;<![CDATA[raw]]>\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:35a3d1a859f34994a4c87aef9d9937a4", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "  old" and new body is "<all/><delete/>&lt;<![CDATA[raw]]>". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7818 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+<exmekh_edit path="src.py"
+===== request 7 2026-11-01 23:04:46 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 1
+tools: 1
+think_mode: none
+prompt_tokens: 398
+effective_prompt_tokens: 374
+cached_tokens: 398
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 398
+prompt_tokens: 398
+live_prompt_common: 398
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 398
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": true, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once for src.py. Begin <exmekh_edit path=\"src.py\" and let the server supply the opening ID. The exact old body is \"  old\" and new body is \"<all/><delete/>&lt;<![CDATA[raw]]>\". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "literal:35a3d1a859f34994a4c87aef9d9937a4", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once for src.py. Begin <exmekh_edit path="src.py" and let the server supply the opening ID. The exact old body is "  old" and new body is "<all/><delete/>&lt;<![CDATA[raw]]>". Use only exmekh_edit and exmekh_new_text framing. Bodies are literal; do not add CDATA, entities, closing edit tags, or trailing newlines. Copy the supplied ID into the separator. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7794 ---
+
+ id="693" />  old<exmekh_new_text id="693"/><all/><delete/>&lt;<![CDATA[raw]]>
+</parameter>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 69 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 69
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 41.211
+
+tool_call[0]:
+id: call_7b3de650bc9717db552a51a9
+name: patch
+arguments:
+{"payload":"\n<exmekh_edit path=\"src.py\" id=\"693\" />  old<exmekh_new_text id=\"693\"/><all/><delete/>&lt;<![CDATA[raw]]>\n"}
+
+===== end request 7 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=398 response_prefill=69 target=467 ---
+
+
+===== request 8 2026-11-01 23:05:34 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 346
+effective_prompt_tokens: 346
+cached_tokens: 258
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 467
+prompt_tokens: 346
+live_prompt_common: 263
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 258
+disk_cached_tokens: 0
+
+first_mismatch_token: 263
+token_window: [255..272)
+    255 ==          live 29 ">" | prompt 29 ">"
+    256 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    257 ==          live 198 "\n" | prompt 198 "\n"
+    258 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    259 ==          live 846 "user" | prompt 846 "user"
+    260 ==          live 198 "\n" | prompt 198 "\n"
+    261 ==          live 6994 "Call" | prompt 6994 "Call"
+    262 ==          live 10582 " patch" | prompt 10582 " patch"
+    263 !=          live 6681 " exactly" | prompt 2957 " once"
+    264 !=          live 2957 " once" | prompt 364 " for"
+    265 !=          live 364 " for" | prompt 2212 " src"
+    266 !=          live 2212 " src" | prompt 6971 ".py"
+    267 !=          live 6971 ".py" | prompt 13 "."
+    268 !=          live 13 "." | prompt 6558 " Let"
+    269 !=          live 18037 " Begin" | prompt 279 " the"
+    270 !=          live 361 " <" | prompt 3421 " server"
+    271 !=          live 325 "ex" | prompt 7892 " supply"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch once for src.py. Let the server supply the opening ID. Select exactly KEEP and replace it with exactly hello. For this test the separator MUST be exactly <exmekh_new_text/> with NO id attribute. The optional separator ID is deliberately omitted. Do not copy the opening ID into it. Do not add whitespace or closing tags. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "missing-id:19e4271cf2e24194b1584a1489ebdae9", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch once for src.py. Let the server supply the opening ID. Select exactly KEEP and replace it with exactly hello. For this test the separator MUST be exactly <exmekh_new_text/> with NO id attribute. The optional separator ID is deliberately omitted. Do not copy the opening ID into it. Do not add whitespace or closing tags. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7846 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+
+     
+
+
+<exmekh_edit path="src.py"
+===== request 9 2026-11-01 23:06:13 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 376
+effective_prompt_tokens: 346
+cached_tokens: 376
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 376
+prompt_tokens: 376
+live_prompt_common: 376
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 376
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch once for src.py. Let the server supply the opening ID. Select exactly KEEP and replace it with exactly hello. For this test the separator MUST be exactly <exmekh_new_text/> with NO id attribute. The optional separator ID is deliberately omitted. Do not copy the opening ID into it. Do not add whitespace or closing tags. Return only the tool call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "missing-id:19e4271cf2e24194b1584a1489ebdae9", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch once for src.py. Let the server supply the opening ID. Select exactly KEEP and replace it with exactly hello. For this test the separator MUST be exactly <exmekh_new_text/> with NO id attribute. The optional separator ID is deliberately omitted. Do not copy the opening ID into it. Do not add whitespace or closing tags. Return only the tool call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7816 ---
+
+ id="394" />KEEP<exmekh_new_text/>hello<exmekh_end  />
+</parameter>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 64 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 64
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 31.239
+
+tool_call[0]:
+id: call_d19b1c3f5f206d2dff94578f
+name: patch
+arguments:
+{"payload":"\n\n     \n\n\n<exmekh_edit path=\"src.py\" id=\"394\" />KEEP<exmekh_new_text/>hello<exmekh_end  />\n"}
+
+===== end request 9 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=376 response_prefill=60 target=436 ---
+
+
+===== request 10 2026-11-01 23:06:48 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 401
+effective_prompt_tokens: 401
+cached_tokens: 258
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 436
+prompt_tokens: 401
+live_prompt_common: 263
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 258
+disk_cached_tokens: 0
+
+first_mismatch_token: 263
+token_window: [255..272)
+    255 ==          live 29 ">" | prompt 29 ">"
+    256 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    257 ==          live 198 "\n" | prompt 198 "\n"
+    258 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    259 ==          live 846 "user" | prompt 846 "user"
+    260 ==          live 198 "\n" | prompt 198 "\n"
+    261 ==          live 6994 "Call" | prompt 6994 "Call"
+    262 ==          live 10582 " patch" | prompt 10582 " patch"
+    263 !=          live 2957 " once" | prompt 6681 " exactly"
+    264 !=          live 364 " for" | prompt 2957 " once"
+    265 !=          live 2212 " src" | prompt 13 "."
+    266 !=          live 6971 ".py" | prompt 11116 " Its"
+    267 !=          live 13 "." | prompt 7484 " payload"
+    268 !=          live 6558 " Let" | prompt 1902 " must"
+    269 !=          live 279 " the" | prompt 6435 " contain"
+    270 !=          live 3421 " server" | prompt 411 " this"
+    271 !=          live 7892 " supply" | prompt 4307 " entire"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"src.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "multiple:7e9259b329ae43f69ed9b895d3ef0384", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="src.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7791 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+<exmekh_edit path="src.py"
+===== request 11 2026-11-01 23:07:26 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 425
+effective_prompt_tokens: 401
+cached_tokens: 425
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 425
+prompt_tokens: 425
+live_prompt_common: 425
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 425
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"src.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "multiple:7e9259b329ae43f69ed9b895d3ef0384", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="src.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7767 ---
+
+ id="873" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="src.py"
+===== request 12 2026-11-01 23:07:51 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 451
+effective_prompt_tokens: 401
+cached_tokens: 451
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 451
+prompt_tokens: 451
+live_prompt_common: 451
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 451
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"src.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "multiple:7e9259b329ae43f69ed9b895d3ef0384", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="src.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. The first replacement is only FIRST. Do not close the payload after FIRST: immediately emit the second exmekh_edit opening inside the same payload. Both selections refer to the original ONE newline TWO snapshot. Do not emit a second patch call. Do not add whitespace or final newline.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7741 ---
+
+ id="874" />TWO<exmekh_new_text/>SECOND
+</parameter>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 77 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 77
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 25.201
+
+tool_call[0]:
+id: call_25fe04f94b79d38b02b508e8
+name: patch
+arguments:
+{"payload":"\n<exmekh_edit path=\"src.py\" id=\"873\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"src.py\" id=\"874\" />TWO<exmekh_new_text/>SECOND\n"}
+
+===== end request 12 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=451 response_prefill=78 target=529 ---
+
+
+===== request 13 2026-11-01 23:08:24 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 306
+effective_prompt_tokens: 306
+cached_tokens: 258
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 529
+prompt_tokens: 306
+live_prompt_common: 261
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 258
+disk_cached_tokens: 0
+
+first_mismatch_token: 261
+token_window: [253..270)
+    253 ==          live 510 "</" | prompt 510 "</"
+    254 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    255 ==          live 29 ">" | prompt 29 ">"
+    256 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    257 ==          live 198 "\n" | prompt 198 "\n"
+    258 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    259 ==          live 846 "user" | prompt 846 "user"
+    260 ==          live 198 "\n" | prompt 198 "\n"
+    261 !=          live 6994 "Call" | prompt 5423 "Return"
+    262 !=          live 10582 " patch" | prompt 23287 " ONE"
+    263 !=          live 6681 " exactly" | prompt 10582 " patch"
+    264 !=          live 2957 " once" | prompt 1562 " call"
+    265 !=          live 13 "." | prompt 440 " with"
+    266 !=          live 11116 " Its" | prompt 1330 " two"
+    267 !=          live 7484 " payload" | prompt 23173 " consecutive"
+    268 !=          live 1902 " must" | prompt 4351 " edit"
+    269 !=          live 6435 " contain" | prompt 9714 " blocks"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Return ONE patch call with two consecutive edit blocks. First src.py old ONE new FIRST; then other.py old TWO new SECOND. Use the literal two-marker framing and supplied IDs."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "reject:76428f0592ed4bddb9fbd4b78ca98dba", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Return ONE patch call with two consecutive edit blocks. First src.py old ONE new FIRST; then other.py old TWO new SECOND. Use the literal two-marker framing and supplied IDs.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7886 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+<exmekh_edit path="src.py"
+===== request 14 2026-11-01 23:08:56 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 334
+effective_prompt_tokens: 306
+cached_tokens: 334
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 334
+prompt_tokens: 334
+live_prompt_common: 334
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 334
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Return ONE patch call with two consecutive edit blocks. First src.py old ONE new FIRST; then other.py old TWO new SECOND. Use the literal two-marker framing and supplied IDs."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "reject:76428f0592ed4bddb9fbd4b78ca98dba", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Return ONE patch call with two consecutive edit blocks. First src.py old ONE new FIRST; then other.py old TWO new SECOND. Use the literal two-marker framing and supplied IDs.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7858 ---
+
+ id="258" />O<exmekh_new_text id="258"/>
+</parameter>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 62 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 62
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 30.834
+
+tool_call[0]:
+id: call_2b7b6d4f14e2fe20f8054f3a
+name: patch
+arguments:
+{"payload":"\n<exmekh_edit path=\"src.py\" id=\"258\" />O<exmekh_new_text id=\"258\"/>\n"}
+
+===== end request 14 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=334 response_prefill=55 target=389 ---
+
+
+===== request 15 2026-11-01 23:09:31 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 386
+effective_prompt_tokens: 386
+cached_tokens: 258
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 389
+prompt_tokens: 386
+live_prompt_common: 261
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-system
+cached_tokens: 258
+disk_cached_tokens: 0
+
+first_mismatch_token: 261
+token_window: [253..270)
+    253 ==          live 510 "</" | prompt 510 "</"
+    254 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    255 ==          live 29 ">" | prompt 29 ">"
+    256 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    257 ==          live 198 "\n" | prompt 198 "\n"
+    258 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    259 ==          live 846 "user" | prompt 846 "user"
+    260 ==          live 198 "\n" | prompt 198 "\n"
+    261 !=          live 5423 "Return" | prompt 6994 "Call"
+    262 !=          live 23287 " ONE" | prompt 10582 " patch"
+    263 !=          live 10582 " patch" | prompt 6681 " exactly"
+    264 !=          live 1562 " call" | prompt 2957 " once"
+    265 !=          live 440 " with" | prompt 13 "."
+    266 !=          live 1330 " two" | prompt 11116 " Its"
+    267 !=          live 23173 " consecutive" | prompt 7484 " payload"
+    268 !=          live 4351 " edit" | prompt 1902 " must"
+    269 !=          live 9714 " blocks" | prompt 6435 " contain"
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"other.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. After FIRST, immediately emit the second exmekh_edit opening inside the same payload. Use exactly those tag names. Do not emit closing edit tags, whitespace, a final newline or a second patch call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "reject-template:23ada14cc9714439a01a074097a61a89", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="other.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. After FIRST, immediately emit the second exmekh_edit opening inside the same payload. Use exactly those tag names. Do not emit closing edit tags, whitespace, a final newline or a second patch call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7806 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=patch>
+<parameter=payload>
+<exmekh_edit path="src.py"
+===== request 16 2026-11-01 23:10:07 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 410
+effective_prompt_tokens: 386
+cached_tokens: 410
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 410
+prompt_tokens: 410
+live_prompt_common: 410
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 410
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "qwen3.8-flash-next", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"other.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. After FIRST, immediately emit the second exmekh_edit opening inside the same payload. Use exactly those tag names. Do not emit closing edit tags, whitespace, a final newline or a second patch call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "reject-template:23ada14cc9714439a01a074097a61a89", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type":"object","properties":{"payload":{"type":"string"}},"required":["payload"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="other.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. After FIRST, immediately emit the second exmekh_edit opening inside the same payload. Use exactly those tag names. Do not emit closing edit tags, whitespace, a final newline or a second patch call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7782 ---
+
+ id="174" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="other.py"

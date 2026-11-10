@@ -1,0 +1,1 @@
+env ./ds4-server --metal -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf --ctx 512 --prefill-chunk 64 --host 0.0.0.0 --no-mtp --port 8080 --kv-disk-dir /Users/danieleflorio/.ds4/server-kv --kv-disk-space-mb 8192 

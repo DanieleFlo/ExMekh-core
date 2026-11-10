@@ -1,0 +1,236 @@
+{
+  "version": 1,
+  "date": "2026-11-10",
+  "base_head": "60e94003b97a8ac1d730d6138233a8d0755e005c",
+  "scope": "Ownership/readability review; no kernel, dtype, shape, numerical threshold or corpus change",
+  "sources_sha256": {
+    "Makefile": "8cbdfcaedbaca41f512a638f96d1105647875737e172d412e0ef0954947409c4",
+    "ds4.h": "358baf25cd3f4de021af010ac0f5b99d4119d139fae476d3c441354adb546887",
+    "ds4_bundle.c": "e7618ecd632d889803505c8805cf7d4f973c4e5cea67b66868d83b16edbe50b4",
+    "ds4_bundle.h": "1a6d40922dd0e7fc7f22be8f8674d1586da7a8954361d890f1b058855af1e52e",
+    "ds4_gpu.h": "93395d7281aeb0fae53cec1f5126bb26416d496494b94f9bc9841634b3cda2b6",
+    "ds4_lifecycle.inc": "879da12586bbb3f919861685aff4a056e9e45092f8ba55210df4965dc55c6ff3",
+    "ds4_metal.m": "dfea72c2d2595da29c6494c9fd07f3475e048c25bc2d133f31cf285f34fbed73",
+    "ds4_metal_device.h": "1ca42d6470a4bdd00f71dc2dddd98e06b89ba74d6ed10312974e955ad7aec081",
+    "ds4_metal_memory.h": "841efe6f802539fe4bdc79fc3aeba87d8c5c57be5266e339f694dd5a66a2656c",
+    "ds4_numeric.c": "c43c3497ea5de43eb5de3f7aedb5a2840603586663cd5acc45a225e6b85f0828",
+    "ds4_numeric.h": "897edc09967e777c847ce1f9a0f3dffc9ce20c1a1009bfbe1588bfbe5da1bcb9",
+    "ds4_numeric_internal.h": "941e851ade5514e2476efc244c02b0622f146aa733140590d2bf8af03699fc96",
+    "ds4_numeric_metal.m": "b0d8320d2ed67e5c87871592700030bbae8529471d00efa1be50e2cd12722e13",
+    "ds4_numeric_weights.c": "80e4ff780990ec0438655e9ae161157c95e26235affdb6b9ffc27fa121f0be01",
+    "ds4_qwen4_metal_stream.inc": "70e4fb15e200cc3d84350be3f130c4dcc5d60840a6851a3d34663ee9ea8a13a9",
+    "ds4_qwen_image_pipeline.c": "99c0ac9b05386ceaec46fc7385993f6fc85a68f24d67159f3cebd3e19e280395",
+    "ds4_qwen_image_pipeline.h": "c8ccda0e1d4083b36c8ad1ce23ce77e2f91bbcd84367780b845845dbc84d4ed7",
+    "ds4_resources.c": "a87a1bdf0c7d6ea61049e3280fba80f38c6a053fff0dea340f5b62b210f1dd72",
+    "ds4_resources.h": "e8aff4e4463ead186dae6add365e58e4794109683df8e3a2cbe47fb18f70b141",
+    "ds4_server_suite.inc": "f734a70bce11f17813c3a678eaa682300223f1463b8a8047a7249fb541087ed0",
+    "tests/probe_qwen_image_pipeline.c": "c618625cd8f5e268d2228c42bcb3ddfc5ad660025034aa9ea5ecff78d6d91dd0",
+    "tests/probe_qwen_metal_stream.c": "2c063d9b770d48a7210a5e0f89d75aceca1945fbdf8863cb07869a57ec9b8d5e",
+    "tests/suite_numeric_api.py": "690da383dbceafe5d25bae5c7b868fbf4ad35505989b3278888bd2027ecacd78",
+    "tests/test_bundle.c": "32bc008eb3c6f1f148b8f7bbc9e52f27592633cc9df65a87bba9dd8ee6fbdc5a",
+    "tests/test_metal_memory_policy.c": "03d1d98a54f1c8df1fd16e9f29afcf4e13a7b80fdd0b45b2ff9643315cbda510",
+    "tests/test_numeric_lifetime.c": "e12ee85ba9ad48a3186f10c886065d2ffa3c24e193da0ea7cc52319cb1aa7bcb",
+    "tests/test_numeric_metal_lifetime.c": "7ee3670efedb97b826270668930041510b73ba9e2d98fcc66c641bb47a0c5b40",
+    "tests/test_qualification_checkpoint.py": "711ee38a1d1e89da99273341b0bc39e5e847554be3fa4edec333fc09727968ba",
+    "tests/test_qualification_client.py": "e1f7013a9a424deb284f3b1b5502def9aaa6c3d22f21bf353c34f32f88397e46",
+    "tests/test_qwen_metal_lifecycle.c": "7eb5cc8a77a7d73be49b7cf3f97c90a3644a99ae77d618f124501a2bb5e3bf12",
+    "tests/test_resources.c": "ef3ec304d662fdeeb24c26b0c40c757c5dfd722b68890d0d75460ebd9d3b1736",
+    "tests/test_suite_numeric.py": "17718667525d2783b2482ea8460c6f6fe3b9e2731226f7f59631cf64f40cd035",
+    "tests/test_suite_numeric_api.py": "ff6f87564ce6b555cb5930d04bd23a69ab658aebd0cdfc5b399c494b578da8f3",
+    "tools/qualification_checkpoint.py": "f3e7abaa8fa914c1969ef24f2949632de276f6ccbda1223295afc7c02ca9e4bf",
+    "tools/qualification_client.py": "7e27af31ea57a5a23014ec8a34ee3b0029f24b289cedb5a7c2a05a12de8d2f15",
+    "tools/qualification_suite.py": "3f0f0d9a57766dd8232f6556d37764e6656b834f6e863946492ec9ec3bdddf1a",
+    "tools/qualify_metal_server.py": "88d41f855e9c3bee641e9780d095a79b68023c2fbe04ebd66b6a12b6e1dcab16",
+    "tools/qualify_suite_release.py": "00263bcf133af500dc02aa879b09e01cbb2323834b5a8ca1c3c984a76e8b2ab1"
+  },
+  "binaries_sha256": {
+    "ds4-server-suite": "92e54170b98efc11ad08164586fa8f196a18c406561617e763690c95b36f33ef",
+    "tests/probe_qwen_metal_stream": "99f03312f36e5ec18104efad343cf57c9624fbb9734aea1e1f779594b66401cd",
+    "tests/probe_qwen_image_pipeline": "397044f1ae17bf829448ea1665de895dd575c9a6b28195d1b4d24db0d616588a",
+    "tests/probe_gemma_visual": "f5cdce5d2165725b1dbc656c3a49c18a67f1d749d3b3904da162df69e8f46987"
+  },
+  "regression": {
+    "before": {
+      "path": "build/metal-swap-review-20261109/lifetime-before.log",
+      "sha256": "2a027cd943935f2964b72376adb122a6633936d0e9b4f84bc1d703111644ec40"
+    },
+    "before_result": "FAILED expected: prepare_close ran before metadata BUSY",
+    "after": {
+      "path": "build/metal-swap-review-20261109/lifetime-after.log",
+      "sha256": "75df967b8fa40a2fbb6e52620deed1920290f770bcd592f7c7aa8dd02e09eda1"
+    },
+    "metal_public_reuse": {
+      "path": "build/metal-swap-review-20261109/metal-lifetime.log",
+      "sha256": "9ca3778e021cf40ad171da1b6df97e0a691ca235209e4916913ca51866bd6018"
+    },
+    "asan_numeric": {
+      "path": "build/metal-swap-review-20261109/numeric-lifetime-asan.log",
+      "sha256": "ec865493582652f0c7e1074a3a420e6dab4209c4d689d5dce90e3cd93f2fe2ca"
+    },
+    "asan_resources": {
+      "path": "build/metal-swap-review-20261109/resources-asan.log",
+      "sha256": "a7fbaf4f7b8576ff1d79210177eb225905057965fc688b8aa6fd7ff2dac026ef"
+    }
+  },
+  "tests": {
+    "qualification": {
+      "status": "PASS",
+      "count": 105,
+      "skip": 1,
+      "path": "build/metal-swap-review-20261109/python-final-checked.log",
+      "sha256": "283625429ebb3e26f9d92a9d02784d5b326e28f911238ec247914ed47ca6a2e1"
+    },
+    "numeric_cpu": {
+      "status": "PASS",
+      "count": 49,
+      "skip": 14,
+      "path": "build/metal-swap-review-20261109/numeric-cpu.log",
+      "sha256": "bded4a0129965f891dae32421b802ffb3990ad110c13b3c221c3bb170c509eea"
+    },
+    "numeric_metal": {
+      "status": "OPEN",
+      "count": 49,
+      "skip": 3,
+      "known_sin_cos_failures": 2,
+      "resource_failures": 1,
+      "reason": "Budget fixture reserve2GiB exceeds current owned available memory; tensors refused with NOMEM, not a changed numerical tolerance",
+      "path": "build/metal-swap-review-20261109/numeric-metal.log",
+      "sha256": "7b74cd0c619e98754662318cd9c70d64a1ef5b794adc448a56f6dbf3262e0e12"
+    },
+    "metal_file_upload": {
+      "status": "PASS",
+      "path": "build/metal-swap-review-20261109/metal-file-upload.log",
+      "sha256": "dc475d9114c52d74fbb53e6ef4ae038173f919c98bbf8f0a47d61f9fe6dacc3a"
+    },
+    "foundations": {
+      "status": "PASS",
+      "path": "build/metal-swap-review-20261109/foundations-final.log",
+      "sha256": "e61f568a99dce222c87bcd7ce70363528e98f8d6f63fa22f4c2edc5b3b05cda0"
+    },
+    "metal_lifecycle": {
+      "status": "PASS",
+      "path": "build/metal-swap-review-20261109/metal-lifecycle.log",
+      "sha256": "3c6f602ed923bba7e39e08276f6632d96fe3a6417f84c580ca584670436363cc"
+    },
+    "build": {
+      "status": "PASS",
+      "path": "build/metal-swap-review-20261109/build.log",
+      "sha256": "9fc2216f928c1f06a4905469d295e0e507ee89784ce2a60096a006edb39e0845"
+    },
+    "cpu_build": {
+      "status": "PASS",
+      "path": "build/metal-swap-review-20261109/cpu-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ruff": "PASS",
+    "diff_check": "PASS"
+  },
+  "model_gates": {
+    "flash": {
+      "path": "build/metal-swap-review-20261109/flash-gate/report.json",
+      "sha256": "dca410048e6e96f184821d4f6618c795cb2cef2072530489640e0871be169083",
+      "status": "PASS",
+      "seconds": 10.182656749995658,
+      "forced": false,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0
+    },
+    "qwen27": {
+      "path": "build/metal-swap-review-20261109/qwen27-gate/report.json",
+      "sha256": "c1c6735033206d24ea2fec08b5651e8ce2d7a6fb4560943728faaee1a62c8248",
+      "status": "PASS",
+      "seconds": 11.179128124997078,
+      "forced": false,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0
+    },
+    "image512_reload": {
+      "path": "build/metal-swap-review-20261109/image512-matched/report.json",
+      "sha256": "7b25fd877ce8e28eb879c8432db984ea22c1aa24d56dc8028a9a4471800145f5",
+      "status": "PASS",
+      "seconds": 423.38496633300383,
+      "forced": false,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0
+    },
+    "image512_exact": {
+      "path": "build/metal-swap-review-20261109/image512-matched/comparison.json",
+      "sha256": "3df1a2893c079345e6152405f76885d70d03ea212ad965fb351fef99d9067962"
+    },
+    "image512_independent": {
+      "path": "build/metal-swap-review-20261109/image512-matched/verification.json",
+      "sha256": "6da371b7e63f2ae53686a2b11cae518a4347b23c1ca3048c7b21498d4a49602a"
+    },
+    "gemma": {
+      "path": "build/metal-swap-review-20261109/gemma-media/report.json",
+      "sha256": "0747c36665046bee577b4e2007a1960dc79b526fc8d237bcb6c2f61dcc9f1d99",
+      "status": "FAIL",
+      "seconds": 2.0669782079999095,
+      "forced": false,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0,
+      "classification": "PENDING_RESOURCE",
+      "native_status": "NOMEM6 from plan, before forward"
+    }
+  },
+  "harness_failures_preserved": {
+    "image_extended_wrong_environment": {
+      "path": "build/metal-swap-review-20261109/image512/report.json",
+      "sha256": "e0dc9fa912e8cf1976aff33b417d295280d81ad3116365474bdc004d8cdb9dc5",
+      "status": "NOT_VERIFIED",
+      "seconds": 600.9052662910035,
+      "forced": false,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0
+    },
+    "note": "Original invocation omitted CASES_ONLY; cases0/1 passed, extra fault matrix timed out. Matched control environment passed. Subsequent verifier missed2PNG; completed PASS reused after including PNG integrity checks. No numerical gate or timeout widened."
+  },
+  "historical_qwen50": {
+    "qualified_by_this_review": false,
+    "report": "docs/performance/metal-inference-20261102/qwen27/swap-transition-20261106/resume-verification.json",
+    "history_replay": "PASS: all51 serialized records, artifact hashes, gates, timings, pending sequence and continuity verdict identical; no inference rerun"
+  },
+  "pending": [
+    {
+      "check": "CUDA",
+      "status": "PENDING_USER_REQUEST",
+      "reason": "User supplied192.168.1.29; SSH22 timed out. User then explicitly asked to leave CUDA validation pending."
+    },
+    {
+      "check": "Gemma media full-model gate after review",
+      "status": "PENDING_RESOURCE",
+      "reason": "Insufficient available memory above protected file floor; unchanged corpus/steps/criteria."
+    },
+    {
+      "check": "New real HTTP interruption/resume after refactoring",
+      "status": "PENDING_RESOURCE",
+      "reason": "Qwen8192/64 profile cannot be admitted in current available RAM. Simulated interruption/resume, upload failures, atomic fixture recovery, immutable records and replay of all51 real records pass."
+    }
+  ],
+  "unchanged_open_scope": [
+    "F08 repeated skill reopening",
+    "Frozen T00 Image noise and Gemma full baseline unavailable",
+    "Two preexisting sin/cos assertions",
+    "Other hardware/distributed coverage"
+  ],
+  "commits": [
+    {
+      "sha": "e46c4adf3db9431b68f5cb3f66a41dbd10bc2edd",
+      "subject": "fix(numeric): bound file uploads and preserve retryable teardown"
+    },
+    {
+      "sha": "6b2909949bd00862ecf509829bf172372f9c1dca",
+      "subject": "fix(metal): hand off reconstructible cache through model owners"
+    },
+    {
+      "sha": "6721055c924e25014010e065df7973c13e6e1b2b",
+      "subject": "feat(tools): resume qualification through owned durable checkpoints"
+    }
+  ],
+  "history_replay": {
+    "status": "PASS",
+    "records": 51,
+    "criteria": "Same artifact checks, gate verdicts, cycle sequence, full timing dictionaries and continuous verdict; no model inference rerun."
+  },
+  "tested_code_commit": "6721055c924e25014010e065df7973c13e6e1b2b"
+}

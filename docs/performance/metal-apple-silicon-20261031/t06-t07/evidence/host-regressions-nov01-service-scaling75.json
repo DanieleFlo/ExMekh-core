@@ -1,0 +1,30 @@
+{
+  "status": "PASS",
+  "tests": 75,
+  "seconds": 12.865,
+  "command": [
+    "build/metal-venv/bin/python",
+    "-m",
+    "unittest",
+    "tests.test_metal_stream_qualification",
+    "tests.test_suite_pipeline_qualification",
+    "tests.test_suite_offloaded_oracle",
+    "tests.test_suite_contracts",
+    "tests.test_flash_launcher",
+    "tests.test_metal_foundations",
+    "tests.test_metal_vision_qualification",
+    "tests.test_qwen4_vision_ref",
+    "-q"
+  ],
+  "source_sha256": {
+    "tests/test_metal_stream_qualification.py": "1dbfd1ddbd3ba4094fc28760c479800c7bc5067d0bd87e079ba0c2bd6c5286e7",
+    "tests/test_suite_pipeline_qualification.py": "85a6281825dea07ab8b399ea3f0c768f664a5e6eb7fa31b5faad693d0108165b",
+    "tests/test_suite_offloaded_oracle.py": "8a8a2dc0d4b4fe4e0b0f7b06a7a85f7b4831b3f8e2f774cde49e35cdc999ea18",
+    "tests/test_suite_contracts.py": "f8fa9b608735c1bd4bd7287a73b093c079ae9ddcdd84b8bd84cba5a1ad0a2a69",
+    "tests/test_flash_launcher.py": "f1863a3ea0ad1d09be8d24aa6f35c3a5c588a2522f7a9c6405e5d25da3eca8fd",
+    "tests/test_metal_foundations.py": "448ce07b62225b9b4345eab0e4fa7533655af1a7333bbef7ab275dab73a26e7e",
+    "tests/test_metal_vision_qualification.py": "6d608e7fc40aea21759761c5aaa4455d440cec86c9f3302d8d4f027387e3bb04",
+    "tests/test_qwen4_vision_ref.py": "2dc7d801263279f340acb74a5f9a36c9ee521dac57cf220e2e4534ee7c6cf7d1"
+  },
+  "scope": "Actual completed local unittest session58776 Nov1 22:28UTC. Frozen numerical/model/client gates separate; includes three new service timeout and interrupt propagation regressions."
+}

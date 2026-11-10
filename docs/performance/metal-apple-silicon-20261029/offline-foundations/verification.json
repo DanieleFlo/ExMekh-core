@@ -1,0 +1,879 @@
+{
+  "date": "2026-10-29",
+  "scope": "No GGUF forward; synthetic state, production lifecycle and build/launcher gates",
+  "device_cap_bytes": 1073741824,
+  "host_reserve_bytes": 2147483648,
+  "environment": {
+    "source": {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "stdout": "8e8ac45a7b463f7d4d72d859234f794b815019ef",
+      "stderr": ""
+    },
+    "macos": {
+      "command": [
+        "sw_vers"
+      ],
+      "exit_code": 0,
+      "stdout": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83",
+      "stderr": ""
+    },
+    "toolchain": {
+      "command": [
+        "clang",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin",
+      "stderr": ""
+    },
+    "sdk_path": {
+      "command": [
+        "xcrun",
+        "--show-sdk-path"
+      ],
+      "exit_code": 0,
+      "stdout": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+      "stderr": ""
+    },
+    "sdk_version": {
+      "command": [
+        "xcrun",
+        "--show-sdk-version"
+      ],
+      "exit_code": 0,
+      "stdout": "26.5",
+      "stderr": ""
+    },
+    "hardware": {
+      "command": [
+        "sysctl",
+        "hw.model",
+        "hw.memsize"
+      ],
+      "exit_code": 0,
+      "stdout": "hw.model: Mac17,9\nhw.memsize: 25769803776",
+      "stderr": ""
+    },
+    "ssd": {
+      "command": [
+        "df",
+        "-k",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on\n/dev/disk3s5   971298980 605464356 339539916    65% 2621699 3395399160    0%   /System/Volumes/Data",
+      "stderr": ""
+    }
+  },
+  "checks": [
+    {
+      "name": "build-metal",
+      "command": [
+        "make",
+        "-j2",
+        "all",
+        "ds4-server-suite",
+        "tests/test_qwen_metal_lifecycle"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 10.201,
+      "rss_max_sampled_bytes": 3162112,
+      "log": "build/metal-qualification/offline-foundations-20261029/build-metal.log",
+      "log_sha256": "25fa13c0606600ae036c31655cda9de2f9130c73af523f2296a737dbcad3967a",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 52%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2564.81M  free = 1531.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 45%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "make: Nothing to be done for `all'.\nmake: `ds4-server-suite' is up to date.\ncc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen_metal_lifecycle tests/test_qwen_metal_lifecycle.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal\nIn file included from tests/test_qwen_metal_lifecycle.c:4:\ntests/../ds4.c:59281:72: warning: unused parameter 'model' [-Wunused-parameter]\n 59281 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,\n       |                                                                        ^\ntests/../ds4.c:59586:58: warning: unused parameter 'g' [-Wunused-parameter]\n 59586 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {\n       |                                                          ^\n2 warnings generated.\n"
+    },
+    {
+      "name": "build-cpu-isolated",
+      "command": [
+        "make",
+        "-j2",
+        "cpu"
+      ],
+      "cwd": "build/metal-qualification/offline-foundations-20261029/cpu",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 180,
+      "elapsed_seconds": 7.126,
+      "rss_max_sampled_bytes": 2686976,
+      "log": "build/metal-qualification/offline-foundations-20261029/build-cpu-isolated.log",
+      "log_sha256": "a7d2433a86c73066c7612afb05c13ca06ee908a1910389527f64a4822015f9d1",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 45%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 44%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -DDS4_NO_GPU -c -o ds4_cli_cpu.o ds4_cli.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -DDS4_NO_GPU -c -o ds4_server_cpu.o ds4_server.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -DDS4_NO_GPU -c -o ds4_bench_cpu.o ds4_bench.c\nds4_bench.c:95:35: warning: use of infinity via a macro is undefined behavior due to the currently enabled floating-point options [-Wnan-infinity-disabled]\n   95 |     int best = -1; float value = -INFINITY;\n      |                                   ^\n1 warning generated.\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -DDS4_NO_GPU -c -o ds4_eval_cpu.o ds4_eval.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_eval_cases.o ds4_eval_cases.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_help.o ds4_help.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_prompt_prefix.o ds4_prompt_prefix.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_kvstore.o ds4_kvstore.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o linenoise.o linenoise.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o rax.o rax.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -DDS4_NO_GPU -c -o ds4_gpu_args_cpu.o ds4_gpu_args.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -Wno-unused-function -DDS4_NO_GPU -c -o ds4_cpu.o ds4.c\nds4.c:67361:59: warning: unused parameter 's' [-Wunused-parameter]\n 67361 | static uint32_t session_vision_position_rows(ds4_session *s) {\n       |                                                           ^\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99   -c -o ds4_runtime.o ds4_runtime.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_executor.o ds4_executor.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_bundle.o ds4_bundle.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_resources.o ds4_resources.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_checkpoint.o ds4_checkpoint.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_image.o ds4_image.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_distributed.o ds4_distributed.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_tp.o ds4_tp.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_ssd.o ds4_ssd.c\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99   -c -o ds4_layer_pack.o ds4_layer_pack.c\n1 warning generated.\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4 ds4_cli_cpu.o ds4_help.o ds4_prompt_prefix.o linenoise.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-server ds4_server_cpu.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-bench ds4_bench_cpu.o ds4_help.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread\ncc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-eval ds4_eval_cpu.o ds4_eval_cases.o ds4_help.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread\n"
+    },
+    {
+      "name": "host-foundations",
+      "command": [
+        "make",
+        "test-runtime",
+        "test-resources",
+        "test-executor",
+        "test-suite-accelerator"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 0.511,
+      "rss_max_sampled_bytes": 6062080,
+      "log": "build/metal-qualification/offline-foundations-20261029/host-foundations.log",
+      "log_sha256": "6be7c8a3804f06d37034e73a61d6dd01e2b6140090dbe6aed6920a7a309c80fa",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 44%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 45%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "./tests/test_runtime\nruntime: PASS\n./tests/test_resources\nPASS: resource lifetime, aliases, events, budgets, concurrent reservations and checkpoint validation\n./tests/test_executor\nexecutor: PASS admission, repeated visits, cancellation, faults, recovery and reservation reuse\n./tests/test_suite_accelerator\nsuite accelerator factory ownership: PASS\n"
+    },
+    {
+      "name": "launchers",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_flash_launcher",
+        "-v"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 0.51,
+      "rss_max_sampled_bytes": 32768,
+      "log": "build/metal-qualification/offline-foundations-20261029/launchers.log",
+      "log_sha256": "e2d4f679b129e5ab4d445ba50b6a34ce71218d011b955f5736882f4266b5946d",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 45%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 45%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "test_27b_launcher_ignores_flash_profile (tests.test_flash_launcher.FlashLauncherTests.test_27b_launcher_ignores_flash_profile) ... ok\ntest_default_is_the_qualified_profile (tests.test_flash_launcher.FlashLauncherTests.test_default_is_the_qualified_profile) ... ok\ntest_explicit_overrides (tests.test_flash_launcher.FlashLauncherTests.test_explicit_overrides) ... ok\ntest_invalid_profile_is_rejected (tests.test_flash_launcher.FlashLauncherTests.test_invalid_profile_is_rejected) ... ok\ntest_legacy_reproduces_original (tests.test_flash_launcher.FlashLauncherTests.test_legacy_reproduces_original) ... ok\ntest_metal_agent_honors_explicit_native_suite (tests.test_flash_launcher.FlashLauncherTests.test_metal_agent_honors_explicit_native_suite) ... ok\ntest_metal_flash_uses_small_context_and_no_cuda_profile (tests.test_flash_launcher.FlashLauncherTests.test_metal_flash_uses_small_context_and_no_cuda_profile) ... ok\ntest_native_agent_configuration_preserves_explicit_capacity_and_flags (tests.test_flash_launcher.FlashLauncherTests.test_native_agent_configuration_preserves_explicit_capacity_and_flags) ... ok\ntest_root_launcher_retains_llm_default_and_accepts_native_config (tests.test_flash_launcher.FlashLauncherTests.test_root_launcher_retains_llm_default_and_accepts_native_config) ... ok\ntest_standard_complete_gpu_profile (tests.test_flash_launcher.FlashLauncherTests.test_standard_complete_gpu_profile) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.173s\n\nOK\n"
+    },
+    {
+      "name": "lifecycle-qwen27",
+      "command": [
+        "./tests/test_qwen_metal_lifecycle",
+        "qwen27"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 6.62,
+      "rss_max_sampled_bytes": 850182144,
+      "log": "build/metal-qualification/offline-foundations-20261029/lifecycle-qwen27.log",
+      "log_sha256": "b1515475bbca97537df3f6d0ed04602950e6b9b0b9bddcbf99ab8735c5da7eae",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 45%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 41%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "ds4: Metal device Apple M5 Pro, 24.00 GiB RAM\nds4: Metal 4 tensor API enabled for Tensor kernels\nds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on\nds4: Qwen3.8 27B graph allocation failed for context 16\nds4: Metal model views created in 0.041 ms, residency requested in 0.077 ms, warmup 2.000 ms (mapped 0.02 MiB from offset 0.00 MiB)\nds4: Metal mapped mmaped model as 1 overlapping shared buffers\nMetal memory: host_available=5805441024 allocated=1769472 recommended=19069665280 max_buffer=14302248960\nQwen27 Metal lifecycle: payload bit-exact in new session; OOM/corrupt/truncated/missing restore atomic; park/release/resume and empty session PASS (1 GiB device cap)\n",
+      "device_memory_bytes": {
+        "host_available": 5805441024,
+        "current_allocated": 1769472,
+        "recommended_working_set": 19069665280,
+        "max_buffer_length": 14302248960
+      }
+    },
+    {
+      "name": "lifecycle-flash",
+      "command": [
+        "./tests/test_qwen_metal_lifecycle",
+        "flash"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 5.086,
+      "rss_max_sampled_bytes": 1522515968,
+      "log": "build/metal-qualification/offline-foundations-20261029/lifecycle-flash.log",
+      "log_sha256": "3a3cede5148a9ca36a09fafda942230ad4a9d03d4cd9d9b5922a34454ca78450",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 41%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 41%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "ds4: Metal device Apple M5 Pro, 24.00 GiB RAM\nds4: Metal 4 tensor API enabled for Tensor kernels\nds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on\nds4: Qwen3.8 graph allocation failed (ctx 16)\nMetal memory: host_available=5631475712 allocated=1769472 recommended=19069665280 max_buffer=14302248960\nFlash Metal lifecycle: payload bit-exact in new session; OOM/corrupt/truncated/missing restore atomic; park/release/resume and empty session PASS (1 GiB device cap)\n",
+      "device_memory_bytes": {
+        "host_available": 5631475712,
+        "current_allocated": 1769472,
+        "recommended_working_set": 19069665280,
+        "max_buffer_length": 14302248960
+      }
+    },
+    {
+      "name": "dry-qwen27-root",
+      "command": [
+        "bash",
+        "start-ds4-server.sh",
+        "--print-command"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 0.511,
+      "rss_max_sampled_bytes": 2048000,
+      "log": "build/metal-qualification/offline-foundations-20261029/dry-qwen27-root.log",
+      "log_sha256": "ad98e33c15eb164959fcc45508cd3400c522ce182520959180b27f07403cc7d8",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 41%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 42%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "env ./ds4-server --metal -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf --ctx 512 --prefill-chunk 64 --host 0.0.0.0 --no-mtp --port 8080 --kv-disk-dir /Users/danieleflorio/.ds4/server-kv --kv-disk-space-mb 8192 \n"
+    },
+    {
+      "name": "dry-qwen27-agent",
+      "command": [
+        "bash",
+        "agent/start-ds4-server.sh",
+        "--print-command"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 0.51,
+      "rss_max_sampled_bytes": 2048000,
+      "log": "build/metal-qualification/offline-foundations-20261029/dry-qwen27-agent.log",
+      "log_sha256": "fed8664abd822955d7235fd2849f2faffb04da9343c6c5af0c29004993494c05",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 42%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 42%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "env ./ds4-server --metal -m gguf/Qwen3.8-27B-UD-Q4_K_S.gguf --ctx 512 --prefill-chunk 64 --host 0.0.0.0 --no-mtp --port 8080 \n"
+    },
+    {
+      "name": "dry-flash-agent",
+      "command": [
+        "bash",
+        "agent/start-ds4-server-flash.sh",
+        "--print-command"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 0.505,
+      "rss_max_sampled_bytes": 2048000,
+      "log": "build/metal-qualification/offline-foundations-20261029/dry-flash-agent.log",
+      "log_sha256": "ed07f59785caa08d825d45472ab6afcc352ae8281004e0f11e32cdefb2b27711",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 42%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 42%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2556.81M  free = 1539.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "env ./ds4-server --metal -m gguf/Qwen3.8-Flash-Next-Q2.gguf --ctx 512 --prefill-chunk 64 --host 0.0.0.0 --no-mtp --port 8080 --kv-disk-dir /Users/danieleflorio/.ds4/server-kv --kv-disk-space-mb 8192 \n"
+    },
+    {
+      "name": "build-final",
+      "command": [
+        "make",
+        "-j2",
+        "all",
+        "ds4-server-suite",
+        "tests/test_qwen_metal_lifecycle"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 10.155,
+      "rss_max_sampled_bytes": 5799936,
+      "log": "build/metal-qualification/offline-foundations-20261029/build-final.log",
+      "log_sha256": "25fa13c0606600ae036c31655cda9de2f9130c73af523f2296a737dbcad3967a",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 49%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 47%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "make: Nothing to be done for `all'.\nmake: `ds4-server-suite' is up to date.\ncc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen_metal_lifecycle tests/test_qwen_metal_lifecycle.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal\nIn file included from tests/test_qwen_metal_lifecycle.c:4:\ntests/../ds4.c:59281:72: warning: unused parameter 'model' [-Wunused-parameter]\n 59281 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,\n       |                                                                        ^\ntests/../ds4.c:59586:58: warning: unused parameter 'g' [-Wunused-parameter]\n 59586 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {\n       |                                                          ^\n2 warnings generated.\n"
+    },
+    {
+      "name": "lifecycle-qwen27-final",
+      "command": [
+        "./tests/test_qwen_metal_lifecycle",
+        "qwen27"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 7.124,
+      "rss_max_sampled_bytes": 850296832,
+      "log": "build/metal-qualification/offline-foundations-20261029/lifecycle-qwen27-final.log",
+      "log_sha256": "3b6c57994ad55086f8723567cb97c561bb06b0a0aee2a01df5405c26548f81e0",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 47%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 47%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "ds4: Metal device Apple M5 Pro, 24.00 GiB RAM\nds4: Metal 4 tensor API enabled for Tensor kernels\nds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on\nds4: Qwen3.8 27B graph allocation failed for context 16\nds4: Metal model views created in 0.030 ms, residency requested in 0.065 ms, warmup 2.164 ms (mapped 0.02 MiB from offset 0.00 MiB)\nds4: Metal mapped mmaped model as 1 overlapping shared buffers\nMetal memory: host_available=6211141632 allocated=1769472 recommended=19069665280 max_buffer=14302248960\nQwen27 Metal lifecycle: payload bit-exact in new session; OOM/corrupt/truncated/missing restore atomic; park/release/resume and empty session PASS (1 GiB device cap)\n",
+      "device_memory_bytes": {
+        "host_available": 6211141632,
+        "current_allocated": 1769472,
+        "recommended_working_set": 19069665280,
+        "max_buffer_length": 14302248960
+      }
+    },
+    {
+      "name": "lifecycle-flash-final",
+      "command": [
+        "./tests/test_qwen_metal_lifecycle",
+        "flash"
+      ],
+      "cwd": ".",
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 120,
+      "elapsed_seconds": 4.582,
+      "rss_max_sampled_bytes": 1032323072,
+      "log": "build/metal-qualification/offline-foundations-20261029/lifecycle-flash-final.log",
+      "log_sha256": "3f4561f98f5ebff495962029f34763ee5ac3f52b86b68bc06223d6a149d46214",
+      "before": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 46%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "after": {
+        "pressure": {
+          "command": [
+            "memory_pressure",
+            "-Q"
+          ],
+          "exit_code": 0,
+          "stdout": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 45%",
+          "stderr": ""
+        },
+        "swap": {
+          "command": [
+            "sysctl",
+            "vm.swapusage"
+          ],
+          "exit_code": 0,
+          "stdout": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)",
+          "stderr": ""
+        }
+      },
+      "output": "ds4: Metal device Apple M5 Pro, 24.00 GiB RAM\nds4: Metal 4 tensor API enabled for Tensor kernels\nds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on\nds4: Qwen3.8 graph allocation failed (ctx 16)\nMetal memory: host_available=6416891904 allocated=1769472 recommended=19069665280 max_buffer=14302248960\nFlash Metal lifecycle: payload bit-exact in new session; OOM/corrupt/truncated/missing restore atomic; park/release/resume and empty session PASS (1 GiB device cap)\n",
+      "device_memory_bytes": {
+        "host_available": 6416891904,
+        "current_allocated": 1769472,
+        "recommended_working_set": 19069665280,
+        "max_buffer_length": 14302248960
+      }
+    }
+  ],
+  "sources": {
+    "tests/test_qwen_metal_lifecycle.c": {
+      "sha256": "24675230e48a55655b091ea7413768af9d7aba1d7cac878de05e1383fe1e4457",
+      "bytes": 10640
+    },
+    "Makefile": {
+      "sha256": "1a138b152c69b762a7b66b629343b820362b4f98e6ec4bc71bbfb0c4f9eb6bc6",
+      "bytes": 87714
+    },
+    "ds4_lifecycle.inc": {
+      "sha256": "2cce0fb26d9d37ad43560ea3a38af9e683036faddaa09c7a49279b6bf51c9b52",
+      "bytes": 31593
+    },
+    "ds4.c": {
+      "sha256": "61b9c3a50e2f6e521d2e524876fbb46c9da66732984763d4987c0a54353498fa",
+      "bytes": 4150308
+    },
+    "ds4_metal.m": {
+      "sha256": "e6bdc35a458b711b835b75964af367e55e56da14522cb924eab5af7a724a7c97",
+      "bytes": 2348411
+    },
+    "tests/test_flash_launcher.py": {
+      "sha256": "f4f755479421701674aa8722b60d25ad92143e6748bd92637fdd31eddef4d488",
+      "bytes": 7203
+    }
+  },
+  "not_verified": [
+    "LLM inference and logits",
+    "Qwen27 MTP/vision",
+    "Flash model weights still downloading",
+    "real LLM/suite alternation and client HTTP",
+    "cross-backend Gemma internal BF16 gate remains FAIL",
+    "CUDA/ROCm/distributed and other Apple chips"
+  ],
+  "cpu_link": {
+    "command": [
+      "otool",
+      "-L",
+      "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/offline-foundations-20261029/cpu/ds4"
+    ],
+    "exit_code": 0,
+    "stdout": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/offline-foundations-20261029/cpu/ds4:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1356.0.0)",
+    "stderr": ""
+  },
+  "test_fixture": {
+    "model_backing_bytes": 4096,
+    "context_tokens": 16,
+    "prefill_chunk": 2,
+    "qwen27": "target-only",
+    "flash": "streamed, synthetic descriptors, embedded MTP graph allocated; no inference"
+  },
+  "measurement_limits": [
+    "RSS sampled only for the directly launched process, not child compilers; build parent RSS is not build peak.",
+    "memory_pressure -Q and swap captured before and after each case; not continuous pressure monitoring.",
+    "Device cap covers registered runtime storage; RSS includes driver and other host overhead.",
+    "No GGUF/model payload was read; reload covers only the temporary 4096-byte mapping."
+  ],
+  "binaries": {
+    "tests/test_qwen_metal_lifecycle": "4efbe151e895c93fdfe1ae3163a84c7c7cb58fcdd2dda5c507f29c9ca7e2da71",
+    "ds4": "2e8be948ff6d74a9c419c8a97d9e5dfa155c11cd4eb7be26d1e0871a6e922a98",
+    "ds4-server": "aa4a6da7e7267fd46296430aec6d9cba062a5485822a116abc72704f0486185e",
+    "ds4-server-suite": "8be753f6ea9536c51b009acbfcc39c5085898145116dc0efd5fa8b1d49773252",
+    "build/metal-qualification/offline-foundations-20261029/cpu/ds4": "1d897f7b81e33ff4e2877174fe3953d1bc6539b11af37011014e635bec688cb5"
+  },
+  "setup_attempts": [
+    {
+      "status": "NOT_VERIFIED",
+      "reason": "Sandbox did not expose the Metal device; successful GPU runs used local device access."
+    },
+    {
+      "status": "FAIL",
+      "check": "initial docs-check",
+      "reason": "Evidence JSON had not yet been copied into the report directory; local link validation failed. Final docs-check recorded separately."
+    }
+  ],
+  "docs_check": {
+    "command": [
+      "make",
+      "docs-check"
+    ],
+    "status": "PASS",
+    "tests": 10,
+    "log_sha256": "c6fa4babb16339d4b879e6d8a7f9a2fe45c9ced8e62249a5074f7301e863d9dc",
+    "output": "python3 tools/build_research_indexes.py\nindexed 49 documents\npython3 tools/build_docs_indexes.py\nindexed 96 documents\npython3 -m unittest tests.test_research_corpus tests.test_docs_wiki -v\ntest_all_local_markdown_links_resolve (tests.test_research_corpus.ResearchCorpusTests.test_all_local_markdown_links_resolve) ... ok\ntest_catalog_ranges_point_to_the_declared_headings (tests.test_research_corpus.ResearchCorpusTests.test_catalog_ranges_point_to_the_declared_headings) ... ok\ntest_every_authored_repository_card_has_at_most_one_external_link (tests.test_research_corpus.ResearchCorpusTests.test_every_authored_repository_card_has_at_most_one_external_link) ... ok\ntest_manifest_lock_and_downloaded_hashes_are_complete (tests.test_research_corpus.ResearchCorpusTests.test_manifest_lock_and_downloaded_hashes_are_complete) ... ok\ntest_master_and_index_of_indexes_reach_every_group (tests.test_research_corpus.ResearchCorpusTests.test_master_and_index_of_indexes_reach_every_group) ... ok\ntest_repository_lock_uses_full_commits_and_evidence_classes (tests.test_research_corpus.ResearchCorpusTests.test_repository_lock_uses_full_commits_and_evidence_classes) ... ok\ntest_all_local_markdown_links_resolve (tests.test_docs_wiki.DocsWikiTests.test_all_local_markdown_links_resolve) ... ok\ntest_catalog_ranges_point_to_declared_headings (tests.test_docs_wiki.DocsWikiTests.test_catalog_ranges_point_to_declared_headings) ... ok\ntest_no_markdown_is_orphaned_or_flat_at_docs_root (tests.test_docs_wiki.DocsWikiTests.test_no_markdown_is_orphaned_or_flat_at_docs_root) ... ok\ntest_root_and_index_of_indexes_reach_every_group (tests.test_docs_wiki.DocsWikiTests.test_root_and_index_of_indexes_reach_every_group) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 0.186s\n\nOK\n"
+  },
+  "production_unchanged": {
+    "ds4.c": true,
+    "ds4_metal.m": true,
+    "ds4_lifecycle.inc": true,
+    "ds4_numeric_metal.m": true
+  },
+  "final_required_checks_pass": true
+}

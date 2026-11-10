@@ -1,0 +1,289 @@
+{
+  "status": "PASS",
+  "exact": 69,
+  "count": 69,
+  "boundaries": [
+    {
+      "stage": "vision-0",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-1",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-2",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-3",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-4",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-5",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-6",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-7",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-8",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-9",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-10",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-11",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-12",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-13",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-14",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-15",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-16",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-17",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-18",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-19",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-20",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-21",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-22",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-23",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-24",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-25",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision-26",
+      "bit_exact": true
+    },
+    {
+      "stage": "deepstack-0",
+      "bit_exact": true
+    },
+    {
+      "stage": "deepstack-1",
+      "bit_exact": true
+    },
+    {
+      "stage": "deepstack-2",
+      "bit_exact": true
+    },
+    {
+      "stage": "vision_merged-0",
+      "bit_exact": true
+    },
+    {
+      "stage": "embeddings-0",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-0",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-1",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-2",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-3",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-4",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-5",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-6",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-7",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-8",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-9",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-10",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-11",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-12",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-13",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-14",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-15",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-16",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-17",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-18",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-19",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-20",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-21",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-22",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-23",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-24",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-25",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-26",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-27",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-28",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-29",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-30",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-31",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-32",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-33",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-34",
+      "bit_exact": true
+    },
+    {
+      "stage": "text-35",
+      "bit_exact": true
+    },
+    {
+      "stage": "conditioning-0",
+      "bit_exact": true
+    }
+  ],
+  "input_identity": {
+    "tokens": true,
+    "positions": true,
+    "pixels": true
+  },
+  "scope": "Complete native encoder vs independently saved frozen HF CPU trace. Decoder boundaries before deepstack, final conditioning unchanged."
+}

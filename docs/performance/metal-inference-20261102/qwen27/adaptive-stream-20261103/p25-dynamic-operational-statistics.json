@@ -1,0 +1,330 @@
+{
+  "summary": [
+    {
+      "depth": 0,
+      "samples": 3,
+      "medians": {
+        "prefill_tps": 16.962359,
+        "gen_tps": 1.572404,
+        "request_seconds": 13.948562073487256
+      },
+      "ranges": {
+        "prefill_tps": [
+          16.958409,
+          17.119843
+        ],
+        "gen_tps": [
+          1.487178,
+          1.607101
+        ],
+        "request_seconds": [
+          13.694166889016119,
+          14.532570383242133
+        ],
+        "min_host_GiB": [
+          2.459564208984375,
+          3.0906829833984375
+        ]
+      },
+      "CV": {
+        "prefill_tps": 0.005412447659752682,
+        "gen_tps": 0.03967069195142082,
+        "request_seconds": 0.03057701413057094
+      }
+    },
+    {
+      "depth": 4,
+      "samples": 3,
+      "medians": {
+        "prefill_tps": 15.801759,
+        "gen_tps": 4.0931,
+        "request_seconds": 7.951297589764063
+      },
+      "ranges": {
+        "prefill_tps": [
+          12.963832,
+          15.832649
+        ],
+        "gen_tps": [
+          4.08522,
+          4.310006
+        ],
+        "request_seconds": [
+          7.7624738240532585,
+          8.853369630678127
+        ],
+        "min_host_GiB": [
+          2.58404541015625,
+          3.7003631591796875
+        ]
+      },
+      "CV": {
+        "prefill_tps": 0.11082057222147414,
+        "gen_tps": 0.030644545296846664,
+        "request_seconds": 0.07119454097577312
+      }
+    }
+  ],
+  "rows": [
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.962359,
+      "gen_tokens": 16.0,
+      "gen_tps": 1.572404,
+      "gen_first_ms": 1468.35,
+      "gen_steady_tokens": 15.0,
+      "gen_steady_tps": 1.722837,
+      "kvcache_bytes": 0.0,
+      "name": "p25-auto-repeat-0-mtp0",
+      "variant": "after",
+      "depth": 0,
+      "rep": 0,
+      "warmup": true,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 7251889664,
+      "process_seconds": 15.510820333001902,
+      "request_seconds": 13.948562073487256,
+      "clock_deltas": [
+        15.51285770800314,
+        15.51293599998462
+      ],
+      "min_host_GiB": 2.459564208984375,
+      "swap_growth_MiB": 0.0,
+      "adjusted_caps_GiB": [
+        9.4,
+        9.57,
+        9.76,
+        9.07,
+        8.31,
+        7.53,
+        6.77,
+        7.91,
+        8.74,
+        9.71,
+        8.94,
+        8.17,
+        7.39,
+        6.62,
+        7.93,
+        8.96,
+        9.99,
+        8.97,
+        8.01,
+        7.04,
+        6.08,
+        8.96
+      ],
+      "oracle": "16 IDs and prefill BIT_EXACT to frozen;MTP4 also final logits"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 15.801759,
+      "gen_tokens": 16.0,
+      "gen_tps": 4.310006,
+      "gen_first_ms": 1270.238,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 4.914216,
+      "kvcache_bytes": 0.0,
+      "name": "p25-auto-repeat-0-mtp4",
+      "variant": "after",
+      "depth": 4,
+      "rep": 0,
+      "warmup": true,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 6613922432,
+      "process_seconds": 9.173178999990341,
+      "request_seconds": 7.7624738240532585,
+      "clock_deltas": [
+        9.175012125007925,
+        9.175057999993442
+      ],
+      "min_host_GiB": 2.608551025390625,
+      "swap_growth_MiB": 0.0,
+      "adjusted_caps_GiB": [
+        7.34,
+        8.1,
+        8.01,
+        6.32,
+        6.2
+      ],
+      "oracle": "16 IDs and prefill BIT_EXACT to frozen;MTP4 also final logits"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 17.119843,
+      "gen_tokens": 16.0,
+      "gen_tps": 1.607101,
+      "gen_first_ms": 1746.417,
+      "gen_steady_tokens": 15.0,
+      "gen_steady_tps": 1.827308,
+      "kvcache_bytes": 0.0,
+      "name": "p25-auto-repeat-1-mtp0",
+      "variant": "after",
+      "depth": 0,
+      "rep": 1,
+      "warmup": false,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 8578649600,
+      "process_seconds": 14.256288250006037,
+      "request_seconds": 13.694166889016119,
+      "clock_deltas": [
+        14.26026645899401,
+        14.26033700001426
+      ],
+      "min_host_GiB": 3.0906829833984375,
+      "swap_growth_MiB": 133.3700008392334,
+      "adjusted_caps_GiB": [
+        10.31,
+        9.7,
+        9.12,
+        8.34,
+        7.56,
+        9.29,
+        10.26,
+        9.29,
+        8.14,
+        7.17,
+        6.02,
+        7.05,
+        9.17,
+        10.26,
+        9.29,
+        8.14,
+        6.96,
+        8.13,
+        9.29,
+        9.15
+      ],
+      "oracle": "16 IDs and prefill BIT_EXACT to frozen;MTP4 also final logits"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 15.832649,
+      "gen_tokens": 16.0,
+      "gen_tps": 4.0931,
+      "gen_first_ms": 1212.599,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 4.450611,
+      "kvcache_bytes": 0.0,
+      "name": "p25-auto-repeat-1-mtp4",
+      "variant": "after",
+      "depth": 4,
+      "rep": 1,
+      "warmup": false,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 6799897216,
+      "process_seconds": 9.149283083010232,
+      "request_seconds": 7.951297589764063,
+      "clock_deltas": [
+        9.15121441699739,
+        9.151260999991791
+      ],
+      "min_host_GiB": 2.58404541015625,
+      "swap_growth_MiB": 0.0,
+      "adjusted_caps_GiB": [
+        7.51,
+        8.28,
+        6.4,
+        4.62,
+        6.25
+      ],
+      "oracle": "16 IDs and prefill BIT_EXACT to frozen;MTP4 also final logits"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.958409,
+      "gen_tokens": 16.0,
+      "gen_tps": 1.487178,
+      "gen_first_ms": 1511.387,
+      "gen_steady_tokens": 15.0,
+      "gen_steady_tps": 1.62221,
+      "kvcache_bytes": 0.0,
+      "name": "p25-auto-repeat-2-mtp0",
+      "variant": "after",
+      "depth": 0,
+      "rep": 2,
+      "warmup": false,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 8406535680,
+      "process_seconds": 16.025047999995877,
+      "request_seconds": 14.532570383242133,
+      "clock_deltas": [
+        16.026424167008372,
+        16.026503000000957
+      ],
+      "min_host_GiB": 2.6436004638671875,
+      "swap_growth_MiB": 0.0,
+      "adjusted_caps_GiB": [
+        9.63,
+        9.19,
+        8.81,
+        8.42,
+        8.04,
+        8.85,
+        9.63,
+        9.01,
+        8.43,
+        7.85,
+        7.27,
+        8.9,
+        9.89,
+        9.13,
+        8.37,
+        9.15,
+        9.92,
+        9.14,
+        8.37,
+        9.09,
+        9.66,
+        8.96,
+        8.38
+      ],
+      "oracle": "16 IDs and prefill BIT_EXACT to frozen;MTP4 also final logits"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 12.963832,
+      "gen_tokens": 16.0,
+      "gen_tps": 4.08522,
+      "gen_first_ms": 1469.121,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 4.903467,
+      "kvcache_bytes": 0.0,
+      "name": "p25-auto-repeat-2-mtp4",
+      "variant": "after",
+      "depth": 4,
+      "rep": 2,
+      "warmup": false,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 6267728512,
+      "process_seconds": 10.196518457989441,
+      "request_seconds": 8.853369630678127,
+      "clock_deltas": [
+        10.19831345899729,
+        10.198365000018384
+      ],
+      "min_host_GiB": 3.7003631591796875,
+      "swap_growth_MiB": 0.0,
+      "adjusted_caps_GiB": [
+        7.02,
+        7.8,
+        7.68,
+        6.53,
+        6.07
+      ],
+      "oracle": "16 IDs and prefill BIT_EXACT to frozen;MTP4 also final logits"
+    }
+  ]
+}

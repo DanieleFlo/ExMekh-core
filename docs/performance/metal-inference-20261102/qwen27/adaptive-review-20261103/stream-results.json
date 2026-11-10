@@ -1,0 +1,406 @@
+{
+  "summary": {
+    "pairs": 5,
+    "distribution": {
+      "before": {
+        "prefill_tps": {
+          "mean": 16.8491088,
+          "stddev": 0.180368987673047,
+          "median": 16.749481,
+          "p10": 16.6980766,
+          "p90": 17.0467514,
+          "cv": 0.010704957147231846
+        },
+        "gen_tps": {
+          "mean": 3.3661632,
+          "stddev": 0.024170422393909482,
+          "median": 3.36091,
+          "p10": 3.3438803999999998,
+          "p90": 3.3923444,
+          "cv": 0.007180407175121362
+        },
+        "request_seconds": {
+          "mean": 8.552149349009849,
+          "stddev": 0.05627624170371026,
+          "median": 8.566345597815229,
+          "p10": 8.493874157701622,
+          "p90": 8.597732162146599,
+          "cv": 0.0065803623635531825
+        }
+      },
+      "after": {
+        "prefill_tps": {
+          "mean": 16.7872914,
+          "stddev": 0.2223909284903496,
+          "median": 16.688348,
+          "p10": 16.6041082,
+          "p90": 17.0297004,
+          "cv": 0.013247576585842169
+        },
+        "gen_tps": {
+          "mean": 3.3225004,
+          "stddev": 0.11230762517433988,
+          "median": 3.365408,
+          "p10": 3.2192164,
+          "p90": 3.381863,
+          "cv": 0.03380214045251579
+        },
+        "request_seconds": {
+          "mean": 8.633201089634396,
+          "stddev": 0.16413756090334342,
+          "median": 8.589263789767637,
+          "p10": 8.513905935084242,
+          "p90": 8.796120545913087,
+          "cv": 0.019012363919151388
+        }
+      }
+    },
+    "paired": {
+      "prefill_tps": {
+        "geomean_delta_percent": -0.36929389682484626,
+        "bootstrap95_percent": [
+          -0.8495224507686907,
+          0.11326061126186644
+        ],
+        "individual_percent": [
+          0.3603336678625668,
+          -0.7916829049985807,
+          -1.1697198259456476,
+          0.08477161710720438,
+          -0.32234022107974214
+        ]
+      },
+      "gen_tps": {
+        "geomean_delta_percent": -1.3415833957378709,
+        "bootstrap95_percent": [
+          -4.1510285670760165,
+          0.570129818676332
+        ],
+        "individual_percent": [
+          -0.7798088457404706,
+          -6.611956351385462,
+          0.10675680098544138,
+          -0.5504375693513808,
+          1.324180557137744
+        ]
+      },
+      "request_seconds": {
+        "geomean_delta_percent": 0.9350766398792048,
+        "bootstrap95_percent": [
+          -0.20145954353205717,
+          2.682195506667905
+        ],
+        "individual_percent": [
+          0.27819407878324487,
+          4.31679623586374,
+          0.467828319810093,
+          0.2675375595195817,
+          -0.5825826906373455
+        ]
+      }
+    }
+  },
+  "rows": [
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.989818,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.388179,
+      "gen_first_ms": 1195.366,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.402544,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-0-mtp4-before",
+      "variant": "before",
+      "depth": 4,
+      "rep": 0,
+      "warmup": true,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.179173500000616,
+      "request_seconds": 8.48926275232791,
+      "clock_deltas": [
+        9.180307499991613,
+        9.180406999978004
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 17.083262,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.388444,
+      "gen_first_ms": 1198.834,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.406244,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-0-mtp4-after",
+      "variant": "after",
+      "depth": 4,
+      "rep": 0,
+      "warmup": true,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.157588959002169,
+      "request_seconds": 8.468288471106572,
+      "clock_deltas": [
+        9.160627666991786,
+        9.160728999995627
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 17.119266,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.371387,
+      "gen_first_ms": 1210.543,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.394519,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-1-mtp4-after",
+      "variant": "after",
+      "depth": 4,
+      "rep": 1,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.17160270801105,
+      "request_seconds": 8.48429927014123,
+      "clock_deltas": [
+        9.173156249991735,
+        9.173257000016747
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 17.057801,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.397884,
+      "gen_first_ms": 1201.705,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.421783,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-1-mtp4-before",
+      "variant": "before",
+      "depth": 4,
+      "rep": 1,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.160624750002171,
+      "request_seconds": 8.46076193142805,
+      "clock_deltas": [
+        9.163047875001212,
+        9.163148999999976
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 17.030177,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.343428,
+      "gen_first_ms": 1212.833,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.358988,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-2-mtp4-before",
+      "variant": "before",
+      "depth": 4,
+      "rep": 2,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.157364084006986,
+      "request_seconds": 8.54354249711198,
+      "clock_deltas": [
+        9.158971374999965,
+        9.15907199998037
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.895352,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.122362,
+      "gen_first_ms": 1245.447,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.093809,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-2-mtp4-after",
+      "variant": "after",
+      "depth": 4,
+      "rep": 2,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 10.202011874993332,
+      "request_seconds": 8.912349818036729,
+      "clock_deltas": [
+        10.20535554100934,
+        10.20546800000011
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.553559,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.364498,
+      "gen_first_ms": 1221.76,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.395952,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-3-mtp4-after",
+      "variant": "after",
+      "depth": 4,
+      "rep": 3,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.157691041007638,
+      "request_seconds": 8.621776637727624,
+      "clock_deltas": [
+        9.159595541001181,
+        9.159695999987889
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.749481,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.36091,
+      "gen_first_ms": 1210.554,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.380924,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-3-mtp4-before",
+      "variant": "before",
+      "depth": 4,
+      "rep": 3,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.16890799999237,
+      "request_seconds": 8.581629345348949,
+      "clock_deltas": [
+        9.171060624998063,
+        9.171163999999408
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.674213,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.384035,
+      "gen_first_ms": 1200.709,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.402123,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-4-mtp4-before",
+      "variant": "before",
+      "depth": 4,
+      "rep": 4,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.167750667009386,
+      "request_seconds": 8.566345597815229,
+      "clock_deltas": [
+        9.169467708998127,
+        9.169568999990588
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.688348,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.365408,
+      "gen_first_ms": 1228.834,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.404012,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-4-mtp4-after",
+      "variant": "after",
+      "depth": 4,
+      "rep": 4,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.160871166997822,
+      "request_seconds": 8.589263789767637,
+      "clock_deltas": [
+        9.163381165999454,
+        9.163480999995954
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.679932,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.388847,
+      "gen_first_ms": 1195.521,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.403592,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-5-mtp4-after",
+      "variant": "after",
+      "depth": 4,
+      "rep": 5,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.168185041999095,
+      "request_seconds": 8.558315932498761,
+      "clock_deltas": [
+        9.169789459003368,
+        9.169890999997733
+      ]
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.733872,
+      "gen_tokens": 16.0,
+      "gen_tps": 3.344559,
+      "gen_first_ms": 1230.913,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 3.377609,
+      "kvcache_bytes": 0.0,
+      "name": "clean-paired-5-mtp4-before",
+      "variant": "before",
+      "depth": 4,
+      "rep": 5,
+      "warmup": false,
+      "auto": false,
+      "profile": false,
+      "cache_bytes": 1610612736,
+      "process_seconds": 9.14333683399309,
+      "request_seconds": 8.608467373345032,
+      "clock_deltas": [
+        9.146089166999445,
+        9.146189999999478
+      ]
+    }
+  ],
+  "oracle": "BIT_EXACT"
+}

@@ -1,0 +1,521 @@
+Downloading z3-solver (37.0MiB)
+ Downloaded z3-solver
+Uninstalled 1 package in 17ms
+Installed 1 package in 11ms
+============================= test session starts ==============================
+platform darwin -- Python 3.13.13, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-7.1.0, xdist-3.8.0, asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+created: 4/4 workers
+4 workers [1256 items]
+
+........................................................................ [  5%]
+........................................................................ [ 11%]
+........................................................................ [ 17%]
+........................................................................ [ 22%]
+........................................................................ [ 28%]
+........................................................................ [ 34%]
+........................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 51%]
+...............F........................................................ [ 57%]
+........................................................................ [ 63%]
+........................................................................ [ 68%]
+........................................................................ [ 74%]
+........................................................................ [ 80%]
+.....................................................F.................. [ 85%]
+....................................F...................F...........F... [ 91%]
+....................................................sssssss..sssssssssss [ 97%]
+sssssssssssss..ssssssssssss.sss.                                         [100%]
+=================================== FAILURES ===================================
+___________ test_sync_launcher_bootstraps_without_installed_packages ___________
+[gw1] darwin -- Python 3.13.13 /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/.venv/bin/python3
+
+tmp_path = PosixPath('/private/var/folders/43/31sxwsnx5yj0nkg_09p0dyvc0000gn/T/pytest-of-danieleflorio/pytest-0/popen-gw1/test_sync_launcher_bootstraps_0')
+
+    def test_sync_launcher_bootstraps_without_installed_packages(tmp_path: Path) -> None:
+        agent_dir = Path(__file__).resolve().parents[1]
+        uv = tmp_path / "uv executable"
+        uv.write_text(
+            '#!/bin/bash\nif [[ "$1" == run ]]; then\n'
+            "    shift 5\n"
+            f'    exec {shlex.quote(sys.executable)} -S "$@"\n'
+            "fi\nexit 73\n"
+        )
+        uv.chmod(0o755)
+        result = subprocess.run(
+            [str(agent_dir / "sync_exmekh_lib.sh")],
+            cwd=tmp_path,
+            env=dict(os.environ, UV_BIN=str(uv), PYTHONPATH=""),
+            capture_output=True,
+            text=True,
+        )
+        # Reaching the wheel build with site packages disabled proves bootstrap works.
+        assert result.returncode == 1
+>       assert "Building ExMekh-Lib from" in result.stdout
+E       AssertionError: assert 'Building ExMekh-Lib from' in '[ERROR] ExMekh-Lib source project not found: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/exmekh_lib\n'
+E        +  where '[ERROR] ExMekh-Lib source project not found: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/exmekh_lib\n' = CompletedProcess(args=['/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/sync_exmekh_lib.sh'], returnc...Mekh-Lib source project not found: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/exmekh_lib\n', stderr='').stdout
+
+tests/test_sync.py:215: AssertionError
+_____________ test_switch_during_compaction_and_reconnected_stream _____________
+[gw3] darwin -- Python 3.13.13 /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/.venv/bin/python3
+
+compaction_server = 'http://127.0.0.1:50703'
+
+    async def test_switch_during_compaction_and_reconnected_stream(compaction_server):
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable(), headless=True
+            )
+            try:
+                page = await browser.new_page()
+                errors = []
+                page.on("pageerror", lambda error: errors.append(str(error)))
+                await page.goto(compaction_server, wait_until="networkidle")
+                await page.get_by_role(
+                    "button", name="New project chat", exact=True
+                ).first.click()
+                await page.request.post(compaction_server + "/test/pause-compaction")
+>               await send_command(page, "Paused compaction")
+
+tests/test_auto_compaction_e2e.py:292: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/browser_support.py:183: in send_command
+    await page.wait_for_function(
+.venv/lib/python3.13/site-packages/playwright/async_api/_generated.py:12739: in wait_for_function
+    await self._impl_obj.wait_for_function(
+.venv/lib/python3.13/site-packages/playwright/_impl/_page.py:1153: in wait_for_function
+    return await self._main_frame.wait_for_function(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/playwright/_impl/_frame.py:941: in wait_for_function
+    await self._channel.send("waitForFunction", self._timeout, params)
+.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <playwright._impl._connection.Connection object at 0x118182570>
+cb = <function Channel.send.<locals>.<lambda> at 0x1163ee660>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        parsed_st = _attach_api_call_information(
+            getattr(task, "__pw_stack__", None) or _capture_stack_trace(),
+            is_internal,
+            title,
+        )
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 15000ms exceeded.
+
+.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py:632: TimeoutError
+_ test_raw_history_multiline_and_json_output_are_readable_and_copy_stays_original _
+[gw2] darwin -- Python 3.13.13 /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/.venv/bin/python3
+
+output_server = 'http://127.0.0.1:51212'
+
+    async def test_raw_history_multiline_and_json_output_are_readable_and_copy_stays_original(
+        output_server,
+    ):
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable(), headless=True
+            )
+            try:
+                context = await browser.new_context(
+                    permissions=["clipboard-read", "clipboard-write"]
+                )
+                page = await context.new_page()
+                await page.goto(output_server, wait_until="networkidle")
+                await page.get_by_role("tab", name="Raw History", exact=True).click()
+                readable = page.locator(
+                    ".raw-history-container:visible .json-readable-string"
+                ).filter(has_text="FIRST RESULT")
+                await expect(readable).to_be_visible()
+                await expect(readable).to_contain_text(
+                    "Log line 001: completed\nLog line 002: completed"
+                )
+                await expect(readable).to_contain_text(
+                    "<header>\n  <name>bash</name>\n  <type>Tool</type>"
+                )
+                await expect(
+                    page.locator(".raw-history-container:visible .output-header")
+                ).to_have_count(0)
+                await readable.scroll_into_view_if_needed()
+                await page.screenshot(
+                    path="screenshots/raw-history-desktop.png",
+                    full_page=True,
+                    animations="disabled",
+                )
+                await page.get_by_role("button", name="Copy full JSON", exact=True).click()
+                copied = await page.evaluate("navigator.clipboard.readText()")
+>               assert "<header>" in copied and "FIRST RESULT" in copied
+E               AssertionError: assert ('<header>' in '')
+
+tests/test_outputs_responsive_e2e.py:133: AssertionError
+________ test_marquee_toggle_group_move_collective_commands_and_arrange ________
+[gw2] darwin -- Python 3.13.13 /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/.venv/bin/python3
+
+corrections_server = 'http://127.0.0.1:51297'
+
+    async def test_marquee_toggle_group_move_collective_commands_and_arrange(
+        corrections_server,
+    ):
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable(), headless=True
+            )
+            try:
+                page = await browser.new_page(viewport={"width": 1800, "height": 1100})
+                board = await open_board(page, corrections_server)
+                canvas = board.locator(".agent-board")
+                bounds = await canvas.bounding_box()
+                await page.mouse.move(bounds["x"] + 330, bounds["y"] + 80)
+                await page.mouse.down(button="right")
+                await page.mouse.move(bounds["x"] + 550, bounds["y"] + 450, steps=8)
+                await expect(board.locator(".agent-board-selection")).to_be_visible()
+                await expect(board.locator(".agent-board-node.selected")).to_have_count(2)
+                await page.mouse.up(button="right")
+                await expect(
+                    board.get_by_text("2 components selected", exact=True)
+                ).to_be_visible()
+                await expect(board.locator(".agent-board-selection")).to_have_count(0)
+                root = board.locator('[data-node="root"]')
+                root_style = await root.get_attribute("style")
+                await root.click(modifiers=["Control"])
+>               await expect(
+                    board.get_by_text("3 components selected", exact=True)
+                ).to_be_visible()
+E               AssertionError: Locator expected to be visible
+E               Actual value: None
+E               Error: element(s) not found 
+E               Call log:
+E                 - Expect "to_be_visible" locator(".agent-designer-dialog").filter(has=locator(".agent-board-node")).last.get_by_text("3 components selected", exact=True) with timeout 5000ms
+E                 - waiting for locator(".agent-designer-dialog").filter(has=locator(".agent-board-node")).last.get_by_text("3 components selected", exact=True)
+E               
+E               Aria snapshot:
+E               - banner:
+E                 - button "Open projects menu"
+E                 - text: ExMekh Agent Hierarchical Agent Engine
+E                 - button
+E               - complementary:
+E                 - text: PROJECTS
+E                 - button "New project"
+E                 - button "Collapse \"work\"" [expanded]:
+E                   - text: work
+E                   - button "New project chat"
+E                   - button "Project actions"
+E                 - button "New Conversation 29/10 19:25 • 2 msg Delete chat":
+E                   - text: New Conversation 29/10 19:25 • 2 msg
+E                   - button "Delete chat"
+E                 - text: QUICK CHATS
+E                 - button "New Quick Chat"
+E                 - button "New Conversation 29/10 19:25 • 0 msg Delete chat":
+E                   - text: New Conversation 29/10 19:25 • 0 msg
+E                   - button "Delete chat"
+E                 - text: ExMekh-Lib Framework
+E                 - status: v0.1.0
+E                 - text: Local AI Pair Programmer
+E               - main:
+E                 - tablist:
+E                   - tab "Chat" [selected]
+E                   - tab "Raw History"
+E                   - tab "Graph"
+E                 - button "Chat agent settings": Agent
+E                 - button "Chat menu"
+E                 - paragraph: Read saved website outputs
+E                 - text: 19:25
+E                 - button "Copy message"
+E                 - button "Edit message"
+E                 - button "Show output for read_tool_output": "Tool: read_tool_output — output_idarchived · summary_modenone depth: 0 path: / 0s"
+E                 - button "Show output for read_tool_output": "Tool: read_tool_output — output_idarchived · summary_modebrief depth: 0 path: / 0s"
+E                 - button "Show output for read_tool_output": "Tool: read_tool_output — output_idarchived · summary_modedetailed depth: 0 path: / 0s"
+E                 - paragraph: Archived results are ready.
+E                 - text: 19:25
+E                 - button "Copy message"
+E                 - button "Split conversation here"
+E                 - button "Torna in fondo"
+E                 - text: Drop files here Files will be added to temporary storage
+E                 - button
+E                 - textbox:
+E                   - /placeholder: Send a message to ExMekh Agent... (Enter to send, Shift+Enter for new line)
+E                 - button
+E                 - text: edit-test-model · 3.7% · 0.8k/22.0k Manual
+E                 - combobox "Manual"
+E               - dialog:
+E                 - text: Chat agent settings Agent type
+E                 - group "Agent type":
+E                   - button "Generic"
+E                   - button "Programmer"
+E                   - button "Creative"
+E                   - button "Custom" [pressed]
+E                 - text: Applies to the next response in this chat. New chats use the project's default agent.
+E                 - button "Cancel"
+E                 - button "Save chat agent"
+E               - dialog:
+E                 - text: Customize agent
+E                 - button "Undo" [disabled]
+E                 - button "Arrange automatically"
+E                 - button "New HDS"
+E                 - button "Cancel"
+E                 - button "Save agent"
+E                 - text: "Select an HDS or skill to connect capabilities. Purple: sub-agents · Blue: skills · Green: tools · Dashed: skill dependencies."
+E                 - complementary:
+E                   - heading "Capabilities" [level=3]
+E                   - button "main HDS"
+E                   - button "quick HDS"
+E                   - button "deep-thinking SKILL"
+E                   - button "file-processing SKILL"
+E                   - button "bash TOOL"
+E                   - button "calculate TOOL"
+E                   - button "call_sub_agent TOOL"
+E                   - button "control_tool_execution TOOL"
+E                   - button "date-time TOOL"
+E                   - button "delete-file TOOL"
+E                   - button "edit-file TOOL"
+E                   - button "generate-image TOOL"
+E                   - button "get_execution_history TOOL"
+E                   - button "inspect-file TOOL"
+E                   - button "interact-web-page TOOL"
+E                   - button "logic-check TOOL"
+E                   - button "logic-consistency TOOL"
+E                   - button "logic-counterexample TOOL"
+E                   - button "new-file TOOL"
+E                   - button "read-file TOOL"
+E                   - button "read-web-page TOOL"
+E                   - button "read_tool_output TOOL"
+E                   - button "search-web TOOL"
+E                   - button "search_tool_outputs TOOL"
+E                   - button "coding-agent HDS"
+E                   - button "command-approval HDS"
+E                   - button "mock-sub-agent HDS"
+E                   - button "mock-skill SKILL"
+E                   - button "nested-skill SKILL"
+E                   - button "mock-sub-tool TOOL"
+E                   - button "mock-tool TOOL"
+E                   - button "nested-sub-tool TOOL"
+E                   - button "shared-tool TOOL"
+E                 - group "Board navigation":
+E                   - button "Pan left": ←
+E                   - button "Pan right": →
+E                   - button "Pan up": ↑
+E                   - button "Pan down": ↓
+E                   - text: Drag to pan · Right-drag to select · Ctrl/Cmd-click to toggle
+E                 - region "Agent board":
+E                   - img
+E                   - button "HDS · ROOT root":
+E                     - text: HDS · ROOT
+E                     - strong: root
+E                   - button "HDS worker":
+E                     - text: HDS
+E                     - strong: worker
+E                   - button "HDS free-worker":
+E                     - text: HDS
+E                     - strong: free-worker
+E                   - button "SKILL deep-thinking" [pressed]:
+E                     - text: SKILL
+E                     - strong: deep-thinking
+E                   - button "SKILL nested":
+E                     - text: SKILL
+E                     - strong: nested
+E                   - button "TOOL calculate" [pressed]:
+E                     - text: TOOL
+E                     - strong: calculate
+E                   - button "TOOL date-time":
+E                     - text: TOOL
+E                     - strong: date-time
+E                 - text: 2 components selected
+E                 - button "Disconnect selected"
+E                 - button "Remove selected (keep root)"
+
+tests/test_corrections_4_e2e.py:46: AssertionError
+____ test_split_earlier_and_latest_reply_reload_and_continue_independently _____
+[gw2] darwin -- Python 3.13.13 /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/.venv/bin/python3
+
+corrections_server = 'http://127.0.0.1:51297'
+
+    async def test_split_earlier_and_latest_reply_reload_and_continue_independently(
+        corrections_server,
+    ):
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable(), headless=True
+            )
+            try:
+                page = await browser.new_page()
+                await page.goto(corrections_server, wait_until="networkidle")
+                await page.get_by_role("button", name="New Quick Chat", exact=True).click()
+>               await send_command(page, "First branch input")
+
+tests/test_corrections_4_e2e.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/browser_support.py:183: in send_command
+    await page.wait_for_function(
+.venv/lib/python3.13/site-packages/playwright/async_api/_generated.py:12739: in wait_for_function
+    await self._impl_obj.wait_for_function(
+.venv/lib/python3.13/site-packages/playwright/_impl/_page.py:1153: in wait_for_function
+    return await self._main_frame.wait_for_function(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/playwright/_impl/_frame.py:941: in wait_for_function
+    await self._channel.send("waitForFunction", self._timeout, params)
+.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py:76: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <playwright._impl._connection.Connection object at 0x11b704a50>
+cb = <function Channel.send.<locals>.<lambda> at 0x11be736a0>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        parsed_st = _attach_api_call_information(
+            getattr(task, "__pw_stack__", None) or _capture_stack_trace(),
+            is_internal,
+            title,
+        )
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.TimeoutError: Page.wait_for_function: Timeout 15000ms exceeded.
+
+.venv/lib/python3.13/site-packages/playwright/_impl/_connection.py:632: TimeoutError
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.13.13-final-0 _______________
+
+Name                                                                   Stmts   Miss Branch BrPart  Cover   Missing
+------------------------------------------------------------------------------------------------------------------
+src/exmekh_agent/__init__.py                                               1      0      0      0   100%
+src/exmekh_agent/config/__init__.py                                        2      0      0      0   100%
+src/exmekh_agent/config/agents.py                                          3      0      0      0   100%
+src/exmekh_agent/config/application.py                                   122      0     32      0   100%
+src/exmekh_agent/config/approvals.py                                      10      0      2      0   100%
+src/exmekh_agent/config/attachments.py                                     7      0      0      0   100%
+src/exmekh_agent/config/catalogs.py                                       11      0      0      0   100%
+src/exmekh_agent/config/environment.py                                     2      0      0      0   100%
+src/exmekh_agent/config/execution.py                                      26      0      4      0   100%
+src/exmekh_agent/config/formatting.py                                      2      0      0      0   100%
+src/exmekh_agent/config/paths.py                                           5      0      0      0   100%
+src/exmekh_agent/config/provider.py                                        2      0      0      0   100%
+src/exmekh_agent/config/server.py                                          2      0      0      0   100%
+src/exmekh_agent/config/storage.py                                         3      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/__init__.py                                 0      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/agents/__init__.py                          0      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/agents/agent_runner.py                    186      0     50      0   100%
+src/exmekh_agent/exmekh_bridge/agents/auto_compaction.py                  31      0      4      0   100%
+src/exmekh_agent/exmekh_bridge/agents/cancellation.py                     46      0      2      0   100%
+src/exmekh_agent/exmekh_bridge/agents/collector.py                       141      0     42      0   100%
+src/exmekh_agent/exmekh_bridge/agents/event_handlers.py                  149      0     58      0   100%
+src/exmekh_agent/exmekh_bridge/agents/execution_restore.py               109      0     46      0   100%
+src/exmekh_agent/exmekh_bridge/agents/steering.py                         66      0     12      0   100%
+src/exmekh_agent/exmekh_bridge/agents/sub_agents.py                      104      0     26      0   100%
+src/exmekh_agent/exmekh_bridge/agents/system_prompt.py                    27      0      4      0   100%
+src/exmekh_agent/exmekh_bridge/agents/turn_request.py                     52      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/capabilities/__init__.py                    0      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/capabilities/agent_design.py               37      0      4      0   100%
+src/exmekh_agent/exmekh_bridge/capabilities/capability_repository.py     310      0    116      0   100%
+src/exmekh_agent/exmekh_bridge/errors.py                                  11      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/history/__init__.py                         0      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/history/compaction.py                      94      0     34      0   100%
+src/exmekh_agent/exmekh_bridge/history/converter.py                      303      0    154      0   100%
+src/exmekh_agent/exmekh_bridge/history/image_input.py                    102      0     34      0   100%
+src/exmekh_agent/exmekh_bridge/history/message_edit.py                    29      0      6      0   100%
+src/exmekh_agent/exmekh_bridge/history/pasted_input.py                   226      0     86      0   100%
+src/exmekh_agent/exmekh_bridge/history/recorded_history.py                79      0     36      0   100%
+src/exmekh_agent/exmekh_bridge/history/recorded_output.py                 50      0      6      0   100%
+src/exmekh_agent/exmekh_bridge/history/skill_history.py                   27      0     20      0   100%
+src/exmekh_agent/exmekh_bridge/history/steering_history.py                 8      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/history/steering_position.py                3      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/history/tool_attachments.py                14      0     10      0   100%
+src/exmekh_agent/exmekh_bridge/history/tool_calls.py                      79      0     48      0   100%
+src/exmekh_agent/exmekh_bridge/models/__init__.py                          8      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/models/execution.py                       292      0    134      0   100%
+src/exmekh_agent/exmekh_bridge/models/messages.py                        252      0     62      0   100%
+src/exmekh_agent/exmekh_bridge/models/sessions.py                        145      0     42      0   100%
+src/exmekh_agent/exmekh_bridge/models/settings.py                         63      0      6      0   100%
+src/exmekh_agent/exmekh_bridge/models/timeline.py                         67      0     22      0   100%
+src/exmekh_agent/exmekh_bridge/providers/__init__.py                       0      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/providers/context_usage.py                324      0    168      0   100%
+src/exmekh_agent/exmekh_bridge/providers/ds4_context.py                   44      0      8      0   100%
+src/exmekh_agent/exmekh_bridge/providers/ds4_prompt.py                    82      0     34      0   100%
+src/exmekh_agent/exmekh_bridge/providers/loader_tokens.py                  9      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/providers/provider_context.py             132      0     36      0   100%
+src/exmekh_agent/exmekh_bridge/providers/provider_health.py               48      0     20      0   100%
+src/exmekh_agent/exmekh_bridge/resources/__init__.py                       4      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/tools/__init__.py                           0      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/tools/tool_approval.py                    182      0     52      0   100%
+src/exmekh_agent/exmekh_bridge/tools/tool_events.py                        9      0      0      0   100%
+src/exmekh_agent/exmekh_bridge/tools/tool_feedback.py                    140      0     46      0   100%
+src/exmekh_agent/package_paths.py                                          4      0      0      0   100%
+src/exmekh_agent/state/__init__.py                                         0      0      0      0   100%
+src/exmekh_agent/state/active_turns.py                                    89      0     24      0   100%
+src/exmekh_agent/state/agent_design.py                                   252      0     92      0   100%
+src/exmekh_agent/state/design_history.py                                  25      0      2      0   100%
+src/exmekh_agent/state/design_selection.py                                19      0      2      0   100%
+src/exmekh_agent/state/input_drafts.py                                    40      0      8      0   100%
+src/exmekh_agent/state/json_store.py                                      34      0      4      0   100%
+src/exmekh_agent/state/session_manager.py                                312      0     92      0   100%
+src/exmekh_agent/state/sub_agent_conversations.py                         23      0     16      0   100%
+src/exmekh_agent/state/temp_storage.py                                    77      0     12      0   100%
+src/exmekh_agent/sync_config.py                                           17      0      0      0   100%
+src/exmekh_agent/ui/__init__.py                                            0      0      0      0   100%
+src/exmekh_agent/ui/agents/__init__.py                                     0      0      0      0   100%
+src/exmekh_agent/ui/chat/__init__.py                                       0      0      0      0   100%
+src/exmekh_agent/ui/chat/chat_export.py                                   49      0     28      0   100%
+src/exmekh_agent/ui/chat/compaction_progress.py                           39      0      8      0   100%
+src/exmekh_agent/ui/chat/context_updates.py                               79      0     24      0   100%
+src/exmekh_agent/ui/chat/message_text.py                                   7      0      2      0   100%
+src/exmekh_agent/ui/graph/__init__.py                                      0      0      0      0   100%
+src/exmekh_agent/ui/graph/graph_data.py                                  637      0    234      0   100%
+src/exmekh_agent/ui/graph/graph_svg.py                                    72      0     16      0   100%
+src/exmekh_agent/ui/graph/graph_view.py                                  199      0     50      0   100%
+src/exmekh_agent/ui/history/__init__.py                                    0      0      0      0   100%
+src/exmekh_agent/ui/history/json_block.py                                 20      0      0      0   100%
+src/exmekh_agent/ui/history/json_format.py                                55      0     28      0   100%
+src/exmekh_agent/ui/navigation/__init__.py                                 0      0      0      0   100%
+src/exmekh_agent/ui/navigation/chat_routes.py                             23      0      4      0   100%
+src/exmekh_agent/ui/navigation/header.py                                  19      0      0      0   100%
+src/exmekh_agent/ui/resources/__init__.py                                 14      0      0      0   100%
+src/exmekh_agent/ui/settings/__init__.py                                   0      0      0      0   100%
+src/exmekh_agent/ui/settings/capability_paths_editor.py                   65      0     12      0   100%
+src/exmekh_agent/ui/shared/__init__.py                                     0      0      0      0   100%
+src/exmekh_agent/ui/shared/disclosure.py                                  33      0      4      0   100%
+src/exmekh_agent/ui/shared/file_upload.py                                 38      0     12      0   100%
+src/exmekh_agent/ui/shared/folder_picker.py                               17      0      2      0   100%
+src/exmekh_agent/ui/shared/image_preview.py                               48      0      8      0   100%
+src/exmekh_agent/ui/shared/neural_loader.py                               25      0      2      0   100%
+src/exmekh_agent/ui/shared/output_format.py                               45      0     10      0   100%
+src/exmekh_agent/ui/styles.py                                             34      0     18      0   100%
+src/exmekh_agent/utils/__init__.py                                         0      0      0      0   100%
+src/exmekh_agent/utils/exceptions.py                                      13      0      2      0   100%
+src/exmekh_agent/utils/filenames.py                                       12      0      0      0   100%
+src/exmekh_agent/utils/files.py                                            9      0      0      0   100%
+src/exmekh_agent/utils/formatting.py                                      35      0     14      0   100%
+src/exmekh_agent/utils/markdown.py                                        17      0      8      0   100%
+src/exmekh_agent/utils/paths.py                                            4      0      0      0   100%
+src/exmekh_agent/utils/resources.py                                       15      0      0      0   100%
+------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                   6797      0   2204      0   100%
+Required test coverage of 100.0% reached. Total coverage: 100.00%
+=========================== short test summary info ============================
+FAILED tests/test_sync.py::test_sync_launcher_bootstraps_without_installed_packages
+FAILED tests/test_auto_compaction_e2e.py::test_switch_during_compaction_and_reconnected_stream
+FAILED tests/test_outputs_responsive_e2e.py::test_raw_history_multiline_and_json_output_are_readable_and_copy_stays_original
+FAILED tests/test_corrections_4_e2e.py::test_marquee_toggle_group_move_collective_commands_and_arrange
+FAILED tests/test_corrections_4_e2e.py::test_split_earlier_and_latest_reply_reload_and_continue_independently
+============ 5 failed, 1205 passed, 46 skipped in 260.44s (0:04:20) ============

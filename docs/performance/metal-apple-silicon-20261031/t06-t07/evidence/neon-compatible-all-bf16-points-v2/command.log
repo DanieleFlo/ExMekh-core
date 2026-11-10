@@ -1,0 +1,31 @@
+ds4: Metal suite compilation failed: program_source:165:18: error: cannot combine with previous 'type-name' declaration specifier
+            uint half=magnitude>>1;
+                 ^
+program_source:165:22: error: expected unqualified-id
+            uint half=magnitude>>1;
+                     ^
+program_source:166:17: error: expected unqualified-id
+            half+=(magnitude&1)&(half&1);
+                ^
+program_source:167:62: error: expected '(' for function-style cast or type construction
+            ((device ushort *)y)[i]=ushort((bits&0x8000)|half);
+                                                         ~~~~^
+
+Traceback (most recent call last):
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/verify-compatible-points.py", line 12, in <module>
+    with Numeric('metal',library_path=(root/'gemm-cpu-compatible/libnumeric.so').resolve()) as n:
+         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/suite_numeric_api.py", line 110, in __init__
+    self.ok(
+    ~~~~~~~^
+        getattr(self.lib, f"ds4_numeric_{backend}")(
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            C.byref(self.ctx), self.resources, 100
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        )
+        ^
+    )
+    ^
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/suite_numeric_api.py", line 282, in ok
+    raise NativeError(status)
+suite_numeric_api.NativeError: native status 2

@@ -1,5 +1,6 @@
 #include "ds4.h"
 #include "ds4_kvstore.h"
+#include "qwen_test_profile.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -66,7 +67,7 @@ static int sync_session(ds4_session *session, const ds4_tokens *tokens,
 }
 
 static int compare_with_canonical(ds4_engine *engine, ds4_session *actual,
-                                  const ds4_tokens *prefix,
+                                  const ds4_tokens *prefixes, size_t prefix_count,
                                   const ds4_tokens *expected, int ctx,
                                   const char *label) {
     ds4_session *canonical = NULL;
@@ -75,7 +76,11 @@ static int compare_with_canonical(ds4_engine *engine, ds4_session *actual,
     int rc = 1;
     const int vocab = ds4_engine_vocab_size(engine);
     if (ds4_session_create(&canonical, engine, ctx) != 0) goto done;
-    if (prefix && sync_session(canonical, prefix, label) != 0) goto done;
+    /* Replay the original request boundaries. A batched GPU prefill may use
+     * different accumulation shapes when several parent turns are merged;
+     * checkpoint equality must compare the same arithmetic schedule. */
+    for (size_t i = 0; i < prefix_count; i++)
+        if (sync_session(canonical, &prefixes[i], label) != 0) goto done;
     if (sync_session(canonical, expected, label) != 0) goto done;
     if (!tokens_equal(ds4_session_tokens(actual), expected)) {
         fprintf(stderr, "FAIL: %s token timeline mismatch\n", label);
@@ -221,7 +226,7 @@ int main(void) {
     const char *model = getenv("DS4_TEST_MODEL");
     const char *mtp = getenv("DS4_TEST_MTP");
     const char *base = getenv("DS4_AGENTIC_TEST_DIR");
-    const bool fast = getenv("DS4_AGENTIC_FAST") != NULL;
+    bool fast = getenv("DS4_AGENTIC_FAST") != NULL;
     if (!model || !model[0]) {
         fprintf(stderr, "DS4_TEST_MODEL is required\n");
         return 2;
@@ -254,16 +259,17 @@ int main(void) {
         .model_path = model,
         .mtp_path = mtp && mtp[0] ? mtp : NULL,
         .mtp_draft_tokens = mtp && mtp[0] ? 4 : 0,
-        .backend = DS4_BACKEND_CUDA,
-        .prefill_chunk = 2048,
     };
+    CHECK(qwen_test_profile(&options, fast ? 1024 : (mtp && mtp[0] ? 4096 : 16384)),
+          "invalid Qwen test profile");
+    if (options.backend == DS4_BACKEND_METAL) fast = true;
     CHECK(ds4_engine_open(&engine, &options) == 0, "engine open failed");
     const bool mtp_enabled = ds4_engine_has_mtp(engine);
     const int parent_count = fast ? 128 : (mtp_enabled ? 256 : 10000);
     const int instruction_count = fast ? 32 : (mtp_enabled ? 64 : 500);
     const int child_count = fast ? 64 : (mtp_enabled ? 128 : 2000);
     const int result_count = fast ? 16 : (mtp_enabled ? 32 : 200);
-    const int main_ctx = fast ? 1024 : (mtp_enabled ? 4096 : 16384);
+    const int main_ctx = options.context_size;
     CHECK(ds4_session_create(&live, engine, main_ctx) == 0,
           "live session create failed");
     ds4_tokenize_text(engine, " parent-memory deterministic block", &pattern);
@@ -325,7 +331,7 @@ int main(void) {
     const double result_ms = monotonic_ms() - result_t0;
     CHECK(ds4_session_pos(live) - frontier.len == result_count,
           "expected exactly %d result prefill tokens", result_count);
-    CHECK(compare_with_canonical(engine, live, &frontier, &returned, main_ctx,
+    CHECK(compare_with_canonical(engine, live, &frontier, 1, &returned, main_ctx,
                                  "return canonical") == 0,
           "long canonical comparison failed");
 
@@ -417,7 +423,7 @@ int main(void) {
         append_tokens(&expected, &result_pattern, 7 + level);
         CHECK(sync_session(live, &expected, "nested return") == 0,
               "nested return %d failed", level);
-        CHECK(compare_with_canonical(engine, live, &nested_frontier[level],
+        CHECK(compare_with_canonical(engine, live, nested_frontier, (size_t)level + 1,
                                      &expected, main_ctx,
                                      "nested return canonical") == 0,
               "nested canonical %d failed", level);
@@ -531,7 +537,7 @@ int main(void) {
           "boundary result sync failed");
     CHECK(ds4_session_pos(live) == 511,
           "boundary did not preserve one generation slot");
-    CHECK(compare_with_canonical(engine, live, &boundary_frontier,
+    CHECK(compare_with_canonical(engine, live, &boundary_frontier, 1,
                                  &boundary_child, 512,
                                  "context boundary canonical") == 0,
           "boundary canonical comparison failed");

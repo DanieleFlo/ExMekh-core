@@ -8,6 +8,9 @@
 
 #include "ds4_qwen.h"
 #include "ds4_qwen4_runtime.h"
+#ifdef __APPLE__
+#include "ds4_metal_memory.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,7 +51,7 @@ typedef struct {
 
 int ds4_gpu_init(void);
 void ds4_gpu_cleanup(void);
-#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
+#if !defined(DS4_ROCM_BUILD)
 /* Tracks tensor storage and views. Raw legacy weight/derived allocations are
  * reported separately; global device free is never summed with owned bytes. */
 ds4_resources *ds4_gpu_resources(void);
@@ -98,10 +101,16 @@ ds4_gpu_tensor *ds4_gpu_tensor_alloc_managed(uint64_t bytes);
 ds4_gpu_tensor *ds4_gpu_tensor_view(const ds4_gpu_tensor *base, uint64_t offset, uint64_t bytes);
 void ds4_gpu_tensor_free(ds4_gpu_tensor *tensor);
 uint64_t ds4_gpu_tensor_bytes(const ds4_gpu_tensor *tensor);
+/* Borrowed backend address, owned by the tensor. Prefer the ordered transfer
+ * APIs below for host access. */
 void *ds4_gpu_tensor_contents(ds4_gpu_tensor *tensor);
+/* Host transfers preserve command order and the caller's active batch.
+ * A read waits for preceding producers before exposing their results. */
 int ds4_gpu_tensor_fill_f32(ds4_gpu_tensor *tensor, float value, uint64_t count);
 int ds4_gpu_tensor_write(ds4_gpu_tensor *tensor, uint64_t offset, const void *data, uint64_t bytes);
 int ds4_gpu_tensor_read(const ds4_gpu_tensor *tensor, uint64_t offset, void *data, uint64_t bytes);
+/* Valid inside or outside command batches, preserving backend command order.
+ * Use tensor_read or synchronize before observing results on the host. */
 int ds4_gpu_tensor_copy(ds4_gpu_tensor *dst, uint64_t dst_offset,
                           const ds4_gpu_tensor *src, uint64_t src_offset,
                           uint64_t bytes);
@@ -129,6 +138,47 @@ int ds4_gpu_flush_commands(void);
 int ds4_gpu_commands_active(void);
 #include "ds4_deepseek41_gpu.h"
 #ifdef __APPLE__
+/* Explicit Qwen SSD owner. Dense plans retain immutable bindings up to the
+ * cap; routed plans keep a layer boundary and read only selected experts.
+ * Recycling and close drain consumers. Failed opens retain the current owner.
+ * A zero limit opens the reader without capacity for weight bindings. */
+int ds4_gpu_qwen4_stream_open(const void *, uint64_t, int fd, uint64_t limit);
+/* Ordered immutable regions to retain lazily within the existing cap. The
+ * first is required for retention; reserve a full transient layer beside it.
+ * Configure once, before encoding. Flash keeps its existing layer policy. */
+int ds4_gpu_qwen4_stream_retain(const void *, uint64_t, const uint64_t *offsets,
+                                const uint64_t *bytes, unsigned count, uint64_t transient);
+typedef struct {
+    uint64_t offset, bytes;
+} ds4_gpu_weight_region;
+typedef struct {
+    ds4_gpu_weight_region head, embedding;
+    const ds4_gpu_weight_region *layers;
+    unsigned layer_count;
+    uint32_t embedding_type, vocab_size;
+    uint64_t extra_bytes; /* Weights outside head, embedding and layer packs. */
+} ds4_gpu_qwen35_stream_plan;
+/* Configure dense layer transport before encoding. Metadata is copied.
+ * 1: configured (including a bounded fallback), -1: overlapping layout needs the existing policy,
+ * 0: invalid descriptors or failed allocation. No change on failure. */
+int ds4_gpu_qwen35_stream_configure(const void *, uint64_t,
+                                    const ds4_gpu_qwen35_stream_plan *);
+/* Replan at an execution boundary. Keeps common immutable buffers; fences
+ * consumers before releasing others. Zero keeps explicit streaming active
+ * with no capacity, so a refusal cannot fall through to full mmap residency. */
+int ds4_gpu_qwen4_stream_resize(const void *, uint64_t, uint64_t limit);
+/* Drop reconstructible storage and resample after bounded physical retirement. */
+int ds4_gpu_qwen4_stream_trim(const void *, uint64_t);
+int ds4_gpu_qwen4_stream_close(void);
+int ds4_gpu_qwen4_stream_layer(const void *, uint64_t);
+int ds4_gpu_qwen4_stream_active(void);
+/* -1: different mapping, 0: read failed, 1: explicit bounded read succeeded. */
+int ds4_gpu_qwen4_stream_read(const void *, uint64_t, uint64_t, void *, uint64_t);
+void ds4_gpu_qwen4_stream_memory(uint64_t *owned, uint64_t *read_bytes);
+typedef ds4_metal_memory ds4_gpu_metal_memory;
+int ds4_gpu_metal_memory_query(ds4_gpu_metal_memory *out);
+/* Refresh measured capacity without replacing caller-supplied budget limits. */
+int ds4_gpu_metal_resources_reconcile(void);
 int ds4_gpu_parallel_ffn_finish(void);
 void ds4_gpu_parallel_ffn_abort(void);
 int ds4_gpu_parallel_ffn_start(
@@ -3720,6 +3770,12 @@ int ds4_gpu_qwen4_gdn_front_tensor(
 /* Encode one image: patches [n_patches][3*P*P] in 2x2 window order plus the
  * resampled position embedding [n_patches][n_embd]; out receives
  * [n_patches/4][n_out].  Weights are read from the mapped mmproj GGUF. */
+#ifdef __APPLE__
+/* Metal owns its encoder workspace layout. Invalid dimensions return
+ * UINT64_MAX so preflight admission fails before allocating any buffers. */
+uint64_t ds4_gpu_qwen4_vision_scratch_bytes(
+        const ds4_qwen4_vision_weights *weights, uint32_t patches);
+#endif
 int ds4_gpu_qwen4_vision_encode(float *out, const float *patches, const float *pos_embed, uint32_t n_patches,
                                 uint32_t grid_w, const void *model_map, uint64_t model_size,
                                 const ds4_qwen4_vision_weights *w);

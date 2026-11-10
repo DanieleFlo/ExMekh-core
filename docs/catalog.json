@@ -972,6 +972,622 @@
           ]
         },
         {
+          "path": "docs/architecture/metal-clean-code-review-20261029.md",
+          "sections": [
+            {
+              "title": "Riesame del porting Metal: responsabilità, lifetime e leggibilità",
+              "level": 1,
+              "start": 1,
+              "end": 90,
+              "summary": "29 ottobre 2026."
+            },
+            {
+              "title": "Correzioni e confini",
+              "level": 2,
+              "start": 12,
+              "end": 39,
+              "summary": "La semantica e la preparazione delle operazioni restano nel dominio numerico"
+            },
+            {
+              "title": "Verifiche e limiti",
+              "level": 2,
+              "start": 40,
+              "end": 74,
+              "summary": "Le primitive Metal e CPU sono confrontate con PyTorch usando i gate"
+            },
+            {
+              "title": "Debito residuo",
+              "level": 2,
+              "start": 75,
+              "end": 90,
+              "summary": "I principi di responsabilità singola, incapsulamento, nomi espliciti,"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-diagnostics-clean-code-review-20261029.md",
+          "sections": [
+            {
+              "title": "Riesame della continuazione Metal: binding, ownership e diagnostici",
+              "level": 1,
+              "start": 1,
+              "end": 82,
+              "summary": "29 ottobre 2026."
+            },
+            {
+              "title": "Problemi corretti",
+              "level": 2,
+              "start": 13,
+              "end": 34,
+              "summary": "La semantica Gemma resta nel diagnostico: scala PLE, ordine delle frontiere,"
+            },
+            {
+              "title": "Verifiche dopo il refactoring",
+              "level": 2,
+              "start": 35,
+              "end": 67,
+              "summary": "cap sintetico di 1 MiB, NOMEM seguito da nuova allocazione riuscita, wrapper,"
+            },
+            {
+              "title": "Valutazione Clean Code e debito residuo",
+              "level": 2,
+              "start": 68,
+              "end": 82,
+              "summary": "Nel perimetro rivisto sono stati applicati responsabilità singola,"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-flash-stream-clean-code-review-20261102.md",
+          "sections": [
+            {
+              "title": "Riesame Clean Code dello streaming Flash, 2 novembre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 112,
+              "summary": "Base `1544bb91eafaefefe32862ab408c412f0beed354` più le modifiche Flash"
+            },
+            {
+              "title": "Responsabilità individuate prima del refactoring",
+              "level": 2,
+              "start": 7,
+              "end": 34,
+              "summary": "GPU."
+            },
+            {
+              "title": "Modifiche e verifica",
+              "level": 2,
+              "start": 35,
+              "end": 105,
+              "summary": "Separato `ds4_file_reader.h`: un proprietario C privato, con API di apertura,"
+            },
+            {
+              "title": "Limiti",
+              "level": 2,
+              "start": 106,
+              "end": 112,
+              "summary": "Il riesame può verificare e migliorare questi confini, non certificare ogni"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-foundations-clean-code-review-20261029.md",
+          "sections": [
+            {
+              "title": "Riesame Clean Code delle fondamenta Metal",
+              "level": 1,
+              "start": 1,
+              "end": 67,
+              "summary": "29 ottobre 2026."
+            },
+            {
+              "title": "Responsabilità e interfacce",
+              "level": 2,
+              "start": 8,
+              "end": 27,
+              "summary": "Il test lifecycle continua a costruire descrittori interni sintetici perché"
+            },
+            {
+              "title": "Correzioni di coerenza",
+              "level": 2,
+              "start": 28,
+              "end": 55,
+              "summary": "pressione elevata azzera l'ammissione, conservando il dato diagnostico."
+            },
+            {
+              "title": "Verifica e limiti",
+              "level": 2,
+              "start": 56,
+              "end": 67,
+              "summary": "Il registro del riesame"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-image-ordered-projection-clean-code-review-20261103.md",
+          "sections": [
+            {
+              "title": "Riesame delle proiezioni BF16 Metal",
+              "level": 1,
+              "start": 1,
+              "end": 186,
+              "summary": "Riesame del diff I-P01 e dei consumer contigui richiesto il 3 novembre."
+            },
+            {
+              "title": "Responsabilità e problema trovato",
+              "level": 2,
+              "start": 8,
+              "end": 29,
+              "summary": "Letti `ds4_numeric.c` (validazione linear/matmul, slicing, overlap, lifetime),"
+            },
+            {
+              "title": "Audit prima del refactoring del dispatch",
+              "level": 2,
+              "start": 30,
+              "end": 64,
+              "summary": "Riletti i pin della scheda I-P01."
+            },
+            {
+              "title": "Verifiche previste",
+              "level": 2,
+              "start": 65,
+              "end": 73,
+              "summary": "Replay BF16 su input identici, incluso il tile con una riga parziale e"
+            },
+            {
+              "title": "Nuova differenza di tempo e controllo",
+              "level": 2,
+              "start": 74,
+              "end": 97,
+              "summary": "Il primo testo riesaminato passa tutti i gate ma misura 137,131 s, DiT"
+            },
+            {
+              "title": "Risultati del riesame",
+              "level": 2,
+              "start": 98,
+              "end": 140,
+              "summary": "acceleratore PASS dopo il refactoring."
+            },
+            {
+              "title": "Commit di integrazione",
+              "level": 2,
+              "start": 141,
+              "end": 146,
+              "summary": "`9634c83` contiene il kernel e la regressione BF16."
+            },
+            {
+              "title": "Secondo riesame dopo b2d94a8",
+              "level": 2,
+              "start": 147,
+              "end": 186,
+              "summary": "Riletti i tre commit integrati, il validatore pubblico linear/matmul, il"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-image-prefetch-clean-code-review-20261105.md",
+          "sections": [
+            {
+              "title": "Riesame di convoluzione, memoria e prefetch Image",
+              "level": 1,
+              "start": 1,
+              "end": 61,
+              "summary": "Il riesame del 5 novembre comprende tutte le modifiche ancora da integrare"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-qwen27-adaptive-cache-clean-code-review-20261103.md",
+          "sections": [
+            {
+              "title": "Riesame della cache adattiva Qwen Metal — 3 novembre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 101,
+              "summary": "Base: HEAD `ab62874723c837ade442c192b90f0fba68bd2f73` più Q-P20/P21/P23/P25 non committati."
+            },
+            {
+              "title": "Ispezione prima degli interventi",
+              "level": 2,
+              "start": 11,
+              "end": 22,
+              "summary": "Riletti diff, core, engine/session creation, checkpoint/park/release/load, API GPU, cache, reader/resource registry, sampler e consumer Numeric, launcher/config/test e report della campagna."
+            },
+            {
+              "title": "Audit specifico prima del fix del workflow",
+              "level": 2,
+              "start": 23,
+              "end": 34,
+              "summary": "Fonti rilette ai pin della campagna, con percorsi esatti:"
+            },
+            {
+              "title": "Correzione dopo il primo gate completo",
+              "level": 2,
+              "start": 35,
+              "end": 42,
+              "summary": "Il fixture prima del fix riproduce `weights_load` rifiutato con cap zero (riga223, `repro-zero-reload`)."
+            },
+            {
+              "title": "Verifica finale di correttezza",
+              "level": 2,
+              "start": 43,
+              "end": 64,
+              "summary": "Zero-cap lifecycle Qwen27 e Flash, constructor invalidi senza mutazione,"
+            },
+            {
+              "title": "Controllo prestazionale",
+              "level": 2,
+              "start": 65,
+              "end": 96,
+              "summary": "P25 è congelato prima del riesame: il suo profilo è425CB/5997encoder,"
+            },
+            {
+              "title": "Integrazione",
+              "level": 2,
+              "start": 97,
+              "end": 101,
+              "summary": "Il commit `53193ef` contiene il trasporto dei layer e la gestione dei buffer"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-qwen27-kernel-stream-clean-code-review-20261103.md",
+          "sections": [
+            {
+              "title": "Riesame Clean Code della continuazione Qwen27 Metal",
+              "level": 1,
+              "start": 1,
+              "end": 147,
+              "summary": "3 novembre 2026."
+            },
+            {
+              "title": "Riesame prima del codice",
+              "level": 2,
+              "start": 8,
+              "end": 35,
+              "summary": "Letti core, API GPU, lifecycle, cache/reader/coda, wrapper UD, shader, test,"
+            },
+            {
+              "title": "Audit specifico prima del refactoring e del fix",
+              "level": 2,
+              "start": 36,
+              "end": 68,
+              "summary": "Riletti i sorgenti locali ai pin verificati della campagna:"
+            },
+            {
+              "title": "Correzioni e verifica numerica",
+              "level": 2,
+              "start": 69,
+              "end": 90,
+              "summary": "Il probe pubblico pre-fix fallisce sul batch UD11 con `tokens=NULL`,"
+            },
+            {
+              "title": "Controllo prestazionale dopo il riesame",
+              "level": 2,
+              "start": 91,
+              "end": 130,
+              "summary": "Warmup escluso e5 coppie alternate, cap1536MiB,8192/64,64 input e16 output"
+            },
+            {
+              "title": "Esito e limiti",
+              "level": 2,
+              "start": 131,
+              "end": 147,
+              "summary": "Riesame locale completato: responsabilità separate senza nuove policy,"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-qwen27-stream-clean-code-review-20261102.md",
+          "sections": [
+            {
+              "title": "Riesame Clean Code Qwen27 streamed, 2 novembre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 177,
+              "summary": "Base HEAD `089255a1d3b6162e59c61a6bede9ece5e672330f` più Q-P03 non"
+            },
+            {
+              "title": "Riesame prima del codice",
+              "level": 2,
+              "start": 8,
+              "end": 37,
+              "summary": "Letti reader, coda, cache Metal, consumer CUDA/PLE/transfer, test host e UD,"
+            },
+            {
+              "title": "Riesame delle fonti pertinente a questo refactoring (prima del codice)",
+              "level": 2,
+              "start": 38,
+              "end": 60,
+              "summary": "Riletti i file locali verificati contro i blob Git dei pin seguenti:"
+            },
+            {
+              "title": "Piano di verifica",
+              "level": 2,
+              "start": 61,
+              "end": 73,
+              "summary": "Test host e ASan/UBSan, casi originali inclusi; fixture Metal resident/streamed,"
+            },
+            {
+              "title": "Modifiche applicate",
+              "level": 2,
+              "start": 74,
+              "end": 115,
+              "summary": "`ds4_file_reader_run_batch` possiede avvio, submit, drain e pubblicazione."
+            },
+            {
+              "title": "Risultati finali",
+              "level": 2,
+              "start": 116,
+              "end": 168,
+              "summary": "Tutti i dieci gruppi di verifica successivi alla build passano: 49 test host"
+            },
+            {
+              "title": "Commit",
+              "level": 2,
+              "start": 169,
+              "end": 177,
+              "summary": "Il commit finale separa report, roadmap, indice, profilo documentato e ignore"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-swap-resume-clean-code-review-20261109.md",
+          "sections": [
+            {
+              "title": "Riesame di trasporto pesi, handoff e ripresa delle prove",
+              "level": 1,
+              "start": 1,
+              "end": 141,
+              "summary": "Base60e9400 più la campagna swap/checkpoint del6–9novembre."
+            },
+            {
+              "title": "Responsabilità e difetti individuati prima dell'intervento",
+              "level": 2,
+              "start": 8,
+              "end": 32,
+              "summary": "verificarla tramite API prima di distruggere lo stato del backend: oggi"
+            },
+            {
+              "title": "Riaudit dei confini prima della correzione lifetime",
+              "level": 2,
+              "start": 33,
+              "end": 51,
+              "summary": "Pin/hash rilette e verificate tutte le19fonti di"
+            },
+            {
+              "title": "Verifica prevista",
+              "level": 2,
+              "start": 52,
+              "end": 66,
+              "summary": "Riprodurre il rilascio anticipato prima della correzione; test CPU del"
+            },
+            {
+              "title": "Esiti e limiti,10novembre",
+              "level": 2,
+              "start": 67,
+              "end": 127,
+              "summary": "Il test CPU fallisce sul codice precedente perché prepare_close viene"
+            },
+            {
+              "title": "Integrazione per responsabilità",
+              "level": 2,
+              "start": 128,
+              "end": 141,
+              "summary": "rifiutabile senza perdere il backend e dtype pubblici coerenti."
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-t06-t07-clean-code-review-20261102.md",
+          "sections": [
+            {
+              "title": "Riesame Clean Code T06–T07, 2 novembre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 65,
+              "summary": "Rilettura delle modifiche successive a `9805acb`, inclusi runtime C/Metal,"
+            },
+            {
+              "title": "Responsabilità e correzioni",
+              "level": 2,
+              "start": 9,
+              "end": 37,
+              "summary": "L'adattatore greedy usa `ProviderRequest.with_extra`, così non deve conoscere"
+            },
+            {
+              "title": "Verifica",
+              "level": 2,
+              "start": 38,
+              "end": 51,
+              "summary": "Gli esiti, i comandi, gli hash dei sorgenti e i log sono conservati in"
+            },
+            {
+              "title": "Limiti architetturali residui",
+              "level": 2,
+              "start": 52,
+              "end": 65,
+              "summary": "Non si può certificare che l'intero repository soddisfi ogni principio Clean"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/metal-t08-clean-code-review-20261106.md",
+          "sections": [
+            {
+              "title": "Riesame di policy e qualificatori T08",
+              "level": 1,
+              "start": 1,
+              "end": 106,
+              "summary": "Riesame richiesto dall'utente dopo la campagna T08 del 6 novembre, su"
+            },
+            {
+              "title": "Responsabilità e interventi",
+              "level": 2,
+              "start": 8,
+              "end": 27,
+              "summary": "senza leggere implicitamente l'ambiente."
+            },
+            {
+              "title": "Confronto prima del refactoring",
+              "level": 2,
+              "start": 28,
+              "end": 52,
+              "summary": "Riletti policy, ammissione/rebalance e wrapper in `ds4_metal_memory.h`,"
+            },
+            {
+              "title": "Verifica prevista",
+              "level": 2,
+              "start": 53,
+              "end": 62,
+              "summary": "Policy e parser su CPU, report/cleanup del controller, fixture/oracle,"
+            },
+            {
+              "title": "Esiti del riesame",
+              "level": 2,
+              "start": 63,
+              "end": 96,
+              "summary": "Gli 86 test Python mirati passano in 14,761 s."
+            },
+            {
+              "title": "Integrazione locale",
+              "level": 2,
+              "start": 97,
+              "end": 106,
+              "summary": "Commit separati per responsabilità: `6bd07b0` per i proprietari della"
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/native-image-progress-implementation-20261110.md",
+          "sections": [
+            {
+              "title": "Implementazione del progresso image — 10 novembre 2026",
+              "level": 1,
+              "start": 1,
+              "end": 252,
+              "summary": "Baseline core `4a03d05c94bcaf88ff295875b8b5ea0e2ca467dd`; sorgente SDK locale"
+            },
+            {
+              "title": "Audit prima dell'implementazione",
+              "level": 2,
+              "start": 3,
+              "end": 61,
+              "summary": "Baseline core `4a03d05c94bcaf88ff295875b8b5ea0e2ca467dd`; sorgente SDK locale"
+            },
+            {
+              "title": "Verifiche",
+              "level": 2,
+              "start": 62,
+              "end": 209,
+              "summary": "`ds4_operation_progress.h` definisce metadati e callback comuni senza dipendenze"
+            },
+            {
+              "title": "Implementazione e copertura",
+              "level": 3,
+              "start": 64,
+              "end": 98,
+              "summary": "`ds4_operation_progress.h` definisce metadati e callback comuni senza dipendenze"
+            },
+            {
+              "title": "Prove host, SDK e frontend",
+              "level": 3,
+              "start": 99,
+              "end": 123,
+              "summary": "HTTP CPU: PASS; bundle 12 test e testi di prodotto 4 test: PASS."
+            },
+            {
+              "title": "Confronto numerico isolato e gate indipendente",
+              "level": 3,
+              "start": 124,
+              "end": 159,
+              "summary": "Fixture Image512 originale, SHA256"
+            },
+            {
+              "title": "HTTP reale con compute nativo",
+              "level": 3,
+              "start": 160,
+              "end": 176,
+              "summary": "Server locale isolato con il binario aggiornato, Qwen27 SSD512/64 senza richieste"
+            },
+            {
+              "title": "Verifica del percorso CUDA",
+              "level": 3,
+              "start": 177,
+              "end": 209,
+              "summary": "Nel ramo Linux, `Makefile:ds4-server-suite` collega gli stessi oggetti C del"
+            },
+            {
+              "title": "Revisione delle responsabilità",
+              "level": 2,
+              "start": 210,
+              "end": 252,
+              "summary": "SSE."
+            }
+          ]
+        },
+        {
+          "path": "docs/architecture/native-image-progress.md",
+          "sections": [
+            {
+              "title": "Progresso della generazione immagini",
+              "level": 1,
+              "start": 1,
+              "end": 242,
+              "summary": "Data: 10 novembre 2026."
+            },
+            {
+              "title": "Requisito di portabilità",
+              "level": 2,
+              "start": 7,
+              "end": 26,
+              "summary": "**Progresso, heartbeat e visualizzazione sullo skeleton appartengono al"
+            },
+            {
+              "title": "Motivazione e punti di integrazione verificati",
+              "level": 2,
+              "start": 27,
+              "end": 71,
+              "summary": "Baseline ispezionata: ExMekh-core"
+            },
+            {
+              "title": "Contratto comune degli eventi",
+              "level": 2,
+              "start": 72,
+              "end": 106,
+              "summary": "Il servizio pubblica eventi versionati `operation.started`,"
+            },
+            {
+              "title": "Percentuale e skeleton",
+              "level": 2,
+              "start": 107,
+              "end": 140,
+              "summary": "Lo skeleton mostra **soltanto percentuale e tempo trascorso**, come richiesto"
+            },
+            {
+              "title": "Trasporto v1 e timeout",
+              "level": 2,
+              "start": 141,
+              "end": 200,
+              "summary": "La prima implementazione usa SSE opt-in sulle chiamate image native,"
+            },
+            {
+              "title": "Responsabilità dell'implementazione",
+              "level": 2,
+              "start": 201,
+              "end": 219,
+              "summary": "1."
+            },
+            {
+              "title": "Gate di accettazione",
+              "level": 2,
+              "start": 220,
+              "end": 242,
+              "summary": "e non Qwen: passi, token, fasi mancanti e totali sconosciuti."
+            }
+          ]
+        },
+        {
           "path": "docs/architecture/native-multimodal-suite-analysis-20261020.md",
           "sections": [
             {
@@ -1205,7 +1821,7 @@
               "title": "Servizio e client multimodale nativo",
               "level": 1,
               "start": 1,
-              "end": 177,
+              "end": 221,
               "summary": "Implementazione T17/T18 del 22 ottobre 2026."
             },
             {
@@ -1219,36 +1835,43 @@
               "title": "SDK standard",
               "level": 2,
               "start": 32,
-              "end": 64,
+              "end": 73,
               "summary": "Un solo client e una sola base URL servono chat, immagini ed embedding:"
             },
             {
               "title": "Client tipizzato ExMekh",
               "level": 2,
-              "start": 65,
-              "end": 97,
+              "start": 74,
+              "end": 106,
               "summary": "`Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`."
             },
             {
               "title": "Tool e frontend",
               "level": 2,
-              "start": 98,
-              "end": 121,
+              "start": 107,
+              "end": 135,
               "summary": "`generate-image` è la capability registrata nel catalogo ExMekh."
             },
             {
               "title": "Accettazione live della libreria e del frontend",
               "level": 2,
-              "start": 122,
-              "end": 150,
+              "start": 136,
+              "end": 164,
               "summary": "La suite completa usa la wheel installata nell'agente e un solo server reale,"
             },
             {
               "title": "Lifetime e osservabilità",
               "level": 2,
-              "start": 151,
-              "end": 177,
-              "summary": "Discovery espone revision/profilo, configured/resident/ready, componenti e limiti."
+              "start": 165,
+              "end": 209,
+              "summary": "Il contratto del progresso image definisce SSE,"
+            },
+            {
+              "title": "Geometria delle immagini",
+              "level": 2,
+              "start": 210,
+              "end": 221,
+              "summary": "Il client e il tool `generate-image` espongono due `ImageDimension` Literal"
             }
           ]
         },
@@ -3159,6 +3782,53 @@
               "start": 123,
               "end": 137,
               "summary": "Il primo tentativo MTP usava `--batched-session 1`: il runtime disabilitava MTP."
+            }
+          ]
+        },
+        {
+          "path": "docs/performance/native-image-batch-20261110.md",
+          "sections": [
+            {
+              "title": "Qwen Image in batch sul servizio nativo",
+              "level": 1,
+              "start": 1,
+              "end": 166,
+              "summary": "Baseline core `8625eb7`, binario Metal SHA256"
+            },
+            {
+              "title": "Audit prima dell'intervento",
+              "level": 2,
+              "start": 12,
+              "end": 62,
+              "summary": "sempre un solo seed per job, ricrea il reclaim e ripete tutti i componenti"
+            },
+            {
+              "title": "Controllo seriale Metal",
+              "level": 2,
+              "start": 63,
+              "end": 70,
+              "summary": "Due PNG e replay idempotente in 143,610 s."
+            },
+            {
+              "title": "Prova batch Metal",
+              "level": 2,
+              "start": 71,
+              "end": 91,
+              "summary": "Stesso prompt, geometria e seed."
+            },
+            {
+              "title": "Gate numerico indipendente a 512 px",
+              "level": 2,
+              "start": 92,
+              "end": 117,
+              "summary": "Il probe ha eseguito due immagini nel batch."
+            },
+            {
+              "title": "Riesame del ciclo di vita",
+              "level": 2,
+              "start": 118,
+              "end": 166,
+              "summary": "Il confronto del riesame usa il binario batch già qualificato e i due PNG"
             }
           ]
         },
@@ -6753,6 +7423,233 @@
               "start": 400,
               "end": 418,
               "summary": "Il protocollo ora conserva configurazione e stato opachi del comportamento."
+            }
+          ]
+        },
+        {
+          "path": "docs/roadmaps/metal-apple-silicon-support-20261028.md",
+          "sections": [
+            {
+              "title": "Piano di supporto Metal del fork su Apple Silicon",
+              "level": 1,
+              "start": 1,
+              "end": 834,
+              "summary": "Data: 28 ottobre 2026; avvio implementazione e revisione delle priorità:"
+            },
+            {
+              "title": "1. Obiettivo e macchina di riferimento",
+              "level": 2,
+              "start": 8,
+              "end": 47,
+              "summary": "Il piano copre i modelli LLM, image ed embedding e i flussi fondamentali di ExMekh."
+            },
+            {
+              "title": "2. Risultati dell'ispezione del fork",
+              "level": 2,
+              "start": 48,
+              "end": 71,
+              "summary": "Riferimento sorgenti: `837894c2af5aaf3382dfc0a0750689baee73363e`."
+            },
+            {
+              "title": "3. Budget: working set dello streaming nella memoria disponibile",
+              "level": 2,
+              "start": 72,
+              "end": 124,
+              "summary": "Le dimensioni seguenti provengono dall'audit Qwen27"
+            },
+            {
+              "title": "4. Milestone e dipendenze",
+              "level": 2,
+              "start": 125,
+              "end": 152,
+              "summary": "Ogni task parte `PLANNED`."
+            },
+            {
+              "title": "5. T00–T02: fondamenta, build e controllo della memoria",
+              "level": 2,
+              "start": 153,
+              "end": 198,
+              "summary": "hash, unità GB/GiB e spazio SSD."
+            },
+            {
+              "title": "6. T03: porting del 27B senza alterare il modello",
+              "level": 2,
+              "start": 199,
+              "end": 299,
+              "summary": "**Regola utente aggiornata il primo novembre 2026:** ogni nuova differenza"
+            },
+            {
+              "title": "6.1 Confronti ripetuti con Strata durante la scrittura dei kernel",
+              "level": 3,
+              "start": 201,
+              "end": 256,
+              "summary": "**Regola utente aggiornata il primo novembre 2026:** ogni nuova differenza"
+            },
+            {
+              "title": "6.2 Implementazione e gate del 27B",
+              "level": 3,
+              "start": 257,
+              "end": 299,
+              "summary": "matvec di decode, prefill multi-riga e MTP."
+            },
+            {
+              "title": "7. T04: portare le funzionalità del fork, oltre la chat",
+              "level": 2,
+              "start": 300,
+              "end": 346,
+              "summary": "**Implementazione aggiornata al 31 ottobre 2026:** T06 e Quick Chat reali"
+            },
+            {
+              "title": "8. T05: MTP e vision con picchi controllati",
+              "level": 2,
+              "start": 347,
+              "end": 401,
+              "summary": "**Implementazione aggiornata al 31 ottobre 2026:** MTP Qwen27 usa ora il"
+            },
+            {
+              "title": "9. T06: streaming SSD Metal, prima Flash e poi Qwen27 a 8k",
+              "level": 2,
+              "start": 402,
+              "end": 510,
+              "summary": "Lo streaming di questa milestone riguarda **i pesi da SSD**, distinto dallo"
+            },
+            {
+              "title": "9.1 T06-A: completare e avviare Flash streamed",
+              "level": 3,
+              "start": 413,
+              "end": 457,
+              "summary": "transitori del Q2 reale."
+            },
+            {
+              "title": "9.2 T06-B: aggiungere lo streaming dei pesi densi del 27B",
+              "level": 3,
+              "start": 458,
+              "end": 510,
+              "summary": "minimo 27B a **8192/64**: embedding/output, proiezioni dei 64 layer,"
+            },
+            {
+              "title": "10. T07: lifecycle, embeddings e immagini della suite",
+              "level": 2,
+              "start": 511,
+              "end": 615,
+              "summary": "Questa milestone verifica funzionalità fondamentali del fork."
+            },
+            {
+              "title": "10.1 Matrice obbligatoria delle funzioni fondamentali",
+              "level": 3,
+              "start": 574,
+              "end": 615,
+              "summary": "La matrice deve essere mantenuta per backend, modello, profilo e hardware."
+            },
+            {
+              "title": "11. Strategia di test contenuta",
+              "level": 2,
+              "start": 616,
+              "end": 694,
+              "summary": "**Nuova fase richiesta il 2 novembre 2026:** ottimizzare l'inferenza Metal"
+            },
+            {
+              "title": "12. T08: criteri di consegna e regressioni",
+              "level": 2,
+              "start": 695,
+              "end": 834,
+              "summary": "Aggiornamento6novembre: la campagna T08"
+            },
+            {
+              "title": "12.1 Registro di esecuzione",
+              "level": 3,
+              "start": 745,
+              "end": 834,
+              "summary": "fallisce in `ds4_bundle.c` per nomi dei timestamp nascosti dalle feature"
+            }
+          ]
+        },
+        {
+          "path": "docs/roadmaps/metal-inference-performance-20261102.md",
+          "sections": [
+            {
+              "title": "Ottimizzazione dell'inferenza Metal, un modello alla volta",
+              "level": 1,
+              "start": 1,
+              "end": 569,
+              "summary": "Data: 2 novembre 2026."
+            },
+            {
+              "title": "1. Regole permanenti",
+              "level": 2,
+              "start": 84,
+              "end": 105,
+              "summary": "e ms/token; per embedding latenza/throughput e per image tempi delle fasi e"
+            },
+            {
+              "title": "2. Ordine e avanzamento",
+              "level": 2,
+              "start": 106,
+              "end": 122,
+              "summary": "Si mantiene la priorità Flash → Qwen27 della roadmap."
+            },
+            {
+              "title": "3. Ciclo da ripetere per ciascun intervento",
+              "level": 2,
+              "start": 123,
+              "end": 157,
+              "summary": "1."
+            },
+            {
+              "title": "4. Scheda delle fonti obbligatoria, per esperimento",
+              "level": 2,
+              "start": 158,
+              "end": 182,
+              "summary": "La scheda precede il codice nel report dell'esperimento e contiene:"
+            },
+            {
+              "title": "5. Baseline e strumenti della prima campagna Flash",
+              "level": 2,
+              "start": 183,
+              "end": 241,
+              "summary": "Profilo iniziale qualificato: Flash Metal streamed,"
+            },
+            {
+              "title": "6. Piccoli incrementi, pacchetti e dispatch per caso",
+              "level": 2,
+              "start": 242,
+              "end": 270,
+              "summary": "Ogni incremento positivo credibile entra nel registro, anche sotto l'1–2%."
+            },
+            {
+              "title": "7. Backlog Flash iniziale: ipotesi, non classifica misurata",
+              "level": 2,
+              "start": 271,
+              "end": 286,
+              "summary": "Prima attivare soltanto l'ID giustificato dalla baseline."
+            },
+            {
+              "title": "8. Ricognizione del 2 novembre e fonti di ingresso",
+              "level": 2,
+              "start": 287,
+              "end": 349,
+              "summary": "Checkout iniziale pulito: `1544bb91eafaefefe32862ab408c412f0beed354`."
+            },
+            {
+              "title": "9. Registro da aggiornare a ogni iterazione",
+              "level": 2,
+              "start": 350,
+              "end": 569,
+              "summary": "Artefatti per esperimento in"
+            },
+            {
+              "title": "Continuazione Qwen27: cache adattiva e pack per layer",
+              "level": 3,
+              "start": 422,
+              "end": 437,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
+            },
+            {
+              "title": "Qwen Image 2.1 Turbo",
+              "level": 3,
+              "start": 438,
+              "end": 569,
+              "summary": "Sezione strutturale; consultare il contenuto locale indicato."
             }
           ]
         },

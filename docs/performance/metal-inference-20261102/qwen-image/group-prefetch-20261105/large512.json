@@ -1,0 +1,202 @@
+{
+  "status": "NATIVE_PARITY_PASS",
+  "independent_quality": "NOT_VERIFIED at 512; full independent 256 gates are separate",
+  "fixture": {
+    "source": "tools/qualify_qwen_image_pipeline.py:alpha-512",
+    "width": 512,
+    "height": 512,
+    "seed": 20261021,
+    "prompt": "A single red circle with a transparent background and clean edges.",
+    "fixture_sha256": "bd5f7eb548ffd8ba2768f09da4d5ccdf657af948cd0799f12533e2cee9b53a80",
+    "scope": "Native parity and resource qualification. Independent 512 oracle remains separate."
+  },
+  "records": [
+    {
+      "variant": "baseline",
+      "runtime": {
+        "width": 512,
+        "height": 512,
+        "references": 0,
+        "seed": 20261021,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 236.926321,
+        "prepare_seconds": 0.000401,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          0.0,
+          14.310281,
+          181.451671,
+          41.163921
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 8493366784,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 8741371872,
+        "plan_host": 7421984,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 77564443000,
+        "d2h_bytes": 4521984,
+        "weight_groups": [
+          {
+            "limit": 8534417056,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 14,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 8069595104,
+            "loads": 145,
+            "hits": 2210,
+            "evictions": 127,
+            "payload_h2d": 63085559808
+          },
+          {
+            "limit": 675480832,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ],
+        "prompt_sha256": "1e56969b3e79b06fdb50a1bb2ec5ae278798566cdb3759797f4ddbdde5ee2bb8",
+        "noise_sha256": "fe534b968a268d74ec2acf9dc4bc1bcf8ea4d5ad72ab615d52f03a8e80ad45e0",
+        "reference_metadata": [],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "host_min_bytes": 5602344960,
+      "swap_growth_bytes": 0,
+      "process_seconds": 250.23636774999613
+    },
+    {
+      "variant": "prefetch",
+      "runtime": {
+        "width": 512,
+        "height": 512,
+        "references": 0,
+        "seed": 20261021,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 228.141556,
+        "prepare_seconds": 0.000297,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          0.0,
+          15.134723,
+          171.9411,
+          41.065387
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 8107473920,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 8441888736,
+        "plan_host": 7421984,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 77564443000,
+        "d2h_bytes": 4521984,
+        "weight_groups": [
+          {
+            "limit": 8234933920,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 15,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7770111968,
+            "loads": 145,
+            "hits": 2210,
+            "evictions": 127,
+            "payload_h2d": 63085559808
+          },
+          {
+            "limit": 675480832,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ],
+        "prompt_sha256": "1e56969b3e79b06fdb50a1bb2ec5ae278798566cdb3759797f4ddbdde5ee2bb8",
+        "noise_sha256": "fe534b968a268d74ec2acf9dc4bc1bcf8ea4d5ad72ab615d52f03a8e80ad45e0",
+        "reference_metadata": [],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "host_min_bytes": 5851037696,
+      "swap_growth_bytes": 0,
+      "process_seconds": 241.0418114579952
+    }
+  ],
+  "exact_native_files": {
+    "rgba.f32": true,
+    "result.png": true,
+    "conditioning.bf16": true,
+    "latent-6.f32": true,
+    "latent-7.f32": true,
+    "latent-5.f32": true,
+    "latent-4.f32": true,
+    "latent-0.f32": true,
+    "latent-1.f32": true,
+    "latent-3.f32": true,
+    "latent-2.f32": true
+  }
+}

@@ -1,0 +1,31 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 1.00 GiB (raw 1.00 + compressed 0.00) + buffers 0.17 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 3.17 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=0 backend=metal
+1101 08:06:12 ds4-server: loaded model Qwen3.8-27B-UD-Q4_K_S.gguf
+1101 08:06:12 ds4-server: context buffers 1199.24 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=0)
+1101 08:06:25 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-phase-cancel-v2/kv (budget=8192 MiB, cross-quant=reject, min=1, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1101 08:06:25 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-phase-cancel-v2/kv/agentic.I72tzq
+1101 08:06:25 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-phase-cancel-v2/trace.log
+1101 08:06:25 ds4-server: listening on http://127.0.0.1:18080
+1101 08:06:26 ds4-server: chat ctx=0..25:25 RESPPROTO prompt start
+1101 08:06:26 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=25 syntax=qwen
+1101 08:06:29 ds4-server: chat ctx=0..25:25 RESPPROTO prefill chunk 25/25 (100.0%) chunk=0.00 t/s avg=7.15 t/s 3.495s
+1101 08:06:29 ds4-server: chat ctx=0..25:25 RESPPROTO prompt done 3.495s
+1101 08:06:29 ds4-server: response frontier captured tokens=25 bytes=151.50 MiB location=vram 21.538ms
+1101 08:06:39 ds4-server: chat ctx=25..29:4 gen=4 RESPPROTO decoding chunk=0.41 t/s avg=0.41 t/s 9.807s
+1101 08:06:39 ds4-server: chat ctx=0..25:25 gen=4 RESPPROTO finish=stop 13.324s
+1101 08:06:42 ds4-server: post-response checkpoint rebuilt source=memory-request cached=25 response_prefill=6 target=31 location=vram 2639.933ms
+1101 08:07:09 suite status=7 path=/v1/images/generations
+1101 08:07:09 ds4-server: live kv cache miss RESPPROTO live=31 prompt=45 common=21 vision=match reason=token-mismatch
+1101 08:07:09 ds4-server: chat ctx=0..45:45 RESPPROTO prompt start
+1101 08:07:09 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=45 syntax=qwen
+1101 08:07:14 ds4-server: chat ctx=0..45:45 RESPPROTO prefill chunk 45/45 (100.0%) chunk=0.00 t/s avg=9.27 t/s 4.856s
+1101 08:07:14 ds4-server: chat ctx=0..45:45 RESPPROTO prompt done 4.856s
+1101 08:07:14 ds4-server: response frontier captured tokens=45 bytes=151.50 MiB location=vram 21.463ms
+1101 08:07:54 ds4-server: chat ctx=45..61:16 gen=16 RESPPROTO decoding chunk=0.41 t/s avg=0.41 t/s 39.415s
+1101 08:07:54 ds4-server: chat ctx=0..45:45 gen=16 RESPPROTO finish=length 44.293s
+1101 08:07:54 ds4-server: shutdown requested, draining requests

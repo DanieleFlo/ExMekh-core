@@ -16,7 +16,23 @@ import sys
 import time
 from pathlib import Path
 
-from suite_numeric_metrics import compare, rgba_metrics
+if __package__:
+    from .qualify_metal_command import run as bounded_run
+    from .suite_numeric_metrics import compare, rgba_metrics
+else:
+    from qualify_metal_command import run as bounded_run
+    from suite_numeric_metrics import compare, rgba_metrics
+
+
+def compare_boundary(reference, candidate, limits):
+    metrics = compare(reference, candidate)
+    metrics["verdict"] = (
+        "PASS"
+        if metrics["relative_l2"] <= limits["relative_l2"]
+        and metrics["rmse"] <= limits["rmse_max"]
+        else "FAIL"
+    )
+    return metrics
 
 
 def main():
@@ -38,13 +54,49 @@ def main():
         nargs="+",
         help="Explicit development subset, never labelled full corpus",
     )
+    p.add_argument(
+        "--native-only",
+        action="store_true",
+        help="Functional native subset only; leave independent quality gates open",
+    )
+    p.add_argument(
+        "--skip-native", action="store_true", help="Reuse existing native artifacts"
+    )
+    p.add_argument(
+        "--skip-oracle",
+        action="store_true",
+        help="Compare existing independent artifacts",
+    )
+    p.add_argument("--oracle-device", choices=("cuda", "cpu", "mps"), default="cuda")
+    p.add_argument(
+        "--oracle-encoder-device",
+        choices=("cuda", "cpu", "mps"),
+        help="Explicit text/vision encoder reference device; otherwise use --oracle-device",
+    )
+    p.add_argument(
+        "--oracle-vae-device",
+        choices=("cuda", "cpu", "mps"),
+        help="Explicit reference device for VAE encode/decode; otherwise use --oracle-device",
+    )
+    p.add_argument("--oracle-offload", action="store_true")
+    p.add_argument(
+        "--bounded",
+        action="store_true",
+        help="One image case, 300-second subprocess deadlines and Metal memory monitoring",
+    )
     a = p.parse_args()
-    a.output.mkdir(parents=True, exist_ok=False)
+    oracle_devices = {
+        "encoder": a.oracle_encoder_device or a.oracle_device,
+        "encode": a.oracle_vae_device or a.oracle_device,
+        "dit": a.oracle_device,
+        "decode": a.oracle_vae_device or a.oracle_device,
+    }
+    a.output.mkdir(parents=True, exist_ok=a.skip_native)
     import numpy as np
     from PIL import Image
 
     fixtures = a.output / "fixtures"
-    fixtures.mkdir()
+    fixtures.mkdir(exist_ok=a.skip_native)
     y, x = np.mgrid[:256, :256]
     rgb = np.stack(((x * 3 + y) % 256, (y * 5) % 256, (x + y * 2) % 256), -1).astype(
         np.uint8
@@ -157,9 +209,20 @@ def main():
         specs = [c for c in specs if c["id"] in a.case_ids]
         if len(specs) != len(a.case_ids):
             raise ValueError("case id not found")
+    if a.bounded and len(specs) != 1:
+        raise ValueError(
+            "bounded qualification requires exactly one --case-ids selection"
+        )
     inputs = []
     for case in specs:
-        if "split" in case:
+        if a.plan_only:
+            # Admission uses shape and counts only. Keep absent oracle noise
+            # from blocking a resource check; these fixtures never run inference.
+            noise = np.zeros(
+                (case["height"] // 16, case["width"] // 16, 64), dtype=np.float32
+            )
+            case["noise_kind"] = "admission_zero"
+        elif "split" in case:
             noise_root = Path("performance-results/native-suite-qwen-noise-20261020")
             frozen = (
                 noise_root / f"{case['width']}x{case['height']}-seed-{case['seed']}.npz"
@@ -207,18 +270,39 @@ def main():
         case["fixture_sha256"] = hashlib.sha256(data).hexdigest()
     cases = a.output / "cases.json"
     cases.write_text(json.dumps(specs, indent=2) + "\n")
-    runs = []
+    runs_path = a.output / "runs.json"
+    runs = (
+        json.loads(runs_path.read_text())
+        if a.skip_native and runs_path.exists()
+        else []
+    )
 
     def run(name, command, env=None):
         start = time.monotonic()
-        with (a.output / f"{name}.log").open("w") as log:
-            result = subprocess.run(
-                list(map(str, command)),
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                env={**os.environ, **(env or {})},
-                check=False,
+        if a.bounded:
+            environment = [f"{key}={value}" for key, value in (env or {}).items()]
+            evidence = bounded_run(
+                ["env", *environment, *map(str, command)],
+                a.output / f"run-{name}",
+                300,
+                0,
+                "S3 256px image or independent reference component",
             )
+            (a.output / f"{name}.log").write_bytes(
+                (a.output / f"run-{name}/command.log").read_bytes()
+            )
+            result = subprocess.CompletedProcess(
+                command, 0 if evidence["status"] == "PASS" else 1
+            )
+        else:
+            with (a.output / f"{name}.log").open("w") as log:
+                result = subprocess.run(
+                    list(map(str, command)),
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    env={**os.environ, **(env or {})},
+                    check=False,
+                )
         runs.append(
             {
                 "name": name,
@@ -227,23 +311,28 @@ def main():
                 "returncode": result.returncode,
             }
         )
-        (a.output / "runs.json").write_text(json.dumps(runs, indent=2) + "\n")
+        runs_path.write_text(json.dumps(runs, indent=2) + "\n")
         print(name, result.returncode, round(runs[-1]["seconds"], 3), flush=True)
         if result.returncode:
             raise RuntimeError(f"{name} failed, see {a.output / name}.log")
 
-    run(
-        "native",
-        [
-            "tests/probe_qwen_image_pipeline",
-            a.bundle,
-            a.prepared / "models",
-            a.tokenizer,
-            a.output / "native",
-            *inputs,
-        ],
-        {"DS4_SUITE_PLAN_ONLY": "1"} if a.plan_only else None,
-    )
+    if not a.skip_native:
+        run(
+            "native",
+            [
+                "tests/probe_qwen_image_pipeline",
+                a.bundle,
+                a.prepared / "models",
+                a.tokenizer,
+                a.output / "native",
+                *inputs,
+            ],
+            {"DS4_SUITE_PLAN_ONLY": "1"}
+            if a.plan_only
+            else {"DS4_SUITE_CASES_ONLY": "1"}
+            if a.native_only or a.bounded
+            else None,
+        )
     if a.plan_only:
         plans = [
             dict(
@@ -261,25 +350,48 @@ def main():
             flush=True,
         )
         return
-    for stage in ("encoder", "encode", "dit", "decode"):
-        run(
-            stage,
-            [
-                sys.executable,
-                "tools/run_qwen_image_pipeline_oracle.py",
-                "--prepared",
-                a.prepared,
-                "--cases",
-                cases,
-                "--output",
-                a.output / "oracle",
-                "--stage",
-                stage,
-            ],
+    if a.native_only:
+        (a.output / "functional.json").write_text(
+            json.dumps(
+                {
+                    "native_status": "PASS",
+                    "quality_status": "NOT_VERIFIED",
+                    "scope": "explicit native subset",
+                    "case_ids": [c["id"] for c in specs],
+                },
+                indent=2,
+            )
+            + "\n"
         )
+        return
+    if not a.skip_oracle:
+        for stage in ("encoder", "encode", "dit", "decode"):
+            run(
+                stage,
+                [
+                    sys.executable,
+                    "tools/run_qwen_image_pipeline_oracle.py",
+                    "--prepared",
+                    a.prepared,
+                    "--cases",
+                    cases,
+                    "--output",
+                    a.output / "oracle",
+                    "--stage",
+                    stage,
+                    "--device",
+                    oracle_devices[stage],
+                    *(["--offload"] if a.oracle_offload else []),
+                ],
+            )
     tol = json.loads(
         Path("docs/performance/native-suite-t00-20261020/tolerances.json").read_text()
     )
+
+    def bf16(path):
+        return (np.fromfile(path, "<u2").astype(np.uint32) << 16).view(np.float32)
+
+    limits = tol["qwen_latent_boundary"]
     report = {"cases": []}
     passed = True
     for i, case in enumerate(specs):
@@ -287,16 +399,30 @@ def main():
         oracle = a.output / "oracle" / case["id"]
         boundaries = []
         ok = True
+        conditioning = compare_boundary(
+            bf16(oracle / "conditioning.bf16"),
+            bf16(native / "conditioning.bf16"),
+            limits,
+        )
+        ok &= conditioning["verdict"] == "PASS"
+        references = None
+        if case["references"]:
+            references = compare_boundary(
+                bf16(oracle / "references.bf16"),
+                np.concatenate(
+                    [
+                        bf16(native / f"reference-{j}.bf16")
+                        for j in range(len(case["references"]))
+                    ]
+                ),
+                limits,
+            )
+            ok &= references["verdict"] == "PASS"
         for step in range(8):
-            m = compare(
+            m = compare_boundary(
                 np.fromfile(oracle / f"latent-{step}.f32", np.float32),
                 np.fromfile(native / f"latent-{step}.f32", np.float32),
-            )
-            m["verdict"] = (
-                "PASS"
-                if m["relative_l2"] <= tol["qwen_latent_boundary"]["relative_l2"]
-                and m["rmse"] <= tol["qwen_latent_boundary"]["rmse_max"]
-                else "FAIL"
+                limits,
             )
             boundaries.append(m)
             ok &= m["verdict"] == "PASS"
@@ -317,6 +443,8 @@ def main():
             "seed": case["seed"],
             "references": case["references"],
             "fixture_sha256": case["fixture_sha256"],
+            "conditioning": conditioning,
+            "references_encoded": references,
             "latents": boundaries,
             "rgba": m,
             "runtime": json.loads((native / "report.json").read_text()),
@@ -326,6 +454,7 @@ def main():
         passed &= ok
     report.update(
         verdict="PASS" if passed else "FAIL",
+        oracle_devices=oracle_devices,
         full_t00_corpus=a.full_corpus and not excluded and not a.case_ids,
         excluded=excluded,
         human_task_review="NOT_VERIFIED",

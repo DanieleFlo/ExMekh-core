@@ -1,0 +1,14 @@
+{
+  "devices": {
+    "encoder": "cpu",
+    "dit": "cpu",
+    "encode": "cpu",
+    "decode": "mps"
+  },
+  "reused_stages": {
+    "encoder": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/run-encoder/report.json",
+    "encode": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/run-encode/report.json",
+    "dit": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/run-dit/report.json"
+  },
+  "scope": "Explicit independent component-device profile; CPU-only VAE remains NOT_VERIFIED. No precision/recipe/tolerance changes."
+}

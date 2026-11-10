@@ -1,0 +1,273 @@
+{
+  "tokens_exact": true,
+  "positions_exact": true,
+  "scope": "Complete native Metal trace versus pinned independent CPU BF16, unchanged frozen quality gate",
+  "boundaries": [
+    {
+      "name": "embeddings-0",
+      "max_abs": 0.0,
+      "rmse": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "name": "text-0",
+      "max_abs": 0.0078125,
+      "rmse": 0.00010288637050409723,
+      "relative_l2": 0.0005149508539548749,
+      "bit_exact": false
+    },
+    {
+      "name": "text-1",
+      "max_abs": 0.03125,
+      "rmse": 0.000812666499320809,
+      "relative_l2": 0.002253507746441506,
+      "bit_exact": false
+    },
+    {
+      "name": "text-2",
+      "max_abs": 0.0625,
+      "rmse": 0.0014586059833348794,
+      "relative_l2": 0.0032094047943093157,
+      "bit_exact": false
+    },
+    {
+      "name": "text-3",
+      "max_abs": 0.125,
+      "rmse": 0.0024072580991650726,
+      "relative_l2": 0.00475968440097942,
+      "bit_exact": false
+    },
+    {
+      "name": "text-4",
+      "max_abs": 0.25,
+      "rmse": 0.003317102706088535,
+      "relative_l2": 0.005433857330979076,
+      "bit_exact": false
+    },
+    {
+      "name": "text-5",
+      "max_abs": 0.25,
+      "rmse": 0.004450711544095111,
+      "relative_l2": 0.006572836992815341,
+      "bit_exact": false
+    },
+    {
+      "name": "text-6",
+      "max_abs": 192.0,
+      "rmse": 0.5307037501089217,
+      "relative_l2": 0.01465260787897864,
+      "bit_exact": false
+    },
+    {
+      "name": "text-7",
+      "max_abs": 192.0,
+      "rmse": 0.5307190019694226,
+      "relative_l2": 0.014652609199803096,
+      "bit_exact": false
+    },
+    {
+      "name": "text-8",
+      "max_abs": 192.0,
+      "rmse": 0.5307447021663816,
+      "relative_l2": 0.014652769205390603,
+      "bit_exact": false
+    },
+    {
+      "name": "text-9",
+      "max_abs": 192.0,
+      "rmse": 0.5307582531053379,
+      "relative_l2": 0.01465295009832912,
+      "bit_exact": false
+    },
+    {
+      "name": "text-10",
+      "max_abs": 192.0,
+      "rmse": 0.5307703945837531,
+      "relative_l2": 0.014652799415685633,
+      "bit_exact": false
+    },
+    {
+      "name": "text-11",
+      "max_abs": 192.0,
+      "rmse": 0.5307889338460309,
+      "relative_l2": 0.014652852256381936,
+      "bit_exact": false
+    },
+    {
+      "name": "text-12",
+      "max_abs": 192.0,
+      "rmse": 0.530811619761637,
+      "relative_l2": 0.014652537398806025,
+      "bit_exact": false
+    },
+    {
+      "name": "text-13",
+      "max_abs": 192.0,
+      "rmse": 0.5308640497697283,
+      "relative_l2": 0.01465382056825304,
+      "bit_exact": false
+    },
+    {
+      "name": "text-14",
+      "max_abs": 192.0,
+      "rmse": 0.5310153135884249,
+      "relative_l2": 0.014656637556666723,
+      "bit_exact": false
+    },
+    {
+      "name": "text-15",
+      "max_abs": 192.0,
+      "rmse": 0.5310010960480961,
+      "relative_l2": 0.014655728293032933,
+      "bit_exact": false
+    },
+    {
+      "name": "text-16",
+      "max_abs": 192.0,
+      "rmse": 0.5586676319109992,
+      "relative_l2": 0.012561730573963075,
+      "bit_exact": false
+    },
+    {
+      "name": "text-17",
+      "max_abs": 192.0,
+      "rmse": 0.5589449389468375,
+      "relative_l2": 0.012540774311266177,
+      "bit_exact": false
+    },
+    {
+      "name": "text-18",
+      "max_abs": 192.0,
+      "rmse": 0.5589673798057953,
+      "relative_l2": 0.012540868739048066,
+      "bit_exact": false
+    },
+    {
+      "name": "text-19",
+      "max_abs": 192.0,
+      "rmse": 0.5590810094503605,
+      "relative_l2": 0.012541145088775903,
+      "bit_exact": false
+    },
+    {
+      "name": "text-20",
+      "max_abs": 192.0,
+      "rmse": 0.5591902844754641,
+      "relative_l2": 0.012542643953276922,
+      "bit_exact": false
+    },
+    {
+      "name": "text-21",
+      "max_abs": 192.0,
+      "rmse": 0.5593687861614068,
+      "relative_l2": 0.01254484476735528,
+      "bit_exact": false
+    },
+    {
+      "name": "text-22",
+      "max_abs": 192.0,
+      "rmse": 0.5595804772332338,
+      "relative_l2": 0.012545353761986266,
+      "bit_exact": false
+    },
+    {
+      "name": "text-23",
+      "max_abs": 192.0,
+      "rmse": 0.5599987226650024,
+      "relative_l2": 0.01254770172384499,
+      "bit_exact": false
+    },
+    {
+      "name": "text-24",
+      "max_abs": 192.0,
+      "rmse": 0.5606087014210887,
+      "relative_l2": 0.012550588606697409,
+      "bit_exact": false
+    },
+    {
+      "name": "text-25",
+      "max_abs": 192.0,
+      "rmse": 0.5613331154078102,
+      "relative_l2": 0.012554926968697781,
+      "bit_exact": false
+    },
+    {
+      "name": "text-26",
+      "max_abs": 192.0,
+      "rmse": 0.5622515500572498,
+      "relative_l2": 0.012560351441139215,
+      "bit_exact": false
+    },
+    {
+      "name": "text-27",
+      "max_abs": 192.0,
+      "rmse": 0.5636363093944982,
+      "relative_l2": 0.012571741862024364,
+      "bit_exact": false
+    },
+    {
+      "name": "text-28",
+      "max_abs": 192.0,
+      "rmse": 0.5658900598741354,
+      "relative_l2": 0.012590705223754389,
+      "bit_exact": false
+    },
+    {
+      "name": "text-29",
+      "max_abs": 192.0,
+      "rmse": 0.568686268308657,
+      "relative_l2": 0.012616894285813744,
+      "bit_exact": false
+    },
+    {
+      "name": "text-30",
+      "max_abs": 192.0,
+      "rmse": 0.572546121083846,
+      "relative_l2": 0.012642465788189533,
+      "bit_exact": false
+    },
+    {
+      "name": "text-31",
+      "max_abs": 192.0,
+      "rmse": 0.5790194517772215,
+      "relative_l2": 0.012720690084112217,
+      "bit_exact": false
+    },
+    {
+      "name": "text-32",
+      "max_abs": 192.0,
+      "rmse": 0.5878976241093279,
+      "relative_l2": 0.012837252675812663,
+      "bit_exact": false
+    },
+    {
+      "name": "text-33",
+      "max_abs": 192.0,
+      "rmse": 0.6014294190523888,
+      "relative_l2": 0.013056595380873812,
+      "bit_exact": false
+    },
+    {
+      "name": "text-34",
+      "max_abs": 128.0,
+      "rmse": 0.5055976363402158,
+      "relative_l2": 0.016443834073526536,
+      "bit_exact": false
+    },
+    {
+      "name": "text-35",
+      "max_abs": 128.0,
+      "rmse": 0.6460993695330426,
+      "relative_l2": 0.03551953819989308,
+      "bit_exact": false
+    },
+    {
+      "name": "conditioning-0",
+      "max_abs": 44.0,
+      "rmse": 0.44954439253487777,
+      "relative_l2": 0.036103262419262566,
+      "bit_exact": false
+    }
+  ]
+}

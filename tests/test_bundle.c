@@ -2,13 +2,25 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 typedef struct {
     ds4_resources *resources;
     ds4_resource *allocation;
     bool fail_write, fail_fence, fail_release;
     const char *mutate_file;
+    bool fail_read, mapped_fallback;
+    unsigned file_reads;
 } backend;
+static ds4_status read_tensor(void *opaque, void *memory, uint64_t offset,
+                              int fd, uint64_t file_offset, uint64_t bytes) {
+    backend *b = opaque;
+    if (b->mapped_fallback) return DS4_STATUS_UNSUPPORTED;
+    if (b->fail_read) return DS4_STATUS_INFERENCE;
+    b->file_reads++;
+    return pread(fd, (char *)memory + offset, bytes, file_offset) == (ssize_t)bytes
+        ? DS4_STATUS_OK : DS4_STATUS_INFERENCE;
+}
 static ds4_status allocate(void *opaque, uint64_t bytes, void **out) {
     backend *b=opaque;
     ds4_resource_spec spec={.owner=42,.requested=bytes,.allocated=bytes,.live=bytes,.location=DS4_MEMORY_DEVICE};
@@ -97,12 +109,27 @@ int main(int argc,char **argv) {
         assert(ds4_weight_group_create_selected(&g,b,t->component,ids,1,&ops)==DS4_STATUS_INVALID);
         ids[0]=0;
         assert(!ds4_weight_group_create_selected(&g,b,t->component,ids,1,&ops));
+        assert(ds4_weight_group_file_transport(g, NULL) == DS4_STATUS_INVALID);
+        assert(!ds4_weight_group_file_transport(g, read_tensor));
+        stub.fail_read = true;
+        assert(ds4_weight_group_load(g) == DS4_STATUS_INFERENCE);
+        assert(!ds4_weight_group_resident(g) && !stub.file_reads);
+        assert(!ds4_weight_group_release(g));
+        stub.fail_read = false;
         assert(!ds4_weight_group_load(g));
+        assert(stub.file_reads == 1);
+        assert(ds4_weight_group_file_transport(g, read_tensor) == DS4_STATUS_BUSY);
         const void *storage=NULL; uint64_t offset=0;
         assert(!ds4_weight_group_tensor(g,t->name,&storage,&offset));
         assert(!memcmp((const uint8_t*)storage+offset,ds4_bundle_tensor_data(b,0),t->bytes));
         for(size_t i=1;i<ds4_bundle_tensor_count(b);i++)
             assert(ds4_weight_group_tensor(g,ds4_bundle_tensor(b,i)->name,&storage,&offset)==DS4_STATUS_INVALID);
+        assert(!ds4_weight_group_release(g));
+        stub.mapped_fallback = true;
+        assert(!ds4_weight_group_load(g));
+        assert(stub.file_reads == 1);
+        assert(!ds4_weight_group_tensor(g,t->name,&storage,&offset));
+        assert(!memcmp((const uint8_t*)storage+offset,ds4_bundle_tensor_data(b,0),t->bytes));
         assert(!ds4_weight_group_close(g));
     }
     for (size_t i=0;i<ds4_bundle_tensor_count(b);i++) {

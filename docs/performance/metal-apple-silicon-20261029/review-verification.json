@@ -1,0 +1,697 @@
+{
+  "date": "2026-10-29",
+  "baseline_commit": "837894c2af5aaf3382dfc0a0750689baee73363e",
+  "source_state": "Tested working tree before commits; content preserved in implementation_commits and identified by source hashes.",
+  "hardware": {
+    "device": "Apple M5 Pro",
+    "physical_bytes": 25769803776,
+    "macos": "26.6.2"
+  },
+  "qualification_claim": false,
+  "source_sha256": {
+    "Makefile": "f1f81e4579f855ea45ebb86e86c5531de19f1ede9c6e2d05d6773bb3fb915214",
+    "agent/start-ds4-server.sh": "b9857a7cb1dac8e75e57d1caad76632a93ef9473a414a09469edd21969d89803",
+    "ds4.c": "61b9c3a50e2f6e521d2e524876fbb46c9da66732984763d4987c0a54353498fa",
+    "ds4_bundle.c": "31c56bec3863b1e44013d218a8768333586d504ad8e6308ca04ab3b619f3879e",
+    "ds4_gpu.h": "b25551dd0eab5a72ba7fad7ef7dcae870d5c9bdd216078a6b27541907999d9f1",
+    "ds4_lifecycle.inc": "2cce0fb26d9d37ad43560ea3a38af9e683036faddaa09c7a49279b6bf51c9b52",
+    "ds4_lifecycle_text.h": "899e96fb1ee5c378e5c3bff7a735fea6ecef558b30f7acfd8cc2ebd955ffa043",
+    "ds4_metal.m": "e6bdc35a458b711b835b75964af367e55e56da14522cb924eab5af7a724a7c97",
+    "ds4_metal_memory.h": "4b9520c3f9bdb83bf337003e29d4297970fd7995cdd9d01f24f35dcad23c0147",
+    "ds4_numeric.c": "94fd694d7dc0094d518cad46ef7ff00b126c1e521297786c038da8428a1aa048",
+    "ds4_numeric.h": "471f6e25b102e92027319eda613ee957af9ce2011c0a4c6f138723f840353a86",
+    "ds4_numeric_cuda.cu": "7be3ef1025165289583676e2f5ce9c8c9e074f84785aec4d213bc53cae8d4e48",
+    "ds4_numeric_internal.h": "8b31866ce87f20fcd93c1138acffadb53ff4453d82cd0d4d718d936ffe1c43dd",
+    "ds4_numeric_metal.m": "f4454ccbd2603bea73a5ace65e66a0268c3d138aa335de09aaf334b06cf35152",
+    "ds4_numeric_metal_args.h": "48aaafb16ff0659d494df5440bb393ab02017dc7dd85ae868f79a6695fc7189d",
+    "ds4_qwen35_metal.inc": "d980a49e6c7780dbefd4743de5da4fa4bc0c5a5373f931ef649952406c207f81",
+    "ds4_qwen4_metal_stream.inc": "a2d7c5a8929d021d3488233029bcab7b35e5c51a0cc6c1ad4f6457548e4615ae",
+    "ds4_qwen_image_dit.c": "a1c18a2d55f977319f49d0ab609256715c96e71d12f40c6ff4d1f1c6a105a30b",
+    "ds4_qwen_image_encoder.c": "e9489d411124256f4d3af5c04c30e584b2de89b500346403432583289b224548",
+    "ds4_resources.c": "e937372761792117caad5e718c55d26ed4341e3564ecaeb42fcafe0745e1aa77",
+    "ds4_resources.h": "c86b437ac13e1b2535052e56a2960c71445baf5b2b3a065b432ffee044ed31a6",
+    "ds4_server.c": "6b7da81f76bb5efe620e1ab1b352e97db4ae4547227c489b6959a516f55a8541",
+    "ds4_server_suite.inc": "55e1235013164e6b5097afae5e35859c43d8f9072e345e00d24c22137e4d21eb",
+    "ds4_suite_text.h": "64e987f6e934535d77dd68007b3344b4dec3d922fd3c76b503bc9b611c6d41bc",
+    "metal/numeric.metal": "749d50cca4ef4be053ae6f027ab8a4906e763d24f7f670bdd2a4b36f64898e30",
+    "metal/qwen35.metal": "441c138b57a82e5228d0fef20664ed897c4cfe470588bd5d6c12b05fd0e2d667",
+    "metal/qwen35_quants.metal": "02c96d35ba1fa7c7992587d2c01d52bacda78bd9b24ff3ce6f75f81a0c227bd9",
+    "start-ds4-server.sh": "c12fe122eb73e37dfe5fe7e6e6a8484dcb2bf07a1cdc1ee090f2784f8f97f286",
+    "tests/probe_gemma_visual.c": "19cb7957a6c23cb695f7cd81e6db04407d713e27722c5e15bfae712d736a632a",
+    "tests/probe_native_suite.c": "270965f4fca75c5a35332261726f6f116f1cdf4e586ce8f44743b0049a735811",
+    "tests/probe_qwen_image_pipeline.c": "5f08b0273c78d8f942c2b860b21de060ec0f77e3e08f58e624203bbc2fb712a4",
+    "tests/suite_accelerator.h": "4d5f3935530c50aaadd89ca0a2b6d65c214cf99b91083a00795950e09b90d92f",
+    "tests/test_flash_launcher.py": "f4f755479421701674aa8722b60d25ad92143e6748bd92637fdd31eddef4d488",
+    "tests/test_flash_metal_lifecycle.c": "489cdfe5e2a0bfe5f31108025ab6b8d26dcdd4965d922b565f907f0cf7cd8c67",
+    "tests/test_qwen35_metal.c": "e48d5e1906c2818ff257612cd1284671dedc4f370d7c54655d7afbb9b64498bb",
+    "tests/test_qwen35_mrope.c": "26b02dee8e0c62ce28575d20d22f56f3a5f30f60a46df568a810a3b16e73ba65",
+    "tests/test_qwen38_compatibility.py": "c93ac2f1a02dc51d2b14a97e13e82a0ee8a7e9ec2aa53a2cc8a93fba1d367ef7",
+    "tests/test_qwen4_kernels.c": "d1f33fb052253fd835e7d3dfc4d9a97c51ad74a5c2bf32124444fda41f85ef20",
+    "tests/test_resources.c": "d2de45981cb2069067a3e51128ab485fab8156015d03c20340278ba995dac0b0",
+    "tests/test_suite_numeric.py": "7a92d641000788bad77fd5e82ce013760e9e671c52976cca749335be3738f0c8",
+    "tests/test_transfer.c": "2d6b70b7e05ffed8250f8fa5556281ef8afc4627c065597f9a84a753dbb5c02f",
+    "third_party/strata/LICENSE": "949b9b0aada7476006469e58ee4ffb0e0f68c2d9137e90a356757b61a09d37f0",
+    "tools/build_suite_media_dependencies.py": "49b53f6720c09716fca2027316ff5ded3bbe25ce83bbfcf861bfddfaa9df9404",
+    "tools/run_embedding_gemma2_oracle.py": "7715789ee7f9cc4395e5ab9d7f315c1e13618090bbba56f572c7f14d300fe8e3",
+    "tools/run_gemma_visual_oracle.py": "27c298a623760bea650f5ba94d55b85fe80b171589631f72e49d36e582526cae"
+  },
+  "binary_sha256": {
+    "ds4": "2e8be948ff6d74a9c419c8a97d9e5dfa155c11cd4eb7be26d1e0871a6e922a98",
+    "ds4-server": "aa4a6da7e7267fd46296430aec6d9cba062a5485822a116abc72704f0486185e",
+    "ds4-server-suite": "8be753f6ea9536c51b009acbfcc39c5085898145116dc0efd5fa8b1d49773252",
+    "ds4_test": "0a80e877f9331aab023c016a5e5299820d3398141f3098d7d96993e16f796d3c",
+    "tests/test_qwen35_metal": "b189148cbad02373ef51db6fd6c8af95d911022d694605462fb09c6301f6a65b",
+    "tests/test_qwen35_mrope": "3e45af4be691585922e44752a789d54bb037b7f364d9400d71325941b2e89589",
+    "tests/test_qwen4_kernels": "afd9e908e827ee70a454e04adea22db269d323572e3612bb57d8fc8044d2bceb",
+    "tests/test_flash_metal_lifecycle": "eaf9f93256a79905dfecd38ff112de60af9ea39590bb9a3d850a0be596fd54f3",
+    "tests/libds4_numeric_metal.so": "35a7643cdaa186810b534ebd2575f7cca9d85227bbd48d39bac7392a43fe4133",
+    "tests/probe_native_suite": "61fd19e64c79fac3f47605fdece267e5b40facb3753aa3d677efa147f4985bff",
+    "tests/probe_gemma_visual": "5363f3267cd7110af9e34304e161be2551e4e40ae2177e42d4529cb9e2fa3e16",
+    "tests/probe_qwen_image_pipeline": "a14b1b03781ff205e8632870a67d49d440cd5022845f777ef7e7135ce97576a4",
+    "tests/test_suite_http": "1ed298bec2bceaeeb445dd40adcc6a24e48046dbdc1bbfacb2d41895e42e0725"
+  },
+  "checks": [
+    {
+      "name": "numeric-metal",
+      "command": [
+        "build/metal-venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_numeric",
+        "-v"
+      ],
+      "env": {
+        "DS4_SUITE_NUMERIC_METAL": "1",
+        "DS4_SUITE_DUMP": "build/metal-qualification/clean-numeric"
+      },
+      "exit_code": 0,
+      "seconds": 3.813,
+      "log": "review/clean-final-numeric-metal.log",
+      "status": "PASS"
+    },
+    {
+      "name": "numeric-cpu",
+      "command": [
+        "build/metal-venv/bin/python",
+        "-m",
+        "unittest",
+        "tests.test_suite_numeric",
+        "tests.test_flash_launcher",
+        "tests.test_qwen38_compatibility",
+        "-v"
+      ],
+      "env": {},
+      "exit_code": 0,
+      "seconds": 4.451,
+      "log": "review/clean-final-numeric-cpu.log",
+      "status": "PASS"
+    },
+    {
+      "name": "qwen35",
+      "command": [
+        "./tests/test_qwen35_metal"
+      ],
+      "env": {},
+      "exit_code": 0,
+      "seconds": 1.883,
+      "log": "review/clean-final-qwen35.log",
+      "status": "PASS"
+    },
+    {
+      "name": "mrope",
+      "command": [
+        "./tests/test_qwen35_mrope"
+      ],
+      "env": {},
+      "exit_code": 0,
+      "seconds": 0.557,
+      "log": "review/clean-final-mrope.log",
+      "status": "PASS"
+    },
+    {
+      "name": "stream",
+      "command": [
+        "./tests/test_qwen4_kernels"
+      ],
+      "env": {
+        "DS4_TEST_QWEN4_METAL_STREAM": "1"
+      },
+      "exit_code": 0,
+      "seconds": 0.636,
+      "log": "review/clean-final-stream.log",
+      "status": "PASS"
+    },
+    {
+      "name": "lifecycle",
+      "command": [
+        "./tests/test_flash_metal_lifecycle"
+      ],
+      "env": {},
+      "exit_code": 0,
+      "seconds": 3.723,
+      "log": "review/clean-final-lifecycle.log",
+      "status": "PASS"
+    },
+    {
+      "name": "http",
+      "command": [
+        "./tests/test_suite_http"
+      ],
+      "env": {},
+      "exit_code": 0,
+      "seconds": 0.584,
+      "log": "review/clean-final-http.log",
+      "status": "PASS"
+    },
+    {
+      "name": "gemma-text",
+      "command": [
+        "./tests/probe_native_suite",
+        "build/metal-models/gemma.ds4b/bundle.ds4b",
+        "build/metal-models",
+        "build/metal-models/gemma.ds4g",
+        "gemma",
+        "build/metal-qualification/clean-gemma-text",
+        "Il gatto dorme.",
+        "A cat is sleeping."
+      ],
+      "env": {
+        "DS4_GEMMA_REPEATS": "2",
+        "DS4_SUITE_FAULTS": "1"
+      },
+      "exit_code": 0,
+      "seconds": 6.5,
+      "log": "review/clean-final-gemma-text.log",
+      "status": "PASS"
+    },
+    {
+      "name": "gemma-media",
+      "command": [
+        "./tests/probe_gemma_visual",
+        "build/metal-models/gemma.ds4b/bundle.ds4b",
+        "build/metal-models",
+        "build/metal-models/gemma.ds4g",
+        "build/metal-models/gemma-media.ds4p",
+        "build/metal-qualification/stimuli/cases.ds4vis",
+        "build/metal-qualification/clean-gemma-media"
+      ],
+      "env": {
+        "DS4_GEMMA_VISUAL_FAULTS": "1"
+      },
+      "exit_code": 0,
+      "seconds": 13.339,
+      "log": "review/clean-final-gemma-media.log",
+      "status": "PASS"
+    },
+    {
+      "name": "image",
+      "command": [
+        "./tests/probe_qwen_image_pipeline",
+        "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+        "build/metal-models",
+        "build/metal-models/image-tokenizer.ds4q",
+        "build/metal-qualification/clean-image",
+        "build/metal-qualification/stimuli/generation.ds4pip",
+        "build/metal-qualification/stimuli/edit.ds4pip"
+      ],
+      "env": {
+        "DS4_SUITE_CASES_ONLY": "1",
+        "DS4_REFERENCE_RESOLUTION": "256"
+      },
+      "exit_code": 0,
+      "seconds": 356.555,
+      "log": "review/clean-final-image.log",
+      "status": "PASS"
+    },
+    {
+      "name": "model-independent",
+      "command": [
+        "./ds4_test",
+        "--metal-kernels",
+        "--qwen35-layer-pattern",
+        "--quant-storage-layout",
+        "--constraint-trie",
+        "--server"
+      ],
+      "env": {},
+      "exit_code": 0,
+      "seconds": 6.801,
+      "log": "review/clean-final-model-independent.log",
+      "status": "PASS"
+    },
+    {
+      "name": "upstream-metal",
+      "command": [
+        "make",
+        "test-metal-ssd-experts",
+        "test-metal-command-memory"
+      ],
+      "env": {},
+      "exit_code": 0,
+      "seconds": 12.727,
+      "log": "review/clean-final-upstream-metal.log",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "./tests/test_layer_pack"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-01.log",
+      "name": "make-test-tail-1",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "./tests/test_engine_mgpu_placement"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-02.log",
+      "name": "make-test-tail-2",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "./tests/test_gpu_args"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-03.log",
+      "name": "make-test-tail-3",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "bash",
+        "tests/test_gpu_args_cli.sh"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-04.log",
+      "name": "make-test-tail-4",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "./tests/test_prompt_prefix"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-05.log",
+      "name": "make-test-tail-5",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "./tests/test_sampling"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-06.log",
+      "name": "make-test-tail-6",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "./tests/test_deepseek4_vision_image"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-07.log",
+      "name": "make-test-tail-7",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "./tests/test_image_decode"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-08.log",
+      "name": "make-test-tail-8",
+      "status": "PASS"
+    },
+    {
+      "command": [
+        "./tests/test_suite_http"
+      ],
+      "exit_code": 0,
+      "log": "review/clean-regression-09.log",
+      "name": "make-test-tail-9",
+      "status": "PASS"
+    }
+  ],
+  "build": {
+    "status": "PASS",
+    "log": "review/build.log",
+    "cpu_object_status": "PASS",
+    "cpu_object_log": "review/cpu-build.log"
+  },
+  "full_make_test": {
+    "command": "PATH=\"$PWD/build/metal-venv/bin:$PATH\" make test",
+    "exit_code": 2,
+    "status": "FAIL_MODEL_ADMISSION",
+    "engine_open_failures": 15,
+    "reason": "Qwen27 automatic model selection; estimated model/state/runtime 15.91 GiB versus about 7.4 GiB available after 2 GiB reserve. Memory guard retained. This is not a full-suite PASS.",
+    "log": "review/clean-make-test.log",
+    "remaining_tests": "All subsequent recipe commands executed separately; see make-test-tail checks."
+  },
+  "output_comparison": {
+    "status": "PASS_BIT_EXACT",
+    "files": 529,
+    "families": [
+      {
+        "baseline": "gemma-text",
+        "reviewed": "clean-gemma-text",
+        "files": 72,
+        "bit_exact": true
+      },
+      {
+        "baseline": "gemma-media",
+        "reviewed": "clean-gemma-media",
+        "files": 434,
+        "bit_exact": true
+      },
+      {
+        "baseline": "image-bf16",
+        "reviewed": "clean-image",
+        "files": 23,
+        "bit_exact": true
+      }
+    ],
+    "details": "review/output-comparison.json",
+    "independence": "Comparison to earlier Metal output, not an independent model oracle; the original BF16 boundary failures remain open."
+  },
+  "image_reports": [
+    {
+      "case": 0,
+      "log": "review/image-case-0.json",
+      "width": 256,
+      "height": 256,
+      "references": 0,
+      "seed": 20261029,
+      "variant": 4,
+      "victims": 0,
+      "total_seconds": 131.565838,
+      "prepare_seconds": 9.3e-05,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        0.0,
+        13.387564,
+        65.809344,
+        52.368768
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        1,
+        1,
+        1
+      ],
+      "peak_device_owned": 7152675584,
+      "live_device_owned": 0,
+      "pre_run_device_owned": 0,
+      "previous_device_peak": 0,
+      "plan_device": 7494717440,
+      "plan_host": 1904672,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 256,
+      "h2d_bytes": 83620352280,
+      "d2h_bytes": 1327104,
+      "weight_groups": [
+        {
+          "limit": 6946071552,
+          "loads": 36,
+          "hits": 360,
+          "evictions": 18,
+          "payload_h2d": 13892143104
+        },
+        {
+          "limit": 7115124736,
+          "loads": 159,
+          "hits": 2196,
+          "evictions": 143,
+          "payload_h2d": 69192473600
+        },
+        {
+          "limit": 518096448,
+          "loads": 1,
+          "hits": 127,
+          "evictions": 0,
+          "payload_h2d": 518096424
+        }
+      ],
+      "prompt_sha256": "645912534bfa05feb46b9c8b9e871e0cde0d08e2eca7206395d1fc0be1bb6a8f",
+      "noise_sha256": "b2da66cf367e80c695bc77fb1cf1235c3b30683921095d1100ec87c5dd4f266c",
+      "reference_metadata": [],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    },
+    {
+      "case": 1,
+      "log": "review/image-case-1.json",
+      "width": 256,
+      "height": 256,
+      "references": 1,
+      "seed": 20261029,
+      "variant": 4,
+      "victims": 0,
+      "total_seconds": 146.206844,
+      "prepare_seconds": 0.000494,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        9.795613,
+        16.930169,
+        67.006512,
+        52.473983
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        1,
+        1,
+        2
+      ],
+      "peak_device_owned": 7735967168,
+      "live_device_owned": 0,
+      "pre_run_device_owned": 0,
+      "previous_device_peak": 7152675584,
+      "plan_device": 7776563696,
+      "plan_host": 13647872,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 256,
+      "h2d_bytes": 168556498672,
+      "d2h_bytes": 3915776,
+      "weight_groups": [
+        {
+          "limit": 7522459888,
+          "loads": 68,
+          "hits": 678,
+          "evictions": 43,
+          "payload_h2d": 15044919776
+        },
+        {
+          "limit": 7115124736,
+          "loads": 159,
+          "hits": 2196,
+          "evictions": 143,
+          "payload_h2d": 69192473600
+        },
+        {
+          "limit": 518096448,
+          "loads": 2,
+          "hits": 224,
+          "evictions": 0,
+          "payload_h2d": 675480808
+        }
+      ],
+      "prompt_sha256": "aa74f9e583b28dac72c326065b54c30aa2c1680eb62ada86cad878100bc0b834",
+      "noise_sha256": "b2da66cf367e80c695bc77fb1cf1235c3b30683921095d1100ec87c5dd4f266c",
+      "reference_metadata": [
+        {
+          "latent_width": 16,
+          "latent_height": 16,
+          "sha256": "13ceedd231ac1bb3bc3d42314ab4b51abbaa6677115b5e73045294f3445d143f"
+        }
+      ],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    }
+  ],
+  "memory_observation": "Image group cache selected larger limits than in the first run. Peaks are within each selected plan; timing and peak differences are not a refactoring benchmark.",
+  "limits": [
+    "Full make test fails its model admission checks.",
+    "No actual Qwen27 or Flash LLM forward in this review. Flash principal GGUF still downloading.",
+    "CUDA host unavailable, confirmed by user; CUDA/ROCm not tested.",
+    "No distributed model inference or other Apple hardware tested.",
+    "Existing independent-oracle Gemma BF16 boundary failures unchanged.",
+    "Full native service/frontend alternation with LLM and image independent-oracle gates remain open."
+  ],
+  "docs_check": {
+    "command": "PATH=\"$PWD/build/metal-venv/bin:$PATH\" make docs-check",
+    "exit_code": 0,
+    "status": "PASS",
+    "tests": 10,
+    "log": "review/docs-check.log"
+  },
+  "evidence": {
+    "review/build.log": {
+      "sha256": "6cf0347d1b23278348b22788f17ad04fcb7f2a7815112d25e9eca955f9fecb56",
+      "bytes": 13027
+    },
+    "review/clean-final-gemma-media.log": {
+      "sha256": "d07d8ff9dc14d26c807c433fa93cc3bae0f36753e4e945ff37d03aaafc6f5694",
+      "bytes": 47
+    },
+    "review/clean-final-gemma-text.log": {
+      "sha256": "7be1ab3ab2aceebab666ccfd7f57980b27bbf34598422ac22fcf66e6500f8c57",
+      "bytes": 22
+    },
+    "review/clean-final-http.log": {
+      "sha256": "eeace533e068e9674b9ced5a9d4695df6a4ed35e0b175cc4db3c526164fd2022",
+      "bytes": 89
+    },
+    "review/clean-final-image.log": {
+      "sha256": "87ad13ea002b4d74ed6825152c592596d3f04c6ed3729c52100f0ee70dc42d48",
+      "bytes": 81
+    },
+    "review/clean-final-lifecycle.log": {
+      "sha256": "11c762aec2baf3954d5d5853be3d6df222cc2b1f956f0dded9e3f55e77c47eec",
+      "bytes": 367
+    },
+    "review/clean-final-model-independent.log": {
+      "sha256": "f1f1ac6f96834ef49568681aa32e539e47931ee0eb685bb4ea95262bd65259b6",
+      "bytes": 17222
+    },
+    "review/clean-final-mrope.log": {
+      "sha256": "03fd6c67381283840e6cc842590884960315abdf78dbdef71f5f16a7fb88c6d3",
+      "bytes": 551
+    },
+    "review/clean-final-numeric-cpu.log": {
+      "sha256": "621a87f806692df5c32200081d72fa3ee73fc91108e9ca1e299b873cab87d667",
+      "bytes": 8139
+    },
+    "review/clean-final-numeric-metal.log": {
+      "sha256": "7b3af5f42ac1a03dee335143fbb9582b82900a6acd4d879b2ef03b390a625deb",
+      "bytes": 3136
+    },
+    "review/clean-final-qwen35.log": {
+      "sha256": "bc4c5d7c55927c23065863cf0e7f1e7964b9a6c364b48f54e8c02113ee27688c",
+      "bytes": 16059
+    },
+    "review/clean-final-stream.log": {
+      "sha256": "1a465cf29e3c0e52611c63e87ce7a9632d44db9b1304280d3d71a63edcc8aeb7",
+      "bytes": 2699
+    },
+    "review/clean-final-upstream-metal.log": {
+      "sha256": "032824cbc2f9eca275ce0afdf09243b49f31591ac7359340af7f3446f09f9b4b",
+      "bytes": 9792
+    },
+    "review/clean-make-test.log": {
+      "sha256": "dfa6deb9c8f02cb8c009dc0eedc17c9d9f9ba64e05488e0f5ff90950f5a6dfdc",
+      "bytes": 39954
+    },
+    "review/clean-regression-01.log": {
+      "sha256": "14763eadb72a567458a39910f9ec3c08f215322cc4e46433520f869966d3ea11",
+      "bytes": 339
+    },
+    "review/clean-regression-02.log": {
+      "sha256": "1fd8fdc88ebb2cdb855e3696152b8f24cf7cdcfb97200c924485856c84d3a7f5",
+      "bytes": 711
+    },
+    "review/clean-regression-03.log": {
+      "sha256": "112882a278cf0bd5d14a35d354fb43b818b11a92a09cc47e50449a004b50fe06",
+      "bytes": 422
+    },
+    "review/clean-regression-04.log": {
+      "sha256": "c9364f3c7bdc70739f3eb17cc8929e9b94217c0d024c18d1cdcb286475ec7bac",
+      "bytes": 3442
+    },
+    "review/clean-regression-05.log": {
+      "sha256": "617f25c93f4a258f37fa0a751558ec02339cf086c253863512d535b35823825b",
+      "bytes": 27
+    },
+    "review/clean-regression-06.log": {
+      "sha256": "15d2bb4921d08c0e7a100ae778194954ce2d5e6af729eb25bf9209b3640433af",
+      "bytes": 307
+    },
+    "review/clean-regression-07.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "review/clean-regression-08.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "review/clean-regression-09.log": {
+      "sha256": "eeace533e068e9674b9ced5a9d4695df6a4ed35e0b175cc4db3c526164fd2022",
+      "bytes": 89
+    },
+    "review/cpu-build.log": {
+      "sha256": "a84bc9ca73c9e14ade618d9700b280347fb1b3bf0f5b0a3e8f32c7d5b02987f3",
+      "bytes": 33
+    },
+    "review/docs-check.log": {
+      "sha256": "e4f99e8b0e10a1e0a03ea2dd6dfe87ba1e59e5175b9e56c6843ece76319b9532",
+      "bytes": 1808
+    },
+    "review/image-case-0.json": {
+      "sha256": "90df0e0e429e7245fbf52b77d1b32959ff1d0eb4821a5d0faedd4c2352ec48d3",
+      "bytes": 1194
+    },
+    "review/image-case-1.json": {
+      "sha256": "da0c74e96e697d04c7785f19c57266bf537ec0931a4e8c47d6aa4f113b022874",
+      "bytes": 1319
+    },
+    "review/launchers.log": {
+      "sha256": "369a3bfafdf8ad9a4a69ece6b77a8df414708ae1328eb9c777bc0239aa0c41b9",
+      "bytes": 1517
+    },
+    "review/numeric-metrics.json": {
+      "sha256": "422b1b9062fdfc02c7027d0dd3c7e5e0545115fa940f52218138616b7dbcc1d6",
+      "bytes": 35497
+    },
+    "review/output-comparison.json": {
+      "sha256": "32156962c182819ddb55743ff517c400a1e3a92791e090dde82c05fa8dd33df1",
+      "bytes": 105110
+    }
+  },
+  "implementation_commits": [
+    "2b47e9c0b894fb709b8085a27f9fb0a22df53462",
+    "0f80820809fd9159eed7cb2e0f647cfa73454c21",
+    "c37fa3bff8cc8bb7fbfc7e3a8fc4357477cc1818"
+  ],
+  "log_normalization": "Trailing whitespace removed from review/build.log; original command output remains in ignored build/metal-qualification/clean-build-final.log."
+}

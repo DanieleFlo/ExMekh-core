@@ -1,0 +1,113 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-audio-block.py",
+    "audio-channel-cascade",
+    "6"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Channel-major CPU outer-sum cascade identified after precise-rsqrt-only candidate retained one BF16 tie; exact same layer6 inputs, L2/F32 paths unchanged.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 1,
+  "elapsed_seconds": 10.178295500001695,
+  "status": "FAIL",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 19523.394880458,
+      "pressure": 1,
+      "host_available_bytes": 8896921600,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 19524.405819291,
+      "pressure": 1,
+      "host_available_bytes": 9164750848,
+      "swap_bytes": 262144,
+      "footprint_bytes": 106676896,
+      "resident_bytes": 155844608
+    },
+    {
+      "monotonic": 19525.4253625,
+      "pressure": 1,
+      "host_available_bytes": 9869148160,
+      "swap_bytes": 262144,
+      "footprint_bytes": 133464760,
+      "resident_bytes": 182894592
+    },
+    {
+      "monotonic": 19526.4412815,
+      "pressure": 1,
+      "host_available_bytes": 9519579136,
+      "swap_bytes": 262144,
+      "footprint_bytes": 170017488,
+      "resident_bytes": 220692480
+    },
+    {
+      "monotonic": 19527.460278,
+      "pressure": 1,
+      "host_available_bytes": 9456205824,
+      "swap_bytes": 262144,
+      "footprint_bytes": 178651856,
+      "resident_bytes": 229621760
+    },
+    {
+      "monotonic": 19528.474568541,
+      "pressure": 1,
+      "host_available_bytes": 9469788160,
+      "swap_bytes": 262144,
+      "footprint_bytes": 179225296,
+      "resident_bytes": 230195200
+    },
+    {
+      "monotonic": 19529.494196375,
+      "pressure": 1,
+      "host_available_bytes": 9475112960,
+      "swap_bytes": 262144,
+      "footprint_bytes": 179847888,
+      "resident_bytes": 230817792
+    },
+    {
+      "monotonic": 19530.507744333,
+      "pressure": 1,
+      "host_available_bytes": 9384656896,
+      "swap_bytes": 262144,
+      "footprint_bytes": 181469904,
+      "resident_bytes": 232439808
+    },
+    {
+      "monotonic": 19531.522180958,
+      "pressure": 1,
+      "host_available_bytes": 9341583360,
+      "swap_bytes": 262144,
+      "footprint_bytes": 276923184,
+      "resident_bytes": 331759616
+    },
+    {
+      "monotonic": 19532.536819916,
+      "pressure": 1,
+      "host_available_bytes": 9511157760,
+      "swap_bytes": 262144,
+      "footprint_bytes": 321635216,
+      "resident_bytes": 388005888
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "1091a173d914d04234d1ded4d426cc86459f48879f89db1eb4eea25957247da9"
+}

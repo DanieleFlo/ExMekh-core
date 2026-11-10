@@ -1,0 +1,40 @@
+{
+  "command": [
+    "tests/test_qwen4_kernels"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {
+    "DS4_TEST_QWEN4_METAL_STREAM": "1"
+  },
+  "timeout_seconds": 120.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 1,
+  "reason": "Synthetic Flash Metal SSD kernel wrappers: eviction, compact layouts, bounded union and failed reads; no model loaded",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 1.0510695419943659,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 53098.642469958,
+      "pressure": 1,
+      "host_available_bytes": 11085217792,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    }
+  ],
+  "executables_sha256": {
+    "tests/test_qwen4_kernels": "8614676dd89b8b415af450f299c6b97b270bc1d762e332a474cd89f867fba41c"
+  },
+  "log_sha256": "ef726a2ec79e8f652548c2e5dac62d7afb788485aae273eb312a5e4d274eb7dc"
+}

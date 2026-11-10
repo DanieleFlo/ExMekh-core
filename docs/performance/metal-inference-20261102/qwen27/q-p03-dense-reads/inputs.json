@@ -1,0 +1,54 @@
+{
+  "prompt_file": "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+  "prompt_sha256": "efae39172d088e3b8da70f408e53eeebe0f5b17fa407a440ed969cd85e4784dd",
+  "mode": "raw text, no chat template, no reasoning or sampling",
+  "seed": null,
+  "seed_reason": "teacher-forced token sequence; no RNG used",
+  "frontiers": [
+    {
+      "occupied_prefix_tokens": 64,
+      "new_prefill_tokens": 64,
+      "teacher_forced_tokens": [
+        2582,
+        2420,
+        13,
+        7977
+      ],
+      "directional_tokens_8": [
+        2582,
+        2420,
+        13,
+        7977,
+        5020,
+        220,
+        15,
+        25
+      ]
+    },
+    {
+      "occupied_prefix_tokens": 128,
+      "new_prefill_tokens": 64,
+      "teacher_forced_tokens": [
+        7602,
+        7968,
+        11930,
+        1518
+      ],
+      "directional_tokens_8": [
+        7602,
+        7968,
+        11930,
+        1518,
+        23414,
+        13,
+        198,
+        4987
+      ]
+    }
+  ],
+  "context_allocated": 8192,
+  "prefill_chunk": 64,
+  "weight_cache_bytes": 2147483648,
+  "quality": false,
+  "target_only": true
+}

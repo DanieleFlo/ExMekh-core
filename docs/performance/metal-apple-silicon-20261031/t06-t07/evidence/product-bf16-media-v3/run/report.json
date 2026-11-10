@@ -1,0 +1,134 @@
+{
+  "command": [
+    "env",
+    "DS4_GEMMA_VISUAL_DIMENSIONS=128",
+    "tests/probe_gemma_visual",
+    "build/metal-models/gemma.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/gemma.ds4g",
+    "build/metal-models/gemma-media.ds4p",
+    "build/metal-qualification/t06-t07-20261031/gemma-media/cases.bin",
+    "build/metal-qualification/t06-t07-20261031/product-bf16-media-v3/native"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200,
+  "base_timeout_seconds": 300,
+  "timeout_multiplier": 4,
+  "reason": "Latest full original media after ordered Conv/video attention/audio/channelRMS integration; frozen strict independent boundaries, serial models, 2GiB reserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 12.205251542000042,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 20449.991878333,
+      "pressure": 1,
+      "host_available_bytes": 11695177728,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 20451.001089916,
+      "pressure": 1,
+      "host_available_bytes": 11436638208,
+      "swap_bytes": 262144,
+      "footprint_bytes": 7225896,
+      "resident_bytes": 17186816
+    },
+    {
+      "monotonic": 20452.014554625,
+      "pressure": 1,
+      "host_available_bytes": 11372134400,
+      "swap_bytes": 262144,
+      "footprint_bytes": 304104384,
+      "resident_bytes": 446496768
+    },
+    {
+      "monotonic": 20453.024991833,
+      "pressure": 1,
+      "host_available_bytes": 10711891968,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1040320576,
+      "resident_bytes": 1905295360
+    },
+    {
+      "monotonic": 20454.0375005,
+      "pressure": 1,
+      "host_available_bytes": 10784915456,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1057769536,
+      "resident_bytes": 1914994688
+    },
+    {
+      "monotonic": 20455.048313291,
+      "pressure": 1,
+      "host_available_bytes": 10815651840,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1057769536,
+      "resident_bytes": 1914994688
+    },
+    {
+      "monotonic": 20456.070626916,
+      "pressure": 1,
+      "host_available_bytes": 10770169856,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1039829056,
+      "resident_bytes": 1903853568
+    },
+    {
+      "monotonic": 20457.081816125,
+      "pressure": 1,
+      "host_available_bytes": 10794221568,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1040812096,
+      "resident_bytes": 1905819648
+    },
+    {
+      "monotonic": 20458.103399333,
+      "pressure": 1,
+      "host_available_bytes": 10829709312,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1058261056,
+      "resident_bytes": 1915518976
+    },
+    {
+      "monotonic": 20459.118738625,
+      "pressure": 1,
+      "host_available_bytes": 10858201088,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1058228288,
+      "resident_bytes": 1915486208
+    },
+    {
+      "monotonic": 20460.129760583,
+      "pressure": 1,
+      "host_available_bytes": 10785619968,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1032783912,
+      "resident_bytes": 1899544576
+    },
+    {
+      "monotonic": 20461.140713708,
+      "pressure": 1,
+      "host_available_bytes": 10512826368,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1302677952,
+      "resident_bytes": 2444361728
+    }
+  ],
+  "executables_sha256": {
+    "tests/probe_gemma_visual": "fa7a0aee18b0f548fcd49721487634c03d636d1262a8f795af7933c0b461263f"
+  },
+  "log_sha256": "1f45addc92728d3b51accedfaff3fd91ad29073bed37212dfd644c6b22621116"
+}

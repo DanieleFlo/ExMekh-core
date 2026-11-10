@@ -176,26 +176,148 @@ fail:
     buf_free(&fields); buf_free(&images); buf_free(&extension); return NULL;
 }
 #include "ds4_server_suite_operations.inc"
+/* Only the connection thread writes SSE. The compute worker publishes one
+ * coalesced snapshot and one bounded terminal JSON body under job.mu. */
+static const struct {
+    const char *type, *state;
+} suite_event_metadata[] = {
+    [SUITE_EVENT_STARTED] = {"operation.started", "running"},
+    [SUITE_EVENT_PROGRESS] = {"operation.progress", "running"},
+    [SUITE_EVENT_HEARTBEAT] = {"operation.heartbeat", "running"},
+    [SUITE_EVENT_COMPLETED] = {"operation.completed", "completed"},
+    [SUITE_EVENT_FAILED] = {"operation.failed", "failed"},
+    [SUITE_EVENT_CANCELLED] = {"operation.cancelled", "cancelled"},
+};
+static bool suite_stream_event(job *j, suite_event event, uint64_t seq,
+                               const suite_progress *p, const suite_terminal *terminal) {
+    suite_http *h = j->suite_request;
+    const char *type = suite_event_metadata[event].type;
+    bool completed = event == SUITE_EVENT_COMPLETED;
+    buf wire = {0};
+    buf_printf(&wire, "event: %s\nid: %llu\ndata: {\"version\":1,\"type\":", type,
+               (unsigned long long)seq);
+    json_escape(&wire, type);
+    buf_puts(&wire, ",\"operation_id\":"); json_escape(&wire, h->request_id);
+    buf_puts(&wire, ",\"request_id\":"); json_escape(&wire, h->request_id);
+    buf_printf(&wire, ",\"seq\":%llu,\"elapsed_seconds\":%.6f,\"state\":",
+        (unsigned long long)seq, fmax(0, now_sec() - h->started));
+    json_escape(&wire, suite_event_metadata[event].state);
+    buf_puts(&wire, ",\"phase\":"); json_escape(&wire, p->phase);
+    buf_puts(&wire, ",\"unit\":");
+    if (*p->unit) json_escape(&wire, p->unit); else buf_puts(&wire, "null");
+    buf_printf(&wire, ",\"item_index\":%u,\"item_count\":%u,\"completed_units\":%llu,\"total_units\":",
+        p->item_index, p->item_count, (unsigned long long)p->completed_units);
+    if (p->total_units) buf_printf(&wire, "%llu", (unsigned long long)p->total_units);
+    else buf_puts(&wire, "null");
+    if (p->active_items > 1) buf_printf(&wire, ",\"active_items\":%u", p->active_items);
+    buf_puts(&wire, ",\"overall_fraction\":");
+    if (completed) buf_puts(&wire, "1");
+    else if (p->overall_fraction >= 0) buf_printf(&wire, "%.6f", p->overall_fraction);
+    else buf_puts(&wire, "null");
+    buf_puts(&wire, ",\"overall_kind\":");
+    json_escape(&wire, completed ? "work" : p->overall_fraction < 0 ? "indeterminate" :
+        p->estimated ? "estimated" : "work");
+    if (terminal)
+        buf_printf(&wire, ",\"status_code\":%d,\"%s\":", terminal->code,
+                   completed ? "result" : "failure");
+    bool ok = send_all(j->fd, wire.ptr, wire.len) &&
+              (!terminal || send_all(j->fd, terminal->body, strlen(terminal->body))) &&
+              send_all(j->fd, "}\n\n", 3);
+    buf_free(&wire);
+    return ok;
+}
+static suite_progress suite_queued_progress(void) {
+    return (suite_progress){.phase = "queued", .overall_fraction = -1, .item_count = 1};
+}
+
+static void suite_stream_wait(server *s, job *j, double heartbeat_seconds) {
+    buf headers = {0};
+    buf_printf(&headers, "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\n"
+        "Cache-Control: no-cache\r\nX-Accel-Buffering: no\r\n"
+        "x-request-id: %s\r\nConnection: close\r\n", j->suite_request->request_id);
+    if (s->enable_cors) append_cors_headers(&headers);
+    buf_puts(&headers, "\r\n");
+    bool connected = send_all(j->fd, headers.ptr, headers.len);
+    buf_free(&headers);
+    uint64_t seq = 0, revision = 0;
+    suite_progress snapshot = suite_queued_progress();
+    if (connected) connected = suite_stream_event(j, SUITE_EVENT_STARTED, ++seq, &snapshot, NULL);
+    double sent = now_sec();
+    for (;;) {
+        pthread_mutex_lock(&j->mu);
+        bool done = j->done;
+        snapshot = j->suite_request->progress;
+        suite_terminal terminal = j->suite_request->terminal;
+        pthread_mutex_unlock(&j->mu);
+        if (done) {
+            if (connected && terminal.body)
+                (void)suite_stream_event(j, terminal.event, ++seq, &snapshot, &terminal);
+            return;
+        }
+        double now = now_sec();
+        bool changed = snapshot.revision != revision && now - sent >= .1;
+        if (connected && (changed || now - sent >= heartbeat_seconds)) {
+            connected = suite_stream_event(j, changed ? SUITE_EVENT_PROGRESS : SUITE_EVENT_HEARTBEAT,
+                                            ++seq, &snapshot, NULL);
+            revision = snapshot.revision; sent = now;
+        }
+        if (!connected || client_socket_disconnected(j->fd)) {
+            connected = false;
+            server_cancel_job(s, j);
+        }
+        pthread_mutex_lock(&j->mu);
+        if (!j->done) {
+            struct timespec until;
+            clock_gettime(CLOCK_REALTIME, &until); timespec_add_us(&until, 100000);
+            (void)pthread_cond_timedwait(&j->cv, &j->mu, &until);
+        }
+        pthread_mutex_unlock(&j->mu);
+    }
+}
 static bool suite_route(server *s, int fd, http_request *hr) {
-    bool operation = !strcmp(hr->method, "POST") &&
-        (!strcmp(hr->path, "/v1/embeddings") || !strcmp(hr->path, "/v1/images/generations") ||
-         !strcmp(hr->path, "/v1/images/edits") || !strcmp(hr->path, "/v1/files"));
+    static const char model_prefix[] = "/v1/models/";
+    bool post = !strcmp(hr->method, "POST");
+    bool image = post && (!strcmp(hr->path, "/v1/images/generations") ||
+                          !strcmp(hr->path, "/v1/images/edits"));
+    bool operation = image || (post && (!strcmp(hr->path, "/v1/embeddings") ||
+                                       !strcmp(hr->path, "/v1/files")));
     bool file = !strcmp(hr->method, "GET") && !strncmp(hr->path, "/v1/files/", 10);
-    bool model = !strcmp(hr->method, "GET") && !strncmp(hr->path, "/v1/models/", 11) &&
+    bool model = !strcmp(hr->method, "GET") &&
+        !strncmp(hr->path, model_prefix, sizeof(model_prefix) - 1) &&
         (strstr(hr->path, "embeddinggemma") || strstr(hr->path, "Qwen-Image"));
     if (!operation && !file && !model) return false;
     suite_http request = {.method = hr->method, .path = hr->path, .body = hr->body,
         .length = hr->body_len, .key = hr->idempotency_key, .content_type = hr->content_type};
     suite_id(request.request_id, "req-");
-    request.deadline = now_sec() + (s->suite ? s->suite->timeout : 600);
+    request.started = now_sec();
+    request.stream = hr->suite_stream && image;
+    request.progress = suite_queued_progress();
+    request.deadline = request.started + (s->suite ?
+        (image && s->suite->image_timeout ? s->suite->image_timeout : s->suite->timeout) : 600);
     job j = {.fd = fd, .suite_request = &request};
     pthread_mutex_init(&j.mu, NULL); pthread_cond_init(&j.cv, NULL);
-    if (!s->suite) suite_error(s, &j, 503, "model_not_ready", DS4_SUITE_MODEL, "model");
-    else {
-        set_client_socket_nonblocking(fd);
-        if (!enqueue(s, &j)) suite_status_error(s, &j, DS4_STATUS_CANCELLED);
-        else wait_for_job_or_disconnect(s, &j);
+    if (!s->suite) {
+        suite_error(s, &j, 503, "model_not_ready", DS4_SUITE_MODEL, "model");
+        job_complete(&j);
     }
+    else if (model) {
+        buf body = {0};
+        suite_catalog_try_refresh(s);
+        if (suite_catalog_append_model(&s->suite->catalog,
+                                       hr->path + sizeof(model_prefix) - 1, &body))
+            suite_send(s, &j, 200, body.ptr);
+        else
+            suite_error(s, &j, 404, "model_not_found", DS4_SUITE_MODEL, "model");
+        buf_free(&body);
+        job_complete(&j);
+    } else {
+        set_client_socket_nonblocking(fd);
+        if (!enqueue(s, &j)) {
+            suite_status_error(s, &j, DS4_STATUS_CANCELLED); job_complete(&j);
+        } else if (!request.stream) wait_for_job_or_disconnect(s, &j);
+    }
+    if (request.stream) suite_stream_wait(s, &j, SUITE_PROGRESS_HEARTBEAT_SECONDS);
+    free(request.terminal.body);
     pthread_cond_destroy(&j.cv); pthread_mutex_destroy(&j.mu);
     return true;
 }

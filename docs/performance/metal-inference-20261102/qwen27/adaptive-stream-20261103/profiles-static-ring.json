@@ -1,0 +1,78 @@
+[
+  {
+    "name": "before-profile-admitted",
+    "command_buffers": 2481,
+    "encoders": 4878,
+    "command_gpu_span_ms": 5295.909483,
+    "encoder_gpu_ms": 4775.99414000001,
+    "io": null,
+    "csv": {
+      "ctx_tokens": "64",
+      "prefill_tokens": "64",
+      "prefill_tps": "14.472991",
+      "gen_tokens": "4",
+      "gen_tps": "0.548800",
+      "gen_first_ms": "1840.755000",
+      "gen_steady_tokens": "3",
+      "gen_steady_tps": "0.550711",
+      "kvcache_bytes": "0"
+    }
+  },
+  {
+    "name": "p21-profile-target-after",
+    "command_buffers": 326,
+    "encoders": 4878,
+    "command_gpu_span_ms": 4472.118835,
+    "encoder_gpu_ms": 4420.493469999992,
+    "io": "logical_bytes=53627760944 diskio_valid=1 diskio_read_bytes=53630402560 owned_final=1561807016 decode_seconds=4.423642",
+    "csv": {
+      "ctx_tokens": "64",
+      "prefill_tokens": "64",
+      "prefill_tps": "16.888972",
+      "gen_tokens": "4",
+      "gen_tps": "0.904232",
+      "gen_first_ms": "1129.418000",
+      "gen_steady_tokens": "3",
+      "gen_steady_tps": "0.910726",
+      "kvcache_bytes": "0"
+    }
+  },
+  {
+    "name": "p21-profile-mtp4-before",
+    "command_buffers": 2580,
+    "encoders": 5997,
+    "command_gpu_span_ms": 6510.264899,
+    "encoder_gpu_ms": 5850.468139999991,
+    "io": "logical_bytes=53542419632 diskio_valid=1 diskio_read_bytes=53561049088 owned_final=1547547392 decode_seconds=8.284439",
+    "csv": {
+      "ctx_tokens": "64",
+      "prefill_tokens": "64",
+      "prefill_tps": "13.282586",
+      "gen_tokens": "16",
+      "gen_tps": "1.931332",
+      "gen_first_ms": "2149.298000",
+      "gen_steady_tokens": "12",
+      "gen_steady_tps": "1.955998",
+      "kvcache_bytes": "0"
+    }
+  },
+  {
+    "name": "p21-profile-mtp4-after",
+    "command_buffers": 425,
+    "encoders": 5997,
+    "command_gpu_span_ms": 5151.820158,
+    "encoder_gpu_ms": 5034.686539999998,
+    "io": "logical_bytes=53627780744 diskio_valid=1 diskio_read_bytes=53632745472 owned_final=1561826816 decode_seconds=4.971534",
+    "csv": {
+      "ctx_tokens": "64",
+      "prefill_tokens": "64",
+      "prefill_tps": "16.039063",
+      "gen_tokens": "16",
+      "gen_tps": "3.218323",
+      "gen_first_ms": "1339.918000",
+      "gen_steady_tokens": "12",
+      "gen_steady_tps": "3.304472",
+      "kvcache_bytes": "0"
+    }
+  }
+]

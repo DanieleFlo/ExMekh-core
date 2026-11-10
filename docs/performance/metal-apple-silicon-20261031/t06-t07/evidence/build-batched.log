@@ -1,0 +1,21 @@
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen35_metal_graph tests/test_qwen35_metal_graph.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4.o ds4.c
+In file included from tests/test_qwen35_metal_graph.c:4:
+tests/../ds4.c:59348:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59348 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+tests/../ds4.c:59653:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59653 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+ds4.c:59348:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59348 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+ds4.c:59653:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59653 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+2 warnings generated.
+2 warnings generated.
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/probe_qwen_metal_stream tests/probe_qwen_metal_stream.c ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math -DDS4_PROBE_SUITE -I. -o tests/probe_qwen_metal_suite tests/probe_qwen_metal_stream.c ds4.o ds4_bundle.o ds4_checkpoint.o ds4_distributed.o ds4_embedding_gemma2.o ds4_engram.o ds4_executor.o ds4_gemma_audio.o ds4_gemma_media.o ds4_gemma_tokenizer.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_image.o ds4_layer_pack.o ds4_media.o ds4_media_av.o ds4_metal.o ds4_numeric.o ds4_numeric_metal.o ds4_numeric_weights.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_observer.o ds4_qwen_image_pipeline.o ds4_qwen_image_reference.o ds4_qwen_image_rgba.o ds4_qwen_image_tokenizer.o ds4_qwen_image_vae.o ds4_resources.o ds4_runtime.o ds4_ssd.o ds4_tp.o ds4_transfer.o ds4_unicode_nfc.o ds4_weight_cache.o -lm -pthread -framework Foundation -framework Metal -framework MetalPerformanceShaders -Lbuild/suite-media/lib -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/suite-media/lib
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-server ds4_server.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -o ds4-server-suite ds4_server_suite.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o ds4_gemma_audio.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_weight_cache.o ds4_transfer.o ds4_numeric_metal.o -lm -pthread -framework Foundation -framework Metal -framework MetalPerformanceShaders -Lbuild/suite-media/lib -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/suite-media/lib 

@@ -1,0 +1,51 @@
+{
+  "status": "NOT_VERIFIED",
+  "command": [
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4-server-suite",
+    "--metal",
+    "-m",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-Flash-Next-Q2.gguf",
+    "--ssd-streaming",
+    "--ssd-streaming-cold",
+    "--ssd-streaming-cache-experts",
+    "2GB",
+    "--ctx",
+    "8192",
+    "--prefill-chunk",
+    "64",
+    "--no-mtp",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18080",
+    "--kv-disk-dir",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-http-embedding-vision/kv",
+    "--suite-config",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-http-embedding-vision/suite-config.json",
+    "--vision",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf"
+  ],
+  "client_command": [
+    "agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "-s",
+    "tests/test_suite_embedding_tools_e2e.py::EmbeddingToolsE2E::test_07_llm_ranking_embedding_llm_retains_conversation"
+  ],
+  "reason": "Bounded real native HTTP/ExMekh composite; image operations retain a 300s deadline, serial models",
+  "timeout_seconds": 600.0,
+  "samples": [],
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "executables_sha256": {
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4-server-suite": "3368dedb7b7e2b698a8908f1748cc9b03b08083e54e07de36b897dde45a852f0"
+  },
+  "suite_config_sha256": "f85fd47d9ae8ab6712bf6601081eaf2f4e27eec3829e493d1c65f60ed157107b",
+  "prepared_suite_config_sha256": "c1cc658083bcff76bf1a2548fd1bd76825f9f767f5602da34ddf44f06347e4ce",
+  "error": "server readiness deadline",
+  "elapsed_seconds": 35.09651958399991,
+  "log_sha256": {
+    "server.log": "fe86906a694593fc5e6a8cf846172080d9a5fa9b064c1c5b03351e8a731ba684",
+    "client.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

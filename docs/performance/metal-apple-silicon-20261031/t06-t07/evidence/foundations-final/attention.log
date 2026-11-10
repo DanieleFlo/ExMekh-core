@@ -1,0 +1,6 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal model views created in 0.013 ms, residency requested in 0.080 ms, warmup 2.666 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+PASS mRoPE: text bit-exact; CPU float64 Q max_abs=1.37823851e-06 K max_abs=1.34660461e-06 attention max_abs=3.44888965e-07; MTP cache bit-exact

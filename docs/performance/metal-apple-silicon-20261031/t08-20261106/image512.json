@@ -1,0 +1,179 @@
+{
+  "cases": [
+    {
+      "id": "alpha-512",
+      "width": 512,
+      "height": 512,
+      "seed": 20261021,
+      "references": [],
+      "fixture_sha256": "bd5f7eb548ffd8ba2768f09da4d5ccdf657af948cd0799f12533e2cee9b53a80",
+      "conditioning": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "verdict": "PASS"
+      },
+      "references_encoded": null,
+      "latents": [
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0009527430183901462,
+          "relative_l2": 0.0009701318643225734,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0012749821591359074,
+          "relative_l2": 0.001327608617233849,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.0015203346422981918,
+          "relative_l2": 0.0016219811969321984,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.0017291011601487552,
+          "relative_l2": 0.0018930894884652968,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.0020569882315098842,
+          "relative_l2": 0.002335509122962608,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.002708217940275982,
+          "relative_l2": 0.003257079522199703,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0390625,
+          "rmse": 0.004878994909007238,
+          "relative_l2": 0.005167514865288297,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.1328125,
+          "rmse": 0.01035862861968833,
+          "relative_l2": 0.007217925989377099,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.142333984375,
+        "rmse": 0.005003053451903715,
+        "relative_l2": 0.008807135411122644,
+        "bit_exact": false,
+        "ssim_rgb": 0.9971658132892824,
+        "alpha_mae": 0.00043903191908611916
+      },
+      "runtime": {
+        "width": 512,
+        "height": 512,
+        "references": 0,
+        "seed": 20261021,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 224.86414,
+        "prepare_seconds": 9.4e-05,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          0.0,
+          14.404912,
+          169.408751,
+          41.050337
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 11194616832,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 11665260512,
+        "plan_host": 7421984,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 56190244728,
+        "d2h_bytes": 4521984,
+        "weight_groups": [
+          {
+            "limit": 11458305696,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 7,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 10993483744,
+            "loads": 96,
+            "hits": 2259,
+            "evictions": 71,
+            "payload_h2d": 41711361536
+          },
+          {
+            "limit": 675480832,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ],
+        "prompt_sha256": "1e56969b3e79b06fdb50a1bb2ec5ae278798566cdb3759797f4ddbdde5ee2bb8",
+        "noise_sha256": "fe534b968a268d74ec2acf9dc4bc1bcf8ea4d5ad72ab615d52f03a8e80ad45e0",
+        "reference_metadata": [],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "PASS"
+    }
+  ],
+  "verdict": "PASS",
+  "oracle_devices": {
+    "encoder": "cpu",
+    "encode": "mps",
+    "dit": "mps",
+    "decode": "mps"
+  },
+  "full_t00_corpus": false,
+  "excluded": [],
+  "human_task_review": "NOT_VERIFIED",
+  "tolerance_sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+}

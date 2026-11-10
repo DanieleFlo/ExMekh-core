@@ -1,0 +1,61 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "tools/diagnose_qwen_image_encoder.py",
+    "--model",
+    "build/metal-models/Qwen/Qwen-Image-2.1-Turbo/text_encoder/model.safetensors",
+    "--oracle",
+    "build/metal-qualification/t06-t07-20261031/image-text/encoder-cpu-trace/text",
+    "--layer",
+    "8",
+    "--backend",
+    "metal",
+    "--device",
+    "cpu",
+    "--numeric-library",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-softmax-sleef/libnumeric.so"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Identical Qwen layer8 operands with pinned ATen/SLEEF FP32 exp and four-stream softmax; unchanged criteria.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.060161458000948,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 10113.125784,
+      "pressure": 1,
+      "host_available_bytes": 11199873024,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 10114.143144791,
+      "pressure": 1,
+      "host_available_bytes": 10967760896,
+      "swap_bytes": 262144,
+      "footprint_bytes": 156959368,
+      "resident_bytes": 206962688
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/diagnose_qwen_image_encoder.py": "8a311ecc0f6a535deceadde5e9d514724cf085b05ee914fb328708b1348d8dc7",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-softmax-sleef/libnumeric.so": "de27c4566004b6ec66cc637390391a97df11a93e19ea28d1b0e17d6fc29105d0"
+  },
+  "log_sha256": "ce6ffaa0054a98c77169dbb390db8ffc112040a5a36a49950820336db8d13dfa"
+}

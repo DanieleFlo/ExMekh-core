@@ -1,0 +1,320 @@
+{
+  "date": "2026-10-29",
+  "source_base": "5fc8229592923c7b30f2b63acbb9453a8a5e45a4",
+  "scope": "Pending Metal continuation and shared numeric diagnostic callers; related production ownership boundaries reread.",
+  "numerical_kernel_changes": false,
+  "all_clean_code_principles_globally_satisfied": false,
+  "remaining_architecture_debt": [
+    "Large ds4.c/ds4_server.c modules with shared legacy state.",
+    "Global Metal runtime and serial Flash stream cache.",
+    "Whole-model/cross-backend oracles required before migrating those boundaries."
+  ],
+  "sources": {
+    "tests/suite_accelerator.h": {
+      "sha256": "480cb010d9e6afa865e60c8f31d1b957df59a4c96f1cffd086df1841f9edb6c9",
+      "bytes": 1817
+    },
+    "tests/test_suite_accelerator.c": {
+      "sha256": "923fddc95a673a92b9a9974b9f23ae977cb40eb74816d40e2ae45f9f6b6097f1",
+      "bytes": 4082
+    },
+    "tests/suite_numeric_api.py": {
+      "sha256": "d49c2a20091709205754f12ee0114ebac8f377ffaa4b92dd97a33bfcca5b3307",
+      "bytes": 11686
+    },
+    "tests/test_suite_numeric_api.py": {
+      "sha256": "a1441c6768245b4888ceb9aca8ae7334d39aed1b50695a57f40d398a6d0b871b",
+      "bytes": 4315
+    },
+    "tests/test_suite_numeric.py": {
+      "sha256": "4cd68f9dc76b460c20f1eaeac26c781bfffd8388e5e10890d6ee079284d1b60d",
+      "bytes": 42189
+    },
+    "tools/diagnose_gemma_metal_bf16.py": {
+      "sha256": "367de5d591dcafbcc561218a33c4597067d8aea3c9d2a9af51823801200fe90d",
+      "bytes": 10963
+    },
+    "tests/test_gemma_bf16_diagnostic.py": {
+      "sha256": "a89f881e00c74c3091903bf19813f4c1778d3738614f32c5d805c0559a7fa2fb",
+      "bytes": 3619
+    },
+    "tools/bench_suite_numeric.py": {
+      "sha256": "171f6163b747b49b6bf7a9b6691d83c698d80e6e4461a2794f9b60c8442a650f",
+      "bytes": 9339
+    },
+    "tools/diagnose_qwen_image_encoder.py": {
+      "sha256": "02042c29caf9e7e4fffd9b64eaa6adbca607de702af3dbad4e338fd4f9cba6b3",
+      "bytes": 8184
+    },
+    "tools/diagnose_qwen_image_vision.py": {
+      "sha256": "abc994e1d4f88cc928a1695939026c086bb5bcfadec98e5b7077beacc26ede1b",
+      "bytes": 8523
+    },
+    "Makefile": {
+      "sha256": "23453d042fe79d83d046c91a357dfccada0cd8a502739fe4d14f30d3fae54662",
+      "bytes": 87306
+    },
+    ".gitignore": {
+      "sha256": "1524227a2bbdf047b91ba3f0a56c67bb04031b15a63b2eaed7ba190b2d89d0b8",
+      "bytes": 3970
+    }
+  },
+  "tests": [
+    {
+      "command": "make -j2 all ds4-server-suite tests/libds4_numeric_metal.so tests/libds4_numeric_cpu.so tests/probe_native_suite tests/probe_gemma_visual tests/probe_qwen_image_pipeline test-suite-accelerator test-numeric-lifetime test-resources test-transfer",
+      "status": "PASS",
+      "log": "cleanup-build-host.log"
+    },
+    {
+      "command": "make test-suite-numeric SUITE_PYTHON=build/metal-venv/bin/python",
+      "status": "PASS",
+      "tests": 37,
+      "skips": 5,
+      "log": "cleanup-numeric-cpu-final.log"
+    },
+    {
+      "command": "make test-suite-numeric-metal SUITE_PYTHON=build/metal-venv/bin/python",
+      "status": "PASS",
+      "tests": 37,
+      "skips": 3,
+      "log": "cleanup-numeric-metal.log"
+    },
+    {
+      "command": "make test-qwen35-metal test-qwen4-metal-stream test-flash-metal-lifecycle",
+      "status": "PASS",
+      "log": "cleanup-metal-regressions.log"
+    },
+    {
+      "command": "DS4_SUITE_CPU_LIBRARY=tests/libds4_suite_metal.so build/metal-venv/bin/python -m unittest tests.test_qwen_image_reference tests.test_suite_contracts tests.test_suite_baseline_manifests -v",
+      "status": "PASS",
+      "tests": 13,
+      "log": "cleanup-contracts-reference.log"
+    },
+    {
+      "command": "cc -O2 -std=c11 -Wall -Wextra -Werror -U__APPLE__ -I. -o build/metal-qualification/cleanup-review/test-suite-accelerator-cuda-contract tests/test_suite_accelerator.c; run resulting fixture",
+      "status": "PASS",
+      "evidence_class": "host fake CUDA API, no CUDA hardware",
+      "log": "cleanup-factory-cuda-host.log"
+    },
+    {
+      "command": "cc -O2 -std=c11 -Wall -Wextra -Werror -I. -o build/metal-qualification/cleanup-review/test-suite-accelerator-metal-contract tests/test_suite_accelerator.c; run resulting fixture",
+      "status": "PASS",
+      "evidence_class": "host fake Metal factory, no GPU",
+      "log": "cleanup-factory-metal-host.log"
+    },
+    {
+      "command": "make docs-check",
+      "status": "PASS",
+      "tests": 10,
+      "log": "cleanup-docs.log"
+    },
+    {
+      "command": "ruff check changed Python files",
+      "status": "PASS",
+      "log": "cleanup-lint.log"
+    },
+    {
+      "command": "--help on three migrated CUDA diagnostics/benchmark",
+      "status": "PASS",
+      "evidence_class": "CLI/import validation only"
+    }
+  ],
+  "model_replay": {
+    "gemma_native_command": [
+      "DS4_GEMMA_REPEATS=2",
+      "DS4_SUITE_FAULTS=1",
+      "./tests/probe_native_suite",
+      "build/metal-models/gemma.ds4b/bundle.ds4b",
+      "build/metal-models",
+      "build/metal-models/gemma.ds4g",
+      "gemma",
+      "build/metal-qualification/cleanup-review/gemma-live",
+      "Il gatto dorme.",
+      "A cat is sleeping."
+    ],
+    "status": "PASS",
+    "comparison": [
+      {
+        "baseline": "build/metal-qualification/bf16-replay-reserve-final-20261029",
+        "reviewed": "build/metal-qualification/cleanup-review/replay",
+        "pattern": "*.npy",
+        "files": 16,
+        "bit_exact": true
+      },
+      {
+        "baseline": "build/metal-qualification/bf16-live-final-20261029",
+        "reviewed": "build/metal-qualification/cleanup-review/gemma-live",
+        "pattern": "*.bf16",
+        "files": 70,
+        "bit_exact": true
+      },
+      {
+        "baseline": "build/metal-qualification/bf16-live-final-20261029",
+        "reviewed": "build/metal-qualification/cleanup-review/gemma-live",
+        "pattern": "vectors*.f32",
+        "files": 2,
+        "bit_exact": true
+      }
+    ],
+    "isolated_ple_replay": "PASS",
+    "strict_ple_gate": "FAIL_UNCHANGED",
+    "peak_numeric_bytes": 38363136,
+    "live_numeric_bytes": 0
+  },
+  "attempts": [
+    {
+      "log": "cleanup-numeric-metal-first.log",
+      "status": "FAIL_TEST_EXPECTATION",
+      "reason": "New NOMEM fixture initially expected code 3; corrected to the C enum NOMEM=6 using named Status. No tolerance/algorithm changes."
+    },
+    {
+      "log": "cleanup-docs-first.log",
+      "status": "FAIL_PENDING_EVIDENCE_LINK",
+      "reason": "The review document was generated before cleanup-review.json existed; rerun after writing the evidence packet passes all 10 tests."
+    }
+  ],
+  "limits": [
+    "Aggregated make test not rerun; known full-model admission failures are not a full-suite PASS.",
+    "No image pipeline rerun during this refactor. Existing RGBA evidence remains separate.",
+    "CUDA host unavailable as previously confirmed; real CUDA/ROCm, distributed inference, full LLM and ExMekh frontend not qualified."
+  ],
+  "evidence": {
+    "cleanup-factory-metal-host.log": {
+      "sha256": "78a9dace6c816376e66c16e883b6f0da876e9f65c521c982078bf34062b7176c",
+      "bytes": 42
+    },
+    "cleanup-output-comparison.json": {
+      "sha256": "b92fd9c37ac2ea37561d59ea8066721840196d689df9eb4d079eeb79137bac73",
+      "bytes": 655
+    },
+    "cleanup-final-probes-build.log": {
+      "sha256": "c0d4eb0b496512312fa6cfb9b3aafe32e67d1706dfbae509ad7503a42cb99173",
+      "bytes": 2964
+    },
+    "cleanup-vision-help.log": {
+      "sha256": "b3a7b17e7423f98808dbb03e9acba2ebfa42aed86292783109dc222a757b5d17",
+      "bytes": 389
+    },
+    "cleanup-docs.log": {
+      "sha256": "f96d1aea9085583c9fe978466d58ee0506de6e4afabfed44eb6e2817cbd41251",
+      "bytes": 1808
+    },
+    "cleanup-docs-first.log": {
+      "sha256": "cf0afaa438dc9787bb3b32f6dd55ded634dc81253373c149e87cdfbba272ba69",
+      "bytes": 2693
+    },
+    "cleanup-numeric-cpu-final.log": {
+      "sha256": "0632407674b83640b8c9597a48ef6d160115f0af72a2e3f42eb084b00af98270",
+      "bytes": 4901
+    },
+    "cleanup-metal-regressions.log": {
+      "sha256": "64f56a9daf2c009c8dbe4b9a3d6f784bfb018e89db1823cd4cc7f39afff208b1",
+      "bytes": 19820
+    },
+    "cleanup-diagnosis.json": {
+      "sha256": "660be3db5fff111b07ee706c62fe9a77e294848ad49b1510be0564275b01a204",
+      "bytes": 17710
+    },
+    "cleanup-lint.log": {
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "bytes": 19
+    },
+    "cleanup-numeric-metal-first.log": {
+      "sha256": "39df6138a71c85c28eb509b3b8bf9f64851eccdf50f80c0e0e29ffb6c640b10c",
+      "bytes": 5727
+    },
+    "cleanup-numeric-metal.log": {
+      "sha256": "62cd04e6d22cf05e8c7d7c14df8cb951c55627ef1f44a5c4faddf9453e17742d",
+      "bytes": 4866
+    },
+    "cleanup-gemma-live.log": {
+      "sha256": "7be1ab3ab2aceebab666ccfd7f57980b27bbf34598422ac22fcf66e6500f8c57",
+      "bytes": 22
+    },
+    "cleanup-bench-help.log": {
+      "sha256": "6cd8360ac7cf22fee95323afc04e513b0077ae5291dafe325e37bb1920a61439",
+      "bytes": 420
+    },
+    "cleanup-replay.log": {
+      "sha256": "44f3954ad116aebf6dc78e183a027435ea998783b5b58b4867f9f74066aa3bff",
+      "bytes": 117
+    },
+    "cleanup-encoder-help.log": {
+      "sha256": "3d99b4650113ab329d8c8b8a3a6e70d00aca3ba67122b3dce8db54cba55cf0bf",
+      "bytes": 343
+    },
+    "cleanup-factory-cuda-host.log": {
+      "sha256": "78a9dace6c816376e66c16e883b6f0da876e9f65c521c982078bf34062b7176c",
+      "bytes": 42
+    },
+    "cleanup-factory.log": {
+      "sha256": "8c168dbc19200db965d939caba4a5be62e45fa16a120bf1abde300990aaa4756",
+      "bytes": 208
+    },
+    "cleanup-build-host.log": {
+      "sha256": "f8e730aca5343b7442d4935f892d1f2a0d7714ce1314c318af2c5d669c0990d2",
+      "bytes": 3579
+    },
+    "cleanup-contracts-reference.log": {
+      "sha256": "4d337bae4eefa848951acecd34c868d03d138b4f6eb36f7f5872874b54aaadc0",
+      "bytes": 1536
+    }
+  },
+  "reviewed_code_commits": [
+    "9c56fcf36396c66b2e97a5c32e0ff7ac590c2dd2",
+    "3a8bf8bccf59552090cf0a5406ed8850864eecfb",
+    "def8f8be1b23a9cf9aa1dd02028b858a700f9ffc"
+  ],
+  "binaries": {
+    "tests/libds4_numeric_cpu.so": {
+      "sha256": "389ef2d94dad497ecb2e50d14d463092dc700fa8de68d60d90bd3a2fd498fffd",
+      "bytes": 95704
+    },
+    "tests/libds4_numeric_metal.so": {
+      "sha256": "35a7643cdaa186810b534ebd2575f7cca9d85227bbd48d39bac7392a43fe4133",
+      "bytes": 139608
+    },
+    "tests/probe_native_suite": {
+      "sha256": "ef98f41312403271deb17df9c7f0b82a9a80af1bb0819c437ae62065c560e624",
+      "bytes": 550192
+    },
+    "tests/probe_gemma_visual": {
+      "sha256": "0663d45500eb6b2187fc321575d1371618f6d8a2d1e83b591ca90be3cdeeecd6",
+      "bytes": 571744
+    },
+    "tests/probe_qwen_image_pipeline": {
+      "sha256": "41b8ab8c358ec6422a7e18eb60dbb8b37c4a9000defe2797b2653b5ae2481b54",
+      "bytes": 570680
+    },
+    "tests/test_suite_accelerator": {
+      "sha256": "3318e4b9093b140107d19a7c0a69bee5304a9a804c23eb89c66999a33970dab9",
+      "bytes": 36136
+    }
+  },
+  "production_sources_unchanged": {
+    "ds4_numeric.c": {
+      "sha256": "94fd694d7dc0094d518cad46ef7ff00b126c1e521297786c038da8428a1aa048",
+      "bytes": 40500
+    },
+    "ds4_numeric_metal.m": {
+      "sha256": "f4454ccbd2603bea73a5ace65e66a0268c3d138aa335de09aaf334b06cf35152",
+      "bytes": 26490
+    },
+    "metal/numeric.metal": {
+      "sha256": "749d50cca4ef4be053ae6f027ab8a4906e763d24f7f670bdd2a4b36f64898e30",
+      "bytes": 15726
+    },
+    "ds4_resources.c": {
+      "sha256": "e937372761792117caad5e718c55d26ed4341e3564ecaeb42fcafe0745e1aa77",
+      "bytes": 22248
+    },
+    "ds4_qwen4_metal_stream.inc": {
+      "sha256": "a2d7c5a8929d021d3488233029bcab7b35e5c51a0cc6c1ad4f6457548e4615ae",
+      "bytes": 8327
+    },
+    "ds4_metal_memory.h": {
+      "sha256": "4b9520c3f9bdb83bf337003e29d4297970fd7995cdd9d01f24f35dcad23c0147",
+      "bytes": 882
+    }
+  }
+}

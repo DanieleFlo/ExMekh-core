@@ -1,0 +1,71 @@
+{
+  "date": "2026-11-02",
+  "scope": "Offline review only; no real GGUF, live client or full model started",
+  "provider_and_launcher": {
+    "command": [
+      "agent/.venv/bin/python",
+      "-m",
+      "unittest",
+      "tests.test_qwen_flash_tools",
+      "-q"
+    ],
+    "environment": {
+      "PYTHONPATH": "agent/src"
+    },
+    "passed": 13,
+    "exit_code": 0,
+    "seconds": 0.054,
+    "evidence": "Interactive execution output; real loopback bind tests permitted, server subprocesses mocked"
+  },
+  "product_text": {
+    "command": [
+      "make",
+      "test-product-text"
+    ],
+    "passed": 4,
+    "exit_code": 0
+  },
+  "http_host_fixture": {
+    "command": [
+      "make",
+      "test-suite-http"
+    ],
+    "status": "PASS",
+    "exit_code": 0
+  },
+  "lint": {
+    "tool": "agent/.venv/bin/ruff check",
+    "modified_python_files": 40,
+    "status": "PASS"
+  },
+  "frontend": {
+    "junit": "offline-nov02-frontend.xml",
+    "passed": 85,
+    "live_skipped": 13,
+    "seconds": 8.01
+  },
+  "live_status": "SUSPENDED_BY_USER; existing queues finished naturally; final process audit found no ds4-server, model probe, queue controller or caffeinate process",
+  "kernel_or_numeric_dispatch_changes": false,
+  "committed": false,
+  "offline-nov02-host-oracle-env": {
+    "status": "PASS",
+    "exit_code": 0,
+    "elapsed_seconds": 23.353714666998712,
+    "cleanup_forced": false,
+    "log_sha256": "30a135918e17e238d040f3198a2ee8eeb34031f97987992c9bd7337ad5563532"
+  },
+  "offline-nov02-numeric": {
+    "status": "PASS",
+    "exit_code": 0,
+    "elapsed_seconds": 8.124985041999025,
+    "cleanup_forced": false,
+    "log_sha256": "e846af1e78738744984a92ca97a90ec7299513eca7da55bc50e75af2bded4b5e"
+  },
+  "offline-nov02-native": {
+    "status": "PASS",
+    "exit_code": 0,
+    "elapsed_seconds": 6.100034541996138,
+    "cleanup_forced": false,
+    "log_sha256": "45f105833fa7587094446df77d41771c507a6e27a3eece97516ddcae13b008d7"
+  }
+}

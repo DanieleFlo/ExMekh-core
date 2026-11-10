@@ -1,0 +1,349 @@
+{
+  "status": "FAIL",
+  "command": [
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4-server-suite",
+    "--metal",
+    "-m",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--ssd-streaming",
+    "--ssd-streaming-cold",
+    "--ssd-streaming-cache-experts",
+    "2GB",
+    "--ctx",
+    "8192",
+    "--prefill-chunk",
+    "64",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "18080",
+    "--kv-disk-dir",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-browser-image/kv",
+    "--trace",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-browser-image/trace.log",
+    "--mtp-model",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+    "--mtp-draft",
+    "2",
+    "--suite-config",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-browser-image/suite-config.json",
+    "--vision",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/mmproj-Qwen3.8-27B-F16.gguf"
+  ],
+  "client_command": [
+    "env",
+    "PYTHONPATH=agent/src:agent",
+    "DS4_SUITE_E2E_IMAGE_COUNT=1",
+    "agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-n",
+    "0",
+    "--no-cov",
+    "-q",
+    "-s",
+    "agent/tests/test_native_image_generation_e2e.py::test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui"
+  ],
+  "reason": "Actual browser generation of one native 256px images, registered tool, real vision continuation, previews and reload persistence; LLM tool-start deadline explicitly extended to 480s after observed dense SSD prefill and argument-generation costs; overall process stays 600s, each image 300s",
+  "timeout_seconds": 600.0,
+  "footprint_limit_gib": null,
+  "host_reserve_bytes": 2147483648,
+  "critical_pressure": 4,
+  "mtp": true,
+  "kv_seed": null,
+  "qualification_profile": {
+    "context_tokens": 8192,
+    "prefill_chunk": 64,
+    "ssd_cache_bytes": 2147483648,
+    "reasoning_effort": "none",
+    "vision_tool_start_timeout_seconds": 480
+  },
+  "samples": [
+    {
+      "monotonic": 18771.483699833,
+      "pressure": 1,
+      "host_available_bytes": 14887829504,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 18772.509122291,
+      "pressure": 1,
+      "host_available_bytes": 14732836864,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106791728,
+      "resident_bytes": 100712448
+    },
+    {
+      "monotonic": 18773.525491666,
+      "pressure": 1,
+      "host_available_bytes": 14747615232,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106857264,
+      "resident_bytes": 100777984
+    },
+    {
+      "monotonic": 18774.535321125,
+      "pressure": 1,
+      "host_available_bytes": 14751940608,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106857264,
+      "resident_bytes": 100777984
+    },
+    {
+      "monotonic": 18775.54266175,
+      "pressure": 1,
+      "host_available_bytes": 14746124288,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106857264,
+      "resident_bytes": 100777984
+    },
+    {
+      "monotonic": 18776.551987833,
+      "pressure": 1,
+      "host_available_bytes": 14775615488,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106857264,
+      "resident_bytes": 100777984
+    },
+    {
+      "monotonic": 18777.569616166,
+      "pressure": 1,
+      "host_available_bytes": 14776434688,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106857264,
+      "resident_bytes": 100777984
+    },
+    {
+      "monotonic": 18778.585904583,
+      "pressure": 1,
+      "host_available_bytes": 14765178880,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106857264,
+      "resident_bytes": 100777984
+    },
+    {
+      "monotonic": 18779.602777666,
+      "pressure": 1,
+      "host_available_bytes": 15417786368,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106857264,
+      "resident_bytes": 100777984
+    },
+    {
+      "monotonic": 18780.619299125,
+      "pressure": 1,
+      "host_available_bytes": 16656072704,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106808112,
+      "resident_bytes": 100728832
+    },
+    {
+      "monotonic": 18781.635748458,
+      "pressure": 1,
+      "host_available_bytes": 16842391552,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106808112,
+      "resident_bytes": 100728832
+    },
+    {
+      "monotonic": 18782.653182833,
+      "pressure": 1,
+      "host_available_bytes": 16829792256,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106808112,
+      "resident_bytes": 100728832
+    },
+    {
+      "monotonic": 18783.669433833,
+      "pressure": 1,
+      "host_available_bytes": 16836853760,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 106808112,
+      "resident_bytes": 100728832
+    },
+    {
+      "monotonic": 18784.686430708,
+      "pressure": 1,
+      "host_available_bytes": 15512535040,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1442039608,
+      "resident_bytes": 1435451392
+    },
+    {
+      "monotonic": 18784.695413375,
+      "pressure": 1,
+      "host_available_bytes": 15511355392,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1442039608,
+      "resident_bytes": 1435516928
+    },
+    {
+      "monotonic": 18785.71118425,
+      "pressure": 1,
+      "host_available_bytes": 15370305536,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1442039608,
+      "resident_bytes": 1435516928
+    },
+    {
+      "monotonic": 18786.727615166,
+      "pressure": 1,
+      "host_available_bytes": 15261696000,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1442039608,
+      "resident_bytes": 1435516928
+    },
+    {
+      "monotonic": 18787.734154,
+      "pressure": 1,
+      "host_available_bytes": 14912192512,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1442039608,
+      "resident_bytes": 1435516928
+    },
+    {
+      "monotonic": 18788.744107666,
+      "pressure": 1,
+      "host_available_bytes": 14717091840,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1442039608,
+      "resident_bytes": 1435516928
+    },
+    {
+      "monotonic": 18789.761191958,
+      "pressure": 1,
+      "host_available_bytes": 12693143552,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1896794200,
+      "resident_bytes": 1850195968
+    },
+    {
+      "monotonic": 18790.769088,
+      "pressure": 1,
+      "host_available_bytes": 12295290880,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1686849528,
+      "resident_bytes": 1640136704
+    },
+    {
+      "monotonic": 18791.784489666,
+      "pressure": 1,
+      "host_available_bytes": 12360826880,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1738672168,
+      "resident_bytes": 1678901248
+    },
+    {
+      "monotonic": 18792.801089625,
+      "pressure": 1,
+      "host_available_bytes": 12401016832,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1687357408,
+      "resident_bytes": 1640660992
+    },
+    {
+      "monotonic": 18793.809319875,
+      "pressure": 1,
+      "host_available_bytes": 12409782272,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1695352848,
+      "resident_bytes": 1648623616
+    },
+    {
+      "monotonic": 18794.817513916,
+      "pressure": 1,
+      "host_available_bytes": 12334383104,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1734510608,
+      "resident_bytes": 1677754368
+    },
+    {
+      "monotonic": 18795.833234375,
+      "pressure": 1,
+      "host_available_bytes": 10864328704,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1659897824,
+      "resident_bytes": 1601847296
+    },
+    {
+      "monotonic": 18796.850767916,
+      "pressure": 1,
+      "host_available_bytes": 10653876224,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1728956432,
+      "resident_bytes": 1670873088
+    },
+    {
+      "monotonic": 18797.866859666,
+      "pressure": 1,
+      "host_available_bytes": 10750476288,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1710688296,
+      "resident_bytes": 1652719616
+    },
+    {
+      "monotonic": 18798.884633916,
+      "pressure": 1,
+      "host_available_bytes": 10778787840,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1690060840,
+      "resident_bytes": 1632092160
+    },
+    {
+      "monotonic": 18799.89320975,
+      "pressure": 1,
+      "host_available_bytes": 10629185536,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1791526976,
+      "resident_bytes": 1733541888
+    },
+    {
+      "monotonic": 18800.91085,
+      "pressure": 1,
+      "host_available_bytes": 10758356992,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1731020888,
+      "resident_bytes": 1673019392
+    },
+    {
+      "monotonic": 18801.92797625,
+      "pressure": 1,
+      "host_available_bytes": 9227747328,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 3150416968,
+      "resident_bytes": 3074637824
+    },
+    {
+      "monotonic": 18802.944217083,
+      "pressure": 1,
+      "host_available_bytes": 10699915264,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1678034984,
+      "resident_bytes": 1619935232
+    },
+    {
+      "monotonic": 18803.961631875,
+      "pressure": 1,
+      "host_available_bytes": 10656727040,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 1868810376,
+      "resident_bytes": 1810776064
+    }
+  ],
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "executables_sha256": {
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4-server-suite": "90097e6a7d6ab06febdc858e8af50074ccac0fa5f427fe5bb54e7ac9e8ad5ee4"
+  },
+  "suite_config_sha256": "f85fd47d9ae8ab6712bf6601081eaf2f4e27eec3829e493d1c65f60ed157107b",
+  "prepared_suite_config_sha256": "3eecec00ba70d8ef7312ff8ecae67c09830103dc542b01c824edee269bf40379",
+  "api_model": "Qwen3.8-27B-UD-Q4_K_S",
+  "client_exit_code": 1,
+  "elapsed_seconds": 36.682084707998,
+  "log_sha256": {
+    "server.log": "e95c537a26f3525ba58baf0aa5118c9d8c147de9c28a32dad38f037c9fd6cac1",
+    "client.log": "69a910ce7d71570983e15b4f5c8dfcdaf33acceb32d78eb34ff9b5fd3b8a4b47",
+    "trace.log": "3669c0c5ea89e72a2714bd38e7a0f4d327df10ee72b9526ad1cbb5942b5704db"
+  }
+}

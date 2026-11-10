@@ -1,12 +1,83 @@
 """Metric contract checks; no model checkpoint or GPU required."""
+
+import struct
+import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 
-from qwen4_vision_ref import compare
+from tools.qwen_vision_reference import compare, read_embedding_dump
 
 
 class VisionComparisonTests(unittest.TestCase):
+    def test_empty_and_inconsistent_embeddings_fail_without_reducing_empty_arrays(self):
+        for values, grid in [
+            (np.empty((0, 4)), (0, 1)),
+            (np.ones((2, 4)), (1, 3)),
+            (np.ones((2, 4, 1)), (1, 2)),
+        ]:
+            with self.subTest(shape=values.shape):
+                self.assertFalse(compare(values, values, grid, grid, 0.99)["pass"])
+
+    def test_invalid_threshold_cannot_qualify(self):
+        values = np.ones((2, 4))
+        for threshold in [0, 1.1, float("nan")]:
+            self.assertFalse(compare(values, values, (1, 2), (1, 2), threshold)["pass"])
+
+    def test_dump_rejects_malformed_layout_truncation_and_nonfinite_values(self):
+        good = struct.pack("<4I", 2, 4, 1, 2) + np.ones((2, 4), dtype="<f4").tobytes()
+        bad = [
+            b"short",
+            good[:-1],
+            good + b"x",
+            struct.pack("<4I", 2, 4, 1, 3) + good[16:],
+            struct.pack("<4I", 0, 4, 0, 2),
+            good[:16] + np.full((2, 4), float("nan"), dtype="<f4").tobytes(),
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "embedding.bin"
+            path.write_bytes(good)
+            values, grid = read_embedding_dump(path)
+            self.assertEqual(grid, (1, 2))
+            np.testing.assert_array_equal(values, np.ones((2, 4)))
+            for payload in bad:
+                path.write_bytes(payload)
+                with self.subTest(payload=payload[:16]), self.assertRaises(ValueError):
+                    read_embedding_dump(path)
+
+    @unittest.skipUnless(
+        (Path(__file__).resolve().parents[1] / "tests/test_qwen4_vision").is_file(),
+        "native vision probe is not built",
+    )
+    def test_native_cli_rejects_invalid_budgets_before_opening_files(self):
+        binary = Path(__file__).resolve().parents[1] / "tests/test_qwen4_vision"
+        for limits in [
+            ("bad",),
+            ("64x",),
+            ("-1",),
+            ("0",),
+            ("64", "32"),
+            ("64", "16384"),
+            ("64", "128", "extra"),
+        ]:
+            with (
+                self.subTest(limits=limits),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                result = subprocess.run(
+                    [str(binary), "--patches", "missing.png", "out.bin", *limits],
+                    cwd=directory,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    check=False,
+                )
+                self.assertEqual(result.returncode, 2)
+                self.assertIn("token limits", result.stderr)
+                self.assertFalse((Path(directory) / "out.bin").exists())
+
     def test_grid_mismatch_with_identical_shape_fails(self):
         values = np.ones((6, 4))
         self.assertFalse(compare(values, values, (2, 3), (3, 2), 0.99)["pass"])
@@ -17,7 +88,9 @@ class VisionComparisonTests(unittest.TestCase):
             bad = good.copy()
             bad[0, 0] = value
             for actual, reference in [(bad, good), (good, bad)]:
-                self.assertFalse(compare(actual, reference, (1, 2), (1, 2), 0.99)["pass"])
+                self.assertFalse(
+                    compare(actual, reference, (1, 2), (1, 2), 0.99)["pass"]
+                )
 
     def test_one_bad_token_fails_despite_high_mean(self):
         reference = np.tile([1.0, 0.0], (1000, 1))

@@ -463,14 +463,17 @@ def test_feedback_observers_can_wait_for_an_update_from_another_thread():
 def test_observer_failure_does_not_block_later_feedback():
     feedback = ToolFeedback()
 
+    events = []
+
     def fail(event):
+        feedback.publish(ToolEvent(tool_name="bash", tool_call_id="two"), events.append)
         raise RuntimeError("observer failed")
 
     with pytest.raises(RuntimeError, match="observer failed"):
         feedback.publish(ToolEvent(tool_name="bash", tool_call_id="one"), fail)
-    events = []
-    feedback.publish(ToolEvent(tool_name="bash", tool_call_id="two"), events.append)
-    assert len(events) == 1
+
+    assert [event.tool_call_id for event in events] == ["two"]
+    feedback.wait_for_images(None)
 
 
 def test_failed_approval_does_not_remain_pending():

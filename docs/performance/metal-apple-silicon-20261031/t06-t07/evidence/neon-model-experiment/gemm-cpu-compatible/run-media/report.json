@@ -1,0 +1,110 @@
+{
+  "command": [
+    "env",
+    "DS4_GEMMA_VISUAL_DIMENSIONS=128",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_gemma_visual",
+    "build/metal-models/gemma.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/gemma.ds4g",
+    "build/metal-models/gemma-media.ds4p",
+    "build/metal-qualification/t06-t07-20261031/gemma-media/cases.bin",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/media"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200.0,
+  "base_timeout_seconds": 300.0,
+  "timeout_multiplier": 4,
+  "reason": "Combined candidate: independent full real Gemma image/audio/video/interleaved subset, strict internal boundaries; text81/81 and fullQwen text conditioning are now exact. One full model,2GiBreserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 9.19752683399929,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 12277.49976375,
+      "pressure": 1,
+      "host_available_bytes": 11127685120,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 12278.516050958,
+      "pressure": 1,
+      "host_available_bytes": 11069636608,
+      "swap_bytes": 262144,
+      "footprint_bytes": 34325056,
+      "resident_bytes": 44105728
+    },
+    {
+      "monotonic": 12279.533476458,
+      "pressure": 1,
+      "host_available_bytes": 11018502144,
+      "swap_bytes": 262144,
+      "footprint_bytes": 398492776,
+      "resident_bytes": 634880000
+    },
+    {
+      "monotonic": 12280.543372041,
+      "pressure": 1,
+      "host_available_bytes": 11070570496,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1053526080,
+      "resident_bytes": 1914814464
+    },
+    {
+      "monotonic": 12281.572663208,
+      "pressure": 1,
+      "host_available_bytes": 11072995328,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1053526080,
+      "resident_bytes": 1914814464
+    },
+    {
+      "monotonic": 12282.591663291,
+      "pressure": 1,
+      "host_available_bytes": 11123671040,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1035585600,
+      "resident_bytes": 1903689728
+    },
+    {
+      "monotonic": 12283.608098833,
+      "pressure": 1,
+      "host_available_bytes": 11147526144,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1053968472,
+      "resident_bytes": 1915305984
+    },
+    {
+      "monotonic": 12284.629048041,
+      "pressure": 1,
+      "host_available_bytes": 11163598848,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1053968472,
+      "resident_bytes": 1915305984
+    },
+    {
+      "monotonic": 12285.64952975,
+      "pressure": 1,
+      "host_available_bytes": 11206459392,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1295174080,
+      "resident_bytes": 2442051584
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_gemma_visual": "298347b7f2cffa0e8ea3869a6181df76e65fd7aefab4587220bead44f9673b22"
+  },
+  "log_sha256": "1f45addc92728d3b51accedfaff3fd91ad29073bed37212dfd644c6b22621116"
+}

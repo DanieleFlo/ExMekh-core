@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "date": "2026-11-09",
+  "source_head": "60e94003b97a8ac1d730d6138233a8d0755e005c",
+  "committed": false,
+  "memory_policy": {
+    "host_reserve_bytes": 0,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "source_pins": {
+    "path": "sources.json",
+    "sha256": "e3aed8ac62a380bd70490d29c03a87b717502e24d2a1f94b6a1e648221c55733"
+  },
+  "frozen_native_candidate": {
+    "path": "build/metal-t08-review-20261106/swap-investigation/final-native-source.json",
+    "sha256": "4f916c17255c26bf284136842ffd157330e4bad22ded732e5baa62cac6482409"
+  },
+  "new_resource_failure": {
+    "path": "build/metal-t08-review-20261106/swap-investigation/resume-proof-server/report.json",
+    "sha256": "2caf3e3002fb77d3d5ca25d76c6a7c6a7dfdc64589ef23d75499a93faa4c3253",
+    "status": "FAIL",
+    "elapsed_seconds": 48.36505733300146,
+    "cleanup_forced": [],
+    "server_exit_code": 0,
+    "pressure_max": 4,
+    "swap_growth_bytes": 789976186,
+    "minimum_host_bytes": 2355183616
+  },
+  "resumption": {
+    "status": "PASS",
+    "scope": "bounded3 with one explicit SIGTERM; no continuous50 promotion",
+    "initial": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/resume-proof-v2-server/report.json",
+      "sha256": "a9aa5eb8791c8f211cae4e221e62ce7c2d182fbc91003c62f13a95d9c366af2b",
+      "status": "NOT_VERIFIED",
+      "elapsed_seconds": 177.46961904199998,
+      "cleanup_forced": [],
+      "server_exit_code": 0,
+      "pressure_max": 1,
+      "swap_growth_bytes": 62915,
+      "minimum_host_bytes": 1931689984
+    },
+    "resumed": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/resume-proof-v2-server/attempts/0001/report.json",
+      "sha256": "4371ddaa7258f8169227132c316e7197eca20ac799f1a5842ce9d721a7a2761d",
+      "status": "PASS",
+      "elapsed_seconds": 309.63127258400345,
+      "cleanup_forced": [],
+      "server_exit_code": 0,
+      "pressure_max": 1,
+      "swap_growth_bytes": 398459,
+      "minimum_host_bytes": 2405597184
+    },
+    "journal": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/resume-proof-v2-client/cycles.jsonl",
+      "sha256": "a4ef4151a10845df16ecf6371c76ec84e39f7e520636e84a8265a9133e8a8dcf"
+    },
+    "summary": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/resume-proof-v2-client/summary.json",
+      "sha256": "763dfeb5e955388885e242c28045c993691dc76c345ddb694dad1e586af2dda5"
+    },
+    "stop": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/resume-proof-v2-stop.json",
+      "sha256": "600975df85faa38577280916c7020e8d43b92869500d17949b7f42ca69da2038"
+    },
+    "completed_cycles": 3,
+    "measured_cycles_per_process": [
+      1,
+      2
+    ],
+    "first_png_sha256": "87674a84e77eae2bdfb8f2f6d9dd780421c77f0ada82560aa40c878cdc0e38aa",
+    "first_png_mtime_ns_unchanged": true,
+    "native_owner_idle_identical": true,
+    "reservations_empty": true,
+    "runtime_environment_followup": "Provenance hashing extended after the real proof; journal code unchanged. Final profile override tests PASS."
+  },
+  "model_gates": {
+    "flash": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/validation-floor/flash-gate/report.json",
+      "sha256": "7938f473c81a6265ec2446ae5e700a64c2388d16108d7ba9a338a526f7040c09",
+      "status": "PASS",
+      "elapsed_seconds": 9.197028332993796,
+      "cleanup_forced": false,
+      "server_exit_code": null,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0,
+      "minimum_host_bytes": 12157681664
+    },
+    "qwen27": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/validation-floor/qwen27-gate/report.json",
+      "sha256": "01098df36878bd03df60d7beb902051b12dc53cd1c6b175c24a27f464233803a",
+      "status": "PASS",
+      "elapsed_seconds": 15.277517624999746,
+      "cleanup_forced": false,
+      "server_exit_code": null,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0,
+      "minimum_host_bytes": 4878843904
+    },
+    "image512_release_reload": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/validation-handoff/image512/report.json",
+      "sha256": "4726de5e0c1750a37134fbe68140998491e32f79e6e1b6674e891ef8626d6f72",
+      "status": "PASS",
+      "elapsed_seconds": 415.7335666669969,
+      "cleanup_forced": false,
+      "server_exit_code": null,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0,
+      "minimum_host_bytes": 7663665152
+    },
+    "image_independent": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/validation-handoff/image512/verification.json",
+      "sha256": "0a6497c3f73b466f7c99f1df92baf7757b73af7be1bee4a7bca43d0e73c5c794"
+    },
+    "gemma_media": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/validation-handoff/gemma-media/report.json",
+      "sha256": "0ead1b0a85802b108f593b48a74b523a92dd112dcc9a6f4c12f45db5578851a1",
+      "status": "PASS",
+      "elapsed_seconds": 12.284794582999893,
+      "cleanup_forced": false,
+      "server_exit_code": null,
+      "pressure_max": 1,
+      "swap_growth_bytes": 0,
+      "minimum_host_bytes": 16334307328
+    },
+    "gemma_independent": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/validation-handoff/gemma-media/comparison.json",
+      "sha256": "955444c4e267d3d0e0a2a76bc51c80ee24ce2291420186632d70a885c32d5b3b"
+    }
+  },
+  "checks": {
+    "python95": "PASS (1 expected skip)",
+    "build": "PASS",
+    "native_policy_resources_executor_bundle_numeric_image_budget_http": "PASS",
+    "metal_lifecycle": "PASS qwen27/qwen27-stream/flash",
+    "ruff_diff": "PASS",
+    "setup_failures": "First bundle invocation used system Python without jsonschema; rerun PASS with project venv. First socket unit lacked sandbox permissions; rerun PASS with localhost access.",
+    "logs": [
+      {
+        "path": "build/metal-t08-review-20261106/swap-investigation/resume-python-source-frozen.log",
+        "sha256": "069a715f546e36e880c4d0e79728aaae8a7aee6ab281d14e0952e456f46c56ec"
+      },
+      {
+        "path": "build/metal-t08-review-20261106/swap-investigation/resume-make-all.log",
+        "sha256": "95203913dc313b903ac8836f57bd9ebbff1a5f7e93cfe3131f5dc9afc5f830b1"
+      },
+      {
+        "path": "build/metal-t08-review-20261106/swap-investigation/resume-native-regressions.log",
+        "sha256": "9b748b24662947e28a918054f3a8950baa691e980c96a1ac0ee1a0c683598c3c"
+      },
+      {
+        "path": "build/metal-t08-review-20261106/swap-investigation/resume-native-regressions-venv.log",
+        "sha256": "6cc9a417c1294ad155378a8ee93120f2ef4664debc1772425e1ce73b1e245b71"
+      },
+      {
+        "path": "build/metal-t08-review-20261106/swap-investigation/p-build.log",
+        "sha256": "8236df2233df5253c5a5e84eb3e7e0fcb0afe9f786f803e951930b0cbb60eb70"
+      },
+      {
+        "path": "build/metal-t08-review-20261106/swap-investigation/p-lifecycle.log",
+        "sha256": "72880dde70da5b793897ff2e9c0ed120b13361e97a9225dc8ee66cd364dcc849"
+      },
+      {
+        "path": "build/metal-t08-review-20261106/swap-investigation/p-llm-gates.log",
+        "sha256": "3360acc5bc9c75ebc6b75233b9d657e2c041e8ea974e79aef91f44a7583f0fd9"
+      },
+      {
+        "path": "build/metal-t08-review-20261106/swap-investigation/resume-profile-tests-final.log",
+        "sha256": "9ec24527dd0af41246d073f8f96b60599e630dad1ff12d023de74d370ed76761"
+      }
+    ]
+  },
+  "historical_stress21": {
+    "status": "STOPPED_MANUALLY_NOT_QUALIFIED",
+    "eligible_for_resume": false,
+    "reason": "Different native binary and unversioned harness; no import of old21 into the new qualification."
+  },
+  "full_stress": {
+    "path": "build/metal-t08-review-20261106/swap-investigation/stress-qwen27-final/report.json",
+    "sha256": "5b00d797d0000603897aaea51004a213949fa494f31efeb6405b39ef06038fe9",
+    "status": "PASS",
+    "elapsed_seconds": 6956.335041459002,
+    "cleanup_forced": [],
+    "server_exit_code": 0,
+    "pressure_max": 2,
+    "swap_growth_bytes": 0,
+    "minimum_host_bytes": 1625800704,
+    "summary": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/stress-qwen27-final-client/summary.json",
+      "sha256": "44205c370d3f95f4d39b8acc3846d0e97fa4a2b6b42e96a9392759b394f43d59"
+    },
+    "completed_cycles": 50,
+    "warmup_cycles": 1,
+    "continuous_lifetime": "PASS",
+    "phases": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/stress-qwen27-final/phases.json",
+      "sha256": "30c8e649f72dd2342fc10e32aa81aebf190bbe7dfc604fdf1f53d466c095144c"
+    }
+  },
+  "remaining": [
+    "F08 repeated skill reopening",
+    "Missing frozen T00 Image noise/Gemma full baseline",
+    "Two preexisting Metal sin/cos assertions",
+    "Other hardware/CUDA/distributed coverage"
+  ],
+  "shared_flash_workflow": {
+    "path": "build/metal-t08-review-20261106/swap-investigation/flash-workflow-floor/report.json",
+    "sha256": "0f6e9d7554b3066d99b75f254aa481011dbf3fdf4213716bd89ce941acbc315a",
+    "status": "PASS",
+    "elapsed_seconds": 239.0105764580003,
+    "cleanup_forced": [],
+    "server_exit_code": 0,
+    "pressure_max": 1,
+    "swap_growth_bytes": 0,
+    "minimum_host_bytes": 7892369408,
+    "summary": {
+      "path": "build/metal-t08-review-20261106/swap-investigation/flash-workflow-floor-client/summary.json",
+      "sha256": "33b3726e84ffe6431bdf82e7c32e4c6142905d00ff4a001357f1d94af5048e21"
+    }
+  },
+  "snapshot_note": "Measurements captured the uncommitted tree of 2026-11-09. Integration and post-review limits are recorded separately in review-verification-20261110.json."
+}

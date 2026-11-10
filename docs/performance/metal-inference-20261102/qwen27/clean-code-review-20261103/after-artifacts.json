@@ -1,0 +1,127 @@
+[
+  {
+    "path": "ds4.c",
+    "sha256": "0806d2e639c2d0d471e76c94f8beeee3159917afd0b07bba7b4f0e103bb678d7",
+    "bytes": 4162323
+  },
+  {
+    "path": "ds4_gpu.h",
+    "sha256": "672c46bb5e846fb814a5afd6d2b5e726abaa38e13204d6661372bf28f90a584a",
+    "bytes": 161780
+  },
+  {
+    "path": "ds4_lifecycle.inc",
+    "sha256": "4997b50cfe4617a5028d8dadb0e9cdeb94a1cbad983dce4d79c20079dfed7475",
+    "bytes": 31908
+  },
+  {
+    "path": "ds4_metal.m",
+    "sha256": "e44e1ae456982f5e6f7e47d431b8303beb61185c352035116341ef369a70ba34",
+    "bytes": 2353962
+  },
+  {
+    "path": "ds4_qwen35_metal.inc",
+    "sha256": "e3ee8945c944f504f853c7cc75e8b597926eac9028815fbe4de3ab170896e12a",
+    "bytes": 14751
+  },
+  {
+    "path": "ds4_qwen4_metal_stream.inc",
+    "sha256": "6402ba835d4abc1c93f22883b1b6d1af774bac0605ba792875d1a9781a9d566d",
+    "bytes": 17395
+  },
+  {
+    "path": "metal/qwen35_quants.metal",
+    "sha256": "d2dfc666a8ec2d0f7abf5312fa9c6197a780586935c9d45fb8240f966f2f036f",
+    "bytes": 14437
+  },
+  {
+    "path": "tests/test_qwen35_metal.c",
+    "sha256": "38779767430c8ec718afe3910cf37b5adb469173bf874f818a05b48ade1a1c25",
+    "bytes": 44491
+  },
+  {
+    "path": "tests/test_qwen35_metal_graph.c",
+    "sha256": "0a97152fab60ab5a49b1a61161ad02f11cd33d3f8fd1d00ecc1d69536c8a9b3f",
+    "bytes": 12689
+  },
+  {
+    "path": "tests/probe_qwen_metal_stream.c",
+    "sha256": "25a7ce68d6e63fd561a6c298bd68ebeefc47d3531c52ce0d3f4bf8add2561e22",
+    "bytes": 15825
+  },
+  {
+    "path": "tests/test_file_reader.c",
+    "sha256": "018a77b2ff877683624bac0049d29eaaadd5b662d51f0be62cdb0bea3e8990b7",
+    "bytes": 12264
+  },
+  {
+    "path": "tests/test_qwen_metal_lifecycle.c",
+    "sha256": "6313199cdb6541306577739b8fa820d9d35b6f492d0d3a81f71751fe772658d3",
+    "bytes": 11956
+  },
+  {
+    "path": "ds4-bench",
+    "sha256": "6014de289c8c0701992d90d4df3c6de7f7fa23fc44b2cedce92b3ab769033ae7",
+    "bytes": 2916632
+  },
+  {
+    "path": "ds4",
+    "sha256": "e56f7fdddaca2d24287eff55504388f603ee1cdf10b4294a2d23016742976226",
+    "bytes": 2976512
+  },
+  {
+    "path": "ds4-server",
+    "sha256": "ed473f43d3ea9362ba8e381cadf61acabb89e0f0b66acdfc0b474e6caedb71b9",
+    "bytes": 3554600
+  },
+  {
+    "path": "ds4-eval",
+    "sha256": "7a25d98eb0db6c0843a869440d7a9fe80444ac6bb31286be97cea4a027b271b2",
+    "bytes": 3101960
+  },
+  {
+    "path": "tests/probe_qwen_metal_stream",
+    "sha256": "9554fac76046976605e07c64774b47e8bf9e8d7a3c99bce980b8d18b35d38d2f",
+    "bytes": 2876200
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/review-20261103/bench-after",
+    "sha256": "6d12314b31ce27ba2b8bf039b3f470dbd5c1d1c8ccd81a766476e1f1544c9012",
+    "bytes": 2916744
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/review-20261103/resident-before",
+    "sha256": "05fccee36a72062406265c941787791cfabc10feb1da4e0843310363fd543a05",
+    "bytes": 1006448
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/review-20261103/resident-after",
+    "sha256": "f8e4a5a4382a12b815e3b86797d878df4dfcf4316f464ab24159c11781be95d4",
+    "bytes": 1006512
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/review-20261103/focused-before",
+    "bytes": 1006448,
+    "sha256": "187f79f05d5bb2a59ea9d86487c51a7ffd64038e2eb1fd8b00fefd431956f058"
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/review-20261103/focused-after",
+    "bytes": 1006512,
+    "sha256": "2088f48ee9e4389b6c58448b5c234140a2af1784b0f914756eb73c159b1d058e"
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/review-20261103/resident-gather.c",
+    "bytes": 1539,
+    "sha256": "2dd2101a9502a2b0f1b66f7fda077dd01a81f1d42f2bb8288a267c0c364bdc8e"
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/review-20261103/resident-focused.c",
+    "bytes": 1372,
+    "sha256": "2d703faf057e78384d66ba12c1464e1181ae3a53e897112c5fd8d2ebb9d93fad"
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/review-20261103/run-pairs.py",
+    "bytes": 2251,
+    "sha256": "92a099e3973f659c25b5e634a9d06365a7efc12be51d3f6ad76a3da38519f99b"
+  }
+]

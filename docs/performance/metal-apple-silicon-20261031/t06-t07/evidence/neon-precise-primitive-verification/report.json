@@ -1,0 +1,48 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/verify-neon-numeric.py",
+    "gemm-cpu-precise-rsqrt"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 240.0,
+  "base_timeout_seconds": 60.0,
+  "timeout_multiplier": 4,
+  "reason": "Verifyall30smalllinear/norm/tail/bias/inplacechecks onprecisereciprocalcandidate before fullforward; nosecondmodel,2GiBhostreserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.0517646660000537,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 7995.115271791,
+      "pressure": 1,
+      "host_available_bytes": 11808751616,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 7996.1229275,
+      "pressure": 1,
+      "host_available_bytes": 11501731840,
+      "swap_bytes": 0,
+      "footprint_bytes": 159712072,
+      "resident_bytes": 214122496
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "1571c0834686273f9e381f93a0c7c749f34b147595e535608e26c6278de6dff7"
+}

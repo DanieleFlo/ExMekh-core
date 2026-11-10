@@ -16,7 +16,7 @@ from exmekh_lib.config.native_suite import NATIVE_SUITE
 from exmekh_lib.core.agents.tools.deep_tools import DeepTools
 from exmekh_lib.core.models.client import Client
 from exmekh_lib.core.models.client_request import ClientRequest
-from exmekh_lib.core.models.native_suite import native_suite_context
+from exmekh_lib.core.models.native_suite import NativeSuiteClient, native_suite_context
 from exmekh_lib.core.models.system_message import SystemMessage
 from exmekh_lib.core.models.tool import AttachedToolResult
 from exmekh_lib.core.models.user_message import ImagesUserMessage, UserMessage
@@ -24,9 +24,48 @@ from exmekh_lib.core.web_navigation import ranking
 from exmekh_lib.core.web_navigation.image_discovery import DiscoveredImage
 from exmekh_lib.providers.local import LocalProvider
 from httpx2 import Client as HTTPClient
+from httpx2 import Timeout
+from openai import OpenAI
 from PIL import Image
 
 URL = os.getenv("DS4_SUITE_HTTP_URL")
+
+
+@unittest.skipUnless(URL, "set DS4_SUITE_HTTP_URL for live native image progress")
+class NativeImageProgressE2E(unittest.TestCase):
+    def test_stream_and_idempotent_json_replay(self):
+        model = NATIVE_SUITE.image_model
+        events = []
+        options = {
+            "width": 256,
+            "height": 256,
+            "seed": 17,
+            "idempotency_key": str(uuid.uuid4()),
+        }
+        prompt = "A red square on white."
+        with OpenAI(
+            base_url=URL, api_key="local", max_retries=0, timeout=Timeout(30, connect=5)
+        ) as transport:
+            catalog = transport.get(f"/models/{model}", cast_to=dict)
+            self.assertEqual(catalog["ds4"]["image_progress_version"], 1)
+            suite = NativeSuiteClient(transport)
+            streamed = suite.images(prompt, on_progress=events.append, **options)
+            replayed = suite.images(prompt, **options)
+
+        self.assertGreaterEqual(len(events), 3)
+        self.assertEqual(events[0].type, "operation.started")
+        self.assertEqual(events[-1].type, "operation.completed")
+        self.assertEqual([e.seq for e in events], list(range(1, len(events) + 1)))
+        self.assertEqual({e.operation_id for e in events}, {events[0].operation_id})
+        self.assertTrue(all(e.state == "running" for e in events[:-1]))
+        self.assertTrue(any(e.type == "operation.progress" for e in events[:-1]))
+        fractions = [
+            e.overall_fraction for e in events if e.overall_fraction is not None
+        ]
+        self.assertEqual(fractions, sorted(fractions))
+        self.assertEqual(events[-1].overall_fraction, 1)
+        self.assertEqual(streamed.ds4["request_id"], replayed.ds4["request_id"])
+        self.assertEqual(streamed.data[0].png_bytes(), replayed.data[0].png_bytes())
 
 
 @unittest.skipUnless(URL, "set DS4_SUITE_HTTP_URL for real image tool acceptance")

@@ -26,7 +26,6 @@ from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents.agent_runner import execute_agent_turn_sync
 from exmekh_agent.exmekh_bridge.models import ChatMessage
 from exmekh_agent.exmekh_bridge.providers.ds4_prompt import (
-    apply_ds4_scope,
     render_ds4_qwen_prompt,
 )
 from exmekh_lib.core.models.provider_request import ProviderRequest
@@ -86,21 +85,17 @@ class GreedyProvider(LocalProvider):
         self._capture_directory = capture_directory
         self._thinking = thinking
 
-    def call(self, request):
+    def call(self, request: ProviderRequest):
         if self._capture_directory is not None:
             messages = [message.message_dump() for message in request.get_messages()]
             extra = request.get_extra() or {}
-            if extra.get("agentic"):
-                apply_ds4_scope(messages, extra["agentic"])
             tools = OpenAIResponseToolMapper.map_tools(request.get_tools()) if request.get_tools() else []
             number = len(list(self._capture_directory.glob("request-*.json")))
             write_json(self._capture_directory / f"request-{number}.json", {"messages": messages, "tools": tools, "extra": extra})
             (self._capture_directory / f"request-{number}-prompt.txt").write_text(
                 render_ds4_qwen_prompt(messages, tools, thinking=self._thinking))
-        fixed = ProviderRequest(
-            request.get_messages(), extra=(request.get_extra() or {}) | {"temperature": 0, "seed": 424242},
-            tool_choice=request.get_tool_choice(), tools=request.get_tools(), stream=request.get_streaming(),
-            on_event=request.on_event, reasoning_effort_override=request.get_reasoning_effort_override(),
+        fixed = request.with_extra(
+            (request.get_extra() or {}) | {"temperature": 0, "seed": 424242}
         )
         return super().call(fixed)
 
@@ -297,7 +292,7 @@ def main():
     identity["harness_source_sha256"] = digest(Path(__file__))
     (args.output / "harness-source.py").write_bytes(Path(__file__).read_bytes())
     records = []
-    standard_environment = launcher_environment()
+    standard_environment = launcher_environment(backend="cuda")
     for sample in range(args.repeats):
         order = args.profiles if sample % 2 == 0 else list(reversed(args.profiles))
         for profile in order:

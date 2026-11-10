@@ -1,0 +1,80 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-qwen-vision-block.py",
+    "production"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "One real Qwen vision block with pinned public HF processor and original RGB reference; identify 72-wide attention/casting differences before any new kernel.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 6.2347405000000435,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 18608.131458208,
+      "pressure": 1,
+      "host_available_bytes": 9017753600,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 18609.142041833,
+      "pressure": 1,
+      "host_available_bytes": 8878931968,
+      "swap_bytes": 262144,
+      "footprint_bytes": 161759952,
+      "resident_bytes": 212369408
+    },
+    {
+      "monotonic": 18610.160768375,
+      "pressure": 1,
+      "host_available_bytes": 8778235904,
+      "swap_bytes": 262144,
+      "footprint_bytes": 179749584,
+      "resident_bytes": 230719488
+    },
+    {
+      "monotonic": 18611.179264416,
+      "pressure": 1,
+      "host_available_bytes": 8731639808,
+      "swap_bytes": 262144,
+      "footprint_bytes": 260326168,
+      "resident_bytes": 315179008
+    },
+    {
+      "monotonic": 18612.288644916,
+      "pressure": 1,
+      "host_available_bytes": 7122878464,
+      "swap_bytes": 262144,
+      "footprint_bytes": 401179728,
+      "resident_bytes": 467058688
+    },
+    {
+      "monotonic": 18613.309983125,
+      "pressure": 1,
+      "host_available_bytes": 6389596160,
+      "swap_bytes": 262144,
+      "footprint_bytes": 576406848,
+      "resident_bytes": 625590272
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "232e2a354ae9996479f93b3d747df466158845c2d71c3bed6e2430dfb437fc2c"
+}

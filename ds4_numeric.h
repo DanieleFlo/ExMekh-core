@@ -22,12 +22,25 @@ ds4_status ds4_numeric_cpu(ds4_numeric **, ds4_resources *, uint64_t owner);
  * Use under the caller's serial runtime lease; destruction never resets CUDA.
  */
 ds4_status ds4_numeric_cuda(ds4_numeric **, ds4_resources *, uint64_t owner);
+/* Apple Silicon shared storage; all arithmetic executes on Metal. Configure
+ * the shared resource registry for unified memory before constructing owners. */
+#ifdef __APPLE__
+ds4_status ds4_numeric_metal(ds4_numeric **, ds4_resources *, uint64_t owner);
+ds4_status ds4_numeric_metal_budget(ds4_numeric *, uint64_t margin);
+#endif
 ds4_status ds4_numeric_close(ds4_numeric *);
 ds4_status ds4_numeric_fence(ds4_numeric *);
+/* Refresh backend capacity without changing explicit limits or margins.
+ * Unsupported backends retain their caller-configured resource budgets. */
+ds4_status ds4_numeric_refresh_memory(ds4_numeric *);
 /* Owned tensor storage only; driver/cuBLAS allocations remain in the device
  * sample. Peak includes weights and transient kernel workspace in this context.
  */
 void ds4_numeric_memory(const ds4_numeric *, uint64_t *live, uint64_t *peak);
+/* Additional owned scratch for a BF16 linear. Adapters reserve the largest
+ * sequential call, alongside weights and activations; UINT64_MAX on overflow. */
+uint64_t ds4_numeric_linear_workspace(const ds4_numeric *, uint32_t rows,
+                                       uint32_t in, uint32_t out);
 /* Successful host/device copies through this context, including weight
  * uploads. Excludes device/device backend work and legacy LLM transfers. */
 void ds4_numeric_transfers(const ds4_numeric *, uint64_t *h2d, uint64_t *d2h);
@@ -54,6 +67,11 @@ ds4_status ds4_num_buffer_write(ds4_num_buffer *, uint64_t byte_offset,
  * Ordinary host writes retain their synchronous lifetime contract. */
 ds4_status ds4_num_buffer_stage(ds4_num_buffer *, uint64_t byte_offset,
                                 const void *, uint64_t bytes);
+/* Optional synchronous file→weight storage transport. Borrows the verified
+ * descriptor; UNSUPPORTED means no destination bytes or I/O were touched.
+ * Failed reads leave storage owned but must not publish usable weights. */
+ds4_status ds4_num_buffer_stage_file(ds4_num_buffer *, uint64_t byte_offset,
+                                     int fd, uint64_t file_offset, uint64_t bytes);
 ds4_status ds4_numeric_weights_ready(ds4_numeric *);
 ds4_status ds4_num_write(ds4_numeric *, ds4_num_view, const void *,
                          uint64_t bytes);

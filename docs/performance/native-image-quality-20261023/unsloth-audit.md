@@ -48,8 +48,8 @@ non sono bit-exact e non sostituiscono i 24 latenti esatti del confronto con
 MATH riportato in `source-audit.md`. Il riscontro positivo dell'utente riguarda
 i riferimenti mostrati prima delle due nuove inferenze native.
 
-[Panda nativo](../../../performance-results/image-quality-20261023/source-audit/native-showcase/case-0/result.png),
-[ape nativa](../../../performance-results/image-quality-20261023/source-audit/native-honeybee/case-0/result.png).
+`../../../performance-results/image-quality-20261023/source-audit/native-showcase/case-0/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/native-honeybee/case-0/result.png`.
 
 ## Default del prodotto
 
@@ -101,9 +101,9 @@ richiede e ottiene 16/16 latenti esatti; il problema del primo harness non era
 presente nel percorso nativo di produzione. Il log fallito è conservato con
 provenienza distinta e non costituisce evidenza di un nuovo bug DS4.
 
-[Alpi BF16](../../../performance-results/image-quality-20261023/source-audit/dit-precision/alps-bf16/result.png),
-[Alpi FP16](../../../performance-results/image-quality-20261023/source-audit/dit-precision/alps-fp16/result.png),
-[Alpi FP32](../../../performance-results/image-quality-20261023/source-audit/dit-precision/alps-fp32/result.png),
-[città BF16](../../../performance-results/image-quality-20261023/source-audit/dit-precision/cyberpunk-bf16/result.png),
-[città FP16](../../../performance-results/image-quality-20261023/source-audit/dit-precision/cyberpunk-fp16/result.png),
-[città FP32](../../../performance-results/image-quality-20261023/source-audit/dit-precision/cyberpunk-fp32/result.png).
+`../../../performance-results/image-quality-20261023/source-audit/dit-precision/alps-bf16/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/dit-precision/alps-fp16/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/dit-precision/alps-fp32/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/dit-precision/cyberpunk-bf16/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/dit-precision/cyberpunk-fp16/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/dit-precision/cyberpunk-fp32/result.png`.

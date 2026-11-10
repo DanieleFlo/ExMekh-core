@@ -4,6 +4,26 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 SERVER_PORT="${DS4_SERVER_PORT:-8080}"
 profile="${DS4_MODEL_PROFILE:-qwen27}"
+backend="${DS4_BACKEND:-auto}"
+if [[ "$backend" == auto ]]; then
+    if [[ "$(uname -s)" == Darwin ]]; then backend=metal; else backend=cuda; fi
+fi
+case "$backend" in
+    metal|cuda|cpu) ;;
+    *) echo "Unknown DS4_BACKEND: $backend (use auto, metal, cuda, or cpu)" >&2; exit 2 ;;
+esac
+# Small native defaults fit the qualification profile; explicit capacities win.
+if [[ "$backend" == cuda ]]; then
+    default_mtp=1
+else
+    default_mtp=0
+fi
+mtp="${DS4_MTP:-$default_mtp}"
+case "$mtp" in
+    1) mtp_args=(--mtp) ;;
+    0) mtp_args=(--no-mtp) ;;
+    *) echo "Invalid DS4_MTP: $mtp (use 0 or 1)" >&2; exit 2 ;;
+esac
 cd "$SCRIPT_DIR"
 
 server=ds4-server
@@ -24,43 +44,54 @@ prefill_args=()
 case "$profile" in
     qwen27)
         model="${DS4_MODEL:-gguf/Qwen3.8-27B-UD-Q4_K_S.gguf}"
-        vision_model="${DS4_VISION_MODEL-gguf/mmproj-Qwen3.8-27B-F16.gguf}"
-        context="${DS4_CTX:-22593}"
+        if [[ "$backend" == cuda ]]; then
+            vision_model="${DS4_VISION_MODEL-gguf/mmproj-Qwen3.8-27B-F16.gguf}"
+            context="${DS4_CTX:-22593}"
+        else
+            vision_model="${DS4_VISION_MODEL-}"
+            context="${DS4_CTX:-512}"
+            prefill_args=(--prefill-chunk "${DS4_PREFILL_CHUNK:-64}")
+        fi
         ;;
     flash)
         model="${DS4_MODEL:-gguf/Qwen3.8-Flash-Next-Q2.gguf}"
-        vision_model="${DS4_VISION_MODEL-gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf}"
-        context="${DS4_CTX:-65536}"
-        # Explicit Flash selection opts into the single-device CUDA tiered path.
-        # The engine validates family/backend/topology before activating it.
-        profile_env=(
-            "DS4_CUDA_QWEN4_TIERED_CACHE=${DS4_CUDA_QWEN4_TIERED_CACHE:-1}"
-            "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB=${DS4_CUDA_WEIGHT_CACHE_LIMIT_GB:-auto}"
-            "DS4_CUDA_QWEN4_RAM_CACHE_MB=${DS4_CUDA_QWEN4_RAM_CACHE_MB:-auto}"
-        )
-        flash_runtime="${DS4_FLASH_PROFILE:-standard}"
-        case "$flash_runtime" in
-            standard)
-                prefill_args=(--prefill-chunk "${DS4_PREFILL_CHUNK:-2048}")
-                # GPU arithmetic stays unchanged; expert transfers use a bounded
-                # ring, historical KV explicit copies and a 32K VRAM working set.
-                profile_env+=(
-                    "DS4_CUDA_QWEN4_KV_STREAMING=${DS4_CUDA_QWEN4_KV_STREAMING:-1}"
-                    "DS4_CUDA_QWEN4_KV_RESIDENT=${DS4_CUDA_QWEN4_KV_RESIDENT:-32768}"
-                    "DS4_CUDA_QWEN4_EXPERT_POLICY=${DS4_CUDA_QWEN4_EXPERT_POLICY:-stable}"
-                    "DS4_CUDA_QWEN4_PREFILL_RING=${DS4_CUDA_QWEN4_PREFILL_RING:-1}"
-                    "DS4_CUDA_QWEN4_HYBRID_MOE=${DS4_CUDA_QWEN4_HYBRID_MOE:-1}"
-                    "DS4_CUDA_QWEN4_PCIE_FRAC=${DS4_CUDA_QWEN4_PCIE_FRAC:-1}"
-                    "DS4_CUDA_QWEN4_HYBRID_PREFILL=${DS4_CUDA_QWEN4_HYBRID_PREFILL:-0}"
-                    "DS4_CUDA_QWEN4_DECODE_RANKS=${DS4_CUDA_QWEN4_DECODE_RANKS:-1}"
-                    "DS4_CUDA_QWEN4_DECODE_GRAPHS=${DS4_CUDA_QWEN4_DECODE_GRAPHS:-1}"
-                    "DS4_CUDA_QWEN4_KV_DECODE_BATCH=${DS4_CUDA_QWEN4_KV_DECODE_BATCH:-1}"
-                    "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS=${DS4_CUDA_QWEN4_QSA_REGISTER_KEYS:-1}"
-                )
-                ;;
-            legacy) prefill_args=(--prefill-chunk "${DS4_PREFILL_CHUNK:-256}") ;;
-            *) echo "Unknown DS4_FLASH_PROFILE: $flash_runtime (use standard or legacy)" >&2; exit 2 ;;
-        esac
+        vision_model="${DS4_VISION_MODEL-}"
+        context="${DS4_CTX:-512}"
+        prefill_args=(--prefill-chunk "${DS4_PREFILL_CHUNK:-64}")
+        if [[ "$backend" == cuda ]]; then
+            vision_model="${DS4_VISION_MODEL-gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf}"
+            context="${DS4_CTX:-65536}"
+            # Explicit Flash selection opts into the single-device CUDA tiered path.
+            # The engine validates family/backend/topology before activating it.
+            profile_env=(
+                "DS4_CUDA_QWEN4_TIERED_CACHE=${DS4_CUDA_QWEN4_TIERED_CACHE:-1}"
+                "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB=${DS4_CUDA_WEIGHT_CACHE_LIMIT_GB:-auto}"
+                "DS4_CUDA_QWEN4_RAM_CACHE_MB=${DS4_CUDA_QWEN4_RAM_CACHE_MB:-auto}"
+            )
+            flash_runtime="${DS4_FLASH_PROFILE:-standard}"
+            case "$flash_runtime" in
+                standard)
+                    prefill_args=(--prefill-chunk "${DS4_PREFILL_CHUNK:-2048}")
+                    # GPU arithmetic stays unchanged; expert transfers use a bounded
+                    # ring, historical KV explicit copies and a 32K VRAM working set.
+                    profile_env+=(
+                        "DS4_CUDA_QWEN4_KV_STREAMING=${DS4_CUDA_QWEN4_KV_STREAMING:-1}"
+                        "DS4_CUDA_QWEN4_KV_RESIDENT=${DS4_CUDA_QWEN4_KV_RESIDENT:-32768}"
+                        "DS4_CUDA_QWEN4_EXPERT_POLICY=${DS4_CUDA_QWEN4_EXPERT_POLICY:-stable}"
+                        "DS4_CUDA_QWEN4_PREFILL_RING=${DS4_CUDA_QWEN4_PREFILL_RING:-1}"
+                        "DS4_CUDA_QWEN4_HYBRID_MOE=${DS4_CUDA_QWEN4_HYBRID_MOE:-1}"
+                        "DS4_CUDA_QWEN4_PCIE_FRAC=${DS4_CUDA_QWEN4_PCIE_FRAC:-1}"
+                        "DS4_CUDA_QWEN4_HYBRID_PREFILL=${DS4_CUDA_QWEN4_HYBRID_PREFILL:-0}"
+                        "DS4_CUDA_QWEN4_DECODE_RANKS=${DS4_CUDA_QWEN4_DECODE_RANKS:-1}"
+                        "DS4_CUDA_QWEN4_DECODE_GRAPHS=${DS4_CUDA_QWEN4_DECODE_GRAPHS:-1}"
+                        "DS4_CUDA_QWEN4_KV_DECODE_BATCH=${DS4_CUDA_QWEN4_KV_DECODE_BATCH:-1}"
+                        "DS4_CUDA_QWEN4_QSA_REGISTER_KEYS=${DS4_CUDA_QWEN4_QSA_REGISTER_KEYS:-1}"
+                    )
+                    ;;
+                legacy) prefill_args=(--prefill-chunk "${DS4_PREFILL_CHUNK:-256}") ;;
+                *) echo "Unknown DS4_FLASH_PROFILE: $flash_runtime (use standard or legacy)" >&2; exit 2 ;;
+            esac
+        fi
         ;;
     *) echo "Unknown DS4_MODEL_PROFILE: $profile (use qwen27 or flash)" >&2; exit 2 ;;
 esac
@@ -68,7 +99,7 @@ if [[ "$profile" == qwen27 && -n "${DS4_PREFILL_CHUNK:-}" ]]; then
     prefill_args=(--prefill-chunk "$DS4_PREFILL_CHUNK")
 fi
 vision_args=()
-if [[ -n "$vision_model" && -f "$vision_model" ]]; then
+if [[ -n "$vision_model" && ( -f "$vision_model" || -n "${DS4_VISION_MODEL+x}" ) ]]; then
     vision_args=(--vision "$vision_model")
 fi
 kv_args=()
@@ -76,19 +107,38 @@ kv_dir="${DS4_KV_DISK_DIR-${HOME}/.ds4/server-kv}"
 if [[ -n "$kv_dir" ]]; then
     kv_args=(--kv-disk-dir "$kv_dir" --kv-disk-space-mb "${DS4_KV_DISK_SPACE_MB:-8192}")
 fi
-server_args=(--cuda -m "$model" "${vision_args[@]}" --ctx "$context"
-    "${prefill_args[@]}" --host 0.0.0.0 --mtp --port "$SERVER_PORT" "${kv_args[@]}"
-    "${suite_args[@]}")
+stream_args=()
+case "${DS4_SSD_STREAMING:-0}" in
+    0) ;;
+    1)
+        stream_args=(--ssd-streaming --ssd-streaming-cold)
+        # Metal admission reserves graph/auxiliary memory and 2 GiB before
+        # sizing the cache. Preserve explicit ceilings and CUDA defaults.
+        if [[ -n "${DS4_SSD_CACHE_GB:-}" || "$backend" != metal ]]; then
+            stream_args+=(--ssd-streaming-cache-experts "${DS4_SSD_CACHE_GB:-2}GB")
+        fi
+        ;;
+    *) echo "Invalid DS4_SSD_STREAMING (use 0 or 1)" >&2; exit 2 ;;
+esac
+server_args=("--$backend" -m "$model" ${vision_args[@]+"${vision_args[@]}"} --ctx "$context"
+    ${prefill_args[@]+"${prefill_args[@]}"} --host 0.0.0.0 "${mtp_args[@]}" --port "$SERVER_PORT" ${kv_args[@]+"${kv_args[@]}"}
+    ${suite_args[@]+"${suite_args[@]}"} ${stream_args[@]+"${stream_args[@]}"})
 
 # Review the exact command without building, allocating a context or loading weights.
 if [[ "${1:-}" == --print-command ]]; then
     shift
-    printf '%q ' env "${profile_env[@]}" "./$server" "${server_args[@]}" "$@"
+    printf '%q ' env ${profile_env[@]+"${profile_env[@]}"} "./$server" "${server_args[@]}" "$@"
     printf '\n'
     exit 0
 fi
 [[ -f "$model" ]] || { echo "Model not found: $model" >&2; exit 2; }
+if [[ ${#vision_args[@]} -gt 0 && ! -f "$vision_model" ]]; then
+    echo "Vision model not found: $vision_model" >&2
+    exit 2
+fi
 echo "Checking $server build..."
-make --no-print-directory -j2 "$server" CUDA_ARCH="${CUDA_ARCH:-native}"
+build_args=()
+if [[ "$backend" == cuda ]]; then build_args=(CUDA_ARCH="${CUDA_ARCH:-native}"); fi
+make --no-print-directory -j2 "$server" ${build_args[@]+"${build_args[@]}"}
 echo "Starting $profile on http://0.0.0.0:${SERVER_PORT} (ctx=$context) ..."
-exec env "${profile_env[@]}" "./$server" "${server_args[@]}" "$@"
+exec env ${profile_env[@]+"${profile_env[@]}"} "./$server" "${server_args[@]}" "$@"

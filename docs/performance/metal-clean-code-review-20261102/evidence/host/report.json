@@ -1,0 +1,179 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "-m",
+    "unittest",
+    "tests.test_metal_stream_qualification",
+    "tests.test_qualification_client",
+    "tests.test_suite_pipeline_qualification",
+    "tests.test_suite_offloaded_oracle",
+    "tests.test_suite_contracts",
+    "tests.test_flash_launcher",
+    "tests.test_metal_foundations",
+    "tests.test_metal_vision_qualification",
+    "tests.test_qwen4_vision_ref",
+    "tests.test_product_text_configuration",
+    "-q"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 1,
+  "reason": "Clean-code review: process ownership, client evidence, lazy tensor API; no full models or live tests",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 17.2379494170018,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 52730.818745916,
+      "pressure": 1,
+      "host_available_bytes": 11312971776,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 52731.83230925,
+      "pressure": 1,
+      "host_available_bytes": 12588777472,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 177291960,
+      "resident_bytes": 228605952
+    },
+    {
+      "monotonic": 52732.84067575,
+      "pressure": 1,
+      "host_available_bytes": 12445859840,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 186761912,
+      "resident_bytes": 238206976
+    },
+    {
+      "monotonic": 52733.84981375,
+      "pressure": 1,
+      "host_available_bytes": 11927011328,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 310936464,
+      "resident_bytes": 374702080
+    },
+    {
+      "monotonic": 52734.856550583,
+      "pressure": 1,
+      "host_available_bytes": 11611471872,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326501288,
+      "resident_bytes": 393314304
+    },
+    {
+      "monotonic": 52735.865304291,
+      "pressure": 1,
+      "host_available_bytes": 11494391808,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326501288,
+      "resident_bytes": 393314304
+    },
+    {
+      "monotonic": 52736.8831035,
+      "pressure": 1,
+      "host_available_bytes": 11486003200,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326501288,
+      "resident_bytes": 393314304
+    },
+    {
+      "monotonic": 52737.891183458,
+      "pressure": 1,
+      "host_available_bytes": 11415289856,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326550440,
+      "resident_bytes": 393363456
+    },
+    {
+      "monotonic": 52738.906619041,
+      "pressure": 1,
+      "host_available_bytes": 11384651776,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326648744,
+      "resident_bytes": 393461760
+    },
+    {
+      "monotonic": 52739.923145625,
+      "pressure": 1,
+      "host_available_bytes": 11332190208,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326665128,
+      "resident_bytes": 393478144
+    },
+    {
+      "monotonic": 52740.93292625,
+      "pressure": 1,
+      "host_available_bytes": 11348656128,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326665128,
+      "resident_bytes": 393478144
+    },
+    {
+      "monotonic": 52741.949550291,
+      "pressure": 1,
+      "host_available_bytes": 11328749568,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326681512,
+      "resident_bytes": 393494528
+    },
+    {
+      "monotonic": 52742.95937175,
+      "pressure": 1,
+      "host_available_bytes": 11335008256,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326681512,
+      "resident_bytes": 393494528
+    },
+    {
+      "monotonic": 52743.977151583,
+      "pressure": 1,
+      "host_available_bytes": 11386093568,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326681512,
+      "resident_bytes": 393494528
+    },
+    {
+      "monotonic": 52744.989975,
+      "pressure": 1,
+      "host_available_bytes": 11430952960,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 326681512,
+      "resident_bytes": 393494528
+    },
+    {
+      "monotonic": 52746.005104958,
+      "pressure": 1,
+      "host_available_bytes": 11537334272,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 343852040,
+      "resident_bytes": 415186944
+    },
+    {
+      "monotonic": 52747.022547166,
+      "pressure": 1,
+      "host_available_bytes": 11356749824,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 348537864,
+      "resident_bytes": 420544512
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "3d8e0ed6b36e22f9148c182a94c737770b8a8ba118abd5be67bda3d2f99a4ab4"
+}

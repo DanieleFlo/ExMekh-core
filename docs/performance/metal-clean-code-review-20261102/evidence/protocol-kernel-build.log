@@ -1,0 +1,22 @@
+make: `ds4_server_test' is up to date.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_qwen4_kernels tests/test_qwen4_kernels.o ds4_metal.o ds4_image.o ds4_resources.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -Wno-unused-function -DDS4_NO_GPU -c -o tests/test_server_interactive.o tests/test_server_interactive.c
+In file included from tests/test_server_interactive.c:3:
+tests/../ds4_server.c:31950:30: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 31950 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |                              ^
+       |                             ,
+tests/../ds4_server.c:31950:9: note: place parentheses around the string literal to silence warning
+ 31950 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |         ^
+tests/../ds4_server.c:33118:9: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 33117 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |                                                                       
+       |                                                                       ,
+ 33118 |         "<parameter=command>safe</parameter>",
+       |         ^
+tests/../ds4_server.c:33117:9: note: place parentheses around the string literal to silence warning
+ 33117 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |         ^
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_server_interactive tests/test_server_interactive.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread

@@ -1,0 +1,197 @@
+{
+  "scope": "Apple M5 Pro24GiB, local bounded subsets, source9805acb plus uncommitted changes",
+  "status": "IN_PROGRESS",
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "process_footprint_limit": null,
+    "warning_pressure_allowed": true,
+    "critical_pressure_stop": 4
+  },
+  "milestones": {
+    "T03_local": "PASS",
+    "T04_extended": "IN_PROGRESS",
+    "T05_local": "PASS",
+    "T06_local": "PASS",
+    "T07": "IN_PROGRESS"
+  },
+  "fundamental_functions": [
+    {
+      "id": "F01",
+      "status": "PASS",
+      "scope_and_limits": "Real streamed LLM text, checkpoint/prefix, MTP and matching vision encoders pass both local families; not a cross-device qualification."
+    },
+    {
+      "id": "F02",
+      "status": "PASS",
+      "scope_and_limits": "Local native256/8step generation passes full frozen comparison: CPU encoder/DiT and MPS VAE explicitly recorded; conditioning bit-exact, maxlatentRMSE0.0045133,RGBSSIM0.999323. Original MPS-encoder failures and scalarCPU-VAE interrupted attempt retained; extended image corpus remains separate."
+    },
+    {
+      "id": "F03",
+      "status": "PASS",
+      "scope_and_limits": "Local complete native RGB/RGBA 256px8step cases now PASS against independent CPU encoder/DiT plus explicit MPS VAE: conditioning bit-exact, all encoded references/latents/RGBA within frozen thresholds; full encoder69/69boundaries exact for both. Native PNGs inspected. Extended alpha/preservation corpus remains separate."
+    },
+    {
+      "id": "F04",
+      "status": "PASS",
+      "scope_and_limits": "Local independent CPU text subset: all3strings,128/256/512/768dimensions and every81hiddenBF16boundary pass bit-exact after ordered Metal BF16 integration. Full quality corpus and other devices remain separate."
+    },
+    {
+      "id": "F05",
+      "status": "PASS",
+      "scope_and_limits": "Latest complete local independent CPU subset: all480/480media/probability boundaries bit-exact after Conv/video/audio/channelRMS integration; all original output vectors pass. Image/audio/video/interleaved real encoders; extended corpus remains separate."
+    },
+    {
+      "id": "F06",
+      "status": "PASS",
+      "scope_and_limits": "Bounded local alternation: exact full native payload and full-vocabulary logits across real256px/8step image generation PASS both families; PNG published after restore,8greedy outputs. Both HTTP generation/edit/retry/disconnect selections pass; Flash311.22s, Qwen27 earlier520.7s. Qwen27 one full embedding/image cycle and Flash two full cycles PASS. Extended50cycle stress remains unqualified."
+    },
+    {
+      "id": "F07",
+      "status": "PASS",
+      "scope_and_limits": "Local bounded native3-level checkpoint/return/isolation/cancellation/SSD reload is bit-exact. Real protocol/compaction/nested skill selections: Flash7/7PASS435.83s; Qwen27 first6/7 with plain Responses cache failure, corrected in server owner and independently reverified PASS25.106s. Follow-up exact allowed-name and embedding/ranking/LLM continuation PASS. Extended corpus remains separate."
+    },
+    {
+      "id": "F08",
+      "status": "NOT_VERIFIED",
+      "scope_and_limits": "Native fixtures PASS. Historical Generic failures and interrupted Custom attempts retained. Safe SDK compaction/coding-HDS file-skill fixes verified offline. Latest explicit literal/greedy Custom workflows reached client deadlines: Flash7204.17s/Qwen277201.06s; serverexit0, forced[], no final JUnit. Full create/edit/delete/effect/history assertions are not promoted from partial effects. Remaining live qualification suspended by user on2026-11-02 until a later TPS session."
+    },
+    {
+      "id": "F09",
+      "status": "PASS",
+      "scope_and_limits": "Local final-vector ranking plus actual typed text/visual ranking consumers PASS both families within the bounded corpus. All current Gemma strict internal boundaries now PASS separately. Extended ranking/quality corpus remains unqualified."
+    },
+    {
+      "id": "F10",
+      "status": "PASS",
+      "scope_and_limits": "Both families pass10actual SDK embedding tests plus21subtests, generation/retry/edit/Files checksums/cache/disconnect and typed previews. Qwen27 registered image-tool conversation now PASS1066.38s, JUnit all selected PASS, serverexit0/forced[]. Qwen27 literal-template second-resource refusal PASS251.85s. Prior MTP/implicit-deadline attempts remain NOT_VERIFIED; local bounded scope only."
+    },
+    {
+      "id": "F11",
+      "status": "PASS",
+      "scope_and_limits": "Actual browser consumers PASS both families: Flash553.87s, Qwen271603.08s. Native PNG checksum,128px vision preview,UI heartbeat,reload/persistence and code recall without regeneration verified. Qwen27 JUnit selected PASS, serverexit0/forced[]; existing screenshots visually inspected offline. Prior timeouts retained. Explicit n1 development subset."
+    },
+    {
+      "id": "F12",
+      "status": "PASS",
+      "scope_and_limits": "Local native allocation/read/checkpoint/fault fixtures, HTTP disconnect recovery and actual latent-boundary cancel/restore/embedding/exactly-once retry all PASS on both families. Latest Flash290.51s/Qwen27 300.36s, explicit1200s suite operation deadline, cleanexit0/forced[]. Prior unscaled300s/interrupted attempts retained. Extended stress separate."
+    }
+  ],
+  "separate_unqualified_scopes": [
+    "Other Apple chips",
+    "CUDA/ROCm regression machine",
+    "Extended quality corpus",
+    "At least50alternation stress"
+  ],
+  "temporary_local_timeouts": {
+    "scope": "Explicit qualification profile on this Mac, requested by user2026-11-01",
+    "multiplier": 4,
+    "ordinary_default_multiplier": 1,
+    "base_interactive_seconds": 300,
+    "effective_interactive_seconds": 1200,
+    "configuration": "config/metal-local-qualification.env.example",
+    "numerical_criteria_unchanged": true,
+    "suite_operation_seconds": 1200,
+    "base_suite_operation_seconds": 300
+  },
+  "independent_image_oracles": {
+    "cpu_target": "Completed and PASS: CPU encoder/DiT plus explicit MPS VAE for text/RGB/RGBA. CPU-only scalar VAE remains NOT_VERIFIED; prior failed CPU/MPS and pre-fix native artifacts preserved.",
+    "prior_mps": "Preserved separate failed evidence; CPU versus MPS themselves differ on identical text conditioning: RMSE0.619411/relativeL20.0498529. Frozen tolerances unchanged."
+  },
+  "sdk_budget_fix": {
+    "wheel_sha256": "97e0119e2b7767bd4af6ec74d39987c73a00b7fe5671d0406bbae5b4c2b76139",
+    "source_revision": "1a94657fd1127375a221349087ce33cae0c9edcc",
+    "patch": "agent/vendor-patches/exmekh-lib-budget.patch",
+    "source_tests": 1510,
+    "installed_tests": 159,
+    "frontend_compaction_tests": 50,
+    "default_interactive_timeout_seconds": 300
+  },
+  "bounded_primitive_measurements": {
+    "cases": 14,
+    "correctness": "PASS",
+    "bit_exact_cases": 11,
+    "samples": 2,
+    "warmup": 1,
+    "verdict": "BOUNDED_SAMPLE",
+    "strata_speedup_claimed": false
+  },
+  "coding_agent_capability_fix": {
+    "resource": "agent/src/exmekh_agent/capabilities/hds/coding-agent.md",
+    "regression": "agent/tests/test_agent_design.py::test_generic_coding_agent_can_open_its_workspace_file_skill",
+    "source_and_external_roots_reproduced": true,
+    "owner_tests_passed": 98,
+    "full_suite": {
+      "status": "PASS",
+      "passed": 1213,
+      "skipped": 49,
+      "failed": [],
+      "statement_branch_coverage_percent": 100,
+      "seconds": 634.37,
+      "scope": "Full frontend after final helper inputs and distinct literal framing case. Real native consumers are separate; live skips are not promoted."
+    }
+  },
+  "host_regressions": {
+    "tests": 77,
+    "status": "PASS",
+    "seconds": 12.749,
+    "ruff_python_source_files": 40,
+    "product_text_tests": 4
+  },
+  "final_frontend_regressions": {
+    "passed": 1213,
+    "live_skipped": 49,
+    "coverage_statement_branch_percent": 100,
+    "seconds": 634.37,
+    "status": "PASS",
+    "real_consumers": "Separate qualification: F10/F11 local PASS; F08 NOT_VERIFIED and suspended. Live skips do not prove real operation."
+  },
+  "live_qualification": {
+    "state": "SUSPENDED_BY_USER",
+    "requested_date": "2026-11-02",
+    "active_live_processes_at_0708_utc": 0,
+    "remaining": "F08 full file workflow and extended scopes",
+    "resume_order": "Dedicated TPS session first; resume live tests afterward on user instruction. No automatic retries or model startup during offline review."
+  },
+  "offline_inference_review": {
+    "report": "offline-inference-review-20261102.md",
+    "new_kernel_or_dispatch_changes": false,
+    "host_tests_passed": 77,
+    "numeric_tests_passed": 39,
+    "numeric_cuda_only_skips": 3,
+    "native_synthetic_cases_passed": 6,
+    "provider_launcher_tests_passed": 13,
+    "frontend_targeted_passed": 85,
+    "frontend_live_skipped": 13,
+    "http_host_fixture": "PASS",
+    "product_text_tests_passed": 4,
+    "build": "PASS",
+    "lint_modified_python_files": 40,
+    "committed": false
+  },
+  "clean_code_review": {
+    "report": "docs/architecture/metal-t06-t07-clean-code-review-20261102.md",
+    "evidence": "docs/performance/metal-clean-code-review-20261102/verification.json",
+    "frontend_passed": 1213,
+    "frontend_live_skipped": 49,
+    "coverage_statement_branch_percent": 100,
+    "frontend_seconds": 590.06,
+    "sdk_owner_tests_passed": 1510,
+    "host_tests_passed": 90,
+    "live_tests_resumed": false,
+    "frozen_numerical_criteria_changed": false,
+    "reachable_arithmetic_changed": false
+  },
+  "qualification_followup_20261106": {
+    "report": "../t08-20261106/README.md",
+    "remaining": "../t08-20261106/remaining.md",
+    "prior_live_suspension_revoked_by_user": true,
+    "host_reserve_bytes": 0,
+    "flash_50cycle_stress": "PASS",
+    "image512_independent": "PASS CPUencoder/MPSDiT/MPSVAE,original thresholds",
+    "gemma_media_boundaries": "480/480 bit-exact",
+    "f08": "NOT_VERIFIED both families; repeated skill opening",
+    "qwen27_stress": "SKIP_RESOURCE_LIMIT during warmup,global swap growth1809254973B",
+    "historical_artifacts_unchanged": true,
+    "t08_status": "IN_PROGRESS"
+  }
+}

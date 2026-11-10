@@ -1,0 +1,19 @@
+W1031 10:41:32.098000 20508 build/metal-venv/lib/python3.13/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+test_dump_rejects_malformed_layout_truncation_and_nonfinite_values (tests.test_qwen4_vision_ref.VisionComparisonTests.test_dump_rejects_malformed_layout_truncation_and_nonfinite_values) ... ok
+test_empty_and_inconsistent_embeddings_fail_without_reducing_empty_arrays (tests.test_qwen4_vision_ref.VisionComparisonTests.test_empty_and_inconsistent_embeddings_fail_without_reducing_empty_arrays) ... ok
+test_grid_mismatch_with_identical_shape_fails (tests.test_qwen4_vision_ref.VisionComparisonTests.test_grid_mismatch_with_identical_shape_fails) ... ok
+test_invalid_threshold_cannot_qualify (tests.test_qwen4_vision_ref.VisionComparisonTests.test_invalid_threshold_cannot_qualify) ... ok
+test_native_cli_rejects_invalid_budgets_before_opening_files (tests.test_qwen4_vision_ref.VisionComparisonTests.test_native_cli_rejects_invalid_budgets_before_opening_files) ... ok
+test_nonfinite_reference_or_actual_fails (tests.test_qwen4_vision_ref.VisionComparisonTests.test_nonfinite_reference_or_actual_fails) ... ok
+test_one_bad_token_fails_despite_high_mean (tests.test_qwen4_vision_ref.VisionComparisonTests.test_one_bad_token_fails_despite_high_mean) ... ok
+test_scaled_vectors_pass_cosine_but_report_absolute_error (tests.test_qwen4_vision_ref.VisionComparisonTests.test_scaled_vectors_pass_cosine_but_report_absolute_error) ... ok
+test_a_single_failed_comparison_cannot_qualify_the_encoder (tests.test_metal_vision_qualification.QualificationReportTests.test_a_single_failed_comparison_cannot_qualify_the_encoder) ... ok
+test_errors_timeouts_and_interruptions_always_leave_evidence (tests.test_metal_vision_qualification.QualificationReportTests.test_errors_timeouts_and_interruptions_always_leave_evidence) ... ok
+test_family_selection_and_lazy_loading_use_public_model_methods (tests.test_metal_vision_qualification.VisionReferenceTests.test_family_selection_and_lazy_loading_use_public_model_methods) ... ok
+test_incompatible_projectors_and_architecture_are_rejected_before_loading (tests.test_metal_vision_qualification.VisionReferenceTests.test_incompatible_projectors_and_architecture_are_rejected_before_loading) ... ok
+test_native_patch_layout_repeats_temporal_frames_without_mixing_channels (tests.test_metal_vision_qualification.VisionReferenceTests.test_native_patch_layout_repeats_temporal_frames_without_mixing_channels) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.095s
+
+OK

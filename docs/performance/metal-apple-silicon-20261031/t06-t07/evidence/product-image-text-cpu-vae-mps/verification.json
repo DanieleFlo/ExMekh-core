@@ -1,0 +1,193 @@
+{
+  "cases": [
+    {
+      "id": "text",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [],
+      "fixture_sha256": "8d1dc46d8718f7423c7ba18ce1c26a704e51fdc9d99a7ac7090ab9dc109d83de",
+      "conditioning": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "verdict": "PASS"
+      },
+      "references_encoded": null,
+      "latents": [
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0013652899358171141,
+          "relative_l2": 0.0016337253968087885,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0026005245171798136,
+          "relative_l2": 0.00273304016569,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.004513292896923952,
+          "relative_l2": 0.0031559522910589934,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.034027099609375,
+        "rmse": 0.001054534751908513,
+        "relative_l2": 0.0011430386104814758,
+        "bit_exact": false,
+        "ssim_rgb": 0.9993229586530248,
+        "alpha_mae": 1.817941665649414e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 0,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 202.873895,
+        "prepare_seconds": 4.7e-05,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          0.0,
+          14.026393,
+          134.795022,
+          54.052374
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 6949795328,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7497297920,
+        "plan_host": 1904672,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 83620429176,
+        "d2h_bytes": 1376256,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "PASS"
+    }
+  ],
+  "verdict": "PASS",
+  "oracle_devices": {
+    "encoder": "cpu",
+    "dit": "cpu",
+    "encode": "cpu",
+    "decode": "mps"
+  },
+  "full_t00_corpus": false,
+  "excluded": [],
+  "human_task_review": "NOT_VERIFIED",
+  "tolerance_sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87",
+  "oracle_profile": {
+    "devices": {
+      "encoder": "cpu",
+      "dit": "cpu",
+      "encode": "cpu",
+      "decode": "mps"
+    },
+    "reused_stages": {
+      "encoder": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/run-encoder/report.json",
+      "encode": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/run-encode/report.json",
+      "dit": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/run-dit/report.json"
+    },
+    "scope": "Explicit independent component-device profile; CPU-only VAE remains NOT_VERIFIED. No precision/recipe/tolerance changes."
+  }
+}

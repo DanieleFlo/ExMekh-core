@@ -1,0 +1,95 @@
+make: Nothing to be done for `all'.
+cc -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math -DDS4_NATIVE_SUITE -c -o ds4_server_suite.o ds4_server.c
+make: `tests/test_flash_metal_lifecycle' is up to date.
+make: `tests/test_qwen35_metal' is up to date.
+make: `tests/test_qwen35_mrope' is up to date.
+make: `tests/test_qwen4_kernels' is up to date.
+make: `tests/libds4_numeric_metal.so' is up to date.
+make: `tests/probe_native_suite' is up to date.
+make: `tests/probe_gemma_visual' is up to date.
+make: `tests/probe_qwen_image_pipeline' is up to date.
+cc -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math -Wno-unused-function -I. -o tests/test_suite_http tests/test_suite_http.c ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o ds4_gemma_audio.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_weight_cache.o ds4_transfer.o -lm -pthread -Lbuild/suite-media/lib -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/suite-media/lib
+In file included from tests/test_suite_http.c:6:
+tests/../ds4_server.c:31886:30: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 31886 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |                              ^
+       |                             ,
+tests/../ds4_server.c:31886:9: note: place parentheses around the string literal to silence warning
+ 31886 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |         ^
+tests/../ds4_server.c:33054:9: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 33053 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |
+       |                                                                       ,
+ 33054 |         "<parameter=command>safe</parameter>",
+       |         ^
+tests/../ds4_server.c:33053:9: note: place parentheses around the string literal to silence warning
+ 33053 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |         ^
+cc -o ds4-server-suite ds4_server_suite.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o ds4_gemma_audio.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_weight_cache.o ds4_transfer.o ds4_numeric_metal.o -lm -pthread -framework Foundation -framework Metal -framework MetalPerformanceShaders -Lbuild/suite-media/lib -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/suite-media/lib
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4.o ds4.c
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -fobjc-arc -c -o ds4_metal.o ds4_metal.m
+make: `tests/libds4_numeric_metal.so' is up to date.
+make: `tests/probe_native_suite' is up to date.
+make: `tests/probe_gemma_visual' is up to date.
+make: `tests/probe_qwen_image_pipeline' is up to date.
+ds4.c:59281:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59281 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+ds4.c:59586:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59586 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -Wno-unused-function -DDS4_NO_GPU -c -o ds4_cpu.o ds4.c
+ds4.c:67361:59: warning: unused parameter 's' [-Wunused-parameter]
+ 67361 | static uint32_t session_vision_position_rows(ds4_session *s) {
+       |                                                           ^
+1 warning generated.
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_flash_metal_lifecycle tests/test_flash_metal_lifecycle.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+In file included from tests/test_flash_metal_lifecycle.c:3:
+tests/../ds4.c:59281:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59281 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+tests/../ds4.c:59586:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59586 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+2 warnings generated.
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen35_metal tests/test_qwen35_metal.c ds4_metal.o ds4_image.o ds4_resources.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_qwen35_mrope tests/test_qwen35_mrope.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_qwen4_kernels tests/test_qwen4_kernels.o ds4_metal.o ds4_image.o ds4_resources.o -lm -pthread -framework Foundation -framework Metal
+cc -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math -Wno-unused-function -I. -o tests/test_suite_http tests/test_suite_http.c ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o ds4_gemma_audio.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_weight_cache.o ds4_transfer.o -lm -pthread -Lbuild/suite-media/lib -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/suite-media/lib
+In file included from tests/test_suite_http.c:6:
+tests/../ds4_server.c:31886:30: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 31886 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |                              ^
+       |                             ,
+tests/../ds4_server.c:31886:9: note: place parentheses around the string literal to silence warning
+ 31886 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |         ^
+tests/../ds4_server.c:33054:9: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 33053 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |
+       |                                                                       ,
+ 33054 |         "<parameter=command>safe</parameter>",
+       |         ^
+tests/../ds4_server.c:33053:9: note: place parentheses around the string literal to silence warning
+ 33053 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |         ^
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4 ds4_cli.o ds4_help.o ds4_prompt_prefix.o linenoise.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-server ds4_server.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-bench ds4_bench.o ds4_help.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-eval ds4_eval.o ds4_eval_cases.o ds4_help.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -o ds4-server-suite ds4_server_suite.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o ds4_gemma_audio.o ds4_gemma_vision.o ds4_gemma_visual.o ds4_media.o ds4_media_av.o ds4_gemma_media.o ds4_embedding_gemma2.o ds4_gemma_tokenizer.o ds4_qwen_image_reference.o ds4_qwen_image_pipeline.o ds4_qwen_image_attention.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o ds4_qwen_image_rgba.o ds4_qwen_image_observer.o ds4_qwen_image_encoder.o ds4_qwen_image_input.o ds4_qwen_image_tokenizer.o ds4_unicode_nfc.o ds4_numeric.o ds4_numeric_weights.o ds4_weight_cache.o ds4_transfer.o ds4_numeric_metal.o -lm -pthread -framework Foundation -framework Metal -framework MetalPerformanceShaders -Lbuild/suite-media/lib -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/suite-media/lib
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -Wno-unused-function -DDS4_TEST_HOOKS -c -o ds4_test_hooks.o ds4.c
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_metal_ssd_experts tests/test_metal_ssd_experts.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_metal_command_memory tests/test_metal_command_memory.c ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+ds4.c:59281:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59281 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+ds4.c:59586:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59586 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4_test ds4_test.o ds4_help.o ds4_kvstore.o rax.o ds4_test_hooks.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal

@@ -2,6 +2,7 @@
 """Isolate native primitive error on real Qwen encoder layer operands."""
 
 import argparse
+import ctypes as C
 import json
 import sys
 from pathlib import Path
@@ -9,11 +10,10 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn.functional as F
+from safetensors import safe_open
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import ctypes as C
-
-from tests.test_suite_numeric import Attention, Numeric, View
+from tests.suite_numeric_api import Attention, Numeric, View
 
 
 def main():
@@ -22,31 +22,55 @@ def main():
     p.add_argument("--oracle", type=Path, required=True)
     p.add_argument("--layer", type=int, default=0)
     p.add_argument("--native", type=Path)
+    p.add_argument("--backend", choices=("cpu", "cuda", "metal"), default="cuda")
+    p.add_argument("--numeric-library", type=Path)
+    p.add_argument("--device", choices=("cpu", "cuda", "mps"), default="cuda")
     args = p.parse_args()
-    from safetensors import safe_open
-
     torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
-    n = Numeric(True)
+    torch.set_num_threads(2)
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+    with Numeric(args.backend, library_path=args.numeric_library) as numeric:
+        diagnose(args, numeric)
 
+
+def diagnose(args, n):
     def load(name):
         return (
             torch.from_numpy(np.fromfile(args.oracle / f"{name}.bf16", dtype=np.uint16))
             .view(torch.bfloat16)
             .reshape(1, -1, 4096)
-            .cuda()
+            .to(args.device)
         )
 
+    def add_deepstack(hidden, layer):
+        path = args.oracle / f"deepstack-{layer}.bf16"
+        if layer not in range(3) or not path.exists():
+            return hidden
+        mask = np.load(args.oracle / "inputs.npz")["input_ids"][0] == 151655
+        visual = (
+            torch.from_numpy(np.fromfile(path, dtype=np.uint16))
+            .view(torch.bfloat16)
+            .reshape(-1, 4096)
+            .to(args.device)
+        )
+        hidden = hidden.clone()
+        hidden[torch.from_numpy(mask).to(args.device)] += visual
+        return hidden
+
     x = load("embeddings-0" if args.layer == 0 else f"text-{args.layer - 1}")[0]
+    if args.layer:
+        x = add_deepstack(x, args.layer - 1)
     prefix = f"model.language_model.layers.{args.layer}."
     with safe_open(args.model, framework="pt", device="cpu") as f:
         weights = {
-            key[len(prefix) :]: f.get_tensor(key).cuda()
+            key[len(prefix) :]: f.get_tensor(key).to(args.device)
             for key in f.keys()  # noqa: SIM118 -- safe_open is not iterable.
             if key.startswith(prefix)
         }
 
     def compare(name, actual, expected):
-        actual = actual.cuda().reshape_as(expected)
+        actual = actual.to(args.device).reshape_as(expected)
         d = actual.float() - expected.float()
         print(
             json.dumps(
@@ -120,10 +144,10 @@ def main():
             .reshape(-1, 3)
             .copy()
         )
-        .cuda()
+        .to(args.device)
         .float()
     )
-    inv = (1 / (5000000 ** (torch.arange(0, 128, 2).float() / 128))).cuda()
+    inv = (1 / (5000000 ** (torch.arange(0, 128, 2).float() / 128))).to(args.device)
     freq = positions[:, 0, None] * inv[None, :]
     freq[:, 1:60:3] = (positions[:, 1, None] * inv[None, :])[:, 1:60:3]
     freq[:, 2:60:3] = (positions[:, 2, None] * inv[None, :])[:, 2:60:3]
@@ -173,14 +197,15 @@ def main():
             128,
             seq,
         )
-        actual = n.read(y, (seq, seq)).cuda()
+        actual = n.read(y, (seq, seq)).to(args.device)
         d = actual - raw[h]
         if (d != 0).any():
             compare(f"qk-{h}", actual, raw[h])
         n.clear()
     scores = raw * (128**-0.5)
     scores.masked_fill_(
-        torch.ones(seq, seq, device="cuda", dtype=torch.bool).triu(1), -float("inf")
+        torch.ones(seq, seq, device=args.device, dtype=torch.bool).triu(1),
+        -float("inf"),
     )
     probs = scores.float().softmax(-1).to(torch.bfloat16)
     for h in range(32):
@@ -195,7 +220,7 @@ def main():
             seq,
             128**-0.5,
         )
-        actual = n.read(y, (seq, seq)).cuda()
+        actual = n.read(y, (seq, seq)).to(args.device)
         d = actual - probs[h]
         if (d != 0).any():
             compare(f"softmax-{h}", actual, probs[h])
@@ -228,21 +253,7 @@ def main():
     n.call("point", y, n.tensor(g), View(), 2, 0)
     compare("silu", n.read(y, g.shape), F.silu(g))
     final = residual + linear(F.silu(g) * u, "mlp.down_proj.weight")
-    if args.layer < 3 and (args.oracle / f"deepstack-{args.layer}.bf16").exists():
-        mask = np.load(args.oracle / "inputs.npz")["input_ids"][0] == 151655
-        deep = (
-            torch.from_numpy(
-                np.fromfile(
-                    args.oracle / f"deepstack-{args.layer}.bf16", dtype=np.uint16
-                )
-            )
-            .view(torch.bfloat16)
-            .reshape(-1, 4096)
-            .cuda()
-        )
-        final[torch.from_numpy(mask).cuda()] += deep
     compare("manual-vs-oracle", final, load(f"text-{args.layer}")[0])
-    n.close()
 
 
 if __name__ == "__main__":

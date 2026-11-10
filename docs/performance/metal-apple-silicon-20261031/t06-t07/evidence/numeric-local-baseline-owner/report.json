@@ -1,0 +1,42 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "tools/bench_suite_numeric.py",
+    "--backend",
+    "metal",
+    "--numeric-library",
+    "tests/libds4_numeric_metal.so",
+    "--bounded",
+    "--repetitions",
+    "2",
+    "--output",
+    "build/metal-qualification/t06-t07-20261031/numeric-local-baseline"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200.0,
+  "base_timeout_seconds": 300.0,
+  "timeout_multiplier": 4,
+  "reason": "One warmup and two bounded samples of existing numeric benchmark after all full-model owners closed; same independent references and numerical ceilings, no speedup or statistical claim; host reserve2GiB.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": -15,
+  "elapsed_seconds": 0.02235708299849648,
+  "status": "NOT_VERIFIED",
+  "cleanup_error": "PermissionError(1, 'Operation not permitted')",
+  "cleanup_forced": false,
+  "samples": [],
+  "error": "CalledProcessError(1, ['sysctl', '-n', 'kern.memorystatus_vm_pressure_level', 'vm.swapusage'])",
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/bench_suite_numeric.py": "6d9e0d56a72299713e80c6068125694dc4ef14b83f295218c5e2aab45638919a",
+    "tests/libds4_numeric_metal.so": "61931e5f5c8bd6b2864a980a5ea57f338e86b9de2833693c6b49a31c6d7222d7"
+  },
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,86 @@
+{
+  "command": [
+    "agent/.venv/bin/python",
+    "-m",
+    "pytest",
+    "-q",
+    "tests/test_metal_stream_qualification.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120.0,
+  "reason": "User requested dynamic available RAM with 2 GiB reserve: validate warning versus critical admission and monitor behavior without allocating artificial load",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 7.112280665998696,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 16106.504981125,
+      "pressure": 1,
+      "host_available_bytes": 13399293952,
+      "swap_bytes": 716764610,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 16107.512949458,
+      "pressure": 1,
+      "host_available_bytes": 13500334080,
+      "swap_bytes": 716764610,
+      "footprint_bytes": 32948728,
+      "resident_bytes": 45613056
+    },
+    {
+      "monotonic": 16108.525104333,
+      "pressure": 1,
+      "host_available_bytes": 13295714304,
+      "swap_bytes": 716764610,
+      "footprint_bytes": 32981496,
+      "resident_bytes": 45645824
+    },
+    {
+      "monotonic": 16109.547061333,
+      "pressure": 1,
+      "host_available_bytes": 13441974272,
+      "swap_bytes": 716764610,
+      "footprint_bytes": 33014264,
+      "resident_bytes": 45678592
+    },
+    {
+      "monotonic": 16110.55604325,
+      "pressure": 1,
+      "host_available_bytes": 13546110976,
+      "swap_bytes": 716764610,
+      "footprint_bytes": 33030648,
+      "resident_bytes": 45711360
+    },
+    {
+      "monotonic": 16111.571779583,
+      "pressure": 1,
+      "host_available_bytes": 13404160000,
+      "swap_bytes": 716764610,
+      "footprint_bytes": 33030648,
+      "resident_bytes": 45711360
+    },
+    {
+      "monotonic": 16112.587120125,
+      "pressure": 1,
+      "host_available_bytes": 13531480064,
+      "swap_bytes": 716764610,
+      "footprint_bytes": 33030648,
+      "resident_bytes": 45711360
+    }
+  ],
+  "executables_sha256": {
+    "agent/.venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "c31a9ff9c4eb9c9e804d3523ded700a414f68bb5d5f00f01988271273d9b5836"
+}

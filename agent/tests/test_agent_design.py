@@ -8,7 +8,10 @@ from exmekh_lib.core.agents.node import DefaultCapabilities, Node, ToolHooks
 
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter
-from exmekh_agent.exmekh_bridge.capabilities.agent_design import build_designed_agent
+from exmekh_agent.exmekh_bridge.capabilities.agent_design import (
+    build_designed_agent,
+    build_generic_agent,
+)
 from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
     markdown_parts,
@@ -21,6 +24,31 @@ from exmekh_agent.state.agent_design import (
 )
 from exmekh_agent.state.session_manager import SessionManager
 from tests.capability_fixtures import TEST_CAPABILITIES
+from tests.mock_client import MockProvider
+
+
+@pytest.mark.parametrize(
+    "paths", [[TEST_CAPABILITIES], [DefaultCapabilities.CAPABILITIES_PATH]]
+)
+def test_generic_coding_agent_can_open_its_workspace_file_skill(tmp_path, paths):
+    _, children = build_generic_agent(
+        paths,
+        SubAgentEventRouter(None),
+        {},
+        root_name="main",
+        coding_persistent_history=True,
+    )
+    child = children[0]
+    child.initialize(MockProvider(), work_root=tmp_path)
+    inventory = child.get_capability_inventory()
+    file_skill = next(
+        entry for entry in inventory.entries if entry.name == "file-processing"
+    )
+    assert file_skill.direct and file_skill.reachable
+    for name in ("inspect-file", "read-file", "edit-file", "new-file", "delete-file"):
+        tool = next(entry for entry in inventory.entries if entry.name == name)
+        assert tool.reachable
+        assert not tool.direct
 
 
 @pytest.mark.parametrize("profile", ["generic", "programmer", "creative", "custom"])

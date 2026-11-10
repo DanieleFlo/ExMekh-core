@@ -1,0 +1,15 @@
+[
+  {
+    "name": "native",
+    "command": [
+      "tests/probe_qwen_image_pipeline",
+      "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+      "build/metal-oracles/models",
+      "build/metal-models/image-tokenizer.ds4q",
+      "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu/native",
+      "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu/fixtures/rgba.ds4p"
+    ],
+    "seconds": 273.5325170420001,
+    "returncode": 1
+  }
+]

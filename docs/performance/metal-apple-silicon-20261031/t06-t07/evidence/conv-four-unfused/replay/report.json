@@ -1,0 +1,64 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-audio-stem.py",
+    "conv-four-unfused"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Same independent BF16 audio operands and CPU nontranspose GEMM four-stream order with explicit noncontraction; no product changes before proof.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 4.064806750000571,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 16830.678131166,
+      "pressure": 1,
+      "host_available_bytes": 9131720704,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 16831.689708625,
+      "pressure": 1,
+      "host_available_bytes": 9326149632,
+      "swap_bytes": 262144,
+      "footprint_bytes": 176587448,
+      "resident_bytes": 227573760
+    },
+    {
+      "monotonic": 16832.701168916,
+      "pressure": 1,
+      "host_available_bytes": 9501933568,
+      "swap_bytes": 262144,
+      "footprint_bytes": 218940112,
+      "resident_bytes": 272613376
+    },
+    {
+      "monotonic": 16833.712726416,
+      "pressure": 1,
+      "host_available_bytes": 9589260288,
+      "swap_bytes": 262144,
+      "footprint_bytes": 326632360,
+      "resident_bytes": 395264000
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "7285b673332a2fd88c09203760e14173842a2722165d168a7e07a2a1b088598b"
+}

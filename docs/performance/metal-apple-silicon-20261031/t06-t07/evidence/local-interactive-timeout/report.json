@@ -1,0 +1,46 @@
+{
+  "scope": "Temporary local dependency configuration override, user explicitly requested x2/x4 timeouts on this machine. Wheel and lockfile unchanged; default300 remains unchanged; reinstall restores original.",
+  "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/.venv/lib/python3.13/site-packages/exmekh_lib/config/file_editing.py",
+  "environment": "EXMEKH_INTERACTIVE_TIMEOUT_SECONDS",
+  "original_sha256": "8dcfd4ddf4ee7040fa28aea44847099564070dbb7387eadc26dbb18e18db61b3",
+  "override_sha256": "1473fe04c0e7141661ecacf15764bdc833062d243813948e2f4dc9a974edcc3f",
+  "backup": "build/metal-qualification/t06-t07-20261031/local-interactive-timeout/file_editing.original.py",
+  "checks": [
+    {
+      "value": null,
+      "expected": "300.0",
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    {
+      "value": "1200",
+      "expected": "1200.0",
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    {
+      "value": "600",
+      "expected": "600.0",
+      "exit_code": 0,
+      "status": "PASS"
+    },
+    {
+      "value": "nan",
+      "expected": null,
+      "exit_code": 1,
+      "status": "PASS"
+    },
+    {
+      "value": "0",
+      "expected": null,
+      "exit_code": 1,
+      "status": "PASS"
+    }
+  ],
+  "active_qualification_profile": {
+    "timeout_multiplier": 4,
+    "base_interactive_seconds": 300,
+    "effective_interactive_seconds": 1200,
+    "explicit_opt_in": "DS4_METAL_TIMEOUT_MULTIPLIER=4 or --timeout-multiplier4"
+  }
+}

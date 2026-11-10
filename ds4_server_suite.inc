@@ -1,5 +1,55 @@
 /* Native service boundary. Included after the server's queue primitives so all
  * operations, including file expiry and receipts, have one serialized owner. */
+#include "ds4_metal_memory.h"
+/* Catalog readers copy serialized data while holding this owner's lock; they
+ * never borrow adapter state or keep the lock while sending HTTP responses. */
+static bool suite_catalog_init(suite_catalog *catalog) {
+    memset(catalog, 0, sizeof(*catalog));
+    return pthread_mutex_init(&catalog->mutex, NULL) == 0;
+}
+static void suite_catalog_models_free(suite_catalog_model models[SUITE_MODELS]) {
+    for (unsigned i = 0; i < SUITE_MODELS; i++) {
+        free(models[i].id);
+        free(models[i].json);
+    }
+}
+static void suite_catalog_close(suite_catalog *catalog) {
+    suite_catalog_models_free(catalog->models);
+    pthread_mutex_destroy(&catalog->mutex);
+}
+/* Transfer a complete snapshot. Old entries are no longer visible once the
+ * mutex is released, so their destruction need not block readers. */
+static void suite_catalog_replace(suite_catalog *catalog,
+                                   suite_catalog_model models[SUITE_MODELS]) {
+    suite_catalog_model previous[SUITE_MODELS];
+    pthread_mutex_lock(&catalog->mutex);
+    memcpy(previous, catalog->models, sizeof(previous));
+    memcpy(catalog->models, models, sizeof(previous));
+    memset(models, 0, sizeof(previous));
+    pthread_mutex_unlock(&catalog->mutex);
+    suite_catalog_models_free(previous);
+}
+static void suite_catalog_append_models(suite_catalog *catalog, buf *body) {
+    pthread_mutex_lock(&catalog->mutex);
+    for (unsigned i = 0; i < SUITE_MODELS; i++) {
+        if (!catalog->models[i].json) continue;
+        buf_putc(body, ',');
+        buf_puts(body, catalog->models[i].json);
+    }
+    pthread_mutex_unlock(&catalog->mutex);
+}
+static bool suite_catalog_append_model(suite_catalog *catalog, const char *id, buf *body) {
+    bool found = false;
+    pthread_mutex_lock(&catalog->mutex);
+    for (unsigned i = 0; i < SUITE_MODELS; i++) {
+        if (!catalog->models[i].id || strcmp(catalog->models[i].id, id)) continue;
+        buf_puts(body, catalog->models[i].json);
+        found = true;
+        break;
+    }
+    pthread_mutex_unlock(&catalog->mutex);
+    return found;
+}
 typedef const schema_json_value sj;
 static sj *suite_get(sj *v, const char *k) { return schema_json_object_get(v, k); }
 static const char *suite_string(sj *v) {
@@ -53,11 +103,30 @@ static bool suite_headers(int fd, bool cors, int code, const char *type,
     buf_free(&b);
     return ok;
 }
-static bool suite_send(server *s, job *j, int code, const char *body) {
+static void suite_publish_terminal(job *j, suite_event event, int code, const char *body) {
+    char *owned_body = xstrdup(body);
+    pthread_mutex_lock(&j->mu);
+    suite_terminal *terminal = &j->suite_request->terminal;
+    if (!terminal->body) {
+        *terminal = (suite_terminal){.body = owned_body, .code = code, .event = event};
+        owned_body = NULL;
+    }
+    pthread_cond_signal(&j->cv);
+    pthread_mutex_unlock(&j->mu);
+    free(owned_body);
+}
+static bool suite_respond(server *s, job *j, suite_event event, int code, const char *body) {
+    if (j->suite_request->stream) {
+        suite_publish_terminal(j, event, code, body);
+        return true;
+    }
     const char *id = j->suite_request->request_id;
     size_t n = strlen(body);
     return suite_headers(j->fd, s->enable_cors, code, "application/json", n, id) &&
            send_all(j->fd, body, n);
+}
+static bool suite_send(server *s, job *j, int code, const char *body) {
+    return suite_respond(s, j, SUITE_EVENT_COMPLETED, code, body);
 }
 static void suite_error(server *s, job *j, int code, const char *error,
                          const char *message, const char *param) {
@@ -68,7 +137,9 @@ static void suite_error(server *s, job *j, int code, const char *error,
     buf_puts(&b, "},\"ds4\":{\"version\":1,\"request_id\":");
     json_escape(&b, j->suite_request->request_id);
     buf_printf(&b, ",\"recovery_required\":%s}}", s->suite && s->suite->recovery ? "true" : "false");
-    suite_send(s, j, code, b.ptr); buf_free(&b);
+    suite_event event = !strcmp(error, "request_cancelled") ? SUITE_EVENT_CANCELLED : SUITE_EVENT_FAILED;
+    suite_respond(s, j, event, code, b.ptr);
+    buf_free(&b);
 }
 static void suite_status_error(server *s, job *j, ds4_status status) {
     server_log(DS4_LOG_DEFAULT, DS4_SUITE_STATUS, (unsigned)status, j->suite_request->path);
@@ -93,7 +164,8 @@ static bool suite_cancel(void *p) {
     return job_cancelled(j) || g_stop_requested || now_sec() >= j->suite_request->deadline;
 }
 static bool suite_read_headers(const char *data, size_t size, char *type,
-                                size_t type_size, char *key, size_t key_size) {
+                                size_t type_size, char *key, size_t key_size,
+                                bool *stream) {
     const char *p = data, *end = data + size;
     bool length_seen = false;
     while (p < end) {
@@ -102,6 +174,12 @@ static bool suite_read_headers(const char *data, size_t size, char *type,
         size_t n = p - line;
         if (n && line[n - 1] == '\r') n--;
         char *dest = NULL; size_t capacity = 0, prefix = 0;
+        if (n >= 7 && !strncasecmp(line, "Accept:", 7)) {
+            const char *a = line + 7, *b = line + n;
+            while (a < b && *a == ' ') a++;
+            while (b > a && b[-1] == ' ') b--;
+            if (b - a == 17 && !strncasecmp(a, "text/event-stream", 17)) *stream = true;
+        }
         if (n >= 15 && !strncasecmp(line, "Content-Length:", 15)) {
             if (length_seen) return false;
             length_seen = true;
@@ -153,13 +231,16 @@ static char *suite_read(const char *path, size_t limit, size_t *length) {
     }
     fclose(f); return data;
 }
+static void suite_remove_file(suite_state *q, suite_file *f) {
+    if (!f || !*f->id || (unlink(f->path) && errno != ENOENT)) return;
+    q->stored -= f->bytes;
+    memset(f, 0, sizeof(*f));
+}
 static void suite_expire(suite_state *q) {
     time_t now = time(NULL);
     for (size_t i = 0; i < SUITE_FILES; i++) {
         suite_file *f = q->files + i;
-        if (*f->id && f->expires <= now) {
-            unlink(f->path); q->stored -= f->bytes; memset(f, 0, sizeof(*f));
-        }
+        if (f->expires <= now) suite_remove_file(q, f);
     }
     for (size_t i = 0; i < SUITE_RECEIPTS; i++) {
         suite_receipt *r = q->receipts + i;
@@ -288,13 +369,63 @@ struct suite_operation {
     double load_seconds[3], phase_seconds[4];
     uint64_t media_tokens[3];
 };
+/* Publish a coherent snapshot when a batch item or its work changes. */
+static void suite_progress_publish(job *j, const ds4_operation_progress *update,
+                                   uint32_t item_index, uint32_t item_count,
+                                   uint32_t active_items) {
+    if (!j || !j->suite_request->stream) return;
+    pthread_mutex_lock(&j->mu);
+    suite_progress *p = &j->suite_request->progress;
+    if (item_count) {
+        p->item_index = item_index;
+        p->item_count = item_count;
+        p->active_items = active_items;
+    }
+    snprintf(p->phase, sizeof(p->phase), "%s", update->phase ? update->phase : "running");
+    snprintf(p->unit, sizeof(p->unit), "%s", update->unit ? update->unit : "");
+    p->completed_units = update->completed_units;
+    p->total_units = update->total_units;
+    if (update->overall_fraction >= 0 && isfinite(update->overall_fraction)) {
+        double active = p->active_items ? p->active_items : 1;
+        double fraction = fmin(.99, (p->item_index + active * fmin(1, update->overall_fraction)) /
+                              p->item_count);
+        if (fraction >= p->overall_fraction) {
+            p->overall_fraction = fraction;
+            p->estimated = update->estimated;
+        }
+    }
+    p->revision++;
+    pthread_cond_signal(&j->cv);
+    pthread_mutex_unlock(&j->mu);
+}
+static void suite_progress_update(job *j, const ds4_operation_progress *update) {
+    suite_progress_publish(j, update, 0, 0, 0);
+}
+static void suite_progress_begin_items(job *j, uint32_t index, uint32_t count,
+                                       uint32_t active) {
+    suite_progress_publish(j, &(ds4_operation_progress){
+        .phase = "preparing", .overall_fraction = -1}, index, count, active);
+}
+static void suite_model_progress(void *opaque, const ds4_operation_progress *update) {
+    suite_operation *o = opaque;
+    suite_progress_update(o->client, update);
+}
+static void suite_phase(job *j, const char *phase) {
+    suite_progress_update(j, &(ds4_operation_progress){
+        .phase = phase, .overall_fraction = -1, .estimated = true});
+}
+static ds4_status suite_close_image_job(suite_operation *o) {
+    ds4_status status = ds4_qwen_image_job_close(o->image);
+    if (!status) o->image = NULL;
+    return status;
+}
 static ds4_status suite_operation_close(suite_operation *o) {
+    suite_phase(o->client, "restore");
     ds4_status s = ds4_bundle_hint_close(o->hint);
     if (s) return s;
     o->hint = NULL;
-    s = ds4_qwen_image_job_close(o->image);
+    s = suite_close_image_job(o);
     if (s) return s;
-    o->image = NULL;
     s = ds4_execution_close(o->execution);
     if (s) return s;
     o->execution = NULL;
@@ -341,7 +472,21 @@ static ds4_status suite_embed_step(void *p, uint32_t step) {
                                       o->dimensions, &observer, &o->result);
 }
 static ds4_status suite_victims(server *s, suite_operation *o) {
-    ds4_status status = ds4_engine_reclaim_create(&o->reclaim, s->engine,
+    /* Reconstructible LLM cache yields to the active adapter before planning;
+     * its size is not a mandatory checkpoint restore requirement. */
+    ds4_status status = ds4_engine_trim_cache(s->engine);
+    if (status != DS4_STATUS_OK && status != DS4_STATUS_UNSUPPORTED) return status;
+    bool handoff = status == DS4_STATUS_OK;
+    suite_model *other = o->state->models + (o->model == o->state->models ? 1 : 0);
+    if (handoff) {
+        /* The inactive adapter yields weights too. Preserve its metadata;
+         * the resting state must not depend on the previous Image variant. */
+        status = other->embed ? suite_drop_gemma(other)
+               : other->image ? ds4_qwen_image_pipeline_release_weights(other->image)
+                              : DS4_STATUS_OK;
+        if (status) return status;
+    }
+    status = ds4_engine_reclaim_create(&o->reclaim, s->engine,
                                                   o->state->directory);
     /* Unqualified legacy adapters still admit eviction-free requests. */
     if (status == DS4_STATUS_UNSUPPORTED) status = DS4_STATUS_OK;
@@ -351,7 +496,7 @@ static ds4_status suite_victims(server *s, suite_operation *o) {
     if (count + 1 > DS4_EXECUTOR_MAX_VICTIMS) return DS4_STATUS_UNSUPPORTED;
     if (count) memcpy(o->victims, v, count * sizeof(*v));
     o->victim_count = count;
-    suite_model *other = o->state->models + (o->model == o->state->models ? 1 : 0);
+    if (handoff) return DS4_STATUS_OK;
     uint64_t bytes = 0;
     if (other->embed) {
         ds4_gemma_residency r;
@@ -393,39 +538,70 @@ static bool suite_close(server *s) {
     suite_state *q = s->suite;
     if (!q) return true;
     if (suite_recover(s)) return false;
-    for (unsigned i = 0; i < 2; i++) {
+    for (unsigned i = 0; i < SUITE_MODELS; i++) {
         if (suite_model_close(q->models + i)) return false;
     }
     if (ds4_numeric_close(q->numeric)) return false;
     for (size_t i = 0; i < SUITE_FILES; i++) if (*q->files[i].id) unlink(q->files[i].path);
     for (size_t i = 0; i < SUITE_RECEIPTS; i++) if (*q->receipts[i].key) unlink(q->receipts[i].path);
+    suite_catalog_close(&q->catalog);
     rmdir(q->directory); free(q); s->suite = NULL;
     return true;
 }
+static void suite_catalog_refresh(suite_state *q);
 static ds4_status suite_open(server *s, const char *path) {
     if (!path) return DS4_STATUS_OK;
     char *data = suite_read(path, 65536, NULL);
     schema_json_value *config = data ? schema_json_parse(data) : NULL;
     free(data);
     ds4_status status = DS4_STATUS_INVALID;
-    if (!SUITE_FIELDS(config, "version", "media_directory", "storage_bytes", "timeout_seconds", "models")) goto done;
-    uint64_t version = 0, quota = 4ull << 30, timeout = 600;
+    if (!SUITE_FIELDS(config, "version", "media_directory", "storage_bytes", "timeout_seconds", "image_timeout_seconds", "models", "device_working_set_bytes")) goto done;
+    uint64_t version = 0, quota = 4ull << 30, timeout = 600, device_working_set = 0;
     if (!suite_uint(suite_get(config, "version"), &version) || version != 1 ||
         !suite_option_uint(config, "storage_bytes", &quota) || quota < SUITE_RECEIPT_MAX ||
-        !suite_option_uint(config, "timeout_seconds", &timeout) || !timeout || timeout > 86400) goto done;
+        !suite_option_uint(config, "timeout_seconds", &timeout) || !timeout || timeout > 86400 ||
+        !suite_option_uint(config, "device_working_set_bytes", &device_working_set) ||
+        (suite_get(config, "device_working_set_bytes") && !device_working_set)) goto done;
     sj *models = suite_get(config, "models");
     const char *directory = suite_str(config, "media_directory");
     if (!directory || strlen(directory) > PATH_MAX - 64 || !models ||
-        models->kind != SCHEMA_JSON_ARRAY || !models->len || models->len > 2) goto done;
+        models->kind != SCHEMA_JSON_ARRAY || !models->len || models->len > SUITE_MODELS) goto done;
+    uint64_t image_timeout = timeout;
+    if (!suite_option_uint(config, "image_timeout_seconds", &image_timeout) ||
+        !image_timeout || image_timeout > 86400) goto done;
     suite_state *q = calloc(1, sizeof(*q));
     if (!q) { status = DS4_STATUS_NOMEM; goto done; }
+    if (!suite_catalog_init(&q->catalog)) {
+        free(q); status = DS4_STATUS_NOMEM; goto done;
+    }
     s->suite = q;
     q->runtime = ds4_engine_runtime(s->engine);
     q->resources = ds4_engine_resources(s->engine);
-    q->quota = quota; q->timeout = timeout;
+    q->quota = quota; q->timeout = timeout; q->image_timeout = image_timeout;
     snprintf(q->directory, sizeof(q->directory), "%s/ds4-suite-XXXXXX", directory);
     if (!q->runtime || !q->resources || !mkdtemp(q->directory)) goto done;
+#if defined(__APPLE__) && !defined(DS4_NO_GPU)
+    status = ds4_numeric_metal(&q->numeric, q->resources, 500);
+    if (!status)
+        status = ds4_numeric_metal_budget(q->numeric, ds4_metal_host_reserve_bytes());
+#else
     status = ds4_numeric_cuda(&q->numeric, q->resources, 500);
+#endif
+    if (!status && device_working_set) {
+        ds4_resource_budget budget;
+        ds4_resource_totals totals;
+        status = ds4_resources_get_budget(q->resources, DS4_MEMORY_DEVICE, &budget);
+        ds4_resources_totals(q->resources, 0, &totals);
+        if (!status && (device_working_set > UINT64_MAX - budget.margin ||
+                        device_working_set < totals.allocated[DS4_MEMORY_DEVICE]))
+            status = DS4_STATUS_NOMEM;
+        if (!status) {
+            uint64_t limit = device_working_set + budget.margin;
+            if (limit < budget.limit) budget.limit = limit;
+            status = ds4_resources_set_budget(q->resources, DS4_MEMORY_DEVICE, &budget);
+            q->device_working_set = budget.limit - budget.margin;
+        }
+    }
     for (size_t i = 0; i < models->len && !status; i++) {
         sj *entry = models->item[i];
         if (!SUITE_FIELDS(entry, "model", "index", "root", "text_asset", "media_asset")) { status = DS4_STATUS_INVALID; break; }
@@ -448,6 +624,7 @@ static ds4_status suite_open(server *s, const char *path) {
         if (!status && slot) status = ds4_gemma_multimodal_open(&m->embed,
             m->bundle, q->numeric, q->runtime, m->asset, m->processor);
     }
+    if (!status) suite_catalog_refresh(q);
 done:
     schema_json_free(config);
     return status;
@@ -469,15 +646,37 @@ static void suite_append_model(buf *b, suite_state *q, suite_model *m) {
     buf_puts(b, ",\"owned_by\":\"ds4.c\",\"created\":1792454400,\"ds4\":{\"version\":1,\"revision\":");
     json_escape(b, ds4_bundle_revision(m->bundle));
     buf_puts(b, ",\"profile\":"); json_escape(b, ds4_bundle_profile(m->bundle));
-    buf_printf(b, ",\"configured\":true,\"resident\":%s,\"ready\":%s,\"qualified_backends\":[\"cuda-sm86\"],"
+    if (!embed) buf_puts(b, ",\"image_progress_version\":1");
+#ifdef __APPLE__
+    buf_puts(b, ",\"qualification\":{\"status\":\"NOT_VERIFIED\",\"reason\":");
+    json_escape(b, DS4_SUITE_METAL_QUALIFICATION);
+    buf_puts(b, "}");
+#endif
+    buf_printf(b, ",\"configured\":true,\"resident\":%s,\"ready\":%s,\"qualified_backends\":%s,"
         "\"operations\":%s,\"input_modalities\":%s,\"context_tokens\":%u,\"embedding_dimensions\":%s,"
         "\"limits\":{\"file_bytes\":536870912,\"storage_bytes\":%llu,\"files\":256,\"receipts\":64,\"max_inflight_requests\":8,"
         "\"receipt_bytes\":67108864,\"receipt_ttl_seconds\":600,\"media_ttl_seconds\":3600,"
-        "\"timeout_seconds\":%.0f,\"batch_items\":32,\"image_total_pixels\":4194304,\"reference_resolution\":0,\"output_formats\":[\"png\"]},\"components\":[",
-        resident ? "true" : "false", q->recovery ? "false" : "true",
+        "\"timeout_seconds\":%.0f,\"batch_items\":32,\"image_total_pixels\":4194304,\"reference_resolution\":0,\"output_formats\":[\"png\"]",
+        resident ? "true" : "false",
+#ifdef __APPLE__
+        "false", /* Full Metal quality qualification is still open. */
+        "[]",
+#else
+        q->recovery ? "false" : "true",
+        "[\"cuda-sm86\"]",
+#endif
         embed ? "[\"embed\"]" : "[\"image_generate\",\"image_edit\"]",
         embed ? "[\"text\",\"image\",\"video\",\"audio\"]" : "[\"text\",\"image\"]",
-        embed ? 8192 : 262144, embed ? "[768,512,256,128]" : "[]", (unsigned long long)q->quota, q->timeout);
+        embed ? 8192 : 262144, embed ? "[768,512,256,128]" : "[]", (unsigned long long)q->quota,
+        embed || !q->image_timeout ? q->timeout : q->image_timeout
+    );
+#ifdef __APPLE__
+    buf_printf(b, ",\"admission_required\":true,\"memory_reserve_bytes\":%llu",
+        (unsigned long long)ds4_metal_host_reserve_bytes());
+#endif
+    if (q->device_working_set)
+        buf_printf(b, ",\"device_working_set_bytes\":%llu", (unsigned long long)q->device_working_set);
+    buf_puts(b, "},\"components\":[");
     for (size_t i = 0; i < ds4_bundle_component_count(m->bundle); i++) {
         const ds4_bundle_component *c = ds4_bundle_component_at(m->bundle, i);
         if (i) buf_putc(b, ',');
@@ -498,9 +697,27 @@ static void suite_append_model(buf *b, suite_state *q, suite_model *m) {
     }
     buf_puts(b, "]}}");
 }
-static void suite_append_models(server *s, buf *b) {
-    if (s->suite) for (unsigned i = 0; i < 2; i++) if (s->suite->models[i].bundle) {
-        buf_putc(b, ','); suite_append_model(b, s->suite, s->suite->models + i);
+/* Call under inference_mu or before starting client threads. Residency queries
+ * see a stable adapter state. Readers borrow only the serialized snapshot. */
+static void suite_catalog_refresh(suite_state *q) {
+    suite_catalog_model models[SUITE_MODELS] = {0};
+    for (unsigned i = 0; i < SUITE_MODELS; i++) if (q->models[i].bundle) {
+        buf body = {0};
+        suite_append_model(&body, q, q->models + i);
+        models[i].id = xstrdup(ds4_bundle_model(q->models[i].bundle));
+        models[i].json = body.ptr;
     }
+    suite_catalog_replace(&q->catalog, models);
+}
+static void suite_catalog_try_refresh(server *s) {
+    if (!pthread_mutex_trylock(&s->inference_mu)) {
+        suite_catalog_refresh(s->suite);
+        pthread_mutex_unlock(&s->inference_mu);
+    }
+}
+static void suite_append_models(server *s, buf *b) {
+    if (!s->suite) return;
+    suite_catalog_try_refresh(s);
+    suite_catalog_append_models(&s->suite->catalog, b);
 }
 static void suite_worker(server *, job *);

@@ -1,0 +1,36 @@
+{
+  "command": [
+    "./tests/test_qwen35_metal_features"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120.0,
+  "reason": "Verify embedded Flash MTP capability and actual speculative execution after unifying the public engine predicates",
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 2.0502354170002945,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 13782.627467416,
+      "pressure": 1,
+      "host_available_bytes": 10068262912,
+      "swap_bytes": 741930434,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 13783.637059291,
+      "pressure": 1,
+      "host_available_bytes": 9846423552,
+      "swap_bytes": 741930434,
+      "footprint_bytes": 346358744,
+      "resident_bytes": 328138752
+    }
+  ],
+  "executables_sha256": {
+    "./tests/test_qwen35_metal_features": "a602ccf04bd826d5bc304372a3e0aa90ade59af6b3350ef82e5d167ca32ab3ba"
+  },
+  "log_sha256": "94b5ea5358dddd3848bc55e57dc9ac3f2529b1b8e39397201f2c410d80a4141e"
+}

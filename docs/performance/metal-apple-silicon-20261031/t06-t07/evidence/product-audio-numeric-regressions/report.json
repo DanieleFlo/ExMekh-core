@@ -1,0 +1,70 @@
+{
+  "command": [
+    "env",
+    "DS4_SUITE_NUMERIC_METAL=1",
+    "build/metal-venv/bin/python",
+    "-m",
+    "unittest",
+    "tests.test_suite_numeric",
+    "tests.test_suite_numeric_api",
+    "tests.test_gemma_bf16_diagnostic",
+    "-v"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Complete regression after CPU-compatible F32 tanh/softmax and BF16 channel-major linear; frozen criteria and FP32 GEMM path retained.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 4.052470165999694,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 18006.953148041,
+      "pressure": 1,
+      "host_available_bytes": 10253959168,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 18007.965462333,
+      "pressure": 1,
+      "host_available_bytes": 10180214784,
+      "swap_bytes": 262144,
+      "footprint_bytes": 157745920,
+      "resident_bytes": 210616320
+    },
+    {
+      "monotonic": 18008.972997916,
+      "pressure": 1,
+      "host_available_bytes": 9987948544,
+      "swap_bytes": 262144,
+      "footprint_bytes": 317080488,
+      "resident_bytes": 321667072
+    },
+    {
+      "monotonic": 18009.980319,
+      "pressure": 1,
+      "host_available_bytes": 10151116800,
+      "swap_bytes": 262144,
+      "footprint_bytes": 606274832,
+      "resident_bytes": 670138368
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "6992c7f6ee539aa95a6a2ebcbcaf5b15aef4cf61c25ff1e650f4a9763ea29ac9"
+}

@@ -1,0 +1,457 @@
+{
+  "date": "2026-10-29",
+  "source_base": "8e8ac45a7b463f7d4d72d859234f794b815019ef",
+  "state": "PREPARED; INFERENCE NOT_VERIFIED",
+  "scope": "Qwen3.8 27B Quick Chat preparation on Apple Silicon; user will free RAM later.",
+  "profile": "config/qwen27-metal-quick.env.example",
+  "model": {
+    "path": "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024,
+    "header_prefix_bytes": 65536,
+    "header_prefix_sha256": "33d59438e6285866f1dd286bd1fb8cbab76826949f9b117b62ee824049ccd7d9",
+    "whole_file_hash_reverified": false
+  },
+  "sources": {
+    "agent/src/exmekh_agent/exmekh_bridge/resources/prompts/ds4_tools_suffix.md": {
+      "sha256": "7e3db1627736f63ab06a359d813ab05e3ff42c4864943f40435137c6c98786b3",
+      "bytes": 725
+    },
+    "agent/tests/test_ds4_prompt_resources.py": {
+      "sha256": "218fab0979b638b828e66f2988609a9c6f021f055a2b32610e440767e5675d70",
+      "bytes": 915
+    },
+    "tests/test_flash_launcher.py": {
+      "sha256": "dfc906b196f591a5314c65e0918dc42f891520e72f1fdb9ad45167e0b0b6babd",
+      "bytes": 8234
+    },
+    "config/qwen27-metal-quick.env.example": {
+      "sha256": "586e9482b4469b012c6478338f6e9b8259d46a3e001755736b1fe3e934b55f5f",
+      "bytes": 507
+    },
+    "agent/uv.lock": {
+      "sha256": "a07baba8a749f9955bcbfc5e78d272f5609f64bc5607a2acb8a18b7d95117170",
+      "bytes": 797635
+    },
+    "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl": {
+      "sha256": "fbe3767ddfbbada8e1c8a3244df46eb06e5266a4fe456ec491564f0104035b09",
+      "bytes": 406819
+    },
+    "ds4_prompt_settings.h": {
+      "sha256": "dd76174f7583f834cb6759a47a92175ac0aa995d34bd48d4dc1d9cb932c9101e",
+      "bytes": 5938
+    },
+    "ds4_server.c": {
+      "sha256": "6b7da81f76bb5efe620e1ab1b352e97db4ae4547227c489b6959a516f55a8541",
+      "bytes": 1408054
+    },
+    "agent/src/exmekh_agent/exmekh_bridge/providers/ds4_prompt.py": {
+      "sha256": "c0394e52283cc30b6f23e6678966b93b9b239d737b0801261be2afca41844cd4",
+      "bytes": 4837
+    }
+  },
+  "frontend": {
+    "command": [
+      "agent/.venv/bin/exmekh-agent"
+    ],
+    "port": 8017,
+    "status": "PASS",
+    "http_status": 200,
+    "html_bytes": 177306,
+    "startup_seconds": 5.27,
+    "elapsed_seconds": 45.677
+  },
+  "prompt_budget": {
+    "scope": "Production frontend node/request construction; captured before inference; frontend renderer, exact GGUF tokenizer. No inference or tools executed.",
+    "results": [
+      {
+        "mode": "generic",
+        "thinking": false,
+        "prompt_tokens": 4460,
+        "tool_count": 23,
+        "contexts": {
+          "512": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "1024": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "2048": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "4096": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          }
+        },
+        "command": [
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4",
+          "-m",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+          "--dump-tokens",
+          "--raw",
+          "--prompt-file",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/qwen27-agent-20261029/generic-none.txt"
+        ],
+        "server_render_matches_frontend": true,
+        "server_prompt_tokens": 4460,
+        "prompt_sha256": "4e2fd2a0cc883ce523ef93104ea208915916691a6fed155f2d778e871c085e94",
+        "initial_frontend_prompt_tokens": 4477,
+        "final_tokenizer_command": [
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4",
+          "-m",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+          "--dump-tokens",
+          "--raw",
+          "--prompt-file",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/qwen27-agent-20261029/generic-none-final.txt"
+        ]
+      },
+      {
+        "mode": "generic",
+        "thinking": true,
+        "prompt_tokens": 4458,
+        "tool_count": 23,
+        "contexts": {
+          "512": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "1024": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "2048": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "4096": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          }
+        },
+        "command": [
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4",
+          "-m",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+          "--dump-tokens",
+          "--raw",
+          "--prompt-file",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/qwen27-agent-20261029/generic-thinking.txt"
+        ],
+        "server_render_matches_frontend": true,
+        "server_prompt_tokens": 4458,
+        "prompt_sha256": "1d2acf6a9754247ff8d849170cb3d09c383e6163fbe3d81c579f769e6bc95b90",
+        "initial_frontend_prompt_tokens": 4475,
+        "final_tokenizer_command": [
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4",
+          "-m",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+          "--dump-tokens",
+          "--raw",
+          "--prompt-file",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/qwen27-agent-20261029/generic-thinking-final.txt"
+        ]
+      },
+      {
+        "mode": "quick",
+        "thinking": false,
+        "prompt_tokens": 2497,
+        "tool_count": 6,
+        "contexts": {
+          "512": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "1024": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "2048": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "4096": {
+            "fits_prompt": true,
+            "room_for_output": 1599
+          }
+        },
+        "command": [
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4",
+          "-m",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+          "--dump-tokens",
+          "--raw",
+          "--prompt-file",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/qwen27-agent-20261029/quick-none.txt"
+        ],
+        "server_render_matches_frontend": true,
+        "server_prompt_tokens": 2497,
+        "prompt_sha256": "dad302f01f24c477a3ce17a8ff72cfbe33504f8c21448fe2d0e7a72da63cfbc7",
+        "initial_frontend_prompt_tokens": 2514,
+        "final_tokenizer_command": [
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4",
+          "-m",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+          "--dump-tokens",
+          "--raw",
+          "--prompt-file",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/qwen27-agent-20261029/quick-none-final.txt"
+        ]
+      },
+      {
+        "mode": "quick",
+        "thinking": true,
+        "prompt_tokens": 2495,
+        "tool_count": 6,
+        "contexts": {
+          "512": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "1024": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "2048": {
+            "fits_prompt": false,
+            "room_for_output": 0
+          },
+          "4096": {
+            "fits_prompt": true,
+            "room_for_output": 1601
+          }
+        },
+        "command": [
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4",
+          "-m",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+          "--dump-tokens",
+          "--raw",
+          "--prompt-file",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/qwen27-agent-20261029/quick-thinking.txt"
+        ],
+        "server_render_matches_frontend": true,
+        "server_prompt_tokens": 2495,
+        "prompt_sha256": "0c15e8974cdd36203ade70c5cd0f9c6747461c676038c61123606be562a795e5",
+        "initial_frontend_prompt_tokens": 2512,
+        "final_tokenizer_command": [
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4",
+          "-m",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+          "--dump-tokens",
+          "--raw",
+          "--prompt-file",
+          "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/qwen27-agent-20261029/quick-thinking-final.txt"
+        ]
+      }
+    ],
+    "wire_json": "Compact UTF-8 JSON verified against installed httpx encode_json; native parser preserves raw schema whitespace.",
+    "renderer_gate": "PASS: final frontend rendering is byte-exact with the native Qwen27 C renderer for the four captured requests."
+  },
+  "memory_attempts": [
+    {
+      "status": "SKIP_RESOURCE_LIMIT",
+      "command": [
+        "./ds4",
+        "--metal",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--ctx",
+        "256",
+        "--prefill-chunk",
+        "64",
+        "--no-mtp",
+        "--raw",
+        "--temp",
+        "0",
+        "-p",
+        "1+1=",
+        "-n",
+        "4"
+      ],
+      "source_base": "8e8ac45a7b463f7d4d72d859234f794b815019ef",
+      "exit_code": 1,
+      "elapsed_seconds": 1.044,
+      "stop_reason": null,
+      "forced": false,
+      "before": {
+        "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 62%",
+        "swap": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)"
+      },
+      "samples": [
+        {
+          "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 62%",
+          "swap": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)",
+          "rss_bytes": 32768
+        }
+      ],
+      "after": {
+        "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 61%",
+        "swap": "vm.swapusage: total = 4096.00M  used = 2540.81M  free = 1555.19M  (encrypted)"
+      },
+      "output": "ds4: Metal device Apple M5 Pro, 24.00 GiB RAM\nds4: Metal 4 tensor API enabled for Tensor kernels\nds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on\nds4: Metal memory admission refused: model/state/runtime 14.76 GiB, available budget 5.40 GiB (2 GiB safety reserve)\n"
+    },
+    {
+      "status": "SKIP_RESOURCE_LIMIT",
+      "command": [
+        "./ds4",
+        "--metal",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--ctx",
+        "4096",
+        "--prefill-chunk",
+        "64",
+        "--no-mtp",
+        "--raw",
+        "--temp",
+        "0",
+        "-p",
+        "1+1=",
+        "-n",
+        "4"
+      ],
+      "source_base": "8e8ac45a7b463f7d4d72d859234f794b815019ef",
+      "exit_code": 1,
+      "elapsed_seconds": 1.03,
+      "stop_reason": null,
+      "forced": false,
+      "before": {
+        "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 59%",
+        "swap": "vm.swapusage: total = 4096.00M  used = 2500.81M  free = 1595.19M  (encrypted)"
+      },
+      "samples": [
+        {
+          "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 59%",
+          "swap": "vm.swapusage: total = 4096.00M  used = 2500.81M  free = 1595.19M  (encrypted)",
+          "rss_bytes": 3620864
+        }
+      ],
+      "after": {
+        "pressure": "The system has 25769803776 (1572864 pages with a page size of 16384).\nSystem-wide memory free percentage: 59%",
+        "swap": "vm.swapusage: total = 4096.00M  used = 2500.81M  free = 1595.19M  (encrypted)"
+      },
+      "output": "ds4: Metal device Apple M5 Pro, 24.00 GiB RAM\nds4: Metal 4 tensor API enabled for Tensor kernels\nds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on\nds4: Metal memory admission refused: model/state/runtime 15.22 GiB, available budget 5.65 GiB (2 GiB safety reserve)\n"
+    }
+  ],
+  "checks": {
+    "frontend-tests": {
+      "status": "PASS",
+      "command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-n",
+        "0",
+        "--no-cov",
+        "tests/test_ds4_prompt_resources.py",
+        "tests/test_config.py",
+        "tests/test_provider_context.py",
+        "tests/test_settings_lifecycle.py"
+      ],
+      "cwd": "agent",
+      "output": "============================= test session starts ==============================\nplatform darwin -- Python 3.13.13, pytest-9.1.1, pluggy-1.6.0\nrootdir: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent\nconfigfile: pyproject.toml\nplugins: cov-7.1.0, xdist-3.8.0, asyncio-1.4.0, anyio-4.15.1\nasyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 47 items\n\ntests/test_ds4_prompt_resources.py ..                                    [  4%]\ntests/test_config.py .....                                               [ 14%]\ntests/test_provider_context.py ............................              [ 74%]\ntests/test_settings_lifecycle.py ............                            [100%]\n\n============================== 47 passed in 1.05s ==============================\n",
+      "sha256": "cef2ef71e9d404ba09b0f17a4916f3d0f48888f29e9c976047d79c72926bc520"
+    },
+    "launchers": {
+      "status": "PASS",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_flash_launcher",
+        "-v"
+      ],
+      "cwd": ".",
+      "output": "test_27b_launcher_ignores_flash_profile (tests.test_flash_launcher.FlashLauncherTests.test_27b_launcher_ignores_flash_profile) ... ok\ntest_default_is_the_qualified_profile (tests.test_flash_launcher.FlashLauncherTests.test_default_is_the_qualified_profile) ... ok\ntest_explicit_overrides (tests.test_flash_launcher.FlashLauncherTests.test_explicit_overrides) ... ok\ntest_invalid_profile_is_rejected (tests.test_flash_launcher.FlashLauncherTests.test_invalid_profile_is_rejected) ... ok\ntest_legacy_reproduces_original (tests.test_flash_launcher.FlashLauncherTests.test_legacy_reproduces_original) ... ok\ntest_metal_agent_honors_explicit_native_suite (tests.test_flash_launcher.FlashLauncherTests.test_metal_agent_honors_explicit_native_suite) ... ok\ntest_metal_flash_uses_small_context_and_no_cuda_profile (tests.test_flash_launcher.FlashLauncherTests.test_metal_flash_uses_small_context_and_no_cuda_profile) ... ok\ntest_metal_quick_chat_profile_has_explicit_agent_capacity (tests.test_flash_launcher.FlashLauncherTests.test_metal_quick_chat_profile_has_explicit_agent_capacity) ... ok\ntest_native_agent_configuration_preserves_explicit_capacity_and_flags (tests.test_flash_launcher.FlashLauncherTests.test_native_agent_configuration_preserves_explicit_capacity_and_flags) ... ok\ntest_root_launcher_retains_llm_default_and_accepts_native_config (tests.test_flash_launcher.FlashLauncherTests.test_root_launcher_retains_llm_default_and_accepts_native_config) ... ok\ntest_standard_complete_gpu_profile (tests.test_flash_launcher.FlashLauncherTests.test_standard_complete_gpu_profile) ... ok\n\n----------------------------------------------------------------------\nRan 11 tests in 0.216s\n\nOK\n",
+      "sha256": "7e0466ac6b2d10d0af0823c494ad697f4e026255134026ff2158437c1a1aa741"
+    },
+    "interactive-host": {
+      "status": "PASS",
+      "command": [
+        "make",
+        "test-server-interactive"
+      ],
+      "cwd": ".",
+      "output": "cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_server_interactive tests/test_server_interactive.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread\n./tests/test_server_interactive\ninteractive snapshot benchmark bytes=1048520 lines=18590 index_ms=54.500 lookup_us=0.720\ninteractive literal server tests: ok\n",
+      "sha256": "da51eccca6c6b3cb3842d5e55c81a629e125277f08407a22eeab237c4d1966fb"
+    },
+    "build": {
+      "status": "PASS",
+      "command": [
+        "make",
+        "-j2",
+        "all",
+        "ds4-server-suite"
+      ],
+      "output": "make: Nothing to be done for `all'.\nmake: `ds4-server-suite' is up to date.\n",
+      "sha256": "7f933bbcad0e00fa5aa81d79cb37c6c33a4f3adc95f818c1ce10b311e23acf5b"
+    },
+    "documentation": {
+      "status": "PASS",
+      "command": [
+        "make",
+        "docs-check"
+      ],
+      "output": "python3 tools/build_research_indexes.py\nindexed 49 documents\npython3 tools/build_docs_indexes.py\nindexed 96 documents\npython3 -m unittest tests.test_research_corpus tests.test_docs_wiki -v\ntest_all_local_markdown_links_resolve (tests.test_research_corpus.ResearchCorpusTests.test_all_local_markdown_links_resolve) ... ok\ntest_catalog_ranges_point_to_the_declared_headings (tests.test_research_corpus.ResearchCorpusTests.test_catalog_ranges_point_to_the_declared_headings) ... ok\ntest_every_authored_repository_card_has_at_most_one_external_link (tests.test_research_corpus.ResearchCorpusTests.test_every_authored_repository_card_has_at_most_one_external_link) ... ok\ntest_manifest_lock_and_downloaded_hashes_are_complete (tests.test_research_corpus.ResearchCorpusTests.test_manifest_lock_and_downloaded_hashes_are_complete) ... ok\ntest_master_and_index_of_indexes_reach_every_group (tests.test_research_corpus.ResearchCorpusTests.test_master_and_index_of_indexes_reach_every_group) ... ok\ntest_repository_lock_uses_full_commits_and_evidence_classes (tests.test_research_corpus.ResearchCorpusTests.test_repository_lock_uses_full_commits_and_evidence_classes) ... ok\ntest_all_local_markdown_links_resolve (tests.test_docs_wiki.DocsWikiTests.test_all_local_markdown_links_resolve) ... ok\ntest_catalog_ranges_point_to_declared_headings (tests.test_docs_wiki.DocsWikiTests.test_catalog_ranges_point_to_declared_headings) ... ok\ntest_no_markdown_is_orphaned_or_flat_at_docs_root (tests.test_docs_wiki.DocsWikiTests.test_no_markdown_is_orphaned_or_flat_at_docs_root) ... ok\ntest_root_and_index_of_indexes_reach_every_group (tests.test_docs_wiki.DocsWikiTests.test_root_and_index_of_indexes_reach_every_group) ... ok\n\n----------------------------------------------------------------------\nRan 10 tests in 1.316s\n\nOK\n",
+      "sha256": "13b572763062a8ff6bbbb4475781bf14e370f60336d88a861ef58a5c3c61e29a"
+    }
+  },
+  "not_verified": [
+    "Real Qwen27 Metal forward and teacher logits",
+    "Real Quick Chat response and tools",
+    "Agent checkpoints/restore after inference",
+    "Qwen27 MTP/vision",
+    "Images/embeddings and LLM alternation",
+    "CUDA/ROCm/distributed and other Apple hardware"
+  ],
+  "setup_findings": [
+    "Offline uv sync cache was incomplete; pinned dependencies installed from package registry.",
+    "A new resource parity test caught an accidental trailing newline; corrected before final tests.",
+    "Initial C prompt replay with spaced JSON did not match the SDK wire; final replay uses compact UTF-8 JSON."
+  ],
+  "probe_sources": {
+    "prompt_budget.py": "import json\nfrom pathlib import Path\nimport subprocess\n\nfrom exmekh_lib.core.agents.deep_agent.deep_agent import DeepAgent\nfrom exmekh_lib.core.agents.node import DefaultCapabilities\nfrom exmekh_lib.core.providers.openai_response_tool_mapper import OpenAIResponseToolMapper\nfrom exmekh_lib.interfaces.provider import Provider\nfrom exmekh_lib.tokenizers.qwen import QwenTokenizer\nfrom exmekh_lib.utils.json import serialize_json\n\nfrom exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEventRouter\nfrom exmekh_agent.exmekh_bridge.capabilities.agent_design import build_generic_agent, build_quick_agent\nfrom exmekh_agent.exmekh_bridge.providers.ds4_prompt import render_ds4_qwen_prompt\n\nROOT=Path.cwd().parent\nOUT=ROOT/'build/qwen27-agent-20261029'\nclass Captured(BaseException):\n    pass\nclass Capture(Provider):\n    def __init__(self):\n        super().__init__(QwenTokenizer())\n        self.request=None\n    def call(self, request):\n        self.request=request\n        raise Captured()\n    def call_structured(self, request):\n        raise RuntimeError('Unexpected structured request before initial turn')\n    def get_tools_text(self, tools):\n        return serialize_json(OpenAIResponseToolMapper.map_tools(tools)) if tools else ''\n\ndef capture(mode):\n    if mode=='quick':\n        node=build_quick_agent({},'metal-readiness-quick')\n    else:\n        node,_=build_generic_agent([DefaultCapabilities().capabilities_path],SubAgentEventRouter(None),{},root_name='main',coding_persistent_history=True,agent_context_id='metal-readiness-main')\n    provider=Capture()\n    agent=DeepAgent(provider,node,OUT)\n    try:\n        agent.run('Reply with OK.')\n    except Captured:\n        pass\n    request=provider.request\n    if request is None:\n        raise RuntimeError('No initial request captured')\n    messages=[m.message_dump() for m in request.get_messages()]\n    tools=OpenAIResponseToolMapper.map_tools(request.get_tools()) if request.get_tools() else []\n    (OUT/(mode+'-request.json')).write_text(json.dumps({'messages':messages,'tools':tools,'extra':request.get_extra()},indent=2)+'\\n')\n    results=[]\n    for thinking in (False,True):\n        prompt=render_ds4_qwen_prompt(messages,tools,thinking=thinking)\n        path=OUT/(mode+('-thinking' if thinking else '-none')+'.txt')\n        path.write_text(prompt)\n        command=[str(ROOT/'ds4'),'-m',str(ROOT/'gguf/Qwen3.8-27B-UD-Q4_K_S.gguf'),'--dump-tokens','--raw','--prompt-file',str(path)]\n        result=subprocess.run(command,text=True,capture_output=True,timeout=30,check=True)\n        tokens=json.loads(result.stdout.splitlines()[0])\n        (path.with_suffix('.tokens.json')).write_text(json.dumps(tokens)+'\\n')\n        results.append({'mode':mode,'thinking':thinking,'prompt_tokens':len(tokens),'tool_count':len(tools),'contexts':{str(c):{'fits_prompt':len(tokens)<c,'room_for_output':max(c-len(tokens),0)} for c in (512,1024,2048)},'command':command})\n    return results\nresults=capture('generic')+capture('quick')\n(OUT/'prompt-budget.json').write_text(json.dumps({'scope':'Production frontend node/request construction; captured before inference; frontend renderer, exact GGUF tokenizer. No inference or tools executed.','results':results},indent=2)+'\\n')\nprint(json.dumps(results,indent=2))\n",
+    "probe_prompt.c": "/* Qualification only: real server parsers/renderers, no engine or inference. */\n#define DS4_SERVER_TEST\n#define DS4_SERVER_TEST_NO_MAIN\n#include \"ds4_server.c\"\nstatic char *read_small(const char *path) {\n    FILE *f = fopen(path, \"rb\");\n    if (!f) return NULL;\n    char *out = NULL;\n    if (!fseek(f, 0, SEEK_END)) {\n        long n = ftell(f);\n        if (n >= 0 && n <= 1024 * 1024 && !fseek(f, 0, SEEK_SET)) {\n            out = calloc((size_t)n + 1, 1);\n            if (out && fread(out, 1, (size_t)n, f) != (size_t)n) {\n                free(out); out = NULL;\n            }\n        }\n    }\n    fclose(f);\n    return out;\n}\nint main(int argc, char **argv) {\n    if (argc != 4) return 2;\n    char *input = read_small(argv[1]), *tools = read_small(argv[2]);\n    char *schemas = NULL, error[256] = {0};\n    chat_msgs messages = {0};\n    tool_schema_orders orders = {0};\n    const char *p = input, *t = tools;\n    int result = 1;\n    if (input && tools && parse_responses_input(&p, &messages, NULL, NULL, error, sizeof(error)) &&\n        parse_tools_value(&t, &schemas, &orders)) {\n        ds4_think_mode mode = !strcmp(argv[3], \"none\") ? DS4_THINK_NONE : DS4_THINK_HIGH;\n        char *rendered = render_qwen_chat_prompt_text(&messages, schemas, &orders, mode, mode);\n        if (rendered) {\n            result = fputs(rendered, stdout) < 0 ? 1 : 0;\n            free(rendered);\n        }\n    } else fprintf(stderr, \"prompt parse failed: %s\\n\", error);\n    free(input); free(tools); free(schemas);\n    chat_msgs_free(&messages);\n    tool_schema_orders_free(&orders);\n    return result;\n}\n",
+    "diagnostic.mk": "include Makefile\nbuild/qwen27-agent-20261029/probe_prompt: build/qwen27-agent-20261029/probe_prompt.c ds4_server.c $(CPU_CORE_OBJS) ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o\n\t$(CC) $(CFLAGS) -DDS4_NO_GPU -Wno-unused-function -I. -o $@ $< $(CPU_CORE_OBJS) ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(LDLIBS)\n"
+  },
+  "production_engine_unchanged": {
+    "ds4.c": true,
+    "ds4_server.c": true,
+    "ds4_metal.m": true,
+    "ds4_numeric_metal.m": true,
+    "ds4_prompt_settings.h": true
+  },
+  "browser_observation": {
+    "url": "http://127.0.0.1:8017/",
+    "title": "ExMekh Agent",
+    "verified": [
+      "Projects/Quick Chats navigation",
+      "Chat/Raw History/Graph tabs",
+      "Qwen3.8-27B model label",
+      "Empty text input and send control"
+    ],
+    "message_sent": false
+  },
+  "frontend_launcher": {
+    "command": [
+      "source config/qwen27-metal-quick.env.example",
+      "agent/run.sh"
+    ],
+    "offline": true,
+    "port": 8017,
+    "status": "PASS",
+    "http_status": 200,
+    "html_bytes": 177303,
+    "startup_seconds": 5.317,
+    "elapsed_seconds": 6.633
+  },
+  "fixture": {
+    "path": "quick-request.json",
+    "sha256": "80d7839e4544974a179a06f1b0fcce3cd5b4c4645b568af746fee71ee3a943b1"
+  },
+  "completion": "Preparation finished at user request; no further model retries until the user reports RAM available."
+}

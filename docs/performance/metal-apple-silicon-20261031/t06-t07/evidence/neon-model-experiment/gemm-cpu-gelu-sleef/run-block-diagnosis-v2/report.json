@@ -1,0 +1,72 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-first-block.py",
+    "gemm-cpu-gelu-sleef"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Replay actual SLEEF GELU dispatch after correcting experimental selector; preserve earlier unused-kernel report.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 5.077825541000493,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 10008.740290791,
+      "pressure": 1,
+      "host_available_bytes": 11693867008,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 10009.750631,
+      "pressure": 1,
+      "host_available_bytes": 11476533248,
+      "swap_bytes": 262144,
+      "footprint_bytes": 159498912,
+      "resident_bytes": 209666048
+    },
+    {
+      "monotonic": 10010.761565541,
+      "pressure": 1,
+      "host_available_bytes": 11407507456,
+      "swap_bytes": 262144,
+      "footprint_bytes": 178242232,
+      "resident_bytes": 229228544
+    },
+    {
+      "monotonic": 10011.774619125,
+      "pressure": 1,
+      "host_available_bytes": 11200364544,
+      "swap_bytes": 262144,
+      "footprint_bytes": 232342248,
+      "resident_bytes": 284409856
+    },
+    {
+      "monotonic": 10012.786269125,
+      "pressure": 1,
+      "host_available_bytes": 11171692544,
+      "swap_bytes": 262144,
+      "footprint_bytes": 321897384,
+      "resident_bytes": 388694016
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "48d9cbd01f49a169de8f2bbc888ee0516b395b825e5f6eeb63a1b680bc1ba7b9"
+}

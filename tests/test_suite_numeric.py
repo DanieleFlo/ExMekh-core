@@ -1,4 +1,4 @@
-"""Independent PyTorch oracle for the C/CUDA suite kernels (no model server).
+"""Independent PyTorch oracle for the C/CUDA/Metal suite kernels (no model server).
 
 Set DS4_SUITE_DUMP to retain every full input/output plus numeric metrics.
 The frozen T00 ceilings apply per case, never to averages across cases.
@@ -8,6 +8,7 @@ import ctypes as C
 import json
 import math
 import os
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -15,244 +16,32 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+from tests.suite_numeric_api import (
+    Attention,
+    Budget,
+    Conv,
+    NativeError,
+    Numeric,
+    Reindex,
+    Resample,
+    View,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
 torch.set_num_threads(2)
 
 
-class View(C.Structure):
-    _fields_ = [("data", C.c_void_p), ("count", C.c_uint64), ("type", C.c_uint32)]
-
-
-class Attention(C.Structure):
-    _fields_ = [
-        (k, C.c_uint32)
-        for k in ("batch", "queries", "keys", "q_heads", "kv_heads", "dim")
-    ] + [
-        ("scale", C.c_float),
-        ("softcap", C.c_float),
-        ("round_scores", C.c_bool),
-        ("round_probabilities", C.c_bool),
-        ("relative_keys", View),
-        ("relative_rows", C.c_uint32),
-        ("relative_offset", C.c_int32),
-    ]
-
-
-class Reindex(C.Structure):
-    _fields_ = [
-        ("rank", C.c_uint32),
-        ("shape", C.c_uint64 * 8),
-        ("stride", C.c_uint64 * 8),
-    ]
-
-
-class Resample(C.Structure):
-    _fields_ = [
-        ("batch", C.c_uint32),
-        ("channels", C.c_uint32),
-        ("input", C.c_uint32 * 3),
-        ("output", C.c_uint32 * 3),
-    ]
-
-
-class Conv(C.Structure):
-    _fields_ = [
-        (k, C.c_uint32) for k in ("batch", "in_channels", "out_channels", "groups")
-    ] + [
-        (k, C.c_uint32 * 3)
-        for k in ("input", "kernel", "stride", "dilation", "pad_before", "pad_after")
-    ]
-
-
-class Numeric:
-    def __init__(self, cuda=False):
-        self.lib = C.CDLL(
-            str(ROOT / f"tests/libds4_numeric_{'cuda' if cuda else 'cpu'}.so")
-        )
-        lib = self.lib
-        ptr = C.c_void_p
-        signatures = {
-            "ds4_resources_create": [C.POINTER(ptr)],
-            "ds4_resources_close": [ptr],
-            "ds4_numeric_cpu": [C.POINTER(ptr), ptr, C.c_uint64],
-            "ds4_numeric_close": [ptr],
-            "ds4_numeric_fence": [ptr],
-            "ds4_num_alloc": [ptr, C.c_uint64, C.c_uint32, C.POINTER(ptr)],
-            "ds4_num_free": [ptr],
-            "ds4_num_data": [ptr],
-            "ds4_num_write": [ptr, View, ptr, C.c_uint64],
-            "ds4_num_read": [ptr, View, ptr, C.c_uint64],
-            "ds4_num_linear": [
-                ptr,
-                View,
-                View,
-                View,
-                View,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_uint32,
-            ],
-            "ds4_num_matmul_batch": [
-                ptr,
-                View,
-                View,
-                View,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_bool,
-            ],
-            "ds4_num_matmul_batch_layout": [
-                ptr,
-                View,
-                View,
-                View,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_bool,
-                C.c_bool,
-            ],
-            "ds4_num_channel_l2": [ptr, View, View, C.c_uint32, C.c_uint32, C.c_float],
-            "ds4_num_channel_rms": [
-                ptr,
-                View,
-                View,
-                View,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_float,
-            ],
-            "ds4_num_norm": [
-                ptr,
-                View,
-                View,
-                View,
-                View,
-                C.c_uint32,
-                C.c_float,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_bool,
-            ],
-            "ds4_num_point": [ptr, View, View, View, C.c_uint32, C.c_float],
-            "ds4_num_rope": [
-                ptr,
-                View,
-                View,
-                View,
-                View,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_bool,
-                C.c_bool,
-            ],
-            "ds4_num_rope_complex": [
-                ptr,
-                View,
-                View,
-                View,
-                View,
-                C.c_uint32,
-                C.c_uint32,
-            ],
-            "ds4_num_attend": [
-                ptr,
-                View,
-                View,
-                View,
-                View,
-                C.POINTER(C.c_uint32),
-                C.POINTER(Attention),
-            ],
-            "ds4_num_conv": [ptr, View, View, View, View, C.POINTER(Conv)],
-            "ds4_num_dequantize": [ptr, C.c_uint64, ptr, C.c_uint64, C.c_uint32],
-            "ds4_num_reorder": [ptr, View, View, C.POINTER(Reindex)],
-            "ds4_num_pool": [
-                ptr,
-                View,
-                View,
-                C.POINTER(C.c_uint32),
-                C.c_uint32,
-                C.c_uint32,
-                C.c_uint32,
-                C.c_float,
-            ],
-            "ds4_num_nearest": [ptr, View, View, C.POINTER(Resample)],
-            "ds4_num_softmax": [
-                ptr,
-                View,
-                View,
-                C.POINTER(C.c_uint32),
-                C.c_uint32,
-                C.c_uint32,
-                C.c_float,
-            ],
-        }
-        if cuda:
-            signatures["ds4_numeric_cuda"] = signatures["ds4_numeric_cpu"]
-        for name, args in signatures.items():
-            fn = getattr(lib, name)
-            fn.argtypes = args
-            fn.restype = View if name == "ds4_num_data" else C.c_int
-        self.resources, self.ctx = ptr(), ptr()
-        self.ok(lib.ds4_resources_create(C.byref(self.resources)))
-        self.ok(
-            getattr(lib, "ds4_numeric_cuda" if cuda else "ds4_numeric_cpu")(
-                C.byref(self.ctx), self.resources, 100
-            )
-        )
-        self.buffers = []
-
-    @staticmethod
-    def ok(status):
-        if status:
-            raise AssertionError(f"native status {status}")
-
-    def tensor(self, tensor):
-        tensor = tensor.detach().cpu().contiguous()
-        dtype = 30 if tensor.dtype == torch.bfloat16 else 0
-        p = C.c_void_p()
-        self.ok(self.lib.ds4_num_alloc(self.ctx, tensor.numel(), dtype, C.byref(p)))
-        self.buffers.append(p)
-        v = self.lib.ds4_num_data(p)
-        array = (
-            tensor.view(torch.uint16).numpy() if dtype == 30 else tensor.float().numpy()
-        )
-        self.ok(self.lib.ds4_num_write(self.ctx, v, array.ctypes.data, array.nbytes))
-        return v
-
-    def read(self, v, shape):
-        arr = np.empty(v.count, dtype=np.uint16 if v.type == 30 else np.float32)
-        self.ok(self.lib.ds4_num_read(self.ctx, v, arr.ctypes.data, arr.nbytes))
-        result = torch.from_numpy(arr)
-        return (
-            (result.view(torch.bfloat16) if v.type == 30 else result)
-            .float()
-            .reshape(shape)
-        )
-
-    def call(self, name, *args):
-        self.ok(getattr(self.lib, "ds4_num_" + name)(self.ctx, *args))
-
-    def clear(self):
-        while self.buffers:
-            self.ok(self.lib.ds4_num_free(self.buffers.pop()))
-
-    def close(self):
-        self.clear()
-        self.ok(self.lib.ds4_numeric_close(self.ctx))
-        self.ok(self.lib.ds4_resources_close(self.resources))
-
-
 class SuiteNumeric(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.n = Numeric(bool(os.environ.get("DS4_SUITE_NUMERIC_CUDA")))
+        backend = "cpu"
+        if os.environ.get("DS4_SUITE_NUMERIC_METAL"):
+            backend = "metal"
+        elif os.environ.get("DS4_SUITE_NUMERIC_CUDA"):
+            backend = "cuda"
+        cls.n = Numeric(backend)
         cls.metrics = []
         cls.dump = (
             Path(os.environ["DS4_SUITE_DUMP"])
@@ -272,6 +61,34 @@ class SuiteNumeric(unittest.TestCase):
 
     def tearDown(self):
         self.n.clear()
+
+    @unittest.skipUnless(os.environ.get("DS4_SUITE_NUMERIC_METAL"), "Metal file upload")
+    def test_file_upload_exact_bytes_chunk_tail_and_short_read(self):
+        for count, dtype in ((37, torch.bfloat16), ((8 << 20) // 4 + 5, torch.float32)):
+            with (
+                self.subTest(count=count, dtype=dtype),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                expected = torch.arange(count).to(dtype)
+                payload = (
+                    (
+                        expected.view(torch.uint16)
+                        if dtype == torch.bfloat16
+                        else expected
+                    )
+                    .numpy()
+                    .tobytes()
+                )
+                path = Path(directory) / "weights.bin"
+                path.write_bytes(b"unaligned-prefix!" + payload)
+                view = self.n.file_tensor(path, count, dtype, offset=17)
+                self.assertTrue(
+                    torch.equal(self.n.read(view, (count,)), expected.float())
+                )
+                with self.assertRaises(NativeError):
+                    self.n.file_tensor(
+                        path, 1, torch.float32, offset=path.stat().st_size
+                    )
 
     def compare(self, name, view, expected, **inputs):
         actual = self.n.read(view, expected.shape)
@@ -337,6 +154,110 @@ class SuiteNumeric(unittest.TestCase):
                     x=x,
                     w=w,
                 )
+
+    @unittest.skipUnless(
+        os.environ.get("DS4_SUITE_NUMERIC_METAL"), "Metal workspace admission"
+    )
+    def test_linear_workspace_bounds_owned_peak(self):
+        original = self.n
+        self.n = Numeric("metal")
+        self.addCleanup(setattr, self, "n", original)
+        self.addCleanup(self.n.close)
+        torch.manual_seed(20261029)
+        # A separate context makes this call's peak independent of the
+        # earlier attention tests' much larger high-water marks.
+        x = torch.randn(3, 4096, dtype=torch.bfloat16)
+        w = torch.randn(1024, 4096, dtype=torch.bfloat16) / 64
+        estimated = self.n.linear_workspace(3, 4096, 1024)
+        for dtype in (torch.bfloat16, torch.float32):
+            with self.subTest(output_dtype=dtype):
+                xv, wv = self.n.tensor(x.to(dtype)), self.n.tensor(w.to(dtype))
+                y = self.n.tensor(torch.zeros(3, 1024, dtype=dtype))
+                before = self.n.memory_usage().live_bytes
+                self.n.call("linear", y, xv, wv, View(), 3, 4096, 1024)
+                usage = self.n.memory_usage()
+                self.assertEqual(usage.live_bytes, before)
+                # A workspace bound permits a direct operation with no staging.
+                self.assertLessEqual(usage.peak_bytes - before, estimated)
+                expected = (
+                    F.linear(x, w)
+                    if dtype == torch.bfloat16
+                    else F.linear(x.float(), w.float())
+                )
+                self.compare(
+                    "linear-owned-workspace-" + str(dtype), y, expected, x=x, w=w
+                )
+                self.n.clear()
+        self.assertEqual(self.n.linear_workspace(0, 4096, 1024), 2**64 - 1)
+        self.assertEqual(
+            self.n.linear_workspace(2**32 - 1, 2**32 - 1, 2**32 - 1),
+            2**64 - 1,
+        )
+
+    @unittest.skipUnless(
+        os.environ.get("DS4_SUITE_NUMERIC_METAL"), "Metal BF16 LayerNorm boundaries"
+    )
+    def test_bf16_layernorm_matches_cpu_with_bias_and_in_place(self):
+        torch.manual_seed(20261101)
+        for width in (32, 128, 1152, 4608):
+            x = torch.randn(7, width).bfloat16()
+            weight = torch.randn(width).bfloat16()
+            bias = torch.randn(width).bfloat16()
+            expected = F.layer_norm(x, (width,), weight, bias, 1e-6)
+            for in_place in (False, True):
+                with self.subTest(width=width, in_place=in_place):
+                    xv = self.n.tensor(x)
+                    y = xv if in_place else self.n.tensor(torch.zeros_like(x))
+                    self.n.call(
+                        "norm",
+                        y,
+                        xv,
+                        self.n.tensor(weight),
+                        self.n.tensor(bias),
+                        width,
+                        1e-6,
+                        1,
+                        1,
+                        False,
+                    )
+                    actual = self.n.read(y, x.shape).bfloat16()
+                    self.assertTrue(
+                        torch.equal(
+                            actual.view(torch.int16), expected.view(torch.int16)
+                        )
+                    )
+                    self.n.clear()
+
+    @unittest.skipUnless(
+        os.environ.get("DS4_SUITE_NUMERIC_METAL"), "Metal BF16 channel-major RMS"
+    )
+    def test_bf16_channel_rms_preserves_cpu_outer_geometry(self):
+        torch.manual_seed(20261103)
+        for channels, spatial in ((31, 5), (32, 33), (128, 68), (1024, 69)):
+            with self.subTest(channels=channels, spatial=spatial):
+                source = torch.randn(channels, spatial).bfloat16()
+                scale = torch.randn(channels).bfloat16()
+                x = source.transpose(0, 1).float()
+                expected = (
+                    x
+                    * torch.pow(x.square().mean(-1, keepdim=True) + 1e-6, -0.5)
+                    * scale.float()
+                ).bfloat16()
+                y = self.n.tensor(torch.zeros(spatial, channels).bfloat16())
+                self.n.call(
+                    "channel_rms",
+                    y,
+                    self.n.tensor(source),
+                    self.n.tensor(scale),
+                    channels,
+                    spatial,
+                    1e-6,
+                )
+                actual = self.n.read(y, expected.shape).bfloat16()
+                self.assertTrue(
+                    torch.equal(actual.view(torch.int16), expected.view(torch.int16))
+                )
+                self.n.clear()
 
     def test_matmul_bf16_stored_layout(self):
         torch.manual_seed(41)
@@ -412,6 +333,80 @@ class SuiteNumeric(unittest.TestCase):
                 )
                 self.n.clear()
 
+    def test_bf16_linear_tile_preserves_rounding_and_partial_rows(self):
+        if self.n.backend != "metal":
+            self.skipTest("Metal SIMD projection")
+        rng = torch.Generator().manual_seed(20261103)
+        rows, inner, columns = 65, 1024, 1030
+        x = (torch.randn(rows, inner, generator=rng) / 16).bfloat16()
+        w = (torch.randn(columns, inner, generator=rng) / 16).bfloat16()
+        b = torch.randn(columns, generator=rng).bfloat16()
+        output = self.n.tensor(torch.zeros(rows, columns, dtype=torch.bfloat16))
+        self.n.call(
+            "linear",
+            output,
+            self.n.tensor(x),
+            self.n.tensor(w),
+            self.n.tensor(b),
+            rows,
+            inner,
+            columns,
+        )
+        actual = self.n.read(output, (rows, columns)).bfloat16()
+        expected = F.linear(x, w, b)
+        torch.testing.assert_close(
+            actual.view(torch.int16), expected.view(torch.int16), atol=0, rtol=0
+        )
+
+    def test_bf16_linear_tile_uses_only_active_ranges_of_borrowed_views(self):
+        if self.n.backend != "metal":
+            self.skipTest("Metal SIMD projection")
+        rng = torch.Generator().manual_seed(20261104)
+        rows, inner, columns = 65, 1024, 1030
+        padding = 16
+        x = (torch.randn(rows, inner, generator=rng) / 16).bfloat16()
+        w = (torch.randn(columns, inner, generator=rng) / 16).bfloat16()
+        bias = torch.randn(columns, generator=rng).bfloat16()
+        output_start = padding + x.numel() + padding
+        storage = torch.full(
+            (output_start + rows * columns + padding,),
+            -123.0,
+            dtype=torch.bfloat16,
+        )
+        storage[padding : padding + x.numel()] = x.flatten()
+        backing = self.n.tensor(storage)
+        # The declared input capacity includes the disjoint output region.
+        # Only the matrix prefix participates in computation and alias checks.
+        inputs = self.n.slice(backing, padding, storage.numel() - padding)
+        output = self.n.slice(backing, output_start, rows * columns + padding)
+        weights = self.n.tensor(F.pad(w.flatten(), (padding, padding), value=-123))
+        weights = self.n.slice(weights, padding, w.numel() + padding)
+        biases = self.n.tensor(F.pad(bias, (padding, padding), value=-123))
+        biases = self.n.slice(biases, padding, columns + padding)
+        self.n.call("linear", output, inputs, weights, biases, rows, inner, columns)
+
+        overlapping = self.n.slice(backing, padding + 1, rows * columns)
+        self.assertEqual(
+            self.n.lib.ds4_num_linear(
+                self.n.ctx,
+                overlapping,
+                inputs,
+                weights,
+                biases,
+                rows,
+                inner,
+                columns,
+            ),
+            1,
+        )
+        storage[output_start : output_start + rows * columns] = F.linear(
+            x, w, bias
+        ).flatten()
+        actual = self.n.read(backing, storage.shape).bfloat16()
+        torch.testing.assert_close(
+            actual.view(torch.int16), storage.view(torch.int16), atol=0, rtol=0
+        )
+
     def test_norms_and_points(self):
         torch.manual_seed(11)
         for dtype in (torch.float32, torch.bfloat16):
@@ -463,6 +458,64 @@ class SuiteNumeric(unittest.TestCase):
             ):
                 self.n.call("point", y, xv, bv, op, 0.25)
                 self.compare(f"point-{dtype}-{op}", y, expected, x=x, b=b)
+
+    def test_activation_finite_tails(self):
+        # Real Gemma PLE gates exceed the random unit fixture's range. A GPU
+        # tanh overflow must not turn a saturated positive GELU into NaN.
+        for dtype in (torch.float32, torch.bfloat16):
+            x = torch.tensor(
+                [-1e10, -100, -30, -20, -10, -8, -5, 0, 5, 8, 10, 20, 30, 100, 1e10]
+            ).to(dtype)
+            source = self.n.tensor(x)
+            y = self.n.tensor(torch.zeros_like(x))
+            for op, expected in (
+                (2, F.silu(x)),
+                (3, F.gelu(x)),
+                (4, F.gelu(x, approximate="tanh")),
+                (10, x.tanh()),
+            ):
+                self.n.call("point", y, source, View(), op, 0)
+                self.compare(f"activation-tail-{dtype}-{op}", y, expected, x=x)
+
+    def test_bf16_erf_gelu_boundaries(self):
+        if self.n.backend != "metal":
+            self.skipTest("Pinned CPU/Metal BF16 erf operation order")
+        values = torch.arange(65536, dtype=torch.int32).to(torch.uint16)
+        values = values.view(torch.bfloat16)
+        values = values[torch.isfinite(values)]
+        generator = torch.Generator().manual_seed(20261101)
+        shuffled = values[torch.randperm(values.numel(), generator=generator)]
+        for name, inputs in (("ordered", values), ("shuffled", shuffled)):
+            with self.subTest(order=name):
+                output = self.n.tensor(torch.zeros_like(inputs))
+                self.n.call("point", output, self.n.tensor(inputs), View(), 3, 0)
+                actual = self.n.read(output, inputs.shape).bfloat16()
+                expected = F.gelu(inputs)
+                self.assertTrue(
+                    torch.equal(actual.view(torch.int16), expected.view(torch.int16))
+                )
+
+    def test_vision_trigonometric_boundaries(self):
+        if self.n.backend != "metal":
+            self.skipTest("Pinned CPU/Metal trigonometric operation order")
+        angles = torch.arange(16).float()[:, None] * (
+            1 / (10000 ** (torch.arange(0, 36, 2).float() / 36))
+        )
+        values = torch.cat(
+            (
+                angles.flatten(),
+                torch.linspace(-124, 124, 8192),
+                torch.tensor([0.0, -0.0, 1e-38, -1e-38]),
+            )
+        )
+        for op, expected in ((13, values.sin()), (14, values.cos())):
+            with self.subTest(op=op):
+                output = self.n.tensor(torch.zeros_like(values))
+                self.n.call("point", output, self.n.tensor(values), View(), op, 0)
+                actual = self.n.read(output, expected.shape)
+                self.assertTrue(
+                    torch.equal(actual.view(torch.int32), expected.view(torch.int32))
+                )
 
     def test_complex_rope(self):
         torch.manual_seed(20261021)
@@ -665,8 +718,7 @@ class SuiteNumeric(unittest.TestCase):
             source = torch.tensor([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=dtype)
             tail = torch.tensor([2.0, 3.0, 99.0, 98.0], dtype=dtype)
             backing = self.n.tensor(torch.cat((torch.zeros(6, dtype=dtype), tail)))
-            unit = 2 if dtype == torch.bfloat16 else 4
-            scale = View(backing.data + 6 * unit, 4, backing.type)
+            scale = self.n.slice(backing, 6, 4)
             value = source.T.float()
             expected = (
                 (
@@ -762,6 +814,46 @@ class SuiteNumeric(unittest.TestCase):
                         v=v,
                     )
                     self.n.clear()
+
+    @unittest.skipUnless(
+        os.environ.get("DS4_SUITE_NUMERIC_METAL"), "Metal BF16 batched QK geometry"
+    )
+    def test_bf16_attention_preserves_cpu_layout_and_tail(self):
+        torch.manual_seed(20261102)
+        length, heads = 73, 3
+        for batch, dim in ((2, 64), (1, 72), (2, 72)):
+            with self.subTest(batch=batch, head_dim=dim):
+                q, k, v = [
+                    torch.randn(batch, length, heads, dim).bfloat16() for _ in range(3)
+                ]
+                scores = (q.transpose(1, 2) @ k.transpose(1, 2).transpose(-1, -2)) * (
+                    dim**-0.5
+                )
+                probabilities = scores.float().softmax(-1).bfloat16()
+                expected = (
+                    (probabilities @ v.transpose(1, 2)).transpose(1, 2).contiguous()
+                )
+                bounds = np.tile(
+                    np.array([[0, length]], dtype=np.uint32), (batch * length, 1)
+                )
+                parameters = Attention(
+                    batch, length, length, heads, heads, dim, dim**-0.5, 0, True, True
+                )
+                y = self.n.tensor(torch.zeros_like(q))
+                self.n.call(
+                    "attend",
+                    y,
+                    self.n.tensor(q),
+                    self.n.tensor(k),
+                    self.n.tensor(v),
+                    bounds.ctypes.data_as(C.POINTER(C.c_uint32)),
+                    C.byref(parameters),
+                )
+                actual = self.n.read(y, expected.shape).bfloat16()
+                self.assertTrue(
+                    torch.equal(actual.view(torch.int16), expected.view(torch.int16))
+                )
+                self.n.clear()
 
     @unittest.skipUnless(
         os.environ.get("DS4_SUITE_NUMERIC_CUDA"), "CUDA eager GEMM geometry"
@@ -960,6 +1052,99 @@ class SuiteNumeric(unittest.TestCase):
                 )
                 self.compare(f"conv-{dtype}-{groups}", y, expected, x=x, w=w, b=b)
 
+    @unittest.skipUnless(
+        os.environ.get("DS4_SUITE_NUMERIC_METAL"), "Metal ordered convolution"
+    )
+    def test_bf16_image_convolution_views(self):
+        rng = torch.Generator().manual_seed(20261104)
+        # Include a spatial tail, batches/groups, asymmetric padding, stride,
+        # dilation, and unaligned-channel fallback through the public API.
+        for channels, groups, kernel, stride, dilation, before, after, biased in (
+            (8, 1, 1, 1, 1, (0, 0), (0, 0), False),
+            (8, 2, 3, 1, 1, (1, 1), (1, 1), True),
+            (4, 1, 3, 2, 2, (2, 1), (0, 3), False),
+            (5, 1, 3, 1, 1, (1, 1), (1, 1), True),
+        ):
+            with self.subTest(
+                channels=channels, groups=groups, kernel=kernel, stride=stride
+            ):
+                x = (torch.randn((2, channels, 5, 7), generator=rng) / 8).bfloat16()
+                w = (
+                    torch.randn((6, channels // groups, kernel, kernel), generator=rng)
+                    / 8
+                ).bfloat16()
+                b = torch.randn(6, generator=rng).bfloat16() if biased else None
+                padded = F.pad(x, (before[1], after[1], before[0], after[0]))
+                expected = F.conv2d(
+                    padded, w, b, stride=stride, dilation=dilation, groups=groups
+                )
+                padding = 16
+                backing = torch.full(
+                    (padding + expected.numel() + padding,), 19, dtype=torch.bfloat16
+                )
+                storage = self.n.tensor(backing)
+                y = self.n.slice(storage, padding, expected.numel() + padding)
+
+                def operand(value, padding=padding):
+                    data = torch.cat(
+                        (
+                            torch.full((padding,), 23, dtype=torch.bfloat16),
+                            value.flatten(),
+                        )
+                    )
+                    return self.n.slice(self.n.tensor(data), padding, value.numel())
+
+                a = Conv(
+                    2,
+                    channels,
+                    6,
+                    groups,
+                    (1, 5, 7),
+                    (1, kernel, kernel),
+                    (1, stride, stride),
+                    (1, dilation, dilation),
+                    (0, *before),
+                    (0, *after),
+                )
+                self.n.call(
+                    "conv",
+                    y,
+                    operand(x),
+                    operand(w),
+                    operand(b) if biased else View(),
+                    C.byref(a),
+                )
+                backing[padding : padding + expected.numel()] = expected.flatten()
+                actual = self.n.read(storage, backing.shape).bfloat16()
+                self.assertTrue(
+                    torch.equal(actual.view(torch.int16), backing.view(torch.int16))
+                )
+                self.n.clear()
+
+    def test_convolution_wide_padding(self):
+        if self.n.backend == "cuda":
+            self.skipTest("cuDNN descriptors use signed int dimensions and strides")
+        # Two output positions fit even though the padded width exceeds uint32.
+        # The first lies in zero padding and the second lands on the input.
+        width = (1 << 32) - 1
+        a = Conv(
+            1,
+            4,
+            1,
+            1,
+            (1, 1, 1),
+            (1, 1, 1),
+            (1, 1, width),
+            (1, 1, 1),
+            (0, 0, width),
+            (0, 0, 1),
+        )
+        x = self.n.tensor(torch.ones(4, dtype=torch.bfloat16))
+        w = self.n.tensor(torch.ones(4, dtype=torch.bfloat16))
+        y = self.n.tensor(torch.full((2,), -1, dtype=torch.bfloat16))
+        self.n.call("conv", y, x, w, View(), C.byref(a))
+        self.assertTrue(torch.equal(self.n.read(y, (2,)), torch.tensor([0.0, 4.0])))
+
     def test_audio_relative_attention(self):
         torch.manual_seed(45)
         q, k, v = (torch.randn(1, 37, 8, 128) * 0.1 for _ in range(3))
@@ -1092,11 +1277,7 @@ class SuiteNumeric(unittest.TestCase):
             self.compare(f"long-softmax-{width}", y, expected, x=x)
 
     def test_constructor_clears_failure_output(self):
-        name = (
-            "ds4_numeric_cuda"
-            if os.environ.get("DS4_SUITE_NUMERIC_CUDA") == "1"
-            else "ds4_numeric_cpu"
-        )
+        name = f"ds4_numeric_{self.n.backend}"
         create = getattr(self.n.lib, name)
         for resources, owner in ((None, 100), (self.n.resources, 0)):
             output = C.c_void_p(1)
@@ -1107,14 +1288,6 @@ class SuiteNumeric(unittest.TestCase):
         os.environ.get("DS4_SUITE_NUMERIC_CUDA"), "CUDA allocation accounting"
     )
     def test_native_free_refreshes_shared_device_budget(self):
-        class Budget(C.Structure):
-            _fields_ = [
-                ("limit", C.c_uint64),
-                ("margin", C.c_uint64),
-                ("global_free", C.c_uint64),
-                ("global_known", C.c_bool),
-            ]
-
         lib = self.n.lib
         lib.ds4_resources_reconcile.argtypes = [
             C.c_void_p,
@@ -1221,8 +1394,8 @@ class SuiteNumeric(unittest.TestCase):
 
     def test_overlapping_views_are_rejected(self):
         backing = self.n.tensor(torch.arange(24).float())
-        x = View(backing.data, 8, 0)
-        shifted = View(backing.data + 4, 8, 0)
+        x = self.n.slice(backing, 0, 8)
+        shifted = self.n.slice(backing, 1, 8)
         self.assertEqual(
             self.n.lib.ds4_num_norm(
                 self.n.ctx, shifted, x, View(), View(), 4, 1e-6, 0, 0, False
@@ -1230,7 +1403,7 @@ class SuiteNumeric(unittest.TestCase):
             1,
         )
         y = self.n.tensor(torch.zeros(8))
-        broadcast_from_output = View(y.data, 2, 0)
+        broadcast_from_output = self.n.slice(y, 0, 2)
         self.assertEqual(
             self.n.lib.ds4_num_point(self.n.ctx, y, x, broadcast_from_output, 0, 0), 1
         )

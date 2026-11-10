@@ -7,6 +7,7 @@ from exmekh_agent.exmekh_bridge.models.execution import (
     SkillNode,
     TerminalStatus,
     ToolEvent,
+    ToolInvocationKey,
     record_tool_event,
 )
 from exmekh_agent.exmekh_bridge.models.messages import (
@@ -28,6 +29,7 @@ from exmekh_agent.utils.formatting import format_duration
 
 __all__ = [
     "ToolEvent",
+    "ToolInvocationKey",
     "record_tool_event",
     "ReasoningBlock",
     "SkillNode",

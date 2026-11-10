@@ -7,6 +7,7 @@ operands and outputs accompany each timing; this is a baseline, not a speedup.
 
 import argparse
 import ctypes as C
+import hashlib
 import json
 import sys
 import time
@@ -18,7 +19,7 @@ import torch
 import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from tests.test_suite_numeric import Attention, Conv, Numeric, Reindex, Resample, View
+from tests.suite_numeric_api import Attention, Conv, Numeric, Reindex, Resample, View
 
 
 def statistics(samples):
@@ -39,18 +40,52 @@ def statistics(samples):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--output", type=Path, required=True)
-    p.add_argument("--repetitions", type=int, default=5)
+    p.add_argument("--backend", choices=("cpu", "cuda", "metal"), default="cuda")
+    p.add_argument("--numeric-library", type=Path)
+    p.add_argument("--repetitions", type=int)
+    p.add_argument(
+        "--bounded",
+        action="store_true",
+        help="One warmup and one/two local samples; no statistical qualification",
+    )
     args = p.parse_args()
-    if args.repetitions < 5:
+    if args.repetitions is None:
+        args.repetitions = 2 if args.bounded else 5
+    if args.bounded and not 1 <= args.repetitions <= 2:
+        p.error("bounded sampling requires one or two repetitions after warmup")
+    if not args.bounded and args.repetitions < 5:
         p.error("at least five repetitions after warmup")
     args.output.mkdir(parents=True, exist_ok=False)
-    n = Numeric(cuda=True)
+    profile = {
+        "backend": args.backend,
+        "warmup_repetitions": 1,
+        "measured_repetitions": args.repetitions,
+        "bounded_development_subset": args.bounded,
+        "clock": time.get_clock_info("perf_counter").implementation,
+        "scope": "Synchronized primitive baseline; independent outputs, no speedup claim",
+        "memory_peak_scope": "Cumulative peak of this numeric context, not a per-case peak",
+        "numeric_library": str(args.numeric_library) if args.numeric_library else None,
+    }
+    if args.numeric_library:
+        with args.numeric_library.open("rb") as source:
+            profile["numeric_library_sha256"] = hashlib.file_digest(
+                source, "sha256"
+            ).hexdigest()
+    (args.output / "profile.json").write_text(json.dumps(profile, indent=2) + "\n")
+    torch.set_num_threads(2)
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+    with Numeric(args.backend, library_path=args.numeric_library) as numeric:
+        benchmark(args, numeric)
+
+
+def benchmark(args, n):
     records = []
     torch.manual_seed(20261020)
 
     def run(name, operation, y, expected, **inputs):
         operation()
-        n.ok(n.lib.ds4_numeric_fence(n.ctx))
+        n.fence()
         actual = n.read(y, expected.shape)
         delta = actual.double() - expected.double()
         absolute = float(delta.abs().max())
@@ -65,7 +100,7 @@ def main():
         for _ in range(args.repetitions):
             start = time.perf_counter()
             operation()
-            n.ok(n.lib.ds4_numeric_fence(n.ctx))
+            n.fence()
             samples.append(time.perf_counter() - start)
         np.savez(
             args.output / (name + ".npz"),
@@ -73,6 +108,7 @@ def main():
             expected=expected.float().numpy(),
             **{k: v.float().numpy() for k, v in inputs.items()},
         )
+        memory = n.memory_usage()
         records.append(
             {
                 "case": name,
@@ -81,10 +117,18 @@ def main():
                 "correctness": "PASS",
                 "max_abs": absolute,
                 "relative_l2": relative,
+                "bit_exact": torch.equal(
+                    actual.contiguous().view(torch.int32),
+                    expected.float().contiguous().view(torch.int32),
+                ),
                 "seconds": samples,
                 "statistics": statistics(samples),
+                "owned_live_bytes": memory.live_bytes,
+                "context_peak_owned_bytes": memory.peak_bytes,
             }
         )
+        if args.bounded:
+            records[-1]["statistics"]["verdict"] = "BOUNDED_SAMPLE"
         (args.output / "metrics.json").write_text(json.dumps(records, indent=2) + "\n")
         print(name, records[-1]["statistics"], flush=True)
         n.clear()
@@ -275,7 +319,6 @@ def main():
     xv, y = n.tensor(x), n.tensor(torch.zeros_like(expected))
     a = Resample(1, 32, (2, 32, 32), (3, 65, 65))
     run("nearest-vae", lambda: n.call("nearest", y, xv, C.byref(a)), y, expected, x=x)
-    n.close()
 
 
 if __name__ == "__main__":

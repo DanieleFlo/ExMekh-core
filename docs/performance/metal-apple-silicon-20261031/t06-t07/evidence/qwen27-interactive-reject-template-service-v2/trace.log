@@ -1,0 +1,149 @@
+
+===== request 1 2026-11-02 05:57:33 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 387
+effective_prompt_tokens: 387
+cached_tokens: 0
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 387
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"other.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. After FIRST, immediately emit the second exmekh_edit opening inside the same payload. Use exactly those tag names. Do not emit closing edit tags, whitespace, a final newline or a second patch call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "reject-template:45711ed53bf34bbab79815491be694b8", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="other.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. After FIRST, immediately emit the second exmekh_edit opening inside the same payload. Use exactly those tag names. Do not emit closing edit tags, whitespace, a final newline or a second patch call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7805 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="patch">
+<｜DSML｜parameter name="payload" string="true"><exmekh_edit path="src.py"
+===== request 2 2026-11-02 06:00:05 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 430
+effective_prompt_tokens: 387
+cached_tokens: 430
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 430
+prompt_tokens: 430
+live_prompt_common: 430
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: memory-token
+cached_tokens: 430
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "stream": false, "temperature": 0, "reasoning": {"effort": "none"}, "max_output_tokens": 768, "tool_choice": "required", "input": [{"role": "user", "content": "Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path=\"src.py\" />ONE<exmekh_new_text/>FIRST<exmekh_edit path=\"other.py\" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. After FIRST, immediately emit the second exmekh_edit opening inside the same payload. Use exactly those tag names. Do not emit closing edit tags, whitespace, a final newline or a second patch call."}], "tools": [{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}], "agentic": {"agent_context_id": "reject-template:45711ed53bf34bbab79815491be694b8", "allowed_tools": ["patch"], "allowed_skills": [], "interactive": {"version": 2, "operation": "configure", "request_id": "initial", "tools": [{"name": "patch", "behavior": "edit_file.v3", "fields": {"document": "payload"}}]}}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "patch", "description": "Edit existing text files", "parameters": {"type": "object", "properties": {"payload": {"type": "string"}}, "required": ["payload"], "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Call patch exactly once. Its payload must contain this entire two-block template: <exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST<exmekh_edit path="other.py" />TWO<exmekh_new_text/>SECOND. The server adds an opening ID to each block; you may copy it into its separator. After FIRST, immediately emit the second exmekh_edit opening inside the same payload. Use exactly those tag names. Do not emit closing edit tags, whitespace, a final newline or a second patch call.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=7762 ---
+
+ id="837" />ONE<exmekh_new_text id="837"/>FIRST<exmekh_edit path="other.py"

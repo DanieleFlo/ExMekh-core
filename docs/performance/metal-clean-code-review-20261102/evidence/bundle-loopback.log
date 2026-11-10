@@ -1,0 +1,18 @@
+build/metal-venv/bin/python -m unittest tests.test_suite_bundle -v
+test_deterministic_inventory_and_native_group_lifetime (tests.test_suite_bundle.SuiteBundleTests.test_deterministic_inventory_and_native_group_lifetime) ... ok
+test_discovery_verifies_shared_artifacts_once (tests.test_suite_bundle.SuiteBundleTests.test_discovery_verifies_shared_artifacts_once) ... ok
+test_explicit_download_checksum_and_resume_without_selection (tests.test_suite_bundle.SuiteBundleTests.test_explicit_download_checksum_and_resume_without_selection) ... ok
+test_invalid_group_and_oversized_directory_fail_before_publication (tests.test_suite_bundle.SuiteBundleTests.test_invalid_group_and_oversized_directory_fail_before_publication) ... ok
+test_lossless_conversion_repeated_and_mixed_types (tests.test_suite_bundle.SuiteBundleTests.test_lossless_conversion_repeated_and_mixed_types) ... ok
+test_mixed_gguf_uses_each_actual_block_geometry (tests.test_suite_bundle.SuiteBundleTests.test_mixed_gguf_uses_each_actual_block_geometry) ... ok
+test_native_bounded_weight_cache (tests.test_suite_bundle.SuiteBundleTests.test_native_bounded_weight_cache) ... ok
+test_pinned_bundle_profiles_conform_to_schema (tests.test_suite_bundle.SuiteBundleTests.test_pinned_bundle_profiles_conform_to_schema) ... ok
+test_reject_artifacts_changed_during_upload (tests.test_suite_bundle.SuiteBundleTests.test_reject_artifacts_changed_during_upload) ... ok
+test_reject_unknown_incompatible_and_corrupt (tests.test_suite_bundle.SuiteBundleTests.test_reject_unknown_incompatible_and_corrupt) ... ok
+test_scalar_calibration_is_preserved (tests.test_suite_bundle.SuiteBundleTests.test_scalar_calibration_is_preserved) ... ok
+test_storage_geometry_matches_vendored_ggml (tests.test_suite_bundle.SuiteBundleTests.test_storage_geometry_matches_vendored_ggml) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.860s
+
+OK

@@ -1,0 +1,218 @@
+{
+  "source_head": "4fef55feed35b79c20677d404f293ad49ffd13f5",
+  "working_tree": "uncommitted",
+  "measured_snapshot": {
+    "description": "Exact source and control binary hashes frozen before the five measured pairs. The final reviewed pipeline source changes one equivalent field access and its binaries have distinct hashes.",
+    "artifacts": [
+      {
+        "path": "ds4_numeric.c",
+        "bytes": 40730,
+        "sha256": "00b1c3bf65a0adff6db78fa1a7ada8ad5955c78045912bb41d67eb73f7318a76"
+      },
+      {
+        "path": "ds4_numeric.h",
+        "bytes": 11407,
+        "sha256": "95a207c919af6bad37624d4c779c576f3d869541e4d75470a06b3d154d48e85b"
+      },
+      {
+        "path": "ds4_numeric_internal.h",
+        "bytes": 3701,
+        "sha256": "86165e6014924e9224421b885281c8e17a4110117558057728ddd2f018d7c7fd"
+      },
+      {
+        "path": "ds4_numeric_metal.m",
+        "bytes": 30010,
+        "sha256": "659a8179050537318fbbc03d105b8a538cad74adc506b435be9049b7088b9db7"
+      },
+      {
+        "path": "ds4_metal_memory.h",
+        "bytes": 6743,
+        "sha256": "a8b6814bedb9b02f7b0a1b2bf115ffb9bfd30de260601329dfa96551841ee357"
+      },
+      {
+        "path": "ds4_metal_device.h",
+        "bytes": 4154,
+        "sha256": "662cba7ae77a1949bd9997210034264c0fcfcff3a0c8eaa88bd8994832fb4da4"
+      },
+      {
+        "path": "ds4_qwen_image_pipeline.c",
+        "bytes": 31333,
+        "sha256": "dd166b280394a6e1f3dfa3c7d6993775e229406777389c4dab528fc5aefe4a60"
+      },
+      {
+        "path": "metal/numeric_ordered.metal",
+        "bytes": 33879,
+        "sha256": "d0d0424a6476555cf4800bc56160bb7322a7903e465c0fc0adc5986f09e405af"
+      },
+      {
+        "path": "tests/probe_qwen_image_pipeline.c",
+        "bytes": 25411,
+        "sha256": "b7ebae4bf7f800b7cb92984cf51e044195070748d4c01eb1a5dd0c7ec7933450"
+      },
+      {
+        "path": "tests/test_metal_memory_policy.c",
+        "bytes": 6804,
+        "sha256": "70a6b8abcb64efb6b72e30ab95385411ae024a783bb616c6e7a12e9c1891655b"
+      },
+      {
+        "path": "tests/test_qwen_image_cache_budget.c",
+        "bytes": 5930,
+        "sha256": "4c9426edd49e375c617c8b3cc3cd8a15c848b61791cb7042326e0a3de20e98d7"
+      },
+      {
+        "path": "tests/test_suite_numeric.py",
+        "bytes": 54316,
+        "sha256": "a413f21b7a44c39809a9603346b6342d299fd52367ebb1e065d6d3c6432ced52"
+      },
+      {
+        "path": "tools/diagnose_metal_image_convolution.py",
+        "bytes": 3683,
+        "sha256": "d825ab9d5bf00fce4596af353730b5528687855fa13d811356ec694b8d3eeb08"
+      },
+      {
+        "path": "Makefile",
+        "bytes": 92281,
+        "sha256": "636f5626a939f71e4e8fdfcecf0bbabc4b6cf94a37fa338bb02fd39721f7a817"
+      },
+      {
+        "path": "build/metal-perf-image-20261104/cache/floor/numeric-baseline.m",
+        "bytes": 30069,
+        "sha256": "e9124d768150b37669e4c1e1f6258e657e14722156ad5d80002f235254093687"
+      },
+      {
+        "path": "build/metal-perf-image-20261104/cache/pipeline-discrete.c",
+        "bytes": 28359,
+        "sha256": "70b1ed338766cbcc878778a0c4434ae28399c5e88b2c6956600e40a6127a26b7"
+      },
+      {
+        "path": "build/metal-perf-image-20261104/cache/probe-floor",
+        "bytes": 585624,
+        "sha256": "5b8c0ae6ab365e59af21e70c59226f2f512ac15f30a30a629cf12d28a86c554c"
+      },
+      {
+        "path": "build/metal-perf-image-20261104/cache/probe-floor-baseline",
+        "bytes": 585672,
+        "sha256": "e9bdd6becf3e7ab0602fd1803780d841371017b5dd11bba035ac2a7d205f1aa0"
+      },
+      {
+        "path": "tests/libds4_numeric_metal.so",
+        "bytes": 173784,
+        "sha256": "cfcd352b5e1232ef85e54758eca333327b686196cbab33217a33e79b4f0be0df"
+      },
+      {
+        "path": "libds4-suite-metal.a",
+        "bytes": 1663392,
+        "sha256": "4ecd1417622db1f75a9a349c8849dcaeb5088baf5ea7ec903f298abf19d42d25"
+      }
+    ]
+  },
+  "reviewed_product": {
+    "description": "Current product after the field-access refactor, independently gated in reviewed-gate.json. Paired performance remains attributed to probe-floor/probe-floor-baseline.",
+    "artifacts": [
+      {
+        "path": "ds4_numeric.c",
+        "bytes": 40730,
+        "sha256": "00b1c3bf65a0adff6db78fa1a7ada8ad5955c78045912bb41d67eb73f7318a76"
+      },
+      {
+        "path": "ds4_numeric.h",
+        "bytes": 11407,
+        "sha256": "95a207c919af6bad37624d4c779c576f3d869541e4d75470a06b3d154d48e85b"
+      },
+      {
+        "path": "ds4_numeric_internal.h",
+        "bytes": 3701,
+        "sha256": "86165e6014924e9224421b885281c8e17a4110117558057728ddd2f018d7c7fd"
+      },
+      {
+        "path": "ds4_numeric_metal.m",
+        "bytes": 30010,
+        "sha256": "659a8179050537318fbbc03d105b8a538cad74adc506b435be9049b7088b9db7"
+      },
+      {
+        "path": "ds4_metal_memory.h",
+        "bytes": 6743,
+        "sha256": "a8b6814bedb9b02f7b0a1b2bf115ffb9bfd30de260601329dfa96551841ee357"
+      },
+      {
+        "path": "ds4_metal_device.h",
+        "bytes": 4154,
+        "sha256": "662cba7ae77a1949bd9997210034264c0fcfcff3a0c8eaa88bd8994832fb4da4"
+      },
+      {
+        "path": "ds4_qwen_image_pipeline.c",
+        "bytes": 31355,
+        "sha256": "193f6fae6f96e2108241ff6374602d84c9073c3dc28a56fa8967087d2b21b8e5"
+      },
+      {
+        "path": "metal/numeric_ordered.metal",
+        "bytes": 33879,
+        "sha256": "d0d0424a6476555cf4800bc56160bb7322a7903e465c0fc0adc5986f09e405af"
+      },
+      {
+        "path": "tests/probe_qwen_image_pipeline.c",
+        "bytes": 25411,
+        "sha256": "b7ebae4bf7f800b7cb92984cf51e044195070748d4c01eb1a5dd0c7ec7933450"
+      },
+      {
+        "path": "tests/test_metal_memory_policy.c",
+        "bytes": 6804,
+        "sha256": "70a6b8abcb64efb6b72e30ab95385411ae024a783bb616c6e7a12e9c1891655b"
+      },
+      {
+        "path": "tests/test_qwen_image_cache_budget.c",
+        "bytes": 5930,
+        "sha256": "4c9426edd49e375c617c8b3cc3cd8a15c848b61791cb7042326e0a3de20e98d7"
+      },
+      {
+        "path": "tests/test_suite_numeric.py",
+        "bytes": 54316,
+        "sha256": "a413f21b7a44c39809a9603346b6342d299fd52367ebb1e065d6d3c6432ced52"
+      },
+      {
+        "path": "tools/diagnose_metal_image_convolution.py",
+        "bytes": 3683,
+        "sha256": "d825ab9d5bf00fce4596af353730b5528687855fa13d811356ec694b8d3eeb08"
+      },
+      {
+        "path": "Makefile",
+        "bytes": 92281,
+        "sha256": "636f5626a939f71e4e8fdfcecf0bbabc4b6cf94a37fa338bb02fd39721f7a817"
+      },
+      {
+        "path": "tests/libds4_numeric_metal.so",
+        "bytes": 173784,
+        "sha256": "cfcd352b5e1232ef85e54758eca333327b686196cbab33217a33e79b4f0be0df"
+      },
+      {
+        "path": "libds4-suite-metal.a",
+        "bytes": 1663392,
+        "sha256": "d7f64278033659468b67280459773d3023efaa46f3d7a0d9c186da2550f7ce12"
+      },
+      {
+        "path": "build/metal-perf-image-20261104/cache/probe-reviewed",
+        "bytes": 585624,
+        "sha256": "0a5965e93fdd05e0e15df12970653dc2b39cd89ce45d732e9055ed058b9c54a0"
+      },
+      {
+        "path": "tests/probe_qwen_image_pipeline",
+        "bytes": 585624,
+        "sha256": "0a5965e93fdd05e0e15df12970653dc2b39cd89ce45d732e9055ed058b9c54a0"
+      },
+      {
+        "path": "ds4-server-suite",
+        "bytes": 4180912,
+        "sha256": "853f5eb8a5d960b1222ef71a33e2a0508beb6841ecf2d8f03d2bc9d69e970803"
+      }
+    ]
+  },
+  "reviewed_gate": {
+    "path": "docs/performance/metal-inference-20261102/qwen-image/continuous-cache-20261104/reviewed-gate.json",
+    "bytes": 3191,
+    "sha256": "9ee3a0d2f97e5fb3da93b93c632d2e354e651afdd586ab8ae6ee8cc2d8c4b47f"
+  },
+  "final_profile": {
+    "path": "docs/performance/metal-inference-20261102/qwen-image/continuous-cache-20261104/final-profile.json",
+    "sha256": "9b71571716f54d6ac266adb9004be90468f11f792a3d0e2dc021b95bf1e845d1"
+  }
+}

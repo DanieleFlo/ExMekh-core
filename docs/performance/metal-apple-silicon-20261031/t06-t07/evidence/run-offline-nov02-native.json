@@ -1,0 +1,47 @@
+[
+  {
+    "command": [
+      "tests/test_qwen35_metal_graph"
+    ],
+    "exit_code": 0,
+    "executable_sha256": "2bbc020d04c011013b94f5cbae40ccde7878a5815fffbec1f858a779245e06a9"
+  },
+  {
+    "command": [
+      "tests/test_qwen35_metal_features"
+    ],
+    "exit_code": 0,
+    "executable_sha256": "8040d01c9265427b3af6ad5aa3d029d0fe4cdeda21170597240c5424676d42de"
+  },
+  {
+    "command": [
+      "tests/test_flash_metal_stream_graph"
+    ],
+    "exit_code": 0,
+    "executable_sha256": "219acf7e1e51ee9f55831cdfa69f40a11dba8e5ee1ef4528688c20094fc48311"
+  },
+  {
+    "command": [
+      "tests/test_qwen_metal_lifecycle",
+      "qwen27"
+    ],
+    "exit_code": 0,
+    "executable_sha256": "d425bf14d2209f5a073843c5e2e833cd49f9fe5c05566a617289d035fb8983fc"
+  },
+  {
+    "command": [
+      "tests/test_qwen_metal_lifecycle",
+      "qwen27-stream"
+    ],
+    "exit_code": 0,
+    "executable_sha256": "d425bf14d2209f5a073843c5e2e833cd49f9fe5c05566a617289d035fb8983fc"
+  },
+  {
+    "command": [
+      "tests/test_qwen_metal_lifecycle",
+      "flash"
+    ],
+    "exit_code": 0,
+    "executable_sha256": "d425bf14d2209f5a073843c5e2e833cd49f9fe5c05566a617289d035fb8983fc"
+  }
+]

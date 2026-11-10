@@ -1,0 +1,61 @@
+{
+  "kind": "encoder-implementation-parity",
+  "backend": "metal",
+  "status": "PASS",
+  "llm_multimodal_gate": "NOT_VERIFIED",
+  "tokens": 128,
+  "projection": 2560,
+  "min_cos": 0.99,
+  "mmproj": "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+  "mmproj_sha256": "b2e9b5e4a44c107f8867e67dbf09b607fd99ae33c1a97a60a6720aeb252a9dad",
+  "image": "tests/vision-fixtures/glm53/earth.jpg",
+  "image_sha256": "a48278513a38768ff92247972e60bc873eb361a8527cb8686a3e19c3ae1bdf9d",
+  "source_sha256": {
+    "ds4.c": "996de77587083e9ff0590ace955a4c14886984f59e1444510c4b6d366e1342b2",
+    "ds4_image.c": "80a3bb6ad254f4f60c2b8bc97aca12b16fb4fa0f08f543c77f2679d80208eb52",
+    "ds4_image_resize.inc": "d655808d3edaead57b27043e0b5921a057095dfbd9df2db2828454dec125280c",
+    "ds4_metal.m": "697478ff402481c1eb8e7b5a7a0d8d720b13dd0499db8d5af9f385010f71c123",
+    "ds4_qwen4_vision.h": "f10c16d3b3ccb50ab3e4542bdef87b6b84d3c401290ff6f78530c328dd07ff6e",
+    "metal/qwen4_vision.metal": "b37c7fc2c66131bf5817621920a6b5b30271af21160e7da33edc71e2d5c7fb4b",
+    "tests/qwen4_vision_ref.py": "4cd36e55a65660f9363a48fbb960dd5c6b259358a01c00210a4fca6266307db3",
+    "tests/test_qwen4_vision.c": "2b20a8e56c0980dfed1615b498180797f3da3449f422d3ae8944aaf254940951",
+    "tools/qualify_qwen_metal_vision.py": "fba4315939a213a6d6f2b58143aacff59dc9494da0bad6383dcd60a27a42d479",
+    "tools/qwen_vision_reference.py": "9ac3498965d74f8784375e4ede3ca14a6c16d3510675acd13a1f013b79904489"
+  },
+  "binary_sha256": "9e870d6163eb58d7a59c05ea220fe17c68e98e7f3749b672aefe8bc084321414",
+  "versions": {
+    "torch": "2.15.0",
+    "transformers": "5.21.0.dev0",
+    "numpy": "2.5.4",
+    "gguf": "0.19.0",
+    "pillow": "12.3.0"
+  },
+  "shape": [
+    121,
+    2560
+  ],
+  "grid": [
+    11,
+    11
+  ],
+  "implementation": {
+    "pass": true,
+    "min_cos": 0.9999999997352271,
+    "mean_cos": 0.999999999974167,
+    "worst_token": 11,
+    "max_abs": 5.4836273193359375e-06,
+    "mean_abs": 2.395577869517466e-07
+  },
+  "image_pipeline": {
+    "pass": true,
+    "min_cos": 0.9995476147788258,
+    "mean_cos": 0.999991989833621,
+    "worst_token": 112,
+    "max_abs": 0.0032440251670777798,
+    "mean_abs": 9.38251506210736e-05
+  },
+  "preprocessing": {
+    "max_abs": 0.007843255996704102,
+    "mean_abs": 2.7619633328868076e-05
+  }
+}

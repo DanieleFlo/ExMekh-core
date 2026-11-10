@@ -1,0 +1,56 @@
+{
+  "command": [
+    "env",
+    "DS4_GEMMA_DIMENSIONS=128",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/probe_native_suite",
+    "build/metal-models/gemma.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/gemma.ds4g",
+    "gemma",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/gemma",
+    "Il gatto dorme sul divano.",
+    "A cat sleeps on the sofa.",
+    "The train arrives at the station."
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200.0,
+  "base_timeout_seconds": 300.0,
+  "timeout_multiplier": 4,
+  "reason": "FullGemma3text after30primitivechecks andcompleteQwenencoder; preciseFP32/CPU-orderarithmetic experiment, independent81BF16boundaries unchanged,2GiBhostreserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.0834152500001437,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 8089.618787833,
+      "pressure": 1,
+      "host_available_bytes": 10972725248,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 8090.631482083,
+      "pressure": 1,
+      "host_available_bytes": 11015995392,
+      "swap_bytes": 0,
+      "footprint_bytes": 6816320,
+      "resident_bytes": 16449536
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/probe_native_suite": "8ec3ea43623e70167d9eef920b20e20663fc6505c7259773803a06386f9b0712"
+  },
+  "log_sha256": "2cddd197b69f1df22f09edf8dad878aa6ff5a057a7c87843cdd864b3077dbc56"
+}

@@ -1,0 +1,110 @@
+{
+  "command": [
+    "env",
+    "DS4_GEMMA_VISUAL_DIMENSIONS=128",
+    "tests/probe_gemma_visual",
+    "build/metal-models/gemma.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/gemma.ds4g",
+    "build/metal-models/gemma-media.ds4p",
+    "build/metal-qualification/t06-t07-20261031/gemma-media/cases.bin",
+    "build/metal-qualification/t06-t07-20261031/product-bf16/media"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200,
+  "base_timeout_seconds": 300,
+  "timeout_multiplier": 4,
+  "reason": "Integrated production BF16: independently compare original inputs/oracles, all hidden states and complete output vectors, function-local FP contraction, no FP32 fallback changes; user4x deadlines and2GiBreserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 9.172179916999085,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 12623.842707916,
+      "pressure": 1,
+      "host_available_bytes": 11521359872,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 12624.852913,
+      "pressure": 1,
+      "host_available_bytes": 11342299136,
+      "swap_bytes": 262144,
+      "footprint_bytes": 121307880,
+      "resident_bytes": 97632256
+    },
+    {
+      "monotonic": 12625.868808208,
+      "pressure": 1,
+      "host_available_bytes": 11067129856,
+      "swap_bytes": 262144,
+      "footprint_bytes": 420873416,
+      "resident_bytes": 674824192
+    },
+    {
+      "monotonic": 12626.879593166,
+      "pressure": 1,
+      "host_available_bytes": 10452041728,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1053460544,
+      "resident_bytes": 1914765312
+    },
+    {
+      "monotonic": 12627.892334,
+      "pressure": 1,
+      "host_available_bytes": 10394124288,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1053460544,
+      "resident_bytes": 1914765312
+    },
+    {
+      "monotonic": 12628.903408791,
+      "pressure": 1,
+      "host_available_bytes": 10427416576,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1035520064,
+      "resident_bytes": 1903640576
+    },
+    {
+      "monotonic": 12629.924023708,
+      "pressure": 1,
+      "host_available_bytes": 10427236352,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1053935680,
+      "resident_bytes": 1915289600
+    },
+    {
+      "monotonic": 12630.944957958,
+      "pressure": 1,
+      "host_available_bytes": 10433134592,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1053935680,
+      "resident_bytes": 1915289600
+    },
+    {
+      "monotonic": 12631.957491291,
+      "pressure": 1,
+      "host_available_bytes": 10152132608,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1297959360,
+      "resident_bytes": 2443886592
+    }
+  ],
+  "executables_sha256": {
+    "tests/probe_gemma_visual": "271816fa1ef15b36841cd92d88cdfd601249a73215a732449ced5200e2b905b5"
+  },
+  "log_sha256": "1f45addc92728d3b51accedfaff3fd91ad29073bed37212dfd644c6b22621116"
+}

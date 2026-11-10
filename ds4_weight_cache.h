@@ -42,6 +42,8 @@ ds4_status ds4_weight_cache_preload(ds4_weight_cache *, size_t count);
  */
 ds4_status ds4_weight_cache_limit(ds4_weight_cache *, uint64_t);
 ds4_status ds4_weight_cache_acquire(ds4_weight_cache *, size_t);
+/* Read-only lookahead, with the bundle's 16 MiB advisory limit. */
+ds4_status ds4_weight_cache_hint(const ds4_weight_cache *, size_t, uint64_t max_bytes);
 ds4_status ds4_weight_cache_release(ds4_weight_cache *);
 #ifdef __cplusplus
 }

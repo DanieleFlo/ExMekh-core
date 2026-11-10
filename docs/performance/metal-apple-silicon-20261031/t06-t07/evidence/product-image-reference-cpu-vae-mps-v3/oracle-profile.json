@@ -1,0 +1,13 @@
+{
+  "devices": {
+    "encoder": "cpu",
+    "dit": "cpu",
+    "encode": "mps",
+    "decode": "mps"
+  },
+  "reused_stages": {},
+  "scope": "Explicit independent component-device profile; CPU-only VAE remains NOT_VERIFIED. No precision/recipe/tolerance changes.",
+  "reused_from": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps",
+  "fixture_sha256": "30817240093d7cd08043f083d7fa1f4ff31fe07d1352b7fa01ae451e65013529",
+  "native_binary_sha256": "8660eecad5561821fd219672395537a419c9d39a1c1dc549568a79e6873a94d8"
+}

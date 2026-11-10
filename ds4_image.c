@@ -513,16 +513,16 @@ int ds4_image_resize_rgb_u8(const ds4_image *image, uint32_t width,
 }
 
 
-static int ds4_qwen_resize_dimensions(uint32_t width, uint32_t height, uint32_t min_tokens,
-        uint32_t max_tokens, bool ties_even, uint32_t *out_width, uint32_t *out_height) {
+int ds4_image_qwen3vl_plan(uint32_t width, uint32_t height, uint32_t min_tokens,
+        uint32_t max_tokens, uint32_t *out_width, uint32_t *out_height) {
     if (!width || !height || !min_tokens || max_tokens < min_tokens || !out_width || !out_height)
         return 0;
     const double factor = 32, h = height, w = width;
     if (fmax(h, w) / fmin(h, w) > 200) return 0;
     const double min_pixels = (double)min_tokens * 1024;
     const double max_pixels = (double)max_tokens * 1024;
-    double hb = fmax(factor, (ties_even ? nearbyint(h/factor) : round(h/factor)) * factor);
-    double wb = fmax(factor, (ties_even ? nearbyint(w/factor) : round(w/factor)) * factor);
+    double hb = fmax(factor, nearbyint(h/factor) * factor);
+    double wb = fmax(factor, nearbyint(w/factor) * factor);
     if (hb * wb > max_pixels) {
         double beta = sqrt(h * w / max_pixels);
         hb = fmax(factor, floor(h / beta / factor) * factor);
@@ -538,12 +538,6 @@ static int ds4_qwen_resize_dimensions(uint32_t width, uint32_t height, uint32_t 
     *out_height = hb;
     return 1;
 }
-int ds4_image_qwen3vl_plan(uint32_t width, uint32_t height, uint32_t min_tokens,
-        uint32_t max_tokens, uint32_t *out_width, uint32_t *out_height) {
-    return ds4_qwen_resize_dimensions(width, height, min_tokens, max_tokens, true,
-                                      out_width, out_height);
-}
-
 static int ds4_image_preprocess_qwen(
         ds4_image_patches *out,
         const ds4_image *image,
@@ -565,8 +559,8 @@ static int ds4_image_preprocess_qwen(
         return 0;
     }
     uint32_t target_height,target_width;
-    if (!ds4_qwen_resize_dimensions(image->width,image->height,min_image_tokens,
-            max_image_tokens,raw_pixels,&target_width,&target_height)) {
+    if (!ds4_image_qwen3vl_plan(image->width,image->height,min_image_tokens,
+            max_image_tokens,&target_width,&target_height)) {
         ds4_image_error(error, error_cap, "resized image is too large");
         return 0;
     }
@@ -577,13 +571,15 @@ static int ds4_image_preprocess_qwen(
     }
     if (target_width == image->width && target_height == image->height) {
         for (size_t i = 0; i < (size_t)target_height * target_width * 3; i++) canvas[i] = image->rgb[i];
-    } else if(raw_pixels) {
-        if(!ds4_resize_qwen3vl_rgb(image->rgb,image->width,image->height,canvas,target_width,target_height)) {
-            free(canvas);return 0;
-        }
     } else {
-        ds4_resize_rgb_bicubic(image->rgb, image->width, image->height,
-                               canvas, target_width, target_height, target_width);
+        /* Both Qwen consumers use the same uint8 bicubic processor. Raw mode
+         * changes only normalization, never pixel rounding or resize geometry. */
+        if (!ds4_resize_qwen3vl_rgb(image->rgb, image->width, image->height,
+                                   canvas, target_width, target_height)) {
+            free(canvas);
+            ds4_image_error(error, error_cap, "unable to resize Qwen image");
+            return 0;
+        }
     }
     for (size_t i = 0; !raw_pixels && i < (size_t)target_height * target_width * 3; i++) {
         canvas[i] = (canvas[i] / 255.0f - 0.5f) / 0.5f;

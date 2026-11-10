@@ -1,0 +1,763 @@
+{
+  "schema": "exmekh-metal-foundations-v1",
+  "created_utc": "2026-10-29T19:09:00.548829+00:00",
+  "scope": "T00-T02 foundations and T03 synthetic numerics; no real LLM inference",
+  "host_reserve_bytes": 2147483648,
+  "hybrid_device_cap_bytes": 134217728,
+  "lifecycle_device_cap_bytes": 1073741824,
+  "checks": [
+    {
+      "name": "metal-build",
+      "command": [
+        "make",
+        "-j2",
+        "all",
+        "tests/test_qwen35_metal",
+        "tests/test_qwen35_mrope",
+        "tests/test_qwen35_metal_graph",
+        "tests/test_qwen_metal_lifecycle"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.296,
+      "log": "metal-build.log",
+      "sha256": "2f705646a6ece4dfaf351c0df80b9d3111c29f3d893a387687de0773a1eb9a74",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "cpu-build",
+      "command": [
+        "make",
+        "-j2",
+        "cpu"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t00-t03-20261029/final/cpu",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 5.679,
+      "log": "cpu-build.log",
+      "sha256": "50cf3b89f06a51f5e9e38e4542367ca351144558b276fdd81f1cfc34817fc82e",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "cpu-link",
+      "command": [
+        "otool",
+        "-L",
+        "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t00-t03-20261029/final/cpu/ds4"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.081,
+      "log": "cpu-link.log",
+      "sha256": "c690d44eff8547b4e6bc8a86e771b6ed79e86d16036860f1e739dce16ad33860",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "host",
+      "command": [
+        "make",
+        "test-runtime",
+        "test-resources",
+        "test-executor",
+        "test-metal-memory-policy"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.036,
+      "log": "host.log",
+      "sha256": "98e210b3022c3019ee7b304f25da2ba9d02b2578583e5f92ba72dbd6c29893cb",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "launchers",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_flash_launcher",
+        "-v"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.282,
+      "log": "launchers.log",
+      "sha256": "e23764bd5fdff32219b3454909ea14cfe11415be59a75ca04052e930fbd62b55",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "launcher-root",
+      "command": [
+        "bash",
+        "start-ds4-server.sh",
+        "--print-command"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {
+        "DS4_BACKEND": "metal"
+      },
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.01,
+      "log": "launcher-root.log",
+      "sha256": "ad98e33c15eb164959fcc45508cd3400c522ce182520959180b27f07403cc7d8",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "launcher-agent",
+      "command": [
+        "bash",
+        "agent/start-ds4-server.sh",
+        "--print-command"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {
+        "DS4_BACKEND": "metal"
+      },
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.02,
+      "log": "launcher-agent.log",
+      "sha256": "fed8664abd822955d7235fd2849f2faffb04da9343c6c5af0c29004993494c05",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "launcher-flash-agent",
+      "command": [
+        "bash",
+        "agent/start-ds4-server-flash.sh",
+        "--print-command"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {
+        "DS4_BACKEND": "metal"
+      },
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.02,
+      "log": "launcher-flash-agent.log",
+      "sha256": "ed07f59785caa08d825d45472ab6afcc352ae8281004e0f11e32cdefb2b27711",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "quant-gdn",
+      "command": [
+        "./tests/test_qwen35_metal"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 2.208,
+      "log": "quant-gdn.log",
+      "sha256": "8c05918e7f7e5145a7b66d40c823ee32d60980c9f0f7e60b03d226437a1c8c76",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "attention",
+      "command": [
+        "./tests/test_qwen35_mrope"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.133,
+      "log": "attention.log",
+      "sha256": "0773b4687599b6b9c04db9e8f14949e72734d53f0ce40472fabd3dfd9bf4d498",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "hybrid",
+      "command": [
+        "./tests/test_qwen35_metal_graph"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.238,
+      "log": "hybrid.log",
+      "sha256": "d862ab9953653bc0db0ae2b479a892a42b5f491302c4a37adc6d6c8a178ec085",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "hybrid-general",
+      "command": [
+        "./tests/test_qwen35_metal_graph"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {
+        "DS4_METAL_DISABLE_METAL4": "1"
+      },
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 1.939,
+      "log": "hybrid-general.log",
+      "sha256": "754b4af6c85e8ade66ca63d766544e6f82adc0a92cd3138e60291cc17e5000af",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "lifecycle-qwen27",
+      "command": [
+        "./tests/test_qwen_metal_lifecycle",
+        "qwen27"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 5.462,
+      "log": "lifecycle-qwen27.log",
+      "sha256": "e71f1bda864f9d92257d120d1da32314ecf58a7b8046129a9196dd7cf8ef6977",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "lifecycle-flash",
+      "command": [
+        "./tests/test_qwen_metal_lifecycle",
+        "flash"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 4.172,
+      "log": "lifecycle-flash.log",
+      "sha256": "567ed0038aabe07310ad60b2a7bdbebe9253525d7223dfd30eb325dc353ba3ee",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "qwen27-inspect",
+      "command": [
+        "./ds4",
+        "--inspect",
+        "-m",
+        "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "timeout_seconds": 240,
+      "elapsed_seconds": 0.041,
+      "log": "qwen27-inspect.log",
+      "sha256": "09a3724a1648117870e5ef4fa7420a9fe317889195013eee8d69ed3027ee7dc6",
+      "memory_before": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      },
+      "memory_after": {
+        "command": [
+          "sysctl",
+          "kern.memorystatus_vm_pressure_level",
+          "vm.swapusage"
+        ],
+        "exit_code": 0,
+        "stdout": "kern.memorystatus_vm_pressure_level: 1\nvm.swapusage: total = 0.00M  used = 0.00M  free = 0.00M  (encrypted)",
+        "stderr": ""
+      }
+    }
+  ],
+  "not_verified": [
+    "Qwen27 real teacher-forced logits and streamed 8192/64 (T06-B)",
+    "Flash streamed inference (T06-A)",
+    "T04-T08 real workflows",
+    "CUDA, ROCm, distributed inference and other Apple devices"
+  ],
+  "environment": {
+    "source": {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "stdout": "8e8ac45a7b463f7d4d72d859234f794b815019ef",
+      "stderr": ""
+    },
+    "macos": {
+      "command": [
+        "sw_vers"
+      ],
+      "exit_code": 0,
+      "stdout": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83",
+      "stderr": ""
+    },
+    "toolchain": {
+      "command": [
+        "clang",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin",
+      "stderr": ""
+    },
+    "sdk": {
+      "command": [
+        "xcrun",
+        "--show-sdk-version"
+      ],
+      "exit_code": 0,
+      "stdout": "26.5",
+      "stderr": ""
+    },
+    "hardware": {
+      "command": [
+        "sysctl",
+        "hw.model",
+        "hw.memsize"
+      ],
+      "exit_code": 0,
+      "stdout": "hw.model: Mac17,9\nhw.memsize: 25769803776",
+      "stderr": ""
+    },
+    "ssd": {
+      "command": [
+        "df",
+        "-k",
+        "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core"
+      ],
+      "exit_code": 0,
+      "stdout": "Filesystem   1024-blocks      Used Available Capacity iused      ifree %iused  Mounted on\n/dev/disk3s5   971298980 634930736 314266760    67% 2627498 3142667600    0%   /System/Volumes/Data",
+      "stderr": ""
+    }
+  },
+  "sources": {
+    "Makefile": "babe6c678eca07485ba886e92b3fb4a21b6689ac67f09ca224773ab8a5424c1a",
+    "start-ds4-server.sh": "e4638b34b6318c72fd0fe22e498c8b3ce221abff72f4779906ca491f7e447d1b",
+    "agent/start-ds4-server.sh": "b9857a7cb1dac8e75e57d1caad76632a93ef9473a414a09469edd21969d89803",
+    "agent/start-ds4-server-flash.sh": "b5dcdbf4adec7e64511943fa10620a98d8572451ecce13c35893e48311a29175",
+    "ds4.c": "f0c9c4bfc4156c209d93dbb3bfc3c7274a485febdbde1b101f34b6272ab1e1b2",
+    "ds4_gpu.h": "11421d22103705b85250c0163edd31badc2ccf6de0f96ad753f6e248656fda3a",
+    "ds4_resources.c": "e937372761792117caad5e718c55d26ed4341e3564ecaeb42fcafe0745e1aa77",
+    "ds4_metal.m": "e082788fb903c3cbbd5aba589964000648b8c943f5d1543e6dc11d7e1e087560",
+    "ds4_metal_memory.h": "cd216ce22384a6fd21ef20aec7224c716d82c5d5dc70afc23e51f42fc70aa51d",
+    "ds4_qwen35_metal.inc": "c1f581aafd7f11810791293e513a882410cd590cd97f7a5baa1d278c5e9c8823",
+    "metal/qwen35.metal": "441c138b57a82e5228d0fef20664ed897c4cfe470588bd5d6c12b05fd0e2d667",
+    "metal/qwen35_quants.metal": "02c96d35ba1fa7c7992587d2c01d52bacda78bd9b24ff3ce6f75f81a0c227bd9",
+    "tests/test_metal_memory_policy.c": "ce1164aa212f589181bf0099dde3a13cf304ca7d40be03d13772ad92099f3689",
+    "tests/test_qwen35_metal.c": "bfd140f0d777ab78fd0262ac6f6f5a5bc782118655926732c51a1102ced12012",
+    "tests/test_qwen35_metal_graph.c": "c49e162e8ce7dc4b2020d6e6b6b44172035f702c5dfa3ce16e210427f8064155",
+    "tests/test_qwen35_mrope.c": "26b02dee8e0c62ce28575d20d22f56f3a5f30f60a46df568a810a3b16e73ba65",
+    "tests/test_qwen_metal_lifecycle.c": "24675230e48a55655b091ea7413768af9d7aba1d7cac878de05e1383fe1e4457",
+    "tools/qualify_metal_foundations.py": "4eae733bb87e3a62b6dda7801746a27b6b4e51a8bc40ff047412f59b0bc82826"
+  },
+  "tensor_inventory": {
+    "file": "qwen27-tensors.json",
+    "sha256": "f0d8d9be3dac4d4085e9bc882c436f935492bae33e7feec35bc9d16c5fc65867",
+    "count": 866,
+    "source": "pinned metadata snapshot"
+  },
+  "model": {
+    "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024,
+    "sha256": "75bc9c8adba2842e72f0ab5201aaa07133c5010b566305c09187fcbdcd364017",
+    "matches_pinned_qwen27": true,
+    "snapshot": "gguf-tools/quality-testing/data/qwen38-metadata/target.json",
+    "snapshot_sha256": "676efc2823c62782b1c1552a9a6041131ddc2e3f5762c6a0651adf7374d12698"
+  },
+  "qwen35_symbols": {
+    "required": [
+      "ds4_gpu_qwen35_full_attention_mrope_rows_tensor",
+      "ds4_gpu_qwen35_full_attention_rows_tensor",
+      "ds4_gpu_qwen35_full_attention_tensor",
+      "ds4_gpu_qwen35_gated_delta_net_rows_tensor",
+      "ds4_gpu_qwen35_gated_delta_net_tensor",
+      "ds4_gpu_qwen35_store_kv_mrope_rows_tensor",
+      "ds4_gpu_qwen35_store_kv_rows_tensor"
+    ],
+    "defined": [
+      "ds4_gpu_qwen35_full_attention_mrope_rows_tensor",
+      "ds4_gpu_qwen35_full_attention_rows_tensor",
+      "ds4_gpu_qwen35_full_attention_tensor",
+      "ds4_gpu_qwen35_gated_delta_net_rows_tensor",
+      "ds4_gpu_qwen35_gated_delta_net_tensor",
+      "ds4_gpu_qwen35_store_kv_mrope_rows_tensor",
+      "ds4_gpu_qwen35_store_kv_rows_tensor"
+    ],
+    "missing": [],
+    "status": "PASS"
+  },
+  "binaries": {
+    "ds4": "6ac5fd04f8a962c19d4f60a6254be611d9054fae9f08128ac484337db8179f48",
+    "ds4-server": "85ae3ef64e97b619b7a25f7d296eb2b9108159900983e6611d21a472473e4b95",
+    "ds4-bench": "f7b972534fc08f48cf2fcf3de6fdca6f79a43659784504e89a8f6d673c538c44",
+    "ds4-eval": "1d5be9d8af0be7427c6569d333fbcf57fca3147ff99fdfafa024d4e1d49388a8"
+  },
+  "all_executed_checks_pass": true,
+  "additional_checks": [
+    {
+      "name": "suite-numeric",
+      "status": "PASS",
+      "command": [
+        "make",
+        "test-suite-numeric-metal",
+        "SUITE_PYTHON=build/metal-venv/bin/python"
+      ],
+      "log": "suite-numeric.log",
+      "sha256": "0fa10e7341c652ad4504f861288c0b2a7d11a1759e0841344b923f37a7688877"
+    },
+    {
+      "name": "suite-build",
+      "status": "PASS",
+      "command": [
+        "make",
+        "-j2",
+        "ds4-server-suite",
+        "tests/test_qwen_metal_lifecycle"
+      ],
+      "log": "suite-build.log",
+      "sha256": "6b20b902f31253bd7774b3a6249d2a1cd569fbededc04094d83cf4e2ebac5ba3"
+    },
+    {
+      "name": "compatibility",
+      "status": "PASS",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_flash_launcher",
+        "tests.test_qwen38_compatibility",
+        "-v"
+      ],
+      "log": "compatibility.log",
+      "sha256": "32e7d3a25a012392332a88f281627693ba3a749fe241d16e10d69c21183541ff"
+    },
+    {
+      "name": "vision-early-refusal",
+      "status": "PASS",
+      "command": [
+        "./ds4",
+        "--metal",
+        "-m",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--ctx",
+        "512",
+        "--prefill-chunk",
+        "64",
+        "--no-mtp",
+        "--raw",
+        "-p",
+        "1+1=",
+        "-n",
+        "1",
+        "--vision",
+        "/missing/unsupported-vision.gguf"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1,
+      "elapsed_seconds": 0.015,
+      "log": "vision-early-refusal.log",
+      "sha256": "03eb6813231c2757745bb9e426a7f3184c8a5d528472ae62eab27703b8887724",
+      "criterion": "CUDA-only vision rejected before Metal initialization/admission; no forward"
+    },
+    {
+      "name": "docs-check",
+      "status": "PASS",
+      "command": [
+        "make",
+        "docs-check"
+      ],
+      "tests": 10,
+      "exit_code": 0,
+      "log": "docs-check.log",
+      "sha256": "f3f4916811c53b07c15ca8b216afd6672198f3ba3fd1676b601b9b301447a9f4"
+    }
+  ]
+}

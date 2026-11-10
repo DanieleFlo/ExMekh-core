@@ -1,0 +1,306 @@
+{
+  "id": "Q-P02",
+  "status": "REJECT",
+  "baseline": {
+    "head": "089255a1d3b6162e59c61a6bede9ece5e672330f",
+    "sources": {
+      "ds4.c": "1e23dd4c43a8dfa85d9a7367c72c91c0e53b897c1f257776521b047bd3413256",
+      "ds4_metal.m": "152b7a9a5d15521f6020da22af60e75629fe293a55a5ae41905d829ebcd11b08",
+      "ds4_qwen35_metal.inc": "8189c3ad4f0ddaa3fda1166e2a16051855310d5df39b95bb9c44bf152b99ffc4",
+      "ds4_qwen4_metal_stream.inc": "0a24aa626eb94c287694725284b7e18b47c059ee92e880a1200c96227190921d",
+      "ds4_file_reader.h": "68c1c0ca25aedf1c47fbc31f7c6154ae9114ec540f5781bdbb1da8068c33bb35",
+      "metal/qwen35.metal": "441c138b57a82e5228d0fef20664ed897c4cfe470588bd5d6c12b05fd0e2d667",
+      "metal/qwen35_quants.metal": "02c96d35ba1fa7c7992587d2c01d52bacda78bd9b24ff3ce6f75f81a0c227bd9",
+      "ds4_bench.c": "a9cbf60f5e0649eb70d2c03893a4629a24eae6796837fd7923b0b268d9df955e",
+      "tests/probe_qwen_metal_stream.c": "59162d9e42dfeca030ee2cbca1af5e258a21007311e7b719a98ad206b0f62a3c",
+      "tools/qualify_metal_command.py": "c7372b56fa2c531868ffd5a722db0e4f6865c9f6f7e5dec08de7522383edb2b3"
+    },
+    "binary": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d",
+    "model": {
+      "path": "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "bytes": 15358213024,
+      "sha256_previous": "75bc9c8adba2842e72f0ab5201aaa07133c5010b566305c09187fcbdcd364017"
+    },
+    "plan": {
+      "context": 8192,
+      "chunk": 64,
+      "cache_bytes": 2147483648,
+      "initial_samples": 2,
+      "frontiers": [
+        64,
+        128
+      ],
+      "decode_tokens": 8,
+      "mode": "teacher-forced; raw prompt; target-only",
+      "timeout_seconds_per_process": 120,
+      "profile": "separate 64+4 trace",
+      "promotion": "separate warmup + five alternating pairs, full-model and isolated correctness required"
+    }
+  },
+  "component": "UD projection token tile4 to8 for rows>=8; original4 below8",
+  "candidate_sources": {
+    "ds4_qwen35_metal.inc": "c6277dcbd366ac377271f61e9dcf425821d1488528eb06f802f0e8f44a161c1e",
+    "metal/qwen35_quants.metal": "e4627306a2cf4b519c03f541d8cd6d144e1b25c13f136d79db7812ebb833d1a0",
+    "tests/test_qwen35_metal.c": "6dec2fd29adfe8fef55903a192c5731984ad6cb26a06922ab8b88872e7099989"
+  },
+  "isolated": {
+    "status": "PASS",
+    "cases": 270,
+    "outputs_bytes": 352512,
+    "exact": true
+  },
+  "excluded_preexisting_expanded_gate": {
+    "format": "Q8_0",
+    "shape": {
+      "K": 256,
+      "N": 17,
+      "T": 17
+    },
+    "candidate": "FAIL",
+    "baseline": "FAIL",
+    "production_changes": "none",
+    "original_test_cases": "retained with frozen thresholds"
+  },
+  "promotion_plan": {
+    "pairs": 5,
+    "warmup_pairs": 1,
+    "alternate": true,
+    "frontiers": [
+      64,
+      128
+    ],
+    "new_prefill_tokens_each": 64,
+    "teacher_forced_decode": 4,
+    "context": 8192,
+    "prefill_chunk": 64,
+    "cache_bytes": 2147483648,
+    "timeout_seconds": 120,
+    "one_model_process": true
+  },
+  "reason": "General tile regresses3/4 representative projection shapes; no reduced prefill GPU span; direction-only end-to-end signal not qualified",
+  "micro": {
+    "b0": {
+      "23/5120/17408/64": {
+        "median_ms": 16.5865,
+        "samples_ms": [
+          16.585,
+          16.588,
+          16.596,
+          16.404,
+          16.651,
+          16.582,
+          16.604,
+          16.386,
+          16.506,
+          16.627
+        ]
+      },
+      "23/17408/5120/64": {
+        "median_ms": 20.2125,
+        "samples_ms": [
+          20.076,
+          20.487,
+          20.243,
+          19.734,
+          20.522,
+          20.182,
+          20.268,
+          20.45,
+          19.567,
+          20.102
+        ]
+      },
+      "23/5120/10240/64": {
+        "median_ms": 9.685,
+        "samples_ms": [
+          9.698,
+          9.757,
+          9.286,
+          9.21,
+          9.672,
+          9.775,
+          9.595,
+          9.706,
+          9.642,
+          9.704
+        ]
+      },
+      "13/5120/17408/64": {
+        "median_ms": 13.435,
+        "samples_ms": [
+          13.41,
+          13.46,
+          13.295,
+          13.754,
+          13.517,
+          13.702,
+          13.409,
+          13.305,
+          13.608,
+          13.172
+        ]
+      }
+    },
+    "ud8": {
+      "23/5120/17408/64": {
+        "median_ms": 17.292,
+        "samples_ms": [
+          17.396,
+          17.249,
+          17.268,
+          17.276,
+          17.366,
+          17.401,
+          17.194,
+          17.496,
+          16.859,
+          17.308
+        ]
+      },
+      "23/17408/5120/64": {
+        "median_ms": 19.575499999999998,
+        "samples_ms": [
+          19.889,
+          19.331,
+          19.74,
+          19.168,
+          19.528,
+          19.617,
+          19.77,
+          19.524,
+          19.657,
+          19.534
+        ]
+      },
+      "23/5120/10240/64": {
+        "median_ms": 10.087,
+        "samples_ms": [
+          9.965,
+          10.239,
+          10.289,
+          9.845,
+          10.014,
+          9.809,
+          10.245,
+          10.079,
+          10.205,
+          10.095
+        ]
+      },
+      "13/5120/17408/64": {
+        "median_ms": 16.022,
+        "samples_ms": [
+          16.636,
+          15.847,
+          15.96,
+          16.247,
+          16.084,
+          15.377,
+          15.692,
+          16.119,
+          15.949,
+          16.138
+        ]
+      }
+    },
+    "speedup": {
+      "23/5120/17408/64": -0.04079921350913718,
+      "23/17408/5120/64": 0.03254067584480613,
+      "23/5120/10240/64": -0.03985327649449777,
+      "13/5120/17408/64": -0.16146548495818236
+    }
+  },
+  "full_model": [
+    {
+      "file": "continuation.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "a5bc6ff3f9cf2cc81b93ca733c542f1b10c10b66519930e52da8ccc567aa9771"
+    },
+    {
+      "file": "position-02.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "88e869d280d2c36a6aaeb0e076abaf5762e3e6a8b09a92aa16baf186675b192e"
+    },
+    {
+      "file": "position-03.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "7ee589e03f6dc804e1530e27cf8c8d2dd2fe497e5896bce713e15bb5e4873996"
+    },
+    {
+      "file": "position-04.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "de331629b6a20cd988ac08c3fdf482203f017c0e2aff36e656c88e84448dc4ba"
+    },
+    {
+      "file": "position-05.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "6a8019d4a353576a40d733458f6c293788ba1110aaf5e5c6ade44718f71765b8"
+    },
+    {
+      "file": "position-06.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "03b2f051260048bbecb98c5f7385478aa9ab864a262429fa499e924c56b7e823"
+    },
+    {
+      "file": "position-07.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "45993ed9d6b7ed1110f5423cad0c713b0ce2dbdef875e905756a2d2239a125bc"
+    },
+    {
+      "file": "position-08.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "af6e4fb3d1890f6e0a82d1344d0c0023173353be61ad45f61bde6089a819dedf"
+    },
+    {
+      "file": "prefill.f32",
+      "bytes": 993280,
+      "exact": true,
+      "sha256_b0": "56f30661f7b0c757958651e36a6c16de4fd411539be93c234c713c0b5485ae89"
+    },
+    {
+      "file": "prefill.state",
+      "bytes": 176630352,
+      "exact": true
+    }
+  ],
+  "profile_after": {
+    "diagnostic_only": true,
+    "phases": [
+      {
+        "phase": "prefill",
+        "wall_ms": 5917.0999999940395,
+        "gpu_span_ms": 3780.6
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 2384.11,
+        "gpu_span_ms": 360.4
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 2557.335,
+        "gpu_span_ms": 429.8
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 2658.383,
+        "gpu_span_ms": 431.5
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 2599.352,
+        "gpu_span_ms": 409.0
+      }
+    ]
+  },
+  "production": "kernel and wrapper restored to B0; extended UD tests retained",
+  "promotion_pairs_executed": 0
+}

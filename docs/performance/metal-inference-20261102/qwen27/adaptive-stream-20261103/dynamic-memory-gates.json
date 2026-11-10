@@ -1,0 +1,84 @@
+{
+  "full": [
+    {
+      "case": "qwen-target",
+      "status": "PASS",
+      "elapsed_seconds": 16.356636958997115,
+      "artifacts": 10,
+      "comparison": "BIT_EXACT"
+    },
+    {
+      "case": "qwen-mtp2",
+      "status": "PASS",
+      "elapsed_seconds": 24.396053584001493,
+      "artifacts": 12,
+      "comparison": "BIT_EXACT"
+    },
+    {
+      "case": "qwen-mtp4",
+      "status": "PASS",
+      "elapsed_seconds": 22.34244912500435,
+      "artifacts": 12,
+      "comparison": "BIT_EXACT"
+    },
+    {
+      "case": "flash-full",
+      "status": "PASS",
+      "elapsed_seconds": 11.16379625000991,
+      "artifacts": 10,
+      "comparison": "BIT_EXACT"
+    }
+  ],
+  "memory": [
+    {
+      "case": "qwen-target",
+      "status": "PASS",
+      "min_host_GiB": 2.333465576171875,
+      "peak_footprint_GiB": 10.972725868225098,
+      "swap_growth_MiB": 0.0
+    },
+    {
+      "case": "qwen-mtp2",
+      "status": "PASS",
+      "min_host_GiB": 3.038665771484375,
+      "peak_footprint_GiB": 11.669991761446,
+      "swap_growth_MiB": 0.0
+    },
+    {
+      "case": "qwen-mtp4",
+      "status": "PASS",
+      "min_host_GiB": 3.3796234130859375,
+      "peak_footprint_GiB": 10.495232000946999,
+      "swap_growth_MiB": 0.0
+    },
+    {
+      "case": "flash-full",
+      "status": "PASS",
+      "min_host_GiB": 9.043228149414062,
+      "peak_footprint_GiB": 1.3845080584287643,
+      "swap_growth_MiB": 0.0
+    }
+  ],
+  "isolated": [
+    {
+      "case": "p23-graph",
+      "status": "PASS",
+      "elapsed_seconds": 2.088872457999969
+    },
+    {
+      "case": "p23-graph-general",
+      "status": "PASS",
+      "elapsed_seconds": 1.0487015419930685
+    },
+    {
+      "case": "p23-features",
+      "status": "PASS",
+      "elapsed_seconds": 1.0565059590007877
+    },
+    {
+      "case": "p23-features-general",
+      "status": "PASS",
+      "elapsed_seconds": 1.0449897919897921
+    }
+  ]
+}

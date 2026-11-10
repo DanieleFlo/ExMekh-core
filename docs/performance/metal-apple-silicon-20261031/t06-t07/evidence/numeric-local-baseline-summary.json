@@ -1,0 +1,115 @@
+{
+  "status": "PASS",
+  "cases": 14,
+  "correctness": "All original ceilings unchanged",
+  "bit_exact_cases": 11,
+  "warmup": 1,
+  "measured_repetitions": 2,
+  "verdict": "BOUNDED_SAMPLE",
+  "not_claimed": [
+    "statistical performance qualification",
+    "Strata speedup",
+    "cross-device qualification"
+  ],
+  "owner_report": "numeric-local-baseline-owner-authorized/report.json",
+  "cases_summary": [
+    {
+      "case": "gemm-104-4096-12288",
+      "median_ms": 47.115313000176684,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "gemm-257-1536-6144",
+      "median_ms": 9.207312499711406,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "gemm-513-4096-4096",
+      "median_ms": 35.91510399746767,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "rms-257-4096",
+      "median_ms": 0.5835419997310964,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "gelu-257-12288",
+      "median_ms": 0.6728749995090766,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "attention-window512-513",
+      "median_ms": 6.786875501347822,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "attention-online-mqa-512",
+      "median_ms": 7.714312499956577,
+      "max_abs": 1.6763806343078613e-08,
+      "relative_l2": 2.9352073954780684e-07,
+      "bit_exact": false
+    },
+    {
+      "case": "patch-conv3d-256",
+      "median_ms": 65.472291500555,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "norm-1-257-1152",
+      "median_ms": 0.1751669988152571,
+      "max_abs": 7.152557373046875e-07,
+      "relative_l2": 7.556419957218939e-08,
+      "bit_exact": false
+    },
+    {
+      "case": "norm-2-257-1152",
+      "median_ms": 0.1664375013206154,
+      "max_abs": 2.2351741790771484e-08,
+      "relative_l2": 7.622649863019621e-08,
+      "bit_exact": false
+    },
+    {
+      "case": "rope-257-4-128",
+      "median_ms": 0.2480414987076074,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "reorder-vae",
+      "median_ms": 0.18218749937659595,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "pool-vision-256-4-768",
+      "median_ms": 0.19541649999155197,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    },
+    {
+      "case": "nearest-vae",
+      "median_ms": 0.35841649878420867,
+      "max_abs": 0.0,
+      "relative_l2": 0.0,
+      "bit_exact": true
+    }
+  ]
+}

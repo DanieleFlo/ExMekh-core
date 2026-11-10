@@ -49,6 +49,9 @@ ds4_status ds4_qwen_image_pipeline_open(ds4_qwen_image_pipeline **,
                                         ds4_bundle *, ds4_numeric *,
                                         ds4_runtime *, const char *tokenizer);
 ds4_status ds4_qwen_image_pipeline_close(ds4_qwen_image_pipeline *);
+/* Yield reconstructible weights while retaining model metadata/tokenizer.
+ * An open job returns BUSY before mutation; a partial release can be retried. */
+ds4_status ds4_qwen_image_pipeline_release_weights(ds4_qwen_image_pipeline *);
 /* Encoder/DiT/VAE owned weight bytes; read-only, no loading or mutation. */
 ds4_status ds4_qwen_image_pipeline_residency(const ds4_qwen_image_pipeline *,
                                             uint64_t resident[3], uint64_t total[3]);
@@ -62,9 +65,21 @@ ds4_status ds4_qwen_image_job_create(ds4_qwen_image_job **,
                                      const ds4_execution_victim *,
                                      size_t victims,
                                      const ds4_qwen_image_observer *);
+/* Same prompt and geometry for every output. Seeds advance from request.seed.
+ * When exact noise is supplied, it applies to the first image. The remaining
+ * images use the native RNG. Tensor tracing follows the first image. */
+ds4_status ds4_qwen_image_job_create_batch(ds4_qwen_image_job **,
+                                           ds4_qwen_image_pipeline *,
+                                           const ds4_qwen_image_request *,
+                                           uint32_t images,
+                                           const ds4_execution_victim *,
+                                           size_t victims,
+                                           const ds4_qwen_image_observer *);
 /* Before run, compute an admission preview without releasing resources.
  * Once execution starts, return its recorded plan; never replan a past job. */
 ds4_status ds4_qwen_image_job_plan(ds4_qwen_image_job *, ds4_execution_plan *);
+/* True until the executor begins, including after a rejected admission. */
+bool ds4_qwen_image_job_admission_pending(const ds4_qwen_image_job *);
 ds4_status ds4_qwen_image_job_run(ds4_qwen_image_job *);
 ds4_status ds4_qwen_image_job_recover(ds4_qwen_image_job *);
 ds4_status ds4_qwen_image_job_recovery(ds4_qwen_image_job *,
@@ -75,6 +90,8 @@ ds4_status ds4_qwen_image_job_recovery(ds4_qwen_image_job *,
  */
 ds4_status ds4_qwen_image_job_take(ds4_qwen_image_job *,
                                    ds4_qwen_image_rgba **);
+ds4_status ds4_qwen_image_job_take_at(ds4_qwen_image_job *, uint32_t index,
+                                      ds4_qwen_image_rgba **);
 const ds4_qwen_image_report *
 ds4_qwen_image_job_report(const ds4_qwen_image_job *);
 ds4_status ds4_qwen_image_job_close(ds4_qwen_image_job *);

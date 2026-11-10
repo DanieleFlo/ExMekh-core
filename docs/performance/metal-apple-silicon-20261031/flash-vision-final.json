@@ -1,0 +1,59 @@
+{
+  "kind": "encoder-implementation-parity",
+  "backend": "metal",
+  "tokens": 128,
+  "projection": 2560,
+  "min_cos": 0.99,
+  "mmproj": "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+  "mmproj_sha256": "b2e9b5e4a44c107f8867e67dbf09b607fd99ae33c1a97a60a6720aeb252a9dad",
+  "image": "tests/vision-fixtures/glm53/earth.jpg",
+  "image_sha256": "a48278513a38768ff92247972e60bc873eb361a8527cb8686a3e19c3ae1bdf9d",
+  "source_sha256": {
+    "ds4.c": "d935e7e3afa8d70e86aa2548d13c7ffe1b57af5b6ca6b01ec674fec105f1e35f",
+    "ds4_image.c": "80a3bb6ad254f4f60c2b8bc97aca12b16fb4fa0f08f543c77f2679d80208eb52",
+    "ds4_image_resize.inc": "d655808d3edaead57b27043e0b5921a057095dfbd9df2db2828454dec125280c",
+    "ds4_metal.m": "6e3845832f491a6f0a58ea1de585a9c576269a8010694bd89d700084150c9b4b",
+    "ds4_qwen4_vision.h": "2c2337d53eb772818c58a90f4017a54715116bc7129b1b1aafccf6d7076bb53f",
+    "metal/qwen4_vision.metal": "b37c7fc2c66131bf5817621920a6b5b30271af21160e7da33edc71e2d5c7fb4b",
+    "tests/qwen4_vision_ref.py": "6f0c30c0d6a0f43bb037a0b68680a8da2f6bdd2eed2d304c60766ca05aa49cea",
+    "tests/test_qwen4_vision.c": "b6c85a16ad2756a5a1a8ecd03c447a9028d7cc04e14e82b5d6c4e917d3aa4cc6",
+    "tools/qualify_qwen_metal_vision.py": "d7fca101e1f8a473cdb17cb38e158c33a681ea2b249085147d3326affa0c1ab5"
+  },
+  "binary_sha256": "ce7af15357240027f0e787c67c432dc7839f5cfcdbb6706ddd4dbabf60b626d2",
+  "versions": {
+    "torch": "2.15.0",
+    "transformers": "5.21.0.dev0",
+    "numpy": "2.5.4",
+    "gguf": "0.19.0",
+    "pillow": "12.3.0"
+  },
+  "llm_multimodal_gate": "NOT_VERIFIED",
+  "shape": [
+    121,
+    2560
+  ],
+  "grid": [
+    11,
+    11
+  ],
+  "implementation": {
+    "pass": true,
+    "min_cos": 0.9999999997352271,
+    "mean_cos": 0.999999999974167,
+    "worst_token": 11,
+    "max_abs": 5.4836273193359375e-06,
+    "mean_abs": 2.395577869517466e-07
+  },
+  "image_pipeline": {
+    "pass": true,
+    "min_cos": 0.9995476147788258,
+    "mean_cos": 0.999991989833621,
+    "worst_token": 112,
+    "max_abs": 0.0032440251670777798,
+    "mean_abs": 9.38251506210736e-05
+  },
+  "preprocessing": {
+    "max_abs": 0.007843255996704102,
+    "mean_abs": 2.7619633328868076e-05
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "torch_version": "2.14.1",
+  "torch_revision": "5c4886908584029761b579af026dcfb627c84070",
+  "rows": [
+    {
+      "variant": "before",
+      "op": 13,
+      "bit_mismatches": 2375,
+      "max_abs": 1.1920928955078125e-07
+    },
+    {
+      "variant": "before",
+      "op": 14,
+      "bit_mismatches": 2595,
+      "max_abs": 5.960464477539063e-08
+    },
+    {
+      "variant": "after",
+      "op": 13,
+      "bit_mismatches": 2375,
+      "max_abs": 1.1920928955078125e-07
+    },
+    {
+      "variant": "after",
+      "op": 14,
+      "bit_mismatches": 2595,
+      "max_abs": 5.960464477539063e-08
+    }
+  ],
+  "before_after": "BIT_EXACT"
+}

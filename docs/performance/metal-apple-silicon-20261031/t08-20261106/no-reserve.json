@@ -1,0 +1,805 @@
+{
+  "status": "LOCAL_CAMPAIGN_RECORDED",
+  "t08_status": "IN_PROGRESS",
+  "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+  "committed": false,
+  "host_reserve_bytes": 0,
+  "runs": {
+    "flash-gate": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-t08-20261106/no-reserve/flash-gate/data",
+        "32"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "reason": "User requested no fixed host reserve; automatic useful cache, full Flash logits and payload restore gate,32occupied tokens",
+      "elapsed_seconds": 11.159596667000073,
+      "timeout_seconds": 600.0,
+      "exit_code": 0,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "437c192f3f5d8678279202a66c301218fd9e5a2713dd6634cc3c791d97fd95ab"
+      },
+      "report_sha256": "1f01eff8da342e84f90f40ee1379f9b227921d3d488bddedeadcc801bb196738",
+      "observed_memory": {
+        "min_host_bytes": 9831940096,
+        "swap_growth_bytes": 0,
+        "max_pressure": 1,
+        "peak_footprint_bytes": 2035763552
+      }
+    },
+    "stress-flash": {
+      "status": "PASS",
+      "command": [
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server-suite",
+        "--metal",
+        "-m",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ctx",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18186",
+        "--kv-disk-dir",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/stress-flash/kv",
+        "--trace",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/stress-flash/trace.log",
+        "--no-mtp",
+        "--suite-config",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/stress-flash/suite-config.json"
+      ],
+      "client_command": [
+        "agent/.venv/bin/python",
+        "tools/qualify_suite_release.py",
+        "--url",
+        "http://127.0.0.1:18186/v1",
+        "--cycles",
+        "50",
+        "--image-size",
+        "256x256",
+        "--output",
+        "build/metal-t08-20261106/no-reserve/stress-flash-client"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "host_reserve_bytes": 0,
+      "reason": "User requested zero host reserve: fresh50measured cycles after warmup,256px,automatic useful cache; historical27cycle interruption separate",
+      "elapsed_seconds": 10394.076879625,
+      "timeout_seconds": 14400.0,
+      "server_exit_code": 0,
+      "cleanup_forced": [],
+      "qualification_profile": {
+        "context_tokens": 8192,
+        "prefill_chunk": 64,
+        "ssd_cache_bytes": null,
+        "ssd_cache_mode": "automatic",
+        "reasoning_effort": "none",
+        "tool_start_timeout_seconds": 480,
+        "http_timeout_seconds": 14400.0,
+        "interactive_timeout_seconds": 1200,
+        "phase_timeout_seconds": 720,
+        "suite_operation_base_timeout_seconds": 300,
+        "suite_operation_timeout_seconds": 1200
+      },
+      "executables_sha256": {
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server-suite": "3ccd2a1a37f2222cf6704a462d329d3722a27d116508b8b88251ed14ed9d7321"
+      },
+      "qualification_tool_sha256": "a2d9b8e4ae372c6ffe1a7193c88c65dbf819865e83ccaa84f02486bc52f682cb",
+      "client_sources_sha256": {
+        "tools/qualify_suite_release.py": "93728114bd72612d6599c63970ebe0aa9f187b561f684d3183d990f8248fa83a"
+      },
+      "report_sha256": "d7069cbf0e861a2acb4ecf04e1aa76e6bfd6d3bc488df8874d8ac6ebef8e1dfb",
+      "observed_memory": {
+        "min_host_bytes": 3952607232,
+        "swap_growth_bytes": 252832645,
+        "max_pressure": 2,
+        "peak_footprint_bytes": 12143032776
+      },
+      "client_summary": {
+        "version": 1,
+        "status": "PASS",
+        "completed_cycles": 50,
+        "warmup_cycles": 1,
+        "bounded_development_subset": false,
+        "required_cycles": 50,
+        "scope": "HTTP lifetime and deterministic residency; no quality promotion",
+        "timings": {
+          "image": {
+            "samples": [
+              96.98141416599992,
+              93.60256779099996,
+              104.44228079100003,
+              103.61784229199998,
+              97.85821891699993,
+              98.82582920799996,
+              94.50739070899999,
+              92.51021283299997,
+              95.92961941600015,
+              92.84082454100007,
+              92.66233520900005,
+              96.59821658300007,
+              88.49173074999999,
+              88.32417591700005,
+              90.0328282090004,
+              92.37873862500055,
+              92.38805933300046,
+              89.16998049999984,
+              90.76224399999955,
+              96.05021787499936,
+              93.6466082500001,
+              92.0496330420001,
+              90.23220091699932,
+              92.86511554200024,
+              94.32129737499963,
+              92.62087312499989,
+              90.35530012500021,
+              94.23695041700012,
+              90.9788529589996,
+              90.5041645830006,
+              90.11518216700006,
+              90.97655300000042,
+              91.57158958299988,
+              91.06964795900058,
+              95.4717053330005,
+              90.80997816700074,
+              87.61285662499904,
+              91.81300437500067,
+              87.52842983399933,
+              93.03527433399904,
+              96.4517375000014,
+              94.87571349999962,
+              87.06860429100016,
+              94.00390279199928,
+              94.66845362499953,
+              90.8755943340002,
+              89.58521050000127,
+              86.99722387500151,
+              92.10596491700016,
+              94.30246504099887
+            ],
+            "min": 86.99722387500151,
+            "p10": 88.4749752667,
+            "median": 92.44913608300021,
+            "mean": 92.81449631504005,
+            "p90": 96.63653634130006,
+            "max": 104.44228079100003,
+            "stddev": 3.6391035797558637,
+            "cv": 0.03920835348180593,
+            "verdict": "STABLE"
+          },
+          "embedding": {
+            "samples": [
+              55.99400412499995,
+              56.05786450000005,
+              58.23019475000001,
+              58.16983862500001,
+              58.1621439999999,
+              58.198123042000134,
+              58.06025995800019,
+              57.94640774999971,
+              57.86870975000011,
+              57.74274383299962,
+              57.70834779200004,
+              58.172216209,
+              57.638917582999966,
+              57.395223916000305,
+              57.57129716700001,
+              57.992137917000036,
+              58.18399591599973,
+              57.55363787500028,
+              57.95221162500002,
+              57.635458417000336,
+              55.920040750000226,
+              55.78754708300039,
+              55.58750116699957,
+              56.10668520799936,
+              55.75057462500081,
+              57.98933479200059,
+              57.75234124999952,
+              56.03729987499992,
+              55.635549708000326,
+              55.46850829199957,
+              55.816698624999844,
+              57.89842291700006,
+              57.99529212499965,
+              58.04575954200027,
+              58.00335804199949,
+              57.53049875000033,
+              57.94763899999998,
+              57.583809374998964,
+              57.99862608299918,
+              57.67947387500135,
+              57.55500054100048,
+              57.73102687500068,
+              57.84674099999938,
+              57.631893084000694,
+              57.5636592080009,
+              57.77086599999893,
+              58.01701879200118,
+              58.02065675000085,
+              57.94489479099866,
+              57.93973974999972
+            ],
+            "min": 55.46850829199957,
+            "p10": 55.8137834707999,
+            "median": 57.74754254149957,
+            "mean": 57.41580385250003,
+            "p90": 58.16291346249991,
+            "max": 58.23019475000001,
+            "stddev": 0.8770141975751895,
+            "cv": 0.015274787405715336,
+            "verdict": "STABLE"
+          },
+          "cycle": {
+            "samples": [
+              207.3106737920001,
+              203.27301224999997,
+              217.45885687500004,
+              216.3204672910001,
+              210.04778491599996,
+              211.01806516600004,
+              205.14346454199995,
+              202.889053333,
+              206.04229287499993,
+              204.97181520899994,
+              203.2885692079999,
+              207.28380654199964,
+              203.1261963750003,
+              199.1696038330001,
+              199.87917041699984,
+              202.59918025000024,
+              204.7910779169997,
+              199.07485320900014,
+              201.18030370799988,
+              205.85193241700017,
+              201.81424420800067,
+              201.4980894169994,
+              198.40767337500074,
+              203.4567476250004,
+              203.53215754100074,
+              204.36234058399987,
+              200.77487633300007,
+              203.19415645899971,
+              200.01449500000035,
+              199.21375237499979,
+              198.99891208400004,
+              202.38196570800028,
+              202.52551579200008,
+              202.34948404199986,
+              206.64351670900032,
+              200.69610504199954,
+              197.78671741700055,
+              201.67314133299988,
+              198.89451529100006,
+              202.78146158399977,
+              206.1032780839996,
+              204.64696575000016,
+              196.9178647080007,
+              204.25745562500015,
+              204.6678831670015,
+              201.12781966700095,
+              200.77940424999906,
+              197.40147454199905,
+              202.80223650000153,
+              204.61516024999946
+            ],
+            "min": 196.9178647080007,
+            "p10": 198.98847240470005,
+            "median": 202.84564491650076,
+            "mean": 203.30079181174008,
+            "p90": 207.28649326699968,
+            "max": 217.45885687500004,
+            "stddev": 4.13631298054697,
+            "cv": 0.020345778999116073,
+            "verdict": "STABLE"
+          }
+        },
+        "owned_memory_observed": true
+      }
+    },
+    "qwen27-gate": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "build/metal-t08-20261106/no-reserve/qwen27-gate/data",
+        "32"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "reason": "Zero host reserve; automatic Qwen27 useful dense cache;32occupied tokens+8output,logits/payload/checkpoint/restore",
+      "elapsed_seconds": 8.306447082999512,
+      "timeout_seconds": 600.0,
+      "exit_code": 0,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "437c192f3f5d8678279202a66c301218fd9e5a2713dd6634cc3c791d97fd95ab"
+      },
+      "report_sha256": "0c564da69581b43d7f98f83778dd9b98dcb1aee1e39750bd367098bd77bc659a",
+      "observed_memory": {
+        "min_host_bytes": 2019459072,
+        "swap_growth_bytes": 0,
+        "max_pressure": 2,
+        "peak_footprint_bytes": 17576653880
+      }
+    },
+    "f08-qwen27": {
+      "status": "NOT_VERIFIED",
+      "command": [
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server",
+        "--metal",
+        "-m",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ctx",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18186",
+        "--kv-disk-dir",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/f08-qwen27/kv",
+        "--trace",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/f08-qwen27/trace.log",
+        "--no-mtp"
+      ],
+      "client_command": [
+        "agent/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-n",
+        "0",
+        "--no-cov",
+        "-s",
+        "agent/tests/test_live_e2e.py::test_live_e2e_custom_literal_greedy_file_workflow",
+        "--junitxml=/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/f08-qwen27/client-junit.xml"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "host_reserve_bytes": 0,
+      "reason": "T08 F08 full unchanged literal greedy real file workflow; Qwen27 automatic RAM and zero host reserve; numerical thresholds unchanged",
+      "elapsed_seconds": 625.0853378749998,
+      "timeout_seconds": 7200.0,
+      "server_exit_code": 0,
+      "cleanup_forced": [],
+      "error": "termination requested",
+      "qualification_profile": {
+        "context_tokens": 8192,
+        "prefill_chunk": 64,
+        "ssd_cache_bytes": null,
+        "ssd_cache_mode": "automatic",
+        "reasoning_effort": "none",
+        "tool_start_timeout_seconds": 480,
+        "http_timeout_seconds": 7200.0,
+        "interactive_timeout_seconds": 1200,
+        "phase_timeout_seconds": 720,
+        "suite_operation_base_timeout_seconds": null,
+        "suite_operation_timeout_seconds": null
+      },
+      "executables_sha256": {
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server": "acaeb75cf7f10debfd4d9b6577a490211dd59cbe5bcfb9a5b991ed30dfc32daa"
+      },
+      "qualification_tool_sha256": "a2d9b8e4ae372c6ffe1a7193c88c65dbf819865e83ccaa84f02486bc52f682cb",
+      "client_sources_sha256": {
+        "agent/tests/test_live_e2e.py": "0328f618ada6b2dc16b8042e6d074a3e34462de51e5b972c8bf476a6c2211f61"
+      },
+      "report_sha256": "8fe392dde653cc4491d453dd081b5497d6de254434af066cc7e030022c71228c",
+      "observed_memory": {
+        "min_host_bytes": 1457209344,
+        "swap_growth_bytes": 0,
+        "max_pressure": 2,
+        "peak_footprint_bytes": 17027084744
+      }
+    },
+    "stress-qwen27": {
+      "status": "SKIP_RESOURCE_LIMIT",
+      "command": [
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server-suite",
+        "--metal",
+        "-m",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ctx",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18186",
+        "--kv-disk-dir",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/stress-qwen27/kv",
+        "--trace",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/stress-qwen27/trace.log",
+        "--no-mtp",
+        "--suite-config",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/no-reserve/stress-qwen27/suite-config.json"
+      ],
+      "client_command": [
+        "agent/.venv/bin/python",
+        "tools/qualify_suite_release.py",
+        "--url",
+        "http://127.0.0.1:18186/v1",
+        "--cycles",
+        "50",
+        "--image-size",
+        "256x256",
+        "--output",
+        "build/metal-t08-20261106/no-reserve/stress-qwen27-client"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "host_reserve_bytes": 0,
+      "reason": "T08 Qwen27 fresh50cycles after warmup,256px,automatic useful cache,zero reserve across engine/adapters/monitor; final discovery binary",
+      "elapsed_seconds": 44.73930337500133,
+      "timeout_seconds": 14400.0,
+      "server_exit_code": 0,
+      "cleanup_forced": [],
+      "error": "footprint, pressure, swap growth or host reserve limit",
+      "qualification_profile": {
+        "context_tokens": 8192,
+        "prefill_chunk": 64,
+        "ssd_cache_bytes": null,
+        "ssd_cache_mode": "automatic",
+        "reasoning_effort": "none",
+        "tool_start_timeout_seconds": 480,
+        "http_timeout_seconds": 14400.0,
+        "interactive_timeout_seconds": 1200,
+        "phase_timeout_seconds": 720,
+        "suite_operation_base_timeout_seconds": 300,
+        "suite_operation_timeout_seconds": 1200
+      },
+      "executables_sha256": {
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server-suite": "a214414ff1e9d4238af186fb4a0755bf490b79039a7aab3b682b5bd5566efd3a"
+      },
+      "qualification_tool_sha256": "a2d9b8e4ae372c6ffe1a7193c88c65dbf819865e83ccaa84f02486bc52f682cb",
+      "client_sources_sha256": {
+        "tools/qualify_suite_release.py": "93728114bd72612d6599c63970ebe0aa9f187b561f684d3183d990f8248fa83a"
+      },
+      "report_sha256": "20cbeed97911fc60e24aae251abe62eaed2cb0f2263dff9585e56bdb9530571c",
+      "observed_memory": {
+        "min_host_bytes": 2060713984,
+        "swap_growth_bytes": 1809254973,
+        "max_pressure": 2,
+        "peak_footprint_bytes": 16724063912
+      }
+    },
+    "image-admission-monitor": {
+      "status": "PASS",
+      "command": [
+        "agent/.venv/bin/python",
+        "tools/qualify_qwen_image_pipeline.py",
+        "--prepared",
+        "build/metal-oracles",
+        "--bundle",
+        "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+        "--tokenizer",
+        "build/metal-models/image-tokenizer.ds4q",
+        "--output",
+        "build/metal-t08-20261106/no-reserve/image-admission",
+        "--plan-only",
+        "--full-corpus"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "reason": "T08 resource admission only: frozen corpus original geometries,explicit zero shape noise,zero reserve,no model inference or oracle promotion",
+      "elapsed_seconds": 13.242864958001519,
+      "timeout_seconds": 300.0,
+      "exit_code": 0,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "executables_sha256": {
+        "agent/.venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+        "tools/qualify_qwen_image_pipeline.py": "d4fa2da70701024dcdc561ed67a2f1844a38ff3a47e78cce2684ee6847e4189f"
+      },
+      "report_sha256": "6ff5bf9594cef2001c3af461874e517690fbad479f6182cc4ef460f2b6c38d23",
+      "observed_memory": {
+        "min_host_bytes": 17789616128,
+        "swap_growth_bytes": 0,
+        "max_pressure": 1,
+        "peak_footprint_bytes": 40829384
+      }
+    },
+    "gemma-media": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_gemma_visual",
+        "build/metal-models/gemma.ds4b/bundle.ds4b",
+        "build/metal-oracles/models",
+        "build/metal-models/gemma.ds4g",
+        "build/metal-models/gemma-media.ds4p",
+        "build/metal-qualification/t06-t07-20261031/gemma-media/cases.bin",
+        "build/metal-t08-20261106/no-reserve/gemma-media/native"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "reason": "Shared no-reserve policy: independent Gemma full media subset,480BF16/probability boundaries plus128dim vectors",
+      "elapsed_seconds": 12.19951108299938,
+      "timeout_seconds": 300.0,
+      "exit_code": 0,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "executables_sha256": {
+        "tests/probe_gemma_visual": "84644add10d59cc5f5fe6e8da352ed0959045d13ba52156004ec193135ad24ce"
+      },
+      "report_sha256": "a34c61dd08356410cf7070dcf53c81ae6b16250d9a5a1d70f41bcc1813c042a6",
+      "observed_memory": {
+        "min_host_bytes": 16380723200,
+        "swap_growth_bytes": 0,
+        "max_pressure": 1,
+        "peak_footprint_bytes": 1316932128
+      },
+      "independent_comparison": {
+        "internal": {
+          "criterion": "bit_exact",
+          "status": "PASS",
+          "exact": 480,
+          "count": 480
+        },
+        "vectors": {
+          "metrics": {
+            "max_abs": 5.960464477539063e-08,
+            "rmse": 6.472565998493549e-09,
+            "relative_l2": 7.322872469981983e-08,
+            "bit_exact": false,
+            "cosine_min": 0.9999999999999989,
+            "unit_norm_error_max": 6.491406745467998e-08
+          },
+          "tolerances": {
+            "cosine_min": 0.999,
+            "max_abs": 0.005,
+            "rmse_max": 0.0015,
+            "unit_norm_error_max": 1e-05,
+            "dimensions": [
+              128,
+              256,
+              512,
+              768
+            ],
+            "float16": "REJECT"
+          },
+          "status": "PASS"
+        },
+        "status": "PASS"
+      }
+    }
+  },
+  "image512": {
+    "native-monitor": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_qwen_image_pipeline",
+        "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+        "build/metal-oracles/models",
+        "build/metal-models/image-tokenizer.ds4q",
+        "build/metal-t08-20261106/no-reserve/image512/native",
+        "build/metal-perf-image-20261105/alpha-512.ds4p"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "reason": "Same alpha512 fixture; native final zero-reserve binary,independent512qualification",
+      "elapsed_seconds": 236.87047237499974,
+      "timeout_seconds": 600.0,
+      "exit_code": 0,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "executables_sha256": {
+        "tests/probe_qwen_image_pipeline": "b713f1791a4983be43d34e635921d2b4f026bcc3f7eafa298aea67b0c804427c"
+      },
+      "report_sha256": "e092e74201fed5c732f9fd90736022f88a701ad72fbb49bec9ae5eee5ac0145f",
+      "observed_memory": {
+        "min_host_bytes": 5395857408,
+        "swap_growth_bytes": 0,
+        "max_pressure": 2,
+        "peak_footprint_bytes": 11466409072
+      }
+    },
+    "oracle-encoder-monitor": {
+      "status": "PASS",
+      "command": [
+        "build/metal-venv/bin/python",
+        "tools/run_qwen_image_pipeline_oracle.py",
+        "--prepared",
+        "build/metal-oracles",
+        "--cases",
+        "build/metal-t08-20261106/no-reserve/image512/cases.json",
+        "--output",
+        "build/metal-t08-20261106/no-reserve/image512/oracle",
+        "--stage",
+        "encoder",
+        "--device",
+        "cpu",
+        "--offload"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "reason": "Independent512oracle: pinned Transformers CPU text encoder,per-module weight offload,one small text prompt;zero reserve",
+      "elapsed_seconds": 57.810251334001805,
+      "timeout_seconds": 600.0,
+      "exit_code": 0,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "executables_sha256": {
+        "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+        "tools/run_qwen_image_pipeline_oracle.py": "c625ada174b32eca2343500e5b6e8ff6db62fc6b31fabd123e4009b1f54df6ef"
+      },
+      "report_sha256": "6a16801a97586598e5a74f023b2be921957a45b731dab7c37d0f65960cc1424a",
+      "observed_memory": {
+        "min_host_bytes": 9466920960,
+        "swap_growth_bytes": 0,
+        "max_pressure": 1,
+        "peak_footprint_bytes": 553190720
+      }
+    },
+    "oracle-dit-monitor": {
+      "status": "PASS",
+      "command": [
+        "build/metal-venv/bin/python",
+        "tools/run_qwen_image_pipeline_oracle.py",
+        "--prepared",
+        "build/metal-oracles",
+        "--cases",
+        "build/metal-t08-20261106/no-reserve/image512/cases.json",
+        "--output",
+        "build/metal-t08-20261106/no-reserve/image512/oracle",
+        "--stage",
+        "dit",
+        "--device",
+        "mps",
+        "--offload",
+        "--mps-memory-fraction",
+        "1"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "reason": "Independent512oracle: pinned Diffusers DiT MPS offload,CPU conditioning,frozen masks/order/8steps,zero fixed reserve",
+      "elapsed_seconds": 34.39203891699799,
+      "timeout_seconds": 600.0,
+      "exit_code": 0,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "executables_sha256": {
+        "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+        "tools/run_qwen_image_pipeline_oracle.py": "c625ada174b32eca2343500e5b6e8ff6db62fc6b31fabd123e4009b1f54df6ef"
+      },
+      "report_sha256": "199fa04ba60f3d4011c0e6780b7b70480d1d4f32d8afc8b1435b3262c9ad1421",
+      "observed_memory": {
+        "min_host_bytes": 9976446976,
+        "swap_growth_bytes": 0,
+        "max_pressure": 1,
+        "peak_footprint_bytes": 1642775896
+      }
+    },
+    "oracle-vae-monitor": {
+      "status": "PASS",
+      "command": [
+        "build/metal-venv/bin/python",
+        "tools/run_qwen_image_pipeline_oracle.py",
+        "--prepared",
+        "build/metal-oracles",
+        "--cases",
+        "build/metal-t08-20261106/no-reserve/image512/cases.json",
+        "--output",
+        "build/metal-t08-20261106/no-reserve/image512/oracle",
+        "--stage",
+        "decode",
+        "--device",
+        "mps",
+        "--offload",
+        "--mps-memory-fraction",
+        "1"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "reason": "Independent512oracle: pinned Diffusers VAE decode MPS offload from independent DiT latents;zero reserve",
+      "elapsed_seconds": 6.07797712500178,
+      "timeout_seconds": 600.0,
+      "exit_code": 0,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "executables_sha256": {
+        "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+        "tools/run_qwen_image_pipeline_oracle.py": "c625ada174b32eca2343500e5b6e8ff6db62fc6b31fabd123e4009b1f54df6ef"
+      },
+      "report_sha256": "c488876457d5d99c15b83ed24655df518d7acaf99b6f489801d5217d9a425e55",
+      "observed_memory": {
+        "min_host_bytes": 16579772416,
+        "swap_growth_bytes": 0,
+        "max_pressure": 1,
+        "peak_footprint_bytes": 1620509944
+      }
+    }
+  },
+  "tests": {
+    "final_python_passed": 56,
+    "final_python_seconds": 13.212,
+    "launcher_foundations_passed": 25,
+    "groups_overlap": true,
+    "policy_factory_planner_resources_executor_http_lifecycle": "PASS",
+    "ruff": "PASS",
+    "known_preexisting_numeric_failures": [
+      "two sin/cos boundary assertions; not changed or promoted"
+    ],
+    "final_product_and_metal_resident_ssd_foundations": "PASS",
+    "metal_foundations_log_sha256": "0ded57b1534de93e7080359c3da62b132c0aeceef0cf003f2cb241a7f782972d",
+    "discovery_schema_passed": 7
+  },
+  "no_production_shader_arithmetic_weights_or_numerical_criteria_changed": true,
+  "discovery_reserve_bytes": {
+    "Qwen/Qwen-Image-2.1-Turbo": 0,
+    "google/embeddinggemma-2": 0
+  },
+  "admission": {
+    "count": 56,
+    "admitted": 56,
+    "scope": "shape-only; zero noise explicitly marked; no inference/quality promotion",
+    "max_plan_device_bytes": 11927531488,
+    "max_plan_host_bytes": 400922624,
+    "sha256": "e587ce63d84b21ac4c53937b9005de8e990798ec43884f788bbb1dd626872699"
+  },
+  "current_source_sha256": {
+    "ds4_metal_memory.h": "ac13849ba3b45271b6ec62c26a82dfd4f3a5871fe0a7937a517ff696ff0580bf",
+    "ds4.c": "519d7dd42c8963c91806a1fd7e6a5829aea9d1adbdc125c4103a49124cb63848",
+    "ds4_metal.m": "bab378801efd78e6b5ffbbe2d7176669baf89d79c2758cfce48a05934a80cc17",
+    "ds4_server_suite.inc": "52b857073284b1439118ba8d28128167d0d48542937587c0232c0dbd03e9b425",
+    "ds4_lifecycle_text.h": "bfba008f106b5b88ce589ed14b8db1853bdfd321104c61fef78db1644b2b219b",
+    "tools/qualify_metal_command.py": "515ecc33857dc6e9754de7b61105b57e608b0da76d6c4e262bc20cc7d4308cbe",
+    "tools/qualify_metal_server.py": "a2d9b8e4ae372c6ffe1a7193c88c65dbf819865e83ccaa84f02486bc52f682cb",
+    "tools/qualify_qwen_image_pipeline.py": "352c44404776f37ed31cb51ff4487f00f481aeba23079fe37a9b32102fb74289",
+    "tests/probe_qwen_skill_return.c": "59d45cf21694aa6f1533aacfae427a34bc49f9ca317ff68ff21d8abe9984f930",
+    "tests/test_metal_stream_qualification.py": "847b1bbdba92b1e59141dfbd3a28717073363e2c4295e107fd88aa7da1a9570c",
+    "tests/test_suite_pipeline_qualification.py": "b0bb836d207953713a65949e62ffc661ad721a9538050d18d03d8736fd09c162"
+  },
+  "old_stress_binary_sha256": "3ccd2a1a37f2222cf6704a462d329d3722a27d116508b8b88251ed14ed9d7321"
+}

@@ -1,0 +1,774 @@
+diff --git a/docs/22-native-suite.md b/docs/22-native-suite.md
+index 8dc778d..2bdada3 100644
+--- a/docs/22-native-suite.md
++++ b/docs/22-native-suite.md
+@@ -1,5 +1,28 @@
+ # Native DS4 images and embeddings
+ 
++## Operation progress
++
++`NativeSuiteClient.images(..., on_progress=callback)` explicitly negotiates
++versioned SSE with `Accept: text/event-stream`. Ordinary JSON responses remain
++compatible. Discovery advertises `ds4.image_progress_version=1`; callers must
++not infer streaming support from a model name or compute backend. Events use
++the common `OperationProgress` interface for CPU, Metal, CUDA and future
++backends/models. Units can be evaluations, tokens, tiles or other work; totals
++and overall fractions can be unknown. The optional `active_items` field counts
++the outputs advancing together from `item_index`. It defaults to one. Call
++`snapshot.item_fraction(index)` to resolve work for an individual output.
++A callback observes metadata and cannot
++alter tensors or numerical execution. `NativeSuiteClient(..., image_model=...)`
++can select another configured image model without changing the progress API.
++
++The registered image tool inherits the callback through `ToolArguments.on_progress`
++and the execution context; no progress argument is exposed to the LLM. The
++client verifies event sequence, operation and request identity, rejects streams without
++a terminal result, preserves structured failures and disables automatic image
++retries. Heartbeats keep a read timeout active but do not extend a server's
++absolute deadline. Final results are verified and saved before UI completion;
++subsequent LLM inference is independent of image success.
++
+ `Client.native_suite()` exposes the configured native DS4 service on the same
+ OpenAI transport, URL and credentials as `LocalProvider`. No client residency,
+ checkpoint or load/unload operations are needed. Providers without this
+@@ -23,9 +46,10 @@ with LocalProvider(model="Qwen3.8-27B-UD-Q4_K_S", base_url="http://localhost:180
+     Path("result.png").write_bytes(suite.content(result.data[0].ds4.file_id))
+ ```
+ 
+-The only implemented identities are `Literal["Qwen/Qwen-Image-2.1-Turbo"]`
+-and `Literal["google/embeddinggemma-2"]`. Each operation has one available
+-model, so methods and tools expose no model selector. Image dimensions are
++The current DS4 service provides `Qwen/Qwen-Image-2.1-Turbo` for images
++and `google/embeddinggemma-2` for embeddings. The registered tools use these
++defaults. The typed client can discover a different configured image model
++through its constructor. Image dimensions are
+ independent `ImageDimension` Literals for `width` and `height`, enumerating
+ every multiple of 32 from 32 to 2048; serialization to the standard `size` field stays
+ inside the transport adapter. `models()` returns typed native catalog entries;
+@@ -55,8 +79,8 @@ alignment and 2560×1440 exceeds the current DS4 per-axis limit. These are
+ service limits, not architectural maxima of the Qwen checkpoint: its model
+ card also lists larger presets such as 2752×1536, outside this service contract.
+ Unknown options are
+-rejected. An automatic per-call idempotency key protects transport retries;
+-pass a stable key yourself when retrying the same logical call later.
++rejected. Every call carries an idempotency key. Pass a stable key when
++explicitly replaying the same logical call later.
+ References preserve their supplied dimensions (`reference_resolution=0`) and
+ must already satisfy the native Qwen3-VL geometry plan, such as 256×256.
+ References requiring an implicit resize are rejected before compute.
+diff --git a/src/exmekh_lib/config/native_suite.py b/src/exmekh_lib/config/native_suite.py
+index f87c165..2cc376d 100644
+--- a/src/exmekh_lib/config/native_suite.py
++++ b/src/exmekh_lib/config/native_suite.py
+@@ -102,6 +102,8 @@ class NativeSuiteSettings:
+     )
+     unsupported_provider: str = "This provider does not expose the native suite."
+     invalid_response: str = "The native service returned an invalid response."
++    incomplete_stream: str = "The native progress stream ended without a terminal result."
++    operation_failed: str = "The native image operation failed; inspect its structured cause before retrying."
+     invalid_scale: str = "preview_scale must be greater than zero and at most one."
+     invalid_path: str = "Media paths must stay inside the workspace."
+     invalid_dimensions: str = "Width and height must each be a supported integer multiple of 32 from 32 to 2048."
+diff --git a/src/exmekh_lib/core/models/native_media_tools.py b/src/exmekh_lib/core/models/native_media_tools.py
+index 8ea2e5d..45fb6a4 100644
+--- a/src/exmekh_lib/core/models/native_media_tools.py
++++ b/src/exmekh_lib/core/models/native_media_tools.py
+@@ -17,6 +17,7 @@ from exmekh_lib.core.models.native_suite import (
+ )
+ from exmekh_lib.core.models.tool import AttachedToolResult
+ from exmekh_lib.core.models.user_message import ImagesUserMessage, UserMessage
++from exmekh_lib.interfaces.operation_progress import operation_progress_observer
+ 
+ 
+ def workspace_media(work_root: Path, path: str) -> Path:
+@@ -69,6 +70,7 @@ def generate_images(
+             background=background,
+             seed=seed,
+             idempotency_key=idempotency_key,
++            on_progress=operation_progress_observer(),
+         )
+     return _save_images(response, directory, include_image_in_result, preview_scale)
+ 
+diff --git a/src/exmekh_lib/core/models/native_suite.py b/src/exmekh_lib/core/models/native_suite.py
+index 322e7f7..e1ac862 100644
+--- a/src/exmekh_lib/core/models/native_suite.py
++++ b/src/exmekh_lib/core/models/native_suite.py
+@@ -14,12 +14,14 @@ from contextvars import ContextVar
+ from pathlib import Path
+ from typing import Any, Literal, get_args
+ 
+-from openai import OpenAI
++from httpx2 import Response as HTTPResponse
++from openai import APIStatusError, OpenAI, Stream
+ from PIL import Image
+ from pydantic import BaseModel, Field
+ 
+ from exmekh_lib.config.native_suite import NATIVE_SUITE, ImageCount, ImageDimension
+ from exmekh_lib.config.provider import DEFAULT_PROVIDER_SETTINGS
++from exmekh_lib.interfaces.operation_progress import OperationProgress
+ 
+ 
+ class TextContent(BaseModel):
+@@ -90,25 +92,29 @@ class NativeCapabilities(BaseModel):
+     configured: bool
+     resident: bool
+     ready: bool
++    image_progress_version: Literal[1] | None = None
+ 
+ 
+ class NativeModel(BaseModel):
+-    id: Literal["Qwen/Qwen-Image-2.1-Turbo", "google/embeddinggemma-2"]
++    id: str
+     ds4: NativeCapabilities
+ 
+ 
+ class NativeSuiteClient:
+     """No residency operations: each method waits for restored service state."""
+ 
+-    def __init__(self, client: OpenAI) -> None:
++    def __init__(
++        self, client: OpenAI, *, image_model: str = NATIVE_SUITE.image_model
++    ) -> None:
+         self._transport = client
++        self._image_model = image_model
+ 
+     def models(self) -> list[NativeModel]:
+         data = self._transport.get("/models", cast_to=dict[str, Any])["data"]
+         return [
+             NativeModel.model_validate(item)
+             for item in data
+-            if item["id"] in (NATIVE_SUITE.image_model, NATIVE_SUITE.embedding_model)
++            if item["id"] in (self._image_model, NATIVE_SUITE.embedding_model)
+         ]
+ 
+     def upload(
+@@ -212,6 +218,7 @@ class NativeSuiteClient:
+         background: Literal["auto", "opaque", "transparent"] = "auto",
+         seed: int | None = None,
+         idempotency_key: str | None = None,
++        on_progress: Callable[[OperationProgress], None] | None = None,
+     ) -> ImageBatch:
+         self.validate_image_options(
+             n=n,
+@@ -225,7 +232,7 @@ class NativeSuiteClient:
+         if seed is not None:
+             extension["seed"] = seed
+         body: dict[str, Any] = {
+-            "model": NATIVE_SUITE.image_model,
++            "model": self._image_model,
+             "prompt": prompt,
+             "n": n,
+             "size": f"{width}x{height}",
+@@ -235,18 +242,82 @@ class NativeSuiteClient:
+         }
+         if images:
+             body["images"] = [item.file_id for item in images]
+-        response = self._transport.post(
+-            "/images/edits" if images else "/images/generations",
+-            cast_to=dict[str, Any],
+-            body=body,
+-            options={
+-                "headers": {"Idempotency-Key": idempotency_key or str(uuid.uuid4())}
+-            },
+-        )
++        path = "/images/edits" if images else "/images/generations"
++        headers = {"Idempotency-Key": idempotency_key or str(uuid.uuid4())}
++        # Image calls can have effects before a transport failure. Recovery
++        # must be explicit; 409 cancellation and 503 resource errors are final.
++        transport = self._transport.with_options(max_retries=0)
++        completion = None
++        if on_progress is None:
++            response = transport.post(
++                path, cast_to=dict[str, Any], body=body, options={"headers": headers}
++            )
++        else:
++            headers["Accept"] = "text/event-stream"
++            with transport.post(
++                path,
++                cast_to=dict[str, Any],
++                body=body,
++                options={"headers": headers},
++                stream=True,
++                stream_cls=Stream[dict[str, Any]],
++            ) as events:
++                content_type = events.response.headers.get("content-type", "")
++                if content_type.partition(";")[0].strip().lower() == "text/event-stream":
++                    response, completion = self._image_events(events, on_progress)
++                else:
++                    # An older server can return ordinary JSON to negotiation.
++                    events.response.read()
++                    response = events.response.json()
+         batch = ImageBatch.model_validate(response)
+         batch.validate_geometry(n=n, width=width, height=height)
++        if completion is not None and on_progress is not None:
++            on_progress(completion)
+         return batch
+ 
++    @staticmethod
++    def _image_events(
++        events: Stream[dict[str, Any]],
++        callback: Callable[[OperationProgress], None],
++    ) -> tuple[dict[str, Any], OperationProgress]:
++        previous = None
++        for payload in events:
++            event = OperationProgress.model_validate(payload)
++            if not event.follows(previous):
++                raise ValueError(NATIVE_SUITE.invalid_response)
++            if event.state == "completed":
++                result = payload.get("result")
++                if not isinstance(result, dict):
++                    raise ValueError(NATIVE_SUITE.invalid_response)
++                return result, event
++            if event.state != "running":
++                failure = NativeSuiteClient._image_stream_error(events.response, payload)
++                callback(event)
++                raise failure
++            callback(event)
++            previous = event
++        raise ValueError(NATIVE_SUITE.incomplete_stream)
++
++    @staticmethod
++    def _image_stream_error(
++        response: HTTPResponse, payload: dict[str, Any]
++    ) -> APIStatusError:
++        failure = payload.get("failure")
++        code = payload.get("status_code")
++        if (
++            not isinstance(code, int)
++            or not 400 <= code <= 599
++            or not isinstance(failure, dict)
++        ):
++            raise ValueError(NATIVE_SUITE.invalid_response)
++        detail = failure.get("error")
++        message = detail.get("message") if isinstance(detail, dict) else None
++        return APIStatusError(
++            message or NATIVE_SUITE.operation_failed,
++            response=HTTPResponse(code, request=response.request, headers=response.headers),
++            body=failure,
++        )
++
+ 
+ _suite_factory: ContextVar[Callable[[], NativeSuiteClient] | None] = ContextVar(
+     "native_suite_factory", default=None
+diff --git a/src/exmekh_lib/core/models/tool.py b/src/exmekh_lib/core/models/tool.py
+index d95190c..d35d4d2 100644
+--- a/src/exmekh_lib/core/models/tool.py
++++ b/src/exmekh_lib/core/models/tool.py
+@@ -23,6 +23,7 @@ from exmekh_lib.core.models.interactive import (
+ from exmekh_lib.core.models.tool_hooks import ToolHooks
+ from exmekh_lib.core.models.user_message import UserMessage
+ from exmekh_lib.interfaces.message import Message
++from exmekh_lib.interfaces.operation_progress import operation_progress_context
+ from exmekh_lib.interfaces.tool_hook import (
+     AfterTool,
+     BeforeTool,
+@@ -279,7 +280,11 @@ class Tool:
+         context = ToolContext(deepcopy(dict(arguments)), work_root, history, call_id)
+         decision = self.before.handle(context) if self.before is not None else None
+         if isinstance(decision, ToolArguments):
+-            context = replace(context, arguments=deepcopy(dict(decision.arguments)))
++            context = replace(
++                context,
++                arguments=deepcopy(dict(decision.arguments)),
++                on_progress=decision.on_progress,
++            )
+             return context, None
+         if decision is not None and not isinstance(decision, ToolResponse):
+             raise TypeError(
+@@ -341,7 +346,8 @@ class Tool:
+                 # AfterTool filters complete results; raw progress must not bypass it.
+                 if self.after is None:
+                     operation.read_partial = work.read_partial
+-                result = work.run()
++                with operation_progress_context(context.on_progress):
++                    result = work.run()
+             return self._finalize_result(context, result)
+ 
+         operation = ToolExecutionOperation(run)
+diff --git a/src/exmekh_lib/interfaces/operation_progress.py b/src/exmekh_lib/interfaces/operation_progress.py
+new file mode 100644
+index 0000000..d319baf
+--- /dev/null
++++ b/src/exmekh_lib/interfaces/operation_progress.py
+@@ -0,0 +1,97 @@
++"""Versioned operation feedback, independent of model and compute backend."""
++
++from __future__ import annotations
++
++from collections.abc import Callable, Iterator
++from contextlib import contextmanager
++from contextvars import ContextVar
++from typing import Literal
++
++from pydantic import BaseModel, ConfigDict, Field, model_validator
++
++from exmekh_lib.config.native_suite import NATIVE_SUITE
++
++
++class OperationProgress(BaseModel):
++    model_config = ConfigDict(frozen=True)
++
++    version: Literal[1] = 1
++    type: Literal[
++        "operation.started",
++        "operation.progress",
++        "operation.heartbeat",
++        "operation.completed",
++        "operation.failed",
++        "operation.cancelled",
++    ]
++    operation_id: str
++    request_id: str
++    seq: int = Field(ge=1)
++    elapsed_seconds: float = Field(ge=0, allow_inf_nan=False)
++    state: Literal["running", "completed", "failed", "cancelled"]
++    phase: str
++    item_index: int = Field(default=0, ge=0)
++    item_count: int = Field(default=1, ge=1)
++    active_items: int = Field(default=1, ge=1)
++    completed_units: int = Field(default=0, ge=0)
++    total_units: int | None = Field(default=None, ge=1)
++    unit: str | None = None
++    overall_fraction: float | None = Field(
++        default=None, ge=0, le=1, allow_inf_nan=False
++    )
++    overall_kind: Literal["work", "estimated", "indeterminate"] = "indeterminate"
++
++    @model_validator(mode="after")
++    def _validate_snapshot(self) -> OperationProgress:
++        expected = self.type.removeprefix("operation.")
++        if expected in {"started", "progress", "heartbeat"}:
++            expected = "running"
++        if (
++            self.state != expected
++            or self.item_index + self.active_items > self.item_count
++        ):
++            raise ValueError(NATIVE_SUITE.invalid_response)
++        return self
++
++    def follows(self, previous: OperationProgress | None) -> bool:
++        """Accept a later snapshot only from the same running operation."""
++        return previous is None or (
++            previous.state == "running"
++            and self.operation_id == previous.operation_id
++            and self.request_id == previous.request_id
++            and self.seq > previous.seq
++        )
++
++    def is_active_item(self, index: int) -> bool:
++        return self.item_index <= index < self.item_index + self.active_items
++
++    def item_fraction(self, index: int) -> float | None:
++        """Resolve batch progress to the work for one item in the snapshot."""
++        if not 0 <= index < self.item_count:
++            return None
++        if self.state == "completed" or index < self.item_index:
++            return 1.0
++        if not self.is_active_item(index) or self.overall_fraction is None:
++            return None
++        completed = self.overall_fraction * self.item_count - self.item_index
++        return min(1.0, max(0.0, completed / self.active_items))
++
++
++_observer: ContextVar[Callable[[OperationProgress], None] | None] = ContextVar(
++    "operation_progress_observer", default=None
++)
++
++
++def operation_progress_observer() -> Callable[[OperationProgress], None] | None:
++    return _observer.get()
++
++
++@contextmanager
++def operation_progress_context(
++    callback: Callable[[OperationProgress], None] | None,
++) -> Iterator[None]:
++    token = _observer.set(callback)
++    try:
++        yield
++    finally:
++        _observer.reset(token)
+diff --git a/src/exmekh_lib/interfaces/tool_hook.py b/src/exmekh_lib/interfaces/tool_hook.py
+index e6402e1..1c9b053 100644
+--- a/src/exmekh_lib/interfaces/tool_hook.py
++++ b/src/exmekh_lib/interfaces/tool_hook.py
+@@ -2,12 +2,14 @@ from __future__ import annotations
+ 
+ import inspect
+ from abc import ABC, abstractmethod
++from collections.abc import Callable
+ from dataclasses import dataclass
+ from pathlib import Path
+ from typing import Any
+ 
+ from exmekh_lib.config.interface_text import INTERFACE_TEXT
+ from exmekh_lib.interfaces.message import Message
++from exmekh_lib.interfaces.operation_progress import OperationProgress
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+@@ -16,11 +18,13 @@ class ToolContext:
+     work_root: Path
+     history: tuple[Message[object], ...]
+     call_id: str = ""
++    on_progress: Callable[[OperationProgress], None] | None = None
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+ class ToolArguments:
+     arguments: dict[str, Any]
++    on_progress: Callable[[OperationProgress], None] | None = None
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+diff --git a/tests/core/agents/tools/test_tool_hooks.py b/tests/core/agents/tools/test_tool_hooks.py
+index 7b90956..f2c8135 100644
+--- a/tests/core/agents/tools/test_tool_hooks.py
++++ b/tests/core/agents/tools/test_tool_hooks.py
+@@ -19,6 +19,7 @@ from exmekh_lib.core.models.assistant_message import (
+ from exmekh_lib.core.models.tool import CalledTool, Tool, ToolExecutionOperation
+ from exmekh_lib.core.models.tool_message import ToolMessage
+ from exmekh_lib.core.models.user_message import UserMessage
++from exmekh_lib.interfaces.operation_progress import operation_progress_observer
+ from exmekh_lib.interfaces.tool_hook import (
+     AfterTool,
+     BeforeTool,
+@@ -38,6 +39,30 @@ class ChangeArguments(BeforeTool):
+         return ToolArguments({"value": "changed"})
+ 
+ 
++def test_progress_callback_is_runtime_context_and_never_a_tool_argument(tmp_path):
++    seen = []
++
++    class Observe(BeforeTool):
++        def handle(self, context):
++            return ToolArguments(context.arguments, on_progress=seen.append)
++
++    @deep_tool(description="Test", before=Observe(), background_enabled=False)
++    def entrypoint(work_root: Path, value: str) -> str:
++        callback = operation_progress_observer()
++        assert callback is not None
++        callback(value)
++        return value
++
++    tool = DeepTool(entrypoint, tmp_path)
++    assert "on_progress" not in tool.get_signature().parameters
++    assert (
++        tool.execute_with_hooks({"value": "progress"}, work_root=tmp_path, history=())
++        == "progress"
++    )
++    assert seen == ["progress"]
++    assert operation_progress_observer() is None
++
++
+ class ChangeResult(AfterTool):
+     def handle(self, context: ToolContext, result: Any) -> str:
+         assert context.arguments == {"value": "changed"}
+diff --git a/tests/core/models/test_native_progress.py b/tests/core/models/test_native_progress.py
+new file mode 100644
+index 0000000..fa3c4c3
+--- /dev/null
++++ b/tests/core/models/test_native_progress.py
+@@ -0,0 +1,302 @@
++"""Progress negotiation, real socket liveness and backend/model-neutral metadata."""
++
++import base64
++import io
++import json
++import threading
++import time
++from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
++
++import httpx2
++import pytest
++from openai import APIStatusError, OpenAI
++from PIL import Image
++
++from exmekh_lib.core.models.native_suite import NativeSuiteClient
++from exmekh_lib.interfaces.operation_progress import (
++    OperationProgress,
++    operation_progress_context,
++    operation_progress_observer,
++)
++
++
++def batch():
++    raw = io.BytesIO()
++    Image.new("RGB", (32, 32), "red").save(raw, "PNG")
++    return {
++        "created": 1,
++        "ds4": {},
++        "data": [
++            {
++                "b64_json": base64.b64encode(raw.getvalue()).decode(),
++                "ds4": {
++                    "file_id": "file-one",
++                    "seed": 17,
++                    "width": 32,
++                    "height": 32,
++                    "recipe": {},
++                },
++            }
++        ],
++    }
++
++
++def event(kind="progress", seq=1, **extra):
++    return {
++        "version": 1,
++        "type": "operation." + kind,
++        "operation_id": "op-one",
++        "request_id": "req-one",
++        "seq": seq,
++        "elapsed_seconds": 0.1,
++        "state": "running",
++        "phase": "generation",
++        "unit": "token",
++        "completed_units": 7,
++        "total_units": None,
++        "overall_fraction": None,
++        "overall_kind": "indeterminate",
++        **extra,
++    }
++
++
++def frame(payload):
++    return (
++        "event: " + payload["type"] + "\ndata: " + json.dumps(payload) + "\n\n"
++    ).encode()
++
++
++class Fragments(httpx2.SyncByteStream):
++    def __init__(self, payload):
++        self.payload = payload
++        self.closed = False
++
++    def __iter__(self):
++        for start in range(0, len(self.payload), 7):
++            yield self.payload[start : start + 7]
++
++    def close(self):
++        self.closed = True
++
++
++def test_stream_negotiation_non_qwen_tokens_unknown_total_and_original_png():
++    stream = Fragments(
++        frame(event("started"))
++        + frame(event(seq=2))
++        + frame(event("completed", 3, state="completed", result=batch()))
++    )
++    model = "future/autoregressive"
++    calls = []
++
++    def respond(request):
++        calls.append(request)
++        if request.method == "GET":
++            return httpx2.Response(
++                200,
++                json={
++                    "data": [
++                        {
++                            "id": model,
++                            "ds4": {
++                                "version": 1,
++                                "revision": "mock",
++                                "profile": "bf16-native-v1",
++                                "operations": ["image_generate"],
++                                "input_modalities": ["text"],
++                                "configured": True,
++                                "resident": False,
++                                "ready": True,
++                                "image_progress_version": 1,
++                            },
++                        }
++                    ]
++                },
++            )
++        return httpx2.Response(
++            200, headers={"content-type": "text/event-stream"}, stream=stream
++        )
++
++    seen = []
++    with OpenAI(
++        base_url="http://native/v1",
++        api_key="test",
++        http_client=httpx2.Client(transport=httpx2.MockTransport(respond)),
++    ) as transport:
++        client = NativeSuiteClient(transport, image_model=model)
++        [entry] = client.models()
++        assert entry.id == model and entry.ds4.image_progress_version == 1
++        result = client.images("red", width=32, height=32, on_progress=seen.append)
++    assert json.loads(calls[1].content)["model"] == model
++    assert calls[1].headers["Accept"] == "text/event-stream"
++    assert calls[1].headers["Idempotency-Key"]
++    assert [item.seq for item in seen] == [1, 2, 3]
++    assert seen[1].unit == "token" and seen[1].total_units is None
++    assert result.data[0].png_bytes() == base64.b64decode(
++        batch()["data"][0]["b64_json"]
++    )
++    assert "result" not in seen[-1].model_dump()
++    assert stream.closed and len(calls) == 2
++
++
++@pytest.mark.parametrize("code", [409, 503])
++def test_failure_inside_stream_preserves_cause_and_never_retries(code):
++    cause = {
++        "error": {
++            "message": "operation cancelled"
++            if code == 409
++            else "insufficient resources",
++            "code": "request_cancelled" if code == 409 else "insufficient_resources",
++        }
++    }
++    calls = []
++
++    def respond(request):
++        calls.append(request)
++        return httpx2.Response(
++            200,
++            headers={"content-type": "text/event-stream"},
++            content=frame(
++                event("failed", state="failed", status_code=code, failure=cause)
++            ),
++        )
++
++    with OpenAI(
++        base_url="http://native/v1",
++        api_key="test",
++        http_client=httpx2.Client(transport=httpx2.MockTransport(respond)),
++    ) as transport:
++        with pytest.raises(APIStatusError) as error:
++            NativeSuiteClient(transport).images(
++                "red", width=32, height=32, on_progress=lambda _: None
++            )
++    assert error.value.status_code == code and error.value.body == cause
++    assert len(calls) == 1
++
++
++@pytest.mark.parametrize(
++    "payload",
++    [
++        b"",
++        frame(event()),
++        frame(event(seq=2)) + frame(event(seq=1)),
++        frame(event()) + frame(event(seq=2, operation_id="other")),
++        frame(event()) + frame(event(seq=2, request_id="other")),
++        frame(event("completed", state="running", result=batch())),
++        frame(event("completed", state="completed")),
++        frame(event("completed", state="completed", result={**batch(), "data": []})),
++    ],
++)
++def test_incomplete_or_invalid_stream_does_not_report_success(payload):
++    seen = []
++
++    def respond(request):
++        return httpx2.Response(
++            200, headers={"content-type": "text/event-stream"}, content=payload
++        )
++
++    with OpenAI(
++        base_url="http://native/v1",
++        api_key="test",
++        http_client=httpx2.Client(transport=httpx2.MockTransport(respond)),
++    ) as transport:
++        with pytest.raises(ValueError):
++            NativeSuiteClient(transport).images(
++                "red", width=32, height=32, on_progress=seen.append
++            )
++    assert all(snapshot.state == "running" for snapshot in seen)
++
++
++def test_older_json_server_is_compatible_with_negotiation():
++    def respond(request):
++        return httpx2.Response(200, json=batch())
++
++    seen = []
++    with OpenAI(
++        base_url="http://native/v1",
++        api_key="test",
++        http_client=httpx2.Client(transport=httpx2.MockTransport(respond)),
++    ) as transport:
++        assert (
++            NativeSuiteClient(transport)
++            .images("red", width=32, height=32, on_progress=seen.append)
++            .data
++        )
++    assert not seen
++
++
++def test_batch_progress_is_shared_only_by_active_items():
++    snapshot = OperationProgress.model_validate(
++        event(
++            item_index=1,
++            item_count=4,
++            active_items=2,
++            overall_fraction=0.5,
++            overall_kind="estimated",
++        )
++    )
++    assert [snapshot.item_fraction(i) for i in range(4)] == [1, 0.5, 0.5, None]
++    completed = OperationProgress.model_validate(
++        event(
++            "completed",
++            state="completed",
++            item_count=4,
++        )
++    )
++    assert [completed.item_fraction(i) for i in (-1, 0, 3, 4)] == [None, 1, 1, None]
++    with pytest.raises(ValueError):
++        OperationProgress.model_validate(
++            event(item_index=1, item_count=2, active_items=2)
++        )
++
++
++def test_callback_context_is_nested_and_restored_after_failure():
++    assert operation_progress_observer() is None
++    with operation_progress_context(lambda _: None):
++        outer = operation_progress_observer()
++        with pytest.raises(RuntimeError), operation_progress_context(None):
++            assert operation_progress_observer() is None
++            raise RuntimeError("failure")
++        assert operation_progress_observer() is outer
++    assert operation_progress_observer() is None
++
++
++def test_heartbeats_keep_real_socket_read_alive_beyond_read_timeout():
++    class Handler(BaseHTTPRequestHandler):
++        def log_message(self, *args):
++            pass
++
++        def do_POST(self):
++            self.rfile.read(int(self.headers["Content-Length"]))
++            self.send_response(200)
++            self.send_header("Content-Type", "text/event-stream")
++            self.send_header("Connection", "close")
++            self.end_headers()
++            for seq in range(1, 7):
++                self.wfile.write(frame(event("heartbeat", seq)))
++                self.wfile.flush()
++                time.sleep(0.05)
++            self.wfile.write(
++                frame(event("completed", 7, state="completed", result=batch()))
++            )
++            self.wfile.flush()
++
++    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
++    worker = threading.Thread(target=server.serve_forever)
++    worker.start()
++    try:
++        with OpenAI(
++            base_url=f"http://127.0.0.1:{server.server_port}/v1",
++            api_key="test",
++            timeout=httpx2.Timeout(0.2, connect=2),
++        ) as transport:
++            seen = []
++            start = time.monotonic()
++            result = NativeSuiteClient(transport).images(
++                "red", width=32, height=32, on_progress=seen.append
++            )
++            assert time.monotonic() - start > 0.2
++        assert len(seen) == 7 and result.data
++    finally:
++        server.shutdown()
++        worker.join()
++        server.server_close()

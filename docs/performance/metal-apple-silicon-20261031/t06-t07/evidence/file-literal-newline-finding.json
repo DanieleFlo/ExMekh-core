@@ -1,0 +1,24 @@
+{
+  "finding": "Actual edit value contains a trailing LF; receipt reports32bytes, expected31.",
+  "contract": "ds4_interactive_grammar.h explicitly retains all leading/trailing string bytes, bypassing optional Qwen framing-newline stripping. Existing literal contract and expectations unchanged.",
+  "observed_arguments": {
+    "leading_codepoint": 10,
+    "last_codepoint": 10,
+    "expected_file": "FRONTEND_INTERACTIVE_OKAPPENDED",
+    "expected_bytes": 31,
+    "receipt_bytes": 32
+  },
+  "scope": "Original Flash Custom workflow stopped after literal LF mismatch and skill reopening despite completion confirmation; NOT_VERIFIED, no final assertions claimed.",
+  "new_case": "test_live_e2e_custom_literal_file_workflow",
+  "new_input": "Explicitly says native closing parameter follows last D without a framing newline; same exact file result and all authorization/effect/history/terminal checks.",
+  "bounded_policy": "One additional distinct-input case per family only if complete original workflow is not verified. No recursive retry, trimming, assertion change or numeric/precision change.",
+  "queue": "run-nov02-literal-file-consumers.py waits nov01-frontend-edit-delete-finished.txt after all preceding actual model cleanup.",
+  "required_final_marker": "nov02-literal-file-consumers-finished.json",
+  "original_flash_result": {
+    "status": "NOT_VERIFIED",
+    "elapsed_seconds": 2158.2364405000008,
+    "server_exit_code": 0,
+    "cleanup_forced": [],
+    "error": "termination requested"
+  }
+}

@@ -1,0 +1,278 @@
+[
+  {
+    "id": "qwen3.8-flash-next",
+    "created": 1767225600,
+    "object": "model",
+    "owned_by": "ds4.c",
+    "name": "Qwen3.8 Flash Next",
+    "context_length": 8192,
+    "top_provider": {
+      "context_length": 8192,
+      "max_completion_tokens": 8192,
+      "is_moderated": false
+    },
+    "supported_parameters": [
+      "tools",
+      "tool_choice",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "top_k",
+      "min_p",
+      "ignore_eos",
+      "stop",
+      "seed",
+      "stream",
+      "reasoning_effort"
+    ]
+  },
+  {
+    "id": "qwen3.8-flash-next-chat",
+    "created": 1767225600,
+    "object": "model",
+    "owned_by": "ds4.c",
+    "name": "Qwen3.8 Flash Next",
+    "context_length": 8192,
+    "top_provider": {
+      "context_length": 8192,
+      "max_completion_tokens": 8192,
+      "is_moderated": false
+    },
+    "supported_parameters": [
+      "tools",
+      "tool_choice",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "top_k",
+      "min_p",
+      "ignore_eos",
+      "stop",
+      "seed",
+      "stream",
+      "reasoning_effort"
+    ]
+  },
+  {
+    "id": "qwen3.8-flash-next-reasoner",
+    "created": 1767225600,
+    "object": "model",
+    "owned_by": "ds4.c",
+    "name": "Qwen3.8 Flash Next",
+    "context_length": 8192,
+    "top_provider": {
+      "context_length": 8192,
+      "max_completion_tokens": 8192,
+      "is_moderated": false
+    },
+    "supported_parameters": [
+      "tools",
+      "tool_choice",
+      "max_tokens",
+      "temperature",
+      "top_p",
+      "top_k",
+      "min_p",
+      "ignore_eos",
+      "stop",
+      "seed",
+      "stream",
+      "reasoning_effort"
+    ]
+  },
+  {
+    "id": "Qwen/Qwen-Image-2.1-Turbo",
+    "created": 1792454400,
+    "object": "model",
+    "owned_by": "ds4.c",
+    "ds4": {
+      "version": 1,
+      "revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "profile": "bf16-native-v1",
+      "qualification": {
+        "status": "FAIL",
+        "reason": "Local image latents and pixels pass; encoder conditioning exceeds the frozen Metal quality limits."
+      },
+      "configured": true,
+      "resident": false,
+      "ready": false,
+      "qualified_backends": [],
+      "operations": [
+        "image_generate",
+        "image_edit"
+      ],
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "context_tokens": 262144,
+      "embedding_dimensions": [],
+      "limits": {
+        "file_bytes": 536870912,
+        "storage_bytes": 4294967296,
+        "files": 256,
+        "receipts": 64,
+        "max_inflight_requests": 8,
+        "receipt_bytes": 67108864,
+        "receipt_ttl_seconds": 600,
+        "media_ttl_seconds": 3600,
+        "timeout_seconds": 300,
+        "batch_items": 32,
+        "image_total_pixels": 4194304,
+        "reference_resolution": 0,
+        "output_formats": [
+          "png"
+        ],
+        "admission_required": true,
+        "memory_reserve_bytes": 2147483648
+      },
+      "components": [
+        {
+          "id": "text_encoder",
+          "optional": false,
+          "input_modalities": [
+            "image"
+          ],
+          "storage_format": "safetensors",
+          "compute_dtype": "bfloat16",
+          "host_loaded": true,
+          "device_resident": false
+        },
+        {
+          "id": "dit",
+          "optional": false,
+          "input_modalities": [
+            "image"
+          ],
+          "storage_format": "safetensors",
+          "compute_dtype": "bfloat16",
+          "host_loaded": true,
+          "device_resident": false
+        },
+        {
+          "id": "vae",
+          "optional": false,
+          "input_modalities": [
+            "image"
+          ],
+          "storage_format": "safetensors",
+          "compute_dtype": "bfloat16",
+          "host_loaded": true,
+          "device_resident": false
+        }
+      ]
+    }
+  },
+  {
+    "id": "google/embeddinggemma-2",
+    "created": 1792454400,
+    "object": "model",
+    "owned_by": "ds4.c",
+    "ds4": {
+      "version": 1,
+      "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+      "profile": "bf16-native-v1",
+      "qualification": {
+        "status": "FAIL",
+        "reason": "Final embedding vectors pass the local subset; strict internal BF16 parity remains open on Metal."
+      },
+      "configured": true,
+      "resident": false,
+      "ready": false,
+      "qualified_backends": [],
+      "operations": [
+        "embed"
+      ],
+      "input_modalities": [
+        "text",
+        "image",
+        "video",
+        "audio"
+      ],
+      "context_tokens": 8192,
+      "embedding_dimensions": [
+        768,
+        512,
+        256,
+        128
+      ],
+      "limits": {
+        "file_bytes": 536870912,
+        "storage_bytes": 4294967296,
+        "files": 256,
+        "receipts": 64,
+        "max_inflight_requests": 8,
+        "receipt_bytes": 67108864,
+        "receipt_ttl_seconds": 600,
+        "media_ttl_seconds": 3600,
+        "timeout_seconds": 300,
+        "batch_items": 32,
+        "image_total_pixels": 4194304,
+        "reference_resolution": 0,
+        "output_formats": [
+          "png"
+        ],
+        "admission_required": true,
+        "memory_reserve_bytes": 2147483648
+      },
+      "components": [
+        {
+          "id": "text",
+          "optional": false,
+          "input_modalities": [
+            "text"
+          ],
+          "storage_format": "safetensors",
+          "compute_dtype": "bfloat16",
+          "host_loaded": true,
+          "device_resident": false
+        },
+        {
+          "id": "vision",
+          "optional": true,
+          "input_modalities": [
+            "image",
+            "video"
+          ],
+          "storage_format": "safetensors",
+          "compute_dtype": "bfloat16",
+          "host_loaded": true,
+          "device_resident": false
+        },
+        {
+          "id": "vision_projection",
+          "optional": true,
+          "input_modalities": [
+            "audio"
+          ],
+          "storage_format": "safetensors",
+          "compute_dtype": "bfloat16",
+          "host_loaded": true,
+          "device_resident": false
+        },
+        {
+          "id": "audio",
+          "optional": true,
+          "input_modalities": [
+            "audio"
+          ],
+          "storage_format": "safetensors",
+          "compute_dtype": "bfloat16",
+          "host_loaded": true,
+          "device_resident": false
+        },
+        {
+          "id": "audio_projection",
+          "optional": true,
+          "input_modalities": [
+            "audio"
+          ],
+          "storage_format": "safetensors",
+          "compute_dtype": "bfloat16",
+          "host_loaded": true,
+          "device_resident": false
+        }
+      ]
+    }
+  }
+]

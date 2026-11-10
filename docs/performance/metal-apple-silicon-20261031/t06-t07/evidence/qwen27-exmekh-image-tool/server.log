@@ -1,0 +1,45 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 1.00 GiB (raw 1.00 + compressed 0.00) + buffers 0.17 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 3.17 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=0 backend=metal
+1031 20:33:50 ds4-server: loaded model Qwen3.8-27B-UD-Q4_K_S.gguf
+1031 20:33:50 ds4-server: context buffers 1199.24 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=0)
+1031 20:35:10 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-exmekh-image-tool/kv (budget=8192 MiB, cross-quant=reject, min=1, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1031 20:35:10 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-exmekh-image-tool/kv/agentic.n776V5
+1031 20:35:10 ds4-server: listening on http://127.0.0.1:18080
+1031 20:35:12 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prompt start
+1031 20:35:12 ds4-server: agent-system boundary system_tokens=1220 prompt_tokens=1281 syntax=qwen
+1031 20:35:18 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 64/1281 (5.0%) chunk=0.00 t/s avg=10.49 t/s 6.100s
+1031 20:35:24 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 128/1281 (10.0%) chunk=10.40 t/s avg=10.44 t/s 12.255s
+1031 20:35:30 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 192/1281 (15.0%) chunk=10.37 t/s avg=10.42 t/s 18.428s
+1031 20:35:36 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 256/1281 (20.0%) chunk=10.31 t/s avg=10.39 t/s 24.635s
+1031 20:35:43 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 320/1281 (25.0%) chunk=10.32 t/s avg=10.38 t/s 30.834s
+1031 20:35:49 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 384/1281 (30.0%) chunk=10.32 t/s avg=10.37 t/s 37.037s
+1031 20:35:55 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 448/1281 (35.0%) chunk=10.34 t/s avg=10.36 t/s 43.227s
+1031 20:36:01 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 512/1281 (40.0%) chunk=10.31 t/s avg=10.36 t/s 49.436s
+1031 20:36:07 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 576/1281 (45.0%) chunk=10.34 t/s avg=10.35 t/s 55.626s
+1031 20:36:14 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 640/1281 (50.0%) chunk=10.32 t/s avg=10.35 t/s 61.826s
+1031 20:36:20 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 704/1281 (55.0%) chunk=10.26 t/s avg=10.34 t/s 68.066s
+1031 20:36:26 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 768/1281 (60.0%) chunk=10.28 t/s avg=10.34 t/s 74.292s
+1031 20:36:32 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 832/1281 (64.9%) chunk=10.30 t/s avg=10.33 t/s 80.508s
+1031 20:36:39 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 896/1281 (69.9%) chunk=10.27 t/s avg=10.33 t/s 86.741s
+1031 20:36:45 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 960/1281 (74.9%) chunk=10.23 t/s avg=10.32 t/s 92.996s
+1031 20:36:51 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 1024/1281 (79.9%) chunk=10.21 t/s avg=10.32 t/s 99.262s
+1031 20:36:57 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 1088/1281 (84.9%) chunk=10.20 t/s avg=10.31 t/s 105.536s
+1031 20:37:04 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 1152/1281 (89.9%) chunk=10.20 t/s avg=10.30 t/s 111.811s
+1031 20:37:10 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 1216/1281 (94.9%) chunk=10.23 t/s avg=10.30 t/s 118.068s
+1031 20:37:12 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 1220/1281 (95.2%) chunk=1.54 t/s avg=10.11 t/s 120.673s
+1031 20:37:13 ds4-server: kv cache stored tokens=1220 trimmed=61 reason=agent-system key=rendered-system size=304.96 MiB save=70.7 ms
+1031 20:37:19 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prefill chunk 1281/1281 (100.0%) chunk=9.89 t/s avg=10.10 t/s 126.838s
+1031 20:37:19 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS prompt done 126.838s
+1031 20:37:19 ds4-server: response frontier captured tokens=1281 bytes=151.50 MiB location=vram 21.907ms
+1031 20:39:21 ds4-server: chat ctx=1281..1331:50 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.41 t/s avg=0.41 t/s 122.216s
+1031 20:41:08 ds4-server: chat ctx=1331..1381:50 gen=100 RESPPROTO TOOLS DSML_START decoding chunk=0.47 t/s avg=0.44 t/s 229.124s
+1031 20:42:49 ds4-server: chat ctx=1381..1431:50 gen=150 RESPPROTO TOOLS DSML_START decoding chunk=0.49 t/s avg=0.45 t/s 330.458s
+1031 20:43:50 ds4-server: shutdown requested, draining requests
+1031 20:43:50 ds4-server: chat ctx=1431..1462:31 gen=181 RESPPROTO TOOLS DSML_START decoding chunk=0.51 t/s avg=0.46 t/s 391.569s
+1031 20:43:50 ds4-server: chat ctx=0..1281:1281 RESPPROTO TOOLS client disconnected
+1031 20:43:50 ds4-server: chat ctx=0..1281:1281 gen=181 RESPPROTO TOOLS DSML_START finish=error error="client disconnected" 518.430s

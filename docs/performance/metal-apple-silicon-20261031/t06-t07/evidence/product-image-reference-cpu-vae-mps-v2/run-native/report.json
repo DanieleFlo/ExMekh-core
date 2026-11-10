@@ -1,0 +1,39 @@
+{
+  "command": [
+    "env",
+    "DS4_SUITE_CASES_ONLY=1",
+    "tests/probe_qwen_image_pipeline",
+    "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/image-tokenizer.ds4q",
+    "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v2/native",
+    "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v2/fixtures/reference.ds4p"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {
+    "DS4_METAL_TIMEOUT_MULTIPLIER": "4"
+  },
+  "timeout_seconds": 1200,
+  "base_timeout_seconds": 300,
+  "timeout_multiplier": 4,
+  "reason": "S3 256px image or independent reference component",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": -15,
+  "elapsed_seconds": 0.03258304200062412,
+  "status": "NOT_VERIFIED",
+  "cleanup_error": "PermissionError(1, 'Operation not permitted')",
+  "cleanup_forced": false,
+  "samples": [],
+  "error": "CalledProcessError(1, ['sysctl', '-n', 'kern.memorystatus_vm_pressure_level', 'vm.swapusage'])",
+  "executables_sha256": {
+    "tests/probe_qwen_image_pipeline": "2411b550e612faa2807883fae0c54a2b5cf18a6fbe627688a6afa41f6fc958d1"
+  },
+  "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

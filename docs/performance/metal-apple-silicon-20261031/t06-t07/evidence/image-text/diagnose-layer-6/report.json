@@ -1,0 +1,56 @@
+{
+  "command": [
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+    "tools/diagnose_qwen_image_encoder.py",
+    "--model",
+    "build/metal-models/Qwen/Qwen-Image-2.1-Turbo/text_encoder/model.safetensors",
+    "--oracle",
+    "build/metal-qualification/t06-t07-20261031/image-text/encoder-cpu-trace/text",
+    "--native",
+    "build/metal-qualification/t06-t07-20261031/image-text/encoder-native-bounded-trace",
+    "--layer",
+    "6",
+    "--backend",
+    "metal",
+    "--device",
+    "cpu"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120,
+  "reason": "Same-input primitive replay against independent CPU BF16, one encoder layer only; diagnostic, not quality promotion",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.074610957999539,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 17971.339207625,
+      "pressure": 1,
+      "host_available_bytes": 13342408704,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 17972.355256375,
+      "pressure": 1,
+      "host_available_bytes": 12428591104,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 535266624,
+      "resident_bytes": 725909504
+    }
+  ],
+  "executables_sha256": {
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/diagnose_qwen_image_encoder.py": "344b90cea6c18798bdda1c068c31891bdf0921873edc03c1968786d6ebfa655e"
+  },
+  "log_sha256": "802a7d0c61e918e7227ecf21beba29978f21fe579a3bb0d6dc384817d9a8aeca"
+}

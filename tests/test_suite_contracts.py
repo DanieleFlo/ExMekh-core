@@ -62,6 +62,15 @@ class SuiteContracts(unittest.TestCase):
             ],
         }
         Draft202012Validator(schema).validate(request)
+        unqualified = copy.deepcopy(request)
+        unqualified["data"][0]["ds4"].update(
+            ready=False, qualified_backends=[],
+            qualification={"status": "NOT_VERIFIED", "reason": "quality verification pending"},
+            limits={"admission_required": True, "memory_reserve_bytes": 2**31},
+        )
+        Draft202012Validator(schema).validate(unqualified)
+        unqualified["data"][0]["ds4"]["limits"]["memory_reserve_bytes"] = 0
+        Draft202012Validator(schema).validate(unqualified)
         bad = copy.deepcopy(request)
         bad["data"][0]["ds4"]["qualified_backends"] = []
         self.assertFalse(Draft202012Validator(schema).is_valid(bad))

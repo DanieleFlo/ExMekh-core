@@ -1,0 +1,304 @@
+{
+  "cases": [
+    {
+      "name": "final-foundations",
+      "status": "PASS",
+      "elapsed_seconds": 22.40052729099989,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-foundations/report.json"
+    },
+    {
+      "name": "final-host-qualification",
+      "status": "PASS",
+      "elapsed_seconds": 13.328521832998376,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-host-qualification/report.json"
+    },
+    {
+      "name": "final-reader-sanitized",
+      "status": "PASS",
+      "elapsed_seconds": 1.0390883329964709,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-reader-sanitized/report.json"
+    },
+    {
+      "name": "final-queue-sanitized",
+      "status": "PASS",
+      "elapsed_seconds": 1.0471190000098431,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-queue-sanitized/report.json"
+    },
+    {
+      "name": "final-features",
+      "status": "PASS",
+      "elapsed_seconds": 1.052335917003802,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-features/report.json"
+    },
+    {
+      "name": "final-features-general",
+      "status": "PASS",
+      "elapsed_seconds": 3.0840997500054073,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-features-general/report.json"
+    },
+    {
+      "name": "final-flash-primitives",
+      "status": "PASS",
+      "elapsed_seconds": 1.0575079580012243,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-flash-primitives/report.json"
+    },
+    {
+      "name": "final-flash-graph",
+      "status": "PASS",
+      "elapsed_seconds": 1.0444918330031214,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-flash-graph/report.json"
+    },
+    {
+      "name": "final-qwen-target",
+      "status": "PASS",
+      "elapsed_seconds": 27.410494666997693,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-qwen-target/report.json"
+    },
+    {
+      "name": "final-qwen-mtp2",
+      "status": "PASS",
+      "elapsed_seconds": 40.56303512500017,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-qwen-mtp2/report.json"
+    },
+    {
+      "name": "final-qwen-mtp4",
+      "status": "PASS",
+      "elapsed_seconds": 36.55834945899551,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-qwen-mtp4/report.json"
+    },
+    {
+      "name": "final-flash-full",
+      "status": "PASS",
+      "elapsed_seconds": 11.218340999999782,
+      "report": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/continuation-20261103/final-flash-full/report.json"
+    }
+  ],
+  "comparisons": [
+    {
+      "case": "final-qwen-target",
+      "status": "BIT_EXACT",
+      "reference": "build/metal-perf-qwen27-20261102/clean-review/qwen-logits",
+      "artifacts": [
+        {
+          "name": "continuation.f32",
+          "bytes": 993280,
+          "sha256": "a5bc6ff3f9cf2cc81b93ca733c542f1b10c10b66519930e52da8ccc567aa9771"
+        },
+        {
+          "name": "prefill.f32",
+          "bytes": 993280,
+          "sha256": "56f30661f7b0c757958651e36a6c16de4fd411539be93c234c713c0b5485ae89"
+        },
+        {
+          "name": "position-02.f32",
+          "bytes": 993280,
+          "sha256": "88e869d280d2c36a6aaeb0e076abaf5762e3e6a8b09a92aa16baf186675b192e"
+        },
+        {
+          "name": "position-03.f32",
+          "bytes": 993280,
+          "sha256": "7ee589e03f6dc804e1530e27cf8c8d2dd2fe497e5896bce713e15bb5e4873996"
+        },
+        {
+          "name": "prefill.state",
+          "bytes": 176630352,
+          "sha256": "a6d7fae468b5e7dfc90b220a818ef88c5b80514e6242862cc5a8666ff8143f66"
+        },
+        {
+          "name": "position-04.f32",
+          "bytes": 993280,
+          "sha256": "de331629b6a20cd988ac08c3fdf482203f017c0e2aff36e656c88e84448dc4ba"
+        },
+        {
+          "name": "position-05.f32",
+          "bytes": 993280,
+          "sha256": "6a8019d4a353576a40d733458f6c293788ba1110aaf5e5c6ade44718f71765b8"
+        },
+        {
+          "name": "position-07.f32",
+          "bytes": 993280,
+          "sha256": "45993ed9d6b7ed1110f5423cad0c713b0ce2dbdef875e905756a2d2239a125bc"
+        },
+        {
+          "name": "position-06.f32",
+          "bytes": 993280,
+          "sha256": "03b2f051260048bbecb98c5f7385478aa9ab864a262429fa499e924c56b7e823"
+        },
+        {
+          "name": "position-08.f32",
+          "bytes": 993280,
+          "sha256": "af6e4fb3d1890f6e0a82d1344d0c0023173353be61ad45f61bde6089a819dedf"
+        }
+      ]
+    },
+    {
+      "case": "final-qwen-mtp2",
+      "status": "BIT_EXACT",
+      "reference": "build/metal-perf-qwen27-20261102/clean-review/qwen-logits",
+      "artifacts": [
+        {
+          "name": "continuation.f32",
+          "bytes": 993280,
+          "sha256": "a5bc6ff3f9cf2cc81b93ca733c542f1b10c10b66519930e52da8ccc567aa9771"
+        },
+        {
+          "name": "prefill.f32",
+          "bytes": 993280,
+          "sha256": "56f30661f7b0c757958651e36a6c16de4fd411539be93c234c713c0b5485ae89"
+        },
+        {
+          "name": "position-02.f32",
+          "bytes": 993280,
+          "sha256": "88e869d280d2c36a6aaeb0e076abaf5762e3e6a8b09a92aa16baf186675b192e"
+        },
+        {
+          "name": "position-03.f32",
+          "bytes": 993280,
+          "sha256": "7ee589e03f6dc804e1530e27cf8c8d2dd2fe497e5896bce713e15bb5e4873996"
+        },
+        {
+          "name": "position-04.f32",
+          "bytes": 993280,
+          "sha256": "de331629b6a20cd988ac08c3fdf482203f017c0e2aff36e656c88e84448dc4ba"
+        },
+        {
+          "name": "position-05.f32",
+          "bytes": 993280,
+          "sha256": "6a8019d4a353576a40d733458f6c293788ba1110aaf5e5c6ade44718f71765b8"
+        },
+        {
+          "name": "position-07.f32",
+          "bytes": 993280,
+          "sha256": "45993ed9d6b7ed1110f5423cad0c713b0ce2dbdef875e905756a2d2239a125bc"
+        },
+        {
+          "name": "position-06.f32",
+          "bytes": 993280,
+          "sha256": "03b2f051260048bbecb98c5f7385478aa9ab864a262429fa499e924c56b7e823"
+        },
+        {
+          "name": "position-08.f32",
+          "bytes": 993280,
+          "sha256": "af6e4fb3d1890f6e0a82d1344d0c0023173353be61ad45f61bde6089a819dedf"
+        }
+      ]
+    },
+    {
+      "case": "final-qwen-mtp4",
+      "status": "BIT_EXACT",
+      "reference": "build/metal-perf-qwen27-20261102/clean-review/qwen-logits",
+      "artifacts": [
+        {
+          "name": "continuation.f32",
+          "bytes": 993280,
+          "sha256": "a5bc6ff3f9cf2cc81b93ca733c542f1b10c10b66519930e52da8ccc567aa9771"
+        },
+        {
+          "name": "prefill.f32",
+          "bytes": 993280,
+          "sha256": "56f30661f7b0c757958651e36a6c16de4fd411539be93c234c713c0b5485ae89"
+        },
+        {
+          "name": "position-02.f32",
+          "bytes": 993280,
+          "sha256": "88e869d280d2c36a6aaeb0e076abaf5762e3e6a8b09a92aa16baf186675b192e"
+        },
+        {
+          "name": "position-03.f32",
+          "bytes": 993280,
+          "sha256": "7ee589e03f6dc804e1530e27cf8c8d2dd2fe497e5896bce713e15bb5e4873996"
+        },
+        {
+          "name": "position-04.f32",
+          "bytes": 993280,
+          "sha256": "de331629b6a20cd988ac08c3fdf482203f017c0e2aff36e656c88e84448dc4ba"
+        },
+        {
+          "name": "position-05.f32",
+          "bytes": 993280,
+          "sha256": "6a8019d4a353576a40d733458f6c293788ba1110aaf5e5c6ade44718f71765b8"
+        },
+        {
+          "name": "position-07.f32",
+          "bytes": 993280,
+          "sha256": "45993ed9d6b7ed1110f5423cad0c713b0ce2dbdef875e905756a2d2239a125bc"
+        },
+        {
+          "name": "position-06.f32",
+          "bytes": 993280,
+          "sha256": "03b2f051260048bbecb98c5f7385478aa9ab864a262429fa499e924c56b7e823"
+        },
+        {
+          "name": "position-08.f32",
+          "bytes": 993280,
+          "sha256": "af6e4fb3d1890f6e0a82d1344d0c0023173353be61ad45f61bde6089a819dedf"
+        }
+      ]
+    },
+    {
+      "case": "final-flash-full",
+      "status": "BIT_EXACT",
+      "reference": "build/metal-perf-qwen27-20261102/clean-review/flash-logits",
+      "artifacts": [
+        {
+          "name": "continuation.f32",
+          "bytes": 993280,
+          "sha256": "56fe03192e7a0cf54337eee4a3b4575ae518ddceee932ecf14e58ec137ad7563"
+        },
+        {
+          "name": "prefill.f32",
+          "bytes": 993280,
+          "sha256": "fdd1d899b144ffc0fc10d0d8050ba1888f8fde929c32896d9f7e93a9677f145e"
+        },
+        {
+          "name": "position-02.f32",
+          "bytes": 993280,
+          "sha256": "a0614d3a564c77ed129aa6b02ab5785e77339374a0a81314e5698dd44d7de28b"
+        },
+        {
+          "name": "position-03.f32",
+          "bytes": 993280,
+          "sha256": "ea55110f855296147f6c2e8c56b45e013d9726e613b00dceedbd8cb7348736ff"
+        },
+        {
+          "name": "prefill.state",
+          "bytes": 120132376,
+          "sha256": "3402b5c030303937e7a665ddef6b98059a55009afe729690394218a994385baf"
+        },
+        {
+          "name": "position-04.f32",
+          "bytes": 993280,
+          "sha256": "45c93222ae567c2568fe13764f2e944f58654114c2ec311c2d658d6cf428e31a"
+        },
+        {
+          "name": "position-05.f32",
+          "bytes": 993280,
+          "sha256": "d2c12c5d65fa41769a5d1e31edf8984cb13cfcefd4fcc703a273a1e45f42a26c"
+        },
+        {
+          "name": "position-07.f32",
+          "bytes": 993280,
+          "sha256": "fa2d1985b22d2797240710d34326ce0ed87844b4f65091551947b5f5540d3ccb"
+        },
+        {
+          "name": "position-06.f32",
+          "bytes": 993280,
+          "sha256": "8cda25788c49bcd410e027013f979f2da62187a76f31b4f948ca008994424e45"
+        },
+        {
+          "name": "position-08.f32",
+          "bytes": 993280,
+          "sha256": "28c057ea01be2f073078456e2be709430ad6d56bd46337593d13cb5a92e48222"
+        }
+      ]
+    }
+  ],
+  "host_tests": 49,
+  "notes": [
+    "12 serial final cases; complete GGUF only on Metal, not CPU",
+    "Ordinary full-vocabulary vectors bit-exact versus frozen references",
+    "MTP numeric thresholds unchanged, 2 independent replay8, internal payload equality",
+    "Flash full regression and frozen payload bit-exact",
+    "Reader threshold-specific sanitizer rerun after final fixture cleanup is recorded separately"
+  ]
+}

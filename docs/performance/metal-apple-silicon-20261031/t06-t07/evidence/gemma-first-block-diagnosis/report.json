@@ -1,0 +1,71 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-first-block.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 240.0,
+  "base_timeout_seconds": 60.0,
+  "timeout_multiplier": 4,
+  "reason": "SinglepinnedHFblockonly, publichooks/state_dict/nativeNumericAPI onidenticalsavedinputs; nofullGemma instance. Investigate firstremainingdecoderdifference beforekernelchanges;2GiBhostreserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 5.073808457998894,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 8795.41825025,
+      "pressure": 1,
+      "host_available_bytes": 13298008064,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 8796.429409041,
+      "pressure": 1,
+      "host_available_bytes": 13392297984,
+      "swap_bytes": 262144,
+      "footprint_bytes": 159941280,
+      "resident_bytes": 210108416
+    },
+    {
+      "monotonic": 8797.440581791,
+      "pressure": 1,
+      "host_available_bytes": 13295648768,
+      "swap_bytes": 262144,
+      "footprint_bytes": 179339960,
+      "resident_bytes": 230326272
+    },
+    {
+      "monotonic": 8798.451764583,
+      "pressure": 1,
+      "host_available_bytes": 13243482112,
+      "swap_bytes": 262144,
+      "footprint_bytes": 245940992,
+      "resident_bytes": 299220992
+    },
+    {
+      "monotonic": 8799.461252041,
+      "pressure": 1,
+      "host_available_bytes": 13124943872,
+      "swap_bytes": 262144,
+      "footprint_bytes": 348931152,
+      "resident_bytes": 432111616
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "1e9c65763542ace38a27266cc2ca4cd751677c4b850db942147391daefae29f0"
+}

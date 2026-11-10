@@ -1,0 +1,525 @@
+{
+  "date": "2026-10-29",
+  "status": "IN_PROGRESS",
+  "baseline_commit": "837894c2af5aaf3382dfc0a0750689baee73363e",
+  "hardware": {
+    "device": "Apple M5 Pro",
+    "physical_bytes": 25769803776,
+    "macos": "26.6.2",
+    "sdk": "26.5"
+  },
+  "cuda": "NOT_VERIFIED: user reports no CUDA host available",
+  "other_apple_hardware": "NOT_VERIFIED",
+  "qualification_claim": false,
+  "tolerances_source": "../native-suite-t00-20261020/tolerances.json",
+  "tolerances_sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87",
+  "evidence": {
+    "logs/numeric-final.log": {
+      "sha256": "b3963e30feb2ba1fa98ec791011d293a1420a4ef7ca083624c1362528eab485f",
+      "bytes": 3136
+    },
+    "logs/qwen35-kernels.log": {
+      "sha256": "66969055f97e636126cd9e60e9de79886f926e33bbbf63b9db6ee7f5448ea35b",
+      "bytes": 16059
+    },
+    "logs/qwen35-mrope.log": {
+      "sha256": "646ca7d2b82372b276186d1ddfaa2f98edd350f928f3995dc855707204ac7ef6",
+      "bytes": 551
+    },
+    "logs/flash-stream-tests.log": {
+      "sha256": "2b146ac0e6f977cde9d79ea453510dce7f78fa09625749f9a368d11a899f0350",
+      "bytes": 2531
+    },
+    "logs/flash-lifecycle-tests.log": {
+      "sha256": "11c762aec2baf3954d5d5853be3d6df222cc2b1f956f0dded9e3f55e77c47eec",
+      "bytes": 367
+    },
+    "logs/gemma-text.log": {
+      "sha256": "c53118ae5efbfb9f01d6930bc9f841c98010d38fe68ffc6568dcbfb91f61e3f0",
+      "bytes": 22
+    },
+    "logs/gemma-media.log": {
+      "sha256": "d07d8ff9dc14d26c807c433fa93cc3bae0f36753e4e945ff37d03aaafc6f5694",
+      "bytes": 47
+    },
+    "logs/gemma-ranking.log": {
+      "sha256": "d3513ec37ae39bccd4514e90eeb6098a81afadb023de8bbf09e5d52d31d1b0b3",
+      "bytes": 22
+    },
+    "logs/gemma-extra.log": {
+      "sha256": "0863b1f8e4fab915bc5167cf9f5883e992298a2bef75b0e7381844802106ca81",
+      "bytes": 113
+    },
+    "logs/host-tests.log": {
+      "sha256": "d4dc5fbf5f5de0856eeb5ce67fb76bfdd3c69173b0da5e242cfc695011d0c184",
+      "bytes": 3437
+    },
+    "logs/bundle-tests.log": {
+      "sha256": "ad6f5ea0271a874750304c2ad52c5a265d61a23319cb1659a6b2eadcf9511184",
+      "bytes": 1898
+    },
+    "logs/qwen27-basic-final.log": {
+      "sha256": "db54f9489d89bc2addb53c8351d93301208584c4653aab97b5e79bf9ac6339b7",
+      "bytes": 329
+    },
+    "logs/cpu-build.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "logs/docs-check.log": {
+      "sha256": "5d842bdea088d081133714c42f7e6dd69274a2f6a633eeeb355c96aa6e20ea15",
+      "bytes": 2626
+    },
+    "logs/http-final.log": {
+      "sha256": "eeace533e068e9674b9ced5a9d4695df6a4ed35e0b175cc4db3c526164fd2022",
+      "bytes": 89
+    },
+    "logs/final-build.log": {
+      "sha256": "7f933bbcad0e00fa5aa81d79cb37c6c33a4f3adc95f818c1ce10b311e23acf5b",
+      "bytes": 76
+    }
+  },
+  "sources": {
+    "ds4.c": "5f13c23d6b59d91ee1b98edc17b44e8a7e54a18bb74e7355e71fe30de930f90e",
+    "ds4_metal.m": "ec9f8675e0bda107dff00ad28da984a50b39bd9007d84f47918a2c50607fe76f",
+    "ds4_gpu.h": "615cf7e981afe80fb21091b1380452c38739d0b710d0fd185ea2809b48f637b1",
+    "ds4_resources.c": "50210eb91b4566588d3692c12ecc44f5e71411b5197c6b4caaaa12a68a61f77b",
+    "ds4_resources.h": "c86b437ac13e1b2535052e56a2960c71445baf5b2b3a065b432ffee044ed31a6",
+    "ds4_numeric.c": "95b23c2b99071d8157ac85797d15503ee4263be0f7837360f7bcea829b2539c7",
+    "ds4_numeric.h": "471f6e25b102e92027319eda613ee957af9ce2011c0a4c6f138723f840353a86",
+    "ds4_numeric_internal.h": "28ffdf8ccda967ef0438c4f43e20b7dd452e09cbb36371165e269eeb5f31f982",
+    "ds4_numeric_metal.m": "08190875de92a20112be05d398641ef3046f521784ca2cb002c1cb0cc6e1ce3e",
+    "ds4_numeric_metal_args.h": "48aaafb16ff0659d494df5440bb393ab02017dc7dd85ae868f79a6695fc7189d",
+    "ds4_metal_memory.h": "aa3ff12d7ae2d984a13388ecac6f13898b3d1c14eb6c88b03543f5fb966745e1",
+    "ds4_qwen4_metal_stream.inc": "347abcc40830283b7e1f57a5d2a703030e9d66a53ce32671ebc8251277d39fa4",
+    "ds4_qwen35_metal.inc": "dadbf0652b3d5733587d393907534adb03fb8bc9c5fbfc95630cd88c1758a88b",
+    "ds4_lifecycle.inc": "e9e9c62013e3002e47fa0cf726a89146b0adebf9c8e7abc891c35050d5c59209",
+    "ds4_lifecycle_text.h": "b2b1524de93e4d8fa88e31165022bbafc50dc316efb3458865477f355b0b490a",
+    "metal/numeric.metal": "aac9388f6bc43911c88bb201638bf9eb0f134413860a9eafb83da50320cb3b3f",
+    "metal/qwen35.metal": "69f2e96a0af2b277f30c2b7f21adb0e474059a6316722f2cc187370b4121b7bf",
+    "metal/qwen35_quants.metal": "9d9e760e90c4fe0b968c312f2beb22ff12ebe7968ec995375eb0231e555c61a1",
+    "ds4_qwen_image_encoder.c": "e9489d411124256f4d3af5c04c30e584b2de89b500346403432583289b224548",
+    "ds4_qwen_image_dit.c": "a1c18a2d55f977319f49d0ab609256715c96e71d12f40c6ff4d1f1c6a105a30b",
+    "ds4_server.c": "6b7da81f76bb5efe620e1ab1b352e97db4ae4547227c489b6959a516f55a8541",
+    "ds4_server_suite.inc": "0471cb1b4c6400971ea4d18d1400be0db1c60d578281e37e53cbcfa8ff7fc3c2",
+    "Makefile": "bb678816ee6650427973c4e9e8de1206d59f0199dc73498f0b471cb0f018631b",
+    "tests/test_flash_metal_lifecycle.c": "852e210a1e7220659fd8e2ac92db46cdf427b784f8b53ce2b9115fc980f7df88",
+    "tests/test_qwen4_kernels.c": "3ced4ec35926d8dfbe61a539caefc466da3cabe10a5087341fc29f229a3834f7",
+    "tests/test_qwen35_mrope.c": "fd2b4bb9f77cc0727f7c2557ec9496c1014c02b58f9973868be978ef0e444197",
+    "tests/test_qwen35_metal.c": "4dcd121b282e6647fd67d10aa55df078ee363e653a974d4a9243b087fbf9fabd",
+    "tests/test_suite_numeric.py": "c0390090e6c1c19d545d61106909a82674831cd8e3af51fceda7383656737541"
+  },
+  "numeric": {
+    "tests": 27,
+    "skipped_cuda_specific": 3,
+    "verdict": "PASS",
+    "cases": 320,
+    "maximum_absolute": 0.015625,
+    "maximum_relative_l2": 0.0002572859320783999
+  },
+  "gemma": {
+    "gemma-text": {
+      "output_metrics": {
+        "max_abs": 0.001007676124572754,
+        "rmse": 0.00025148913031983194,
+        "cosine_min": 0.9999730299843175,
+        "unit_norm_error_max": 4.579920331870824e-08
+      },
+      "output_verdict": "PASS",
+      "internal_bit_exact": {
+        "exact": 2,
+        "total": 70,
+        "verdict": "FAIL"
+      },
+      "oracle_device": "cpu"
+    },
+    "gemma-media": {
+      "output_metrics": {
+        "max_abs": 0.00212135910987854,
+        "rmse": 0.0004187474032316705,
+        "cosine_min": 0.9999196442225993,
+        "unit_norm_error_max": 5.5082371552828135e-08
+      },
+      "output_verdict": "PASS",
+      "internal_bit_exact": {
+        "exact": 4,
+        "total": 400,
+        "verdict": "FAIL"
+      },
+      "oracle_device": "cpu",
+      "official_api": {
+        "max_abs": 0.00212135910987854,
+        "rmse": 0.0004187474032316705,
+        "cosine_min": 0.9999196442225993,
+        "unit_norm_error_max": 5.5082371552828135e-08
+      }
+    },
+    "gemma-ranking": {
+      "output_metrics": {
+        "max_abs": 0.0015950649976730347,
+        "rmse": 0.00039381012603582574,
+        "cosine_min": 0.9999221977439647,
+        "unit_norm_error_max": 8.457028610742157e-08
+      },
+      "output_verdict": "PASS",
+      "internal_bit_exact": {
+        "exact": 6,
+        "total": 210,
+        "verdict": "FAIL"
+      },
+      "oracle_device": "cpu",
+      "native_order": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          1,
+          3,
+          0,
+          2
+        ]
+      ],
+      "oracle_order": [
+        [
+          0,
+          2,
+          3,
+          1
+        ],
+        [
+          1,
+          3,
+          0,
+          2
+        ]
+      ]
+    },
+    "dimensions": {
+      "128": {
+        "max_abs": 0.001639275811612606,
+        "rmse": 0.0004884844523851581,
+        "cosine_min": 0.99998161181659,
+        "unit_norm_error_max": 2.6216256943101257e-08
+      },
+      "256": {
+        "max_abs": 0.001360875554382801,
+        "rmse": 0.00039031878295481335,
+        "cosine_min": 0.9999779110905601,
+        "unit_norm_error_max": 3.210637355977042e-08
+      },
+      "512": {
+        "max_abs": 0.0010923403315246105,
+        "rmse": 0.0003023477810372971,
+        "cosine_min": 0.9999741370287076,
+        "unit_norm_error_max": 5.971739769350393e-09
+      }
+    }
+  },
+  "image": {
+    "generation": {
+      "width": 256,
+      "height": 256,
+      "references": 0,
+      "seed": 20261029,
+      "variant": 6,
+      "victims": 0,
+      "total_seconds": 160.27234,
+      "prepare_seconds": 0.0001,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        0.0,
+        13.452687,
+        94.161092,
+        52.6584
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        1,
+        1,
+        1
+      ],
+      "peak_device_owned": 3679639808,
+      "live_device_owned": 0,
+      "pre_run_device_owned": 0,
+      "previous_device_peak": 0,
+      "plan_device": 3937155072,
+      "plan_host": 1904672,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 256,
+      "h2d_bytes": 108048007448,
+      "d2h_bytes": 1327104,
+      "weight_groups": [
+        {
+          "limit": 3473035776,
+          "loads": 36,
+          "hits": 360,
+          "evictions": 27,
+          "payload_h2d": 13892143104
+        },
+        {
+          "limit": 3557562368,
+          "loads": 215,
+          "hits": 2140,
+          "evictions": 207,
+          "payload_h2d": 93620128768
+        },
+        {
+          "limit": 518096448,
+          "loads": 1,
+          "hits": 127,
+          "evictions": 0,
+          "payload_h2d": 518096424
+        }
+      ],
+      "prompt_sha256": "645912534bfa05feb46b9c8b9e871e0cde0d08e2eca7206395d1fc0be1bb6a8f",
+      "noise_sha256": "b2da66cf367e80c695bc77fb1cf1235c3b30683921095d1100ec87c5dd4f266c",
+      "reference_metadata": [],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ],
+      "latents_finite": true,
+      "rgba_finite": true,
+      "rgba_range": [
+        0.0,
+        1.0
+      ],
+      "basic_verdict": "PASS",
+      "independent_image_oracle": "NOT_VERIFIED",
+      "rgba_reference_and_alpha_edges": "NOT_VERIFIED"
+    },
+    "edit": {
+      "width": 256,
+      "height": 256,
+      "references": 1,
+      "seed": 20261029,
+      "variant": 6,
+      "victims": 0,
+      "total_seconds": 158.076939,
+      "prepare_seconds": 0.000769,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        9.784486,
+        14.861389,
+        81.859112,
+        51.571123
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        1,
+        1,
+        2
+      ],
+      "peak_device_owned": 3977325216,
+      "live_device_owned": 0,
+      "pre_run_device_owned": 0,
+      "previous_device_peak": 3679639808,
+      "plan_device": 4162017280,
+      "plan_host": 13647872,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 256,
+      "h2d_bytes": 217411809008,
+      "d2h_bytes": 3915776,
+      "weight_groups": [
+        {
+          "limit": 3761229944,
+          "loads": 68,
+          "hits": 678,
+          "evictions": 49,
+          "payload_h2d": 15044919776
+        },
+        {
+          "limit": 3557562368,
+          "loads": 215,
+          "hits": 2140,
+          "evictions": 207,
+          "payload_h2d": 93620128768
+        },
+        {
+          "limit": 518096448,
+          "loads": 2,
+          "hits": 224,
+          "evictions": 0,
+          "payload_h2d": 675480808
+        }
+      ],
+      "prompt_sha256": "aa74f9e583b28dac72c326065b54c30aa2c1680eb62ada86cad878100bc0b834",
+      "noise_sha256": "b2da66cf367e80c695bc77fb1cf1235c3b30683921095d1100ec87c5dd4f266c",
+      "reference_metadata": [
+        {
+          "latent_width": 16,
+          "latent_height": 16,
+          "sha256": "13ceedd231ac1bb3bc3d42314ab4b51abbaa6677115b5e73045294f3445d143f"
+        }
+      ],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ],
+      "latents_finite": true,
+      "rgba_finite": true,
+      "rgba_range": [
+        0.0,
+        1.0
+      ],
+      "basic_verdict": "PASS",
+      "independent_image_oracle": "NOT_VERIFIED",
+      "rgba_reference_and_alpha_edges": "NOT_VERIFIED"
+    }
+  },
+  "f_gates": {
+    "F01": "NOT_VERIFIED",
+    "F06": "NOT_VERIFIED",
+    "F07": "NOT_VERIFIED",
+    "F08": "NOT_VERIFIED",
+    "F09": "NOT_VERIFIED",
+    "F10": "NOT_VERIFIED",
+    "F11": "NOT_VERIFIED",
+    "F02": "BASIC_PASS; independent latent/RGBA oracle open",
+    "F03": "BASIC_PASS RGB edit/RGBA output; alpha/reference gates open",
+    "F04": "OUTPUT_PASS; internal exact boundaries FAIL; full task/HTTP gates open",
+    "F05": "OUTPUT_PASS; internal exact boundaries FAIL; full media gates open",
+    "F12": "PARTIAL_PASS numeric/embedding/lifecycle faults; live service/LLM matrix open"
+  },
+  "flash": {
+    "streaming_fixture": "PASS",
+    "checkpoint_storage_fixture": "PASS",
+    "real_model": "NOT_VERIFIED; external download in progress",
+    "cache_default_bytes": 2147483648,
+    "io_overlap": "NOT_IMPLEMENTED; synchronous first parity path",
+    "resident_shared_arena_suite": "NOT_SUPPORTED; lifecycle enabled for Metal SSD with private session scratch"
+  },
+  "qwen27": {
+    "kernels": "PASS",
+    "real_inference": "REFUSED_BY_MEMORY_ADMISSION",
+    "context": 256,
+    "prefill": 64,
+    "mtp": false,
+    "need_gib": 14.76,
+    "available_after_margin_gib": 6.57,
+    "reserve_gib": 2
+  },
+  "commands": {
+    "numeric": "DS4_SUITE_NUMERIC_METAL=1 DS4_SUITE_DUMP=build/metal-qualification/numeric-final build/metal-venv/bin/python -m unittest tests.test_suite_numeric -v",
+    "flash_stream": "DS4_TEST_QWEN4_METAL_STREAM=1 tests/test_qwen4_kernels",
+    "flash_lifecycle": "tests/test_flash_metal_lifecycle",
+    "image": "DS4_SUITE_CASES_ONLY=1 DS4_REFERENCE_RESOLUTION=256 tests/probe_qwen_image_pipeline build/metal-models/image-bf16.ds4b/bundle.ds4b build/metal-models build/metal-models/image-tokenizer.ds4q build/metal-qualification/image-bf16 build/metal-qualification/stimuli/generation.ds4pip build/metal-qualification/stimuli/edit.ds4pip",
+    "ranking": "DS4_GEMMA_REPEATS=2 DS4_SUITE_FAULTS=1 tests/probe_native_suite <gemma-bundle> <root> <tokenizer> gemma <output> <six texts from stimuli/ranking.json>",
+    "media_faults": "DS4_GEMMA_VISUAL_FAULTS=1 tests/probe_gemma_visual <gemma-bundle> <root> <tokenizer> <processor> <stimuli/cases.ds4vis> <output>"
+  },
+  "strata": {
+    "revision": "46c152a1310f77cd2f0ce2c7cd213962df14fe83",
+    "comparison": "S1-S4 static design reviews with native parity/integration tests; no matched Strata runtime benchmark",
+    "files": {
+      "LICENSE": "329a33c678cdaa56bd43d81b8647130a9ed0c5efe14328204d764d6ba9deee3d",
+      "metal/kernels/dense_mm.metal": "56f1c47ef55ca0b7d060d533bf0658d9b18fe36efc540fd672ce0516a34db1ef",
+      "metal/kernels/gdn.metal": "4e001c1942b2ec42ddddcbaac9500fb12603d3018f979dd5028edec025cd3b06",
+      "metal/kernels/quant.metal": "6b3ba3361229e4524c86a0e90ab53e6205df902e5a7fdf040164d84b4b220bff",
+      "metal/kernels/gemv.metal": "2c6d7cb3e366cdb4006c3ca39dc04637a16b386b2b2b0d12c4bab86033257b86",
+      "metal/kernels/units.metal": "83e79379e598c5b2c85482ffb3f146f8a7ae698c06dfa103c25df31996bccbf9",
+      "metal/kernels/gdn_prompt.metal": "07b8059a13442806174af47ee98cf9ae43d779db76c5eb0f7207d2d568d1e0a8",
+      "metal/tests/gdn_parity.cpp": "4eb9b86fb6123a10d1d0e4109e14bdc941dd611f817038c72e7d9b75c7f699b1",
+      "metal/src/ref_quant.cpp": "4f81bcddb67896fcf30809b4f9bbbcf1b72a6870629eb968388022037716c354",
+      "metal/src/engine/arena_budget.h": "e58aae1f8160c4ed81ef9e7bafe3a08d327dffbe8ee9d0e1b4a385d488e0275d"
+    }
+  },
+  "binaries": {
+    "ds4": {
+      "sha256": "55ecea35ff247017bcab43377446d1ed6bab8b3a3d550033a7ee285189608969",
+      "bytes": 2958464
+    },
+    "ds4-server-suite": {
+      "sha256": "06d4093321091f539c165906bad17602a298c4d8b4611ba91858b06904e409de",
+      "bytes": 4127408
+    },
+    "tests/test_qwen35_metal": {
+      "sha256": "5b1d235f025f94cf05bab28a0ff9e0416bb67d9e058062988a7b3e9136c10589",
+      "bytes": 970640
+    },
+    "tests/test_qwen35_mrope": {
+      "sha256": "e7591cf6cf22f8f4296a7233151552937f7d66290d1a453c8c29549120d6bc8d",
+      "bytes": 2858224
+    },
+    "tests/test_qwen4_kernels": {
+      "sha256": "c2175f3532166e22dce939ccb7250f0db8eff062940b248580404a6590460954",
+      "bytes": 1234768
+    },
+    "tests/test_flash_metal_lifecycle": {
+      "sha256": "4daaf2711116e37d5c637badc6eabaf1f8da6e6c213d27a2edb304bc8c26a951",
+      "bytes": 2844984
+    },
+    "tests/libds4_numeric_metal.so": {
+      "sha256": "b9084652d26b0cc925bf3e916649778de4cade2c5cd23fb344d1a1b2baef5e87",
+      "bytes": 120792
+    },
+    "tests/probe_native_suite": {
+      "sha256": "013ebaae4a9ce148ce41e24dca151eab5f32baeafc5d601ea71a4322ccf6f927",
+      "bytes": 547840
+    },
+    "tests/probe_gemma_visual": {
+      "sha256": "aefb2b6143e72a681fb5359e8ed510ea77b353a5b15cff1e1445a7c334442628",
+      "bytes": 552864
+    },
+    "tests/probe_qwen_image_pipeline": {
+      "sha256": "a2f2cd372db499189cca5e4e1627eaca8a69176bed6ee2defc9821ba4e7dbb90",
+      "bytes": 551800
+    }
+  },
+  "docs_check": {
+    "verdict": "FAIL_PREEXISTING",
+    "passed": 9,
+    "total": 10,
+    "broken_link": "docs/roadmaps/interactive-edit-file-server-plan.md -> ../../exmekh_lib/todo.md"
+  },
+  "oracle_runtime": {
+    "python": "3.13.13",
+    "torch": "2.15.0",
+    "transformers_revision": "d4fcbccd0966ace9505b9cbd3041d28ad822d8a7",
+    "device": "cpu (EmbeddingGemma only)"
+  },
+  "other_regressions": {
+    "cuda": "NOT_VERIFIED: no CUDA host",
+    "rocm": "NOT_VERIFIED: no ROCm host",
+    "legacy_ssd_other_model_families": "NOT_VERIFIED: model artifacts not available",
+    "distributed": "NOT_RUN: outside this single-host change; requires separate user authorization"
+  }
+}

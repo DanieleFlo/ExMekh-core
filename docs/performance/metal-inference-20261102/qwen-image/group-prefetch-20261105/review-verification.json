@@ -1,0 +1,528 @@
+{
+  "tested_head": "4fef55feed35b79c20677d404f293ad49ffd13f5",
+  "scope": "Post-refactor qualification. Original paired performance remains attached to the frozen I-P05 executable.",
+  "gates": [
+    {
+      "name": "text",
+      "verdict": "PASS",
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 0,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 88.887692,
+        "prepare_seconds": 7.7e-05,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          0.0,
+          13.793877,
+          64.623709,
+          10.469977
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 6949795328,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7514255328,
+        "plan_host": 1904672,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 83620429176,
+        "d2h_bytes": 1376256,
+        "weight_groups": [
+          {
+            "limit": 7307300512,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7132082144,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 675480832,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "exact_native_files": {
+        "rgba.f32": true,
+        "result.png": true,
+        "conditioning.bf16": true,
+        "latent-6.f32": true,
+        "latent-7.f32": true,
+        "latent-5.f32": true,
+        "latent-4.f32": true,
+        "latent-0.f32": true,
+        "latent-1.f32": true,
+        "latent-3.f32": true,
+        "latent-2.f32": true
+      },
+      "host_min_bytes": 6023233536,
+      "swap_growth_bytes": 0,
+      "artifacts": [
+        {
+          "path": "build/metal-perf-image-20261105/clean-text/report.json",
+          "bytes": 22916,
+          "sha256": "652e16f003f012c0ca2286778b219ab570a0c4cb106b549f4e00c31b8b16d0f5"
+        },
+        {
+          "path": "build/metal-perf-image-20261105/clean-text/verification.json",
+          "bytes": 4455,
+          "sha256": "086ddc5db327b1bdf1aec861851b609d193c3a6b8f713b128bd130270da149f0"
+        }
+      ]
+    },
+    {
+      "name": "reference",
+      "verdict": "PASS",
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 91.602838,
+        "prepare_seconds": 0.000389,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          2.012335,
+          17.277997,
+          61.824438,
+          10.487623
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 8400634528,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 8658485248,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 78829232600,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 8404381440,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 37,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 8054030336,
+            "loads": 145,
+            "hits": 2210,
+            "evictions": 127,
+            "payload_h2d": 63085559808
+          },
+          {
+            "limit": 675480832,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "exact_native_files": {
+        "rgba.f32": true,
+        "result.png": true,
+        "conditioning.bf16": true,
+        "latent-6.f32": true,
+        "latent-7.f32": true,
+        "latent-5.f32": true,
+        "latent-4.f32": true,
+        "latent-0.f32": true,
+        "latent-1.f32": true,
+        "latent-3.f32": true,
+        "latent-2.f32": true,
+        "reference-0.bf16": true
+      },
+      "host_min_bytes": 5282021376,
+      "swap_growth_bytes": 0,
+      "artifacts": [
+        {
+          "path": "build/metal-perf-image-20261105/clean-reference/report.json",
+          "bytes": 23549,
+          "sha256": "37d3b12910a6d92f16dbc25908e0b3471267a4447f940cb82304c5a2bd99ec72"
+        },
+        {
+          "path": "build/metal-perf-image-20261105/clean-reference/verification.json",
+          "bytes": 5178,
+          "sha256": "1c8a9918c7a0d3bbb5d0e7865d4e26a10e542d5e52e90faf522529b5f73c2913"
+        }
+      ]
+    },
+    {
+      "name": "rgba",
+      "verdict": "PASS",
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 97.436879,
+        "prepare_seconds": 0.000427,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          2.003975,
+          16.744651,
+          68.216157,
+          10.469402
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 8542695328,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 8786755584,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 75775775704,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 8532651776,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 44,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 8182300672,
+            "loads": 138,
+            "hits": 2217,
+            "evictions": 119,
+            "payload_h2d": 60032102912
+          },
+          {
+            "limit": 675480832,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "b47943f25b685bc1f38b785e8fa29c7bed1108561e5af80e017fcf503eecc066"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "exact_native_files": {
+        "rgba.f32": true,
+        "result.png": true,
+        "conditioning.bf16": true,
+        "latent-6.f32": true,
+        "latent-7.f32": true,
+        "latent-5.f32": true,
+        "latent-4.f32": true,
+        "latent-0.f32": true,
+        "latent-1.f32": true,
+        "latent-3.f32": true,
+        "latent-2.f32": true,
+        "reference-0.bf16": true
+      },
+      "host_min_bytes": 5208358912,
+      "swap_growth_bytes": 0,
+      "artifacts": [
+        {
+          "path": "build/metal-perf-image-20261105/clean-rgba/report.json",
+          "bytes": 24836,
+          "sha256": "809acbb199baec5f4fa8f36251e50c865e8c6ceae6f01c9083c4dd01e0fbdd7a"
+        },
+        {
+          "path": "build/metal-perf-image-20261105/clean-rgba/verification.json",
+          "bytes": 5164,
+          "sha256": "b2b8d49820453556b81a21db08452c5a1d1f54014f7112fc218ff9d42cee109c"
+        }
+      ]
+    }
+  ],
+  "gemma": {
+    "exact_boundaries": 480,
+    "boundaries": 480,
+    "vectors": {
+      "metrics": {
+        "max_abs": 5.960464477539063e-08,
+        "rmse": 6.472565998493549e-09,
+        "relative_l2": 7.322872469981983e-08,
+        "bit_exact": false,
+        "cosine_min": 0.9999999999999989,
+        "unit_norm_error_max": 6.491406745467998e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    }
+  },
+  "numeric_cpu": {
+    "tests": 47,
+    "skips": 13,
+    "status": "PASS"
+  },
+  "numeric_metal": {
+    "tests": 47,
+    "skips": 3,
+    "known_failed_assertions": 2,
+    "failed_method": "test_vision_trigonometric_boundaries",
+    "new_failures": 0
+  },
+  "host": [
+    "hint selected ranges and cumulative bound",
+    "hint ASan/UBSan",
+    "Image cache planner",
+    "memory policy",
+    "executor",
+    "resources",
+    "numeric lifetime",
+    "Image graph/input/output",
+    "Metal foundations resident and streamed",
+    "Flash SSD",
+    "bundle",
+    "local HTTP",
+    "suite contracts/release/transfer/SHA/product text"
+  ],
+  "logs": [
+    {
+      "path": "build/metal-perf-image-20261105/review/build-host-tests.log",
+      "bytes": 18726,
+      "sha256": "7195947aca1333b69af63b7290a9363d14c1e84df6aa2e08a6a4ec4e075f8dc0"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/review/foundations.log",
+      "bytes": 56552,
+      "sha256": "7d0d67ba33dcc273c97c3f91275d2eeec8d507df9f739f9fd119414a13e5b7a2"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/review/hint-tests.log",
+      "bytes": 285,
+      "sha256": "dc7ef6ded93e65ddf3ecb1d2cd2d6183b1af1ef9ef6bcedff999046dda5c91f6"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/review/hint-sanitized.log",
+      "bytes": 90,
+      "sha256": "9f12a254df52286001608ee6971a27da58008a9e747061cc8e3b14c604271fcf"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/review/numeric-full.log",
+      "bytes": 8009,
+      "sha256": "de284c7c771f3db1360252f88c2e1a9ad38f33299eae43b7486fdb43d8051b85"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/review/numeric-baseline-trig.log",
+      "bytes": 1869,
+      "sha256": "ace4de59e8d485400266fe8630989c941601adf6362ea483712e4c9ace23263d"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/review/regressions.json",
+      "bytes": 85326,
+      "sha256": "df19e5a61a97cc79d8e61203bf4069ea115ae497f125e8200464261c1d898162"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/review/contracts-release.log",
+      "bytes": 5327,
+      "sha256": "2bb387ef4c00155066b9f0dd6a380d83398a56370c7b48d172e00f80ed4dd351"
+    }
+  ],
+  "sources": [
+    {
+      "path": "ds4_bundle.h",
+      "bytes": 4674,
+      "sha256": "be23f24d7519631c083f2c9f11b2456d20c082dfdf511087ba66425ded03b8a2"
+    },
+    {
+      "path": "ds4_bundle.c",
+      "bytes": 26496,
+      "sha256": "1676178e12454709bdc4e173f8340132cf6d9f005f75bc4792820db93f206cff"
+    },
+    {
+      "path": "ds4_weight_cache.c",
+      "bytes": 5455,
+      "sha256": "ab0afcfeb6b68c625cf79efe1dc20b1d8a384897f4666b822e3387fcbbb1333c"
+    },
+    {
+      "path": "ds4_qwen_image_dit.c",
+      "bytes": 33809,
+      "sha256": "162f0a256c7540efdbd0ab12fecaf2a29108f2361904de3e36457822223a5857"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 40409,
+      "sha256": "2a1d1d64f5f90c4e842d76cefcb38e6ec659ddf10abbe4ef7db428a07425551d"
+    },
+    {
+      "path": "ds4_numeric_metal.m",
+      "bytes": 30203,
+      "sha256": "c1143fecf246a88cc3fa20c1644537e6abe58c386838a5800983a6f0d01d0d77"
+    },
+    {
+      "path": "ds4_qwen_image_pipeline.c",
+      "bytes": 31656,
+      "sha256": "5d25b5b78ef065577a2fcf4d65c14d1e2f62594bd61d4206468401497909c9ed"
+    },
+    {
+      "path": "tests/test_bundle_group_hint.c",
+      "bytes": 3373,
+      "sha256": "ca652ba178da7833b49e7395d8c91692599777b4307723b0499ea5b4a299530f"
+    }
+  ],
+  "binaries": [
+    {
+      "path": "build/metal-perf-image-20261105/probe-clean",
+      "bytes": 585752,
+      "sha256": "d05e4e5ba4e2448f4b52d8c15c0c56f5bcc60354cc1bbdeee0c9b7b30d93de20"
+    },
+    {
+      "path": "tests/probe_qwen_image_pipeline",
+      "bytes": 585752,
+      "sha256": "d05e4e5ba4e2448f4b52d8c15c0c56f5bcc60354cc1bbdeee0c9b7b30d93de20"
+    },
+    {
+      "path": "tests/libds4_numeric_metal.so",
+      "bytes": 173720,
+      "sha256": "06dbf8db018070194998cb5376acfc49c838194e4b1c0f9d3fa9b37300488e3e"
+    },
+    {
+      "path": "libds4-suite-metal.a",
+      "bytes": 1663480,
+      "sha256": "4ad553a63ff6b8525287fa2dd8adf31f4bc90e34c7fd5866b9babbea06a3bbc9"
+    },
+    {
+      "path": "ds4-server-suite",
+      "bytes": 4180944,
+      "sha256": "2c620005f6c9d87a8431aa71daf566e56407b38ce9454bab34bd46e36a9f2ba3"
+    }
+  ],
+  "implementation_commits": [
+    "f48feac99d8148d3bec34b09ec50fe0f7f8eb2ae",
+    "31eecb436c85099468e0568b2a05e5c9dd2f3589",
+    "4d9fc74b0065dc0706fef1e06a1c113ecedb0f57"
+  ],
+  "branch": "codex/metal-image-clean-code-review"
+}

@@ -1,0 +1,68 @@
+{
+  "command": [
+    "env",
+    "DS4_GEMMA_DIMENSIONS=128",
+    "tests/probe_native_suite",
+    "build/metal-models/gemma.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/gemma.ds4g",
+    "gemma",
+    "build/metal-qualification/t06-t07-20261031/gemma-text/native-128",
+    "Il gatto dorme sul divano.",
+    "A cat sleeps on the sofa.",
+    "The train arrives at the station."
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120,
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 6.1037693749995015,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 7342.45951275,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 7343.471616791,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6701656,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 7344.479998958,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6701656,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 7345.488274416,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6701656,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 7346.501794208,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6701656,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 7347.515245541,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 362824904,
+      "resident_bytes": 591937536
+    }
+  ],
+  "log_sha256": "1ba70c398ca7d25b9debb610e40a554e657348fc0809b3ddec4e7f8729647e87"
+}

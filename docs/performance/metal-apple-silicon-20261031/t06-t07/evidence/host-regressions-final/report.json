@@ -1,0 +1,140 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "-m",
+    "unittest",
+    "tests.test_metal_stream_qualification",
+    "tests.test_suite_pipeline_qualification",
+    "tests.test_suite_offloaded_oracle",
+    "tests.test_suite_contracts",
+    "tests.test_flash_launcher",
+    "tests.test_metal_foundations",
+    "tests.test_metal_vision_qualification",
+    "tests.test_qwen4_vision_ref"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120.0,
+  "reason": "Final host regressions for bounded memory, source inventory, lazy independent weights, unchanged quality rejection, launchers and API schemas; no pretrained model or GPU inference",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 13.156353375001345,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 17115.740351625,
+      "pressure": 1,
+      "host_available_bytes": 10639245312,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 17116.751976458,
+      "pressure": 1,
+      "host_available_bytes": 10302357504,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 159728360,
+      "resident_bytes": 209584128
+    },
+    {
+      "monotonic": 17117.763300625,
+      "pressure": 1,
+      "host_available_bytes": 10001498112,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 184877800,
+      "resident_bytes": 236224512
+    },
+    {
+      "monotonic": 17118.772723583,
+      "pressure": 1,
+      "host_available_bytes": 9279094784,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 216138496,
+      "resident_bytes": 268894208
+    },
+    {
+      "monotonic": 17119.782018,
+      "pressure": 1,
+      "host_available_bytes": 10360733696,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 306086872,
+      "resident_bytes": 365871104
+    },
+    {
+      "monotonic": 17120.792121125,
+      "pressure": 1,
+      "host_available_bytes": 10005856256,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 326730736,
+      "resident_bytes": 392986624
+    },
+    {
+      "monotonic": 17121.8000045,
+      "pressure": 1,
+      "host_available_bytes": 9163161600,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 326730736,
+      "resident_bytes": 386580480
+    },
+    {
+      "monotonic": 17122.811127,
+      "pressure": 1,
+      "host_available_bytes": 10556751872,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 326730736,
+      "resident_bytes": 386580480
+    },
+    {
+      "monotonic": 17123.821227541,
+      "pressure": 1,
+      "host_available_bytes": 10051026944,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 326730736,
+      "resident_bytes": 386580480
+    },
+    {
+      "monotonic": 17124.835431208,
+      "pressure": 1,
+      "host_available_bytes": 9921282048,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 326730736,
+      "resident_bytes": 386580480
+    },
+    {
+      "monotonic": 17125.847674708,
+      "pressure": 1,
+      "host_available_bytes": 9867083776,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 326714352,
+      "resident_bytes": 386564096
+    },
+    {
+      "monotonic": 17126.857643125,
+      "pressure": 1,
+      "host_available_bytes": 9608331264,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 343524408,
+      "resident_bytes": 403980288
+    },
+    {
+      "monotonic": 17127.86938675,
+      "pressure": 1,
+      "host_available_bytes": 10542268416,
+      "swap_bytes": 691598786,
+      "footprint_bytes": 291013688,
+      "resident_bytes": 396836864
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "12c02d119926610ed133e4faeb6e697772345bd9b1d99b1216a05d877635a8da"
+}

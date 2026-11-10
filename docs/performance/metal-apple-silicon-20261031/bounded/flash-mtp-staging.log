@@ -1,0 +1,10 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal model views created in 0.014 ms, residency requested in 0.135 ms, warmup 1.731 ms (mapped 4.00 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+  mtp stage E=2560 hc=4                        ok  max|d|=3.37e-07 (scale 2.57e+00)
+  mtp combine E=2560 hc=4                      ok  max|d|=0.00e+00 (scale 1.98e+00)
+  mtp stage E=64 hc=4                          ok  max|d|=1.80e-07 (scale 2.60e+00)
+  mtp combine E=64 hc=4                        ok  max|d|=0.00e+00 (scale 1.99e+00)
+PASS bounded Flash MTP staging/combine (FP64 oracle)

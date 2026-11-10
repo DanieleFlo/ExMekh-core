@@ -1,0 +1,113 @@
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4 ds4_cli.o ds4_help.o ds4_prompt_prefix.o linenoise.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_server.o ds4_server.c
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-bench ds4_bench.o ds4_help.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-eval ds4_eval.o ds4_eval_cases.o ds4_help.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen35_metal tests/test_qwen35_metal.c ds4_metal.o ds4_image.o ds4_resources.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -c -o tests/test_qwen35_mrope.o tests/test_qwen35_mrope.c
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen35_metal_graph tests/test_qwen35_metal_graph.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+In file included from tests/test_qwen35_metal_graph.c:4:
+tests/../ds4.c:59351:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59351 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+tests/../ds4.c:59656:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59656 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_flash_metal_stream_graph tests/test_flash_metal_stream_graph.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+In file included from tests/test_flash_metal_stream_graph.c:3:
+tests/../ds4.c:59351:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59351 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+tests/../ds4.c:59656:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59656 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+2 warnings generated.
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen_metal_lifecycle tests/test_qwen_metal_lifecycle.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+In file included from tests/test_qwen_metal_lifecycle.c:4:
+tests/../ds4.c:59351:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59351 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+tests/../ds4.c:59656:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59656 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_image_decode tests/test_image_decode.o ds4_image.o -lm
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -I. -c -o tests/test_qwen4_vision.o tests/test_qwen4_vision.c
+make: `ds4-server-suite' is up to date.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -Wno-unused-function -DDS4_SERVER_TEST -DDS4_NO_GPU -c -o ds4_server_test.o ds4_server.c
+ds4_server.c:31887:30: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 31887 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |                              ^
+       |                             ,
+ds4_server.c:31887:9: note: place parentheses around the string literal to silence warning
+ 31887 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |         ^
+ds4_server.c:33055:9: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 33054 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |                                                                       
+       |                                                                       ,
+ 33055 |         "<parameter=command>safe</parameter>",
+       |         ^
+ds4_server.c:33054:9: note: place parentheses around the string literal to silence warning
+ 33054 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |         ^
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -Wno-unused-function -DDS4_NO_GPU -c -o ds4_cpu.o ds4.c
+ds4.c:67510:59: warning: unused parameter 's' [-Wunused-parameter]
+ 67510 | static uint32_t session_vision_position_rows(ds4_session *s) {
+       |                                                           ^
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -Wno-unused-function -DDS4_NO_GPU -c -o tests/test_server_interactive.o tests/test_server_interactive.c
+In file included from tests/test_server_interactive.c:3:
+tests/../ds4_server.c:31887:30: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 31887 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |                              ^
+       |                             ,
+tests/../ds4_server.c:31887:9: note: place parentheses around the string literal to silence warning
+ 31887 |         "<|DSML\xef\xbd\x9c" "tool_calls>",
+       |         ^
+tests/../ds4_server.c:33055:9: warning: suspicious concatenation of string literals in an array initialization; did you mean to separate the elements with a comma? [-Wstring-concatenation]
+ 33054 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |                                                                       
+       |                                                                       ,
+ 33055 |         "<parameter=command>safe</parameter>",
+       |         ^
+tests/../ds4_server.c:33054:9: note: place parentheses around the string literal to silence warning
+ 33054 |         "<tool_call><function=run><parameter=command>safe</parameter>"
+       |         ^
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -fno-finite-math-only -DDS4_TEST_HOOKS -I. -c -o tests/test_sampling.o tests/test_sampling.c
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -Wno-unused-function -DDS4_NO_GPU -DDS4_TEST_HOOKS -c -o ds4_cpu_test_hooks.o ds4.c
+ds4.c:67510:59: warning: unused parameter 's' [-Wunused-parameter]
+ 67510 | static uint32_t session_vision_position_rows(ds4_session *s) {
+       |                                                           ^
+1 warning generated.
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen35_metal_features tests/test_qwen35_metal_features.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+In file included from tests/test_qwen35_metal_features.c:3:
+tests/../ds4.c:59351:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59351 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+tests/../ds4.c:59656:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59656 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+1 warning generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -I. -c -o tests/test_qwen4_kernels.o tests/test_qwen4_kernels.c
+make: `tests/test_qwen_test_profile' is up to date.
+cc -o tests/test_agentic_checkpoint tests/test_agentic_checkpoint.o ds4_gpu_args.o ds4_kvstore.o rax.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -I. -c -o tests/test_qwen_mtp_callback.o tests/test_qwen_mtp_callback.c
+In file included from tests/test_qwen_mtp_callback.c:3:
+tests/../ds4.c:59351:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59351 | static bool qwen4_graph_alloc(ds4_qwen4_gpu_graph *g, const ds4_model *model, const ds4_weights *w, uint32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+tests/../ds4.c:59656:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59656 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+2 warnings generated.
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4-server ds4_server.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_qwen35_mrope tests/test_qwen35_mrope.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_qwen4_vision tests/test_qwen4_vision.o ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4_server_test ds4_server_test.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_server_interactive tests/test_server_interactive.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o ds4_cpu.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_sampling tests/test_sampling.o ds4_cpu_test_hooks.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_layer_pack.o -lm -pthread
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_qwen4_kernels tests/test_qwen4_kernels.o ds4_metal.o ds4_image.o ds4_resources.o -lm -pthread -framework Foundation -framework Metal
+2 warnings generated.
+cc -o tests/test_qwen_mtp_callback tests/test_qwen_mtp_callback.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal

@@ -1,6 +1,7 @@
 #include "ds4.h"
 #include "ds4_distributed.h"
 #include "ds4_tp.h"
+#include "qwen_test_profile.h"
 
 #include <float.h>
 #include <math.h>
@@ -87,6 +88,15 @@ int main(int argc, char **argv) {
             generate = (int)value;
             continue;
         }
+        if (!strcmp(argv[i], "--mtp-model") && i + 1 < argc) {
+            options.mtp_path = argv[++i];
+            options.mtp_draft_tokens = 2;
+            continue;
+        }
+        if (!strcmp(argv[i], "--mtp")) {
+            options.glm_mtp = true;
+            continue;
+        }
         if (!strcmp(argv[i], "--ssd-streaming")) {
             options.ssd_streaming = true;
             continue;
@@ -109,6 +119,9 @@ int main(int argc, char **argv) {
         return 2;
     }
 
+#ifdef __APPLE__
+    if (!qwen_test_profile(&options, 4096)) return 2;
+#endif
     ds4_engine *engine = NULL;
     if (ds4_engine_open(&engine, &options) != 0) return 1;
     if (options.tp.role == DS4_TP_WORKER) {
@@ -153,14 +166,11 @@ int main(int argc, char **argv) {
     if (!ds4_engine_vision_encode_file(engine, argv[3], &embedding,
                                        error, sizeof(error))) goto done;
     ds4_chat_begin(engine, &prompt);
-    ds4_tokens_push(&prompt, ds4_token_user(engine));
-    if (!ds4_prompt_append_vision(engine, &prompt, &span, &embedding,
-                                  error, sizeof(error))) goto done;
-    ds4_tokenize_text(engine,
-                      "\nDescribe the image briefly and state its dominant colors.",
-                      &prompt);
+    const char *parts[] = {"", "\nDescribe the image briefly and state its dominant colors."};
+    if (!ds4_chat_append_multimodal_message(engine, &prompt, "user", parts,
+            &embedding, 1, &span, error, sizeof(error))) goto done;
     ds4_chat_append_assistant_prefix(engine, &prompt, DS4_THINK_NONE);
-    if (ds4_session_create(&session, engine, 4096) != 0) {
+    if (ds4_session_create(&session, engine, options.context_size) != 0) {
         snprintf(error, sizeof(error), "session creation failed");
         goto done;
     }
@@ -287,7 +297,21 @@ int main(int argc, char **argv) {
         size_t len = 0;
         char *text = ds4_token_text(engine, token, &len);
         if (text && len) fwrite(text, 1, len, stdout);
-        if (ds4_session_eval(session, token, error, sizeof(error)) != 0) goto done;
+        free(text);
+        if (ds4_engine_has_mtp(engine)) {
+            int accepted[8];
+            uint64_t rng = 20261031;
+            int count = ds4_session_eval_speculative(session, token, generate - i,
+                ds4_token_eos(engine), 0.0f, 0, 1.0f, 0.0f, &rng, accepted, 8,
+                error, sizeof(error));
+            if (count <= 0) goto done;
+            for (int j = 1; j < count; j++) {
+                text = ds4_token_text(engine, accepted[j], &len);
+                if (text && len) fwrite(text, 1, len, stdout);
+                free(text);
+            }
+            i += count - 1;
+        } else if (ds4_session_eval(session, token, error, sizeof(error)) != 0) goto done;
     }
     fputc('\n', stdout);
     rc = 0;

@@ -1,0 +1,23 @@
+[
+  {
+    "baseline": "build/metal-qualification/bf16-replay-reserve-final-20261029",
+    "reviewed": "build/metal-qualification/cleanup-review/replay",
+    "pattern": "*.npy",
+    "files": 16,
+    "bit_exact": true
+  },
+  {
+    "baseline": "build/metal-qualification/bf16-live-final-20261029",
+    "reviewed": "build/metal-qualification/cleanup-review/gemma-live",
+    "pattern": "*.bf16",
+    "files": 70,
+    "bit_exact": true
+  },
+  {
+    "baseline": "build/metal-qualification/bf16-live-final-20261029",
+    "reviewed": "build/metal-qualification/cleanup-review/gemma-live",
+    "pattern": "vectors*.f32",
+    "files": 2,
+    "bit_exact": true
+  }
+]

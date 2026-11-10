@@ -1,0 +1,95 @@
+[
+  {
+    "case": "foundations",
+    "status": "PASS",
+    "elapsed_seconds": 9.145035249995999
+  },
+  {
+    "case": "host",
+    "status": "PASS",
+    "elapsed_seconds": 12.265001708001364
+  },
+  {
+    "case": "graph-fallback",
+    "status": "PASS",
+    "elapsed_seconds": 1.045893332993728
+  },
+  {
+    "case": "features",
+    "status": "PASS",
+    "elapsed_seconds": 1.0393897079920862
+  },
+  {
+    "case": "features-fallback",
+    "status": "PASS",
+    "elapsed_seconds": 1.0377959579927847
+  },
+  {
+    "case": "reader-asan",
+    "status": "PASS",
+    "elapsed_seconds": 1.048141332998057
+  },
+  {
+    "case": "queue-asan",
+    "status": "PASS",
+    "elapsed_seconds": 1.0554817920055939
+  },
+  {
+    "case": "cpu-compile",
+    "status": "PASS",
+    "elapsed_seconds": 4.091105291998247
+  },
+  {
+    "case": "qwen-target",
+    "status": "PASS",
+    "elapsed_seconds": 16.337077250005677,
+    "artifacts": 10,
+    "comparison": "BIT_EXACT"
+  },
+  {
+    "case": "qwen-mtp2",
+    "status": "PASS",
+    "elapsed_seconds": 24.384407417004695,
+    "artifacts": 12,
+    "comparison": "BIT_EXACT"
+  },
+  {
+    "case": "qwen-mtp4",
+    "status": "PASS",
+    "elapsed_seconds": 22.397724583002855,
+    "artifacts": 12,
+    "comparison": "BIT_EXACT"
+  },
+  {
+    "case": "flash-full",
+    "status": "PASS",
+    "elapsed_seconds": 10.161150667001493,
+    "artifacts": 10,
+    "comparison": "BIT_EXACT"
+  },
+  {
+    "case": "flash-primitives",
+    "status": "PASS",
+    "elapsed_seconds": 3.0552161659870762
+  },
+  {
+    "case": "flash-graph-build",
+    "status": "PASS",
+    "elapsed_seconds": 10.173806083010277
+  },
+  {
+    "case": "flash-graph",
+    "status": "PASS",
+    "elapsed_seconds": 1.0555527919932501
+  },
+  {
+    "case": "numeric-metal",
+    "status": "FAIL",
+    "elapsed_seconds": 10.202624083001865,
+    "classification": "PREEXISTING_FAILURE",
+    "details": [
+      "FAIL: test_vision_trigonometric_boundaries (tests.test_suite_numeric.SuiteNumeric.test_vision_trigonometric_boundaries) (op=13)",
+      "FAIL: test_vision_trigonometric_boundaries (tests.test_suite_numeric.SuiteNumeric.test_vision_trigonometric_boundaries) (op=14)"
+    ]
+  }
+]

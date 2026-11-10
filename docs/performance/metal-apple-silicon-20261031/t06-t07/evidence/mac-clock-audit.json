@@ -1,0 +1,15 @@
+{
+  "scope": "Observed qualification clock semantics only; native server deadlines and numerical criteria unchanged.",
+  "python_monotonic_implementation": "mach_absolute_time()",
+  "python_monotonic": 24512.036940083,
+  "posix_monotonic": 53473.496069,
+  "wall_unix": 1793572958.2158668,
+  "native_server_clock": "clock_gettime(CLOCK_MONOTONIC)",
+  "apple_source": {
+    "revision": "63976b830a836a22649b806fe62e8614fe3e5555",
+    "url": "https://raw.githubusercontent.com/apple-oss-distributions/Libc/63976b830a836a22649b806fe62e8614fe3e5555/gen/clock_gettime.c",
+    "sha256": "55ee62841451d0d936fee72658b9c0452d5571c6039789e794e42751e2050f15"
+  },
+  "python_documentation": "https://docs.python.org/3.13/library/time.html#time.monotonic",
+  "finding": "Apple POSIX MONOTONIC derives from wall time minus boot time; Python runtime uses mach_absolute_time. Sleep contributes differently. Prior wall-clock and monitor elapsed durations must not be treated as identical or used for a speedup claim. New qualification controllers hold temporary caffeinate -i leases to prevent automatic idle sleep; no persistent power settings changed."
+}

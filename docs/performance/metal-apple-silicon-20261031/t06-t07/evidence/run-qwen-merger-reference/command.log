@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/diagnose-qwen-merger.py", line 17, in <module>
+    norm=F.layer_norm(x,(x.shape[-1],),weights['norm.weight'],weights['norm.bias'],1e-6);y=n.tensor(torch.zeros_like(norm));n.call('norm',y,n.tensor(x),n.tensor(weights['norm.weight']),n.tensor(weights['norm.bias']),x.shape[-1],1e-6,1,1,False);compare(f'{index}-norm',n.read(y,norm.shape),norm);n.clear();z=norm.reshape(-1,4608)
+                                                                                                                                                                                                                                                    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/diagnose-qwen-merger.py", line 11, in compare
+    d=(a.float()-b.float());row=dict(name=name,different=int((a.view(torch.int16)!=b.view(torch.int16)).sum()),max_abs=float(d.abs().max()));records.append(row);print(row,flush=True)
+                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: The size of tensor a (9216) must match the size of tensor b (4608) at non-singleton dimension 1

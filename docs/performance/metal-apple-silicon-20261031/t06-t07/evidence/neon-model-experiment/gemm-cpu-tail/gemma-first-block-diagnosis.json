@@ -1,0 +1,128 @@
+[
+  {
+    "stage": "input_layernorm",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.q_proj",
+    "different": 0,
+    "elements": 11264,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.k_proj",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.v_proj",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.q_norm",
+    "different": 0,
+    "elements": 11264,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.k_norm",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.v_norm",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.o_proj",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "post_attention_layernorm",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "pre_feedforward_layernorm",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "mlp.gate_proj",
+    "different": 0,
+    "elements": 22528,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "mlp.act_fn",
+    "different": 35,
+    "elements": 22528,
+    "max_abs": 1.52587890625e-05
+  },
+  {
+    "stage": "mlp.up_proj",
+    "different": 0,
+    "elements": 22528,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "mlp.down_proj",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "post_feedforward_layernorm",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "ple_block.per_layer_input_gate",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "ple_block.act_fn",
+    "different": 1,
+    "elements": 5632,
+    "max_abs": 1.52587890625e-05
+  },
+  {
+    "stage": "ple_block.per_layer_projection",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "ple_block.post_per_layer_input_norm",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "upstream-block-vs-frozen",
+    "different": 0,
+    "elements": 5632,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "attention-same-input",
+    "different": 0,
+    "elements": 11264,
+    "max_abs": 0.0
+  }
+]

@@ -1,0 +1,499 @@
+
+===== request 1 2026-11-02 05:31:01 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 1
+tools: 1
+think_mode: none
+prompt_tokens: 1761
+effective_prompt_tokens: 1761
+cached_tokens: 0
+max_tokens: 1024
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 1761
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":true,"input":[{"role":"system","content":"Follow the user's exact generate-image arguments. Call generate-image once per requested generation; wait for its completion, do not regenerate. After success, answer the user directly with the remembered code. When asked to recall a code, do not generate an image.\n\n\n<harness-output-guidance>\nHere, open a skill with a tool call using its exact name; reading a file does not open it. Skill-only tools require an open skill exposing them; after exit, only the restored caller's tools are allowed.\nFinish the scoped work, then call the configured exit tool to close one level. At root, answer the user. Exit replaces the inner transcript with the returned result: carry outcome, completed actions, essential facts, references and next step in text. Reopening starts a new invocation; reuse completed work instead of repeating it.\nPlan for the next consumer: promote saved output IDs in items only if the caller needs their full details immediately. If concise text suffices, use items=[]. If another skill will use the details, return their ID/path and purpose in text, use items=[], and retrieve them there. \nTools exposing execution_mode accept 'wait' (default) or 'background' (return immediately). wait_seconds defaults to 60, >0 and <=300; null uses defaults. Wait expiry or user steering leaves work running. Skill navigation and control/read tools stay synchronous. \nKeep running work's original tool_call_id and output_id. Transient outputs expire with the runtime; jobs do not resume after restart.\nLarge outputs return temporary file manifests, also on retrieval or in items. Check status and domain results separately: final does not mean success. Before retrying failed or partially delivered work, check effects already applied.</harness-output-guidance>"},{"role":"user","content":"Remember code IMAGE-E2E-17. Generate exactly 1 images by calling generate-image exactly once with prompt 'A red square on white', n 1, width 256, height 256, seed 171, background opaque, include_image_in_result true, preview_scale 0.5. Wait for the generation to complete. After success reply exactly IMAGE-E2E-17 and no other text. Do not describe the image or repeat its metadata."}],"reasoning":{"effort":"none"},"tools":[{"type":"function","name":"generate-image","parameters":{"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]},"strict":true,"description":"Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."},{"type":"function","name":"exit_agent","parameters":{"type":"object","properties":{"text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["text","items"]},"strict":true,"description":"Close the current skill; return text and selected saved outputs to its caller. Available in every skill."}],"agentic":{"agent_context_id":"2858b9df-1676-4856-afcb-1c38dcd4e9a7","allowed_tools":["generate-image"],"allowed_skills":[]},"max_output_tokens":1024,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type":"function","name":"generate-image","parameters":{"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]},"strict":true,"description":"Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."}
+{"type":"function","name":"exit_agent","parameters":{"type":"object","properties":{"text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["text","items"]},"strict":true,"description":"Close the current skill; return text and selected saved outputs to its caller. Available in every skill."}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT>
+
+Follow the user's exact generate-image arguments. Call generate-image once per requested generation; wait for its completion, do not regenerate. After success, answer the user directly with the remembered code. When asked to recall a code, do not generate an image.
+
+
+<harness-output-guidance>
+Here, open a skill with a tool call using its exact name; reading a file does not open it. Skill-only tools require an open skill exposing them; after exit, only the restored caller's tools are allowed.
+Finish the scoped work, then call the configured exit tool to close one level. At root, answer the user. Exit replaces the inner transcript with the returned result: carry outcome, completed actions, essential facts, references and next step in text. Reopening starts a new invocation; reuse completed work instead of repeating it.
+Plan for the next consumer: promote saved output IDs in items only if the caller needs their full details immediately. If concise text suffices, use items=[]. If another skill will use the details, return their ID/path and purpose in text, use items=[], and retrieve them there. 
+Tools exposing execution_mode accept 'wait' (default) or 'background' (return immediately). wait_seconds defaults to 60, >0 and <=300; null uses defaults. Wait expiry or user steering leaves work running. Skill navigation and control/read tools stay synchronous. 
+Keep running work's original tool_call_id and output_id. Transient outputs expire with the runtime; jobs do not resume after restart.
+Large outputs return temporary file manifests, also on retrieval or in items. Check status and domain results separately: final does not mean success. Before retrying failed or partially delivered work, check effects already applied.</harness-output-guidance><|im_end|>
+<|im_start|>user
+Remember code IMAGE-E2E-17. Generate exactly 1 images by calling generate-image exactly once with prompt 'A red square on white', n 1, width 256, height 256, seed 171, background opaque, include_image_in_result true, preview_scale 0.5. Wait for the generation to complete. After success reply exactly IMAGE-E2E-17 and no other text. Do not describe the image or repeat its metadata.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=1024 ctx_room=6431 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="generate-image">
+<｜DSML｜parameter name="prompt" string="true">A red square on white</｜DSML｜parameter>
+<｜DSML｜parameter name="images" string="false">null</｜DSML｜parameter><｜DSML｜parameter name="n" string="false">1</｜DSML｜parameter><｜DSML｜parameter name="width" string="false">256</｜DSML｜parameter><｜DSML｜parameter name="height" string="false">2
+
+--- trace: progress gen=128 dsml_start=1 dsml_end=0 ---
+
+56</｜DSML｜parameter><｜DSML｜parameter name="output_format" string="false">"png"</｜DSML｜parameter><｜DSML｜parameter name="background" string="false">"opaque"</｜DSML｜parameter><｜DSML｜parameter name="seed" string="false">171</｜DSML｜parameter><｜DSML｜parameter name="idempotency_key" string="false">null</｜DSML｜parameter><｜DSML｜parameter name="include_image_in_result" string="false">true</｜DSML｜parameter><｜DS
+
+--- trace: progress gen=256 dsml_start=1 dsml_end=0 ---
+
+ML｜parameter name="preview_scale" string="false">0.5</｜DSML｜parameter></｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 293 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 293
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 806.841
+
+tool_call[0]:
+id: call_e0272a2fd0a8862c8d2c1e1cf1e51ab5
+name: generate-image
+arguments:
+{"prompt": "A red square on white", "images": null, "n": 1, "width": 256, "height": 256, "output_format": "png", "background": "opaque", "seed": 171, "idempotency_key": null, "include_image_in_result": true, "preview_scale": 0.5}
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=1761 response_prefill=295 target=2056 ---
+
+
+===== request 2 2026-11-02 05:48:21 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 1
+tools: 1
+think_mode: none
+prompt_tokens: 3113
+effective_prompt_tokens: 3111
+cached_tokens: 2056
+max_tokens: 1024
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 2056
+prompt_tokens: 3113
+live_prompt_common: 2056
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=1 disk=0 canonical=0 missing_ids=0
+cache_source: responses-visible
+cached_tokens: 2056
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":true,"input":[{"role":"system","content":"Follow the user's exact generate-image arguments. Call generate-image once per requested generation; wait for its completion, do not regenerate. After success, answer the user directly with the remembered code. When asked to recall a code, do not generate an image.\n\n\n<harness-output-guidance>\nHere, open a skill with a tool call using its exact name; reading a file does not open it. Skill-only tools require an open skill exposing them; after exit, only the restored caller's tools are allowed.\nFinish the scoped work, then call the configured exit tool to close one level. At root, answer the user. Exit replaces the inner transcript with the returned result: carry outcome, completed actions, essential facts, references and next step in text. Reopening starts a new invocation; reuse completed work instead of repeating it.\nPlan for the next consumer: promote saved output IDs in items only if the caller needs their full details immediately. If concise text suffices, use items=[]. If another skill will use the details, return their ID/path and purpose in text, use items=[], and retrieve them there. \nTools exposing execution_mode accept 'wait' (default) or 'background' (return immediately). wait_seconds defaults to 60, >0 and <=300; null uses defaults. Wait expiry or user steering leaves work running. Skill navigation and control/read tools stay synchronous. \nKeep running work's original tool_call_id and output_id. Transient outputs expire with the runtime; jobs do not resume after restart.\nLarge outputs return temporary file manifests, also on retrieval or in items. Check status and domain results separately: final does not mean success. Before retrying failed or partially delivered work, check effects already applied.</harness-output-guidance>"},{"role":"user","content":"Remember code IMAGE-E2E-17. Generate exactly 1 images by calling generate-image exactly once with prompt 'A red square on white', n 1, width 256, height 256, seed 171, background opaque, include_image_in_result true, preview_scale 0.5. Wait for the generation to complete. After success reply exactly IMAGE-E2E-17 and no other text. Do not describe the image or repeat its metadata."},{"type":"function_call","call_id":"call_e0272a2fd0a8862c8d2c1e1cf1e51ab5","name":"generate-image","arguments":"{\"prompt\":\"A red square on white\",\"images\":null,\"n\":1,\"width\":256,\"height\":256,\"output_format\":\"png\",\"background\":\"opaque\",\"seed\":171,\"idempotency_key\":null,\"include_image_in_result\":true,\"preview_scale\":0.5}"},{"type":"function_call_output","call_id":"call_e0272a2fd0a8862c8d2c1e1cf1e51ab5","output":"<header>\n  <name>generate-image</name>\n  <type>Tool</type>\n  <id>0_0_0</id>\n  <current-time>2026-11-02T05:48:20Z</current-time>\n  <response-type>final</response-type>\n  <elapsed>3m 22.3s</elapsed>\n</header>\n<tool-result type=\"object\">\n  <images type=\"array\">\n    <item type=\"object\">\n      <file_id type=\"string\">file-f5525f7b67ebe2596f32ca344305e812</file_id>\n      <seed type=\"integer\">171</seed>\n      <width type=\"integer\">256</width>\n      <height type=\"integer\">256</height>\n      <recipe type=\"object\">\n        <version type=\"integer\">1</version>\n        <rng_version type=\"integer\">1</rng_version>\n        <steps type=\"integer\">8</steps>\n        <guidance type=\"integer\">1</guidance>\n        <reference_resolution type=\"integer\">0</reference_resolution>\n        <background type=\"string\">opaque</background>\n      </recipe>\n      <path type=\"string\">/private/var/folders/43/31sxwsnx5yj0nkg_09p0dyvc0000gn/T/pytest-of-danieleflorio/pytest-30/test_real_image_generation_del0/state/work/.exmekh_lib/generated-media/3234b9acfa63424d9a8683fad08be514/0.png</path>\n    </item>\n  </images>\n  <ds4 type=\"object\">\n    <version type=\"integer\">1</version>\n    <request_id type=\"string\">req-b75d9386015a69f903af5daad41b8187</request_id>\n    <revision type=\"string\">fc13ba1986fcb905854dc8de2f52eee395f49b5b</revision>\n    <profile type=\"string\">bf16-native-v1</profile>\n    <plan type=\"object\">\n      <variant type=\"integer\">6</variant>\n      <victims type=\"integer\">0</victims>\n    </plan>\n    <reclaimed_device_bytes type=\"integer\">0</reclaimed_device_bytes>\n    <cache_hits type=\"integer\">0</cache_hits>\n    <total_seconds type=\"number\">202.253382</total_seconds>\n    <usage type=\"object\">\n      <processed_tokens type=\"integer\">0</processed_tokens>\n      <image_soft_tokens type=\"integer\">0</image_soft_tokens>\n      <video_soft_tokens type=\"integer\">0</video_soft_tokens>\n      <audio_soft_tokens type=\"integer\">0</audio_soft_tokens>\n    </usage>\n    <transfers type=\"object\">\n      <native_h2d_bytes type=\"integer\">108047904920</native_h2d_bytes>\n      <native_d2h_bytes type=\"integer\">630784</native_d2h_bytes>\n    </transfers>\n    <load_seconds type=\"array\">\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">0.0</item>\n    </load_seconds>\n    <phase_seconds type=\"array\">\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">12.425735</item>\n      <item type=\"number\">132.470254</item>\n      <item type=\"number\">57.346115</item>\n    </phase_seconds>\n  </ds4>\n</tool-result>"},{"role":"user","content":[{"type":"input_text","text":"These images are previews from the completed generate-image tool call. The original PNGs, file IDs, seeds and recipe are in its tool result. Continue the current request using that completed result."},{"type":"input_image","detail":"auto","image_url":"data:image/png;base64,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"}]}],"reasoning":{"effort":"none"},"tools":[{"type":"function","name":"generate-image","parameters":{"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]},"strict":true,"description":"Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."},{"type":"function","name":"exit_agent","parameters":{"type":"object","properties":{"text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["text","items"]},"strict":true,"description":"Close the current skill; return text and selected saved outputs to its caller. Available in every skill."}],"agentic":{"agent_context_id":"2858b9df-1676-4856-afcb-1c38dcd4e9a7","allowed_tools":["generate-image"],"allowed_skills":[]},"max_output_tokens":1024,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type":"function","name":"generate-image","parameters":{"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]},"strict":true,"description":"Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."}
+{"type":"function","name":"exit_agent","parameters":{"type":"object","properties":{"text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["text","items"]},"strict":true,"description":"Close the current skill; return text and selected saved outputs to its caller. Available in every skill."}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT>
+
+Follow the user's exact generate-image arguments. Call generate-image once per requested generation; wait for its completion, do not regenerate. After success, answer the user directly with the remembered code. When asked to recall a code, do not generate an image.
+
+
+<harness-output-guidance>
+Here, open a skill with a tool call using its exact name; reading a file does not open it. Skill-only tools require an open skill exposing them; after exit, only the restored caller's tools are allowed.
+Finish the scoped work, then call the configured exit tool to close one level. At root, answer the user. Exit replaces the inner transcript with the returned result: carry outcome, completed actions, essential facts, references and next step in text. Reopening starts a new invocation; reuse completed work instead of repeating it.
+Plan for the next consumer: promote saved output IDs in items only if the caller needs their full details immediately. If concise text suffices, use items=[]. If another skill will use the details, return their ID/path and purpose in text, use items=[], and retrieve them there. 
+Tools exposing execution_mode accept 'wait' (default) or 'background' (return immediately). wait_seconds defaults to 60, >0 and <=300; null uses defaults. Wait expiry or user steering leaves work running. Skill navigation and control/read tools stay synchronous. 
+Keep running work's original tool_call_id and output_id. Transient outputs expire with the runtime; jobs do not resume after restart.
+Large outputs return temporary file manifests, also on retrieval or in items. Check status and domain results separately: final does not mean success. Before retrying failed or partially delivered work, check effects already applied.</harness-output-guidance><|im_end|>
+<|im_start|>user
+Remember code IMAGE-E2E-17. Generate exactly 1 images by calling generate-image exactly once with prompt 'A red square on white', n 1, width 256, height 256, seed 171, background opaque, include_image_in_result true, preview_scale 0.5. Wait for the generation to complete. After success reply exactly IMAGE-E2E-17 and no other text. Do not describe the image or repeat its metadata.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="generate-image">
+<｜DSML｜parameter name="prompt" string="true">A red square on white</｜DSML｜parameter>
+<｜DSML｜parameter name="images" string="false">null</｜DSML｜parameter><｜DSML｜parameter name="n" string="false">1</｜DSML｜parameter><｜DSML｜parameter name="width" string="false">256</｜DSML｜parameter><｜DSML｜parameter name="height" string="false">256</｜DSML｜parameter><｜DSML｜parameter name="output_format" string="false">"png"</｜DSML｜parameter><｜DSML｜parameter name="background" string="false">"opaque"</｜DSML｜parameter><｜DSML｜parameter name="seed" string="false">171</｜DSML｜parameter><｜DSML｜parameter name="idempotency_key" string="false">null</｜DSML｜parameter><｜DSML｜parameter name="include_image_in_result" string="false">true</｜DSML｜parameter><｜DSML｜parameter name="preview_scale" string="false">0.5</｜DSML｜parameter></｜DSML｜invoke>
+</｜DSML｜tool_calls><|im_end|>
+<|im_start|>user
+<tool_response>
+<header>
+  <name>generate-image</name>
+  <type>Tool</type>
+  <id>0_0_0</id>
+  <current-time>2026-11-02T05:48:20Z</current-time>
+  <response-type>final</response-type>
+  <elapsed>3m 22.3s</elapsed>
+</header>
+<tool-result type="object">
+  <images type="array">
+    <item type="object">
+      <file_id type="string">file-f5525f7b67ebe2596f32ca344305e812</file_id>
+      <seed type="integer">171</seed>
+      <width type="integer">256</width>
+      <height type="integer">256</height>
+      <recipe type="object">
+        <version type="integer">1</version>
+        <rng_version type="integer">1</rng_version>
+        <steps type="integer">8</steps>
+        <guidance type="integer">1</guidance>
+        <reference_resolution type="integer">0</reference_resolution>
+        <background type="string">opaque</background>
+      </recipe>
+      <path type="string">/private/var/folders/43/31sxwsnx5yj0nkg_09p0dyvc0000gn/T/pytest-of-danieleflorio/pytest-30/test_real_image_generation_del0/state/work/.exmekh_lib/generated-media/3234b9acfa63424d9a8683fad08be514/0.png</path>
+    </item>
+  </images>
+  <ds4 type="object">
+    <version type="integer">1</version>
+    <request_id type="string">req-b75d9386015a69f903af5daad41b8187</request_id>
+    <revision type="string">fc13ba1986fcb905854dc8de2f52eee395f49b5b</revision>
+    <profile type="string">bf16-native-v1</profile>
+    <plan type="object">
+      <variant type="integer">6</variant>
+      <victims type="integer">0</victims>
+    </plan>
+    <reclaimed_device_bytes type="integer">0</reclaimed_device_bytes>
+    <cache_hits type="integer">0</cache_hits>
+    <total_seconds type="number">202.253382</total_seconds>
+    <usage type="object">
+      <processed_tokens type="integer">0</processed_tokens>
+      <image_soft_tokens type="integer">0</image_soft_tokens>
+      <video_soft_tokens type="integer">0</video_soft_tokens>
+      <audio_soft_tokens type="integer">0</audio_soft_tokens>
+    </usage>
+    <transfers type="object">
+      <native_h2d_bytes type="integer">108047904920</native_h2d_bytes>
+      <native_d2h_bytes type="integer">630784</native_d2h_bytes>
+    </transfers>
+    <load_seconds type="array">
+      <item type="number">0.0</item>
+      <item type="number">0.0</item>
+      <item type="number">0.0</item>
+    </load_seconds>
+    <phase_seconds type="array">
+      <item type="number">0.0</item>
+      <item type="number">12.425735</item>
+      <item type="number">132.470254</item>
+      <item type="number">57.346115</item>
+    </phase_seconds>
+  </ds4>
+</tool-result>
+</tool_response><|im_end|>
+<|im_start|>user
+These images are previews from the completed generate-image tool call. The original PNGs, file IDs, seeds and recipe are in its tool result. Continue the current request using that completed result.DS4_IMAGE_ef16adfba8aab70238ba2cc3<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=1024 ctx_room=5081 ---
+
+IMAGE-E2E-17
+
+--- parsed message ---
+finish: stop
+generated_tokens: 7
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 133.124
+
+content:
+IMAGE-E2E-17
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=3111 response_prefill=9 target=3120 ---
+
+
+===== request 3 2026-11-02 05:51:01 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 1
+tools: 1
+think_mode: none
+prompt_tokens: 3145
+effective_prompt_tokens: 3145
+cached_tokens: 0
+max_tokens: 1024
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 3120
+prompt_tokens: 3145
+live_prompt_common: 3038
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=1 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 3038
+token_window: [3030..3047)
+   3030 ==          live 279 " the" | prompt 279 " the"
+   3031 ==          live 1428 " current" | prompt 1428 " current"
+   3032 ==          live 1622 " request" | prompt 1622 " request"
+   3033 ==          live 1608 " using" | prompt 1608 " using"
+   3034 ==          live 421 " that" | prompt 421 " that"
+   3035 ==          live 7888 " completed" | prompt 7888 " completed"
+   3036 ==          live 1067 " result" | prompt 1067 " result"
+   3037 ==          live 13 "." | prompt 13 "."
+   3038 !=          live 248056 "<|image_pad|>" | prompt 248053 "<|vision_start|>"
+   3039 ==          live 248056 "<|image_pad|>" | prompt 248056 "<|image_pad|>"
+   3040 ==          live 248056 "<|image_pad|>" | prompt 248056 "<|image_pad|>"
+   3041 ==          live 248056 "<|image_pad|>" | prompt 248056 "<|image_pad|>"
+   3042 ==          live 248056 "<|image_pad|>" | prompt 248056 "<|image_pad|>"
+   3043 ==          live 248056 "<|image_pad|>" | prompt 248056 "<|image_pad|>"
+   3044 ==          live 248056 "<|image_pad|>" | prompt 248056 "<|image_pad|>"
+   3045 ==          live 248056 "<|image_pad|>" | prompt 248056 "<|image_pad|>"
+   3046 ==          live 248056 "<|image_pad|>" | prompt 248056 "<|image_pad|>"
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":true,"input":[{"role":"system","content":"Follow the user's exact generate-image arguments. Call generate-image once per requested generation; wait for its completion, do not regenerate. After success, answer the user directly with the remembered code. When asked to recall a code, do not generate an image.\n\n\n<harness-output-guidance>\nHere, open a skill with a tool call using its exact name; reading a file does not open it. Skill-only tools require an open skill exposing them; after exit, only the restored caller's tools are allowed.\nFinish the scoped work, then call the configured exit tool to close one level. At root, answer the user. Exit replaces the inner transcript with the returned result: carry outcome, completed actions, essential facts, references and next step in text. Reopening starts a new invocation; reuse completed work instead of repeating it.\nPlan for the next consumer: promote saved output IDs in items only if the caller needs their full details immediately. If concise text suffices, use items=[]. If another skill will use the details, return their ID/path and purpose in text, use items=[], and retrieve them there. \nTools exposing execution_mode accept 'wait' (default) or 'background' (return immediately). wait_seconds defaults to 60, >0 and <=300; null uses defaults. Wait expiry or user steering leaves work running. Skill navigation and control/read tools stay synchronous. \nKeep running work's original tool_call_id and output_id. Transient outputs expire with the runtime; jobs do not resume after restart.\nLarge outputs return temporary file manifests, also on retrieval or in items. Check status and domain results separately: final does not mean success. Before retrying failed or partially delivered work, check effects already applied.</harness-output-guidance>"},{"role":"user","content":"Remember code IMAGE-E2E-17. Generate exactly 1 images by calling generate-image exactly once with prompt 'A red square on white', n 1, width 256, height 256, seed 171, background opaque, include_image_in_result true, preview_scale 0.5. Wait for the generation to complete. After success reply exactly IMAGE-E2E-17 and no other text. Do not describe the image or repeat its metadata."},{"role":"assistant","content":""},{"type":"function_call","call_id":"call_e0272a2fd0a8862c8d2c1e1cf1e51ab5","name":"generate-image","arguments":"{\"prompt\":\"A red square on white\",\"images\":null,\"n\":1,\"width\":256,\"height\":256,\"output_format\":\"png\",\"background\":\"opaque\",\"seed\":171,\"idempotency_key\":null,\"include_image_in_result\":true,\"preview_scale\":0.5}"},{"type":"function_call_output","call_id":"call_e0272a2fd0a8862c8d2c1e1cf1e51ab5","output":"<header>\n  <name>generate-image</name>\n  <type>Tool</type>\n  <id>0_0_0</id>\n  <current-time>2026-11-02T05:48:20Z</current-time>\n  <response-type>final</response-type>\n  <elapsed>3m 22.3s</elapsed>\n</header>\n<tool-result type=\"object\">\n  <images type=\"array\">\n    <item type=\"object\">\n      <file_id type=\"string\">file-f5525f7b67ebe2596f32ca344305e812</file_id>\n      <seed type=\"integer\">171</seed>\n      <width type=\"integer\">256</width>\n      <height type=\"integer\">256</height>\n      <recipe type=\"object\">\n        <version type=\"integer\">1</version>\n        <rng_version type=\"integer\">1</rng_version>\n        <steps type=\"integer\">8</steps>\n        <guidance type=\"integer\">1</guidance>\n        <reference_resolution type=\"integer\">0</reference_resolution>\n        <background type=\"string\">opaque</background>\n      </recipe>\n      <path type=\"string\">/private/var/folders/43/31sxwsnx5yj0nkg_09p0dyvc0000gn/T/pytest-of-danieleflorio/pytest-30/test_real_image_generation_del0/state/work/.exmekh_lib/generated-media/3234b9acfa63424d9a8683fad08be514/0.png</path>\n    </item>\n  </images>\n  <ds4 type=\"object\">\n    <version type=\"integer\">1</version>\n    <request_id type=\"string\">req-b75d9386015a69f903af5daad41b8187</request_id>\n    <revision type=\"string\">fc13ba1986fcb905854dc8de2f52eee395f49b5b</revision>\n    <profile type=\"string\">bf16-native-v1</profile>\n    <plan type=\"object\">\n      <variant type=\"integer\">6</variant>\n      <victims type=\"integer\">0</victims>\n    </plan>\n    <reclaimed_device_bytes type=\"integer\">0</reclaimed_device_bytes>\n    <cache_hits type=\"integer\">0</cache_hits>\n    <total_seconds type=\"number\">202.253382</total_seconds>\n    <usage type=\"object\">\n      <processed_tokens type=\"integer\">0</processed_tokens>\n      <image_soft_tokens type=\"integer\">0</image_soft_tokens>\n      <video_soft_tokens type=\"integer\">0</video_soft_tokens>\n      <audio_soft_tokens type=\"integer\">0</audio_soft_tokens>\n    </usage>\n    <transfers type=\"object\">\n      <native_h2d_bytes type=\"integer\">108047904920</native_h2d_bytes>\n      <native_d2h_bytes type=\"integer\">630784</native_d2h_bytes>\n    </transfers>\n    <load_seconds type=\"array\">\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">0.0</item>\n    </load_seconds>\n    <phase_seconds type=\"array\">\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">12.425735</item>\n      <item type=\"number\">132.470254</item>\n      <item type=\"number\">57.346115</item>\n    </phase_seconds>\n  </ds4>\n</tool-result>"},{"role":"user","content":[{"type":"input_text","text":"These images are previews from the completed generate-image tool call. The original PNGs, file IDs, seeds and recipe are in its tool result. Continue the current request using that completed result."},{"type":"input_image","detail":"auto","image_url":"data:image/png;base64,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"}]},{"role":"assistant","content":"IMAGE-E2E-17"},{"role":"user","content":"Without generating another image, reply only with the exact code you remembered earlier."}],"reasoning":{"effort":"none"},"tools":[{"type":"function","name":"generate-image","parameters":{"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]},"strict":true,"description":"Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."},{"type":"function","name":"exit_agent","parameters":{"type":"object","properties":{"text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["text","items"]},"strict":true,"description":"Close the current skill; return text and selected saved outputs to its caller. Available in every skill."}],"agentic":{"agent_context_id":"2858b9df-1676-4856-afcb-1c38dcd4e9a7","allowed_tools":["generate-image"],"allowed_skills":[]},"max_output_tokens":1024,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type":"function","name":"generate-image","parameters":{"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]},"strict":true,"description":"Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."}
+{"type":"function","name":"exit_agent","parameters":{"type":"object","properties":{"text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["text","items"]},"strict":true,"description":"Close the current skill; return text and selected saved outputs to its caller. Available in every skill."}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT>
+
+Follow the user's exact generate-image arguments. Call generate-image once per requested generation; wait for its completion, do not regenerate. After success, answer the user directly with the remembered code. When asked to recall a code, do not generate an image.
+
+
+<harness-output-guidance>
+Here, open a skill with a tool call using its exact name; reading a file does not open it. Skill-only tools require an open skill exposing them; after exit, only the restored caller's tools are allowed.
+Finish the scoped work, then call the configured exit tool to close one level. At root, answer the user. Exit replaces the inner transcript with the returned result: carry outcome, completed actions, essential facts, references and next step in text. Reopening starts a new invocation; reuse completed work instead of repeating it.
+Plan for the next consumer: promote saved output IDs in items only if the caller needs their full details immediately. If concise text suffices, use items=[]. If another skill will use the details, return their ID/path and purpose in text, use items=[], and retrieve them there. 
+Tools exposing execution_mode accept 'wait' (default) or 'background' (return immediately). wait_seconds defaults to 60, >0 and <=300; null uses defaults. Wait expiry or user steering leaves work running. Skill navigation and control/read tools stay synchronous. 
+Keep running work's original tool_call_id and output_id. Transient outputs expire with the runtime; jobs do not resume after restart.
+Large outputs return temporary file manifests, also on retrieval or in items. Check status and domain results separately: final does not mean success. Before retrying failed or partially delivered work, check effects already applied.</harness-output-guidance><|im_end|>
+<|im_start|>user
+Remember code IMAGE-E2E-17. Generate exactly 1 images by calling generate-image exactly once with prompt 'A red square on white', n 1, width 256, height 256, seed 171, background opaque, include_image_in_result true, preview_scale 0.5. Wait for the generation to complete. After success reply exactly IMAGE-E2E-17 and no other text. Do not describe the image or repeat its metadata.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="generate-image">
+<｜DSML｜parameter name="prompt" string="true">A red square on white</｜DSML｜parameter>
+<｜DSML｜parameter name="images" string="false">null</｜DSML｜parameter><｜DSML｜parameter name="n" string="false">1</｜DSML｜parameter><｜DSML｜parameter name="width" string="false">256</｜DSML｜parameter><｜DSML｜parameter name="height" string="false">256</｜DSML｜parameter><｜DSML｜parameter name="output_format" string="false">"png"</｜DSML｜parameter><｜DSML｜parameter name="background" string="false">"opaque"</｜DSML｜parameter><｜DSML｜parameter name="seed" string="false">171</｜DSML｜parameter><｜DSML｜parameter name="idempotency_key" string="false">null</｜DSML｜parameter><｜DSML｜parameter name="include_image_in_result" string="false">true</｜DSML｜parameter><｜DSML｜parameter name="preview_scale" string="false">0.5</｜DSML｜parameter></｜DSML｜invoke>
+</｜DSML｜tool_calls><|im_end|>
+<|im_start|>user
+<tool_response>
+<header>
+  <name>generate-image</name>
+  <type>Tool</type>
+  <id>0_0_0</id>
+  <current-time>2026-11-02T05:48:20Z</current-time>
+  <response-type>final</response-type>
+  <elapsed>3m 22.3s</elapsed>
+</header>
+<tool-result type="object">
+  <images type="array">
+    <item type="object">
+      <file_id type="string">file-f5525f7b67ebe2596f32ca344305e812</file_id>
+      <seed type="integer">171</seed>
+      <width type="integer">256</width>
+      <height type="integer">256</height>
+      <recipe type="object">
+        <version type="integer">1</version>
+        <rng_version type="integer">1</rng_version>
+        <steps type="integer">8</steps>
+        <guidance type="integer">1</guidance>
+        <reference_resolution type="integer">0</reference_resolution>
+        <background type="string">opaque</background>
+      </recipe>
+      <path type="string">/private/var/folders/43/31sxwsnx5yj0nkg_09p0dyvc0000gn/T/pytest-of-danieleflorio/pytest-30/test_real_image_generation_del0/state/work/.exmekh_lib/generated-media/3234b9acfa63424d9a8683fad08be514/0.png</path>
+    </item>
+  </images>
+  <ds4 type="object">
+    <version type="integer">1</version>
+    <request_id type="string">req-b75d9386015a69f903af5daad41b8187</request_id>
+    <revision type="string">fc13ba1986fcb905854dc8de2f52eee395f49b5b</revision>
+    <profile type="string">bf16-native-v1</profile>
+    <plan type="object">
+      <variant type="integer">6</variant>
+      <victims type="integer">0</victims>
+    </plan>
+    <reclaimed_device_bytes type="integer">0</reclaimed_device_bytes>
+    <cache_hits type="integer">0</cache_hits>
+    <total_seconds type="number">202.253382</total_seconds>
+    <usage type="object">
+      <processed_tokens type="integer">0</processed_tokens>
+      <image_soft_tokens type="integer">0</image_soft_tokens>
+      <video_soft_tokens type="integer">0</video_soft_tokens>
+      <audio_soft_tokens type="integer">0</audio_soft_tokens>
+    </usage>
+    <transfers type="object">
+      <native_h2d_bytes type="integer">108047904920</native_h2d_bytes>
+      <native_d2h_bytes type="integer">630784</native_d2h_bytes>
+    </transfers>
+    <load_seconds type="array">
+      <item type="number">0.0</item>
+      <item type="number">0.0</item>
+      <item type="number">0.0</item>
+    </load_seconds>
+    <phase_seconds type="array">
+      <item type="number">0.0</item>
+      <item type="number">12.425735</item>
+      <item type="number">132.470254</item>
+      <item type="number">57.346115</item>
+    </phase_seconds>
+  </ds4>
+</tool-result>
+</tool_response><|im_end|>
+<|im_start|>user
+These images are previews from the completed generate-image tool call. The original PNGs, file IDs, seeds and recipe are in its tool result. Continue the current request using that completed result.DS4_IMAGE_135cc25dbc0062d2e0a414a9<|im_end|>
+<|im_start|>assistant
+IMAGE-E2E-17<|im_end|>
+<|im_start|>user
+Without generating another image, reply only with the exact code you remembered earlier.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=1024 ctx_room=5047 ---
+
+IMAGE-E2E-17
+
+--- parsed message ---
+finish: stop
+generated_tokens: 7
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 344.867
+
+content:
+IMAGE-E2E-17
+
+===== end request 3 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=3145 response_prefill=9 target=3154 ---
+

@@ -1,0 +1,38 @@
+{
+  "inspection": "Native PNGs visually inspected during this session",
+  "images": [
+    {
+      "case": "image-text",
+      "path": "build/metal-qualification/t06-t07-20261031/image-text/native/case-0/result.png",
+      "sha256": "2603de7709eb1d8bf47f9f680defd3376df5ff3b5e6f2ca2bc22068e092196b7",
+      "visual_observation": "Red square on the left and blue circle on the right on a white background; no obvious geometry or decoding artifacts in the inspected native PNG.",
+      "scope": "Small frozen development case, not full quality promotion."
+    },
+    {
+      "case": "image-reference",
+      "path": "build/metal-qualification/t06-t07-20261031/image-reference/native/case-0/result.png",
+      "sha256": "cf5d38515a6a99c9854e643b79ec83a2da94f85d099ec234cd9cb0760ca20cd2",
+      "visual_observation": "Red square on the left and blue circle on the right on a white background; no obvious geometry or decoding artifacts in the inspected native PNG.",
+      "scope": "Small frozen development case, not full quality promotion."
+    },
+    {
+      "case": "image-rgba",
+      "path": "build/metal-qualification/t06-t07-20261031/image-rgba/native/case-0/result.png",
+      "sha256": "70afb22fb2501855db180a2c5270109cf451d81c13c5c1917ac3890ee360be6a",
+      "visual_observation": "Red square on the left and blue circle on the right on a white background; no obvious geometry or decoding artifacts in the inspected native PNG.",
+      "scope": "Small frozen development case, not full quality promotion."
+    },
+    {
+      "case": "flash-browser-image-v3",
+      "path": "build/metal-qualification/t06-t07-20261031/flash-browser-image-v3/client-artifacts/original-0.png",
+      "sha256": "3c6ad6ee70c33fb833076095dd1d53802063a4fe1263b585dd9bf6e236495caa",
+      "visual_observation": "Centered red square on a white/light background; original256px PNG and final UI screenshot visually inspected. One visible preview, recalled IMAGE-E2E-17, no error panel.",
+      "scope": "Functional real browser with one explicit image and SSDprefix reuse after restart; no numerical-quality promotion."
+    }
+  ],
+  "unverified": [
+    "Transparent generation and alpha preservation corpus",
+    "Full prompt/edit quality corpus"
+  ],
+  "overall_quality_gate": "FAIL: encoder conditioning exceeds frozen tolerances even when final pixels pass"
+}

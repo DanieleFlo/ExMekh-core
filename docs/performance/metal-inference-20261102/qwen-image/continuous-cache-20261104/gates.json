@@ -1,0 +1,412 @@
+[
+  {
+    "label": "serial-text-0",
+    "runtime": {
+      "width": 256,
+      "height": 256,
+      "references": 0,
+      "seed": 20261020,
+      "variant": 4,
+      "victims": 0,
+      "total_seconds": 84.638927,
+      "prepare_seconds": 8e-05,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        0.0,
+        13.118087,
+        60.997245,
+        10.523466
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        1,
+        1,
+        1
+      ],
+      "peak_device_owned": 7346366464,
+      "live_device_owned": 0,
+      "pre_run_device_owned": 0,
+      "previous_device_peak": 0,
+      "plan_device": 7784628224,
+      "plan_host": 1904672,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 0,
+      "h2d_bytes": 80566972280,
+      "d2h_bytes": 1376256,
+      "weight_groups": [
+        {
+          "limit": 7577673408,
+          "loads": 36,
+          "hits": 360,
+          "evictions": 17,
+          "payload_h2d": 13892143104
+        },
+        {
+          "limit": 7402455040,
+          "loads": 152,
+          "hits": 2203,
+          "evictions": 135,
+          "payload_h2d": 66139016704
+        },
+        {
+          "limit": 675480832,
+          "loads": 1,
+          "hits": 127,
+          "evictions": 0,
+          "payload_h2d": 518096424
+        }
+      ],
+      "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+      "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+      "reference_metadata": [],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    },
+    "exact_native_files": {
+      "rgba.f32": true,
+      "result.png": true,
+      "conditioning.bf16": true,
+      "latent-6.f32": true,
+      "latent-7.f32": true,
+      "latent-5.f32": true,
+      "latent-4.f32": true,
+      "latent-0.f32": true,
+      "latent-1.f32": true,
+      "latent-3.f32": true,
+      "latent-2.f32": true
+    },
+    "host_min_bytes": 6066307072,
+    "swap_growth_bytes": 0
+  },
+  {
+    "label": "serial-auto-0",
+    "runtime": {
+      "width": 256,
+      "height": 256,
+      "references": 0,
+      "seed": 20261020,
+      "variant": 4,
+      "victims": 0,
+      "total_seconds": 79.499256,
+      "prepare_seconds": 6.4e-05,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        0.0,
+        16.303084,
+        52.68032,
+        10.515744
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        1,
+        1,
+        1
+      ],
+      "peak_device_owned": 10836031488,
+      "live_device_owned": 0,
+      "pre_run_device_owned": 0,
+      "previous_device_peak": 0,
+      "plan_device": 11206524928,
+      "plan_host": 1904672,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 0,
+      "h2d_bytes": 56139317112,
+      "d2h_bytes": 1376256,
+      "weight_groups": [
+        {
+          "limit": 10999570112,
+          "loads": 36,
+          "hits": 360,
+          "evictions": 8,
+          "payload_h2d": 13892143104
+        },
+        {
+          "limit": 10824351744,
+          "loads": 96,
+          "hits": 2259,
+          "evictions": 71,
+          "payload_h2d": 41711361536
+        },
+        {
+          "limit": 675480832,
+          "loads": 1,
+          "hits": 127,
+          "evictions": 0,
+          "payload_h2d": 518096424
+        }
+      ],
+      "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+      "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+      "reference_metadata": [],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    },
+    "exact_native_files": {
+      "rgba.f32": true,
+      "result.png": true,
+      "conditioning.bf16": true,
+      "latent-6.f32": true,
+      "latent-7.f32": true,
+      "latent-5.f32": true,
+      "latent-4.f32": true,
+      "latent-0.f32": true,
+      "latent-1.f32": true,
+      "latent-3.f32": true,
+      "latent-2.f32": true
+    },
+    "host_min_bytes": 4536238080,
+    "swap_growth_bytes": 0
+  },
+  {
+    "label": "release-rgb",
+    "runtime": {
+      "width": 256,
+      "height": 256,
+      "references": 1,
+      "seed": 20261020,
+      "variant": 4,
+      "victims": 0,
+      "total_seconds": 122.188964,
+      "prepare_seconds": 0.000424,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        2.004834,
+        19.864486,
+        89.849037,
+        10.467917
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        1,
+        1,
+        2
+      ],
+      "peak_device_owned": 7537411776,
+      "live_device_owned": 0,
+      "pre_run_device_owned": 0,
+      "previous_device_peak": 0,
+      "plan_device": 7784628224,
+      "plan_host": 13647872,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 0,
+      "h2d_bytes": 84936146392,
+      "d2h_bytes": 2588672,
+      "weight_groups": [
+        {
+          "limit": 7530524416,
+          "loads": 68,
+          "hits": 678,
+          "evictions": 42,
+          "payload_h2d": 15044919776
+        },
+        {
+          "limit": 7180173312,
+          "loads": 159,
+          "hits": 2196,
+          "evictions": 143,
+          "payload_h2d": 69192473600
+        },
+        {
+          "limit": 675480832,
+          "loads": 2,
+          "hits": 224,
+          "evictions": 0,
+          "payload_h2d": 675480808
+        }
+      ],
+      "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+      "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+      "reference_metadata": [
+        {
+          "latent_width": 16,
+          "latent_height": 16,
+          "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+        }
+      ],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    },
+    "exact_native_files": {
+      "rgba.f32": true,
+      "result.png": true,
+      "conditioning.bf16": true,
+      "latent-6.f32": true,
+      "latent-7.f32": true,
+      "latent-5.f32": true,
+      "latent-4.f32": true,
+      "latent-0.f32": true,
+      "latent-1.f32": true,
+      "latent-3.f32": true,
+      "latent-2.f32": true,
+      "reference-0.bf16": true
+    },
+    "host_min_bytes": 5165514752,
+    "swap_growth_bytes": 0
+  },
+  {
+    "label": "release-rgba",
+    "runtime": {
+      "width": 256,
+      "height": 256,
+      "references": 1,
+      "seed": 20261020,
+      "variant": 4,
+      "victims": 0,
+      "total_seconds": 107.344963,
+      "prepare_seconds": 0.000672,
+      "load_seconds": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "phase_seconds": [
+        2.005764,
+        18.012771,
+        76.86658,
+        10.459109
+      ],
+      "loads": [
+        0,
+        0,
+        0
+      ],
+      "releases": [
+        1,
+        1,
+        2
+      ],
+      "peak_device_owned": 7537411776,
+      "live_device_owned": 0,
+      "pre_run_device_owned": 0,
+      "previous_device_peak": 0,
+      "plan_device": 7784628224,
+      "plan_host": 13647872,
+      "peak_bound_checked": true,
+      "recipe_version": 1,
+      "rng_version": 0,
+      "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+      "reference_resolution": 0,
+      "h2d_bytes": 84936146392,
+      "d2h_bytes": 2588672,
+      "weight_groups": [
+        {
+          "limit": 7530524416,
+          "loads": 68,
+          "hits": 678,
+          "evictions": 42,
+          "payload_h2d": 15044919776
+        },
+        {
+          "limit": 7180173312,
+          "loads": 159,
+          "hits": 2196,
+          "evictions": 143,
+          "payload_h2d": 69192473600
+        },
+        {
+          "limit": 675480832,
+          "loads": 2,
+          "hits": 224,
+          "evictions": 0,
+          "payload_h2d": 675480808
+        }
+      ],
+      "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+      "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+      "reference_metadata": [
+        {
+          "latent_width": 16,
+          "latent_height": 16,
+          "sha256": "b47943f25b685bc1f38b785e8fa29c7bed1108561e5af80e017fcf503eecc066"
+        }
+      ],
+      "sigmas": [
+        1,
+        0.978452981,
+        0.954180002,
+        0.926626027,
+        0.89507997,
+        0.845148027,
+        0.704533994,
+        0.414568007,
+        0
+      ]
+    },
+    "exact_native_files": {
+      "rgba.f32": true,
+      "result.png": true,
+      "conditioning.bf16": true,
+      "latent-6.f32": true,
+      "latent-7.f32": true,
+      "latent-5.f32": true,
+      "latent-4.f32": true,
+      "latent-0.f32": true,
+      "latent-1.f32": true,
+      "latent-3.f32": true,
+      "latent-2.f32": true,
+      "reference-0.bf16": true
+    },
+    "host_min_bytes": 5300305920,
+    "swap_growth_bytes": 0
+  }
+]

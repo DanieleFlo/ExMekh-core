@@ -1,0 +1,74 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "tools/diagnose_qwen_image_vision.py",
+    "--model",
+    "build/metal-oracles/models/Qwen/Qwen-Image-2.1-Turbo/text_encoder/model.safetensors",
+    "--oracle",
+    "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps/oracle/reference",
+    "--backend",
+    "metal",
+    "--device",
+    "cpu",
+    "--native",
+    "build/metal-qualification/t06-t07-20261031/product-encoder-reference-final/native"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Independent identical RGB input replay including original production patch, positional embedding and RoPE frequency traces; first full native vision boundary diverges despite exact isolated primitives.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 4.059123041999555,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 20537.098041541,
+      "pressure": 1,
+      "host_available_bytes": 13806436352,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 20538.107677791,
+      "pressure": 1,
+      "host_available_bytes": 13567606784,
+      "swap_bytes": 262144,
+      "footprint_bytes": 160252744,
+      "resident_bytes": 215465984
+    },
+    {
+      "monotonic": 20539.119282791,
+      "pressure": 1,
+      "host_available_bytes": 13357203456,
+      "swap_bytes": 262144,
+      "footprint_bytes": 242156528,
+      "resident_bytes": 259325952
+    },
+    {
+      "monotonic": 20540.129229166,
+      "pressure": 1,
+      "host_available_bytes": 13338902528,
+      "swap_bytes": 262144,
+      "footprint_bytes": 299762720,
+      "resident_bytes": 334348288
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/diagnose_qwen_image_vision.py": "6de6fec216d35bdfea4508e5d27f2bff002cb8d6209ebc56f455bcb19f6014cd"
+  },
+  "log_sha256": "afa62e7ad9e92d0ff5532a02fbe365cd4ecf09a38a00db903992ae2f97f3dc40"
+}

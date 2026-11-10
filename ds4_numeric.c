@@ -98,6 +98,11 @@ ds4_status ds4_numeric_close(ds4_numeric *c) {
   ds4_status s = c->ops->fence(c->state);
   if (s)
     return s;
+  /* A backend may release synchronous staging in prepare_close. Refuse an
+   * in-flight context before consuming any of that still-usable state. */
+  s = ds4_resource_can_release(c->metadata);
+  if (s)
+    return s;
   if (c->ops->prepare_close) {
     s = c->ops->prepare_close(c->state);
     if (s)
@@ -122,6 +127,18 @@ ds4_status ds4_num_buffer_stage(ds4_num_buffer *b, uint64_t off,
   if (!s && c->device) c->h2d_bytes += bytes;
   return s;
 }
+ds4_status ds4_num_buffer_stage_file(ds4_num_buffer *b, uint64_t off,
+                                     int fd, uint64_t file_off, uint64_t bytes) {
+  if (!b || fd < 0 || !bytes || file_off > INT64_MAX || bytes > INT64_MAX - file_off ||
+      off > b->view.count * ds4_num_type_bytes(b->view.type) ||
+      bytes > b->view.count * ds4_num_type_bytes(b->view.type) - off)
+    return DS4_STATUS_INVALID;
+  ds4_numeric *c = b->ctx;
+  if (!c->ops->weight_read) return DS4_STATUS_UNSUPPORTED;
+  ds4_status s = c->ops->weight_read(c->state, (char *)b->view.data + off, fd, file_off, bytes);
+  if (!s && c->device) c->h2d_bytes += bytes;
+  return s;
+}
 ds4_status ds4_numeric_weights_ready(ds4_numeric *c) {
   if (!c) return DS4_STATUS_INVALID;
   return c->ops->weight_ready ? c->ops->weight_ready(c->state) : ds4_numeric_fence(c);
@@ -129,11 +146,22 @@ ds4_status ds4_numeric_weights_ready(ds4_numeric *c) {
 ds4_status ds4_numeric_fence(ds4_numeric *c) {
   return c ? c->ops->fence(c->state) : DS4_STATUS_INVALID;
 }
+ds4_status ds4_numeric_refresh_memory(ds4_numeric *c) {
+  if (!c)
+    return DS4_STATUS_INVALID;
+  return c->ops->refresh_memory ? c->ops->refresh_memory(c->state)
+                                : DS4_STATUS_UNSUPPORTED;
+}
 void ds4_numeric_memory(const ds4_numeric *c, uint64_t *live, uint64_t *peak) {
   if (live)
     *live = c ? c->live_bytes + c->backend_bytes : 0;
   if (peak)
     *peak = c ? c->peak_bytes : 0;
+}
+uint64_t ds4_numeric_linear_workspace(const ds4_numeric *c, uint32_t rows,
+                                       uint32_t in, uint32_t out) {
+  if (!c || !rows || !in || !out) return UINT64_MAX;
+  return c->ops->linear_workspace ? c->ops->linear_workspace(rows, in, out) : 0;
 }
 ds4_resources *ds4_numeric_resources(ds4_numeric *c, uint64_t *owner) {
   if (owner)
@@ -263,7 +291,7 @@ static ds4_status copy_counted(ds4_numeric *c, void *destination,
                                const void *source, uint64_t bytes, int direction) {
   ds4_status s = c->ops->copy(c->state, destination, source, bytes, direction);
   if (!s && c->device) {
-    uint64_t *count = direction ? &c->d2h_bytes : &c->h2d_bytes;
+    uint64_t *count = direction == DS4_NUM_COPY_FROM_DEVICE ? &c->d2h_bytes : &c->h2d_bytes;
     *count = bytes > UINT64_MAX - *count ? UINT64_MAX : *count + bytes;
   }
   return s;
@@ -275,25 +303,25 @@ ds4_status ds4_num_buffer_write(ds4_num_buffer *b, uint64_t off,
   uint64_t capacity = b->view.count * ds4_num_type_bytes(b->view.type);
   if (off > capacity || bytes > capacity - off)
     return DS4_STATUS_INVALID;
-  return copy_counted(b->ctx, (char *)b->view.data + off, source, bytes, 0);
+  return copy_counted(b->ctx, (char *)b->view.data + off, source, bytes, DS4_NUM_COPY_TO_DEVICE);
 }
 ds4_status ds4_num_write(ds4_numeric *c, ds4_num_view v, const void *p,
                          uint64_t bytes) {
   if (!c || !valid(v) || !p || bytes > v.count * ds4_num_type_bytes(v.type))
     return DS4_STATUS_INVALID;
-  return copy_counted(c, v.data, p, bytes, 0);
+  return copy_counted(c, v.data, p, bytes, DS4_NUM_COPY_TO_DEVICE);
 }
 ds4_status ds4_num_read(ds4_numeric *c, ds4_num_view v, void *p,
                         uint64_t bytes) {
   if (!c || !valid(v) || !p || bytes > v.count * ds4_num_type_bytes(v.type))
     return DS4_STATUS_INVALID;
-  return copy_counted(c, p, v.data, bytes, 1);
+  return copy_counted(c, p, v.data, bytes, DS4_NUM_COPY_FROM_DEVICE);
 }
 ds4_status ds4_num_copy(ds4_numeric *c, ds4_num_view y, ds4_num_view x) {
   if (!c || !valid(x) || !fits(y, x.count) || y.type != x.type)
     return DS4_STATUS_INVALID;
   return c->ops->copy(c->state, y.data, x.data,
-                      x.count * ds4_num_type_bytes(x.type), 2);
+                      x.count * ds4_num_type_bytes(x.type), DS4_NUM_COPY_DEVICE);
 }
 ds4_status ds4_num_linear(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
                           ds4_num_view w, ds4_num_view b, uint32_t rows,
@@ -468,14 +496,9 @@ ds4_status ds4_num_conv(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
   ny = (uint64_t)a->batch * a->out_channels;
   nw = (uint64_t)a->out_channels * (a->in_channels / a->groups);
   for (int i = 0; i < 3; i++) {
-    if (!a->input[i] || !a->kernel[i] || !a->stride[i] || !a->dilation[i])
-      return DS4_STATUS_INVALID;
-    uint64_t extent = (uint64_t)a->dilation[i] * (a->kernel[i] - 1) + 1,
-             padded =
-                 (uint64_t)a->input[i] + a->pad_before[i] + a->pad_after[i];
-    if (extent > padded || !product(nx, a->input[i], &nx) ||
+    if (!product(nx, a->input[i], &nx) ||
         !product(nw, a->kernel[i], &nw) ||
-        !product(ny, (padded - extent) / a->stride[i] + 1, &ny))
+        !product(ny, ds4_num_conv_axis_output(a, i), &ny))
       return DS4_STATUS_INVALID;
   }
   if (!fits(x, nx) || !fits(w, nw) || !fits(y, ny) || x.type != w.type ||
@@ -779,22 +802,18 @@ static ds4_status cpu_conv(void *s, ds4_num_view y, ds4_num_view x,
                            ds4_num_view w, ds4_num_view bias,
                            const ds4_num_convolution *a) {
   (void)s;
-  uint32_t o[3];
+  uint64_t o[3];
   uint64_t spatial = 1, ins = 1, ks = 1;
   for (int d = 0; d < 3; d++) {
-    o[d] = (a->input[d] + a->pad_before[d] + a->pad_after[d] -
-            a->dilation[d] * (a->kernel[d] - 1) - 1) /
-               a->stride[d] +
-           1;
+    o[d] = ds4_num_conv_axis_output(a, d);
     spatial *= o[d];
     ins *= a->input[d];
     ks *= a->kernel[d];
   }
-  for (uint64_t i = 0; i < (uint64_t)a->batch * a->out_channels * spatial;
-       i++) {
+  for (uint64_t i = 0; i < y.count; i++) {
     uint32_t oc = (i / spatial) % a->out_channels,
-             batch = i / (spatial * a->out_channels), p[3];
-    uint64_t rem = i % spatial;
+             batch = i / (spatial * a->out_channels);
+    uint64_t p[3], rem = i % spatial;
     for (int d = 2; d >= 0; d--) {
       p[d] = rem % o[d];
       rem /= o[d];
@@ -807,7 +826,7 @@ static ds4_status cpu_conv(void *s, ds4_num_view y, ds4_num_view x,
         int64_t coord[3];
         for (int d = 2; d >= 0; d--) {
           coord[d] = (int64_t)p[d] * a->stride[d] +
-                     (r % a->kernel[d]) * a->dilation[d] - a->pad_before[d];
+                     (int64_t)(r % a->kernel[d]) * a->dilation[d] - a->pad_before[d];
           r /= a->kernel[d];
           if (coord[d] < 0 || coord[d] >= a->input[d])
             ok = false;
@@ -971,10 +990,23 @@ ds4_status ds4_num_softmax(ds4_numeric *c, ds4_num_view y, ds4_num_view x,
   return c->ops->softmax(c->state, y, x, bounds, rows, width, scale);
 }
 static const ds4_numeric_ops cpu_ops = {
-    cpu_alloc,        cpu_release,    cpu_copy,       cpu_fence,   NULL,
-    cpu_linear,       cpu_norm,       cpu_point,      cpu_rope,    cpu_attend,
-    cpu_conv,         cpu_reorder,    cpu_pool,       cpu_nearest, cpu_softmax,
-    cpu_matmul_batch, cpu_channel_l2, cpu_channel_rms, NULL, NULL, NULL};
+    .allocate = cpu_alloc,
+    .release = cpu_release,
+    .copy = cpu_copy,
+    .fence = cpu_fence,
+    .linear = cpu_linear,
+    .norm = cpu_norm,
+    .point = cpu_point,
+    .rope = cpu_rope,
+    .attend = cpu_attend,
+    .conv = cpu_conv,
+    .reorder = cpu_reorder,
+    .pool = cpu_pool,
+    .nearest = cpu_nearest,
+    .softmax = cpu_softmax,
+    .matmul_batch = cpu_matmul_batch,
+    .channel_l2 = cpu_channel_l2,
+    .channel_rms = cpu_channel_rms};
 ds4_status ds4_numeric_cpu(ds4_numeric **out, ds4_resources *r,
                            uint64_t owner) {
   return ds4_numeric_create(out, &cpu_ops, NULL, r, owner, false);

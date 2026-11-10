@@ -1,0 +1,214 @@
+
+===== request 1 2026-10-31 22:25:55 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 411
+effective_prompt_tokens: 411
+cached_tokens: 0
+max_tokens: 256
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 411
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":false,"input":[{"role":"system","content":"Use the requested tool and remember the user's code."},{"role":"user","content":"Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code."}],"reasoning":{"effort":"none"},"tool_choice":"required","tools":[{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}],"max_output_tokens":256,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT>
+
+Use the requested tool and remember the user's code.<|im_end|>
+<|im_start|>user
+Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=256 ctx_room=7781 ---
+
+<｜DSML｜tool_calls><
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+｜DSML｜invoke name="rank_local_results">
+<｜DSML｜parameter name="query" string="true">snow</｜DSML｜parameter>
+<｜DSML｜parameter name="execution_mode" string="true">wait</｜DSML｜parameter>
+<｜DSML｜parameter name="wait_seconds" string="false">60</｜DSML｜parameter></｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 106 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 106
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 302.165
+
+tool_call[0]:
+id: call_11e51dd31efc9bec6b0e48693545b0fd
+name: rank_local_results
+arguments:
+{"query": "snow", "execution_mode": "wait", "wait_seconds": 60}
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=411 response_prefill=108 target=519 ---
+
+
+===== request 2 2026-10-31 22:31:23 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 616
+effective_prompt_tokens: 616
+cached_tokens: 519
+max_tokens: 48
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 519
+prompt_tokens: 616
+live_prompt_common: 519
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=1 disk=0 canonical=0 missing_ids=0
+cache_source: responses-visible
+cached_tokens: 519
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":false,"input":[{"role":"system","content":"Use the requested tool and remember the user's code."},{"role":"user","content":"Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code."},{"type":"function_call","call_id":"call_11e51dd31efc9bec6b0e48693545b0fd","name":"rank_local_results","arguments":"{\"query\":\"snow\",\"execution_mode\":\"wait\",\"wait_seconds\":60.0}"},{"type":"function_call_output","call_id":"call_11e51dd31efc9bec6b0e48693545b0fd","output":"<tool-result type=\"object\">\n  <scores type=\"array\">\n    <item type=\"number\">0.832023024559021</item>\n    <item type=\"number\">0.743124783039093</item>\n  </scores>\n</tool-result>"}],"reasoning":{"effort":"none"},"tools":[{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}],"max_output_tokens":48,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT>
+
+Use the requested tool and remember the user's code.<|im_end|>
+<|im_start|>user
+Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<｜DSML｜tool_calls><｜DSML｜invoke name="rank_local_results">
+<｜DSML｜parameter name="query" string="true">snow</｜DSML｜parameter>
+<｜DSML｜parameter name="execution_mode" string="true">wait</｜DSML｜parameter>
+<｜DSML｜parameter name="wait_seconds" string="false">60</｜DSML｜parameter></｜DSML｜invoke>
+</｜DSML｜tool_calls><|im_end|>
+<|im_start|>user
+<tool_response>
+<tool-result type="object">
+  <scores type="array">
+    <item type="number">0.832023024559021</item>
+    <item type="number">0.743124783039093</item>
+  </scores>
+</tool-result>
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=48 ctx_room=7576 ---
+
+EMBEDDING-E2E-27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 10
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 36.553
+
+content:
+EMBEDDING-E2E-27
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=616 response_prefill=12 target=628 ---
+

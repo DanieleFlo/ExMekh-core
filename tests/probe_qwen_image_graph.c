@@ -1,5 +1,6 @@
 /* Development gate over real frozen weights, one component process at a time.
  */
+#include "suite_accelerator.h"
 #include "ds4_qwen_image_dit.h"
 #include "ds4_qwen_image_graph.h"
 #include "ds4_qwen_image_vae.h"
@@ -494,7 +495,7 @@ int main(int argc, char **argv) {
   ds4_runtime *runtime = NULL;
   ds4_bundle *bundle = NULL;
   CHECK(ds4_resources_create(&resources));
-  CHECK(ds4_numeric_cuda(&num, resources, 900));
+  CHECK(suite_numeric_create(&num, resources, 900));
   CHECK(ds4_runtime_create(&runtime, NULL, NULL));
   CHECK(ds4_bundle_open(&bundle, argv[1], argv[2], resources, 900));
   for (int arg = 4; arg + 1 < argc; arg += 2) {

@@ -1,0 +1,105 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "tools/run_qwen_image_pipeline_oracle.py",
+    "--prepared",
+    "build/metal-oracles",
+    "--cases",
+    "build/metal-qualification/t06-t07-20261031/image-text/cases.json",
+    "--output",
+    "build/metal-qualification/t06-t07-20261031/image-text/oracle",
+    "--stage",
+    "decode",
+    "--device",
+    "mps",
+    "--offload"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 300.0,
+  "reason": "Independent BF16 VAE decoding of the eighth reference latent with bounded module transport",
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 9.127979208000397,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 11319.980702958,
+      "pressure": 1,
+      "host_available_bytes": 15921889280,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 11320.991087083,
+      "pressure": 1,
+      "host_available_bytes": 15782395904,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 172016336,
+      "resident_bytes": 221724672
+    },
+    {
+      "monotonic": 11322.00242175,
+      "pressure": 1,
+      "host_available_bytes": 15614263296,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 276153232,
+      "resident_bytes": 332513280
+    },
+    {
+      "monotonic": 11323.013582583,
+      "pressure": 1,
+      "host_available_bytes": 15584608256,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 283804560,
+      "resident_bytes": 340967424
+    },
+    {
+      "monotonic": 11324.024807958,
+      "pressure": 1,
+      "host_available_bytes": 15554822144,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 350684120,
+      "resident_bytes": 420790272
+    },
+    {
+      "monotonic": 11325.036103791,
+      "pressure": 1,
+      "host_available_bytes": 15355363328,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 500417712,
+      "resident_bytes": 590708736
+    },
+    {
+      "monotonic": 11326.046887875,
+      "pressure": 1,
+      "host_available_bytes": 14216888320,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 1592214800,
+      "resident_bytes": 593920000
+    },
+    {
+      "monotonic": 11327.059987166,
+      "pressure": 1,
+      "host_available_bytes": 14246166528,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 1661469968,
+      "resident_bytes": 594345984
+    },
+    {
+      "monotonic": 11328.074026291,
+      "pressure": 1,
+      "host_available_bytes": 14276689920,
+      "swap_bytes": 1372984442,
+      "footprint_bytes": 1638958352,
+      "resident_bytes": 597884928
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/run_qwen_image_pipeline_oracle.py": "fbc692c318b0da645ad1a8d6a0d17a7e786c31f02d87544d85eaae578602e32b"
+  },
+  "log_sha256": "61b607f208f2e4e73bffe487129c746fdef45003c0d8c02b698064a2700f277f"
+}

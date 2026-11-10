@@ -1,0 +1,121 @@
+{
+  "label": "reviewed-auto-final",
+  "purpose": "Final semantic field refactor gate; not a new paired speed measurement",
+  "change": "Read total weight bytes from resource-group memory.bytes[DEVICE], not load_cost. configure_plan assigns both the identical weights[i] value.",
+  "status": "PASS",
+  "runtime": {
+    "width": 256,
+    "height": 256,
+    "references": 0,
+    "seed": 20261020,
+    "variant": 6,
+    "victims": 0,
+    "total_seconds": 115.457872,
+    "prepare_seconds": 9.2e-05,
+    "load_seconds": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "phase_seconds": [
+      0.0,
+      13.1589,
+      91.838047,
+      10.46078
+    ],
+    "loads": [
+      0,
+      0,
+      0
+    ],
+    "releases": [
+      1,
+      1,
+      1
+    ],
+    "peak_device_owned": 3862652416,
+    "live_device_owned": 0,
+    "pre_run_device_owned": 0,
+    "previous_device_peak": 0,
+    "plan_device": 4399607776,
+    "plan_host": 1904672,
+    "peak_bound_checked": true,
+    "recipe_version": 1,
+    "rng_version": 0,
+    "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+    "reference_resolution": 0,
+    "h2d_bytes": 104994627448,
+    "d2h_bytes": 1376256,
+    "weight_groups": [
+      {
+        "limit": 4192652960,
+        "loads": 36,
+        "hits": 360,
+        "evictions": 26,
+        "payload_h2d": 13892143104
+      },
+      {
+        "limit": 4017434592,
+        "loads": 208,
+        "hits": 2147,
+        "evictions": 199,
+        "payload_h2d": 90566671872
+      },
+      {
+        "limit": 675480832,
+        "loads": 1,
+        "hits": 127,
+        "evictions": 0,
+        "payload_h2d": 518096424
+      }
+    ],
+    "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+    "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+    "reference_metadata": [],
+    "sigmas": [
+      1,
+      0.978452981,
+      0.954180002,
+      0.926626027,
+      0.89507997,
+      0.845148027,
+      0.704533994,
+      0.414568007,
+      0
+    ]
+  },
+  "exact_native_files": {
+    "rgba.f32": true,
+    "result.png": true,
+    "conditioning.bf16": true,
+    "latent-6.f32": true,
+    "latent-7.f32": true,
+    "latent-5.f32": true,
+    "latent-4.f32": true,
+    "latent-0.f32": true,
+    "latent-1.f32": true,
+    "latent-3.f32": true,
+    "latent-2.f32": true
+  },
+  "host_min_bytes": 6468829184,
+  "swap_growth_bytes": 0,
+  "fixture_sha256": "8d1dc46d8718f7423c7ba18ce1c26a704e51fdc9d99a7ac7090ab9dc109d83de",
+  "tolerance_sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87",
+  "artifacts": [
+    {
+      "path": "build/metal-perf-image-20261104/cache/reviewed-auto-final/report.json",
+      "bytes": 28808,
+      "sha256": "7de80c5f96fc3ea628df379855cc09f2bb742b5458240b2dc831315a36534586"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/reviewed-auto-final/verification.json",
+      "bytes": 4454,
+      "sha256": "a1100c1d6bdc2e4deaa14eb3e3c2e0b0127890c228262b2f768bd7e42e47ab14"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/probe-reviewed",
+      "bytes": 585624,
+      "sha256": "0a5965e93fdd05e0e15df12970653dc2b39cd89ce45d732e9055ed058b9c54a0"
+    }
+  ]
+}

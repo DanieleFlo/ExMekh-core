@@ -3,10 +3,15 @@
 /* Private component API. Memory queries never allocate or enter model scopes. */
 #include "ds4_qwen_image_dit.h"
 #include "ds4_qwen_image_vae.h"
+/* Packed FP32 noise and latents are contiguous by image. Trace observes the
+ * first image, while cancellation applies to the whole batch. */
+ds4_status qi_dit_generate_batch(ds4_qwen_image_dit *, ds4_qwen_image_dit_input *,
+                                 const float *noise, uint64_t seed, uint32_t batch,
+                                 const ds4_qwen_image_observer *, ds4_num_buffer **);
 void qi_encoder_memory(ds4_qwen_image_encoder *, bool vision, uint64_t *weights,
                        uint64_t *resident);
 void qi_dit_memory(ds4_qwen_image_dit *, uint32_t total, uint32_t target,
-                   uint32_t prefix, uint32_t query_span,
+                   uint32_t prefix, uint32_t query_span, uint32_t batch,
                    ds4_qwen_image_dit_memory *, uint64_t *resident);
 void qi_vae_memory(ds4_qwen_image_vae *, uint64_t *weights, uint64_t *resident);
 /* Validated reference geometry; transient memory excludes resident weights. */

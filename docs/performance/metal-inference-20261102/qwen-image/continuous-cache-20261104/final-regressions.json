@@ -1,0 +1,98 @@
+{
+  "gemma": {
+    "status": "PASS",
+    "exact": 480,
+    "boundaries": 480,
+    "vectors": {
+      "metrics": {
+        "max_abs": 5.960464477539063e-08,
+        "rmse": 6.472565998493549e-09,
+        "relative_l2": 7.322872469981983e-08,
+        "bit_exact": false,
+        "cosine_min": 0.9999999999999989,
+        "unit_norm_error_max": 6.491406745467998e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    }
+  },
+  "numeric_cpu": {
+    "tests": 46,
+    "skipped": 13,
+    "status": "PASS"
+  },
+  "numeric_metal": {
+    "tests": 46,
+    "skipped": 3,
+    "known_failed_assertions": 2,
+    "failed_method": "test_vision_trigonometric_boundaries",
+    "new_convolution_regression": "PASS"
+  },
+  "baseline_trig": {
+    "name": "baseline-trig",
+    "tests": 1,
+    "failures": [
+      "tests.test_suite_numeric.SuiteNumeric.test_vision_trigonometric_boundaries (op=13)",
+      "tests.test_suite_numeric.SuiteNumeric.test_vision_trigonometric_boundaries (op=14)"
+    ],
+    "errors": []
+  },
+  "host": [
+    "memory policy",
+    "Image cache planner",
+    "numeric lifetime",
+    "resources",
+    "executor",
+    "bundle",
+    "Image input/output/graph",
+    "suite accelerator"
+  ],
+  "logs": [
+    {
+      "path": "build/metal-perf-image-20261104/cache/floor/host-tests.log",
+      "sha256": "0d5513888de6a4cd7e9098abc71b13f9114f2592f0d327a8b92cc992d28c3905"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/floor/release/numeric-full.log",
+      "sha256": "75151d2c478b205562caa3b90c96af01f5f2986f47f97d15ca750344cb3fb04f"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/floor/release/numeric-baseline-trig.log",
+      "sha256": "a7f2059a52b40874cd21f3fab122be21cee49812e6edf8f51c3f2762903a6346"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/floor/release/regressions.json",
+      "sha256": "df19e5a61a97cc79d8e61203bf4069ea115ae497f125e8200464261c1d898162"
+    }
+  ],
+  "final_review": {
+    "status": "PASS",
+    "checks": [
+      "product build",
+      "Image cache planner",
+      "memory policy",
+      "numeric lifetime",
+      "executor",
+      "resources",
+      "independent full Image automatic gate, 11 native artifacts exact"
+    ],
+    "gate": "reviewed-gate.json",
+    "test_log": {
+      "path": "build/metal-perf-image-20261104/cache/floor/final-review-tests.log",
+      "bytes": 4169,
+      "sha256": "d415a8551d45cd252e814841a79fe7f33635882827638ddfa798396184da7851"
+    }
+  }
+}

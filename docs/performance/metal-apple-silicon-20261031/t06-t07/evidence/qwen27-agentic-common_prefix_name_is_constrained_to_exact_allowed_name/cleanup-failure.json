@@ -1,0 +1,8 @@
+{
+  "status": "NOT_VERIFIED",
+  "client_result": "1 passed in238.22s",
+  "cleanup_error": "PermissionError from os.killpg during final server cleanup; full monitor report was lost by the old qualifier.",
+  "scope": "Client assertion success is preserved but does not certify cleanup.",
+  "subsequent_observation": "The next server bound the same localhost port; the completed original server is absent.",
+  "fix": "New qualifier checks finished process groups on the macOS signal race and persists cleanup errors before returning."
+}

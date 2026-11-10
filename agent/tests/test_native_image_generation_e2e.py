@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import time
@@ -31,6 +32,12 @@ pytestmark = [
 async def test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui(
     tmp_path,
 ):
+    image_count = int(os.getenv("DS4_SUITE_E2E_IMAGE_COUNT", "2"))
+    compact_reply = os.getenv("DS4_SUITE_E2E_COMPACT_REPLY", "0") == "1"
+    turn_timeout = 600000 * int(os.getenv("DS4_METAL_TIMEOUT_MULTIPLIER", "1"))
+    assert image_count in (1, 2), (
+        "explicit native development subset supports one or two images"
+    )
     artifacts = Path(os.getenv("DS4_SUITE_E2E_ARTIFACTS", str(tmp_path / "evidence")))
     artifacts.mkdir(parents=True, exist_ok=True)
     with BrowserTestServer(
@@ -47,13 +54,21 @@ async def test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui
                 await page.goto(url, wait_until="networkidle")
                 await send_command(
                     page,
-                    "Remember code IMAGE-E2E-17. Generate exactly two images by calling generate-image exactly once "
-                    "with prompt 'A red square on white', n 2, width 256, height 256, seed 171, "
+                    f"Remember code IMAGE-E2E-17. Generate exactly {image_count} images by calling generate-image exactly once "
+                    f"with prompt 'A red square on white', n {image_count}, width 256, height 256, seed 171, "
                     "background opaque, include_image_in_result true, preview_scale 0.5. "
                     "Wait for the generation to complete. "
-                    "After success finish with IMAGE-E2E-17.",
+                    + (
+                        "After success reply exactly IMAGE-E2E-17 "
+                        "and no other text. Do not describe the image or repeat its metadata."
+                        if compact_reply
+                        else "After success finish with IMAGE-E2E-17."
+                    ),
+                    published_text=f"Remember code IMAGE-E2E-17. Generate exactly {image_count} images",
                 )
-                deadline = time.monotonic() + 120
+                deadline = time.monotonic() + float(
+                    os.getenv("DS4_SUITE_LLM_START_TIMEOUT_SECONDS", "120")
+                )
                 while True:
                     state = await (
                         await page.request.get(
@@ -80,12 +95,12 @@ async def test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui
                     "Draft while generating"
                 )
                 await page.locator("textarea").fill("")
-                await wait_turn_completion(page, timeout=600000)
+                await wait_turn_completion(page, timeout=turn_timeout)
                 await expect(page.locator(".msg-assistant").last).to_contain_text(
                     "IMAGE-E2E-17"
                 )
                 previews = page.locator(".msg-assistant .exmekh-image-thumbnail")
-                await expect(previews).to_have_count(2)
+                await expect(previews).to_have_count(image_count)
                 await page.screenshot(
                     path=str(artifacts / "generated-images.png"), full_page=True
                 )
@@ -98,47 +113,59 @@ async def test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui
                 await page.reload(wait_until="networkidle")
                 await expect(
                     page.locator(".msg-assistant .exmekh-image-thumbnail")
-                ).to_have_count(2)
+                ).to_have_count(image_count)
                 state = await (
                     await page.request.get(f"{url}/test/native-image-stats")
                 ).json()
                 assert len(state["image_requests"]) == 1, state
                 assert state["image_requests"][0]["body"]["size"] == "256x256"
-                assert state["image_requests"][0]["body"]["n"] == 2
+                assert state["image_requests"][0]["body"]["n"] == image_count
                 assert state["image_requests"][0]["idempotency_key"]
                 assert state["image_responses"][0]["status"] == 200
                 outputs = state["image_responses"][0]["images"]
-                assert [row["seed"] for row in outputs] == [171, 172]
+                assert [row["seed"] for row in outputs] == list(
+                    range(171, 171 + image_count)
+                )
                 assert {row["png_sha256"] for row in outputs} == {
                     row["sha256"] for row in state["files"]
                 }
                 assert all(row["size"] == [256, 256] for row in state["files"])
                 assert any(
-                    call["input_image_sizes"] == [[128, 128], [128, 128]]
-                    and call["tool_attachment_counts"] == [2]
+                    call["input_image_sizes"] == [[128, 128]] * image_count
+                    and call["tool_attachment_counts"] == [image_count]
                     for call in state["provider_calls"]
                 ), state
                 await send_command(
                     page,
-                    "Without generating another image, repeat the code you remembered earlier.",
+                    (
+                        "Without generating another image, reply only with the exact code you remembered earlier."
+                        if compact_reply
+                        else "Without generating another image, repeat the code you remembered earlier."
+                    ),
                 )
-                await wait_turn_completion(page, timeout=600000)
+                await wait_turn_completion(page, timeout=turn_timeout)
                 await expect(page.locator(".msg-assistant").last).to_contain_text(
                     "IMAGE-E2E-17"
                 )
                 await expect(
                     page.locator(".msg-assistant .exmekh-image-thumbnail")
-                ).to_have_count(2)
+                ).to_have_count(image_count)
                 state = await (
                     await page.request.get(f"{url}/test/native-image-stats")
                 ).json()
                 assert len(state["image_requests"]) == 1, state
-                assert state["provider_calls"][-1]["input_image_sizes"] == [
-                    [128, 128],
-                    [128, 128],
-                ], state
+                assert (
+                    state["provider_calls"][-1]["input_image_sizes"]
+                    == [[128, 128]] * image_count
+                ), state
                 assert not errors, errors
+                for index, record in enumerate(state["files"]):
+                    original = Path(record["path"]).read_bytes()
+                    assert hashlib.sha256(original).hexdigest() == record["sha256"]
+                    (artifacts / f"original-{index}.png").write_bytes(original)
                 state["ui_heartbeat_seconds"] = heartbeats
+                state["qualified_image_count"] = image_count
+                state["qualified_compact_reply"] = compact_reply
                 (artifacts / "browser.json").write_text(json.dumps(state, indent=2))
             finally:
                 await page.screenshot(
@@ -182,7 +209,9 @@ async def test_real_multiple_image_calls_without_model_previews_can_be_attached(
                     "First call: prompt 'A red square on white', seed=231. Second call: prompt 'A blue square on white', seed=232. "
                     "Do not combine them into one n=2 call. Do not retry a completed generation. After both succeed finish with IMAGE-MULTI-23.",
                 )
-                await wait_turn_completion(page, timeout=600000)
+                await wait_turn_completion(
+                    page, timeout=600000 * int(os.getenv("DS4_METAL_TIMEOUT_MULTIPLIER", "1"))
+                )
                 await expect(page.locator(".msg-assistant").last).to_contain_text(
                     "IMAGE-MULTI-23"
                 )
@@ -225,7 +254,9 @@ async def test_real_multiple_image_calls_without_model_previews_can_be_attached(
                     page,
                     "Without generating another image, repeat the remembered code.",
                 )
-                await wait_turn_completion(page, timeout=600000)
+                await wait_turn_completion(
+                    page, timeout=600000 * int(os.getenv("DS4_METAL_TIMEOUT_MULTIPLIER", "1"))
+                )
                 await expect(page.locator(".msg-assistant").last).to_contain_text(
                     "IMAGE-MULTI-23"
                 )

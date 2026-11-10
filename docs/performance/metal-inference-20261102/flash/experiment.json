@@ -1,0 +1,454 @@
+{
+  "experiment_id": "F-P01",
+  "status": "KEEP",
+  "hypothesis": "Parallel bounded demand reads of already-routed expert slices improve Flash streamed prefill and/or decode without changing arithmetic or GPU storage",
+  "baseline": "B0:1544bb91eafaefefe32862ab408c412f0beed354",
+  "scope": "Flash routed expert loads only; dense and resident paths unchanged",
+  "legacy_kernel_tuning_attempts": 0,
+  "worker_count": 4,
+  "max_outstanding_reads": 16,
+  "cache_bytes": 1073741824,
+  "context_alloc": 8192,
+  "prefill_chunk": 64,
+  "prompt": "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+  "decode": "8 teacher-forced tokens per frontier64/128",
+  "acceptance": {
+    "minimum_measured_pairs": 5,
+    "discarded_warmup_pairs": 1,
+    "order": "alternating A/B",
+    "correctness": "bit-exact logits and serialized state; frozen original gates",
+    "regression_policy": "do not promote globally if decode regression is reproducible; assess phase-specific dispatch with fresh audit"
+  },
+  "source_manifest": "sources.json",
+  "initial_source_manifest": {
+    "head": "1544bb91eafaefefe32862ab408c412f0beed354",
+    "sources": {
+      "ds4_metal.m": "152b7a9a5d15521f6020da22af60e75629fe293a55a5ae41905d829ebcd11b08",
+      "ds4_qwen4_metal_stream.inc": "d4a302e887db766a61c33e8890d7834db74096c74cf64a6a7c05a6454563a8ff",
+      "ds4.c": "1e23dd4c43a8dfa85d9a7367c72c91c0e53b897c1f257776521b047bd3413256",
+      "metal/qwen4.metal": "13224aeae23802defef678877146ae8047a45c2d1be824361efa2f4f5aa25b28",
+      "ds4_bench.c": "a9cbf60f5e0649eb70d2c03893a4629a24eae6796837fd7923b0b268d9df955e",
+      "tests/probe_qwen_metal_stream.c": "f8711a0db081d805a9d91cd3a8a164607fedf24e8cdfc241cb5da2c5f381f8f6"
+    },
+    "model": {
+      "path": "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+      "bytes": 147207127040,
+      "mtime_ns": 1793291708983292732
+    },
+    "raw_output": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102",
+    "policy": {
+      "legacy_kernel_tuning_attempts": 2,
+      "scope": "Flash only; abbreviated tuning only for inherited DS4 Metal code",
+      "numerical_gates": "unchanged"
+    }
+  },
+  "raw_output_directory": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102",
+  "full_model_comparison": {
+    "status": "PASS",
+    "files": [
+      {
+        "name": "continuation.f32",
+        "bytes": 993280,
+        "sha256": "56fe03192e7a0cf54337eee4a3b4575ae518ddceee932ecf14e58ec137ad7563",
+        "bit_exact": true
+      },
+      {
+        "name": "position-02.f32",
+        "bytes": 993280,
+        "sha256": "a0614d3a564c77ed129aa6b02ab5785e77339374a0a81314e5698dd44d7de28b",
+        "bit_exact": true
+      },
+      {
+        "name": "position-03.f32",
+        "bytes": 993280,
+        "sha256": "ea55110f855296147f6c2e8c56b45e013d9726e613b00dceedbd8cb7348736ff",
+        "bit_exact": true
+      },
+      {
+        "name": "position-04.f32",
+        "bytes": 993280,
+        "sha256": "45c93222ae567c2568fe13764f2e944f58654114c2ec311c2d658d6cf428e31a",
+        "bit_exact": true
+      },
+      {
+        "name": "position-05.f32",
+        "bytes": 993280,
+        "sha256": "d2c12c5d65fa41769a5d1e31edf8984cb13cfcefd4fcc703a273a1e45f42a26c",
+        "bit_exact": true
+      },
+      {
+        "name": "position-06.f32",
+        "bytes": 993280,
+        "sha256": "8cda25788c49bcd410e027013f979f2da62187a76f31b4f948ca008994424e45",
+        "bit_exact": true
+      },
+      {
+        "name": "position-07.f32",
+        "bytes": 993280,
+        "sha256": "fa2d1985b22d2797240710d34326ce0ed87844b4f65091551947b5f5540d3ccb",
+        "bit_exact": true
+      },
+      {
+        "name": "position-08.f32",
+        "bytes": 993280,
+        "sha256": "28c057ea01be2f073078456e2be709430ad6d56bd46337593d13cb5a92e48222",
+        "bit_exact": true
+      },
+      {
+        "name": "prefill.f32",
+        "bytes": 993280,
+        "sha256": "fdd1d899b144ffc0fc10d0d8050ba1888f8fde929c32896d9f7e93a9677f145e",
+        "bit_exact": true
+      }
+    ],
+    "prefill_state_bytes": 120132376,
+    "prefill_state_sha256": "3402b5c030303937e7a665ddef6b98059a55009afe729690394218a994385baf",
+    "state_bit_exact": true,
+    "ssd_read_bytes_each": 48919904256
+  },
+  "profile": {
+    "diagnostic_only": true,
+    "stages": [
+      {
+        "phase": "prefill",
+        "wall_ms": 6396.29999999702,
+        "gpu_span_ms": 870.9,
+        "command_buffers": 101
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 1192.16,
+        "gpu_span_ms": 113.4,
+        "command_buffers": 98
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 953.429,
+        "gpu_span_ms": 110.1,
+        "command_buffers": 98
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 997.966,
+        "gpu_span_ms": 114.6,
+        "command_buffers": 98
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 1008.319,
+        "gpu_span_ms": 110.6,
+        "command_buffers": 98
+      }
+    ],
+    "encoder_groups_top_us": [
+      [
+        "kernel_qwen4_moe_mid",
+        637480.6800000002
+      ],
+      [
+        "kernel_qwen4_moe_down",
+        274994.42
+      ],
+      [
+        "kernel_mul_mv_q8_0_f32",
+        152252.36000000004
+      ],
+      [
+        "kernel_mul_mm_q8_0_f32_nax_direct_rhs_n64",
+        44343.41999999999
+      ],
+      [
+        "kernel_qwen4_dense_mm",
+        30215.570000000007
+      ],
+      [
+        "kernel_qwen4_hc_gate_mix_f16_pf",
+        27370.489999999983
+      ],
+      [
+        "kernel_mul_mv_f16_f32_4",
+        24806.790000000005
+      ],
+      [
+        "kernel_qwen4_hc_norm_f16",
+        16527.54
+      ],
+      [
+        "kernel_qwen4_gdn_scan_r4",
+        12397.209999999994
+      ],
+      [
+        "kernel_mul_mv_f32_f32_4",
+        9736.189999999997
+      ]
+    ]
+  },
+  "environment": {
+    "sw_vers": {
+      "returncode": 0,
+      "stdout": "ProductName:\t\tmacOS\nProductVersion:\t\t26.6.2\nBuildVersion:\t\t25G83",
+      "stderr": ""
+    },
+    "sysctl -n hw.model hw.memsize": {
+      "returncode": 0,
+      "stdout": "Mac17,9\n25769803776",
+      "stderr": ""
+    },
+    "xcrun --show-sdk-version": {
+      "returncode": 0,
+      "stdout": "26.5",
+      "stderr": ""
+    },
+    "clang --version": {
+      "returncode": 0,
+      "stdout": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin25.6.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin",
+      "stderr": ""
+    }
+  },
+  "profile_after": {
+    "diagnostic_only": true,
+    "stages": [
+      {
+        "phase": "prefill",
+        "wall_ms": 3320.2000000029802,
+        "gpu_span_ms": 597.4,
+        "command_buffers": 101
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 1050.726,
+        "gpu_span_ms": 117.7,
+        "command_buffers": 98
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 939.212,
+        "gpu_span_ms": 120.0,
+        "command_buffers": 98
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 1021.773,
+        "gpu_span_ms": 137.1,
+        "command_buffers": 98
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 961.921,
+        "gpu_span_ms": 130.8,
+        "command_buffers": 98
+      }
+    ]
+  },
+  "post_implementation_review": {
+    "S1": "Source-specific audit recorded in README before implementation",
+    "S2": "Rechecked demand-read jobs, waiter publication, draining errors and disjoint destinations against Strata and existing C queue; isolated scalar/mixed-quant/split/failure fixtures PASS",
+    "S3": "Rechecked unchanged format/kernel/slot order and fixed4-worker transport; direction samples then predefined warmup+5 alternating pairs, no additional tuning or imports",
+    "S4": "Integrated owner close/park/release/reopen and resident path;9 full-vocabulary outputs/state exact, default2GiB profile exact and MTP2replays max logit delta0"
+  },
+  "gates": {
+    "candidate-stream-primitives": {
+      "status": "PASS",
+      "command": [
+        "tests/test_qwen4_kernels"
+      ],
+      "elapsed_seconds": 1.0540256250023958,
+      "executables_sha256": {
+        "tests/test_qwen4_kernels": "4f757613d9eaf60b39c4f1f258361272015f0a08e84376247f3bf894d9bc72d3"
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    "candidate-graph": {
+      "status": "PASS",
+      "command": [
+        "tests/test_flash_metal_stream_graph"
+      ],
+      "elapsed_seconds": 1.033282333999523,
+      "executables_sha256": {
+        "tests/test_flash_metal_stream_graph": "e4b0a5e977eb63c35a68e537c9a083c5b4c78d4b82442f37635e9b2fbb9c6f65"
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    "baseline-full-model": {
+      "status": "PASS",
+      "command": [
+        "build/metal-perf-flash-20261102/probe-baseline-1g",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-perf-flash-20261102/baseline-full-logits"
+      ],
+      "elapsed_seconds": 14.207472500005679,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/probe-baseline-1g": "d484f1393d4419d99d7e091651540a3092695cbe8be36b016955f73fc4044de3"
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    "candidate-full-model": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-perf-flash-20261102/candidate-full-logits"
+      ],
+      "elapsed_seconds": 12.182236375003413,
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "90da6cfc397417318f5e84376c203a55e7110ef5c23cc819c55591b5b71223a9"
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    "resident-decode-fusions": {
+      "status": "PASS",
+      "command": [
+        "tests/test_qwen4_kernels"
+      ],
+      "elapsed_seconds": 1.043220207997365,
+      "executables_sha256": {
+        "tests/test_qwen4_kernels": "4f757613d9eaf60b39c4f1f258361272015f0a08e84376247f3bf894d9bc72d3"
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    "flash-lifecycle": {
+      "status": "PASS",
+      "command": [
+        "tests/test_qwen_metal_lifecycle",
+        "flash"
+      ],
+      "elapsed_seconds": 2.056884165998781,
+      "executables_sha256": {
+        "tests/test_qwen_metal_lifecycle": "79ba49d76d99410308bb454ea8101fbf063f130ab8fc52bdabc7c1b9f6d6c2e1"
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    "candidate-default-2g": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-perf-flash-20261102/default-2g-logits"
+      ],
+      "elapsed_seconds": 17.275967875000788,
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "90da6cfc397417318f5e84376c203a55e7110ef5c23cc819c55591b5b71223a9"
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    "candidate-mtp": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-perf-flash-20261102/mtp-logits"
+      ],
+      "elapsed_seconds": 30.416428583004745,
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "90da6cfc397417318f5e84376c203a55e7110ef5c23cc819c55591b5b71223a9"
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null
+    },
+    "prefill512": {
+      "status": "PASS",
+      "full_vocabulary_bit_exact": true,
+      "performance": "single pair,directional only"
+    }
+  },
+  "host_tests": {
+    "read_queue": "PASS",
+    "qualification_arguments": "25 PASS outside sandbox; initial sandbox run24 PASS+1 socket-bind PermissionError; no kernel failure",
+    "build": "make -j2 all ds4-server-suite tests/test_qwen_metal_lifecycle PASS;2 pre-existing unused-parameter warnings in included ds4.c",
+    "initial_probe_build": "missing errno.h diagnosed and included; subsequent builds PASS"
+  },
+  "candidate_sources_sha256": {
+    "ds4_qwen4_metal_stream.inc": "434db1b8c6872c460c3023fe997ec88c9aea3607979cdf173702bee9519c37d6",
+    "Makefile": "a545ec0ac7190bbc401687e6a33447fc5d0772582e93676e646048ca049066c6",
+    "tests/test_qwen4_kernels.c": "aa574e0fec538ac15ec14f1d70d2d3b1f44392d85eefa054750797e877353583",
+    "tests/probe_qwen_metal_stream.c": "59162d9e42dfeca030ee2cbca1af5e258a21007311e7b719a98ad206b0f62a3c"
+  },
+  "scope_limits": [
+    "M5 Pro only",
+    "Measured performance:1GiB cache,allocated8192,occupied64/128,increment64,8 teacher-forced decode tokens",
+    "Full-model correctness includes original2GiB target profile and1GiB MTP; no changed numerical criteria",
+    "No performance promotion for first-token latency: baseline CV>5%; no HTTP TTFT measurement",
+    "No new CUDA,ROCm,distributed,27B,image/embedding or near8k performance qualification",
+    "One new streaming candidate;0 inherited-kernel tuning attempts because host waits dominate",
+    "Throughput CSV rounded to2decimals; intervals are approximate"
+  ],
+  "promotion_scope": "LOCAL_PASS: Flash Next Q2 streamed,M5 Pro,1GiB cache,allocated8192,occupied64/128,8teacher-forced tokens; other modes correctness only",
+  "measurements": "measurements.json",
+  "additional_prefill512": [
+    {
+      "variant": "baseline",
+      "status": "PASS",
+      "rows": [
+        {
+          "ctx_tokens": "512",
+          "prefill_tokens": "512",
+          "prefill_tps": "9.14",
+          "gen_tokens": "0",
+          "gen_tps": "0.00",
+          "gen_first_ms": "0.000",
+          "gen_steady_tokens": "0",
+          "gen_steady_tps": "0.00",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "variant": "parallel",
+      "status": "PASS",
+      "rows": [
+        {
+          "ctx_tokens": "512",
+          "prefill_tokens": "512",
+          "prefill_tps": "16.92",
+          "gen_tokens": "0",
+          "gen_tps": "0.00",
+          "gen_first_ms": "0.000",
+          "gen_steady_tokens": "0",
+          "gen_steady_tps": "0.00",
+          "kvcache_bytes": "0"
+        }
+      ]
+    }
+  ],
+  "additional_prefill512_full_vocabulary_bit_exact": true,
+  "reproduction_scripts": {
+    "run-first-candidate.py": {
+      "local_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/run-first-candidate.py",
+      "sha256": "eade0bd59e33d1cebc12016985b4f4e3d949cf139936089f6d27628430ec1dc7"
+    },
+    "run-paired.py": {
+      "local_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/run-paired.py",
+      "sha256": "01f7401a1243b2d83761a716552df5b111d9c8096182b0b80dc60b7b01d2cfff"
+    },
+    "run-final-gates.py": {
+      "local_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/run-final-gates.py",
+      "sha256": "24488be4aa73a991e690eb2ec32993abdbb513ca3c7fa7875d328b7c9888d95c"
+    },
+    "run-prefill512.py": {
+      "local_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/run-prefill512.py",
+      "sha256": "c445a936a867ec68f8067cf4238e1ed05690a260cfa1e270a32e9c58a13281c1"
+    }
+  },
+  "frozen_binaries": {
+    "ds4-bench-baseline": "2e82fc985afe20076ce5dc28b8073d9dae5771864f9f2f81f2b2f2dae9b0aafb",
+    "ds4-bench-parallel": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378",
+    "probe-baseline-1g": "d484f1393d4419d99d7e091651540a3092695cbe8be36b016955f73fc4044de3"
+  },
+  "closed_cycle": "One Flash transport candidate accepted; inherited kernel tuning deferred by measured bottleneck; final profile still host-dominated",
+  "model_identity": {
+    "path": "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+    "bytes": 147207127040,
+    "mtime_ns": 1793291708983292732,
+    "unchanged_size_mtime_after_campaign": true,
+    "content_sha256_recomputed": false,
+    "prior_inventory": "docs/performance/metal-apple-silicon-20261031/t06-t07/evidence/Qwen3.8-Flash-Next-Q2-inventory.json"
+  },
+  "prompt_sha256": "efae39172d088e3b8da70f408e53eeebe0f5b17fa407a440ed969cd85e4784dd"
+}

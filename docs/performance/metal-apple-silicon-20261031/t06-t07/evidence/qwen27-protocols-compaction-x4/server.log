@@ -1,0 +1,188 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 1.00 GiB (raw 1.00 + compressed 0.00) + buffers 0.17 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 3.17 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=0 backend=metal
+1101 10:15:06 ds4-server: loaded model Qwen3.8-27B-UD-Q4_K_S.gguf
+1101 10:15:06 ds4-server: context buffers 1199.24 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=0)
+1101 10:15:19 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-protocols-compaction-x4/kv (budget=8192 MiB, cross-quant=reject, min=1, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1101 10:15:19 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-protocols-compaction-x4/kv/agentic.k2FeND
+1101 10:15:19 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-protocols-compaction-x4/trace.log
+1101 10:15:19 ds4-server: listening on http://127.0.0.1:18080
+1101 10:15:23 ds4-server: chat ctx=0..16:16 prompt start
+1101 10:15:23 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=16 syntax=qwen
+1101 10:15:26 ds4-server: chat ctx=0..16:16 prefill chunk 16/16 (100.0%) chunk=0.00 t/s avg=5.10 t/s 3.136s
+1101 10:15:26 ds4-server: chat ctx=0..16:16 prompt done 3.136s
+1101 10:15:29 ds4-server: phase profile ctx=0..16:16 gen=1 mode=trie wall=2561.573ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.077ms/2 eval=2561.271ms/1 residual=0.225ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 10:15:29 ds4-server: chat ctx=16..17:1 gen=1 decoding chunk=0.39 t/s avg=0.39 t/s 2.562s
+1101 10:15:29 ds4-server: chat ctx=0..16:16 gen=1 finish=stop 5.699s
+1101 10:15:29 ds4-server: live kv cache miss live=17 prompt=16 common=16 vision=match reason=token-mismatch
+1101 10:15:29 ds4-server: chat ctx=0..16:16 prompt start
+1101 10:15:29 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=16 syntax=qwen
+1101 10:15:32 ds4-server: chat ctx=0..16:16 prefill chunk 16/16 (100.0%) chunk=0.00 t/s avg=5.15 t/s 3.108s
+1101 10:15:32 ds4-server: chat ctx=0..16:16 prompt done 3.108s
+1101 10:15:35 ds4-server: phase profile ctx=0..16:16 gen=1 mode=trie wall=2533.672ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.068ms/2 eval=2533.543ms/1 residual=0.061ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 10:15:35 ds4-server: chat ctx=16..17:1 gen=1 decoding chunk=0.39 t/s avg=0.39 t/s 2.534s
+1101 10:15:35 ds4-server: chat ctx=0..16:16 gen=1 finish=stop 5.642s
+1101 10:15:35 ds4-server: live kv cache miss live=17 prompt=16 common=16 vision=match reason=token-mismatch
+1101 10:15:35 ds4-server: chat ctx=0..16:16 prompt start
+1101 10:15:35 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=16 syntax=qwen
+1101 10:15:38 ds4-server: chat ctx=0..16:16 prefill chunk 16/16 (100.0%) chunk=0.00 t/s avg=5.08 t/s 3.149s
+1101 10:15:38 ds4-server: chat ctx=0..16:16 prompt done 3.149s
+1101 10:15:40 ds4-server: phase profile ctx=0..16:16 gen=1 mode=trie wall=2572.984ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.065ms/2 eval=2572.843ms/1 residual=0.076ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 10:15:40 ds4-server: chat ctx=16..17:1 gen=1 decoding chunk=0.39 t/s avg=0.39 t/s 2.573s
+1101 10:15:40 ds4-server: chat ctx=0..16:16 gen=1 finish=stop 5.722s
+1101 10:15:40 ds4-server: live kv cache miss live=17 prompt=16 common=16 vision=match reason=token-mismatch
+1101 10:15:40 ds4-server: chat ctx=0..16:16 prompt start
+1101 10:15:40 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=16 syntax=qwen
+1101 10:15:43 ds4-server: chat ctx=0..16:16 prefill chunk 16/16 (100.0%) chunk=0.00 t/s avg=5.08 t/s 3.149s
+1101 10:15:43 ds4-server: chat ctx=0..16:16 prompt done 3.149s
+1101 10:15:46 ds4-server: phase profile ctx=0..16:16 gen=1 mode=trie wall=2573.911ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.066ms/2 eval=2573.549ms/1 residual=0.296ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 10:15:46 ds4-server: chat ctx=16..17:1 gen=1 decoding chunk=0.39 t/s avg=0.39 t/s 2.574s
+1101 10:15:46 ds4-server: chat ctx=0..16:16 gen=1 finish=stop 5.723s
+1101 10:15:46 ds4-server: live kv cache miss RESPPROTO live=17 prompt=23 common=3 vision=match reason=token-mismatch
+1101 10:15:46 ds4-server: chat ctx=0..23:23 RESPPROTO prompt start
+1101 10:15:46 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=23 syntax=qwen
+1101 10:15:50 ds4-server: chat ctx=0..23:23 RESPPROTO prefill chunk 23/23 (100.0%) chunk=0.00 t/s avg=6.41 t/s 3.588s
+1101 10:15:50 ds4-server: chat ctx=0..23:23 RESPPROTO prompt done 3.588s
+1101 10:15:50 ds4-server: response frontier captured tokens=23 bytes=151.50 MiB location=vram 22.874ms
+1101 10:15:57 ds4-server: phase profile ctx=0..23:23 gen=3 mode=trie wall=7674.133ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.136ms/4 eval=7673.810ms/3 residual=0.187ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 10:15:57 ds4-server: chat ctx=23..26:3 gen=3 RESPPROTO decoding chunk=0.39 t/s avg=0.39 t/s 7.674s
+1101 10:15:57 ds4-server: chat ctx=0..23:23 gen=3 RESPPROTO finish=stop 11.286s
+1101 10:16:00 ds4-server: post-response checkpoint rebuilt source=memory-request cached=23 response_prefill=5 target=28 location=vram 2708.765ms
+1101 10:16:00 ds4-server: live kv cache miss RESPPROTO live=28 prompt=42 common=19 vision=match reason=token-mismatch
+1101 10:16:00 ds4-server: chat ctx=0..42:42 RESPPROTO prompt start
+1101 10:16:00 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=42 syntax=qwen
+1101 10:16:05 ds4-server: chat ctx=0..42:42 RESPPROTO prefill chunk 42/42 (100.0%) chunk=0.00 t/s avg=8.80 t/s 4.774s
+1101 10:16:05 ds4-server: chat ctx=0..42:42 RESPPROTO prompt done 4.774s
+1101 10:16:05 ds4-server: response frontier captured tokens=42 bytes=151.50 MiB location=vram 21.535ms
+1101 10:16:13 ds4-server: phase profile ctx=0..42:42 gen=3 mode=trie wall=7682.654ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.148ms/4 eval=7682.376ms/3 residual=0.130ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 10:16:13 ds4-server: chat ctx=42..45:3 gen=3 RESPPROTO decoding chunk=0.39 t/s avg=0.39 t/s 7.683s
+1101 10:16:13 ds4-server: chat ctx=0..42:42 gen=3 RESPPROTO finish=stop 12.479s
+1101 10:16:15 ds4-server: post-response checkpoint rebuilt source=memory-request cached=42 response_prefill=5 target=47 location=vram 2706.291ms
+1101 10:16:15 ds4-server: live kv cache miss live=47 prompt=103 common=3 vision=match reason=token-mismatch
+1101 10:16:15 ds4-server: chat ctx=0..103:103 prompt start
+1101 10:16:15 ds4-server: agent-system boundary system_tokens=0 prompt_tokens=103 syntax=qwen
+1101 10:16:21 ds4-server: chat ctx=0..103:103 prefill chunk 64/103 (62.1%) chunk=0.00 t/s avg=10.57 t/s 6.056s
+1101 10:16:26 ds4-server: chat ctx=0..103:103 prefill chunk 103/103 (100.0%) chunk=8.51 t/s avg=9.68 t/s 10.642s
+1101 10:16:26 ds4-server: chat ctx=0..103:103 prompt done 10.642s
+1101 10:16:29 ds4-server: phase profile ctx=0..103:103 gen=5 mode=trie wall=2723.119ms forced_build=87.483ms/1 forced_sync=2635.599ms/1/5_tok forced_prefix_probe=0.680ms sampling_mask_build=86.803ms oracle_compare=0.000ms/0/0_div constraint_cpu=87.483ms constraint_cpu_exposed=87.483ms constraint_cpu_overlapped=0.000ms filter_setup=86.783ms filter=0.020ms filtered_sample=0.000ms/0 plain_sample=0.000ms/0 eval=0.000ms/0 residual=0.037ms vocab=1241600 filter_calls=1523 accepted=11 finite_allowed=2 piece_bytes=1814 candidate_tokens_tested=11 parser_transition_count=4080 parser_bytes_visited=4080 trie_nodes_visited=1512 subtrees_pruned=1501 trie_leaf_tokens_emitted=11 mask_cache_hit=0 mask_cache_miss=1 grammar_compile_ms=0.005 grammar_jit_ms=0.000 trie_compile_ms=86.783 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=1523 constraint_state_rollback=1523 exhaustive_fallback_steps=0
+1101 10:16:29 ds4-server: chat ctx=103..108:5 gen=5 decoding chunk=1.84 t/s avg=1.84 t/s 2.723s
+1101 10:16:29 ds4-server: chat ctx=0..103:103 gen=5 finish=stop 13.366s
+1101 10:16:29 ds4-server: live kv cache miss RESPPROTO live=108 prompt=123 common=1 vision=match reason=token-mismatch
+1101 10:16:29 ds4-server: chat ctx=0..123:123 RESPPROTO prompt start
+1101 10:16:29 ds4-server: agent-system boundary system_tokens=11 prompt_tokens=123 syntax=qwen
+1101 10:16:32 ds4-server: chat ctx=0..123:123 RESPPROTO prefill chunk 11/123 (8.9%) chunk=0.00 t/s avg=3.88 t/s 2.839s
+1101 10:16:32 ds4-server: kv cache stored tokens=11 trimmed=112 reason=agent-system key=rendered-system size=153.82 MiB save=58.0 ms
+1101 10:16:38 ds4-server: chat ctx=0..123:123 RESPPROTO prefill chunk 75/123 (61.0%) chunk=9.88 t/s avg=8.05 t/s 9.318s
+1101 10:16:43 ds4-server: chat ctx=0..123:123 RESPPROTO prefill chunk 123/123 (100.0%) chunk=9.15 t/s avg=8.45 t/s 14.564s
+1101 10:16:43 ds4-server: chat ctx=0..123:123 RESPPROTO prompt done 14.564s
+1101 10:16:43 ds4-server: response frontier captured tokens=123 bytes=151.50 MiB location=vram 23.210ms
+1101 10:16:46 ds4-server: phase profile ctx=0..123:123 gen=5 mode=trie wall=2644.558ms forced_build=0.630ms/1 forced_sync=2643.897ms/1/5_tok forced_prefix_probe=0.604ms sampling_mask_build=0.026ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.630ms constraint_cpu_exposed=0.630ms constraint_cpu_overlapped=0.000ms filter_setup=0.001ms filter=0.025ms filtered_sample=0.000ms/0 plain_sample=0.000ms/0 eval=0.000ms/0 residual=0.031ms vocab=1241600 filter_calls=1523 accepted=11 finite_allowed=2 piece_bytes=1814 candidate_tokens_tested=11 parser_transition_count=4080 parser_bytes_visited=4080 trie_nodes_visited=1512 subtrees_pruned=1501 trie_leaf_tokens_emitted=11 mask_cache_hit=0 mask_cache_miss=1 grammar_compile_ms=0.005 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=1523 constraint_state_rollback=1523 exhaustive_fallback_steps=0
+1101 10:16:46 ds4-server: chat ctx=123..128:5 gen=5 RESPPROTO decoding chunk=1.89 t/s avg=1.89 t/s 2.645s
+1101 10:16:46 ds4-server: chat ctx=0..123:123 gen=5 RESPPROTO finish=stop 17.235s
+1101 10:16:49 ds4-server: post-response checkpoint rebuilt source=memory-request cached=123 response_prefill=7 target=130 location=vram 2740.845ms
+1101 10:16:49 ds4-server: live kv cache miss RESPPROTO live=130 prompt=787 common=3 vision=match reason=token-mismatch
+1101 10:16:49 ds4-server: chat ctx=0..787:787 RESPPROTO prompt start
+1101 10:16:49 ds4-server: agent-system boundary system_tokens=355 prompt_tokens=787 syntax=qwen
+1101 10:16:55 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 64/787 (8.1%) chunk=0.00 t/s avg=10.40 t/s 6.151s
+1101 10:17:01 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 128/787 (16.3%) chunk=10.41 t/s avg=10.41 t/s 12.297s
+1101 10:17:07 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 192/787 (24.4%) chunk=10.39 t/s avg=10.40 t/s 18.454s
+1101 10:17:13 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 256/787 (32.5%) chunk=10.36 t/s avg=10.39 t/s 24.633s
+1101 10:17:20 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 320/787 (40.7%) chunk=10.36 t/s avg=10.39 t/s 30.809s
+1101 10:17:24 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 355/787 (45.1%) chunk=8.01 t/s avg=10.09 t/s 35.180s
+1101 10:17:24 ds4-server: kv cache stored tokens=355 trimmed=432 reason=agent-system key=rendered-system size=196.83 MiB save=67.7 ms
+1101 10:17:30 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 419/787 (53.2%) chunk=10.36 t/s avg=10.13 t/s 41.356s
+1101 10:17:36 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 483/787 (61.4%) chunk=10.50 t/s avg=10.18 t/s 47.453s
+1101 10:17:42 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 547/787 (69.5%) chunk=10.50 t/s avg=10.21 t/s 53.550s
+1101 10:17:48 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 611/787 (77.6%) chunk=10.47 t/s avg=10.24 t/s 59.665s
+1101 10:17:55 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 675/787 (85.8%) chunk=10.40 t/s avg=10.26 t/s 65.817s
+1101 10:18:01 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 739/787 (93.9%) chunk=10.34 t/s avg=10.26 t/s 72.008s
+1101 10:18:06 ds4-server: chat ctx=0..787:787 RESPPROTO prefill chunk 787/787 (100.0%) chunk=8.97 t/s avg=10.17 t/s 77.358s
+1101 10:18:06 ds4-server: chat ctx=0..787:787 RESPPROTO prompt done 77.358s
+1101 10:18:06 ds4-server: response frontier captured tokens=787 bytes=151.50 MiB location=vram 23.862ms
+1101 10:18:19 ds4-server: phase profile ctx=0..787:787 gen=9 mode=trie wall=13086.674ms forced_build=2.244ms/5 forced_sync=5272.234ms/2/6_tok forced_prefix_probe=1.528ms sampling_mask_build=0.716ms oracle_compare=0.000ms/0/0_div constraint_cpu=2.359ms constraint_cpu_exposed=2.359ms constraint_cpu_overlapped=0.000ms filter_setup=0.001ms filter=0.715ms filtered_sample=0.115ms/3 plain_sample=0.000ms/0 eval=7811.814ms/3 residual=0.267ms vocab=2483200 filter_calls=2949 accepted=43 finite_allowed=25 piece_bytes=3378 candidate_tokens_tested=43 parser_transition_count=12810 parser_bytes_visited=12702 trie_nodes_visited=2906 subtrees_pruned=2863 trie_leaf_tokens_emitted=43 mask_cache_hit=0 mask_cache_miss=5 grammar_compile_ms=0.006 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=2949 constraint_state_rollback=2949 exhaustive_fallback_steps=0
+1101 10:18:19 ds4-server: chat ctx=787..796:9 gen=9 RESPPROTO decoding chunk=0.69 t/s avg=0.69 t/s 13.087s
+1101 10:18:19 ds4-server: chat ctx=0..787:787 gen=9 RESPPROTO finish=stop 90.472s
+1101 10:18:22 ds4-server: post-response checkpoint rebuilt source=memory-request cached=787 response_prefill=11 target=798 location=vram 2922.369ms
+1101 10:18:22 ds4-server: live kv cache miss RESPPROTO live=798 prompt=115 common=3 vision=match reason=token-mismatch
+1101 10:18:22 ds4-server: chat ctx=0..115:115 RESPPROTO prompt start
+1101 10:18:22 ds4-server: agent-system boundary system_tokens=69 prompt_tokens=115 syntax=qwen
+1101 10:18:28 ds4-server: chat ctx=0..115:115 RESPPROTO prefill chunk 64/115 (55.7%) chunk=0.00 t/s avg=10.50 t/s 6.095s
+1101 10:18:31 ds4-server: chat ctx=0..115:115 RESPPROTO prefill chunk 69/115 (60.0%) chunk=1.88 t/s avg=7.88 t/s 8.760s
+1101 10:18:31 ds4-server: kv cache stored tokens=69 trimmed=46 reason=agent-system key=rendered-system size=161.07 MiB save=68.6 ms
+1101 10:18:36 ds4-server: chat ctx=0..115:115 RESPPROTO prefill chunk 115/115 (100.0%) chunk=8.89 t/s avg=8.25 t/s 13.935s
+1101 10:18:36 ds4-server: chat ctx=0..115:115 RESPPROTO prompt done 13.935s
+1101 10:18:36 ds4-server: response frontier captured tokens=115 bytes=151.50 MiB location=vram 23.230ms
+1101 10:19:07 ds4-server: phase profile ctx=0..115:115 gen=12 mode=trie wall=30950.027ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.477ms/13 eval=30948.911ms/12 residual=0.639ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 10:19:07 ds4-server: chat ctx=115..127:12 gen=12 RESPPROTO decoding chunk=0.39 t/s avg=0.39 t/s 30.950s
+1101 10:19:07 ds4-server: chat ctx=0..115:115 gen=12 RESPPROTO finish=stop 44.911s
+1101 10:19:10 ds4-server: post-response checkpoint rebuilt source=memory-request cached=115 response_prefill=14 target=129 location=vram 3024.644ms
+1101 10:19:10 ds4-server: live kv cache miss RESPPROTO live=129 prompt=385 common=3 vision=match reason=token-mismatch
+1101 10:19:10 ds4-server: chat ctx=0..385:385 RESPPROTO prompt start
+1101 10:19:10 ds4-server: agent-system boundary system_tokens=16 prompt_tokens=385 syntax=qwen
+1101 10:19:13 ds4-server: chat ctx=0..385:385 RESPPROTO prefill chunk 16/385 (4.2%) chunk=0.00 t/s avg=5.05 t/s 3.166s
+1101 10:19:13 ds4-server: kv cache stored tokens=16 trimmed=369 reason=agent-system key=rendered-system size=154.45 MiB save=61.7 ms
+1101 10:19:19 ds4-server: chat ctx=0..385:385 RESPPROTO prefill chunk 80/385 (20.8%) chunk=10.46 t/s avg=8.62 t/s 9.285s
+1101 10:19:25 ds4-server: chat ctx=0..385:385 RESPPROTO prefill chunk 144/385 (37.4%) chunk=10.61 t/s avg=9.40 t/s 15.320s
+1101 10:19:32 ds4-server: chat ctx=0..385:385 RESPPROTO prefill chunk 208/385 (54.0%) chunk=10.40 t/s avg=9.69 t/s 21.475s
+1101 10:19:38 ds4-server: chat ctx=0..385:385 RESPPROTO prefill chunk 272/385 (70.6%) chunk=10.31 t/s avg=9.83 t/s 27.684s
+1101 10:19:44 ds4-server: chat ctx=0..385:385 RESPPROTO prefill chunk 336/385 (87.3%) chunk=10.36 t/s avg=9.92 t/s 33.864s
+1101 10:19:49 ds4-server: chat ctx=0..385:385 RESPPROTO prefill chunk 385/385 (100.0%) chunk=9.24 t/s avg=9.83 t/s 39.168s
+1101 10:19:49 ds4-server: chat ctx=0..385:385 RESPPROTO prompt done 39.168s
+1101 10:19:49 ds4-server: response frontier captured tokens=385 bytes=151.50 MiB location=vram 23.407ms
+1101 10:20:00 ds4-server: phase profile ctx=0..385:385 gen=4 mode=trie wall=10283.695ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.196ms/5 eval=10283.094ms/4 residual=0.405ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 10:20:00 ds4-server: chat ctx=385..389:4 gen=4 RESPPROTO decoding chunk=0.39 t/s avg=0.39 t/s 10.284s
+1101 10:20:00 ds4-server: chat ctx=0..385:385 gen=4 RESPPROTO finish=stop 49.478s
+1101 10:20:02 ds4-server: post-response checkpoint rebuilt source=memory-request cached=385 response_prefill=6 target=391 location=vram 2768.367ms
+1101 10:20:02 ds4-server: live kv cache miss RESPPROTO live=391 prompt=634 common=3 vision=match reason=token-mismatch
+1101 10:20:02 ds4-server: kv cache hit text RESPPROTO tokens=617 text=2569 quant=4 key=token-text load=23.5 ms file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-protocols-compaction-x4/kv/699045025f2dbb033e84b89a6f3209f1a819b6ed.kv
+1101 10:20:02 ds4-server: chat ctx=617..634:17 RESPPROTO TOOLS prompt start
+1101 10:20:02 ds4-server: resident system frontier captured tokens=617 bytes=229.57 MiB location=host 18.637ms
+1101 10:20:02 ds4-server: agent-system boundary system_tokens=617 prompt_tokens=634 syntax=qwen
+1101 10:20:06 ds4-server: chat ctx=617..634:17 RESPPROTO TOOLS prefill chunk 17/17 (100.0%) chunk=0.00 t/s avg=5.28 t/s 3.220s
+1101 10:20:06 ds4-server: chat ctx=617..634:17 RESPPROTO TOOLS prompt done 3.220s
+1101 10:20:06 ds4-server: response frontier captured tokens=634 bytes=151.50 MiB location=vram 22.875ms
+1101 10:21:31 ds4-server: phase profile ctx=617..634:17 gen=35 mode=trie wall=84927.794ms forced_build=74.540ms/32 forced_sync=5452.586ms/2/5_tok forced_prefix_probe=74.343ms sampling_mask_build=350.180ms oracle_compare=0.000ms/0/0_div constraint_cpu=425.592ms constraint_cpu_exposed=425.592ms constraint_cpu_overlapped=0.000ms filter_setup=0.004ms filter=350.176ms filtered_sample=1.069ms/30 plain_sample=0.000ms/0 eval=79046.220ms/30 residual=3.396ms vocab=9684480 filter_calls=8197294 accepted=1272 finite_allowed=1249 piece_bytes=60930745 candidate_tokens_tested=8195650 parser_transition_count=148343424 parser_bytes_visited=148343424 trie_nodes_visited=1644 subtrees_pruned=1078 trie_leaf_tokens_emitted=366 mask_cache_hit=0 mask_cache_miss=30 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=8197195 constraint_state_rollback=8197195 exhaustive_fallback_steps=0
+1101 10:21:31 ds4-server: chat ctx=634..669:35 gen=35 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.41 t/s avg=0.41 t/s 84.928s
+1101 10:21:31 SKILL_CHECKPOINT call_id=call_9a91674270a74dbf63fbb1cb2f69299e skill=skill-A sequence=669 checkpoint_tokens=669 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-protocols-compaction-x4/kv/agentic.k2FeND/call_115a696e7f16e4d7ec74ce2f0847b67f.dsk checkpoint_bytes=247542468 checkpoint_stage_ms=64.616 checkpoint_write_ms=244.551 skill_checkpoint_count=1 skill_checkpoint_live_bytes=247542468 skill_checkpoint_peak_bytes=247542468
+1101 10:21:31 ds4-server: tool calls ctx=617..634:17 RESPPROTO n=1 raw_tool_text=1 ids=[call_9a91674270a74dbf63fbb1cb2f69299e] names=[skill-A]
+1101 10:21:31 ds4-server: chat ctx=617..634:17 gen=35 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 88.483s
+1101 10:21:35 ds4-server: post-response checkpoint rebuilt source=memory-request cached=634 response_prefill=37 target=671 location=vram 4527.948ms
+1101 10:21:35 ds4-server: responses live continuation RESPPROTO match=visible-prefix ids=0 cached=671 prompt=692
+1101 10:21:35 ds4-server: chat ctx=671..692:21 RESPPROTO TOOLS prompt start
+1101 10:21:35 ds4-server: agent-system boundary system_tokens=617 prompt_tokens=692 syntax=qwen
+1101 10:21:39 ds4-server: chat ctx=671..692:21 RESPPROTO TOOLS prefill chunk 21/21 (100.0%) chunk=0.00 t/s avg=6.07 t/s 3.458s
+1101 10:21:39 ds4-server: chat ctx=671..692:21 RESPPROTO TOOLS prompt done 3.458s
+1101 10:21:39 ds4-server: response frontier captured tokens=692 bytes=151.50 MiB location=vram 22.553ms
+1101 10:23:02 ds4-server: phase profile ctx=671..692:21 gen=35 mode=trie wall=83441.173ms forced_build=70.301ms/32 forced_sync=5263.239ms/2/5_tok forced_prefix_probe=70.115ms sampling_mask_build=346.604ms oracle_compare=0.000ms/0/0_div constraint_cpu=417.809ms constraint_cpu_exposed=417.809ms constraint_cpu_overlapped=0.000ms filter_setup=0.003ms filter=346.601ms filtered_sample=1.090ms/30 plain_sample=0.000ms/0 eval=77756.989ms/30 residual=3.136ms vocab=9684480 filter_calls=8197294 accepted=1273 finite_allowed=1250 piece_bytes=60930745 candidate_tokens_tested=8195650 parser_transition_count=148343424 parser_bytes_visited=148343424 trie_nodes_visited=1644 subtrees_pruned=1078 trie_leaf_tokens_emitted=366 mask_cache_hit=0 mask_cache_miss=30 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=8197195 constraint_state_rollback=8197195 exhaustive_fallback_steps=0
+1101 10:23:02 ds4-server: chat ctx=692..727:35 gen=35 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.42 t/s avg=0.42 t/s 83.441s
+1101 10:23:03 SKILL_CHECKPOINT call_id=call_02913b9ef02e612be44ded3aa9f60383 skill=skill-B sequence=727 checkpoint_tokens=727 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-protocols-compaction-x4/kv/agentic.k2FeND/call_2924d52cde4dd9549b4e2b02fe0cd1fc.dsk checkpoint_bytes=255144876 checkpoint_stage_ms=80.091 checkpoint_write_ms=250.651 skill_checkpoint_count=2 skill_checkpoint_live_bytes=502687344 skill_checkpoint_peak_bytes=502687344
+1101 10:23:03 ds4-server: tool calls ctx=671..692:21 RESPPROTO n=1 raw_tool_text=1 ids=[call_02913b9ef02e612be44ded3aa9f60383] names=[skill-B]
+1101 10:23:03 ds4-server: chat ctx=671..692:21 gen=35 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 87.256s
+1101 10:23:07 ds4-server: post-response checkpoint rebuilt source=memory-request cached=692 response_prefill=37 target=729 location=vram 4530.090ms
+1101 10:23:07 ds4-server: responses live continuation RESPPROTO match=skill-call-id ids=1 cached=727 prompt=747
+1101 10:23:07 ds4-server: chat ctx=727..747:20 RESPPROTO TOOLS prompt start
+1101 10:23:07 ds4-server: agent-system boundary system_tokens=617 prompt_tokens=747 syntax=qwen
+1101 10:23:11 ds4-server: chat ctx=727..747:20 RESPPROTO TOOLS prefill chunk 20/20 (100.0%) chunk=0.00 t/s avg=5.85 t/s 3.418s
+1101 10:23:11 SKILL_RETURN call_id=call_02913b9ef02e612be44ded3aa9f60383 restored_tokens=727 discarded_child_tokens=2 result_prefill_tokens=20 checkpoint_read_ms=257.233 checkpoint_restore_ms=20.020 checkpoint_deleted=true skill_return_count=1 skill_checkpoint_live_bytes=247542468
+1101 10:23:11 ds4-server: chat ctx=727..747:20 RESPPROTO TOOLS prompt done 3.419s
+1101 10:23:11 ds4-server: response frontier captured tokens=747 bytes=151.50 MiB location=vram 22.579ms
+1101 10:23:16 ds4-server: phase profile ctx=727..747:20 gen=2 mode=trie wall=5092.550ms forced_build=21.242ms/3 forced_sync=0.000ms/0/0_tok forced_prefix_probe=20.291ms sampling_mask_build=0.951ms oracle_compare=0.000ms/0/0_div constraint_cpu=21.352ms constraint_cpu_exposed=21.352ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.951ms filtered_sample=0.110ms/3 plain_sample=0.000ms/0 eval=5071.091ms/2 residual=0.107ms vocab=744960 filter_calls=1797 accepted=744885 finite_allowed=744885 piece_bytes=9618 candidate_tokens_tested=1797 parser_transition_count=13715 parser_bytes_visited=13715 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=3 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=20.283 static_mask_memory_bytes=764588 dynamic_frontier_size=1797 search_static_steps=3 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=1788 constraint_state_rollback=1788 exhaustive_fallback_steps=0
+1101 10:23:16 ds4-server: chat ctx=747..749:2 gen=2 RESPPROTO TOOLS decoding chunk=0.39 t/s avg=0.39 t/s 5.093s
+1101 10:23:16 ds4-server: chat ctx=727..747:20 gen=2 RESPPROTO TOOLS finish=stop 8.535s
+1101 10:23:19 ds4-server: post-response checkpoint rebuilt source=memory-request cached=747 response_prefill=4 target=751 location=vram 2728.323ms
+1101 10:23:19 ds4-server: responses live continuation RESPPROTO match=skill-call-id ids=1 cached=669 prompt=689
+1101 10:23:19 ds4-server: chat ctx=669..689:20 RESPPROTO TOOLS prompt start
+1101 10:23:19 ds4-server: agent-system boundary system_tokens=617 prompt_tokens=689 syntax=qwen
+1101 10:23:22 ds4-server: chat ctx=669..689:20 RESPPROTO TOOLS prefill chunk 20/20 (100.0%) chunk=0.00 t/s avg=5.87 t/s 3.409s
+1101 10:23:22 SKILL_RETURN call_id=call_9a91674270a74dbf63fbb1cb2f69299e restored_tokens=669 discarded_child_tokens=82 result_prefill_tokens=20 checkpoint_read_ms=249.322 checkpoint_restore_ms=18.089 checkpoint_deleted=true skill_return_count=2 skill_checkpoint_live_bytes=0
+1101 10:23:22 ds4-server: chat ctx=669..689:20 RESPPROTO TOOLS prompt done 3.412s
+1101 10:23:22 ds4-server: response frontier captured tokens=689 bytes=151.50 MiB location=vram 23.827ms
+1101 10:23:35 ds4-server: phase profile ctx=669..689:20 gen=5 mode=trie wall=12781.347ms forced_build=2.323ms/6 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.017ms sampling_mask_build=2.306ms oracle_compare=0.000ms/0/0_div constraint_cpu=2.526ms constraint_cpu_exposed=2.526ms constraint_cpu_overlapped=0.000ms filter_setup=-0.000ms filter=2.306ms filtered_sample=0.203ms/6 plain_sample=0.000ms/0 eval=12778.538ms/5 residual=0.283ms vocab=1489920 filter_calls=3594 accepted=1489770 finite_allowed=1489770 piece_bytes=19236 candidate_tokens_tested=3594 parser_transition_count=62594 parser_bytes_visited=62594 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=6 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=3594 search_static_steps=6 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=3576 constraint_state_rollback=3576 exhaustive_fallback_steps=0
+1101 10:23:35 ds4-server: chat ctx=689..694:5 gen=5 RESPPROTO TOOLS decoding chunk=0.39 t/s avg=0.39 t/s 12.781s
+1101 10:23:35 ds4-server: chat ctx=669..689:20 gen=5 RESPPROTO TOOLS finish=stop 16.218s
+1101 10:23:36 ds4-server: shutdown requested, draining requests
+1101 10:23:38 ds4-server: post-response checkpoint rebuilt source=memory-request cached=689 response_prefill=7 target=696 location=vram 2772.084ms

@@ -41,7 +41,7 @@ with OpenAI(base_url="http://localhost:18091/v1", api_key="local", timeout=600) 
         model="google/embeddinggemma-2", input=["ciao", "hello"], dimensions=256
     )
     images = client.images.generate(
-        model="Qwen/Qwen-Image-2.1-Turbo", prompt="Un quadrato rosso",
+        model="Qwen/Qwen-Image-2.1-Turbo", prompt="Un quadrato rosso", n=2,
         size="256x256", extra_headers={"Idempotency-Key": "example-image-1"},
         extra_body={"ds4": {"version": 1, "seed": 17}},
     )
@@ -56,8 +56,12 @@ with OpenAI(base_url="http://localhost:18091/v1", api_key="local", timeout=600) 
 invece `width: ImageDimension` e `height: ImageDimension`, due Literal indipendenti. PNG è l'unico formato output implementato;
 `quality`, `style`, `mask` e campi non mappati producono errore esplicito.
 Larghezza/altezza devono essere multipli di 32 fra 32 e 2048; `n` è fra 1 e 8,
-con al massimo 4.194.304 pixel totali. Client, helper e tool ExMekh usano
-2048×2048 per default; accettano le dimensioni minori richieste esplicitamente.
+con al massimo 4.194.304 pixel totali. Una richiesta `n > 1` usa lo stesso
+prompt e gli stessi riferimenti, con seed consecutivi e PNG restituiti in
+ordine. La pipeline nativa esegue il denoising in gruppi di massimo due
+immagini. I gruppi condividono conditioning e pesi e la dimensione scende
+a uno se il piano a due supera il budget. La decodifica VAE procede per
+singola immagine. Client, helper e tool ExMekh usano 2048×2048 per default; accettano le dimensioni minori richieste esplicitamente.
 La descrizione del tool suggerisce 2048×1536 per paesaggi, 1536×2048 per
 ritratti e 2048×1152 per 16:9. Per più immagini 2048×2048 servono chiamate
 separate, dato il limite totale del batch. Il default del protocollo HTTP
@@ -160,7 +164,23 @@ fallire l'accettazione.
 
 ## Lifetime e osservabilità
 
+Il [contratto del progresso image](native-image-progress.md) definisce SSE,
+heartbeat, timeout e percentuale sullo skeleton come contratto comune per
+CPU, Metal, CUDA e backend futuri, valido anche per i modelli image diversi
+da Qwen Image che verranno integrati. SSE v1 è opt-in tramite
+`Accept: text/event-stream`; il percorso JSON resta compatibile. Lo skeleton
+mostra solo percentuale e tempo. `image_timeout_seconds` configura la deadline
+assoluta image, inclusa la coda, e altrimenti eredita `timeout_seconds`.
+Risultati delle prove nel [report](native-image-progress-implementation-20261110.md).
+
 Discovery espone revision/profilo, configured/resident/ready, componenti e limiti.
+`GET /v1/models` e `GET /v1/models/{id}` per i modelli nativi rispondono
+durante prefill, decode e operazioni della suite, senza entrare nella coda
+di inferenza. Entrambi leggono lo stesso snapshot posseduto dal catalogo.
+Quando l'inferenza possiede gli adapter, la risposta usa l'ultimo snapshot
+coerente del catalogo. Il worker aggiorna lo snapshot dopo ogni operazione
+della suite e la discovery lo aggiorna quando gli adapter sono disponibili.
+I campi di residenza descrivono lo stato osservato nello snapshot.
 Le risposte riportano request ID, piano/vittime, byte device recuperati, cache
 hit, token delle modalità, copie H2D/D2H native e tempi. I contatori copie non
 includono traffico interno ai kernel o restore legacy; i tempi separati Gemma

@@ -1,0 +1,46 @@
+[
+  {
+    "id": "image",
+    "media": [
+      {
+        "type": "image",
+        "path": "build/metal-qualification/stimuli/image.png",
+        "soft": 70
+      }
+    ]
+  },
+  {
+    "id": "audio",
+    "media": [
+      {
+        "type": "audio",
+        "path": "build/metal-qualification/stimuli/audio.wav"
+      }
+    ]
+  },
+  {
+    "id": "video",
+    "media": [
+      {
+        "type": "video",
+        "path": "build/metal-qualification/stimuli/video.npz",
+        "soft": 70
+      }
+    ]
+  },
+  {
+    "id": "interleaved",
+    "prompt": "Describe: <|image|> and <|audio|>",
+    "media": [
+      {
+        "type": "image",
+        "path": "build/metal-qualification/stimuli/image.png",
+        "soft": 70
+      },
+      {
+        "type": "audio",
+        "path": "build/metal-qualification/stimuli/audio.wav"
+      }
+    ]
+  }
+]

@@ -1,0 +1,1483 @@
+{
+  "command": [
+    "env",
+    "DS4_SUITE_CASES_ONLY=1",
+    "tests/probe_qwen_image_pipeline",
+    "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/image-tokenizer.ds4q",
+    "build/metal-qualification/t06-t07-20261031/image-rgba/native",
+    "build/metal-qualification/t06-t07-20261031/image-rgba/fixtures/rgba.ds4p"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 300,
+  "reason": "S3 256px image or independent reference component",
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 183.91277054200145,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 11766.435133125,
+      "pressure": 1,
+      "host_available_bytes": 10314366976,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 11767.442264541,
+      "pressure": 1,
+      "host_available_bytes": 10295214080,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11768.451760041,
+      "pressure": 1,
+      "host_available_bytes": 10593058816,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11769.461878666,
+      "pressure": 1,
+      "host_available_bytes": 10558390272,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11770.473568625,
+      "pressure": 1,
+      "host_available_bytes": 10570399744,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11771.48380775,
+      "pressure": 1,
+      "host_available_bytes": 10605953024,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11772.493561125,
+      "pressure": 1,
+      "host_available_bytes": 10460250112,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11773.499915083,
+      "pressure": 1,
+      "host_available_bytes": 10434576384,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11774.512106416,
+      "pressure": 1,
+      "host_available_bytes": 10645143552,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11775.528668458,
+      "pressure": 1,
+      "host_available_bytes": 10842488832,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11776.540641291,
+      "pressure": 1,
+      "host_available_bytes": 11230396416,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11777.552595166,
+      "pressure": 1,
+      "host_available_bytes": 11584258048,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11778.564307708,
+      "pressure": 1,
+      "host_available_bytes": 12006555648,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11779.575781166,
+      "pressure": 1,
+      "host_available_bytes": 12442828800,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11780.583655458,
+      "pressure": 1,
+      "host_available_bytes": 12887375872,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11781.592071541,
+      "pressure": 1,
+      "host_available_bytes": 13244940288,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11782.603503083,
+      "pressure": 1,
+      "host_available_bytes": 13638500352,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11783.615594333,
+      "pressure": 1,
+      "host_available_bytes": 13732282368,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11784.625553833,
+      "pressure": 1,
+      "host_available_bytes": 14091763712,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11785.633785833,
+      "pressure": 1,
+      "host_available_bytes": 14471118848,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11786.6455845,
+      "pressure": 1,
+      "host_available_bytes": 14878752768,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11787.654354083,
+      "pressure": 1,
+      "host_available_bytes": 15327707136,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11788.666345083,
+      "pressure": 1,
+      "host_available_bytes": 15726985216,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11789.675736791,
+      "pressure": 1,
+      "host_available_bytes": 16105340928,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11790.68795975,
+      "pressure": 1,
+      "host_available_bytes": 16526016512,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11791.697365291,
+      "pressure": 1,
+      "host_available_bytes": 16934682624,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11792.708790625,
+      "pressure": 1,
+      "host_available_bytes": 17262952448,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11793.717229416,
+      "pressure": 1,
+      "host_available_bytes": 17363927040,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11794.725531166,
+      "pressure": 1,
+      "host_available_bytes": 17744429056,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11795.737280375,
+      "pressure": 1,
+      "host_available_bytes": 18178736128,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11796.748698208,
+      "pressure": 1,
+      "host_available_bytes": 18246582272,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11797.760448708,
+      "pressure": 1,
+      "host_available_bytes": 18208636928,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11798.77230375,
+      "pressure": 1,
+      "host_available_bytes": 18207670272,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11799.783735125,
+      "pressure": 1,
+      "host_available_bytes": 18234916864,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11800.791986708,
+      "pressure": 1,
+      "host_available_bytes": 18247106560,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11801.803242958,
+      "pressure": 1,
+      "host_available_bytes": 18234277888,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11802.815057916,
+      "pressure": 1,
+      "host_available_bytes": 18231263232,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11803.825465791,
+      "pressure": 1,
+      "host_available_bytes": 18254807040,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11804.83363625,
+      "pressure": 1,
+      "host_available_bytes": 18054004736,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11805.8458865,
+      "pressure": 1,
+      "host_available_bytes": 17552408576,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11806.857947875,
+      "pressure": 1,
+      "host_available_bytes": 17545117696,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11807.868209083,
+      "pressure": 1,
+      "host_available_bytes": 17576656896,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11808.876721625,
+      "pressure": 1,
+      "host_available_bytes": 17593270272,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11809.887476083,
+      "pressure": 1,
+      "host_available_bytes": 17568169984,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11810.8992045,
+      "pressure": 1,
+      "host_available_bytes": 17571069952,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11811.909057791,
+      "pressure": 1,
+      "host_available_bytes": 17584865280,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11812.921878583,
+      "pressure": 1,
+      "host_available_bytes": 17005674496,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11813.933764,
+      "pressure": 1,
+      "host_available_bytes": 14124433408,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11814.941791125,
+      "pressure": 1,
+      "host_available_bytes": 12630622208,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11815.953490166,
+      "pressure": 1,
+      "host_available_bytes": 10689675264,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11816.96265,
+      "pressure": 1,
+      "host_available_bytes": 10135814144,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 16482304
+    },
+    {
+      "monotonic": 11817.978253,
+      "pressure": 1,
+      "host_available_bytes": 10043179008,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10502144
+    },
+    {
+      "monotonic": 11818.990305583,
+      "pressure": 1,
+      "host_available_bytes": 10109042688,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10698752
+    },
+    {
+      "monotonic": 11819.99998925,
+      "pressure": 1,
+      "host_available_bytes": 10125443072,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10698752
+    },
+    {
+      "monotonic": 11821.008720125,
+      "pressure": 1,
+      "host_available_bytes": 10072604672,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11822.016921708,
+      "pressure": 1,
+      "host_available_bytes": 10075635712,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11823.030254875,
+      "pressure": 1,
+      "host_available_bytes": 10147430400,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11824.041841625,
+      "pressure": 1,
+      "host_available_bytes": 10158538752,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11825.049974833,
+      "pressure": 1,
+      "host_available_bytes": 10103193600,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11826.058308583,
+      "pressure": 1,
+      "host_available_bytes": 10117660672,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11827.070011541,
+      "pressure": 1,
+      "host_available_bytes": 10163437568,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11828.083040041,
+      "pressure": 1,
+      "host_available_bytes": 10176757760,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11829.092087333,
+      "pressure": 1,
+      "host_available_bytes": 10103029760,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10731520
+    },
+    {
+      "monotonic": 11830.09967025,
+      "pressure": 1,
+      "host_available_bytes": 10151084032,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10977280
+    },
+    {
+      "monotonic": 11831.111181958,
+      "pressure": 1,
+      "host_available_bytes": 10145677312,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10977280
+    },
+    {
+      "monotonic": 11832.122655375,
+      "pressure": 1,
+      "host_available_bytes": 10212737024,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10977280
+    },
+    {
+      "monotonic": 11833.134161083,
+      "pressure": 1,
+      "host_available_bytes": 10117906432,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10977280
+    },
+    {
+      "monotonic": 11834.144569375,
+      "pressure": 1,
+      "host_available_bytes": 10150199296,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10616832
+    },
+    {
+      "monotonic": 11835.156400166,
+      "pressure": 1,
+      "host_available_bytes": 10210885632,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 10371072
+    },
+    {
+      "monotonic": 11836.166377416,
+      "pressure": 1,
+      "host_available_bytes": 10239049728,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 9601024
+    },
+    {
+      "monotonic": 11837.174818208,
+      "pressure": 1,
+      "host_available_bytes": 10179756032,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 9601024
+    },
+    {
+      "monotonic": 11838.1832935,
+      "pressure": 1,
+      "host_available_bytes": 10221928448,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 9404416
+    },
+    {
+      "monotonic": 11839.192503666,
+      "pressure": 1,
+      "host_available_bytes": 10222108672,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 9404416
+    },
+    {
+      "monotonic": 11840.204255041,
+      "pressure": 1,
+      "host_available_bytes": 10244866048,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 9535488
+    },
+    {
+      "monotonic": 11841.216490083,
+      "pressure": 1,
+      "host_available_bytes": 10189668352,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6799960,
+      "resident_bytes": 9535488
+    },
+    {
+      "monotonic": 11842.22601675,
+      "pressure": 1,
+      "host_available_bytes": 10048077824,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 271795040,
+      "resident_bytes": 343457792
+    },
+    {
+      "monotonic": 11843.237212875,
+      "pressure": 1,
+      "host_available_bytes": 10040852480,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 271795040,
+      "resident_bytes": 343457792
+    },
+    {
+      "monotonic": 11844.24865025,
+      "pressure": 1,
+      "host_available_bytes": 10096721920,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 248202080,
+      "resident_bytes": 343457792
+    },
+    {
+      "monotonic": 11845.259885458,
+      "pressure": 1,
+      "host_available_bytes": 10119970816,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 251347808,
+      "resident_bytes": 343457792
+    },
+    {
+      "monotonic": 11846.270544333,
+      "pressure": 1,
+      "host_available_bytes": 10125934592,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 239551328,
+      "resident_bytes": 343457792
+    },
+    {
+      "monotonic": 11847.286327375,
+      "pressure": 1,
+      "host_available_bytes": 10056335360,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 241075040,
+      "resident_bytes": 343408640
+    },
+    {
+      "monotonic": 11848.297565958,
+      "pressure": 1,
+      "host_available_bytes": 10109288448,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 235176800,
+      "resident_bytes": 343408640
+    },
+    {
+      "monotonic": 11849.30878325,
+      "pressure": 1,
+      "host_available_bytes": 10030809088,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 235963232,
+      "resident_bytes": 343408640
+    },
+    {
+      "monotonic": 11850.319334416,
+      "pressure": 1,
+      "host_available_bytes": 10052059136,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 232424288,
+      "resident_bytes": 343408640
+    },
+    {
+      "monotonic": 11851.326615541,
+      "pressure": 1,
+      "host_available_bytes": 10127294464,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 251921608,
+      "resident_bytes": 469581824
+    },
+    {
+      "monotonic": 11852.334565333,
+      "pressure": 1,
+      "host_available_bytes": 9738256384,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 1042581784,
+      "resident_bytes": 2056552448
+    },
+    {
+      "monotonic": 11853.347504666,
+      "pressure": 1,
+      "host_available_bytes": 9441804288,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 2017611616,
+      "resident_bytes": 3346350080
+    },
+    {
+      "monotonic": 11854.358170166,
+      "pressure": 1,
+      "host_available_bytes": 8693301248,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 3412858448,
+      "resident_bytes": 5157666816
+    },
+    {
+      "monotonic": 11855.369349791,
+      "pressure": 1,
+      "host_available_bytes": 8268562432,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 4701674864,
+      "resident_bytes": 6776389632
+    },
+    {
+      "monotonic": 11856.383150041,
+      "pressure": 1,
+      "host_available_bytes": 7725268992,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 5813888216,
+      "resident_bytes": 7802159104
+    },
+    {
+      "monotonic": 11857.391991791,
+      "pressure": 1,
+      "host_available_bytes": 7331823616,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6608808232,
+      "resident_bytes": 6480510976
+    },
+    {
+      "monotonic": 11858.406454125,
+      "pressure": 1,
+      "host_available_bytes": 6770999296,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7395913128,
+      "resident_bytes": 5793759232
+    },
+    {
+      "monotonic": 11859.4168645,
+      "pressure": 1,
+      "host_available_bytes": 6671187968,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7730868488,
+      "resident_bytes": 6372638720
+    },
+    {
+      "monotonic": 11860.425469125,
+      "pressure": 1,
+      "host_available_bytes": 6582779904,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7833531640,
+      "resident_bytes": 6515654656
+    },
+    {
+      "monotonic": 11861.436782416,
+      "pressure": 1,
+      "host_available_bytes": 6498680832,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7823309080,
+      "resident_bytes": 6323126272
+    },
+    {
+      "monotonic": 11862.444530375,
+      "pressure": 1,
+      "host_available_bytes": 8116846592,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7857487808,
+      "resident_bytes": 8390311936
+    },
+    {
+      "monotonic": 11863.453804375,
+      "pressure": 1,
+      "host_available_bytes": 16731291648,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 623816704,
+      "resident_bytes": 9659138048
+    },
+    {
+      "monotonic": 11864.461929916,
+      "pressure": 1,
+      "host_available_bytes": 13569032192,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 1934883048,
+      "resident_bytes": 12932775936
+    },
+    {
+      "monotonic": 11865.47357975,
+      "pressure": 1,
+      "host_available_bytes": 11946852352,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 3532718568,
+      "resident_bytes": 16106799104
+    },
+    {
+      "monotonic": 11866.487368291,
+      "pressure": 1,
+      "host_available_bytes": 10625597440,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 4870457536,
+      "resident_bytes": 17299947520
+    },
+    {
+      "monotonic": 11867.498785291,
+      "pressure": 1,
+      "host_available_bytes": 9763799040,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 5736615424,
+      "resident_bytes": 17229283328
+    },
+    {
+      "monotonic": 11868.507065625,
+      "pressure": 1,
+      "host_available_bytes": 9463955456,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6762714016,
+      "resident_bytes": 16887676928
+    },
+    {
+      "monotonic": 11869.518331375,
+      "pressure": 1,
+      "host_available_bytes": 9335586816,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6859150984,
+      "resident_bytes": 15063171072
+    },
+    {
+      "monotonic": 11870.529627125,
+      "pressure": 1,
+      "host_available_bytes": 8796569600,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7034182144,
+      "resident_bytes": 14552334336
+    },
+    {
+      "monotonic": 11871.541368875,
+      "pressure": 1,
+      "host_available_bytes": 8668708864,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7110712744,
+      "resident_bytes": 14289125376
+    },
+    {
+      "monotonic": 11872.55519125,
+      "pressure": 1,
+      "host_available_bytes": 8108392448,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7044866336,
+      "resident_bytes": 13109379072
+    },
+    {
+      "monotonic": 11873.568008291,
+      "pressure": 1,
+      "host_available_bytes": 7339851776,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6889530352,
+      "resident_bytes": 11603886080
+    },
+    {
+      "monotonic": 11874.580180041,
+      "pressure": 1,
+      "host_available_bytes": 6780010496,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 6890038856,
+      "resident_bytes": 10741825536
+    },
+    {
+      "monotonic": 11875.591502291,
+      "pressure": 1,
+      "host_available_bytes": 6629474304,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7097018840,
+      "resident_bytes": 10619502592
+    },
+    {
+      "monotonic": 11876.602840375,
+      "pressure": 1,
+      "host_available_bytes": 6579601408,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7312304600,
+      "resident_bytes": 10551328768
+    },
+    {
+      "monotonic": 11877.611557166,
+      "pressure": 1,
+      "host_available_bytes": 8394522624,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7115467248,
+      "resident_bytes": 10532077568
+    },
+    {
+      "monotonic": 11878.624328166,
+      "pressure": 1,
+      "host_available_bytes": 9822863360,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7144122840,
+      "resident_bytes": 10517020672
+    },
+    {
+      "monotonic": 11879.631674375,
+      "pressure": 1,
+      "host_available_bytes": 9762062336,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7273523672,
+      "resident_bytes": 10566189056
+    },
+    {
+      "monotonic": 11880.643217375,
+      "pressure": 1,
+      "host_available_bytes": 6817316864,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7152757208,
+      "resident_bytes": 10559012864
+    },
+    {
+      "monotonic": 11881.652721875,
+      "pressure": 1,
+      "host_available_bytes": 9471197184,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7316564440,
+      "resident_bytes": 10567958528
+    },
+    {
+      "monotonic": 11882.664134791,
+      "pressure": 1,
+      "host_available_bytes": 9928966144,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7330720216,
+      "resident_bytes": 10554818560
+    },
+    {
+      "monotonic": 11883.673849,
+      "pressure": 1,
+      "host_available_bytes": 6697369600,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7312386544,
+      "resident_bytes": 10567942144
+    },
+    {
+      "monotonic": 11884.685385916,
+      "pressure": 1,
+      "host_available_bytes": 9366208512,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7096805872,
+      "resident_bytes": 10567860224
+    },
+    {
+      "monotonic": 11885.695219666,
+      "pressure": 1,
+      "host_available_bytes": 9588736000,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7150512624,
+      "resident_bytes": 10567712768
+    },
+    {
+      "monotonic": 11886.704648958,
+      "pressure": 1,
+      "host_available_bytes": 6669484032,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7436331720,
+      "resident_bytes": 10924310528
+    },
+    {
+      "monotonic": 11887.712558666,
+      "pressure": 1,
+      "host_available_bytes": 9754738688,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7509273312,
+      "resident_bytes": 10894655488
+    },
+    {
+      "monotonic": 11888.724006416,
+      "pressure": 1,
+      "host_available_bytes": 9357950976,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7270427120,
+      "resident_bytes": 10567729152
+    },
+    {
+      "monotonic": 11889.733352291,
+      "pressure": 1,
+      "host_available_bytes": 6884098048,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7312386544,
+      "resident_bytes": 10567729152
+    },
+    {
+      "monotonic": 11890.74473375,
+      "pressure": 1,
+      "host_available_bytes": 9796386816,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7392848560,
+      "resident_bytes": 10882940928
+    },
+    {
+      "monotonic": 11891.755552666,
+      "pressure": 1,
+      "host_available_bytes": 8969322496,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7306095088,
+      "resident_bytes": 10567729152
+    },
+    {
+      "monotonic": 11892.766756416,
+      "pressure": 1,
+      "host_available_bytes": 7255769088,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7146252760,
+      "resident_bytes": 10558898176
+    },
+    {
+      "monotonic": 11893.778046125,
+      "pressure": 1,
+      "host_available_bytes": 9951936512,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7316564464,
+      "resident_bytes": 10567712768
+    },
+    {
+      "monotonic": 11894.787095375,
+      "pressure": 1,
+      "host_available_bytes": 8884109312,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7293495792,
+      "resident_bytes": 10567712768
+    },
+    {
+      "monotonic": 11895.799296958,
+      "pressure": 1,
+      "host_available_bytes": 7200112640,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7310256600,
+      "resident_bytes": 10565451776
+    },
+    {
+      "monotonic": 11896.809138291,
+      "pressure": 1,
+      "host_available_bytes": 10008248320,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 7137585696,
+      "resident_bytes": 10625515520
+    },
+    {
+      "monotonic": 11897.819067208,
+      "pressure": 1,
+      "host_available_bytes": 13125648384,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 615160032,
+      "resident_bytes": 10955751424
+    },
+    {
+      "monotonic": 11898.830201708,
+      "pressure": 1,
+      "host_available_bytes": 12950765568,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 613112032,
+      "resident_bytes": 10955980800
+    },
+    {
+      "monotonic": 11899.836844,
+      "pressure": 1,
+      "host_available_bytes": 12949913600,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 616061152,
+      "resident_bytes": 10955997184
+    },
+    {
+      "monotonic": 11900.847997625,
+      "pressure": 1,
+      "host_available_bytes": 13064470528,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 616061152,
+      "resident_bytes": 10955997184
+    },
+    {
+      "monotonic": 11901.856958541,
+      "pressure": 1,
+      "host_available_bytes": 13097992192,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 619600096,
+      "resident_bytes": 10955997184
+    },
+    {
+      "monotonic": 11902.86458975,
+      "pressure": 1,
+      "host_available_bytes": 13006503936,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 628447456,
+      "resident_bytes": 10955997184
+    },
+    {
+      "monotonic": 11903.876079,
+      "pressure": 1,
+      "host_available_bytes": 12980486144,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 628447456,
+      "resident_bytes": 10955997184
+    },
+    {
+      "monotonic": 11904.883814208,
+      "pressure": 1,
+      "host_available_bytes": 12929564672,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 628414688,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11905.892113875,
+      "pressure": 1,
+      "host_available_bytes": 12825542656,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 628414688,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11906.903609875,
+      "pressure": 1,
+      "host_available_bytes": 12851625984,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 628414688,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11907.910269583,
+      "pressure": 1,
+      "host_available_bytes": 12872417280,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 628414688,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11908.919952083,
+      "pressure": 1,
+      "host_available_bytes": 12846759936,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 628414688,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11909.93078975,
+      "pressure": 1,
+      "host_available_bytes": 12914393088,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 642570464,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11910.938031333,
+      "pressure": 1,
+      "host_available_bytes": 12949864448,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 642570464,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11911.945686166,
+      "pressure": 1,
+      "host_available_bytes": 12985221120,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 642570464,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11912.956813083,
+      "pressure": 1,
+      "host_available_bytes": 12935069696,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 642570464,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11913.968248416,
+      "pressure": 1,
+      "host_available_bytes": 12956581888,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 642570464,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11914.979293083,
+      "pressure": 1,
+      "host_available_bytes": 12961890304,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 654366944,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11915.986150041,
+      "pressure": 1,
+      "host_available_bytes": 12978847744,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 654366944,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11916.993623375,
+      "pressure": 1,
+      "host_available_bytes": 12944244736,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 649648352,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11918.003618291,
+      "pressure": 1,
+      "host_available_bytes": 12962627584,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 649648352,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11919.010669083,
+      "pressure": 1,
+      "host_available_bytes": 12959219712,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 644929760,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11920.021589125,
+      "pressure": 1,
+      "host_available_bytes": 12976144384,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 644929760,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11921.033726416,
+      "pressure": 1,
+      "host_available_bytes": 12997361664,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 644929760,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11922.044750458,
+      "pressure": 1,
+      "host_available_bytes": 13010698240,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 644929760,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11923.055611208,
+      "pressure": 1,
+      "host_available_bytes": 12928466944,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 673241312,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11924.062507875,
+      "pressure": 1,
+      "host_available_bytes": 12934135808,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 673241312,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11925.069929041,
+      "pressure": 1,
+      "host_available_bytes": 12952813568,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 673241312,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11926.0788245,
+      "pressure": 1,
+      "host_available_bytes": 12964855808,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 673241312,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11927.086308875,
+      "pressure": 1,
+      "host_available_bytes": 12925157376,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 673241312,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11928.095437166,
+      "pressure": 1,
+      "host_available_bytes": 12898484224,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 696834272,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11929.102824958,
+      "pressure": 1,
+      "host_available_bytes": 12926533632,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 696834272,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11930.111354,
+      "pressure": 1,
+      "host_available_bytes": 12939509760,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 696834272,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11931.119847333,
+      "pressure": 1,
+      "host_available_bytes": 12858441728,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 687397088,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11932.130783125,
+      "pressure": 1,
+      "host_available_bytes": 12818481152,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 677959904,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11933.139544041,
+      "pressure": 1,
+      "host_available_bytes": 12907806720,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 677959904,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11934.149003,
+      "pressure": 1,
+      "host_available_bytes": 12918915072,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 677959904,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11935.155486708,
+      "pressure": 1,
+      "host_available_bytes": 12869419008,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 677959904,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11936.166453708,
+      "pressure": 1,
+      "host_available_bytes": 12894273536,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 677959904,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11937.173343708,
+      "pressure": 1,
+      "host_available_bytes": 12846841856,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 734583008,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11938.182275541,
+      "pressure": 1,
+      "host_available_bytes": 12862586880,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 734583008,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11939.193028916,
+      "pressure": 1,
+      "host_available_bytes": 12821266432,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 734583008,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11940.203899541,
+      "pressure": 1,
+      "host_available_bytes": 12801835008,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 734583008,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11941.214917875,
+      "pressure": 1,
+      "host_available_bytes": 12847120384,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 734583008,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11942.225446125,
+      "pressure": 1,
+      "host_available_bytes": 12891389952,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 706271456,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11943.23645425,
+      "pressure": 1,
+      "host_available_bytes": 12824100864,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 706271456,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11944.245197208,
+      "pressure": 1,
+      "host_available_bytes": 12839075840,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 687397088,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11945.256213333,
+      "pressure": 1,
+      "host_available_bytes": 12891652096,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 668522720,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11946.266049333,
+      "pressure": 1,
+      "host_available_bytes": 12867223552,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 668522720,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11947.277239458,
+      "pressure": 1,
+      "host_available_bytes": 12884279296,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 668522720,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11948.286989083,
+      "pressure": 1,
+      "host_available_bytes": 12898926592,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 668522720,
+      "resident_bytes": 10956013568
+    },
+    {
+      "monotonic": 11949.297972291,
+      "pressure": 1,
+      "host_available_bytes": 12910313472,
+      "swap_bytes": 1289024962,
+      "footprint_bytes": 668522720,
+      "resident_bytes": 10956013568
+    }
+  ],
+  "executables_sha256": {
+    "tests/probe_qwen_image_pipeline": "dc721009fc0e16895f42aab7e8321a413323e6b2db00cba34281a1704084418b"
+  },
+  "log_sha256": "3abd6c26eb65902a64b9b45856ac2d009e1666fe8337a36ded3107bd076cc35d"
+}

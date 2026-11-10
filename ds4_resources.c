@@ -23,6 +23,7 @@ struct ds4_resources {
     uint64_t completed;
     size_t reservations;
     bool destroying;
+    bool unified;
 };
 struct ds4_resource {
     ds4_resources *registry;
@@ -63,16 +64,20 @@ void ds4_reservation_leave(ds4_reservation_scope *scope) {
 static bool location_valid(ds4_memory_location l) { return (unsigned)l < DS4_MEMORY_COUNT; }
 static uint64_t subtract(uint64_t a, uint64_t b) { return a > b ? a - b : 0; }
 static uint64_t add(uint64_t a, uint64_t b) { return b > UINT64_MAX - a ? UINT64_MAX : a + b; }
+static bool charges_host_memory(const ds4_resources *r, ds4_memory_location location) {
+    return location == DS4_MEMORY_PINNED || location == DS4_MEMORY_RESIDENT ||
+           (r->unified && location == DS4_MEMORY_DEVICE);
+}
 static uint64_t available_after(ds4_resources *r, ds4_memory_location l, const uint64_t *reclaimed) {
     const ds4_resource_budget *b = &r->budget[l];
     uint64_t credit = reclaimed ? reclaimed[l] : 0;
     uint64_t allocated = subtract(r->totals.allocated[l], credit), reserved = r->totals.reserved[l];
     if (l == DS4_MEMORY_HOST) {
-        const ds4_memory_location shared[] = {DS4_MEMORY_PINNED, DS4_MEMORY_RESIDENT};
-        for (size_t i = 0; i < 2; i++) {
-            uint64_t part = reclaimed ? reclaimed[shared[i]] : 0;
-            allocated = add(allocated, subtract(r->totals.allocated[shared[i]], part));
-            reserved = add(reserved, r->totals.reserved[shared[i]]);
+        for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++) {
+            if (!charges_host_memory(r, i)) continue;
+            uint64_t part = reclaimed ? reclaimed[i] : 0;
+            allocated = add(allocated, subtract(r->totals.allocated[i], part));
+            reserved = add(reserved, r->totals.reserved[i]);
             credit = add(credit, part);
         }
     }
@@ -80,7 +85,7 @@ static uint64_t available_after(ds4_resources *r, ds4_memory_location l, const u
     uint64_t global = add(b->global_free, credit);
     if (b->global_known && global < free) free = global;
     free = subtract(subtract(free, reserved), b->margin);
-    if (l == DS4_MEMORY_PINNED || l == DS4_MEMORY_RESIDENT) {
+    if (charges_host_memory(r, l)) {
         uint64_t host = available_after(r, DS4_MEMORY_HOST, reclaimed);
         if (host < free) free = host;
     }
@@ -95,9 +100,13 @@ static ds4_status can_reserve(ds4_resources *r, const uint64_t *bytes, const uin
         if (reclaimed && reclaimed[i] > r->totals.allocated[i]) return DS4_STATUS_INVALID;
     for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++)
         if (bytes[i] > available_after(r, i, reclaimed)) return DS4_STATUS_NOMEM;
-    uint64_t host = bytes[DS4_MEMORY_HOST], pinned = bytes[DS4_MEMORY_PINNED], resident = bytes[DS4_MEMORY_RESIDENT];
-    if (pinned > UINT64_MAX-host || resident > UINT64_MAX-host-pinned ||
-        host+pinned+resident > available_after(r, DS4_MEMORY_HOST, reclaimed)) return DS4_STATUS_NOMEM;
+    uint64_t host = bytes[DS4_MEMORY_HOST];
+    for (unsigned i = 0; i < DS4_MEMORY_COUNT; i++) {
+        if (!charges_host_memory(r, i)) continue;
+        if (bytes[i] > UINT64_MAX - host) return DS4_STATUS_NOMEM;
+        host += bytes[i];
+    }
+    if (host > available_after(r, DS4_MEMORY_HOST, reclaimed)) return DS4_STATUS_NOMEM;
     return DS4_STATUS_OK;
 }
 ds4_status ds4_resources_create(ds4_resources **out) {
@@ -121,6 +130,14 @@ ds4_status ds4_resources_close(ds4_resources *r) {
     }
     pthread_mutex_unlock(&r->mutex);
     pthread_mutex_destroy(&r->mutex); free(r); return DS4_STATUS_OK;
+}
+ds4_status ds4_resources_set_unified_memory(ds4_resources *r, bool enabled) {
+    if (!r) return DS4_STATUS_INVALID;
+    pthread_mutex_lock(&r->mutex);
+    ds4_status status = r->head || r->reservations || r->destroying ? DS4_STATUS_BUSY : DS4_STATUS_OK;
+    if (!status) r->unified = enabled;
+    pthread_mutex_unlock(&r->mutex);
+    return status;
 }
 ds4_status ds4_resources_set_budget(ds4_resources *r, ds4_memory_location l,
                                      const ds4_resource_budget *b) {
@@ -192,7 +209,7 @@ static void insert(ds4_resources *r, ds4_resource *p, const ds4_resource_spec *s
     /* Keep a global-free sample conservative until the next reconciliation. */
     if (r->budget[s->location].global_known)
         r->budget[s->location].global_free = subtract(r->budget[s->location].global_free, s->allocated);
-    if ((s->location == DS4_MEMORY_PINNED || s->location == DS4_MEMORY_RESIDENT) && r->budget[DS4_MEMORY_HOST].global_known)
+    if (charges_host_memory(r, s->location) && r->budget[DS4_MEMORY_HOST].global_known)
         r->budget[DS4_MEMORY_HOST].global_free = subtract(r->budget[DS4_MEMORY_HOST].global_free, s->allocated);
 }
 ds4_status ds4_resource_register(ds4_resources *r, const ds4_resource_spec *s, ds4_resource **out) {
@@ -268,10 +285,25 @@ ds4_status ds4_resource_retain(ds4_resource *p) {
     if (!status) p->info.references++;
     pthread_mutex_unlock(&r->mutex); return status;
 }
+static ds4_status release_admission(ds4_resource *p) {
+    ds4_resources *r = p->registry;
+    ds4_resource *root = p->backing ? p->backing : p;
+    return r->destroying || root->info.last_event > r->completed
+        ? DS4_STATUS_BUSY : DS4_STATUS_OK;
+}
+ds4_status ds4_resource_can_release(ds4_resource *p) {
+    if (!p) return DS4_STATUS_OK;
+    ds4_resources *r = p->registry;
+    pthread_mutex_lock(&r->mutex);
+    ds4_status status = release_admission(p);
+    pthread_mutex_unlock(&r->mutex);
+    return status;
+}
 static ds4_status release(ds4_resource *p) {
     ds4_resources *r = p->registry;
     ds4_resource *root = p->backing ? p->backing : p;
-    if (r->destroying || root->info.last_event > r->completed) return DS4_STATUS_BUSY;
+    ds4_status admission = release_admission(p);
+    if (admission) return admission;
     if (p->info.references > 1) { p->info.references--; return DS4_STATUS_OK; }
     if (!p->backing && p->info.spec.destroy) {
         r->destroying = true;

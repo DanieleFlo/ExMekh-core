@@ -1,0 +1,1422 @@
+{
+  "raw_samples": [
+    {
+      "pair": 0,
+      "warmup": true,
+      "variant": "baseline",
+      "status": "PASS",
+      "elapsed_seconds": 28.36881733300106,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "10.58",
+          "gen_tokens": "8",
+          "gen_tps": "1.09",
+          "gen_first_ms": "1147.691",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.13",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "9.77",
+          "gen_tokens": "8",
+          "gen_tps": "1.03",
+          "gen_first_ms": "1192.376",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.06",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 0,
+      "warmup": true,
+      "variant": "parallel",
+      "status": "PASS",
+      "elapsed_seconds": 21.278419209003914,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "19.94",
+          "gen_tokens": "8",
+          "gen_tps": "1.15",
+          "gen_first_ms": "1050.851",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.19",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "18.53",
+          "gen_tokens": "8",
+          "gen_tps": "1.14",
+          "gen_first_ms": "1062.365",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.17",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "warmup": false,
+      "variant": "parallel",
+      "status": "PASS",
+      "elapsed_seconds": 21.238657624999178,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "19.69",
+          "gen_tokens": "8",
+          "gen_tps": "1.12",
+          "gen_first_ms": "1075.113",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.15",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "18.46",
+          "gen_tokens": "8",
+          "gen_tps": "1.11",
+          "gen_first_ms": "1105.822",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.15",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 1,
+      "warmup": false,
+      "variant": "baseline",
+      "status": "PASS",
+      "elapsed_seconds": 30.387452124996344,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "10.46",
+          "gen_tokens": "8",
+          "gen_tps": "0.96",
+          "gen_first_ms": "1257.456",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.99",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "9.41",
+          "gen_tokens": "8",
+          "gen_tps": "0.96",
+          "gen_first_ms": "1265.284",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.00",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "warmup": false,
+      "variant": "baseline",
+      "status": "PASS",
+      "elapsed_seconds": 30.385634375001246,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "10.28",
+          "gen_tokens": "8",
+          "gen_tps": "0.96",
+          "gen_first_ms": "1266.838",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.99",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "9.51",
+          "gen_tokens": "8",
+          "gen_tps": "0.96",
+          "gen_first_ms": "1266.415",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.99",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 2,
+      "warmup": false,
+      "variant": "parallel",
+      "status": "PASS",
+      "elapsed_seconds": 22.26649904200167,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "19.46",
+          "gen_tokens": "8",
+          "gen_tps": "1.11",
+          "gen_first_ms": "1094.617",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.14",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "18.34",
+          "gen_tokens": "8",
+          "gen_tps": "1.11",
+          "gen_first_ms": "1103.707",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.15",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "warmup": false,
+      "variant": "parallel",
+      "status": "PASS",
+      "elapsed_seconds": 22.28736904199468,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "19.28",
+          "gen_tokens": "8",
+          "gen_tps": "1.10",
+          "gen_first_ms": "1099.369",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.14",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "18.16",
+          "gen_tokens": "8",
+          "gen_tps": "1.11",
+          "gen_first_ms": "1103.523",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.14",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 3,
+      "warmup": false,
+      "variant": "baseline",
+      "status": "PASS",
+      "elapsed_seconds": 31.425056791995303,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "10.19",
+          "gen_tokens": "8",
+          "gen_tps": "0.95",
+          "gen_first_ms": "1246.215",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.98",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "9.17",
+          "gen_tokens": "8",
+          "gen_tps": "0.90",
+          "gen_first_ms": "1472.131",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.94",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "warmup": false,
+      "variant": "baseline",
+      "status": "PASS",
+      "elapsed_seconds": 31.396730334003223,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "9.91",
+          "gen_tokens": "8",
+          "gen_tps": "0.93",
+          "gen_first_ms": "1412.080",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.97",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "8.89",
+          "gen_tokens": "8",
+          "gen_tps": "0.94",
+          "gen_first_ms": "1305.535",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.97",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 4,
+      "warmup": false,
+      "variant": "parallel",
+      "status": "PASS",
+      "elapsed_seconds": 22.28009583400126,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "18.76",
+          "gen_tokens": "8",
+          "gen_tps": "1.09",
+          "gen_first_ms": "1124.643",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.13",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "17.92",
+          "gen_tokens": "8",
+          "gen_tps": "1.11",
+          "gen_first_ms": "1127.835",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.15",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 5,
+      "warmup": false,
+      "variant": "parallel",
+      "status": "PASS",
+      "elapsed_seconds": 22.26763504200062,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "18.51",
+          "gen_tokens": "8",
+          "gen_tps": "1.09",
+          "gen_first_ms": "1129.872",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.12",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "17.91",
+          "gen_tokens": "8",
+          "gen_tps": "1.10",
+          "gen_first_ms": "1131.206",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "1.14",
+          "kvcache_bytes": "0"
+        }
+      ]
+    },
+    {
+      "pair": 5,
+      "warmup": false,
+      "variant": "baseline",
+      "status": "PASS",
+      "elapsed_seconds": 31.369503374997294,
+      "rows": [
+        {
+          "ctx_tokens": "64",
+          "prefill_tokens": "64",
+          "prefill_tps": "9.53",
+          "gen_tokens": "8",
+          "gen_tps": "0.94",
+          "gen_first_ms": "1322.866",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.97",
+          "kvcache_bytes": "121048412"
+        },
+        {
+          "ctx_tokens": "128",
+          "prefill_tokens": "64",
+          "prefill_tps": "9.06",
+          "gen_tokens": "8",
+          "gen_tps": "0.94",
+          "gen_first_ms": "1300.330",
+          "gen_steady_tokens": "7",
+          "gen_steady_tps": "0.98",
+          "kvcache_bytes": "0"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "64": {
+      "prefill_tps": {
+        "stats": {
+          "baseline": {
+            "median": 10.19,
+            "mean": 10.074,
+            "sd": 0.3632216953872665,
+            "cv_percent": 3.605535987564686,
+            "samples": [
+              10.46,
+              10.28,
+              10.19,
+              9.91,
+              9.53
+            ],
+            "minimum": 9.53,
+            "p10": 9.681999999999999,
+            "p90": 10.388000000000002,
+            "maximum": 10.46
+          },
+          "parallel": {
+            "median": 19.28,
+            "mean": 19.14,
+            "sd": 0.49137562007083724,
+            "cv_percent": 2.5672707422718766,
+            "samples": [
+              19.69,
+              19.46,
+              19.28,
+              18.76,
+              18.51
+            ],
+            "minimum": 18.51,
+            "p10": 18.61,
+            "p90": 19.598,
+            "maximum": 19.69
+          }
+        },
+        "median_improvement_percent": 89.20510304219826,
+        "paired_improvement_percent": [
+          88.24091778202676,
+          89.29961089494165,
+          89.20510304219826,
+          89.30373360242181,
+          94.22875131164746
+        ],
+        "paired_mean_ci95_t": [
+          87.10628375474535,
+          93.00496289854904
+        ]
+      },
+      "gen_tps": {
+        "stats": {
+          "baseline": {
+            "median": 0.95,
+            "mean": 0.948,
+            "sd": 0.01303840481040527,
+            "cv_percent": 1.375359157215746,
+            "samples": [
+              0.96,
+              0.96,
+              0.95,
+              0.93,
+              0.94
+            ],
+            "minimum": 0.93,
+            "p10": 0.934,
+            "p90": 0.96,
+            "maximum": 0.96
+          },
+          "parallel": {
+            "median": 1.1,
+            "mean": 1.102,
+            "sd": 0.013038404810405309,
+            "cv_percent": 1.1831583312527503,
+            "samples": [
+              1.12,
+              1.11,
+              1.1,
+              1.09,
+              1.09
+            ],
+            "minimum": 1.09,
+            "p10": 1.09,
+            "p90": 1.116,
+            "maximum": 1.12
+          }
+        },
+        "median_improvement_percent": 15.789473684210531,
+        "paired_improvement_percent": [
+          16.666666666666675,
+          15.625000000000021,
+          15.789473684210531,
+          17.204301075268823,
+          15.957446808510657
+        ],
+        "paired_mean_ci95_t": [
+          15.422010681641382,
+          17.0751446122213
+        ]
+      },
+      "gen_steady_tps": {
+        "stats": {
+          "baseline": {
+            "median": 0.98,
+            "mean": 0.98,
+            "sd": 0.010000000000000009,
+            "cv_percent": 1.020408163265307,
+            "samples": [
+              0.99,
+              0.99,
+              0.98,
+              0.97,
+              0.97
+            ],
+            "minimum": 0.97,
+            "p10": 0.97,
+            "p90": 0.99,
+            "maximum": 0.99
+          },
+          "parallel": {
+            "median": 1.14,
+            "mean": 1.136,
+            "sd": 0.011401754250991313,
+            "cv_percent": 1.00367555026332,
+            "samples": [
+              1.15,
+              1.14,
+              1.14,
+              1.13,
+              1.12
+            ],
+            "minimum": 1.12,
+            "p10": 1.124,
+            "p90": 1.146,
+            "maximum": 1.15
+          }
+        },
+        "median_improvement_percent": 16.326530612244895,
+        "paired_improvement_percent": [
+          16.161616161616156,
+          15.151515151515138,
+          16.326530612244895,
+          16.494845360824726,
+          15.463917525773208
+        ],
+        "paired_mean_ci95_t": [
+          15.197629753153475,
+          16.641740171636176
+        ]
+      },
+      "gen_first_ms": {
+        "stats": {
+          "baseline": {
+            "median": 1266.838,
+            "mean": 1301.091,
+            "sd": 68.70474029497528,
+            "cv_percent": 5.280548423974595,
+            "samples": [
+              1257.456,
+              1266.838,
+              1246.215,
+              1412.08,
+              1322.866
+            ],
+            "minimum": 1246.215,
+            "p10": 1250.7114,
+            "p90": 1376.3944,
+            "maximum": 1412.08
+          },
+          "parallel": {
+            "median": 1099.369,
+            "mean": 1104.7228,
+            "sd": 22.565611296838398,
+            "cv_percent": 2.042649187365228,
+            "samples": [
+              1075.113,
+              1094.617,
+              1099.369,
+              1124.643,
+              1129.872
+            ],
+            "minimum": 1075.113,
+            "p10": 1082.9146,
+            "p90": 1127.7804,
+            "maximum": 1129.872
+          }
+        },
+        "median_improvement_percent": 13.219448737723372,
+        "paired_improvement_percent": [
+          14.5009447646677,
+          13.594555894281669,
+          11.783360014122767,
+          20.355574754971386,
+          14.5890815849829
+        ],
+        "paired_mean_ci95_t": [
+          10.969327136375828,
+          18.96007966883474
+        ]
+      }
+    },
+    "128": {
+      "prefill_tps": {
+        "stats": {
+          "baseline": {
+            "median": 9.17,
+            "mean": 9.208,
+            "sd": 0.25321927256826215,
+            "cv_percent": 2.7499921000028467,
+            "samples": [
+              9.41,
+              9.51,
+              9.17,
+              8.89,
+              9.06
+            ],
+            "minimum": 8.89,
+            "p10": 8.958000000000002,
+            "p90": 9.469999999999999,
+            "maximum": 9.51
+          },
+          "parallel": {
+            "median": 18.16,
+            "mean": 18.158,
+            "sd": 0.24621129137389272,
+            "cv_percent": 1.3559383818366157,
+            "samples": [
+              18.46,
+              18.34,
+              18.16,
+              17.92,
+              17.91
+            ],
+            "minimum": 17.91,
+            "p10": 17.914,
+            "p90": 18.412,
+            "maximum": 18.46
+          }
+        },
+        "median_improvement_percent": 98.03707742639041,
+        "paired_improvement_percent": [
+          96.17428267800211,
+          92.84963196635121,
+          98.03707742639041,
+          101.5748031496063,
+          97.68211920529801
+        ],
+        "paired_mean_ci95_t": [
+          93.33564283992942,
+          101.1915229303298
+        ]
+      },
+      "gen_tps": {
+        "stats": {
+          "baseline": {
+            "median": 0.94,
+            "mean": 0.94,
+            "sd": 0.024494897427831758,
+            "cv_percent": 2.6058401518969956,
+            "samples": [
+              0.96,
+              0.96,
+              0.9,
+              0.94,
+              0.94
+            ],
+            "minimum": 0.9,
+            "p10": 0.916,
+            "p90": 0.96,
+            "maximum": 0.96
+          },
+          "parallel": {
+            "median": 1.11,
+            "mean": 1.108,
+            "sd": 0.004472135954999583,
+            "cv_percent": 0.40362237861007066,
+            "samples": [
+              1.11,
+              1.11,
+              1.11,
+              1.11,
+              1.1
+            ],
+            "minimum": 1.1,
+            "p10": 1.104,
+            "p90": 1.11,
+            "maximum": 1.11
+          }
+        },
+        "median_improvement_percent": 18.085106382978733,
+        "paired_improvement_percent": [
+          15.625000000000021,
+          15.625000000000021,
+          23.33333333333334,
+          18.085106382978733,
+          17.021276595744705
+        ],
+        "paired_mean_ci95_t": [
+          13.97863218259354,
+          21.897254342229186
+        ]
+      },
+      "gen_steady_tps": {
+        "stats": {
+          "baseline": {
+            "median": 0.98,
+            "mean": 0.976,
+            "sd": 0.023021728866442697,
+            "cv_percent": 2.3587836953322436,
+            "samples": [
+              1.0,
+              0.99,
+              0.94,
+              0.97,
+              0.98
+            ],
+            "minimum": 0.94,
+            "p10": 0.952,
+            "p90": 0.996,
+            "maximum": 1.0
+          },
+          "parallel": {
+            "median": 1.15,
+            "mean": 1.146,
+            "sd": 0.005477225575051666,
+            "cv_percent": 0.4779428948561663,
+            "samples": [
+              1.15,
+              1.15,
+              1.14,
+              1.15,
+              1.14
+            ],
+            "minimum": 1.14,
+            "p10": 1.14,
+            "p90": 1.15,
+            "maximum": 1.15
+          }
+        },
+        "median_improvement_percent": 17.34693877551019,
+        "paired_improvement_percent": [
+          14.999999999999991,
+          16.161616161616156,
+          21.276595744680836,
+          18.556701030927837,
+          16.326530612244895
+        ],
+        "paired_mean_ci95_t": [
+          14.37311776299534,
+          20.555459656792543
+        ]
+      },
+      "gen_first_ms": {
+        "stats": {
+          "baseline": {
+            "median": 1300.33,
+            "mean": 1321.939,
+            "sd": 86.00346004958175,
+            "cv_percent": 6.505856930583162,
+            "samples": [
+              1265.284,
+              1266.415,
+              1472.131,
+              1305.535,
+              1300.33
+            ],
+            "minimum": 1265.284,
+            "p10": 1265.7364000000002,
+            "p90": 1405.4926,
+            "maximum": 1472.131
+          },
+          "parallel": {
+            "median": 1105.822,
+            "mean": 1114.4186,
+            "sd": 13.866962475610865,
+            "cv_percent": 1.244322597954742,
+            "samples": [
+              1105.822,
+              1103.707,
+              1103.523,
+              1127.835,
+              1131.206
+            ],
+            "minimum": 1103.523,
+            "p10": 1103.5966,
+            "p90": 1129.8575999999998,
+            "maximum": 1131.206
+          }
+        },
+        "median_improvement_percent": 14.95835672483139,
+        "paired_improvement_percent": [
+          12.602862282301853,
+          12.847921100113302,
+          25.03907600614349,
+          13.611278135017447,
+          13.00623687833089
+        ],
+        "paired_mean_ci95_t": [
+          8.729833375105624,
+          22.113116385657168
+        ]
+      }
+    }
+  },
+  "runs": [
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-baseline",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-00-baseline.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 28.36881733300106,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-baseline": "2e82fc985afe20076ce5dc28b8073d9dae5771864f9f2f81f2b2f2dae9b0aafb"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 0,
+      "variant": "baseline",
+      "warmup": true,
+      "peak_footprint_bytes": 1525630776,
+      "minimum_host_available_bytes": 8552431616,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-00-baseline/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-parallel",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-00-parallel.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 21.278419209003914,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-parallel": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 0,
+      "variant": "parallel",
+      "warmup": true,
+      "peak_footprint_bytes": 1441515272,
+      "minimum_host_available_bytes": 8621080576,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-00-parallel/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-parallel",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-01-parallel.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 21.238657624999178,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-parallel": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 1,
+      "variant": "parallel",
+      "warmup": false,
+      "peak_footprint_bytes": 1442203304,
+      "minimum_host_available_bytes": 8677949440,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-01-parallel/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-baseline",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-01-baseline.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 30.387452124996344,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-baseline": "2e82fc985afe20076ce5dc28b8073d9dae5771864f9f2f81f2b2f2dae9b0aafb"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 1,
+      "variant": "baseline",
+      "warmup": false,
+      "peak_footprint_bytes": 1242859128,
+      "minimum_host_available_bytes": 9077735424,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-01-baseline/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-baseline",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-02-baseline.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 30.385634375001246,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-baseline": "2e82fc985afe20076ce5dc28b8073d9dae5771864f9f2f81f2b2f2dae9b0aafb"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 2,
+      "variant": "baseline",
+      "warmup": false,
+      "peak_footprint_bytes": 1143522840,
+      "minimum_host_available_bytes": 9061761024,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-02-baseline/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-parallel",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-02-parallel.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 22.26649904200167,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-parallel": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 2,
+      "variant": "parallel",
+      "warmup": false,
+      "peak_footprint_bytes": 1645348760,
+      "minimum_host_available_bytes": 8981954560,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-02-parallel/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-parallel",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-03-parallel.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 22.28736904199468,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-parallel": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 3,
+      "variant": "parallel",
+      "warmup": false,
+      "peak_footprint_bytes": 1491420912,
+      "minimum_host_available_bytes": 8447868928,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-03-parallel/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-baseline",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-03-baseline.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 31.425056791995303,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-baseline": "2e82fc985afe20076ce5dc28b8073d9dae5771864f9f2f81f2b2f2dae9b0aafb"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 3,
+      "variant": "baseline",
+      "warmup": false,
+      "peak_footprint_bytes": 1517127432,
+      "minimum_host_available_bytes": 7713685504,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-03-baseline/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-baseline",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-04-baseline.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 31.396730334003223,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-baseline": "2e82fc985afe20076ce5dc28b8073d9dae5771864f9f2f81f2b2f2dae9b0aafb"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 4,
+      "variant": "baseline",
+      "warmup": false,
+      "peak_footprint_bytes": 1442449112,
+      "minimum_host_available_bytes": 8010366976,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-04-baseline/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-parallel",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-04-parallel.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 22.28009583400126,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-parallel": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 4,
+      "variant": "parallel",
+      "warmup": false,
+      "peak_footprint_bytes": 1517651744,
+      "minimum_host_available_bytes": 8105426944,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-04-parallel/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-parallel",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-05-parallel.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 22.26763504200062,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-parallel": "d4d28d234dd1cc67b1385508e6610adb12a9cef35efd4b408c0f377c41da2378"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 5,
+      "variant": "parallel",
+      "warmup": false,
+      "peak_footprint_bytes": 1502463728,
+      "minimum_host_available_bytes": 7781367808,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-05-parallel/report.json"
+    },
+    {
+      "command": [
+        "build/metal-perf-flash-20261102/ds4-bench-baseline",
+        "--backend",
+        "metal",
+        "-m",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "1GB",
+        "--ctx-alloc",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--prompt-file",
+        "tests/test-vectors/flash-0731/prompts/long_code_audit.txt",
+        "--ctx-start",
+        "64",
+        "--ctx-max",
+        "128",
+        "--step-incr",
+        "64",
+        "--gen-tokens",
+        "8",
+        "--teacher-forced-decode",
+        "--csv",
+        "build/metal-perf-flash-20261102/paired-05-baseline.csv"
+      ],
+      "status": "PASS",
+      "elapsed_seconds": 31.369503374997294,
+      "executables_sha256": {
+        "build/metal-perf-flash-20261102/ds4-bench-baseline": "2e82fc985afe20076ce5dc28b8073d9dae5771864f9f2f81f2b2f2dae9b0aafb"
+      },
+      "memory_policy": {
+        "host_reserve_bytes": 2147483648,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "pair": 5,
+      "variant": "baseline",
+      "warmup": false,
+      "peak_footprint_bytes": 1149601304,
+      "minimum_host_available_bytes": 7932264448,
+      "pressures": [
+        1
+      ],
+      "swap_growth_bytes": 0,
+      "report_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-flash-20261102/paired-05-baseline/report.json"
+    }
+  ],
+  "precision_note": "Benchmark CSV throughput rounded to two decimals; confidence intervals on those values are approximate; first-token baselines CV>5%, not promoted as a separate latency claim",
+  "ci_method": "95% paired t interval across5 matched pairs, t4=2.776445105; ratios in percent; discarded predefined warmup pair"
+}

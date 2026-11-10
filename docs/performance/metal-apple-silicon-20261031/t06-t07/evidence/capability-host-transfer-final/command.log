@@ -1,0 +1,13 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal model views created in 0.024 ms, residency requested in 0.211 ms, warmup 0.833 ms (mapped 24.36 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+ds4: Qwen3.8 27B MTP graph allocation failed
+PASS tensor copies inside/outside command batches and invalid bounds
+PASS MTP allocation: rollback, retry, exact estimate and target preservation
+PASS inactive MTP scratch excluded from full, skill and device exports
+PASS parent -> skill -> return, cancellation, SSD/new-session restore, RNG metadata
+PASS MTP acceptance/rejection, declined/invalid verifier rows, RNG rollback and context boundary
+PASS text/image/text, MTP mRoPE catch-up, restore, changed pixels and park/resume
+PASS bounded Metal T04/T05 session features (synthetic weights)

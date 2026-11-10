@@ -1,0 +1,133 @@
+{
+  "command": [
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+    "tools/run_qwen_image_pipeline_oracle.py",
+    "--prepared",
+    "build/metal-oracles",
+    "--cases",
+    "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps/cases.json",
+    "--output",
+    "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps/oracle",
+    "--stage",
+    "decode",
+    "--device",
+    "mps",
+    "--offload"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {
+    "DS4_METAL_TIMEOUT_MULTIPLIER": "4"
+  },
+  "timeout_seconds": 1200,
+  "base_timeout_seconds": 300,
+  "timeout_multiplier": 4,
+  "reason": "Independent pinned HF/Diffusers component reference: CPU encoder/DiT, MPS VAE, unchanged BF16 recipe/noise/8steps/256px and frozen acceptance thresholds. Prior scalar CPU VAE attempt retained NOT_VERIFIED after measured slow_conv2d. Serial models,2GiBhostreserve,user4x deadlines.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 11.219313624998904,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 19525.5383195,
+      "pressure": 1,
+      "host_available_bytes": 9858088960,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 19526.554315916,
+      "pressure": 1,
+      "host_available_bytes": 9512763392,
+      "swap_bytes": 262144,
+      "footprint_bytes": 169001656,
+      "resident_bytes": 218775552
+    },
+    {
+      "monotonic": 19527.573018708,
+      "pressure": 1,
+      "host_available_bytes": 9447129088,
+      "swap_bytes": 262144,
+      "footprint_bytes": 211485416,
+      "resident_bytes": 262471680
+    },
+    {
+      "monotonic": 19528.588908666,
+      "pressure": 1,
+      "host_available_bytes": 9459105792,
+      "swap_bytes": 262144,
+      "footprint_bytes": 264962912,
+      "resident_bytes": 321290240
+    },
+    {
+      "monotonic": 19529.608878458,
+      "pressure": 1,
+      "host_available_bytes": 9491333120,
+      "swap_bytes": 262144,
+      "footprint_bytes": 277316448,
+      "resident_bytes": 333709312
+    },
+    {
+      "monotonic": 19530.624664333,
+      "pressure": 1,
+      "host_available_bytes": 9383100416,
+      "swap_bytes": 262144,
+      "footprint_bytes": 277726048,
+      "resident_bytes": 334118912
+    },
+    {
+      "monotonic": 19531.640855083,
+      "pressure": 1,
+      "host_available_bytes": 9349824512,
+      "swap_bytes": 262144,
+      "footprint_bytes": 277758816,
+      "resident_bytes": 334151680
+    },
+    {
+      "monotonic": 19532.657630958,
+      "pressure": 1,
+      "host_available_bytes": 9651027968,
+      "swap_bytes": 262144,
+      "footprint_bytes": 327861160,
+      "resident_bytes": 394559488
+    },
+    {
+      "monotonic": 19533.678018708,
+      "pressure": 1,
+      "host_available_bytes": 9954394112,
+      "swap_bytes": 262144,
+      "footprint_bytes": 358745048,
+      "resident_bytes": 428851200
+    },
+    {
+      "monotonic": 19534.695328583,
+      "pressure": 1,
+      "host_available_bytes": 9911926784,
+      "swap_bytes": 262144,
+      "footprint_bytes": 683853120,
+      "resident_bytes": 592314368
+    },
+    {
+      "monotonic": 19535.703256041,
+      "pressure": 1,
+      "host_available_bytes": 9386524672,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1662436672,
+      "resident_bytes": 595935232
+    }
+  ],
+  "executables_sha256": {
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/run_qwen_image_pipeline_oracle.py": "c625ada174b32eca2343500e5b6e8ff6db62fc6b31fabd123e4009b1f54df6ef"
+  },
+  "log_sha256": "53bf099de1f597a3949f651d97619e879e0b6b500f9fad232080410a0906f361"
+}

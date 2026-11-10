@@ -1,0 +1,294 @@
+
+===== request 1 2026-11-01 08:15:48 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 16
+effective_prompt_tokens: 16
+cached_tokens: 0
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 16
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","messages":[{"role":"user","content":"Reply only OK."}],"max_tokens":16,"temperature":0,"thinking":{"type":"disabled"}}
+
+--- rendered prompt ---
+<|im_start|>user
+Reply only OK.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8176 ---
+
+OK
+
+--- trace: speculative boundary: kept=1 discarded=1 resample=0 ---
+
+
+
+--- parsed message ---
+finish: stop
+generated_tokens: 1
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 9.789
+
+content:
+OK
+
+===== end request 1 =====
+
+===== request 2 2026-11-01 08:15:58 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 16
+effective_prompt_tokens: 16
+cached_tokens: 0
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 17
+prompt_tokens: 16
+live_prompt_common: 16
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 16
+token_window: [8..17)
+      8 ==          live 198 "\n" | prompt 198 "\n"
+      9 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+     10 ==          live 74455 "assistant" | prompt 74455 "assistant"
+     11 ==          live 198 "\n" | prompt 198 "\n"
+     12 ==          live 248068 "<think>" | prompt 248068 "<think>"
+     13 ==          live 271 "\n\n" | prompt 271 "\n\n"
+     14 ==          live 248069 "</think>" | prompt 248069 "</think>"
+     15 ==          live 271 "\n\n" | prompt 271 "\n\n"
+     16 live-only   live 3793 "OK" | prompt - <none>
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","messages":[{"role":"user","content":"Reply only OK."}],"max_tokens":16,"reasoning_effort":"none","temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Reply only OK.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8176 ---
+
+OK
+
+--- trace: speculative boundary: kept=1 discarded=1 resample=0 ---
+
+
+
+--- parsed message ---
+finish: stop
+generated_tokens: 1
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 9.926
+
+content:
+OK
+
+===== end request 2 =====
+
+===== request 3 2026-11-01 08:16:08 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 16
+effective_prompt_tokens: 16
+cached_tokens: 0
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 17
+prompt_tokens: 16
+live_prompt_common: 16
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 16
+token_window: [8..17)
+      8 ==          live 198 "\n" | prompt 198 "\n"
+      9 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+     10 ==          live 74455 "assistant" | prompt 74455 "assistant"
+     11 ==          live 198 "\n" | prompt 198 "\n"
+     12 ==          live 248068 "<think>" | prompt 248068 "<think>"
+     13 ==          live 271 "\n\n" | prompt 271 "\n\n"
+     14 ==          live 248069 "</think>" | prompt 248069 "</think>"
+     15 ==          live 271 "\n\n" | prompt 271 "\n\n"
+     16 live-only   live 3793 "OK" | prompt - <none>
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","messages":[{"role":"user","content":"Reply only OK."}],"max_tokens":16,"reasoning_effort":"none","temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Reply only OK.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8176 ---
+
+OK
+
+--- trace: speculative boundary: kept=1 discarded=1 resample=0 ---
+
+
+
+--- parsed message ---
+finish: stop
+generated_tokens: 1
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 9.528
+
+content:
+OK
+
+===== end request 3 =====
+
+===== request 4 2026-11-01 08:16:18 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 103
+effective_prompt_tokens: 103
+cached_tokens: 0
+max_tokens: 32
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 17
+prompt_tokens: 103
+live_prompt_common: 3
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 3
+token_window: [0..12)
+      0 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+      1 ==          live 846 "user" | prompt 846 "user"
+      2 ==          live 198 "\n" | prompt 198 "\n"
+      3 !=          live 20206 "Reply" | prompt 5423 "Return"
+      4 !=          live 1132 " only" | prompt 279 " the"
+      5 !=          live 10092 " OK" | prompt 4566 " JSON"
+      6 !=          live 13 "." | prompt 1576 " object"
+      7 !=          live 248046 "<|im_end|>" | prompt 440 " with"
+      8 !=          live 198 "\n" | prompt 5226 " ok"
+      9 !=          live 248045 "<|im_start|>" | prompt 804 " true"
+     10 !=          live 74455 "assistant" | prompt 13 "."
+     11 !=          live 198 "\n" | prompt 248046 "<|im_end|>"
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","messages":[{"role":"user","content":"Return the JSON object with ok true."}],"max_tokens":32,"reasoning_effort":"none","response_format":{"type":"json_schema","json_schema":{"name":"short_gate","strict":true,"schema":{"type":"object","properties":{"ok":{"type":"boolean","const":true}},"required":["ok"],"additionalProperties":false}}},"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Return the JSON object with ok true.<|im_end|>
+<|im_start|>user
+If thinking is enabled, keep all reasoning (including JSON examples) before the closing </think> tag. Immediately after </think>, return exactly one JSON value and no prose, Markdown, or code fences. The JSON value must satisfy this JSON Schema exactly:
+{"type":"object","properties":{"ok":{"type":"boolean","const":true}},"required":["ok"],"additionalProperties":false}<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=32 ctx_room=8089 ---
+
+{"ok":true}
+
+--- parsed message ---
+finish: stop
+generated_tokens: 5
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 14.015
+
+content:
+{"ok":true}
+
+===== end request 4 =====

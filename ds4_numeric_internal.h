@@ -1,6 +1,19 @@
 #ifndef DS4_NUMERIC_INTERNAL_H
 #define DS4_NUMERIC_INTERNAL_H
 #include "ds4_numeric.h"
+enum { DS4_NUM_COPY_TO_DEVICE, DS4_NUM_COPY_FROM_DEVICE, DS4_NUM_COPY_DEVICE };
+/* The shared convolution geometry uses wide arithmetic before backend limits
+ * are applied. Zero denotes an invalid axis. */
+static inline uint64_t ds4_num_conv_axis_output(const ds4_num_convolution *shape,
+                                                uint32_t axis) {
+  uint32_t kernel = shape->kernel[axis], stride = shape->stride[axis];
+  if (!shape->input[axis] || !kernel || !stride || !shape->dilation[axis])
+    return 0;
+  uint64_t padded = (uint64_t)shape->input[axis] + shape->pad_before[axis] +
+                    shape->pad_after[axis];
+  uint64_t extent = (uint64_t)shape->dilation[axis] * (kernel - 1) + 1;
+  return extent <= padded ? (padded - extent) / stride + 1 : 0;
+}
 typedef struct {
   ds4_status (*allocate)(void *, uint64_t, void **);
   ds4_status (*release)(void *, void *);
@@ -40,6 +53,11 @@ typedef struct {
   /* Fallible shutdown retains a usable backend on failure. close() runs only
    * after this succeeds and the context metadata event has completed. */
   ds4_status (*prepare_close)(void *);
+  /* Additional owned storage for one BF16 linear, beyond its input/output
+   * tensors. Zero for backends whose existing adapter margins cover it. */
+  uint64_t (*linear_workspace)(uint32_t rows, uint32_t in, uint32_t out);
+  ds4_status (*refresh_memory)(void *);
+  ds4_status (*weight_read)(void *, void *, int fd, uint64_t offset, uint64_t bytes);
 } ds4_numeric_ops;
 struct ds4_numeric {
   const ds4_numeric_ops *ops;

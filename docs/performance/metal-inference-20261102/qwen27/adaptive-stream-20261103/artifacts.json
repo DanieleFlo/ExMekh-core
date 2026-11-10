@@ -1,0 +1,82 @@
+{
+  "source_head": "ab62874723c837ade442c192b90f0fba68bd2f73",
+  "git_commits_created": 0,
+  "working_tree": "modified,not committed",
+  "hardware": {
+    "device": "Apple M5 Pro",
+    "model": "Mac17,9",
+    "RAM_bytes": 25769803776,
+    "macOS": "26.6.2 (25G83)",
+    "SDK": "26.5",
+    "compiler": "Apple clang21.0.0 (clang-2100.1.1.101)"
+  },
+  "model": {
+    "path": "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "sha256_frozen": "75bc9c8adba2842e72f0ab5201aaa07133c5010b566305c09187fcbdcd364017",
+    "bytes": 15358213024
+  },
+  "MTP": {
+    "path": "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+    "sha256_frozen": "50d9ce5a6da381bbcfb31061cf73df94a90e6faf8efeddee379a9cb8f1501c6e"
+  },
+  "raw_directory": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/phase2-20261103",
+  "frozen_criteria": {
+    "primitive": "2e-4+2e-5*abs(ref)",
+    "graph": "2e-5+5e-5*abs(ref)",
+    "transport": "BIT_EXACT"
+  },
+  "memory_policy": {
+    "reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_guard_bytes": 268435456,
+    "cache_cap": "dynamic unless explicit ceiling; physical allocations remain lazy"
+  },
+  "files": [
+    {
+      "path": "ds4.c",
+      "sha256": "a9c8fc3888a607dac127e35e9d92e3c291222bf8d9479f13c8de251c55f0ae7a",
+      "bytes": 4168817
+    },
+    {
+      "path": "ds4_gpu.h",
+      "sha256": "fa040ffac13db6fd211b8f4cfa1fb5dd011af7998e36353caa9da1678c3780a4",
+      "bytes": 162810
+    },
+    {
+      "path": "ds4_metal.m",
+      "sha256": "be97c9bc0d58e34c7fc3c10d2e3c1f3660458102322348c29f57dac31295ad71",
+      "bytes": 2353983
+    },
+    {
+      "path": "ds4_qwen4_metal_stream.inc",
+      "sha256": "93b4fa33bccc56d376ee4580b0f5312a6bd5f47a2401ed73f89f18af038183d6",
+      "bytes": 29240
+    },
+    {
+      "path": "ds4_metal_device.h",
+      "sha256": "83eb223d562adbe713156fe0af66f65b8871bc47e9151f923a3c4f11f0cd7bbf",
+      "bytes": 3011
+    },
+    {
+      "path": "ds4_metal_memory.h",
+      "sha256": "ec310a956434d63604cf44abd2ecb142083ebf123c57d639f1af88b4d65a6edc",
+      "bytes": 6013
+    },
+    {
+      "path": "ds4_lifecycle_text.h",
+      "sha256": "fd30c2bd09699ec9906eadf8512d9b5ec6721164b66e13b94dfbeac9cd9a1464",
+      "bytes": 1668
+    },
+    {
+      "path": "ds4-bench",
+      "sha256": "00aa89ebee5c53e4af63c24463b207b0889b80569f0fb563e80e5d6b25a0c89b",
+      "bytes": 2917512
+    },
+    {
+      "path": "tests/probe_qwen_metal_stream",
+      "sha256": "d905d720dcb7e08c44572f1192fa2b6f486112beb9bcc0cd5e18aaeb55f04916",
+      "bytes": 2877080
+    }
+  ],
+  "final_component": "Q-P25:discard removed retained/slot buffers only after fence"
+}

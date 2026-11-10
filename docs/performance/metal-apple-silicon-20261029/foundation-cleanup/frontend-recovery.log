@@ -1,0 +1,18 @@
+Uninstalled 1 package in 8ms
+Installed 1 package in 7ms
+============================= test session starts ==============================
+platform darwin -- Python 3.13.13, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 28 items
+
+tests/test_sync.py .................                                     [ 60%]
+tests/test_browser_support.py .....                                      [ 78%]
+tests/test_ds4_prompt_resources.py ..                                    [ 85%]
+tests/test_auto_compaction_e2e.py .                                      [ 89%]
+tests/test_outputs_responsive_e2e.py .                                   [ 92%]
+tests/test_corrections_4_e2e.py ..                                       [100%]
+
+============================= 28 passed in 20.94s ==============================

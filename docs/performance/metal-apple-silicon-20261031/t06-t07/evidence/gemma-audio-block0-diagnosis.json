@@ -1,0 +1,182 @@
+[
+  {
+    "stage": "feed_forward1.pre_layer_norm",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "feed_forward1.ffw_layer_1.linear",
+    "different": 0,
+    "elements": 282624,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "feed_forward1.ffw_layer_2.linear",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "feed_forward1.post_layer_norm",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "norm_pre_attn",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.q_proj.linear",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.k_proj.linear",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.v_proj.linear",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.relative_k_proj",
+    "different": 0,
+    "elements": 13312,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "self_attn.post.linear",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "norm_post_attn",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "lconv1d.pre_layer_norm",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "lconv1d.linear_start.linear",
+    "different": 0,
+    "elements": 141312,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "lconv1d.conv_norm",
+    "different": 1,
+    "elements": 70656,
+    "max_abs": 0.00390625
+  },
+  {
+    "stage": "lconv1d.linear_end.linear",
+    "different": 9,
+    "elements": 70656,
+    "max_abs": 0.0078125
+  },
+  {
+    "stage": "feed_forward2.pre_layer_norm",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "feed_forward2.ffw_layer_1.linear",
+    "different": 0,
+    "elements": 282624,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "feed_forward2.ffw_layer_2.linear",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "feed_forward2.post_layer_norm",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "norm_out",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "upstream-block-vs-frozen",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "scale-softplus",
+    "different": 0,
+    "elements": 128,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "q-scale",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "q-per-dim-scale",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "k-scale",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "blocked-qk-f32",
+    "different": 0,
+    "elements": 13824,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "relative-qk-f32",
+    "different": 0,
+    "elements": 7488,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "score-tanh",
+    "different": 5330,
+    "elements": 13824,
+    "max_abs": 1.1920928955078125e-07
+  },
+  {
+    "stage": "probabilities-f32",
+    "different": 4097,
+    "elements": 13824,
+    "max_abs": 2.384185791015625e-07
+  },
+  {
+    "stage": "blocked-pv-f32",
+    "different": 0,
+    "elements": 73728,
+    "max_abs": 0.0
+  }
+]

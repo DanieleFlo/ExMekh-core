@@ -1,0 +1,45 @@
+{
+  "schema": "exmekh-metal-t04-t05-v1",
+  "status": "IMPLEMENTATION_AND_BOUNDED_CHECKS_PASS",
+  "roadmap_tasks": {
+    "T04": "IN_PROGRESS",
+    "T05": "IN_PROGRESS"
+  },
+  "final_native_check_groups": 21,
+  "frontend": {
+    "passed": 1210,
+    "skipped": 46,
+    "coverage_percent": 100,
+    "provider": "mock"
+  },
+  "real_vision_encoders": {
+    "flash": {
+      "tokens": 121,
+      "width": 2560,
+      "status": "PASS"
+    },
+    "qwen27": {
+      "tokens": 121,
+      "width": 5120,
+      "status": "PASS"
+    }
+  },
+  "not_verified": [
+    "Real LLM inference at 8192/64 (T06-A/T06-B)",
+    "Matching real Qwen27 MTP sidecar inference",
+    "Full Flash MTP inference",
+    "Real LLM/server/frontend multimodal and agentic integration",
+    "CUDA/ROCm and other Apple devices"
+  ],
+  "artifacts": {
+    "checkpoint-compatibility/verification.json": "4ea48b695b3825dbcf29aef77a38990f44677e84eff83f7b672e2aee0eee922b",
+    "verification/verification.json": "62c647ade21d194f9118833503472af0e8cdb414e21319f5c70b67c0ce6f7da3",
+    "post-review/verification.json": "3ad62939b61163216296a285695aca0779a8e1d5ce1230b3adace70a5881c6b1",
+    "flash-vision-final.json": "7382cf244d4b5c0989905a9feabf0473ca6a1b71963d8bd08b2cbfae1928a165",
+    "qwen27-vision-final.json": "9a14cce0299dc391f2a4345f93f0b140973278b76f11dbeeb0ad7d6d784e4b9a",
+    "preprocessing.json": "c49866e966eac3ba0214faddc8eadc0b4818ca1587c8bf68d270902bb42d8ef4",
+    "preprocessing-after.json": "e632e68e4e0040b6ab707250260919d219169d4a671f1cf2767f5bf9adeec2c8",
+    "README.md": "1933e920d4a4393ec14a526ba7bd982a9a0365312f46eebe139d1a09b8dff734"
+  },
+  "committed": false
+}

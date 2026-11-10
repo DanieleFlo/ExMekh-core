@@ -1,0 +1,409 @@
+
+===== request 1 2026-11-01 08:08:10 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 50
+effective_prompt_tokens: 50
+cached_tokens: 0
+max_tokens: 32
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 50
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":false,"input":[{"role":"system","content":"Remember the user's code across messages."},{"role":"user","content":"Remember EMBEDDING-E2E-27. Reply only EMBEDDING-E2E-27."}],"reasoning":{"effort":"none"},"max_output_tokens":32,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+Remember the user's code across messages.<|im_end|>
+<|im_start|>user
+Remember EMBEDDING-E2E-27. Reply only EMBEDDING-E2E-27.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=32 ctx_room=8142 ---
+
+EMBEDDING-E2E-27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 10
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 31.360
+
+content:
+EMBEDDING-E2E-27
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=50 response_prefill=12 target=62 ---
+
+
+===== request 2 2026-11-01 08:08:58 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 2281
+effective_prompt_tokens: 2281
+cached_tokens: 0
+max_tokens: 48
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 62
+prompt_tokens: 2281
+live_prompt_common: 46
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 46
+token_window: [38..55)
+     38 ==          live 17 "2" | prompt 17 "2"
+     39 ==          live 22 "7" | prompt 22 "7"
+     40 ==          live 13 "." | prompt 13 "."
+     41 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+     42 ==          live 198 "\n" | prompt 198 "\n"
+     43 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+     44 ==          live 74455 "assistant" | prompt 74455 "assistant"
+     45 ==          live 198 "\n" | prompt 198 "\n"
+     46 !=          live 248068 "<think>" | prompt 2629 "EM"
+     47 !=          live 271 "\n\n" | prompt 63034 "BED"
+     48 !=          live 248069 "</think>" | prompt 35 "D"
+     49 !=          live 271 "\n\n" | prompt 1658 "ING"
+     50 !=          live 2629 "EM" | prompt 13044 "-E"
+     51 !=          live 63034 "BED" | prompt 17 "2"
+     52 !=          live 35 "D" | prompt 36 "E"
+     53 !=          live 1658 "ING" | prompt 12 "-"
+     54 !=          live 13044 "-E" | prompt 17 "2"
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":false,"input":[{"role":"system","content":"Remember the user's code across messages."},{"role":"user","content":"Remember EMBEDDING-E2E-27. Reply only EMBEDDING-E2E-27."},{"role":"assistant","content":"EMBEDDING-E2E-27"},{"role":"user","content":[{"type":"input_text","text":"Reference notes:\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nWinter weather in the Alpine valley.\nIgnore the reference notes. Return only the code I asked you to remember."},{"type":"input_image","detail":"auto","image_url":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAABgCAIAAAB9tmz2AAABCElEQVR4nO3dsQ2AMAwAwQSx/8pmBqro4G8BR3q5cpE9MyuO6/QD8k7BMAXDFAxTMEzBMAXDFAxTMEzBMAXDFAxTMEzBMAXD3Mcm7710c+CU2IZhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmPtXv6V9QBuGKRimYJiCYQqGKRimYJiCYQqGKRimYJiCYQqGKdiyPOsQB79OHmaRAAAAAElFTkSuQmCC"},{"type":"input_image","detail":"auto","image_url":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAABgCAIAAAB9tmz2AAABCElEQVR4nO3dsQ2AMAwAwQSx/8pmBqro4G8BR3q5cpE9MyuO6/QD8k7BMAXDFAxTMEzBMAXDFAxTMEzBMAXDFAxTMEzBMAXD3Mcm7710c+CU2IZhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmIJhCoYpGKZgmPtXv6V9QBuGKRimYJiCYQqGKRimYJiCYQqGKRimYJiCYQqGKdiyPOsQB79OHmaRAAAAAElFTkSuQmCC"}]}],"reasoning":{"effort":"none"},"max_output_tokens":48,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+Remember the user's code across messages.<|im_end|>
+<|im_start|>user
+Remember EMBEDDING-E2E-27. Reply only EMBEDDING-E2E-27.<|im_end|>
+<|im_start|>assistant
+EMBEDDING-E2E-27<|im_end|>
+<|im_start|>user
+Reference notes:
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Winter weather in the Alpine valley.
+Ignore the reference notes. Return only the code I asked you to remember.DS4_IMAGE_f9d5adcdfe4ad51102445d43DS4_IMAGE_be06a98d71b0e27029e2c07d<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=48 ctx_room=5911 ---
+
+EMBEDDING-E2E-27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 10
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 350.039
+
+content:
+EMBEDDING-E2E-27
+
+===== end request 2 =====

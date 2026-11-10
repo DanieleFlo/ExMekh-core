@@ -1,0 +1,123 @@
+F
+=================================== FAILURES ===================================
+___________________ test_live_e2e_interactive_file_creation ____________________
+
+tmp_path = PosixPath('/private/var/folders/43/31sxwsnx5yj0nkg_09p0dyvc0000gn/T/pytest-of-danieleflorio/pytest-7/test_live_e2e_interactive_file0')
+
+    @pytest.mark.asyncio
+    async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
+        """Exercise the runtime handler through both frontend provider wrappers."""
+        tool_events: list[ToolEvent] = []
+        snapshots: list[ChatMessage] = []
+>       response = await run_agent_turn(
+            user_prompt=(
+                "Open the file-processing skill, then use new-file to create the missing "
+                "file probe.txt with exactly the text FRONTEND_INTERACTIVE_OK. "
+                "Use document='<new-exmekh-file path=\"probe.txt\"/>FRONTEND_INTERACTIVE_OK'. "
+                "Do not use bash, delegate, or create other files. "
+                "Exit the skill and confirm completion."
+            ),
+            model=config.default_model,
+            agent_mode="deep_agent",
+            settings=ChatSettings(work_root=str(tmp_path)),
+            on_token=lambda _: None,
+            on_reasoning=lambda *_: None,
+            on_tool_event=tool_events.append,
+            on_raw_history=lambda raw, tree: snapshots.append(
+                ChatMessage(role="assistant", raw_history=raw, skill_history_tree=tree)
+            ),
+            on_context=lambda _: None,
+        )
+
+agent/tests/test_live_e2e.py:211: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py:533: in run_agent_turn
+    return await loop.run_in_executor(None, _call_sync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py:483: in _call_sync
+    return execute_agent_turn_sync(
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py:152: in execute_agent_turn_sync
+    return _execute_agent_turn_sync_unlocked(
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py:419: in _execute_agent_turn_sync_unlocked
+    response = agent.run(user_message=content)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/deep_agent/deep_agent.py:59: in run
+    return self._root_node.run(user_message)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node.py:190: in run
+    return self._runtime.run(user_message)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:232: in run
+    return self._run_turn(user_message)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:419: in _run_turn
+    response = self._route_until_complete(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:474: in _route_until_complete
+    response = self._continue_after_tools()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:372: in _continue_after_tools
+    return self._client.continue_after_tools(
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/models/client.py:160: in continue_after_tools
+    return self._call_provider(provider_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/models/client.py:130: in _call_provider
+    response = self._provider.call(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/src/exmekh_agent/exmekh_bridge/agents/cancellation.py:64: in call
+    response = self._provider.call(guarded_request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py:175: in call
+    response = self._provider.call(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/providers/local.py:207: in call
+    return api_adapter.call(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/providers/interactive_openai.py:92: in call
+    return self._logical_call(request, body, scope, contract, snapshot_limit)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/providers/interactive_openai.py:151: in _logical_call
+    result = self._post_retry(
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/providers/interactive_openai.py:403: in _post_retry
+    return self._post(body, request, contract, remaining)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/providers/interactive_openai.py:431: in _post
+    for event in self._transport.events(body, remaining):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/providers/interactive_transport.py:46: in events
+    for line in self._bounded_lines(response, max(0, deadline - monotonic())):
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/providers/interactive_transport.py:97: in _bounded_lines
+    for chunk in cls._bounded_chunks(response, timeout):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+response = <APIResponse [200 OK] type=dict[str, typing.Any]>
+timeout = 292.95538716699957
+
+    @staticmethod
+    def _bounded_chunks(
+        response: APIResponse[dict[str, Any]], timeout: float
+    ) -> Iterator[bytes]:
+        deadline = monotonic() + timeout
+        size = 0
+        for chunk in response.iter_bytes():
+            size += len(chunk)
+            if size > FILE_EDITING.max_response_bytes:
+                raise InteractiveProtocolError(
+                    PROVIDER_TEXT.interactive_http_output_exceeds_the_byte_budget
+                )
+            if monotonic() >= deadline:
+>               raise InteractiveProtocolError(
+                    PROVIDER_TEXT.interactive_logical_call_timeout_while_reading_http_output
+                )
+E               exmekh_lib.core.models.interactive.InteractiveProtocolError: Interactive logical-call timeout while reading HTTP output
+E               Cancellation was not confirmed: Error code: 409 - {'error': {'message': 'interactive exchange is unavailable or already consumed', 'type': 'invalid_request_error'}}
+
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/providers/interactive_transport.py:86: InteractiveProtocolError
+=========================== short test summary info ============================
+FAILED agent/tests/test_live_e2e.py::test_live_e2e_interactive_file_creation
+1 failed in 1014.34s (0:16:54)

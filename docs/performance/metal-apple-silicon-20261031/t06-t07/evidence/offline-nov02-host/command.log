@@ -1,0 +1,36 @@
+Traceback (most recent call last):
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/test_suite_offloaded_oracle.py", line 11, in <module>
+    from tools.suite_offloaded_oracle import SafetensorsWeights, load_offloaded_model
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tools/suite_offloaded_oracle.py", line 13, in <module>
+    from accelerate import cpu_offload, init_empty_weights
+ModuleNotFoundError: No module named 'accelerate'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/danieleflorio/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/unittest/__main__.py", line 18, in <module>
+    main(module=None)
+    ~~~~^^^^^^^^^^^^^
+  File "/Users/danieleflorio/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/unittest/main.py", line 103, in __init__
+    self.parseArgs(argv)
+    ~~~~~~~~~~~~~~^^^^^^
+  File "/Users/danieleflorio/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/unittest/main.py", line 142, in parseArgs
+    self.createTests()
+    ~~~~~~~~~~~~~~~~^^
+  File "/Users/danieleflorio/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/unittest/main.py", line 153, in createTests
+    self.test = self.testLoader.loadTestsFromNames(self.testNames,
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+                                                   self.module)
+                                                   ^^^^^^^^^^^^
+  File "/Users/danieleflorio/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/unittest/loader.py", line 207, in loadTestsFromNames
+    suites = [self.loadTestsFromName(name, module) for name in names]
+              ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/danieleflorio/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/unittest/loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/test_suite_offloaded_oracle.py", line 13, in <module>
+    raise unittest.SkipTest(
+        "requires the prepared PyTorch oracle environment"
+    ) from error
+unittest.case.SkipTest: requires the prepared PyTorch oracle environment

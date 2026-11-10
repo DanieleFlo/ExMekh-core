@@ -196,7 +196,7 @@ static ds4_status suite_prepare_image(suite_operation *o, sj *root, bool edit,
     r->opaque = background && !strcmp(background, "opaque");
     r->background = background ? background : "auto";
     uint64_t n = 1, seed;
-    if (!random_bytes(&seed, sizeof(seed)) || !suite_option_uint(root, "n", &n) || !n || n > 8) return DS4_STATUS_INVALID;
+    if (!random_bytes(&seed, sizeof(seed)) || !suite_option_uint(root, "n", &n) || !n || n > SUITE_IMAGE_MAX) return DS4_STATUS_INVALID;
     sj *extension = suite_get(root, "ds4");
     if (extension) {
         uint64_t version;
@@ -236,8 +236,60 @@ static ds4_status suite_prepare_image(suite_operation *o, sj *root, bool edit,
     } else if (images) return DS4_STATUS_UNSUPPORTED;
     return ds4_qwen_image_request_validate(&r->native);
 }
-static ds4_status suite_run_images(suite_operation *o, suite_image_request *r, buf *body,
-                                    ds4_execution_plan *plan) {
+static ds4_status suite_append_image(suite_operation *o, const suite_image_request *r,
+                                     buf *body, uint32_t index, uint32_t item,
+                                     suite_file **stored) {
+    suite_state *q = o->state;
+    ds4_qwen_image_rgba *rgba = NULL;
+    ds4_status status = ds4_qwen_image_job_take_at(o->image, item, &rgba);
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/output.png", q->directory);
+    if (!status && r->opaque) status = ds4_qwen_image_rgba_opaque(rgba);
+    if (!status) status = ds4_qwen_image_rgba_save_png(rgba, path);
+    ds4_qwen_image_rgba_free(rgba);
+    size_t bytes = 0;
+    char *png = status ? NULL : suite_read(path, 32ull << 20, &bytes);
+    unlink(path);
+    if (!status && !png) status = DS4_STATUS_NOMEM;
+    suite_file *f = status ? NULL : suite_new_file(q, "image.png", "image/png", png, bytes);
+    if (!status && !f) status = DS4_STATUS_NOMEM;
+    if (!status) {
+        *stored = f;
+        if (index) buf_putc(body, ',');
+        buf_puts(body, "{\"b64_json\":\""); suite_base64(body, png, bytes);
+        buf_puts(body, "\",\"ds4\":{\"file_id\":"); json_escape(body, f->id);
+        buf_printf(body, ",\"seed\":%llu,\"width\":%u,\"height\":%u,\"recipe\":{\"version\":1,\"rng_version\":1,"
+            "\"steps\":8,\"guidance\":1,\"reference_resolution\":0,\"background\":\"%s\"}}}",
+            (unsigned long long)(r->native.seed + index), r->native.width,
+            r->native.height, r->background);
+    }
+    free(png);
+    return status;
+}
+static ds4_status suite_run_image_batch(suite_operation *o,
+                                       const ds4_qwen_image_request *request,
+                                       uint32_t index, uint32_t count, uint32_t *active) {
+    ds4_qwen_image_observer observer = {.opaque = o, .cancelled = suite_operation_cancel,
+                                       .progress = {o, suite_model_progress}};
+#ifdef DS4_SUITE_TEST_PHASE_OBSERVER
+    observer.trace = DS4_SUITE_TEST_PHASE_OBSERVER;
+#endif
+    for (;;) {
+        if (suite_operation_cancel(o)) return DS4_STATUS_CANCELLED;
+        suite_progress_begin_items(o->client, index, count, *active);
+        ds4_status status = ds4_qwen_image_job_create_batch(&o->image, o->model->image,
+            request, *active, o->victims, o->victim_count, &observer);
+        if (!status) status = ds4_qwen_image_job_run(o->image);
+        if (status != DS4_STATUS_NOMEM || *active == 1 ||
+            (o->image && !ds4_qwen_image_job_admission_pending(o->image)))
+            return status;
+        status = suite_close_image_job(o);
+        if (status) return status;
+        --*active;
+    }
+}
+static ds4_status suite_run_images(suite_operation *o, const suite_image_request *r, buf *body,
+                                   ds4_execution_plan *plan, suite_file **pending_images) {
     suite_state *q = o->state;
     if (!o->model->image) {
         ds4_status s = ds4_qwen_image_pipeline_open(&o->model->image, o->model->bundle,
@@ -245,46 +297,27 @@ static ds4_status suite_run_images(suite_operation *o, suite_image_request *r, b
         if (s) return s;
     }
     buf_printf(body, "{\"created\":%lld,\"data\":[", (long long)time(NULL));
-    for (uint32_t i = 0; i < r->count; i++) {
-        ds4_qwen_image_observer observer = {o, suite_operation_cancel, NULL};
-#ifdef DS4_SUITE_TEST_PHASE_OBSERVER
-        observer.trace = DS4_SUITE_TEST_PHASE_OBSERVER;
-#endif
-        ds4_status status = ds4_qwen_image_job_create(&o->image, o->model->image,
-            &r->native, o->victims, o->victim_count, &observer);
-        if (!status) status = ds4_qwen_image_job_run(o->image);
+    for (uint32_t i = 0; i < r->count;) {
+        uint32_t active = r->count - i;
+        if (active > DS4_QWEN_IMAGE_BATCH_MAX) active = DS4_QWEN_IMAGE_BATCH_MAX;
+        ds4_qwen_image_request request = r->native;
+        request.seed += i;
+        ds4_status status = suite_run_image_batch(o, &request, i, r->count, &active);
         if (status) return status;
         const ds4_qwen_image_report *report = ds4_qwen_image_job_report(o->image);
         for (unsigned phase = 0; phase < 4; phase++) o->phase_seconds[phase] += report->phase_seconds[phase];
         for (unsigned phase = 0; phase < 3; phase++) o->load_seconds[phase] += report->load_seconds[phase];
         *plan = report->plan;
-        ds4_qwen_image_rgba *rgba = NULL;
-        status = ds4_qwen_image_job_take(o->image, &rgba);
-        char path[PATH_MAX]; snprintf(path, sizeof(path), "%s/output.png", q->directory);
-        if (!status && r->opaque) status = ds4_qwen_image_rgba_opaque(rgba);
-        if (!status) status = ds4_qwen_image_rgba_save_png(rgba, path);
-        ds4_qwen_image_rgba_free(rgba);
-        size_t bytes = 0;
-        char *png = status ? NULL : suite_read(path, 32ull << 20, &bytes);
-        unlink(path);
-        if (!status && !png) status = DS4_STATUS_NOMEM;
-        suite_file *f = status ? NULL : suite_new_file(q, "image.png", "image/png", png, bytes);
-        if (!status && !f) status = DS4_STATUS_NOMEM;
-        if (!status) {
-            if (i) buf_putc(body, ',');
-            buf_puts(body, "{\"b64_json\":\""); suite_base64(body, png, bytes);
-            buf_puts(body, "\",\"ds4\":{\"file_id\":"); json_escape(body, f->id);
-            buf_printf(body, ",\"seed\":%llu,\"width\":%u,\"height\":%u,\"recipe\":{\"version\":1,\"rng_version\":1,"
-                "\"steps\":8,\"guidance\":1,\"reference_resolution\":0,\"background\":\"%s\"}}}",
-                (unsigned long long)r->native.seed, r->native.width, r->native.height, r->background);
+        suite_phase(o->client, "finalizing");
+        for (uint32_t item = 0; item < active; item++) {
+            if (suite_operation_cancel(o)) return DS4_STATUS_CANCELLED;
+            status = suite_append_image(o, r, body, i + item, item, pending_images + i + item);
+            if (status) return status;
         }
-        free(png);
+        status = suite_close_image_job(o);
         if (status) return status;
-        status = ds4_qwen_image_job_close(o->image);
-        if (status) return status;
-        o->image = NULL;
-        if (i + 1 < r->count) {
-            r->native.seed++;
+        i += active;
+        if (i < r->count) {
             status = ds4_engine_reclaim_close(o->reclaim);
             if (status) return status;
             o->reclaim = NULL; o->victim_count = 0;
@@ -335,7 +368,8 @@ static bool suite_receipt_lookup(server *s, job *j, sj *root, suite_receipt **re
         if (strcmp(r->key, j->suite_request->key)) continue;
         if (memcmp(fingerprint, r->hash, 32)) suite_error(s, j, 409, "idempotency_conflict", DS4_SUITE_CONFLICT, NULL);
         else {
-            snprintf(j->suite_request->request_id, 38, "%s", r->request_id);
+            if (!j->suite_request->stream)
+                snprintf(j->suite_request->request_id, 38, "%s", r->request_id);
             char *body = suite_read(r->path, SUITE_RECEIPT_MAX, NULL);
             if (body) { suite_send(s, j, r->code, body); free(body); }
             else suite_error(s, j, 503, "model_not_ready", DS4_SUITE_FAILED, NULL);
@@ -377,19 +411,12 @@ static void suite_worker(server *s, job *j) {
     pthread_mutex_lock(&s->inference_mu);
     suite_state *q = s->suite;
     suite_http *h = j->suite_request;
+    suite_phase(j, "preparing");
     if (suite_recover(s)) { suite_status_error(s, j, DS4_STATUS_RESTORE); goto done; }
     suite_expire(q);
     if (suite_cancel(j)) { suite_status_error(s, j, DS4_STATUS_CANCELLED); goto done; }
     if (!strcmp(h->method, "GET")) {
-        if (!strncmp(h->path, "/v1/files/", 10)) suite_download(s, j);
-        else {
-            const char *id = h->path + 11;
-            bool found = false;
-            for (unsigned i = 0; i < 2; i++) if (q->models[i].bundle && !strcmp(id, ds4_bundle_model(q->models[i].bundle))) {
-                buf body = {0}; suite_append_model(&body, q, q->models + i); suite_send(s, j, 200, body.ptr); buf_free(&body); found = true;
-            }
-            if (!found) suite_error(s, j, 404, "model_not_found", DS4_SUITE_MODEL, "model");
-        }
+        suite_download(s, j);
         goto done;
     }
     if (!strcmp(h->path, "/v1/files")) { suite_upload(s, j); goto done; }
@@ -401,13 +428,15 @@ static void suite_worker(server *s, job *j) {
         : (h->body && !memchr(h->body, 0, h->length) && !strstr(h->body, "\\u0000") ? schema_json_parse(h->body) : NULL);
     suite_operation *o = NULL;
     suite_image_request image = {0};
+    suite_file *pending_images[SUITE_IMAGE_MAX] = {0};
+    bool images_committed = false;
     buf body = {0}; suite_receipt *receipt = NULL;
     if (!root || root->kind != SCHEMA_JSON_OBJECT) { suite_status_error(s, j, DS4_STATUS_INVALID); goto cleanup; }
     const char *model = suite_str(root, "model");
     suite_model *m = q->models + (embed ? 1 : 0);
     if (!model || !m->bundle || strcmp(model, ds4_bundle_model(m->bundle))) {
         bool known = false;
-        for (unsigned i = 0; i < 2; i++) known |= q->models[i].bundle && model && !strcmp(model, ds4_bundle_model(q->models[i].bundle));
+        for (unsigned i = 0; i < SUITE_MODELS; i++) known |= q->models[i].bundle && model && !strcmp(model, ds4_bundle_model(q->models[i].bundle));
         suite_error(s, j, known ? 400 : 404, known ? "unsupported_operation" : "model_not_found", DS4_SUITE_MODEL, "model"); goto cleanup;
     }
     o = calloc(1, sizeof(*o));
@@ -424,6 +453,7 @@ static void suite_worker(server *s, job *j) {
         else suite_status_error(s, j, status);
         goto cleanup;
     }
+    if (!embed) suite_progress_begin_items(j, 0, image.count, 1);
     if (suite_receipt_lookup(s, j, root, &receipt)) goto cleanup;
     /* Bound output storage before any eviction or compute, including a full
      * receipt plus PNG bytes. No GPU result is retained by the HTTP client. */
@@ -442,7 +472,9 @@ static void suite_worker(server *s, job *j) {
     uint64_t h2d_before, d2h_before;
     ds4_numeric_transfers(q->numeric, &h2d_before, &d2h_before);
     ds4_execution_plan plan = {0};
-    if (!status) status = embed ? suite_run_embedding(o, &body, root, usage, &plan) : suite_run_images(o, &image, &body, &plan);
+    if (!status)
+        status = embed ? suite_run_embedding(o, &body, root, usage, &plan) :
+            suite_run_images(o, &image, &body, &plan, pending_images);
     if (status) {
         ds4_status close = suite_operation_close(o);
         if (close) { o->client = NULL; q->recovery = o; status = DS4_STATUS_RESTORE; }
@@ -489,18 +521,20 @@ static void suite_worker(server *s, job *j) {
         }
         receipt->bytes = body.len; q->stored += body.len;
     }
+    images_committed = true;
     suite_send(s, j, 200, body.ptr);
 cleanup:
     if (o) {
         ds4_status close = suite_operation_close(o);
         if (close) { o->client = NULL; q->recovery = o; }
     }
+    if (!images_committed)
+        for (size_t i = 0; i < image.count; i++) suite_remove_file(q, pending_images[i]);
     suite_image_request_free(&image);
     schema_json_free(root); buf_free(&body);
-    for (size_t i = 0; i < transients; i++) {
-        suite_file *f = suite_find_file(q, transient[i]);
-        if (f) { unlink(f->path); q->stored -= f->bytes; memset(f, 0, sizeof(*f)); }
-    }
+    for (size_t i = 0; i < transients; i++)
+        suite_remove_file(q, suite_find_file(q, transient[i]));
 done:
+    suite_catalog_refresh(q);
     pthread_mutex_unlock(&s->inference_mu);
 }

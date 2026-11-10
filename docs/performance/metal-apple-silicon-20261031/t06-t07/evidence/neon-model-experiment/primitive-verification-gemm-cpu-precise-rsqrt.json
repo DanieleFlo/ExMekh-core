@@ -1,0 +1,231 @@
+{
+  "scope": "Bounded primitive checks with alternate libraries and public Numeric API; no full-model qualification.",
+  "variants": [
+    {
+      "variant": "gemm-cpu-precise-rsqrt",
+      "status": "PASS",
+      "checks": [
+        {
+          "kind": "linear",
+          "shape": [
+            2,
+            8,
+            2
+          ],
+          "bias": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            2,
+            8,
+            2
+          ],
+          "bias": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            35,
+            39,
+            37
+          ],
+          "bias": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            35,
+            39,
+            37
+          ],
+          "bias": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            3,
+            7,
+            5
+          ],
+          "bias": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            3,
+            7,
+            5
+          ],
+          "bias": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            8,
+            512,
+            96
+          ],
+          "bias": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            8,
+            512,
+            96
+          ],
+          "bias": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            3,
+            33,
+            8
+          ],
+          "bias": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "linear",
+          "shape": [
+            3,
+            33,
+            8
+          ],
+          "bias": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "gemma-0",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "gemma-0",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "gemma-6",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "gemma-6",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "gemma-18",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "gemma-18",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "gemma-23",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "gemma-23",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-0",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-0",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-qnorm-0",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-qnorm-0",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-6",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-6",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-qnorm-6",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-qnorm-6",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-18",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-18",
+          "in_place": true,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-35",
+          "in_place": false,
+          "bit_exact": true
+        },
+        {
+          "kind": "rms",
+          "name": "qwen-35",
+          "in_place": true,
+          "bit_exact": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,832 @@
+{
+  "scope": "T08 ownership/configuration/diagnostic review; not full T08 completion",
+  "status": "PASS_IN_REVIEW_SCOPE",
+  "date": "2026-11-06",
+  "source_base": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+  "code_commits": [
+    {
+      "sha": "6bd07b0936ff245db09d179296aec263aa5fc820",
+      "scope": "Metal host reserve owners"
+    },
+    {
+      "sha": "d0f0e3a1fc74e4310a8bb4c150011564d57ac0b9",
+      "scope": "Qualification MemoryPolicy"
+    },
+    {
+      "sha": "e56f530b08a63f29420594ff1fe97b23f04dc11f",
+      "scope": "Image admission and oracle devices"
+    },
+    {
+      "sha": "d33d4b66c93f0a6f7b9e2a9c755292448c8b2a3e",
+      "scope": "Skill restore diagnostic"
+    }
+  ],
+  "hardware": "Apple M5 Pro, 24 GiB unified RAM",
+  "source_sha256": {
+    "Makefile": "6030121dcd022fe41b65c29c19d991e8ae2f799548d8c6d6b174286243a4cda6",
+    "config/flash-metal-streamed.env.example": "46ea471b2e5a90b91ef8fdde1d99d36582d2efe0e8f00d7a1cc877bccc607987",
+    "config/qwen27-metal-streamed.env.example": "d078bb04b19debc7987d1b21ba0fd4de956a436e11d4a9a58c64c197e97e4ca3",
+    "ds4.c": "d75788b84707aeecad18cfd20953032815211201db9687889c78326d27f09661",
+    "ds4_lifecycle_text.h": "a1b9fa5199521201d5254a31acaf9ce531d4289dd727764906ed39330974c2bd",
+    "ds4_metal.m": "bab378801efd78e6b5ffbbe2d7176669baf89d79c2758cfce48a05934a80cc17",
+    "ds4_metal_memory.h": "65b52fd9ed3e5fe9cc9794580eb4e327aa81fdb1841379d04fe1f97b00ecdd86",
+    "ds4_server_suite.inc": "52b857073284b1439118ba8d28128167d0d48542937587c0232c0dbd03e9b425",
+    "tests/probe_qwen_metal_stream.c": "27fae6950e418126be54c98d7040570635c8972840961381dcd7b08f48988db1",
+    "tests/probe_qwen_skill_return.c": "02ed689b39482c58fcceeb1ab3cb2eca09ae88352f1eb0808da6ff48f6a5674e",
+    "tests/suite_accelerator.h": "dcdba96155250b315f20522a4a14e3696c709d72c01b83d51bc49ad76878f00a",
+    "tests/test_metal_foundations.py": "2512d200f9ae34097922704eed00784857ef227adc8f5c0aef7657b623f501bc",
+    "tests/test_metal_memory_policy.c": "8517009dc4ca5c30a4ed93a5c06a6205cae472ae37c188c52d6e9ffa54723a56",
+    "tests/test_metal_stream_qualification.py": "ea7355616f32a2c660a7a7314b0c0c45d5680f73fdb6a4e9c398eb960988f7b4",
+    "tests/test_qualification_memory.py": "c0fea65e0b32c12a413ead4ccef278f8480ec5b31eea90224c6551b6cc60e59f",
+    "tests/test_suite_accelerator.c": "adfd9067d9ef3b23e12aaac6253ab47fede853e24597cec7af3b44d562f0c014",
+    "tests/test_suite_contracts.py": "4c52d2f754da0f914d2a84f455d2f2fd44078ef61512c6fe54fd2f208efabab0",
+    "tests/test_suite_pipeline_qualification.py": "b0bb836d207953713a65949e62ffc661ad721a9538050d18d03d8736fd09c162",
+    "tools/qualification_memory.py": "37ac18fb44348ff8eb46a4dfec803ddef9c601a2600c9b0c9404c8244759e056",
+    "tools/qualify_metal_command.py": "e9d96b9548387e3d22de33b7a81a585f10ed100ad56ddec449f92af23f4c8b1f",
+    "tools/qualify_metal_foundations.py": "863bf29ea53ec6b9d1e5ef4751e464c0c03466a4c8468e12f988f0ff120ab57c",
+    "tools/qualify_metal_server.py": "c92e49303c293930ec8374bb9a1388b12874d5f28a70f89b9b5deff035de5472",
+    "tools/qualify_qwen_image_pipeline.py": "352c44404776f37ed31cb51ff4487f00f481aeba23079fe37a9b32102fb74289"
+  },
+  "binaries_sha256": {
+    "ds4-server": "cda107ed41f74cfc62da04f6eefc3a87a1bdfdce4aee8a1c6f95382333b93f12",
+    "ds4-server-suite": "c48d660db597a5ee38a20d6ec297b4982306c510285debf4177ba55b247a61bb",
+    "tests/probe_qwen_metal_stream": "f1221a3ca923552ca1730723de5702247b4ec1ed08cb0c992474fb07ac751705",
+    "tests/probe_qwen_skill_return": "f44fd562b59de03d2fdba36079b205ea81530c4a5d35db01147d5451095dba87",
+    "tests/probe_qwen_image_pipeline": "0e4a9c437d7971fb42153f4713dca7067c1fabeae008add9fca7b234eb33786a",
+    "tests/probe_gemma_visual": "fc36053f501875fe8540d6b04b46d29694b1df8d460fb0e38d9298c8b455611b"
+  },
+  "pre_review_binaries_sha256": {
+    "build/metal-t08-review-20261106/server-before": "acaeb75cf7f10debfd4d9b6577a490211dd59cbe5bcfb9a5b991ed30dfc32daa",
+    "build/metal-t08-review-20261106/probe-before": "437c192f3f5d8678279202a66c301218fd9e5a2713dd6634cc3c791d97fd95ab",
+    "build/metal-t08-review-20261106/image-before": "b713f1791a4983be43d34e635921d2b4f026bcc3f7eafa298aea67b0c804427c",
+    "build/metal-t08-review-20261106/skill-before": "a8a4e7a04f7f25b23232bdecd375829030f394fb5125b05d56a7ddc0b961cfac"
+  },
+  "checks": [
+    {
+      "id": "python",
+      "status": "PASS",
+      "tests": 86,
+      "elapsed_seconds": 14.761,
+      "command": "agent/.venv/bin/python -m unittest tests.test_qualification_memory tests.test_metal_stream_qualification tests.test_qualification_client tests.test_suite_pipeline_qualification tests.test_suite_release tests.test_suite_contracts tests.test_metal_foundations tests.test_flash_launcher tests.test_server_qualification",
+      "log": "build/metal-t08-review-20261106/python-final-unrestricted.log",
+      "log_sha256": "8f78a921ba7c3f2fccf9f8bc44030c0a5aed52fd94121edc73de24b4b65dc31e"
+    },
+    {
+      "id": "ruff",
+      "status": "PASS",
+      "scope": "ten modified/new Python source and test files",
+      "log": "build/metal-t08-review-20261106/ruff.log",
+      "log_sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "id": "build-metal-foundations",
+      "status": "PASS",
+      "command": "DS4_METAL_HOST_RESERVE_BYTES=0 make all ds4-server-suite test-metal-foundations test-qwen35-metal-features test-qwen4-metal-stream test-suite-accelerator test-qwen-image-cache-budget test-suite-http tests/probe_qwen_skill_return tests/probe_gemma_visual SUITE_PYTHON=agent/.venv/bin/python",
+      "log": "build/metal-t08-review-20261106/metal-foundations.log",
+      "log_sha256": "aca682d7adadeaf20ed50072a9cf0b264ff3e959c8d2072b647e48a003cd8bd4"
+    },
+    {
+      "id": "policy-asan-ubsan",
+      "status": "PASS",
+      "scope": "test_metal_memory_policy.c with ds4_resources.c",
+      "log": "build/metal-t08-review-20261106/policy-sanitized.log",
+      "log_sha256": "40aa50a0752cbfb1f7deb44e953783a48cfb5b29852c50f62db3698678086413"
+    },
+    {
+      "id": "cpu-compile",
+      "status": "PASS",
+      "command": "cc -O2 -std=c99 -DDS4_NO_GPU -I. -c ds4.c -o build/metal-t08-review-20261106/ds4-cpu.o",
+      "log": "build/metal-t08-review-20261106/cpu-build.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "git-diff-check",
+      "status": "PASS"
+    }
+  ],
+  "model_runs": {
+    "flash-gate": {
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-t08-review-20261106/flash-gate/data",
+        "32"
+      ],
+      "cwd": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core",
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "environment": {
+        "DS4_METAL_HOST_RESERVE_BYTES": "0"
+      },
+      "timeout_seconds": 600.0,
+      "base_timeout_seconds": 600.0,
+      "timeout_multiplier": 1,
+      "reason": "Post-review explicit capacity arithmetic and immutable qualification policy;Flash full payload/logits replay32+8",
+      "footprint_limit_gib": null,
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "exit_code": 0,
+      "elapsed_seconds": 10.165063417000056,
+      "status": "PASS",
+      "cleanup_error": null,
+      "cleanup_forced": false,
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "f1221a3ca923552ca1730723de5702247b4ec1ed08cb0c992474fb07ac751705"
+      },
+      "log_sha256": "4584ec25e938fd1d0b452510fc8ef8a87722a812c3fe7f74f36445a7eb4190fa",
+      "sample_summary": {
+        "count": 10,
+        "host_available_min_bytes": 13861928960,
+        "peak_footprint_bytes": 1980139824,
+        "pressure_max": 1,
+        "global_swap_growth_bytes": 0
+      },
+      "raw_report": "build/metal-t08-review-20261106/flash-gate/report.json",
+      "raw_report_sha256": "f88b6ee326ca6d1deea054203ccb0b9ac4d49fd49240c4eed02e8f5ce3540871"
+    },
+    "qwen27-gate": {
+      "command": [
+        "tests/probe_qwen_metal_stream",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "build/metal-t08-review-20261106/qwen27-gate/data",
+        "32"
+      ],
+      "cwd": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core",
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "environment": {
+        "DS4_METAL_HOST_RESERVE_BYTES": "0"
+      },
+      "timeout_seconds": 600.0,
+      "base_timeout_seconds": 600.0,
+      "timeout_multiplier": 1,
+      "reason": "Post-review explicit capacity arithmetic and immutable qualification policy;Qwen27 full payload/logits replay32+8",
+      "footprint_limit_gib": null,
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "exit_code": 0,
+      "elapsed_seconds": 8.402461415997095,
+      "status": "PASS",
+      "cleanup_error": null,
+      "cleanup_forced": false,
+      "executables_sha256": {
+        "tests/probe_qwen_metal_stream": "f1221a3ca923552ca1730723de5702247b4ec1ed08cb0c992474fb07ac751705"
+      },
+      "log_sha256": "a6f56664e9318f2d1dc58189fc903b28134b7a79101b056cca31ea83e261c047",
+      "sample_summary": {
+        "count": 8,
+        "host_available_min_bytes": 2289893376,
+        "peak_footprint_bytes": 17576899688,
+        "pressure_max": 2,
+        "global_swap_growth_bytes": 0
+      },
+      "raw_report": "build/metal-t08-review-20261106/qwen27-gate/report.json",
+      "raw_report_sha256": "c874874faa980c546941e099d35268842d42e6e800828b15e45978fb6ee02922"
+    },
+    "image512": {
+      "command": [
+        "tests/probe_qwen_image_pipeline",
+        "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+        "build/metal-oracles/models",
+        "build/metal-models/image-tokenizer.ds4q",
+        "build/metal-t08-review-20261106/image512/native",
+        "build/metal-perf-image-20261105/alpha-512.ds4p"
+      ],
+      "cwd": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core",
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "environment": {
+        "DS4_METAL_HOST_RESERVE_BYTES": "0",
+        "DS4_SUITE_CASES_ONLY": "1"
+      },
+      "timeout_seconds": 600.0,
+      "base_timeout_seconds": 600.0,
+      "timeout_multiplier": 1,
+      "reason": "Post-review native512 replay on identical fixture; compare saved independent CPUencoder/MPSDiT/MPSVAE gate without arithmetic changes",
+      "footprint_limit_gib": null,
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "exit_code": 0,
+      "elapsed_seconds": 242.72387037500084,
+      "status": "PASS",
+      "cleanup_error": null,
+      "cleanup_forced": false,
+      "executables_sha256": {
+        "tests/probe_qwen_image_pipeline": "0e4a9c437d7971fb42153f4713dca7067c1fabeae008add9fca7b234eb33786a"
+      },
+      "log_sha256": "3abd6c26eb65902a64b9b45856ac2d009e1666fe8337a36ded3107bd076cc35d",
+      "sample_summary": {
+        "count": 240,
+        "host_available_min_bytes": 5136187392,
+        "peak_footprint_bytes": 10885547936,
+        "pressure_max": 2,
+        "global_swap_growth_bytes": 0
+      },
+      "raw_report": "build/metal-t08-review-20261106/image512/report.json",
+      "raw_report_sha256": "935b0ad42ca11d9a00c8492a239ce4139cc65527a4165fa05ea17a29e989339c"
+    },
+    "gemma-media": {
+      "command": [
+        "tests/probe_gemma_visual",
+        "build/metal-models/gemma.ds4b/bundle.ds4b",
+        "build/metal-oracles/models",
+        "build/metal-models/gemma.ds4g",
+        "build/metal-models/gemma-media.ds4p",
+        "build/metal-qualification/t06-t07-20261031/gemma-media/cases.bin",
+        "build/metal-t08-review-20261106/gemma-media/native"
+      ],
+      "cwd": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core",
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "environment": {
+        "DS4_METAL_HOST_RESERVE_BYTES": "0",
+        "DS4_GEMMA_VISUAL_DIMENSIONS": "128"
+      },
+      "timeout_seconds": 300.0,
+      "base_timeout_seconds": 300.0,
+      "timeout_multiplier": 1,
+      "reason": "Post-review Gemma independent strict480boundary and128dim vector gate,zero reserve",
+      "footprint_limit_gib": null,
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "exit_code": 0,
+      "elapsed_seconds": 12.200585541999317,
+      "status": "PASS",
+      "cleanup_error": null,
+      "cleanup_forced": false,
+      "executables_sha256": {
+        "tests/probe_gemma_visual": "fc36053f501875fe8540d6b04b46d29694b1df8d460fb0e38d9298c8b455611b"
+      },
+      "log_sha256": "1f45addc92728d3b51accedfaff3fd91ad29073bed37212dfd644c6b22621116",
+      "sample_summary": {
+        "count": 12,
+        "host_available_min_bytes": 13954072576,
+        "peak_footprint_bytes": 1316882976,
+        "pressure_max": 1,
+        "global_swap_growth_bytes": 0
+      },
+      "raw_report": "build/metal-t08-review-20261106/gemma-media/report.json",
+      "raw_report_sha256": "cb7f5f7b7848b0677046871567d7b308b13ed20466d8c88273655ca41739de3d"
+    },
+    "skill-return": {
+      "command": [
+        "tests/probe_qwen_skill_return",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "docs/performance/metal-apple-silicon-20261031/t08-20261106/fixtures/return.prompt.txt",
+        "docs/performance/metal-apple-silicon-20261031/t08-20261106/fixtures/inner.prompt.txt",
+        "build/metal-t08-review-20261106/skill-return/data",
+        "1234",
+        "1247",
+        "1151"
+      ],
+      "cwd": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core",
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "environment": {
+        "DS4_METAL_HOST_RESERVE_BYTES": "0"
+      },
+      "timeout_seconds": 600.0,
+      "base_timeout_seconds": 600.0,
+      "timeout_multiplier": 1,
+      "reason": "Post-review probe ownership and checked IO; frozen2GiB cache,exact system frontier1151,compare all direct/restored/cold logits",
+      "footprint_limit_gib": null,
+      "memory_policy": {
+        "host_reserve_bytes": 0,
+        "critical_pressure": 4,
+        "swap_growth_bytes": 268435456,
+        "unsafe_samples": 2
+      },
+      "exit_code": 0,
+      "elapsed_seconds": 246.69888399999763,
+      "status": "PASS",
+      "cleanup_error": null,
+      "cleanup_forced": false,
+      "executables_sha256": {
+        "tests/probe_qwen_skill_return": "f44fd562b59de03d2fdba36079b205ea81530c4a5d35db01147d5451095dba87"
+      },
+      "log_sha256": "40803de1401b71a72c22ea9ae40f0d948df49ce8444c8fa12581347971597bfe",
+      "sample_summary": {
+        "count": 244,
+        "host_available_min_bytes": 14296334336,
+        "peak_footprint_bytes": 1929808080,
+        "pressure_max": 1,
+        "global_swap_growth_bytes": 62914
+      },
+      "raw_report": "build/metal-t08-review-20261106/skill-return/report.json",
+      "raw_report_sha256": "5e044f405b8855bd5cdf51a8f0808f68adca92af11ccf8e66c6ada62ad8136a5"
+    }
+  },
+  "llm_artifact_parity": {
+    "flash": {
+      "continuation.f32": true,
+      "prefill.f32": true,
+      "position-02.f32": true,
+      "position-03.f32": true,
+      "prefill.state": true,
+      "position-04.f32": true,
+      "position-05.f32": true,
+      "position-07.f32": true,
+      "position-06.f32": true,
+      "position-08.f32": true
+    },
+    "qwen27": {
+      "continuation.f32": true,
+      "prefill.f32": true,
+      "position-02.f32": true,
+      "position-03.f32": true,
+      "prefill.state": true,
+      "position-04.f32": true,
+      "position-05.f32": true,
+      "position-07.f32": true,
+      "position-06.f32": true,
+      "position-08.f32": true
+    }
+  },
+  "image512_native_artifact_parity": {
+    "rgba.f32": true,
+    "result.png": true,
+    "conditioning.bf16": true,
+    "latent-6.f32": true,
+    "latent-7.f32": true,
+    "latent-5.f32": true,
+    "latent-4.f32": true,
+    "latent-0.f32": true,
+    "latent-1.f32": true,
+    "latent-3.f32": true,
+    "latent-2.f32": true
+  },
+  "image512_independent": {
+    "cases": [
+      {
+        "id": "alpha-512",
+        "width": 512,
+        "height": 512,
+        "seed": 20261021,
+        "references": [],
+        "fixture_sha256": "bd5f7eb548ffd8ba2768f09da4d5ccdf657af948cd0799f12533e2cee9b53a80",
+        "conditioning": {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        "references_encoded": null,
+        "latents": [
+          {
+            "max_abs": 0.015625,
+            "rmse": 0.0009527430183901462,
+            "relative_l2": 0.0009701318643225734,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "max_abs": 0.015625,
+            "rmse": 0.0012749821591359074,
+            "relative_l2": 0.001327608617233849,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "max_abs": 0.03125,
+            "rmse": 0.0015203346422981918,
+            "relative_l2": 0.0016219811969321984,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "max_abs": 0.03125,
+            "rmse": 0.0017291011601487552,
+            "relative_l2": 0.0018930894884652968,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "max_abs": 0.03125,
+            "rmse": 0.0020569882315098842,
+            "relative_l2": 0.002335509122962608,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "max_abs": 0.03125,
+            "rmse": 0.002708217940275982,
+            "relative_l2": 0.003257079522199703,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "max_abs": 0.0390625,
+            "rmse": 0.004878994909007238,
+            "relative_l2": 0.005167514865288297,
+            "bit_exact": false,
+            "verdict": "PASS"
+          },
+          {
+            "max_abs": 0.1328125,
+            "rmse": 0.01035862861968833,
+            "relative_l2": 0.007217925989377099,
+            "bit_exact": false,
+            "verdict": "PASS"
+          }
+        ],
+        "rgba": {
+          "max_abs": 0.142333984375,
+          "rmse": 0.005003053451903715,
+          "relative_l2": 0.008807135411122644,
+          "bit_exact": false,
+          "ssim_rgb": 0.9971658132892824,
+          "alpha_mae": 0.00043903191908611916
+        },
+        "runtime": {
+          "width": 512,
+          "height": 512,
+          "references": 0,
+          "seed": 20261021,
+          "variant": 4,
+          "victims": 0,
+          "total_seconds": 230.131281,
+          "prepare_seconds": 0.000102,
+          "load_seconds": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "phase_seconds": [
+            0.0,
+            14.100996,
+            173.985587,
+            42.044549
+          ],
+          "loads": [
+            0,
+            0,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            1
+          ],
+          "peak_device_owned": 10808723968,
+          "live_device_owned": 0,
+          "pre_run_device_owned": 0,
+          "previous_device_peak": 0,
+          "plan_device": 11196825568,
+          "plan_host": 7421984,
+          "peak_bound_checked": true,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 0,
+          "h2d_bytes": 59243701624,
+          "d2h_bytes": 4521984,
+          "weight_groups": [
+            {
+              "limit": 10989870752,
+              "loads": 36,
+              "hits": 360,
+              "evictions": 8,
+              "payload_h2d": 13892143104
+            },
+            {
+              "limit": 10525048800,
+              "loads": 103,
+              "hits": 2252,
+              "evictions": 79,
+              "payload_h2d": 44764818432
+            },
+            {
+              "limit": 675480832,
+              "loads": 1,
+              "hits": 127,
+              "evictions": 0,
+              "payload_h2d": 518096424
+            }
+          ],
+          "prompt_sha256": "1e56969b3e79b06fdb50a1bb2ec5ae278798566cdb3759797f4ddbdde5ee2bb8",
+          "noise_sha256": "fe534b968a268d74ec2acf9dc4bc1bcf8ea4d5ad72ab615d52f03a8e80ad45e0",
+          "reference_metadata": [],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        },
+        "verdict": "PASS"
+      }
+    ],
+    "verdict": "PASS",
+    "oracle_devices": {
+      "encoder": "cpu",
+      "encode": "mps",
+      "dit": "mps",
+      "decode": "mps"
+    },
+    "full_t00_corpus": false,
+    "excluded": [],
+    "human_task_review": "NOT_VERIFIED",
+    "tolerance_sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+  },
+  "image512_oracle_origin": "Reused independent CPU encoder / MPS DiT / MPS VAE artifacts from no-reserve/image512; symlink recorded in ignored build directory. Comparison rerun against the reviewed native binary, frozen input and tolerances.",
+  "gemma_media": {
+    "raw_report": "build/metal-t08-review-20261106/gemma-media/comparison.json",
+    "raw_report_sha256": "4e31e3af2c9b2df2edebdeb8b5dbb10c0bda88eeefb335efd18dc13b39303131",
+    "internal": {
+      "criterion": "bit_exact",
+      "status": "PASS",
+      "exact": 480,
+      "count": 480
+    },
+    "vectors": {
+      "metrics": {
+        "max_abs": 5.960464477539063e-08,
+        "rmse": 6.472565998493549e-09,
+        "relative_l2": 7.322872469981983e-08,
+        "bit_exact": false,
+        "cosine_min": 0.9999999999999989,
+        "unit_norm_error_max": 6.491406745467998e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    "dimensions": 128
+  },
+  "skill_return": {
+    "result": {
+      "restore_exact": true,
+      "restore_max_abs": 0,
+      "cold_max_abs": 1.89239585,
+      "direct_top": 248058,
+      "restored_top": 248058,
+      "cold_top": 10191,
+      "vocab": 248320,
+      "target_tokens": 1422,
+      "inner_tokens": 2662,
+      "prefill_tokens": 1234,
+      "frontier_tokens": 1247,
+      "anchor_tokens": 1151
+    },
+    "parity_with_previous_control": [
+      {
+        "file": "direct.f32",
+        "control_sha256": "7390590cf5b69e17f5b93fd6744f75f19e79d88e801c6f86c91a36d3e177fa18",
+        "review_sha256": "7390590cf5b69e17f5b93fd6744f75f19e79d88e801c6f86c91a36d3e177fa18",
+        "byte_exact": true
+      },
+      {
+        "file": "restored.f32",
+        "control_sha256": "7390590cf5b69e17f5b93fd6744f75f19e79d88e801c6f86c91a36d3e177fa18",
+        "review_sha256": "7390590cf5b69e17f5b93fd6744f75f19e79d88e801c6f86c91a36d3e177fa18",
+        "byte_exact": true
+      },
+      {
+        "file": "cold.f32",
+        "control_sha256": "91f57a30011b79c063539dccf076639f6a6254c97cc3964cef56d3cb37084e3b",
+        "review_sha256": "91f57a30011b79c063539dccf076639f6a6254c97cc3964cef56d3cb37084e3b",
+        "byte_exact": true
+      },
+      {
+        "file": "result.json",
+        "control_sha256": "2f5eda0e1b8ac6c3a7c27a4b70bb0575175906ca502850d00f76d2ddcd0bfa8b",
+        "review_sha256": "2f5eda0e1b8ac6c3a7c27a4b70bb0575175906ca502850d00f76d2ddcd0bfa8b",
+        "byte_exact": true
+      }
+    ],
+    "interpretation": "Restore is exact; different cold/mixed segmentation remains reproduced. Diagnostic PASS does not qualify F08."
+  },
+  "sandbox_attempts": {
+    "python": "86 tests, one socket bind PermissionError; separate failed log python-final.log. Same final source passed outside sandbox.",
+    "api": {
+      "status": "FAIL",
+      "command": [
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server",
+        "--metal",
+        "-m",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ctx",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18186",
+        "--kv-disk-dir",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-review-20261106/server-quick/kv",
+        "--trace",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-review-20261106/server-quick/trace.log",
+        "--no-mtp"
+      ],
+      "client_command": [
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/agent/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-n",
+        "0",
+        "--no-cov",
+        "-s",
+        "tests/test_live_e2e.py::test_live_e2e_quick_chat_waiting_for_response",
+        "--junitxml=/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-review-20261106/server-quick/client-junit.xml"
+      ],
+      "client_cwd": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/agent",
+      "client_junit": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-review-20261106/server-quick/client-junit.xml",
+      "client_sources_sha256": {
+        "tests/test_live_e2e.py": "0328f618ada6b2dc16b8042e6d074a3e34462de51e5b972c8bf476a6c2211f61"
+      },
+      "qualification_tool_sha256": "c92e49303c293930ec8374bb9a1388b12874d5f28a70f89b9b5deff035de5472",
+      "reason": "initial bounded qualification",
+      "timeout_seconds": 300.0,
+      "base_timeout_seconds": 300.0,
+      "timeout_multiplier": 1,
+      "footprint_limit_gib": null,
+      "host_reserve_bytes": 0,
+      "critical_pressure": 4,
+      "swap_growth_bytes": 268435456,
+      "unsafe_samples": 2,
+      "mtp": false,
+      "resource_metrics": false,
+      "phase_profile": true,
+      "kv_seed": null,
+      "qualification_profile": {
+        "context_tokens": 8192,
+        "prefill_chunk": 64,
+        "ssd_cache_bytes": null,
+        "ssd_cache_mode": "automatic",
+        "reasoning_effort": "none",
+        "tool_start_timeout_seconds": 120,
+        "http_timeout_seconds": 300.0,
+        "interactive_timeout_seconds": 300,
+        "phase_timeout_seconds": 180,
+        "suite_operation_base_timeout_seconds": null,
+        "suite_operation_timeout_seconds": null
+      },
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "executables_sha256": {
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server": "cda107ed41f74cfc62da04f6eefc3a87a1bdfdce4aee8a1c6f95382333b93f12"
+      },
+      "error": "PermissionError(1, 'Operation not permitted')",
+      "cleanup_forced": [],
+      "server_exit_code": null,
+      "elapsed_seconds": 0.04421537500093109,
+      "test_results": [],
+      "all_selected_tests_passed": false,
+      "test_results_error": "JUnit report is missing or contains no testcases",
+      "log_sha256": {
+        "server.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "client.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "raw_report": "build/metal-t08-review-20261106/server-quick/report.json",
+      "raw_report_sha256": "d6ddcd31738d54d99fef7564b391b320a6ecff4363f26d23dfd23880bad568f9"
+    }
+  },
+  "known_open": [
+    "F08 Flash and Qwen27 workflow/segmentation investigations",
+    "Qwen27 50-cycle stress stopped in warmup for global swap growth; historical SKIP_RESOURCE_LIMIT retained",
+    "Original frozen Image noise and Gemma T00 vector assets absent",
+    "Two pre-existing Numeric sin/cos assertions, reproduced on prior control",
+    "Flash resident, second Mac family, CUDA/ROCm and distributed not qualified here"
+  ],
+  "performance_claim": "No new speedup claim. New elapsed times are verification runs, not paired performance evidence.",
+  "previous_campaign_manifests": [
+    "verification.json",
+    "no-reserve.json",
+    "image512.json",
+    "admission.json",
+    "noise-recovery.json",
+    "noise-recovery-2141.json"
+  ],
+  "api_quick_chat": {
+    "status": "PASS",
+    "command": [
+      "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server",
+      "--metal",
+      "-m",
+      "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/gguf/Qwen3.8-Flash-Next-Q2.gguf",
+      "--ssd-streaming",
+      "--ssd-streaming-cold",
+      "--ctx",
+      "8192",
+      "--prefill-chunk",
+      "64",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "18186",
+      "--kv-disk-dir",
+      "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-review-20261106/server-quick-unrestricted/kv",
+      "--trace",
+      "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-review-20261106/server-quick-unrestricted/trace.log",
+      "--no-mtp"
+    ],
+    "client_command": [
+      "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/agent/.venv/bin/python",
+      "-m",
+      "pytest",
+      "-n",
+      "0",
+      "--no-cov",
+      "-s",
+      "tests/test_live_e2e.py::test_live_e2e_quick_chat_waiting_for_response",
+      "--junitxml=/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-review-20261106/server-quick-unrestricted/client-junit.xml"
+    ],
+    "client_cwd": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/agent",
+    "client_junit": "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-review-20261106/server-quick-unrestricted/client-junit.xml",
+    "client_sources_sha256": {
+      "tests/test_live_e2e.py": "0328f618ada6b2dc16b8042e6d074a3e34462de51e5b972c8bf476a6c2211f61"
+    },
+    "qualification_tool_sha256": "c92e49303c293930ec8374bb9a1388b12874d5f28a70f89b9b5deff035de5472",
+    "reason": "Post-review real API test of shared memory policy and ordered server cleanup; initial sandbox could not bind a local socket",
+    "timeout_seconds": 300.0,
+    "base_timeout_seconds": 300.0,
+    "timeout_multiplier": 1,
+    "footprint_limit_gib": null,
+    "host_reserve_bytes": 0,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2,
+    "mtp": false,
+    "resource_metrics": false,
+    "phase_profile": true,
+    "kv_seed": null,
+    "qualification_profile": {
+      "context_tokens": 8192,
+      "prefill_chunk": 64,
+      "ssd_cache_bytes": null,
+      "ssd_cache_mode": "automatic",
+      "reasoning_effort": "none",
+      "tool_start_timeout_seconds": 120,
+      "http_timeout_seconds": 300.0,
+      "interactive_timeout_seconds": 300,
+      "phase_timeout_seconds": 180,
+      "suite_operation_base_timeout_seconds": null,
+      "suite_operation_timeout_seconds": null
+    },
+    "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+    "executables_sha256": {
+      "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server": "cda107ed41f74cfc62da04f6eefc3a87a1bdfdce4aee8a1c6f95382333b93f12"
+    },
+    "api_model": "qwen3.8-flash-next",
+    "client_exit_code": 0,
+    "cleanup_forced": [],
+    "server_exit_code": 0,
+    "elapsed_seconds": 148.1764140000014,
+    "test_results": [
+      {
+        "class": "tests.test_live_e2e",
+        "name": "test_live_e2e_quick_chat_waiting_for_response",
+        "seconds": 142.412,
+        "status": "PASS",
+        "detail": ""
+      }
+    ],
+    "all_selected_tests_passed": true,
+    "log_sha256": {
+      "server.log": "99ab2714ec0f710a3db03cef847cae889479ae8fb87dbffa3afca31b1680a5e9",
+      "client.log": "a79c263cd301ab5e899aee748ea608dd74c29bc90d1b149cd85e790023a1bd75",
+      "trace.log": "ec3fb72f5ab67e01e0fc79e66db7c3d2e9b6eef0e82257d40dd79e03c29a09bd"
+    },
+    "sample_summary": {
+      "count": 147,
+      "host_available_min_bytes": 13242368000,
+      "peak_footprint_bytes": 1436550944,
+      "pressure_max": 1,
+      "global_swap_growth_bytes": 0
+    },
+    "raw_report": "build/metal-t08-review-20261106/server-quick-unrestricted/report.json",
+    "raw_report_sha256": "8d484c0337dde8929f6f978772d202d1a59d3a0013275b17d1221593a7015686"
+  },
+  "qualified_code_head": "d33d4b66c93f0a6f7b9e2a9c755292448c8b2a3e",
+  "runner_revision_note": "Native model gates preceded the final Python command-runner environment normalization; their recorded runner SHA is retained. Native binaries and resolved reserve=0 are identical. The final command runner is exercised by the 86 tests (real subprocess zero/default normalization); real API gate exercises the final server runner. No native arithmetic or resource changes followed these native gates."
+}

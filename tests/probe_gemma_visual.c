@@ -1,4 +1,4 @@
-/* Fixture-only CUDA qualification. All inference uses native suite APIs. */
+/* Fixture-only native qualification. All inference uses native suite APIs. */
 #include "ds4_gemma_multimodal.h"
 #include "ds4_gemma_vision.h"
 #include "ds4_gemma_visual.h"
@@ -7,7 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
-extern int cudaMemGetInfo(size_t *, size_t *);
+#include "suite_accelerator.h"
 #define CHECK(x)                                                               \
   do {                                                                         \
     ds4_status s = (x);                                                        \
@@ -212,11 +212,11 @@ int main(int argc, char **argv) {
   ds4_gemma_visual *adapter = NULL;
   CHECK(ds4_resources_create(&rs));
   CHECK(ds4_runtime_create(&runtime, NULL, NULL));
-  CHECK(ds4_numeric_cuda(&num, rs, 301));
+  CHECK(suite_numeric_create(&num, rs, 301));
   uint64_t baseline, peak;
   ds4_numeric_memory(num, &baseline, &peak);
   size_t free_device, total;
-  assert(!cudaMemGetInfo(&free_device, &total));
+  assert(!suite_memory_info(num, &free_device, &total));
   ds4_resource_budget budget = {.limit = baseline + free_device,
                                 .margin = 256u << 20};
   const char *limit = getenv("DS4_GEMMA_VISUAL_DEVICE_LIMIT");
@@ -490,8 +490,9 @@ int main(int argc, char **argv) {
   CHECK(ds4_gemma_visual_close(adapter));
   ds4_gemma_processor_close(processor);
   CHECK(ds4_bundle_close(bundle));
-  ds4_numeric_memory(num, &free_device, &peak);
-  assert(free_device == baseline);
+  uint64_t live=0;
+  ds4_numeric_memory(num, &live, &peak);
+  assert(live == baseline);
   CHECK(ds4_numeric_close(num));
   ds4_runtime_release(runtime);
   if (result) {

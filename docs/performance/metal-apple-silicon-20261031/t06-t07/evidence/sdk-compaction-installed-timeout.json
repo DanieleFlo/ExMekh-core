@@ -1,0 +1,38 @@
+[
+  {
+    "environment": null,
+    "returncode": 0,
+    "stdout": "300",
+    "passed": true
+  },
+  {
+    "environment": "1200",
+    "returncode": 0,
+    "stdout": "1200.0",
+    "passed": true
+  },
+  {
+    "environment": "600",
+    "returncode": 0,
+    "stdout": "600.0",
+    "passed": true
+  },
+  {
+    "environment": "nan",
+    "returncode": 1,
+    "stdout": "",
+    "passed": true
+  },
+  {
+    "environment": "0",
+    "returncode": 1,
+    "stdout": "",
+    "passed": true
+  },
+  {
+    "environment": "invalid",
+    "returncode": 1,
+    "stdout": "",
+    "passed": true
+  }
+]

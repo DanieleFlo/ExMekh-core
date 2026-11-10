@@ -14,7 +14,7 @@ import torch.nn.functional as F
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from safetensors import safe_open
 
-from tests.test_suite_numeric import Attention, Conv, Numeric, View
+from tests.suite_numeric_api import Attention, Conv, Numeric, View
 
 
 def main():
@@ -22,6 +22,9 @@ def main():
     p.add_argument("--model", type=Path, required=True)
     p.add_argument("--oracle", type=Path, required=True)
     p.add_argument("--layer", type=int, default=0)
+    p.add_argument("--backend", choices=("cpu", "cuda", "metal"), default="cuda")
+    p.add_argument("--device", choices=("cpu", "cuda", "mps"), default="cuda")
+    p.add_argument("--numeric-library", type=Path)
     p.add_argument(
         "--native", type=Path, help="Native trace directory for frequency controls"
     )
@@ -30,6 +33,12 @@ def main():
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
 
+    torch.set_num_threads(2)
+    with Numeric(args.backend, library_path=args.numeric_library) as numeric:
+        diagnose(args, numeric)
+
+
+def diagnose(args, n):
     def compare(name, a, b):
         d = a.float() - b.float()
         print(
@@ -45,14 +54,14 @@ def main():
         )
 
     inputs = np.load(args.oracle / "inputs.npz")
-    x = torch.from_numpy(inputs["pixel_values"]).cuda().bfloat16()
+    x = torch.from_numpy(inputs["pixel_values"]).to(args.device).bfloat16()
     with safe_open(args.model, framework="pt", device="cpu") as f:
-        w = f.get_tensor("model.visual.patch_embed.proj.weight").cuda()
-        b = f.get_tensor("model.visual.patch_embed.proj.bias").cuda()
-        pos_table = f.get_tensor("model.visual.pos_embed.weight").cuda()
+        w = f.get_tensor("model.visual.patch_embed.proj.weight").to(args.device)
+        b = f.get_tensor("model.visual.patch_embed.proj.bias").to(args.device)
+        pos_table = f.get_tensor("model.visual.pos_embed.weight").to(args.device)
         prefix = f"model.visual.blocks.{args.layer}."
         weights = {
-            key[len(prefix) :]: f.get_tensor(key).cuda()
+            key[len(prefix) :]: f.get_tensor(key).to(args.device)
             for key in f.keys()  # noqa: SIM118 -- safe_open is not iterable.
             if key.startswith(prefix)
         }
@@ -65,7 +74,6 @@ def main():
         + b,
         ref,
     )
-    n = Numeric(True)
     descriptor = Conv(
         x.shape[0],
         3,
@@ -80,7 +88,17 @@ def main():
     )
     output = n.tensor(torch.zeros_like(ref))
     n.call("conv", output, n.tensor(x), n.tensor(w), n.tensor(b), C.byref(descriptor))
-    compare("native-cudnn", n.read(output, ref.shape).cuda(), ref)
+    compare("native-conv", n.read(output, ref.shape).to(args.device), ref)
+    if args.native:
+        patch = (
+            torch.from_numpy(
+                np.fromfile(args.native / "vision_patch-0.bf16", np.uint16)
+            )
+            .view(torch.bfloat16)
+            .reshape(ref.shape)
+            .to(args.device)
+        )
+        compare("production-patch", patch, ref)
     n.clear()
     prepared = args.model.parents[4]
     sys.path.insert(0, str(prepared / "deps"))
@@ -90,12 +108,22 @@ def main():
         get_vision_position_ids,
     )
 
-    grid = torch.from_numpy(inputs["image_grid_thw"]).cuda()
+    grid = torch.from_numpy(inputs["image_grid_thw"]).to(args.device)
     indices, iw = get_vision_interpolation_indices_and_weights(
         grid, 48, mode="bilinear", align_corners=True, spatial_merge_size=2
     )
     pos = (F.embedding(indices, pos_table) * iw[:, :, None]).sum(1).bfloat16()
     vision_x = ref + pos
+    if args.native:
+        prepared = (
+            torch.from_numpy(
+                np.fromfile(args.native / "vision_input-0.bf16", np.uint16)
+            )
+            .view(torch.bfloat16)
+            .reshape(vision_x.shape)
+            .to(args.device)
+        )
+        compare("production-vision-input", prepared, vision_x)
     if args.layer:
         vision_x = (
             torch.from_numpy(
@@ -105,7 +133,7 @@ def main():
             )
             .view(torch.bfloat16)
             .reshape(-1, 1152)
-            .cuda()
+            .to(args.device)
         )
 
     def norm(z, name):
@@ -125,7 +153,7 @@ def main():
             1,
             False,
         )
-        compare("norm-" + name, n.read(y, expected.shape).cuda(), expected)
+        compare("norm-" + name, n.read(y, expected.shape).to(args.device), expected)
         n.clear()
         return expected
 
@@ -149,7 +177,7 @@ def main():
             z.shape[-1],
             w.shape[0],
         )
-        compare("linear-" + name, n.read(y, expected.shape).cuda(), expected)
+        compare("linear-" + name, n.read(y, expected.shape).to(args.device), expected)
         n.clear()
         return expected
 
@@ -158,19 +186,19 @@ def main():
     )
     positions = get_vision_position_ids(grid, 2)
     inv = 1 / (10000 ** (torch.arange(0, 36, 2).float() / 36))
-    freq = positions[..., None].float() * inv.cuda()
+    freq = positions[..., None].float() * inv.to(args.device)
     co = torch.cat((freq.cos()[:, 0], freq.cos()[:, 1]), -1)
     si = torch.cat((freq.sin()[:, 0], freq.sin()[:, 1]), -1)
     if args.native:
         native_co = (
             torch.from_numpy(np.fromfile(args.native / "vision_cos-0.bf16", np.float32))
             .reshape(co.shape)
-            .cuda()
+            .to(args.device)
         )
         native_si = (
             torch.from_numpy(np.fromfile(args.native / "vision_sin-0.bf16", np.float32))
             .reshape(si.shape)
-            .cuda()
+            .to(args.device)
         )
         compare("production-cos", native_co, co)
         compare("production-sin", native_si, si)
@@ -194,7 +222,7 @@ def main():
             False,
             False,
         )
-        compare("rope", n.read(y, expected.shape).cuda(), expected)
+        compare("rope", n.read(y, expected.shape).to(args.device), expected)
         n.clear()
         if args.native:
             y = n.tensor(torch.zeros_like(expected))
@@ -209,7 +237,9 @@ def main():
                 False,
                 False,
             )
-            compare("production-rope", n.read(y, expected.shape).cuda(), expected)
+            compare(
+                "production-rope", n.read(y, expected.shape).to(args.device), expected
+            )
             n.clear()
         return expected
 
@@ -231,14 +261,16 @@ def main():
         bounds.ctypes.data_as(C.POINTER(C.c_uint32)),
         C.byref(a),
     )
-    compare("attention", n.read(y, expected.shape).cuda(), expected)
+    compare("attention", n.read(y, expected.shape).to(args.device), expected)
     n.clear()
     residual = vision_x + linear(expected.reshape(seq, 1152), "attn.proj")
     hidden = linear(norm(residual, "norm2"), "mlp.linear_fc1")
     y = n.tensor(torch.zeros_like(hidden))
     n.call("point", y, n.tensor(hidden), View(), 4, 0)
     compare(
-        "gelu-tanh", n.read(y, hidden.shape).cuda(), F.gelu(hidden, approximate="tanh")
+        "gelu-tanh",
+        n.read(y, hidden.shape).to(args.device),
+        F.gelu(hidden, approximate="tanh"),
     )
     n.clear()
     final = residual + linear(F.gelu(hidden, approximate="tanh"), "mlp.linear_fc2")
@@ -248,10 +280,9 @@ def main():
         )
         .view(torch.bfloat16)
         .reshape(-1, 1152)
-        .cuda()
+        .to(args.device)
     )
     compare("manual-vs-oracle", final, target)
-    n.close()
 
 
 if __name__ == "__main__":

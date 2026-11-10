@@ -1,0 +1,8 @@
+./tests/test_runtime
+runtime: PASS
+./tests/test_resources
+PASS: resource lifetime, aliases, events, budgets, concurrent reservations and checkpoint validation
+./tests/test_executor
+executor: PASS admission, repeated visits, cancellation, faults, recovery and reservation reuse
+./tests/test_metal_memory_policy
+PASS: conservative Metal host pages, shared physical budget, reserve, staging and pressure

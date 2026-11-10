@@ -1,0 +1,337 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "tools/run_qwen_image_pipeline_oracle.py",
+    "--prepared",
+    "build/metal-oracles",
+    "--cases",
+    "build/metal-qualification/t06-t07-20261031/image-text/cases.json",
+    "--output",
+    "build/metal-qualification/t06-t07-20261031/image-text/oracle-cpu",
+    "--stage",
+    "encoder",
+    "--device",
+    "cpu",
+    "--offload"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 300.0,
+  "reason": "Diagnose text-only conditioning frontier against independent PyTorch CPU BF16, same pinned model and no arithmetic changes",
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 38.442817540999386,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 11717.008086958,
+      "pressure": 1,
+      "host_available_bytes": 15958589440,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 11718.015814,
+      "pressure": 1,
+      "host_available_bytes": 15813181440,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 200590056,
+      "resident_bytes": 251527168
+    },
+    {
+      "monotonic": 11719.025770666,
+      "pressure": 1,
+      "host_available_bytes": 15739453440,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 282919848,
+      "resident_bytes": 340066304
+    },
+    {
+      "monotonic": 11720.0339,
+      "pressure": 1,
+      "host_available_bytes": 15714304000,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 349635544,
+      "resident_bytes": 419741696
+    },
+    {
+      "monotonic": 11721.042348583,
+      "pressure": 1,
+      "host_available_bytes": 15091073024,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552518904,
+      "resident_bytes": 636567552
+    },
+    {
+      "monotonic": 11722.054706375,
+      "pressure": 1,
+      "host_available_bytes": 14326218752,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552862944,
+      "resident_bytes": 631029760
+    },
+    {
+      "monotonic": 11723.070196291,
+      "pressure": 1,
+      "host_available_bytes": 13805223936,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552862944,
+      "resident_bytes": 631029760
+    },
+    {
+      "monotonic": 11724.081771041,
+      "pressure": 1,
+      "host_available_bytes": 13253902336,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552912168,
+      "resident_bytes": 695173120
+    },
+    {
+      "monotonic": 11725.092935541,
+      "pressure": 1,
+      "host_available_bytes": 12796559360,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552895760,
+      "resident_bytes": 641155072
+    },
+    {
+      "monotonic": 11726.100564458,
+      "pressure": 1,
+      "host_available_bytes": 12374245376,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552862944,
+      "resident_bytes": 631046144
+    },
+    {
+      "monotonic": 11727.112538291,
+      "pressure": 1,
+      "host_available_bytes": 11967791104,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552895760,
+      "resident_bytes": 636846080
+    },
+    {
+      "monotonic": 11728.123970708,
+      "pressure": 1,
+      "host_available_bytes": 11516887040,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552895760,
+      "resident_bytes": 633978880
+    },
+    {
+      "monotonic": 11729.134190875,
+      "pressure": 1,
+      "host_available_bytes": 11136335872,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552879352,
+      "resident_bytes": 634421248
+    },
+    {
+      "monotonic": 11730.141901666,
+      "pressure": 1,
+      "host_available_bytes": 10775330816,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552862944,
+      "resident_bytes": 631046144
+    },
+    {
+      "monotonic": 11731.14987625,
+      "pressure": 1,
+      "host_available_bytes": 10415931392,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552928576,
+      "resident_bytes": 681443328
+    },
+    {
+      "monotonic": 11732.161949583,
+      "pressure": 1,
+      "host_available_bytes": 10358603776,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552912168,
+      "resident_bytes": 715309056
+    },
+    {
+      "monotonic": 11733.173126333,
+      "pressure": 1,
+      "host_available_bytes": 10404823040,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552895760,
+      "resident_bytes": 634896384
+    },
+    {
+      "monotonic": 11734.184402125,
+      "pressure": 1,
+      "host_available_bytes": 10414571520,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552912168,
+      "resident_bytes": 665190400
+    },
+    {
+      "monotonic": 11735.19562025,
+      "pressure": 1,
+      "host_available_bytes": 10343006208,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552912168,
+      "resident_bytes": 687996928
+    },
+    {
+      "monotonic": 11736.207164541,
+      "pressure": 1,
+      "host_available_bytes": 10392420352,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552912168,
+      "resident_bytes": 696172544
+    },
+    {
+      "monotonic": 11737.219518208,
+      "pressure": 1,
+      "host_available_bytes": 10312695808,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552912168,
+      "resident_bytes": 706248704
+    },
+    {
+      "monotonic": 11738.234995666,
+      "pressure": 1,
+      "host_available_bytes": 10276880384,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552912168,
+      "resident_bytes": 677412864
+    },
+    {
+      "monotonic": 11739.245534916,
+      "pressure": 1,
+      "host_available_bytes": 10363437056,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552862944,
+      "resident_bytes": 631046144
+    },
+    {
+      "monotonic": 11740.256638541,
+      "pressure": 1,
+      "host_available_bytes": 10421862400,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552928576,
+      "resident_bytes": 724664320
+    },
+    {
+      "monotonic": 11741.26786375,
+      "pressure": 1,
+      "host_available_bytes": 10415603712,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552912168,
+      "resident_bytes": 692928512
+    },
+    {
+      "monotonic": 11742.2803095,
+      "pressure": 1,
+      "host_available_bytes": 10352820224,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552862944,
+      "resident_bytes": 631046144
+    },
+    {
+      "monotonic": 11743.29220825,
+      "pressure": 1,
+      "host_available_bytes": 10391306240,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552895760,
+      "resident_bytes": 639827968
+    },
+    {
+      "monotonic": 11744.304228583,
+      "pressure": 1,
+      "host_available_bytes": 10406887424,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552862944,
+      "resident_bytes": 631046144
+    },
+    {
+      "monotonic": 11745.316860416,
+      "pressure": 1,
+      "host_available_bytes": 10406871040,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 552862944,
+      "resident_bytes": 631046144
+    },
+    {
+      "monotonic": 11746.328564333,
+      "pressure": 1,
+      "host_available_bytes": 10344660992,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 554042688,
+      "resident_bytes": 732250112
+    },
+    {
+      "monotonic": 11747.339846416,
+      "pressure": 1,
+      "host_available_bytes": 10384064512,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 554009872,
+      "resident_bytes": 636485632
+    },
+    {
+      "monotonic": 11748.350986291,
+      "pressure": 1,
+      "host_available_bytes": 10402889728,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 554026280,
+      "resident_bytes": 663633920
+    },
+    {
+      "monotonic": 11749.361518875,
+      "pressure": 1,
+      "host_available_bytes": 10402217984,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 554042688,
+      "resident_bytes": 712245248
+    },
+    {
+      "monotonic": 11750.373081375,
+      "pressure": 1,
+      "host_available_bytes": 10349035520,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 553977056,
+      "resident_bytes": 632160256
+    },
+    {
+      "monotonic": 11751.382517458,
+      "pressure": 1,
+      "host_available_bytes": 10394386432,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 553977056,
+      "resident_bytes": 632160256
+    },
+    {
+      "monotonic": 11752.392307083,
+      "pressure": 1,
+      "host_available_bytes": 10421633024,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 553977056,
+      "resident_bytes": 632160256
+    },
+    {
+      "monotonic": 11753.404712125,
+      "pressure": 1,
+      "host_available_bytes": 10424320000,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 553977056,
+      "resident_bytes": 632160256
+    },
+    {
+      "monotonic": 11754.41603175,
+      "pressure": 1,
+      "host_available_bytes": 10364387328,
+      "swap_bytes": 1297413570,
+      "footprint_bytes": 554042688,
+      "resident_bytes": 714735616
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/run_qwen_image_pipeline_oracle.py": "1e77663c171c378566c5ebcb8ba9b1c6073c5dfcd2674aa33708d1ab3190f33d"
+  },
+  "log_sha256": "5c54305a7ac3d8a74d0186f19243c54b919e248ae0fcc6c14b5d48ef06c51b6c"
+}

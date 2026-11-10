@@ -1,0 +1,56 @@
+{
+  "command": [
+    "env",
+    "DS4_GEMMA_DIMENSIONS=128",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/probe_native_suite",
+    "build/metal-models/gemma.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/gemma.ds4g",
+    "gemma",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/gemma",
+    "Il gatto dorme sul divano.",
+    "A cat sleeps on the sofa.",
+    "The train arrives at the station."
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200,
+  "base_timeout_seconds": 300,
+  "timeout_multiplier": 4,
+  "reason": "Separate precise::sqrt only after new layer1 same-input audit; all original gates frozen, serial models and2GiBhostreserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.055331292000119,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 8254.964737875,
+      "pressure": 1,
+      "host_available_bytes": 11421990912,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 8255.982171875,
+      "pressure": 1,
+      "host_available_bytes": 11191779328,
+      "swap_bytes": 0,
+      "footprint_bytes": 214025080,
+      "resident_bytes": 303661056
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-norm-precise/probe_native_suite": "e89a1c2df129c60f75dfcb5ed302992db33bbd3ea11894bf0f62a655415162fc"
+  },
+  "log_sha256": "2cddd197b69f1df22f09edf8dad878aa6ff5a057a7c87843cdd864b3077dbc56"
+}

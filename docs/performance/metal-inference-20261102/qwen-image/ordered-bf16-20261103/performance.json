@@ -1,0 +1,650 @@
+{
+  "baseline_head": "f2fed3e6dbbb8473adae1733a9ececd7cb0d8eb8",
+  "scope": "I-P01 fixed device budget 7.5 GiB, warmup pair 2 then five alternating text pairs 3..7",
+  "confidence": "paired percentile bootstrap, 20000 resamples, seed 20261103",
+  "timing": "encoder, DiT, VAE and total operation include native work. Process includes startup and artifact output.",
+  "summary": {
+    "encoder": {
+      "before": {
+        "median": 14.606269,
+        "p10": 13.905251999999999,
+        "p90": 14.9457202,
+        "mean": 14.462089599999999,
+        "sample_sd": 0.5164713032945781,
+        "cv_percent": 3.5712080175092966
+      },
+      "after": {
+        "median": 14.116199,
+        "p10": 13.9111264,
+        "p90": 14.8944242,
+        "mean": 14.345622800000001,
+        "sample_sd": 0.4999783217482531,
+        "cv_percent": 3.4852325947692773
+      },
+      "paired_percent": [
+        0.24090678791686138,
+        -1.8778337837437653,
+        1.1386756018251898,
+        -3.3552031665307513,
+        -0.09220538880589935
+      ],
+      "geometric_percent": -0.8023359679167563,
+      "bootstrap95_percent": [
+        -2.350615707667003,
+        0.5321045134016655
+      ]
+    },
+    "dit": {
+      "before": {
+        "median": 138.127418,
+        "p10": 131.2047744,
+        "p90": 142.1877494,
+        "mean": 136.9247824,
+        "sample_sd": 5.468545165352513,
+        "cv_percent": 3.993831554449498
+      },
+      "after": {
+        "median": 61.628882,
+        "p10": 58.80708,
+        "p90": 63.285941799999996,
+        "mean": 61.16359580000001,
+        "sample_sd": 2.219538309968697,
+        "cv_percent": 3.628855172652711
+      },
+      "paired_percent": [
+        -52.98972324350463,
+        -55.36083213474568,
+        -56.88523259010025,
+        -58.69251094633133,
+        -52.38616906350888
+      ],
+      "geometric_percent": -55.325533638985604,
+      "bootstrap95_percent": [
+        -57.32189224154436,
+        -53.23579114760575
+      ]
+    },
+    "vae": {
+      "before": {
+        "median": 54.596377,
+        "p10": 54.276121,
+        "p90": 54.6442428,
+        "mean": 54.4890274,
+        "sample_sd": 0.19076624109181264,
+        "cv_percent": 0.35010028659790804
+      },
+      "after": {
+        "median": 54.198084,
+        "p10": 54.16743,
+        "p90": 54.6593942,
+        "mean": 54.367973400000004,
+        "sample_sd": 0.26051180273895364,
+        "cv_percent": 0.4791640858530762
+      },
+      "paired_percent": [
+        -0.8028756193840358,
+        -0.08495477360823678,
+        0.12104404396284796,
+        -0.12283919164889356,
+        -0.22088416111443188
+      ],
+      "geometric_percent": -0.22258775091309468,
+      "bootstrap95_percent": [
+        -0.5314184429457969,
+        0.0037739438790929114
+      ]
+    },
+    "operation": {
+      "before": {
+        "median": 207.58058,
+        "p10": 199.5937734,
+        "p90": 211.5383936,
+        "mean": 205.8760932,
+        "sample_sd": 5.980027429793334,
+        "cv_percent": 2.904673066621673
+      },
+      "after": {
+        "median": 129.851958,
+        "p10": 127.6611478,
+        "p90": 132.1005272,
+        "mean": 129.87740820000002,
+        "sample_sd": 2.3525781118917575,
+        "cv_percent": 1.8113836305302535
+      },
+      "paired_percent": [
+        -34.98445102864864,
+        -37.36640374137037,
+        -37.739228785274626,
+        -39.71472483664533,
+        -34.56077415366291
+      ],
+      "geometric_percent": -36.90169460083224,
+      "bootstrap95_percent": [
+        -38.463645129420385,
+        -35.29330207262799
+      ]
+    },
+    "process": {
+      "before": {
+        "median": 220.8626060000097,
+        "p10": 212.700827192,
+        "p90": 224.6453336577979,
+        "mean": 219.01554239160032,
+        "sample_sd": 5.976500489312317,
+        "cv_percent": 2.7288019946211484
+      },
+      "after": {
+        "median": 143.11003679200076,
+        "p10": 140.89400104219968,
+        "p90": 145.5605413995945,
+        "mean": 143.2026673917979,
+        "sample_sd": 2.433377499125325,
+        "cv_percent": 1.6992543110022402
+      },
+      "paired_percent": [
+        -32.91740014277804,
+        -35.15053969907079,
+        -35.526962442435774,
+        -37.14986425951741,
+        -32.14562818533009
+      ],
+      "geometric_percent": -34.60332202020555,
+      "bootstrap95_percent": [
+        -36.106744938194744,
+        -32.98927694381862
+      ]
+    }
+  },
+  "pairs": [
+    {
+      "before": {
+        "label": "text-before-3",
+        "encoder": 14.031153,
+        "dit": 131.096616,
+        "vae": 54.596377,
+        "operation": 199.724466,
+        "process": 213.3340644169948,
+        "host_min_bytes": 6025084928,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      },
+      "after": {
+        "label": "text-after-3",
+        "encoder": 14.064955,
+        "dit": 61.628882,
+        "vae": 54.158036,
+        "operation": 129.851958,
+        "process": 143.11003679200076,
+        "host_min_bytes": 5894193152,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "label": "text-before-4",
+        "encoder": 15.025185,
+        "dit": 142.873015,
+        "vae": 54.65614,
+        "operation": 212.554418,
+        "process": 226.02192329100217,
+        "host_min_bytes": 5463031808,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      },
+      "after": {
+        "label": "text-after-4",
+        "encoder": 14.743037,
+        "dit": 63.777325,
+        "vae": 54.609707,
+        "operation": 133.130476,
+        "process": 146.5739974159951,
+        "host_min_bytes": 5449383936,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "label": "text-before-5",
+        "encoder": 14.826523,
+        "dit": 138.127418,
+        "vae": 54.626397,
+        "operation": 207.58058,
+        "process": 220.8626060000097,
+        "host_min_bytes": 5383487488,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      },
+      "after": {
+        "label": "text-after-5",
+        "encoder": 14.995349,
+        "dit": 59.553315,
+        "vae": 54.692519,
+        "operation": 129.24127,
+        "process": 142.39683091700135,
+        "host_min_bytes": 5412470784,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "label": "text-before-6",
+        "encoder": 14.606269,
+        "dit": 141.159851,
+        "vae": 54.248159,
+        "operation": 210.014357,
+        "process": 222.58044920799148,
+        "host_min_bytes": 5155045376,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      },
+      "after": {
+        "label": "text-after-6",
+        "encoder": 14.116199,
+        "dit": 58.30959,
+        "vae": 54.181521,
+        "operation": 126.607733,
+        "process": 139.89211445899855,
+        "host_min_bytes": 5606604800,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      }
+    },
+    {
+      "before": {
+        "label": "text-before-7",
+        "encoder": 13.821318,
+        "dit": 131.367012,
+        "vae": 54.318064,
+        "operation": 199.506645,
+        "process": 212.27866904200346,
+        "host_min_bytes": 5516181504,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      },
+      "after": {
+        "label": "text-after-7",
+        "encoder": 13.808574,
+        "dit": 62.548867,
+        "vae": 54.198084,
+        "operation": 130.555604,
+        "process": 144.04035737499362,
+        "host_min_bytes": 5664653312,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        },
+        "plan_device": 7497297920,
+        "h2d_bytes": 83620429176,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ]
+      }
+    }
+  ]
+}

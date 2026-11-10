@@ -1,0 +1,225 @@
+{
+  "date": "2026-10-29",
+  "baseline_commit": "8e8ac45a7b463f7d4d72d859234f794b815019ef",
+  "scope": "Clean code review, Metal numerical and ownership regression, frontend contracts and complete offline suite",
+  "sources": {
+    "agent/tests/browser_support.py": "0fa1fa3489946d9c808c83173645f85fcbade75fb46410ea2fc85f366dcdcd51",
+    "agent/tests/test_sync.py": "551dc0b2721782e5da18628c1b350a8f0e9410b35b1fdcdadfc2b49c7644b845",
+    "agent/tests/test_corrections_4_e2e.py": "7e58d0f88a9e4f2f84ba130f1b494b7d9472cc961cca5c91fc7e217069d3eea5",
+    "agent/tests/test_outputs_responsive_e2e.py": "05509072c09e9782cedf31122827d44727d15c01949bf51af880f7cc212e5b0e",
+    "agent/tests/test_ds4_prompt_resources.py": "218fab0979b638b828e66f2988609a9c6f021f055a2b32610e440767e5675d70",
+    "agent/src/exmekh_agent/exmekh_bridge/resources/prompts/ds4_tools_suffix.md": "7e3db1627736f63ab06a359d813ab05e3ff42c4864943f40435137c6c98786b3",
+    "config/qwen27-metal-quick.env.example": "ebf3d4a26483d3039fc2bb3b47af9a380f75d1308b4d645b448bc95eb68cbda6",
+    "agent/uv.lock": "a07baba8a749f9955bcbfc5e78d272f5609f64bc5607a2acb8a18b7d95117170",
+    "agent/pyproject.toml": "a2ca1ab16544af4220f8094cfd48950271a01d6bfa052bad2a48b7cc51bce650",
+    "tests/qwen_half_reference.h": "8d10ee29fa4f442b7648a3d0df27ee5eecfc72140d9dfe718da4a02754f8b1bd",
+    "tests/qwen_numerics_probe.c": "dae3c0a7d617d53f19e4b86fbd30ee016b1af075c4269e8fd6c053262391c721"
+  },
+  "checks": [
+    {
+      "name": "foundations",
+      "status": "PASS",
+      "command": [
+        "python3",
+        "tools/qualify_metal_foundations.py",
+        "--output",
+        "build/metal-qualification/clean-code-review-20261029/final",
+        "--cpu-build",
+        "--model",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf"
+      ],
+      "exit_code": 0,
+      "log": "verification.json",
+      "sha256": "c8ade65ba8a97c361379046847c5721a0cd3b770c3f27b2158940d65abf79349",
+      "cwd": "."
+    },
+    {
+      "name": "suite-numeric",
+      "status": "PASS",
+      "command": [
+        "make",
+        "test-suite-numeric-metal",
+        "SUITE_PYTHON=build/metal-venv/bin/python"
+      ],
+      "exit_code": 0,
+      "log": "suite-numeric.log",
+      "sha256": "3682c246ea10a7e50afe46bdfd1395c775bd4d930dda485834bb01d162d6d0d9",
+      "cwd": "."
+    },
+    {
+      "name": "host-ownership",
+      "status": "PASS",
+      "command": [
+        "make",
+        "test-suite-accelerator",
+        "test-numeric-lifetime"
+      ],
+      "exit_code": 0,
+      "log": "host-ownership.log",
+      "sha256": "547e5007a6836d507bc7bcff74c0dc372ba181d234d5ff5a0913d9940718e591",
+      "cwd": "."
+    },
+    {
+      "name": "compatibility",
+      "status": "PASS",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_qwen38_compatibility",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "compatibility.log",
+      "sha256": "0fe4853438cf85acd09e86ff4e699358f97d8d6d15505177933fcd242d9ac9cf",
+      "cwd": "."
+    },
+    {
+      "name": "host-tests",
+      "status": "PASS",
+      "command": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_metal_foundations",
+        "tests.test_flash_launcher",
+        "-v"
+      ],
+      "exit_code": 0,
+      "log": "host-tests.log",
+      "sha256": "5d201683951fe1f8acf859def13610206053b8147fa04a14f0e75eb1f9bab80f",
+      "cwd": "."
+    },
+    {
+      "name": "frontend-initial",
+      "status": "FAIL",
+      "command": [
+        "uv",
+        "run",
+        "--frozen",
+        "pytest"
+      ],
+      "exit_code": 1,
+      "log": "frontend-initial.log",
+      "sha256": "0151260971f1997cee8b189d3cfbcbd0290ec2079672f50aab96fcf8ad6b00de",
+      "superseded_by": "frontend-final",
+      "results": {
+        "passed": 1205,
+        "failed": 5,
+        "skipped": 46,
+        "coverage_percent": 100
+      },
+      "cwd": "agent"
+    },
+    {
+      "name": "frontend-recovery",
+      "status": "PASS",
+      "command": [
+        "uv",
+        "run",
+        "--frozen",
+        "pytest",
+        "--no-cov",
+        "-n",
+        "0",
+        "tests/test_sync.py",
+        "tests/test_browser_support.py",
+        "tests/test_ds4_prompt_resources.py",
+        "tests/test_auto_compaction_e2e.py::test_switch_during_compaction_and_reconnected_stream",
+        "tests/test_outputs_responsive_e2e.py::test_raw_history_multiline_and_json_output_are_readable_and_copy_stays_original",
+        "tests/test_corrections_4_e2e.py::test_marquee_toggle_group_move_collective_commands_and_arrange",
+        "tests/test_corrections_4_e2e.py::test_split_earlier_and_latest_reply_reload_and_continue_independently"
+      ],
+      "exit_code": 0,
+      "log": "frontend-recovery.log",
+      "sha256": "f45008f9c86c51b90d3339be82f994126b66f2dcd7f18e6515cef6896f7e68bf",
+      "cwd": "agent"
+    },
+    {
+      "name": "frontend-final",
+      "status": "PASS",
+      "command": [
+        "uv",
+        "run",
+        "--frozen",
+        "pytest"
+      ],
+      "exit_code": 0,
+      "log": "frontend-final.log",
+      "sha256": "0da9669de11bb5c214703defa135e2fdd0433c163537bbe9523a05803a675ea3",
+      "results": {
+        "passed": 1210,
+        "failed": 0,
+        "skipped": 46,
+        "coverage_percent": 100,
+        "seconds": 245.94
+      },
+      "environment": {
+        "EXMEKH_AGENT_RUN_LIVE_TESTS": "0",
+        "PYTEST_XDIST_AUTO_NUM_WORKERS": "4"
+      },
+      "cwd": "agent"
+    },
+    {
+      "name": "frontend-lint",
+      "status": "PASS",
+      "command": [
+        ".venv/bin/ruff",
+        "check",
+        "src",
+        "tests"
+      ],
+      "exit_code": 0,
+      "log": "frontend-lint.log",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18",
+      "cwd": "agent"
+    },
+    {
+      "name": "frontend-format",
+      "status": "PASS",
+      "command": [
+        ".venv/bin/ruff",
+        "format",
+        "--check",
+        "src",
+        "tests"
+      ],
+      "exit_code": 0,
+      "log": "frontend-format.log",
+      "sha256": "4b57ff1f0b70b465edb484b8e8b55713665c9ef75ef98fe26d6753268de15ee2",
+      "cwd": "agent"
+    },
+    {
+      "name": "oracle-build",
+      "status": "PASS",
+      "command": [
+        "make",
+        "tests/qwen_numerics_probe.o"
+      ],
+      "exit_code": 0,
+      "log": "oracle-build.log",
+      "sha256": "e85101a1f2d4471ca93ddc1baba3b28aa55da614178621d7e33882c0a56ec0ff",
+      "cwd": "."
+    },
+    {
+      "name": "docs",
+      "status": "PASS",
+      "command": [
+        "make",
+        "docs-check"
+      ],
+      "cwd": ".",
+      "exit_code": 0,
+      "tests": 10,
+      "log": "docs-check.log",
+      "sha256": "31eb69bcc1ea36588adc4ffc56cbd4066d7c0bfdbc0fdcda4a97c0c885bb8263"
+    }
+  ],
+  "all_current_checks_pass": true,
+  "tested_tree_commit": "dede1dfa9a5679733f6e979b9f27f33c869bf693",
+  "implementation_commits": {
+    "metal": "ff48ce945af2794063cfa9fc9624f9aa63c8e0e2",
+    "launchers": "7b7a57b51cd7303a8f9a4f39416f7bcad9aa144f",
+    "frontend": "dede1dfa9a5679733f6e979b9f27f33c869bf693"
+  }
+}

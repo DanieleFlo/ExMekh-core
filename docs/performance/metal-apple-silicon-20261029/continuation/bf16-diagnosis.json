@@ -1,0 +1,514 @@
+{
+  "kind": "diagnostic",
+  "qualification_claim": false,
+  "model_revision_expected": "914f7f89142e33e77833254d9c9b90c3cef7303b",
+  "source_head": "5fc8229592923c7b30f2b63acbb9453a8a5e45a4",
+  "command": [
+    "tools/diagnose_gemma_metal_bf16.py",
+    "--model",
+    "build/metal-oracles/models/google/embeddinggemma-2/model.safetensors",
+    "--native",
+    "build/metal-qualification/bf16-live-final-20261029",
+    "--oracle",
+    "build/metal-qualification/gemma-text-oracle",
+    "--output",
+    "build/metal-qualification/bf16-replay-reserve-final-20261029"
+  ],
+  "torch_version": "2.15.0",
+  "owned_storage_limit_bytes": 1073741824,
+  "reserve_bytes": 2147483648,
+  "items": [
+    {
+      "linear_same_input": {
+        "elements": 98304,
+        "mismatches": 14,
+        "bit_exact": false,
+        "max_abs": 0.00390625
+      },
+      "dot_witnesses": [
+        {
+          "row": 0,
+          "column": 6843,
+          "fp64_sum": -0.06274419743567705,
+          "cpu": -0.0625,
+          "metal": -0.06298828125,
+          "cpu_absolute_error": 0.00024419743567705154,
+          "metal_absolute_error": 0.00024408381432294846,
+          "fp64_then_f32_then_bf16": -0.06298828125
+        },
+        {
+          "row": 1,
+          "column": 982,
+          "fp64_sum": 1.7246522475034e-05,
+          "cpu": 1.71661376953125e-05,
+          "metal": 1.728534698486328e-05,
+          "cpu_absolute_error": 8.038477972149849e-08,
+          "metal_absolute_error": 3.882450982928276e-08,
+          "fp64_then_f32_then_bf16": 1.728534698486328e-05
+        },
+        {
+          "row": 2,
+          "column": 10365,
+          "fp64_sum": -0.2626954014413059,
+          "cpu": -0.263671875,
+          "metal": -0.26171875,
+          "cpu_absolute_error": 0.0009764735586941242,
+          "metal_absolute_error": 0.0009766514413058758,
+          "fp64_then_f32_then_bf16": -0.263671875
+        },
+        {
+          "row": 3,
+          "column": 2174,
+          "fp64_sum": 0.013763375114649534,
+          "cpu": 0.01373291015625,
+          "metal": 0.0137939453125,
+          "cpu_absolute_error": 3.0464958399534225e-05,
+          "metal_absolute_error": 3.0570197850465775e-05,
+          "fp64_then_f32_then_bf16": 0.01373291015625
+        },
+        {
+          "row": 3,
+          "column": 3457,
+          "fp64_sum": -0.09643545129802078,
+          "cpu": -0.0966796875,
+          "metal": -0.09619140625,
+          "cpu_absolute_error": 0.0002442362019792199,
+          "metal_absolute_error": 0.0002440450480207801,
+          "fp64_then_f32_then_bf16": -0.09619140625
+        },
+        {
+          "row": 3,
+          "column": 7296,
+          "fp64_sum": 0.595703296829015,
+          "cpu": 0.59765625,
+          "metal": 0.59375,
+          "cpu_absolute_error": 0.0019529531709849834,
+          "metal_absolute_error": 0.0019532968290150166,
+          "fp64_then_f32_then_bf16": 0.59765625
+        },
+        {
+          "row": 4,
+          "column": 7570,
+          "fp64_sum": -0.00011892733164131641,
+          "cpu": -0.00011873245239257812,
+          "metal": -0.00011920928955078125,
+          "cpu_absolute_error": 1.9487924873828888e-07,
+          "metal_absolute_error": 2.819579094648361e-07,
+          "fp64_then_f32_then_bf16": -0.00011873245239257812
+        },
+        {
+          "row": 5,
+          "column": 7405,
+          "fp64_sum": 0.0002793464809656143,
+          "cpu": 0.0002803802490234375,
+          "metal": 0.000278472900390625,
+          "cpu_absolute_error": 1.0337680578231812e-06,
+          "metal_absolute_error": 8.735805749893188e-07,
+          "fp64_then_f32_then_bf16": 0.000278472900390625
+        },
+        {
+          "row": 5,
+          "column": 8122,
+          "fp64_sum": -0.1013183236354962,
+          "cpu": -0.10107421875,
+          "metal": -0.1015625,
+          "cpu_absolute_error": 0.00024410488549619913,
+          "metal_absolute_error": 0.00024417636450380087,
+          "fp64_then_f32_then_bf16": -0.10107421875
+        },
+        {
+          "row": 6,
+          "column": 245,
+          "fp64_sum": 0.6855468694120646,
+          "cpu": 0.6875,
+          "metal": 0.68359375,
+          "cpu_absolute_error": 0.0019531305879354477,
+          "metal_absolute_error": 0.0019531194120645523,
+          "fp64_then_f32_then_bf16": 0.6875
+        },
+        {
+          "row": 6,
+          "column": 2347,
+          "fp64_sum": 0.24072271678596735,
+          "cpu": 0.2412109375,
+          "metal": 0.240234375,
+          "cpu_absolute_error": 0.00048822071403265,
+          "metal_absolute_error": 0.00048834178596735,
+          "fp64_then_f32_then_bf16": 0.2412109375
+        },
+        {
+          "row": 6,
+          "column": 2439,
+          "fp64_sum": -0.004196176014374942,
+          "cpu": -0.00421142578125,
+          "metal": -0.004180908203125,
+          "cpu_absolute_error": 1.5249766875058413e-05,
+          "metal_absolute_error": 1.5267811249941587e-05,
+          "fp64_then_f32_then_bf16": -0.00421142578125
+        },
+        {
+          "row": 7,
+          "column": 29,
+          "fp64_sum": -4.5658089220523834e-07,
+          "cpu": -4.023313522338867e-07,
+          "metal": -4.172325134277344e-07,
+          "cpu_absolute_error": 5.4249539971351624e-08,
+          "metal_absolute_error": 3.934837877750397e-08,
+          "fp64_then_f32_then_bf16": -4.5634806156158447e-07
+        },
+        {
+          "row": 7,
+          "column": 5235,
+          "fp64_sum": 0.00044349394738674164,
+          "cpu": 0.0004444122314453125,
+          "metal": 0.0004425048828125,
+          "cpu_absolute_error": 9.182840585708618e-07,
+          "metal_absolute_error": 9.890645742416382e-07,
+          "fp64_then_f32_then_bf16": 0.0004444122314453125
+        }
+      ],
+      "norm_same_input": {
+        "elements": 98304,
+        "mismatches": 2,
+        "bit_exact": false,
+        "max_abs": 0.125
+      },
+      "scale_same_input": {
+        "elements": 98304,
+        "mismatches": 0,
+        "bit_exact": true,
+        "max_abs": 0.0
+      },
+      "ple_replay": {
+        "elements": 98304,
+        "mismatches": 17,
+        "bit_exact": false,
+        "max_abs": 0.125
+      },
+      "item": 0,
+      "tokens": 8,
+      "cpu_matches_recorded": {
+        "elements": 98304,
+        "mismatches": 0,
+        "bit_exact": true,
+        "max_abs": 0.0
+      },
+      "metal_matches_recorded": {
+        "elements": 98304,
+        "mismatches": 0,
+        "bit_exact": true,
+        "max_abs": 0.0
+      }
+    },
+    {
+      "linear_same_input": {
+        "elements": 86016,
+        "mismatches": 11,
+        "bit_exact": false,
+        "max_abs": 0.00390625
+      },
+      "dot_witnesses": [
+        {
+          "row": 0,
+          "column": 6843,
+          "fp64_sum": -0.06274419743567705,
+          "cpu": -0.0625,
+          "metal": -0.06298828125,
+          "cpu_absolute_error": 0.00024419743567705154,
+          "metal_absolute_error": 0.00024408381432294846,
+          "fp64_then_f32_then_bf16": -0.06298828125
+        },
+        {
+          "row": 2,
+          "column": 8281,
+          "fp64_sum": -0.006484971847385168,
+          "cpu": -0.006500244140625,
+          "metal": -0.0064697265625,
+          "cpu_absolute_error": 1.5272293239831924e-05,
+          "metal_absolute_error": 1.5245284885168076e-05,
+          "fp64_then_f32_then_bf16": -0.0064697265625
+        },
+        {
+          "row": 3,
+          "column": 2889,
+          "fp64_sum": 0.00012538954615592957,
+          "cpu": 0.000125885009765625,
+          "metal": 0.00012493133544921875,
+          "cpu_absolute_error": 4.954636096954346e-07,
+          "metal_absolute_error": 4.5821070671081543e-07,
+          "fp64_then_f32_then_bf16": 0.00012493133544921875
+        },
+        {
+          "row": 3,
+          "column": 3073,
+          "fp64_sum": -0.028991664992645383,
+          "cpu": -0.0289306640625,
+          "metal": -0.029052734375,
+          "cpu_absolute_error": 6.100093014538288e-05,
+          "metal_absolute_error": 6.106938235461712e-05,
+          "fp64_then_f32_then_bf16": -0.0289306640625
+        },
+        {
+          "row": 4,
+          "column": 5810,
+          "fp64_sum": -0.16845701448619366,
+          "cpu": -0.16796875,
+          "metal": -0.1689453125,
+          "cpu_absolute_error": 0.0004882644861936569,
+          "metal_absolute_error": 0.0004882980138063431,
+          "fp64_then_f32_then_bf16": -0.16796875
+        },
+        {
+          "row": 4,
+          "column": 8102,
+          "fp64_sum": 0.00046080187894403934,
+          "cpu": 0.000461578369140625,
+          "metal": 0.0004596710205078125,
+          "cpu_absolute_error": 7.764901965856552e-07,
+          "metal_absolute_error": 1.1308584362268448e-06,
+          "fp64_then_f32_then_bf16": 0.000461578369140625
+        },
+        {
+          "row": 5,
+          "column": 245,
+          "fp64_sum": 0.6855468694120646,
+          "cpu": 0.6875,
+          "metal": 0.68359375,
+          "cpu_absolute_error": 0.0019531305879354477,
+          "metal_absolute_error": 0.0019531194120645523,
+          "fp64_then_f32_then_bf16": 0.6875
+        },
+        {
+          "row": 5,
+          "column": 2347,
+          "fp64_sum": 0.24072271678596735,
+          "cpu": 0.2412109375,
+          "metal": 0.240234375,
+          "cpu_absolute_error": 0.00048822071403265,
+          "metal_absolute_error": 0.00048834178596735,
+          "fp64_then_f32_then_bf16": 0.2412109375
+        },
+        {
+          "row": 5,
+          "column": 2439,
+          "fp64_sum": -0.004196176014374942,
+          "cpu": -0.00421142578125,
+          "metal": -0.004180908203125,
+          "cpu_absolute_error": 1.5249766875058413e-05,
+          "metal_absolute_error": 1.5267811249941587e-05,
+          "fp64_then_f32_then_bf16": -0.00421142578125
+        },
+        {
+          "row": 6,
+          "column": 29,
+          "fp64_sum": -4.5658089220523834e-07,
+          "cpu": -4.023313522338867e-07,
+          "metal": -4.172325134277344e-07,
+          "cpu_absolute_error": 5.4249539971351624e-08,
+          "metal_absolute_error": 3.934837877750397e-08,
+          "fp64_then_f32_then_bf16": -4.5634806156158447e-07
+        },
+        {
+          "row": 6,
+          "column": 5235,
+          "fp64_sum": 0.00044349394738674164,
+          "cpu": 0.0004444122314453125,
+          "metal": 0.0004425048828125,
+          "cpu_absolute_error": 9.182840585708618e-07,
+          "metal_absolute_error": 9.890645742416382e-07,
+          "fp64_then_f32_then_bf16": 0.0004444122314453125
+        }
+      ],
+      "norm_same_input": {
+        "elements": 86016,
+        "mismatches": 1,
+        "bit_exact": false,
+        "max_abs": 0.0625
+      },
+      "scale_same_input": {
+        "elements": 86016,
+        "mismatches": 0,
+        "bit_exact": true,
+        "max_abs": 0.0
+      },
+      "ple_replay": {
+        "elements": 86016,
+        "mismatches": 11,
+        "bit_exact": false,
+        "max_abs": 0.125
+      },
+      "item": 1,
+      "tokens": 7,
+      "cpu_matches_recorded": {
+        "elements": 86016,
+        "mismatches": 0,
+        "bit_exact": true,
+        "max_abs": 0.0
+      },
+      "metal_matches_recorded": {
+        "elements": 86016,
+        "mismatches": 0,
+        "bit_exact": true,
+        "max_abs": 0.0
+      }
+    }
+  ],
+  "numeric_live_bytes": 0,
+  "numeric_peak_bytes": 38363136,
+  "seconds": 0.09071912499712198,
+  "process_max_rss_bytes": 278495232,
+  "replay_verdict": "PASS",
+  "strict_ple_gate": "FAIL",
+  "artifacts": [
+    {
+      "path": "build/metal-oracles/models/google/embeddinggemma-2/model.safetensors",
+      "sha256": "197a32965d4b1105faf060417baa899e193fb73cd401f42ec9295234d5553d79",
+      "bytes": 1488915288
+    },
+    {
+      "path": "build/metal-qualification/bf16-live-final-20261029/item-0-embeddings-0.bf16",
+      "sha256": "67372037ba7f1f3959e59c5428c57a59fb178b4c0400276dd37018e6ae570eff",
+      "bytes": 8192
+    },
+    {
+      "path": "build/metal-qualification/bf16-live-final-20261029/item-0-ple-0.bf16",
+      "sha256": "22a6aff45ca8be23fe2034626e0e12f26b8bb975922306fceeeabf89df02a8dd",
+      "bytes": 196608
+    },
+    {
+      "path": "build/metal-qualification/gemma-text-oracle/item-0-embeddings-0.bf16",
+      "sha256": "67372037ba7f1f3959e59c5428c57a59fb178b4c0400276dd37018e6ae570eff",
+      "bytes": 8192
+    },
+    {
+      "path": "build/metal-qualification/gemma-text-oracle/item-0-ple-0.bf16",
+      "sha256": "4a784134f435b61335f2b68c8f87ba5d9634dedd7d3e9b42b99db8a6df4512d6",
+      "bytes": 196608
+    },
+    {
+      "path": "build/metal-qualification/bf16-live-final-20261029/item-1-embeddings-0.bf16",
+      "sha256": "71acb8ddf48537acc1dee2fbec11ec2f82b4c874387eaa6cb3538f596509b6ad",
+      "bytes": 7168
+    },
+    {
+      "path": "build/metal-qualification/bf16-live-final-20261029/item-1-ple-0.bf16",
+      "sha256": "225f090c3b05784b3dc3720f9bea28b72694ded9aa9117ef6f35037c13a9a933",
+      "bytes": 172032
+    },
+    {
+      "path": "build/metal-qualification/gemma-text-oracle/item-1-embeddings-0.bf16",
+      "sha256": "71acb8ddf48537acc1dee2fbec11ec2f82b4c874387eaa6cb3538f596509b6ad",
+      "bytes": 7168
+    },
+    {
+      "path": "build/metal-qualification/gemma-text-oracle/item-1-ple-0.bf16",
+      "sha256": "440230753f4b93925b5cc6548a0489597653d50f2b4e1edd9e48fa75431dbd20",
+      "bytes": 172032
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tools/diagnose_gemma_metal_bf16.py",
+      "sha256": "d9da1b772516e132654b09d795b228cd4af7832276a1b3c8bc1706a0b0ff89c0",
+      "bytes": 12137
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/test_suite_numeric.py",
+      "sha256": "7a92d641000788bad77fd5e82ce013760e9e671c52976cca749335be3738f0c8",
+      "bytes": 49860
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/ds4_numeric_metal.m",
+      "sha256": "f4454ccbd2603bea73a5ace65e66a0268c3d138aa335de09aaf334b06cf35152",
+      "bytes": 26490
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/metal/numeric.metal",
+      "sha256": "749d50cca4ef4be053ae6f027ab8a4906e763d24f7f670bdd2a4b36f64898e30",
+      "bytes": 15726
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/libds4_numeric_metal.so",
+      "sha256": "35a7643cdaa186810b534ebd2575f7cca9d85227bbd48d39bac7392a43fe4133",
+      "bytes": 139608
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-0-linear-cpu.npy",
+      "sha256": "bc40925625daa38b5ce82c023af8a4af8ff4afc48ba82a4a34cd68f689a9c567",
+      "bytes": 196736
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-0-linear-metal.npy",
+      "sha256": "d08080618011213289a8235d75c86a3f8c54e70aeb32b2c0c38f99049267f9bf",
+      "bytes": 196736
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-0-norm-cpu.npy",
+      "sha256": "b773c2a532eb0541167a1ec403e35978ff63430622852300d32ea9beef7f4f50",
+      "bytes": 196736
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-0-norm-metal.npy",
+      "sha256": "4d1ce2e554d56834a18b6cbe4ecfc9bcee058c6d6f5571fb99cf1c72c9e37c13",
+      "bytes": 196736
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-0-ple-cpu.npy",
+      "sha256": "b773c2a532eb0541167a1ec403e35978ff63430622852300d32ea9beef7f4f50",
+      "bytes": 196736
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-0-ple-metal.npy",
+      "sha256": "7d2128a5d31da318e4e8e5572f5faeea771e20d96f08b2e1411abb3982980664",
+      "bytes": 196736
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-0-scale-cpu.npy",
+      "sha256": "d3bdee18b4a4b87a934f77a4a872ada92e5f3357894439f69b1d6ad8f62ebfa2",
+      "bytes": 196736
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-0-scale-metal.npy",
+      "sha256": "d3bdee18b4a4b87a934f77a4a872ada92e5f3357894439f69b1d6ad8f62ebfa2",
+      "bytes": 196736
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-1-linear-cpu.npy",
+      "sha256": "4d6ca4f76c0c9c94585b69addda6a0427f2cfb95d60cb4d65b6c40ae6ddddd6c",
+      "bytes": 172160
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-1-linear-metal.npy",
+      "sha256": "4577f04381f7b691c2adf05a7973dd3dcb236ab746a9465a447a5ca801e9ab43",
+      "bytes": 172160
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-1-norm-cpu.npy",
+      "sha256": "9ca71d590c6b9cf31c7b85888cde335abc1e6eb7485fce79c0c7ee601b2ef1f8",
+      "bytes": 172160
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-1-norm-metal.npy",
+      "sha256": "0be5e3ba96924c8410283cc43599c0e7f6ffedae4b27b58328cc8bb2fcb0d809",
+      "bytes": 172160
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-1-ple-cpu.npy",
+      "sha256": "9ca71d590c6b9cf31c7b85888cde335abc1e6eb7485fce79c0c7ee601b2ef1f8",
+      "bytes": 172160
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-1-ple-metal.npy",
+      "sha256": "3778bdd5d44a5ccc43be36dfba08a62b0d66665d9a25b8d809c79343c7cf007c",
+      "bytes": 172160
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-1-scale-cpu.npy",
+      "sha256": "2a323527291b5473551d985c288309f31c4740fae4949ab069cc205f49ae0bac",
+      "bytes": 172160
+    },
+    {
+      "path": "build/metal-qualification/bf16-replay-reserve-final-20261029/item-1-scale-metal.npy",
+      "sha256": "2a323527291b5473551d985c288309f31c4740fae4949ab069cc205f49ae0bac",
+      "bytes": 172160
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "media_directory": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-browser-image/media",
+  "storage_bytes": 4294967296,
+  "timeout_seconds": 300,
+  "models": [
+    {
+      "model": "Qwen/Qwen-Image-2.1-Turbo",
+      "index": "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+      "root": "build/metal-models",
+      "text_asset": "build/metal-models/image-tokenizer.ds4q"
+    },
+    {
+      "model": "google/embeddinggemma-2",
+      "index": "build/metal-models/gemma.ds4b/bundle.ds4b",
+      "root": "build/metal-models",
+      "text_asset": "build/metal-models/gemma.ds4g",
+      "media_asset": "build/metal-models/gemma-media.ds4p"
+    }
+  ]
+}

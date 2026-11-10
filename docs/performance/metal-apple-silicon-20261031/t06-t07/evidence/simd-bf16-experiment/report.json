@@ -1,0 +1,221 @@
+{
+  "scope": "Independent primitive experiment, unchanged production MPS and frozen gates. GPU timings overlap serial acceptance and are not benchmarks.",
+  "results": [
+    {
+      "name": "tiny",
+      "status": "MEASURED",
+      "shape": [
+        2,
+        8,
+        2
+      ],
+      "input_sha256": "a214ae5c03e0c56b5540a2f2e924a30f3a059d4d38c2b8c62b9182a78e8afb24",
+      "weight_sha256": "a214ae5c03e0c56b5540a2f2e924a30f3a059d4d38c2b8c62b9182a78e8afb24",
+      "cpu_sha256": "a9f7f08041f0f98a66cfd1c626d66f35af705288c733ce0199b1da4c4b082b95",
+      "simd_vs_cpu": {
+        "different": 0,
+        "count": 4,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "a9f7f08041f0f98a66cfd1c626d66f35af705288c733ce0199b1da4c4b082b95"
+      },
+      "mps_vs_cpu": {
+        "different": 0,
+        "count": 4,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "a9f7f08041f0f98a66cfd1c626d66f35af705288c733ce0199b1da4c4b082b95"
+      },
+      "simd_vs_mps": {
+        "different": 0,
+        "count": 4,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "a9f7f08041f0f98a66cfd1c626d66f35af705288c733ce0199b1da4c4b082b95"
+      },
+      "mps_memory": {
+        "live_bytes": 72,
+        "peak_bytes": 216
+      },
+      "metadata": {
+        "gpu_seconds": 0.000147333334,
+        "operand_and_output_bytes": 80,
+        "threadgroup_bytes": 8192,
+        "device": "Apple M5 Pro"
+      }
+    },
+    {
+      "name": "tail",
+      "status": "MEASURED",
+      "shape": [
+        35,
+        39,
+        37
+      ],
+      "input_sha256": "d8f1462cd2bcc0540679a395d24b43f8bd0d82439fefa21e35717965ba57bf07",
+      "weight_sha256": "f7574360e745dba632d6995a2db140f80457abab48b1a7c7d2069f80ebbfefbd",
+      "cpu_sha256": "ed455484144707ba4b449d43914a59d7eeda42f078fdf9bd66c3bf88d3649400",
+      "simd_vs_cpu": {
+        "different": 0,
+        "count": 1295,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "ed455484144707ba4b449d43914a59d7eeda42f078fdf9bd66c3bf88d3649400"
+      },
+      "mps_vs_cpu": {
+        "different": 0,
+        "count": 1295,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "ed455484144707ba4b449d43914a59d7eeda42f078fdf9bd66c3bf88d3649400"
+      },
+      "simd_vs_mps": {
+        "different": 0,
+        "count": 1295,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "ed455484144707ba4b449d43914a59d7eeda42f078fdf9bd66c3bf88d3649400"
+      },
+      "mps_memory": {
+        "live_bytes": 8206,
+        "peak_bytes": 24618
+      },
+      "metadata": {
+        "gpu_seconds": 7.20833305e-06,
+        "operand_and_output_bytes": 10796,
+        "threadgroup_bytes": 8192,
+        "device": "Apple M5 Pro"
+      }
+    },
+    {
+      "name": "signed",
+      "status": "MEASURED",
+      "shape": [
+        8,
+        512,
+        96
+      ],
+      "input_sha256": "97617d31687be370cffd0bdf8bff9b0a57d60b70aebce6bade6cf1c74a291f55",
+      "weight_sha256": "6f5b2ff89cb812b66c1df4b324fb069d87c40de31e5eb6fea7b7cde80371e266",
+      "cpu_sha256": "b14e502223ef8e61dbbc69d3b5986514090b182ba42837b30d1d8fb2248df941",
+      "simd_vs_cpu": {
+        "different": 0,
+        "count": 768,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "b14e502223ef8e61dbbc69d3b5986514090b182ba42837b30d1d8fb2248df941"
+      },
+      "mps_vs_cpu": {
+        "different": 0,
+        "count": 768,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "b14e502223ef8e61dbbc69d3b5986514090b182ba42837b30d1d8fb2248df941"
+      },
+      "simd_vs_mps": {
+        "different": 0,
+        "count": 768,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "b14e502223ef8e61dbbc69d3b5986514090b182ba42837b30d1d8fb2248df941"
+      },
+      "mps_memory": {
+        "live_bytes": 108032,
+        "peak_bytes": 324096
+      },
+      "metadata": {
+        "gpu_seconds": 0.00026725,
+        "operand_and_output_bytes": 109568,
+        "threadgroup_bytes": 8192,
+        "device": "Apple M5 Pro"
+      }
+    },
+    {
+      "name": "gemma-ple",
+      "status": "MEASURED",
+      "shape": [
+        11,
+        512,
+        12288
+      ],
+      "input_sha256": "2dcfa3449becfcd2f6097945a77abc9b80ff7adbc97f3720b453a8f1972c625f",
+      "weight_sha256": "0448ef82ff2ab67b64a46f123a2cda675e37279a74939ccf6a394c51ef92590a",
+      "cpu_sha256": "80c74aa9c2f9ad563b1f31e8ffc0a186ae582d194a492eb71ece168bc9381dcc",
+      "simd_vs_cpu": {
+        "different": 19,
+        "count": 135168,
+        "maximum_absolute": 0.00390625,
+        "rmse": 1.6589299775660038e-05,
+        "sha256": "07116b6cf996bdc29129a182d5fce8de27d65afd00b8df8ec53f13aadb202414"
+      },
+      "mps_vs_cpu": {
+        "different": 19,
+        "count": 135168,
+        "maximum_absolute": 0.00390625,
+        "rmse": 1.6589299775660038e-05,
+        "sha256": "07116b6cf996bdc29129a182d5fce8de27d65afd00b8df8ec53f13aadb202414"
+      },
+      "simd_vs_mps": {
+        "different": 0,
+        "count": 135168,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "07116b6cf996bdc29129a182d5fce8de27d65afd00b8df8ec53f13aadb202414"
+      },
+      "mps_memory": {
+        "live_bytes": 12864512,
+        "peak_bytes": 38593536
+      },
+      "metadata": {
+        "gpu_seconds": 0.000391875,
+        "operand_and_output_bytes": 13134848,
+        "threadgroup_bytes": 8192,
+        "device": "Apple M5 Pro"
+      }
+    },
+    {
+      "name": "qwen-q0",
+      "status": "MEASURED",
+      "shape": [
+        34,
+        4096,
+        4096
+      ],
+      "input_sha256": "a045127a15155e91225af58d80c46d6bd9c5759642d85db13e6a19c8571a183c",
+      "weight_sha256": "196ea55e2ad0ab4967155588a5b549beade1ddf65d793931b17f74edc73993e4",
+      "cpu_sha256": "11afa615bf5257b66dec9b5adf2895a7154a8758c635d48d6d040ed8fb25b62f",
+      "simd_vs_cpu": {
+        "different": 58,
+        "count": 139264,
+        "maximum_absolute": 0.001953125,
+        "rmse": 6.733233021805063e-06,
+        "sha256": "b0a853ec06f3e98708b153a881ea7baf2ac9f303b6f94445bb983174f1e8a5c5"
+      },
+      "mps_vs_cpu": {
+        "different": 58,
+        "count": 139264,
+        "maximum_absolute": 0.001953125,
+        "rmse": 6.733233021805063e-06,
+        "sha256": "b0a853ec06f3e98708b153a881ea7baf2ac9f303b6f94445bb983174f1e8a5c5"
+      },
+      "simd_vs_mps": {
+        "different": 0,
+        "count": 139264,
+        "maximum_absolute": 0.0,
+        "rmse": 0.0,
+        "sha256": "b0a853ec06f3e98708b153a881ea7baf2ac9f303b6f94445bb983174f1e8a5c5"
+      },
+      "mps_memory": {
+        "live_bytes": 34111488,
+        "peak_bytes": 102334464
+      },
+      "metadata": {
+        "gpu_seconds": 0.000715708333,
+        "operand_and_output_bytes": 34390016,
+        "threadgroup_bytes": 8192,
+        "device": "Apple M5 Pro"
+      }
+    }
+  ],
+  "all_computed": true
+}

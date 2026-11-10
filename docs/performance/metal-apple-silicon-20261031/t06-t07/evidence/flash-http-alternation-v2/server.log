@@ -1,0 +1,94 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Qwen BF16 n-grams: 95.37 GiB, disk reads only
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 0.26 GiB (raw 0.20 + compressed 0.06) + buffers 0.38 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 2.64 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=2049 backend=metal
+1031 21:49:24 ds4-server: loaded model Qwen3.8 Flash Next
+1031 21:49:24 ds4-server: context buffers 659.60 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=2049)
+1031 21:49:36 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-http-alternation-v2/kv (budget=4096 MiB, cross-quant=accept, min=512, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1031 21:49:36 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-http-alternation-v2/kv/agentic.J5biYo
+1031 21:49:36 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-http-alternation-v2/trace.log
+1031 21:49:36 ds4-server: listening on http://127.0.0.1:18080
+1031 21:49:41 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prompt start
+1031 21:49:41 ds4-server: agent-system boundary system_tokens=305 prompt_tokens=348 syntax=qwen4
+1031 21:49:48 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 64/348 (18.4%) chunk=0.00 t/s avg=8.93 t/s 7.166s
+1031 21:49:56 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 128/348 (36.8%) chunk=8.44 t/s avg=8.68 t/s 14.748s
+1031 21:50:03 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 192/348 (55.2%) chunk=8.74 t/s avg=8.70 t/s 22.068s
+1031 21:50:11 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 256/348 (73.6%) chunk=8.23 t/s avg=8.58 t/s 29.842s
+1031 21:50:19 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 320/348 (92.0%) chunk=7.77 t/s avg=8.40 t/s 38.074s
+1031 21:50:23 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 348/348 (100.0%) chunk=6.46 t/s avg=8.21 t/s 42.410s
+1031 21:50:23 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prompt done 42.410s
+1031 21:50:23 ds4-server: response frontier captured tokens=348 bytes=123.97 MiB location=host 10.826ms
+1031 21:50:37 ds4-server: chat ctx=348..362:14 gen=14 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=1.06 t/s avg=1.06 t/s 13.267s
+1031 21:50:37 ds4-server: tool calls ctx=0..348:348 RESPPROTO n=1 raw_tool_text=1 ids=[call_58550f9ef402516a18dfd7623e03396f] names=[suite_image]
+1031 21:50:37 ds4-server: chat ctx=0..348:348 gen=14 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 55.693s
+1031 21:50:38 ds4-server: post-response checkpoint rebuilt source=memory-request cached=348 response_prefill=15 target=363 location=host 1509.490ms
+1031 21:52:25 ds4-server: responses live continuation RESPPROTO match=tool-output-ids ids=1 cached=363 prompt=389
+1031 21:52:25 ds4-server: chat ctx=363..389:26 RESPPROTO TOOLS prompt start
+1031 21:52:29 ds4-server: chat ctx=363..389:26 RESPPROTO TOOLS prefill chunk 26/26 (100.0%) chunk=0.00 t/s avg=6.23 t/s 4.171s
+1031 21:52:29 ds4-server: chat ctx=363..389:26 RESPPROTO TOOLS prompt done 4.172s
+1031 21:52:29 ds4-server: response frontier captured tokens=389 bytes=125.21 MiB location=host 26.121ms
+1031 21:52:42 ds4-server: chat ctx=389..403:14 gen=14 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=1.03 t/s avg=1.03 t/s 13.658s
+1031 21:52:42 ds4-server: tool calls ctx=363..389:26 RESPPROTO n=1 raw_tool_text=1 ids=[call_6670c89e3994c0211cb57a4f599fa8d3] names=[suite_embedding]
+1031 21:52:42 ds4-server: chat ctx=363..389:26 gen=14 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 17.856s
+1031 21:52:45 ds4-server: post-response checkpoint rebuilt source=memory-request cached=389 response_prefill=15 target=404 location=host 2937.246ms
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0x98c2e0000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0x98c2e0000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0x98bf7c000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x98bf7c000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0x98c2e0000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0x98c2e0000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0x98bff0000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x98bff0000] No accelerated colorspace conversion found from yuv420p to rgb24.
+1031 21:53:12 ds4-server: responses live continuation RESPPROTO match=tool-output-ids ids=1 cached=404 prompt=431
+1031 21:53:12 ds4-server: chat ctx=404..431:27 RESPPROTO TOOLS prompt start
+1031 21:53:17 ds4-server: chat ctx=404..431:27 RESPPROTO TOOLS prefill chunk 27/27 (100.0%) chunk=0.00 t/s avg=5.77 t/s 4.676s
+1031 21:53:17 ds4-server: chat ctx=404..431:27 RESPPROTO TOOLS prompt done 4.676s
+1031 21:53:17 ds4-server: response frontier captured tokens=431 bytes=126.47 MiB location=host 24.779ms
+1031 21:53:23 ds4-server: chat ctx=431..437:6 gen=6 RESPPROTO TOOLS decoding chunk=0.99 t/s avg=0.99 t/s 6.071s
+1031 21:53:23 ds4-server: chat ctx=404..431:27 gen=6 RESPPROTO TOOLS finish=stop 10.772s
+1031 21:53:25 ds4-server: post-response checkpoint rebuilt source=memory-request cached=431 response_prefill=7 target=438 location=host 1447.018ms
+1031 21:53:25 ds4-server: live kv cache miss RESPPROTO live=438 prompt=348 common=314 vision=match reason=token-mismatch
+1031 21:53:25 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prompt start
+1031 21:53:25 ds4-server: agent-system boundary system_tokens=305 prompt_tokens=348 syntax=qwen4
+1031 21:53:32 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 64/348 (18.4%) chunk=0.00 t/s avg=8.66 t/s 7.388s
+1031 21:53:40 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 128/348 (36.8%) chunk=8.31 t/s avg=8.48 t/s 15.087s
+1031 21:53:47 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 192/348 (55.2%) chunk=8.58 t/s avg=8.51 t/s 22.549s
+1031 21:53:55 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 256/348 (73.6%) chunk=8.11 t/s avg=8.41 t/s 30.444s
+1031 21:54:03 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 320/348 (92.0%) chunk=7.71 t/s avg=8.26 t/s 38.741s
+1031 21:54:08 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prefill chunk 348/348 (100.0%) chunk=5.80 t/s avg=7.99 t/s 43.572s
+1031 21:54:08 ds4-server: chat ctx=0..348:348 RESPPROTO TOOLS prompt done 43.572s
+1031 21:54:08 ds4-server: response frontier captured tokens=348 bytes=123.97 MiB location=host 25.889ms
+1031 21:54:22 ds4-server: chat ctx=348..362:14 gen=14 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.99 t/s avg=0.99 t/s 14.130s
+1031 21:54:22 ds4-server: tool calls ctx=0..348:348 RESPPROTO n=1 raw_tool_text=1 ids=[call_0bc26f7f2b497726ecfae7e932b4d321] names=[suite_image]
+1031 21:54:22 ds4-server: chat ctx=0..348:348 gen=14 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 57.733s
+1031 21:54:25 ds4-server: post-response checkpoint rebuilt source=memory-request cached=348 response_prefill=15 target=363 location=host 2493.592ms
+1031 21:56:14 ds4-server: responses live continuation RESPPROTO match=tool-output-ids ids=1 cached=363 prompt=389
+1031 21:56:14 ds4-server: chat ctx=363..389:26 RESPPROTO TOOLS prompt start
+1031 21:56:18 ds4-server: chat ctx=363..389:26 RESPPROTO TOOLS prefill chunk 26/26 (100.0%) chunk=0.00 t/s avg=5.82 t/s 4.464s
+1031 21:56:18 ds4-server: chat ctx=363..389:26 RESPPROTO TOOLS prompt done 4.464s
+1031 21:56:18 ds4-server: response frontier captured tokens=389 bytes=125.21 MiB location=host 36.916ms
+1031 21:56:33 ds4-server: chat ctx=389..403:14 gen=14 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.96 t/s avg=0.96 t/s 14.596s
+1031 21:56:33 ds4-server: tool calls ctx=363..389:26 RESPPROTO n=1 raw_tool_text=1 ids=[call_857131fa3f0490d296696127062955d3] names=[suite_embedding]
+1031 21:56:33 ds4-server: chat ctx=363..389:26 gen=14 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 19.098s
+1031 21:56:36 ds4-server: post-response checkpoint rebuilt source=memory-request cached=389 response_prefill=15 target=404 location=host 3021.780ms
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0x98c2e0000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0x98c2e0000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0x98bff0000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x98bff0000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0x98c2e0000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0x98c2e0000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0x98bff0000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0x98bff0000] No accelerated colorspace conversion found from yuv420p to rgb24.
+1031 21:57:03 ds4-server: responses live continuation RESPPROTO match=tool-output-ids ids=1 cached=404 prompt=431
+1031 21:57:03 ds4-server: chat ctx=404..431:27 RESPPROTO TOOLS prompt start
+1031 21:57:08 ds4-server: chat ctx=404..431:27 RESPPROTO TOOLS prefill chunk 27/27 (100.0%) chunk=0.00 t/s avg=5.67 t/s 4.764s
+1031 21:57:08 ds4-server: chat ctx=404..431:27 RESPPROTO TOOLS prompt done 4.764s
+1031 21:57:08 ds4-server: response frontier captured tokens=431 bytes=126.47 MiB location=host 27.095ms
+1031 21:57:14 ds4-server: chat ctx=431..437:6 gen=6 RESPPROTO TOOLS decoding chunk=0.99 t/s avg=0.99 t/s 6.083s
+1031 21:57:14 ds4-server: chat ctx=404..431:27 gen=6 RESPPROTO TOOLS finish=stop 10.875s
+1031 21:57:15 ds4-server: shutdown requested, draining requests
+1031 21:57:15 ds4-server: post-response checkpoint rebuilt source=memory-request cached=431 response_prefill=7 target=438 location=host 1357.449ms

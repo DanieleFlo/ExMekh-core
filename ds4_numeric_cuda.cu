@@ -111,8 +111,8 @@ static ds4_status gpu_weight_ready(void *p) {
 }
 static ds4_status gpu_copy(void *p, void *out, const void *in, uint64_t n,
                            int kind) {
-  cudaMemcpyKind k = kind == 0   ? cudaMemcpyHostToDevice
-                     : kind == 1 ? cudaMemcpyDeviceToHost
+  cudaMemcpyKind k = kind == DS4_NUM_COPY_TO_DEVICE ? cudaMemcpyHostToDevice
+                     : kind == DS4_NUM_COPY_FROM_DEVICE ? cudaMemcpyDeviceToHost
                                  : cudaMemcpyDeviceToDevice;
   ds4_status s =
       status(cudaMemcpyAsync(out, in, n, k, ((numeric_cuda *)p)->stream));
@@ -1216,7 +1216,7 @@ static const ds4_numeric_ops gpu_ops = {
     gpu_linear,       gpu_norm,       gpu_point,      gpu_rope,    gpu_attend,
     gpu_conv,         gpu_reorder,    gpu_pool,       gpu_nearest, gpu_softmax,
     gpu_matmul_batch, gpu_channel_l2, gpu_channel_rms, gpu_weight_copy, gpu_weight_ready,
-    gpu_prepare_close};
+    gpu_prepare_close, NULL};
 extern "C" ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r,
                                        uint64_t owner) {
   if (!out)

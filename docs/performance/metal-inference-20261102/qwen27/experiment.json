@@ -1,0 +1,223 @@
+{
+  "head": "089255a1d3b6162e59c61a6bede9ece5e672330f",
+  "sources": {
+    "ds4.c": "1e23dd4c43a8dfa85d9a7367c72c91c0e53b897c1f257776521b047bd3413256",
+    "ds4_metal.m": "152b7a9a5d15521f6020da22af60e75629fe293a55a5ae41905d829ebcd11b08",
+    "ds4_qwen35_metal.inc": "8189c3ad4f0ddaa3fda1166e2a16051855310d5df39b95bb9c44bf152b99ffc4",
+    "ds4_qwen4_metal_stream.inc": "0a24aa626eb94c287694725284b7e18b47c059ee92e880a1200c96227190921d",
+    "ds4_file_reader.h": "68c1c0ca25aedf1c47fbc31f7c6154ae9114ec540f5781bdbb1da8068c33bb35",
+    "metal/qwen35.metal": "441c138b57a82e5228d0fef20664ed897c4cfe470588bd5d6c12b05fd0e2d667",
+    "metal/qwen35_quants.metal": "02c96d35ba1fa7c7992587d2c01d52bacda78bd9b24ff3ce6f75f81a0c227bd9",
+    "ds4_bench.c": "a9cbf60f5e0649eb70d2c03893a4629a24eae6796837fd7923b0b268d9df955e",
+    "tests/probe_qwen_metal_stream.c": "59162d9e42dfeca030ee2cbca1af5e258a21007311e7b719a98ad206b0f62a3c",
+    "tools/qualify_metal_command.py": "c7372b56fa2c531868ffd5a722db0e4f6865c9f6f7e5dec08de7522383edb2b3"
+  },
+  "binary": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d",
+  "model": {
+    "path": "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024,
+    "sha256_previous": "75bc9c8adba2842e72f0ab5201aaa07133c5010b566305c09187fcbdcd364017"
+  },
+  "plan": {
+    "context": 8192,
+    "chunk": 64,
+    "cache_bytes": 2147483648,
+    "initial_samples": 2,
+    "frontiers": [
+      64,
+      128
+    ],
+    "decode_tokens": 8,
+    "mode": "teacher-forced; raw prompt; target-only",
+    "timeout_seconds_per_process": 120,
+    "profile": "separate 64+4 trace",
+    "promotion": "separate warmup + five alternating pairs, full-model and isolated correctness required"
+  },
+  "baseline": {
+    "rows": [
+      {
+        "sample": 0,
+        "ctx_tokens": "64",
+        "prefill_tokens": "64",
+        "prefill_tps": "9.62",
+        "gen_tokens": "8",
+        "gen_tps": "0.33",
+        "gen_first_ms": "3005.783",
+        "gen_steady_tokens": "7",
+        "gen_steady_tps": "0.33",
+        "kvcache_bytes": "168241488"
+      },
+      {
+        "sample": 0,
+        "ctx_tokens": "128",
+        "prefill_tokens": "64",
+        "prefill_tps": "9.79",
+        "gen_tokens": "8",
+        "gen_tps": "0.33",
+        "gen_first_ms": "2919.745",
+        "gen_steady_tokens": "7",
+        "gen_steady_tps": "0.33",
+        "kvcache_bytes": "0"
+      },
+      {
+        "sample": 1,
+        "ctx_tokens": "64",
+        "prefill_tokens": "64",
+        "prefill_tps": "9.87",
+        "gen_tokens": "8",
+        "gen_tps": "0.34",
+        "gen_first_ms": "2880.863",
+        "gen_steady_tokens": "7",
+        "gen_steady_tps": "0.34",
+        "kvcache_bytes": "168241488"
+      },
+      {
+        "sample": 1,
+        "ctx_tokens": "128",
+        "prefill_tokens": "64",
+        "prefill_tps": "10.06",
+        "gen_tokens": "8",
+        "gen_tps": "0.32",
+        "gen_first_ms": "3013.556",
+        "gen_steady_tokens": "7",
+        "gen_steady_tps": "0.32",
+        "kvcache_bytes": "0"
+      }
+    ],
+    "profile": {
+      "diagnostic_only": true,
+      "phases": [
+        {
+          "phase": "prefill",
+          "wall_ms": 6056.5,
+          "gpu_span_ms": 3726.5,
+          "command_buffers": 67
+        },
+        {
+          "phase": "decode",
+          "wall_ms": 2908.294,
+          "gpu_span_ms": 468.2,
+          "command_buffers": 66
+        },
+        {
+          "phase": "decode",
+          "wall_ms": 3013.087,
+          "gpu_span_ms": 514.6,
+          "command_buffers": 66
+        },
+        {
+          "phase": "decode",
+          "wall_ms": 2893.807,
+          "gpu_span_ms": 485.3,
+          "command_buffers": 66
+        },
+        {
+          "phase": "decode",
+          "wall_ms": 2980.062,
+          "gpu_span_ms": 499.40000000000003,
+          "command_buffers": 66
+        }
+      ],
+      "encoder_groups_us": [
+        [
+          "ds4_qwen_ud_project_23",
+          2910312.3599999994
+        ],
+        [
+          "ds4_qwen_ud_project_13",
+          859690.8199999997
+        ],
+        [
+          "ds4_qwen_ud_project_11",
+          363768.1400000001
+        ],
+        [
+          "ds4_qwen_ud_project_21",
+          301184.06000000006
+        ],
+        [
+          "kernel_mul_mv_q4_K_dense_f32",
+          131231.06000000006
+        ],
+        [
+          "ds4_qwen_ud_project_18",
+          100008.05
+        ],
+        [
+          "ds4_qwen_ud_project_20",
+          94264.23000000001
+        ],
+        [
+          "ds4_qwen_ud_project_14",
+          93183.47
+        ],
+        [
+          "kernel_mul_mm_q4_K_f32_nax_direct_rhs_n64",
+          48787.290000000015
+        ],
+        [
+          "ds4_qwen35_gdn",
+          38905.28000000003
+        ],
+        [
+          "ds4_qwen_ud_project_22",
+          17207.99
+        ],
+        [
+          "ds4_qwen_ud_project_17",
+          16999.34
+        ],
+        [
+          "kernel_mul_mm_q8_0_f32",
+          12829.239999999998
+        ],
+        [
+          "kernel_rms_norm_mul_f32_4",
+          12017.79
+        ],
+        [
+          "ds4_qwen35_attention",
+          11815.480000000001
+        ],
+        [
+          "kernel_add2_f32",
+          9599.880000000008
+        ],
+        [
+          "kernel_mul_mv_q8_0_f32",
+          7569.909999999999
+        ],
+        [
+          "kernel_swiglu_flat_f32",
+          4775.449999999998
+        ],
+        [
+          "ds4_qwen35_conv",
+          3243.090000000001
+        ],
+        [
+          "ds4_qwen35_prepare_q",
+          1318.7399999999996
+        ]
+      ]
+    }
+  },
+  "status": "KEEP local measured subset",
+  "active_experiment": "Q-P03",
+  "accepted_experiment": "q-p03-dense-reads/experiment.json",
+  "rejected_experiment": "q-p02-ud8/experiment.json",
+  "model_verified": {
+    "path": "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024,
+    "sha256": "75bc9c8adba2842e72f0ab5201aaa07133c5010b566305c09187fcbdcd364017",
+    "seconds": 5.762348542004474
+  },
+  "local_and_cumulative": "identical, B0 unchanged after Q-P02 rollback",
+  "remaining": "bounded residency/reuse and inter-layer overlap require a new source audit and measurement campaign",
+  "post_review": {
+    "report": "clean-code-review.json",
+    "correctness": "PASS",
+    "performance": "NEED_MORE_DATA for strict non-regression;historical Q-P03 unchanged",
+    "code_revision_after": "87cf102547472b9ceb38f71722a61bf1e79468a9"
+  }
+}

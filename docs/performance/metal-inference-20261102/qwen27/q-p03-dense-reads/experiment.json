@@ -1,0 +1,195 @@
+{
+  "id": "Q-P03",
+  "status": "KEEP",
+  "baseline": {
+    "head": "089255a1d3b6162e59c61a6bede9ece5e672330f",
+    "sources": {
+      "ds4.c": "1e23dd4c43a8dfa85d9a7367c72c91c0e53b897c1f257776521b047bd3413256",
+      "ds4_metal.m": "152b7a9a5d15521f6020da22af60e75629fe293a55a5ae41905d829ebcd11b08",
+      "ds4_qwen35_metal.inc": "8189c3ad4f0ddaa3fda1166e2a16051855310d5df39b95bb9c44bf152b99ffc4",
+      "ds4_qwen4_metal_stream.inc": "0a24aa626eb94c287694725284b7e18b47c059ee92e880a1200c96227190921d",
+      "ds4_file_reader.h": "68c1c0ca25aedf1c47fbc31f7c6154ae9114ec540f5781bdbb1da8068c33bb35",
+      "metal/qwen35.metal": "441c138b57a82e5228d0fef20664ed897c4cfe470588bd5d6c12b05fd0e2d667",
+      "metal/qwen35_quants.metal": "02c96d35ba1fa7c7992587d2c01d52bacda78bd9b24ff3ce6f75f81a0c227bd9",
+      "ds4_bench.c": "a9cbf60f5e0649eb70d2c03893a4629a24eae6796837fd7923b0b268d9df955e",
+      "tests/probe_qwen_metal_stream.c": "59162d9e42dfeca030ee2cbca1af5e258a21007311e7b719a98ad206b0f62a3c",
+      "tools/qualify_metal_command.py": "c7372b56fa2c531868ffd5a722db0e4f6865c9f6f7e5dec08de7522383edb2b3"
+    },
+    "binary": "bd8911549b23e48efc4dbffd99bd7738f582333e94342a8224d4c61481eedc5d",
+    "model": {
+      "path": "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+      "bytes": 15358213024,
+      "sha256_previous": "75bc9c8adba2842e72f0ab5201aaa07133c5010b566305c09187fcbdcd364017"
+    },
+    "plan": {
+      "context": 8192,
+      "chunk": 64,
+      "cache_bytes": 2147483648,
+      "initial_samples": 2,
+      "frontiers": [
+        64,
+        128
+      ],
+      "decode_tokens": 8,
+      "mode": "teacher-forced; raw prompt; target-only",
+      "timeout_seconds_per_process": 120,
+      "profile": "separate 64+4 trace",
+      "promotion": "separate warmup + five alternating pairs, full-model and isolated correctness required"
+    }
+  },
+  "component": "split complete reads >=32MiB using existing indexed queue,4 workers in Metal, no extra buffer",
+  "sources_before_implementation": "sources.json",
+  "candidate_sources": {
+    "ds4_file_reader.h": "285731f154cce85d7236d2d5fc0e5ae71d4737a344dbcea6c318f5ca11183809",
+    "tests/test_file_reader.c": "2c83e3c4074906f7535c00ce7ff5ff75a144ade66795d6b0a6947627edf10c49",
+    "tests/test_qwen35_metal.c": "6dec2fd29adfe8fef55903a192c5731984ad6cb26a06922ab8b88872e7099989"
+  },
+  "host_profile": {
+    "sampled_main_thread": 6447,
+    "pread_samples": 4844,
+    "fraction": 0.751357220412595,
+    "gpu_wait_samples": 1448,
+    "artifact": "build/metal-perf-qwen27-20261102/q-p03-host-sample.txt"
+  },
+  "correctness": [
+    {
+      "file": "continuation.f32",
+      "exact": true
+    },
+    {
+      "file": "position-02.f32",
+      "exact": true
+    },
+    {
+      "file": "position-03.f32",
+      "exact": true
+    },
+    {
+      "file": "position-04.f32",
+      "exact": true
+    },
+    {
+      "file": "position-05.f32",
+      "exact": true
+    },
+    {
+      "file": "position-06.f32",
+      "exact": true
+    },
+    {
+      "file": "position-07.f32",
+      "exact": true
+    },
+    {
+      "file": "position-08.f32",
+      "exact": true
+    },
+    {
+      "file": "prefill.f32",
+      "exact": true
+    },
+    {
+      "file": "prefill.state",
+      "exact": true
+    }
+  ],
+  "promotion_plan": {
+    "warmup_pairs": 1,
+    "measured_pairs": 5,
+    "alternate": true,
+    "frontiers": [
+      64,
+      128
+    ],
+    "new_prefill_tokens_each": 64,
+    "teacher_forced_decode": 4,
+    "context": 8192,
+    "prefill_chunk": 64,
+    "cache_bytes": 2147483648,
+    "timeout_seconds": 120,
+    "one_model_process": true,
+    "CSV_TPS_decimals": 6
+  },
+  "models_not_tuned": [
+    "Flash (sequential shared-reader regression only)"
+  ],
+  "qualification": "local measured M5 Pro subset",
+  "baseline_instability": "decode CV6.98/6.40%;paired gain intervals stay positive;retained all samples",
+  "metrics": "measurements.json",
+  "gates": "gates.json",
+  "model": {
+    "path": "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "bytes": 15358213024,
+    "sha256": "75bc9c8adba2842e72f0ab5201aaa07133c5010b566305c09187fcbdcd364017",
+    "seconds": 5.762348542004474
+  },
+  "profile_after": {
+    "diagnostic_only": true,
+    "phases": [
+      {
+        "phase": "prefill",
+        "wall_ms": 5475.100000008941,
+        "gpu_span_ms": 3674.0
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 2119.229,
+        "gpu_span_ms": 376.3
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 2093.021,
+        "gpu_span_ms": 383.7
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 2168.116,
+        "gpu_span_ms": 395.1
+      },
+      {
+        "phase": "decode",
+        "wall_ms": 2185.532,
+        "gpu_span_ms": 421.7
+      }
+    ]
+  },
+  "production_sources": {
+    "ds4_file_reader.h": "285731f154cce85d7236d2d5fc0e5ae71d4737a344dbcea6c318f5ca11183809",
+    "ds4_qwen35_metal.inc": "8189c3ad4f0ddaa3fda1166e2a16051855310d5df39b95bb9c44bf152b99ffc4",
+    "metal/qwen35_quants.metal": "02c96d35ba1fa7c7992587d2c01d52bacda78bd9b24ff3ce6f75f81a0c227bd9",
+    "ds4_qwen4_metal_stream.inc": "0a24aa626eb94c287694725284b7e18b47c059ee92e880a1200c96227190921d",
+    "tests/test_file_reader.c": "2c83e3c4074906f7535c00ce7ff5ff75a144ade66795d6b0a6947627edf10c49",
+    "tests/test_qwen35_metal.c": "6dec2fd29adfe8fef55903a192c5731984ad6cb26a06922ab8b88872e7099989"
+  },
+  "binaries": {
+    "ds4": "23c67be2042bb39dd71beb150f21ec63ca65b0b7d36db1a4d8c407a7a5671067",
+    "ds4-server": "51eb15468f1470032d90746ed1c0be3f6dc0703ecd35406108b30e0f37a4e9bb",
+    "ds4-bench": "91f0c1b17af05aebc82e942ce0fd40633560fbfe05469791d75b2741a32231b0",
+    "ds4-eval": "cf9f57a5dce6ed5c12e72dd8a429555370c8107d57c6defb9219870b86a041c6"
+  },
+  "build": "make -j2 all test-file-reader test-read-queue tests/test_qwen35_metal tests/test_qwen35_metal_features;PASS;final Metal tests verified outside sandbox",
+  "limits": [
+    "actual occupancy only64/128;8192 allocation",
+    "teacher-forced4 output performance,target-only",
+    "HTTP/ExMekh latency not measured",
+    "real full-resident27B not measured",
+    "CUDA/ROCm/distributed not run;production sources unchanged",
+    "no performance claim for Flash,only correctness regression",
+    "no physical SSD-byte counter",
+    "same old Q8 extended-case limit remains"
+  ],
+  "accepted_diff_sha256": "74ff3d05d4adeb2509f644fa845e178af6f95c0454330806686a3ef810ea6742",
+  "hardware": {
+    "device": "Apple M5 Pro",
+    "machine": "Mac17,9",
+    "physical_memory_bytes": 25769803776,
+    "macOS": "26.6.2 (25G83)",
+    "SDK": "26.5",
+    "compiler": "Apple clang21.0.0 (clang-2100.1.1.101)",
+    "target": "arm64-apple-darwin25.6.0",
+    "thermal_initial": "no thermal/performance warning recorded"
+  },
+  "input_manifest": "inputs.json",
+  "seed": null,
+  "seed_reason": "teacher-forced deterministic token sequence"
+}

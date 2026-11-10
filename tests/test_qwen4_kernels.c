@@ -10,9 +10,7 @@
 #include <string.h>
 #include <time.h>
 #include <sys/mman.h>
-#ifndef __APPLE__
 #include <unistd.h>
-#endif
 
 #include "ds4.h"
 #include "ds4_gpu.h"
@@ -1831,6 +1829,12 @@ static void test_moe_types(arena_t *a, uint32_t NE, uint32_t slots, uint32_t E, 
                                             sg_off, su_off, shared_type), "moe mid");
     require_ok(ds4_gpu_qwen4_moe_down_tensor(gpart, gmid, gsel, a->base, a->size, down_off, dtype, NE, T, slots, F, E,
                                              sd_off, shared_type), "moe down");
+#ifdef __APPLE__
+    if(ds4_gpu_qwen4_stream_active()) {
+        check_tensor("streamed MoE mid",gmid,mid,(uint64_t)T*n_out*F,2e-5);
+        check_tensor("streamed MoE down",gpart,part,(uint64_t)T*n_out*E,2e-5);
+    }
+#endif
     if ((dtype == 10u || dtype == 39u) && getenv("DS4_TEST_QWEN4_MV_EXACT")) {
         /* Specialized decode row kernels must match the generic dispatch bit
          * for bit across every NR/NSG geometry; Q4_K gate/up keep their own
@@ -4031,48 +4035,262 @@ static void test_decode_graph_state_banks(void) {
 }
 #endif
 
+#ifdef __APPLE__
+static void test_metal_stream_eviction(arena_t *a, FILE *file) {
+    enum { WIDTH = 64, BYTES = WIDTH * WIDTH * 4, PASSES = 256 };
+    uint64_t offsets[3];
+    for (unsigned k = 0; k < 3; k++) {
+        offsets[k] = arena_alloc(a, BYTES);
+        float *matrix = (float *)((char *)a->base + offsets[k]);
+        memset(matrix, 0, BYTES);
+        for (unsigned i = 0; i < WIDTH; i++) matrix[i * WIDTH + i] = k + 1;
+    }
+    float ones[WIDTH], actual[WIDTH];
+    for (unsigned i = 0; i < WIDTH; i++) ones[i] = 1;
+    ds4_gpu_tensor *input = upload(ones, WIDTH), *output = upload(NULL, WIDTH);
+    require_ok(ds4_gpu_qwen4_stream_open(a->base, a->size, fileno(file), BYTES),
+               "one-slot dense cache");
+    uint64_t baseline = 0;
+    for (unsigned pass = 0; pass < PASSES; pass++) {
+        unsigned k = pass % 3;
+        require_ok(ds4_gpu_matmul_f32_tensor(output, a->base, a->size, offsets[k],
+                                              WIDTH, WIDTH, input, 1), "evicted dense binding");
+        require_ok(ds4_gpu_tensor_read(output, 0, actual, sizeof(actual)), "evicted output");
+        for (unsigned i = 0; i < WIDTH; i++)
+            require_ok(actual[i] == (float)(k + 1), "reused slot retains the requested weights");
+        ds4_gpu_metal_memory memory;
+        require_ok(ds4_gpu_metal_memory_query(&memory), "eviction physical storage sample");
+        if (pass == 16) baseline = memory.allocated;
+        if (pass > 16) require_ok(memory.allocated <= baseline + (1u << 20),
+                                  "completed dispatches do not retain evicted storage");
+    }
+    uint64_t owned, reads;
+    ds4_gpu_qwen4_stream_memory(&owned, &reads);
+    require_ok(owned == BYTES && reads == (uint64_t)PASSES * BYTES,
+               "one physical slot and explicit reads across every cache miss");
+    ds4_gpu_tensor_free(output);
+    ds4_gpu_tensor_free(input);
+    puts("Metal SSD repeated dense eviction/reuse: PASS");
+}
+
+static void test_metal_stream_cache_isolation(arena_t *a, FILE *file) {
+    const unsigned experts = 4, width = 32, rows = experts * width;
+    require_ok(ds4_gpu_qwen4_stream_layer(a->base, a->size), "isolation layer");
+    double *gate, *up;
+    uint64_t gate_offset = arena_f32(a, (uint64_t)rows * width, &gate, .01f, .02f);
+    uint64_t up_offset = arena_f32(a, (uint64_t)rows * width, &up, .01f, .02f);
+    float x[32];
+    for (unsigned i = 0; i < width; i++)
+        x[i] = 1;
+    int32_t ids[] = {3, 1, 2, 0};
+    ds4_gpu_tensor *input = upload(x, width), *selection = ds4_gpu_tensor_alloc(sizeof(ids));
+    ds4_gpu_tensor *mid = upload(NULL, rows), *output = upload(NULL, rows);
+    require_ok(ds4_gpu_tensor_write(selection, 0, ids, sizeof(ids)), "permuted selection");
+    require_ok(ds4_gpu_qwen4_moe_mid_tensor(mid, input, selection, a->base, a->size, gate_offset,
+                                            up_offset, 0, experts, 1, experts, width, width, 0, 0,
+                                            UINT32_MAX),
+               "compact F32 experts");
+    /* The same bytes now denote a dense matrix in original expert order.
+     * A compact cache entry cannot serve this binding even at equal size. */
+    require_ok(
+        ds4_gpu_matmul_f32_tensor(output, a->base, a->size, gate_offset, width, rows, input, 1),
+        "dense binding after compaction");
+    double expected[128] = {0};
+    for (unsigned row = 0; row < rows; row++)
+        for (unsigned col = 0; col < width; col++)
+            expected[row] += gate[row * width + col];
+    check_tensor("dense/compact cache isolation", output, expected, rows, 2e-5);
+    uint64_t live, reads, after_live, after_reads;
+    ds4_gpu_qwen4_stream_memory(&live, &reads);
+    int closed = dup(fileno(file));
+    require_ok(closed >= 0, "closed descriptor fixture");
+    close(closed);
+    require_ok(!ds4_gpu_qwen4_stream_open(a->base, a->size, closed, 1), "failed replacement");
+    ds4_gpu_qwen4_stream_memory(&after_live, &after_reads);
+    require_ok(live == after_live && reads == after_reads && ds4_gpu_qwen4_stream_active(),
+               "working owner retained");
+    require_ok(
+        ds4_gpu_matmul_f32_tensor(output, a->base, a->size, gate_offset, width, rows, input, 1),
+        "old stream still usable");
+    check_tensor("failed replacement preserves weights", output, expected, rows, 2e-5);
+    require_ok(ds4_gpu_qwen4_stream_layer(a->base, a->size), "invalid router layer");
+    ids[0] = -1;
+    require_ok(ds4_gpu_tensor_write(selection, 0, ids, sizeof(ids)) && ds4_gpu_begin_commands(),
+               "invalid router fixture");
+    require_ok(!ds4_gpu_qwen4_moe_mid_tensor(mid, input, selection, a->base, a->size, gate_offset,
+                                             up_offset, 0, experts, 1, experts, width, width, 0, 0,
+                                             UINT32_MAX),
+               "invalid router rejected");
+    require_ok(ds4_gpu_commands_active() && ds4_gpu_end_commands(),
+               "failed router preserves batch");
+    ds4_gpu_qwen4_stream_memory(&live, NULL);
+    require_ok(!live, "invalid router owns no storage");
+    ds4_gpu_tensor_free(output);
+    ds4_gpu_tensor_free(mid);
+    ds4_gpu_tensor_free(selection);
+    ds4_gpu_tensor_free(input);
+    free(gate);
+    free(up);
+}
+
+static void test_metal_stream_read_failures(arena_t *a, FILE *file) {
+    uint64_t owned = 0;
+    require_ok(ds4_gpu_qwen4_stream_layer(a->base, a->size), "stream fault boundary");
+    float x[32] = {0}, sentinel[32], actual[32];
+    for (unsigned i = 0; i < 32; i++)
+        sentinel[i] = 123;
+    ds4_gpu_tensor *input = upload(x, 32), *output = upload(sentinel, 32);
+    require_ok(ftruncate(fileno(file), 0) == 0, "truncate cold source");
+    require_ok(!ds4_gpu_matmul_f32_tensor(output, a->base, a->size, 0, 32, 32, input, 1),
+               "cold read fails closed");
+    require_ok(ds4_gpu_tensor_read(output, 0, actual, sizeof(actual)) &&
+                   !memcmp(actual, sentinel, sizeof(actual)),
+               "failed read preserves output");
+    require_ok(ds4_gpu_qwen4_stream_layer(a->base, a->size),
+               "drain dense failure before routed fault");
+    int32_t ids[] = {3, 1, 2, 0};
+    float routed_sentinel[128], routed_actual[128];
+    for (unsigned i = 0; i < 128; i++)
+        routed_sentinel[i] = 321;
+    ds4_gpu_tensor *selection = ds4_gpu_tensor_alloc(sizeof(ids));
+    ds4_gpu_tensor *mid = upload(routed_sentinel, 128);
+    require_ok(selection && ds4_gpu_tensor_write(selection, 0, ids, sizeof(ids)),
+               "concurrent routed failure selection");
+    require_ok(!ds4_gpu_qwen4_moe_mid_tensor(mid, input, selection, a->base, a->size,
+                                             0, 16384, 0, 4, 1, 4, 32, 32, 0, 0,
+                                             UINT32_MAX),
+               "concurrent routed short reads fail closed");
+    require_ok(ds4_gpu_tensor_read(mid, 0, routed_actual, sizeof(routed_actual)) &&
+                   !memcmp(routed_actual, routed_sentinel, sizeof(routed_actual)),
+               "failed routed reads never publish partial output");
+    ds4_gpu_tensor_free(mid);
+    ds4_gpu_tensor_free(selection);
+    require_ok(ds4_gpu_qwen4_stream_open(a->base, a->size, fileno(file), 1),
+               "minimal stream cap");
+    require_ok(!ds4_gpu_matmul_f32_tensor(output, a->base, a->size, 0, 32, 32, input, 1),
+               "cap refuses before allocation");
+    ds4_gpu_qwen4_stream_memory(&owned, NULL);
+    require_ok(!owned, "failed admission owns zero bytes");
+    ds4_gpu_tensor_free(output);
+    ds4_gpu_tensor_free(input);
+}
+#endif
+
 int main(void) {
     arena_t arena;
-    arena.size = (uint64_t)1536 << 20;
+    const bool mtp_only = getenv("DS4_TEST_QWEN4_MTP") != NULL;
+    arena.size = (uint64_t)(mtp_only ? 4 : 1536) << 20;
     FILE *tiered_file = NULL;
+#ifdef __APPLE__
+    const bool metal_stream = getenv("DS4_TEST_QWEN4_METAL_STREAM") != NULL;
+    if (metal_stream) {
+        tiered_file = tmpfile();
+        require_ok(tiered_file && !ftruncate(fileno(tiered_file), arena.size),
+                   "Metal stream backing file");
+    }
+#endif
 #ifndef __APPLE__
     if (getenv("DS4_CUDA_QWEN4_TIERED_CACHE")) {
         tiered_file = tmpfile();
-        require_ok(tiered_file && ftruncate(fileno(tiered_file), arena.size) == 0, "tiered test backing file");
+        require_ok(tiered_file && ftruncate(fileno(tiered_file), arena.size) == 0,
+                   "tiered test backing file");
         /* Synthetic weights are modified between tests: buffered pread sees
          * those dirty shared pages. Real GGUF validation also tests O_DIRECT. */
         setenv("DS4_CUDA_NO_DIRECT_IO", "1", 1);
     }
 #endif
     arena.base = mmap(NULL, arena.size, PROT_READ | PROT_WRITE,
-                     tiered_file ? MAP_SHARED : MAP_PRIVATE | MAP_ANON,
-                     tiered_file ? fileno(tiered_file) : -1, 0);
+                      tiered_file ? MAP_SHARED : MAP_PRIVATE | MAP_ANON,
+                      tiered_file ? fileno(tiered_file) : -1, 0);
     arena.used = 0;
-    if (arena.base == MAP_FAILED) { perror("mmap"); return 1; }
+    if (arena.base == MAP_FAILED) {
+        perror("mmap");
+        return 1;
+    }
     setenv("DS4_QWEN4_ATTN_SPLIT_KEYS", "8", 1);
     require_ok(ds4_gpu_init(), "GPU initialization");
+#ifdef __APPLE__
+    if (metal_stream) {
+        const uint64_t limit = 16u * 1024u * 1024u;
+        ds4_gpu_set_ssd_streaming(true);
+        require_ok(ds4_gpu_qwen4_stream_open(arena.base, arena.size, fileno(tiered_file), limit),
+                   "Metal stream configure");
+        test_moe(&arena, 32, 4, 256, 96, 1, 12u);
+        uint64_t owned, read_bytes;
+        ds4_gpu_qwen4_stream_memory(&owned, &read_bytes);
+        require_ok(owned <= limit && read_bytes < arena.used / 2, "only selected experts read");
+        require_ok(ds4_gpu_begin_commands() && ds4_gpu_qwen4_stream_layer(arena.base, arena.size) &&
+                       ds4_gpu_commands_active(),
+                   "layer boundary preserves command batch");
+        ds4_gpu_qwen4_stream_memory(&owned, NULL);
+        require_ok(!owned, "old layer storage released");
+        require_ok(ds4_gpu_end_commands(), "finish boundary batch before scalar readbacks");
+        test_moe_types(&arena, 32, 4, 256, 672, 3, 16u, 10u);
+        require_ok(ds4_gpu_qwen4_stream_layer(arena.base, arena.size), "stream mixed quant layer");
+        test_moe_types(&arena, 32, 4, 256, 96, 3, 12u, 39u);
+        require_ok(ds4_gpu_qwen4_stream_layer(arena.base, arena.size), "stream next layer");
+        test_moe(&arena, 512, 4, 32, 32, 5, 8u);
+        require_ok(ds4_gpu_qwen4_stream_layer(arena.base, arena.size), "stream dense layer");
+        test_dense_mm(&arena, 96, 129, 35, 1u);
+        require_ok(ds4_gpu_qwen4_stream_open(arena.base, arena.size, fileno(tiered_file), 32768),
+                   "small cache forces token-union split");
+        test_moe(&arena, 512, 4, 32, 32, 17, 8u);
+        ds4_gpu_qwen4_stream_memory(&owned, NULL);
+        require_ok(owned <= 32768, "split union respects physical cache cap");
+        require_ok(ds4_gpu_qwen4_stream_open(arena.base, arena.size, fileno(tiered_file), limit),
+                   "restore cache for fault checks");
+        test_metal_stream_eviction(&arena, tiered_file);
+        require_ok(ds4_gpu_qwen4_stream_open(arena.base, arena.size, fileno(tiered_file), limit),
+                   "restore cache after eviction loop");
+        test_metal_stream_cache_isolation(&arena, tiered_file);
+        test_metal_stream_read_failures(&arena, tiered_file);
+        require_ok(ds4_gpu_qwen4_stream_close(), "stream close");
+        ds4_gpu_cleanup();
+        munmap(arena.base, arena.size);
+        fclose(tiered_file);
+        puts("Flash Metal SSD: selected-only reads, scalar oracles, layer fence, cap and "
+             "short-read failure PASS");
+        return 0;
+    }
+#endif
 #if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
     if (getenv("DS4_TEST_QWEN4_GRAPH_BANKS")) {
         test_decode_graph_state_banks();
         ds4_gpu_cleanup();
         munmap(arena.base, arena.size);
-        if (tiered_file) fclose(tiered_file);
+        if (tiered_file)
+            fclose(tiered_file);
         return 0;
     }
 #endif
 #if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
     if (getenv("DS4_TEST_QWEN4_QSA_REGISTER_KEYS")) {
-        test_idx_register_keys(); ds4_gpu_cleanup(); munmap(arena.base, arena.size);
-        if (tiered_file) fclose(tiered_file);
+        test_idx_register_keys();
+        ds4_gpu_cleanup();
+        munmap(arena.base, arena.size);
+        if (tiered_file)
+            fclose(tiered_file);
         return 0;
     }
 #endif
+#if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
     if (tiered_file) {
         require_ok(ds4_gpu_qwen4_set_tiered_cache(true), "Flash tiered capability");
         const uint64_t offset = 0;
         require_ok(ds4_gpu_set_model_map_spans(arena.base, arena.size, &offset, &arena.size, 1, arena.size), "unpinned model map");
         require_ok(ds4_gpu_set_model_fd(fileno(tiered_file)), "tiered model file");
-    } else require_ok(ds4_gpu_set_model_map(arena.base, arena.size), "model map registration");
+    } else
+#endif
+    require_ok(ds4_gpu_set_model_map(arena.base, arena.size), "model map registration");
+    if (mtp_only) {
+        test_mtp(&arena, 2560, 4);
+        test_mtp(&arena, 64, 4);
+        ds4_gpu_cleanup(); munmap(arena.base, arena.size);
+        if (tiered_file) fclose(tiered_file);
+        puts("PASS bounded Flash MTP staging/combine (FP64 oracle)");
+        return 0;
+    }
+
 
 #if !defined(__APPLE__) && !defined(DS4_ROCM_BUILD)
     if (getenv("DS4_TEST_QWEN4_PREFILL_RING")) {

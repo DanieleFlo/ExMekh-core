@@ -1,0 +1,40 @@
+[
+  {
+    "stage": "layer0.norm",
+    "mean": {
+      "different": 66,
+      "max_abs": 2.384185791015625e-07
+    },
+    "rstd": {
+      "different": 3,
+      "max_abs": 1.1920928955078125e-07
+    },
+    "affine_unfused": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "affine_fused": {
+      "different": 113,
+      "max_abs": 0.0078125
+    }
+  },
+  {
+    "stage": "layer1.norm",
+    "mean": {
+      "different": 654,
+      "max_abs": 1.1920928955078125e-07
+    },
+    "rstd": {
+      "different": 5,
+      "max_abs": 1.4901161193847656e-08
+    },
+    "affine_unfused": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "affine_fused": {
+      "different": 1,
+      "max_abs": 0.03125
+    }
+  }
+]

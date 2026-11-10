@@ -16,7 +16,7 @@ from types import TracebackType
 from uuid import uuid4
 
 import httpx
-from playwright.async_api import Page
+from playwright.async_api import Page, expect
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT_ROOT = PROJECT_ROOT / ".test-tmp"
@@ -165,11 +165,14 @@ def start_mock_server(
             yield url
 
 
-async def send_command(page: Page, text: str) -> None:
-    """Wait for the server to publish the input, including queued messages."""
-    previous_inputs = await page.locator(
+async def send_command(
+    page: Page, text: str, *, published_text: str | None = None
+) -> None:
+    """Wait for publication, optionally matching text as rendered by Markdown."""
+    published_inputs = page.locator(
         ".msg-user:visible, .exmekh-queue-item:visible"
-    ).count()
+    ).filter(has_text=text.strip() if published_text is None else published_text)
+    previous_inputs = await published_inputs.count()
     textarea = page.locator("textarea").first
     await textarea.wait_for(state="visible", timeout=8000)
     await textarea.click()
@@ -180,11 +183,9 @@ async def send_command(page: Page, text: str) -> None:
         await send_button.click()
     else:
         await textarea.press("Enter")
-    await page.wait_for_function(
-        "previous => [...document.querySelectorAll('.msg-user, .exmekh-queue-item')].filter(node => node.getClientRects().length > 0).length > previous",
-        arg=previous_inputs,
-        timeout=15000,
-    )
+    # A pending chat switch can remove unrelated inputs. A global message
+    # count is not monotonic across navigation; await this command's content.
+    await expect(published_inputs).to_have_count(previous_inputs + 1, timeout=15000)
 
 
 async def wait_turn_completion(page: Page, timeout: float = 15000) -> None:

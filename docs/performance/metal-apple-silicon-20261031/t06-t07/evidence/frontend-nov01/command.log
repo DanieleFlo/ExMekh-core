@@ -1,0 +1,162 @@
+Uninstalled 1 package in 13ms
+Installed 1 package in 13ms
+============================= test session starts ==============================
+platform darwin -- Python 3.13.13, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, asyncio-1.4.0, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+created: 4/4 workers
+4 workers [1256 items]
+
+........................................................................ [  5%]
+........................................................................ [ 11%]
+........................................................................ [ 17%]
+........................................................................ [ 22%]
+........................................................................ [ 28%]
+........................................................................ [ 34%]
+........................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 51%]
+........................................................................ [ 57%]
+........................................................................ [ 63%]
+........................................................................ [ 68%]
+........................................................................ [ 74%]
+........................................................................ [ 80%]
+........................................................................ [ 85%]
+........................................................................ [ 91%]
+...................................................sssssss..ssssssssssss [ 97%]
+ssssssssssss..ssssssssssss..sss.                                         [100%]
+================================ tests coverage ================================
+______________ coverage: platform darwin, python 3.13.13-final-0 _______________
+
+Name                                                                         Stmts   Miss Branch BrPart  Cover   Missing
+------------------------------------------------------------------------------------------------------------------------
+agent/src/exmekh_agent/__init__.py                                               1      0      0      0   100%
+agent/src/exmekh_agent/config/__init__.py                                        2      0      0      0   100%
+agent/src/exmekh_agent/config/agents.py                                          3      0      0      0   100%
+agent/src/exmekh_agent/config/application.py                                   122      0     32      0   100%
+agent/src/exmekh_agent/config/approvals.py                                      10      0      2      0   100%
+agent/src/exmekh_agent/config/attachments.py                                     7      0      0      0   100%
+agent/src/exmekh_agent/config/catalogs.py                                       11      0      0      0   100%
+agent/src/exmekh_agent/config/environment.py                                     2      0      0      0   100%
+agent/src/exmekh_agent/config/execution.py                                      26      0      4      0   100%
+agent/src/exmekh_agent/config/formatting.py                                      2      0      0      0   100%
+agent/src/exmekh_agent/config/paths.py                                           5      0      0      0   100%
+agent/src/exmekh_agent/config/provider.py                                        2      0      0      0   100%
+agent/src/exmekh_agent/config/server.py                                          2      0      0      0   100%
+agent/src/exmekh_agent/config/storage.py                                         3      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/__init__.py                                 0      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/__init__.py                          0      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py                    186      0     50      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/auto_compaction.py                  31      0      4      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/cancellation.py                     46      0      2      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/collector.py                       141      0     42      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/event_handlers.py                  149      0     58      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/execution_restore.py               109      0     46      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/steering.py                         66      0     12      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/sub_agents.py                      104      0     26      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/system_prompt.py                    27      0      4      0   100%
+agent/src/exmekh_agent/exmekh_bridge/agents/turn_request.py                     52      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/capabilities/__init__.py                    0      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/capabilities/agent_design.py               37      0      4      0   100%
+agent/src/exmekh_agent/exmekh_bridge/capabilities/capability_repository.py     310      0    116      0   100%
+agent/src/exmekh_agent/exmekh_bridge/errors.py                                  11      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/__init__.py                         0      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/compaction.py                      94      0     34      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/converter.py                      303      0    154      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/image_input.py                    102      0     34      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/message_edit.py                    29      0      6      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/pasted_input.py                   226      0     86      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/recorded_history.py                79      0     36      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/recorded_output.py                 50      0      6      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/skill_history.py                   27      0     20      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/steering_history.py                 8      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/steering_position.py                3      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/tool_attachments.py                14      0     10      0   100%
+agent/src/exmekh_agent/exmekh_bridge/history/tool_calls.py                      79      0     48      0   100%
+agent/src/exmekh_agent/exmekh_bridge/models/__init__.py                          8      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/models/execution.py                       292      0    134      0   100%
+agent/src/exmekh_agent/exmekh_bridge/models/messages.py                        252      0     62      0   100%
+agent/src/exmekh_agent/exmekh_bridge/models/sessions.py                        145      0     42      0   100%
+agent/src/exmekh_agent/exmekh_bridge/models/settings.py                         63      0      6      0   100%
+agent/src/exmekh_agent/exmekh_bridge/models/timeline.py                         67      0     22      0   100%
+agent/src/exmekh_agent/exmekh_bridge/providers/__init__.py                       0      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/providers/context_usage.py                324      0    168      0   100%
+agent/src/exmekh_agent/exmekh_bridge/providers/ds4_context.py                   44      0      8      0   100%
+agent/src/exmekh_agent/exmekh_bridge/providers/ds4_prompt.py                    82      0     34      0   100%
+agent/src/exmekh_agent/exmekh_bridge/providers/loader_tokens.py                  9      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/providers/provider_context.py             132      0     36      0   100%
+agent/src/exmekh_agent/exmekh_bridge/providers/provider_health.py               48      0     20      0   100%
+agent/src/exmekh_agent/exmekh_bridge/resources/__init__.py                       4      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/tools/__init__.py                           0      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/tools/tool_approval.py                    182      0     52      0   100%
+agent/src/exmekh_agent/exmekh_bridge/tools/tool_events.py                        9      0      0      0   100%
+agent/src/exmekh_agent/exmekh_bridge/tools/tool_feedback.py                    140      0     46      0   100%
+agent/src/exmekh_agent/main.py                                                  33      5      4      1    78%   34-39, 58
+agent/src/exmekh_agent/package_paths.py                                          4      0      0      0   100%
+agent/src/exmekh_agent/state/__init__.py                                         0      0      0      0   100%
+agent/src/exmekh_agent/state/active_turns.py                                    89      0     24      0   100%
+agent/src/exmekh_agent/state/agent_design.py                                   252      0     92      0   100%
+agent/src/exmekh_agent/state/design_history.py                                  25      0      2      0   100%
+agent/src/exmekh_agent/state/design_selection.py                                19      0      2      0   100%
+agent/src/exmekh_agent/state/input_drafts.py                                    40      0      8      0   100%
+agent/src/exmekh_agent/state/json_store.py                                      34      0      4      0   100%
+agent/src/exmekh_agent/state/session_manager.py                                312      0     92      0   100%
+agent/src/exmekh_agent/state/sub_agent_conversations.py                         23      0     16      0   100%
+agent/src/exmekh_agent/state/temp_storage.py                                    77      0     12      0   100%
+agent/src/exmekh_agent/sync.py                                                  48      1     10      1    97%   107
+agent/src/exmekh_agent/sync_config.py                                           17      0      0      0   100%
+agent/src/exmekh_agent/ui/__init__.py                                            0      0      0      0   100%
+agent/src/exmekh_agent/ui/agents/__init__.py                                     0      0      0      0   100%
+agent/src/exmekh_agent/ui/agents/agent_designer.py                             302    104     76     22    62%   124-128, 166-179, 181, 208-210, 223-227, 231->233, 237, 239-256, 257->exit, 270-273, 276-284, 331->344, 340, 344->367, 360-362, 368-374, 381->387, 397, 414-415, 419, 421, 425, 431-432, 439-458, 462-465, 471-475, 478, 483-488, 491, 494, 497-501, 504-554, 557, 562-570, 593->603, 599->603, 604->exit
+agent/src/exmekh_agent/ui/agents/agent_selector.py                              55      7      8      0    86%   81-86, 89, 98
+agent/src/exmekh_agent/ui/agents/capability_editor.py                           66      1     18      6    92%   48->50, 134->127, 143, 166->181, 171->181, 182->exit
+agent/src/exmekh_agent/ui/chat/__init__.py                                       0      0      0      0   100%
+agent/src/exmekh_agent/ui/chat/chat_export.py                                   49      0     28      0   100%
+agent/src/exmekh_agent/ui/chat/chat_view.py                                    857     43    294     45    91%   83-86, 92-95, 402->406, 406->410, 415, 452, 469->473, 473->477, 477->exit, 493, 503->505, 505->507, 507->509, 534->exit, 538, 555->554, 642-653, 716-739, 760-762, 852-858, 1009, 1019->1027, 1052-1053, 1126->1138, 1368->1399, 1711-1725, 1856->1859, 1859->1861, 1866, 1877->1879, 1906, 1926->1930, 1947->1949, 1949->1952, 1957, 1977->1985, 2011->exit, 2017, 2097->2100, 2100->2103, 2105->exit, 2117, 2119, 2147->2150, 2160->2163, 2165->exit, 2179->2182
+agent/src/exmekh_agent/ui/chat/compaction_progress.py                           39      0      8      0   100%
+agent/src/exmekh_agent/ui/chat/context_updates.py                               79      0     24      0   100%
+agent/src/exmekh_agent/ui/chat/input_bar.py                                    512     16    184     37    92%   529->533, 533->536, 751->exit, 755->exit, 767->exit, 771->exit, 775->exit, 794->796, 796->813, 813->815, 815->exit, 838->exit, 851->exit, 856, 883, 914, 1012->1015, 1035->1038, 1050->1055, 1055->exit, 1099, 1108->exit, 1127-1132, 1155, 1184->exit, 1196->1198, 1226-1234, 1236, 1247-1249, 1269->exit, 1274->exit, 1291->1293, 1293->exit, 1300->exit, 1306->exit, 1312->exit, 1331->1343, 1339->1343, 1353->exit
+agent/src/exmekh_agent/ui/chat/message_editor.py                               124     93     34      0    20%   33-37, 40-97, 100, 107-110, 113-117, 121-134, 137-145, 152-154, 157-158, 161-191, 194-198, 201-209, 212-232
+agent/src/exmekh_agent/ui/chat/message_text.py                                   7      0      2      0   100%
+agent/src/exmekh_agent/ui/chat/page_controller.py                              739    109    278     54    80%   78->exit, 84->exit, 210-211, 220->exit, 231, 263, 269-271, 303->305, 305->307, 312-313, 329->331, 382->384, 387->389, 389->exit, 393-396, 399-400, 403-404, 407, 412-418, 431, 467->472, 470, 485->487, 488->exit, 492->exit, 496-499, 502-565, 581-598, 650, 691-701, 708, 756->763, 829, 869, 872->exit, 875->exit, 895, 929, 968-969, 972-977, 983, 990, 994, 1022->exit, 1076->1085, 1097->1107, 1107->1109, 1109->1120, 1128-1152, 1158, 1180->1185, 1185->exit, 1187-1188, 1213-1214, 1228->exit, 1231->exit, 1239->exit, 1243->1245, 1270->1272, 1280->exit, 1331->exit, 1334->1337, 1348->exit, 1361->exit, 1373->exit, 1377->exit
+agent/src/exmekh_agent/ui/graph/__init__.py                                      0      0      0      0   100%
+agent/src/exmekh_agent/ui/graph/graph_data.py                                  637      0    234      0   100%
+agent/src/exmekh_agent/ui/graph/graph_svg.py                                    72      0     16      0   100%
+agent/src/exmekh_agent/ui/graph/graph_view.py                                  199      0     50      0   100%
+agent/src/exmekh_agent/ui/history/__init__.py                                    0      0      0      0   100%
+agent/src/exmekh_agent/ui/history/json_block.py                                 20      0      0      0   100%
+agent/src/exmekh_agent/ui/history/json_format.py                                55      0     28      0   100%
+agent/src/exmekh_agent/ui/history/raw_history_view.py                          395     25    140     16    92%   93->72, 316-318, 321-327, 334-337, 341, 361->370, 432->431, 577-579, 688, 812, 822->831, 832-836, 941->exit, 994->exit, 1007->exit, 1018, 1026, 1052->1054
+agent/src/exmekh_agent/ui/navigation/__init__.py                                 0      0      0      0   100%
+agent/src/exmekh_agent/ui/navigation/chat_routes.py                             23      0      4      0   100%
+agent/src/exmekh_agent/ui/navigation/header.py                                  19      0      0      0   100%
+agent/src/exmekh_agent/ui/navigation/new_project_dialog.py                      66     20     10      1    64%   80-82, 85, 90, 99->108, 114-143
+agent/src/exmekh_agent/ui/navigation/sidebar.py                                192     35     44      3    81%   358, 439-479, 526-531, 539, 546-569, 572-578, 582-603
+agent/src/exmekh_agent/ui/resources/__init__.py                                 14      0      0      0   100%
+agent/src/exmekh_agent/ui/settings/__init__.py                                   0      0      0      0   100%
+agent/src/exmekh_agent/ui/settings/capability_paths_editor.py                   65      0     12      0   100%
+agent/src/exmekh_agent/ui/settings/project_settings_dialog.py                   93     11     20      6    83%   105-107, 111, 146, 153, 154->176, 157, 165-168, 177->exit
+agent/src/exmekh_agent/ui/settings/settings_drawer.py                          246      9    106     25    90%   290, 318->320, 341, 346->349, 349->366, 359, 366->373, 373->exit, 416, 435, 463->exit, 465, 471->exit, 473, 479->exit, 483->487, 487->489, 489->491, 491->493, 493->495, 495->497, 497->exit, 513->exit, 531, 540
+agent/src/exmekh_agent/ui/shared/__init__.py                                     0      0      0      0   100%
+agent/src/exmekh_agent/ui/shared/disclosure.py                                  33      0      4      0   100%
+agent/src/exmekh_agent/ui/shared/file_icons.py                                  20      0      6      0   100%
+agent/src/exmekh_agent/ui/shared/file_upload.py                                 38      0     12      0   100%
+agent/src/exmekh_agent/ui/shared/folder_picker.py                               17      0      2      0   100%
+agent/src/exmekh_agent/ui/shared/image_preview.py                               48      0      8      0   100%
+agent/src/exmekh_agent/ui/shared/markdown_parser.py                            107      7     26      5    91%   14-15, 56->62, 80, 84, 97-98, 230
+agent/src/exmekh_agent/ui/shared/neural_loader.py                               25      0      2      0   100%
+agent/src/exmekh_agent/ui/shared/output_format.py                               45      0     10      0   100%
+agent/src/exmekh_agent/ui/styles.py                                             34      0     18      0   100%
+agent/src/exmekh_agent/utils/__init__.py                                         0      0      0      0   100%
+agent/src/exmekh_agent/utils/exceptions.py                                      13      0      2      0   100%
+agent/src/exmekh_agent/utils/filenames.py                                       12      0      0      0   100%
+agent/src/exmekh_agent/utils/files.py                                            9      0      0      0   100%
+agent/src/exmekh_agent/utils/formatting.py                                      35      0     14      0   100%
+agent/src/exmekh_agent/utils/markdown.py                                        17      0      8      0   100%
+agent/src/exmekh_agent/utils/paths.py                                            4      0      0      0   100%
+agent/src/exmekh_agent/utils/resources.py                                       15      0      0      0   100%
+------------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                        10652    486   3462    222    94%
+================= 1210 passed, 46 skipped in 273.75s (0:04:33) =================

@@ -1,0 +1,16 @@
+W1101 14:13:47.358000 51738 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+Traceback (most recent call last):
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/diagnose-gemma-audio-block.py", line 32, in <module>
+    with Numeric('metal',library_path=library.resolve()) as n:
+         ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/suite_numeric_api.py", line 103, in __init__
+    self.lib = self._load_library(backend, library_path)
+               ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/suite_numeric_api.py", line 122, in _load_library
+    lib = C.CDLL(str(path))
+  File "/Users/danieleflorio/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 361, in __init__
+    self._handle = self._load_library(name, mode, handle, winmode)
+                   ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/danieleflorio/.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/ctypes/__init__.py", line 403, in _load_library
+    return _dlopen(name, mode)
+OSError: dlopen(/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/audio-channel-cascade/libnumeric.so, 0x0006): tried: '/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/audio-channel-cascade/libnumeric.so' (no such file), '/System/Volumes/Preboot/Cryptexes/OS/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/audio-channel-cascade/libnumeric.so' (no such file), '/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/audio-channel-cascade/libnumeric.so' (no such file)

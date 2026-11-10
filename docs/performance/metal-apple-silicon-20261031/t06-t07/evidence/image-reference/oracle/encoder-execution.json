@@ -1,0 +1,16 @@
+{
+  "backend": "PyTorch MATH",
+  "device": "mps",
+  "cpu_weight_offload": true,
+  "weight_transport": "lazy safetensors with module fences",
+  "weight_reads": 749,
+  "weight_bytes": 16289587680,
+  "mps_memory_fraction": 0.5,
+  "torch_version": "2.15.0",
+  "query_tile": 256,
+  "tile_if_score_bytes_exceeds": 536870912,
+  "full_key_axis": true,
+  "cases": [
+    "reference"
+  ]
+}

@@ -1,6 +1,7 @@
 #include "ds4_qwen_image_pipeline.h"
 #include "ds4_qwen_image_components.h"
 #include "ds4_qwen_image_reference.h"
+#include "ds4_qwen_image_rgba_internal.h"
 #include "ds4_sha256.h"
 #include <math.h>
 #include <stdlib.h>
@@ -15,7 +16,11 @@
 enum { ENCODER, DIT, VAE, COMPONENT_COUNT };
 enum { ENCODE_REFERENCES, ENCODE_PROMPT, DENOISE, DECODE, PHASE_COUNT };
 enum { RESIDENT_VARIANTS = 4, STREAM_LEVELS = 5,
-       VARIANT_COUNT = RESIDENT_VARIANTS + STREAM_LEVELS * 2 };
+       VARIANT_COUNT = RESIDENT_VARIANTS + STREAM_LEVELS * 2,
+       DIT_CACHE_MISS_COST = 7 };
+static const uint32_t phase_component[PHASE_COUNT] = {
+    [ENCODE_REFERENCES] = VAE, [ENCODE_PROMPT] = ENCODER,
+    [DENOISE] = DIT, [DECODE] = VAE};
 static uint64_t component_bit(uint32_t id) { return UINT64_C(1) << id; }
 static bool host_cache(size_t variant) {
   return variant < RESIDENT_VARIANTS ? variant >= 2 : variant % 2 != 0;
@@ -42,13 +47,13 @@ struct ds4_qwen_image_job {
   ds4_qwen_image_input *input;
   ds4_qwen_image_reference refs[64];
   ds4_qwen_image_latent_shape shapes[65];
-  uint32_t references, text, prefix, total;
+  uint32_t images, references, text, prefix, total;
   uint16_t *conditioning, *reference_latents;
   float *noise;
   uint64_t ref_count, target_count;
   ds4_resource *account, *conditioning_account;
   ds4_num_buffer *latent;
-  ds4_qwen_image_rgba *result;
+  ds4_qwen_image_rgba *results[DS4_QWEN_IMAGE_BATCH_MAX];
   ds4_qwen_image_vae_plan decode;
   ds4_qwen_image_observer observer;
   ds4_qwen_image_report report;
@@ -126,6 +131,14 @@ ds4_status ds4_qwen_image_pipeline_close(ds4_qwen_image_pipeline *p) {
   return DS4_STATUS_OK;
 }
 
+ds4_status ds4_qwen_image_pipeline_release_weights(ds4_qwen_image_pipeline *p) {
+  if (!p) return DS4_STATUS_INVALID;
+  if (p->job_open) return DS4_STATUS_BUSY;
+  ds4_status status = ds4_qwen_image_encoder_release_weights(p->encoder);
+  if (!status) status = ds4_qwen_image_dit_release_weights(p->dit);
+  if (!status) status = ds4_qwen_image_vae_release_weights(p->vae);
+  return status;
+}
 static ds4_status weight_limit(const ds4_qwen_image_pipeline *p, uint32_t id,
                                 uint64_t limit, ds4_weight_budget *out) {
   return id == ENCODER ? ds4_qwen_image_encoder_weights(p->encoder, limit, out)
@@ -148,6 +161,35 @@ ds4_status ds4_qwen_image_pipeline_residency(const ds4_qwen_image_pipeline *p,
 static bool cancelled(void *opaque) {
   ds4_qwen_image_job *j = opaque;
   return j->observer.cancelled && j->observer.cancelled(j->observer.opaque);
+}
+/* This adapter declares a fixed phase-work estimate, not a time prediction.
+ * Models with a different execution plan publish their own metadata. */
+static void model_progress(void *opaque, const ds4_operation_progress *progress) {
+  ds4_qwen_image_job *j = opaque;
+  ds4_operation_progress update = *progress;
+  double phases = j->references ? 5 : 4;
+  double before = j->references ? 2 : 1;
+  update.overall_fraction = (before + (double)progress->completed_units /
+                             progress->total_units) / phases;
+  update.estimated = true;
+  ds4_operation_publish(&j->observer.progress, update);
+}
+static void pipeline_progress(ds4_qwen_image_job *j, const char *phase,
+                               double completed) {
+  ds4_operation_publish(&j->observer.progress, (ds4_operation_progress){
+      .phase = phase, .overall_fraction = completed / (j->references ? 5 : 4),
+      .estimated = true});
+}
+static void execution_progress(void *opaque, ds4_execution_event event,
+                                size_t index, ds4_status status) {
+  (void)index;
+  ds4_qwen_image_job *j = opaque;
+  if (event == DS4_EXEC_RESTORE)
+    pipeline_progress(j, "restore", j->references ? 4 : 3);
+  if (event == DS4_EXEC_LOAD)
+    ds4_operation_publish(&j->observer.progress, (ds4_operation_progress){
+        .phase = "loading", .overall_fraction = -1});
+  (void)status;
 }
 static ds4_status drain(void *opaque);
 static ds4_status load(void *opaque) {
@@ -195,13 +237,16 @@ static ds4_status drain(void *opaque) {
 }
 static void abort_result(void *opaque) {
   ds4_qwen_image_job *j = opaque;
-  ds4_qwen_image_rgba_free(j->result);
-  j->result = NULL;
+  for (uint32_t item = 0; item < j->images; item++) {
+    ds4_qwen_image_rgba_free(j->results[item]);
+    j->results[item] = NULL;
+  }
 }
 static ds4_status commit(void *opaque) {
   ds4_qwen_image_job *j = opaque;
-  if (!j->result)
-    return DS4_STATUS_INFERENCE;
+  for (uint32_t item = 0; item < j->images; item++)
+    if (!j->results[item])
+      return DS4_STATUS_INFERENCE;
   j->committed = true;
   return DS4_STATUS_OK;
 }
@@ -216,9 +261,13 @@ static ds4_status stage(void *opaque, uint32_t id) {
   ds4_num_buffer *a = NULL, *b = NULL;
   ds4_qwen_image_conditioning *conditioning = NULL;
   ds4_qwen_image_dit_input *input = NULL;
-  const ds4_qwen_image_observer *o = &j->observer;
+  ds4_qwen_image_observer model_observer = j->observer;
+  model_observer.progress = (ds4_operation_observer){j, model_progress};
+  const ds4_qwen_image_observer *o = &model_observer;
+  const char *phases[] = {"references", "conditioning", "generation", "decode"};
+  pipeline_progress(j, phases[id], id - (j->references ? 0 : 1));
   size_t variant = ds4_execution_get_plan(j->execution)->variant;
-  uint32_t active = id == ENCODE_PROMPT ? ENCODER : id == DENOISE ? DIT : VAE;
+  uint32_t active = phase_component[id];
   if (variant >= RESIDENT_VARIANTS)
     TRY(weight_limit(p, active, j->weight_limits[variant][active], NULL));
   if (id == ENCODE_REFERENCES) {
@@ -260,11 +309,16 @@ static ds4_status stage(void *opaque, uint32_t id) {
     a = NULL;
     TRY(ds4_num_free(b));
     b = NULL;
-    TRY(ds4_qwen_image_dit_generate(p->dit, input, j->noise, j->report.seed, o,
-                                    &j->latent));
+    TRY(qi_dit_generate_batch(p->dit, input, j->noise, j->report.seed, j->images,
+                              o, &j->latent));
   } else if (id == DECODE) {
-    TRY(ds4_qwen_image_vae_decode(p->vae, ds4_num_data(j->latent), &j->decode,
-                                  o, &j->result));
+    for (uint32_t item = 0; item < j->images; item++) {
+      if (item) model_observer.trace = NULL;
+      ds4_num_view latent = ds4_num_slice(ds4_num_data(j->latent),
+                                        item * j->target_count, j->target_count);
+      TRY(ds4_qwen_image_vae_decode(p->vae, latent, &j->decode,
+                                    o, &j->results[item]));
+    }
     TRY(ds4_num_free(j->latent));
     j->latent = NULL;
   } else
@@ -327,7 +381,7 @@ static ds4_status copy_references(ds4_qwen_image_job *j,
   ds4_status status = DS4_STATUS_OK;
   ds4_reservation *resize_lease = NULL;
   ds4_reservation_scope resizing = {0};
-  uint64_t host = sizeof(*j) + j->target_count * 4;
+  uint64_t host = sizeof(*j) + j->images * j->target_count * sizeof(float);
   for (size_t i = 0; i < r->reference_count; i++) {
     const ds4_qwen_image_reference *ref = r->references + i;
     uint32_t width, height;
@@ -396,17 +450,18 @@ static ds4_status prepare_inputs(ds4_qwen_image_job *j,
   j->conditioning = malloc((uint64_t)j->text * 8192);
   if (j->ref_count)
     j->reference_latents = malloc(j->ref_count * 2);
-  j->noise = malloc(j->target_count * 4);
-  if (j->noise) {
-    if (r->noise)
-      memcpy(j->noise, r->noise, j->target_count * 4);
-    else
-      TRY(ds4_qwen_image_noise(j->noise, j->target_count, r->seed));
-  }
+  j->noise = malloc(j->images * j->target_count * sizeof(float));
   if (!j->conditioning || (j->ref_count && !j->reference_latents) ||
       !j->noise) {
     status = DS4_STATUS_NOMEM;
     goto cleanup;
+  }
+  for (uint32_t item = 0; item < j->images; item++) {
+    float *noise = j->noise + item * j->target_count;
+    if (!item && r->noise)
+      memcpy(noise, r->noise, j->target_count * sizeof(float));
+    else
+      TRY(ds4_qwen_image_noise(noise, j->target_count, r->seed + item));
   }
   if (r->vae_core)
     TRY(ds4_qwen_image_vae_plan_tiled(p->vae, r->height / 16, r->width / 16,
@@ -416,6 +471,65 @@ static ds4_status prepare_inputs(ds4_qwen_image_job *j,
                                        UINT64_MAX, &j->decode));
 cleanup:
   return status;
+}
+static void set_stream_limit(ds4_qwen_image_job *j, size_t variant,
+                             uint32_t component, uint64_t bytes) {
+  uint64_t before = j->weight_limits[variant][component];
+  for (size_t i = 0; i < j->variants[variant].step_count; i++) {
+    ds4_execution_step *step = &j->steps[variant][i];
+    if (phase_component[step->id] == component)
+      step->working.bytes[DS4_MEMORY_DEVICE] =
+          step->working.bytes[DS4_MEMORY_DEVICE] - before + bytes;
+  }
+  if (component == DIT) {
+    if (bytes >= before)
+      j->variants[variant].cost -= DIT_CACHE_MISS_COST * (bytes - before);
+    else
+      j->variants[variant].cost += DIT_CACHE_MISS_COST * (before - bytes);
+  }
+  j->weight_limits[variant][component] = bytes;
+}
+static ds4_status expand_stream_cache(ds4_qwen_image_job *j, ds4_resources *resources) {
+  ds4_execution_plan initial;
+  ds4_status status = ds4_execution_plan_build(resources, &j->request, &initial);
+  if (status == DS4_STATUS_NOMEM)
+    return DS4_STATUS_OK; /* The normal cache-victim fallback still owns admission. */
+  if (status || initial.variant < RESIDENT_VARIANTS)
+    return status;
+  size_t variant = initial.variant;
+  ds4_execution_request trial = j->request;
+  trial.variants = j->variants + variant;
+  trial.variant_count = 1;
+  // Refine the admitted plan, preserving its victims and complete restore peak.
+  // Planning is read-only: no weight allocation or eviction occurs here.
+  for (uint32_t component = 0; component < COMPONENT_COUNT; component++) {
+    uint64_t low = j->weight_limits[variant][component];
+    uint64_t high = j->groups[component].memory.bytes[DS4_MEMORY_DEVICE];
+    while (low < high) {
+      uint64_t middle = high - (high - low) / 2;
+      set_stream_limit(j, variant, component, middle);
+      ds4_execution_plan candidate;
+      status = ds4_execution_plan_build(resources, &trial, &candidate);
+      if (!status && candidate.victims == initial.victims)
+        low = middle;
+      else if (!status || status == DS4_STATUS_NOMEM)
+        high = middle - 1;
+      else {
+        set_stream_limit(j, variant, component, low);
+        return status;
+      }
+    }
+    set_stream_limit(j, variant, component, low);
+  }
+  return DS4_STATUS_OK;
+}
+static ds4_status refine_stream_cache(ds4_qwen_image_job *j) {
+  ds4_status status = ds4_numeric_refresh_memory(j->pipeline->num);
+  if (status == DS4_STATUS_UNSUPPORTED)
+    return DS4_STATUS_OK;
+  if (status)
+    return status;
+  return expand_stream_cache(j, ds4_numeric_resources(j->pipeline->num, NULL));
 }
 static ds4_status configure_plan(ds4_qwen_image_job *j,
                                  const ds4_execution_victim *victims,
@@ -441,7 +555,7 @@ static ds4_status configure_plan(ds4_qwen_image_job *j,
   if (largest_ref / 256 > query_span)
     query_span = largest_ref / 256;
   qi_dit_memory(p->dit, j->total, j->target_count / 64, j->prefix, query_span,
-                &dm, resident + DIT);
+                j->images, &dm, resident + DIT);
   weights[DIT] = dm.weights;
   qi_vae_memory(p->vae, weights + VAE, resident + VAE);
   for (uint32_t i = 0; i < COMPONENT_COUNT; i++) {
@@ -462,13 +576,15 @@ static ds4_status configure_plan(ds4_qwen_image_job *j,
       enc.device_bytes - (weights[ENCODER] - resident[ENCODER]);
   uint64_t persistent =
       j->target_count * 4 + j->ref_count * 4 + (uint64_t)j->text * 16384;
+  uint32_t additional = j->images - 1;
+  /* The VAE decodes one slice while retaining prior host RGBA. */
+  uint64_t retained_rgba = additional * ds4_qwen_image_rgba_bytes(
+      j->decode.latent_width * 16, j->decode.latent_height * 16);
   uint64_t devices[] = {vae_encode.device_bytes, enc_device,
                         dm.prefix_cache + dm.first_step + persistent,
-                        j->decode.device + j->target_count * 4};
+                        j->decode.device + j->images * j->target_count * 4};
   uint64_t hosts[] = {vae_encode.host_bytes, enc.host_bytes, dm.host,
-                      j->decode.host};
-  uint64_t bits[] = {component_bit(VAE), component_bit(ENCODER),
-                     component_bit(DIT), component_bit(VAE)};
+                      j->decode.host + retained_rgba};
   ds4_weight_budget budgets[COMPONENT_COUNT];
   for (uint32_t i = 0; i < COMPONENT_COUNT; i++)
     TRY(weight_limit(p, i, 0, budgets + i));
@@ -485,29 +601,36 @@ static ds4_status configure_plan(ds4_qwen_image_job *j,
     uint32_t k = 0;
     for (uint32_t i = j->references ? ENCODE_REFERENCES : ENCODE_PROMPT;
          i < PHASE_COUNT; i++) {
-      live |= bits[i];
+      uint32_t active = phase_component[i];
+      uint64_t bit = component_bit(active);
+      live |= bit;
       ds4_execution_step *s = &j->steps[variant][k++];
       *s =
           (ds4_execution_step){.id = i,
-                               .groups = streamed ? 0 : bits[i],
+                               .groups = streamed ? 0 : bit,
                                .retain = retain_components(variant) ? live : 0};
       s->working.bytes[DS4_MEMORY_DEVICE] = devices[i];
       s->working.bytes[DS4_MEMORY_HOST] = hosts[i];
-      if (streamed) {
-        uint32_t active = i == ENCODE_PROMPT ? ENCODER : i == DENOISE ? DIT : VAE;
+      if (streamed)
         s->working.bytes[DS4_MEMORY_DEVICE] += j->weight_limits[variant][active];
-      }
       if (host_cache(variant) && i == DENOISE) {
         s->working.bytes[DS4_MEMORY_DEVICE] -= dm.prefix_cache;
         s->working.bytes[DS4_MEMORY_HOST] += dm.prefix_cache;
       }
     }
+    uint64_t cost = variant;
+    if (host_cache(variant))
+      cost += dm.prefix_cache * 8;
+    if (streamed) {
+      uint64_t repeated_dit_bytes =
+          dm.weights - j->weight_limits[variant][DIT] + budgets[DIT].minimum;
+      cost += weights[ENCODER] + weights[VAE] * (j->references + 1) + dm.weights;
+      cost += DIT_CACHE_MISS_COST * repeated_dit_bytes;
+    }
     j->variants[variant] = (ds4_execution_variant){
         .steps = j->steps[variant],
         .step_count = k,
-        .cost = (host_cache(variant) ? dm.prefix_cache * 8 : 0) + variant +
-                (streamed ? weights[ENCODER] + weights[VAE] * (j->references + 1) +
-                    dm.weights + 7 * (dm.weights - j->weight_limits[variant][DIT] + budgets[DIT].minimum) : 0),
+        .cost = cost,
         .streamed = streamed,
         .keep = streamed ? 0 : retain_components(variant) ? live : component_bit(VAE)};
     /* Serial execution retains only the final VAE cache. Every intermediate
@@ -522,6 +645,7 @@ static ds4_status configure_plan(ds4_qwen_image_job *j,
   j->request.variant_count = VARIANT_COUNT;
   j->request.victims = j->victims;
   j->request.victim_count = count;
+  status = refine_stream_cache(j);
 cleanup:
   return status;
 }
@@ -531,7 +655,8 @@ static ds4_status create_execution(ds4_qwen_image_job *j) {
                            .drain = drain,
                            .commit = commit,
                            .abort = abort_result,
-                           .cancelled = cancelled};
+                           .cancelled = cancelled,
+                           .journal = execution_progress};
   uint64_t owner;
   ds4_resources *rs = ds4_numeric_resources(j->pipeline->num, &owner);
   return ds4_execution_create(&j->execution, j->pipeline->runtime, rs, owner,
@@ -569,22 +694,26 @@ static void record_request(ds4_qwen_image_job *j,
   memcpy(j->report.model_revision, p->revision, sizeof(p->revision));
   ds4_qwen_image_turbo_sigmas(j->report.sigmas);
 }
-ds4_status ds4_qwen_image_job_create(ds4_qwen_image_job **out,
-                                     ds4_qwen_image_pipeline *p,
-                                     const ds4_qwen_image_request *r,
-                                     const ds4_execution_victim *victims,
-                                     size_t count,
-                                     const ds4_qwen_image_observer *o) {
+ds4_status ds4_qwen_image_job_create_batch(ds4_qwen_image_job **out,
+                                           ds4_qwen_image_pipeline *p,
+                                           const ds4_qwen_image_request *r,
+                                           uint32_t images,
+                                           const ds4_execution_victim *victims,
+                                           size_t count,
+                                           const ds4_qwen_image_observer *o) {
   if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
-  if (!p || count > DS4_EXECUTOR_MAX_VICTIMS || (count && !victims))
+  if (!p || !images || images > DS4_QWEN_IMAGE_BATCH_MAX ||
+      count > DS4_EXECUTOR_MAX_VICTIMS || (count && !victims))
     return DS4_STATUS_INVALID;
   if (p->job_open)
     return DS4_STATUS_BUSY;
   ds4_status status = ds4_qwen_image_request_validate(r);
   if (status)
     return status;
+  if (r->seed > UINT64_MAX - (images - 1))
+    return DS4_STATUS_INVALID;
   double start = now();
   ds4_qwen_image_job *j = calloc(1, sizeof(*j));
   if (!j)
@@ -593,6 +722,7 @@ ds4_status ds4_qwen_image_job_create(ds4_qwen_image_job **out,
   p->job_open = true;
   if (o)
     j->observer = *o;
+  j->images = images;
   j->references = r->reference_count;
   j->target_count = (uint64_t)r->width * r->height / 4;
   TRY(prepare_inputs(j, r));
@@ -605,30 +735,25 @@ cleanup:
   ds4_qwen_image_job_close(j);
   return status;
 }
-ds4_status ds4_qwen_image_job_plan(ds4_qwen_image_job *j,
-                                   ds4_execution_plan *out) {
-  if (!j || !out)
-    return DS4_STATUS_INVALID;
-  if (!j->execution)
-    return DS4_STATUS_NOT_READY;
-  if (ds4_execution_get_state(j->execution) != DS4_EXECUTION_NEW) {
-    *out = *ds4_execution_get_plan(j->execution);
-    return DS4_STATUS_OK;
-  }
-  ds4_resources *rs = ds4_numeric_resources(j->pipeline->num, NULL);
-  ds4_status status = ds4_execution_plan_build(rs, &j->request, out);
-  if (status != DS4_STATUS_NOMEM || j->cache_fallback)
-    return status;
+ds4_status ds4_qwen_image_job_create(ds4_qwen_image_job **out,
+                                     ds4_qwen_image_pipeline *p,
+                                     const ds4_qwen_image_request *r,
+                                     const ds4_execution_victim *victims,
+                                     size_t count,
+                                     const ds4_qwen_image_observer *o) {
+  return ds4_qwen_image_job_create_batch(out, p, r, 1, victims, count, o);
+}
+static ds4_status prepare_cache_fallback(ds4_qwen_image_job *j) {
   size_t caches = 0;
   for (uint32_t i = 0; i < COMPONENT_COUNT; i++)
     if (j->resident[i])
       caches++;
   if (!caches || j->request.victim_count + caches > DS4_EXECUTOR_MAX_VICTIMS)
-    return status;
+    return DS4_STATUS_NOMEM;
   /* Existing component caches are optional owners, just like any other
    * rebuildable cache. Only consider reclaiming them after the plan which
    * keeps all of them has failed. No release happens during planning. */
-  status = ds4_execution_close(j->execution);
+  ds4_status status = ds4_execution_close(j->execution);
   if (status)
     return status;
   j->execution = NULL;
@@ -643,11 +768,45 @@ ds4_status ds4_qwen_image_job_plan(ds4_qwen_image_job *j,
                                   .release = release};
       v->reclaimed.bytes[DS4_MEMORY_DEVICE] = j->resident[i];
     }
+  return DS4_STATUS_OK;
+}
+ds4_status ds4_qwen_image_job_plan(ds4_qwen_image_job *j,
+                                   ds4_execution_plan *out) {
+  if (!j || !out)
+    return DS4_STATUS_INVALID;
+  if (!ds4_qwen_image_job_admission_pending(j)) {
+    *out = *ds4_execution_get_plan(j->execution);
+    return DS4_STATUS_OK;
+  }
+  ds4_resources *rs = ds4_numeric_resources(j->pipeline->num, NULL);
+  ds4_status status = ds4_numeric_refresh_memory(j->pipeline->num);
+  if (status && status != DS4_STATUS_UNSUPPORTED)
+    return status;
+  bool adaptive = status == DS4_STATUS_OK;
+  if (j->execution) {
+    status = ds4_execution_plan_build(rs, &j->request, out);
+    if (status != DS4_STATUS_NOMEM || j->cache_fallback)
+      return status;
+    status = prepare_cache_fallback(j);
+    if (status)
+      return status;
+  }
+  /* Reuse the admission sample. A failed rebuild leaves the fallback
+   * descriptors ready for the next plan/run call. */
+  if (adaptive) {
+    status = expand_stream_cache(j, rs);
+    if (status)
+      return status;
+  }
   status = create_execution(j);
   return status ? status : ds4_execution_plan_build(rs, &j->request, out);
 }
+bool ds4_qwen_image_job_admission_pending(const ds4_qwen_image_job *j) {
+  return j && (!j->execution ||
+               ds4_execution_get_state(j->execution) == DS4_EXECUTION_NEW);
+}
 ds4_status ds4_qwen_image_job_run(ds4_qwen_image_job *j) {
-  if (!j || ds4_execution_get_state(j->execution) != DS4_EXECUTION_NEW)
+  if (!ds4_qwen_image_job_admission_pending(j))
     return DS4_STATUS_INVALID;
   ds4_execution_plan plan;
   ds4_status planned = ds4_qwen_image_job_plan(j, &plan);
@@ -678,20 +837,24 @@ ds4_status ds4_qwen_image_job_recovery(ds4_qwen_image_job *j,
                                        ds4_execution_recovery *r) {
   return j ? ds4_execution_recovery_query(j->execution, r) : DS4_STATUS_INVALID;
 }
-ds4_status ds4_qwen_image_job_take(ds4_qwen_image_job *j,
-                                   ds4_qwen_image_rgba **out) {
+ds4_status ds4_qwen_image_job_take_at(ds4_qwen_image_job *j, uint32_t index,
+                                      ds4_qwen_image_rgba **out) {
   if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
-  if (!j)
+  if (!j || index >= j->images)
     return DS4_STATUS_INVALID;
   if (!j->committed ||
       ds4_execution_get_state(j->execution) != DS4_EXECUTION_COMPLETE ||
-      !j->result)
+      !j->results[index])
     return DS4_STATUS_NOT_READY;
-  *out = j->result;
-  j->result = NULL;
+  *out = j->results[index];
+  j->results[index] = NULL;
   return DS4_STATUS_OK;
+}
+ds4_status ds4_qwen_image_job_take(ds4_qwen_image_job *j,
+                                   ds4_qwen_image_rgba **out) {
+  return ds4_qwen_image_job_take_at(j, 0, out);
 }
 const ds4_qwen_image_report *
 ds4_qwen_image_job_report(const ds4_qwen_image_job *j) {
@@ -708,7 +871,7 @@ ds4_status ds4_qwen_image_job_close(ds4_qwen_image_job *j) {
   j->latent = NULL;
   if (s)
     return s;
-  ds4_qwen_image_rgba_free(j->result);
+  abort_result(j);
   ds4_qwen_image_input_free(j->input);
   for (uint32_t i = 0; i < j->references; i++)
     free((void *)j->refs[i].pixels);

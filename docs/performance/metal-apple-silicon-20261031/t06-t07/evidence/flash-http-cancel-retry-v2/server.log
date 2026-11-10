@@ -1,0 +1,38 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Qwen BF16 n-grams: 95.37 GiB, disk reads only
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 0.26 GiB (raw 0.20 + compressed 0.06) + buffers 0.38 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 2.64 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=2049 backend=metal
+1101 09:10:25 ds4-server: loaded model Qwen3.8 Flash Next
+1101 09:10:25 ds4-server: context buffers 659.60 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=2049)
+1101 09:10:38 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-http-cancel-retry-v2/kv (budget=4096 MiB, cross-quant=accept, min=512, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1101 09:10:38 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-http-cancel-retry-v2/kv/agentic.Xtw6Gi
+1101 09:10:38 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-http-cancel-retry-v2/trace.log
+1101 09:10:38 ds4-server: listening on http://127.0.0.1:18080
+1101 09:10:41 ds4-server: chat ctx=0..299:299 RESPPROTO TOOLS prompt start
+1101 09:10:41 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=299 syntax=qwen4
+1101 09:10:47 ds4-server: chat ctx=0..299:299 RESPPROTO TOOLS prefill chunk 64/299 (21.4%) chunk=0.00 t/s avg=9.98 t/s 6.414s
+1101 09:10:54 ds4-server: chat ctx=0..299:299 RESPPROTO TOOLS prefill chunk 128/299 (42.8%) chunk=9.17 t/s avg=9.56 t/s 13.394s
+1101 09:11:01 ds4-server: chat ctx=0..299:299 RESPPROTO TOOLS prefill chunk 192/299 (64.2%) chunk=9.11 t/s avg=9.40 t/s 20.423s
+1101 09:11:08 ds4-server: chat ctx=0..299:299 RESPPROTO TOOLS prefill chunk 256/299 (85.6%) chunk=9.03 t/s avg=9.31 t/s 27.508s
+1101 09:11:14 ds4-server: chat ctx=0..299:299 RESPPROTO TOOLS prefill chunk 299/299 (100.0%) chunk=7.53 t/s avg=9.00 t/s 33.214s
+1101 09:11:14 ds4-server: chat ctx=0..299:299 RESPPROTO TOOLS prompt done 33.214s
+1101 09:11:14 ds4-server: response frontier captured tokens=299 bytes=122.50 MiB location=host 10.544ms
+1101 09:11:43 ds4-server: phase profile ctx=0..299:299 gen=31 mode=trie wall=29656.884ms forced_build=112.715ms/32 forced_sync=0.000ms/0/0_tok forced_prefix_probe=21.840ms sampling_mask_build=318.086ms oracle_compare=0.000ms/0/0_div constraint_cpu=341.018ms constraint_cpu_exposed=341.018ms constraint_cpu_overlapped=0.000ms filter_setup=87.078ms filter=231.008ms filtered_sample=1.092ms/32 plain_sample=0.000ms/0 eval=29314.358ms/31 residual=1.508ms vocab=8939520 filter_calls=4233269 accepted=2733853 finite_allowed=2733845 piece_bytes=31434471 candidate_tokens_tested=4228325 parser_transition_count=113656569 parser_bytes_visited=113656569 trie_nodes_visited=4944 subtrees_pruned=3248 trie_leaf_tokens_emitted=1094 mask_cache_hit=9 mask_cache_miss=23 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=87.076 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=21.220 static_mask_memory_bytes=764592 dynamic_frontier_size=5391 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=4233165 constraint_state_rollback=4233165 exhaustive_fallback_steps=0
+1101 09:11:43 ds4-server: chat ctx=299..330:31 gen=31 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=1.05 t/s avg=1.05 t/s 29.657s
+1101 09:11:43 ds4-server: tool calls ctx=0..299:299 RESPPROTO n=1 raw_tool_text=1 ids=[call_9dd19ccc3be4fdccf5a3021db4148e66] names=[generate_image]
+1101 09:11:43 ds4-server: chat ctx=0..299:299 gen=31 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 62.883s
+1101 09:11:47 ds4-server: post-response checkpoint rebuilt source=memory-request cached=299 response_prefill=32 target=331 location=host 3338.846ms
+1101 09:15:26 ds4-server: responses live continuation RESPPROTO match=tool-output-ids ids=1 cached=331 prompt=358
+1101 09:15:26 ds4-server: chat ctx=331..358:27 RESPPROTO TOOLS prompt start
+1101 09:15:30 ds4-server: chat ctx=331..358:27 RESPPROTO TOOLS prefill chunk 27/27 (100.0%) chunk=0.00 t/s avg=7.09 t/s 3.808s
+1101 09:15:30 ds4-server: chat ctx=331..358:27 RESPPROTO TOOLS prompt done 3.809s
+1101 09:15:30 ds4-server: response frontier captured tokens=358 bytes=124.27 MiB location=host 25.108ms
+1101 09:15:34 ds4-server: phase profile ctx=331..358:27 gen=4 mode=trie wall=4000.231ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=0.463ms/5 eval=3997.312ms/4 residual=2.456ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 09:15:34 ds4-server: chat ctx=358..362:4 gen=4 RESPPROTO TOOLS decoding chunk=1.00 t/s avg=1.00 t/s 4.000s
+1101 09:15:34 ds4-server: chat ctx=331..358:27 gen=4 RESPPROTO TOOLS finish=stop 7.836s
+1101 09:15:35 ds4-server: post-response checkpoint rebuilt source=memory-request cached=358 response_prefill=5 target=363 location=host 1240.598ms
+1101 09:15:36 ds4-server: shutdown requested, draining requests

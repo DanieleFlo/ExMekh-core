@@ -1,6 +1,7 @@
 /* The server's constrained sampler may decline a verifier row at a
  * thinking/tool boundary. Exercise both the draft and bonus row at V(2). */
 #include "../ds4.c"
+#include "qwen_test_profile.h"
 
 #define CHECK(c) do { if (!(c)) { \
     fprintf(stderr, "FAIL line %d: %s (%s)\n", __LINE__, #c, err); exit(1); \
@@ -31,8 +32,11 @@ static int save_state(ds4_session *s, ds4_session_snapshot *snap,
 }
 static int load_state(ds4_session *s, const ds4_session_snapshot *snap,
                       char *err, size_t errlen) {
-    FILE *fp = fmemopen(snap->ptr, snap->len, "rb");
+    FILE *fp = tmpfile();
     if (!fp) return -1;
+    if (fwrite(snap->ptr, 1, snap->len, fp) != snap->len || fseek(fp, 0, SEEK_SET)) {
+        fclose(fp); return -1;
+    }
     int rc = ds4_session_load_payload(s, fp, snap->len, err, errlen);
     fclose(fp);
     return rc;
@@ -45,9 +49,10 @@ int main(int argc, char **argv) {
     ds4_session *s = NULL;
     ds4_engine_options options = {
         .model_path = argv[1], .mtp_path = argv[2],
-        .backend = DS4_BACKEND_CUDA, .context_size = 4096,
-        .prefill_chunk = 2048, .mtp_draft_tokens = 2,
+        .mtp_draft_tokens = 2,
     };
+    CHECK(qwen_test_profile(&options, 4096));
+    CHECK(options.context_size > (int)DS4_QWEN_MTP_DEPTH1_CONTEXT + 32);
     CHECK(getenv("DS4_MTP_QWEN_V2_SAFE_SNAPSHOT") == NULL);
     CHECK(ds4_engine_open(&e, &options) == 0 && ds4_engine_has_mtp(e));
     CHECK(ds4_session_create(&s, e, options.context_size) == 0);
@@ -81,10 +86,7 @@ int main(int argc, char **argv) {
         CHECK(rng == 42);
         CHECK(g->mtp_ready && g->mtp_cache_len == (uint32_t)prompt.len + 1);
         if (abort_row) CHECK(next == -1);
-        /* mtp_logits is verifier scratch while the draft-valid flag is false.
-         * Canonicalize only that unused host buffer before comparing payloads. */
         CHECK(!s->mtp_draft_valid);
-        memset(s->mtp_logits, 0, (size_t)DS4_N_VOCAB * sizeof(float));
         ds4_session_snapshot actual = {0};
         CHECK(save_state(s, &actual, err, sizeof(err)) == 0);
         if (!abort_row) expected = actual;

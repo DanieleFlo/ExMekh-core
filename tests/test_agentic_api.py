@@ -11,12 +11,11 @@ from __future__ import annotations
 
 import json
 import os
-from pathlib import Path
 import time
 import unittest
+from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-
 
 BASE_URL = os.environ.get("DS4_AGENTIC_BASE_URL", "").rstrip("/")
 CHECKPOINT_ROOT = os.environ.get("DS4_AGENTIC_TEST_CHECKPOINT_ROOT", "")
@@ -66,7 +65,7 @@ def response_payload(
         agentic["operation"] = operation
     if skill_call_id is not None:
         agentic["skill_call_id"] = skill_call_id
-    return {
+    payload = {
         "model": os.environ.get("DS4_AGENTIC_MODEL",
                                 "Qwen3.8-27B-UD-Q4_K_S"),
         "input": input_items,
@@ -77,6 +76,10 @@ def response_payload(
         "stream": False,
         "agentic": agentic,
     }
+    effort = os.getenv("DS4_AGENTIC_REASONING_EFFORT")
+    if effort:
+        payload["reasoning"] = {"effort": effort}
+    return payload
 
 
 def post_response(payload: dict, expected_status: int = 200) -> dict:
@@ -87,7 +90,9 @@ def post_response(payload: dict, expected_status: int = 200) -> dict:
         method="POST",
     )
     try:
-        with urlopen(request, timeout=600) as response:
+        with urlopen(
+            request, timeout=float(os.getenv("DS4_SUITE_HTTP_TIMEOUT_SECONDS", "600"))
+        ) as response:
             status = response.status
             body = response.read().decode("utf-8")
     except HTTPError as error:
@@ -111,7 +116,7 @@ def post_response_rejected(payload: dict) -> dict:
 def output_items(response: dict) -> list[dict]:
     value = response.get("output", [])
     if not isinstance(value, list):
-        raise AssertionError(f"response.output is not a list: {value!r}")
+        raise AssertionError(f"response.output is not a list: {value!r}")  # noqa: TRY004 -- API test assertion.
     return value
 
 

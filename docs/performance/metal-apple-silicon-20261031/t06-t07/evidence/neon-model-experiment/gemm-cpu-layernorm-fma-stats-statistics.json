@@ -1,0 +1,40 @@
+[
+  {
+    "stage": "layer0.norm",
+    "mean": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "rstd": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "affine_unfused": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "affine_fused": {
+      "different": 113,
+      "max_abs": 0.0078125
+    }
+  },
+  {
+    "stage": "layer1.norm",
+    "mean": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "rstd": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "affine_unfused": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "affine_fused": {
+      "different": 1,
+      "max_abs": 0.03125
+    }
+  }
+]

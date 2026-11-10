@@ -88,10 +88,10 @@ fasi scende da 0,005054 a 0,001297 (Alpi) e da 0,003739 a 0,001341 (Cyberpunk).
 Questa combinazione resta sperimentale e non chiude il problema percettivo.
 
 Confronti apribili alla risoluzione originale:
-[Alpi, sigma alternativo](../../../performance-results/image-quality-20261023/source-audit/schedule-diagnostic/alps-community-low-sigma/result.png),
-[Cyberpunk, sigma alternativo](../../../performance-results/image-quality-20261023/source-audit/schedule-diagnostic/cyberpunk-community-low-sigma/result.png),
-[Alpi, sigma alternativo + Texture-Fix](../../../performance-results/image-quality-20261023/source-audit/alps-low-sigma-texture-fix/result.png),
-[Cyberpunk, sigma alternativo + Texture-Fix](../../../performance-results/image-quality-20261023/source-audit/cyberpunk-low-sigma-texture-fix/result.png).
+`../../../performance-results/image-quality-20261023/source-audit/schedule-diagnostic/alps-community-low-sigma/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/schedule-diagnostic/cyberpunk-community-low-sigma/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/alps-low-sigma-texture-fix/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/cyberpunk-low-sigma-texture-fix/result.png`.
 
 ## Artefatti e limiti
 
@@ -103,8 +103,8 @@ I dati grandi e gli script diagnostici sono in
 della ricetta di produzione; nessun filtro di sharpening viene aggiunto.
 
 Le immagini si possono aprire senza conversioni:
-[ufficiale 2K](../../../performance-results/image-quality-20261023/source-audit/whole-pipeline/alps-2048x1536/result.png),
-[nativo 2K](../../../performance-results/image-quality-20261023/source-audit/native-2048x1536/case-0/result.png),
-[decoder FP32](../../../performance-results/image-quality-20261023/source-audit/decoder-precision/alps-f32/result.png),
-[Texture-Fix Alpi](../../../performance-results/image-quality-20261023/source-audit/alps-texture-fix/result.png),
-[Texture-Fix Cyberpunk](../../../performance-results/image-quality-20261023/source-audit/cyberpunk-texture-fix/result.png).
+`../../../performance-results/image-quality-20261023/source-audit/whole-pipeline/alps-2048x1536/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/native-2048x1536/case-0/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/decoder-precision/alps-f32/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/alps-texture-fix/result.png`,
+`../../../performance-results/image-quality-20261023/source-audit/cyberpunk-texture-fix/result.png`.

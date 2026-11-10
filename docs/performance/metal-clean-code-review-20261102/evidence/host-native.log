@@ -1,0 +1,51 @@
+./tests/test_runtime
+./tests/test_resources
+runtime: PASS
+./tests/test_executor
+PASS: resource lifetime, aliases, events, budgets, concurrent reservations and checkpoint validation
+python3 -m unittest tests.test_suite_bundle -v
+executor: PASS admission, repeated visits, cancellation, faults, recovery and reservation reuse
+./tests/test_suite_http
+suite HTTP: PASS integers, canonical receipts, multipart, limits, lifetime and deadlines
+./tests/test_qwen_test_profile
+DS4_TEST_SSD_STREAMING requires Metal and 0 or 1
+DS4_TEST_CTX must be a positive integer
+DS4_TEST_CTX must be a positive integer
+DS4_TEST_CTX must be a positive integer
+DS4_TEST_CTX must be a positive integer
+DS4_TEST_PREFILL exceeds DS4_TEST_CTX
+DS4_TEST_BACKEND must be metal or cuda
+PASS Qwen live-test backend and explicit context/prefill budgets
+./tests/test_metal_memory_policy
+PASS: conservative Metal host pages, shared physical budget, reserve, staging and pressure
+./tests/test_numeric_lifetime
+numeric failed-fence ownership: PASS
+./tests/test_qwen_image_input
+prepared input ownership, padding, validation, admission and weight bridge: PASS
+./tests/test_qwen_image_output
+RGBA host lifetime, PNG alpha/errors, reservation accounting and observer cancellation: PASS
+./tests/test_sha256
+PASS: NIST SHA-256 vectors, zero-length updates and 1..65-byte streaming chunks
+./tests/test_sha256_portable
+PASS: NIST SHA-256 vectors, zero-length updates and 1..65-byte streaming chunks
+./tests/test_suite_accelerator
+suite accelerator factory ownership: PASS
+test_suite_bundle (unittest.loader._FailedTest.test_suite_bundle) ... ERROR
+
+======================================================================
+ERROR: test_suite_bundle (unittest.loader._FailedTest.test_suite_bundle)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_suite_bundle
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/test_suite_bundle.py", line 14, in <module>
+    import jsonschema
+ModuleNotFoundError: No module named 'jsonschema'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)
+make: *** [test-bundle] Error 1

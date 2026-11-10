@@ -1,0 +1,35 @@
+..F....
+=================================== FAILURES ===================================
+________ QwenMetalApiLive.test_responses_output_items_keep_live_prefix _________
+
+self = <test_qwen_metal_api_live.QwenMetalApiLive testMethod=test_responses_output_items_keep_live_prefix>
+
+    def test_responses_output_items_keep_live_prefix(self):
+        original = {
+            "role": "user",
+            "content": "Remember PREFIX27. Reply only PREFIX27.",
+        }
+        arguments = {
+            "model": MODEL,
+            "reasoning": {"effort": "none"},
+            "max_output_tokens": 16,
+            "temperature": 0,
+        }
+        first = self.client.responses.create(input=[original], **arguments)
+        self.assertIn("PREFIX27", first.output_text)
+        final = self.client.responses.create(
+            input=[
+                original,
+                *[item.model_dump(exclude_unset=True) for item in first.output],
+                {"role": "user", "content": "Repeat the remembered code only."},
+            ],
+            **arguments,
+        )
+        self.assertIn("PREFIX27", final.output_text)
+>       self.assertGreater(final.usage.input_tokens_details.cached_tokens, 0)
+E       AssertionError: 0 not greater than 0
+
+tests/test_qwen_metal_api_live.py:138: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_qwen_metal_api_live.py::QwenMetalApiLive::test_responses_output_items_keep_live_prefix
+1 failed, 6 passed in 495.04s (0:08:15)

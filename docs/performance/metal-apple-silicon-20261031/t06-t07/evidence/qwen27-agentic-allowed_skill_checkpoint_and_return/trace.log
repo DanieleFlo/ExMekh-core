@@ -1,0 +1,236 @@
+
+===== request 1 2026-11-01 08:25:25 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 644
+effective_prompt_tokens: 644
+cached_tokens: 0
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 644
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "input": [{"role": "user", "content": "Open skill-A now by calling it. Do not call any other capability."}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "auto", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": ["execute"], "allowed_skills": ["skill-A"]}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Open skill-A now by calling it. Do not call any other capability.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7548 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="skill-A">
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 37 generated tokens ---
+
+
+
+--- trace: speculative boundary: kept=1 discarded=1 resample=0 ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 37
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 230.994
+
+tool_call[0]:
+id: call_7933254922dba4e258bd6b1035bdcafb
+name: skill-A
+arguments:
+{}
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=644 response_prefill=39 target=683 ---
+
+
+===== request 2 2026-11-01 08:29:22 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 635
+effective_prompt_tokens: 701
+cached_tokens: 681
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 683
+prompt_tokens: 635
+live_prompt_common: 620
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: agentic-return
+cached_tokens: 681
+disk_cached_tokens: 0
+
+first_mismatch_token: 620
+token_window: [612..629)
+    612 ==          live 510 "</" | prompt 510 "</"
+    613 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    614 ==          live 29 ">" | prompt 29 ">"
+    615 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    616 ==          live 198 "\n" | prompt 198 "\n"
+    617 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    618 ==          live 846 "user" | prompt 846 "user"
+    619 ==          live 198 "\n" | prompt 198 "\n"
+    620 !=          live 4841 "Open" | prompt 248066 "<tool_response>"
+    621 !=          live 9653 " skill" | prompt 198 "\n"
+    622 !=          live 6481 "-A" | prompt 28493 "skill"
+    623 !=          live 1381 " now" | prompt 7807 " finished"
+    624 !=          live 539 " by" | prompt 198 "\n"
+    625 !=          live 7842 " calling" | prompt 248067 "</tool_response>"
+    626 !=          live 424 " it" | prompt 248046 "<|im_end|>"
+    627 !=          live 13 "." | prompt 198 "\n"
+    628 !=          live 3054 " Do" | prompt 248045 "<|im_start|>"
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "input": [{"type": "function_call_output", "call_id": "call_7933254922dba4e258bd6b1035bdcafb", "output": "skill finished"}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "auto", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": ["safe_tool"], "allowed_skills": ["skill-A"], "operation": "return", "skill_call_id": "call_7933254922dba4e258bd6b1035bdcafb"}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+<tool_response>
+skill finished
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7491 ---
+
+skill-A has been opened.
+
+--- trace: speculative boundary: kept=1 discarded=1 resample=0 ---
+
+
+
+--- parsed message ---
+finish: stop
+generated_tokens: 6
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 86.193
+
+content:
+skill-A has been opened.
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=701 response_prefill=8 target=709 ---
+

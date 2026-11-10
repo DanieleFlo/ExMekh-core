@@ -9,7 +9,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
-extern int cudaMemGetInfo(size_t *, size_t *);
+#include "suite_accelerator.h"
 #define CHECK(x)                                                               \
   do {                                                                         \
     ds4_status s = (x);                                                        \
@@ -92,12 +92,12 @@ int main(int argc, char **argv) {
   ds4_bundle *b = NULL;
   CHECK(ds4_resources_create(&rs));
   CHECK(ds4_runtime_create(&rt, NULL, NULL));
-  CHECK(ds4_numeric_cuda(&n, rs, 100));
+  CHECK(suite_numeric_create(&n, rs, 100));
   CHECK(ds4_bundle_open(&b, argv[1], argv[2], rs, 101));
   uint64_t baseline, initial_peak;
   ds4_numeric_memory(n, &baseline, &initial_peak);
   size_t free_device, total_device;
-  if (cudaMemGetInfo(&free_device, &total_device))
+  if (suite_memory_info(n, &free_device, &total_device))
     return 1;
   ds4_resource_budget budget = {.limit = baseline + free_device,
                                 .margin = 256u * 1024u * 1024u};

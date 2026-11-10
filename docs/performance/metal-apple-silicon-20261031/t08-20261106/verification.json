@@ -1,0 +1,260 @@
+{
+  "status": "IN_PROGRESS",
+  "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+  "runs": {
+    "f08-flash": {
+      "status": "NOT_VERIFIED",
+      "command": [
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server",
+        "--metal",
+        "-m",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ssd-streaming-cache-experts",
+        "2GB",
+        "--ctx",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18186",
+        "--kv-disk-dir",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/f08-flash/kv",
+        "--trace",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/f08-flash/trace.log",
+        "--no-mtp"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "qualification_tool_sha256": "482eac8e64c40cb3780a4ca2fe0e4239b1263bfced687481d60755148a2a9327",
+      "executables_sha256": {
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server": "048d511649a85d6b6a02a69b802fcb6c2f9e17d78b8ba6ece484f32b31af8811"
+      },
+      "client_sources_sha256": {
+        "agent/tests/test_live_e2e.py": "0328f618ada6b2dc16b8042e6d074a3e34462de51e5b972c8bf476a6c2211f61"
+      },
+      "timeout_seconds": 7200.0,
+      "reason": "T08 resumed by user 2026-11-06; unchanged full Custom literal greedy file workflow; frozen 2GiB cache qualification profile",
+      "elapsed_seconds": 820.5901556250003,
+      "server_exit_code": 0,
+      "cleanup_forced": [],
+      "error": "termination requested",
+      "qualification_profile": {
+        "context_tokens": 8192,
+        "prefill_chunk": 64,
+        "ssd_cache_bytes": 2147483648,
+        "reasoning_effort": "none",
+        "tool_start_timeout_seconds": 480,
+        "http_timeout_seconds": 7200.0,
+        "interactive_timeout_seconds": 1200,
+        "phase_timeout_seconds": 720,
+        "suite_operation_base_timeout_seconds": null,
+        "suite_operation_timeout_seconds": null
+      },
+      "report_sha256": "2f9dd052d4705b3114da9405ac7859af7df2a0475500e8e8d7bc850e803de5dd",
+      "memory": {
+        "min_host_bytes": 5965299712,
+        "max_swap_growth_bytes": 3795845,
+        "max_pressure": 1
+      }
+    },
+    "f08-flash-cold-replay": {
+      "status": "PASS",
+      "command": [
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server",
+        "--metal",
+        "-m",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "--ssd-streaming",
+        "--ssd-streaming-cold",
+        "--ctx",
+        "8192",
+        "--prefill-chunk",
+        "64",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "18186",
+        "--kv-disk-dir",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/f08-flash-cold-replay/kv",
+        "--trace",
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/build/metal-t08-20261106/f08-flash-cold-replay/trace.log",
+        "--ssd-streaming-cache-experts",
+        "2GB",
+        "--no-mtp"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "qualification_tool_sha256": "59986e4b4a6395ff35accbe1ceba0944839dd4b897f7856d7e2c2d5901c5b841",
+      "executables_sha256": {
+        "/Users/danieleflorio/.codex/worktrees/1340/ExMekh-core/ds4-server": "048d511649a85d6b6a02a69b802fcb6c2f9e17d78b8ba6ece484f32b31af8811"
+      },
+      "client_sources_sha256": {
+        "build/metal-t08-20261106/replay_root.py": "50059dbde9ba9abfa9e71261e5b50eaac99119a696cf0d7204a1d5969c37bffb"
+      },
+      "timeout_seconds": 300.0,
+      "reason": "F08 diagnostic: fresh full prefill of frozen first root return, no checkpoint restore; 32-token diagnostic only",
+      "elapsed_seconds": 90.01457087499966,
+      "server_exit_code": 0,
+      "cleanup_forced": [],
+      "qualification_profile": {
+        "context_tokens": 8192,
+        "prefill_chunk": 64,
+        "ssd_cache_bytes": 2147483648,
+        "ssd_cache_mode": "explicit",
+        "reasoning_effort": "none",
+        "tool_start_timeout_seconds": 120,
+        "http_timeout_seconds": 300.0,
+        "interactive_timeout_seconds": 300,
+        "phase_timeout_seconds": 180,
+        "suite_operation_base_timeout_seconds": null,
+        "suite_operation_timeout_seconds": null
+      },
+      "report_sha256": "5ab3e6f359fc7311b7e0154ad68cedfcb671360947e07002ab0cb71dd3ce037e",
+      "memory": {
+        "min_host_bytes": 7286652928,
+        "max_swap_growth_bytes": 0,
+        "max_pressure": 1
+      }
+    },
+    "flash-return-isolation": {
+      "status": "NOT_VERIFIED",
+      "command": [
+        "tests/probe_qwen_skill_return",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-t08-20261106/f08-flash-root-prompt.txt",
+        "build/metal-t08-20261106/flash-inner-prompt.txt",
+        "build/metal-t08-20261106/flash-return-isolation/data",
+        "1234",
+        "1247"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "executables_sha256": {
+        "tests/probe_qwen_skill_return": "199085cd4ea0e69822c68dd4cb79723cd268375d1a4f1ddda873015fddf27443"
+      },
+      "timeout_seconds": 600.0,
+      "reason": "F08 identical token inputs: mixed decode/prefill direct versus full payload restore after inner forward; cold segmentation separate",
+      "elapsed_seconds": 57.84092845799978,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "error": "KeyboardInterrupt('termination requested')",
+      "exit_code": -15,
+      "report_sha256": "cc0e76ffb5c774743ef076f6b87c1bac60eeacdf3061ecbd3c111f76c4f96ba1",
+      "memory": {
+        "min_host_bytes": 7592755200,
+        "max_swap_growth_bytes": 524288,
+        "max_pressure": 1
+      }
+    },
+    "flash-return-isolation-exact": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_qwen_skill_return",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-t08-20261106/flash-return-prompt-exact.txt",
+        "build/metal-t08-20261106/flash-inner-prompt.txt",
+        "build/metal-t08-20261106/flash-return-isolation-exact/data",
+        "1234",
+        "1247"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "executables_sha256": {
+        "tests/probe_qwen_skill_return": "199085cd4ea0e69822c68dd4cb79723cd268375d1a4f1ddda873015fddf27443"
+      },
+      "timeout_seconds": 600.0,
+      "reason": "F08 exact trace prompts including trailing LF: direct mixed decode/prefill vs payload restore after inner forward; cold segmentation separate",
+      "elapsed_seconds": 279.901125416,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "exit_code": 0,
+      "report_sha256": "21db8380d1e2352ff5ac623f2fcf2216a3bcab6cfccd43a0200efe74248746ed",
+      "memory": {
+        "min_host_bytes": 7318011904,
+        "max_swap_growth_bytes": 2296381,
+        "max_pressure": 1
+      },
+      "logits_comparison": {
+        "restore_exact": true,
+        "restore_max_abs": 0,
+        "cold_max_abs": 1.37691212,
+        "direct_top": 10191,
+        "restored_top": 10191,
+        "cold_top": 10191,
+        "vocab": 248320,
+        "target_tokens": 1422,
+        "inner_tokens": 2662,
+        "prefill_tokens": 1234,
+        "frontier_tokens": 1247
+      },
+      "probe_sha256": "199085cd4ea0e69822c68dd4cb79723cd268375d1a4f1ddda873015fddf27443"
+    },
+    "flash-return-isolation-system": {
+      "status": "PASS",
+      "command": [
+        "tests/probe_qwen_skill_return",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-t08-20261106/flash-return-prompt-exact.txt",
+        "build/metal-t08-20261106/flash-inner-prompt.txt",
+        "build/metal-t08-20261106/flash-return-isolation-system/data",
+        "1234",
+        "1247",
+        "1151"
+      ],
+      "source_head": "1cae6443de1537b5cf1a5c89bf57f8703012dfc5",
+      "executables_sha256": {
+        "tests/probe_qwen_skill_return": "a8a4e7a04f7f25b23232bdecd375829030f394fb5125b05d56a7ddc0b961cfac"
+      },
+      "timeout_seconds": 600.0,
+      "reason": "F08 exact trace prompts and initial system boundary1151: mixed direct vs full restore; anchored cold segmentation separate",
+      "elapsed_seconds": 276.0065697499999,
+      "cleanup_forced": false,
+      "cleanup_error": null,
+      "exit_code": 0,
+      "report_sha256": "7e34950a06ec362f3e33ff4319cd218153f2b760ebafcd3dc4e9a4bf7c36fb1c",
+      "memory": {
+        "min_host_bytes": 6884016128,
+        "max_swap_growth_bytes": 2097152,
+        "max_pressure": 1
+      },
+      "logits_comparison": {
+        "restore_exact": true,
+        "restore_max_abs": 0,
+        "cold_max_abs": 1.89239585,
+        "direct_top": 248058,
+        "restored_top": 248058,
+        "cold_top": 10191,
+        "vocab": 248320,
+        "target_tokens": 1422,
+        "inner_tokens": 2662,
+        "prefill_tokens": 1234,
+        "frontier_tokens": 1247,
+        "anchor_tokens": 1151
+      },
+      "probe_sha256": "a8a4e7a04f7f25b23232bdecd375829030f394fb5125b05d56a7ddc0b961cfac"
+    }
+  },
+  "source_and_input_sha256": {
+    "tests/probe_qwen_skill_return.c": "59d45cf21694aa6f1533aacfae427a34bc49f9ca317ff68ff21d8abe9984f930",
+    "tools/qualify_metal_server.py": "59986e4b4a6395ff35accbe1ceba0944839dd4b897f7856d7e2c2d5901c5b841",
+    "tools/qualify_qwen_image_pipeline.py": "d4fa2da70701024dcdc561ed67a2f1844a38ff3a47e78cce2684ee6847e4189f",
+    "tests/test_metal_stream_qualification.py": "286bf664b48baf098324d0662653396f5f815e0a48dc68225709cb79a4af04ab",
+    "tests/test_suite_pipeline_qualification.py": "28319897696dfd0b69a25fa944404d2097d7943f51e08dadc7aa3cb1ee8d6f9e",
+    "docs/performance/metal-apple-silicon-20261031/t08-20261106/fixtures/return.prompt.txt": "587e119ee988e1c0dfe5434cad5207446de5ecbaaf5b05f92aa5a0ae78b00dd6",
+    "docs/performance/metal-apple-silicon-20261031/t08-20261106/fixtures/inner.prompt.txt": "1f0d326b42f1eeb5a8d8d44fc7fc705dc94f423d2d06e734d5c2dc70fe5f0a12"
+  },
+  "no_production_kernel_or_dispatch_changed": true,
+  "committed": false,
+  "tests": {
+    "qualification_contracts": {
+      "passed": 40,
+      "seconds": 12.226
+    },
+    "release_client_and_pipeline_contracts": {
+      "passed": 21,
+      "overlaps_with_qualification_contracts": true
+    },
+    "interactive_protocol": "PASS",
+    "build_product_and_suite": "PASS"
+  }
+}

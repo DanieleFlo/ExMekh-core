@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "status": "PASS",
+  "completed_cycles": 1,
+  "warmup_cycles": 0,
+  "bounded_development_subset": true,
+  "required_cycles": 1,
+  "scope": "HTTP lifetime and deterministic residency; no quality promotion",
+  "timings": {
+    "image": {
+      "samples": [
+        109.62142929199945
+      ],
+      "min": 109.62142929199945,
+      "p10": 109.62142929199945,
+      "median": 109.62142929199945,
+      "mean": 109.62142929199945,
+      "p90": 109.62142929199945,
+      "max": 109.62142929199945,
+      "stddev": 0.0,
+      "cv": 0.0,
+      "verdict": "NEED_MORE_DATA"
+    },
+    "embedding": {
+      "samples": [
+        31.652487125000334
+      ],
+      "min": 31.652487125000334,
+      "p10": 31.652487125000334,
+      "median": 31.652487125000334,
+      "mean": 31.652487125000334,
+      "p90": 31.652487125000334,
+      "max": 31.652487125000334,
+      "stddev": 0.0,
+      "cv": 0.0,
+      "verdict": "NEED_MORE_DATA"
+    },
+    "cycle": {
+      "samples": [
+        370.17634070799977
+      ],
+      "min": 370.17634070799977,
+      "p10": 370.17634070799977,
+      "median": 370.17634070799977,
+      "mean": 370.17634070799977,
+      "p90": 370.17634070799977,
+      "max": 370.17634070799977,
+      "stddev": 0.0,
+      "cv": 0.0,
+      "verdict": "NEED_MORE_DATA"
+    }
+  },
+  "owned_memory_observed": true
+}

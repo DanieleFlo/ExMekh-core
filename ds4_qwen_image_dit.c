@@ -371,7 +371,8 @@ cleanup:
 }
 static ds4_status block(qi_graph *g, ds4_qwen_image_dit_input *p,
                         uint32_t layer, ds4_num_view x, ds4_num_view mod,
-                        uint32_t offset, const ds4_qwen_image_observer *o) {
+                        uint32_t offset, bool save_prefix,
+                        const ds4_qwen_image_observer *o) {
   uint32_t n = p->count - offset, prefix = offset ? 0 : p->prefix;
   uint64_t size = (uint64_t)n * D, keys = (uint64_t)p->count * D;
   qi_work w = {.num = g->num};
@@ -408,6 +409,12 @@ static ds4_status block(qi_graph *g, ds4_qwen_image_dit_input *p,
                    vt = ds4_num_slice(v, (uint64_t)offset * D, size);
       snprintf(name, sizeof(name), "transformer_blocks.%u.attn.to_q", layer);
       QI_TRY(qi_linear(g, name, q, norm, n, D, D, false));
+#ifdef __APPLE__
+      /* The next block is known. Let its first mapped pages warm while this
+       * block computes; cache ownership and demand loading remain serial. */
+      if (layer + 2 < g->group_count)
+        (void)ds4_weight_cache_hint(&g->cache, layer + 2, DS4_BUNDLE_HINT_MAX_BYTES);
+#endif
       DIAG("qproj", q);
       snprintf(name, sizeof(name), "transformer_blocks.%u.attn.to_k", layer);
       QI_TRY(qi_linear(g, name, kt, norm, n, D, D, false));
@@ -436,7 +443,7 @@ static ds4_status block(qi_graph *g, ds4_qwen_image_dit_input *p,
       DIAG("rope_q", rq);
       DIAG("rope_k", rk);
       QI_TRY(ds4_num_copy(g->num, kt, rk));
-      if (p->host_cache && p->prefix) {
+      if (p->host_cache && p->prefix && (offset || save_prefix)) {
         uint64_t elements = (uint64_t)p->prefix * D;
         if (!p->host_kv)
           QI_TRY(qi_host(g->num, elements * 4 * 32, (void **)&p->host_kv,
@@ -458,7 +465,7 @@ static ds4_status block(qi_graph *g, ds4_qwen_image_dit_input *p,
         QI_TRY(ds4_num_copy(g->num,
                             ds4_num_slice(v, 0, (uint64_t)p->prefix * D),
                             ds4_num_data(p->v[layer])));
-      } else if (p->prefix) {
+      } else if (p->prefix && save_prefix) {
         QI_TRY(ds4_num_alloc(g->num, (uint64_t)p->prefix * D, DS4_NUM_BF16,
                              &p->k[layer]));
         QI_TRY(ds4_num_alloc(g->num, (uint64_t)p->prefix * D, DS4_NUM_BF16,
@@ -527,16 +534,16 @@ cleanup:
   }
 #undef DIAG
 }
-ds4_status ds4_qwen_image_dit_forward(ds4_qwen_image_dit *e,
-                                      ds4_qwen_image_dit_input *p,
-                                      ds4_num_view target, float sigma,
-                                      const ds4_qwen_image_observer *o,
-                                      ds4_num_buffer **out) {
+static ds4_status forward_batch(ds4_qwen_image_dit *e,
+                                ds4_qwen_image_dit_input *p,
+                                ds4_num_view target, uint32_t batch, float sigma,
+                                const ds4_qwen_image_observer *o,
+                                ds4_num_buffer **out) {
   if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
   if (!e || !p || p->dit != e || !target.data ||
-      target.count != (uint64_t)p->target * 64 || target.type != DS4_NUM_F32 ||
+      target.count != (uint64_t)batch * p->target * 64 || target.type != DS4_NUM_F32 ||
       !isfinite(sigma) || sigma < 0 || sigma > 1)
     return DS4_STATUS_INVALID;
   qi_graph *g = &e->g;
@@ -547,11 +554,17 @@ ds4_status ds4_qwen_image_dit_forward(ds4_qwen_image_dit *e,
   qi_work w = {.num = g->num};
   ds4_num_buffer *result = NULL;
   uint32_t offset = p->cached ? p->prefix : 0, n = p->count - offset;
-  ds4_num_view x, temb, mod, scale, images, projected, text, norm, tw;
+  uint64_t rows = (uint64_t)n * D, target_elements = (uint64_t)p->target * 64;
+  ds4_num_view hidden, temb, mod, scale, images, projected, text, norm, tw;
+  ds4_qwen_image_observer cancel_only = {0};
+  if (o) {
+    cancel_only.opaque = o->opaque;
+    cancel_only.cancelled = o->cancelled;
+  }
   QI_TRY(ds4_qwen_image_observe(g->num, o, "begin", 0, QI_NONE));
-  /* Resident execution: no hidden streaming or eviction between blocks. */
+  /* Preload within the configured weight-cache limit. */
   QI_TRY(qi_load_all(g));
-  QI_TRY(qi_alloc(&w, (uint64_t)n * D, DS4_NUM_BF16, &x));
+  QI_TRY(qi_alloc(&w, batch * rows, DS4_NUM_BF16, &hidden));
   QI_TRY(qi_alloc(&w, 2 * D, DS4_NUM_BF16, &temb));
   QI_TRY(qi_alloc(&w, 8 * D, DS4_NUM_BF16, &mod));
   QI_TRY(qi_alloc(&w, 2 * D, DS4_NUM_BF16, &scale));
@@ -563,59 +576,77 @@ ds4_status ds4_qwen_image_dit_forward(ds4_qwen_image_dit *e,
     QI_TRY(ds4_num_copy(g->num,
                         ds4_num_slice(images, 0, (uint64_t)p->reference * 64),
                         ds4_num_data(p->references)));
-  QI_TRY(ds4_num_point(g->num,
-                       ds4_num_slice(images, (uint64_t)(ni - p->target) * 64,
-                                     (uint64_t)p->target * 64),
-                       target, QI_NONE, DS4_NUM_CAST, 0));
-  QI_TRY(qi_linear(g, "img_in", projected, images, ni, 64, D, false));
-  if (offset)
-    QI_TRY(ds4_num_copy(g->num, x,
-                        ds4_num_slice(projected, (uint64_t)p->reference * D,
-                                      (uint64_t)p->target * D)));
-  else {
-    QI_TRY(qi_alloc(&w, (uint64_t)p->text * D, DS4_NUM_BF16, &text));
-    QI_TRY(qi_alloc(&w, (uint64_t)p->text * D, DS4_NUM_BF16, &norm));
-    QI_TRY(qi_weight(g, "txt_in.text_norm.weight", &tw));
-    QI_TRY(ds4_num_norm(g->num, norm, ds4_num_data(p->conditioning), tw,
-                        QI_NONE, D, 1e-6f, DS4_NUM_RMS,
-                        DS4_NUM_SCALE_ZERO_CENTERED, false));
-    QI_TRY(qi_linear(g, "txt_in.in_layer", text, norm, p->text, D, D, false));
-    QI_TRY(ds4_num_point(g->num, text, text, QI_NONE, DS4_NUM_GELU_TANH, 0));
-    QI_TRY(qi_linear(g, "txt_in.out_layer", norm, text, p->text, D, D, false));
-    for (uint32_t i = 0; i < n;) {
-      uint32_t j = i + 1;
-      int32_t src = p->source[i];
-      while (j < n && p->source[j] == src + (src < 0 ? -(int32_t)(j - i)
-                                                     : (int32_t)(j - i)))
-        j++;
-      uint64_t from = src < 0 ? (uint64_t)(-src - 1) * D : (uint64_t)src * D;
-      QI_TRY(ds4_num_copy(
-          g->num, ds4_num_slice(x, (uint64_t)i * D, (uint64_t)(j - i) * D),
-          ds4_num_slice(src < 0 ? projected : norm, from,
-                        (uint64_t)(j - i) * D)));
-      i = j;
+  for (uint32_t item = 0; item < batch; item++) {
+    ds4_num_view x = ds4_num_slice(hidden, item * rows, rows);
+    QI_TRY(ds4_num_point(g->num,
+                         ds4_num_slice(images, (uint64_t)p->reference * 64,
+                                       target_elements),
+                         ds4_num_slice(target, item * target_elements, target_elements),
+                         QI_NONE, DS4_NUM_CAST, 0));
+    QI_TRY(qi_linear(g, "img_in", projected, images, ni, 64, D, false));
+    if (offset) {
+      QI_TRY(ds4_num_copy(g->num, x,
+                          ds4_num_slice(projected, (uint64_t)p->reference * D,
+                                        (uint64_t)p->target * D)));
+    } else {
+      if (!item) {
+        QI_TRY(qi_alloc(&w, (uint64_t)p->text * D, DS4_NUM_BF16, &text));
+        QI_TRY(qi_alloc(&w, (uint64_t)p->text * D, DS4_NUM_BF16, &norm));
+        QI_TRY(qi_weight(g, "txt_in.text_norm.weight", &tw));
+        QI_TRY(ds4_num_norm(g->num, norm, ds4_num_data(p->conditioning), tw,
+                            QI_NONE, D, 1e-6f, DS4_NUM_RMS,
+                            DS4_NUM_SCALE_ZERO_CENTERED, false));
+        QI_TRY(qi_linear(g, "txt_in.in_layer", text, norm, p->text, D, D, false));
+        QI_TRY(ds4_num_point(g->num, text, text, QI_NONE, DS4_NUM_GELU_TANH, 0));
+        QI_TRY(qi_linear(g, "txt_in.out_layer", norm, text, p->text, D, D, false));
+      }
+      for (uint32_t i = 0; i < n;) {
+        uint32_t j = i + 1;
+        int32_t src = p->source[i];
+        while (j < n && p->source[j] == src + (src < 0 ? -(int32_t)(j - i)
+                                                       : (int32_t)(j - i)))
+          j++;
+        uint64_t from = src < 0 ? (uint64_t)(-src - 1) * D : (uint64_t)src * D;
+        QI_TRY(ds4_num_copy(
+            g->num, ds4_num_slice(x, (uint64_t)i * D, (uint64_t)(j - i) * D),
+            ds4_num_slice(src < 0 ? projected : norm, from,
+                          (uint64_t)(j - i) * D)));
+        i = j;
+      }
     }
   }
-  QI_TRY(ds4_qwen_image_observe(g->num, o, "joint", 0, x));
-  for (uint32_t i = 0; i < 32; i++) {
-    QI_TRY(block(g, p, i, x, mod, offset, o));
-    QI_TRY(ds4_qwen_image_observe(g->num, o, "block", i, x));
-  }
+  QI_TRY(ds4_qwen_image_observe(g->num, o, "joint", 0,
+                               ds4_num_slice(hidden, 0, rows)));
+  /* Keep one block's weights hot across the batch. A slice keeps the scalar
+   * projection geometry and each lane's attention bounds. The frozen prefix
+   * cannot attend to any target, so only lane zero saves its K/V. */
+  for (uint32_t i = 0; i < 32; i++)
+    for (uint32_t item = 0; item < batch; item++) {
+      ds4_num_view x = ds4_num_slice(hidden, item * rows, rows);
+      const ds4_qwen_image_observer *observer = item ? &cancel_only : o;
+      QI_TRY(block(g, p, i, x, mod, offset, !item, observer));
+      QI_TRY(ds4_qwen_image_observe(g->num, observer, "block", i, x));
+    }
   /* Preserve active-sequence GEMM geometry at the first step. Projecting only
    * a target view changes BF16 ties and can amplify over subsequent steps. */
   ds4_num_view prediction;
   QI_TRY(qi_alloc(&w, (uint64_t)n * 64, DS4_NUM_BF16, &prediction));
-  QI_TRY(ds4_num_norm(g->num, x, x, QI_NONE, QI_NONE, D, 1e-6f, DS4_NUM_LAYER,
-                      DS4_NUM_SCALE_NONE, false));
-  QI_TRY(modulate(g, x, scale, offset ? 0 : p->prefix, n));
-  QI_TRY(
-      ds4_num_alloc(g->num, (uint64_t)p->target * 64, DS4_NUM_BF16, &result));
-  QI_TRY(qi_linear(g, "proj_out", prediction, x, n, D, 64, false));
-  QI_TRY(ds4_num_copy(g->num, ds4_num_data(result),
-                      ds4_num_slice(prediction, (uint64_t)(n - p->target) * 64,
-                                    (uint64_t)p->target * 64)));
-  QI_TRY(
-      ds4_qwen_image_observe(g->num, o, "velocity", 0, ds4_num_data(result)));
+  for (uint32_t item = 0; item < batch; item++) {
+    ds4_num_view x = ds4_num_slice(hidden, item * rows, rows);
+    QI_TRY(ds4_num_norm(g->num, x, x, QI_NONE, QI_NONE, D, 1e-6f, DS4_NUM_LAYER,
+                        DS4_NUM_SCALE_NONE, false));
+    QI_TRY(modulate(g, x, scale, offset ? 0 : p->prefix, n));
+    if (!item)
+      QI_TRY(ds4_num_alloc(g->num, batch * target_elements, DS4_NUM_BF16, &result));
+    QI_TRY(qi_linear(g, "proj_out", prediction, x, n, D, 64, false));
+    QI_TRY(ds4_num_copy(g->num,
+                        ds4_num_slice(ds4_num_data(result), item * target_elements,
+                                      target_elements),
+                        ds4_num_slice(prediction, (uint64_t)(n - p->target) * 64,
+                                      target_elements)));
+  }
+  QI_TRY(ds4_qwen_image_observe(g->num, o, "velocity", 0,
+                               ds4_num_slice(ds4_num_data(result), 0, target_elements)));
   QI_TRY(ds4_numeric_fence(g->num));
 cleanup:
   {
@@ -634,6 +665,13 @@ cleanup:
     ds4_runtime_scope_leave(&scope);
     return status;
   }
+}
+ds4_status ds4_qwen_image_dit_forward(ds4_qwen_image_dit *e,
+                                      ds4_qwen_image_dit_input *p,
+                                      ds4_num_view target, float sigma,
+                                      const ds4_qwen_image_observer *o,
+                                      ds4_num_buffer **out) {
+  return forward_batch(e, p, target, 1, sigma, o, out);
 }
 void ds4_qwen_image_turbo_sigmas(float s[9]) {
   static const float recipe[] = {1.f,      .978453f, .95418f,
@@ -661,15 +699,16 @@ ds4_status ds4_qwen_image_noise(float *out, size_t count, uint64_t seed) {
   }
   return DS4_STATUS_OK;
 }
-ds4_status ds4_qwen_image_dit_generate(ds4_qwen_image_dit *e,
+ds4_status qi_dit_generate_batch(ds4_qwen_image_dit *e,
                                        ds4_qwen_image_dit_input *p,
-                                       const float *noise, uint64_t seed,
+                                       const float *noise, uint64_t seed, uint32_t batch,
                                        const ds4_qwen_image_observer *o,
                                        ds4_num_buffer **out) {
   if (!out)
     return DS4_STATUS_INVALID;
   *out = NULL;
-  if (!e || !p || p->dit != e)
+  if (!e || !p || p->dit != e || !batch || batch > DS4_QWEN_IMAGE_BATCH_MAX ||
+      seed > UINT64_MAX - (batch - 1))
     return DS4_STATUS_INVALID;
   /* The outer model scope serializes the entire loop and rejects callback
    * eviction. A failed run returns no partially advanced latent or cache. */
@@ -683,11 +722,14 @@ ds4_status ds4_qwen_image_dit_generate(ds4_qwen_image_dit *e,
   ds4_num_view delta, rounded;
   float *host = NULL;
   ds4_resource *ha = NULL;
-  uint64_t count = (uint64_t)p->target * 64;
+  uint64_t item_elements = (uint64_t)p->target * 64;
+  uint64_t count = batch * item_elements;
   QI_TRY(clear_cache(p));
   if (!noise) {
     QI_TRY(qi_host(g->num, count * 4, (void **)&host, &ha));
-    QI_TRY(ds4_qwen_image_noise(host, count, seed));
+    for (uint32_t item = 0; item < batch; item++)
+      QI_TRY(ds4_qwen_image_noise(host + item * item_elements, item_elements,
+                                 seed + item));
     noise = host;
   }
   for (uint64_t i = 0; i < count; i++)
@@ -706,8 +748,13 @@ ds4_status ds4_qwen_image_dit_generate(ds4_qwen_image_dit *e,
   float sigmas[9];
   ds4_qwen_image_turbo_sigmas(sigmas);
   for (uint32_t i = 0; i < 8; i++) {
-    QI_TRY(ds4_qwen_image_dit_forward(e, p, ds4_num_data(latent), sigmas[i], o,
-                                      &velocity));
+    QI_TRY(forward_batch(e, p, ds4_num_data(latent), batch, sigmas[i], o,
+                         &velocity));
+    /* forward already fences. Count finished model evaluations, without
+     * synchronizing the scheduler update or enabling diagnostic trace. */
+    if (o) ds4_operation_publish(&o->progress, (ds4_operation_progress){
+        .phase = "generation", .unit = "evaluation",
+        .completed_units = i + 1, .total_units = 8, .overall_fraction = -1});
     /* A zero-dimensional FP32 sigma multiplies a BF16 velocity in BF16
      * under PyTorch scalar promotion; the FP32 sample addition follows. */
     QI_TRY(ds4_num_point(g->num, rounded, ds4_num_data(velocity), QI_NONE,
@@ -722,8 +769,8 @@ ds4_status ds4_qwen_image_dit_generate(ds4_qwen_image_dit *e,
                          DS4_NUM_CAST, 0));
     QI_TRY(ds4_num_free(velocity));
     velocity = NULL;
-    QI_TRY(
-        ds4_qwen_image_observe(g->num, o, "latent", i, ds4_num_data(latent)));
+    QI_TRY(ds4_qwen_image_observe(
+        g->num, o, "latent", i, ds4_num_slice(ds4_num_data(latent), 0, item_elements)));
   }
   QI_TRY(ds4_numeric_fence(g->num));
 cleanup:
@@ -746,6 +793,13 @@ cleanup:
     return status;
   }
 }
+ds4_status ds4_qwen_image_dit_generate(ds4_qwen_image_dit *e,
+                                       ds4_qwen_image_dit_input *p,
+                                       const float *noise, uint64_t seed,
+                                       const ds4_qwen_image_observer *o,
+                                       ds4_num_buffer **out) {
+  return qi_dit_generate_batch(e, p, noise, seed, 1, o, out);
+}
 ds4_status qi_dit_load(ds4_qwen_image_dit *e) {
   ds4_runtime_scope scope = {0};
   ds4_status s = ds4_runtime_model_enter(e->g.model, &scope);
@@ -755,7 +809,7 @@ ds4_status qi_dit_load(ds4_qwen_image_dit *e) {
   return s;
 }
 void qi_dit_memory(ds4_qwen_image_dit *e, uint32_t count, uint32_t target,
-                   uint32_t prefix, uint32_t query_span,
+                   uint32_t prefix, uint32_t query_span, uint32_t batch,
                    ds4_qwen_image_dit_memory *m, uint64_t *resident) {
   /* Bound live storage rather than reserving a second unused layer:
    * block BF16 buffers <=26*N*D bytes; attention keys/scores <=24*N*D,
@@ -764,17 +818,24 @@ void qi_dit_memory(ds4_qwen_image_dit *e, uint32_t count, uint32_t target,
    * Round the N terms up to 62 and add 64 MiB for tile/GEMM scratch. This
    * bounds cached steps too. Request-sized scratch avoids needless spills.
    * Driver allocations remain in the device sample, outside owned storage. */
+  /* Other images share block scratch and the prefix cache. Bound each
+   * additional image's hidden rows and packed scheduler buffers. */
+  uint64_t additional = (batch - 1) *
+      ((uint64_t)count * D * sizeof(uint16_t) + (uint64_t)target * 64 * 16);
   *m = (ds4_qwen_image_dit_memory){
       .weights = qi_weight_bytes(&e->g),
       .prefix_cache = (uint64_t)prefix * D * 4 * 32,
       .first_step = ((uint64_t)count * 62 + (uint64_t)query_span * 14) * D +
-                    64 * 1024 * 1024,
+                    64 * 1024 * 1024 + additional,
       .cached_step = (uint64_t)target * D * 100 + (uint64_t)prefix * D * 40 +
-                     64 * 1024 * 1024,
+                     64 * 1024 * 1024 + additional,
       .host = sizeof(ds4_qwen_image_dit_input) + 65536 +
               (uint64_t)count * (12 + 128 * sizeof(float)) +
               (uint64_t)target * 64 * 4};
   *resident = 0;
+  uint64_t linear_scratch = ds4_numeric_linear_workspace(e->g.num, count, D, FF);
+  m->first_step += linear_scratch;
+  m->cached_step += linear_scratch;
   for (uint32_t i = 0; i < 33; i++) {
     m->groups[i] = i;
     m->dependencies[i] = i ? i - 1 : UINT32_MAX;
@@ -799,7 +860,7 @@ ds4_status ds4_qwen_image_dit_estimate(ds4_qwen_image_dit *e,
     if (run > span)
       span = run;
   }
-  qi_dit_memory(e, p->count, p->target, p->prefix, span, m, &resident);
+  qi_dit_memory(e, p->count, p->target, p->prefix, span, 1, m, &resident);
   if (p->host_cache) {
     m->host += m->prefix_cache;
     m->prefix_cache = 0;

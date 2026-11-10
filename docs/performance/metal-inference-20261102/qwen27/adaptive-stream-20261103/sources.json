@@ -1,0 +1,105 @@
+{
+  "interventions": [
+    "Q-P20",
+    "Q-P21",
+    "Q-P23",
+    "Q-P24",
+    "Q-P25"
+  ],
+  "sources": [
+    {
+      "repository": "transformers",
+      "revision": "ca8c871ede62b521a75a2ddfc5e1968ac9c8e097",
+      "paths": [
+        "src/transformers/models/qwen3_5/modeling_qwen3_5.py"
+      ],
+      "applicability": "Semantics/state unchanged; no OS allocator oracle"
+    },
+    {
+      "repository": "Strata",
+      "revision": "46c152a1310f77cd2f0ce2c7cd213962df14fe83",
+      "paths": [
+        "metal/src/engine/stream.cpp",
+        "metal/src/engine/stream.h",
+        "metal/src/engine/window.cpp",
+        "metal/src/engine/arena_budget.h",
+        "metal/src/mtl_rt.mm",
+        "metal/kernels/gemv.metal",
+        "metal/kernels/dense_mm.metal"
+      ],
+      "applicability": "Minima before resident cache, wait before refill; MoE/all-dense-resident/M5Max assumptions incompatible"
+    },
+    {
+      "repository": "llama.cpp",
+      "revision": "dde879bc4f954b809892fd0d660515f42536394a",
+      "paths": [
+        "ggml/src/ggml-metal/ggml-metal.cpp",
+        "ggml/src/ggml-metal/ggml-metal-device.cpp",
+        "src/llama-mmap.cpp",
+        "src/models/qwen35.cpp",
+        "tests/test-backend-ops.cpp"
+      ],
+      "applicability": "Synchronization, raw bounds/read/release; different quant numerical contracts"
+    },
+    {
+      "repository": "antirez/ds4",
+      "revision": "890898cfb437ed256be58ebcf7c58a6dfa8f2f53",
+      "paths": [
+        "ds4_ssd.c",
+        "docs/SSD_STREAMING.md"
+      ],
+      "applicability": "Fixed costs before bounded cache; percent80 and all nonrouted residency not transferred"
+    },
+    {
+      "repository": "tkhr-sait/ds4",
+      "revision": "9d8c1a8f1189dbe6403ca93097b551f8cc1e2f9c",
+      "paths": [
+        "ds4_metal.m",
+        "ssd-streaming-memo/README.md"
+      ],
+      "applicability": "Parity double buffer and slab reuse; its per-layer global drain is not our asynchronous lifetime"
+    },
+    {
+      "repository": "apple-oss-distributions/xnu",
+      "revision": "f6217f891ac0bb64f3d375211650a4c1ff8ca1ea",
+      "paths": [
+        "osfmk/kern/host.c",
+        "bsd/vm/vm_unix.c",
+        "osfmk/kern/host_statistics.h"
+      ],
+      "applicability": "Mach host sample rate limit; live read-only UINT page counters; no private API or synthetic free memory"
+    }
+  ],
+  "new_source_artifacts": [
+    {
+      "file": "xnu-vm-unix.c",
+      "sha256": "5537aae353306f2a19fa3fd4f49b170491de9fd2d911a29df5358e5d46f4c05d"
+    },
+    {
+      "file": "upstream-brushup.md",
+      "sha256": "f039044cbdc457f4d813720b51e7b27176f250662788ec451cc17f164f712087"
+    },
+    {
+      "file": "upstream-brushup-metal.m",
+      "sha256": "cc8608a2f3a84bb95f0f62872fdcda78c8925bb35d9bff048ae9d439f7d47440"
+    },
+    {
+      "file": "xnu-host-statistics.h",
+      "sha256": "d92d5e52413d6320a4c730e85f6c1a05df6fd43483dc5799a8d724b71c7bb992"
+    },
+    {
+      "file": "xnu-vm-resident.c",
+      "sha256": "a0e7a97fe17fd5d5d9ac7148355ede1b56040d1a425ca2235c97886b3f2d4d59"
+    },
+    {
+      "file": "xnu-host.c",
+      "sha256": "a935841c1b49e830c0baa99316e93a6c2004aa7ff65b56790f6a1efacf461198"
+    }
+  ],
+  "SDK_release_source": {
+    "SDK": "26.5",
+    "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLResource.h",
+    "sha256": "6100bf17139327113e3a0e6782f1cd3f08493eee37432f92afb8c37bd39dca78",
+    "method": "setPurgeableState:MTLPurgeableStateEmpty;only discarded storage after GPU fence"
+  }
+}

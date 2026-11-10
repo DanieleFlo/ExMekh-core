@@ -1,0 +1,79 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/run-offline-nov02-native.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 240.0,
+  "base_timeout_seconds": 240.0,
+  "timeout_multiplier": 1,
+  "reason": "Reduced synthetic Qwen27/Flash graphs, Metal MTP/vision and checkpoint/SSD lifetime fixtures only; no real model or live tests",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 6.100034541996138,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 51965.468289791,
+      "pressure": 1,
+      "host_available_bytes": 14821539840,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 51966.4805815,
+      "pressure": 1,
+      "host_available_bytes": 14682685440,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 10191232,
+      "resident_bytes": 21889024
+    },
+    {
+      "monotonic": 51967.497929791,
+      "pressure": 1,
+      "host_available_bytes": 14846738432,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 16122240,
+      "resident_bytes": 27901952
+    },
+    {
+      "monotonic": 51968.509391583,
+      "pressure": 1,
+      "host_available_bytes": 14200127488,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 16122240,
+      "resident_bytes": 27901952
+    },
+    {
+      "monotonic": 51969.52071225,
+      "pressure": 1,
+      "host_available_bytes": 14624686080,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 16122240,
+      "resident_bytes": 27901952
+    },
+    {
+      "monotonic": 51970.531789791,
+      "pressure": 1,
+      "host_available_bytes": 14584119296,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 16122240,
+      "resident_bytes": 27901952
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "45f105833fa7587094446df77d41771c507a6e27a3eece97516ddcae13b008d7"
+}

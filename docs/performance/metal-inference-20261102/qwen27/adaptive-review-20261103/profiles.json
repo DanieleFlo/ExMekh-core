@@ -1,0 +1,47 @@
+[
+  {
+    "case": "clean-final-profile-mtp4",
+    "command_buffers": 425,
+    "encoders": 5997,
+    "gpu_span_ms": 5148.04913,
+    "io": [
+      "IO_DIAGNOSTIC logical_bytes=53627780744 diskio_valid=1 diskio_read_bytes=53638705152 owned_final=1561826816 decode_seconds=6.674087"
+    ],
+    "cycles": [
+      "ds4-bench: decode cycle ctx=64 completed=4 rows=4 ms=1213.216",
+      "ds4-bench: decode cycle ctx=64 completed=8 rows=4 ms=1660.112",
+      "ds4-bench: decode cycle ctx=64 completed=13 rows=5 ms=1907.717",
+      "ds4-bench: decode cycle ctx=64 completed=16 rows=3 ms=1892.886"
+    ]
+  },
+  {
+    "case": "clean-control-profile-before",
+    "command_buffers": 425,
+    "encoders": 5997,
+    "gpu_span_ms": 5052.183173,
+    "io": [
+      "IO_DIAGNOSTIC logical_bytes=53627780744 diskio_valid=1 diskio_read_bytes=53630353408 owned_final=1561826816 decode_seconds=4.742242"
+    ],
+    "cycles": [
+      "ds4-bench: decode cycle ctx=64 completed=4 rows=4 ms=1206.284",
+      "ds4-bench: decode cycle ctx=64 completed=8 rows=4 ms=1196.696",
+      "ds4-bench: decode cycle ctx=64 completed=13 rows=5 ms=1197.629",
+      "ds4-bench: decode cycle ctx=64 completed=16 rows=3 ms=1141.472"
+    ]
+  },
+  {
+    "case": "clean-control-profile-after",
+    "command_buffers": 425,
+    "encoders": 5997,
+    "gpu_span_ms": 5062.818035,
+    "io": [
+      "IO_DIAGNOSTIC logical_bytes=53627780744 diskio_valid=1 diskio_read_bytes=53634220032 owned_final=1561826816 decode_seconds=4.768762"
+    ],
+    "cycles": [
+      "ds4-bench: decode cycle ctx=64 completed=4 rows=4 ms=1232.223",
+      "ds4-bench: decode cycle ctx=64 completed=8 rows=4 ms=1220.548",
+      "ds4-bench: decode cycle ctx=64 completed=13 rows=5 ms=1173.705",
+      "ds4-bench: decode cycle ctx=64 completed=16 rows=3 ms=1142.121"
+    ]
+  }
+]

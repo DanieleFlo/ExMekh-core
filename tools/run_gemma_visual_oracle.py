@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--prepared", type=Path, required=True)
     parser.add_argument("--cases", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=False)
     lock = json.loads((args.prepared / "prepared.json").read_text())
@@ -53,7 +54,7 @@ def main():
             attn_implementation="eager",
         )
         .eval()
-        .to("cuda")
+        .to(args.device)
     )
     prompts = json.loads((modelpath / "config_sentence_transformers.json").read_text())[
         "prompts"
@@ -171,7 +172,7 @@ def main():
             "audio-query",
             o,
             sa.q_scale
-            * torch.ones(128, device="cuda")
+            * torch.ones(128, device=args.device)
             * torch.nn.functional.softplus(sa.per_dim_scale),
         )
     )
@@ -326,7 +327,7 @@ def main():
                     )
                     parts[next(slots)] = processor.replace_audio_token(inputs, 0)
                     result = model.get_audio_features(
-                        features.to("cuda", torch.bfloat16), mask.to("cuda")
+                        features.to(args.device, torch.bfloat16), mask.to(args.device)
                     )
                     audio_features.append(result.pooler_output[result.attention_mask])
                     current["clip"] += 1
@@ -379,8 +380,8 @@ def main():
                     " " if case.get("timestamps") and media["type"] == "video" else ""
                 ).join(blocks)
                 output = model.vision_tower(
-                    pixel_values=pixels.to("cuda", torch.bfloat16),
-                    pixel_position_ids=positions.to("cuda"),
+                    pixel_values=pixels.to(args.device, torch.bfloat16),
+                    pixel_position_ids=positions.to(args.device),
                 )
                 feature = model.embed_vision(output.last_hidden_state)
                 (image_features if media["type"] == "image" else video_features).append(
@@ -395,12 +396,12 @@ def main():
                     )
                     parts[slot] += processor.replace_audio_token(sound_inputs, 0)
                     result = model.get_audio_features(
-                        sound_inputs["input_features"].to("cuda", torch.bfloat16),
-                        sound_inputs["input_features_mask"].to("cuda"),
+                        sound_inputs["input_features"].to(args.device, torch.bfloat16),
+                        sound_inputs["input_features_mask"].to(args.device),
                     )
                     audio_features.append(result.pooler_output[result.attention_mask])
                     current["clip"] += 1
-            inputs = processor.tokenizer("".join(parts), return_tensors="pt").to("cuda")
+            inputs = processor.tokenizer("".join(parts), return_tensors="pt").to(args.device)
             inputs["input_ids"].cpu().numpy().astype("<u4").tofile(
                 args.output / f"item-{i}-tokens.u32"
             )
@@ -461,7 +462,7 @@ def main():
                     }
                     if kind == "video":
                         request[key + "_kwargs"]["do_sample_frames"] = False
-            official = processor(**request).to("cuda")
+            official = processor(**request).to(args.device)
             for key in official:
                 if (
                     isinstance(official[key], torch.Tensor)
@@ -483,6 +484,7 @@ def main():
                 "frames": current["frame"],
                 "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
                 "dtype": "bfloat16",
+                "device": args.device,
             },
             indent=2,
         )

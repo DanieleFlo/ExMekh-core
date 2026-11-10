@@ -1,0 +1,63 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 1.00 GiB (raw 1.00 + compressed 0.00) + buffers 0.17 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 3.17 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=0 backend=metal
+1031 22:18:24 ds4-server: loaded model Qwen3.8-27B-UD-Q4_K_S.gguf
+1031 22:18:24 ds4-server: context buffers 1199.24 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=0)
+1031 22:18:36 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-http-embedding-v2/kv (budget=8192 MiB, cross-quant=reject, min=1, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1031 22:18:36 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-http-embedding-v2/kv/agentic.JYU6OD
+1031 22:18:36 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-http-embedding-v2/trace.log
+1031 22:18:36 ds4-server: listening on http://127.0.0.1:18080
+1031 22:18:40 suite status=1 path=/v1/embeddings
+1031 22:18:40 suite status=1 path=/v1/embeddings
+1031 22:18:40 suite status=1 path=/v1/embeddings
+1031 22:18:40 suite status=1 path=/v1/embeddings
+1031 22:18:40 suite status=1 path=/v1/embeddings
+1031 22:18:40 suite status=11 path=/v1/embeddings
+1031 22:18:40 suite status=1 path=/v1/images/generations
+1031 22:18:40 suite status=1 path=/v1/images/generations
+1031 22:18:40 suite status=1 path=/v1/images/generations
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fcbc000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9ff60000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fcbc000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9ff60000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[swscaler @ 0xb9fc48000] No accelerated colorspace conversion found from yuv420p to rgb24.
+[mov,mp4,m4a,3gp,3g2,mj2 @ 0xba1c8c000] Protocol name not provided, cannot determine if input is local or a network protocol, buffers and access patterns cannot be configured optimally without knowing the protocol
+1031 22:21:04 suite status=1 path=/v1/embeddings
+1031 22:21:04 suite status=1 path=/v1/embeddings
+1031 22:21:04 suite status=11 path=/v1/embeddings
+1031 22:21:30 ds4-server: shutdown requested, draining requests

@@ -1,0 +1,121 @@
+{
+  "scope": "Two direct alternating pairs I-P01/owner review at the same fixed 7.5 GiB cap. The earlier unpaired slow run is retained separately.",
+  "pairs": [
+    {
+      "ip01": {
+        "label": "review-control-a-ip01",
+        "phases": [
+          0.0,
+          14.994808,
+          58.166583,
+          54.374339
+        ],
+        "operation": 127.536014,
+        "process": 140.75880612499896,
+        "host_min_bytes": 5160714240,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        }
+      },
+      "final": {
+        "label": "review-control-a-final",
+        "phases": [
+          0.0,
+          14.084247,
+          59.11471,
+          54.359069
+        ],
+        "operation": 127.558327,
+        "process": 140.68913270899793,
+        "host_min_bytes": 5731893248,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        }
+      }
+    },
+    {
+      "ip01": {
+        "label": "review-control-b-ip01",
+        "phases": [
+          0.0,
+          13.992536,
+          58.970925,
+          54.344648
+        ],
+        "operation": 127.308391,
+        "process": 140.11872854200192,
+        "host_min_bytes": 5696421888,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        }
+      },
+      "final": {
+        "label": "review-control-b-final",
+        "phases": [
+          0.0,
+          14.203998,
+          56.423178,
+          54.374633
+        ],
+        "operation": 125.001892,
+        "process": 137.85563854099018,
+        "host_min_bytes": 5297094656,
+        "swap_growth_bytes": 0,
+        "bit_exact_files": {
+          "conditioning.bf16": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-2.f32": true,
+          "latent-3.f32": true,
+          "latent-4.f32": true,
+          "latent-5.f32": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "result.png": true,
+          "rgba.f32": true
+        }
+      }
+    }
+  ],
+  "operation_percent": [
+    0.01749545034392952,
+    -1.8117415371308843
+  ],
+  "median_seconds": {
+    "ip01": 127.4222025,
+    "final": 126.28010950000001
+  }
+}

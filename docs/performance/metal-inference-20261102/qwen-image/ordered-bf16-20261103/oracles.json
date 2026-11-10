@@ -1,0 +1,166 @@
+[
+  {
+    "case": "text",
+    "reference": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps",
+    "fixture_sha256": "8d1dc46d8718f7423c7ba18ce1c26a704e51fdc9d99a7ac7090ab9dc109d83de",
+    "independent_verdict": "PASS",
+    "oracle_files": [
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/conditioning.bf16",
+        "sha256": "3efc9fbd5a0fc8d2720b2b111c159dbfbcb6ff5aa42c9db323194ce6d1e0a517"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/conditioning.json",
+        "sha256": "29274940e9154d494f489d9a45788ef7a04af19a9fc04a6fe8077823d0ceda97"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/latent-0.f32",
+        "sha256": "f7fba99bc39edec7c102cafeaea360466b57cde168bd0ef94207846bae945038"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/latent-1.f32",
+        "sha256": "c1887cb24363687116d018957b72165d7b66722ca91a2488d909f88f1046ad76"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/latent-2.f32",
+        "sha256": "355e12d9a9769f37aba4b058929af4e29ff3baa3503083539bbf7b64f9e5a9ab"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/latent-3.f32",
+        "sha256": "da7d64414804a029072533a6080c02347324bedb541a1abf6a74f1eb90976e31"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/latent-4.f32",
+        "sha256": "ddf2957ef84de19a83cfe3881f623878db6a672a6bb864bd5fbf7748019907eb"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/latent-5.f32",
+        "sha256": "aaa12c492333c0383a513e3a9a214be377dd3df49c9522b800d820c7954ee246"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/latent-6.f32",
+        "sha256": "bffec060619a2ef573ba3decd274c8ee8efb9a1886747182e6f2c9ba3c90dace"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/latent-7.f32",
+        "sha256": "dc0b3402d8ce1591103cf4af53268f558c64b72414308f35183ec047027bfb08"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/oracle/text/rgba.f32",
+        "sha256": "79ddcaa3eae2c82b225a500c62168753cce59d88871003bf0469482c03c99311"
+      }
+    ]
+  },
+  {
+    "case": "reference",
+    "reference": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3",
+    "fixture_sha256": "30817240093d7cd08043f083d7fa1f4ff31fe07d1352b7fa01ae451e65013529",
+    "independent_verdict": "PASS",
+    "oracle_files": [
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/conditioning.bf16",
+        "sha256": "bdd4ca3a24c90316fb58fc4008e67d0943925442df6d1d8b9080eb6a1d8571a0"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/conditioning.json",
+        "sha256": "21eb9a34adf3e0bc51694ac71eae993f876e9b959a1f44b19c90dbeebf5bd622"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/latent-0.f32",
+        "sha256": "71fb8ea4b75f341ba45abfba080e579006bb3426ca979091174ff80c56b640ce"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/latent-1.f32",
+        "sha256": "62e5de359c3cfb212ab04d8e750bbde48eadf7e44ae2bbca12633d02c93e9fad"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/latent-2.f32",
+        "sha256": "385576757b901c4ea46e08712ef1824cc1348b622d791e74e862ad5a6cc427fb"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/latent-3.f32",
+        "sha256": "7f31fa1bf7225fe688b11e6d9010b42b1d99831970e17014bae72e2045a4f059"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/latent-4.f32",
+        "sha256": "bed1a9016eddc26e5f2f6e563a5d6a5ff4b398b69b6e824387828aad3080cea0"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/latent-5.f32",
+        "sha256": "355677d232a880ba58bedb28a6c0a26ecbd7dc3d02ed6d1e8e293c44ac4f4508"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/latent-6.f32",
+        "sha256": "7674f9f68b9618e85bd7795f8cf9ba7fb8fc1d594d20e6a67f2b81f1352d7476"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/latent-7.f32",
+        "sha256": "5dd16d8cc9333fe6d98dc3b8d68f6a58755f4aa5887e4cca3dfdc952655450b2"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/references.bf16",
+        "sha256": "66870b5a9cebc92f1a4eebdf96721d306fabafcce684bec19b173801888a7590"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/oracle/reference/rgba.f32",
+        "sha256": "1c7fb14906236c52ed9748a45a254545de28bd1e69065161d6c3a4af5ad923a8"
+      }
+    ]
+  },
+  {
+    "case": "rgba",
+    "reference": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3",
+    "fixture_sha256": "e3c96a8fe71baf621be3d440c583c9cd61a2358491ee57beaf8cc22f7444ce98",
+    "independent_verdict": "PASS",
+    "oracle_files": [
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/conditioning.bf16",
+        "sha256": "c25f971cd20cf70dfd204aebf586fe2bcd881e32c32122f70fd3098b01158113"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/conditioning.json",
+        "sha256": "21eb9a34adf3e0bc51694ac71eae993f876e9b959a1f44b19c90dbeebf5bd622"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/latent-0.f32",
+        "sha256": "e53db204b8e0f64b72f03979f16857051e6184a36e9f7b63c2ad8d470bc43714"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/latent-1.f32",
+        "sha256": "d01dd798944047887c07943dc8964a5cb52a78badfa23d77f486a3ad7d644f82"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/latent-2.f32",
+        "sha256": "1ef673b836cd850114a2a94b18122f199a31797cf3a6013cbfdd3a7a753cde37"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/latent-3.f32",
+        "sha256": "2dfd77515a4498fe909fa5c0f88d65692816efa583664867d246f1bf075b6eec"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/latent-4.f32",
+        "sha256": "637462c9b19abcf177da17876554609f00720de39e3ab941ece09d63385c6ee7"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/latent-5.f32",
+        "sha256": "1e92dcb82b2d183e6453a47cb94a1872d05d37448baffc270af5e47a12481ac2"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/latent-6.f32",
+        "sha256": "f129db0757b77ef6bc5e658d0158b89579aaeba11d409e1de4366adc9d7547d8"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/latent-7.f32",
+        "sha256": "0c1315b0a2c127bd081a2f74846b01748f240d83bcb1fadc1479bb590cef8a01"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/references.bf16",
+        "sha256": "ff1f2b0a4e27b7a126beeb46bed9ef17a11113033b49e80cc80a2b6b52c6736a"
+      },
+      {
+        "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/oracle/rgba/rgba.f32",
+        "sha256": "80a4080a295e8c71262f29ff7b3d998974daec63c939d43ec73ad7aa9b944c73"
+      }
+    ]
+  }
+]

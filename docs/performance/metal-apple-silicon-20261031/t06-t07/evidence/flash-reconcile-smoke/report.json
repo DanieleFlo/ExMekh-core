@@ -1,0 +1,81 @@
+{
+  "command": [
+    "./ds4",
+    "--metal",
+    "-m",
+    "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+    "--ssd-streaming",
+    "--ssd-streaming-cold",
+    "--ssd-streaming-cache-experts",
+    "2GB",
+    "--ctx",
+    "8192",
+    "--prefill-chunk",
+    "64",
+    "--no-mtp",
+    "--nothink",
+    "--temp",
+    "0",
+    "-n",
+    "2",
+    "-p",
+    "Please answer this simple question in one short sentence. What is the capital of Italy? Give only the city name, with no explanation or extra formatting."
+  ],
+  "timeout_seconds": 120.0,
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 7.0882973329999,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 5389.119708125,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 5390.124595541,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6287348968,
+      "resident_bytes": 6162530304
+    },
+    {
+      "monotonic": 5391.138142833,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6455334144,
+      "resident_bytes": 6243909632
+    },
+    {
+      "monotonic": 5392.15161525,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6326031472,
+      "resident_bytes": 6080069632
+    },
+    {
+      "monotonic": 5393.165495791,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6485939432,
+      "resident_bytes": 6205259776
+    },
+    {
+      "monotonic": 5394.179045916,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6411834504,
+      "resident_bytes": 6067322880
+    },
+    {
+      "monotonic": 5395.192505333,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6436738256,
+      "resident_bytes": 6092242944
+    }
+  ],
+  "log_sha256": "34b331423c3ed437d4cb3c608db9b6503de3cbe48f1b440dc86b87337441dc1c"
+}

@@ -1,0 +1,63 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-audio-conv-order.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Isolated Conv2d versus unfolded BF16 linear on identical captured operands; inspect pinned CPU GEMM layout semantics before convolution changes.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 4.111561875000916,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 13653.155985291,
+      "pressure": 1,
+      "host_available_bytes": 6679166976,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 13654.172626458,
+      "pressure": 1,
+      "host_available_bytes": 9526640640,
+      "swap_bytes": 262144,
+      "footprint_bytes": 98157168,
+      "resident_bytes": 131399680
+    },
+    {
+      "monotonic": 13655.18895625,
+      "pressure": 1,
+      "host_available_bytes": 11773280256,
+      "swap_bytes": 262144,
+      "footprint_bytes": 131924640,
+      "resident_bytes": 168443904
+    },
+    {
+      "monotonic": 13656.205500875,
+      "pressure": 1,
+      "host_available_bytes": 10648993792,
+      "swap_bytes": 262144,
+      "footprint_bytes": 204047248,
+      "resident_bytes": 251346944
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "32e430a78afc5571b729252d716a52cd1ab3043cf4efe0d56259d39d89b01b5c"
+}

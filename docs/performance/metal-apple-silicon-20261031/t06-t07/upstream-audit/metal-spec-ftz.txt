@@ -1,0 +1,190 @@
+PAGE 8
+7.2 Tensor Operations (TensorOps) ......................................................................................... 350
+7.2.1 Matrix Multiplication ........................................................................................................ 351
+7.2.2 Convolution ..................................................................................................................... 365
+8 Numerical Compliance ................................................................................ 368
+8.1 INF, NaN, and Denormalized Numbers ............................................................................... 368
+8.2 Rounding Mode ..................................................................................................................... 368
+8.3 Floating-Point Exceptions .................................................................................................... 368
+8.4 ULPs and Relative Error ........................................................................................................ 368
+8.5 Edge Case Behavior in Flush to Zero Mode ....................................................................... 375
+8.6 Conversion Rules for Floating-Point and Integer Types ................................................... 376
+8.7 Texture Addressing and Conversion Rules ........................................................................ 376
+8.7.1 Conversion Rules for Normalized Integer Pixel Data Types ...................................... 376
+8.7.1.1 Converting Normalized Integer Pixel Data Types to Floating-Point Values ...... 376
+8.7.1.2 Converting Floating-Point Values to Normalized Integer Pixel Data Types ....... 377
+8.7.2 Conversion Rules for Half-Precision Floating-Point Pixel Data Type ....................... 378
+8.7.3 Conversion Rules for Single-Precision Floating-Point Pixel Data Type ................... 379
+8.7.4 Conversion Rules for 10- and 11-bit Floating-Point Pixel Data Type ........................ 379
+8.7.5 Conversion Rules for 9-bit Floating-Point Pixel Data Type with a 5-bit Exponent . 379
+8.7.6 Conversion Rules for Signed and Unsigned Integer Pixel Data Types ..................... 380
+8.7.7 Conversion Rules for sRGBA and sBGRA Textures .................................................... 380
+9 Appendix .................................................................................................... 382
+9.1 New in Metal 3.2 ................................................................................................................... 382
+9.2 New in Metal 4 ....................................................................................................................... 382
+Tables and Figures
+Table 1.1. Rounding mode .................................................................................................................... 18
+Figure 1. Normalized device coordinate system .............................................................................. 23
+Figure 2. Viewport coordinate system .............................................................................................. 24
+Figure 3. Normalized 2D texture coordinate system ....................................................................... 24
+Table 2.1. Metal scalar data types ..................................................................................................... 25
+Table 2.2. Size and alignment of scalar data types ......................................................................... 26
+Table 2.3. Size and alignment of vector data types ........................................................................ 28
+Table 2.4. Size and alignment of packed vector data types ........................................................... 34
+Table 2.5. Size and alignment of matrix data types ......................................................................... 36
+Table 2.6. Metal pixel data types ....................................................................................................... 40
+Table 2.7. Sampler state enumeration values .................................................................................. 46
+Table 2.8. Imageblock slices and compatible target texture formats ........................................... 49
+Table 2.9. Intersection tags ................................................................................................................ 62
+Table 2.10. Mesh template parameter ............................................................................................... 75
+Table 2.11. Mesh vertex attributes ..................................................................................................... 76
+Table 2.12. Mesh primitive attributes ................................................................................................ 76
+Table 2.13. Mesh static members ....................................................................................................... 78
+Table 2.14. Format types .................................................................................................................... 79
+2026-06-04 | Copyright © 2026 Apple Inc. | All Rights Reserved.
+Page 8 of 383
+PAGE 368
+8 Numerical Compliance
+This chapter covers how Metal represents floating-point numbers regarding accuracy in
+mathematical operations. Metal is compliant to a subset of the IEEE 754 standard.
+8.1 INF, NaN, and Denormalized Numbers
+INF must be supported for single-precision, half-precision, and brain floating-point numbers.
+NaNs must be supported for single-precision, half-precision, and brain floating-point numbers
+(with fast math disabled). If fast math is enabled the behavior of handling NaN or INF (as inputs
+or outputs) is undefined. Signaling NaNs are not supported.
+Denormalized single-precision, half-precision, or brain floating-point numbers passed as input
+to or produced as the output of single-precision, half-precision, or brain floating-point
+arithmetic operations may be flushed to zero.
+8.2 Rounding Mode
+Either round ties to even or round toward zero rounding mode may be supported for single-
+precision, half-precision, and brain floating-point operations.
+8.3 Floating-Point Exceptions
+Floating-point exceptions are disabled in Metal.
+8.4 ULPs and Relative Error
+Table 8.1 describes the minimum accuracy of single-precision floating-point basic arithmetic
+operations and math functions given as ULP values. The reference value used to compute the
+ULP value of an arithmetic operation is the infinitely precise result.
+Table 8.1. Accuracy of single-precision floating-point operations and functions
+Math function Minimum accuracy (ULP values)
+x + y Correctly rounded
+x - y Correctly rounded
+x * y Correctly rounded
+1.0 / x Correctly rounded
+x / y Correctly rounded
+2026-06-04 | Copyright © 2026 Apple Inc. | All Rights Reserved.
+Page 368 of 383
+PAGE 375
+Table 8.4. Accuracy of brain floating-point operations and functions
+Math function Minimum accuracy (ULP values)
+x + y Correctly rounded
+x - y Correctly rounded
+x * y Correctly rounded
+1.0 / x Correctly rounded
+x / y Correctly rounded
+Table 8.5. Accuracy of brain floating-point operations and functions with fast
+math enabled
+Math function Minimum accuracy (ULP values)
+x + y Correctly rounded
+x - y Correctly rounded
+x * y Correctly rounded
+1.0 / x <= 0.6 ulp for x in the domain of 2-126 to 2126
+x / y <= 0.6 ulp for y in the domain of 2-126 to 2126
+Even though the precision of individual math operations and functions are specified in Table
+8.1, Table 8.2, Table 8.3, Table 8.4, and Table 8.5, the Metal compiler, in fast math mode (see
+section 1.6.5), may do various optimization like reassociate floating-point operations that may
+dramatically change results in floating-point. Reassociation may change or ignore the sign of
+zero, allow optimizations to assume the arguments and result are not NaN or +/-INF, inhibit or
+create underflow or overflow and thus cannot be in code that relies on rounding behavior such
+as (x + 252) - 252
+, or ordered floating-point comparisons.
+The ULP is defined as follows:
+If x is a real number that lies between two finite consecutive floating-point numbers a and b,
+without being equal to one of them, then ulp(x) = |b − a|, otherwise ulp(x) is the
+distance between the two nonequal finite floating-point numbers nearest x. Moreover,
+ulp(NaN) is NaN.
+8.5 Edge Case Behavior in Flush to Zero Mode
+If denormalized values are flushed to zero, then a function may return one of four results:
+1. Any conforming result when not in flush to zero mode.
+2026-06-04 | Copyright © 2026 Apple Inc. | All Rights Reserved.
+Page 375 of 383
+PAGE 376
+2. 3. If the result given by step 1 is a subnormal before rounding, it may be flushed to zero.
+Any nonflushed conforming result for the function if one or more of its subnormal
+operands are flushed to zero.
+4. If the result of step 3 is a subnormal before rounding, the result may be flushed to zero.
+In each of the above cases, if an operand or result is flushed to zero, the sign of the zero is
+undefined.
+8.6 Conversion Rules for Floating-Point and Integer
+Types
+When converting from a floating-point type to an integer, the conversion uses round toward
+zero rounding mode. Use the “round ties to even” or “round toward zero” rounding mode for
+conversions from a floating-point or integer type to a floating-point type.
+The conversions from half and bfloat to float are lossless. Conversions from float to
+half or to bfloat round the mantissa using the round ties to even rounding mode. When
+converting a float to a half, denormalized numbers generated for the half data type may
+not be flushed to zero.
+When converting a floating-point type to an integer type, if the floating-point value is NaN, the
+resulting integer is 0.
+Note that fast math does not change the accuracy of conversion operations.
+8.7 Texture Addressing and Conversion Rules
+The texture coordinates specified to the sample, sample_compare, gather,
+gather_compare, read, and write functions cannot be INF or NaN. An out-of-bound
+texture read returns the default value for each component, as described in section 6.13, and
+Metal ignores an out-of-bound texture write.
+The following sections discuss the application of conversion rules when reading and writing
+textures in a graphics or kernel function. When performing a multisample resolve operation,
+these conversion rules do not apply.
+8.7.1 Conversion Rules for Normalized Integer Pixel Data Types
+This section discusses converting normalized integer pixel data types to floating-point values
+and vice-versa.
+8.7.1.1 Converting Normalized Integer Pixel Data Types to Floating-Point Values
+For textures that have 8-
+, 10-
+, or 16-bit normalized unsigned integer pixel values, the texture
+sample and read functions convert the pixel values from an 8- or 16-bit unsigned integer to a
+normalized single- or half-precision floating-point value in the range [0.0 … 1.0].
+2026-06-04 | Copyright © 2026 Apple Inc. | All Rights Reserved.
+Page 376 of 383
+PAGE 379
+be converted to an appropriate NaN or be flushed to zero in the half type. A float INF must
+be converted to an appropriate INF in the half type.
+8.7.3 Conversion Rules for Single-Precision Floating-Point Pixel Data Type
+The following rules apply for reading and writing textures that have single-precision floating-
+point pixel color values:
+• NaNs may be converted to a NaN value(s) or be flushed to zero.
+• INFs must be preserved.
+• Denormalized numbers may be flushed to zero.
+• All other values must be preserved.
+8.7.4 Conversion Rules for 10- and 11-bit Floating-Point Pixel Data Type
+The floating-point formats use 5 bits for the exponent, with 5 bits of mantissa for 10-bit
+floating-point types, or 6-bits of mantissa for 11-bit floating-point types with an additional
+hidden bit for both types. There is no sign bit. The 10- and 11-bit floating-point types preserve
+denormalizes.
+These floating-point formats use the following rules:
+• If the exponent and mantissa are 0, the floating-point value is 0.0.
+• If the exponent is 31 and the mantissa is != 0, the resulting floating-point value is a NaN.
+• If the exponent is 31 and the mantissa is 0, the resulting floating-point value is positive
+infinity.
+• If 0 <= exponent <= 31, the floating-point value is 2 ^ (exponent - 15) * (1 + mantissa/N).
+• If the exponent is 0 and the mantissa is != 0, the floating-point value is a denormalized
+number given as 2 ^ (exponent – 14) * (mantissa / N). If mantissa is 5 bits, N is 32; if
+mantissa is 6 bits, N is 64.
+Conversion of a 10- or 11-bit floating-point pixel data type to a half- or single-precision
+floating-point value is lossless. Conversion of a half or single precision floating-point value to a
+10- or 11-bit floating-point value must be <= 0.5 ULP. Any operation that results in a value less
+than zero for these floating-point types is clamped to zero.
+8.7.5 Conversion Rules for 9-bit Floating-Point Pixel Data Type with a 5-bit
+Exponent
+The RGB9E5_SharedExponent shared exponent floating-point format uses 5 bits for the
+exponent and 9 bits for the mantissa. There is no sign bit.
+Conversion from this format to a half- or single-precision floating-point value is lossless and
+computed as 2 ^ (shared exponent – 15) * (mantissa/512) for each color channel.
+Conversion from a half or single precision floating-point RGB color value to this format is
+performed as follows, where N is the number of mantissa bits per component (9), B is the
+exponent bias (15) and Emax is the maximum allowed biased exponent value (31).
+• Clamp the r, g, and b components (in the process, mapping NaN to zero) as follows:
+rc = max(0, min(sharedexpmax, r)
+gc = max(0, min(sharedexpmax, g)
+bc = max(0, min(sharedexpmax, b)
+2026-06-04 | Copyright © 2026 Apple Inc. | All Rights Reserved.
+Page 379 of 383

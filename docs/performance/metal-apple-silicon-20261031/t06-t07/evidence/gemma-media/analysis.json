@@ -1,0 +1,3473 @@
+{
+  "scope": "Saved local subset; independent strict internal and final-vector gates",
+  "kind": "media",
+  "native_trace": "build/metal-qualification/t06-t07-20261031/gemma-media/native-128",
+  "oracle_trace": "build/metal-qualification/t06-t07-20261031/gemma-media/oracle",
+  "output_vectors": {
+    "128": {
+      "metrics": {
+        "max_abs": 0.0025320351123809814,
+        "rmse": 0.0006739933648193976,
+        "relative_l2": 0.00762536443403623,
+        "bit_exact": false,
+        "cosine_min": 0.9999430434297134,
+        "unit_norm_error_max": 5.364039812327803e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    "256": {
+      "metrics": {
+        "max_abs": 0.0023524537682533264,
+        "rmse": 0.0006121909266699416,
+        "relative_l2": 0.00979505471538587,
+        "bit_exact": false,
+        "cosine_min": 0.9999036545538486,
+        "unit_norm_error_max": 6.802827412499823e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    "512": {
+      "metrics": {
+        "max_abs": 0.0019144043326377869,
+        "rmse": 0.0004609914819389923,
+        "relative_l2": 0.010431046334841588,
+        "bit_exact": false,
+        "cosine_min": 0.9998946361080645,
+        "unit_norm_error_max": 4.074847814727889e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    "768": {
+      "metrics": {
+        "max_abs": 0.0016618594527244568,
+        "rmse": 0.0003865979896608843,
+        "relative_l2": 0.010713717358629105,
+        "bit_exact": false,
+        "cosine_min": 0.9998862760674871,
+        "unit_norm_error_max": 5.852771467473872e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    }
+  },
+  "internal_boundaries": {
+    "criterion": "bit_exact",
+    "status": "FAIL",
+    "exact": 6,
+    "count": 480,
+    "boundaries": [
+      {
+        "file": "clip-0-audio-attention-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.005768880647798331
+      },
+      {
+        "file": "clip-0-audio-attention-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.013437279080406924
+      },
+      {
+        "file": "clip-0-audio-attention-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.045498515003134024
+      },
+      {
+        "file": "clip-0-audio-attention-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 3.0,
+        "rmse": 0.07071316790388592
+      },
+      {
+        "file": "clip-0-audio-attention-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.019046640030840018
+      },
+      {
+        "file": "clip-0-audio-attention-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.015161859115523767
+      },
+      {
+        "file": "clip-0-audio-attention-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.024815443166975377
+      },
+      {
+        "file": "clip-0-audio-attention-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.04436554947311199
+      },
+      {
+        "file": "clip-0-audio-attention-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.0467649090365657
+      },
+      {
+        "file": "clip-0-audio-attention-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.030267330512794247
+      },
+      {
+        "file": "clip-0-audio-attention-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.03164889019418439
+      },
+      {
+        "file": "clip-0-audio-attention-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.03562828974320372
+      },
+      {
+        "file": "clip-0-audio-context-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0030858208478596514
+      },
+      {
+        "file": "clip-0-audio-conv-end-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0023103241742080415
+      },
+      {
+        "file": "clip-0-audio-conv-end-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.005788605120135337
+      },
+      {
+        "file": "clip-0-audio-conv-end-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.46875,
+        "rmse": 0.015730260225066447
+      },
+      {
+        "file": "clip-0-audio-conv-end-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0625,
+        "rmse": 0.05504425871497314
+      },
+      {
+        "file": "clip-0-audio-conv-end-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.033203125,
+        "rmse": 0.00575280399489719
+      },
+      {
+        "file": "clip-0-audio-conv-end-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.006600619542088206
+      },
+      {
+        "file": "clip-0-audio-conv-end-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.009166453194282139
+      },
+      {
+        "file": "clip-0-audio-conv-end-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.008029498468894067
+      },
+      {
+        "file": "clip-0-audio-conv-end-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.078125,
+        "rmse": 0.011033116329115921
+      },
+      {
+        "file": "clip-0-audio-conv-end-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.007511623895905427
+      },
+      {
+        "file": "clip-0-audio-conv-end-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.078125,
+        "rmse": 0.007579024341499255
+      },
+      {
+        "file": "clip-0-audio-conv-end-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.109375,
+        "rmse": 0.007548657786307515
+      },
+      {
+        "file": "clip-0-audio-convnorm-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.0033810951546994787
+      },
+      {
+        "file": "clip-0-audio-convolution-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.007126121614877244
+      },
+      {
+        "file": "clip-0-audio-convolution-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.015694312236141275
+      },
+      {
+        "file": "clip-0-audio-convolution-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.04951213759160005
+      },
+      {
+        "file": "clip-0-audio-convolution-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.09241849940998662
+      },
+      {
+        "file": "clip-0-audio-convolution-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.022103807152020438
+      },
+      {
+        "file": "clip-0-audio-convolution-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.018181331902596073
+      },
+      {
+        "file": "clip-0-audio-convolution-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.027916884216161213
+      },
+      {
+        "file": "clip-0-audio-convolution-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.045957952107511205
+      },
+      {
+        "file": "clip-0-audio-convolution-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.05108291973581883
+      },
+      {
+        "file": "clip-0-audio-convolution-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.032204724234979054
+      },
+      {
+        "file": "clip-0-audio-convolution-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.03410800738862288
+      },
+      {
+        "file": "clip-0-audio-convolution-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.03698028055346039
+      },
+      {
+        "file": "clip-0-audio-depthwise-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.010813945763876204
+      },
+      {
+        "file": "clip-0-audio-ff1-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.0017253928515111544
+      },
+      {
+        "file": "clip-0-audio-ff1-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.010906957611316109
+      },
+      {
+        "file": "clip-0-audio-ff1-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.041834463709973235
+      },
+      {
+        "file": "clip-0-audio-ff1-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 3.0,
+        "rmse": 0.06559546514646297
+      },
+      {
+        "file": "clip-0-audio-ff1-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.016740284605702083
+      },
+      {
+        "file": "clip-0-audio-ff1-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.013867344227858501
+      },
+      {
+        "file": "clip-0-audio-ff1-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.021954178763003037
+      },
+      {
+        "file": "clip-0-audio-ff1-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.04308011609783241
+      },
+      {
+        "file": "clip-0-audio-ff1-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.0454894596750809
+      },
+      {
+        "file": "clip-0-audio-ff1-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.02876239199845867
+      },
+      {
+        "file": "clip-0-audio-ff1-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.027498079343587698
+      },
+      {
+        "file": "clip-0-audio-ff1-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.033956570110908205
+      },
+      {
+        "file": "clip-0-audio-glu-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.006168434553823156
+      },
+      {
+        "file": "clip-0-audio-input-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.000532508065421423
+      },
+      {
+        "file": "clip-0-audio-layer-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.008412192807848324
+      },
+      {
+        "file": "clip-0-audio-layer-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.01589594890560805
+      },
+      {
+        "file": "clip-0-audio-layer-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.057683735675826346
+      },
+      {
+        "file": "clip-0-audio-layer-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.25,
+        "rmse": 0.07889841005382053
+      },
+      {
+        "file": "clip-0-audio-layer-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.012265250984460286
+      },
+      {
+        "file": "clip-0-audio-layer-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.0200491286431568
+      },
+      {
+        "file": "clip-0-audio-layer-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.039856145008760405
+      },
+      {
+        "file": "clip-0-audio-layer-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.04387834411258318
+      },
+      {
+        "file": "clip-0-audio-layer-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.025923696807716754
+      },
+      {
+        "file": "clip-0-audio-layer-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.02515997634159009
+      },
+      {
+        "file": "clip-0-audio-layer-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.02980397180507391
+      },
+      {
+        "file": "clip-0-audio-layer-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.03785584079415304
+      },
+      {
+        "file": "clip-0-audio-output-12.bf16",
+        "elements": 105984,
+        "bit_exact": false,
+        "max_abs": 1.97265625,
+        "rmse": 0.10161915125226989
+      },
+      {
+        "file": "clip-0-audio-position-0.bf16",
+        "elements": 13312,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "clip-0-audio-probabilities-0.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.0019777119159698486,
+        "rmse": 5.559056234653535e-05
+      },
+      {
+        "file": "clip-0-audio-probabilities-1.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.012730181217193604,
+        "rmse": 0.0003074448789757097
+      },
+      {
+        "file": "clip-0-audio-probabilities-10.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.032864898443222046,
+        "rmse": 0.0014265873209015436
+      },
+      {
+        "file": "clip-0-audio-probabilities-11.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.027065694332122803,
+        "rmse": 0.0015375852662935382
+      },
+      {
+        "file": "clip-0-audio-probabilities-2.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.01456362009048462,
+        "rmse": 0.00047376980073702586
+      },
+      {
+        "file": "clip-0-audio-probabilities-3.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.014320313930511475,
+        "rmse": 0.0006449927507207526
+      },
+      {
+        "file": "clip-0-audio-probabilities-4.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.012215137481689453,
+        "rmse": 0.0005755732275588993
+      },
+      {
+        "file": "clip-0-audio-probabilities-5.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.03548765182495117,
+        "rmse": 0.001136370016874059
+      },
+      {
+        "file": "clip-0-audio-probabilities-6.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.038688838481903076,
+        "rmse": 0.001574452959279653
+      },
+      {
+        "file": "clip-0-audio-probabilities-7.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.02723085880279541,
+        "rmse": 0.001120587386284065
+      },
+      {
+        "file": "clip-0-audio-probabilities-8.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.0190049409866333,
+        "rmse": 0.0011900959534816785
+      },
+      {
+        "file": "clip-0-audio-probabilities-9.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.027196407318115234,
+        "rmse": 0.0014527842955201758
+      },
+      {
+        "file": "clip-0-audio-projected-12.bf16",
+        "elements": 35328,
+        "bit_exact": false,
+        "max_abs": 0.296875,
+        "rmse": 0.018945238459030594
+      },
+      {
+        "file": "clip-0-audio-relative-0.bf16",
+        "elements": 13312,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.00027084970518810017
+      },
+      {
+        "file": "clip-0-audio-silu-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.001688316107353567
+      },
+      {
+        "file": "clip-0-audio-sscp-conv-0.bf16",
+        "elements": 1122304,
+        "bit_exact": false,
+        "max_abs": 7.62939453125e-06,
+        "rmse": 7.201696554782115e-09
+      },
+      {
+        "file": "clip-0-audio-sscp-conv-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.0002657965423919442
+      },
+      {
+        "file": "clip-0-audio-subsample-0.bf16",
+        "elements": 1122304,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 9.411396167596045e-06
+      },
+      {
+        "file": "clip-0-audio-subsample-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 8.83841356929441e-05
+      },
+      {
+        "file": "clip-1-audio-attention-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.005768880647798331
+      },
+      {
+        "file": "clip-1-audio-attention-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.013437279080406924
+      },
+      {
+        "file": "clip-1-audio-attention-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.045498515003134024
+      },
+      {
+        "file": "clip-1-audio-attention-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 3.0,
+        "rmse": 0.07071316790388592
+      },
+      {
+        "file": "clip-1-audio-attention-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.019046640030840018
+      },
+      {
+        "file": "clip-1-audio-attention-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.015161859115523767
+      },
+      {
+        "file": "clip-1-audio-attention-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.024815443166975377
+      },
+      {
+        "file": "clip-1-audio-attention-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.04436554947311199
+      },
+      {
+        "file": "clip-1-audio-attention-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.0467649090365657
+      },
+      {
+        "file": "clip-1-audio-attention-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.030267330512794247
+      },
+      {
+        "file": "clip-1-audio-attention-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.03164889019418439
+      },
+      {
+        "file": "clip-1-audio-attention-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.03562828974320372
+      },
+      {
+        "file": "clip-1-audio-context-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0030858208478596514
+      },
+      {
+        "file": "clip-1-audio-conv-end-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0023103241742080415
+      },
+      {
+        "file": "clip-1-audio-conv-end-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.005788605120135337
+      },
+      {
+        "file": "clip-1-audio-conv-end-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.46875,
+        "rmse": 0.015730260225066447
+      },
+      {
+        "file": "clip-1-audio-conv-end-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0625,
+        "rmse": 0.05504425871497314
+      },
+      {
+        "file": "clip-1-audio-conv-end-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.033203125,
+        "rmse": 0.00575280399489719
+      },
+      {
+        "file": "clip-1-audio-conv-end-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.006600619542088206
+      },
+      {
+        "file": "clip-1-audio-conv-end-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.009166453194282139
+      },
+      {
+        "file": "clip-1-audio-conv-end-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.008029498468894067
+      },
+      {
+        "file": "clip-1-audio-conv-end-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.078125,
+        "rmse": 0.011033116329115921
+      },
+      {
+        "file": "clip-1-audio-conv-end-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.007511623895905427
+      },
+      {
+        "file": "clip-1-audio-conv-end-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.078125,
+        "rmse": 0.007579024341499255
+      },
+      {
+        "file": "clip-1-audio-conv-end-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.109375,
+        "rmse": 0.007548657786307515
+      },
+      {
+        "file": "clip-1-audio-convnorm-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.0033810951546994787
+      },
+      {
+        "file": "clip-1-audio-convolution-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.007126121614877244
+      },
+      {
+        "file": "clip-1-audio-convolution-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.015694312236141275
+      },
+      {
+        "file": "clip-1-audio-convolution-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.04951213759160005
+      },
+      {
+        "file": "clip-1-audio-convolution-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.09241849940998662
+      },
+      {
+        "file": "clip-1-audio-convolution-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.022103807152020438
+      },
+      {
+        "file": "clip-1-audio-convolution-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.018181331902596073
+      },
+      {
+        "file": "clip-1-audio-convolution-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.027916884216161213
+      },
+      {
+        "file": "clip-1-audio-convolution-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.045957952107511205
+      },
+      {
+        "file": "clip-1-audio-convolution-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.05108291973581883
+      },
+      {
+        "file": "clip-1-audio-convolution-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.032204724234979054
+      },
+      {
+        "file": "clip-1-audio-convolution-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.03410800738862288
+      },
+      {
+        "file": "clip-1-audio-convolution-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.03698028055346039
+      },
+      {
+        "file": "clip-1-audio-depthwise-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.010813945763876204
+      },
+      {
+        "file": "clip-1-audio-ff1-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.0017253928515111544
+      },
+      {
+        "file": "clip-1-audio-ff1-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.010906957611316109
+      },
+      {
+        "file": "clip-1-audio-ff1-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.041834463709973235
+      },
+      {
+        "file": "clip-1-audio-ff1-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 3.0,
+        "rmse": 0.06559546514646297
+      },
+      {
+        "file": "clip-1-audio-ff1-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.016740284605702083
+      },
+      {
+        "file": "clip-1-audio-ff1-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.013867344227858501
+      },
+      {
+        "file": "clip-1-audio-ff1-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.021954178763003037
+      },
+      {
+        "file": "clip-1-audio-ff1-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.04308011609783241
+      },
+      {
+        "file": "clip-1-audio-ff1-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.0454894596750809
+      },
+      {
+        "file": "clip-1-audio-ff1-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.02876239199845867
+      },
+      {
+        "file": "clip-1-audio-ff1-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.027498079343587698
+      },
+      {
+        "file": "clip-1-audio-ff1-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.033956570110908205
+      },
+      {
+        "file": "clip-1-audio-glu-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.006168434553823156
+      },
+      {
+        "file": "clip-1-audio-input-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.000532508065421423
+      },
+      {
+        "file": "clip-1-audio-layer-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.008412192807848324
+      },
+      {
+        "file": "clip-1-audio-layer-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.01589594890560805
+      },
+      {
+        "file": "clip-1-audio-layer-10.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.057683735675826346
+      },
+      {
+        "file": "clip-1-audio-layer-11.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.25,
+        "rmse": 0.07889841005382053
+      },
+      {
+        "file": "clip-1-audio-layer-2.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.012265250984460286
+      },
+      {
+        "file": "clip-1-audio-layer-3.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.0200491286431568
+      },
+      {
+        "file": "clip-1-audio-layer-4.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.039856145008760405
+      },
+      {
+        "file": "clip-1-audio-layer-5.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.04387834411258318
+      },
+      {
+        "file": "clip-1-audio-layer-6.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.025923696807716754
+      },
+      {
+        "file": "clip-1-audio-layer-7.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.02515997634159009
+      },
+      {
+        "file": "clip-1-audio-layer-8.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.02980397180507391
+      },
+      {
+        "file": "clip-1-audio-layer-9.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.03785584079415304
+      },
+      {
+        "file": "clip-1-audio-output-12.bf16",
+        "elements": 105984,
+        "bit_exact": false,
+        "max_abs": 1.97265625,
+        "rmse": 0.10161915125226989
+      },
+      {
+        "file": "clip-1-audio-position-0.bf16",
+        "elements": 13312,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "clip-1-audio-probabilities-0.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.0019777119159698486,
+        "rmse": 5.559056234653535e-05
+      },
+      {
+        "file": "clip-1-audio-probabilities-1.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.012730181217193604,
+        "rmse": 0.0003074448789757097
+      },
+      {
+        "file": "clip-1-audio-probabilities-10.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.032864898443222046,
+        "rmse": 0.0014265873209015436
+      },
+      {
+        "file": "clip-1-audio-probabilities-11.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.027065694332122803,
+        "rmse": 0.0015375852662935382
+      },
+      {
+        "file": "clip-1-audio-probabilities-2.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.01456362009048462,
+        "rmse": 0.00047376980073702586
+      },
+      {
+        "file": "clip-1-audio-probabilities-3.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.014320313930511475,
+        "rmse": 0.0006449927507207526
+      },
+      {
+        "file": "clip-1-audio-probabilities-4.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.012215137481689453,
+        "rmse": 0.0005755732275588993
+      },
+      {
+        "file": "clip-1-audio-probabilities-5.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.03548765182495117,
+        "rmse": 0.001136370016874059
+      },
+      {
+        "file": "clip-1-audio-probabilities-6.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.038688838481903076,
+        "rmse": 0.001574452959279653
+      },
+      {
+        "file": "clip-1-audio-probabilities-7.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.02723085880279541,
+        "rmse": 0.001120587386284065
+      },
+      {
+        "file": "clip-1-audio-probabilities-8.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.0190049409866333,
+        "rmse": 0.0011900959534816785
+      },
+      {
+        "file": "clip-1-audio-probabilities-9.f32",
+        "elements": 13824,
+        "bit_exact": false,
+        "max_abs": 0.027196407318115234,
+        "rmse": 0.0014527842955201758
+      },
+      {
+        "file": "clip-1-audio-projected-12.bf16",
+        "elements": 35328,
+        "bit_exact": false,
+        "max_abs": 0.296875,
+        "rmse": 0.018945238459030594
+      },
+      {
+        "file": "clip-1-audio-relative-0.bf16",
+        "elements": 13312,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.00027084970518810017
+      },
+      {
+        "file": "clip-1-audio-silu-0.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.001688316107353567
+      },
+      {
+        "file": "clip-1-audio-sscp-conv-0.bf16",
+        "elements": 1122304,
+        "bit_exact": false,
+        "max_abs": 7.62939453125e-06,
+        "rmse": 7.201696554782115e-09
+      },
+      {
+        "file": "clip-1-audio-sscp-conv-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.0002657965423919442
+      },
+      {
+        "file": "clip-1-audio-subsample-0.bf16",
+        "elements": 1122304,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 9.411396167596045e-06
+      },
+      {
+        "file": "clip-1-audio-subsample-1.bf16",
+        "elements": 70656,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 8.83841356929441e-05
+      },
+      {
+        "file": "frame-0-vision-attention-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0001467862092711514
+      },
+      {
+        "file": "frame-0-vision-attn-out-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.00027059702830227656
+      },
+      {
+        "file": "frame-0-vision-gate-0.bf16",
+        "elements": 1935360,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.0006739542920099639
+      },
+      {
+        "file": "frame-0-vision-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.5830192770649685e-05
+      },
+      {
+        "file": "frame-0-vision-layer-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0008519533965564827
+      },
+      {
+        "file": "frame-0-vision-layer-1.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.0037143313225823167
+      },
+      {
+        "file": "frame-0-vision-layer-10.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.11880454362972495
+      },
+      {
+        "file": "frame-0-vision-layer-11.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.15600415488254146
+      },
+      {
+        "file": "frame-0-vision-layer-12.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.22917320614971284
+      },
+      {
+        "file": "frame-0-vision-layer-13.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.37190196121104835
+      },
+      {
+        "file": "frame-0-vision-layer-14.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 20.0,
+        "rmse": 0.6531115414574622
+      },
+      {
+        "file": "frame-0-vision-layer-15.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 50.0,
+        "rmse": 1.2944747808424284
+      },
+      {
+        "file": "frame-0-vision-layer-2.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.006931093167637093
+      },
+      {
+        "file": "frame-0-vision-layer-3.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.015408159550061383
+      },
+      {
+        "file": "frame-0-vision-layer-4.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.022183965001950846
+      },
+      {
+        "file": "frame-0-vision-layer-5.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.0495743974219889
+      },
+      {
+        "file": "frame-0-vision-layer-6.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 6.0,
+        "rmse": 0.05627644090473747
+      },
+      {
+        "file": "frame-0-vision-layer-7.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.06856013671803429
+      },
+      {
+        "file": "frame-0-vision-layer-8.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.08450556580482942
+      },
+      {
+        "file": "frame-0-vision-layer-9.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.09406929893883285
+      },
+      {
+        "file": "frame-0-vision-norm-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 3.0517578125e-05,
+        "rmse": 7.756968700281379e-08
+      },
+      {
+        "file": "frame-0-vision-patches-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 7.62939453125e-06,
+        "rmse": 3.8020022704540154e-08
+      },
+      {
+        "file": "frame-0-vision-pooled-16.bf16",
+        "elements": 46080,
+        "bit_exact": false,
+        "max_abs": 192.0,
+        "rmse": 12.832361922684221
+      },
+      {
+        "file": "frame-0-vision-projected-16.bf16",
+        "elements": 30720,
+        "bit_exact": false,
+        "max_abs": 0.20703125,
+        "rmse": 0.021091653355161083
+      },
+      {
+        "file": "frame-0-vision-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 6.576747109178824e-05
+      },
+      {
+        "file": "frame-0-vision-rope-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.9442831104837627e-05
+      },
+      {
+        "file": "frame-0-vision-rope-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 6.738858638547154e-05
+      },
+      {
+        "file": "frame-0-vision-v-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 4.689335476036489e-05
+      },
+      {
+        "file": "frame-1-vision-attention-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.00013815794364851187
+      },
+      {
+        "file": "frame-1-vision-attn-out-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0003663798098870347
+      },
+      {
+        "file": "frame-1-vision-gate-0.bf16",
+        "elements": 1935360,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 7.492798241288128e-05
+      },
+      {
+        "file": "frame-1-vision-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.276774900463612e-05
+      },
+      {
+        "file": "frame-1-vision-layer-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0008136963383467914
+      },
+      {
+        "file": "frame-1-vision-layer-1.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.003413582077876505
+      },
+      {
+        "file": "frame-1-vision-layer-10.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.11453490750615217
+      },
+      {
+        "file": "frame-1-vision-layer-11.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.14666223974089615
+      },
+      {
+        "file": "frame-1-vision-layer-12.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.2204213430418163
+      },
+      {
+        "file": "frame-1-vision-layer-13.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.3750263163833817
+      },
+      {
+        "file": "frame-1-vision-layer-14.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 16.0,
+        "rmse": 0.6831493632580887
+      },
+      {
+        "file": "frame-1-vision-layer-15.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 40.0,
+        "rmse": 1.3965902640576937
+      },
+      {
+        "file": "frame-1-vision-layer-2.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.007335559538883973
+      },
+      {
+        "file": "frame-1-vision-layer-3.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.013177603632530673
+      },
+      {
+        "file": "frame-1-vision-layer-4.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.020720431320586957
+      },
+      {
+        "file": "frame-1-vision-layer-5.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.04871400724029805
+      },
+      {
+        "file": "frame-1-vision-layer-6.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.05559496658327575
+      },
+      {
+        "file": "frame-1-vision-layer-7.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.05899597723941503
+      },
+      {
+        "file": "frame-1-vision-layer-8.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.07785071417391558
+      },
+      {
+        "file": "frame-1-vision-layer-9.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.08771879098629894
+      },
+      {
+        "file": "frame-1-vision-norm-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 3.0517578125e-05,
+        "rmse": 7.618822361796702e-08
+      },
+      {
+        "file": "frame-1-vision-patches-0.bf16",
+        "elements": 483840,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "frame-1-vision-pooled-16.bf16",
+        "elements": 46080,
+        "bit_exact": false,
+        "max_abs": 208.0,
+        "rmse": 14.467052639094097
+      },
+      {
+        "file": "frame-1-vision-projected-16.bf16",
+        "elements": 30720,
+        "bit_exact": false,
+        "max_abs": 0.359375,
+        "rmse": 0.0267129150181654
+      },
+      {
+        "file": "frame-1-vision-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 4.0451633575791e-05
+      },
+      {
+        "file": "frame-1-vision-rope-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.405135137955039e-05
+      },
+      {
+        "file": "frame-1-vision-rope-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 3.806089347299054e-05
+      },
+      {
+        "file": "frame-1-vision-v-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 3.267046702991346e-05
+      },
+      {
+        "file": "frame-2-vision-attention-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.00015851976655477908
+      },
+      {
+        "file": "frame-2-vision-attn-out-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.0002131284350200557
+      },
+      {
+        "file": "frame-2-vision-gate-0.bf16",
+        "elements": 1935360,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 8.57230560320182e-05
+      },
+      {
+        "file": "frame-2-vision-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.3628038410952592e-05
+      },
+      {
+        "file": "frame-2-vision-layer-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0008004644794535989
+      },
+      {
+        "file": "frame-2-vision-layer-1.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.0033289085368058734
+      },
+      {
+        "file": "frame-2-vision-layer-10.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.16027835323253106
+      },
+      {
+        "file": "frame-2-vision-layer-11.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.18429690618433509
+      },
+      {
+        "file": "frame-2-vision-layer-12.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.24738909021631444
+      },
+      {
+        "file": "frame-2-vision-layer-13.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 16.0,
+        "rmse": 0.41217408066196226
+      },
+      {
+        "file": "frame-2-vision-layer-14.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 22.625,
+        "rmse": 0.7192126526034377
+      },
+      {
+        "file": "frame-2-vision-layer-15.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 54.0,
+        "rmse": 1.4626676385641086
+      },
+      {
+        "file": "frame-2-vision-layer-2.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.006591490121900104
+      },
+      {
+        "file": "frame-2-vision-layer-3.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.015207187770014462
+      },
+      {
+        "file": "frame-2-vision-layer-4.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.02113279671620825
+      },
+      {
+        "file": "frame-2-vision-layer-5.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.04080607070139245
+      },
+      {
+        "file": "frame-2-vision-layer-6.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 6.0,
+        "rmse": 0.04820042385880732
+      },
+      {
+        "file": "frame-2-vision-layer-7.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 6.0,
+        "rmse": 0.060657512019856176
+      },
+      {
+        "file": "frame-2-vision-layer-8.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.08499117168397272
+      },
+      {
+        "file": "frame-2-vision-layer-9.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.10673948407673534
+      },
+      {
+        "file": "frame-2-vision-norm-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 3.0517578125e-05,
+        "rmse": 7.618822361796702e-08
+      },
+      {
+        "file": "frame-2-vision-patches-0.bf16",
+        "elements": 483840,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "frame-2-vision-pooled-16.bf16",
+        "elements": 46080,
+        "bit_exact": false,
+        "max_abs": 480.0,
+        "rmse": 15.539639711282557
+      },
+      {
+        "file": "frame-2-vision-projected-16.bf16",
+        "elements": 30720,
+        "bit_exact": false,
+        "max_abs": 0.2757568359375,
+        "rmse": 0.025949406370974346
+      },
+      {
+        "file": "frame-2-vision-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 6.424856829508551e-05
+      },
+      {
+        "file": "frame-2-vision-rope-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.506464827498731e-05
+      },
+      {
+        "file": "frame-2-vision-rope-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 6.5313781850389e-05
+      },
+      {
+        "file": "frame-2-vision-v-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 3.724479700270153e-05
+      },
+      {
+        "file": "frame-3-vision-attention-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0001467862092711514
+      },
+      {
+        "file": "frame-3-vision-attn-out-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.00027059702830227656
+      },
+      {
+        "file": "frame-3-vision-gate-0.bf16",
+        "elements": 1935360,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.0006739542920099639
+      },
+      {
+        "file": "frame-3-vision-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.5830192770649685e-05
+      },
+      {
+        "file": "frame-3-vision-layer-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0008519533965564827
+      },
+      {
+        "file": "frame-3-vision-layer-1.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.0037143313225823167
+      },
+      {
+        "file": "frame-3-vision-layer-10.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.11880454362972495
+      },
+      {
+        "file": "frame-3-vision-layer-11.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.15600415488254146
+      },
+      {
+        "file": "frame-3-vision-layer-12.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.22917320614971284
+      },
+      {
+        "file": "frame-3-vision-layer-13.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.37190196121104835
+      },
+      {
+        "file": "frame-3-vision-layer-14.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 20.0,
+        "rmse": 0.6531115414574622
+      },
+      {
+        "file": "frame-3-vision-layer-15.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 50.0,
+        "rmse": 1.2944747808424284
+      },
+      {
+        "file": "frame-3-vision-layer-2.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.006931093167637093
+      },
+      {
+        "file": "frame-3-vision-layer-3.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.015408159550061383
+      },
+      {
+        "file": "frame-3-vision-layer-4.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.022183965001950846
+      },
+      {
+        "file": "frame-3-vision-layer-5.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.0495743974219889
+      },
+      {
+        "file": "frame-3-vision-layer-6.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 6.0,
+        "rmse": 0.05627644090473747
+      },
+      {
+        "file": "frame-3-vision-layer-7.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.06856013671803429
+      },
+      {
+        "file": "frame-3-vision-layer-8.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.08450556580482942
+      },
+      {
+        "file": "frame-3-vision-layer-9.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.09406929893883285
+      },
+      {
+        "file": "frame-3-vision-norm-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 3.0517578125e-05,
+        "rmse": 7.756968700281379e-08
+      },
+      {
+        "file": "frame-3-vision-patches-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 7.62939453125e-06,
+        "rmse": 3.8020022704540154e-08
+      },
+      {
+        "file": "frame-3-vision-pooled-16.bf16",
+        "elements": 46080,
+        "bit_exact": false,
+        "max_abs": 192.0,
+        "rmse": 12.832361922684221
+      },
+      {
+        "file": "frame-3-vision-projected-16.bf16",
+        "elements": 30720,
+        "bit_exact": false,
+        "max_abs": 0.20703125,
+        "rmse": 0.021091653355161083
+      },
+      {
+        "file": "frame-3-vision-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 6.576747109178824e-05
+      },
+      {
+        "file": "frame-3-vision-rope-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.9442831104837627e-05
+      },
+      {
+        "file": "frame-3-vision-rope-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 6.738858638547154e-05
+      },
+      {
+        "file": "frame-3-vision-v-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 4.689335476036489e-05
+      },
+      {
+        "file": "frame-4-vision-attention-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.00013815794364851187
+      },
+      {
+        "file": "frame-4-vision-attn-out-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0003663798098870347
+      },
+      {
+        "file": "frame-4-vision-gate-0.bf16",
+        "elements": 1935360,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 7.492798241288128e-05
+      },
+      {
+        "file": "frame-4-vision-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.276774900463612e-05
+      },
+      {
+        "file": "frame-4-vision-layer-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0008136963383467914
+      },
+      {
+        "file": "frame-4-vision-layer-1.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.003413582077876505
+      },
+      {
+        "file": "frame-4-vision-layer-10.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.11453490750615217
+      },
+      {
+        "file": "frame-4-vision-layer-11.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.14666223974089615
+      },
+      {
+        "file": "frame-4-vision-layer-12.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.2204213430418163
+      },
+      {
+        "file": "frame-4-vision-layer-13.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.3750263163833817
+      },
+      {
+        "file": "frame-4-vision-layer-14.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 16.0,
+        "rmse": 0.6831493632580887
+      },
+      {
+        "file": "frame-4-vision-layer-15.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 40.0,
+        "rmse": 1.3965902640576937
+      },
+      {
+        "file": "frame-4-vision-layer-2.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.007335559538883973
+      },
+      {
+        "file": "frame-4-vision-layer-3.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.013177603632530673
+      },
+      {
+        "file": "frame-4-vision-layer-4.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.020720431320586957
+      },
+      {
+        "file": "frame-4-vision-layer-5.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.04871400724029805
+      },
+      {
+        "file": "frame-4-vision-layer-6.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.05559496658327575
+      },
+      {
+        "file": "frame-4-vision-layer-7.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.05899597723941503
+      },
+      {
+        "file": "frame-4-vision-layer-8.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.07785071417391558
+      },
+      {
+        "file": "frame-4-vision-layer-9.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.08771879098629894
+      },
+      {
+        "file": "frame-4-vision-norm-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 3.0517578125e-05,
+        "rmse": 7.618822361796702e-08
+      },
+      {
+        "file": "frame-4-vision-patches-0.bf16",
+        "elements": 483840,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "frame-4-vision-pooled-16.bf16",
+        "elements": 46080,
+        "bit_exact": false,
+        "max_abs": 208.0,
+        "rmse": 14.467052639094097
+      },
+      {
+        "file": "frame-4-vision-projected-16.bf16",
+        "elements": 30720,
+        "bit_exact": false,
+        "max_abs": 0.359375,
+        "rmse": 0.0267129150181654
+      },
+      {
+        "file": "frame-4-vision-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 4.0451633575791e-05
+      },
+      {
+        "file": "frame-4-vision-rope-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.405135137955039e-05
+      },
+      {
+        "file": "frame-4-vision-rope-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 3.806089347299054e-05
+      },
+      {
+        "file": "frame-4-vision-v-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 3.267046702991346e-05
+      },
+      {
+        "file": "frame-5-vision-attention-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.00015851976655477908
+      },
+      {
+        "file": "frame-5-vision-attn-out-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.0002131284350200557
+      },
+      {
+        "file": "frame-5-vision-gate-0.bf16",
+        "elements": 1935360,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 8.57230560320182e-05
+      },
+      {
+        "file": "frame-5-vision-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.3628038410952592e-05
+      },
+      {
+        "file": "frame-5-vision-layer-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.0008004644794535989
+      },
+      {
+        "file": "frame-5-vision-layer-1.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.0033289085368058734
+      },
+      {
+        "file": "frame-5-vision-layer-10.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.16027835323253106
+      },
+      {
+        "file": "frame-5-vision-layer-11.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.18429690618433509
+      },
+      {
+        "file": "frame-5-vision-layer-12.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.24738909021631444
+      },
+      {
+        "file": "frame-5-vision-layer-13.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 16.0,
+        "rmse": 0.41217408066196226
+      },
+      {
+        "file": "frame-5-vision-layer-14.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 22.625,
+        "rmse": 0.7192126526034377
+      },
+      {
+        "file": "frame-5-vision-layer-15.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 54.0,
+        "rmse": 1.4626676385641086
+      },
+      {
+        "file": "frame-5-vision-layer-2.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.006591490121900104
+      },
+      {
+        "file": "frame-5-vision-layer-3.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.015207187770014462
+      },
+      {
+        "file": "frame-5-vision-layer-4.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.02113279671620825
+      },
+      {
+        "file": "frame-5-vision-layer-5.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.04080607070139245
+      },
+      {
+        "file": "frame-5-vision-layer-6.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 6.0,
+        "rmse": 0.04820042385880732
+      },
+      {
+        "file": "frame-5-vision-layer-7.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 6.0,
+        "rmse": 0.060657512019856176
+      },
+      {
+        "file": "frame-5-vision-layer-8.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.08499117168397272
+      },
+      {
+        "file": "frame-5-vision-layer-9.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 8.0,
+        "rmse": 0.10673948407673534
+      },
+      {
+        "file": "frame-5-vision-norm-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 3.0517578125e-05,
+        "rmse": 7.618822361796702e-08
+      },
+      {
+        "file": "frame-5-vision-patches-0.bf16",
+        "elements": 483840,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "frame-5-vision-pooled-16.bf16",
+        "elements": 46080,
+        "bit_exact": false,
+        "max_abs": 480.0,
+        "rmse": 15.539639711282557
+      },
+      {
+        "file": "frame-5-vision-projected-16.bf16",
+        "elements": 30720,
+        "bit_exact": false,
+        "max_abs": 0.2757568359375,
+        "rmse": 0.025949406370974346
+      },
+      {
+        "file": "frame-5-vision-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 6.424856829508551e-05
+      },
+      {
+        "file": "frame-5-vision-rope-k-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.0078125,
+        "rmse": 2.506464827498731e-05
+      },
+      {
+        "file": "frame-5-vision-rope-q-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 6.5313781850389e-05
+      },
+      {
+        "file": "frame-5-vision-v-0.bf16",
+        "elements": 483840,
+        "bit_exact": false,
+        "max_abs": 0.015625,
+        "rmse": 3.724479700270153e-05
+      },
+      {
+        "file": "item-0-backbone-attention-0.bf16",
+        "elements": 65536,
+        "bit_exact": false,
+        "max_abs": 0.171875,
+        "rmse": 0.008179735160329049
+      },
+      {
+        "file": "item-0-backbone-attn-out-0.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.22265625,
+        "rmse": 0.022324667007007668
+      },
+      {
+        "file": "item-0-backbone-k-0.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.0117340087890625,
+        "rmse": 0.0012856454658585971
+      },
+      {
+        "file": "item-0-backbone-norm-0.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 2.4375,
+        "rmse": 0.11466059186925594
+      },
+      {
+        "file": "item-0-backbone-q-0.bf16",
+        "elements": 65536,
+        "bit_exact": false,
+        "max_abs": 0.15625,
+        "rmse": 0.013866874036914799
+      },
+      {
+        "file": "item-0-backbone-rope-k-0.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.011749267578125,
+        "rmse": 0.0013085186256092788
+      },
+      {
+        "file": "item-0-backbone-rope-q-0.bf16",
+        "elements": 65536,
+        "bit_exact": false,
+        "max_abs": 0.1484375,
+        "rmse": 0.014005568666120032
+      },
+      {
+        "file": "item-0-backbone-v-0.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.296875,
+        "rmse": 0.016641060530803074
+      },
+      {
+        "file": "item-0-embeddings-0.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.20703125,
+        "rmse": 0.020421905547129665
+      },
+      {
+        "file": "item-0-layer-0.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.1953125,
+        "rmse": 0.016893147311032242
+      },
+      {
+        "file": "item-0-layer-1.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.09375,
+        "rmse": 0.006505732031178538
+      },
+      {
+        "file": "item-0-layer-10.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 1.3125,
+        "rmse": 0.07220817052140513
+      },
+      {
+        "file": "item-0-layer-11.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 2.5,
+        "rmse": 0.06575284540255033
+      },
+      {
+        "file": "item-0-layer-12.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 2.5,
+        "rmse": 0.07123443312613426
+      },
+      {
+        "file": "item-0-layer-13.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 3.0,
+        "rmse": 0.09458810432719703
+      },
+      {
+        "file": "item-0-layer-14.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 5.0,
+        "rmse": 0.11882114252497959
+      },
+      {
+        "file": "item-0-layer-15.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 7.5,
+        "rmse": 0.1307134898413192
+      },
+      {
+        "file": "item-0-layer-16.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.06255861594579958
+      },
+      {
+        "file": "item-0-layer-17.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 5.0,
+        "rmse": 0.08459365355048054
+      },
+      {
+        "file": "item-0-layer-18.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 7.25,
+        "rmse": 0.08288639610585674
+      },
+      {
+        "file": "item-0-layer-19.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 7.25,
+        "rmse": 0.08925815904759066
+      },
+      {
+        "file": "item-0-layer-2.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.1171875,
+        "rmse": 0.011644545445131674
+      },
+      {
+        "file": "item-0-layer-20.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 7.0,
+        "rmse": 0.09488465566595022
+      },
+      {
+        "file": "item-0-layer-21.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 7.5,
+        "rmse": 0.10228425770086703
+      },
+      {
+        "file": "item-0-layer-22.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 7.75,
+        "rmse": 0.10424395814049232
+      },
+      {
+        "file": "item-0-layer-23.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 3.125,
+        "rmse": 0.043841632842874616
+      },
+      {
+        "file": "item-0-layer-3.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.21875,
+        "rmse": 0.021484977421683753
+      },
+      {
+        "file": "item-0-layer-4.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.4296875,
+        "rmse": 0.03390007802268381
+      },
+      {
+        "file": "item-0-layer-5.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.78515625,
+        "rmse": 0.043341412564414095
+      },
+      {
+        "file": "item-0-layer-6.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.267578125,
+        "rmse": 0.018335527322191267
+      },
+      {
+        "file": "item-0-layer-7.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.03292866997771422
+      },
+      {
+        "file": "item-0-layer-8.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.04278913488289791
+      },
+      {
+        "file": "item-0-layer-9.bf16",
+        "elements": 32768,
+        "bit_exact": false,
+        "max_abs": 1.125,
+        "rmse": 0.06956677084881477
+      },
+      {
+        "file": "item-0-ple-0.bf16",
+        "elements": 786432,
+        "bit_exact": false,
+        "max_abs": 4.5,
+        "rmse": 0.15041043112398206
+      },
+      {
+        "file": "item-0-projected-24.bf16",
+        "elements": 49152,
+        "bit_exact": false,
+        "max_abs": 74.5,
+        "rmse": 3.1603575864753486
+      },
+      {
+        "file": "item-1-backbone-attention-0.bf16",
+        "elements": 74752,
+        "bit_exact": false,
+        "max_abs": 0.6171875,
+        "rmse": 0.009698318740921441
+      },
+      {
+        "file": "item-1-backbone-attn-out-0.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.5625,
+        "rmse": 0.023407868029267018
+      },
+      {
+        "file": "item-1-backbone-k-0.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.0234375,
+        "rmse": 0.0014903149956625253
+      },
+      {
+        "file": "item-1-backbone-norm-0.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 2.125,
+        "rmse": 0.10580817665128286
+      },
+      {
+        "file": "item-1-backbone-q-0.bf16",
+        "elements": 74752,
+        "bit_exact": false,
+        "max_abs": 0.30859375,
+        "rmse": 0.014535994385171428
+      },
+      {
+        "file": "item-1-backbone-rope-k-0.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.021484375,
+        "rmse": 0.0015134361243329566
+      },
+      {
+        "file": "item-1-backbone-rope-q-0.bf16",
+        "elements": 74752,
+        "bit_exact": false,
+        "max_abs": 0.3203125,
+        "rmse": 0.01469750139399259
+      },
+      {
+        "file": "item-1-backbone-v-0.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.3125,
+        "rmse": 0.013775491770024911
+      },
+      {
+        "file": "item-1-embeddings-0.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.296875,
+        "rmse": 0.018418878849240046
+      },
+      {
+        "file": "item-1-layer-0.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.34375,
+        "rmse": 0.01825268525997859
+      },
+      {
+        "file": "item-1-layer-1.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.115234375,
+        "rmse": 0.007418506655539763
+      },
+      {
+        "file": "item-1-layer-10.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 1.13623046875,
+        "rmse": 0.04739618882251202
+      },
+      {
+        "file": "item-1-layer-11.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 1.25,
+        "rmse": 0.038726495845072324
+      },
+      {
+        "file": "item-1-layer-12.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.044138608739744706
+      },
+      {
+        "file": "item-1-layer-13.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 1.625,
+        "rmse": 0.05589534954328371
+      },
+      {
+        "file": "item-1-layer-14.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 2.125,
+        "rmse": 0.054821486174428995
+      },
+      {
+        "file": "item-1-layer-15.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 3.125,
+        "rmse": 0.058758166041354316
+      },
+      {
+        "file": "item-1-layer-16.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 2.5,
+        "rmse": 0.030025172427568393
+      },
+      {
+        "file": "item-1-layer-17.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 2.25,
+        "rmse": 0.03433397083662871
+      },
+      {
+        "file": "item-1-layer-18.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.030402650475674507
+      },
+      {
+        "file": "item-1-layer-19.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.030838232676828482
+      },
+      {
+        "file": "item-1-layer-2.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.21875,
+        "rmse": 0.013844850974832408
+      },
+      {
+        "file": "item-1-layer-20.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 1.5,
+        "rmse": 0.031714972774175156
+      },
+      {
+        "file": "item-1-layer-21.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.03181425523470135
+      },
+      {
+        "file": "item-1-layer-22.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.030525801891571003
+      },
+      {
+        "file": "item-1-layer-23.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 3.0,
+        "rmse": 0.025394752224981672
+      },
+      {
+        "file": "item-1-layer-3.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.3984375,
+        "rmse": 0.022926349221281995
+      },
+      {
+        "file": "item-1-layer-4.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.38671875,
+        "rmse": 0.030202507552819734
+      },
+      {
+        "file": "item-1-layer-5.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.40625,
+        "rmse": 0.03249355787741192
+      },
+      {
+        "file": "item-1-layer-6.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.014828679725075152
+      },
+      {
+        "file": "item-1-layer-7.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.024813353424233374
+      },
+      {
+        "file": "item-1-layer-8.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.546875,
+        "rmse": 0.03324039694290364
+      },
+      {
+        "file": "item-1-layer-9.bf16",
+        "elements": 37376,
+        "bit_exact": false,
+        "max_abs": 0.75,
+        "rmse": 0.049029986552847786
+      },
+      {
+        "file": "item-1-ple-0.bf16",
+        "elements": 897024,
+        "bit_exact": false,
+        "max_abs": 16.0,
+        "rmse": 0.14330318909479012
+      },
+      {
+        "file": "item-1-projected-24.bf16",
+        "elements": 56064,
+        "bit_exact": false,
+        "max_abs": 12.0,
+        "rmse": 0.7459023261725096
+      },
+      {
+        "file": "item-2-backbone-attention-0.bf16",
+        "elements": 129024,
+        "bit_exact": false,
+        "max_abs": 0.2578125,
+        "rmse": 0.00956402998654092
+      },
+      {
+        "file": "item-2-backbone-attn-out-0.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.40625,
+        "rmse": 0.02754742443498916
+      },
+      {
+        "file": "item-2-backbone-k-0.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.025390625,
+        "rmse": 0.0015968426892666644
+      },
+      {
+        "file": "item-2-backbone-norm-0.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 3.75,
+        "rmse": 0.1473589979461785
+      },
+      {
+        "file": "item-2-backbone-q-0.bf16",
+        "elements": 129024,
+        "bit_exact": false,
+        "max_abs": 0.44140625,
+        "rmse": 0.017839961611275903
+      },
+      {
+        "file": "item-2-backbone-rope-k-0.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.021484375,
+        "rmse": 0.0016202608554087086
+      },
+      {
+        "file": "item-2-backbone-rope-q-0.bf16",
+        "elements": 129024,
+        "bit_exact": false,
+        "max_abs": 0.40625,
+        "rmse": 0.018003191558581925
+      },
+      {
+        "file": "item-2-backbone-v-0.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.40625,
+        "rmse": 0.020519159911393775
+      },
+      {
+        "file": "item-2-embeddings-0.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.359375,
+        "rmse": 0.025699282181690177
+      },
+      {
+        "file": "item-2-layer-0.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.546875,
+        "rmse": 0.02265228238111169
+      },
+      {
+        "file": "item-2-layer-1.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.26171875,
+        "rmse": 0.009067365822790935
+      },
+      {
+        "file": "item-2-layer-10.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 4.9375,
+        "rmse": 0.11164687920473615
+      },
+      {
+        "file": "item-2-layer-11.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 8.703125,
+        "rmse": 0.11227691542044507
+      },
+      {
+        "file": "item-2-layer-12.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 10.359375,
+        "rmse": 0.11933150519756083
+      },
+      {
+        "file": "item-2-layer-13.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 14.8740234375,
+        "rmse": 0.1541910568728715
+      },
+      {
+        "file": "item-2-layer-14.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 13.96875,
+        "rmse": 0.16059358036728563
+      },
+      {
+        "file": "item-2-layer-15.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 12.859375,
+        "rmse": 0.16513999518084932
+      },
+      {
+        "file": "item-2-layer-16.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 13.5,
+        "rmse": 0.09189797859132269
+      },
+      {
+        "file": "item-2-layer-17.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 17.0,
+        "rmse": 0.12376797529218565
+      },
+      {
+        "file": "item-2-layer-18.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 31.75,
+        "rmse": 0.15810109480032153
+      },
+      {
+        "file": "item-2-layer-19.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 31.0,
+        "rmse": 0.16211345491917478
+      },
+      {
+        "file": "item-2-layer-2.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.3984375,
+        "rmse": 0.015430616869905829
+      },
+      {
+        "file": "item-2-layer-20.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 31.0,
+        "rmse": 0.16672736925609627
+      },
+      {
+        "file": "item-2-layer-21.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 30.0,
+        "rmse": 0.16789103399397481
+      },
+      {
+        "file": "item-2-layer-22.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 29.25,
+        "rmse": 0.16561721258780243
+      },
+      {
+        "file": "item-2-layer-23.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 10.5,
+        "rmse": 0.07574767401818279
+      },
+      {
+        "file": "item-2-layer-3.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.671875,
+        "rmse": 0.030306920640675163
+      },
+      {
+        "file": "item-2-layer-4.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 1.27734375,
+        "rmse": 0.052396075250616896
+      },
+      {
+        "file": "item-2-layer-5.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 2.125,
+        "rmse": 0.07079699775853208
+      },
+      {
+        "file": "item-2-layer-6.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 0.847900390625,
+        "rmse": 0.02905249607993658
+      },
+      {
+        "file": "item-2-layer-7.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 1.21875,
+        "rmse": 0.046909745202765564
+      },
+      {
+        "file": "item-2-layer-8.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 2.0,
+        "rmse": 0.0639252567035226
+      },
+      {
+        "file": "item-2-layer-9.bf16",
+        "elements": 64512,
+        "bit_exact": false,
+        "max_abs": 4.5,
+        "rmse": 0.11435587053863154
+      },
+      {
+        "file": "item-2-ple-0.bf16",
+        "elements": 1548288,
+        "bit_exact": false,
+        "max_abs": 14.875,
+        "rmse": 0.19086141730690476
+      },
+      {
+        "file": "item-2-projected-24.bf16",
+        "elements": 96768,
+        "bit_exact": false,
+        "max_abs": 102.25,
+        "rmse": 4.060967426585556
+      },
+      {
+        "file": "item-3-backbone-attention-0.bf16",
+        "elements": 276480,
+        "bit_exact": false,
+        "max_abs": 0.56640625,
+        "rmse": 0.008872918112201493
+      },
+      {
+        "file": "item-3-backbone-attn-out-0.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.40625,
+        "rmse": 0.0248835795750395
+      },
+      {
+        "file": "item-3-backbone-k-0.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.025390625,
+        "rmse": 0.001477249607917158
+      },
+      {
+        "file": "item-3-backbone-norm-0.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 3.75,
+        "rmse": 0.12758037043562934
+      },
+      {
+        "file": "item-3-backbone-q-0.bf16",
+        "elements": 276480,
+        "bit_exact": false,
+        "max_abs": 0.44140625,
+        "rmse": 0.015850359241338072
+      },
+      {
+        "file": "item-3-backbone-rope-k-0.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.025390625,
+        "rmse": 0.0014999108529417746
+      },
+      {
+        "file": "item-3-backbone-rope-q-0.bf16",
+        "elements": 276480,
+        "bit_exact": false,
+        "max_abs": 0.5078125,
+        "rmse": 0.016025610283359335
+      },
+      {
+        "file": "item-3-backbone-v-0.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.40625,
+        "rmse": 0.01770403009328919
+      },
+      {
+        "file": "item-3-embeddings-0.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.359375,
+        "rmse": 0.022333680247743067
+      },
+      {
+        "file": "item-3-layer-0.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.546875,
+        "rmse": 0.019881031331189278
+      },
+      {
+        "file": "item-3-layer-1.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.3125,
+        "rmse": 0.008046590658804347
+      },
+      {
+        "file": "item-3-layer-10.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.63671875,
+        "rmse": 0.0757743360176144
+      },
+      {
+        "file": "item-3-layer-11.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 3.0,
+        "rmse": 0.06976459996280655
+      },
+      {
+        "file": "item-3-layer-12.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 2.6875,
+        "rmse": 0.07618358205549727
+      },
+      {
+        "file": "item-3-layer-13.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.6875,
+        "rmse": 0.09808575375510074
+      },
+      {
+        "file": "item-3-layer-14.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 5.0703125,
+        "rmse": 0.0992172161134251
+      },
+      {
+        "file": "item-3-layer-15.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.375,
+        "rmse": 0.11027515249096462
+      },
+      {
+        "file": "item-3-layer-16.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 3.25,
+        "rmse": 0.05643815184569829
+      },
+      {
+        "file": "item-3-layer-17.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.0,
+        "rmse": 0.0742571566477475
+      },
+      {
+        "file": "item-3-layer-18.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.75,
+        "rmse": 0.06852282656218683
+      },
+      {
+        "file": "item-3-layer-19.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.75,
+        "rmse": 0.07526067933004693
+      },
+      {
+        "file": "item-3-layer-2.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.42578125,
+        "rmse": 0.013614261566572843
+      },
+      {
+        "file": "item-3-layer-20.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.5,
+        "rmse": 0.07934221050779218
+      },
+      {
+        "file": "item-3-layer-21.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.25,
+        "rmse": 0.08351857312410957
+      },
+      {
+        "file": "item-3-layer-22.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 3.75,
+        "rmse": 0.08085104320251199
+      },
+      {
+        "file": "item-3-layer-23.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 6.0,
+        "rmse": 0.046878543918344166
+      },
+      {
+        "file": "item-3-layer-3.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.796875,
+        "rmse": 0.024620271148932785
+      },
+      {
+        "file": "item-3-layer-4.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 0.8046875,
+        "rmse": 0.03581247551105362
+      },
+      {
+        "file": "item-3-layer-5.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 1.33642578125,
+        "rmse": 0.04720989375704242
+      },
+      {
+        "file": "item-3-layer-6.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.022304420594259515
+      },
+      {
+        "file": "item-3-layer-7.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 3.25,
+        "rmse": 0.0430175196107613
+      },
+      {
+        "file": "item-3-layer-8.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 4.6875,
+        "rmse": 0.06302302468637247
+      },
+      {
+        "file": "item-3-layer-9.bf16",
+        "elements": 138240,
+        "bit_exact": false,
+        "max_abs": 5.84375,
+        "rmse": 0.07971123482816965
+      },
+      {
+        "file": "item-3-ple-0.bf16",
+        "elements": 3317760,
+        "bit_exact": false,
+        "max_abs": 16.0,
+        "rmse": 0.16707665473237673
+      },
+      {
+        "file": "item-3-projected-24.bf16",
+        "elements": 207360,
+        "bit_exact": false,
+        "max_abs": 54.0,
+        "rmse": 2.5306222599701407
+      }
+    ]
+  },
+  "status": "FAIL"
+}

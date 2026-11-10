@@ -1,0 +1,44 @@
+[
+  {
+    "layer": 0,
+    "shape": [
+      1,
+      1,
+      273,
+      128
+    ],
+    "cpu_linear_vs_conv": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "native_linear_vs_conv": {
+      "different": 0,
+      "max_abs": 0.0
+    },
+    "native_linear_vs_cpu_linear": {
+      "different": 0,
+      "max_abs": 0.0
+    }
+  },
+  {
+    "layer": 1,
+    "shape": [
+      1,
+      128,
+      137,
+      64
+    ],
+    "cpu_linear_vs_conv": {
+      "different": 4,
+      "max_abs": 0.0001220703125
+    },
+    "native_linear_vs_conv": {
+      "different": 4,
+      "max_abs": 0.0001220703125
+    },
+    "native_linear_vs_cpu_linear": {
+      "different": 0,
+      "max_abs": 0.0
+    }
+  }
+]

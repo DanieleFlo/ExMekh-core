@@ -1,0 +1,47 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-qwen-merger.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Isolate all four real Qwen visual mergers from exact saved CPU vision outputs: norm, linear and erf GELU against identical independent inputs.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 1,
+  "elapsed_seconds": 2.0616418339996017,
+  "status": "FAIL",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 20937.859439041,
+      "pressure": 1,
+      "host_available_bytes": 13704413184,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 20938.875825416,
+      "pressure": 1,
+      "host_available_bytes": 13441449984,
+      "swap_bytes": 262144,
+      "footprint_bytes": 159941472,
+      "resident_bytes": 215187456
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "5de5d3a24087e079b21025d5693a38d331565ac3d23a57f107c8886fdcc331c1"
+}

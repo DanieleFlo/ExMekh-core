@@ -1,0 +1,9 @@
+W1031 18:35:55.225000 35381 torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+Loading weights:   0%|          | 0/749 [00:00<?, ?it/s]Loading weights: 100%|██████████| 749/749 [00:00<00:00, 9322.89it/s]
+[transformers] [1mQwen3VLModel LOAD REPORT[0m from: build/metal-oracles/models/Qwen/Qwen-Image-2.1-Turbo/text_encoder
+Key            | Status     |  | 
+---------------+------------+--+-
+lm_head.weight | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.

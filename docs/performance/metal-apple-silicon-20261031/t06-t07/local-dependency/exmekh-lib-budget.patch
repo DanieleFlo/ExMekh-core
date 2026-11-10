@@ -1,0 +1,250 @@
+diff --git a/src/exmekh_lib/config/file_editing.py b/src/exmekh_lib/config/file_editing.py
+index 9f58cd8..9fa5192 100644
+--- a/src/exmekh_lib/config/file_editing.py
++++ b/src/exmekh_lib/config/file_editing.py
+@@ -1,5 +1,9 @@
+ """Shared literal edit contract and bounded filesystem operations."""
+ 
++from __future__ import annotations
++
++import math
++import os
+ from dataclasses import dataclass
+ 
+ from exmekh_lib.config.default_capabilities import DEFAULT_CAPABILITIES
+@@ -184,8 +188,22 @@ class FileEditingSettings:
+             "Directory bodies are ignored with warnings."
+         )
+ 
+-
+-FILE_EDITING = FileEditingSettings()
++    @classmethod
++    def from_environment(cls) -> FileEditingSettings:
++        value = os.getenv("EXMEKH_INTERACTIVE_TIMEOUT_SECONDS")
++        if value is None:
++            return cls()
++        error_text = "EXMEKH_INTERACTIVE_TIMEOUT_SECONDS must be finite and positive"
++        try:
++            timeout = float(value)
++        except ValueError as error:
++            raise ValueError(error_text) from error
++        if not math.isfinite(timeout) or timeout <= 0:
++            raise ValueError(error_text)
++        return cls(protocol_timeout_seconds=timeout)
++
++
++FILE_EDITING = FileEditingSettings.from_environment()
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+diff --git a/src/exmekh_lib/core/agents/node/node_runtime.py b/src/exmekh_lib/core/agents/node/node_runtime.py
+index 8b178c6..179ea01 100644
+--- a/src/exmekh_lib/core/agents/node/node_runtime.py
++++ b/src/exmekh_lib/core/agents/node/node_runtime.py
+@@ -261,7 +261,7 @@ class NodeRuntime(ProviderEventHandler):
+         if not requested and not oversized:
+             return request
+         try:
+-            self._compact_history()
++            self._compact_history(request)
+         except Exception as error:
+             # Sending the unmodified request after the policy asked to compact
+             # can exhaust the context before there is another safe boundary.
+@@ -274,8 +274,21 @@ class NodeRuntime(ProviderEventHandler):
+         )
+         for message in steering:
+             self._client.add_user_message(message)
+-        compacted_request = ProviderRequest(
+-            messages=self._client.get_history(),
++        compacted_request = self._request_with_history(
++            request, self._client.get_history()
++        )
++        compacted_request.notify_steering_added(steering)
++        policy.after_compaction(compacted_request)
++        if budget is not None:
++            budget.require_fits(compacted_request)
++        return compacted_request
++
++    def _request_with_history(
++        self, request: ProviderRequest, history: list[Message[object]]
++    ) -> ProviderRequest:
++        # History contains raw tool messages; the request expands attachments once.
++        return ProviderRequest(
++            messages=history,
+             tools=request.get_tools(),
+             tool_choice=request.get_tool_choice(),
+             extra=self._executor.build_agentic_extra(),
+@@ -283,17 +296,12 @@ class NodeRuntime(ProviderEventHandler):
+             on_event=request.on_event,
+             reasoning_effort_override=request.get_reasoning_effort_override(),
+         )
+-        compacted_request.notify_steering_added(steering)
+-        policy.after_compaction(compacted_request)
+-        if budget is not None:
+-            budget.require_fits(compacted_request)
+-        return compacted_request
+ 
+     def _compact_pending_history(self) -> None:
+         if self._turn_control.take_compaction_request():
+             self._compact_history()
+ 
+-    def _compact_history(self) -> None:
++    def _compact_history(self, request: ProviderRequest | None = None) -> None:
+         original = self._client.get_history()
+         records = {record.id: record for record in self._get_tool_cache().get_all()}
+         records.update(
+@@ -327,7 +335,20 @@ class NodeRuntime(ProviderEventHandler):
+         )
+         if self._client.get_history() != original:
+             raise RuntimeError(HISTORY_COMPACTION.changed_history)
+-        self._client.replace_history_from(0, result.replacement_for(original))
++        replacement = result.replacement_for(original)
++        budget = self._compaction_budget
++        if request is not None and budget is not None:
++            candidate = self._request_with_history(request, replacement)
++            # Short retained outputs can grow when wrapped in a synthetic batch.
++            # Commit only a smaller request that fits, keeping originals and
++            # scope anchors available when compaction cannot satisfy the budget.
++            candidate_tokens = budget.count_tokens(candidate)
++            if (
++                candidate_tokens > budget.prompt_limit
++                or candidate_tokens >= budget.count_tokens(request)
++            ):
++                return
++        self._client.replace_history_from(0, replacement)
+         self._executor.rebase_active_history(result.index_map)
+         if result.replaced_history:
+             snapshot = self._executor.snapshot()
+diff --git a/tests/config/test_settings.py b/tests/config/test_settings.py
+index 4e93b00..b12f146 100644
+--- a/tests/config/test_settings.py
++++ b/tests/config/test_settings.py
+@@ -6,6 +6,7 @@ from unittest.mock import patch
+ import pytest
+ 
+ from exmekh_lib.config.cli import CliSettings
++from exmekh_lib.config.file_editing import FileEditingSettings
+ from exmekh_lib.config.provider import DEFAULT_PROVIDER_SETTINGS, ProviderSettings
+ from exmekh_lib.config.runtime import RUNTIME
+ from exmekh_lib.config.storage import StorageSettings
+@@ -26,6 +27,26 @@ class StubTokenizer(SequentialTokenizer):
+         return text[:start_tokens] + (text[-end_tokens:] if end_tokens else "")
+ 
+ 
++def test_interactive_timeout_defaults_to_300_seconds(monkeypatch):
++    monkeypatch.delenv("EXMEKH_INTERACTIVE_TIMEOUT_SECONDS", raising=False)
++    assert FileEditingSettings.from_environment().protocol_timeout_seconds == 300
++
++
++@pytest.mark.parametrize("value", ["600", "1200", "0.5"])
++def test_interactive_timeout_can_be_configured(monkeypatch, value):
++    monkeypatch.setenv("EXMEKH_INTERACTIVE_TIMEOUT_SECONDS", value)
++    assert FileEditingSettings.from_environment().protocol_timeout_seconds == float(
++        value
++    )
++
++
++@pytest.mark.parametrize("value", ["", "invalid", "0", "-1", "nan", "inf", "-inf"])
++def test_interactive_timeout_rejects_invalid_values(monkeypatch, value):
++    monkeypatch.setenv("EXMEKH_INTERACTIVE_TIMEOUT_SECONDS", value)
++    with pytest.raises(ValueError, match="must be finite and positive"):
++        FileEditingSettings.from_environment()
++
++
+ def test_provider_settings_read_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+     monkeypatch.setenv("EXMEKH_LIB_MODEL", "custom-model")
+     monkeypatch.setenv("EXMEKH_LIB_API", "chat_completions")
+diff --git a/tests/core/agents/node/test_auto_history_compaction.py b/tests/core/agents/node/test_auto_history_compaction.py
+index b56a55c..2959a3c 100644
+--- a/tests/core/agents/node/test_auto_history_compaction.py
++++ b/tests/core/agents/node/test_auto_history_compaction.py
+@@ -273,17 +273,54 @@ def test_oversized_protected_input_stops_before_any_inference(make_agent):
+     )
+ 
+ 
+-def test_compacted_result_is_checked_before_the_next_inference(make_agent):
++@pytest.mark.parametrize(
++    "score,summary", [(100, "unused"), (30, "large summary " * 1000)]
++)
++def test_larger_automatic_compaction_preserves_fitting_history(
++    make_agent, score, summary
++):
++    provider = CompactionProvider(
++        [tool_reply(call()), AssistantMessage("done")], score=score, summary=summary
++    )
++    events = []
++    agent = make_agent(
++        provider,
++        Tool(lambda: "original body", name="mock-tool"),
++        on_stream=as_agent_handler(events.append),
++    )
++    budget = RequestBudget(8000, count_request)
++    policy = automatic_policy()
++    provider.on_call = budget.require_fits
++    agent.root_node.set_history_compaction_policy(policy, budget=budget)
++    assert agent.run("task").get_message() == "done"
++    assert len(provider.requests) == 2
++    assert len(provider.score_requests) == 1
++    assert provider.requests[-1].get_messages()[-1].get_name() == "mock-tool"
++    assert "original body" in provider.requests[-1].get_messages()[-1].get_message()
++    assert not any(
++        isinstance(event, DeepAgentHistoryCompactionEvent) for event in events
++    )
++    policy.after_compaction.assert_called_once_with(provider.requests[-1])
++    assert agent.root_node.read_tool_output("output-0").content.endswith(
++        "original body"
++    )
++
++
++@pytest.mark.parametrize("summary", ["large summary " * 1000, "summary\n" * 300])
++def test_unusable_compaction_preserves_oversized_originals(make_agent, summary):
++    body = "evidence line\n" * 300
+     provider = CompactionProvider(
+         [tool_reply(call()), AssistantMessage("must not run")],
+         score=30,
+-        summary="large summary " * 1000,
+-    )
+-    agent = make_agent(provider, Tool(lambda: "original body", name="mock-tool"))
+-    agent.root_node.set_history_compaction_policy(
+-        automatic_policy(), budget=RequestBudget(8000, count_request)
++        summary=summary,
+     )
++    agent = make_agent(provider, Tool(lambda: body, name="mock-tool"))
++    budget = RequestBudget(11000, count_request)
++    provider.on_call = budget.require_fits
++    provider.on_score = budget.require_fits
++    agent.root_node.set_history_compaction_policy(automatic_policy(), budget=budget)
+     with pytest.raises(ContextBudgetExceededError):
+-        agent.run("task")
++        agent.run("user constraint " * 220)
+     assert len(provider.requests) == len(provider.score_requests) == 1
+-    assert "compact_history" in str([m.message_dump() for m in runtime_history(agent)])
++    assert runtime_history(agent)[-1].get_name() == "mock-tool"
++    assert agent.root_node.read_tool_output("output-0").content.endswith(body)
+diff --git a/tests/core/agents/node/test_deep_thinking_workflow.py b/tests/core/agents/node/test_deep_thinking_workflow.py
+index 8c85687..b1501c4 100644
+--- a/tests/core/agents/node/test_deep_thinking_workflow.py
++++ b/tests/core/agents/node/test_deep_thinking_workflow.py
+@@ -2,6 +2,7 @@
+ 
+ from __future__ import annotations
+ 
++import socket
+ from pathlib import Path
+ from unittest.mock import MagicMock
+ 
+@@ -174,6 +175,14 @@ def _xml_body(content: str) -> dict[str, object]:
+ def test_full_skill_uses_every_tool_with_a_mock_provider(
+     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+ ) -> None:
++    # The browser is mocked; URL validation must not depend on external DNS.
++    monkeypatch.setattr(
++        socket,
++        "getaddrinfo",
++        lambda *_args, **_kwargs: [
++            (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
++        ],
++    )
+     search_web = MagicMock(
+         return_value={
+             "result_count": 1,

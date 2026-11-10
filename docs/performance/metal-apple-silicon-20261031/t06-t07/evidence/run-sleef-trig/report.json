@@ -1,0 +1,47 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/verify-sleef-trig.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Pinned SLEEF u35 trigonometric prototype on all original Qwen vision angles, dense signed bounded interval and signed zero/subnormal controls; public numeric ABI only.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.0529618750006193,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 20748.625155,
+      "pressure": 1,
+      "host_available_bytes": 13282590720,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 20749.632028708,
+      "pressure": 1,
+      "host_available_bytes": 13140393984,
+      "swap_bytes": 262144,
+      "footprint_bytes": 158532376,
+      "resident_bytes": 213630976
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "c3fa8c69133cdc66e96e7c88d01534b85f50cfd6175e7a8616c7da5863cef61a"
+}

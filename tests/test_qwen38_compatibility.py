@@ -489,9 +489,10 @@ class Qwen38CompatibilityTests(unittest.TestCase):
         )
 
     @unittest.skipUnless(shutil.which("bash"), "launcher requires Bash")
-    def test_server_launcher_preserves_model_defaults_and_overrides(self) -> None:
+    def test_server_launcher_preserves_cuda_defaults_and_overrides(self) -> None:
         clean_env = {k: v for k, v in os.environ.items()
                      if not k.startswith("DS4_")}
+        clean_env["DS4_BACKEND"] = "cuda"
         cases = (
             ("start-ds4-server.sh", {}, "22593", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
             ("agent/start-ds4-server.sh", {}, "26000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),

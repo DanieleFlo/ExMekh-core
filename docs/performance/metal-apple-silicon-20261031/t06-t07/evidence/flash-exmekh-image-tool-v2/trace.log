@@ -1,0 +1,306 @@
+
+===== request 1 2026-10-31 22:04:39 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 1310
+effective_prompt_tokens: 1310
+cached_tokens: 0
+max_tokens: 768
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 1310
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","stream":false,"input":[{"role":"system","content":"Use the requested tool exactly. Remember codes."},{"role":"user","content":"Remember code BETA18. Call generate-image exactly once with prompt 'A red square on white.', n 1, width 256, height 256, seed 18, include_image_in_result false. Omit optional arguments you were not given. After the tool succeeds reply only BETA18."}],"reasoning":{"effort":"none"},"tool_choice":"required","tools":[{"type":"function","name":"generate-image","parameters":{"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]},"strict":true,"description":"Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."}],"max_output_tokens":768,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "generate-image", "parameters": {"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]}, "description": "Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT>
+
+Use the requested tool exactly. Remember codes.<|im_end|>
+<|im_start|>user
+Remember code BETA18. Call generate-image exactly once with prompt 'A red square on white.', n 1, width 256, height 256, seed 18, include_image_in_result false. Omit optional arguments you were not given. After the tool succeeds reply only BETA18.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=768 ctx_room=6882 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=generate-image>
+<parameter=prompt>
+A red square on white.
+</parameter>
+<parameter=n>
+1
+</parameter><parameter=width>
+256
+</parameter><parameter=height>
+256
+</parameter><parameter=seed>
+18
+</parameter><parameter=include_image_in_result>
+false
+</parameter><parameter=images>
+[]
+</parameter><parameter=output_format>
+png
+</parameter><parameter=background>
+auto
+</parameter><parameter=idempotency_key>
+None
+</parameter><parameter
+
+--- trace: progress gen=128 dsml_start=1 dsml_end=0 ---
+
+=preview_scale>
+1.0
+</parameter></function>
+</tool_call>
+
+--- trace: closed tool-call block after 144 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 144
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 272.075
+
+tool_call[0]:
+id: call_62fb8c351244c67433e2282b9caeb8d2
+name: generate-image
+arguments:
+{"prompt": "A red square on white.", "n": 1, "width": 256, "height": 256, "seed": 18, "include_image_in_result": false, "images": [], "output_format": "png", "background": "auto", "idempotency_key": "None", "preview_scale": 1.0}
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=1310 response_prefill=145 target=1455 ---
+
+
+===== request 2 2026-10-31 22:11:14 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 2276
+effective_prompt_tokens: 2276
+cached_tokens: 1455
+max_tokens: 48
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 1455
+prompt_tokens: 2276
+live_prompt_common: 1455
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=1 disk=0 canonical=0 missing_ids=0
+cache_source: responses-visible
+cached_tokens: 1455
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","stream":false,"input":[{"role":"system","content":"Use the requested tool exactly. Remember codes."},{"role":"user","content":"Remember code BETA18. Call generate-image exactly once with prompt 'A red square on white.', n 1, width 256, height 256, seed 18, include_image_in_result false. Omit optional arguments you were not given. After the tool succeeds reply only BETA18."},{"type":"function_call","call_id":"call_62fb8c351244c67433e2282b9caeb8d2","name":"generate-image","arguments":"{\"prompt\":\"A red square on white.\",\"images\":[],\"n\":1,\"width\":256,\"height\":256,\"output_format\":\"png\",\"background\":\"auto\",\"seed\":18,\"idempotency_key\":\"None\",\"include_image_in_result\":false,\"preview_scale\":1.0}"},{"type":"function_call_output","call_id":"call_62fb8c351244c67433e2282b9caeb8d2","output":"<tool-result type=\"object\">\n  <images type=\"array\">\n    <item type=\"object\">\n      <file_id type=\"string\">file-bf044118a16d98b1c8ea6aadfe2e0613</file_id>\n      <seed type=\"integer\">18</seed>\n      <width type=\"integer\">256</width>\n      <height type=\"integer\">256</height>\n      <recipe type=\"object\">\n        <version type=\"integer\">1</version>\n        <rng_version type=\"integer\">1</rng_version>\n        <steps type=\"integer\">8</steps>\n        <guidance type=\"integer\">1</guidance>\n        <reference_resolution type=\"integer\">0</reference_resolution>\n        <background type=\"string\">auto</background>\n      </recipe>\n      <path type=\"string\">/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/.exmekh_lib/generated-media/57b8b67b117c49588c33e9e4282b697b/0.png</path>\n    </item>\n  </images>\n  <ds4 type=\"object\">\n    <version type=\"integer\">1</version>\n    <request_id type=\"string\">req-56a706c232daf11e5de0a0b279654851</request_id>\n    <revision type=\"string\">fc13ba1986fcb905854dc8de2f52eee395f49b5b</revision>\n    <profile type=\"string\">bf16-native-v1</profile>\n    <plan type=\"object\">\n      <variant type=\"integer\">6</variant>\n      <victims type=\"integer\">0</victims>\n    </plan>\n    <reclaimed_device_bytes type=\"integer\">0</reclaimed_device_bytes>\n    <cache_hits type=\"integer\">0</cache_hits>\n    <total_seconds type=\"number\">105.167206</total_seconds>\n    <usage type=\"object\">\n      <processed_tokens type=\"integer\">0</processed_tokens>\n      <image_soft_tokens type=\"integer\">0</image_soft_tokens>\n      <video_soft_tokens type=\"integer\">0</video_soft_tokens>\n      <audio_soft_tokens type=\"integer\">0</audio_soft_tokens>\n    </usage>\n    <transfers type=\"object\">\n      <native_h2d_bytes type=\"integer\">108047930552</native_h2d_bytes>\n      <native_d2h_bytes type=\"integer\">638976</native_d2h_bytes>\n    </transfers>\n    <load_seconds type=\"array\">\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">0.0</item>\n    </load_seconds>\n    <phase_seconds type=\"array\">\n      <item type=\"number\">0.0</item>\n      <item type=\"number\">10.774782</item>\n      <item type=\"number\">43.548579</item>\n      <item type=\"number\">50.831345</item>\n    </phase_seconds>\n  </ds4>\n</tool-result>"}],"reasoning":{"effort":"none"},"tools":[{"type":"function","name":"generate-image","parameters":{"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]},"strict":true,"description":"Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."}],"max_output_tokens":48,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "generate-image", "parameters": {"type":"object","properties":{"prompt":{"type":"string"},"images":{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"null"}]},"n":{"enum":[1,2,3,4,5,6,7,8],"type":"integer"},"width":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"height":{"enum":[32,64,96,128,160,192,224,256,288,320,352,384,416,448,480,512,544,576,608,640,672,704,736,768,800,832,864,896,928,960,992,1024,1056,1088,1120,1152,1184,1216,1248,1280,1312,1344,1376,1408,1440,1472,1504,1536,1568,1600,1632,1664,1696,1728,1760,1792,1824,1856,1888,1920,1952,1984,2016,2048],"type":"integer"},"output_format":{"enum":["png"],"type":"string"},"background":{"enum":["auto","opaque","transparent"],"type":"string"},"seed":{"anyOf":[{"type":"integer"},{"type":"null"}]},"idempotency_key":{"anyOf":[{"type":"string"},{"type":"null"}]},"include_image_in_result":{"type":"boolean"},"preview_scale":{"type":"number"}},"additionalProperties":false,"required":["prompt","images","n","width","height","output_format","background","seed","idempotency_key","include_image_in_result","preview_scale"]}, "description": "Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT>
+
+Use the requested tool exactly. Remember codes.<|im_end|>
+<|im_start|>user
+Remember code BETA18. Call generate-image exactly once with prompt 'A red square on white.', n 1, width 256, height 256, seed 18, include_image_in_result false. Omit optional arguments you were not given. After the tool succeeds reply only BETA18.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<tool_call>
+<function=generate-image>
+<parameter=prompt>
+A red square on white.
+</parameter>
+<parameter=n>
+1
+</parameter><parameter=width>
+256
+</parameter><parameter=height>
+256
+</parameter><parameter=seed>
+18
+</parameter><parameter=include_image_in_result>
+false
+</parameter><parameter=images>
+[]
+</parameter><parameter=output_format>
+png
+</parameter><parameter=background>
+auto
+</parameter><parameter=idempotency_key>
+None
+</parameter><parameter=preview_scale>
+1.0
+</parameter></function>
+</tool_call><|im_end|>
+<|im_start|>user
+<tool_response>
+<tool-result type="object">
+  <images type="array">
+    <item type="object">
+      <file_id type="string">file-bf044118a16d98b1c8ea6aadfe2e0613</file_id>
+      <seed type="integer">18</seed>
+      <width type="integer">256</width>
+      <height type="integer">256</height>
+      <recipe type="object">
+        <version type="integer">1</version>
+        <rng_version type="integer">1</rng_version>
+        <steps type="integer">8</steps>
+        <guidance type="integer">1</guidance>
+        <reference_resolution type="integer">0</reference_resolution>
+        <background type="string">auto</background>
+      </recipe>
+      <path type="string">/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/.exmekh_lib/generated-media/57b8b67b117c49588c33e9e4282b697b/0.png</path>
+    </item>
+  </images>
+  <ds4 type="object">
+    <version type="integer">1</version>
+    <request_id type="string">req-56a706c232daf11e5de0a0b279654851</request_id>
+    <revision type="string">fc13ba1986fcb905854dc8de2f52eee395f49b5b</revision>
+    <profile type="string">bf16-native-v1</profile>
+    <plan type="object">
+      <variant type="integer">6</variant>
+      <victims type="integer">0</victims>
+    </plan>
+    <reclaimed_device_bytes type="integer">0</reclaimed_device_bytes>
+    <cache_hits type="integer">0</cache_hits>
+    <total_seconds type="number">105.167206</total_seconds>
+    <usage type="object">
+      <processed_tokens type="integer">0</processed_tokens>
+      <image_soft_tokens type="integer">0</image_soft_tokens>
+      <video_soft_tokens type="integer">0</video_soft_tokens>
+      <audio_soft_tokens type="integer">0</audio_soft_tokens>
+    </usage>
+    <transfers type="object">
+      <native_h2d_bytes type="integer">108047930552</native_h2d_bytes>
+      <native_d2h_bytes type="integer">638976</native_d2h_bytes>
+    </transfers>
+    <load_seconds type="array">
+      <item type="number">0.0</item>
+      <item type="number">0.0</item>
+      <item type="number">0.0</item>
+    </load_seconds>
+    <phase_seconds type="array">
+      <item type="number">0.0</item>
+      <item type="number">10.774782</item>
+      <item type="number">43.548579</item>
+      <item type="number">50.831345</item>
+    </phase_seconds>
+  </ds4>
+</tool-result>
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: cancelled after prefill ---
+

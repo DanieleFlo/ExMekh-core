@@ -1,0 +1,317 @@
+{
+  "date": "2026-11-02",
+  "source_parent": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "scope": "Clean-code review of all pending T06-T07 changes; native synthetic and non-live SDK/frontend tests only. Remaining live gates expressly suspended by user.",
+  "frontend": {
+    "passed": 1213,
+    "skipped": 49,
+    "failures": [],
+    "statement_branch_coverage_percent": 100,
+    "seconds": 590.06
+  },
+  "sdk_owners": {
+    "passed": 1510,
+    "skipped": 0,
+    "failures": [],
+    "seconds": 14.87,
+    "patch_matches_local_source_diff": true
+  },
+  "host": {
+    "passed": 90,
+    "seconds": 13.175
+  },
+  "numeric": {
+    "passed": 39,
+    "cuda_only_skipped": 3,
+    "seconds": 2.484
+  },
+  "native_synthetic": {
+    "cases_passed": 6
+  },
+  "flash_stream_kernel_fixture": "PASS",
+  "server_unit_fixtures": "PASS",
+  "interactive_unit_fixtures": "PASS",
+  "additional_make_targets": {
+    "runtime": "PASS",
+    "resources": "PASS",
+    "executor": "PASS",
+    "bundle": "PASS12tests",
+    "suite_contracts_artifacts_manifests": "PASS16tests",
+    "suite_http": "PASS",
+    "qwen_test_profile": "PASS",
+    "metal_memory_policy": "PASS",
+    "numeric_lifetime": "PASS",
+    "image_input": "PASS",
+    "image_output": "PASS",
+    "sha256_native_portable": "PASS",
+    "suite_accelerator": "PASS"
+  },
+  "provider_launcher_tests": {
+    "passed": 13,
+    "seconds": 0.054
+  },
+  "ruff_modified_python_files": 42,
+  "uv_lock_check_offline": "PASS167packages",
+  "reachable_arithmetic_changed_by_review": false,
+  "unreachable_shader_removed": "nm_softmax; nm_ordered_softmax dispatch preserved",
+  "numerical_criteria_changed": false,
+  "live_tests_started": false,
+  "tps_optimization_started": false,
+  "environment_attempts_retained": {
+    "host-native.log": "System Python lacked jsonschema; suite targets now honor SUITE_PYTHON",
+    "host-native-prepared-python.log": "Bundle loopback bind denied by sandbox; target subsequently PASS with authorized loopback",
+    "uv-lock.log": "Sandbox denied existing uv cache; authorized offline check PASS"
+  },
+  "remaining_limits": [
+    "F08 live workflow NOT_VERIFIED; T07 remains open",
+    "Extended quality/stress and other Apple devices",
+    "No new CUDA/ROCm or distributed execution; CUDA machine previously unavailable"
+  ],
+  "source_sha256": {
+    "AGENTS.md": "613e67f1b620854ccd0ec4beb95db5e9b177eb15dcc7c9fa816b6838c9d1c6e1",
+    "agent/tests/file_workflow_profile.py": "13e9118430c109784f9f7b113dc1a492747e6120647428f25a5a3a5a8a98945f",
+    "agent/vendor-patches/README.md": "45f44aa59259ff6250a78dbe2ab721c9ec31cf941c0761fbd64c0fee75dc0a4d",
+    "agent/vendor-patches/exmekh-lib-budget.patch": "6c133df1636398b059e722d9332076895709c56e19ffb69113c2c6aaa2c62ca6",
+    "config/flash-metal-streamed.env.example": "a64f882adeb4a15851610a7ae687ec1be34489688a3df528669d9d9c01a9e59f",
+    "config/metal-local-qualification.env.example": "7fb565404c729891bbf6d8c5fcf6e8c5dcc3bc55292792640dc6a78f31f918e8",
+    "config/native-suite-metal.example.json": "f85fd47d9ae8ab6712bf6601081eaf2f4e27eec3829e493d1c65f60ed157107b",
+    "config/qwen27-metal-streamed.env.example": "88f74e13cc1a1a39133a8bf7f556e4b3592ebc668b8998995cd5f69ad1fab7cc",
+    "docs/architecture/metal-t06-t07-clean-code-review-20261102.md": "2f94e7adec03b15fcc50442a91514f98b57af2864187c9aa6736f807501ba08b",
+    "metal/numeric_ordered.metal": "ecded1d3919af1de19c08f318340125952a64f75ecd8177833d9c4d9cbf7c3b6",
+    "tests/probe_qwen_metal_stream.c": "f8711a0db081d805a9d91cd3a8a164607fedf24e8cdfc241cb5da2c5f381f8f6",
+    "tests/test_flash_metal_stream_graph.c": "c17675c43b1c3623749e239e864008c6ed37df2e6bdd6395fa7d2f633b51d568",
+    "tests/test_metal_stream_qualification.py": "caaf9a6c76c24092ba2d33ecc3e243a105ddeac47afa36fd50c9ba8ff80d8c50",
+    "tests/test_qualification_client.py": "bb6a5eb131b28b6880b1da457ab6fbc9663a1ae54c8284f1a2ccd9040c80b53f",
+    "tests/test_qwen_metal_api_live.py": "ccb8c456a02f28484f7ec29c603dbf8cbd8bbad028650504cc1821dd70bbd4b9",
+    "tests/test_qwen_metal_compaction_live.py": "07eae7bff7c82ae3638e413f1369c9b62cd4e352aef21ee6e18d35db8c48dd01",
+    "tests/test_sha256.c": "523029bb10dc7e5918c36604150eae7872ac66cc1a127c441fce0d6d72e1988e",
+    "tests/test_suite_offloaded_oracle.py": "4bf0afe3a7f3acd37cb1007396cfb9b7cc37efc0370d879d32b6fbd405f2ca72",
+    "tests/test_suite_phase_live.py": "30f294ee6979b04c4ccd1f420004eb575a2a1133d9dc849a10455ddecb029a22",
+    "tests/test_suite_pipeline_qualification.py": "85a6281825dea07ab8b399ea3f0c768f664a5e6eb7fa31b5faad693d0108165b",
+    "tools/embed_metal_numeric.py": "73042868c408de6808ff01f56abd683d42b670f5af9f9c180bc89b31cce70029",
+    "tools/qualification_client.py": "3f86046cb032714ec57777c4be9ce0e5158b7224bcd251ffa7a3e1718e70585a",
+    "tools/qualification_timeouts.py": "cd92e9a902cad37f84e95a5231e0693d32c673e5b1e1d8e7623e0446e22334e0",
+    "tools/qualify_metal_command.py": "c7372b56fa2c531868ffd5a722db0e4f6865c9f6f7e5dec08de7522383edb2b3",
+    "tools/qualify_metal_server.py": "482eac8e64c40cb3780a4ca2fe0e4239b1263bfced687481d60755148a2a9327",
+    "tools/qualify_metal_suite.py": "0861ece8c90412e34651f1eb3578429def6f9928222d11d32b18942bcf78dcb5",
+    "tools/suite_offloaded_oracle.py": "ad0a6dea14e22a81a98d458fff47e951c44d8a2b927eecd6cd0fdd7aa543c81e",
+    ".gitignore": "c96b34ea619920779bd7b7b806bb62f8079a6df4f990957c80b2dc016819ca37",
+    "Makefile": "54014cee3ead34c2c0aae50ab017f5914cab2e56599c711ceda08a367b2ce138",
+    "PROJECT_INDEX.md": "80b4aa2fc2f1c32952061d594622a87ae44dba4f3be32f702f830477996d1baf",
+    "README.md": "567041fe1ffc765e2b302421e738f074d471c4452d4c251f35ed8edd3b814b2c",
+    "agent/README.md": "3b8dfc394260371d5dc915986fa12c2689adc384181bfd1b50b64985f61f97e7",
+    "agent/src/exmekh_agent/capabilities/hds/coding-agent.md": "7281c59be9e92bf1e548f94d27da8dd8e6e1f9b6414e5dd0b8126d79b05a5776",
+    "agent/tests/browser_support.py": "4ef86f37c78f26184444eac32acf6b6a15dd45f61743eec8a1ccb2ebcfec8d20",
+    "agent/tests/run_native_image_generation_agent.py": "417be76e95f02d17416d261ec5eb5ad32f96b8d5ff78a986e8eb19d436248360",
+    "agent/tests/test_agent_design.py": "b10a68844ee942dddae5226e2a082e20f3263dc9ae3bea0da9c9e49c5cff3513",
+    "agent/tests/test_auto_compaction.py": "b6c080a812dcd55396d54d807f1a0da8a4c0c032c6d04bc79cdbf7a793d90f3d",
+    "agent/tests/test_live_e2e.py": "0328f618ada6b2dc16b8042e6d074a3e34462de51e5b972c8bf476a6c2211f61",
+    "agent/tests/test_native_image_generation_e2e.py": "fde21d96bef9f49daf951a33e7ed61d795e41c22878a97ce0e995163ffb87cf5",
+    "agent/uv.lock": "00dab05b9610bdd8ca44f44ab2d41fd67900710969548c00e185bfc12666ead5",
+    "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl": "97e0119e2b7767bd4af6ec74d39987c73a00b7fe5671d0406bbae5b4c2b76139",
+    "docs/roadmaps/metal-apple-silicon-support-20261028.md": "7f017558b8f5190ab9e0cf03c69cb8d5d9f8a5184415984141e6e78bb036fb08",
+    "ds4.c": "1e23dd4c43a8dfa85d9a7367c72c91c0e53b897c1f257776521b047bd3413256",
+    "ds4.h": "60028af3940021b4bd12d89dbeb49743538e4eb9fdd51becf47e0c7e18803b25",
+    "ds4_gpu.h": "bf0f6cde7f1955572549ce2a3f9e8511ac88b6246f6632494532bbdee01cbd20",
+    "ds4_help.c": "605ad255dc929ef01a1b2b343a23f838f06e956772dcbce9c05bccc4fdc59451",
+    "ds4_lifecycle.inc": "d80041b655ccd2360e113a811cc1d10665fb04e2c2610a0555f33ce1fb0c3370",
+    "ds4_metal.m": "152b7a9a5d15521f6020da22af60e75629fe293a55a5ae41905d829ebcd11b08",
+    "ds4_metal_device.h": "a599be95d42950d4be17cdee058482645e9554ae07d517920aaf59b6c3f7b29d",
+    "ds4_metal_memory.h": "6c28c1414f164fcc63fed186cb216fad798e641620f7a4d4e8bcea71dfdbded5",
+    "ds4_numeric_metal.m": "9717e4017890554327fda29a1c429fdbded028ddd4359d5606cbbd1784becf6f",
+    "ds4_numeric_metal_args.h": "40e24d4ab68aef78cede3c18e3d593a491dd4ce1637aa8259a4b689bb0573b29",
+    "ds4_qwen35_metal.inc": "8189c3ad4f0ddaa3fda1166e2a16051855310d5df39b95bb9c44bf152b99ffc4",
+    "ds4_qwen4_metal_stream.inc": "d4a302e887db766a61c33e8890d7834db74096c74cf64a6a7c05a6454563a8ff",
+    "ds4_qwen_image_encoder.c": "45f22f3bb4195cd513c47b0c0f463e48c748f93b38d92b4ffe3157c1f7ffd9d2",
+    "ds4_server.c": "03fc05355dfbd5ec9207b8ff2a6b0c5d71fc2a830ee0cb7b09ade3e08ad79763",
+    "ds4_server_suite.inc": "e87d307ad6eb71a44c457e805d542dd98289beedbdf02a9bc440e2214c488970",
+    "ds4_server_suite_types.h": "211b30e98db37bf581cd9ba13591e40aacb6a21297e677d42810c620f5ad7e98",
+    "ds4_sha256.h": "d9e59033e547d6eecca3081841f1a8374fbc22bf02c127b6d55fbf4a3a6307d7",
+    "ds4_suite_text.h": "6ec3c5ccb398a05c53f0dc0d3024c82990eb0bc7587dc080e9c7afe92a532c2c",
+    "metal/numeric.metal": "6931c4bd68871b66c3fefb69c3dbf4ec41cacd8826a940631ac510f18380c1ba",
+    "schemas/ds4-suite-catalog-v1.schema.json": "c024a5f58bca912e31997c026f166a54841a30b4c72136e1433d0518604bcc52",
+    "start-ds4-server.sh": "e50a3c4622ce7af108e6bd79e488b89290617c2ea57eb3ba7fd519f742674e1c",
+    "tests/probe_gemma_visual.c": "41eadcda8df5b00d8e7544a8e7b29355e0aa471d692987baefa93dc24a48daa6",
+    "tests/probe_qwen_image_encoder.c": "f13f9cf662bf6b944ddcd543731143b8ea769962cb4e9ab957ac5686ae84703d",
+    "tests/probe_qwen_image_graph.c": "2b19e179ad14b67cb05e0a7047ea09e79d4fd99b5b346ccb8ef038a73d0f78cd",
+    "tests/qwen_test_profile.h": "870f6b0b28e1b6fd5002c424cd87bf26886635c28528a86d90c4b77273de2662",
+    "tests/suite_numeric_api.py": "eb8a2ba3fc38b5d34fda0d802824d9cbd3d7c0eee8e086372542c0cf1397572e",
+    "tests/test_agentic_api.py": "b3eb055ec25032a7a0044db36791472d2a3217bd1c12870954882b3c090bec8e",
+    "tests/test_agentic_checkpoint.c": "415be082196bc2f04e33176301f99e2ef9d8c030869ae10e362f6fdec0524100",
+    "tests/test_flash_launcher.py": "f1863a3ea0ad1d09be8d24aa6f35c3a5c588a2522f7a9c6405e5d25da3eca8fd",
+    "tests/test_glm53_vision_prompt.c": "45c8d2993e7a210ed5f690b63b4431b1a7a823809d388b7358fe4db00d8e5f89",
+    "tests/test_interactive_api.py": "6cc43baf3b17c4aebb87ede36d1a107c560a9a7af9ef125b1e7cab9e5096ffaa",
+    "tests/test_metal_memory_policy.c": "43c6a66f5f3517586cb268f7441953373f802d38e36d36950ee34aae1e731bcb",
+    "tests/test_qwen35_metal_features.c": "e405a52250a32132ddad2a581597746a491d9296d308f247d052f1fb55c99e9e",
+    "tests/test_qwen35_metal_graph.c": "d0ef0025f27e51f6b29c546f35c3f269620ed20cc9de0273d019140804312914",
+    "tests/test_qwen4_kernels.c": "09a97202a39e1b574716f7d07fdcd0456f70240ee974c825bb2ce593c44b564a",
+    "tests/test_qwen_flash_tools.py": "640f243dcd42035ad47b80f04e173b8224aa116a14e2ebf90c4a67852b5f4c3d",
+    "tests/test_qwen_metal_lifecycle.c": "8407925e9ad56909639dae34e2213f7b7c5c2b4e5d5e7bbcc8f4557145566ddc",
+    "tests/test_qwen_test_profile.c": "9e3caf0fc6ee16db4175f31cf4b9e4382d92f6a181749c17b4165225efcc9bca",
+    "tests/test_suite_contracts.py": "f8fa9b608735c1bd4bd7287a73b093c079ae9ddcdd84b8bd84cba5a1ad0a2a69",
+    "tests/test_suite_embedding_tools_e2e.py": "75b6fbff219c3e9c5b1120a42089db732e23d3cd2cc121cd54e72c51ab202ade",
+    "tests/test_suite_exmekh_live.py": "434cb559fbe91aecf480afc92b7127dfca7e60bc89ac89a5e38e6b0ad9012843",
+    "tests/test_suite_http_live.py": "67bb1105d2f233eff4bcf0163c8f9a7073e32b9f7ca575f51c3c8160cfc5c5cb",
+    "tests/test_suite_numeric.py": "223ab91797ef82c313e0e18d3cf665ec2aaab4e2c5417f5d5d26922d6e754834",
+    "tests/test_suite_numeric_api.py": "d1318d7b993b6c66f05eefe02e778b6af4d0fd93d99edbfa71837a7bf4ce074b",
+    "tools/bench_qwen_flash_agent.py": "21940834b78e4184db7bdc72c5556194b7fe9105116be43ef0ae76f2dd838935",
+    "tools/bench_suite_numeric.py": "6d9e0d56a72299713e80c6068125694dc4ef14b83f295218c5e2aab45638919a",
+    "tools/diagnose_qwen_image_encoder.py": "049be13fc1d60360b4d5cd70717c37bb6d0687ce87044129fe4cc0b6725440f8",
+    "tools/diagnose_qwen_image_vision.py": "ae31873337204bb1f38bdb2d8160cef6f95f5e7ab9b10b7705aac765007fe131",
+    "tools/qualify_metal_foundations.py": "3f31177c719e9b1e4f93a17718401e9074b40969e3903bc74fbbc9a2caad4bcb",
+    "tools/qualify_qwen_flash_launcher.py": "a6d9f150dd1d0607381ee8829d3f1a56570e71cdcfd659bb59843ee500fac5b8",
+    "tools/qualify_qwen_image_pipeline.py": "3e465fa586d6ad370f6e491930f1265dadf4032d70340784b7f277d502926e0a",
+    "tools/qualify_suite_release.py": "93728114bd72612d6599c63970ebe0aa9f187b561f684d3183d990f8248fa83a",
+    "tools/qwen_flash_launcher.py": "b1948598a1712f98a8442eaa8317056a2224199028d777b5d3fb7af36d6ba698",
+    "tools/run_qwen_image_pipeline_oracle.py": "c625ada174b32eca2343500e5b6e8ff6db62fc6b31fabd123e4009b1f54df6ef"
+  },
+  "evidence": [
+    {
+      "path": "evidence/build.log",
+      "bytes": 6897,
+      "sha256": "3465a72e1a10a0a1f3fae8ecedb8305f9893bfab6747b7772914b9af8843d34c"
+    },
+    {
+      "path": "evidence/bundle-loopback.log",
+      "bytes": 1918,
+      "sha256": "acd5556b0beee6005bf621c69cc76a2b957e907a402f64f3f276b94f6d7ca7b4"
+    },
+    {
+      "path": "evidence/frontend-junit.xml",
+      "bytes": 305320,
+      "sha256": "917a105c803bdce56ece81148d3ad49046df268b6f915b3501b9e298ac9dcb0b"
+    },
+    {
+      "path": "evidence/frontend.log",
+      "bytes": 13609,
+      "sha256": "8d425dafaebcbef3d77810f3db8cd0f4c40825006c9651005ea19c9998956bdf"
+    },
+    {
+      "path": "evidence/host/command.log",
+      "bytes": 379,
+      "sha256": "3d8e0ed6b36e22f9148c182a94c737770b8a8ba118abd5be67bda3d2f99a4ab4"
+    },
+    {
+      "path": "evidence/host/report.json",
+      "bytes": 4984,
+      "sha256": "01b29b77a28cdd16cb57ce3ac2c4eca1b6c1972bba9c68ce7be0f794ca5b583a"
+    },
+    {
+      "path": "evidence/host-final/command.log",
+      "bytes": 379,
+      "sha256": "f5c49251c74ae2a2ab8d0ce5dcd36b7bc135673524917bd417479481648def08"
+    },
+    {
+      "path": "evidence/host-final/report.json",
+      "bytes": 5022,
+      "sha256": "d19cc484d513eb69aca626ac6d5e45f0ec10b2d8e66638fb756391f13adace0d"
+    },
+    {
+      "path": "evidence/host-native-prepared-python.log",
+      "bytes": 6936,
+      "sha256": "95fd0f15c4ed4d5566b792ff23f06c7a664b062dad3e3bec2436cf2b03f174cb"
+    },
+    {
+      "path": "evidence/host-native.log",
+      "bytes": 2412,
+      "sha256": "e3debcd44ae48f818c111162c33b6f0d3b5a87d40c01e00da173351a3d7f5753"
+    },
+    {
+      "path": "evidence/interactive-unit.log",
+      "bytes": 126,
+      "sha256": "f4e2c8a0d7a4a31bd8a0694ca566cbb58ae5c4b932719ae8854d27f09109ce50"
+    },
+    {
+      "path": "evidence/lint.log",
+      "bytes": 44,
+      "sha256": "9f729d770b27dc6f5c341568d485f5fbdabf0cd3ceb8a060f98c94173538fd81"
+    },
+    {
+      "path": "evidence/native/command.log",
+      "bytes": 5940,
+      "sha256": "22162619425dd99a48d718a4f9042b5ad20e4ad8300b6d5f27a16393347b88eb"
+    },
+    {
+      "path": "evidence/native/report.json",
+      "bytes": 2301,
+      "sha256": "3cca4c30982b34828924da3e0c4f356a3700798b7b30b625c5cfd746b533e3f1"
+    },
+    {
+      "path": "evidence/numeric/command.log",
+      "bytes": 110,
+      "sha256": "da18beadb20bc3fda0ca46653af7a4058ab1753d5c3459986ce92c68735cdb47"
+    },
+    {
+      "path": "evidence/numeric/report.json",
+      "bytes": 2027,
+      "sha256": "e5d6ba580c3406741cb13a4321acd6c72136629c19ea7e5456a083c9dd139f91"
+    },
+    {
+      "path": "evidence/protocol-kernel-build.log",
+      "bytes": 2020,
+      "sha256": "31f6c82572dd9531cb91135595385b8809f35599049900e06f80e2cd0a7c46f7"
+    },
+    {
+      "path": "evidence/provider-launcher.log",
+      "bytes": 98,
+      "sha256": "5a192857a532ebdc49fb247c4ed51d56d115195a4b800ece301a58aa5ab2aa0f"
+    },
+    {
+      "path": "evidence/sdk-owners-junit.xml",
+      "bytes": 257132,
+      "sha256": "39bc20520382fe920a66adc55db9ecb499181f8b425e23359e81fa9fa96b4e1d"
+    },
+    {
+      "path": "evidence/sdk-owners.log",
+      "bytes": 1702,
+      "sha256": "a255a1b18af873a7c40c3bb92e7a4c59ea5b113e018ae789d5e0136dc1544aff"
+    },
+    {
+      "path": "evidence/server-unit.log",
+      "bytes": 574,
+      "sha256": "1036d9d80d90bf9849cf11887e13954b557e8c9aaa3e7354f7831ca6c5fd10fe"
+    },
+    {
+      "path": "evidence/stream-kernels/command.log",
+      "bytes": 3421,
+      "sha256": "ef726a2ec79e8f652548c2e5dac62d7afb788485aae273eb312a5e4d274eb7dc"
+    },
+    {
+      "path": "evidence/stream-kernels/report.json",
+      "bytes": 1221,
+      "sha256": "f7f53be776e7fb3f7caaf5cda05958c5fa2abeec8143623af9afe833924b51dd"
+    },
+    {
+      "path": "evidence/uv-lock-authorized.log",
+      "bytes": 31,
+      "sha256": "c363d1ac4035e4d789015b6232df5a4df4e517c84c84b92068a18a78619af852"
+    },
+    {
+      "path": "evidence/uv-lock.log",
+      "bytes": 189,
+      "sha256": "14074081ee758969a1c2af6470f3f1f1fc1e30f384710cf0c3cfe46eeca07fd9"
+    },
+    {
+      "path": "diagnostics/run-offline-nov02-native.py",
+      "bytes": 989,
+      "sha256": "309165ad99882e88ee2c13ab037f54817e246bbfe1b5d1709631a7379cf6d660"
+    },
+    {
+      "path": "diagnostics/run-offline-nov02-native.json",
+      "bytes": 1170,
+      "sha256": "b8affa14167f449f8d29e15d3efe1d47ff5e29c6150e07c1a2268dd9f94e430a"
+    }
+  ],
+  "excluded_local_output": [
+    ".coverage",
+    ".test-tmp/",
+    "screenshots/",
+    "ExMekh-lib/ audit checkout; reproducible patch and wheel versioned",
+    "build/ binaries and multi-GiB numerical/state inputs"
+  ],
+  "implementation_commits": [
+    "fb1fdb3ecfe733bffb3e42749d7bcc5ebf10a833",
+    "8e3449d82f826deefe32c356faf6f1b4922cc028",
+    "aa8e8201d489450564ec49b44fbb2e496eb60831"
+  ]
+}

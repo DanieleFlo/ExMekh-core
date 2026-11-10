@@ -1,0 +1,49 @@
+{
+  "command": [
+    "env",
+    "DS4_SUITE_NUMERIC_METAL=1",
+    "build/metal-venv/bin/python",
+    "-m",
+    "unittest",
+    "tests.test_suite_numeric_api",
+    "-v"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120.0,
+  "reason": "Public Numeric wrapper library selection, ownership, resource budget rejection/recovery and teardown; tiny fixtures only, no model.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 2.0422698749998744,
+  "status": "PASS",
+  "cleanup_error": null,
+  "samples": [
+    {
+      "monotonic": 4984.870984916,
+      "pressure": 1,
+      "host_available_bytes": 15005794304,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 4985.887026083,
+      "pressure": 1,
+      "host_available_bytes": 14746271744,
+      "swap_bytes": 0,
+      "footprint_bytes": 172426056,
+      "resident_bytes": 228687872
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "cf770bbeff2cd6affb91daa1251546a73c852b94c76fd77af588646a6779e116"
+}

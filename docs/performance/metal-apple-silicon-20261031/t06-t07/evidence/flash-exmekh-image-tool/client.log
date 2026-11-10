@@ -1,0 +1,49 @@
+F
+=================================== FAILURES ===================================
+_______ ExmekhNativeLive.test_registered_image_tool_retains_conversation _______
+
+self = <test_suite_exmekh_live.ExmekhNativeLive testMethod=test_registered_image_tool_retains_conversation>
+
+    def test_registered_image_tool_retains_conversation(self):
+        captures = []
+>       with LocalProvider(
+            model=os.getenv("DS4_SUITE_LLM_MODEL", "Qwen3.8-27B-UD-Q4_K_S"),
+            base_url=URL,
+            api="responses",
+            reasoning_effort="none",
+            http_client=HTTPClient(
+                event_hooks={
+                    "response": [lambda response: captures.append(response.read())]
+                }
+            ),
+        ) as provider:
+
+tests/test_suite_exmekh_live.py:31: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/providers/local.py:63: in __init__
+    self._check_provider()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <exmekh_lib.providers.local.LocalProvider object at 0x10b9b4980>
+
+    def _check_provider(self) -> None:
+        if not self._model:
+            raise ValueError(PROVIDER_TEXT.model_name_is_not_set)
+    
+        available_models = self._get_available_models()
+    
+        if not available_models:
+            raise ValueError(PROVIDER_TEXT.no_models_are_available_from_the_provider)
+    
+        if self._model not in available_models:
+>           raise ValueError(
+                PROVIDER_TEXT.model_not_found_available_models.format(
+                    model=self._model, names=", ".join(sorted(available_models))
+                )
+            )
+E           ValueError: Model 'Qwen3.8-Flash-Next-Q2' not found. Available models: qwen3.8-flash-next, qwen3.8-flash-next-chat, qwen3.8-flash-next-reasoner
+
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/providers/local.py:162: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_suite_exmekh_live.py::ExmekhNativeLive::test_registered_image_tool_retains_conversation
+1 failed in 4.02s

@@ -1,0 +1,235 @@
+{
+  "command": [
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_qwen_image_encoder",
+    "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+    "build/metal-models",
+    "build/metal-models/image-tokenizer.ds4q",
+    "build/metal-qualification/t06-t07-20261031/image-text/encoder.ds4i",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/encoder"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200,
+  "base_timeout_seconds": 300,
+  "timeout_multiplier": 4,
+  "reason": "Combined isolated candidate after exact identical-input GELU and softmax/attention replay; unchanged frozen oracles, serial full models, user4x deadlines and2GiB host reserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 25.300101500000892,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 12080.444897666,
+      "pressure": 1,
+      "host_available_bytes": 13120012288,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 12081.454554625,
+      "pressure": 1,
+      "host_available_bytes": 13108035584,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12082.462764166,
+      "pressure": 1,
+      "host_available_bytes": 13087277056,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12083.473140708,
+      "pressure": 1,
+      "host_available_bytes": 13494337536,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12084.481919625,
+      "pressure": 1,
+      "host_available_bytes": 13544210432,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12085.490154125,
+      "pressure": 1,
+      "host_available_bytes": 13573505024,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12086.500411666,
+      "pressure": 1,
+      "host_available_bytes": 13596688384,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12087.511476875,
+      "pressure": 1,
+      "host_available_bytes": 13608222720,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12088.524931,
+      "pressure": 1,
+      "host_available_bytes": 13630996480,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12089.536550458,
+      "pressure": 1,
+      "host_available_bytes": 13645725696,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12090.547125291,
+      "pressure": 1,
+      "host_available_bytes": 13941751808,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12091.557428208,
+      "pressure": 1,
+      "host_available_bytes": 13945192448,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12092.56494375,
+      "pressure": 1,
+      "host_available_bytes": 13929988096,
+      "swap_bytes": 262144,
+      "footprint_bytes": 6668864,
+      "resident_bytes": 16351232
+    },
+    {
+      "monotonic": 12093.579464625,
+      "pressure": 1,
+      "host_available_bytes": 12779831296,
+      "swap_bytes": 262144,
+      "footprint_bytes": 597362200,
+      "resident_bytes": 1078165504
+    },
+    {
+      "monotonic": 12094.586401166,
+      "pressure": 1,
+      "host_available_bytes": 10612654080,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1684442232,
+      "resident_bytes": 3250094080
+    },
+    {
+      "monotonic": 12095.598523708,
+      "pressure": 1,
+      "host_available_bytes": 9832857600,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1930350888,
+      "resident_bytes": 4317954048
+    },
+    {
+      "monotonic": 12096.611872166,
+      "pressure": 1,
+      "host_available_bytes": 9610903552,
+      "swap_bytes": 262144,
+      "footprint_bytes": 1969181832,
+      "resident_bytes": 4694081536
+    },
+    {
+      "monotonic": 12097.623970375,
+      "pressure": 1,
+      "host_available_bytes": 9420767232,
+      "swap_bytes": 262144,
+      "footprint_bytes": 2016090160,
+      "resident_bytes": 5845041152
+    },
+    {
+      "monotonic": 12098.635684916,
+      "pressure": 1,
+      "host_available_bytes": 9324478464,
+      "swap_bytes": 262144,
+      "footprint_bytes": 2049989472,
+      "resident_bytes": 7069630464
+    },
+    {
+      "monotonic": 12099.648758208,
+      "pressure": 1,
+      "host_available_bytes": 9363013632,
+      "swap_bytes": 262144,
+      "footprint_bytes": 2138890040,
+      "resident_bytes": 8403828736
+    },
+    {
+      "monotonic": 12100.663827708,
+      "pressure": 1,
+      "host_available_bytes": 9426649088,
+      "swap_bytes": 262144,
+      "footprint_bytes": 2009096928,
+      "resident_bytes": 9686614016
+    },
+    {
+      "monotonic": 12101.675013125,
+      "pressure": 1,
+      "host_available_bytes": 9419522048,
+      "swap_bytes": 262144,
+      "footprint_bytes": 2021975544,
+      "resident_bytes": 10869047296
+    },
+    {
+      "monotonic": 12102.687631208,
+      "pressure": 1,
+      "host_available_bytes": 9321381888,
+      "swap_bytes": 262144,
+      "footprint_bytes": 2077469088,
+      "resident_bytes": 12136431616
+    },
+    {
+      "monotonic": 12103.694372958,
+      "pressure": 1,
+      "host_available_bytes": 9286041600,
+      "swap_bytes": 262144,
+      "footprint_bytes": 2150313216,
+      "resident_bytes": 12417662976
+    },
+    {
+      "monotonic": 12104.710949333,
+      "pressure": 1,
+      "host_available_bytes": 10662510592,
+      "swap_bytes": 262144,
+      "footprint_bytes": 853044336,
+      "resident_bytes": 12244467712
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-compatible/probe_qwen_image_encoder": "ba290cce134f19aa6d8ae4b62277357609284800c8058802bb2f10e0345b0c83"
+  },
+  "log_sha256": "9602c80d0dfda23bdacf56ee201a96fd31f03f19247ba490bba7663cd30a4062"
+}

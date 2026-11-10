@@ -1,0 +1,38 @@
+[
+  {
+    "stage": "layer0.conv",
+    "different": 1,
+    "elements": 1122304,
+    "max_abs": 7.62939453125e-06
+  },
+  {
+    "stage": "layer0.norm",
+    "different": 1,
+    "elements": 1122304,
+    "max_abs": 0.00390625
+  },
+  {
+    "stage": "layer1.conv",
+    "different": 6,
+    "elements": 70656,
+    "max_abs": 0.0625
+  },
+  {
+    "stage": "layer1.norm",
+    "different": 1,
+    "elements": 70656,
+    "max_abs": 0.0001220703125
+  },
+  {
+    "stage": "input_proj_linear",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "upstream-stem-vs-frozen",
+    "different": 0,
+    "elements": 70656,
+    "max_abs": 0.0
+  }
+]

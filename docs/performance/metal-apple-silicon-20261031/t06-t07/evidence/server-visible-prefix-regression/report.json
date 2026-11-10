@@ -1,0 +1,38 @@
+{
+  "command": [
+    "./ds4_server_test"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Allhostserverprotocolfixtures after QwenplainResponses visibleprefixfix; noGGUF ormodelinference, inclnew renderer/replay regression.4xtimeout and2GiBhostreserve.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 1.0452842920003604,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 8653.122259,
+      "pressure": 1,
+      "host_available_bytes": 10932649984,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    }
+  ],
+  "executables_sha256": {
+    "./ds4_server_test": "fb5a2361e224a22df63cda40a3bac5a001fe95096621f5014ffef2957b30185d"
+  },
+  "log_sha256": "df501ec11f0b19ff0d3abda971fcb0a1c3ebaf9285d75f70c143bd4d1ce15086"
+}

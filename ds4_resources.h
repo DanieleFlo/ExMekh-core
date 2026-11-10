@@ -55,6 +55,9 @@ typedef struct {
 } ds4_resource_info;
 
 ds4_status ds4_resources_create(ds4_resources **out);
+/* Unified GPUs charge device storage and host storage to one physical HOST
+ * budget. Select before registering resources; mmap remains a virtual ledger. */
+ds4_status ds4_resources_set_unified_memory(ds4_resources *, bool enabled);
 /* Refuses destruction while any resources or reservations remain. */
 ds4_status ds4_resources_close(ds4_resources *resources);
 ds4_status ds4_resources_set_budget(ds4_resources *, ds4_memory_location,
@@ -79,6 +82,9 @@ ds4_status ds4_resource_register_host(ds4_resources *, uint64_t owner,
 /* Views retain storage and never charge its bytes again. */
 ds4_status ds4_resource_view(ds4_resource *, uint64_t offset, uint64_t bytes, ds4_resource **);
 ds4_status ds4_resource_retain(ds4_resource *);
+/* Read-only release admission, including the backing event of a view.
+ * The owner must still serialize final use and destruction of its handle. */
+ds4_status ds4_resource_can_release(ds4_resource *);
 ds4_status ds4_resource_release(ds4_resource *);
 ds4_status ds4_resource_inspect(ds4_resource *, ds4_resource_info *);
 ds4_status ds4_resource_set_live(ds4_resource *, uint64_t);

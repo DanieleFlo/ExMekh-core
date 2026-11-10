@@ -1,0 +1,163 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 1.00 GiB (raw 1.00 + compressed 0.00) + buffers 0.17 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 3.17 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=0 backend=metal
+1101 20:55:09 ds4-server: loaded model Qwen3.8-27B-UD-Q4_K_S.gguf
+1101 20:55:09 ds4-server: context buffers 1199.24 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=0)
+1101 21:10:41 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv (budget=8192 MiB, cross-quant=reject, min=1, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1101 21:10:41 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk
+1101 21:10:41 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/trace.log
+1101 21:10:41 ds4-server: listening on http://127.0.0.1:18080
+1101 21:10:44 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prompt start
+1101 21:10:50 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prefill chunk 64/363 (17.6%) chunk=0.00 t/s avg=10.42 t/s 6.142s
+1101 21:10:56 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prefill chunk 128/363 (35.3%) chunk=10.37 t/s avg=10.40 t/s 12.310s
+1101 21:11:02 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prefill chunk 192/363 (52.9%) chunk=10.44 t/s avg=10.41 t/s 18.442s
+1101 21:11:09 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prefill chunk 256/363 (70.5%) chunk=10.38 t/s avg=10.40 t/s 24.607s
+1101 21:11:11 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prefill chunk 259/363 (71.3%) chunk=1.13 t/s avg=9.50 t/s 27.264s
+1101 21:11:11 ds4-server: resident system frontier captured tokens=259 bytes=184.82 MiB location=host 14.282ms
+1101 21:11:11 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=363 syntax=qwen
+1101 21:11:11 ds4-server: kv cache stored tokens=259 trimmed=104 reason=agent-system key=rendered-system size=184.82 MiB save=31.8 ms
+1101 21:11:17 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prefill chunk 323/363 (89.0%) chunk=10.29 t/s avg=9.65 t/s 33.484s
+1101 21:11:22 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prefill chunk 363/363 (100.0%) chunk=8.50 t/s avg=9.51 t/s 38.189s
+1101 21:11:22 ds4-server: chat ctx=0..363:363 RESPPROTO TOOLS prompt done 38.189s
+1101 21:11:22 ds4-server: response frontier captured tokens=363 bytes=151.50 MiB location=vram 23.235ms
+1101 21:28:14 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=literal:18a0a637a49f4e2b831a2a01307b8136 checkpoint_tokens=406 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-XDnCsm.dsh checkpoint_bytes=213069480 checkpoint_write_ms=34.953 agent_context_checkpoint_count=1
+1101 21:28:14 ds4-server: resident system frontier restored tokens=259 5.775ms
+1101 21:28:14 ds4-server: chat ctx=259..362:103 RESPPROTO TOOLS prompt start
+1101 21:28:14 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=362 syntax=qwen
+1101 21:28:20 ds4-server: chat ctx=259..362:103 RESPPROTO TOOLS prefill chunk 64/103 (62.1%) chunk=0.00 t/s avg=10.42 t/s 6.140s
+1101 21:28:25 ds4-server: chat ctx=259..362:103 RESPPROTO TOOLS prefill chunk 103/103 (100.0%) chunk=8.53 t/s avg=9.62 t/s 10.711s
+1101 21:28:25 ds4-server: chat ctx=259..362:103 RESPPROTO TOOLS prompt done 10.711s
+1101 21:28:25 ds4-server: response frontier captured tokens=362 bytes=151.50 MiB location=vram 23.076ms
+1101 21:37:55 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=literal:177b7672fbae481ebaa28c7f222f07b3 checkpoint_tokens=405 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-uF4zfD.dsh checkpoint_bytes=212938404 checkpoint_write_ms=37.219 agent_context_checkpoint_count=2
+1101 21:37:55 ds4-server: chat ctx=405..362:0 RESPPROTO TOOLS prompt start
+1101 21:37:55 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=405 syntax=qwen
+1101 21:37:55 AGENT_CONTEXT_RESTORE slot=0 context_id=literal:177b7672fbae481ebaa28c7f222f07b3 restored_tokens=405 discarded_context_tokens=0 result_prefill_tokens=0 checkpoint_read_ms=15.552 checkpoint_deleted=true agent_context_restore_count=1
+1101 21:37:55 ds4-server: chat ctx=405..362:0 RESPPROTO TOOLS prompt done 0.002s
+1101 21:37:55 ds4-server: response frontier captured tokens=405 bytes=151.50 MiB location=vram 26.285ms
+1101 21:53:54 ds4-server: chat ctx=405..412:7 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.01 t/s avg=0.01 t/s 959.226s
+1101 22:10:22 ds4-server: interactive payload frontier call_id=call_e639959e4b32bcc12e9c4725 input_index=1 temperature=0.000 unmasked_best=37 piece="F" raw_argmax_allowed=true operation_probe_allowed=true
+1101 22:23:13 ds4-server: phase profile ctx=405..362:0 gen=88 mode=trie wall=2717822.005ms forced_build=548.844ms/45 forced_sync=0.000ms/0/0_tok forced_prefix_probe=22.363ms sampling_mask_build=708.408ms oracle_compare=0.000ms/0/0_div constraint_cpu=732.281ms constraint_cpu_exposed=732.281ms constraint_cpu_overlapped=0.000ms filter_setup=0.006ms filter=708.402ms filtered_sample=1.510ms/45 plain_sample=0.000ms/0 eval=2717086.060ms/45 residual=3.664ms vocab=11174400 filter_calls=5229454 accepted=2233883 finite_allowed=2233883 piece_bytes=38802037 candidate_tokens_tested=5220106 parser_transition_count=1134353996 parser_bytes_visited=1134353996 trie_nodes_visited=9348 subtrees_pruned=7197 trie_leaf_tokens_emitted=415 mask_cache_hit=3 mask_cache_miss=42 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=19.924 static_mask_memory_bytes=764588 dynamic_frontier_size=4971 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=5229331 constraint_state_rollback=5229331 exhaustive_fallback_steps=0
+1101 22:23:13 ds4-server: chat ctx=412..450:38 gen=88 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.02 t/s avg=0.02 t/s 2717.822s
+1101 22:23:13 ds4-server: tool calls ctx=405..362:0 RESPPROTO n=1 raw_tool_text=1 ids=[call_e639959e4b32bcc12e9c4725] names=[patch]
+1101 22:23:13 ds4-server: chat ctx=405..362:0 gen=88 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 2717.851s
+1101 22:23:23 ds4-server: post-response checkpoint rebuilt source=memory-request cached=405 response_prefill=89 target=494 location=vram 9671.957ms
+1101 22:23:23 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=literal:177b7672fbae481ebaa28c7f222f07b3 checkpoint_tokens=494 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-XcrD8S.dsh checkpoint_bytes=224604168 checkpoint_write_ms=37.093 agent_context_checkpoint_count=3
+1101 22:23:23 ds4-server: resident system frontier restored tokens=259 5.794ms
+1101 22:23:23 ds4-server: chat ctx=259..375:116 RESPPROTO TOOLS prompt start
+1101 22:23:23 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=375 syntax=qwen
+1101 22:23:29 ds4-server: chat ctx=259..375:116 RESPPROTO TOOLS prefill chunk 64/116 (55.2%) chunk=0.00 t/s avg=10.67 t/s 6.001s
+1101 22:23:34 ds4-server: chat ctx=259..375:116 RESPPROTO TOOLS prefill chunk 116/116 (100.0%) chunk=9.55 t/s avg=10.13 t/s 11.446s
+1101 22:23:34 ds4-server: chat ctx=259..375:116 RESPPROTO TOOLS prompt done 11.446s
+1101 22:23:34 ds4-server: response frontier captured tokens=375 bytes=151.50 MiB location=vram 22.427ms
+1101 22:25:27 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=literal:9836521436ff4f2f8bd939fba97ac34b checkpoint_tokens=418 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-ZVyxG2.dsh checkpoint_bytes=214642392 checkpoint_write_ms=34.373 agent_context_checkpoint_count=4
+1101 22:25:27 ds4-server: chat ctx=418..375:0 RESPPROTO TOOLS prompt start
+1101 22:25:27 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=418 syntax=qwen
+1101 22:25:27 AGENT_CONTEXT_RESTORE slot=0 context_id=literal:9836521436ff4f2f8bd939fba97ac34b restored_tokens=418 discarded_context_tokens=0 result_prefill_tokens=0 checkpoint_read_ms=15.689 checkpoint_deleted=true agent_context_restore_count=2
+1101 22:25:27 ds4-server: chat ctx=418..375:0 RESPPROTO TOOLS prompt done 0.004s
+1101 22:25:27 ds4-server: response frontier captured tokens=418 bytes=151.50 MiB location=vram 24.599ms
+1101 22:25:45 ds4-server: chat ctx=418..425:7 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.39 t/s avg=0.39 t/s 17.859s
+1101 22:28:00 ds4-server: chat ctx=425..475:50 gen=100 RESPPROTO TOOLS DSML_START decoding chunk=0.37 t/s avg=0.37 t/s 152.529s
+1101 22:28:02 ds4-server: phase profile ctx=418..375:0 gen=101 mode=trie wall=155189.120ms forced_build=976.522ms/58 forced_sync=0.000ms/0/0_tok forced_prefix_probe=3.295ms sampling_mask_build=1165.875ms oracle_compare=0.000ms/0/0_div constraint_cpu=1171.178ms constraint_cpu_exposed=1171.178ms constraint_cpu_overlapped=0.000ms filter_setup=0.004ms filter=1165.871ms filtered_sample=2.008ms/58 plain_sample=0.000ms/0 eval=154013.808ms/58 residual=4.134ms vocab=14402560 filter_calls=6481825 accepted=4715295 finite_allowed=4715295 piece_bytes=48063313 candidate_tokens_tested=6470003 parser_transition_count=1550414891 parser_bytes_visited=1550414891 trie_nodes_visited=11822 subtrees_pruned=8378 trie_leaf_tokens_emitted=427 mask_cache_hit=8 mask_cache_miss=50 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=13256 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=6481654 constraint_state_rollback=6481654 exhaustive_fallback_steps=0
+1101 22:28:02 ds4-server: chat ctx=475..476:1 gen=101 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.38 t/s avg=0.37 t/s 155.189s
+1101 22:28:02 ds4-server: tool calls ctx=418..375:0 RESPPROTO n=1 raw_tool_text=1 ids=[call_40983a1b234d019b9e26815c] names=[patch]
+1101 22:28:02 ds4-server: chat ctx=418..375:0 gen=101 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 155.218s
+1101 22:28:13 ds4-server: post-response checkpoint rebuilt source=memory-request cached=418 response_prefill=101 target=519 location=vram 10449.595ms
+1101 22:28:13 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=literal:9836521436ff4f2f8bd939fba97ac34b checkpoint_tokens=519 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-8N4REX.dsh checkpoint_bytes=227881068 checkpoint_write_ms=39.518 agent_context_checkpoint_count=5
+1101 22:28:13 ds4-server: resident system frontier restored tokens=259 5.942ms
+1101 22:28:13 ds4-server: chat ctx=259..375:116 RESPPROTO TOOLS prompt start
+1101 22:28:13 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=375 syntax=qwen
+1101 22:28:19 ds4-server: chat ctx=259..375:116 RESPPROTO TOOLS prefill chunk 64/116 (55.2%) chunk=0.00 t/s avg=10.60 t/s 6.038s
+1101 22:28:24 ds4-server: chat ctx=259..375:116 RESPPROTO TOOLS prefill chunk 116/116 (100.0%) chunk=9.43 t/s avg=10.04 t/s 11.554s
+1101 22:28:24 ds4-server: chat ctx=259..375:116 RESPPROTO TOOLS prompt done 11.554s
+1101 22:28:24 ds4-server: response frontier captured tokens=375 bytes=151.50 MiB location=vram 22.558ms
+1101 22:30:15 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=literal:4bbf5f61b677467a894f6795fe327f3f checkpoint_tokens=418 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-5DR69v.dsh checkpoint_bytes=214642392 checkpoint_write_ms=39.410 agent_context_checkpoint_count=6
+1101 22:30:15 ds4-server: chat ctx=418..375:0 RESPPROTO TOOLS prompt start
+1101 22:30:15 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=418 syntax=qwen
+1101 22:30:15 AGENT_CONTEXT_RESTORE slot=0 context_id=literal:4bbf5f61b677467a894f6795fe327f3f restored_tokens=418 discarded_context_tokens=0 result_prefill_tokens=0 checkpoint_read_ms=16.210 checkpoint_deleted=true agent_context_restore_count=3
+1101 22:30:15 ds4-server: chat ctx=418..375:0 RESPPROTO TOOLS prompt done 0.002s
+1101 22:30:15 ds4-server: response frontier captured tokens=418 bytes=151.50 MiB location=vram 24.499ms
+1101 22:30:34 ds4-server: chat ctx=418..425:7 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.37 t/s avg=0.37 t/s 18.792s
+1101 22:32:43 ds4-server: chat ctx=425..475:50 gen=100 RESPPROTO TOOLS DSML_START decoding chunk=0.39 t/s avg=0.39 t/s 147.779s
+1101 22:32:46 ds4-server: phase profile ctx=418..375:0 gen=101 mode=trie wall=150360.979ms forced_build=963.438ms/58 forced_sync=0.000ms/0/0_tok forced_prefix_probe=3.229ms sampling_mask_build=1151.224ms oracle_compare=0.000ms/0/0_div constraint_cpu=1156.446ms constraint_cpu_exposed=1156.446ms constraint_cpu_overlapped=0.000ms filter_setup=0.002ms filter=1151.222ms filtered_sample=1.993ms/58 plain_sample=0.000ms/0 eval=149200.635ms/58 residual=3.898ms vocab=14402560 filter_calls=6481825 accepted=4715295 finite_allowed=4715295 piece_bytes=48063313 candidate_tokens_tested=6470003 parser_transition_count=1550414891 parser_bytes_visited=1550414891 trie_nodes_visited=11822 subtrees_pruned=8378 trie_leaf_tokens_emitted=427 mask_cache_hit=8 mask_cache_miss=50 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=13256 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=6481654 constraint_state_rollback=6481654 exhaustive_fallback_steps=0
+1101 22:32:46 ds4-server: chat ctx=475..476:1 gen=101 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.39 t/s avg=0.39 t/s 150.361s
+1101 22:32:46 ds4-server: tool calls ctx=418..375:0 RESPPROTO n=1 raw_tool_text=1 ids=[call_46ea0aab14ff8d74c057efb2] names=[patch]
+1101 22:32:46 ds4-server: chat ctx=418..375:0 gen=101 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 150.389s
+1101 22:32:56 ds4-server: post-response checkpoint rebuilt source=memory-request cached=418 response_prefill=101 target=519 location=vram 10570.696ms
+1101 22:32:56 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=literal:4bbf5f61b677467a894f6795fe327f3f checkpoint_tokens=519 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-nCpj8Z.dsh checkpoint_bytes=227881068 checkpoint_write_ms=38.249 agent_context_checkpoint_count=7
+1101 22:32:56 ds4-server: resident system frontier restored tokens=259 5.990ms
+1101 22:32:56 ds4-server: chat ctx=259..347:88 RESPPROTO TOOLS prompt start
+1101 22:32:56 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=347 syntax=qwen
+1101 22:33:02 ds4-server: chat ctx=259..347:88 RESPPROTO TOOLS prefill chunk 64/88 (72.7%) chunk=0.00 t/s avg=10.36 t/s 6.177s
+1101 22:33:06 ds4-server: chat ctx=259..347:88 RESPPROTO TOOLS prefill chunk 88/88 (100.0%) chunk=6.59 t/s avg=8.96 t/s 9.822s
+1101 22:33:06 ds4-server: chat ctx=259..347:88 RESPPROTO TOOLS prompt done 9.822s
+1101 22:33:06 ds4-server: response frontier captured tokens=347 bytes=151.50 MiB location=vram 22.215ms
+1101 22:35:05 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=missing-id:ce7952c4fea74b848ffa5129b51307f6 checkpoint_tokens=392 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-V5gCs2.dsh checkpoint_bytes=211234416 checkpoint_write_ms=44.140 agent_context_checkpoint_count=8
+1101 22:35:05 ds4-server: chat ctx=392..347:0 RESPPROTO TOOLS prompt start
+1101 22:35:05 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=392 syntax=qwen
+1101 22:35:05 AGENT_CONTEXT_RESTORE slot=0 context_id=missing-id:ce7952c4fea74b848ffa5129b51307f6 restored_tokens=392 discarded_context_tokens=0 result_prefill_tokens=0 checkpoint_read_ms=15.475 checkpoint_deleted=true agent_context_restore_count=4
+1101 22:35:05 ds4-server: chat ctx=392..347:0 RESPPROTO TOOLS prompt done 0.002s
+1101 22:35:05 ds4-server: response frontier captured tokens=392 bytes=151.50 MiB location=vram 29.679ms
+1101 22:35:18 ds4-server: chat ctx=392..397:5 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.39 t/s avg=0.39 t/s 12.891s
+1101 22:35:43 ds4-server: interactive payload frontier call_id=call_6aad1a25c60a062fb33fb380 input_index=1 temperature=0.000 unmasked_best=14556 piece="hello" raw_argmax_allowed=true operation_probe_allowed=true
+1101 22:36:52 ds4-server: phase profile ctx=392..347:0 gen=86 mode=trie wall=106997.885ms forced_build=589.080ms/41 forced_sync=0.000ms/0/0_tok forced_prefix_probe=2.122ms sampling_mask_build=777.754ms oracle_compare=0.000ms/0/0_div constraint_cpu=781.294ms constraint_cpu_exposed=781.294ms constraint_cpu_overlapped=0.000ms filter_setup=0.005ms filter=777.749ms filtered_sample=1.418ms/41 plain_sample=0.000ms/0 eval=106213.619ms/41 residual=2.972ms vocab=10181120 filter_calls=5228275 accepted=2233872 finite_allowed=2233872 piece_bytes=38800670 candidate_tokens_tested=5220095 parser_transition_count=1113273395 parser_bytes_visited=1113273395 trie_nodes_visited=8180 subtrees_pruned=6039 trie_leaf_tokens_emitted=404 mask_cache_hit=3 mask_cache_miss=38 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=4971 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=5228156 constraint_state_rollback=5228156 exhaustive_fallback_steps=0
+1101 22:36:52 ds4-server: chat ctx=397..433:36 gen=86 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.38 t/s avg=0.38 t/s 106.998s
+1101 22:36:52 ds4-server: tool calls ctx=392..347:0 RESPPROTO n=1 raw_tool_text=1 ids=[call_6aad1a25c60a062fb33fb380] names=[patch]
+1101 22:36:52 ds4-server: chat ctx=392..347:0 gen=86 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 107.030s
+1101 22:37:01 ds4-server: post-response checkpoint rebuilt source=memory-request cached=392 response_prefill=88 target=480 location=vram 9693.352ms
+1101 22:37:01 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=missing-id:ce7952c4fea74b848ffa5129b51307f6 checkpoint_tokens=480 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-mqT3Tk.dsh checkpoint_bytes=222769104 checkpoint_write_ms=38.600 agent_context_checkpoint_count=9
+1101 22:37:01 ds4-server: resident system frontier restored tokens=259 5.842ms
+1101 22:37:01 ds4-server: chat ctx=259..402:143 RESPPROTO TOOLS prompt start
+1101 22:37:01 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=402 syntax=qwen
+1101 22:37:08 ds4-server: chat ctx=259..402:143 RESPPROTO TOOLS prefill chunk 64/143 (44.8%) chunk=0.00 t/s avg=10.42 t/s 6.144s
+1101 22:37:14 ds4-server: chat ctx=259..402:143 RESPPROTO TOOLS prefill chunk 128/143 (89.5%) chunk=10.50 t/s avg=10.46 t/s 12.240s
+1101 22:37:17 ds4-server: chat ctx=259..402:143 RESPPROTO TOOLS prefill chunk 143/143 (100.0%) chunk=4.92 t/s avg=9.35 t/s 15.287s
+1101 22:37:17 ds4-server: chat ctx=259..402:143 RESPPROTO TOOLS prompt done 15.287s
+1101 22:37:17 ds4-server: response frontier captured tokens=402 bytes=151.50 MiB location=vram 23.770ms
+1101 22:39:11 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=multiple:db230d98216a4b3cbb4344fe9a2bbec4 checkpoint_tokens=445 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-R0PM2r.dsh checkpoint_bytes=218181444 checkpoint_write_ms=38.236 agent_context_checkpoint_count=10
+1101 22:39:11 ds4-server: chat ctx=445..402:0 RESPPROTO TOOLS prompt start
+1101 22:39:11 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=445 syntax=qwen
+1101 22:39:11 AGENT_CONTEXT_RESTORE slot=0 context_id=multiple:db230d98216a4b3cbb4344fe9a2bbec4 restored_tokens=445 discarded_context_tokens=0 result_prefill_tokens=0 checkpoint_read_ms=15.953 checkpoint_deleted=true agent_context_restore_count=5
+1101 22:39:11 ds4-server: chat ctx=445..402:0 RESPPROTO TOOLS prompt done 0.002s
+1101 22:39:11 ds4-server: response frontier captured tokens=445 bytes=151.50 MiB location=vram 31.418ms
+1101 22:39:29 ds4-server: chat ctx=445..452:7 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.39 t/s avg=0.39 t/s 18.065s
+1101 22:40:02 ds4-server: interactive payload frontier call_id=call_be72829f9e3a4ae920ecc9f1 input_index=1 temperature=0.000 unmasked_best=65507 piece="FIRST" raw_argmax_allowed=true operation_probe_allowed=true
+1101 22:40:31 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=multiple:db230d98216a4b3cbb4344fe9a2bbec4 checkpoint_tokens=476 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-8JOlFV.dsh checkpoint_bytes=222244800 checkpoint_write_ms=35.742 agent_context_checkpoint_count=11
+1101 22:40:31 ds4-server: chat ctx=476..402:0 RESPPROTO TOOLS prompt start
+1101 22:40:31 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=476 syntax=qwen
+1101 22:40:31 AGENT_CONTEXT_RESTORE slot=0 context_id=multiple:db230d98216a4b3cbb4344fe9a2bbec4 restored_tokens=476 discarded_context_tokens=0 result_prefill_tokens=0 checkpoint_read_ms=16.115 checkpoint_deleted=true agent_context_restore_count=6
+1101 22:40:31 ds4-server: chat ctx=476..402:0 RESPPROTO TOOLS prompt done 0.002s
+1101 22:40:31 ds4-server: response frontier captured tokens=476 bytes=151.50 MiB location=vram 30.698ms
+1101 22:41:25 ds4-server: interactive payload frontier call_id=call_be72829f9e3a4ae920ecc9f1 input_index=2 temperature=0.000 unmasked_best=94817 piece="SECOND" raw_argmax_allowed=true operation_probe_allowed=true
+1101 22:41:38 ds4-server: chat ctx=476..502:26 gen=100 RESPPROTO TOOLS DSML_START decoding chunk=0.39 t/s avg=0.39 t/s 66.973s
+1101 22:42:30 ds4-server: phase profile ctx=476..402:0 gen=120 mode=trie wall=118931.878ms forced_build=552.134ms/46 forced_sync=0.000ms/0/0_tok forced_prefix_probe=2.669ms sampling_mask_build=739.898ms oracle_compare=0.000ms/0/0_div constraint_cpu=744.163ms constraint_cpu_exposed=744.163ms constraint_cpu_overlapped=0.000ms filter_setup=0.010ms filter=739.888ms filtered_sample=1.596ms/46 plain_sample=0.000ms/0 eval=118183.478ms/46 residual=4.237ms vocab=11422720 filter_calls=5228495 accepted=1985747 finite_allowed=1985747 piece_bytes=38797429 candidate_tokens_tested=5218453 parser_transition_count=1531505560 parser_bytes_visited=1531505560 trie_nodes_visited=10042 subtrees_pruned=7887 trie_leaf_tokens_emitted=419 mask_cache_hit=2 mask_cache_miss=44 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=3314 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=5228374 constraint_state_rollback=5228374 exhaustive_fallback_steps=0
+1101 22:42:30 ds4-server: chat ctx=502..522:20 gen=120 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.38 t/s avg=0.39 t/s 118.932s
+1101 22:42:30 ds4-server: tool calls ctx=476..402:0 RESPPROTO n=1 raw_tool_text=1 ids=[call_be72829f9e3a4ae920ecc9f1] names=[patch]
+1101 22:42:30 ds4-server: chat ctx=476..402:0 gen=120 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 118.965s
+1101 22:42:42 ds4-server: post-response checkpoint rebuilt source=memory-request cached=476 response_prefill=122 target=598 location=vram 12056.400ms
+1101 22:42:42 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=multiple:db230d98216a4b3cbb4344fe9a2bbec4 checkpoint_tokens=598 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-iPak4V.dsh checkpoint_bytes=238236072 checkpoint_write_ms=30.321 agent_context_checkpoint_count=12
+1101 22:42:42 ds4-server: resident system frontier restored tokens=259 5.851ms
+1101 22:42:42 ds4-server: chat ctx=259..307:48 RESPPROTO TOOLS prompt start
+1101 22:42:42 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=307 syntax=qwen
+1101 22:42:48 ds4-server: chat ctx=259..307:48 RESPPROTO TOOLS prefill chunk 48/48 (100.0%) chunk=0.00 t/s avg=9.05 t/s 5.306s
+1101 22:42:48 ds4-server: chat ctx=259..307:48 RESPPROTO TOOLS prompt done 5.306s
+1101 22:42:48 ds4-server: response frontier captured tokens=307 bytes=151.50 MiB location=vram 22.052ms
+1101 22:44:58 ds4-server: chat ctx=307..357:50 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.39 t/s avg=0.39 t/s 129.858s
+1101 22:45:00 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=reject:90c5b4fb516a4012bce250ab7d92e1a5 checkpoint_tokens=358 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-full-x4/kv/agentic.oGfrpk/agent-context-slot-0-cuq7QW.dsh checkpoint_bytes=206777832 checkpoint_write_ms=41.649 agent_context_checkpoint_count=13
+1101 22:45:00 ds4-server: chat ctx=358..307:0 RESPPROTO TOOLS prompt start
+1101 22:45:00 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=358 syntax=qwen
+1101 22:45:00 AGENT_CONTEXT_RESTORE slot=0 context_id=reject:90c5b4fb516a4012bce250ab7d92e1a5 restored_tokens=358 discarded_context_tokens=0 result_prefill_tokens=0 checkpoint_read_ms=15.527 checkpoint_deleted=true agent_context_restore_count=7
+1101 22:45:00 ds4-server: chat ctx=358..307:0 RESPPROTO TOOLS prompt done 0.002s
+1101 22:45:00 ds4-server: response frontier captured tokens=358 bytes=151.50 MiB location=vram 28.010ms
+1101 22:46:13 ds4-server: interactive payload frontier call_id=call_48156a110ea5f4c6adcef120 input_index=1 temperature=0.000 unmasked_best=65507 piece="FIRST" raw_argmax_allowed=true operation_probe_allowed=true
+1101 22:47:11 ds4-server: chat ctx=358..407:49 gen=100 RESPPROTO TOOLS DSML_START decoding chunk=0.38 t/s avg=0.38 t/s 130.097s
+1101 22:49:21 ds4-server: chat ctx=407..457:50 gen=150 RESPPROTO TOOLS DSML_START decoding chunk=0.38 t/s avg=0.38 t/s 261.029s
+1101 22:50:01 ds4-server: phase profile ctx=358..307:0 gen=165 mode=trie wall=300683.810ms forced_build=1034.784ms/114 forced_sync=0.000ms/0/0_tok forced_prefix_probe=4.017ms sampling_mask_build=1226.317ms oracle_compare=0.000ms/0/0_div constraint_cpu=1234.226ms constraint_cpu_exposed=1234.226ms constraint_cpu_overlapped=0.000ms filter_setup=0.011ms filter=1226.306ms filtered_sample=3.892ms/114 plain_sample=0.000ms/0 eval=299435.949ms/114 residual=13.635ms vocab=28308480 filter_calls=6814534 accepted=17370440 finite_allowed=17370440 piece_bytes=50185796 candidate_tokens_tested=6801178 parser_transition_count=2092695504 parser_bytes_visited=2092695504 trie_nodes_visited=13356 subtrees_pruned=9652 trie_leaf_tokens_emitted=432 mask_cache_hit=58 mask_cache_miss=56 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=96106 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=6814153 constraint_state_rollback=6814153 exhaustive_fallback_steps=0
+1101 22:50:01 ds4-server: chat ctx=457..472:15 gen=165 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.38 t/s avg=0.38 t/s 300.684s
+1101 22:50:01 ds4-server: tool calls ctx=358..307:0 RESPPROTO n=1 raw_tool_text=1 ids=[call_48156a110ea5f4c6adcef120] names=[patch]
+1101 22:50:01 ds4-server: chat ctx=358..307:0 gen=165 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 300.714s
+1101 22:50:01 ds4-server: shutdown requested, draining requests
+1101 22:50:18 ds4-server: post-response checkpoint rebuilt source=memory-request cached=358 response_prefill=154 target=512 location=vram 16734.649ms

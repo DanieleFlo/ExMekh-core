@@ -1,0 +1,334 @@
+{
+  "gates": [
+    {
+      "label": "final-rgb-profiled",
+      "status": "PASS",
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 6,
+        "victims": 0,
+        "total_seconds": 100.595604,
+        "prepare_seconds": 0.000462,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          2.01078,
+          16.437092,
+          71.669375,
+          10.477841
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 7476453760,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7728857088,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 84936146392,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 7474753280,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 44,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 7124402176,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 675480832,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "exact_native_files": {
+        "rgba.f32": true,
+        "result.png": true,
+        "conditioning.bf16": true,
+        "latent-6.f32": true,
+        "latent-7.f32": true,
+        "latent-5.f32": true,
+        "latent-4.f32": true,
+        "latent-0.f32": true,
+        "latent-1.f32": true,
+        "latent-3.f32": true,
+        "latent-2.f32": true,
+        "reference-0.bf16": true
+      },
+      "host_min_bytes": 5854806016,
+      "swap_growth_bytes": 0,
+      "artifacts": [
+        {
+          "path": "build/metal-perf-image-20261105/final-rgb-profiled/report.json",
+          "bytes": 25506,
+          "sha256": "2d6149647840cb65e42d9d62636c1e444aae4f5db9bc7985432842941d845270"
+        },
+        {
+          "path": "build/metal-perf-image-20261105/final-rgb-profiled/verification.json",
+          "bytes": 5181,
+          "sha256": "9b24ce84afc34e1ecd709ca48a3997be94b6ff83993efa2ee480fd6d4fbc4c42"
+        }
+      ]
+    },
+    {
+      "label": "final-rgba",
+      "status": "PASS",
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 91.393763,
+        "prepare_seconds": 0.000415,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          2.014005,
+          17.310311,
+          61.587126,
+          10.481848
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 8278718496,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 8526774272,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 78829232600,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 8272670464,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 41,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 7922319360,
+            "loads": 145,
+            "hits": 2210,
+            "evictions": 127,
+            "payload_h2d": 63085559808
+          },
+          {
+            "limit": 675480832,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "b47943f25b685bc1f38b785e8fa29c7bed1108561e5af80e017fcf503eecc066"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "exact_native_files": {
+        "rgba.f32": true,
+        "result.png": true,
+        "conditioning.bf16": true,
+        "latent-6.f32": true,
+        "latent-7.f32": true,
+        "latent-5.f32": true,
+        "latent-4.f32": true,
+        "latent-0.f32": true,
+        "latent-1.f32": true,
+        "latent-3.f32": true,
+        "latent-2.f32": true,
+        "reference-0.bf16": true
+      },
+      "host_min_bytes": 5275107328,
+      "swap_growth_bytes": 0,
+      "artifacts": [
+        {
+          "path": "build/metal-perf-image-20261105/final-rgba/report.json",
+          "bytes": 23549,
+          "sha256": "6afe69fb00e2192ce5b93cd41c96af89023ab82cd1f004a5f9fadb7d845575d2"
+        },
+        {
+          "path": "build/metal-perf-image-20261105/final-rgba/verification.json",
+          "bytes": 5164,
+          "sha256": "29bb58d2e3478ff928201f89734114be9904aef91b65f7f98b6c7d8660e25771"
+        }
+      ]
+    }
+  ],
+  "numeric_cpu": {
+    "tests": 47,
+    "skips": 13,
+    "status": "PASS"
+  },
+  "numeric_metal": {
+    "tests": 47,
+    "skips": 3,
+    "known_failed_assertions": 2,
+    "failed_method": "test_vision_trigonometric_boundaries",
+    "wide_padding": "PASS",
+    "budget_recovery": "PASS"
+  },
+  "gemma": {
+    "exact_boundaries": 480,
+    "boundaries": 480,
+    "vectors": {
+      "metrics": {
+        "max_abs": 5.960464477539063e-08,
+        "rmse": 6.472565998493549e-09,
+        "relative_l2": 7.322872469981983e-08,
+        "bit_exact": false,
+        "cosine_min": 0.9999999999999989,
+        "unit_norm_error_max": 6.491406745467998e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    }
+  },
+  "post_profile": {
+    "main_thread_samples": 658,
+    "counts": {
+      "memmove": 395,
+      "linear": 237,
+      "hint": 1
+    },
+    "scope": "Profiled RGB automatic request; separate from paired timings. Projection includes GPU waits.",
+    "sample": {
+      "path": "build/metal-perf-image-20261105/final-dit.sample",
+      "bytes": 94601,
+      "sha256": "51065a24069d511367251dd4486cf9e06c531b1b8e6d51829cf3af9312a1a543"
+    }
+  },
+  "logs": [
+    {
+      "path": "build/metal-perf-image-20261105/final-build-host-tests.log",
+      "bytes": 16757,
+      "sha256": "7548509812feabce951830c01e70916dbe97a7122bd2f1d1b6e1b14b603cc265"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/final-foundations.log",
+      "bytes": 57347,
+      "sha256": "05e73216df57cb979c428606c7f2f5f9b8b35ca42c70c52ac179937e0e498d73"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/numeric-full.log",
+      "bytes": 8009,
+      "sha256": "82fec605b573230df790aa8a86f9bd68bc6f7235b1f3a88485d87eee41fce7a1"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/numeric-baseline-trig.log",
+      "bytes": 1869,
+      "sha256": "cc8023007527d0a02d9e491280c210eb57e5d18b7330702439e6bce9d656f20b"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/regressions.json",
+      "bytes": 85326,
+      "sha256": "df19e5a61a97cc79d8e61203bf4069ea115ae497f125e8200464261c1d898162"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/hint-sanitized.log",
+      "bytes": 90,
+      "sha256": "9f12a254df52286001608ee6971a27da58008a9e747061cc8e3b14c604271fcf"
+    },
+    {
+      "path": "build/metal-perf-image-20261105/bundle-tests-retry.log",
+      "bytes": 1972,
+      "sha256": "891e028b8f894ab677de29101946da9a4be1c6d59af7ec677009b14c5da89a1e"
+    }
+  ]
+}

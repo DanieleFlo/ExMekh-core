@@ -1,0 +1,137 @@
+[
+  {
+    "path": "ds4.c",
+    "bytes": 4162323,
+    "sha256": "0806d2e639c2d0d471e76c94f8beeee3159917afd0b07bba7b4f0e103bb678d7"
+  },
+  {
+    "path": "ds4_gpu.h",
+    "bytes": 161780,
+    "sha256": "672c46bb5e846fb814a5afd6d2b5e726abaa38e13204d6661372bf28f90a584a"
+  },
+  {
+    "path": "ds4_lifecycle.inc",
+    "bytes": 31908,
+    "sha256": "4997b50cfe4617a5028d8dadb0e9cdeb94a1cbad983dce4d79c20079dfed7475"
+  },
+  {
+    "path": "ds4_qwen35_metal.inc",
+    "bytes": 14302,
+    "sha256": "a920d7f1b51bf2836adf96747247ac56e841c523e9ac444b1372e12e8c924dfe"
+  },
+  {
+    "path": "ds4_qwen4_metal_stream.inc",
+    "bytes": 17090,
+    "sha256": "196cbc9901480227f474d51d03a475cca48121eab6ebb6a51c85e07565aa58d7"
+  },
+  {
+    "path": "metal/qwen35_quants.metal",
+    "bytes": 14437,
+    "sha256": "d2dfc666a8ec2d0f7abf5312fa9c6197a780586935c9d45fb8240f966f2f036f"
+  },
+  {
+    "path": "tests/test_qwen35_metal.c",
+    "bytes": 42264,
+    "sha256": "d4c7308354034739f876a660c6599b5db1937351dfd5b569e930e560359e6c48"
+  },
+  {
+    "path": "tests/test_qwen35_metal_graph.c",
+    "bytes": 12689,
+    "sha256": "0a97152fab60ab5a49b1a61161ad02f11cd33d3f8fd1d00ecc1d69536c8a9b3f"
+  },
+  {
+    "path": "tests/probe_qwen_metal_stream.c",
+    "bytes": 15825,
+    "sha256": "25a7ce68d6e63fd561a6c298bd68ebeefc47d3531c52ce0d3f4bf8add2561e22"
+  },
+  {
+    "path": "tests/test_qwen_metal_lifecycle.c",
+    "bytes": 11956,
+    "sha256": "6313199cdb6541306577739b8fa820d9d35b6f492d0d3a81f71751fe772658d3"
+  },
+  {
+    "path": "tests/test_file_reader.c",
+    "bytes": 12264,
+    "sha256": "018a77b2ff877683624bac0049d29eaaadd5b662d51f0be62cdb0bea3e8990b7"
+  },
+  {
+    "path": "ds4",
+    "bytes": 2976368,
+    "sha256": "5cf0177845eee708053d7d519976c5160747aa2c1d012507b1586b99c276a107"
+  },
+  {
+    "path": "ds4-server",
+    "bytes": 3554488,
+    "sha256": "6a43512b3b6e1873036ebe061203c0c9b6d0e60d051fcd7940181617d841df75"
+  },
+  {
+    "path": "ds4-bench",
+    "bytes": 2916520,
+    "sha256": "3f617d499c61bffb1b8dc3b5bba00ab21ac70c275fb6c19b890b58b5a7b24142"
+  },
+  {
+    "path": "ds4-eval",
+    "bytes": 3101848,
+    "sha256": "1c0c1255e5db3e45e128d3e6184342346646dca2e944127a8b83fa1abead7663"
+  },
+  {
+    "path": "ds4.o",
+    "bytes": 6035424,
+    "sha256": "3fd821d6fe0bdd26914c72017908182df758006c6045f62ac4257d510b617176"
+  },
+  {
+    "path": "ds4_metal.o",
+    "bytes": 2928592,
+    "sha256": "f68d488cf48fdb2d194ae25309116f1f849de2aecc9563bf126153f86af2c645"
+  },
+  {
+    "path": "tests/probe_qwen_metal_stream",
+    "bytes": 2876088,
+    "sha256": "41b7dd5bb455cdd92d6b3f91d88f6b46131fd107a29a6b02995330f302641ed7"
+  },
+  {
+    "path": "tests/test_qwen35_metal",
+    "bytes": 989168,
+    "sha256": "b9f6521f87797ac95d1a2c709d9393a0da66101deea98f037636594e38b4e78b"
+  },
+  {
+    "path": "tests/test_qwen35_metal_graph",
+    "bytes": 2883288,
+    "sha256": "3b621c094356ad9d4d1b615d73f9ca88f332b2bd904a4bddc1bfe75b3ed219bc"
+  },
+  {
+    "path": "tests/test_qwen35_metal_features",
+    "bytes": 3037592,
+    "sha256": "3750c86232e2b0961ed3a25abda5bcaf4d04354f7086bbdbba2b3679da76f207"
+  },
+  {
+    "path": "tests/test_qwen_metal_lifecycle",
+    "bytes": 2882840,
+    "sha256": "026d2fcc61e096d86958fab311186c5fb5715395a7c8f8b06ab12864d8812d17"
+  },
+  {
+    "path": "tests/test_flash_metal_stream_graph",
+    "bytes": 2862160,
+    "sha256": "d4699da8e743e354688ddfaa728fda71dbb6ac5ec93c318714240752f98a677f"
+  },
+  {
+    "path": "tests/test_qwen4_kernels",
+    "bytes": 1273392,
+    "sha256": "554b101f9ebf994a409cc531eb5561c5c3d682f45e8014dfc93e536a4662c1b1"
+  },
+  {
+    "path": "tests/test_file_reader",
+    "bytes": 77296,
+    "sha256": "e57cca9d4f45555d749d22cefd32842d6b01fe83ac92dbaf2da15350d52b88b0"
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/continuation-20261103/file-reader-final-sanitized",
+    "bytes": 100856,
+    "sha256": "c4cc835939f7f94f5e08bf09cef426ccab0a375062c1923d2dbea798e0fc5f49"
+  },
+  {
+    "path": "build/metal-perf-qwen27-20261102/continuation-20261103/read-queue-final-sanitized",
+    "bytes": 56456,
+    "sha256": "1e101915d0ed9f45c6e1403e283258b643e7c1509845ab6a8f7dba2bbe68d904"
+  }
+]

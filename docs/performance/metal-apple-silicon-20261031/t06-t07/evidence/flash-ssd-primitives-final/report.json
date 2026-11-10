@@ -1,0 +1,36 @@
+{
+  "command": [
+    "env",
+    "DS4_TEST_QWEN4_METAL_STREAM=1",
+    "./tests/test_qwen4_kernels"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120.0,
+  "reason": "Focused independent FP64 primitive checks for dense cache eviction and 17-token expert unions over domain 512; no pretrained model",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 1.0333011250004347,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 18922.121259833,
+      "pressure": 1,
+      "host_available_bytes": 10427400192,
+      "swap_bytes": 674821570,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    }
+  ],
+  "executables_sha256": {
+    "./tests/test_qwen4_kernels": "dd0d408d0e77f7706a8311dc70c665f8b8afd65bedb72aa63ea02d2250f643fa"
+  },
+  "log_sha256": "ef726a2ec79e8f652548c2e5dac62d7afb788485aae273eb312a5e4d274eb7dc"
+}

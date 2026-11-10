@@ -12,6 +12,7 @@ from urllib.request import Request, urlopen
 
 BASE = os.environ.get("DS4_INTERACTIVE_BASE_URL", "").rstrip("/")
 MODEL = os.environ.get("DS4_INTERACTIVE_MODEL", "Qwen3.8-27B-UD-Q4_K_S")
+TIMEOUT = float(os.environ.get("DS4_INTERACTIVE_TIMEOUT_SECONDS", "90"))
 WIRE = []
 
 
@@ -19,7 +20,7 @@ def http(payload, expected=200):
     request = Request(BASE + "/v1/responses", json.dumps(payload).encode(),
                       {"Content-Type": "application/json"})
     try:
-        with urlopen(request, timeout=90) as response:
+        with urlopen(request, timeout=TIMEOUT) as response:
             status, raw = response.status, response.read().decode()
     except HTTPError as error:
         status, raw = error.code, error.read().decode()
@@ -252,6 +253,23 @@ class InteractiveAPI(unittest.TestCase):
             "First src.py old ONE new FIRST; then other.py old TWO new SECOND. "
             "Use the literal two-marker framing and supplied IDs."
         )
+        self.reject_second_resource(payload)
+
+    def test_second_resource_rejection_with_literal_template(self):
+        payload = initial("reject-template:" + uuid.uuid4().hex)
+        payload["input"][0]["content"] = (
+            'Call patch exactly once. Its payload must contain this entire two-block template: '
+            '<exmekh_edit path="src.py" />ONE<exmekh_new_text/>FIRST'
+            '<exmekh_edit path="other.py" />TWO<exmekh_new_text/>SECOND'
+            '. The server adds an opening ID to each block; you may copy it into its separator. '
+            'After FIRST, immediately emit the second exmekh_edit opening inside the same payload. '
+            'Use exactly those tag names. Do not emit closing edit tags, whitespace, '
+            'a final newline or a second patch call.'
+        )
+        self.reject_second_resource(payload, expected_path="other.py")
+
+    def reject_second_resource(self, payload, expected_path=None):
+        """Reject a real second snapshot request and verify no partial call escapes."""
         first = http(payload)
         _, second = self.resume(payload, first, snapshot("ONE"))
         if second.get("status") in {"completed", "incomplete"}:
@@ -259,6 +277,8 @@ class InteractiveAPI(unittest.TestCase):
                 self.completed(second)
             self.skipTest("MODEL_LIMITATION: second resource not selected; rejection boundary not verified")
         self.assertEqual(second.get("type"), "interactive.await_input", second)
+        if expected_path is not None:
+            self.assertEqual(second["request"]["values"], {"path": expected_path})
         _, final = self.resume(payload, second, {"status": "reject", "code": "unread", "message": "read first"}, "reject")
         self.assertEqual(final["type"], "interactive.rejected")
         self.assertEqual(final["output"], [])

@@ -1,0 +1,130 @@
+{
+  "scope": "Final reviewed product after floor policy and equivalent field refactor. Profiled automatic request, excluded from paired performance.",
+  "status": "PASS",
+  "sample_seconds": 8,
+  "sample_interval_ms": 10,
+  "main_thread_samples": 666,
+  "main_thread_stack_counts": {
+    "memmove": 427,
+    "linear": 217
+  },
+  "interpretation": "Memmove stacks describe mapped weight upload and may include page-fault stalls. Projection stacks include GPU waits. CPU stack counts are not GPU hardware utilization or measured SSD bandwidth. No new dispatch/kernel change chosen from this sample.",
+  "runtime": {
+    "width": 256,
+    "height": 256,
+    "references": 0,
+    "seed": 20261020,
+    "variant": 6,
+    "victims": 0,
+    "total_seconds": 119.381015,
+    "prepare_seconds": 7.3e-05,
+    "load_seconds": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "phase_seconds": [
+      0.0,
+      14.186328,
+      94.715789,
+      10.478784
+    ],
+    "loads": [
+      0,
+      0,
+      0
+    ],
+    "releases": [
+      1,
+      1,
+      1
+    ],
+    "peak_device_owned": 5406223872,
+    "live_device_owned": 0,
+    "pre_run_device_owned": 0,
+    "previous_device_peak": 0,
+    "plan_device": 5633126368,
+    "plan_host": 1904672,
+    "peak_bound_checked": true,
+    "recipe_version": 1,
+    "rng_version": 0,
+    "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+    "reference_resolution": 0,
+    "h2d_bytes": 95834256760,
+    "d2h_bytes": 1376256,
+    "weight_groups": [
+      {
+        "limit": 5426171552,
+        "loads": 36,
+        "hits": 360,
+        "evictions": 22,
+        "payload_h2d": 13892143104
+      },
+      {
+        "limit": 5250953184,
+        "loads": 187,
+        "hits": 2168,
+        "evictions": 175,
+        "payload_h2d": 81406301184
+      },
+      {
+        "limit": 675480832,
+        "loads": 1,
+        "hits": 127,
+        "evictions": 0,
+        "payload_h2d": 518096424
+      }
+    ],
+    "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+    "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+    "reference_metadata": [],
+    "sigmas": [
+      1,
+      0.978452981,
+      0.954180002,
+      0.926626027,
+      0.89507997,
+      0.845148027,
+      0.704533994,
+      0.414568007,
+      0
+    ]
+  },
+  "exact_native_files": {
+    "rgba.f32": true,
+    "result.png": true,
+    "conditioning.bf16": true,
+    "latent-6.f32": true,
+    "latent-7.f32": true,
+    "latent-5.f32": true,
+    "latent-4.f32": true,
+    "latent-0.f32": true,
+    "latent-1.f32": true,
+    "latent-3.f32": true,
+    "latent-2.f32": true
+  },
+  "host_min_bytes": 5754929152,
+  "swap_growth_bytes": 0,
+  "artifacts": [
+    {
+      "path": "build/metal-perf-image-20261104/cache/floor/profile-reviewed-dit.sample",
+      "sha256": "81bf1f9128b253c6e9d95700874eb0364fd0bc741f09fd9cfa1a9a632d1013a0"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/floor/profile-reviewed-dit.log",
+      "sha256": "8318947f572f921d7b9ad8c6318354510a615034a972d7eec679fa9e38a2e563"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/reviewed-profile-final/report.json",
+      "sha256": "af1aaecef2eb11b4f2ebf9789cceb18189e31e3be6eaff8cf1b8b9fc2c38c1da"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/reviewed-profile-final/verification.json",
+      "sha256": "bb5dfeb8b709f74691d075b84cbf0be9309c2c22f5b4b8b8fc1219017a96bb64"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/cache/probe-reviewed",
+      "sha256": "0a5965e93fdd05e0e15df12970653dc2b39cd89ce45d732e9055ed058b9c54a0"
+    }
+  ]
+}

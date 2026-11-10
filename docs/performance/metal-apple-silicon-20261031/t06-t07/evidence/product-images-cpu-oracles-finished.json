@@ -1,0 +1,21 @@
+{
+  "scope": "All serial native/reference owners completed cleanup; explicit independent CPU encoder/DiT and MPS VAE. Scalar CPU-only VAE remains NOT_VERIFIED. RGB/RGBA reference inputs and noise SHA verified identical.",
+  "cases": [
+    {
+      "case": "text",
+      "status": "PASS",
+      "path": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps",
+      "reuse_scope": "Completed full text generation. Subsequent production changes concern only visual encoder erf/position/trig and audio channelRMS; text encoder, DiT and VAE paths unchanged."
+    },
+    {
+      "case": "reference",
+      "status": "PASS",
+      "path": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3"
+    },
+    {
+      "case": "rgba",
+      "status": "PASS",
+      "path": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3"
+    }
+  ]
+}

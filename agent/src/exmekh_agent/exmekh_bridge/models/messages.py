@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Iterator
 from copy import deepcopy
 from typing import Any, Literal
 
@@ -124,15 +125,22 @@ class ChatMessage(BaseModel):
         ).system_prompt_message()
 
     def has_same_execution_details(self, other: ChatMessage) -> bool:
-        """Compare the execution panels independently of root text and reasoning."""
+        """Compare panels independently of root text, reasoning and image progress."""
         return (
             self.raw_history == other.raw_history
             and self.model_context == other.model_context
             and self.skill_history_tree == other.skill_history_tree
-            and self.skills == other.skills
-            and self.tool_events == other.tool_events
+            and [skill.execution_details() for skill in self.skills]
+            == [skill.execution_details() for skill in other.skills]
+            and [tool.execution_details() for tool in self.tool_events]
+            == [tool.execution_details() for tool in other.tool_events]
             and self.steering_insertions == other.steering_insertions
         )
+
+    def iter_tool_events(self) -> Iterator[ToolEvent]:
+        yield from self.tool_events
+        for skill in self.skills:
+            yield from skill.iter_tool_events()
 
     def arguments_for_tool(self, event: ToolEvent) -> dict[str, Any]:
         """Resolve arguments through the recorded invocation's public API."""

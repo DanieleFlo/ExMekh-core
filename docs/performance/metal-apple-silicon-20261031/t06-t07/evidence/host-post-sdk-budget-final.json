@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "tests": 77,
+  "seconds": 12.609,
+  "scope": "Full host regression after SDK/wheel inventory and aggregate verdict consistency fix. Mixed executed PASS and skipped cases produce NOT_VERIFIED; original per-case verdicts retained.",
+  "log": "host-post-sdk-budget-final.log",
+  "source_sha256": {
+    "tools/qualify_metal_server.py": "84cf6bbea035523b12e8e084550ccbd36ae9e9ba7d2d2210f6183349063c842d",
+    "tools/qualify_metal_foundations.py": "852271d8e4b3118bb4da9b951576028bee8affd35013911b63aa52fc979eda78",
+    "tests/test_metal_stream_qualification.py": "c01efd6989548a038185836e4a65f0594f61af9af1cac637eb95bd447c96f641"
+  }
+}

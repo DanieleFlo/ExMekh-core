@@ -1,0 +1,318 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 1.00 GiB (raw 1.00 + compressed 0.00) + buffers 0.17 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 3.17 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=0 backend=metal
+1101 10:37:22 ds4-server: loaded model Qwen3.8-27B-UD-Q4_K_S.gguf
+1101 10:37:22 ds4-server: context buffers 1199.24 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=0)
+1101 10:37:35 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/kv (budget=8192 MiB, cross-quant=reject, min=1, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1101 10:37:35 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/kv/agentic.lAxtHq
+1101 10:37:35 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/trace.log
+1101 10:37:35 ds4-server: listening on http://127.0.0.1:18080
+1101 10:37:43 ds4-server: kv cache load failed RESPPROTO /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/kv/8f8105ed220a33c9b8aa2228b0e63645f1da1277.kv: incompatible Qwen persistent session payload load=9.1 ms
+1101 10:37:43 ds4-server: kv cache discarded failed text-prefix payload RESPPROTO /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/kv/8f8105ed220a33c9b8aa2228b0e63645f1da1277.kv
+1101 10:37:43 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prompt start
+1101 10:37:49 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 64/4879 (1.3%) chunk=0.00 t/s avg=10.67 t/s 6.001s
+1101 10:37:55 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 128/4879 (2.6%) chunk=10.60 t/s avg=10.63 t/s 12.039s
+1101 10:38:01 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 192/4879 (3.9%) chunk=10.55 t/s avg=10.61 t/s 18.103s
+1101 10:38:07 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 256/4879 (5.2%) chunk=10.49 t/s avg=10.58 t/s 24.204s
+1101 10:38:13 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 320/4879 (6.6%) chunk=10.48 t/s avg=10.56 t/s 30.310s
+1101 10:38:19 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 384/4879 (7.9%) chunk=10.47 t/s avg=10.54 t/s 36.422s
+1101 10:38:25 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 448/4879 (9.2%) chunk=10.52 t/s avg=10.54 t/s 42.505s
+1101 10:38:31 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 512/4879 (10.5%) chunk=10.61 t/s avg=10.55 t/s 48.540s
+1101 10:38:38 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 576/4879 (11.8%) chunk=10.53 t/s avg=10.55 t/s 54.619s
+1101 10:38:44 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 640/4879 (13.1%) chunk=10.58 t/s avg=10.55 t/s 60.668s
+1101 10:38:50 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 704/4879 (14.4%) chunk=10.61 t/s avg=10.55 t/s 66.699s
+1101 10:38:56 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 768/4879 (15.7%) chunk=10.58 t/s avg=10.56 t/s 72.750s
+1101 10:39:02 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 832/4879 (17.1%) chunk=10.55 t/s avg=10.56 t/s 78.817s
+1101 10:39:08 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 896/4879 (18.4%) chunk=10.35 t/s avg=10.54 t/s 84.999s
+1101 10:39:14 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 960/4879 (19.7%) chunk=10.35 t/s avg=10.53 t/s 91.184s
+1101 10:39:20 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1024/4879 (21.0%) chunk=10.30 t/s avg=10.51 t/s 97.400s
+1101 10:39:27 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1088/4879 (22.3%) chunk=10.26 t/s avg=10.50 t/s 103.637s
+1101 10:39:33 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1152/4879 (23.6%) chunk=10.31 t/s avg=10.49 t/s 109.846s
+1101 10:39:39 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1216/4879 (24.9%) chunk=10.22 t/s avg=10.47 t/s 116.111s
+1101 10:39:45 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1280/4879 (26.2%) chunk=10.26 t/s avg=10.46 t/s 122.347s
+1101 10:39:52 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1344/4879 (27.5%) chunk=10.13 t/s avg=10.45 t/s 128.666s
+1101 10:39:58 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1408/4879 (28.9%) chunk=10.17 t/s avg=10.43 t/s 134.956s
+1101 10:40:04 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1472/4879 (30.2%) chunk=10.11 t/s avg=10.42 t/s 141.283s
+1101 10:40:10 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1536/4879 (31.5%) chunk=10.15 t/s avg=10.41 t/s 147.589s
+1101 10:40:17 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1600/4879 (32.8%) chunk=10.09 t/s avg=10.39 t/s 153.930s
+1101 10:40:23 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1664/4879 (34.1%) chunk=10.09 t/s avg=10.38 t/s 160.275s
+1101 10:40:29 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1728/4879 (35.4%) chunk=10.13 t/s avg=10.37 t/s 166.592s
+1101 10:40:36 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1792/4879 (36.7%) chunk=10.05 t/s avg=10.36 t/s 172.960s
+1101 10:40:42 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1856/4879 (38.0%) chunk=10.28 t/s avg=10.36 t/s 179.188s
+1101 10:40:48 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1920/4879 (39.4%) chunk=10.27 t/s avg=10.36 t/s 185.417s
+1101 10:40:55 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 1984/4879 (40.7%) chunk=10.24 t/s avg=10.35 t/s 191.670s
+1101 10:41:01 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2048/4879 (42.0%) chunk=10.23 t/s avg=10.35 t/s 197.924s
+1101 10:41:07 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2112/4879 (43.3%) chunk=10.21 t/s avg=10.34 t/s 204.193s
+1101 10:41:13 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2176/4879 (44.6%) chunk=10.04 t/s avg=10.33 t/s 210.569s
+1101 10:41:20 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2240/4879 (45.9%) chunk=9.99 t/s avg=10.32 t/s 216.973s
+1101 10:41:26 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2304/4879 (47.2%) chunk=9.98 t/s avg=10.31 t/s 223.387s
+1101 10:41:33 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2368/4879 (48.5%) chunk=9.98 t/s avg=10.30 t/s 229.798s
+1101 10:41:39 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2432/4879 (49.8%) chunk=9.99 t/s avg=10.30 t/s 236.207s
+1101 10:41:46 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2496/4879 (51.2%) chunk=9.95 t/s avg=10.29 t/s 242.638s
+1101 10:41:52 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2560/4879 (52.5%) chunk=9.81 t/s avg=10.27 t/s 249.160s
+1101 10:41:59 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2624/4879 (53.8%) chunk=9.41 t/s avg=10.25 t/s 255.960s
+1101 10:42:06 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2688/4879 (55.1%) chunk=9.02 t/s avg=10.22 t/s 263.055s
+1101 10:42:14 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2752/4879 (56.4%) chunk=8.25 t/s avg=10.16 t/s 270.810s
+1101 10:42:21 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2816/4879 (57.7%) chunk=8.68 t/s avg=10.12 t/s 278.180s
+1101 10:42:28 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2880/4879 (59.0%) chunk=8.86 t/s avg=10.09 t/s 285.403s
+1101 10:42:36 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 2944/4879 (60.3%) chunk=8.76 t/s avg=10.06 t/s 292.711s
+1101 10:42:43 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3008/4879 (61.7%) chunk=8.62 t/s avg=10.02 t/s 300.133s
+1101 10:42:51 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3072/4879 (63.0%) chunk=8.49 t/s avg=9.98 t/s 307.668s
+1101 10:42:58 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3136/4879 (64.3%) chunk=9.02 t/s avg=9.96 t/s 314.762s
+1101 10:43:05 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3200/4879 (65.6%) chunk=9.28 t/s avg=9.95 t/s 321.662s
+1101 10:43:12 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3264/4879 (66.9%) chunk=9.07 t/s avg=9.93 t/s 328.718s
+1101 10:43:19 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3328/4879 (68.2%) chunk=9.18 t/s avg=9.91 t/s 335.687s
+1101 10:43:25 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3392/4879 (69.5%) chunk=9.50 t/s avg=9.91 t/s 342.423s
+1101 10:43:32 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3456/4879 (70.8%) chunk=9.58 t/s avg=9.90 t/s 349.102s
+1101 10:43:39 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3520/4879 (72.1%) chunk=9.62 t/s avg=9.89 t/s 355.751s
+1101 10:43:45 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3584/4879 (73.5%) chunk=9.62 t/s avg=9.89 t/s 362.402s
+1101 10:43:52 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3648/4879 (74.8%) chunk=9.69 t/s avg=9.89 t/s 369.006s
+1101 10:43:58 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3712/4879 (76.1%) chunk=9.73 t/s avg=9.88 t/s 375.582s
+1101 10:44:05 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3776/4879 (77.4%) chunk=9.71 t/s avg=9.88 t/s 382.173s
+1101 10:44:12 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3840/4879 (78.7%) chunk=9.77 t/s avg=9.88 t/s 388.726s
+1101 10:44:18 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3904/4879 (80.0%) chunk=9.53 t/s avg=9.87 t/s 395.445s
+1101 10:44:25 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 3968/4879 (81.3%) chunk=9.64 t/s avg=9.87 t/s 402.085s
+1101 10:44:32 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4032/4879 (82.6%) chunk=9.77 t/s avg=9.87 t/s 408.637s
+1101 10:44:38 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4096/4879 (84.0%) chunk=9.71 t/s avg=9.86 t/s 415.230s
+1101 10:44:45 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4160/4879 (85.3%) chunk=9.72 t/s avg=9.86 t/s 421.816s
+1101 10:44:51 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4224/4879 (86.6%) chunk=9.67 t/s avg=9.86 t/s 428.432s
+1101 10:44:58 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4288/4879 (87.9%) chunk=9.69 t/s avg=9.86 t/s 435.034s
+1101 10:45:05 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4352/4879 (89.2%) chunk=9.67 t/s avg=9.85 t/s 441.652s
+1101 10:45:11 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4416/4879 (90.5%) chunk=9.62 t/s avg=9.85 t/s 448.305s
+1101 10:45:18 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4480/4879 (91.8%) chunk=9.70 t/s avg=9.85 t/s 454.903s
+1101 10:45:24 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4544/4879 (93.1%) chunk=9.78 t/s avg=9.85 t/s 461.448s
+1101 10:45:31 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4608/4879 (94.4%) chunk=9.79 t/s avg=9.85 t/s 467.983s
+1101 10:45:37 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4672/4879 (95.8%) chunk=9.76 t/s avg=9.85 t/s 474.542s
+1101 10:45:44 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4736/4879 (97.1%) chunk=9.66 t/s avg=9.84 t/s 481.165s
+1101 10:45:51 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4800/4879 (98.4%) chunk=9.76 t/s avg=9.84 t/s 487.722s
+1101 10:45:53 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4801/4879 (98.4%) chunk=0.40 t/s avg=9.79 t/s 490.204s
+1101 10:45:53 ds4-server: resident system frontier captured tokens=4801 bytes=752.59 MiB location=host 62.458ms
+1101 10:45:53 ds4-server: agent-system boundary system_tokens=4801 prompt_tokens=4879 syntax=qwen
+1101 10:45:53 ds4-server: kv cache stored tokens=4801 trimmed=78 reason=agent-system key=rendered-system size=752.61 MiB save=180.6 ms
+1101 10:46:00 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4865/4879 (99.7%) chunk=9.35 t/s avg=9.79 t/s 497.052s
+1101 10:46:03 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prefill chunk 4879/4879 (100.0%) chunk=4.35 t/s avg=9.75 t/s 500.273s
+1101 10:46:03 ds4-server: chat ctx=0..4879:4879 RESPPROTO TOOLS prompt done 500.273s
+1101 10:46:03 ds4-server: response frontier captured tokens=4879 bytes=151.50 MiB location=vram 22.051ms
+1101 10:48:13 ds4-server: phase profile ctx=0..4879:4879 gen=48 mode=trie wall=129343.419ms forced_build=279.284ms/48 forced_sync=0.000ms/0/0_tok forced_prefix_probe=187.314ms sampling_mask_build=683.687ms oracle_compare=0.000ms/0/0_div constraint_cpu=889.981ms constraint_cpu_exposed=889.981ms constraint_cpu_overlapped=0.000ms filter_setup=86.055ms filter=597.632ms filtered_sample=18.980ms/48 plain_sample=0.000ms/0 eval=128447.429ms/48 residual=6.009ms vocab=13657600 filter_calls=9197900 accepted=3229066 finite_allowed=3229042 piece_bytes=68344783 candidate_tokens_tested=9194614 parser_transition_count=206741119 parser_bytes_visited=206741119 trie_nodes_visited=3286 subtrees_pruned=2158 trie_leaf_tokens_emitted=728 mask_cache_hit=12 mask_cache_miss=36 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=86.050 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=20.672 static_mask_memory_bytes=764588 dynamic_frontier_size=7188 search_static_steps=12 search_static_fallbacks=7 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=9197763 constraint_state_rollback=9197763 exhaustive_fallback_steps=0
+1101 10:48:13 ds4-server: chat ctx=4879..4927:48 gen=48 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.37 t/s avg=0.37 t/s 129.343s
+1101 10:48:13 SKILL_CHECKPOINT call_id=call_5ee03d1a3e1e44ee37c96b550cb1b05f skill=file-processing sequence=4927 checkpoint_tokens=4927 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/kv/agentic.lAxtHq/call_f74ac08cd778fd8a9805e6b71d6d1bbf.dsk checkpoint_bytes=805664076 checkpoint_stage_ms=194.848 checkpoint_write_ms=762.122 skill_checkpoint_count=1 skill_checkpoint_live_bytes=805664076 skill_checkpoint_peak_bytes=805664076
+1101 10:48:13 ds4-server: tool calls ctx=0..4879:4879 RESPPROTO n=1 raw_tool_text=1 ids=[call_5ee03d1a3e1e44ee37c96b550cb1b05f] names=[file-processing]
+1101 10:48:13 ds4-server: chat ctx=0..4879:4879 gen=48 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 630.599s
+1101 10:48:19 ds4-server: post-response checkpoint rebuilt source=memory-request cached=4879 response_prefill=50 target=4929 location=vram 5910.985ms
+1101 10:48:19 ds4-server: responses live continuation RESPPROTO match=visible-prefix ids=1 cached=4929 prompt=6353
+1101 10:48:19 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prompt start
+1101 10:48:19 ds4-server: agent-system boundary system_tokens=4801 prompt_tokens=6353 syntax=qwen
+1101 10:48:26 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 64/1424 (4.5%) chunk=0.00 t/s avg=9.44 t/s 6.783s
+1101 10:48:33 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 128/1424 (9.0%) chunk=9.37 t/s avg=9.40 t/s 13.613s
+1101 10:48:40 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 192/1424 (13.5%) chunk=9.32 t/s avg=9.38 t/s 20.478s
+1101 10:48:47 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 256/1424 (18.0%) chunk=9.18 t/s avg=9.33 t/s 27.447s
+1101 10:48:54 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 320/1424 (22.5%) chunk=9.13 t/s avg=9.29 t/s 34.454s
+1101 10:49:01 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 384/1424 (27.0%) chunk=9.14 t/s avg=9.26 t/s 41.458s
+1101 10:49:08 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 448/1424 (31.5%) chunk=9.04 t/s avg=9.23 t/s 48.541s
+1101 10:49:15 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 512/1424 (36.0%) chunk=9.08 t/s avg=9.21 t/s 55.592s
+1101 10:49:22 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 576/1424 (40.4%) chunk=9.11 t/s avg=9.20 t/s 62.615s
+1101 10:49:29 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 640/1424 (44.9%) chunk=9.00 t/s avg=9.18 t/s 69.723s
+1101 10:49:36 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 704/1424 (49.4%) chunk=9.12 t/s avg=9.17 t/s 76.743s
+1101 10:49:43 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 768/1424 (53.9%) chunk=9.09 t/s avg=9.17 t/s 83.782s
+1101 10:49:50 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 832/1424 (58.4%) chunk=9.12 t/s avg=9.16 t/s 90.797s
+1101 10:49:57 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 896/1424 (62.9%) chunk=9.13 t/s avg=9.16 t/s 97.804s
+1101 10:50:04 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 960/1424 (67.4%) chunk=9.09 t/s avg=9.16 t/s 104.843s
+1101 10:50:11 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 1024/1424 (71.9%) chunk=9.04 t/s avg=9.15 t/s 111.923s
+1101 10:50:18 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 1088/1424 (76.4%) chunk=9.10 t/s avg=9.15 t/s 118.953s
+1101 10:50:25 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 1152/1424 (80.9%) chunk=9.08 t/s avg=9.14 t/s 126.004s
+1101 10:50:33 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 1216/1424 (85.4%) chunk=9.06 t/s avg=9.14 t/s 133.065s
+1101 10:50:40 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 1280/1424 (89.9%) chunk=9.08 t/s avg=9.14 t/s 140.111s
+1101 10:50:47 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 1344/1424 (94.4%) chunk=9.08 t/s avg=9.13 t/s 147.158s
+1101 10:50:54 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 1408/1424 (98.9%) chunk=9.01 t/s avg=9.13 t/s 154.259s
+1101 10:50:57 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prefill chunk 1424/1424 (100.0%) chunk=4.56 t/s avg=9.03 t/s 157.766s
+1101 10:50:57 ds4-server: chat ctx=4929..6353:1424 RESPPROTO TOOLS prompt done 157.766s
+1101 10:50:57 ds4-server: response frontier captured tokens=6353 bytes=151.50 MiB location=vram 21.901ms
+1101 10:53:16 ds4-server: chat ctx=6353..6403:50 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.36 t/s avg=0.36 t/s 138.862s
+1101 10:54:23 ds4-server: phase profile ctx=4929..6353:1424 gen=75 mode=trie wall=205773.807ms forced_build=80.097ms/75 forced_sync=0.000ms/0/0_tok forced_prefix_probe=74.284ms sampling_mask_build=802.956ms oracle_compare=0.000ms/0/0_div constraint_cpu=901.351ms constraint_cpu_exposed=901.351ms constraint_cpu_overlapped=0.000ms filter_setup=0.006ms filter=802.950ms filtered_sample=24.111ms/75 plain_sample=0.000ms/0 eval=204866.092ms/75 residual=6.364ms vocab=22348800 filter_calls=14418679 accepted=5713206 finite_allowed=5713171 piece_bytes=107149407 candidate_tokens_tested=14413751 parser_transition_count=1571342557 parser_bytes_visited=1571342557 trie_nodes_visited=4928 subtrees_pruned=3238 trie_leaf_tokens_emitted=1090 mask_cache_hit=16 mask_cache_miss=59 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=9584 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=14418375 constraint_state_rollback=14418375 exhaustive_fallback_steps=0
+1101 10:54:23 ds4-server: chat ctx=6403..6428:25 gen=75 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.37 t/s avg=0.36 t/s 205.774s
+1101 10:54:23 ds4-server: tool calls ctx=4929..6353:1424 RESPPROTO n=1 raw_tool_text=1 ids=[call_1754b0591096fe0090e96ca505c451af] names=[new-file]
+1101 10:54:23 ds4-server: chat ctx=4929..6353:1424 gen=75 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 363.563s
+1101 10:54:33 ds4-server: post-response checkpoint rebuilt source=memory-request cached=6353 response_prefill=77 target=6430 location=vram 9968.460ms
+1101 10:54:34 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=main checkpoint_tokens=6430 system_tokens=4801 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/kv/agentic.lAxtHq/agent-context-slot-0-Xqj3Rv.dsh checkpoint_bytes=1002671304 checkpoint_write_ms=251.567 agent_context_checkpoint_count=1
+1101 10:54:34 ds4-server: responses live continuation RESPPROTO match=visible-prefix ids=1 cached=6430 prompt=7026
+1101 10:54:34 ds4-server: chat ctx=6430..7026:596 RESPPROTO prompt start
+1101 10:54:34 ds4-server: agent-system boundary system_tokens=4801 prompt_tokens=7026 syntax=qwen
+1101 10:54:40 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 64/596 (10.7%) chunk=0.00 t/s avg=9.38 t/s 6.825s
+1101 10:54:47 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 128/596 (21.5%) chunk=9.29 t/s avg=9.33 t/s 13.712s
+1101 10:54:54 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 192/596 (32.2%) chunk=9.31 t/s avg=9.33 t/s 20.587s
+1101 10:55:01 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 256/596 (43.0%) chunk=9.28 t/s avg=9.32 t/s 27.481s
+1101 10:55:08 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 320/596 (53.7%) chunk=9.38 t/s avg=9.33 t/s 34.306s
+1101 10:55:15 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 384/596 (64.4%) chunk=9.36 t/s avg=9.33 t/s 41.143s
+1101 10:55:22 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 448/596 (75.2%) chunk=9.27 t/s avg=9.32 t/s 48.047s
+1101 10:55:29 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 512/596 (85.9%) chunk=9.23 t/s avg=9.31 t/s 54.977s
+1101 10:55:35 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 576/596 (96.6%) chunk=9.37 t/s avg=9.32 t/s 61.809s
+1101 10:55:39 ds4-server: chat ctx=6430..7026:596 RESPPROTO prefill chunk 596/596 (100.0%) chunk=5.48 t/s avg=9.10 t/s 65.461s
+1101 10:55:39 ds4-server: chat ctx=6430..7026:596 RESPPROTO prompt done 65.461s
+1101 10:55:39 ds4-server: response frontier captured tokens=7026 bytes=151.50 MiB location=vram 22.021ms
+1101 10:55:49 ds4-server: phase profile ctx=6430..7026:596 gen=8 mode=trie wall=10361.600ms forced_build=1.988ms/4 forced_sync=5229.399ms/2/6_tok forced_prefix_probe=1.415ms sampling_mask_build=0.573ms oracle_compare=0.000ms/0/0_div constraint_cpu=3.826ms constraint_cpu_exposed=3.826ms constraint_cpu_overlapped=0.000ms filter_setup=0.001ms filter=0.572ms filtered_sample=1.838ms/2 plain_sample=0.000ms/0 eval=5128.148ms/2 residual=0.227ms vocab=2234880 filter_calls=2659 accepted=41 finite_allowed=23 piece_bytes=3056 candidate_tokens_tested=41 parser_transition_count=12198 parser_bytes_visited=12126 trie_nodes_visited=2618 subtrees_pruned=2577 trie_leaf_tokens_emitted=41 mask_cache_hit=0 mask_cache_miss=4 grammar_compile_ms=0.006 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=2659 constraint_state_rollback=2659 exhaustive_fallback_steps=0
+1101 10:55:49 ds4-server: chat ctx=7026..7034:8 gen=8 RESPPROTO decoding chunk=0.77 t/s avg=0.77 t/s 10.362s
+1101 10:55:49 ds4-server: chat ctx=6430..7026:596 gen=8 RESPPROTO finish=stop 75.846s
+1101 10:55:52 ds4-server: post-response checkpoint rebuilt source=memory-request cached=7026 response_prefill=10 target=7036 location=vram 2972.115ms
+1101 10:55:53 ds4-server: resident system frontier restored tokens=4801 123.812ms
+1101 10:55:53 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prompt start
+1101 10:55:53 ds4-server: agent-system boundary system_tokens=4801 prompt_tokens=6907 syntax=qwen
+1101 10:55:59 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 64/2106 (3.0%) chunk=0.00 t/s avg=9.69 t/s 6.606s
+1101 10:56:06 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 128/2106 (6.1%) chunk=9.62 t/s avg=9.66 t/s 13.257s
+1101 10:56:13 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 192/2106 (9.1%) chunk=9.42 t/s avg=9.57 t/s 20.054s
+1101 10:56:20 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 256/2106 (12.2%) chunk=9.43 t/s avg=9.54 t/s 26.844s
+1101 10:56:26 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 320/2106 (15.2%) chunk=9.34 t/s avg=9.50 t/s 33.699s
+1101 10:56:33 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 384/2106 (18.2%) chunk=9.34 t/s avg=9.47 t/s 40.550s
+1101 10:56:40 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 448/2106 (21.3%) chunk=9.22 t/s avg=9.43 t/s 47.493s
+1101 10:56:47 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 512/2106 (24.3%) chunk=9.27 t/s avg=9.41 t/s 54.397s
+1101 10:56:54 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 576/2106 (27.4%) chunk=9.18 t/s avg=9.39 t/s 61.372s
+1101 10:57:01 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 640/2106 (30.4%) chunk=9.21 t/s avg=9.37 t/s 68.319s
+1101 10:57:08 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 704/2106 (33.4%) chunk=9.34 t/s avg=9.37 t/s 75.171s
+1101 10:57:15 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 768/2106 (36.5%) chunk=9.40 t/s avg=9.37 t/s 81.981s
+1101 10:57:21 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 832/2106 (39.5%) chunk=9.46 t/s avg=9.38 t/s 88.747s
+1101 10:57:28 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 896/2106 (42.5%) chunk=9.43 t/s avg=9.38 t/s 95.537s
+1101 10:57:35 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 960/2106 (45.6%) chunk=9.29 t/s avg=9.37 t/s 102.423s
+1101 10:57:42 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1024/2106 (48.6%) chunk=9.26 t/s avg=9.37 t/s 109.338s
+1101 10:57:49 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1088/2106 (51.7%) chunk=9.25 t/s avg=9.36 t/s 116.257s
+1101 10:57:56 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1152/2106 (54.7%) chunk=9.22 t/s avg=9.35 t/s 123.196s
+1101 10:58:03 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1216/2106 (57.7%) chunk=9.09 t/s avg=9.34 t/s 130.233s
+1101 10:58:10 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1280/2106 (60.8%) chunk=9.08 t/s avg=9.32 t/s 137.284s
+1101 10:58:17 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1344/2106 (63.8%) chunk=9.06 t/s avg=9.31 t/s 144.346s
+1101 10:58:24 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1408/2106 (66.9%) chunk=9.02 t/s avg=9.30 t/s 151.445s
+1101 10:58:31 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1472/2106 (69.9%) chunk=9.04 t/s avg=9.29 t/s 158.526s
+1101 10:58:38 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1536/2106 (72.9%) chunk=9.10 t/s avg=9.28 t/s 165.562s
+1101 10:58:45 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1600/2106 (76.0%) chunk=9.08 t/s avg=9.27 t/s 172.614s
+1101 10:58:52 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1664/2106 (79.0%) chunk=9.12 t/s avg=9.26 t/s 179.633s
+1101 10:58:59 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1728/2106 (82.1%) chunk=9.07 t/s avg=9.26 t/s 186.689s
+1101 10:59:06 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1792/2106 (85.1%) chunk=9.10 t/s avg=9.25 t/s 193.721s
+1101 10:59:13 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1856/2106 (88.1%) chunk=9.12 t/s avg=9.25 t/s 200.735s
+1101 10:59:21 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1920/2106 (91.2%) chunk=9.02 t/s avg=9.24 t/s 207.833s
+1101 10:59:28 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 1984/2106 (94.2%) chunk=9.01 t/s avg=9.23 t/s 214.935s
+1101 10:59:35 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 2048/2106 (97.2%) chunk=9.00 t/s avg=9.22 t/s 222.043s
+1101 10:59:41 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prefill chunk 2106/2106 (100.0%) chunk=8.63 t/s avg=9.21 t/s 228.767s
+1101 10:59:42 AGENT_CONTEXT_RESTORE slot=0 context_id=main restored_tokens=6430 discarded_context_tokens=606 result_prefill_tokens=2106 checkpoint_read_ms=146.320 checkpoint_deleted=true agent_context_restore_count=1
+1101 10:59:42 ds4-server: chat ctx=4801..6907:2106 RESPPROTO TOOLS prompt done 228.776s
+1101 10:59:42 ds4-server: response frontier captured tokens=6907 bytes=151.50 MiB location=vram 25.390ms
+1101 11:01:59 ds4-server: chat ctx=6907..6957:50 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.36 t/s avg=0.36 t/s 137.721s
+1101 11:04:18 ds4-server: chat ctx=6957..7007:50 gen=100 RESPPROTO TOOLS DSML_START decoding chunk=0.36 t/s avg=0.36 t/s 276.314s
+1101 11:05:09 ds4-server: phase profile ctx=4801..6907:2106 gen=118 mode=trie wall=326993.465ms forced_build=310.206ms/118 forced_sync=0.000ms/0/0_tok forced_prefix_probe=73.836ms sampling_mask_build=1187.643ms oracle_compare=0.000ms/0/0_div constraint_cpu=1304.752ms constraint_cpu_exposed=1304.752ms constraint_cpu_overlapped=0.000ms filter_setup=0.006ms filter=1187.637ms filtered_sample=43.273ms/118 plain_sample=0.000ms/0 eval=325665.903ms/118 residual=22.810ms vocab=32778240 filter_calls=19399660 accepted=10680821 finite_allowed=10680788 piece_bytes=144146695 candidate_tokens_tested=19393090 parser_transition_count=4189035683 parser_bytes_visited=4189035683 trie_nodes_visited=6570 subtrees_pruned=4318 trie_leaf_tokens_emitted=1452 mask_cache_hit=37 mask_cache_miss=81 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=22163 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=19399190 constraint_state_rollback=19399190 exhaustive_fallback_steps=8
+1101 11:05:09 ds4-server: chat ctx=7007..7025:18 gen=118 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.36 t/s avg=0.36 t/s 326.993s
+1101 11:05:09 ds4-server: tool calls ctx=4801..6907:2106 RESPPROTO n=1 raw_tool_text=1 ids=[call_5f5b36c02873cc5e13892283b3cbfd96] names=[exit_agent]
+1101 11:05:09 ds4-server: chat ctx=4801..6907:2106 gen=118 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 555.796s
+1101 11:05:22 ds4-server: post-response checkpoint rebuilt source=memory-request cached=6907 response_prefill=120 target=7027 location=vram 13842.043ms
+1101 11:05:23 ds4-server: responses live continuation RESPPROTO match=skill-call-id ids=1 cached=4927 prompt=5134
+1101 11:05:23 ds4-server: chat ctx=4927..5134:207 RESPPROTO TOOLS prompt start
+1101 11:05:23 ds4-server: agent-system boundary system_tokens=4801 prompt_tokens=5134 syntax=qwen
+1101 11:05:30 ds4-server: chat ctx=4927..5134:207 RESPPROTO TOOLS prefill chunk 64/207 (30.9%) chunk=0.00 t/s avg=9.36 t/s 6.834s
+1101 11:05:37 ds4-server: chat ctx=4927..5134:207 RESPPROTO TOOLS prefill chunk 128/207 (61.8%) chunk=9.36 t/s avg=9.36 t/s 13.670s
+1101 11:05:44 ds4-server: chat ctx=4927..5134:207 RESPPROTO TOOLS prefill chunk 192/207 (92.8%) chunk=9.48 t/s avg=9.40 t/s 20.423s
+1101 11:05:47 ds4-server: chat ctx=4927..5134:207 RESPPROTO TOOLS prefill chunk 207/207 (100.0%) chunk=4.46 t/s avg=8.70 t/s 23.790s
+1101 11:05:47 SKILL_RETURN call_id=call_5ee03d1a3e1e44ee37c96b550cb1b05f restored_tokens=4927 discarded_child_tokens=2100 result_prefill_tokens=207 checkpoint_read_ms=823.898 checkpoint_restore_ms=95.849 checkpoint_deleted=true skill_return_count=1 skill_checkpoint_live_bytes=0
+1101 11:05:47 ds4-server: chat ctx=4927..5134:207 RESPPROTO TOOLS prompt done 23.794s
+1101 11:05:47 ds4-server: response frontier captured tokens=5134 bytes=151.50 MiB location=vram 22.416ms
+1101 11:08:07 ds4-server: chat ctx=5134..5184:50 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.36 t/s avg=0.36 t/s 140.094s
+1101 11:09:23 ds4-server: phase profile ctx=4927..5134:207 gen=77 mode=trie wall=215781.635ms forced_build=184.507ms/77 forced_sync=0.000ms/0/0_tok forced_prefix_probe=165.749ms sampling_mask_build=623.874ms oracle_compare=0.000ms/0/0_div constraint_cpu=834.942ms constraint_cpu_exposed=834.942ms constraint_cpu_overlapped=0.000ms filter_setup=0.004ms filter=623.870ms filtered_sample=45.319ms/77 plain_sample=0.000ms/0 eval=214936.718ms/77 residual=9.975ms vocab=20858880 filter_calls=9215271 accepted=10429621 finite_allowed=10429597 piece_bytes=68437757 candidate_tokens_tested=9211985 parser_transition_count=207226132 parser_bytes_visited=207226132 trie_nodes_visited=3286 subtrees_pruned=2158 trie_leaf_tokens_emitted=728 mask_cache_hit=41 mask_cache_miss=36 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=764588 dynamic_frontier_size=24559 search_static_steps=41 search_static_fallbacks=7 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=9215047 constraint_state_rollback=9215047 exhaustive_fallback_steps=0
+1101 11:09:23 ds4-server: chat ctx=5184..5211:27 gen=77 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.36 t/s avg=0.36 t/s 215.782s
+1101 11:09:24 SKILL_CHECKPOINT call_id=call_ceff3cd1fde1b5b334fa4187452053c6 skill=file-processing sequence=5211 checkpoint_tokens=5211 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/kv/agentic.lAxtHq/call_c936e7b3bb8e1622648adc6763b77f45.dsk checkpoint_bytes=842889660 checkpoint_stage_ms=298.205 checkpoint_write_ms=816.375 skill_checkpoint_count=2 skill_checkpoint_live_bytes=842889660 skill_checkpoint_peak_bytes=842889660
+1101 11:09:24 ds4-server: tool calls ctx=4927..5134:207 RESPPROTO n=1 raw_tool_text=1 ids=[call_ceff3cd1fde1b5b334fa4187452053c6] names=[file-processing]
+1101 11:09:24 ds4-server: chat ctx=4927..5134:207 gen=77 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 240.718s
+1101 11:09:35 ds4-server: post-response checkpoint rebuilt source=memory-request cached=5134 response_prefill=79 target=5213 location=vram 10466.176ms
+1101 11:09:35 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=main checkpoint_tokens=5213 system_tokens=4801 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-frontend-file-create-x4/kv/agentic.lAxtHq/agent-context-slot-0-HuMcyl.dsh checkpoint_bytes=843151812 checkpoint_write_ms=245.493 agent_context_checkpoint_count=2
+1101 11:09:35 ds4-server: responses live continuation RESPPROTO match=visible-prefix ids=1 cached=5213 prompt=6994
+1101 11:09:35 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prompt start
+1101 11:09:35 ds4-server: agent-system boundary system_tokens=4801 prompt_tokens=6994 syntax=qwen
+1101 11:09:42 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 64/1781 (3.6%) chunk=0.00 t/s avg=9.29 t/s 6.891s
+1101 11:09:49 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 128/1781 (7.2%) chunk=9.05 t/s avg=9.17 t/s 13.961s
+1101 11:09:56 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 192/1781 (10.8%) chunk=9.17 t/s avg=9.17 t/s 20.942s
+1101 11:10:03 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 256/1781 (14.4%) chunk=9.01 t/s avg=9.13 t/s 28.047s
+1101 11:10:10 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 320/1781 (18.0%) chunk=9.04 t/s avg=9.11 t/s 35.129s
+1101 11:10:17 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 384/1781 (21.6%) chunk=9.11 t/s avg=9.11 t/s 42.153s
+1101 11:10:24 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 448/1781 (25.2%) chunk=9.11 t/s avg=9.11 t/s 49.180s
+1101 11:10:31 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 512/1781 (28.7%) chunk=9.12 t/s avg=9.11 t/s 56.198s
+1101 11:10:38 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 576/1781 (32.3%) chunk=9.09 t/s avg=9.11 t/s 63.235s
+1101 11:10:45 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 640/1781 (35.9%) chunk=9.10 t/s avg=9.11 t/s 70.269s
+1101 11:10:52 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 704/1781 (39.5%) chunk=9.12 t/s avg=9.11 t/s 77.289s
+1101 11:10:59 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 768/1781 (43.1%) chunk=9.11 t/s avg=9.11 t/s 84.317s
+1101 11:11:06 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 832/1781 (46.7%) chunk=9.06 t/s avg=9.10 t/s 91.385s
+1101 11:11:13 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 896/1781 (50.3%) chunk=9.01 t/s avg=9.10 t/s 98.484s
+1101 11:11:21 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 960/1781 (53.9%) chunk=8.96 t/s avg=9.09 t/s 105.625s
+1101 11:11:28 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1024/1781 (57.5%) chunk=9.03 t/s avg=9.08 t/s 112.716s
+1101 11:11:35 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1088/1781 (61.1%) chunk=8.92 t/s avg=9.08 t/s 119.889s
+1101 11:11:42 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1152/1781 (64.7%) chunk=8.96 t/s avg=9.07 t/s 127.033s
+1101 11:11:50 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1216/1781 (68.3%) chunk=8.16 t/s avg=9.02 t/s 134.872s
+1101 11:11:58 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1280/1781 (71.9%) chunk=7.96 t/s avg=8.96 t/s 142.913s
+1101 11:12:06 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1344/1781 (75.5%) chunk=7.38 t/s avg=8.87 t/s 151.589s
+1101 11:12:15 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1408/1781 (79.1%) chunk=7.59 t/s avg=8.80 t/s 160.024s
+1101 11:12:24 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1472/1781 (82.7%) chunk=6.94 t/s avg=8.70 t/s 169.244s
+1101 11:12:33 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1536/1781 (86.2%) chunk=6.95 t/s avg=8.61 t/s 178.452s
+1101 11:12:42 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1600/1781 (89.8%) chunk=7.35 t/s avg=8.55 t/s 187.155s
+1101 11:12:51 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1664/1781 (93.4%) chunk=7.48 t/s avg=8.50 t/s 195.707s
+1101 11:12:59 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1728/1781 (97.0%) chunk=7.73 t/s avg=8.47 t/s 203.986s
+1101 11:13:06 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prefill chunk 1781/1781 (100.0%) chunk=7.47 t/s avg=8.44 t/s 211.080s
+1101 11:13:06 ds4-server: chat ctx=5213..6994:1781 RESPPROTO prompt done 211.080s
+1101 11:13:06 ds4-server: response frontier captured tokens=6994 bytes=151.50 MiB location=vram 26.477ms
+1101 11:13:20 ds4-server: phase profile ctx=5213..6994:1781 gen=9 mode=trie wall=13593.544ms forced_build=2.260ms/5 forced_sync=5380.674ms/2/6_tok forced_prefix_probe=1.574ms sampling_mask_build=0.686ms oracle_compare=0.000ms/0/0_div constraint_cpu=4.999ms constraint_cpu_exposed=4.999ms constraint_cpu_overlapped=0.000ms filter_setup=0.001ms filter=0.685ms filtered_sample=2.739ms/3 plain_sample=0.000ms/0 eval=8207.608ms/3 residual=0.263ms vocab=2483200 filter_calls=2949 accepted=43 finite_allowed=25 piece_bytes=3378 candidate_tokens_tested=43 parser_transition_count=12810 parser_bytes_visited=12702 trie_nodes_visited=2906 subtrees_pruned=2863 trie_leaf_tokens_emitted=43 mask_cache_hit=0 mask_cache_miss=5 grammar_compile_ms=0.007 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=2949 constraint_state_rollback=2949 exhaustive_fallback_steps=0
+1101 11:13:20 ds4-server: chat ctx=6994..7003:9 gen=9 RESPPROTO decoding chunk=0.66 t/s avg=0.66 t/s 13.594s
+1101 11:13:20 ds4-server: chat ctx=5213..6994:1781 gen=9 RESPPROTO finish=stop 224.701s
+1101 11:13:23 ds4-server: post-response checkpoint rebuilt source=memory-request cached=6994 response_prefill=11 target=7005 location=vram 3048.111ms
+1101 11:13:23 ds4-server: resident system frontier restored tokens=4801 50.046ms
+1101 11:13:23 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prompt start
+1101 11:13:23 ds4-server: agent-system boundary system_tokens=4801 prompt_tokens=7041 syntax=qwen
+1101 11:13:29 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 64/2240 (2.9%) chunk=0.00 t/s avg=9.52 t/s 6.722s
+1101 11:13:37 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 128/2240 (5.7%) chunk=8.98 t/s avg=9.24 t/s 13.846s
+1101 11:13:43 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 192/2240 (8.6%) chunk=9.59 t/s avg=9.36 t/s 20.520s
+1101 11:13:50 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 256/2240 (11.4%) chunk=9.43 t/s avg=9.38 t/s 27.305s
+1101 11:13:57 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 320/2240 (14.3%) chunk=9.41 t/s avg=9.38 t/s 34.103s
+1101 11:14:04 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 384/2240 (17.1%) chunk=9.51 t/s avg=9.40 t/s 40.835s
+1101 11:14:10 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 448/2240 (20.0%) chunk=9.37 t/s avg=9.40 t/s 47.664s
+1101 11:14:17 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 512/2240 (22.9%) chunk=9.39 t/s avg=9.40 t/s 54.482s
+1101 11:14:24 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 576/2240 (25.7%) chunk=9.44 t/s avg=9.40 t/s 61.261s
+1101 11:14:31 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 640/2240 (28.6%) chunk=9.42 t/s avg=9.40 t/s 68.055s
+1101 11:14:38 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 704/2240 (31.4%) chunk=9.33 t/s avg=9.40 t/s 74.913s
+1101 11:14:44 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 768/2240 (34.3%) chunk=9.33 t/s avg=9.39 t/s 81.776s
+1101 11:14:51 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 832/2240 (37.1%) chunk=9.34 t/s avg=9.39 t/s 88.626s
+1101 11:14:58 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 896/2240 (40.0%) chunk=9.32 t/s avg=9.38 t/s 95.496s
+1101 11:15:05 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 960/2240 (42.9%) chunk=9.32 t/s avg=9.38 t/s 102.366s
+1101 11:15:12 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1024/2240 (45.7%) chunk=9.39 t/s avg=9.38 t/s 109.183s
+1101 11:15:19 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1088/2240 (48.6%) chunk=9.33 t/s avg=9.38 t/s 116.040s
+1101 11:15:26 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1152/2240 (51.4%) chunk=9.26 t/s avg=9.37 t/s 122.952s
+1101 11:15:32 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1216/2240 (54.3%) chunk=9.39 t/s avg=9.37 t/s 129.768s
+1101 11:15:39 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1280/2240 (57.1%) chunk=9.39 t/s avg=9.37 t/s 136.586s
+1101 11:15:46 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1344/2240 (60.0%) chunk=9.27 t/s avg=9.37 t/s 143.490s
+1101 11:15:53 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1408/2240 (62.9%) chunk=9.26 t/s avg=9.36 t/s 150.401s
+1101 11:16:00 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1472/2240 (65.7%) chunk=9.25 t/s avg=9.36 t/s 157.323s
+1101 11:16:07 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1536/2240 (68.6%) chunk=9.29 t/s avg=9.35 t/s 164.209s
+1101 11:16:14 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1600/2240 (71.4%) chunk=9.18 t/s avg=9.35 t/s 171.178s
+1101 11:16:21 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1664/2240 (74.3%) chunk=9.21 t/s avg=9.34 t/s 178.129s
+1101 11:16:28 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1728/2240 (77.1%) chunk=9.24 t/s avg=9.34 t/s 185.054s
+1101 11:16:35 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1792/2240 (80.0%) chunk=9.19 t/s avg=9.33 t/s 192.016s
+1101 11:16:42 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1856/2240 (82.9%) chunk=9.17 t/s avg=9.33 t/s 198.992s
+1101 11:16:49 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1920/2240 (85.7%) chunk=9.20 t/s avg=9.32 t/s 205.945s
+1101 11:16:56 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 1984/2240 (88.6%) chunk=9.13 t/s avg=9.32 t/s 212.958s
+1101 11:17:03 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 2048/2240 (91.4%) chunk=9.16 t/s avg=9.31 t/s 219.942s
+1101 11:17:10 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 2112/2240 (94.3%) chunk=9.17 t/s avg=9.31 t/s 226.923s
+1101 11:17:17 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 2176/2240 (97.1%) chunk=9.13 t/s avg=9.30 t/s 233.932s
+1101 11:17:24 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prefill chunk 2240/2240 (100.0%) chunk=9.07 t/s avg=9.30 t/s 240.986s
+1101 11:17:24 ds4-server: chat ctx=4801..7041:2240 RESPPROTO prompt done 240.986s
+1101 11:17:24 ds4-server: response frontier captured tokens=7041 bytes=151.50 MiB location=vram 22.500ms
+1101 11:17:35 ds4-server: phase profile ctx=4801..7041:2240 gen=14 mode=trie wall=11331.106ms forced_build=3.036ms/4 forced_sync=5894.350ms/2/12_tok forced_prefix_probe=2.486ms sampling_mask_build=0.550ms oracle_compare=0.000ms/0/0_div constraint_cpu=4.768ms constraint_cpu_exposed=4.768ms constraint_cpu_overlapped=0.000ms filter_setup=0.001ms filter=0.549ms filtered_sample=1.732ms/2 plain_sample=0.000ms/0 eval=5429.620ms/2 residual=2.368ms vocab=3724800 filter_calls=4427 accepted=47 finite_allowed=23 piece_bytes=5050 candidate_tokens_tested=47 parser_transition_count=35959 parser_bytes_visited=35887 trie_nodes_visited=4380 subtrees_pruned=4333 trie_leaf_tokens_emitted=47 mask_cache_hit=0 mask_cache_miss=4 grammar_compile_ms=0.006 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=4427 constraint_state_rollback=4427 exhaustive_fallback_steps=0
+1101 11:17:35 ds4-server: chat ctx=7041..7055:14 gen=14 RESPPROTO decoding chunk=1.24 t/s avg=1.24 t/s 11.331s
+1101 11:17:35 ds4-server: chat ctx=4801..7041:2240 gen=14 RESPPROTO finish=stop 252.340s
+1101 11:17:39 ds4-server: post-response checkpoint rebuilt source=memory-request cached=7041 response_prefill=16 target=7057 location=vram 3513.960ms
+1101 11:17:39 ds4-server: live kv cache miss RESPPROTO live=7057 prompt=113 common=3 vision=match reason=token-mismatch
+1101 11:17:39 ds4-server: chat ctx=0..113:113 RESPPROTO prompt start
+1101 11:17:39 ds4-server: agent-system boundary system_tokens=69 prompt_tokens=113 syntax=qwen
+1101 11:17:45 ds4-server: chat ctx=0..113:113 RESPPROTO prefill chunk 64/113 (56.6%) chunk=0.00 t/s avg=10.10 t/s 6.335s
+1101 11:17:48 ds4-server: chat ctx=0..113:113 RESPPROTO prefill chunk 69/113 (61.1%) chunk=1.84 t/s avg=7.62 t/s 9.053s
+1101 11:17:48 ds4-server: kv cache stored tokens=69 trimmed=44 reason=agent-system key=rendered-system size=161.07 MiB save=73.6 ms
+1101 11:17:53 ds4-server: chat ctx=0..113:113 RESPPROTO prefill chunk 113/113 (100.0%) chunk=8.43 t/s avg=7.92 t/s 14.275s
+1101 11:17:53 ds4-server: chat ctx=0..113:113 RESPPROTO prompt done 14.275s
+1101 11:17:53 ds4-server: response frontier captured tokens=113 bytes=151.50 MiB location=vram 22.119ms
+1101 11:18:20 ds4-server: phase profile ctx=0..113:113 gen=10 mode=trie wall=26868.054ms forced_build=0.000ms/0 forced_sync=0.000ms/0/0_tok forced_prefix_probe=0.000ms sampling_mask_build=0.000ms oracle_compare=0.000ms/0/0_div constraint_cpu=0.000ms constraint_cpu_exposed=0.000ms constraint_cpu_overlapped=0.000ms filter_setup=0.000ms filter=0.000ms filtered_sample=0.000ms/0 plain_sample=10.062ms/11 eval=26852.109ms/10 residual=5.883ms vocab=0 filter_calls=0 accepted=0 finite_allowed=0 piece_bytes=0 candidate_tokens_tested=0 parser_transition_count=0 parser_bytes_visited=0 trie_nodes_visited=0 subtrees_pruned=0 trie_leaf_tokens_emitted=0 mask_cache_hit=0 mask_cache_miss=0 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=0.000 trie_compiled_nodes=0 trie_memory_bytes=0 static_mask_compile_ms=0.000 static_mask_memory_bytes=0 dynamic_frontier_size=0 search_static_steps=0 search_static_fallbacks=0 mtp_constrained_target_only_steps=0 mtp_constrained_speculative_cycles=0 mtp_constrained_sampled_rows=0 mtp_constrained_accepted_drafts=0 mtp_constrained_fallbacks=0 constraint_state_checkpoint=0 constraint_state_rollback=0 exhaustive_fallback_steps=0
+1101 11:18:20 ds4-server: chat ctx=113..123:10 gen=10 RESPPROTO decoding chunk=0.37 t/s avg=0.37 t/s 26.868s
+1101 11:18:20 ds4-server: chat ctx=0..113:113 gen=10 RESPPROTO finish=stop 41.168s
+1101 11:18:22 ds4-server: shutdown requested, draining requests
+1101 11:18:23 ds4-server: post-response checkpoint rebuilt source=memory-request cached=113 response_prefill=12 target=125 location=vram 2963.989ms

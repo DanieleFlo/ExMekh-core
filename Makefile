@@ -30,6 +30,8 @@ DS4_DSPARK_SUPPORT ?= gguf/DeepSeek-V4-Flash-DSpark-support-0731.gguf
 
 ifeq ($(UNAME_S),Darwin)
 METAL_LDLIBS := $(LDLIBS) -framework Foundation -framework Metal
+DS4_LINK ?= $(CC)
+DS4_LINK_LIBS ?= $(METAL_LDLIBS)
 CORE_OBJS = ds4.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o
 else
 CFLAGS += -D_GNU_SOURCE -fno-finite-math-only
@@ -167,7 +169,7 @@ session-concurrency-bench: speed-bench/session_concurrency_bench
 tests/test_mxfp4_metal.o: tests/test_mxfp4_metal.c ds4_gpu.h
 	$(CC) $(CFLAGS) -I. -c -o $@ $<
 
-tests/test_mxfp4_metal: tests/test_mxfp4_metal.o ds4_metal.o ds4_image.o
+tests/test_mxfp4_metal: tests/test_mxfp4_metal.o ds4_metal.o ds4_image.o ds4_resources.o
 	$(CC) $(CFLAGS) -o $@ $^ $(METAL_LDLIBS)
 
 check-mxfp4-half-lut:
@@ -571,7 +573,7 @@ docs-index: research-index
 docs-check: docs-index
 	python3 -m unittest tests.test_research_corpus tests.test_docs_wiki -v
 
-ds4.o: ds4.c $(DS4_API_HEADERS) ds4_lifecycle.inc ds4_lifecycle_text.h ds4_checkpoint.h ds4_sha256.h ds4_resources.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_qwen.h ds4_env.h ds4_qwen4_runtime.h ds4_gpu_tp.h ds4_deepseek41_gpu.h ds4_linux_memory.h ds4_engram.h ds4_read_queue.h
+ds4.o: ds4.c $(DS4_API_HEADERS) ds4_lifecycle.inc ds4_lifecycle_text.h ds4_checkpoint.h ds4_sha256.h ds4_resources.h ds4_ssd.h ds4_distributed.h ds4_gpu.h ds4_qwen.h ds4_env.h ds4_qwen4_runtime.h ds4_gpu_tp.h ds4_deepseek41_gpu.h ds4_linux_memory.h ds4_metal_memory.h ds4_engram.h ds4_read_queue.h
 	$(CC) $(CFLAGS) -c -o $@ ds4.c
 
 ds4_image.o: ds4_image.c ds4_image.h third_party/iris/jpeg.h third_party/iris/png.h
@@ -629,7 +631,9 @@ tests/cuda_long_context_smoke.o: tests/cuda_long_context_smoke.c ds4_gpu.h ds4_q
 tests/qwen_numerics_probe.o: tests/qwen_numerics_probe.c ds4_gpu.h ds4_qwen.h
 	$(CC) $(QUALITY_CFLAGS) -I. -c -o $@ tests/qwen_numerics_probe.c
 
-tests/test_qwen_mtp_callback.o: tests/test_qwen_mtp_callback.c ds4.c $(DS4_API_HEADERS) ds4_gpu.h ds4_qwen.h ds4_env.h
+tests/qwen_numerics_probe.o tests/test_qwen35_metal: tests/qwen_half_reference.h
+
+tests/test_qwen_mtp_callback.o: tests/test_qwen_mtp_callback.c tests/qwen_test_profile.h ds4.c $(DS4_API_HEADERS) ds4_gpu.h ds4_qwen.h ds4_env.h
 	$(CC) $(CFLAGS) -I. -c -o $@ $<
 
 tests/test_qwen_mtp_callback: tests/test_qwen_mtp_callback.o $(filter-out ds4.o,$(CORE_OBJS))
@@ -688,7 +692,9 @@ ds4_bench_cpu.o: ds4_bench.c $(DS4_API_HEADERS) ds4_ssd.h ds4_distributed.h ds4_
 ds4_eval_cpu.o: ds4_eval.c ds4_eval_cases.h $(DS4_API_HEADERS) ds4_ssd.h ds4_distributed.h ds4_help.h
 	$(CC) $(CFLAGS) -DDS4_NO_GPU -c -o $@ ds4_eval.c
 
-ds4_metal.o: ds4_metal.m ds4_qwen.h $(DS4_API_HEADERS) ds4_gpu.h ds4_gpu_tp.h ds4_deepseek41_gpu.h ds4_image.h $(METAL_SRCS)
+ds4_metal.o: ds4_metal_memory.h ds4_metal_device.h
+ds4_metal.o: ds4_qwen4_metal_stream.inc ds4_file_reader.h ds4_read_queue.h
+ds4_metal.o: ds4_metal.m ds4_qwen35_metal.inc ds4_iq_ud_tables_cuda.inc ds4_qwen.h $(DS4_API_HEADERS) ds4_gpu.h ds4_gpu_tp.h ds4_deepseek41_gpu.h ds4_image.h $(METAL_SRCS)
 	$(CC) $(OBJCFLAGS) -c -o $@ ds4_metal.m
 
 tests/test_glm53_kda.o: tests/test_glm53_kda.c ds4_gpu.h
@@ -704,7 +710,7 @@ else
 	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
 endif
 
-tests/test_glm53_vision_prompt.o: tests/test_glm53_vision_prompt.c $(DS4_API_HEADERS)
+tests/test_glm53_vision_prompt.o: tests/test_glm53_vision_prompt.c tests/qwen_test_profile.h $(DS4_API_HEADERS)
 	$(CC) $(CFLAGS) -fno-fast-math -I. -c -o $@ tests/test_glm53_vision_prompt.c
 
 tests/test_glm53_vision_prompt: tests/test_glm53_vision_prompt.o $(CORE_OBJS)
@@ -727,7 +733,7 @@ tests/test_image_decode: tests/test_image_decode.o ds4_image.o
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 ifeq ($(UNAME_S),Darwin)
-$(GLM53_KDA_TEST): tests/test_glm53_kda.o ds4_metal.o ds4_image.o
+$(GLM53_KDA_TEST): tests/test_glm53_kda.o ds4_metal.o ds4_image.o ds4_resources.o
 	$(CC) $(CFLAGS) -o $@ $^ $(METAL_LDLIBS)
 else
 $(GLM53_KDA_TEST): tests/test_glm53_kda.o ds4_cuda.o ds4_image.o $(MMQ_OBJS)
@@ -742,7 +748,7 @@ ifeq ($(UNAME_S),Darwin)
 tests/test_qwen4_kernels.o: tests/test_qwen4_kernels.c ds4_gpu.h $(DS4_API_HEADERS)
 	$(CC) $(CFLAGS) -I. -c -o $@ tests/test_qwen4_kernels.c
 
-$(QWEN4_KERNEL_TEST): tests/test_qwen4_kernels.o ds4_metal.o ds4_image.o
+$(QWEN4_KERNEL_TEST): tests/test_qwen4_kernels.o ds4_metal.o ds4_image.o ds4_resources.o
 	$(CC) $(CFLAGS) -o $@ $^ $(METAL_LDLIBS)
 
 endif
@@ -807,7 +813,7 @@ tests/test_glm_attention.o: tests/test_glm_attention.c $(DS4_API_HEADERS) ds4_gp
 	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -c -o $@ $<
 
 ifeq ($(UNAME_S),Darwin)
-tests/test_glm_attention: tests/test_glm_attention.o ds4_metal.o ds4_image.o
+tests/test_glm_attention: tests/test_glm_attention.o ds4_metal.o ds4_image.o ds4_resources.o
 	$(CC) $(CFLAGS) -o $@ $^ $(METAL_LDLIBS)
 else
 tests/test_glm_attention: tests/test_glm_attention.o ds4_cuda.o ds4_image.o $(MMQ_OBJS)
@@ -1098,15 +1104,22 @@ tests/test_cuda_mixed_batch: tests/test_cuda_mixed_batch.o ds4_cuda_test_hooks.o
 test-cuda-mixed-batch: tests/test_cuda_mixed_batch
 	DS4_TEST_MODEL="$(DS4_TEST_MODEL)" ./tests/test_cuda_mixed_batch
 
-tests/test_agentic_checkpoint.o: tests/test_agentic_checkpoint.c $(DS4_API_HEADERS)
-	$(CC) $(CFLAGS) -I. -I$(CUDA_HOME)/include -c -o $@ $<
+endif
+
+tests/test_agentic_checkpoint.o: tests/test_agentic_checkpoint.c tests/qwen_test_profile.h $(DS4_API_HEADERS)
+	$(CC) $(CFLAGS) -I. -c -o $@ $<
+
+tests/probe_qwen_metal_stream: tests/probe_qwen_metal_stream.c ds4_sha256.h $(CORE_OBJS)
+	$(DS4_LINK) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $< $(CORE_OBJS) $(DS4_LINK_LIBS)
+
+tests/probe_qwen_skill_return: tests/probe_qwen_skill_return.c $(CORE_OBJS)
+	$(DS4_LINK) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $< $(CORE_OBJS) $(DS4_LINK_LIBS)
 
 tests/test_agentic_checkpoint: tests/test_agentic_checkpoint.o ds4_gpu_args.o ds4_kvstore.o rax.o $(CORE_OBJS)
-	$(NVCC) $(NVCCFLAGS) -o $@ $^ $(CUDA_LDLIBS)
+	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
 
 test-agentic-checkpoint: tests/test_agentic_checkpoint
 	DS4_TEST_MODEL="$(DS4_TEST_MODEL)" ./tests/test_agentic_checkpoint
-endif
 
 ds4_test: ds4_test.o ds4_help.o ds4_kvstore.o rax.o ds4_test_hooks.o $(filter-out ds4.o,$(CORE_OBJS))
 ifeq ($(UNAME_S),Darwin)
@@ -1231,14 +1244,81 @@ mxfp4-dot-test: tests/test_mxfp4_dot.c
 	./tests/test_mxfp4_dot
 
 tests/test_qwen35_mrope.o: tests/test_qwen35_mrope.c ds4_gpu.h
-	$(CC) $(CFLAGS) -I. -c -o $@ $<
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -c -o $@ $<
 
 tests/test_qwen35_mrope: tests/test_qwen35_mrope.o $(CORE_OBJS)
+ifeq ($(UNAME_S),Darwin)
+	$(CC) $(CFLAGS) -o $@ $^ $(METAL_LDLIBS)
+else
 	$(DS4_LINK) -o $@ $^ $(DS4_LINK_LIBS)
+endif
 
 .PHONY: test-qwen35-mrope
 test-qwen35-mrope: tests/test_qwen35_mrope
 	./tests/test_qwen35_mrope
+
+ifeq ($(UNAME_S),Darwin)
+tests/test_qwen35_metal: tests/test_qwen35_metal.c ds4_metal.o ds4_image.o ds4_resources.o
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $(filter %.c %.o,$^) $(METAL_LDLIBS)
+
+.PHONY: test-qwen35-metal
+test-qwen35-metal: tests/test_qwen35_metal tests/test_qwen35_mrope
+	./tests/test_qwen35_metal
+	./tests/test_qwen35_mrope
+
+tests/test_flash_metal_stream_graph: tests/test_flash_metal_stream_graph.c ds4.c ds4_lifecycle.inc $(DS4_API_HEADERS) $(filter-out ds4.o,$(CORE_OBJS))
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $< $(filter-out ds4.o,$(CORE_OBJS)) $(METAL_LDLIBS)
+
+tests/test_qwen35_metal_graph: tests/test_qwen35_metal_graph.c tests/qwen35_metal_fixture.h ds4.c ds4_lifecycle.inc ds4_lifecycle_text.h ds4_metal_memory.h $(DS4_API_HEADERS) $(filter-out ds4.o,$(CORE_OBJS))
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $< $(filter-out ds4.o,$(CORE_OBJS)) $(METAL_LDLIBS)
+.PHONY: test-qwen35-metal-graph
+test-qwen35-metal-graph: tests/test_qwen35_metal_graph
+	./tests/test_qwen35_metal_graph
+
+tests/test_qwen35_metal_features: tests/test_qwen35_metal_features.c tests/qwen35_metal_fixture.h ds4.c ds4_lifecycle.inc ds4_lifecycle_text.h $(DS4_API_HEADERS) $(filter-out ds4.o,$(CORE_OBJS))
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $< $(filter-out ds4.o,$(CORE_OBJS)) $(METAL_LDLIBS)
+.PHONY: test-qwen35-metal-features
+test-qwen35-metal-features: tests/test_qwen35_metal_features
+	./tests/test_qwen35_metal_features
+
+.PHONY: test-qwen4-metal-mtp
+test-qwen4-metal-mtp: $(QWEN4_KERNEL_TEST)
+	DS4_TEST_QWEN4_MTP=1 ./$(QWEN4_KERNEL_TEST)
+
+# Only bounded synthetic/host checks: no GGUF, large inference or benchmarks.
+# Recursive invocations keep GPU processes serial even under make -j.
+.PHONY: test-metal-foundations
+test-metal-foundations: all tests/test_qwen35_metal tests/test_qwen35_mrope tests/test_qwen35_metal_graph tests/test_qwen_metal_lifecycle
+	$(MAKE) test-runtime test-resources test-executor test-metal-memory-policy
+	$(MAKE) test-file-reader
+	python3 -m unittest tests.test_flash_launcher tests.test_metal_foundations -v
+	$(MAKE) test-qwen35-metal
+	$(MAKE) test-qwen35-metal-graph
+	$(MAKE) test-qwen-metal-lifecycle
+
+.PHONY: test-qwen4-metal-stream
+test-qwen4-metal-stream: $(QWEN4_KERNEL_TEST)
+	DS4_TEST_QWEN4_METAL_STREAM=1 ./$(QWEN4_KERNEL_TEST)
+
+tests/test_qwen_metal_lifecycle: tests/test_qwen_metal_lifecycle.c ds4.c ds4_lifecycle.inc ds4_lifecycle_text.h $(DS4_API_HEADERS) $(filter-out ds4.o,$(CORE_OBJS))
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $< $(filter-out ds4.o,$(CORE_OBJS)) $(METAL_LDLIBS)
+.PHONY: test-flash-metal-lifecycle test-qwen27-metal-lifecycle test-qwen-metal-lifecycle
+test-flash-metal-lifecycle: tests/test_qwen_metal_lifecycle
+	./tests/test_qwen_metal_lifecycle flash
+test-qwen27-metal-lifecycle: tests/test_qwen_metal_lifecycle
+	./tests/test_qwen_metal_lifecycle qwen27
+# Run families serially even under make -j: each has real session storage.
+test-qwen-metal-lifecycle: tests/test_qwen_metal_lifecycle
+	./tests/test_qwen_metal_lifecycle qwen27
+	./tests/test_qwen_metal_lifecycle qwen27-stream
+	./tests/test_qwen_metal_lifecycle flash
+endif
+
+tests/test_qwen_test_profile: tests/test_qwen_test_profile.c tests/qwen_test_profile.h $(DS4_API_HEADERS)
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $<
+.PHONY: test-qwen-test-profile
+test-qwen-test-profile: tests/test_qwen_test_profile
+	./tests/test_qwen_test_profile
 
 tests/test_server_agentic_payload.o: tests/test_server_agentic_payload.c ds4_server.c $(DS4_API_HEADERS) ds4_env.h ds4_qwen4_runtime.h
 	$(CC) $(CFLAGS) -Wno-unused-function -I. -c -o $@ $<
@@ -1281,6 +1361,7 @@ ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o tests/test_session_state.o \
 tests/test_session_state_gpu.o: ds4_tool_text.h
 
 clean:
+	rm -f tests/test_flash_metal_stream_graph tests/test_flash_metal_lifecycle tests/test_qwen_metal_lifecycle tests/probe_qwen_metal_stream tests/probe_qwen_metal_suite tests/probe_qwen_skill_return
 	rm -f tests/test_server_interactive tests/bench_interactive_edit
 	rm -f tests/test_qwen_snapshot_drafts
 	rm -f tests/test_qwen_memory_lifetime
@@ -1288,7 +1369,7 @@ clean:
 	rm -f tests/qwen_flash_quality_probe
 	rm -f tests/test_qwen4_tuning
 	rm -f tests/test_qwen4_ranks tests/test_qwen4_cpu
-	rm -f tests/test_qwen35_mrope tests/test_server_agentic_payload tests/test_qwen_mtp_callback tests/test_server_resident_frontier tests/test_agentic_checkpoint tests/qwen_numerics_probe tests/test_mmq_parity
+	rm -f tests/test_qwen35_mrope tests/test_qwen35_metal tests/test_qwen35_metal_graph tests/test_qwen35_metal_features tests/test_qwen_test_profile tests/test_metal_memory_policy tests/test_server_agentic_payload tests/test_qwen_mtp_callback tests/test_server_resident_frontier tests/test_agentic_checkpoint tests/qwen_numerics_probe tests/test_mmq_parity tests/test_sha256 tests/test_sha256_portable
 	rm -f tests/test_qwen4_ngrams
 	rm -f tests/test_qwen4_ngram_state
 	rm -f tests/test_web_recovery
@@ -1320,7 +1401,7 @@ clean:
 	rm -f tests/test_metal_tp_cancel
 	rm -f ds4 ds4-server ds4-bench ds4-eval ds4_cpu ds4_native ds4_server_test ds4_test gguf-tools/quality-testing/score_official gguf-tools/quality-testing/score_official.o speed-bench/metal_decode_schedule_bench speed-bench/metal_prefill_variant_bench speed-bench/*.o tests/test_q4k_dot tests/test_mxfp4_dot tests/test_mxfp4_metal tests/test_mxfp4_rocm tests/test_mxfp4_cuda tests/test_metal_session_batch tests/test_metal_moe_prefill tests/test_qwen4_moe_mm_specialize tests/test_qwen4_conv_parallel tests/test_q8_prefill_variants tests/test_metal_dense_mpp tests/test_glm53_kda tests/test_glm53_kda_rocm tests/test_glm53_vision_engine tests/test_glm53_vision_prompt tests/test_deepseek4_vision_image tests/test_prompt_prefix tests/test_gpu_xdev tests/test_gpu_model_cache tests/test_gpu_lookup_cache_strict tests/test_engine_mgpu_refusal tests/test_engine_mgpu_runtime tests/test_engine_correctness tests/test_sampling tests/test_cuda_session_batch tests/test_cuda_mixed_batch tests/*.o *.o tests/cuda_long_context_smoke tests/cuda_long_context_smoke.o
 	rm -f tests/test_image_decode
-	rm -f tests/test_read_queue tests/test_qwen4_expert_cache tests/test_qwen4_kernels tests/test_qwen4_cuda tests/test_qwen4_vision tests/test_qwen4_prefill
+	rm -f tests/test_read_queue tests/test_file_reader tests/test_qwen4_expert_cache tests/test_qwen4_kernels tests/test_qwen4_cuda tests/test_qwen4_vision tests/test_qwen4_prefill
 	rm -f speed-bench/session_concurrency_bench
 
 # The active tokenizer includes generated Unicode classes.
@@ -1352,6 +1433,15 @@ tests/test_read_queue: tests/test_read_queue.c ds4_read_queue.h
 .PHONY: test-read-queue
 test-read-queue: tests/test_read_queue
 	./tests/test_read_queue
+
+tests/test_file_reader: tests/test_file_reader.c ds4_file_reader.h ds4_read_queue.h
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $< -pthread
+
+.PHONY: test-file-reader
+test-file-reader: tests/test_file_reader
+	./tests/test_file_reader
+
+test: test-file-reader
 
 .PHONY: test-product-text
 test-product-text:
@@ -1392,12 +1482,12 @@ test: test-runtime
 
 .PHONY: test-suite-contracts
 test-suite-contracts:
-	python3 -m unittest tests.test_suite_contracts tests.test_suite_baseline_manifests tests.test_suite_artifacts -v
+	$(SUITE_PYTHON) -m unittest tests.test_suite_contracts tests.test_suite_baseline_manifests tests.test_suite_artifacts -v
 
 test: test-suite-contracts
 
 clean-suite-runtime:
-	rm -f tests/test_runtime tests/test_runtime_cuda tests/test_resources tests/test_lifecycle_cuda tests/test_executor tests/test_executor_cuda tests/test_bundle tools/probe_suite_baseline tools/probe_suite_baseline.o
+	rm -f tests/test_runtime tests/test_runtime_cuda tests/test_resources tests/test_lifecycle_cuda tests/test_executor tests/test_executor_cuda tests/test_bundle tests/test_bundle_group_hint tools/probe_suite_baseline tools/probe_suite_baseline.o tests/test_suite_accelerator
 
 .PHONY: clean-suite-runtime
 clean: clean-suite-runtime
@@ -1411,12 +1501,24 @@ CUDNN_HOME ?= $(CUDA_HOME)
 SUITE_CUDA_LIBDIR ?= $(CUDA_HOME)/lib64
 SUITE_CUDA_LDLIBS = -lm -pthread -L$(SUITE_CUDA_LIBDIR) -l:libcudart.so.13 -l:libcublas.so.13 -l:libcublasLt.so.13 -Wl,-rpath,$(abspath $(SUITE_CUDA_LIBDIR))
 SUITE_CUDNN_LIBS = -L$(CUDNN_HOME)/lib -L$(CUDNN_HOME)/lib64 -l:libcudnn.so.9 -Wl,-rpath,$(abspath $(CUDNN_HOME)/lib)
-SUITE_API_HEADERS = ds4_numeric.h ds4_bundle.h ds4_resources.h ds4_runtime.h ds4_weight_cache.h
+ifeq ($(UNAME_S),Darwin)
+SUITE_ACCEL_OBJS = ds4_numeric_metal.o
+SUITE_ACCEL_LDLIBS = $(METAL_LDLIBS) -framework MetalPerformanceShaders
+else
+SUITE_ACCEL_OBJS = ds4_numeric_cuda.o ds4_numeric_cudnn.o
+SUITE_ACCEL_LDLIBS = $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
+SUITE_SERVICE_LDLIBS = -L$(CUDA_HOME)/lib64 -lcudart -lstdc++
+endif
+SUITE_API_HEADERS = ds4_operation_progress.h ds4_numeric.h ds4_bundle.h ds4_resources.h ds4_runtime.h ds4_weight_cache.h
 # Native media codecs are linked only into the multimodal suite.
 # Use a system installation or set this prefix to an isolated dependency build.
 SUITE_MEDIA_PREFIX ?= build/suite-media
 SUITE_MEDIA_CFLAGS ?= -I$(SUITE_MEDIA_PREFIX)/include -I$(SUITE_MEDIA_PREFIX)/usr/include
 SUITE_MEDIA_LDLIBS ?= -L$(SUITE_MEDIA_PREFIX)/lib -L$(SUITE_MEDIA_PREFIX)/usr/lib/x86_64-linux-gnu -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,$(abspath $(SUITE_MEDIA_PREFIX)/lib) -Wl,-rpath,$(abspath $(SUITE_MEDIA_PREFIX)/usr/lib/x86_64-linux-gnu)
+
+ifeq ($(UNAME_S),Darwin)
+SUITE_MEDIA_LDLIBS = -L$(SUITE_MEDIA_PREFIX)/lib -lavformat -lavcodec -lavutil -lswscale -lswresample -lsoxr -Wl,-rpath,$(abspath $(SUITE_MEDIA_PREFIX)/lib)
+endif
 
 ds4_gemma_vision.o: ds4_gemma_vision.c ds4_gemma_vision.h ds4_gemma_media.h ds4_embedding_gemma2.h ds4_host_memory.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
@@ -1448,36 +1550,41 @@ ds4_transfer.o: ds4_transfer.c ds4_transfer.h ds4_read_queue.h $(SUITE_API_HEADE
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_weight_cache.o: ds4_weight_cache.c ds4_weight_cache.h ds4_bundle.h
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
-ds4_qwen_image_pipeline.o: ds4_qwen_image_pipeline.c ds4_qwen_image_pipeline.h ds4_qwen_image_components.h ds4_qwen_image_reference.h ds4_sha256.h ds4_executor.h $(SUITE_API_HEADERS)
+ds4_qwen_image_pipeline.o: ds4_qwen_image_pipeline.c ds4_qwen_image_pipeline.h ds4_qwen_image_dit.h ds4_qwen_image_observer.h ds4_qwen_image_components.h ds4_qwen_image_reference.h ds4_qwen_image_rgba_internal.h ds4_sha256.h ds4_executor.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
-ds4_qwen_image_encoder.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o: ds4_qwen_image_components.h
+ds4_qwen_image_encoder.o ds4_qwen_image_dit.o ds4_qwen_image_vae.o: ds4_qwen_image_components.h ds4_qwen_image_observer.h ds4_operation_progress.h
 tests/libds4_suite_cuda.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o ds4_numeric_cuda.o ds4_numeric_cudnn.o
 	$(CC) -shared -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
 tests/libds4_suite_cpu.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o
 	$(CC) -shared -o $@ $^ -lm -pthread $(SUITE_MEDIA_LDLIBS)
-tests/probe_native_suite: tests/probe_native_suite.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
-	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
-tests/probe_qwen_image_pipeline: tests/probe_qwen_image_pipeline.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
-	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
-tests/probe_gemma_visual: tests/probe_gemma_visual.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
-	$(CC) $(SUITE_CFLAGS) -I. -o $@ $(filter %.c %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
+tests/probe_native_suite: tests/probe_native_suite.c tests/suite_accelerator.h $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $(filter %.c %.o,$^) $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS)
+tests/probe_qwen_image_pipeline: tests/probe_qwen_image_pipeline.c tests/suite_accelerator.h $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $(filter %.c %.o,$^) $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS)
+tests/probe_gemma_visual: tests/probe_gemma_visual.c tests/suite_accelerator.h $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $(filter %.c %.o,$^) $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS)
 libds4-suite-cpu.a: $(SUITE_OBJS)
 	$(AR) rcs $@ $^
 libds4-suite-cuda.a: $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
 	$(AR) rcs $@ $^
 
-# Explicit serial CUDA service. The legacy binary and launchers keep their
-# existing link dependencies and model defaults.
-ds4_server_suite.o: ds4_server.c ds4_server_suite_types.h ds4_server_suite.inc ds4_server_suite_http.inc ds4_server_suite_operations.inc ds4_suite_text.h $(DS4_API_HEADERS)
+# Serial native service, linked to the platform accelerator.
+SUITE_SERVER_HEADERS = ds4_server_suite_types.h ds4_server_suite.inc ds4_server_suite_http.inc ds4_server_suite_operations.inc ds4_suite_text.h ds4_qwen_image_pipeline.h ds4_qwen_image_dit.h ds4_qwen_image_observer.h ds4_operation_progress.h ds4_metal_memory.h $(DS4_API_HEADERS)
+ds4_server_suite.o: ds4_server.c $(SUITE_SERVER_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -DDS4_NATIVE_SUITE -c -o $@ $<
-ds4-server-suite: ds4_server_suite.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o $(CORE_OBJS) $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
-	$(CC) -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS) -L$(CUDA_HOME)/lib64 -lcudart -lstdc++
+ifeq ($(UNAME_S),Darwin)
+tests/probe_qwen_metal_suite: tests/probe_qwen_metal_stream.c ds4_sha256.h $(CORE_OBJS) $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)
+	$(CC) $(SUITE_CFLAGS) -DDS4_PROBE_SUITE -I. -o $@ $< $(sort $(CORE_OBJS) $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)) $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS)
+endif
 
-tests/probe_suite_phase_server.o: tests/probe_suite_phase_server.c ds4_server.c ds4_server_suite_types.h ds4_server_suite.inc ds4_server_suite_http.inc ds4_server_suite_operations.inc ds4_suite_text.h $(DS4_API_HEADERS)
+ds4-server-suite: ds4_server_suite.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o $(CORE_OBJS) $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)
+	$(CC) -o $@ $^ $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS) $(SUITE_SERVICE_LDLIBS)
+
+tests/probe_suite_phase_server.o: tests/probe_suite_phase_server.c ds4_server.c $(SUITE_SERVER_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -I. -c -o $@ $<
-tests/probe_suite_phase_server: tests/probe_suite_phase_server.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o $(CORE_OBJS) $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
-	$(CC) -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS) -L$(CUDA_HOME)/lib64 -lcudart -lstdc++
-tests/test_suite_http: tests/test_suite_http.c ds4_server.c ds4_server_suite.inc ds4_server_suite_http.inc ds4_server_suite_operations.inc ds4_server_suite_types.h ds4_suite_text.h ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS) $(SUITE_OBJS)
+tests/probe_suite_phase_server: tests/probe_suite_phase_server.o ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args.o $(CORE_OBJS) $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)
+	$(CC) -o $@ $^ $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS) $(SUITE_SERVICE_LDLIBS)
+tests/test_suite_http: tests/test_suite_http.c tests/suite_progress_cases.inc ds4_server.c $(SUITE_SERVER_HEADERS) ds4_help.o ds4_kvstore.o rax.o ds4_gpu_args_cpu.o $(CPU_CORE_OBJS) $(SUITE_OBJS)
 	$(CC) $(SUITE_CFLAGS) -Wno-unused-function -I. -o $@ tests/test_suite_http.c $(filter %.o,$^) $(LDLIBS) $(SUITE_MEDIA_LDLIBS)
 .PHONY: test-suite-http
 test-suite-http: tests/test_suite_http
@@ -1507,13 +1614,14 @@ tests/test_qwen_image_input: tests/test_qwen_image_input.c ds4_qwen_image_input.
 test-qwen-image-input: tests/test_qwen_image_input
 	./tests/test_qwen_image_input
 clean-suite-numeric:
+	rm -f ds4_numeric_metal.o tests/libds4_numeric_metal.so tests/libds4_suite_metal.so tests/test_numeric_metal_lifetime libds4-suite-metal.a build/numeric_metal_source.inc
 	rm -f tests/probe_native_suite tests/probe_gemma_visual tests/probe_qwen_image_pipeline tests/libds4_suite_cpu.so tests/libds4_suite_cuda.so
 	rm -f tests/test_qwen_image_output
-	rm -f tests/probe_qwen_image_graph tests/probe_qwen_image_graph.o tests/libds4_qwen_image_graph_cpu.so tests/test_qwen_image_timestep
+	rm -f tests/probe_qwen_image_graph tests/probe_qwen_image_graph.o tests/libds4_qwen_image_graph_cpu.so tests/test_qwen_image_timestep tests/test_qwen_image_cache_budget
 	rm -f $(filter-out ds4_bundle.o ds4_resources.o ds4_runtime.o ds4_image.o,$(SUITE_OBJS)) ds4_numeric_cuda.o ds4_numeric_cudnn.o libds4-suite-cpu.a libds4-suite-cuda.a tests/probe_qwen_image_encoder tests/probe_qwen_image_encoder.o tests/test_numeric_lifetime tests/libds4_numeric_cpu.so tests/libds4_numeric_cuda.so tests/suite_resources.o tests/libds4_image_suite.so tests/libds4_qwen_image_tokenizer.so tests/test_qwen_image_input
 clean: clean-suite-numeric
 ds4_qwen_image_encoder.o: ds4_qwen_image_encoder.c ds4_qwen_image_encoder.h ds4_qwen_image_observer.h ds4_qwen_image_input.h ds4_qwen_image_input_internal.h ds4_qwen_image_tokenizer.h ds4_numeric_weights.h $(SUITE_API_HEADERS)
-	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
+	$(CC) $(SUITE_CFLAGS) -ffp-contract=off -c -o $@ $<
 ds4_qwen_image_dit.o: ds4_qwen_image_dit.c ds4_qwen_image_dit.h ds4_qwen_image_dit_constants.h ds4_qwen_image_graph.h ds4_numeric_weights.h ds4_qwen_image_attention.h ds4_qwen_image_encoder.h ds4_qwen_image_observer.h $(SUITE_API_HEADERS)
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_qwen_image_attention.o: ds4_qwen_image_attention.c ds4_qwen_image_attention.h ds4_qwen_image_graph.h $(SUITE_API_HEADERS)
@@ -1537,12 +1645,12 @@ ds4_qwen_image_tokenizer.o: ds4_qwen_image_tokenizer.c ds4_qwen_image_tokenizer.
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
 ds4_unicode_nfc.o: ds4_unicode_nfc.c ds4_unicode_nfc.h third_party/unicode/nfc9.inc
 	$(CC) $(SUITE_CFLAGS) -c -o $@ $<
-tests/probe_qwen_image_encoder: tests/probe_qwen_image_encoder.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
+tests/probe_qwen_image_encoder: tests/probe_qwen_image_encoder.c tests/suite_accelerator.h $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)
 	$(CC) $(SUITE_CFLAGS) -I. -c -o tests/probe_qwen_image_encoder.o $<
-	$(CC) -o $@ tests/probe_qwen_image_encoder.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
-tests/probe_qwen_image_graph: tests/probe_qwen_image_graph.c $(SUITE_OBJS) ds4_numeric_cuda.o ds4_numeric_cudnn.o
+	$(CC) -o $@ tests/probe_qwen_image_encoder.o $(filter %.o,$^) $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS)
+tests/probe_qwen_image_graph: tests/probe_qwen_image_graph.c tests/suite_accelerator.h $(SUITE_OBJS) $(SUITE_ACCEL_OBJS)
 	$(CC) $(SUITE_CFLAGS) -I. -c -o tests/probe_qwen_image_graph.o $<
-	$(CC) -o $@ tests/probe_qwen_image_graph.o $(filter %.o,$^) $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS) $(SUITE_MEDIA_LDLIBS)
+	$(CC) -o $@ tests/probe_qwen_image_graph.o $(filter %.o,$^) $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS)
 tests/libds4_qwen_image_graph_cpu.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o
 	$(CC) -shared -o $@ $^ -lm -pthread $(SUITE_MEDIA_LDLIBS)
 tests/test_qwen_image_timestep: tests/test_qwen_image_timestep.c ds4_qwen_image_graph.h
@@ -1559,6 +1667,12 @@ ds4_numeric_cudnn.o: ds4_numeric_cudnn.cu ds4_numeric_internal.h $(SUITE_API_HEA
 	$(NVCC) $(SUITE_NVCCFLAGS) -I$(CUDNN_HOME)/include -c -o $@ $<
 tests/libds4_numeric_cpu.so: ds4_numeric.c ds4_resources.c ds4_numeric.h ds4_numeric_internal.h ds4_resources.h
 	$(CC) $(SUITE_CFLAGS) -shared -I. -o $@ ds4_numeric.c ds4_resources.c -lm -pthread
+tests/test_suite_accelerator: tests/test_suite_accelerator.c tests/suite_accelerator.h ds4_metal_memory.h $(SUITE_API_HEADERS)
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $<
+.PHONY: test-suite-accelerator
+test-suite-accelerator: tests/test_suite_accelerator
+	./tests/test_suite_accelerator
+test: test-suite-accelerator
 tests/libds4_qwen_image_tokenizer.so: ds4_qwen_image_tokenizer.c ds4_qwen_image_tokenizer.h ds4_sha256.h third_party/unicode/image_classes.inc ds4_unicode_nfc.h ds4_unicode_nfc.c third_party/unicode/nfc9.inc
 	$(CC) $(SUITE_CFLAGS) -shared -I. -o $@ ds4_qwen_image_tokenizer.c ds4_unicode_nfc.c
 tests/libds4_image_suite.so: ds4_image.c ds4_image.h ds4_image_resize.inc
@@ -1572,7 +1686,7 @@ tests/libds4_numeric_cuda.so: ds4_numeric.o ds4_numeric_cuda.o ds4_numeric_cudnn
 	$(CC) -shared -o $@ $^ $(SUITE_CUDA_LDLIBS) $(SUITE_CUDNN_LIBS)
 .PHONY: test-suite-numeric test-suite-numeric-cuda
 test-suite-numeric: tests/libds4_numeric_cpu.so
-	$(SUITE_PYTHON) -m unittest tests.test_suite_numeric -v
+	$(SUITE_PYTHON) -m unittest tests.test_suite_numeric tests.test_suite_numeric_api tests.test_gemma_bf16_diagnostic -v
 test-suite-numeric-cuda: tests/libds4_numeric_cuda.so
 	DS4_SUITE_NUMERIC_CUDA=1 $(SUITE_PYTHON) -m unittest tests.test_suite_numeric -v
 
@@ -1600,7 +1714,7 @@ tests/test_bundle: tests/test_bundle.c ds4_bundle.o ds4_resources.o
 	$(CC) $(CFLAGS) -I. -o $@ $^ $(LDLIBS)
 .PHONY: test-bundle
 test-bundle: tests/test_bundle tests/test_weight_cache
-	python3 -m unittest tests.test_suite_bundle -v
+	$(SUITE_PYTHON) -m unittest tests.test_suite_bundle -v
 
 tests/test_weight_cache: tests/test_weight_cache.c ds4_weight_cache.o ds4_bundle.o ds4_resources.o
 	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread
@@ -1619,6 +1733,18 @@ clean-suite-transfer:
 	rm -f tests/test_transfer tests/test_weight_cache
 clean: clean-suite-transfer
 test: test-bundle
+
+ds4_server_suite.o tests/probe_suite_phase_server.o: ds4_sha256.h
+
+tests/test_sha256: tests/test_sha256.c ds4_sha256.h
+	$(CC) $(CFLAGS) -o $@ $<
+tests/test_sha256_portable: tests/test_sha256.c ds4_sha256.h
+	$(CC) $(CFLAGS) -DDS4_SHA256_PORTABLE -o $@ $<
+.PHONY: test-sha256
+test-sha256: tests/test_sha256 tests/test_sha256_portable
+	./tests/test_sha256
+	./tests/test_sha256_portable
+test: test-sha256
 tests/test_executor: tests/test_executor.c ds4_executor.o ds4_resources.o ds4_runtime.o
 	$(CC) $(CFLAGS) -I. -o $@ $^ $(LDLIBS)
 .PHONY: test-executor
@@ -1633,6 +1759,13 @@ tests/test_resources: tests/test_resources.c ds4_resources.o ds4_checkpoint.o
 test-resources: tests/test_resources
 	./tests/test_resources
 test: test-resources
+
+tests/test_metal_memory_policy: tests/test_metal_memory_policy.c ds4_metal_memory.h ds4_resources.o
+	$(CC) $(filter-out -ffast-math,$(CFLAGS)) -I. -o $@ $< ds4_resources.o $(LDLIBS)
+.PHONY: test-metal-memory-policy
+test-metal-memory-policy: tests/test_metal_memory_policy
+	./tests/test_metal_memory_policy
+test: test-metal-memory-policy
 
 tests/test_lifecycle_cuda.o: tests/test_lifecycle_cuda.c $(DS4_API_HEADERS) ds4_resources.h
 	$(CC) $(CFLAGS) -I. -c -o $@ $<
@@ -1655,3 +1788,45 @@ ds4.o ds4_cpu.o ds4_test_hooks.o ds4_cpu_test_hooks.o ds4_cuda_test_hooks.o \
 ds4_cli.o ds4_server.o ds4_bench.o ds4_eval.o \
  ds4_cli_cpu.o ds4_server_cpu.o ds4_bench_cpu.o ds4_eval_cpu.o \
  tests/test_lifecycle_cuda.o tests/test_runtime_cuda.o: ds4_executor.h
+
+ifeq ($(UNAME_S),Darwin)
+# Metal suite source is embedded so installed native libraries need no source tree.
+build/numeric_metal_source.inc: metal/numeric.metal metal/numeric_ordered.metal ds4_numeric_metal_args.h tools/embed_metal_numeric.py
+	python3 tools/embed_metal_numeric.py $@
+
+ds4_numeric_metal.o: ds4_numeric_metal.m ds4_numeric_metal_args.h ds4_numeric_internal.h ds4_metal_memory.h ds4_metal_device.h ds4_file_reader.h ds4_read_queue.h ds4_suite_text.h $(SUITE_API_HEADERS) build/numeric_metal_source.inc
+	$(CC) $(SUITE_CFLAGS) -fobjc-arc -c -o $@ $<
+
+tests/libds4_numeric_metal.so: ds4_numeric.o ds4_numeric_metal.o tests/suite_resources.o
+	$(CC) -dynamiclib -o $@ $^ -lm -pthread -framework Foundation -framework Metal -framework MetalPerformanceShaders
+
+libds4-suite-metal.a: $(SUITE_OBJS) ds4_numeric_metal.o
+	$(AR) rcs $@ $^
+tests/libds4_suite_metal.so: $(filter-out ds4_resources.o,$(SUITE_OBJS)) tests/suite_resources.o ds4_numeric_metal.o
+	$(CC) -dynamiclib -o $@ $^ $(SUITE_ACCEL_LDLIBS) $(SUITE_MEDIA_LDLIBS)
+.PHONY: test-suite-numeric-metal
+tests/test_numeric_metal_lifetime: tests/test_numeric_metal_lifetime.c ds4_numeric.o ds4_numeric_metal.o ds4_resources.o
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $^ -lm -pthread -framework Foundation -framework Metal -framework MetalPerformanceShaders
+.PHONY: test-numeric-metal-lifetime
+test-numeric-metal-lifetime: tests/test_numeric_metal_lifetime
+	./tests/test_numeric_metal_lifetime
+test-suite-numeric-metal: tests/libds4_numeric_metal.so
+	DS4_SUITE_NUMERIC_METAL=1 $(SUITE_PYTHON) -m unittest tests.test_suite_numeric tests.test_suite_numeric_api tests.test_gemma_bf16_diagnostic -v
+endif
+
+# Planner-only Image cache refinement; independent of model weights and GPU access.
+tests/test_qwen_image_cache_budget: tests/test_qwen_image_cache_budget.c ds4_qwen_image_pipeline.c ds4_qwen_image_pipeline.h ds4_qwen_image_components.h ds4_qwen_image_reference.h ds4_numeric_internal.h ds4_sha256.h $(SUITE_API_HEADERS) $(filter-out ds4_qwen_image_pipeline.o,$(SUITE_OBJS))
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $< $(filter %.o,$^) -lm -pthread $(SUITE_MEDIA_LDLIBS)
+.PHONY: test-qwen-image-cache-budget
+test-qwen-image-cache-budget: tests/test_qwen_image_cache_budget
+	./tests/test_qwen_image_cache_budget
+
+test: test-qwen-image-cache-budget
+
+tests/test_bundle_group_hint: tests/test_bundle_group_hint.c ds4_bundle.c ds4_bundle.h ds4_weight_cache.c ds4_weight_cache.h ds4_sha256.h ds4_resources.o
+	$(CC) $(SUITE_CFLAGS) -I. -o $@ $< ds4_resources.o -lm -pthread
+.PHONY: test-bundle-group-hint
+test-bundle-group-hint: tests/test_bundle_group_hint
+	./tests/test_bundle_group_hint
+
+test: test-bundle-group-hint

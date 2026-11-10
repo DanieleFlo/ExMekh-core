@@ -1,0 +1,30 @@
+python3 tools/build_research_indexes.py
+indexed 49 documents
+python3 tools/build_docs_indexes.py
+indexed 94 documents
+python3 -m unittest tests.test_research_corpus tests.test_docs_wiki -v
+test_all_local_markdown_links_resolve (tests.test_research_corpus.ResearchCorpusTests.test_all_local_markdown_links_resolve) ... ok
+test_catalog_ranges_point_to_the_declared_headings (tests.test_research_corpus.ResearchCorpusTests.test_catalog_ranges_point_to_the_declared_headings) ... ok
+test_every_authored_repository_card_has_at_most_one_external_link (tests.test_research_corpus.ResearchCorpusTests.test_every_authored_repository_card_has_at_most_one_external_link) ... ok
+test_manifest_lock_and_downloaded_hashes_are_complete (tests.test_research_corpus.ResearchCorpusTests.test_manifest_lock_and_downloaded_hashes_are_complete) ... ok
+test_master_and_index_of_indexes_reach_every_group (tests.test_research_corpus.ResearchCorpusTests.test_master_and_index_of_indexes_reach_every_group) ... ok
+test_repository_lock_uses_full_commits_and_evidence_classes (tests.test_research_corpus.ResearchCorpusTests.test_repository_lock_uses_full_commits_and_evidence_classes) ... ok
+test_all_local_markdown_links_resolve (tests.test_docs_wiki.DocsWikiTests.test_all_local_markdown_links_resolve) ... FAIL
+test_catalog_ranges_point_to_declared_headings (tests.test_docs_wiki.DocsWikiTests.test_catalog_ranges_point_to_declared_headings) ... ok
+test_no_markdown_is_orphaned_or_flat_at_docs_root (tests.test_docs_wiki.DocsWikiTests.test_no_markdown_is_orphaned_or_flat_at_docs_root) ... ok
+test_root_and_index_of_indexes_reach_every_group (tests.test_docs_wiki.DocsWikiTests.test_root_and_index_of_indexes_reach_every_group) ... ok
+
+======================================================================
+FAIL: test_all_local_markdown_links_resolve (tests.test_docs_wiki.DocsWikiTests.test_all_local_markdown_links_resolve)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/test_docs_wiki.py", line 68, in test_all_local_markdown_links_resolve
+    self.assertTrue(resolved.exists(), f"{path}: broken link {target}")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/docs/roadmaps/interactive-edit-file-server-plan.md: broken link ../../exmekh_lib/todo.md
+
+----------------------------------------------------------------------
+Ran 10 tests in 1.100s
+
+FAILED (failures=1)
+make: *** [docs-check] Error 1

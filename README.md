@@ -131,7 +131,7 @@ See the [upstream merge and compatibility audit](docs/architecture/ds4-upstream-
 
 **ExMekh Core — inference and state.** The native server executes the model, constrains allowed tool names at decoding time, maintains active KV and model-specific state, and checkpoints/restores inference contexts. The engine receives resolved capabilities; it does not infer the skill hierarchy.
 
-The optional **native multimodal suite**, built as `ds4-server-suite`, integrates image generation/editing and embeddings into the same local serving environment. It uses C/CUDA for inference and does not start a separate Python model-serving process. Offline model preparation and native media libraries remain necessary.
+The optional **native multimodal suite**, built as `ds4-server-suite`, integrates image generation/editing and embeddings into the same local serving environment. It uses native C inference with CUDA or Metal numeric backends and does not start a separate Python model-serving process. Offline model preparation and native media libraries remain necessary.
 
 ### How the agentic API works
 
@@ -164,8 +164,17 @@ Read the [agentic contract](docs/agentic/agent-api.md) and [frontend integration
 | **Qwen3.8-27B UD-Q4_K_S** (`qwen35`) | Pinned GGUF and external MTP sidecar; local CUDA validation of model-specific inference, tool/API constraints, checkpointing and a matching vision path |
 | **Qwen3.8 Flash Next** (`qwen4exp`) | Separate architecture and protocol, with locally tested CUDA paths and specialized expert/weight/KV handling; resource and performance characteristics differ substantially from 27B |
 | **DeepSeek V4/V4.1, GLM 5.2/5.3 and other DS4 families** | Upstream-derived implementations are integrated; successful compilation does **not** certify local full-model inference |
-| **Qwen-Image-2.1-Turbo / EmbeddingGemma-2** | Native single-GPU CUDA functional and resource-lifecycle work; image output quality and production release qualification remain open |
-| **Metal, ROCm, distributed and multi-GPU** | Upstream-derived paths; not all have been independently validated on the fork's development machine |
+| **Qwen-Image-2.1-Turbo / EmbeddingGemma-2** | Native CUDA/Metal paths; bounded M5 Pro image and embedding numerical gates pass with declared independent reference devices. Extended quality and release qualification remain separate |
+| **Metal, ROCm, distributed and multi-GPU** | Qwen27/Flash Metal streaming profiles pass locally; other model/backend/topology combinations require their own qualification |
+
+Apple Silicon supports bounded SSD weight streaming for both Qwen27 and Flash
+on the M5 Pro 24 GiB qualification machine. Real context **8192 / prefill 64**,
+Quick Chat and progressive occupancy through 8176 input positions pass with
+checkpoint/prefix/continuation checks. See the
+[Metal streaming and suite report](docs/performance/metal-apple-silicon-20261031/t06-t07/README.md)
+and [launch profiles](agent/README.md#apple-silicon-streamed-quick-chat).
+Native image/embedding and service qualification have separate numerical,
+quality and lifecycle gates; their verdicts are recorded in that report.
 
 Qwen3.8-27B and Flash Next use **different model loaders, tensor graphs, tokenization/tool dialects, and memory behavior**. Do not interchange their GGUF files, MTP configurations, or vision encoders. ExMekh is **not** a universal runner for arbitrary GGUF files.
 

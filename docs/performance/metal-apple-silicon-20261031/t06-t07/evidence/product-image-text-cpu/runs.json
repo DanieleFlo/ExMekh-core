@@ -1,0 +1,75 @@
+[
+  {
+    "name": "native",
+    "command": [
+      "tests/probe_qwen_image_pipeline",
+      "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+      "build/metal-oracles/models",
+      "build/metal-models/image-tokenizer.ds4q",
+      "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/native",
+      "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/fixtures/text.ds4p"
+    ],
+    "seconds": 229.01107495799988,
+    "returncode": 1
+  },
+  {
+    "name": "encoder",
+    "command": [
+      "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+      "tools/run_qwen_image_pipeline_oracle.py",
+      "--prepared",
+      "build/metal-oracles",
+      "--cases",
+      "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/cases.json",
+      "--output",
+      "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/oracle",
+      "--stage",
+      "encoder",
+      "--device",
+      "cpu",
+      "--offload"
+    ],
+    "seconds": 56.75824308300071,
+    "returncode": 0
+  },
+  {
+    "name": "encode",
+    "command": [
+      "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+      "tools/run_qwen_image_pipeline_oracle.py",
+      "--prepared",
+      "build/metal-oracles",
+      "--cases",
+      "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/cases.json",
+      "--output",
+      "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/oracle",
+      "--stage",
+      "encode",
+      "--device",
+      "cpu",
+      "--offload"
+    ],
+    "seconds": 5.086262083001202,
+    "returncode": 0
+  },
+  {
+    "name": "dit",
+    "command": [
+      "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+      "tools/run_qwen_image_pipeline_oracle.py",
+      "--prepared",
+      "build/metal-oracles",
+      "--cases",
+      "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/cases.json",
+      "--output",
+      "build/metal-qualification/t06-t07-20261031/product-image-text-cpu/oracle",
+      "--stage",
+      "dit",
+      "--device",
+      "cpu",
+      "--offload"
+    ],
+    "seconds": 460.7471419169997,
+    "returncode": 0
+  }
+]

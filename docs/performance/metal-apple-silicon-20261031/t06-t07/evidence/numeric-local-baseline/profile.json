@@ -1,0 +1,11 @@
+{
+  "backend": "metal",
+  "warmup_repetitions": 1,
+  "measured_repetitions": 2,
+  "bounded_development_subset": true,
+  "clock": "mach_absolute_time()",
+  "scope": "Synchronized primitive baseline; independent outputs, no speedup claim",
+  "memory_peak_scope": "Cumulative peak of this numeric context, not a per-case peak",
+  "numeric_library": "tests/libds4_numeric_metal.so",
+  "numeric_library_sha256": "61931e5f5c8bd6b2864a980a5ea57f338e86b9de2833693c6b49a31c6d7222d7"
+}

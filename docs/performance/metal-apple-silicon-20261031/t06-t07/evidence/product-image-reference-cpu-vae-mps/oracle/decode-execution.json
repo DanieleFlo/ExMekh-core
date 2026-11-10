@@ -1,0 +1,17 @@
+{
+  "backend": "PyTorch MATH",
+  "device": "mps",
+  "cpu_weight_offload": true,
+  "weight_transport": "lazy safetensors",
+  "module_fences": true,
+  "weight_reads": 128,
+  "weight_bytes": 506140968,
+  "mps_memory_fraction": 0.5,
+  "torch_version": "2.15.0",
+  "query_tile": 256,
+  "tile_if_score_bytes_exceeds": 536870912,
+  "full_key_axis": true,
+  "cases": [
+    "reference"
+  ]
+}

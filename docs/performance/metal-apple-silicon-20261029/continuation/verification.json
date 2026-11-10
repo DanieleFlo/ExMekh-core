@@ -1,0 +1,194 @@
+{
+  "status": "IN_PROGRESS",
+  "qualification_claim": false,
+  "source_head": "5fc8229592923c7b30f2b63acbb9453a8a5e45a4",
+  "source_changes": [
+    "tests/suite_accelerator.h",
+    "tools/diagnose_gemma_metal_bf16.py",
+    "tests/test_gemma_bf16_diagnostic.py"
+  ],
+  "image": {
+    "functional_rgba_edit": "PASS",
+    "independent_full_image_oracle": "NOT_VERIFIED",
+    "extended_alpha_quality": "NOT_VERIFIED",
+    "shape": [
+      256,
+      256,
+      4
+    ],
+    "png_mode": "RGBA",
+    "finite": true,
+    "value_range": [
+      0.0,
+      1.0
+    ],
+    "alpha_range": [
+      0.994140625,
+      1.0
+    ],
+    "latent_boundaries": 8,
+    "all_latents_finite": true,
+    "conditioning_matches_equivalent_rgb": true,
+    "vae_reference_changes_with_alpha": true,
+    "geometry_seed_recipe": "256x256; seed 20261029; 8 steps; CFG 1; bf16-native-v1",
+    "visual_review": "Blue square, white background, expected geometry; no obvious visual artifacts. This is one small functional case, not extended quality qualification.",
+    "sampled_max_rss_bytes": 8797487104,
+    "sampled_min_system_free_percent": 37,
+    "sampled_max_swap_growth_bytes": 335544,
+    "peak_numeric_bytes": 3977325216,
+    "plan_device_bytes": 4015333752,
+    "numeric_live_bytes": 0
+  },
+  "gemma": {
+    "model_replay": "PASS",
+    "strict_bf16_gate": "FAIL",
+    "numeric_peak_bytes": 38363136,
+    "inference_repeat_cancel_retry": "PASS"
+  },
+  "llm": {
+    "qwen27": "SKIP_RESOURCE_LIMIT: requires 14.76 GiB; 9.42 GiB available after reserve",
+    "flash": "NOT_VERIFIED: main GGUF absent, user download still running"
+  },
+  "tests": {
+    "host": {
+      "count": 5,
+      "status": "PASS"
+    },
+    "build": "PASS",
+    "docs": {
+      "count": 10,
+      "status": "PASS"
+    }
+  },
+  "oracle_environment": {
+    "initial_pillow": "13.0.0",
+    "initial_resize_test": "FAIL in 2 large downsampling cases",
+    "pinned_pillow": "12.3.0",
+    "pinned_resize_test": "PASS",
+    "repair": "Restored only build/metal-venv using already cached pillow==12.3.0; tests/requirements-suite.txt unchanged."
+  },
+  "limits": [
+    "No image full-model CPU reference run.",
+    "No changes to numerical kernels or tolerances.",
+    "No LLM inference, LLM/suite alternation, HTTP or ExMekh frontend qualification.",
+    "CUDA/ROCm and other Apple hardware not available."
+  ],
+  "evidence": {
+    "README.md": {
+      "sha256": "3f6df4364cfaea70e7f2c931983f40bfc0d9520dc85a7aeae334d663337e54e4",
+      "bytes": 8593
+    },
+    "bf16-diagnosis.json": {
+      "sha256": "561b39ba6126e3539052bed97e11af1b77fe546e12ae6c38f1f471381b54af9f",
+      "bytes": 17933
+    },
+    "build.log": {
+      "sha256": "7f933bbcad0e00fa5aa81d79cb37c6c33a4f3adc95f818c1ce10b311e23acf5b",
+      "bytes": 76
+    },
+    "diffusers-sources.json": {
+      "sha256": "00c3d8fdbd2ceb922419594835db42e62412f09adf897c01594ff8dec477fe4b",
+      "bytes": 1497
+    },
+    "docs-check.log": {
+      "sha256": "0d90822cd5d27402a3a6289758c0c7588db77583aa4e532300118bfe8ef33245",
+      "bytes": 1808
+    },
+    "gemma-live-run.json": {
+      "sha256": "5af4a1e2ec565f4673ec25e5cac08c283ca601b11f2ed995edd25851a39c05e2",
+      "bytes": 516
+    },
+    "host-tests.log": {
+      "sha256": "ec618e7c7954c912e8b86ee4fe38596701d7141248a9b2e8286223987211feeb",
+      "bytes": 840
+    },
+    "llama-sources.json": {
+      "sha256": "d61aec182aef5d27dde341d44f10d609cd7949c360f0681d2fe1641cd9eac43a",
+      "bytes": 3235
+    },
+    "qwen27-run.json": {
+      "sha256": "f37a7b0ccce57fd94a877d03c22007a56bbaca285ddf20a656026cd12c3f9738",
+      "bytes": 349
+    },
+    "qwen27.log": {
+      "sha256": "cc356e052ce70887ddc4cac940b901bfbfc84eaa9e45b55b2d52a284482d7bb2",
+      "bytes": 329
+    },
+    "rgba-case.json": {
+      "sha256": "741be1dbbcf38d0275487a2146f0d509df00c568eeb07f7465e0c90e94de4d99",
+      "bytes": 401
+    },
+    "rgba-edit.png": {
+      "sha256": "919de1df68fd536e33a8668735743728a0b303aca6fbd30710bc1df657551e4d",
+      "bytes": 262488
+    },
+    "rgba-plan.json": {
+      "sha256": "918f43b210850f19c624f74f36402ce88942618c0ed450b7f77bac9fce133472",
+      "bytes": 74
+    },
+    "rgba-reference.png": {
+      "sha256": "1abfa0a41e3193a4f78f1607be61fb95185e9b57b9a1766d15731cff50b9a51f",
+      "bytes": 923
+    },
+    "rgba-run.json": {
+      "sha256": "aa817a84d352820fb3b196e5350684b8df0ad11c5b84cf23ea57a9de126522d3",
+      "bytes": 4244
+    },
+    "rgba-runtime.json": {
+      "sha256": "abe1a23332e080306d2ba96a21ff2a74fb19ce5d7ea9481fe4cf9629a100cf55",
+      "bytes": 1313
+    },
+    "rgba.log": {
+      "sha256": "3abd6c26eb65902a64b9b45856ac2d009e1666fe8337a36ded3107bd076cc35d",
+      "bytes": 69
+    },
+    "transformers-sources.json": {
+      "sha256": "004ffc3a0ed3f29d60e8586965ddd056a9f592934df7d1bbd8ecfdaabf2a93f7",
+      "bytes": 728
+    }
+  },
+  "sources": {
+    "tests/suite_accelerator.h": {
+      "sha256": "826439ac798746bb208ba2bbd7a1743e8219397ce214ac56500f698a9807b6ce",
+      "bytes": 1272
+    },
+    "tools/diagnose_gemma_metal_bf16.py": {
+      "sha256": "d9da1b772516e132654b09d795b228cd4af7832276a1b3c8bc1706a0b0ff89c0",
+      "bytes": 12137
+    },
+    "tests/test_gemma_bf16_diagnostic.py": {
+      "sha256": "03a463ec75bf327faf4cc0c80673d0f0e872c76fed1124bb6da915361ec86dab",
+      "bytes": 2455
+    },
+    "tests/requirements-suite.txt": {
+      "sha256": "c5ebee42cd4c335ffa658da5d4efaa8bb30c4132c047038ac6ac7325e3faedd5",
+      "bytes": 114
+    }
+  },
+  "reproducible_inputs": {
+    "build/metal-qualification/rgba-20261029/edit-rgba.ds4pip": {
+      "sha256": "2b1bfbbec06600681783e61c81c06ec6f8083ec0f8e14529a4e1979722011be8",
+      "bytes": 327785
+    },
+    "build/metal-qualification/rgba-20261029/reference.ds4i": {
+      "sha256": "c2695a0a841d0cf8f746ee139f855cf02e0ca225ba4568a87e526607dd19fc8c",
+      "bytes": 262156
+    },
+    "build/metal-qualification/stimuli/edit.ds4pip": {
+      "sha256": "b7bf524d0d12af914588fcacb9e240ee1bbc1ac28dd16e1303de2d4968d16bc4",
+      "bytes": 262245
+    },
+    "tests/probe_qwen_image_pipeline": {
+      "sha256": "eca8edfb08aab8f450c478727304b58b8888c200c185143f1416cd6076853d38",
+      "bytes": 570680
+    },
+    "tests/probe_native_suite": {
+      "sha256": "40e68e632a97d09a2369a46a1b0844b58238bcfd4fc6e7758691d749d5f2e92a",
+      "bytes": 550192
+    },
+    "build/metal-models/image-bf16.ds4b/bundle.ds4b": {
+      "sha256": "8fdbe2b02a80483ebd90db73a96517762cf75b8dd709b77be3c8253066117969",
+      "bytes": 163456
+    }
+  }
+}

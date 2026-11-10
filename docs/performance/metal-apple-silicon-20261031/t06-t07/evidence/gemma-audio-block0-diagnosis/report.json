@@ -1,0 +1,63 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-audio-block.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Next residual strict media gate: one pinned actual audio block and complete blocked QK/relative/tanh/softmax/PV primitives on identical independent CPU inputs.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 4.076866583000083,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 17546.561601875,
+      "pressure": 1,
+      "host_available_bytes": 10127917056,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 17547.573211583,
+      "pressure": 1,
+      "host_available_bytes": 10044227584,
+      "swap_bytes": 262144,
+      "footprint_bytes": 177013432,
+      "resident_bytes": 227999744
+    },
+    {
+      "monotonic": 17548.589137541,
+      "pressure": 1,
+      "host_available_bytes": 10048651264,
+      "swap_bytes": 262144,
+      "footprint_bytes": 179880632,
+      "resident_bytes": 230866944
+    },
+    {
+      "monotonic": 17549.606021041,
+      "pressure": 1,
+      "host_available_bytes": 9955819520,
+      "swap_bytes": 262144,
+      "footprint_bytes": 305005456,
+      "resident_bytes": 364756992
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "d76fcf5830f76b0b5e7df265d7950a1843912aa5303bd10bc1d1df73b258c96d"
+}

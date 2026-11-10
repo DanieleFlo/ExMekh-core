@@ -1,0 +1,55 @@
+F
+=================================== FAILURES ===================================
+_ SuitePhaseLive.test_cancel_after_real_latent_restores_llm_and_publishes_no_image _
+
+self = <test_suite_phase_live.SuitePhaseLive testMethod=test_cancel_after_real_latent_restores_llm_and_publishes_no_image>
+
+    def test_cancel_after_real_latent_restores_llm_and_publishes_no_image(self):
+        control = Path(CONTROL)
+        signal = control.with_name(control.name + ".ready")
+        model = os.environ["DS4_SUITE_LLM_MODEL"]
+        observed = {}
+        with OpenAI(base_url=URL, api_key="local", timeout=300, max_retries=0) as client:
+            first = client.responses.create(
+                model=model,
+                input="Remember PHASE27. Reply only PHASE27.",
+                reasoning={"effort": "none"}, max_output_tokens=16, temperature=0,
+            )
+            self.assertIn("PHASE27", first.output_text)
+            # The qualification server stores media beneath this private
+            # parent. The public API intentionally has no Files list endpoint.
+            media = control.parent / "media"
+            files_before = {str(path) for path in media.rglob("file-*") if path.is_file()}
+            control.write_text("latent 0\n")
+            key = "phase-cancel-" + os.urandom(8).hex()
+            body = {
+                "model": "Qwen/Qwen-Image-2.1-Turbo",
+                "prompt": "A red square on white.", "size": "256x256", "n": 1,
+                "ds4": {"version": 1, "seed": 20261020},
+            }
+            encoded = json.dumps(body).encode()
+            target = urlparse(URL)
+            try:
+                with socket.create_connection((target.hostname, target.port or 80)) as peer:
+                    peer.sendall((
+                        "POST /v1/images/generations HTTP/1.1\r\nHost: local\r\n"
+                        f"Idempotency-Key: {key}\r\nContent-Length: {len(encoded)}\r\n"
+                        "Content-Type: application/json\r\n\r\n"
+                    ).encode() + encoded)
+                    deadline = time.monotonic() + 180
+                    while not signal.exists():
+                        self.assertLess(time.monotonic(), deadline, "native latent boundary not reached")
+                        time.sleep(0.1)
+                    self.assertEqual(signal.read_text(), "latent 0\n")
+            finally:
+                control.unlink(missing_ok=True)
+            # The peer really disconnected after a native, fenced diffusion
+            # step. The same receipt must reject retry without another job.
+>           with self.assertRaises(APIStatusError) as cancelled:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: APIStatusError not raised
+
+tests/test_suite_phase_live.py:60: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_suite_phase_live.py::SuitePhaseLive::test_cancel_after_real_latent_restores_llm_and_publishes_no_image
+1 failed in 135.71s (0:02:15)

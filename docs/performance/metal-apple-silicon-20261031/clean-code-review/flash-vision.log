@@ -1,0 +1,7 @@
+W1031 10:43:31.295000 21016 build/metal-venv/lib/python3.13/site-packages/torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal model views created in 0.071 ms, residency requested in 4.948 ms, warmup 2.582 ms (mapped 588.12 MiB from offset 0.02 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+{"status": "PASS", "implementation": {"pass": true, "min_cos": 0.9999999997352271, "mean_cos": 0.999999999974167, "worst_token": 11, "max_abs": 5.4836273193359375e-06, "mean_abs": 2.395577869517466e-07}, "image_pipeline": {"pass": true, "min_cos": 0.9995476147788258, "mean_cos": 0.999991989833621, "worst_token": 112, "max_abs": 0.0032440251670777798, "mean_abs": 9.38251506210736e-05}, "preprocessing": {"max_abs": 0.007843255996704102, "mean_abs": 2.7619633328868076e-05}}

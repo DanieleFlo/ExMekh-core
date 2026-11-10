@@ -53,7 +53,7 @@ def main():
         fixture["target_ids"] = tokenize(ROOT / "ds4", model, fixture["target"])
     write_json(args.output / "fixtures.json", fixtures)
     records = []
-    candidate = ({} if args.plain else launcher_environment()) | dict(v.split("=", 1) for v in args.env)
+    candidate = ({} if args.plain else launcher_environment(backend="cuda")) | dict(v.split("=", 1) for v in args.env)
     for context in args.contexts:
         for name, chunk, extra in [("reference", 256, {})] + [(f"candidate-{c}", c, candidate) for c in args.chunks]:
             dest = args.output / f"ctx-{context}-{name}"

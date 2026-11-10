@@ -8,9 +8,14 @@ from collections.abc import Callable, Iterator
 from copy import deepcopy
 from typing import Any, Literal
 
+from exmekh_lib.interfaces.operation_progress import OperationProgress
 from pydantic import BaseModel, Field
 
 TerminalStatus = Literal["completed", "error"]
+ToolInvocationKey = tuple[str | None, str, str, int]
+type SkillExecutionDetails = tuple[
+    dict[str, Any], list[dict[str, Any]], list[SkillExecutionDetails]
+]
 
 
 class ToolEvent(BaseModel):
@@ -24,6 +29,7 @@ class ToolEvent(BaseModel):
     image_urls: list[str] = Field(default_factory=list)
     images_in_context: bool | None = None
     image_state: Literal["running", "completed", "error"] | None = None
+    image_progress: OperationProgress | None = None
     depth: int = 0
     skill_path: str = "/"
     timestamp: float = Field(default_factory=time.time)
@@ -60,9 +66,20 @@ class ToolEvent(BaseModel):
         )
 
     @property
-    def invocation_key(self) -> tuple[str | None, str, str, int]:
+    def invocation_key(self) -> ToolInvocationKey:
         """Call IDs are unique only within a tool's execution scope."""
         return self.tool_call_id, self.tool_name, self.skill_path, self.depth
+
+    def execution_details(self) -> dict[str, Any]:
+        """Describe the rendered invocation independently of transient progress."""
+        return self.model_dump(exclude={"image_progress"})
+
+    def is_progress_update_for(self, previous: ToolEvent) -> bool:
+        return (
+            self.image_progress is not None
+            and previous.matches_update(self)
+            and self.execution_details() == previous.execution_details()
+        )
 
     def complete_from(self, incoming: ToolEvent) -> None:
         """Apply a terminal update while retaining this invocation's opening time."""
@@ -98,8 +115,15 @@ class ToolEvent(BaseModel):
         """Keep the first terminal result while accepting missing arguments later."""
         if incoming.approval_state is not None:
             self.approval_state = incoming.approval_state
-        if incoming.image_state is not None:
+        if incoming.image_state is not None and (
+            incoming.image_state != "running"
+            or self.image_state not in {"completed", "error"}
+        ):
             self.image_state = incoming.image_state
+        if incoming.image_progress is not None and incoming.image_progress.follows(
+            self.image_progress
+        ):
+            self.image_progress = incoming.image_progress
         if incoming.images_in_context is not None:
             self.images_in_context = incoming.images_in_context
         if incoming.image_urls:
@@ -215,6 +239,14 @@ class SkillNode(BaseModel):
     opening_tool_call_id: str | None = None
     tokens_pending: bool = False
 
+    def execution_details(self) -> SkillExecutionDetails:
+        """Panel structure and results, excluding transient image progress."""
+        return (
+            self.model_dump(exclude={"tool_events", "sub_skills"}),
+            [tool.execution_details() for tool in self.tool_events],
+            [child.execution_details() for child in self.sub_skills],
+        )
+
     def add_tool_event(self, event: ToolEvent) -> None:
         """Apply the same invocation lifecycle used by chat messages."""
         for block in self.reasoning_blocks:
@@ -286,6 +318,10 @@ class SkillNode(BaseModel):
         yield self
         for child in self.sub_skills:
             yield from child.iter_nodes()
+
+    def iter_tool_events(self) -> Iterator[ToolEvent]:
+        for node in self.iter_nodes():
+            yield from node.tool_events
 
     @property
     def action_count(self) -> int:

@@ -473,8 +473,8 @@ static ds4_status vision(ds4_qwen_image_encoder *e,
   TRY(alloc_view(&w, (uint64_t)n * 1536, DS4_NUM_BF16, &patch));
   TRY(ds4_num_write(e->num, patch, packed, (uint64_t)n * 1536 * 2));
   TRY(alloc_view(&w, (uint64_t)n * 1152, DS4_NUM_BF16, &x));
-  /* Conv3d's output is cast BEFORE bias. Use the native convolution backend
-   * so its reduction and bias boundaries match the frozen encoder. */
+  /* The convolution backend owns reduction and BF16 bias boundaries for the
+   * selected accelerator; the encoder supplies the original model tensors. */
   {
     ds4_num_view bias, filter;
     TRY(weight(e, "model.visual.patch_embed.proj", "weight", &filter));
@@ -520,6 +520,8 @@ static ds4_status vision(ds4_qwen_image_encoder *e,
                     hx0 = 1 - fabsf(wx), hx1 = 1 - fabsf(wx - 1);
               float w00 = hy0 * hx0, w01 = hy0 * hx1, w10 = hy1 * hx0,
                     w11 = hy1 * hx1;
+              /* Keep the processor's distinct FP32 multiply and sum steps.
+               * This file is compiled with FP contraction disabled. */
               for (uint32_t d = 0; d < 1152; d++)
                 position[(uint64_t)p * 1152 + d] =
                     unbf16(table[((uint64_t)y0 * 48 + x0) * 1152 + d]) * w00 +
@@ -687,6 +689,18 @@ ds4_status ds4_qwen_image_encoder_estimate(ds4_qwen_image_encoder *e,
     }
   }
   out->device_bytes += extra;
+  /* Metal preserves BF16 values through temporary F32 MPS operands. The
+   * largest projection is much larger than the old 64 MiB CUDA margin. */
+  uint64_t linear_scratch = 0;
+  for (size_t i = 0; i < e->bound; i++) {
+    const ds4_weight_tensor *t = e->weights[i].tensor;
+    if (e->weights[i].group == EMBED_GROUP || t->rank != 2 ||
+        (!in->images && e->weights[i].group >= TEXT_LAYERS)) continue;
+    uint32_t rows = in->count > in->patches ? in->count : in->patches;
+    uint64_t bytes = ds4_numeric_linear_workspace(e->num, rows, t->shape[0], t->shape[1]);
+    if (bytes > linear_scratch) linear_scratch = bytes;
+  }
+  out->device_bytes += linear_scratch;
   out->host_bytes = (uint64_t)in->count * 32768 + (uint64_t)in->patches * 40000;
   out->known = true;
   return DS4_STATUS_OK;
@@ -823,6 +837,9 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
       TRY(ds4_qwen_image_observe(e->num, observer, "mlp_mid", layer, gate));
     TRY(linear(e, prefix, "mlp.down_proj", proj, gate, n, 12288, 4096, false));
     TRY(ds4_num_point(e->num, x, x, proj, DS4_NUM_ADD, 0));
+    /* Match the decoder layer's public output boundary. Deepstack belongs to
+     * the enclosing language model and becomes input to the next layer. */
+    TRY(ds4_qwen_image_observe(e->num, observer, "text", layer, x));
     if (layer < 3 && in->patches) {
       uint32_t offset = 0;
       for (uint32_t i = 0; i < n; i++)
@@ -834,7 +851,6 @@ ds4_status ds4_qwen_image_encode(ds4_qwen_image_encoder *e,
               DS4_NUM_ADD, 0));
         }
     }
-    TRY(ds4_qwen_image_observe(e->num, observer, "text", layer, x));
   }
   /* Intentionally skip language_model.norm and lm_head. The DiT was trained
    * on the last decoder block BEFORE final RMSNorm; no AR generation occurs. */

@@ -17,6 +17,7 @@ def main():
     p.add_argument("--prepared", type=Path, required=True)
     p.add_argument("--cases", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--device", choices=("cuda", "cpu"), default="cuda")
     a = p.parse_args()
     a.output.mkdir(parents=True, exist_ok=False)
     lock = json.loads((a.prepared / "prepared.json").read_text())
@@ -48,7 +49,7 @@ def main():
             attn_implementation="eager",
         )
         .eval()
-        .to("cuda")
+        .to(a.device)
     )
     tasks = json.loads((modelpath / "config_sentence_transformers.json").read_text())[
         "prompts"
@@ -93,7 +94,7 @@ def main():
             inputs["input_ids"].numpy().astype("<u4").tofile(
                 a.output / f"item-{i}-tokens.u32"
             )
-            out = model(**inputs.to("cuda")).last_hidden_state.float()
+            out = model(**inputs.to(a.device)).last_hidden_state.float()
             pooled = out.mean(1)
             vectors.append(
                 torch.nn.functional.normalize(pooled, dim=-1).cpu().numpy()[0]
@@ -108,7 +109,7 @@ def main():
         for start in range(0, len(formatted), 8):
             ins = tokenizer(
                 formatted[start : start + 8], padding=True, return_tensors="pt"
-            ).to("cuda")
+            ).to(a.device)
             output = model(**ins).last_hidden_state.float()
             mask = ins["attention_mask"].unsqueeze(-1).float()
             pooled = (output * mask).sum(1) / mask.sum(1)
@@ -120,6 +121,7 @@ def main():
         "padded_single_max_abs": float(np.max(np.abs(vectors - np.array(padded)))),
         "revision": "914f7f89142e33e77833254d9c9b90c3cef7303b",
         "dtype": "bfloat16",
+        "device": a.device,
     }
     (a.output / "oracle.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary), flush=True)

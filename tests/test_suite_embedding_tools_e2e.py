@@ -1,4 +1,4 @@
-"""Opt-in ExMekh consumers -> shared native transport -> real CUDA embeddings."""
+"""Opt-in ExMekh consumers -> shared native transport -> real embeddings."""
 
 import hashlib
 import json
@@ -69,6 +69,7 @@ class EmbeddingToolsE2E(unittest.TestCase):
             api="responses",
             reasoning_effort="none",
             http_client=HTTPClient(
+                timeout=float(os.getenv("DS4_SUITE_HTTP_TIMEOUT_SECONDS", "600")),
                 event_hooks={
                     "request": [cls.capture_request],
                     "response": [cls.capture_response],
@@ -158,9 +159,22 @@ class EmbeddingToolsE2E(unittest.TestCase):
             set(models["google/embeddinggemma-2"].input_modalities),
             {"text", "image", "video", "audio"},
         )
-        self.assertTrue(
-            all(model.configured and model.ready for model in models.values())
-        )
+        self.assertTrue(all(model.configured for model in models.values()))
+        # Functional inference remains testable before a backend's full quality
+        # qualification. Discovery must distinguish that state explicitly.
+        catalog = self.provider.client.models.list()
+        for entry in catalog.data:
+            if entry.id not in models:
+                continue
+            details = entry.model_dump()["ds4"]
+            if details["qualified_backends"]:
+                self.assertTrue(models[entry.id].ready)
+            else:
+                self.assertFalse(models[entry.id].ready)
+                self.assertIn(
+                    details["qualification"]["status"], ("FAIL", "NOT_VERIFIED")
+                )
+                self.assertTrue(details["qualification"]["reason"])
         for dimensions in (128, 256, 512, 768):
             with self.subTest(dimensions=dimensions):
                 self.vectors(
@@ -376,6 +390,36 @@ class EmbeddingToolsE2E(unittest.TestCase):
         cached = self.responses[-1]["usage"]["input_tokens_details"]["cached_tokens"]
         self.assertGreater(cached, 0)
         self.vectors([item])
+        self.observations.append(
+            {"case": "llm_embedding_consumers_llm", "cached_tokens": cached}
+        )
+
+    def test_08_long_vision_prefill_after_all_embedding_towers(self):
+        # Keep this fresh working-set gate independent of tool-generation time.
+        # Both cases retain their full checks and can run under separate model
+        # process deadlines without truncating the long multimodal input.
+        client = Client(
+            self.provider, SystemMessage("Remember the user's code across messages.")
+        )
+        first = client.call(
+            ClientRequest(
+                UserMessage("Remember EMBEDDING-E2E-27. Reply only EMBEDDING-E2E-27."),
+                extra={"max_output_tokens": 32, "temperature": 0},
+            )
+        )
+        self.assertIn("EMBEDDING-E2E-27", first.get_message())
+        self.vectors(
+            [
+                EmbeddingItem(
+                    content=[
+                        TextContent(text="Mountains"),
+                        self.image,
+                        self.audio,
+                        self.video.model_copy(update={"audio": "exclude"}),
+                    ]
+                )
+            ]
+        )
         # Exercise a fresh vision/prefill working set after every native tower,
         # rather than relying only on the small decode buffers already resident.
         with Image.open(
@@ -397,7 +441,10 @@ class EmbeddingToolsE2E(unittest.TestCase):
         self.assertIn("EMBEDDING-E2E-27", last.get_message())
         self.assertGreater(self.responses[-1]["usage"]["input_tokens"], 2048)
         self.observations.append(
-            {"case": "llm_embedding_consumers_llm", "cached_tokens": cached}
+            {
+                "case": "long_vision_prefill_after_embedding_towers",
+                "input_tokens": self.responses[-1]["usage"]["input_tokens"],
+            }
         )
 
 

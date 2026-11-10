@@ -1,0 +1,544 @@
+{
+  "scope": "bounded development subset",
+  "kind": "text",
+  "cases": [
+    {
+      "id": "text-0",
+      "text": "Il gatto dorme sul divano."
+    },
+    {
+      "id": "text-1",
+      "text": "A cat sleeps on the sofa."
+    },
+    {
+      "id": "text-2",
+      "text": "The train arrives at the station."
+    }
+  ],
+  "checks": [
+    {
+      "command": [
+        "env",
+        "DS4_GEMMA_DIMENSIONS=128",
+        "tests/probe_native_suite",
+        "build/metal-models/gemma.ds4b/bundle.ds4b",
+        "build/metal-oracles/models",
+        "build/metal-models/gemma.ds4g",
+        "gemma",
+        "build/metal-qualification/t06-t07-20261031/gemma-text/native-128",
+        "Il gatto dorme sul divano.",
+        "A cat sleeps on the sofa.",
+        "The train arrives at the station."
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+      "environment": {},
+      "timeout_seconds": 120,
+      "footprint_limit_gib": 10,
+      "exit_code": 0,
+      "elapsed_seconds": 6.1037693749995015,
+      "status": "PASS",
+      "samples": [
+        {
+          "monotonic": 7342.45951275,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 81992,
+          "resident_bytes": 32768
+        },
+        {
+          "monotonic": 7343.471616791,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6701656,
+          "resident_bytes": 16351232
+        },
+        {
+          "monotonic": 7344.479998958,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6701656,
+          "resident_bytes": 16351232
+        },
+        {
+          "monotonic": 7345.488274416,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6701656,
+          "resident_bytes": 16351232
+        },
+        {
+          "monotonic": 7346.501794208,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6701656,
+          "resident_bytes": 16351232
+        },
+        {
+          "monotonic": 7347.515245541,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 362824904,
+          "resident_bytes": 591937536
+        }
+      ],
+      "log_sha256": "1ba70c398ca7d25b9debb610e40a554e657348fc0809b3ddec4e7f8729647e87"
+    },
+    {
+      "command": [
+        "env",
+        "DS4_GEMMA_DIMENSIONS=256",
+        "tests/probe_native_suite",
+        "build/metal-models/gemma.ds4b/bundle.ds4b",
+        "build/metal-oracles/models",
+        "build/metal-models/gemma.ds4g",
+        "gemma",
+        "build/metal-qualification/t06-t07-20261031/gemma-text/native-256",
+        "Il gatto dorme sul divano.",
+        "A cat sleeps on the sofa.",
+        "The train arrives at the station."
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+      "environment": {},
+      "timeout_seconds": 120,
+      "footprint_limit_gib": 10,
+      "exit_code": 0,
+      "elapsed_seconds": 5.081820875000631,
+      "status": "PASS",
+      "samples": [
+        {
+          "monotonic": 7348.561998458,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 81992,
+          "resident_bytes": 32768
+        },
+        {
+          "monotonic": 7349.5757185,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668888,
+          "resident_bytes": 16318464
+        },
+        {
+          "monotonic": 7350.579965375,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668888,
+          "resident_bytes": 16318464
+        },
+        {
+          "monotonic": 7351.588345166,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668888,
+          "resident_bytes": 16318464
+        },
+        {
+          "monotonic": 7352.601859291,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 362611888,
+          "resident_bytes": 591724544
+        }
+      ],
+      "log_sha256": "1ba70c398ca7d25b9debb610e40a554e657348fc0809b3ddec4e7f8729647e87"
+    },
+    {
+      "command": [
+        "env",
+        "DS4_GEMMA_DIMENSIONS=512",
+        "tests/probe_native_suite",
+        "build/metal-models/gemma.ds4b/bundle.ds4b",
+        "build/metal-oracles/models",
+        "build/metal-models/gemma.ds4g",
+        "gemma",
+        "build/metal-qualification/t06-t07-20261031/gemma-text/native-512",
+        "Il gatto dorme sul divano.",
+        "A cat sleeps on the sofa.",
+        "The train arrives at the station."
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+      "environment": {},
+      "timeout_seconds": 120,
+      "footprint_limit_gib": 10,
+      "exit_code": 0,
+      "elapsed_seconds": 5.08040845800042,
+      "status": "PASS",
+      "samples": [
+        {
+          "monotonic": 7353.645206583,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 81992,
+          "resident_bytes": 32768
+        },
+        {
+          "monotonic": 7354.658794958,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668912,
+          "resident_bytes": 16302080
+        },
+        {
+          "monotonic": 7355.663150583,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668912,
+          "resident_bytes": 16302080
+        },
+        {
+          "monotonic": 7356.673888208,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668912,
+          "resident_bytes": 16302080
+        },
+        {
+          "monotonic": 7357.690234583,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 360613064,
+          "resident_bytes": 591757312
+        }
+      ],
+      "log_sha256": "1ba70c398ca7d25b9debb610e40a554e657348fc0809b3ddec4e7f8729647e87"
+    },
+    {
+      "command": [
+        "env",
+        "DS4_GEMMA_DIMENSIONS=768",
+        "tests/probe_native_suite",
+        "build/metal-models/gemma.ds4b/bundle.ds4b",
+        "build/metal-oracles/models",
+        "build/metal-models/gemma.ds4g",
+        "gemma",
+        "build/metal-qualification/t06-t07-20261031/gemma-text/native-768",
+        "Il gatto dorme sul divano.",
+        "A cat sleeps on the sofa.",
+        "The train arrives at the station."
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+      "environment": {},
+      "timeout_seconds": 120,
+      "footprint_limit_gib": 10,
+      "exit_code": 0,
+      "elapsed_seconds": 5.085706291999486,
+      "status": "PASS",
+      "samples": [
+        {
+          "monotonic": 7358.727584666,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 81992,
+          "resident_bytes": 32768
+        },
+        {
+          "monotonic": 7359.738135708,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668888,
+          "resident_bytes": 16318464
+        },
+        {
+          "monotonic": 7360.746556458,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668888,
+          "resident_bytes": 16318464
+        },
+        {
+          "monotonic": 7361.754873041,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 6668888,
+          "resident_bytes": 16318464
+        },
+        {
+          "monotonic": 7362.768182708,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 360662192,
+          "resident_bytes": 591822848
+        }
+      ],
+      "log_sha256": "1ba70c398ca7d25b9debb610e40a554e657348fc0809b3ddec4e7f8729647e87"
+    },
+    {
+      "command": [
+        "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-venv/bin/python",
+        "tools/run_embedding_gemma2_oracle.py",
+        "--prepared",
+        "build/metal-oracles",
+        "--cases",
+        "build/metal-qualification/t06-t07-20261031/gemma-text/cases.json",
+        "--output",
+        "build/metal-qualification/t06-t07-20261031/gemma-text/oracle",
+        "--device",
+        "cpu"
+      ],
+      "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+      "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+      "environment": {},
+      "timeout_seconds": 120,
+      "footprint_limit_gib": 10,
+      "exit_code": 0,
+      "elapsed_seconds": 21.340472542000498,
+      "status": "PASS",
+      "samples": [
+        {
+          "monotonic": 7363.816631458,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 81992,
+          "resident_bytes": 32768
+        },
+        {
+          "monotonic": 7364.824740458,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 99156664,
+          "resident_bytes": 147881984
+        },
+        {
+          "monotonic": 7365.842274083,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 115049144,
+          "resident_bytes": 164151296
+        },
+        {
+          "monotonic": 7366.859445791,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 132219600,
+          "resident_bytes": 181567488
+        },
+        {
+          "monotonic": 7367.876738666,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 160613072,
+          "resident_bytes": 210239488
+        },
+        {
+          "monotonic": 7368.894557041,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 174801640,
+          "resident_bytes": 225247232
+        },
+        {
+          "monotonic": 7369.912506041,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 177963752,
+          "resident_bytes": 228409344
+        },
+        {
+          "monotonic": 7370.93755875,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 178258664,
+          "resident_bytes": 228704256
+        },
+        {
+          "monotonic": 7371.956185041,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 178684648,
+          "resident_bytes": 229130240
+        },
+        {
+          "monotonic": 7372.974948791,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 178897640,
+          "resident_bytes": 229343232
+        },
+        {
+          "monotonic": 7373.984055583,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 179045096,
+          "resident_bytes": 229490688
+        },
+        {
+          "monotonic": 7374.989523541,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 179503848,
+          "resident_bytes": 229949440
+        },
+        {
+          "monotonic": 7375.997047833,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 187974376,
+          "resident_bytes": 239222784
+        },
+        {
+          "monotonic": 7377.010677833,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 212943640,
+          "resident_bytes": 264470528
+        },
+        {
+          "monotonic": 7378.027897416,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 229425944,
+          "resident_bytes": 280952832
+        },
+        {
+          "monotonic": 7379.041180083,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 253084464,
+          "resident_bytes": 305823744
+        },
+        {
+          "monotonic": 7380.053015875,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 276628272,
+          "resident_bytes": 331530240
+        },
+        {
+          "monotonic": 7381.059172041,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 567985256,
+          "resident_bytes": 654082048
+        },
+        {
+          "monotonic": 7382.078134583,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 576963784,
+          "resident_bytes": 668057600
+        },
+        {
+          "monotonic": 7383.094994,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 583238856,
+          "resident_bytes": 680427520
+        },
+        {
+          "monotonic": 7384.111373458,
+          "pressure": 1,
+          "swap_bytes": 0,
+          "footprint_bytes": 484017448,
+          "resident_bytes": 587956224
+        }
+      ],
+      "log_sha256": "5cfabf498012f8646611abef07c6c3a1adeb616bc2f1a7631f197cb236e1b66a"
+    },
+    {
+      "metrics": {
+        "max_abs": 0.002175748348236084,
+        "rmse": 0.0005991709190361861,
+        "relative_l2": 0.006778844929192358,
+        "bit_exact": false,
+        "cosine_min": 0.9999715886763398,
+        "unit_norm_error_max": 4.3502690116881126e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    {
+      "metrics": {
+        "max_abs": 0.0017998367547988892,
+        "rmse": 0.000502992489712363,
+        "relative_l2": 0.008047879748809654,
+        "bit_exact": false,
+        "cosine_min": 0.9999572170289119,
+        "unit_norm_error_max": 3.571532758428475e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    {
+      "metrics": {
+        "max_abs": 0.0014497004449367523,
+        "rmse": 0.0003860984614385055,
+        "relative_l2": 0.008736410767774323,
+        "bit_exact": false,
+        "cosine_min": 0.9999520904489361,
+        "unit_norm_error_max": 2.263912368682952e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    {
+      "metrics": {
+        "max_abs": 0.0012604501098394394,
+        "rmse": 0.00032340732587341116,
+        "relative_l2": 0.00896252651458019,
+        "bit_exact": false,
+        "cosine_min": 0.999950792982003,
+        "unit_norm_error_max": 5.603780817153847e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS",
+  "ranking": {
+    "related": 0.8575215935707092,
+    "unrelated": 0.6090969443321228
+  }
+}

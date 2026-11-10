@@ -1,0 +1,143 @@
+{
+  "command": [
+    "env",
+    "DS4_TEST_SSD_STREAMING=1",
+    "DS4_QWEN4_IMAGE_MAX_TOKENS=128",
+    "./tests/test_glm53_vision_prompt",
+    "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+    "tests/vision-fixtures/glm53/earth.jpg",
+    "--ssd-streaming",
+    "--tokens",
+    "8",
+    "--mtp-model",
+    "gguf/mtp-Qwen3.8-27B-Q4_0.gguf"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120,
+  "reason": "T05 actual encoder and LLM, image versus zero image, prefix replay and eight generation tokens",
+  "footprint_limit_gib": 10,
+  "exit_code": -15,
+  "elapsed_seconds": 14.007189374999143,
+  "status": "NOT_VERIFIED",
+  "samples": [
+    {
+      "monotonic": 12710.918275541,
+      "pressure": 1,
+      "host_available_bytes": 13089013760,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 12711.931374958,
+      "pressure": 1,
+      "host_available_bytes": 10755473408,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1732233208,
+      "resident_bytes": 1695301632
+    },
+    {
+      "monotonic": 12712.938666833,
+      "pressure": 1,
+      "host_available_bytes": 10948001792,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1632864176,
+      "resident_bytes": 1595850752
+    },
+    {
+      "monotonic": 12713.946976333,
+      "pressure": 1,
+      "host_available_bytes": 10919936000,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1667778528,
+      "resident_bytes": 1630797824
+    },
+    {
+      "monotonic": 12714.959419083,
+      "pressure": 1,
+      "host_available_bytes": 10880925696,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1666779080,
+      "resident_bytes": 1629814784
+    },
+    {
+      "monotonic": 12715.969145666,
+      "pressure": 1,
+      "host_available_bytes": 10864492544,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1671677872,
+      "resident_bytes": 1624621056
+    },
+    {
+      "monotonic": 12716.982967416,
+      "pressure": 1,
+      "host_available_bytes": 10754097152,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1710884832,
+      "resident_bytes": 1663811584
+    },
+    {
+      "monotonic": 12717.997125333,
+      "pressure": 1,
+      "host_available_bytes": 10378969088,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1636452248,
+      "resident_bytes": 1034584064
+    },
+    {
+      "monotonic": 12719.005292333,
+      "pressure": 1,
+      "host_available_bytes": 10304520192,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1642514376,
+      "resident_bytes": 1040613376
+    },
+    {
+      "monotonic": 12720.01405275,
+      "pressure": 1,
+      "host_available_bytes": 10304684032,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1687291848,
+      "resident_bytes": 1085521920
+    },
+    {
+      "monotonic": 12721.024816041,
+      "pressure": 1,
+      "host_available_bytes": 10290397184,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1666631648,
+      "resident_bytes": 1057292288
+    },
+    {
+      "monotonic": 12722.0368125,
+      "pressure": 1,
+      "host_available_bytes": 10404560896,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1669613536,
+      "resident_bytes": 863911936
+    },
+    {
+      "monotonic": 12723.052298791,
+      "pressure": 1,
+      "host_available_bytes": 10337058816,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 1684703200,
+      "resident_bytes": 675659776
+    },
+    {
+      "monotonic": 12724.063759958,
+      "pressure": 1,
+      "host_available_bytes": 9964175360,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 2765834952,
+      "resident_bytes": 891600896
+    }
+  ],
+  "executables_sha256": {
+    "./tests/test_glm53_vision_prompt": "8389127ab5bb01c16a0cc88655867c4c88d4e01cc2195b277a29bf4ab9da5b53"
+  },
+  "log_sha256": "bad058b9466174b353167f7b028258a74d7514cca3eef4a0b1978fca4d9bf9a2"
+}

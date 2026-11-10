@@ -4,6 +4,30 @@
 #include <stddef.h>
 #include <string.h>
 
+#if defined(__APPLE__) && !defined(DS4_SHA256_PORTABLE)
+#include <CommonCrypto/CommonDigest.h>
+
+/* CommonCrypto uses the system's accelerated SHA-256 implementation. Keep
+ * the same streaming contract and full digest checks for multi-GiB bundles;
+ * split size_t updates at the public API's 32-bit byte-count boundary. */
+typedef CC_SHA256_CTX ds4_sha256;
+static void ds4_sha256_init(ds4_sha256 *sha) {
+    (void)CC_SHA256_Init(sha);
+}
+static void ds4_sha256_update(ds4_sha256 *sha, const void *data, size_t len) {
+    const uint8_t *p = data;
+    while (len) {
+        CC_LONG take = len > UINT32_MAX ? UINT32_MAX : (CC_LONG)len;
+        (void)CC_SHA256_Update(sha, p, take);
+        p += take;
+        len -= take;
+    }
+}
+static void ds4_sha256_final(ds4_sha256 *sha, uint8_t out[32]) {
+    (void)CC_SHA256_Final(out, sha);
+}
+#else
+
 typedef struct {
     uint32_t state[8];
     uint64_t bytes;
@@ -118,4 +142,5 @@ static void ds4_sha256_final(ds4_sha256 *sha, uint8_t out[32]) {
     }
 }
 
+#endif /* Apple system SHA-256 or portable implementation. */
 #endif

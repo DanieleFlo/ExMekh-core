@@ -1,0 +1,62 @@
+{
+  "command": [
+    "env",
+    "DS4_SUITE_NUMERIC_METAL=1",
+    "build/metal-venv/bin/python",
+    "-m",
+    "unittest",
+    "tests.test_suite_numeric",
+    "tests.test_suite_numeric_api",
+    "tests.test_gemma_bf16_diagnostic",
+    "-v"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Production BF16 owner dispatch and CPU-order LayerNorm: all existing numeric regressions plus independent exact bias/in-place cases at audio/vision widths; frozen limits unchanged.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 3.0597652079995896,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 13453.491120083,
+      "pressure": 1,
+      "host_available_bytes": 11174559744,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 13454.502745208,
+      "pressure": 1,
+      "host_available_bytes": 11031003136,
+      "swap_bytes": 262144,
+      "footprint_bytes": 161694536,
+      "resident_bytes": 215810048
+    },
+    {
+      "monotonic": 13455.515856291,
+      "pressure": 1,
+      "host_available_bytes": 10788667392,
+      "swap_bytes": 262144,
+      "footprint_bytes": 620315800,
+      "resident_bytes": 625049600
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "2a5a8914661a77fad1f461ef555247c514b69d8b00aa5bcd82410093630ae2b6"
+}

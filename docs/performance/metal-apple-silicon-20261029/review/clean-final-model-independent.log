@@ -1,0 +1,139 @@
+metal-kernels:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal model views created in 0.028 ms, residency requested in 0.121 ms, warmup 6.331 ms (mapped 4.00 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+ds4: Metal model views created in 0.016 ms, residency requested in 0.078 ms, warmup 0.457 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 2 overlapping shared buffers
+ds4: Metal model views created in 0.016 ms, residency requested in 0.091 ms, warmup 0.495 ms (mapped 0.42 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 3 overlapping shared buffers
+ds4: Metal model views created in 0.014 ms, residency requested in 0.146 ms, warmup 0.180 ms (mapped 4.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 4 overlapping shared buffers
+ds4-test: compressor pair state-store exact width=256 ratio=4 pos=8 emit=0 ape=f32 decode_pack=0 exact_reduce=0 proj=0/0 state=0/0 comp=0 max_ulp=0/0/0/0/0
+ds4-test: compressor pair state-store exact width=256 ratio=4 pos=11 emit=1 ape=f16 decode_pack=1 exact_reduce=1 proj=0/0 state=0/0 comp=0 max_ulp=0/0/0/0/0
+ds4: Metal model views created in 0.045 ms, residency requested in 0.539 ms, warmup 0.565 ms (mapped 16.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 5 overlapping shared buffers
+ds4-test: compressor pair state-store exact width=1024 ratio=4 pos=11 emit=1 ape=f16 decode_pack=1 exact_reduce=1 proj=0/0 state=0/0 comp=0 max_ulp=0/0/0/0/0
+ds4: Metal model views created in 0.029 ms, residency requested in 0.569 ms, warmup 0.227 ms (mapped 8.14 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 6 overlapping shared buffers
+ds4-test: compressor pair state-store exact width=512 ratio=128 pos=255 emit=1 ape=f16 decode_pack=0 exact_reduce=0 proj=0/0 state=0/0 comp=0 max_ulp=0/0/0/0/0
+ds4: Metal model views created in 0.011 ms, residency requested in 0.561 ms, warmup 0.211 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 7 overlapping shared buffers
+ds4-test: compressor APE add exact head=128 ratio=4 pos=3 tokens=16 ape=f16 comp=0/512 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4: Metal model views created in 0.009 ms, residency requested in 0.580 ms, warmup 0.198 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 8 overlapping shared buffers
+ds4-test: compressor APE add exact head=512 ratio=4 pos=0 tokens=16 ape=f16 comp=0/2048 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor APE add exact head=512 ratio=4 pos=1 tokens=14 ape=f32 comp=0/1536 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4: Metal model views created in 0.009 ms, residency requested in 0.587 ms, warmup 0.213 ms (mapped 0.14 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 9 overlapping shared buffers
+ds4-test: compressor APE add exact head=512 ratio=128 pos=127 tokens=257 ape=f16 comp=0/1024 state_kv=0/65536 state_score=0/65536 max_ulp=0/0/0
+ds4-test: compressor ratio4 pack exact head=128 ratio=4 pos=0 tokens=4 ape=f16 comp=0/128 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4-test: compressor ratio4 pack exact head=512 ratio=4 pos=0 tokens=8 ape=f16 comp=0/1024 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 pack exact head=512 ratio=4 pos=1 tokens=14 ape=f32 comp=0/1536 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 replay pack exact head=128 tokens=4 comp=0/128 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4: Metal model views created in 0.008 ms, residency requested in 0.500 ms, warmup 0.222 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 10 overlapping shared buffers
+ds4-test: compressor ratio4 replay pack exact head=512 tokens=8 comp=0/1024 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4: Metal model views created in 0.006 ms, residency requested in 0.940 ms, warmup 0.262 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 11 overlapping shared buffers
+ds4-test: compressor ratio4 direct pool exact mode=prefill head=512 pos=0 tokens=4 comp_rows=1 ape=f16 comp=0/512 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=prefill head=512 pos=1 tokens=16 comp_rows=4 ape=f32 comp=0/2048 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=prefill head=128 pos=3 tokens=14 comp_rows=3 ape=f16 comp=0/384 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=replay head=512 pos=2048 tokens=8 comp_rows=2 ape=f16 comp=0/1024 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=replay head=128 pos=12 tokens=12 comp_rows=3 ape=f32 comp=0/384 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=replay head=128 pos=8 tokens=4 comp_rows=1 ape=f16 comp=0/128 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4-test: in-place RoPE exactness case=0 shape=1x64x512 pos=4294967295 inverse=0 ext=1 pair=0/32768 shared=0/32768 affine=0/32768 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=1 shape=1x1x512 pos=2047 inverse=0 ext=1 pair=0/512 shared=0/512 affine=0/512 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=2 shape=1x64x512 pos=65533 inverse=1 ext=1 pair=0/32768 shared=0/32768 affine=0/32768 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=3 shape=1x64x128 pos=37 inverse=0 ext=0 pair=0/8192 shared=0/8192 affine=0/8192 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=4 shape=32x4x512 pos=0 inverse=0 ext=0 pair=0/65536 shared=0/65536 affine=0/65536 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=5 shape=33x7x512 pos=2047 inverse=1 ext=1 pair=0/118272 shared=0/118272 affine=0/118272 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=6 shape=34x64x128 pos=65533 inverse=0 ext=1 pair=0/278528 shared=0/278528 affine=0/278528 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=7 shape=35x64x128 pos=37 inverse=1 ext=0 pair=0/286720 shared=0/286720 affine=0/286720 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=8 shape=35x4x128 pos=4294967279 inverse=1 ext=1 pair=0/17920 shared=0/17920 affine=0/17920 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE total pair=0/841216 shared=0/841216 affine=0/841216 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0
+ds4-test: contiguous conversion exactness f32_f16=0/107 guard=0, f16_f32_roundtrip=0/107 guard=0
+ds4: required Metal gathered KV staging kernel was not selected
+ds4: required Metal gathered KV staging kernel was not selected
+ds4: required Metal gathered KV staging kernel was not selected
+ds4-test: gathered KV staging exact cases=4 raw_bytes=0 comp_bytes=0 guard_bytes=0
+ds4-test: contiguous compressed-F16 staging exactness mismatches=0/1024 max_ulp=0 max_abs=0
+ds4: Metal model views created in 0.014 ms, residency requested in 0.609 ms, warmup 0.231 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 12 overlapping shared buffers
+ds4-test: persistent zero attention mask exact keys=8 candidate=0/1024 max_ulp=0 masked_diff=1024/1024 pad_fusion=0/1024 max_ulp=0 after_mask=0/1024 max_ulp=0
+ds4-test: persistent zero attention mask exact keys=32 candidate=0/1024 max_ulp=0 masked_diff=1024/1024 pad_fusion=0/1024 max_ulp=0 after_mask=0/1024 max_ulp=0
+ds4: Metal model views created in 0.015 ms, residency requested in 0.676 ms, warmup 0.245 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 13 overlapping shared buffers
+ds4-test: zero-prefix prefill mask cache raw exact mismatches=0 max_ulp=0 key_diff=33280 masked_diff=0
+ds4-test: zero-prefix prefill mask cache ratio4 exact mismatches=0 max_ulp=0 key_diff=33280 masked_diff=64000
+ds4-test: zero-prefix prefill mask cache ratio128 exact mismatches=0 max_ulp=0 key_diff=33280 masked_diff=512
+ds4: Metal model views created in 0.009 ms, residency requested in 0.625 ms, warmup 0.244 ms (mapped 0.06 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 14 overlapping shared buffers
+ds4-test: batch HC+RMSNorm exactness rows=3 split=0/72 max_ulp=0 max_abs=0, collapse=0/21504 max_ulp=0 max_abs=0, norm=0/21504 max_ulp=0 max_abs=0
+ds4: Metal model views created in 0.007 ms, residency requested in 0.600 ms, warmup 0.306 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 15 overlapping shared buffers
+ds4-test: output HC weights4 exact case=0 mismatch=0/4 max_ulp=0 max_abs=0
+ds4-test: output HC weights4 exact case=1 mismatch=0/4 max_ulp=0 max_abs=0
+ds4-test: output HC weights4 exact case=2 mismatch=0/4 max_ulp=0 max_abs=0
+ds4-test: output HC weights4 exact case=3 mismatch=0/4 max_ulp=0 max_abs=0
+ds4: required Metal output HC weights4 kernel was not selected
+ds4-test: output HC weights4 total mismatch=0/16 max_ulp=0
+ds4: Metal model views created in 0.011 ms, residency requested in 0.542 ms, warmup 0.606 ms (mapped 0.77 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 16 overlapping shared buffers
+ds4-test: HC RMS scale F16 projection exact K=16384 rows=33 scale=0/33 max_ulp=0 projection=0/792 max_ulp=0
+ds4: Metal model views created in 0.032 ms, residency requested in 0.644 ms, warmup 0.583 ms (mapped 1.33 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 17 overlapping shared buffers
+ds4-test: HC RMS scale F16 projection exact K=28672 rows=33 scale=0/33 max_ulp=0 projection=0/792 max_ulp=0
+ds4-test: router SIMD finalize exactness case=unique mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=unique mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=unique mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=unique mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=bias mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=bias mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=bias mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=bias mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=top6-ties mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=top6-ties mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=top6-ties mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=top6-ties mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=signed-zero-extremes mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=signed-zero-extremes mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=signed-zero-extremes mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=signed-zero-extremes mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=clamp-underflow mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=clamp-underflow mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=clamp-underflow mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=clamp-underflow mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=sum-rounding mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=sum-rounding mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=sum-rounding mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=sum-rounding mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize total selected=0/144 weights=0/144 probs=0/6144
+ds4-test: router batch weights exactness case=rows2-unique rep=0 selected=0/12 weights=0/12 probs=0/512 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows2-unique rep=1 selected=0/12 weights=0/12 probs=0/512 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows17-bias-ties rep=0 selected=0/102 weights=0/102 probs=0/4352 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows17-bias-ties rep=1 selected=0/102 weights=0/102 probs=0/4352 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows129-hash-duplicates rep=0 selected=0/774 weights=0/774 probs=0/33024 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows129-hash-duplicates rep=1 selected=0/774 weights=0/774 probs=0/33024 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows2048-typical rep=0 selected=0/12288 weights=0/12288 probs=0/524288 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows2048-typical rep=1 selected=0/12288 weights=0/12288 probs=0/524288 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows3-clamp-underflow rep=0 selected=0/18 weights=0/18 probs=0/768 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows3-clamp-underflow rep=1 selected=0/18 weights=0/18 probs=0/768 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights total selected=0 weights=0 probs=0
+metal-kernels: OK
+qwen35-layer-pattern:
+qwen35-layer-pattern: OK
+quant-storage-layout:
+quant-storage-layout: OK
+constraint-trie:
+constraint-trie: OK
+server:
+1029 15:16:18 ds4-server: removed orphan agentic checkpoints files=1 bytes=5
+ds4-server: thinking not closed, ignoring incomplete Qwen tool calls in reasoning
+1029 15:16:18 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen
+1029 15:16:18 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen
+1029 15:16:18 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4
+1029 15:16:18 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4
+server: OK
+ds4 tests: ok

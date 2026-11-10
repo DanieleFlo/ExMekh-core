@@ -78,6 +78,14 @@ def main():
     p.add_argument(
         "--stage", choices=["encoder", "encode", "dit", "decode"], required=True
     )
+    p.add_argument("--device", choices=("cuda", "cpu", "mps"), default="cuda")
+    p.add_argument(
+        "--offload",
+        action="store_true",
+        help="Lazy per-module SSD/CPU weights for a bounded development oracle",
+    )
+    p.add_argument("--mps-memory-fraction", type=float, default=0.5)
+    p.add_argument("--trace-encoder", action="store_true")
     a = p.parse_args()
     a.output.mkdir(parents=True, exist_ok=True)
     lock = json.loads((a.prepared / "prepared.json").read_text())
@@ -106,6 +114,10 @@ def main():
     from torch.nn.attention import SDPBackend, sdpa_kernel
     from transformers import AutoProcessor, Qwen3VLModel
 
+    if a.device == "mps":
+        if not 0 < a.mps_memory_fraction <= 1:
+            raise ValueError("MPS memory fraction must be in (0,1]")
+        torch.mps.set_per_process_memory_fraction(a.mps_memory_fraction)
     torch.set_num_threads(2)
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
@@ -131,54 +143,90 @@ def main():
             torch.from_numpy(np.fromfile(path, np.uint16))
             .view(torch.bfloat16)
             .reshape(shape)
-            .to("cuda")
+            .to(a.device)
         )
 
     def dump(path, value):
         value.detach().cpu().contiguous().view(torch.uint16).numpy().tofile(path)
 
+    weights = None
+
+    def load_model(model_class, directory, *, transformers=False):
+        nonlocal weights
+        if a.offload:
+            from suite_offloaded_oracle import load_offloaded_model
+
+            model, weights = load_offloaded_model(
+                model_class, directory, a.device, transformers=transformers
+            )
+            return model
+        options = {"local_files_only": True}
+        if transformers:
+            options.update(dtype=torch.bfloat16, attn_implementation="eager")
+        else:
+            options.update(torch_dtype=torch.bfloat16)
+        return model_class.from_pretrained(directory, **options).eval().to(a.device)
+
     if a.stage == "encoder":
         processor = AutoProcessor.from_pretrained(
             modelpath / "processor", local_files_only=True
         )
-        model = (
-            Qwen3VLModel.from_pretrained(
-                modelpath / "text_encoder",
-                dtype=torch.bfloat16,
-                attn_implementation="eager",
-                local_files_only=True,
-            )
-            .eval()
-            .to("cuda")
-        )
+        model = load_model(Qwen3VLModel, modelpath / "text_encoder", transformers=True)
         active = {}
         model.language_model.norm.register_forward_pre_hook(
             lambda m, args: active.update(hidden=args[0].detach())
         )
-    elif a.stage in ("encode", "decode"):
-        model = (
-            AutoencoderKLQwenImage21.from_pretrained(
-                modelpath / "vae", torch_dtype=torch.bfloat16, local_files_only=True
+        if a.trace_encoder:
+            for index, layer in enumerate(model.visual.blocks):
+                layer.register_forward_hook(
+                    lambda module, arguments, value, index=index: active.update(
+                        {
+                            f"vision-{index}": value[0]
+                            if isinstance(value, tuple)
+                            else value
+                        }
+                    )
+                )
+            model.visual.merger.register_forward_hook(
+                lambda module, arguments, value: active.update(
+                    {"vision_merged-0": value}
+                )
             )
-            .eval()
-            .to("cuda")
-        )
+            for index, merger in enumerate(model.visual.deepstack_merger_list):
+                merger.register_forward_hook(
+                    lambda module, arguments, value, index=index: active.update(
+                        {f"deepstack-{index}": value}
+                    )
+                )
+            for index, layer in enumerate(model.language_model.layers):
+                layer.register_forward_hook(
+                    lambda module, arguments, value, index=index: active.update(
+                        {
+                            f"text-{index}": value[0]
+                            if isinstance(value, tuple)
+                            else value
+                        }
+                    )
+                )
+            model.language_model.register_forward_pre_hook(
+                lambda module, arguments, kwargs: active.update(
+                    {"embeddings-0": kwargs["inputs_embeds"]}
+                ),
+                with_kwargs=True,
+            )
+            model.language_model.rotary_emb.register_forward_pre_hook(
+                lambda module, arguments: active.update(positions=arguments[1].detach())
+            )
+    elif a.stage in ("encode", "decode"):
+        model = load_model(AutoencoderKLQwenImage21, modelpath / "vae")
         mean = torch.tensor(
-            model.config.latents_mean, device="cuda", dtype=torch.bfloat16
+            model.config.latents_mean, device=a.device, dtype=torch.bfloat16
         ).view(1, 64, 1, 1, 1)
         std = torch.tensor(
-            model.config.latents_std, device="cuda", dtype=torch.bfloat16
+            model.config.latents_std, device=a.device, dtype=torch.bfloat16
         ).view(1, 64, 1, 1, 1)
     else:
-        model = (
-            QwenImage21Transformer2DModel.from_pretrained(
-                modelpath / "transformer",
-                torch_dtype=torch.bfloat16,
-                local_files_only=True,
-            )
-            .eval()
-            .to("cuda")
-        )
+        model = load_model(QwenImage21Transformer2DModel, modelpath / "transformer")
     with torch.inference_mode(), sdpa_kernel(SDPBackend.MATH):
         for case in cases:
             out = a.output / case["id"]
@@ -235,8 +283,25 @@ def main():
                         return_dict=False,
                     )[0]
                 )
-                model(**ins.to("cuda"), use_cache=False)
+                model(**ins.to(a.device), use_cache=False)
                 dump(out / "conditioning.bf16", active["hidden"][:, drop:])
+                if a.trace_encoder:
+                    for name, value in active.items():
+                        if name not in ("hidden", "positions"):
+                            dump(out / f"{name}.bf16", value)
+                    np.asarray(active["positions"][:, 0].cpu().T, np.uint32).tofile(
+                        out / "positions.u32"
+                    )
+                    ins["input_ids"].cpu().numpy().astype(np.uint32).tofile(
+                        out / "tokens.u32"
+                    )
+                    np.savez(
+                        out / "inputs.npz",
+                        **{
+                            key: value.detach().cpu().numpy()
+                            for key, value in ins.items()
+                        },
+                    )
                 mask = ins["input_ids"][0, drop:] == 151655
                 mask.cpu().numpy().astype(np.uint8).tofile(out / "image-mask.u8")
                 (out / "conditioning.json").write_text(
@@ -250,7 +315,7 @@ def main():
                             [ref, np.full((*ref.shape[:2], 1), 255, np.uint8)], -1
                         )
                     image = (
-                        torch.tensor(ref, device="cuda")
+                        torch.tensor(ref, device=a.device)
                         .float()
                         .permute(2, 0, 1)[None, :, None]
                         / 255
@@ -269,13 +334,13 @@ def main():
                 reference = (
                     read_bf16(out / "references.bf16", (1, -1, 64))
                     if refs
-                    else torch.empty((1, 0, 64), device="cuda", dtype=torch.bfloat16)
+                    else torch.empty((1, 0, 64), device=a.device, dtype=torch.bfloat16)
                 )
                 noise = np.fromfile(case["noise"], np.float32).reshape(1, h * w, 64)
-                latent = torch.tensor(noise, device="cuda", dtype=torch.bfloat16)
+                latent = torch.tensor(noise, device=a.device, dtype=torch.bfloat16)
                 mask = torch.tensor(
                     np.concatenate([slots, np.ones(h * w // 4, np.uint8)]),
-                    device="cuda",
+                    device=a.device,
                     dtype=torch.bool,
                 )[None]
                 shapes = [(1, r.shape[0] // 16, r.shape[1] // 16) for r in refs] + [
@@ -288,7 +353,7 @@ def main():
                     sigmas=json.loads((modelpath / "model_index.json").read_text())[
                         "sample_sigmas"
                     ],
-                    device="cuda",
+                    device=a.device,
                     mu=0.5,
                 )
                 # Match the actual pipeline: cast t before normalizing it.
@@ -312,7 +377,7 @@ def main():
                     torch.from_numpy(np.fromfile(out / "latent-7.f32", np.float32))
                     .reshape(1, h, w, 64)
                     .permute(0, 3, 1, 2)[:, :, None]
-                    .to(device="cuda", dtype=torch.bfloat16)
+                    .to(device=a.device, dtype=torch.bfloat16)
                 )
                 image = (
                     model.decode(latent * std + mean)
@@ -329,6 +394,16 @@ def main():
         json.dumps(
             {
                 "backend": "PyTorch MATH",
+                "device": a.device,
+                "cpu_weight_offload": a.offload,
+                "weight_transport": "lazy safetensors" if weights else "resident",
+                "module_fences": weights is not None and a.device == "mps",
+                "weight_reads": weights.reads if weights else None,
+                "weight_bytes": weights.bytes if weights else None,
+                "mps_memory_fraction": a.mps_memory_fraction
+                if a.device == "mps"
+                else None,
+                "torch_version": torch.__version__,
                 "query_tile": 256,
                 "tile_if_score_bytes_exceeds": score_budget,
                 "full_key_axis": True,

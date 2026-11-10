@@ -1,0 +1,148 @@
+
+===== request 1 2026-11-01 08:06:26 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 25
+effective_prompt_tokens: 25
+cached_tokens: 0
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 25
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","input":"Remember PHASE27. Reply only PHASE27.","max_output_tokens":16,"reasoning":{"effort":"none"},"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Remember PHASE27. Reply only PHASE27.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8167 ---
+
+PHASE27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 4
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 13.324
+
+content:
+PHASE27
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=25 response_prefill=6 target=31 ---
+
+
+===== request 2 2026-11-01 08:07:09 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 45
+effective_prompt_tokens: 45
+cached_tokens: 0
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 31
+prompt_tokens: 45
+live_prompt_common: 21
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 21
+token_window: [13..30)
+     13 ==          live 17 "2" | prompt 17 "2"
+     14 ==          live 22 "7" | prompt 22 "7"
+     15 ==          live 13 "." | prompt 13 "."
+     16 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+     17 ==          live 198 "\n" | prompt 198 "\n"
+     18 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+     19 ==          live 74455 "assistant" | prompt 74455 "assistant"
+     20 ==          live 198 "\n" | prompt 198 "\n"
+     21 !=          live 248068 "<think>" | prompt 10525 "PH"
+     22 !=          live 271 "\n\n" | prompt 3930 "ASE"
+     23 !=          live 248069 "</think>" | prompt 17 "2"
+     24 !=          live 271 "\n\n" | prompt 22 "7"
+     25 !=          live 10525 "PH" | prompt 248046 "<|im_end|>"
+     26 !=          live 3930 "ASE" | prompt 198 "\n"
+     27 !=          live 17 "2" | prompt 248045 "<|im_start|>"
+     28 !=          live 22 "7" | prompt 846 "user"
+     29 !=          live 248046 "<|im_end|>" | prompt 198 "\n"
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","input":[{"role":"user","content":"Remember PHASE27. Reply only PHASE27."},{"role":"assistant","content":"PHASE27"},{"role":"user","content":"Repeat the code you remembered."}],"max_output_tokens":16,"reasoning":{"effort":"none"},"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Remember PHASE27. Reply only PHASE27.<|im_end|>
+<|im_start|>assistant
+PHASE27<|im_end|>
+<|im_start|>user
+Repeat the code you remembered.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8147 ---
+
+I don't have any code to repeat. I'm an AI assistant designed to
+
+--- parsed message ---
+finish: length
+generated_tokens: 16
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 44.292
+
+content:
+I don't have any code to repeat. I'm an AI assistant designed to
+
+===== end request 2 =====

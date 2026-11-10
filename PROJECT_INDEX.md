@@ -15,6 +15,284 @@ Catalogo, loader e downloader accettano solo Qwen3.8 per la famiglia GGUF
 documenti e fixture dei modelli ritirati conservano evidenze storiche.
 Gli identificativi della shape e delle cache Qwen3.8 restano invariati.
 
+## Piano Metal su Apple Silicon del 28 ottobre 2026
+
+Il [piano Metal del fork](docs/roadmaps/metal-apple-silicon-support-20261028.md)
+definisce il porting Qwen27 `qwen35`, la qualifica Flash Next `qwen4exp` con
+streaming bounded e l'estensione della suite nativa. La priorità aggiornata
+del 29 ottobre è Flash streamed (T06-A), poi 27B con streaming dei pesi densi
+(T06-B), entrambi con contesto massimo 8192/prefill 64 su M5 Pro 24 GB,
+Quick Chat come primo frontend e guard di memoria attivi. La prova di capacità
+allocata resta distinta dall'occupazione effettiva fino a 8k; non si attende
+il budget necessario al 27B residente. La matrice F01–F12 richiede prove
+reali obbligatorie di generazione/editing image, embedding testuali/multimodali,
+ranking e flussi ExMekh, inclusi alternanza e restore del LLM. Stato `IN_PROGRESS`
+dal 29 ottobre; ogni famiglia di kernel richiede quattro confronti con Strata
+a commit fissato, prima della scrittura, dopo la prima parity, durante il tuning
+e dopo l'integrazione. La matrice distingue implementazione e qualifica reale.
+
+File introdotti durante il porting:
+
+- `docs/performance/metal-apple-silicon-20261031/t08-20261106/`: ripresa
+  della qualifica finale, esiti F08, isolamento di restore e segmentazione
+  del prefill, lista dei gate residui e verifica del successivo riesame.
+- `tests/probe_qwen_skill_return.c`: diagnostico opt-in con le API pubbliche
+  di sessione. Confronta tutti i logits dopo payload restore e forward
+  interno, tenendo distinto il prefill freddo e il confine del system prompt.
+  Build con `make tests/probe_qwen_skill_return`.
+- `tools/qualification_memory.py`: policy immutabile dei qualificatori;
+  possiede parsing della riserva, limiti, controllo dei campioni e serializzazione
+  coerente per report e processo figlio. I runner possiedono il lifecycle,
+  mentre `qualify_metal_command.py` campiona il sistema operativo.
+- `tools/qualification_checkpoint.py`, `tests/test_qualification_checkpoint.py`:
+  journal durevole dei cicli validati, identità di binario/modelli/policy,
+  integrità degli artefatti e lock; `qualify_metal_server.py --resume` conserva
+  i tentativi e riprende `qualify_suite_release.py` dall'ultimo ciclo completo.
+  I cicli cumulati fra processi restano distinti dal gate lifetime continuo.
+- `tools/qualification_suite.py`: regole numeriche della suite, digest
+  deterministici, stato idle e statistiche, riutilizzati anche nella ripresa.
+  Il journal possiede sequenza e durabilità, senza conoscere gli owner nativi.
+- `docs/architecture/metal-swap-resume-clean-code-review-20261109.md`:
+  riesame del9–10novembre, correzione della chiusura Numeric rifiutata,
+  responsabilità dei qualificatori e verifiche successive distinte dallo stress.
+- `docs/architecture/metal-t08-clean-code-review-20261106.md`: riesame
+  di configurazione, calcolo puro della capacità, qualificatori e diagnostico
+  T08, con test successivi e commit separati per scopo.
+
+- `ds4_file_reader.h`, `tests/test_file_reader.c`: lettore host proprietario
+  di descriptor duplicato, coda lazy, letture complete/indicizzate, errori e
+  contatori; la cache Metal usa soltanto i suoi metodi. Test senza GPU per
+  EOF parziale, ordinamento, limiti, recovery e fallback dopo startup fallito.
+  Il reader ripartisce letture dense da almeno 32 MiB tra i worker già presenti,
+  con lo stesso buffer e drain; copertura host anche per soglia/code e startup
+  parziale. Campagna Qwen27 Q-P03 verificata e confrontata con B0.
+- `docs/architecture/metal-qwen27-stream-clean-code-review-20261102.md`:
+  riesame reader/coda/cache e consumer adiacenti, esecuzione batch privata
+  condivisa dai pianificatori contigui/indicizzati, test di errori/drain e
+  provenienza del qualificatore; gate Qwen27/MTP/Flash e controllo prima/dopo.
+- `docs/architecture/metal-qwen27-kernel-stream-clean-code-review-20261103.md`:
+  riesame del bundle successivo, validazione degli ingressi embedding prima
+  del dispatch per formato, gather SSD tramite API tensor/scalar, lifecycle
+  distinto per cache transiente e regioni retained; gate e commit per scopo.
+- `docs/architecture/metal-qwen27-adaptive-cache-clean-code-review-20261103.md`:
+  separazione budget/layout, reload a cap zero e validazione della factory;
+  gate Qwen/MTP/Flash e confronto appaiato resident/streamed.
+- `docs/architecture/metal-image-ordered-projection-clean-code-review-20261103.md`:
+  riesame delle proiezioni BF16, selezione del kernel nel proprietario delle
+  pipeline e fallback di capability del tile. Replay e gate Image/Gemma.
+- `docs/performance/metal-inference-20261102/qwen-image/ordered-bf16-20261103/`:
+  proiezioni BF16 ordinate con tile SIMD32, confronto ATen/Strata/ggml,
+  verifica delle fonti pubbliche YASAKANI e gate testo/RGB/RGBA.
+- `docs/architecture/metal-flash-stream-clean-code-review-20261102.md`:
+  riesame di cache/lettore/coda, errori coerenti e regressioni successive
+  alla campagna Flash, conservando le misure prestazionali storiche.
+- `docs/performance/metal-inference-20261102/qwen27/adaptive-stream-20261103/`: cache elastica durante l’uso, picco di restore e riserva2GiB, doppio buffer per layer, audit upstream/XNU e gate numerici/performance.
+- `docs/roadmaps/metal-inference-performance-20261102.md`: piano e registro
+  della campagna prestazionale Metal, un modello alla volta, prima Flash
+  streamed e poi Qwen27. Profilazione prima delle scelte, audit delle fonti
+  a ogni intervento, kernel/scheduling/workflow, dispatch per fase e misure
+  cumulative dei piccoli incrementi; nessuno speedup dedotto da audit statici.
+- `docs/performance/metal-inference-20261102/flash/`: campagna Flash Metal,
+  provenienza DS4 dei kernel, baseline/profilo, audit specifici e misure
+  appaiate dello streaming. Conserva anche rifiuti di ammissione e tentativi
+  incompleti; la qualifica prestazionale resta distinta dai gate numerici.
+- `docs/performance/metal-inference-20261102/qwen27/`: campagna Qwen27
+  streamed successiva a Flash, con B0 propria 8192/64/cache 2 GiB, profilo
+  separato e registro degli interventi/gate; Q-P03 KEEP per letture dense,
+  Q-P02 tile UD ritirato, correttezza e misure appaiate con limiti espliciti;
+  non eredita speedup Flash.
+- `docs/performance/metal-inference-20261102/qwen27/q-p05-row-gather/`
+  fino a `q-p19-embedding-budget/`: continuazione del 3 novembre, gather per riga,
+  residenza bounded, riscrittura UD SIMD32 con due output e tile verifier5,
+  submit prima delle letture e verifiche MTP4. Conserva il rifiuto della
+  riduzione16lane e delle soglie SSD8/64, quota lazy e recovery senza allocazioni
+  ripetute. Il costo embedding minimo Q-P19 resta sperimentale e ritirato
+  dopo il confronto request. `q-p15-upstream-ssd/` confronta DS4 originale890898c con i percorsi
+  Qwen27, Flash e Qwen Image; separa idee trasferibili e copertura misurata.
+- `metal/qwen35.metal` e `ds4_qwen35_metal.inc`: attention ibrida,
+  mRoPE e ricorrenza GDN; il layout del 27B resta distinto da Flash.
+- `metal/qwen35_quants.metal`: embedding/proiezioni UD con codebook condivisi;
+  decoder IQ derivati da Strata, attribuiti in `third_party/strata/LICENSE`.
+- `ds4_numeric_metal.m`, `metal/numeric.metal` e
+  `ds4_numeric_metal_args.h`: primitive F32/BF16 della suite nativa su Metal,
+  classe proprietaria con ivar privati, buffer shared e workspace matriciale
+  temporaneo contabilizzato; gli adapter interrogano il costo tramite API.
+  `metal/numeric_ordered.metal` conserva gli ordini FP32 delle frontiere BF16
+  e i percorsi softmax/trigonometrici verificati contro CPU, con attribuzioni
+  SLEEF/PyTorch. Il backend possiede il dispatch e prepara gli argomenti Metal.
+  `ds4_numeric_internal.h` condivide il calcolo della geometria Conv con il
+  validatore e il riferimento CPU. I modelli usano la stessa API.
+  `tools/embed_metal_numeric.py` incorpora header e shader per le librerie
+  installate, senza richiedere il sorgente a runtime.
+- `docs/performance/metal-inference-20261102/qwen-image/continuation-20261104.md`:
+  esito del ciclo Image: Conv ordinata, budget per richiesta e floor XNU,
+  conferma del bundle finale, tentativo di copia parallela ritirato e residui.
+- `docs/performance/metal-inference-20261102/qwen-image/continuous-cache-20261104/`:
+  budget Image continuo, audit memoria/restore, test del planner e gate seriati.
+- `docs/performance/metal-inference-20261102/qwen-image/group-prefetch-20261105/`:
+  anticipo bounded dei tensori del prossimo blocco DiT, audit specifico e
+  confronto con quota cache comune. `ds4_weight_cache_hint` delega al gruppo
+  bundle e conserva contatori, LRU e ownership dei pesi.
+- `docs/architecture/metal-image-prefetch-clean-code-review-20261105.md`:
+  riesame dei proprietari di geometria, dispatch, costi e hint. Limiti bundle
+  condivisi e verifica della cache tramite il budget pubblico.
+- `tests/test_bundle_group_hint.c`: intercetta i consigli di lettura per
+  verificare selezione dei tensori, limite cumulativo, errori e assenza di
+  allocazioni. `make test-bundle-group-hint` usa soltanto fixture host.
+- `docs/performance/metal-inference-20261102/qwen-image/weight-transport-20261104/`:
+  esperimento di copia parallela esatto ma ritirato dopo il confronto sul
+  modello; conserva il rifiuto e l'ablation seriale, senza flag di prodotto.
+- `tests/test_qwen_image_cache_budget.c`: unità del planner Image, senza
+  pesi/GPU: limite in byte, cap esplicito, margine unificato, vittime e retry
+  dopo un campione non disponibile.
+  `make test-qwen-image-cache-budget`; callback Numeric opzionale per aggiornare
+  capacità correnti senza riscrivere i limiti espliciti.
+- `tools/diagnose_metal_image_convolution.py`: replay I-P02 delle forme Conv2d
+  BF16 del VAE, input deterministici e oracle PyTorch CPU, una libreria Metal
+  per processo; separa timing isolati dalla qualifica della pipeline completa.
+- `docs/performance/metal-inference-20261102/qwen-image/ordered-conv-20261104/`:
+  audit Conv2d Diffusers/ATen/Strata/ggml, kernel ordinato a quattro lane,
+  replay e gate testo/RGB/RGBA con conferma appaiata.
+- `tests/test_qwen35_metal.c`: oracoli indipendenti per quantizzazioni/GDN;
+  `tests/test_suite_numeric.py`: confronto delle primitive Metal con PyTorch
+  tramite `DS4_SUITE_NUMERIC_METAL=1`.
+- `docs/performance/metal-inference-20261102/qwen27/swap-transition-20261106/`:
+  indagine della transizione Qwen27→Image, candidati e ablation, audit XNU
+  di contatori/floor e I/O allineato, gate separati da stress e prestazioni.
+  Qwen50+warmup PASS con swap growth0; prova reale di ripresa1+2cicli,
+  hash e copertura distinti in `resume-verification.json`.
+- `ds4_engine_trim_cache` in `ds4_lifecycle.inc`: API Metal per cedere la sola
+  cache SSD ricostruibile prima del piano di un adapter; conserva sessioni,
+  modello aperto e ceiling, riammettendo la cache al prossimo forward.
+  `ds4_qwen4_metal_stream.inc` possiede fence e ritiro fisico bounded.
+- `ds4_numeric_metal.m`: trasporto DS4B con letture F_NOCACHE allineate e
+  staging host8MiB registrato nel budget; bundle e Numeric mantengono range,
+  identità, disponibilità e fallback CPU/CUDA nei rispettivi proprietari.
+- `ds4_resource_can_release`: query del registro per verificare l'evento
+  prima del teardown; Numeric conserva backend e staging quando close è BUSY.
+  `tests/test_numeric_metal_lifetime.c` verifica il riuso reale dopo il rifiuto
+  tramite le API pubbliche. Il chiamante serializza uso e chiusura del contesto.
+- `ds4_qwen_image_pipeline_release_weights`: rilascio dei pesi ricostruibili
+  nel proprietario Image, con metadata/tokenizer riutilizzabili e rifiuto
+  atomico se un job è aperto. La suite lo usa nell'handoff Metal SSD per
+  cedere la cache dell'adapter inattivo, mantenendo il gate idle esatto.
+- `ds4_metal_memory.h`, `ds4_metal_device.h`: policy e campionamento condivisi
+  da legacy e suite, senza doppio conteggio delle pagine speculative; budget
+  elastico dopo costi futuri/restore e riserva2GiB, contatori VM correnti per
+  evitare snapshot Mach cached dopo crescita o rilascio della cache. Il backend
+  Numeric e il legacy SSD escludono dal reclaim la quota file protetta da XNU
+  anche quando il floor misurato precede il rilascio di un diverso workload
+  wired; il wrapping residente file-backed conserva il proprio campione.
+  L'override comune `DS4_METAL_HOST_RESERVE_BYTES` include il profilo0richiesto
+  il6novembre e si propaga anche alla suite e ai monitor; senza override
+  conserva il default storico2GiB. I profili streamed esplicitano0.
+- `ds4_qwen4_metal_stream.inc`: cache Qwen Metal con cap in byte, letture
+  `pread` di pesi densi ed esperti scelti dal router, indici compattati e fence
+  al cambio layer routed; il piano denso mantiene regioni immutabili e due
+  slot per layer, con fence dell'ultimo consumer prima del refill, quota lazy
+  e ready dopo lettura completa. Resize conserva buffer comuni, riduce o
+  amplia la residenza ai confini dell'esecuzione senza modificare KV/logits.
+  Open/close espliciti, chiavi distinte per layout denso e
+  compatto. Il percorso residente conserva i binding mmap originali.
+- `tests/test_qwen_metal_lifecycle.c`: stato completo Qwen27 target-only e
+  Flash su buffer Metal reali, con cap device di 1 GiB e riserva host di 2 GiB;
+  checkpoint e restore in nuova sessione, guasti atomici, cleanup delle
+  allocazioni parziali e park/release/resume, senza inferenza GGUF.
+  `make test-qwen-metal-lifecycle` esegue le due famiglie in sequenza.
+- `tests/suite_accelerator.h`: scelta Metal/CUDA e budget per i probe nativi.
+  I probe Metal usano la riserva configurata, con default2GiB e override0,
+  anche quando restringono il budget device per una prova; inizializzazione parziale e query fallite
+  conservano ownership e output coerenti. `tests/test_suite_accelerator.c`
+  verifica i rifiuti senza aprire un device.
+- `tests/suite_numeric_api.py`, `tests/test_suite_numeric_api.py`: binding
+  condivisi di sviluppo per test, diagnostici e benchmark. `Numeric` possiede
+  ABI, tensori, sottoviste native, budget, query memoria e teardown ripetibile;
+  i chiamanti diagnostici usano i metodi esposti senza accedere agli handle nativi.
+  `tensor` e `file_tensor` accettano gli stessi dtype pubblici PyTorch; formato
+  ABI e limiti del file rimangono nel proprietario del binding.
+- `tools/diagnose_gemma_metal_bf16.py`,
+  `tests/test_gemma_bf16_diagnostic.py`: replay isolato PLE, scala e RMSNorm,
+  testimoni FP64 per i dot divergenti e cap di memoria; diagnosi distinta
+  dalla qualifica numerica completa. Le evidenze e il riesame sorgenti image
+  sono nella `continuation/` del report Metal.
+- `docs/architecture/metal-diagnostics-clean-code-review-20261029.md`:
+  riesame della continuazione, confini fra owner numerico, trace e CLI,
+  regressioni e debito architetturale ancora presente.
+- `docs/performance/metal-apple-silicon-20261029/`: evidenze compatte delle
+  prove M5 Pro, output PNG/vettori, hash e gate ancora aperti. I risultati
+  standalone non qualificano automaticamente l'alternanza col LLM o il servizio.
+  `offline-foundations/` registra anche build CPU completamente isolata,
+  dry-run dei tre launcher e recovery di entrambe le famiglie senza GGUF.
+  `quick-chat/` registra preparazione del frontend macOS, prompt iniziali
+  confrontati con il renderer C e rifiuto del profilo 4k per RAM insufficiente.
+- `config/qwen27-metal-quick.env.example`: profilo esplicito Quick Chat Metal,
+  precedente preparazione residente 4096/prefill 64, target-only e Responses
+  senza reasoning; `config/flash-metal-streamed.env.example` e
+  `config/qwen27-metal-streamed.env.example` qualificano localmente 8192/64,
+  inclusa occupazione reale di 8176 posizioni con checkpoint e continuazione.
+  `agent/tests/test_ds4_prompt_resources.py` allinea le istruzioni usate dal
+  contatore del frontend alle macro native Qwen27, senza modificare l'inferenza.
+- `docs/architecture/metal-clean-code-review-20261029.md`: riesame di
+  responsabilità, incapsulamento e coerenza; regressioni e modello reale
+  nel distinto `review-verification.json` del report Metal.
+- `tools/build_suite_media_dependencies.py`: build locale riproducibile di
+  FFmpeg/libsoxr anche su Darwin arm64; gli oracle Gemma accettano CPU per
+  il solo modello piccolo di riferimento.
+- `tools/qualify_metal_command.py`, `tools/qualify_metal_server.py`,
+  `tools/qualification_timeouts.py`: processi seriali con riserva host,
+  monitoraggio memoria, cleanup e report per caso/JUnit. Il moltiplicatore
+  locale esplicito scala anche il timeout suite nella sola copia del profilo;
+  `config/metal-local-qualification.env.example` abilita temporaneamente ×4.
+- `tools/qualification_client.py`, `tests/test_qualification_client.py`:
+  invocazione immutabile del client, hash dalla sua directory di lavoro,
+  risoluzione delle opzioni JUnit pubbliche di pytest e verdetti per caso.
+  L'owner identifica l'entrypoint reale, applica alle opzioni duplicate la
+  stessa precedenza di argparse e verifica URL/output del client della suite.
+  Il server orchestra i processi e rifiuta porte già occupate; il client
+  possiede provenienza e risultati, senza inferirli dai messaggi del terminale.
+- `agent/vendor-patches/exmekh-lib-budget.patch`: patch riproducibile della
+  wheel SDK fissata, con test. Il runtime applica la compaction automatica
+  budgeted solo se il request completo si riduce e rispetta il limite;
+  `FileEditingSettings` possiede il timeout interattivo d'ambiente validato.
+  `agent/vendor-patches/README.md` registra revisione, hash e ricostruzione.
+- `agent/tests/file_workflow_profile.py`: profilo Custom esplicito, costruito
+  tramite `AgentDesign`, per qualificare creazione/editing/cancellazione reali
+  con la sola skill file-processing e i tool originali. I controlli di effetti
+  e history sono condivisi con i test Generic, che conservano esiti separati.
+  La variante greedy usa `ProviderRequest.with_extra`, conservando handler,
+  allegati e metadati delle richieste reali. Le prove live rimanenti sono
+  sospese dal 2 novembre: prima una sessione dedicata ai TPS.
+  Il coding-agent bundled dichiara la skill file-processing opzionale nel
+  proprio HDS; `agent/tests/test_agent_design.py` ne verifica inventario diretto
+  e tool raggiungibili con risorse predefinite ed esterne.
+- `tools/qualify_metal_suite.py`, `tools/qualify_qwen_image_pipeline.py`:
+  subset locale e confronti salvati con soglie congelate. Il conditioning
+  image e ogni frontiera interna Gemma sono gate distinti dai pixel/vettori.
+  `tools/suite_offloaded_oracle.py` possiede il trasporto lazy dei pesi per
+  gli oracle HF/Diffusers, mantenendo l'aritmetica dei modelli indipendente.
+- `tools/diagnose_qwen_image_encoder.py`,
+  `tools/diagnose_qwen_image_vision.py`: replay di singoli blocchi tramite
+  `Numeric`, selezione backend/device e tracce pubbliche. Le uscite decoder
+  precedono la fusione deepstack del contenitore, come i forward hook HF.
+- `tests/probe_qwen_metal_stream.c`, `tests/test_flash_metal_stream_graph.c`,
+  `tests/test_metal_stream_qualification.py`, `tests/test_suite_phase_live.py`:
+  occupazione 8k, cache/restore, errori del qualificatore e cancellazione
+  dopo una vera frontiera DiT, con recupero della conversazione.
+- `docs/performance/metal-apple-silicon-20261031/t06-t07/`: gate aggiornati
+  T06/T07 e riesami upstream. Sul subset M5 Pro passano 81/81 frontiere
+  Gemma testo, 480/480 media e 69/69 encoder Qwen per RGB/RGBA; le tre
+  pipeline immagine complete passano contro encoder/DiT CPU e VAE MPS
+  dichiarata. Qualifica client, corpus esteso e altri dispositivi restano
+  separati; la matrice registra i casi ancora aperti.
+- `AGENTS.md`: istruzione permanente di riesaminare HF, Strata, ggml e la
+  ricerca locale per ogni nuova differenza numerica o di prestazioni e per
+  ciascun intervento di ottimizzazione Metal; rinvio al registro della campagna.
+- `docs/architecture/metal-t06-t07-clean-code-review-20261102.md`: riesame
+  dei confini T06/T07, API pubblica Safetensors, risultati client e debito
+  legacy residuo. Evidenze nuove senza modelli completi in
+  `docs/performance/metal-clean-code-review-20261102/`; le prove live
+  rimanenti restano sospese su richiesta dell'utente.
+
 ## Integrazione upstream del 1 ottobre 2026
 
 Il branch dedicato integra `antirez/ds4@0aaea5a` conservando ExMekh Agent come unico
@@ -199,6 +477,11 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   configurazione locale seriale CUDA ed esempi con un solo client/base URL;
   helper e tool usano width/height Literal indipendenti (32..2048, passo 32),
   validazione locale del limite batch e nessuna scelta per modello unico.
+- `docs/architecture/native-image-progress.md` — contratto di
+  progresso image: osservatore comune, SSE, heartbeat, timeout e percentuale
+  sullo skeleton; obbligo di supporto CPU/Metal/CUDA e backend futuri, per
+  Qwen Image e ogni modello image futuro. Include responsabilità e gate;
+  implementazione e prove nel report `native-image-progress-implementation-20261110.md`.
 - `tests/test_suite_http.c`, `tests/test_suite_http_live.py`,
   `tests/test_suite_exmekh_live.py` — protocollo host, SDK reale sulle quattro
   modalità, retry/editing/disconnessione e conversazione ExMekh con KV riusata.
@@ -315,6 +598,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `tools/diagnose_qwen_image_encoder.py`, `tools/diagnose_qwen_image_vision.py`,
   `tools/inventory_suite_primitives.py`, `tools/bench_suite_numeric.py` —
   conversione, inventario, oracle, diagnosi e benchmark offline T07/T08.
+  Il benchmark accetta backend e libreria numerica espliciti; `--bounded`
+  limita i campioni locali a un warm-up e una/due ripetizioni, distinti
+  dalla qualifica statistica standard e da qualsiasi confronto di speedup.
 - `tests/probe_qwen_image_encoder.c`, `tests/test_suite_numeric.py`,
   `tests/test_numeric_lifetime.c`, `tests/test_qwen_image_input.c`, `tests/test_qwen_image_tokenizer.py`,
   `tests/test_qwen_image_preprocess.py` — gate completi di primitive,
@@ -978,6 +1264,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   ExMekh reale avviando `agent/start-ds4-server-flash.sh`, con stato isolato,
   fronti riusati, log per richiesta e memoria GPU; confronta configurazioni
   del launcher a sampling fisso senza caricare conversazioni utente.
+  L'adattatore modifica gli extra tramite l'API pubblica della richiesta,
+  conservando gli allegati già espansi e l'handler interattivo.
 - `tools/qualify_qwen_flash_launcher.py`, `tests/qwen_flash_quality_probe.c` —
   confronto full-vocabulary e loss teacher-forced tramite sessioni di produzione
   a capacità/chunk espliciti, incluso un prompt con gli schemi tool dell'agente.
@@ -1007,6 +1295,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   negative, sanitizer, suite frontend completa e nuova accettazione live.
 - `tools/qwen_flash_launcher.py` — legge i default dal dry-run del launcher;
   benchmark e qualifica non mantengono copie della configurazione Flash.
+  Il backend è un argomento esplicito: i consumer di ricerca CUDA richiedono
+  CUDA anche quando il dry-run viene controllato su un host Metal.
 - `tools/qwen_flash_metrics.py`, `tests/test_qwen_flash_tools.py` — confronto
   teacher-forced condiviso, validazione dei dump e regressioni su lifecycle
   del server, isolamento dei provider e completezza delle coppie A/B.
@@ -1080,9 +1370,9 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `ds4.c` — nucleo verticale del motore: parser GGUF mmap-backed, metadata,
   shape dei modelli, tensor binding, tokenizer, CPU reference, costruzione e
   scheduling del grafo, sessioni, prefill/decode, KV, logits, MTP e payload
-  degli snapshot. Include il percorso specializzato Qwen `qwen35` text-only:
+  degli snapshot. Include il percorso specializzato Qwen `qwen35`:
   validazione del Qwen3.8 27B UD-Q4_K_S, tokenizer/template Qwen e sessione ibrida
-  full-attention/Gated DeltaNet CUDA e prefill layer-major a chunk. Espone il
+  full-attention/Gated DeltaNet CUDA/Metal e prefill layer-major a chunk. Espone il
   salvataggio/ripristino session-scoped su SSD dello stato ricorrente Qwen per
   le frontiere delle skill; per Qwen3.8 UD-Q4_K_S il payload generale portabile
   comprende inoltre timeline, logits, stato GDN, KV full-attention e stato MTP,
@@ -1366,7 +1656,8 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
   `DS4_EXMEKH_LIB_REQUIRE_COMPLETION=1` abilita anche
   il gate separato che richiede una risposta finale spontanea.
 - `tests/test_qwen35_mrope.c` — oracle float64 per mRoPE [11,11,10],
-  identità del percorso testo e KV MTP; target CUDA `test-qwen35-mrope`.
+  attention causale GQA, identità del percorso testo e KV MTP;
+  target Metal/CUDA `test-qwen35-mrope`.
 - `tests/test_server_agentic_payload.c` — checkpoint completi skill/subagent
   per Qwen27 e Flash Next: logits/token bit-exact, sessione ricreata, file
   corrotti e nesting; opzionalmente immagini e contesto testuale popolato.

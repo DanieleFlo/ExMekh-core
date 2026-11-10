@@ -1,0 +1,66 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "tools/bench_suite_numeric.py",
+    "--backend",
+    "metal",
+    "--numeric-library",
+    "tests/libds4_numeric_metal.so",
+    "--bounded",
+    "--repetitions",
+    "2",
+    "--output",
+    "build/metal-qualification/t06-t07-20261031/numeric-local-baseline"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 1200.0,
+  "base_timeout_seconds": 300.0,
+  "timeout_multiplier": 4,
+  "reason": "One warmup and two bounded samples of existing numeric benchmark, no full model active. Same independent references/ceilings; no speedup/statistical claim. Host reserve2GiB; rerun after sandbox denied macOS pressure metric.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 3.0590496670010907,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 27621.232134208,
+      "pressure": 1,
+      "host_available_bytes": 11294244864,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 27622.243585833,
+      "pressure": 1,
+      "host_available_bytes": 10568007680,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 774948112,
+      "resident_bytes": 831504384
+    },
+    {
+      "monotonic": 27623.256067291,
+      "pressure": 1,
+      "host_available_bytes": 9841115136,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 1074398768,
+      "resident_bytes": 1086586880
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/bench_suite_numeric.py": "6d9e0d56a72299713e80c6068125694dc4ef14b83f295218c5e2aab45638919a",
+    "tests/libds4_numeric_metal.so": "61931e5f5c8bd6b2864a980a5ea57f338e86b9de2833693c6b49a31c6d7222d7"
+  },
+  "log_sha256": "51bffb3514459a74d8d1e2bd3e70002d0a3e7358d36cbd7a6c9397249a27c133"
+}

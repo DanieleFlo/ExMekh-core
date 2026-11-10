@@ -1,0 +1,157 @@
+./tests/test_metal_ssd_experts
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+Metal SSD excludes persistent full-expert tables: PASS
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+Metal SSD type=16 batch cache exact outputs: PASS
+Metal SSD seed/release 0: 118.08 MiB footprint
+Metal SSD seed/release 1: 118.09 MiB footprint
+Metal SSD seed/release 2: 118.08 MiB footprint
+Metal SSD seed/release 3: 118.09 MiB footprint
+Metal SSD seed/release 4: 118.08 MiB footprint
+Metal SSD seed/release 5: 118.09 MiB footprint
+Metal SSD seed/release 6: 118.08 MiB footprint
+Metal SSD seed/release 7: 118.09 MiB footprint
+Metal SSD seed/release 8: 118.08 MiB footprint
+Metal SSD seed/release 9: 118.09 MiB footprint
+ds4: Metal memory SSD expert test: runtime 0.00 GiB + streaming experts 0.00 GiB = 0.00 GiB tracked live
+ds4:   runtime tensors live 0.00 MiB peak 14.57 MiB
+ds4:   macOS task memory footprint 0.12 GiB, resident 0.11 GiB, virtual 415.53 GiB
+ds4:   mmap model wrapper creations 1 buffers 0.02 GiB cumulative, 0.02 GiB max (not copied)
+ds4:   model residency requests 0 (ssd-streaming)
+ds4:   device Apple M5 Pro, Metal 4 runtime yes, family yes, MTL4 queue yes, tensor API enabled, M5 neural accelerators likely
+ds4:   accelerated Metal path enabled
+ds4:   device Apple M5 Pro, Metal 4 runtime yes, family yes, MTL4 queue yes, tensor API enabled, M5 neural accelerators likely
+ds4:   scratch 0.25 MiB (flash mask 0.00, pad 0.00, tmp 0.00, blk 0.00, ring 0.00, kv 0.00, compressor 0.00, router 0.00, indexer 0.00, moe 0.25, f16 0.00, raw-store 0.00)
+Metal SSD bounded target views and auxiliary mapping: PASS
+Metal SSD type=16 8-expert eviction: PASS
+./tests/test_metal_ssd_experts --q4
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+Metal SSD excludes persistent full-expert tables: PASS
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+Metal SSD type=12 batch cache exact outputs: PASS
+Metal SSD seed/release 0: 168.36 MiB footprint
+Metal SSD seed/release 1: 168.36 MiB footprint
+Metal SSD seed/release 2: 168.36 MiB footprint
+Metal SSD seed/release 3: 168.36 MiB footprint
+Metal SSD seed/release 4: 168.36 MiB footprint
+Metal SSD seed/release 5: 168.39 MiB footprint
+Metal SSD seed/release 6: 168.39 MiB footprint
+Metal SSD seed/release 7: 168.39 MiB footprint
+Metal SSD seed/release 8: 168.39 MiB footprint
+Metal SSD seed/release 9: 168.39 MiB footprint
+ds4: Metal memory SSD expert test: runtime 0.00 GiB + streaming experts 0.00 GiB = 0.00 GiB tracked live
+ds4:   runtime tensors live 0.00 MiB peak 11.05 MiB
+ds4:   macOS task memory footprint 0.16 GiB, resident 0.21 GiB, virtual 415.63 GiB
+ds4:   mmap model wrapper creations 1 buffers 0.08 GiB cumulative, 0.08 GiB max (not copied)
+ds4:   model residency requests 0 (ssd-streaming)
+ds4:   device Apple M5 Pro, Metal 4 runtime yes, family yes, MTL4 queue yes, tensor API enabled, M5 neural accelerators likely
+ds4:   accelerated Metal path enabled
+ds4:   device Apple M5 Pro, Metal 4 runtime yes, family yes, MTL4 queue yes, tensor API enabled, M5 neural accelerators likely
+ds4:   scratch 0.38 MiB (flash mask 0.00, pad 0.00, tmp 0.00, blk 0.00, ring 0.00, kv 0.00, compressor 0.00, router 0.00, indexer 0.00, moe 0.38, f16 0.00, raw-store 0.00)
+Metal SSD bounded target views and auxiliary mapping: PASS
+Metal SSD type=12 6-expert eviction: PASS
+./tests/test_metal_ssd_experts --mxfp4
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+Metal SSD excludes persistent full-expert tables: PASS
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+Metal SSD type=39 batch cache exact outputs: PASS
+Metal SSD seed/release 0: 136.19 MiB footprint
+Metal SSD seed/release 1: 136.19 MiB footprint
+Metal SSD seed/release 2: 136.19 MiB footprint
+Metal SSD seed/release 3: 136.19 MiB footprint
+Metal SSD seed/release 4: 136.19 MiB footprint
+Metal SSD seed/release 5: 136.19 MiB footprint
+Metal SSD seed/release 6: 136.19 MiB footprint
+Metal SSD seed/release 7: 136.19 MiB footprint
+Metal SSD seed/release 8: 136.19 MiB footprint
+Metal SSD seed/release 9: 136.19 MiB footprint
+ds4: Metal memory SSD expert test: runtime 0.00 GiB + streaming experts 0.00 GiB = 0.00 GiB tracked live
+ds4:   runtime tensors live 0.00 MiB peak 11.05 MiB
+ds4:   macOS task memory footprint 0.13 GiB, resident 0.15 GiB, virtual 415.57 GiB
+ds4:   mmap model wrapper creations 1 buffers 0.05 GiB cumulative, 0.05 GiB max (not copied)
+ds4:   model residency requests 0 (ssd-streaming)
+ds4:   device Apple M5 Pro, Metal 4 runtime yes, family yes, MTL4 queue yes, tensor API enabled, M5 neural accelerators likely
+ds4:   accelerated Metal path enabled
+ds4:   device Apple M5 Pro, Metal 4 runtime yes, family yes, MTL4 queue yes, tensor API enabled, M5 neural accelerators likely
+ds4:   scratch 0.25 MiB (flash mask 0.00, pad 0.00, tmp 0.00, blk 0.00, ring 0.00, kv 0.00, compressor 0.00, router 0.00, indexer 0.00, moe 0.25, f16 0.00, raw-store 0.00)
+Metal SSD bounded target views and auxiliary mapping: PASS
+Metal SSD type=39 6-expert eviction: PASS
+MTL_DEBUG_LAYER=1 ./tests/test_metal_command_memory
+2026-10-29 15:16:23.645 test_metal_command_memory[73583:1188912] Metal API Validation Enabled
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+Metal copies: 1024 batches, heap 22.566 MiB
+Metal copies: 2048 batches, heap 22.566 MiB
+Metal copies: 3072 batches, heap 22.566 MiB
+Metal copies: 4096 batches, heap 22.566 MiB
+Metal copies: 5120 batches, heap 22.566 MiB
+Metal copies: 6144 batches, heap 22.566 MiB
+Metal copies: 7168 batches, heap 22.566 MiB
+Metal copies: 8192 batches, heap 22.566 MiB
+Metal copy contents, asynchronous flush and bounded command heap: PASS
+MTL_DEBUG_LAYER=1 ./tests/test_metal_command_memory row
+2026-10-29 15:16:28.270 test_metal_command_memory[73614:1189078] Metal API Validation Enabled
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+Metal TP mode 0: 1024 gates, heap 22.910 MiB
+Metal TP mode 0: 2048 gates, heap 22.910 MiB
+Metal TP mode 0: 3072 gates, heap 22.910 MiB
+Metal TP mode 0: 4096 gates, heap 22.910 MiB
+Metal TP mode 0: 5120 gates, heap 22.910 MiB
+Metal TP mode 0: 6144 gates, heap 22.910 MiB
+Metal TP mode 0: 7168 gates, heap 22.910 MiB
+Metal TP mode 0: 8192 gates, heap 22.910 MiB
+Metal TP payloads, ordered loopback exchanges and bounded command heap: PASS
+MTL_DEBUG_LAYER=1 ./tests/test_metal_command_memory session
+2026-10-29 15:16:29.106 test_metal_command_memory[73688:1189191] Metal API Validation Enabled
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+Metal TP mode 1: 1024 gates, heap 22.836 MiB
+Metal TP mode 1: 2048 gates, heap 22.840 MiB
+Metal TP mode 1: 3072 gates, heap 22.840 MiB
+Metal TP mode 1: 4096 gates, heap 22.840 MiB
+Metal TP mode 1: 5120 gates, heap 22.840 MiB
+Metal TP mode 1: 6144 gates, heap 22.840 MiB
+Metal TP mode 1: 7168 gates, heap 22.840 MiB
+Metal TP mode 1: 8192 gates, heap 22.840 MiB
+Metal TP payloads, ordered loopback exchanges and bounded command heap: PASS
+MTL_DEBUG_LAYER=1 ./tests/test_metal_command_memory batch
+2026-10-29 15:16:29.820 test_metal_command_memory[73700:1189261] Metal API Validation Enabled
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+Metal TP mode 2: 1024 gates, heap 22.855 MiB
+Metal TP mode 2: 2048 gates, heap 22.855 MiB
+Metal TP mode 2: 3072 gates, heap 22.857 MiB
+Metal TP mode 2: 4096 gates, heap 22.857 MiB
+Metal TP mode 2: 5120 gates, heap 22.857 MiB
+Metal TP mode 2: 6144 gates, heap 22.857 MiB
+Metal TP mode 2: 7168 gates, heap 22.857 MiB
+Metal TP mode 2: 8192 gates, heap 22.857 MiB
+Metal TP payloads, ordered loopback exchanges and bounded command heap: PASS
+MTL_DEBUG_LAYER=1 ./tests/test_metal_command_memory big
+2026-10-29 15:16:30.408 test_metal_command_memory[73712:1189335] Metal API Validation Enabled
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+Metal TP mode 3: 1024 gates, heap 22.703 MiB
+Metal TP mode 3: 2048 gates, heap 22.703 MiB
+Metal TP mode 3: 3072 gates, heap 22.836 MiB
+Metal TP mode 3: 4096 gates, heap 22.836 MiB
+Metal TP mode 3: 5120 gates, heap 22.839 MiB
+Metal TP mode 3: 6144 gates, heap 22.839 MiB
+Metal TP mode 3: 7168 gates, heap 22.839 MiB
+Metal TP mode 3: 8192 gates, heap 22.839 MiB
+Metal TP payloads, ordered loopback exchanges and bounded command heap: PASS

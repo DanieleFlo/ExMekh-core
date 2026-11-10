@@ -1,0 +1,41 @@
+{
+  "kind": "encoder-implementation-parity",
+  "backend": "metal",
+  "tokens": 64,
+  "projection": 2560,
+  "min_cos": 0.99,
+  "mmproj": "gguf/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+  "mmproj_sha256": "b2e9b5e4a44c107f8867e67dbf09b607fd99ae33c1a97a60a6720aeb252a9dad",
+  "image": "tests/vision-fixtures/glm53/earth.jpg",
+  "image_sha256": "a48278513a38768ff92247972e60bc873eb361a8527cb8686a3e19c3ae1bdf9d",
+  "source_sha256": {
+    "ds4.c": "c1fe44fc3a2cffb5804f746cee37c6e4f4b7490de0847e2dcae429897f69420b",
+    "ds4_metal.m": "6e3845832f491a6f0a58ea1de585a9c576269a8010694bd89d700084150c9b4b",
+    "metal/qwen4_vision.metal": "b37c7fc2c66131bf5817621920a6b5b30271af21160e7da33edc71e2d5c7fb4b",
+    "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tools/qualify_qwen_metal_vision.py": "a7885c04d28a57c56062abf54775643f77c81d63d3482665e9b7acbe3e8e0cd4"
+  },
+  "versions": {
+    "torch": "2.15.0",
+    "transformers": "5.21.0.dev0",
+    "numpy": "2.5.4",
+    "gguf": "0.19.0",
+    "pillow": "12.3.0"
+  },
+  "llm_multimodal_gate": "NOT_VERIFIED",
+  "shape": [
+    56,
+    2560
+  ],
+  "grid": [
+    7,
+    8
+  ],
+  "implementation": {
+    "pass": false,
+    "min_cos": 0.973507651574122,
+    "mean_cos": 0.9980626051401843,
+    "worst_token": 6,
+    "max_abs": 0.03642062470316887,
+    "mean_abs": 0.0016979058462015485
+  }
+}

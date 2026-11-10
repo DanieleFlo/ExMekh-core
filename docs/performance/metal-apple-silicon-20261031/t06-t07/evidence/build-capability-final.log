@@ -1,0 +1,25 @@
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4.o ds4.c
+cc -O3 -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_qwen35_metal_features tests/test_qwen35_metal_features.c ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+ds4.c:59351:72: warning: unused parameter 'model' [-Wunused-parameter]
+ 59351 | static bool qwen4_graph_alloc(ds4_In file included from tests/test_qwen35_metal_features.c:qwen4_gpu_graph *g, const ds4_model *model3:
+tests/../ds4.c:59351:72: warning: unused parameter 'model' [-Wunused-parameter]
+, const 59351 | static bool qwen4_gra ds4_weights *w, uint32_t ctph_alloc(ds4_x_cap, uqwen4_gpu_graph *g, coint32_nst ds4_model *modt cap_toel, const ds4_weights *w, uikens,
+       |                                                                        ^
+nt32_t ctx_cap, uint32_t cap_tokens,
+       |                                                                        ^
+ds4.c:59656:58: warning: unused parameter 'g' [-Wunused-parameter]
+tests/../ds4.c:59656:58: warning: unused parameter 'g' [-Wunused-parameter]
+ 59656 | static bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_grap 59656 | sh *g) {
+       |                                                          ^
+tatic bool qwen4_graph_truncate_kv(ds4_qwen4_gpu_graph *g) {
+       |                                                          ^
+tests/test_qwen35_metal_features.c:25:11: error: invalid argument type 'void' to unary expression
+   25 |     CHECK(!ds4_runtime_release(engine.runtime));
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests/qwen35_metal_fixture.h:7:15: note: expanded from macro 'CHECK'
+    7 |         if (!(x)) {                                                                                \
+      |               ^
+2 warnings and 1 error generated.
+make: *** [tests/test_qwen35_metal_features] Error 1
+make: *** Waiting for unfinished jobs....
+2 warnings generated.

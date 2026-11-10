@@ -1,0 +1,50 @@
+{
+  "scope": "Host stack samples only; GPU work appears as wait in the owning dispatch. Windows differ between stages and first/cached steps, so counts are not paired speedups.",
+  "profiles": [
+    {
+      "path": "build/metal-perf-image-20261103/profile-baseline.sample",
+      "phase": "encoder and DiT startup",
+      "sampled_host_stacks": {
+        "nm_gemm": 215,
+        "nm_conv": 0,
+        "_platform_memmove": 402
+      }
+    },
+    {
+      "path": "build/metal-perf-image-20261103/profile-baseline-dit.sample",
+      "phase": "baseline cached DiT",
+      "sampled_host_stacks": {
+        "nm_gemm": 469,
+        "nm_conv": 0,
+        "_platform_memmove": 170
+      }
+    },
+    {
+      "path": "build/metal-perf-image-20261103/profile-candidate-dit-rgb.sample",
+      "phase": "candidate RGB DiT",
+      "sampled_host_stacks": {
+        "nm_gemm": 236,
+        "nm_conv": 0,
+        "_platform_memmove": 434
+      }
+    },
+    {
+      "path": "build/metal-perf-image-20261103/profile-candidate-dit-text.sample",
+      "phase": "candidate text DiT",
+      "sampled_host_stacks": {
+        "nm_gemm": 216,
+        "nm_conv": 0,
+        "_platform_memmove": 429
+      }
+    },
+    {
+      "path": "build/metal-perf-image-20261103/profile-candidate-vae-text.sample",
+      "phase": "candidate text VAE",
+      "sampled_host_stacks": {
+        "nm_gemm": 0,
+        "nm_conv": 415,
+        "_platform_memmove": 0
+      }
+    }
+  ]
+}

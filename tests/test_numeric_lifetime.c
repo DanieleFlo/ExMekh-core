@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 typedef struct {
-  int failed, live, allocation_failed, close_failed, closed;
+  int failed, live, allocation_failed, close_failed, closed, preparations;
 } state;
 static ds4_status allocate(void *p, uint64_t n, void **out) {
   if (((state *)p)->allocation_failed) {
@@ -30,6 +30,7 @@ static ds4_status fence(void *p) {
 }
 static void close_backend(void *p) { ((state *)p)->closed++; }
 static ds4_status prepare_close(void *p) {
+  ((state *)p)->preparations++;
   return ((state *)p)->close_failed ? DS4_STATUS_INFERENCE : DS4_STATUS_OK;
 }
 int main(void) {
@@ -47,6 +48,10 @@ int main(void) {
   assert(!ds4_numeric_create(&n, &ops, &s, r, 901, false));
   assert(!ds4_num_alloc(n, 128, DS4_NUM_F32, &a));
   assert(!ds4_num_alloc(n, 128, DS4_NUM_BF16, &b));
+  assert(ds4_num_buffer_stage_file(a, 0, 0, 0, 512) == DS4_STATUS_UNSUPPORTED);
+  assert(ds4_num_buffer_stage_file(a, 1, 0, 0, 512) == DS4_STATUS_INVALID);
+  assert(ds4_num_buffer_stage_file(a, 0, -1, 0, 512) == DS4_STATUS_INVALID);
+  assert(ds4_num_buffer_stage_file(a, 0, 0, INT64_MAX, 1) == DS4_STATUS_INVALID);
   s.failed = 1;
   assert(ds4_num_free(a) == DS4_STATUS_DEVICE_LOST);    /* owner keeps a */
   assert(ds4_num_dispose(b) == DS4_STATUS_DEVICE_LOST); /* context keeps b */
@@ -100,7 +105,9 @@ int main(void) {
   scope = ds4_reservation_enter(lease);
   assert(!ds4_numeric_create(&n, &ops, &s, r, 901, false));
   ds4_reservation_leave(&scope);
+  int preparations = s.preparations;
   assert(ds4_numeric_close(n) == DS4_STATUS_BUSY && s.closed == 1);
+  assert(s.preparations == preparations); /* Rejected close must preserve the backend. */
   ds4_resources_complete(r, 9);
   assert(!ds4_numeric_close(n) && s.closed == 2);
   assert(!ds4_reservation_cancel(lease));

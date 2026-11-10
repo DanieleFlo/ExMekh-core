@@ -1,0 +1,229 @@
+
+===== request 1 2026-11-01 09:10:41 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 299
+effective_prompt_tokens: 299
+cached_tokens: 0
+max_tokens: 128
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 299
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"role":"user","content":"Remember code ALFA17. Call generate_image with prompt 'A red square on white.'. After its result, reply with the code."}],"max_output_tokens":128,"reasoning":{"effort":"none"},"temperature":0,"tool_choice":"required","tools":[{"type":"function","name":"generate_image","description":"Generate the requested image.","parameters":{"type":"object","properties":{"prompt":{"type":"string"}},"required":["prompt"],"additionalProperties":false}}]}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "generate_image", "description": "Generate the requested image.", "parameters": {"type":"object","properties":{"prompt":{"type":"string"}},"required":["prompt"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Remember code ALFA17. Call generate_image with prompt 'A red square on white.'. After its result, reply with the code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=128 ctx_room=7893 ---
+
+<tool_call>
+
+--- trace: entered tool-call block after 1 generated tokens ---
+
+
+<function=generate_image>
+<parameter=prompt>
+A red square on white.
+</parameter>
+</function>
+</tool_call>
+
+--- trace: closed tool-call block after 31 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 31
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 62.883
+
+tool_call[0]:
+id: call_9dd19ccc3be4fdccf5a3021db4148e66
+name: generate_image
+arguments:
+{"prompt": "A red square on white."}
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=299 response_prefill=32 target=331 ---
+
+
+===== request 2 2026-11-01 09:15:26 =====
+kind: chat
+model: qwen3.8-flash-next
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 284
+effective_prompt_tokens: 358
+cached_tokens: 331
+max_tokens: 32
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 331
+prompt_tokens: 284
+live_prompt_common: 262
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: responses-tool-output
+cached_tokens: 331
+disk_cached_tokens: 0
+
+first_mismatch_token: 262
+token_window: [254..271)
+    254 ==          live 510 "</" | prompt 510 "</"
+    255 ==          live 95328 "IMPORTANT" | prompt 95328 "IMPORTANT"
+    256 ==          live 29 ">" | prompt 29 ">"
+    257 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+    258 ==          live 198 "\n" | prompt 198 "\n"
+    259 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+    260 ==          live 846 "user" | prompt 846 "user"
+    261 ==          live 198 "\n" | prompt 198 "\n"
+    262 !=          live 27656 "Remember" | prompt 248066 "<tool_response>"
+    263 !=          live 1970 " code" | prompt 198 "\n"
+    264 !=          live 8488 " AL" | prompt 1841 "Image"
+    265 !=          live 3505 "FA" | prompt 7658 " generated"
+    266 !=          live 16 "1" | prompt 7544 " successfully"
+    267 !=          live 22 "7" | prompt 13 "."
+    268 !=          live 13 "." | prompt 3301 " Return"
+    269 !=          live 6920 " Call" | prompt 279 " the"
+    270 !=          live 6707 " generate" | prompt 25624 " remembered"
+
+--- raw request json ---
+{"model":"qwen3.8-flash-next","input":[{"type":"function_call_output","call_id":"call_9dd19ccc3be4fdccf5a3021db4148e66","output":"Image generated successfully. Return the remembered code."}],"max_output_tokens":32,"reasoning":{"effort":"none"},"temperature":0,"tool_choice":"auto","tools":[{"type":"function","name":"generate_image","description":"Generate the requested image.","parameters":{"type":"object","properties":{"prompt":{"type":"string"}},"required":["prompt"],"additionalProperties":false}}]}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "generate_image", "description": "Generate the requested image.", "parameters": {"type":"object","properties":{"prompt":{"type":"string"}},"required":["prompt"],"additionalProperties":false}}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+<tool_response>
+Image generated successfully. Return the remembered code.
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=32 ctx_room=7834 ---
+
+ALFA17
+
+--- parsed message ---
+finish: stop
+generated_tokens: 4
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 7.835
+
+content:
+ALFA17
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=358 response_prefill=5 target=363 ---
+

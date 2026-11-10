@@ -1,0 +1,39 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Qwen35 NextN MTP support model loaded: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/gguf/mtp-Qwen3.8-27B-Q4_0.gguf (stages=1 draft=2)
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 1.06 GiB (raw 1.06 + compressed 0.00) + buffers 0.62 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 3.68 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=0 backend=metal
+1101 08:16:33 ds4-server: loaded model Qwen3.8-27B-UD-Q4_K_S.gguf
+1101 08:16:33 ds4-server: context buffers 1199.24 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=0)
+1101 08:16:46 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-agentic-common_prefix_name_is_constrained_to_exact_allowed_name/kv (budget=8192 MiB, cross-quant=reject, min=1, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1101 08:16:46 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-agentic-common_prefix_name_is_constrained_to_exact_allowed_name/kv/agentic.81THlr
+1101 08:16:46 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-agentic-common_prefix_name_is_constrained_to_exact_allowed_name/trace.log
+1101 08:16:46 ds4-server: listening on http://127.0.0.1:18080
+1101 08:16:48 ds4-server: kv cache load failed RESPPROTO /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-agentic-common_prefix_name_is_constrained_to_exact_allowed_name/kv/699045025f2dbb033e84b89a6f3209f1a819b6ed.kv: incompatible Qwen persistent session payload load=9.7 ms
+1101 08:16:48 ds4-server: kv cache discarded failed text-prefix payload RESPPROTO /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-agentic-common_prefix_name_is_constrained_to_exact_allowed_name/kv/699045025f2dbb033e84b89a6f3209f1a819b6ed.kv
+1101 08:16:48 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prompt start
+1101 08:16:54 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 64/647 (9.9%) chunk=0.00 t/s avg=10.31 t/s 6.209s
+1101 08:17:00 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 128/647 (19.8%) chunk=10.20 t/s avg=10.26 t/s 12.481s
+1101 08:17:06 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 192/647 (29.7%) chunk=10.27 t/s avg=10.26 t/s 18.714s
+1101 08:17:13 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 256/647 (39.6%) chunk=10.31 t/s avg=10.27 t/s 24.922s
+1101 08:17:19 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 320/647 (49.5%) chunk=10.33 t/s avg=10.28 t/s 31.120s
+1101 08:17:25 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 384/647 (59.4%) chunk=10.23 t/s avg=10.27 t/s 37.377s
+1101 08:17:31 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 448/647 (69.2%) chunk=10.03 t/s avg=10.24 t/s 43.760s
+1101 08:17:38 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 512/647 (79.1%) chunk=10.06 t/s avg=10.22 t/s 50.122s
+1101 08:17:44 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 576/647 (89.0%) chunk=10.08 t/s avg=10.20 t/s 56.473s
+1101 08:17:49 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 617/647 (95.4%) chunk=8.31 t/s avg=10.05 t/s 61.406s
+1101 08:17:49 ds4-server: resident system frontier captured tokens=617 bytes=235.36 MiB location=host 33.325ms
+1101 08:17:49 ds4-server: agent-system boundary system_tokens=617 prompt_tokens=647 syntax=qwen
+1101 08:17:49 ds4-server: kv cache stored tokens=617 trimmed=30 reason=agent-system key=rendered-system size=235.36 MiB save=86.8 ms
+1101 08:17:53 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prefill chunk 647/647 (100.0%) chunk=6.84 t/s avg=9.83 t/s 65.790s
+1101 08:17:53 ds4-server: chat ctx=0..647:647 RESPPROTO TOOLS prompt done 65.790s
+1101 08:17:53 ds4-server: response frontier captured tokens=647 bytes=151.52 MiB location=vram 31.879ms
+1101 08:20:46 ds4-server: phase profile ctx=0..647:647 gen=39 mode=trie wall=172345.971ms forced_build=308.848ms/43 forced_sync=0.000ms/0/0_tok forced_prefix_probe=85.799ms sampling_mask_build=553.797ms oracle_compare=0.000ms/0/0_div constraint_cpu=641.163ms constraint_cpu_exposed=641.163ms constraint_cpu_overlapped=0.000ms filter_setup=94.174ms filter=459.623ms filtered_sample=1.567ms/43 plain_sample=0.000ms/0 eval=102840.914ms/33 residual=68863.894ms vocab=10677760 filter_calls=8698797 accepted=498731 finite_allowed=498731 piece_bytes=64642361 candidate_tokens_tested=8693061 parser_transition_count=170428396 parser_bytes_visited=170428396 trie_nodes_visited=5736 subtrees_pruned=3781 trie_leaf_tokens_emitted=1262 mask_cache_hit=1 mask_cache_miss=42 grammar_compile_ms=0.000 grammar_jit_ms=0.000 trie_compile_ms=94.168 trie_compiled_nodes=592346 trie_memory_bytes=30531808 static_mask_compile_ms=20.260 static_mask_memory_bytes=764588 dynamic_frontier_size=599 search_static_steps=1 search_static_fallbacks=7 mtp_constrained_target_only_steps=29 mtp_constrained_speculative_cycles=33 mtp_constrained_sampled_rows=13 mtp_constrained_accepted_drafts=7 mtp_constrained_fallbacks=37 constraint_state_checkpoint=8698689 constraint_state_rollback=8698689 exhaustive_fallback_steps=0
+1101 08:20:46 ds4-server: chat ctx=647..686:39 gen=39 RESPPROTO TOOLS DSML_START DSML_END decoding chunk=0.23 t/s avg=0.23 t/s 172.346s
+1101 08:20:46 ds4-server: tool calls ctx=0..647:647 RESPPROTO n=1 raw_tool_text=1 ids=[call_1ba352400d29d8576aea87d98734eed9] names=[safe_tool/child]
+1101 08:20:46 ds4-server: chat ctx=0..647:647 gen=39 RESPPROTO TOOLS DSML_START DSML_END finish=tool_calls 238.169s
+1101 08:20:46 ds4-server: shutdown requested, draining requests
+1101 08:20:51 ds4-server: post-response checkpoint rebuilt source=memory-request cached=647 response_prefill=41 target=688 location=vram 5103.406ms

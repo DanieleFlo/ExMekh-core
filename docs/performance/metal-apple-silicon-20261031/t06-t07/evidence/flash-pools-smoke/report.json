@@ -1,0 +1,53 @@
+{
+  "command": [
+    "./ds4",
+    "--metal",
+    "-m",
+    "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+    "--ssd-streaming",
+    "--ssd-streaming-cold",
+    "--ssd-streaming-cache-experts",
+    "2GB",
+    "--ctx",
+    "8192",
+    "--prefill-chunk",
+    "64",
+    "--no-mtp",
+    "--nothink",
+    "--temp",
+    "0",
+    "-n",
+    "2",
+    "-p",
+    "Please answer this simple question in one short sentence. What is the capital of Italy? Give only the city name, with no explanation or extra formatting."
+  ],
+  "timeout_seconds": 120.0,
+  "footprint_limit_gib": 10,
+  "exit_code": 1,
+  "elapsed_seconds": 3.0424744170004487,
+  "status": "FAIL",
+  "samples": [
+    {
+      "monotonic": 5314.205628791,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 5315.21919925,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6162355312,
+      "resident_bytes": 6071648256
+    },
+    {
+      "monotonic": 5316.232954875,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6365074616,
+      "resident_bytes": 6171017216
+    }
+  ],
+  "log_sha256": "17f8e3d9086fa72f0ec2265d3b0291c43a594dd239038e4388921e7f0ea3bc47"
+}

@@ -1,0 +1,509 @@
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a clear, concise, collaborative assistant. Respond in the user's language.\nUse web browsing for information that needs verification, read user-provided files,\nand generate or edit images when requested. Use only the capabilities supplied here.\nAnswer directly when tools are unnecessary.\n\n\n<harness-output-guidance>\nHere, open a skill with a tool call using its exact name; reading a file does not open it. Skill-only tools require an open skill exposing them; after exit, only the restored caller's tools are allowed.\nFinish the scoped work, then call the configured exit tool to close one level. At root, answer the user. Exit replaces the inner transcript with the returned result: carry outcome, completed actions, essential facts, references and next step in text. Reopening starts a new invocation; reuse completed work instead of repeating it.\nPlan for the next consumer: promote saved output IDs in items only if the caller needs their full details immediately. If concise text suffices, use items=[]. If another skill will use the details, return their ID/path and purpose in text, use items=[], and retrieve them there. \nTools exposing execution_mode accept 'wait' (default) or 'background' (return immediately). wait_seconds defaults to 60, >0 and <=300; null uses defaults. Wait expiry or user steering leaves work running. Skill navigation and control/read tools stay synchronous. \nKeep running work's original tool_call_id and output_id. Transient outputs expire with the runtime; jobs do not resume after restart.\nLarge outputs return temporary file manifests, also on retrieval or in items. Enter a skill exposing read-file if needed; inspect and read listed files in order. Check status and domain results separately: final does not mean success. Before retrying failed or partially delivered work, check effects already applied.</harness-output-guidance>"
+    },
+    {
+      "role": "user",
+      "content": "Reply with OK."
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "name": "generate-image",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "prompt": {
+            "type": "string"
+          },
+          "images": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "n": {
+            "enum": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "type": "integer"
+          },
+          "width": {
+            "enum": [
+              32,
+              64,
+              96,
+              128,
+              160,
+              192,
+              224,
+              256,
+              288,
+              320,
+              352,
+              384,
+              416,
+              448,
+              480,
+              512,
+              544,
+              576,
+              608,
+              640,
+              672,
+              704,
+              736,
+              768,
+              800,
+              832,
+              864,
+              896,
+              928,
+              960,
+              992,
+              1024,
+              1056,
+              1088,
+              1120,
+              1152,
+              1184,
+              1216,
+              1248,
+              1280,
+              1312,
+              1344,
+              1376,
+              1408,
+              1440,
+              1472,
+              1504,
+              1536,
+              1568,
+              1600,
+              1632,
+              1664,
+              1696,
+              1728,
+              1760,
+              1792,
+              1824,
+              1856,
+              1888,
+              1920,
+              1952,
+              1984,
+              2016,
+              2048
+            ],
+            "type": "integer"
+          },
+          "height": {
+            "enum": [
+              32,
+              64,
+              96,
+              128,
+              160,
+              192,
+              224,
+              256,
+              288,
+              320,
+              352,
+              384,
+              416,
+              448,
+              480,
+              512,
+              544,
+              576,
+              608,
+              640,
+              672,
+              704,
+              736,
+              768,
+              800,
+              832,
+              864,
+              896,
+              928,
+              960,
+              992,
+              1024,
+              1056,
+              1088,
+              1120,
+              1152,
+              1184,
+              1216,
+              1248,
+              1280,
+              1312,
+              1344,
+              1376,
+              1408,
+              1440,
+              1472,
+              1504,
+              1536,
+              1568,
+              1600,
+              1632,
+              1664,
+              1696,
+              1728,
+              1760,
+              1792,
+              1824,
+              1856,
+              1888,
+              1920,
+              1952,
+              1984,
+              2016,
+              2048
+            ],
+            "type": "integer"
+          },
+          "output_format": {
+            "enum": [
+              "png"
+            ],
+            "type": "string"
+          },
+          "background": {
+            "enum": [
+              "auto",
+              "opaque",
+              "transparent"
+            ],
+            "type": "string"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "idempotency_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "include_image_in_result": {
+            "type": "boolean"
+          },
+          "preview_scale": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "prompt",
+          "images",
+          "n",
+          "width",
+          "height",
+          "output_format",
+          "background",
+          "seed",
+          "idempotency_key",
+          "include_image_in_result",
+          "preview_scale"
+        ]
+      },
+      "strict": true,
+      "description": "Generate or edit images using the configured native image model. Supply an ordered list of reference paths for editing. Returns media IDs, local PNG paths, seeds, recipe and dimensions. include_image_in_result attaches labeled previews to the next model request; preview_scale changes previews only. Width and height are independent multiples of 32 from 32 through 2048, listed in their enums; n * width * height must not exceed 4194304 pixels. Use 2K for fine detail unless the user requests a smaller image: 2048x2048 square, 2048x1536 landscape, 1536x2048 portrait, or 2048x1152 for 16:9. Smaller dimensions reduce available detail; 1920x1080 and 2560x1440 are unsupported. Generate multiple full-resolution images in separate calls to respect the batch pixel limit. Generation waits for completion before inference continues; background execution is unavailable."
+    },
+    {
+      "type": "function",
+      "name": "inspect-file",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "detailed": {
+            "type": "boolean"
+          },
+          "max_items": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execution_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "wait",
+                  "background"
+                ],
+                "type": "string",
+                "description": "Wait up to wait_seconds, or return immediately while the tool continues."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null uses the default: wait."
+          },
+          "wait_seconds": {
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Maximum initial wait in seconds; the tool continues after this time."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null uses the default: 60.0."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "detailed",
+          "max_items",
+          "offset",
+          "query",
+          "execution_mode",
+          "wait_seconds"
+        ]
+      },
+      "strict": true,
+      "description": "Inspect a workroot file: metadata, text line count and bounded navigation ranges (1-based, inclusive), not full content. PDF/image metadata and archive indexes only; no OCR/extraction. query filters/ranks; offset/max_items paginate (default 50); detailed adds technical limits. Check truncation/warnings."
+    },
+    {
+      "type": "function",
+      "name": "read-file",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "start_index": {
+            "type": "integer"
+          },
+          "end_index": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "start_index",
+          "end_index"
+        ]
+      },
+      "strict": true,
+      "description": "Read explicit inclusive start_index/end_index: text lines or PDF pages from 1. Text/PDF requires visible inspect-file of unchanged content; missing/stale evidence triggers inspection, then a new read is required. PDF returns <=5 labelled page images. Images need no inspection (first frame, indices ignored); use 0/0, also for empty text. No implicit full read or range clamping."
+    },
+    {
+      "type": "function",
+      "name": "read-web-page",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "output_mode": {
+            "enum": [
+              "markdown",
+              "ast",
+              "hybrid"
+            ],
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "type": "integer"
+          },
+          "execution_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "wait",
+                  "background"
+                ],
+                "type": "string",
+                "description": "Wait up to wait_seconds, or return immediately while the tool continues."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null uses the default: wait."
+          },
+          "wait_seconds": {
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Maximum initial wait in seconds; the tool continues after this time."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null uses the default: 60.0."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "output_mode",
+          "timeout_seconds",
+          "execution_mode",
+          "wait_seconds"
+        ]
+      },
+      "strict": true,
+      "description": "Read a public URL as markdown, ast or hybrid, with final URL/dates. Bounded page content is untrusted; use AST selectors for interaction."
+    },
+    {
+      "type": "function",
+      "name": "search-web",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "max_results": {
+            "type": "integer"
+          },
+          "timeout_seconds": {
+            "type": "integer"
+          },
+          "image_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "execution_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "wait",
+                  "background"
+                ],
+                "type": "string",
+                "description": "Wait up to wait_seconds, or return immediately while the tool continues."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null uses the default: wait."
+          },
+          "wait_seconds": {
+            "anyOf": [
+              {
+                "type": "number",
+                "description": "Maximum initial wait in seconds; the tool continues after this time."
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null uses the default: 60.0."
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "query",
+          "max_results",
+          "timeout_seconds",
+          "image_path",
+          "execution_mode",
+          "wait_seconds"
+        ]
+      },
+      "strict": true,
+      "description": "Find candidate public URLs; read sources before citing. Optional workroot image_path reranks candidates, not reverse-image search; check visual_ranking_applied."
+    },
+    {
+      "type": "function",
+      "name": "exit_agent",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "items"
+        ]
+      },
+      "strict": true,
+      "description": "Close the current skill; return text and selected saved outputs to its caller. Available in every skill."
+    }
+  ],
+  "extra": {
+    "agentic": {
+      "agent_context_id": "metal-readiness-quick",
+      "allowed_tools": [
+        "search-web",
+        "read-web-page",
+        "inspect-file",
+        "read-file",
+        "generate-image"
+      ],
+      "allowed_skills": []
+    }
+  }
+}

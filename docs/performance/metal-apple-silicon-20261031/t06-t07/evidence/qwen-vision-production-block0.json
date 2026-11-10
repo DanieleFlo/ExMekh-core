@@ -1,0 +1,68 @@
+[
+  {
+    "stage": "patch-conv3d",
+    "different": 0,
+    "elements": 294912,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "norm1",
+    "different": 0,
+    "elements": 294912,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "attn.qkv",
+    "different": 0,
+    "elements": 884736,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "attn.proj",
+    "different": 0,
+    "elements": 294912,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "norm2",
+    "different": 0,
+    "elements": 294912,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "mlp.linear_fc1",
+    "different": 0,
+    "elements": 1101824,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "mlp.act_fn",
+    "different": 0,
+    "elements": 1101824,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "mlp.linear_fc2",
+    "different": 0,
+    "elements": 294912,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "rope-q",
+    "different": 0,
+    "elements": 294912,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "rope-k",
+    "different": 0,
+    "elements": 294912,
+    "max_abs": 0.0
+  },
+  {
+    "stage": "attention-same-input",
+    "different": 0,
+    "elements": 294912,
+    "max_abs": 0.0
+  }
+]

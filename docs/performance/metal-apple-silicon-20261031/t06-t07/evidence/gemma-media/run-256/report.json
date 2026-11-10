@@ -1,0 +1,94 @@
+{
+  "command": [
+    "env",
+    "DS4_GEMMA_VISUAL_DIMENSIONS=256",
+    "tests/probe_gemma_visual",
+    "build/metal-models/gemma.ds4b/bundle.ds4b",
+    "build/metal-oracles/models",
+    "build/metal-models/gemma.ds4g",
+    "build/metal-models/gemma-media.ds4p",
+    "build/metal-qualification/t06-t07-20261031/gemma-media/cases.bin",
+    "build/metal-qualification/t06-t07-20261031/gemma-media/native-256"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120,
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 10.142086708000534,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 7445.2294585,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 7446.237476625,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6619736,
+      "resident_bytes": 16302080
+    },
+    {
+      "monotonic": 7447.24282725,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6619736,
+      "resident_bytes": 16302080
+    },
+    {
+      "monotonic": 7448.256890041,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 6619736,
+      "resident_bytes": 16302080
+    },
+    {
+      "monotonic": 7449.2705165,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 330466384,
+      "resident_bytes": 485965824
+    },
+    {
+      "monotonic": 7450.281325291,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 1063929968,
+      "resident_bytes": 1915355136
+    },
+    {
+      "monotonic": 7451.291016916,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 1042024560,
+      "resident_bytes": 1904132096
+    },
+    {
+      "monotonic": 7452.304987458,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 1064323184,
+      "resident_bytes": 1915797504
+    },
+    {
+      "monotonic": 7453.317746291,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 1031293016,
+      "resident_bytes": 1899741184
+    },
+    {
+      "monotonic": 7454.333095458,
+      "pressure": 1,
+      "swap_bytes": 0,
+      "footprint_bytes": 1300056512,
+      "resident_bytes": 2444951552
+    }
+  ],
+  "log_sha256": "d62a212f7e51331e58079c29dc099f789c68bb7c30aedbe1dbd51b58d29483dd"
+}

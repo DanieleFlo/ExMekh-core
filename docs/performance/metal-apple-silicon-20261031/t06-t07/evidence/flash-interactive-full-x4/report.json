@@ -1,0 +1,5 @@
+{
+  "status": "NOT_VERIFIED",
+  "execution_started": false,
+  "reason": "Deliberately deferred before execution: the legacy in-memory serial controller predates suite-operation timeout scaling and swallows SIGTERM. Its already active Qwen interactive case is allowed to finish and cleanup; fresh controller will execute remaining cases in separate directories with service/client deadlines explicitly x4. This is a scheduling record, not a test execution result."
+}

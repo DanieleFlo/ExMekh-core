@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import datetime
 from functools import partial
 from pathlib import Path
@@ -29,6 +29,7 @@ from exmekh_agent.exmekh_bridge.models import (
     SkillNode,
     SteeringInsertion,
     ToolEvent,
+    ToolInvocationKey,
     record_tool_event,
 )
 from exmekh_agent.exmekh_bridge.providers.context_usage import (
@@ -40,6 +41,7 @@ from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.ui.chat.chat_export import ExportFormat, export_chat
 from exmekh_agent.ui.chat.compaction_progress import CompactionProgressView
+from exmekh_agent.ui.chat.image_progress import ImageProgressView
 from exmekh_agent.ui.chat.message_editor import EditMessageCallback, MessageEditor
 from exmekh_agent.ui.chat.message_text import message_display_text
 from exmekh_agent.ui.graph.graph_view import GraphViewComponent
@@ -75,24 +77,26 @@ def load_chat_scroll_js() -> None:
 
 def _upsert_streaming_skill(
     skills: list[SkillNode], incoming: SkillNode, action: str
-) -> None:
-    """Insert or update a SkillNode inside the streaming skills list, preserving start_time."""
+) -> SkillNode | None:
+    """Return the merged skill when its rendered structure remains the same."""
     incoming.finalize_timing(action if action in ("completed", "error") else None)
 
     for root in reversed(skills):
         existing = root.find_invocation(incoming.path, incoming.opening_tool_call_id)
         if existing is not None:
+            before = existing.execution_details()
             existing.merge_snapshot(incoming)
-            return
+            return existing if before == existing.execution_details() else None
 
     if incoming.depth <= 1 or not skills:
         skills.append(incoming)
-        return
+        return None
 
     for existing in skills:
         if existing.attach_descendant(incoming):
-            return
+            return None
     skills.append(incoming)
+    return None
 
 
 class ChatViewComponent:
@@ -140,6 +144,7 @@ class ChatViewComponent:
         self.streaming_root_tools: list[ToolEvent] = []
         self.live_skill_timer_labels: list[tuple[SkillNode, ui.label]] = []
         self.live_tool_timer_labels: list[tuple[ToolEvent, ui.label]] = []
+        self.image_progress_views: dict[ToolInvocationKey, list[ImageProgressView]] = {}
         self.current_master_reasoning_expansion: ui.expansion | None = None
         self.active_tab: str = "chat"
         self.selected_sub_agent_id: str | None = None
@@ -1722,13 +1727,15 @@ class ChatViewComponent:
                             if generating
                             else UI_PRESENTATION["image_generation.classes.unavailable"]
                         )
-                        ui.label(
-                            app_text(
-                                "chat.chat_view.image_generating"
-                                if generating
-                                else "chat.chat_view.image_unavailable"
+                        if generating:
+                            progress_view = ImageProgressView(event, index)
+                            self.image_progress_views.setdefault(
+                                event.invocation_key, []
+                            ).append(progress_view)
+                        else:
+                            ui.label(app_text("chat.chat_view.image_unavailable")).classes(
+                                UI_PRESENTATION["image_generation.classes.label"]
                             )
-                        ).classes(UI_PRESENTATION["image_generation.classes.label"])
 
     def _render_turn_activity(self, message: ChatMessage) -> None:
         """Render the model's timeline identically during streaming and after reload."""
@@ -1786,6 +1793,7 @@ class ChatViewComponent:
         self.streaming_steering_spinners.clear()
         self.live_skill_timer_labels.clear()
         self.live_tool_timer_labels.clear()
+        self.image_progress_views.clear()
         self.current_live_reasoning_container = None
         self.current_live_reasoning_block = None
         self.current_live_reasoning_timer_label = None
@@ -1866,9 +1874,7 @@ class ChatViewComponent:
             return
         self.update_compaction_progress(message.compaction_progress)
         previous = self._streaming_history
-        execution_changed = previous is None or not message.has_same_execution_details(
-            previous
-        )
+        execution_changed = previous is None or not message.has_same_execution_details(previous)
         self._streaming_history = message
         self.streaming_steering_insertions = message.confirmed_steering_insertions()
         self._update_steering_spinners()
@@ -1900,6 +1906,8 @@ class ChatViewComponent:
         ]
         if execution_changed:
             self._refresh_streaming_skills_and_tools()
+        else:
+            self._update_image_progress(message.iter_tool_events())
 
     def show_steering_messages(self, messages: list[QueuedMessage]) -> None:
         if self.current_steering_container is None:
@@ -1929,6 +1937,16 @@ class ChatViewComponent:
             )
         if previous is None or not message.has_same_execution_details(previous):
             self._refresh_streaming_skills_and_tools()
+        else:
+            self._update_image_progress(message.iter_tool_events())
+
+    def _update_image_progress(self, events: Iterable[ToolEvent]) -> None:
+        if not self.image_progress_views:
+            return
+        for event in events:
+            for view in self.image_progress_views.get(event.invocation_key, ()):
+                if not view.is_deleted:
+                    view.show(event)
 
     def show_steering_insertions(self, message: ChatMessage) -> None:
         insertions = message.confirmed_steering_insertions()
@@ -1944,6 +1962,10 @@ class ChatViewComponent:
                 spinner.set_visibility(False)
 
     def _update_stream_duration(self) -> None:
+        for views in self.image_progress_views.values():
+            for view in views:
+                if not view.is_deleted:
+                    view.refresh()
         if self.compaction_progress_view is not None:
             self.compaction_progress_view.refresh()
         if self.stream_duration_label and self.stream_started_at is not None:
@@ -2119,6 +2141,7 @@ class ChatViewComponent:
             return
         self.live_skill_timer_labels.clear()
         self.live_tool_timer_labels.clear()
+        self.image_progress_views.clear()
         snapshot = active_turns.snapshot(
             self.stream_session_id or "", after_revision=-1
         )
@@ -2152,10 +2175,24 @@ class ChatViewComponent:
         if not self.current_skills_container:
             return
 
-        _upsert_streaming_skill(self.streaming_skills, node, action)
-        self._refresh_streaming_skills_and_tools()
+        updated = _upsert_streaming_skill(self.streaming_skills, node, action)
+        if updated is None:
+            self._refresh_streaming_skills_and_tools()
+        else:
+            self._update_image_progress(updated.iter_tool_events())
 
     def add_tool_event(self, ev: ToolEvent) -> None:
+        existing = next(
+            (
+                item for item in reversed(self.streaming_root_tools)
+                if item.matches_update(ev)
+            ),
+            None,
+        )
+        if existing is not None and ev.is_progress_update_for(existing):
+            existing.merge_update(ev)
+            self._update_image_progress((existing,))
+            return
         self._compact_streaming_reasoning()
         if self.raw_history_view:
             self.raw_history_view.add_tool_event(ev)
@@ -2207,6 +2244,7 @@ class ChatViewComponent:
         self.streaming_root_tools.clear()
         self.live_skill_timer_labels.clear()
         self.live_tool_timer_labels.clear()
+        self.image_progress_views.clear()
 
     def update_compaction_progress(
         self, events: list[DeepAgentCompactionProgressEvent]

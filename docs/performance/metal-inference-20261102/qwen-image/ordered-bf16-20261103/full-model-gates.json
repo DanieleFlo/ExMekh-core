@@ -1,0 +1,723 @@
+{
+  "status": "PASS",
+  "scope": "256x256, 8 steps, CFG1, seed20261020, independent CPU encoder/DiT plus MPS VAE",
+  "tolerance_sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87",
+  "cases": [
+    {
+      "id": "text",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [],
+      "fixture_sha256": "8d1dc46d8718f7423c7ba18ce1c26a704e51fdc9d99a7ac7090ab9dc109d83de",
+      "conditioning": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "verdict": "PASS"
+      },
+      "references_encoded": null,
+      "latents": [
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0013652899358171141,
+          "relative_l2": 0.0016337253968087885,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0026005245171798136,
+          "relative_l2": 0.00273304016569,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.004513292896923952,
+          "relative_l2": 0.0031559522910589934,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.034027099609375,
+        "rmse": 0.001054534751908513,
+        "relative_l2": 0.0011430386104814758,
+        "bit_exact": false,
+        "ssim_rgb": 0.9993229586530248,
+        "alpha_mae": 1.817941665649414e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 0,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 1754.906756,
+        "prepare_seconds": 5.3e-05,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          0.0,
+          14.520993,
+          1051.534988,
+          688.850673
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 6949795328,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7497297920,
+        "plan_host": 1904672,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 83620429176,
+        "d2h_bytes": 1376256,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "PASS",
+      "run": "text-after-1",
+      "performance_sample": false,
+      "host_min_bytes": 5009817600,
+      "max_swap_growth_bytes": 0,
+      "native_baseline": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/native/case-0",
+      "native_comparison": {
+        "conditioning.bf16": {
+          "sha256": "3efc9fbd5a0fc8d2720b2b111c159dbfbcb6ff5aa42c9db323194ce6d1e0a517",
+          "baseline_sha256": "3efc9fbd5a0fc8d2720b2b111c159dbfbcb6ff5aa42c9db323194ce6d1e0a517",
+          "bit_exact": true
+        },
+        "latent-0.f32": {
+          "sha256": "f7fba99bc39edec7c102cafeaea360466b57cde168bd0ef94207846bae945038",
+          "baseline_sha256": "f7fba99bc39edec7c102cafeaea360466b57cde168bd0ef94207846bae945038",
+          "bit_exact": true
+        },
+        "latent-1.f32": {
+          "sha256": "c1887cb24363687116d018957b72165d7b66722ca91a2488d909f88f1046ad76",
+          "baseline_sha256": "c1887cb24363687116d018957b72165d7b66722ca91a2488d909f88f1046ad76",
+          "bit_exact": true
+        },
+        "latent-2.f32": {
+          "sha256": "355e12d9a9769f37aba4b058929af4e29ff3baa3503083539bbf7b64f9e5a9ab",
+          "baseline_sha256": "355e12d9a9769f37aba4b058929af4e29ff3baa3503083539bbf7b64f9e5a9ab",
+          "bit_exact": true
+        },
+        "latent-3.f32": {
+          "sha256": "da7d64414804a029072533a6080c02347324bedb541a1abf6a74f1eb90976e31",
+          "baseline_sha256": "da7d64414804a029072533a6080c02347324bedb541a1abf6a74f1eb90976e31",
+          "bit_exact": true
+        },
+        "latent-4.f32": {
+          "sha256": "ddf2957ef84de19a83cfe3881f623878db6a672a6bb864bd5fbf7748019907eb",
+          "baseline_sha256": "ddf2957ef84de19a83cfe3881f623878db6a672a6bb864bd5fbf7748019907eb",
+          "bit_exact": true
+        },
+        "latent-5.f32": {
+          "sha256": "a0d492404155cd4f45c5487afc8f0ef5390529c2f94166cadb4377f7d8bac2b7",
+          "baseline_sha256": "a0d492404155cd4f45c5487afc8f0ef5390529c2f94166cadb4377f7d8bac2b7",
+          "bit_exact": true
+        },
+        "latent-6.f32": {
+          "sha256": "f23ed5a932b62bf8bf4a3fcf64f7d0d5debbe18202c75b7575c3d2618a70d19c",
+          "baseline_sha256": "f23ed5a932b62bf8bf4a3fcf64f7d0d5debbe18202c75b7575c3d2618a70d19c",
+          "bit_exact": true
+        },
+        "latent-7.f32": {
+          "sha256": "4cd71851636eb89722a99c5d42145faba659d2d535e4c6408a0d0710dabcc4e5",
+          "baseline_sha256": "4cd71851636eb89722a99c5d42145faba659d2d535e4c6408a0d0710dabcc4e5",
+          "bit_exact": true
+        },
+        "result.png": {
+          "sha256": "429da2de68041eb008c27f9efa3da9c08455ad57e98822fecfedfa4fef23f960",
+          "baseline_sha256": "429da2de68041eb008c27f9efa3da9c08455ad57e98822fecfedfa4fef23f960",
+          "bit_exact": true
+        },
+        "rgba.f32": {
+          "sha256": "4caccdb058debd456a1caf0306b38e0cf8267b348c93129be76cca58361dd188",
+          "baseline_sha256": "4caccdb058debd456a1caf0306b38e0cf8267b348c93129be76cca58361dd188",
+          "bit_exact": true
+        }
+      }
+    },
+    {
+      "id": "reference",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [
+        "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/rgb-after/fixtures/reference.ds4i"
+      ],
+      "fixture_sha256": "30817240093d7cd08043f083d7fa1f4ff31fe07d1352b7fa01ae451e65013529",
+      "conditioning": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "verdict": "PASS"
+      },
+      "references_encoded": {
+        "max_abs": 0.125,
+        "rmse": 0.00825364234856655,
+        "relative_l2": 0.0070588105396709845,
+        "bit_exact": false,
+        "verdict": "PASS"
+      },
+      "latents": [
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0009869755363885022,
+          "relative_l2": 0.0010064210671278746,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0012451488544045666,
+          "relative_l2": 0.0012973262319906295,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.001503742359042826,
+          "relative_l2": 0.001602843395395415,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.0017144248058141459,
+          "relative_l2": 0.0018708108353837933,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0019164582701960739,
+          "relative_l2": 0.002157536424598585,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.002431935751821463,
+          "relative_l2": 0.0028376600959816598,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0035453225130053006,
+          "relative_l2": 0.003522981748514114,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0625,
+          "rmse": 0.005946174122930468,
+          "relative_l2": 0.003896274326498726,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.0995025634765625,
+        "rmse": 0.0026648575967828754,
+        "relative_l2": 0.002879846966899715,
+        "bit_exact": false,
+        "ssim_rgb": 0.9991805840942836,
+        "alpha_mae": 5.4776668548583984e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 148.832166,
+        "prepare_seconds": 0.000414,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          10.118158,
+          16.370373,
+          67.89036,
+          54.452782
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 7528562112,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7776563696,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 84936146392,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 7522459888,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 43,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "PASS",
+      "run": "rgb-after",
+      "performance_sample": false,
+      "host_min_bytes": 5052628992,
+      "max_swap_growth_bytes": 0,
+      "native_baseline": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/native/case-0",
+      "native_comparison": {
+        "conditioning.bf16": {
+          "sha256": "bdd4ca3a24c90316fb58fc4008e67d0943925442df6d1d8b9080eb6a1d8571a0",
+          "baseline_sha256": "bdd4ca3a24c90316fb58fc4008e67d0943925442df6d1d8b9080eb6a1d8571a0",
+          "bit_exact": true
+        },
+        "latent-0.f32": {
+          "sha256": "246aaed739da4362c301349a47dab4d50bd368aea52b7974d06ccc054be181bb",
+          "baseline_sha256": "246aaed739da4362c301349a47dab4d50bd368aea52b7974d06ccc054be181bb",
+          "bit_exact": true
+        },
+        "latent-1.f32": {
+          "sha256": "147643ecdd7295785f7acdf5079b16d9ed14a0a3ce0f353ca53f899ec096ef21",
+          "baseline_sha256": "147643ecdd7295785f7acdf5079b16d9ed14a0a3ce0f353ca53f899ec096ef21",
+          "bit_exact": true
+        },
+        "latent-2.f32": {
+          "sha256": "6d7dc87a37a9e944aaff2f4482eddc474e1643db5d9d795bb4f3f2ffbcf2e436",
+          "baseline_sha256": "6d7dc87a37a9e944aaff2f4482eddc474e1643db5d9d795bb4f3f2ffbcf2e436",
+          "bit_exact": true
+        },
+        "latent-3.f32": {
+          "sha256": "1ef1a52b437159a2f8f884937c2440a1418bbf6916c2a11c656986c9e46b5cd5",
+          "baseline_sha256": "1ef1a52b437159a2f8f884937c2440a1418bbf6916c2a11c656986c9e46b5cd5",
+          "bit_exact": true
+        },
+        "latent-4.f32": {
+          "sha256": "4c668fb11accd4a570ed0cbfc69cad60773d799393491ae4f5ed5e1582f04073",
+          "baseline_sha256": "4c668fb11accd4a570ed0cbfc69cad60773d799393491ae4f5ed5e1582f04073",
+          "bit_exact": true
+        },
+        "latent-5.f32": {
+          "sha256": "0d4d69b1f72e7fc6de6c00803602c0fce082ed5c60081011aff5a8154ecbf436",
+          "baseline_sha256": "0d4d69b1f72e7fc6de6c00803602c0fce082ed5c60081011aff5a8154ecbf436",
+          "bit_exact": true
+        },
+        "latent-6.f32": {
+          "sha256": "8884eb1d7f501487592f3d838bee86ceb3d8b9e22b6cc04f4d2242a63e75ce50",
+          "baseline_sha256": "8884eb1d7f501487592f3d838bee86ceb3d8b9e22b6cc04f4d2242a63e75ce50",
+          "bit_exact": true
+        },
+        "latent-7.f32": {
+          "sha256": "b89db2a548fecde0833379d27aab9c3dccf6e589758e6ea1fcea6b094e822bb6",
+          "baseline_sha256": "b89db2a548fecde0833379d27aab9c3dccf6e589758e6ea1fcea6b094e822bb6",
+          "bit_exact": true
+        },
+        "reference-0.bf16": {
+          "sha256": "6dbb57831e5b283f4029aa98221b312a53c2abd607672c51b01ece3db9c2337a",
+          "baseline_sha256": "6dbb57831e5b283f4029aa98221b312a53c2abd607672c51b01ece3db9c2337a",
+          "bit_exact": true
+        },
+        "result.png": {
+          "sha256": "90521ee53004d56fc8dedcfc39559660001e27d37689b9cac0da12fdb56b0359",
+          "baseline_sha256": "90521ee53004d56fc8dedcfc39559660001e27d37689b9cac0da12fdb56b0359",
+          "bit_exact": true
+        },
+        "rgba.f32": {
+          "sha256": "e756def6c344752d38574df6d7cd1e83904c54f782ac3b81020f8312b3c06969",
+          "baseline_sha256": "e756def6c344752d38574df6d7cd1e83904c54f782ac3b81020f8312b3c06969",
+          "bit_exact": true
+        }
+      }
+    },
+    {
+      "id": "rgba",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [
+        "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/rgba-after/fixtures/rgba.ds4i"
+      ],
+      "fixture_sha256": "e3c96a8fe71baf621be3d440c583c9cd61a2358491ee57beaf8cc22f7444ce98",
+      "conditioning": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "verdict": "PASS"
+      },
+      "references_encoded": {
+        "max_abs": 0.1015625,
+        "rmse": 0.005613435374323408,
+        "relative_l2": 0.0054394122604195265,
+        "bit_exact": false,
+        "verdict": "PASS"
+      },
+      "latents": [
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.001053803171797369,
+          "relative_l2": 0.0010746391972773573,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.001370566372474761,
+          "relative_l2": 0.0014282076985857694,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0015578578494884307,
+          "relative_l2": 0.0016606543799083037,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0016980383036986056,
+          "relative_l2": 0.001852789788200623,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0018935153304060677,
+          "relative_l2": 0.002130662848524146,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.002275453685226792,
+          "relative_l2": 0.002647596486565209,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0032052085909087063,
+          "relative_l2": 0.003154737855619369,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.005251465295460913,
+          "relative_l2": 0.0033955296859058686,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.05169677734375,
+        "rmse": 0.001412632420920551,
+        "relative_l2": 0.001526721319698592,
+        "bit_exact": false,
+        "ssim_rgb": 0.9993751599262385,
+        "alpha_mae": 4.6193599700927734e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 149.595313,
+        "prepare_seconds": 0.000393,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          10.111368,
+          16.27024,
+          68.874695,
+          54.338555
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 7528562112,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7776563696,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 84936146392,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 7522459888,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 43,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "b47943f25b685bc1f38b785e8fa29c7bed1108561e5af80e017fcf503eecc066"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "PASS",
+      "run": "rgba-after",
+      "performance_sample": false,
+      "host_min_bytes": 5847941120,
+      "max_swap_growth_bytes": 0,
+      "native_baseline": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/native/case-0",
+      "native_comparison": {
+        "conditioning.bf16": {
+          "sha256": "c25f971cd20cf70dfd204aebf586fe2bcd881e32c32122f70fd3098b01158113",
+          "baseline_sha256": "c25f971cd20cf70dfd204aebf586fe2bcd881e32c32122f70fd3098b01158113",
+          "bit_exact": true
+        },
+        "latent-0.f32": {
+          "sha256": "6d1c6f54c5a458b1727e8fda627196a28b83bc27c20203ca55cf403551829532",
+          "baseline_sha256": "6d1c6f54c5a458b1727e8fda627196a28b83bc27c20203ca55cf403551829532",
+          "bit_exact": true
+        },
+        "latent-1.f32": {
+          "sha256": "69e37605ec07c1ef15fa5c70de2a110a75aada6bc77c5f6c9fa2edc214a940b3",
+          "baseline_sha256": "69e37605ec07c1ef15fa5c70de2a110a75aada6bc77c5f6c9fa2edc214a940b3",
+          "bit_exact": true
+        },
+        "latent-2.f32": {
+          "sha256": "8150d2b9c3293d2c2141d057a5ebe5bf4fcd278941f286cfa2cdace8ae6108a7",
+          "baseline_sha256": "8150d2b9c3293d2c2141d057a5ebe5bf4fcd278941f286cfa2cdace8ae6108a7",
+          "bit_exact": true
+        },
+        "latent-3.f32": {
+          "sha256": "dd3a18c3f2636a0e44064796c8b8d77bf5f9dad35dbe4b708e9110536b3caefc",
+          "baseline_sha256": "dd3a18c3f2636a0e44064796c8b8d77bf5f9dad35dbe4b708e9110536b3caefc",
+          "bit_exact": true
+        },
+        "latent-4.f32": {
+          "sha256": "36b922ef87c2f6d9920151adf663521f18716f638ef56dcaa931042a034fc623",
+          "baseline_sha256": "36b922ef87c2f6d9920151adf663521f18716f638ef56dcaa931042a034fc623",
+          "bit_exact": true
+        },
+        "latent-5.f32": {
+          "sha256": "883804ab237670f2e8b5014b372311be7deadd7aadf6b398623086bbd6a979da",
+          "baseline_sha256": "883804ab237670f2e8b5014b372311be7deadd7aadf6b398623086bbd6a979da",
+          "bit_exact": true
+        },
+        "latent-6.f32": {
+          "sha256": "6c9d91074d53515f30c08e1d2bdd7a12e3689ca1e243a6861a8c070ac791fdcc",
+          "baseline_sha256": "6c9d91074d53515f30c08e1d2bdd7a12e3689ca1e243a6861a8c070ac791fdcc",
+          "bit_exact": true
+        },
+        "latent-7.f32": {
+          "sha256": "150b860563a1d4e7fef94f357c815065a08b3e008eb730d46f2a3b4d6f19c65d",
+          "baseline_sha256": "150b860563a1d4e7fef94f357c815065a08b3e008eb730d46f2a3b4d6f19c65d",
+          "bit_exact": true
+        },
+        "reference-0.bf16": {
+          "sha256": "23bc2d22ee03dd57d69bf01947215a7ba4f1c888ffc66a52b61f533a9cf96609",
+          "baseline_sha256": "23bc2d22ee03dd57d69bf01947215a7ba4f1c888ffc66a52b61f533a9cf96609",
+          "bit_exact": true
+        },
+        "result.png": {
+          "sha256": "d15a8fce0adc361f99add015007d9eaefa625811de022adfefb5d3d27b5de5f1",
+          "baseline_sha256": "d15a8fce0adc361f99add015007d9eaefa625811de022adfefb5d3d27b5de5f1",
+          "bit_exact": true
+        },
+        "rgba.f32": {
+          "sha256": "26334efb8e3a15eb2255bf256689ff130cc3f75f82b40bff75aaa1fc4c64a131",
+          "baseline_sha256": "26334efb8e3a15eb2255bf256689ff130cc3f75f82b40bff75aaa1fc4c64a131",
+          "bit_exact": true
+        }
+      }
+    }
+  ]
+}

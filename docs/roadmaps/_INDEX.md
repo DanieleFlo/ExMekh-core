@@ -233,6 +233,45 @@ dopo ogni path, una call ID e nuovi exchange ID/indici per i singoli edit.
 - righe 366–399: **12. Qualifica locale del 9 ottobre 2026** — Implementazione disponibile in `ds4_server.c`, `ds4_interactive_config.h`, `ds4_interactive_grammar.h`, `ds4_interactive_runtime.h`, `ds4_interactive_edit.h` e `ds4_edit_constraint.h`.
 - righe 400–418: **13. Revisione delle responsabilità** — Il protocollo ora conserva configurazione e stato opachi del comportamento.
 
+## [Piano di supporto Metal del fork su Apple Silicon](metal-apple-silicon-support-20261028.md)
+
+Il piano copre i modelli LLM, image ed embedding e i flussi fondamentali di ExMekh.
+
+- righe 8–47: **1. Obiettivo e macchina di riferimento** — Il piano copre i modelli LLM, image ed embedding e i flussi fondamentali di ExMekh.
+- righe 48–71: **2. Risultati dell'ispezione del fork** — Riferimento sorgenti: `837894c2af5aaf3382dfc0a0750689baee73363e`.
+- righe 72–124: **3. Budget: working set dello streaming nella memoria disponibile** — Le dimensioni seguenti provengono dall'audit Qwen27
+- righe 125–152: **4. Milestone e dipendenze** — Ogni task parte `PLANNED`.
+- righe 153–198: **5. T00–T02: fondamenta, build e controllo della memoria** — hash, unità GB/GiB e spazio SSD.
+- righe 199–299: **6. T03: porting del 27B senza alterare il modello** — **Regola utente aggiornata il primo novembre 2026:** ogni nuova differenza
+  - righe 201–256: **6.1 Confronti ripetuti con Strata durante la scrittura dei kernel** — **Regola utente aggiornata il primo novembre 2026:** ogni nuova differenza
+  - righe 257–299: **6.2 Implementazione e gate del 27B** — matvec di decode, prefill multi-riga e MTP.
+- righe 300–346: **7. T04: portare le funzionalità del fork, oltre la chat** — **Implementazione aggiornata al 31 ottobre 2026:** T06 e Quick Chat reali
+- righe 347–401: **8. T05: MTP e vision con picchi controllati** — **Implementazione aggiornata al 31 ottobre 2026:** MTP Qwen27 usa ora il
+- righe 402–510: **9. T06: streaming SSD Metal, prima Flash e poi Qwen27 a 8k** — Lo streaming di questa milestone riguarda **i pesi da SSD**, distinto dallo
+  - righe 413–457: **9.1 T06-A: completare e avviare Flash streamed** — transitori del Q2 reale.
+  - righe 458–510: **9.2 T06-B: aggiungere lo streaming dei pesi densi del 27B** — minimo 27B a **8192/64**: embedding/output, proiezioni dei 64 layer,
+- righe 511–615: **10. T07: lifecycle, embeddings e immagini della suite** — Questa milestone verifica funzionalità fondamentali del fork.
+  - righe 574–615: **10.1 Matrice obbligatoria delle funzioni fondamentali** — La matrice deve essere mantenuta per backend, modello, profilo e hardware.
+- righe 616–694: **11. Strategia di test contenuta** — **Nuova fase richiesta il 2 novembre 2026:** ottimizzare l'inferenza Metal
+- righe 695–834: **12. T08: criteri di consegna e regressioni** — Aggiornamento6novembre: la campagna T08
+  - righe 745–834: **12.1 Registro di esecuzione** — fallisce in `ds4_bundle.c` per nomi dei timestamp nascosti dalle feature
+
+## [Ottimizzazione dell'inferenza Metal, un modello alla volta](metal-inference-performance-20261102.md)
+
+e ms/token; per embedding latenza/throughput e per image tempi delle fasi e
+
+- righe 84–105: **1. Regole permanenti** — e ms/token; per embedding latenza/throughput e per image tempi delle fasi e
+- righe 106–122: **2. Ordine e avanzamento** — Si mantiene la priorità Flash → Qwen27 della roadmap.
+- righe 123–157: **3. Ciclo da ripetere per ciascun intervento** — 1.
+- righe 158–182: **4. Scheda delle fonti obbligatoria, per esperimento** — La scheda precede il codice nel report dell'esperimento e contiene:
+- righe 183–241: **5. Baseline e strumenti della prima campagna Flash** — Profilo iniziale qualificato: Flash Metal streamed,
+- righe 242–270: **6. Piccoli incrementi, pacchetti e dispatch per caso** — Ogni incremento positivo credibile entra nel registro, anche sotto l'1–2%.
+- righe 271–286: **7. Backlog Flash iniziale: ipotesi, non classifica misurata** — Prima attivare soltanto l'ID giustificato dalla baseline.
+- righe 287–349: **8. Ricognizione del 2 novembre e fonti di ingresso** — Checkout iniziale pulito: `1544bb91eafaefefe32862ab408c412f0beed354`.
+- righe 350–569: **9. Registro da aggiornare a ogni iterazione** — Artefatti per esperimento in
+  - righe 422–437: **Continuazione Qwen27: cache adattiva e pack per layer** — Sezione strutturale; consultare il contenuto locale indicato.
+  - righe 438–569: **Qwen Image 2.1 Turbo** — Sezione strutturale; consultare il contenuto locale indicato.
+
 ## [Piano di implementazione: suite multimodale nativa DS4](native-multimodal-suite-implementation-20261020.md)
 
 Una sola istanza DS4 deve servire LLM, Qwen-Image-2.1-Turbo ed EmbeddingGemma 2, decidendo dinamicamente quali componenti tenere in GPU, spostare o ricaricare, senza perdita di conversazione.

@@ -1,0 +1,38 @@
+{
+  "sdk_base_revision": "1a94657fd1127375a221349087ce33cae0c9edcc",
+  "scope": "Budgeted automatic replacement is atomic: candidate must shrink AND fit before history/scope/archive changes; manual compaction unchanged. Explicit timeout override defaults300.",
+  "source_owners_junit": "sdk-compaction-owners-final-junit.xml",
+  "source_owners_tests": 1510,
+  "installed_junit": "sdk-installed-budget-junit.xml",
+  "installed_tests": 159,
+  "frontend_targeted_tests": 50,
+  "frontend_full": {
+    "status": "PASS",
+    "passed": 1213,
+    "skipped": 49,
+    "failed": [],
+    "statement_branch_coverage_percent": 100,
+    "seconds": 634.37,
+    "scope": "Full frontend after final helper inputs and distinct literal framing case. Real native consumers are separate; live skips are not promoted."
+  },
+  "uv_lock_check": "PASS offline; wheel METADATA byte-identical to original, only local artifact SHA changed. uv offline refresh unsupported; fresh offline resolution has no cached httpx metadata, so hash refreshed directly and validated by uv lock --check --offline.",
+  "files_sha256": {
+    "agent/vendor-patches/exmekh-lib-budget.patch": "6c133df1636398b059e722d9332076895709c56e19ffb69113c2c6aaa2c62ca6",
+    "agent/wheels/exmekh_lib-0.1.0-py3-none-any.whl": "97e0119e2b7767bd4af6ec74d39987c73a00b7fe5671d0406bbae5b4c2b76139",
+    "agent/uv.lock": "00dab05b9610bdd8ca44f44ab2d41fd67900710969548c00e185bfc12666ead5"
+  },
+  "original_flash_generic_frontend": {
+    "status": "NOT_VERIFIED",
+    "reason": "Stopped after actual correct new-file and skill return followed by repeated unrequested mock-skill reopenings. Not a timeout or assertion PASS. Source SDK unchanged during this attempt.",
+    "elapsed_seconds": 1328.1876240829988,
+    "server_exit": 0,
+    "forced_cleanup": []
+  },
+  "unrelated_sdk_test_baseline": "Mock-browser workflow required external DNS; reproduced with original installed SDK and corrected using a fixed public getaddrinfo result. URL validation remains active.",
+  "coding_hds_followup": {
+    "reason": "Generic child HDS promised code file work but exposed no file-processing skill. Observed allowed_skills=[] and repeated control_tool_execution(noop). Public capability inventory regression failed before fix with both default/external roots.",
+    "fix": "optional-sub-skills: file-processing plus conditional resource guidance; Python hierarchy builder unchanged.",
+    "owner_tests": 98,
+    "latest_full_status": "PASS1213/48SKIP100%"
+  }
+}

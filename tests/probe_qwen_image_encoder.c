@@ -1,6 +1,7 @@
 /* Real native encoder probe. Input cases are little-endian binary fixtures:
  * uint32 prompt_bytes, image_count; UTF-8 prompt; then per image width,height,
  * channels and raw pixels. Dumps complete tensors, not samples of a tensor. */
+#include "suite_accelerator.h"
 #include "ds4_qwen_image_encoder.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -106,10 +107,15 @@ int main(int argc, char **argv) {
   ds4_runtime *runtime = NULL;
   ds4_qwen_image_encoder *encoder = NULL;
   CHECK(ds4_resources_create(&resources));
-  CHECK(ds4_numeric_cuda(&num, resources, 700));
+  CHECK(suite_numeric_create(&num, resources, 700));
   CHECK(ds4_bundle_open(&bundle, argv[1], argv[2], resources, 700));
   CHECK(ds4_runtime_create(&runtime, NULL, NULL));
   CHECK(ds4_qwen_image_encoder_open(&encoder, bundle, num, runtime, argv[3]));
+#ifdef __APPLE__
+  /* The standalone encoder uses the same public bounded weight groups as the
+   * full pipeline; tracing must not accidentally retain all 16 GiB of weights. */
+  CHECK(ds4_qwen_image_encoder_weights(encoder, 2ull << 30, NULL));
+#endif
   for (int arg = 4; arg + 1 < argc; arg += 2) {
     FILE *f = fopen(argv[arg], "rb");
     if (!f)
@@ -173,7 +179,7 @@ int main(int argc, char **argv) {
                     (size_t)input_data.patches * 1536 * 4))
       return 2;
     trace_context trace = {argv[arg + 1], num};
-    ds4_qwen_image_observer observer = {&trace, NULL, dump};
+    ds4_qwen_image_observer observer = {.opaque = &trace, .cancelled = NULL, .trace = dump};
     ds4_qwen_image_conditioning *conditioning = NULL;
     double start = now();
     CHECK(ds4_qwen_image_encode(encoder, input, &observer, &conditioning));
@@ -216,8 +222,7 @@ int main(int argc, char **argv) {
         ds4_resource_totals before, after;
         ds4_resources_totals(resources, 0, &before);
         cancel_context cancellation = {.encoder = encoder};
-        ds4_qwen_image_observer cancelled = {&cancellation, cancel_requested,
-                                             cancel_trace};
+        ds4_qwen_image_observer cancelled = {.opaque = &cancellation, .cancelled = cancel_requested, .trace = cancel_trace};
         ds4_qwen_image_conditioning *next = NULL;
         if (ds4_qwen_image_encode(encoder, input, &cancelled, &next) !=
                 DS4_STATUS_CANCELLED ||
@@ -280,7 +285,7 @@ int main(int argc, char **argv) {
                       64 * 12))
         return 1;
       trace_context padded_trace = {directory, num};
-      ds4_qwen_image_observer padded_observer = {&padded_trace, NULL, dump};
+      ds4_qwen_image_observer padded_observer = {.opaque = &padded_trace, .cancelled = NULL, .trace = dump};
       CHECK(ds4_qwen_image_encode(encoder, padded, &padded_observer, &next));
       if (ds4_qwen_image_conditioning_data(next).count !=
           conditioning_data.count)

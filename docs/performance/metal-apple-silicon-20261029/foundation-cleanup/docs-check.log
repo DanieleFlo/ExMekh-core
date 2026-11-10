@@ -1,0 +1,20 @@
+python3 tools/build_research_indexes.py
+indexed 49 documents
+python3 tools/build_docs_indexes.py
+indexed 97 documents
+python3 -m unittest tests.test_research_corpus tests.test_docs_wiki -v
+test_all_local_markdown_links_resolve (tests.test_research_corpus.ResearchCorpusTests.test_all_local_markdown_links_resolve) ... ok
+test_catalog_ranges_point_to_the_declared_headings (tests.test_research_corpus.ResearchCorpusTests.test_catalog_ranges_point_to_the_declared_headings) ... ok
+test_every_authored_repository_card_has_at_most_one_external_link (tests.test_research_corpus.ResearchCorpusTests.test_every_authored_repository_card_has_at_most_one_external_link) ... ok
+test_manifest_lock_and_downloaded_hashes_are_complete (tests.test_research_corpus.ResearchCorpusTests.test_manifest_lock_and_downloaded_hashes_are_complete) ... ok
+test_master_and_index_of_indexes_reach_every_group (tests.test_research_corpus.ResearchCorpusTests.test_master_and_index_of_indexes_reach_every_group) ... ok
+test_repository_lock_uses_full_commits_and_evidence_classes (tests.test_research_corpus.ResearchCorpusTests.test_repository_lock_uses_full_commits_and_evidence_classes) ... ok
+test_all_local_markdown_links_resolve (tests.test_docs_wiki.DocsWikiTests.test_all_local_markdown_links_resolve) ... ok
+test_catalog_ranges_point_to_declared_headings (tests.test_docs_wiki.DocsWikiTests.test_catalog_ranges_point_to_declared_headings) ... ok
+test_no_markdown_is_orphaned_or_flat_at_docs_root (tests.test_docs_wiki.DocsWikiTests.test_no_markdown_is_orphaned_or_flat_at_docs_root) ... ok
+test_root_and_index_of_indexes_reach_every_group (tests.test_docs_wiki.DocsWikiTests.test_root_and_index_of_indexes_reach_every_group) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.175s
+
+OK

@@ -1,0 +1,33 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Qwen BF16 n-grams: 95.37 GiB, disk reads only
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 0.26 GiB (raw 0.20 + compressed 0.06) + buffers 0.38 GiB + resident model 6.32 GiB + expert cache 2.00 GiB = 8.97 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=2049 backend=metal
+1031 11:44:59 ds4-server: loaded model Qwen3.8 Flash Next
+1031 11:44:59 ds4-server: context buffers 659.60 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=2049)
+1031 11:44:59 ds4-server: agentic skill checkpoints dir=/tmp/ds4-agentic.AYeCu1
+1031 11:44:59 ds4-server: listening on http://127.0.0.1:18080
+1031 11:45:11 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prompt start
+1031 11:45:17 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 64/2575 (2.5%) chunk=0.00 t/s avg=10.43 t/s 6.138s
+1031 11:45:22 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 128/2575 (5.0%) chunk=11.78 t/s avg=11.06 t/s 11.573s
+1031 11:45:25 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 192/2575 (7.5%) chunk=24.10 t/s avg=13.49 t/s 14.229s
+1031 11:45:27 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 256/2575 (9.9%) chunk=26.24 t/s avg=15.36 t/s 16.668s
+1031 11:45:30 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 320/2575 (12.4%) chunk=28.74 t/s avg=16.94 t/s 18.895s
+1031 11:45:32 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 384/2575 (14.9%) chunk=27.72 t/s avg=18.11 t/s 21.204s
+1031 11:45:38 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 448/2575 (17.4%) chunk=10.63 t/s avg=16.46 t/s 27.223s
+1031 11:45:43 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 512/2575 (19.9%) chunk=12.17 t/s avg=15.76 t/s 32.481s
+1031 11:45:49 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 576/2575 (22.4%) chunk=11.37 t/s avg=15.12 t/s 38.108s
+1031 12:01:00 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 640/2575 (24.9%) chunk=0.07 t/s avg=0.67 t/s 948.742s
+1031 12:01:06 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 704/2575 (27.3%) chunk=9.46 t/s avg=0.74 t/s 955.505s
+1031 12:01:13 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 768/2575 (29.8%) chunk=10.26 t/s avg=0.80 t/s 961.741s
+1031 12:01:20 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 832/2575 (32.3%) chunk=8.97 t/s avg=0.86 t/s 968.874s
+1031 12:01:26 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 896/2575 (34.8%) chunk=9.61 t/s avg=0.92 t/s 975.535s
+1031 12:01:33 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 960/2575 (37.3%) chunk=9.80 t/s avg=0.98 t/s 982.063s
+1031 12:01:39 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 1024/2575 (39.8%) chunk=9.76 t/s avg=1.04 t/s 988.623s
+1031 12:01:47 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 1088/2575 (42.3%) chunk=8.69 t/s avg=1.09 t/s 995.989s
+1031 12:01:54 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 1152/2575 (44.7%) chunk=9.54 t/s avg=1.15 t/s 1002.697s
+1031 12:17:44 ds4-server: chat ctx=0..2575:2575 RESPPROTO TOOLS prefill chunk 1216/2575 (47.2%) chunk=0.07 t/s avg=0.62 t/s 1953.553s
+1031 12:17:47 ds4-server: shutdown requested, draining requests

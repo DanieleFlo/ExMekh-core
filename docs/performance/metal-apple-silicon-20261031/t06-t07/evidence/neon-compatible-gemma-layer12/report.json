@@ -1,0 +1,73 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-block.py",
+    "gemm-cpu-compatible",
+    "12"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "One later frozen Gemma block using the combined candidate; independent same-input verification, no full second model.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 5.082390083000064,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 10250.316345125,
+      "pressure": 1,
+      "host_available_bytes": 9706176512,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 10251.333819333,
+      "pressure": 1,
+      "host_available_bytes": 10057957376,
+      "swap_bytes": 262144,
+      "footprint_bytes": 150504096,
+      "resident_bytes": 189186048
+    },
+    {
+      "monotonic": 10252.342911333,
+      "pressure": 1,
+      "host_available_bytes": 9519349760,
+      "swap_bytes": 262144,
+      "footprint_bytes": 177636024,
+      "resident_bytes": 218218496
+    },
+    {
+      "monotonic": 10253.352070791,
+      "pressure": 1,
+      "host_available_bytes": 9389015040,
+      "swap_bytes": 262144,
+      "footprint_bytes": 207749840,
+      "resident_bytes": 243990528
+    },
+    {
+      "monotonic": 10254.361408,
+      "pressure": 1,
+      "host_available_bytes": 9942614016,
+      "swap_bytes": 262144,
+      "footprint_bytes": 301040504,
+      "resident_bytes": 345653248
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "e3ca89d62463aedca5d52e66193862b38bfe8827abac58488c87a56089e3953c"
+}

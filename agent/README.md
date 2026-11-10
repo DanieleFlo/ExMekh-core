@@ -12,6 +12,12 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
   - **Tool & Skill Execution Cards**: monitoring of hierarchical tools invoked by `DeepAgent` with depth tracking and skill paths.
   - **Turn Steering**: send a queued message as guidance to the active DeepAgent run. Accepted guidance and its delivery position remain visible after a page refresh and in saved conversation history. Guidance delivered inside a skill retains its canonical output ID in `get_execution_history` and `read_tool_output` across later turns, including its attached images and rendered PDF pages.
 - **Generated images**: each `generate-image` invocation has animated placeholders matching the requested count and aspect ratio. Original PNGs replace those placeholders at the tool's position in the chat. Images remain visible when their skill is collapsed and survive saved-chat reloads. The gallery supports previous/next images, arrow keys, download, copying PNG pixels, and Escape to close against a blurred backdrop. Background generations keep the turn open until their image feedback arrives, and cancellation stops that wait.
+  Skeletons show only percentage and elapsed time, without a phase label or
+  progress bar. Unknown percentages show `—%`.
+  Native SSE progress and heartbeats share a contract across CPU, Metal, CUDA
+  and future image models. The optional `image_timeout_seconds` controls the
+  total image deadline separately from connection inactivity; the Metal example
+  selects 1200 seconds. See the [progress contract](../docs/architecture/native-image-progress.md).
   Global Settings → **Send generated images to the agent** controls the library's `include_image_in_result` parameter (enabled by default). Disabling it preserves the original images in the UI while omitting model attachments. `INCLUDE_GENERATED_IMAGES_IN_CONTEXT` persists the setting.
 
 - **Images and PDFs**:
@@ -33,6 +39,13 @@ A Python frontend inspired by modern local LLM interfaces such as **LM Studio**,
 - **Readable execution results**: tool rows remain compact until clicked or activated with Enter/Space. Expanded results scroll within a bounded panel; completed skills offer their result in the last row of the expanded skill. Raw History preserves the XML header at the top of content with readable indentation while copying the original JSON. Archived read_tool_output results are matched by output ID and summary mode, including older saved chats.
 - **Responsive tabs**: chat, execution graph, history, dialogs, and the agent editor adapt to desktop, tablet, and phone widths.
 - **Automatic context compaction**: each DeepAgent node compacts its working history before the next inference at 80% of the server-reported context limit. Change the percentage (1–99) in Global Settings. Unknown server limits do not activate compaction. Graph and Raw retain original calls and outputs; a switch in Raw selects the complete execution archive or the current model context. Saved chats resume from the compact context while keeping their inspectable archive.
+  A budgeted automatic replacement is applied only when the complete request
+  becomes smaller and fits. Short outputs whose synthetic wrappers would grow
+  the context remain unchanged. An oversized request that cannot be reduced
+  enough is stopped with its originals retained. The bundled SDK patch and
+  rebuild instructions are recorded in [vendor-patches](vendor-patches/README.md).
+  The bundled coding agent can open file-processing for workspace inspection,
+  reading and changes; file tools retain their skill scope and authorization.
 
   With a known server limit, a request budget also protects against tool batches
   jumping across the threshold: compaction externalizes large outputs when needed,
@@ -106,7 +119,52 @@ set `UV_BIN=/path/to/uv` to choose another executable.
 
 ## Starting the Frontend
 
-Start `./agent/start-ds4-server.sh` for Qwen27 and the native Images/Embeddings
+### Apple Silicon streamed Quick Chat
+
+The [Metal roadmap](../docs/roadmaps/metal-apple-silicon-support-20261028.md)
+now has real M5 Pro 24 GiB results for both Flash and Qwen27 at context **8192**,
+prefill **64**, target-only and Responses with reasoning disabled. Actual Quick
+Chat turns pass for both models, including the approximately 2500-token frontend
+prompt. Separate runs fill 2048, 4096 and 8176 input positions and verify prefix,
+checkpoint and continuation state. See the
+[streaming qualification](../docs/performance/metal-apple-silicon-20261031/t06-t07/README.md).
+
+Install the locked frontend dependencies once with `cd agent && uv sync --frozen`.
+From the repository root, start Flash in the backend terminal:
+
+```sh
+set -a
+source config/flash-metal-streamed.env.example
+set +a
+./agent/start-ds4-server-flash.sh --host 127.0.0.1
+```
+
+In the frontend terminal, source the same profile:
+
+```sh
+set -a
+source config/flash-metal-streamed.env.example
+set +a
+./agent/run.sh
+```
+
+For Qwen27, source `config/qwen27-metal-streamed.env.example` in both terminals
+and use `./agent/start-ds4-server.sh` for the backend. Start only one backend at
+a time. Open [ExMekh Agent](http://127.0.0.1:8000) and choose **New Quick Chat**.
+Profiles do not overwrite a saved `.env` file.
+
+The 2 GiB weight cache is only one part of process memory. Persistent KV/GDN,
+runtime and staging are accounted separately, with a 2 GiB host reserve.
+Synchronous SSD reads preserve the original quantizations and keep Flash n-grams
+on disk. First responses can take several minutes on the qualification machine.
+These base profiles explicitly disable MTP, vision and the native suite; their
+integrated qualification is recorded separately. The old
+[resident 4096 profile](../config/qwen27-metal-quick.env.example) remains a
+historical preparation profile with its original resource refusal.
+
+### Qwen27 CUDA and native suite
+
+On CUDA, start `./agent/start-ds4-server.sh` for Qwen27 and the native Images/Embeddings
 endpoints on the same `http://localhost:8080/v1` URL. It builds and runs
 `ds4-server-suite` with `config/native-suite.example.json`, keeping context
 26000, MTP and the matching vision encoder. Set `DS4_SUITE_CONFIG` to use your

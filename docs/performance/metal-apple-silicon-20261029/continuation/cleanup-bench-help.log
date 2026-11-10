@@ -1,0 +1,10 @@
+usage: bench_suite_numeric.py [-h] --output OUTPUT [--repetitions REPETITIONS]
+
+Development benchmark: synchronized native primitives, independent outputs. No
+model weights or Python code enter the production C library. Complete operands
+and outputs accompany each timing; this is a baseline, not a speedup.
+
+options:
+  -h, --help            show this help message and exit
+  --output OUTPUT
+  --repetitions REPETITIONS

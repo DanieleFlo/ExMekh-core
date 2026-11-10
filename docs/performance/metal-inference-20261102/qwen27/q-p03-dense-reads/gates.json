@@ -1,0 +1,304 @@
+{
+  "gates": [
+    {
+      "command": [
+        "./tests/test_file_reader"
+      ],
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 1.0355214160008472,
+      "executables_sha256": {
+        "./tests/test_file_reader": "beed2012f6ed8d3c84355b81bd0b257707222a3d5f9a1a435438474e01058eba"
+      },
+      "log_sha256": "2dcd32fe6e0aa7016c68c0db6eb973fb66d970c2109d09d1ab042cee663c9ee8",
+      "name": "q-p03-host"
+    },
+    {
+      "command": [
+        "build/metal-perf-qwen27-20261102/file-reader-sanitized"
+      ],
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 1.0314230840012897,
+      "executables_sha256": {
+        "build/metal-perf-qwen27-20261102/file-reader-sanitized": "235e8e823b4885fd359de988ddb5a14d10a46912c982e836da547e705ce7fc17"
+      },
+      "log_sha256": "2dcd32fe6e0aa7016c68c0db6eb973fb66d970c2109d09d1ab042cee663c9ee8",
+      "name": "q-p03-host-sanitized"
+    },
+    {
+      "command": [
+        "./tests/test_qwen35_metal_graph"
+      ],
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 1.027372208001907,
+      "executables_sha256": {
+        "./tests/test_qwen35_metal_graph": "609213ff5ae6ac732e729ebd73a39cec7ba3185620cef3f5c9edff63ad4fdd36"
+      },
+      "log_sha256": "d6707ce7a693e9c7b98fcbc6cc0fbb42bed544eb1ea37a0c7e652ae7dbf6e626",
+      "name": "q-p03-hybrid"
+    },
+    {
+      "command": [
+        "./tests/test_flash_metal_stream_graph"
+      ],
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 1.035721874999581,
+      "executables_sha256": {
+        "./tests/test_flash_metal_stream_graph": "9b0158f5d5bd95c7b6986d28b8960ded2c56d3b0eeabc184125b3b3e16ac7a1c"
+      },
+      "log_sha256": "70bdcd8d08aba0e38931f6a6199fafcbe81c25690896bca4968207780fad0dfd",
+      "name": "q-p03-flash-graph"
+    },
+    {
+      "command": [
+        "build/metal-perf-qwen27-20261102/probe-dense",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "build/metal-perf-qwen27-20261102/dense-full-logits",
+        "128"
+      ],
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 34.49835445800272,
+      "executables_sha256": {
+        "build/metal-perf-qwen27-20261102/probe-dense": "51cb126a9f839180dc900f13101ffa9a9486c6f9e428219f5104f781b07a36d7"
+      },
+      "log_sha256": "5f9b0f2ee2d5a945c0661e767194200bed5538295bf23f3e896a5bef6779e66c",
+      "name": "q-p03-full-model"
+    },
+    {
+      "command": [
+        "build/metal-perf-qwen27-20261102/probe-dense",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "build/metal-perf-qwen27-20261102/dense-mtp-logits",
+        "128"
+      ],
+      "environment": {
+        "DS4_PROBE_MTP_MODEL": "gguf/mtp-Qwen3.8-27B-Q4_0.gguf"
+      },
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 54.92233275000035,
+      "executables_sha256": {
+        "build/metal-perf-qwen27-20261102/probe-dense": "51cb126a9f839180dc900f13101ffa9a9486c6f9e428219f5104f781b07a36d7"
+      },
+      "log_sha256": "227d9f1c3b5523e058d867f57f18261af8175722609738e04e9b2adb3b08fdab",
+      "name": "q-p03-qwen-mtp"
+    },
+    {
+      "command": [
+        "build/metal-perf-qwen27-20261102/probe-b0",
+        "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+        "build/metal-perf-qwen27-20261102/b0-mtp-logits",
+        "128"
+      ],
+      "environment": {
+        "DS4_PROBE_MTP_MODEL": "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+        "DS4_METAL_QWEN_UD_SOURCE": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/qwen35-quants-b0.metal"
+      },
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 67.06627004199981,
+      "executables_sha256": {
+        "build/metal-perf-qwen27-20261102/probe-b0": "b62be77a63ae960af7f4092adcdc450828aaf613ef3b3afd09f01c14e8534f07"
+      },
+      "log_sha256": "227d9f1c3b5523e058d867f57f18261af8175722609738e04e9b2adb3b08fdab",
+      "name": "q-p03-qwen-mtp-b0"
+    },
+    {
+      "command": [
+        "build/metal-perf-qwen27-20261102/probe-dense",
+        "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+        "build/metal-perf-qwen27-20261102/dense-flash-logits"
+      ],
+      "environment": {
+        "DS4_PROBE_SSD_CACHE_BYTES": "1073741824"
+      },
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 13.201865167000506,
+      "executables_sha256": {
+        "build/metal-perf-qwen27-20261102/probe-dense": "51cb126a9f839180dc900f13101ffa9a9486c6f9e428219f5104f781b07a36d7"
+      },
+      "log_sha256": "fd1953ba77421d900976985b42a1e273ada0c2f1ff7875312388c2c0dfff9152",
+      "name": "q-p03-flash-full"
+    },
+    {
+      "command": [
+        "./tests/test_qwen35_metal"
+      ],
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 2.067172874994867,
+      "executables_sha256": {
+        "./tests/test_qwen35_metal": "e64c8098578fdc458b6b402513c771bde71d0c1dd2d6d7c5f10dbc13d4322bc1"
+      },
+      "log_sha256": "0db63879103fac2d1df05dffa25178b9b2f0901f9e6ff68c4f26af38598afe2f",
+      "name": "final-scalar-quant-gdn-verified"
+    },
+    {
+      "command": [
+        "./tests/test_qwen35_metal_features"
+      ],
+      "environment": {},
+      "status": "PASS",
+      "exit_code": 0,
+      "elapsed_seconds": 1.0269932080045692,
+      "executables_sha256": {
+        "./tests/test_qwen35_metal_features": "b3f262ab4a80fb55f24c0a1678cc8bb6de407c9f9ffb9a711cdb0f63587587cd"
+      },
+      "log_sha256": "03c2c5c66fffd52fc87bfc684889e76ad096fafe33aa574bb54196e29f84b52d",
+      "name": "final-features-verified"
+    }
+  ],
+  "target_full_model": [
+    {
+      "file": "continuation.f32",
+      "exact": true
+    },
+    {
+      "file": "position-02.f32",
+      "exact": true
+    },
+    {
+      "file": "position-03.f32",
+      "exact": true
+    },
+    {
+      "file": "position-04.f32",
+      "exact": true
+    },
+    {
+      "file": "position-05.f32",
+      "exact": true
+    },
+    {
+      "file": "position-06.f32",
+      "exact": true
+    },
+    {
+      "file": "position-07.f32",
+      "exact": true
+    },
+    {
+      "file": "position-08.f32",
+      "exact": true
+    },
+    {
+      "file": "prefill.f32",
+      "exact": true
+    },
+    {
+      "file": "prefill.state",
+      "exact": true
+    }
+  ],
+  "mtp_b0_vs_candidate": [
+    {
+      "file": "continuation.f32",
+      "exact": true
+    },
+    {
+      "file": "position-02.f32",
+      "exact": true
+    },
+    {
+      "file": "position-03.f32",
+      "exact": true
+    },
+    {
+      "file": "position-04.f32",
+      "exact": true
+    },
+    {
+      "file": "position-05.f32",
+      "exact": true
+    },
+    {
+      "file": "position-06.f32",
+      "exact": true
+    },
+    {
+      "file": "position-07.f32",
+      "exact": true
+    },
+    {
+      "file": "position-08.f32",
+      "exact": true
+    },
+    {
+      "file": "prefill.f32",
+      "exact": true
+    }
+  ],
+  "mtp_replay_max_logit_delta_b0": 1.1920929e-05,
+  "mtp_replay_max_logit_delta_candidate": 1.1920929e-05,
+  "frozen_mtp_tolerance": "2e-5 + 5e-5*abs(reference)",
+  "flash": [
+    {
+      "file": "continuation.f32",
+      "exact": true
+    },
+    {
+      "file": "position-02.f32",
+      "exact": true
+    },
+    {
+      "file": "position-03.f32",
+      "exact": true
+    },
+    {
+      "file": "position-04.f32",
+      "exact": true
+    },
+    {
+      "file": "position-05.f32",
+      "exact": true
+    },
+    {
+      "file": "position-06.f32",
+      "exact": true
+    },
+    {
+      "file": "position-07.f32",
+      "exact": true
+    },
+    {
+      "file": "position-08.f32",
+      "exact": true
+    },
+    {
+      "file": "prefill.f32",
+      "exact": true
+    }
+  ],
+  "preliminary_failures": [
+    {
+      "case": "final tests inside sandbox",
+      "status": "NOT_VERIFIED (Metal device unavailable)",
+      "logs": [
+        "final-scalar-quant-gdn.log",
+        "final-features.log"
+      ],
+      "resolution": "verified outside sandbox"
+    },
+    {
+      "case": "large-read one-worker fixture",
+      "status": "FAIL (fixture extended file instead of truncating)",
+      "resolution": "correct test EOF boundary, no reader change"
+    },
+    {
+      "case": "micro reader first compile/run",
+      "status": "NOT_VERIFIED",
+      "resolution": "declare Darwin feature macros, build succeeded; rerun separately"
+    }
+  ]
+}

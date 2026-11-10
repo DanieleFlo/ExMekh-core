@@ -143,6 +143,12 @@ ds4_status ds4_weight_cache_acquire(ds4_weight_cache *c, size_t group) {
   }
   return s;
 }
+ds4_status ds4_weight_cache_hint(const ds4_weight_cache *c, size_t group,
+                                uint64_t max_bytes) {
+  if (!c || !c->groups || group >= c->count)
+    return DS4_STATUS_INVALID;
+  return ds4_weight_group_hint(c->groups[group], max_bytes);
+}
 ds4_status ds4_weight_cache_release(ds4_weight_cache *c) {
   if (!c || !c->groups)
     return DS4_STATUS_INVALID;

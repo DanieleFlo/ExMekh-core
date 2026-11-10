@@ -1,0 +1,183 @@
+{
+  "source_head": "4fef55feed35b79c20677d404f293ad49ffd13f5",
+  "scope": "Clean Code integration review. The measured I-P02/I-P04 snapshots have their original hashes in final-artifacts.json.",
+  "statuses": {
+    "cpu_numeric": {
+      "tests": 47,
+      "skipped": 13,
+      "status": "PASS"
+    },
+    "metal_numeric": {
+      "tests": 47,
+      "skipped": 3,
+      "status": "PARTIAL",
+      "convolution_views": "PASS",
+      "wide_padding": "PASS",
+      "known_failures": [
+        "sin (op 13)",
+        "cos (op 14)"
+      ],
+      "resource_refusals": [
+        "test_metal_budget_caps_storage_and_allows_recovery: NOMEM on small allocation"
+      ]
+    },
+    "metal_foundations": "PASS, including resident and streamed Qwen27 and Flash lifecycle",
+    "flash_ssd_fixture": "PASS",
+    "bundle": "PASS",
+    "suite_http": "PASS",
+    "planner_asan_ubsan": "PASS",
+    "suite_contracts_release_transfer_sha_product_text": "PASS"
+  },
+  "admission_refusals": {
+    "clean-review-control-preflight": {
+      "status": "NOT_VERIFIED",
+      "observed_exit": 1,
+      "elapsed_seconds": 1.0426481670001522,
+      "failure": "Bundle metadata admission: NOMEM before model execution",
+      "report": {
+        "path": "build/metal-perf-image-20261104/cache/clean-review-control-preflight/report.json",
+        "bytes": 1790,
+        "sha256": "4a9f93ca53d124dcc8f9347ad65e0d2207e802fa5af51b796de9a42ea62bd651"
+      },
+      "log": {
+        "path": "build/metal-perf-image-20261104/cache/clean-review-control-preflight/command.log",
+        "bytes": 50,
+        "sha256": "a50878e777f77e9afbcf710123e086342ef62787d99e80cd90e6422346a26a99"
+      }
+    },
+    "clean-review-text-preflight": {
+      "status": "NOT_VERIFIED",
+      "observed_exit": 1,
+      "elapsed_seconds": 1.0456183749993215,
+      "failure": "Bundle metadata admission: NOMEM before model execution",
+      "report": {
+        "path": "build/metal-perf-image-20261104/cache/clean-review-text-preflight/report.json",
+        "bytes": 1798,
+        "sha256": "146a0b1dc19fc8692466a081885f026cfd0de6feeba771618dfc178e48b657ff"
+      },
+      "log": {
+        "path": "build/metal-perf-image-20261104/cache/clean-review-text-preflight/command.log",
+        "bytes": 50,
+        "sha256": "a50878e777f77e9afbcf710123e086342ef62787d99e80cd90e6422346a26a99"
+      }
+    },
+    "gemma-regression": {
+      "status": "NOT_VERIFIED",
+      "observed_exit": 1,
+      "elapsed_seconds": 1.0562348750008823,
+      "failure": "Bundle metadata admission: NOMEM before model execution",
+      "report": {
+        "path": "build/metal-perf-image-20261104/review/gemma-regression/report.json",
+        "bytes": 1536,
+        "sha256": "09c09e36ef455de93d25cbe6bfceabe1863f499a55ba503e883fd1daa41ea2d9"
+      },
+      "log": {
+        "path": "build/metal-perf-image-20261104/review/gemma-regression/command.log",
+        "bytes": 55,
+        "sha256": "0d78e70cec5663c31da32ff6d788f7896b85b03fe4eaa21b7c0c9d2551cc04a1"
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "path": "build/metal-perf-image-20261104/review/host-tests.log",
+      "bytes": 14564,
+      "sha256": "152671ae40669c846ea5b6f400345df08b4b3630ee96fd4dfc305a59d5e68646"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/review/foundations-final.log",
+      "bytes": 53936,
+      "sha256": "d051713fa472cb80983d4f95e2ef05b2ed35b7a395cd5827afe62cd520cbf6e0"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/review/numeric-full.log",
+      "bytes": 8998,
+      "sha256": "645f4d8c5d10039ae1232c94af4a3308aa25fbd0f8101664953d42cb706502be"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/review/numeric-baseline-trig.log",
+      "bytes": 1877,
+      "sha256": "5324ce6e3416df8899350277c7398678165a39533159984bfea3fb14279f6ca4"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/review/regressions.json",
+      "bytes": 400,
+      "sha256": "5083d092a2c4ee303f2cbb8e802bc980aca2a5d70d2e2a2a8e2faa82fbf48ac0"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/review/planner-sanitized.log",
+      "bytes": 81,
+      "sha256": "95204b4c3ddf19705df09057395b27012b41085b8bedfa8c37578907cae0eac3"
+    },
+    {
+      "path": "build/metal-perf-image-20261104/review/suite-contracts.log",
+      "bytes": 4980,
+      "sha256": "f2bc90e7b0a43e8fd0d2ad87e5686b913b872ea22deb694f33a8f8fa582ad2f8"
+    }
+  ],
+  "reviewed_sources": [
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 40269,
+      "sha256": "95e6d8581c4aa2667e690d62575c9a4883cb57d9dc5a19d4e28210e54fc84e5a"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 4394,
+      "sha256": "3256e93f5e77ed2a1f9513342acffddba9ac91858def2a813f5c5b831b8cb69e"
+    },
+    {
+      "path": "ds4_numeric_metal.m",
+      "bytes": 30203,
+      "sha256": "c1143fecf246a88cc3fa20c1644537e6abe58c386838a5800983a6f0d01d0d77"
+    },
+    {
+      "path": "ds4_metal_device.h",
+      "bytes": 4010,
+      "sha256": "5f1b92c1cd5caf5db8246ab9cf15af4fb4c086c58c07b605dc50bf07fac22bbb"
+    },
+    {
+      "path": "ds4_qwen_image_pipeline.c",
+      "bytes": 31573,
+      "sha256": "17eb394a4b0d18dbd6f42e1eb76d65422e7a0a3d5d5838f8b02194dcf08042fc"
+    },
+    {
+      "path": "metal/numeric_ordered.metal",
+      "bytes": 33879,
+      "sha256": "d0d0424a6476555cf4800bc56160bb7322a7903e465c0fc0adc5986f09e405af"
+    },
+    {
+      "path": "tests/test_qwen_image_cache_budget.c",
+      "bytes": 7708,
+      "sha256": "9c7929f7d1e4aa7e557f89da61bcb5a43e7c12794819d584baaae82971348fad"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 55126,
+      "sha256": "63dcfe09a83bcd75f1091e4ba59855a5de6e56545eb5299fb8fa76f6fb257f4c"
+    }
+  ],
+  "reviewed_binaries": [
+    {
+      "path": "build/metal-perf-image-20261104/cache/probe-clean-review",
+      "bytes": 585752,
+      "sha256": "8803395d5721d1f29e38747455ca4f07df9ea122652a3c50076a484853f9ded8"
+    },
+    {
+      "path": "tests/libds4_numeric_metal.so",
+      "bytes": 173736,
+      "sha256": "a34d47d5f5d2dab7aad5531e6cd93662a4ed658ed753ff960c05fc5c002cc1fc"
+    },
+    {
+      "path": "tests/probe_gemma_visual",
+      "bytes": 586848,
+      "sha256": "8daccd04707e54c972af0480977fa7a234e4c838aa15e3cc162353156be511bb"
+    }
+  ],
+  "memory_retry": {
+    "status": "NOT_VERIFIED",
+    "upper_bound_bytes": 1819377664,
+    "reserve_bytes": 2147483648,
+    "result": "Host never reached the retry threshold. No model executed on this retry."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "before": {
+    "execution": "FAIL",
+    "expected_diagnostic_failure": true,
+    "cause": "Public UD batch incorrectly accepted tokens=NULL"
+  },
+  "after": {
+    "execution": "PASS",
+    "contract": "Reject missing token tensor before reading weights or mutating output"
+  },
+  "type": 11,
+  "vocab": 17,
+  "rows": 2,
+  "width": 256,
+  "cache_bytes": 110,
+  "permanent_fixture": "tests/test_qwen35_metal.c:check_gather_arguments, all12types/2widths resident+streamed"
+}

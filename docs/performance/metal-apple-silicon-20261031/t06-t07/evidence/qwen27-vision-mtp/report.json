@@ -1,0 +1,41 @@
+{
+  "command": [
+    "env",
+    "DS4_TEST_SSD_STREAMING=1",
+    "DS4_QWEN4_IMAGE_MAX_TOKENS=128",
+    "./tests/test_glm53_vision_prompt",
+    "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "gguf/mmproj-Qwen3.8-27B-F16.gguf",
+    "tests/vision-fixtures/glm53/earth.jpg",
+    "--ssd-streaming",
+    "--tokens",
+    "8",
+    "--mtp-model",
+    "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+    "--mtp-draft",
+    "2"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120,
+  "reason": "T05 actual encoder and LLM, image versus zero image, prefix replay and eight generation tokens",
+  "footprint_limit_gib": 10,
+  "exit_code": 2,
+  "elapsed_seconds": 1.0548587079993013,
+  "status": "FAIL",
+  "samples": [
+    {
+      "monotonic": 12199.338926166,
+      "pressure": 1,
+      "host_available_bytes": 15582101504,
+      "swap_bytes": 1280636354,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    }
+  ],
+  "executables_sha256": {
+    "./tests/test_glm53_vision_prompt": "93b83e56fbd58e79afeeb9672c75112bdbada11804e26da688c2a587dd8dd50d"
+  },
+  "log_sha256": "5d1e2a14aa53d7b23e7afb30128a6539581f2f42316cd5d1b9493d377861f349"
+}

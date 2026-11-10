@@ -42,11 +42,11 @@ async def test_marquee_toggle_group_move_collective_commands_and_arrange(
             await expect(board.locator(".agent-board-selection")).to_have_count(0)
             root = board.locator('[data-node="root"]')
             root_style = await root.get_attribute("style")
-            await root.click(modifiers=["Control"])
+            await root.click(modifiers=["ControlOrMeta"])
             await expect(
                 board.get_by_text("3 components selected", exact=True)
             ).to_be_visible()
-            await root.click(modifiers=["Meta"])
+            await root.click(modifiers=["ControlOrMeta"])
             await expect(
                 board.get_by_text("2 components selected", exact=True)
             ).to_be_visible()

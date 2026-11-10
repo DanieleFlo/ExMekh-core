@@ -1,0 +1,61 @@
+FF.
+=================================== FAILURES ===================================
+______ QwenMetalApiLive.test_anthropic_messages_uses_the_matching_family _______
+
+self = <test_qwen_metal_api_live.QwenMetalApiLive testMethod=test_anthropic_messages_uses_the_matching_family>
+
+    def test_anthropic_messages_uses_the_matching_family(self):
+        response = self.client.post(
+            "/messages",
+            cast_to=dict,
+            body={
+                "model": MODEL,
+                "messages": [{"role": "user", "content": "Reply only OK."}],
+                "max_tokens": 16,
+                "temperature": 0,
+                "thinking": {"type": "disabled"},
+            },
+            options={"headers": {"anthropic-version": "2023-06-01"}},
+        )
+        self.exchanges.append({"endpoint": "/messages", "response": response})
+        self.assertEqual(response["type"], "message")
+        self.assertEqual(response["role"], "assistant")
+        text = "".join(
+            part["text"] for part in response["content"] if part["type"] == "text"
+        )
+        self.assertIn("OK", text)
+>       self.assertGreater(response["usage"]["input_tokens"], 0)
+E       AssertionError: 0 not greater than 0
+
+tests/test_qwen_metal_api_live.py:86: AssertionError
+_______ QwenMetalApiLive.test_chat_prefix_and_sse_match_ordinary_decode ________
+
+self = <test_qwen_metal_api_live.QwenMetalApiLive testMethod=test_chat_prefix_and_sse_match_ordinary_decode>
+
+        cls.exchanges = []
+    
+    @classmethod
+    def tearDownClass(cls):
+        if destination := os.getenv("DS4_SUITE_E2E_ARTIFACTS"):
+            output = Path(destination)
+            output.mkdir(parents=True, exist_ok=True)
+            (output / "short-protocols.json").write_text(
+                json.dumps({"model": MODEL, "exchanges": cls.exchanges}, indent=2)
+                + "\n"
+            )
+    
+    def test_chat_prefix_and_sse_match_ordinary_decode(self):
+        request = {
+            "model": MODEL,
+            "messages": [{"role": "user", "content": "Reply only OK."}],
+            "temperature": 0,
+            "reasoning_effort": "none",
+            "max_tokens": 16,
+>       }
+E       AssertionError: 0 not greater than 0
+
+tests/test_qwen_metal_api_live.py:51: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_qwen_metal_api_live.py::QwenMetalApiLive::test_anthropic_messages_uses_the_matching_family
+FAILED tests/test_qwen_metal_api_live.py::QwenMetalApiLive::test_chat_prefix_and_sse_match_ordinary_decode
+2 failed, 1 passed in 43.88s

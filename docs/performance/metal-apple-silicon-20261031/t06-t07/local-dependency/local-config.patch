@@ -1,0 +1,29 @@
+--- /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/.venv/lib/python3.13/site-packages/exmekh_lib/config/file_editing.py
++++ /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/agent/.venv/lib/python3.13/site-packages/exmekh_lib/config/file_editing.py
+@@ -1,8 +1,17 @@
+ """Shared literal edit contract and bounded filesystem operations."""
+ 
++import math
++import os
+ from dataclasses import dataclass
+ 
+ from exmekh_lib.config.default_capabilities import DEFAULT_CAPABILITIES
++
++
++def configured_protocol_timeout() -> float:
++    value = float(os.getenv("EXMEKH_INTERACTIVE_TIMEOUT_SECONDS", "300"))
++    if not math.isfinite(value) or value <= 0:
++        raise ValueError("EXMEKH_INTERACTIVE_TIMEOUT_SECONDS must be finite and positive")
++    return value
+ 
+ 
+ @dataclass(frozen=True, slots=True)
+@@ -15,7 +24,7 @@
+     creation_directory_mode: int = 0o777
+     max_snapshot_bytes: int = 1024 * 1024
+     max_generated_bytes: int = 1024 * 1024
+-    protocol_timeout_seconds: float = 300
++    protocol_timeout_seconds: float = configured_protocol_timeout()
+     max_exchanges: int = 64
+     max_response_bytes: int = 16 * 1024 * 1024
+     inspection_required: str = (

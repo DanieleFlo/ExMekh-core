@@ -1,0 +1,66 @@
+{
+  "command": [
+    "agent/.venv/bin/python",
+    "-m",
+    "unittest",
+    "tests.test_metal_stream_qualification",
+    "tests.test_suite_pipeline_qualification",
+    "tests.test_suite_offloaded_oracle",
+    "tests.test_suite_contracts",
+    "tests.test_flash_launcher",
+    "tests.test_metal_foundations",
+    "tests.test_metal_vision_qualification",
+    "tests.test_qwen4_vision_ref",
+    "tests.test_qwen_flash_tools",
+    "-q"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 1,
+  "reason": "Model-free host regression and public provider adapter checks; live inference expressly suspended by user",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 1,
+  "elapsed_seconds": 3.056775666998874,
+  "status": "FAIL",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 51861.605731875,
+      "pressure": 1,
+      "host_available_bytes": 15412527104,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 51862.624127625,
+      "pressure": 1,
+      "host_available_bytes": 15230648320,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 101286536,
+      "resident_bytes": 150142976
+    },
+    {
+      "monotonic": 51863.631273666,
+      "pressure": 1,
+      "host_available_bytes": 15090565120,
+      "swap_bytes": 2034237,
+      "footprint_bytes": 135053960,
+      "resident_bytes": 184500224
+    }
+  ],
+  "executables_sha256": {
+    "agent/.venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "93b89a190fccfef10c484a33af4714a4f709e76c626b91976713e314c67b4c8d"
+}

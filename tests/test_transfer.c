@@ -43,7 +43,7 @@ static ds4_status copy(void *p, unsigned slot, void *dst, const void *src,
   f->bytes[slot] = bytes;
   return DS4_STATUS_OK;
 }
-static ds4_status wait(void *p, unsigned slot) {
+static ds4_status wait_stage(void *p, unsigned slot) {
   fake *f = p;
   if (f->fail_wait)
     return DS4_STATUS_INFERENCE;
@@ -53,14 +53,14 @@ static ds4_status wait(void *p, unsigned slot) {
   return DS4_STATUS_OK;
 }
 static ds4_status publish(void *p) {
-  ds4_status s = wait(p, 0);
-  return s ? s : wait(p, 1);
+  ds4_status s = wait_stage(p, 0);
+  return s ? s : wait_stage(p, 1);
 }
 int main(void) {
   ds4_resources *r = NULL;
   assert(!ds4_resources_create(&r));
   fake f = {.resources = r};
-  ds4_transfer_ops ops = {&f, allocate, release, copy, wait, publish};
+  ds4_transfer_ops ops = {&f, allocate, release, copy, wait_stage, publish};
   ds4_transfer *t = NULL;
   ds4_resource_budget budget = {.limit = 253};
   assert(!ds4_resources_set_budget(r, DS4_MEMORY_PINNED, &budget));

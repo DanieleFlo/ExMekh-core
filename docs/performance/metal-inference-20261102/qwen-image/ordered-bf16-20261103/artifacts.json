@@ -1,0 +1,615 @@
+{
+  "baseline_head": "f2fed3e6dbbb8473adae1733a9ececd7cb0d8eb8",
+  "source_snapshot": "Final owner/capability review. Initial I-P01 host source and manifest are archived in review/.",
+  "hardware": "Apple M5 Pro, 24 GiB",
+  "os": "macOS 26.6.2 (25G83)",
+  "sdk": "macOS 26.5",
+  "compiler": "Apple clang 21.0.0 (clang-2100.1.1.101)",
+  "excluded_from_performance": [
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-1",
+      "reason": "Two macOS sleep intervals. Numerical gate passes."
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/isolated-objc-duplicate.json",
+      "reason": "Duplicate Objective-C classes in first micro harness; repeated in separate processes."
+    }
+  ],
+  "files": [
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/auto-budget-text/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "83ebb4c1181a1465ef5fabec99c4fbc5449b4540dced55aa7f10426da9b4a14a"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/auto-budget-text/report.json",
+      "bytes": 31656,
+      "sha256": "0d4b4b01eaf21ccee8bfc0e5f0d6ba6e096c872e98a89ee9d6e54a61adbd176d"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/auto-budget-text/verification.json",
+      "bytes": 4457,
+      "sha256": "5227969a6dac10fce6314447bfa819d08b5236bead526283c2c792872164ce0a"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/confirm.sh",
+      "bytes": 510,
+      "sha256": "f159af4c48f3571c35672376e5bf0563c907d8fe9563ffd5dfe9e9865fcccd8c"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/gemma-regression/report.json",
+      "bytes": 3907,
+      "sha256": "6833661a38a0c9e09ed9e44b882fcc407a114a0d37e4ec67dafb1136d5f4e5c0"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/isolated-after.json",
+      "bytes": 2578,
+      "sha256": "acac5b4dd715bfbcd92e88aaec1f3233534bdbfcf45106a611903798b6b18e25"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/isolated-before.json",
+      "bytes": 2601,
+      "sha256": "72f9081883eaebc2015c1f96e79ccff98d94481e31720d1baab3b5d52d11105b"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/isolated-fallback.json",
+      "bytes": 2596,
+      "sha256": "cccdb91000562ee81fdaca3a3c44dac711292acf1d1d3ef0da0140178d7ae035"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/isolated-objc-duplicate.json",
+      "bytes": 3855,
+      "sha256": "33e1c9419814bd48a44ab39727439a80dfe9aba70f16289073519be8d1f50b9e"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/isolated-reviewed.json",
+      "bytes": 2586,
+      "sha256": "7cbf001e2ea439651d8a046f66ff3fe9edd932dc1962565eb09ff2d186dfb11e"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/isolated.log",
+      "bytes": 3131,
+      "sha256": "e1b37853be3dd51af9ec7db84581c4e4cd12fb777a74d0fdcfa3b30536a39913"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/linear.py",
+      "bytes": 1993,
+      "sha256": "a7c4d3f2d878c8211ac4597774ffe8169d1a667819ff9d862bd61f44c0f9e5a0"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/numeric-after.so",
+      "bytes": 173048,
+      "sha256": "f3072f209c1b348ca65c1e15122b2d5894fc19988217ac7926d0a3db10167344"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/numeric-baseline-trig.log",
+      "bytes": 1877,
+      "sha256": "e3ba54d7b5780d4a6d0301b111f48b2c6b2d48db98cbb2f9d3b7cd61a130762d"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/numeric-before.so",
+      "bytes": 156440,
+      "sha256": "8fa6a2ab02203c8fe4d4c3775010d08ad9b5e13ec6634117df544b1947975a6b"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/numeric-fallback.so",
+      "bytes": 173328,
+      "sha256": "c9f0d7d5dbd679f39fc6074bbe2d2c26a665df84bc86effdd614a85d3c3558ba"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/numeric-full.log",
+      "bytes": 7408,
+      "sha256": "dcabeab484a7ec19481d5b2a4d3972faab9af3ac7ecad63a4a4e9d417d051d71"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/numeric-reviewed.so",
+      "bytes": 173272,
+      "sha256": "f5dd26fb42fd1a1e380853375eb869242f89eb07631f28dd4a36c0a49156ecdf"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/pipeline.py",
+      "bytes": 2471,
+      "sha256": "27f1b4955a73c1187bd9f2d61c75f57fafb1fd2430cad2f26ab50555b86012fb"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/post-checks.sh",
+      "bytes": 1517,
+      "sha256": "b6e46a2aafa2ef0901ee829c15dd760e2b775f5c946a25cff6265123d69839f0"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/probe-after",
+      "bytes": 584840,
+      "sha256": "05f6cb486d82e68e20859690f796711a351716eb3b7870457b05d2691460c40c"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/probe-before",
+      "bytes": 568232,
+      "sha256": "fa402ab4a28f5230aa1d92c9efc47821625f21ed1742dd945cd206586f63c347"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/probe-reviewed",
+      "bytes": 585048,
+      "sha256": "f02ea6273c1e65d3571d96503af8218d1c90673439d89b76610c6ea0a16a65a2"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/profile-baseline-dit.sample",
+      "bytes": 92053,
+      "sha256": "ffc7597c031de2fb2698b83f3d0ac31debfeeb0dba4d479248d509a1b65384d6"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/profile-baseline.sample",
+      "bytes": 112618,
+      "sha256": "5383c2a9f4b18e94e49d424fa51c939239682951bb896763d23b548586862b79"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/profile-candidate-dit-rgb.sample",
+      "bytes": 104041,
+      "sha256": "af07ca60ae474e0bf75adfce72774a7e905de126a232a521ff2897414df99272"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/profile-candidate-dit-text.sample",
+      "bytes": 95689,
+      "sha256": "b5fba8655572064bd86c4dfc19b1439c8bbfb47c8397e02d0a622695d6beee5f"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/profile-candidate-vae-text.sample",
+      "bytes": 78020,
+      "sha256": "310c9888071352bfc38270d07aa53605f845f5ca14d6c119482dfa4d94fb7889"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/profile-text-after/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "e404b26b90371a08977c68fec8036dedfb42839561dd279273ad54d7e121aec8"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/profile-text-after/report.json",
+      "bytes": 31428,
+      "sha256": "84f1104be44bcee1379b4b31a780d362536d477838d18531d36f3d31d839c52c"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/profile-text-after/verification.json",
+      "bytes": 4456,
+      "sha256": "1e22d358f9c42ac526e4215d256492c99f1d1aa108edf4482991ae55a57a705b"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/regressions.json",
+      "bytes": 85326,
+      "sha256": "df19e5a61a97cc79d8e61203bf4069ea115ae497f125e8200464261c1d898162"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/regressions.py",
+      "bytes": 2797,
+      "sha256": "d2510e22cc190936128f8db952a595322dc1bae96f74a4e9e0f7366f89ebfe00"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-a-final/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "f4e0dfdb6147f17a6d156db4b35d1ceeeba8ee9130f448ddf9d0b3fb709ec63d"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-a-final/report.json",
+      "bytes": 31437,
+      "sha256": "99883040043adb3fcf7fb3b2161f14ece17c493f9e794b8d2044445747d5f70b"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-a-final/verification.json",
+      "bytes": 4456,
+      "sha256": "cf7291882fd0ae7e6a7dacd728d6181ac8d24a304a427f8bf17694ef5a9f4735"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-a-ip01/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "235c8cec7e5922104a5458635f1fcc3b2057e23614e82cfd94094919a6fa653f"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-a-ip01/report.json",
+      "bytes": 31441,
+      "sha256": "df51d3cc161ce0ee7f43f11cfe619ca310a596b156ea9ee4654751f442244bca"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-a-ip01/verification.json",
+      "bytes": 4457,
+      "sha256": "0713b95e94bdeac9b820108e8bd8c37925e96492e41c4a83b30ed552d08787af"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-b-final/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "d674c69e9b3eb0ee67cabf7304d326b79f6e379fedb7042f00f60ed8348e4969"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-b-final/report.json",
+      "bytes": 30824,
+      "sha256": "65de5aa3ca4321811e4e21597ca84ee42588a6a3e6279326d42ccd3b130e5637"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-b-final/verification.json",
+      "bytes": 4456,
+      "sha256": "f2995f6006d675093ec3626e2fbcc84c5857b258ba4991331c1443caf098b9da"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-b-ip01/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "b63a89500c8175cc6d975349c373dea9347e66c5eef77233ee20ab7bf7d7a386"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-b-ip01/report.json",
+      "bytes": 31231,
+      "sha256": "a10d2ea3749515c24cbcc165a324c2bdf578fbd93a0e811ff7c9e61613a2c553"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-control-b-ip01/verification.json",
+      "bytes": 4457,
+      "sha256": "18afe51c004f8214f8242399bef74ff6ffde86373cfb4623ebf2c34049217eae"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-rgb/native/case-0/report.json",
+      "bytes": 1308,
+      "sha256": "d87e8df49fc1f554b87e0e96f584b07e24f38cfa89546f95826756a757d0b84e"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-rgb/report.json",
+      "bytes": 35310,
+      "sha256": "07fe6661ca38135f304fc42d93b282f276c29fc8fbf416482404ad8bac0c35f8"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-rgb/verification.json",
+      "bytes": 5177,
+      "sha256": "6faf5def19169d0dd4f7fb482a279b13175ba2e46fabefcf1b76c87c1c8fe2c7"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-rgba/native/case-0/report.json",
+      "bytes": 1308,
+      "sha256": "472df3c577204f4b15340482de2c5a524f1841f777b68a046c9d00956bda739d"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-rgba/report.json",
+      "bytes": 35524,
+      "sha256": "5cb5b1b16fc5e61624bbed9e3fd990bd47cb8511ef59a03821c3348f7d24d595"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-rgba/verification.json",
+      "bytes": 5171,
+      "sha256": "83718b5977f656bf6d1148e03b79c41f0b76682b5ea78f91c6a6d2f1bed720b6"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-text/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "18881d2c75190f3441a86981b98151770e6d2e0553b1d86659da6c57f15ca987"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-text/report.json",
+      "bytes": 33393,
+      "sha256": "48cc228a9c16f976d9f7ef281d96a19cff8cb6b4e8af92e1e8993f8255931a6b"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-text/verification.json",
+      "bytes": 4456,
+      "sha256": "2a2223e108629b7c92f2a8b88592fa22b78ec3f01061f93921c7136cd5868402"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review/before.m",
+      "bytes": 27294,
+      "sha256": "80fd7d834416f725783525350c43bd59e27c52017153ec47b27cedab8254db8d"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review/build.log",
+      "bytes": 3870,
+      "sha256": "81e396cfb4087a89688ad5e53e139d331976434f7cb0ac2accd77176a0f6b3e3"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review/forced-fallback.m",
+      "bytes": 28534,
+      "sha256": "da21c43aedb576c9860e2960785154398fc088a7fb4636347bdf19b493a30680"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review/host-tests.log",
+      "bytes": 2808,
+      "sha256": "2816682d871e1759659b70d4b429fa682431e94b2a10911e05282e5863f928eb"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review/manifest-ip01.json",
+      "bytes": 2243,
+      "sha256": "a2bc7a1dbd05be7cb294ca54ea36cd7909d17d8f8746e1cc41ce9973d41e705a"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review/original-dispatch.patch",
+      "bytes": 1422,
+      "sha256": "f4ff4bb3d8a22b1aeea79485990257f31f7ad87b4f5547a445cbcb5dbab92b44"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review/summarize-controls.py",
+      "bytes": 2134,
+      "sha256": "e34583e6a78b41c647a7fcae402c761356ca1bd5d3fe4693b74a6062ced6a173"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/rgb-after/native/case-0/report.json",
+      "bytes": 1308,
+      "sha256": "1a0756544e5a851e9f648d865782f7f4e859d47ffb1324ce33904d895357779a"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/rgb-after/report.json",
+      "bytes": 35961,
+      "sha256": "585a98142b885bf81696286259a29f3b52f61373d4ba3551a4fa07802da3b927"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/rgb-after/verification.json",
+      "bytes": 5177,
+      "sha256": "f4fd2c6dab2d6953652646d0c07e49a3d4d07079a2d4cdd756031d7950103110"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/rgba-after/native/case-0/report.json",
+      "bytes": 1308,
+      "sha256": "605a158dc52a47ea74bc0707dc1614bf52da96533be2332cb7837eb8acd09acd"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/rgba-after/report.json",
+      "bytes": 36161,
+      "sha256": "e5329c9f6820a1272ba2310dacf0a71a0b3de70fb8bd2af2c85d03dac22af95b"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/rgba-after/verification.json",
+      "bytes": 5169,
+      "sha256": "9d543a7255d9cdbc4abe437bed9b1be0b1e8bdee2119618aa033f6fbf0d342f5"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/run-matrix.sh",
+      "bytes": 553,
+      "sha256": "9228489adf92685697dac790ac47ebcd64b840cf9ef1b804c143f112b8cbd762"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/summarize.py",
+      "bytes": 4009,
+      "sha256": "b862bfa37d7f299864cb9302118f1c841f0e6bd4112e3c31e71070fac3312b85"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-1/native/case-0/report.json",
+      "bytes": 1196,
+      "sha256": "380e2bed37629f894faff049af5f760908eea4e5fb877e53c9c3b998771ede10"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-1/report.json",
+      "bytes": 37640,
+      "sha256": "747828ffc3153ab8f497a5fc990b301ab2efd9b35c8f03ce9b692a98fa494bbd"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-1/verification.json",
+      "bytes": 4460,
+      "sha256": "cf849a30142c80e8fa1564e0eeb751ee473a64a2dd64e242318461b827883610"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-2/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "32fd384e0717419df65063c8e0182e9f2f342faf2b85b931067a1fc1d4a3312a"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-2/report.json",
+      "bytes": 31016,
+      "sha256": "cda47ec9179f58602aa761a453141011ee2eff25f41c44742121cbb0649a8fd2"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-2/verification.json",
+      "bytes": 4457,
+      "sha256": "0004c58afa28d84b4cb9470379a90cb917b4b70df9dca1df15a9feecfa9ec7c5"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-3/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "4594b0844ad25a974d7c2522d15968f5cf23aa73af590898b306dce1244b279c"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-3/report.json",
+      "bytes": 31864,
+      "sha256": "c3ef25864b8a975b41397f5781a2abe67831053f6003a9669f3b82937a632717"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-3/verification.json",
+      "bytes": 4456,
+      "sha256": "c32c9fdd1d1181cbaf1bc72a2dc665c30ac0a305934cd6bf3df28667b4b0dfca"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-4/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "d81438afecd9e76ae6421f7575a670c624071be7719ee74ca64511c7ba4db44f"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-4/report.json",
+      "bytes": 32510,
+      "sha256": "ee07024c1e941d88f103a197642269e10efa2af99fc4ae87d21da48fa9eadddb"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-4/verification.json",
+      "bytes": 4457,
+      "sha256": "1f875cb5bfc6a68e3383d011f9f7c328fd733649725202b1b8d1220c9ca663fc"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-5/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "cd5a5fc7acbdd5cef2069f37061c6cba1559d7142b5f7ac88b4ea6ce2896448e"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-5/report.json",
+      "bytes": 31645,
+      "sha256": "b5e971d6903843b601e539d8cb0ff0c93d755ff8aa48f6b5698dc06d8113af3b"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-5/verification.json",
+      "bytes": 4455,
+      "sha256": "c1f8ddabe86b0d1a0597a74433e05a77354eb1b83b406ba7d790dc4635efc1bd"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-6/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "27b13e706c16404c181d91b8ac64652f538b004134fbe33145a84237f9185bc7"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-6/report.json",
+      "bytes": 31222,
+      "sha256": "a19808e5a365c691cf362903cebb8f1e625db048981ee7530ab48ef233a6d0fd"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-6/verification.json",
+      "bytes": 4456,
+      "sha256": "9d7af7732173ca68bbaaa2e0d4b73bd4789bcf5a14a8e0b634d4952de1519f6c"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-7/native/case-0/report.json",
+      "bytes": 1192,
+      "sha256": "dda95f3090a4ce4827deea629bfa833843e37eccadd6dbadd1d7e968baa4ac4a"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-7/report.json",
+      "bytes": 32081,
+      "sha256": "f0539580d25f67231d0fae05581c30a619a84bdefbd9ab9515524b93e52e84c6"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-after-7/verification.json",
+      "bytes": 4456,
+      "sha256": "b1553ca61e7bd668898ca5a07eab507f4535609a58341963457928b047bb142e"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-2/native/case-0/report.json",
+      "bytes": 1193,
+      "sha256": "a172b2642b8280f554e8d14aa42cfa26a390ad225a2a662e534e4c3c55134fb9"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-2/report.json",
+      "bytes": 47835,
+      "sha256": "491936f397f66f1422d00fecbfcabc55dda42e2b4a4a47399e35da9a5e967f92"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-2/verification.json",
+      "bytes": 4458,
+      "sha256": "7c7f1bbc2091278989664b73b36c6d40d3565d1d3bee9134a9352983f7dab128"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-3/native/case-0/report.json",
+      "bytes": 1193,
+      "sha256": "4c6a56d657879d691e3e9249284d743dc1e522e85470c810c6af9162b8be9151"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-3/report.json",
+      "bytes": 46760,
+      "sha256": "0b26e0a7dea1578469d46494c2212f6463a67d15feaeb5476e7d7778a819c161"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-3/verification.json",
+      "bytes": 4458,
+      "sha256": "055abf7d9746e913b002cdf0de00731a37be94ef1bcf7d29673007582b778077"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-4/native/case-0/report.json",
+      "bytes": 1193,
+      "sha256": "7c518163a835392598d87955835afa04eb475090d32257b552a850a3534ad57f"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-4/report.json",
+      "bytes": 49350,
+      "sha256": "d2fe4823a8a0db29789cf3e9f779def07222c2ebe0f83708b39f631760e998a3"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-4/verification.json",
+      "bytes": 4456,
+      "sha256": "456fe48326ec9b2b3839e95e51ab18e0a180d21446fde4edbdcc9b681fcbc67b"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-5/native/case-0/report.json",
+      "bytes": 1193,
+      "sha256": "9eff4388ecac25014af60debdcb7cf829e903e46214102eb007883dbbd4f16e2"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-5/report.json",
+      "bytes": 48265,
+      "sha256": "1a9ce3e2d12f41df38ed18caf0925490d28c91208a6b532a9a7b9909798fbc1c"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-5/verification.json",
+      "bytes": 4457,
+      "sha256": "3debd4bc5b361259ad4daf96d728db8bae8102dc41d8c7e43daa78afe50c082f"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-6/native/case-0/report.json",
+      "bytes": 1193,
+      "sha256": "b1aa4419e23e935ffc244e5d530a650d86e1659a0f407dfc9292168c89bcd3ca"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-6/report.json",
+      "bytes": 48692,
+      "sha256": "efc64cdfdcebf780a78246fd57c7e3cb975fb429f1ca4e43b67dd7398da4ebe7"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-6/verification.json",
+      "bytes": 4457,
+      "sha256": "d22d59db7489485821004f4048f3ec445a26fb9f71965f1b5dc85631bf5e4e4d"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-7/native/case-0/report.json",
+      "bytes": 1193,
+      "sha256": "fcdda5fce8fb6b79ca7de35a6aa2c6519003d3cd1419bc0f2ecdc0024da267b0"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-7/report.json",
+      "bytes": 46549,
+      "sha256": "42ec0ae8c79ebc1b1c17d44f0c51563d16ec00b9fb5e41b7005fd2708d208071"
+    },
+    {
+      "path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/text-before-7/verification.json",
+      "bytes": 4458,
+      "sha256": "b5b7e26b9602dd96fee38522faa35f40a568733f0041886e5adb2570c6c50fb1"
+    },
+    {
+      "path": "build/metal-models/image-bf16.ds4b/bundle.ds4b",
+      "bytes": 163456,
+      "sha256": "8fdbe2b02a80483ebd90db73a96517762cf75b8dd709b77be3c8253066117969"
+    },
+    {
+      "path": "build/metal-models/image-tokenizer.ds4q",
+      "bytes": 1818396,
+      "sha256": "670ded5ceddd425cebde28e918cffcc71205a3cc311cc781ae2b20d114acb4d8"
+    },
+    {
+      "path": "build/suite-media/provenance.json",
+      "bytes": 1216,
+      "sha256": "6e50fad3ed8059cabf8eae5d8008511aa3c783a42c5bde2cab36c8c24e562b60"
+    },
+    {
+      "path": "docs/performance/native-suite-t00-20261020/tolerances.json",
+      "bytes": 1639,
+      "sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+    },
+    {
+      "path": "ds4_numeric.c",
+      "bytes": 40500,
+      "sha256": "94fd694d7dc0094d518cad46ef7ff00b126c1e521297786c038da8428a1aa048"
+    },
+    {
+      "path": "ds4_numeric_internal.h",
+      "bytes": 3661,
+      "sha256": "8b31866ce87f20fcd93c1138acffadb53ff4453d82cd0d4d718d936ffe1c43dd"
+    },
+    {
+      "path": "ds4_numeric_metal.m",
+      "bytes": 28485,
+      "sha256": "e932e40f36704638dbfaa7dd0b1fd51578c5f44045e33bcf1194bc4b58334137"
+    },
+    {
+      "path": "ds4_numeric_metal_args.h",
+      "bytes": 744,
+      "sha256": "40e24d4ab68aef78cede3c18e3d593a491dd4ce1637aa8259a4b689bb0573b29"
+    },
+    {
+      "path": "metal/numeric_ordered.metal",
+      "bytes": 30959,
+      "sha256": "c0e23b6db50760e5d3bcfe970f5b2978f546c90acffc3e7e19e192732dc97a93"
+    },
+    {
+      "path": "tests/test_suite_numeric.py",
+      "bytes": 49928,
+      "sha256": "d4f0acad0c8b60a7389fbacb9237f2afadfafd89149ef8ac4207438ce3e53b53"
+    },
+    {
+      "path": "build/metal-perf-image-20261103/power-events.log",
+      "bytes": 1003,
+      "sha256": "3bf9d999a17ce9bfa12f34cc5d5021bb190acc10994f0205120eeca6c7f15ff3"
+    }
+  ]
+}

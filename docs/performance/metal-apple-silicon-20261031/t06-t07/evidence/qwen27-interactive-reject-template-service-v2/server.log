@@ -1,0 +1,36 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 1.00 GiB (raw 1.00 + compressed 0.00) + buffers 0.17 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 3.17 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=0 backend=metal
+1102 05:57:18 ds4-server: loaded model Qwen3.8-27B-UD-Q4_K_S.gguf
+1102 05:57:18 ds4-server: context buffers 1199.24 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=0)
+1102 05:57:31 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-reject-template-service-v2/kv (budget=8192 MiB, cross-quant=reject, min=1, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1102 05:57:31 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-reject-template-service-v2/kv/agentic.Ze7Nj7
+1102 05:57:31 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-reject-template-service-v2/trace.log
+1102 05:57:31 ds4-server: listening on http://127.0.0.1:18080
+1102 05:57:33 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prompt start
+1102 05:57:39 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prefill chunk 64/387 (16.5%) chunk=0.00 t/s avg=10.78 t/s 5.938s
+1102 05:57:45 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prefill chunk 128/387 (33.1%) chunk=10.48 t/s avg=10.63 t/s 12.046s
+1102 05:57:51 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prefill chunk 192/387 (49.6%) chunk=10.40 t/s avg=10.55 t/s 18.202s
+1102 05:57:57 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prefill chunk 256/387 (66.1%) chunk=10.40 t/s avg=10.51 t/s 24.354s
+1102 05:58:00 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prefill chunk 259/387 (66.9%) chunk=1.14 t/s avg=9.60 t/s 26.981s
+1102 05:58:00 ds4-server: resident system frontier captured tokens=259 bytes=184.82 MiB location=host 14.714ms
+1102 05:58:00 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=387 syntax=qwen
+1102 05:58:00 ds4-server: kv cache stored tokens=259 trimmed=128 reason=agent-system key=rendered-system size=184.82 MiB save=32.7 ms
+1102 05:58:06 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prefill chunk 323/387 (83.5%) chunk=10.37 t/s avg=9.74 t/s 33.151s
+1102 05:58:12 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prefill chunk 387/387 (100.0%) chunk=10.37 t/s avg=9.84 t/s 39.320s
+1102 05:58:12 ds4-server: chat ctx=0..387:387 RESPPROTO TOOLS prompt done 39.320s
+1102 05:58:12 ds4-server: response frontier captured tokens=387 bytes=151.50 MiB location=vram 28.790ms
+1102 06:00:05 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=reject-template:45711ed53bf34bbab79815491be694b8 checkpoint_tokens=430 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-reject-template-service-v2/kv/agentic.Ze7Nj7/agent-context-slot-0-Fbk9ZN.dsh checkpoint_bytes=216215304 checkpoint_write_ms=29.281 agent_context_checkpoint_count=1
+1102 06:00:05 ds4-server: chat ctx=430..387:0 RESPPROTO TOOLS prompt start
+1102 06:00:05 ds4-server: agent-system boundary system_tokens=259 prompt_tokens=430 syntax=qwen
+1102 06:00:05 AGENT_CONTEXT_RESTORE slot=0 context_id=reject-template:45711ed53bf34bbab79815491be694b8 restored_tokens=430 discarded_context_tokens=0 result_prefill_tokens=0 checkpoint_read_ms=15.162 checkpoint_deleted=true agent_context_restore_count=1
+1102 06:00:05 ds4-server: chat ctx=430..387:0 RESPPROTO TOOLS prompt done 0.002s
+1102 06:00:05 ds4-server: response frontier captured tokens=430 bytes=151.50 MiB location=vram 26.580ms
+1102 06:00:23 ds4-server: chat ctx=430..437:7 gen=50 RESPPROTO TOOLS DSML_START decoding chunk=0.39 t/s avg=0.39 t/s 18.082s
+1102 06:00:59 ds4-server: interactive payload frontier call_id=call_7dfd6bd08d1fbcaec4b2da06 input_index=1 temperature=0.000 unmasked_best=65507 piece="FIRST" raw_argmax_allowed=true operation_probe_allowed=true
+1102 06:01:29 AGENT_CONTEXT_CHECKPOINT slot=0 context_id=reject-template:45711ed53bf34bbab79815491be694b8 checkpoint_tokens=462 system_tokens=259 checkpoint_file=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-interactive-reject-template-service-v2/kv/agentic.Ze7Nj7/agent-context-slot-0-XBrSMg.dsh checkpoint_bytes=220409736 checkpoint_write_ms=32.014 agent_context_checkpoint_count=2
+1102 06:01:30 ds4-server: shutdown requested, draining requests

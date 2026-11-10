@@ -15,8 +15,8 @@ La lunghezza della skill, da sola, non dimostra che un tool sia sbagliato: parte
 - [Descrizione e adattatore server](../../ds4_interactive_edit.h): descrizione aggiunta al tool, scambio degli snapshot, composizione degli escape nativi e del parser XML.
 - [Documento incrementale server](../../ds4_edit_document.h): CDATA/entità, chiusure, comandi, intervalli, checkpoint e proposte di copia dello snapshot.
 - [Vincolo dinamico](../../ds4_edit_constraint.h): inizi di riga, candidati, prefissi globalmente univoci e indice dei suffissi.
-- [Skill file-processing](../../exmekh_lib/src/exmekh_lib/capabilities/deep-skill/file-processing.md), [configurazione](../../exmekh_lib/src/exmekh_lib/config/file_editing.py) e [tool](../../exmekh_lib/src/exmekh_lib/capabilities/tools/edit-file/main.py): contratto presentato al modello in più punti.
-- [Parser client](../../exmekh_lib/src/exmekh_lib/core/models/edit_document.py), [selezioni](../../exmekh_lib/src/exmekh_lib/core/file_inspection/edit_selection.py), [autorizzazione](../../exmekh_lib/src/exmekh_lib/core/file_inspection/editing.py) e [filesystem](../../exmekh_lib/src/exmekh_lib/core/file_inspection/edit_filesystem.py).
+- `../../exmekh_lib/src/exmekh_lib/capabilities/deep-skill/file-processing.md`, `../../exmekh_lib/src/exmekh_lib/config/file_editing.py` e `../../exmekh_lib/src/exmekh_lib/capabilities/tools/edit-file/main.py`: contratto presentato al modello in più punti.
+- `../../exmekh_lib/src/exmekh_lib/core/models/edit_document.py`, `../../exmekh_lib/src/exmekh_lib/core/file_inspection/edit_selection.py`, `../../exmekh_lib/src/exmekh_lib/core/file_inspection/editing.py` e `../../exmekh_lib/src/exmekh_lib/core/file_inspection/edit_filesystem.py`.
 - [Contratto interattivo](../agentic/interactive-calls.md), [piano e storico](../roadmaps/interactive-edit-file-server-plan.md), [qualifica client](client-xml-edit-v2-20261012.md), [revisione successiva](client-xml-clean-review-20261012.md) e [copia speculativa dello snapshot](../performance/old-text-snapshot-chunks-20261012.md).
 
 ### Evidenze locali

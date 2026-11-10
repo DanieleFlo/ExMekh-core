@@ -1,0 +1,19 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Qwen BF16 n-grams: 95.37 GiB, disk reads only
+ds4: Metal SSD streaming mode enabled; full model residency and warmup are skipped
+ds4: metal backend initialized for graph diagnostics
+ds4: memory: KV 0.26 GiB (raw 0.20 + compressed 0.06) + buffers 0.38 GiB + resident model 0.00 GiB + SSD weight cache 2.00 GiB = 2.64 GiB planned (dynamic accelerator caches/driver excluded)
+ds4: memory detail: ctx=8192 prefill_cap=64 raw_kv_rows=8192 compressed_kv_rows=2049 backend=metal
+1031 20:56:34 ds4-server: loaded model Qwen3.8 Flash Next
+1031 20:56:34 ds4-server: context buffers 659.60 MiB (ctx=8192, backend=metal, prefill_chunk=64, raw_kv_rows=8192, compressed_kv_rows=2049)
+1031 20:56:48 ds4-server: KV disk cache /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-browser-image/kv (budget=4096 MiB, cross-quant=accept, min=512, cold_max=30000, continued=10000, trim=32, align=2048, hit_half_life=21600s)
+1031 20:56:48 ds4-server: agentic skill checkpoints dir=/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-browser-image/kv/agentic.7qsqbf
+1031 20:56:48 ds4-server: tracing session to /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/flash-browser-image/trace.log
+1031 20:56:48 ds4-server: listening on http://127.0.0.1:18080
+1031 20:57:00 ds4-server: chat ctx=0..1769:1769 RESPPROTO TOOLS prompt start
+1031 20:57:07 ds4-server: chat ctx=0..1769:1769 RESPPROTO TOOLS prefill chunk 64/1769 (3.6%) chunk=0.00 t/s avg=9.65 t/s 6.634s
+1031 20:57:12 ds4-server: chat ctx=0..1769:1769 RESPPROTO TOOLS prefill chunk 128/1769 (7.2%) chunk=11.18 t/s avg=10.36 t/s 12.357s
+1031 20:57:15 ds4-server: agent-system boundary system_tokens=1670 prompt_tokens=1769 syntax=qwen4
+1031 20:57:16 ds4-server: shutdown requested, draining requests

@@ -1,0 +1,322 @@
+{
+  "summary": [
+    {
+      "depth": 0,
+      "samples": 3,
+      "medians": {
+        "prefill_tps": 17.007282,
+        "gen_tps": 1.591937,
+        "request_seconds": 13.804725094696568
+      },
+      "ranges": {
+        "prefill_tps": [
+          16.886223,
+          17.048136
+        ],
+        "gen_tps": [
+          1.569052,
+          1.723219
+        ],
+        "request_seconds": [
+          13.048042641945376,
+          13.98731205904199
+        ],
+        "min_host_GiB": [
+          2.6671142578125,
+          3.2763519287109375
+        ]
+      },
+      "note": "Operational changing RAM; not a paired speedup versus fixed cap. All3 samples shown, including rep0."
+    },
+    {
+      "depth": 4,
+      "samples": 3,
+      "medians": {
+        "prefill_tps": 15.67149,
+        "gen_tps": 4.352134,
+        "request_seconds": 7.8130823567561585
+      },
+      "ranges": {
+        "prefill_tps": [
+          15.471176,
+          15.702508
+        ],
+        "gen_tps": [
+          4.110904,
+          4.385514
+        ],
+        "request_seconds": [
+          7.724157116454869,
+          7.975937047777162
+        ],
+        "min_host_GiB": [
+          2.5121307373046875,
+          3.0765838623046875
+        ]
+      },
+      "note": "Operational changing RAM; not a paired speedup versus fixed cap. All3 samples shown, including rep0."
+    }
+  ],
+  "rows": [
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 16.886223,
+      "gen_tokens": 16.0,
+      "gen_tps": 1.569052,
+      "gen_first_ms": 1589.371,
+      "gen_steady_tokens": 15.0,
+      "gen_steady_tps": 1.742714,
+      "kvcache_bytes": 0.0,
+      "name": "p23-auto-repeat-0-mtp0",
+      "variant": "after",
+      "depth": 0,
+      "rep": 0,
+      "warmup": true,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 6426594816,
+      "process_seconds": 15.386836207995657,
+      "request_seconds": 13.98731205904199,
+      "clock_deltas": [
+        15.389681915999972,
+        15.389697000005981
+      ],
+      "min_host_GiB": 3.2763519287109375,
+      "swap_growth_MiB": 0.0,
+      "observed_adjusted_caps_GiB": [
+        8.52,
+        9.12,
+        8.84,
+        8.45,
+        8.07,
+        7.69,
+        8.81,
+        9.89,
+        9.04,
+        8.08,
+        7.11,
+        6.16,
+        7.13,
+        9.05,
+        10.14,
+        9.13,
+        8.17,
+        7.2,
+        6.24,
+        7.32,
+        9.1,
+        10.16
+      ],
+      "oracle": "16 greedy IDs and prefill BIT_EXACT to frozen;MTP4 final vector BIT_EXACT"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 15.67149,
+      "gen_tokens": 16.0,
+      "gen_tps": 4.110904,
+      "gen_first_ms": 1203.572,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 4.463706,
+      "kvcache_bytes": 0.0,
+      "name": "p23-auto-repeat-0-mtp4",
+      "variant": "after",
+      "depth": 4,
+      "rep": 0,
+      "warmup": true,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 6675411584,
+      "process_seconds": 9.17192070800229,
+      "request_seconds": 7.975937047777162,
+      "clock_deltas": [
+        9.173580333008431,
+        9.173589000012726
+      ],
+      "min_host_GiB": 2.5121307373046875,
+      "swap_growth_MiB": 0.0,
+      "observed_adjusted_caps_GiB": [
+        7.39,
+        8.5,
+        8.23,
+        6.32,
+        4.33,
+        6.27
+      ],
+      "oracle": "16 greedy IDs and prefill BIT_EXACT to frozen;MTP4 final vector BIT_EXACT"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 17.048136,
+      "gen_tokens": 16.0,
+      "gen_tps": 1.591937,
+      "gen_first_ms": 1934.179,
+      "gen_steady_tokens": 15.0,
+      "gen_steady_tps": 1.848228,
+      "kvcache_bytes": 0.0,
+      "name": "p23-auto-repeat-1-mtp0",
+      "variant": "after",
+      "depth": 0,
+      "rep": 1,
+      "warmup": false,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 8596868608,
+      "process_seconds": 14.436580458990647,
+      "request_seconds": 13.804725094696568,
+      "clock_deltas": [
+        14.439600624988088,
+        14.439615000010235
+      ],
+      "min_host_GiB": 2.86785888671875,
+      "swap_growth_MiB": 183.3799991607666,
+      "observed_adjusted_caps_GiB": [
+        8.07,
+        10.27,
+        9.47,
+        8.51,
+        7.53,
+        6.57,
+        7.4,
+        9.23,
+        10.31,
+        9.35,
+        8.39,
+        7.34,
+        6.19,
+        9.32,
+        9.1,
+        8.91,
+        8.72,
+        9.19,
+        9.77,
+        10.16,
+        9.27,
+        8.31,
+        7.34,
+        6.39
+      ],
+      "oracle": "16 greedy IDs and prefill BIT_EXACT to frozen;MTP4 final vector BIT_EXACT"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 15.702508,
+      "gen_tokens": 16.0,
+      "gen_tps": 4.385514,
+      "gen_first_ms": 1269.833,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 5.04546,
+      "kvcache_bytes": 0.0,
+      "name": "p23-auto-repeat-1-mtp4",
+      "variant": "after",
+      "depth": 4,
+      "rep": 1,
+      "warmup": false,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 6911373952,
+      "process_seconds": 8.114742374993511,
+      "request_seconds": 7.724157116454869,
+      "clock_deltas": [
+        8.115912542009028,
+        8.115921000018716
+      ],
+      "min_host_GiB": 3.0765838623046875,
+      "swap_growth_MiB": 0.0,
+      "observed_adjusted_caps_GiB": [
+        7.52,
+        8.29,
+        6.37,
+        6.24
+      ],
+      "oracle": "16 greedy IDs and prefill BIT_EXACT to frozen;MTP4 final vector BIT_EXACT"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 17.007282,
+      "gen_tokens": 16.0,
+      "gen_tps": 1.723219,
+      "gen_first_ms": 1780.676,
+      "gen_steady_tokens": 15.0,
+      "gen_steady_tps": 1.999022,
+      "kvcache_bytes": 0.0,
+      "name": "p23-auto-repeat-2-mtp0",
+      "variant": "after",
+      "depth": 0,
+      "rep": 2,
+      "warmup": false,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 8561774080,
+      "process_seconds": 13.80445041701023,
+      "request_seconds": 13.048042641945376,
+      "clock_deltas": [
+        13.807097625001916,
+        13.807111000001896
+      ],
+      "min_host_GiB": 2.6671142578125,
+      "swap_growth_MiB": 0.0,
+      "observed_adjusted_caps_GiB": [
+        10.2,
+        9.6,
+        9.03,
+        8.54,
+        8.16,
+        8.32,
+        9.05,
+        9.84,
+        9.07,
+        8.3,
+        7.53,
+        6.76,
+        9.03,
+        9.1,
+        9.29,
+        9.1,
+        8.91,
+        8.72
+      ],
+      "oracle": "16 greedy IDs and prefill BIT_EXACT to frozen;MTP4 final vector BIT_EXACT"
+    },
+    {
+      "ctx_tokens": 64.0,
+      "prefill_tokens": 64.0,
+      "prefill_tps": 15.471176,
+      "gen_tokens": 16.0,
+      "gen_tps": 4.352134,
+      "gen_first_ms": 1295.85,
+      "gen_steady_tokens": 12.0,
+      "gen_steady_tps": 5.04128,
+      "kvcache_bytes": 0.0,
+      "name": "p23-auto-repeat-2-mtp4",
+      "variant": "after",
+      "depth": 4,
+      "rep": 2,
+      "warmup": false,
+      "auto": true,
+      "profile": false,
+      "cache_bytes": 6408909440,
+      "process_seconds": 9.19777033299033,
+      "request_seconds": 7.8130823567561585,
+      "clock_deltas": [
+        9.199091208996833,
+        9.199099999997998
+      ],
+      "min_host_GiB": 2.898681640625,
+      "swap_growth_MiB": 0.0,
+      "observed_adjusted_caps_GiB": [
+        7.13,
+        8.05,
+        7.97,
+        6.51,
+        6.31,
+        6.11
+      ],
+      "oracle": "16 greedy IDs and prefill BIT_EXACT to frozen;MTP4 final vector BIT_EXACT"
+    }
+  ]
+}

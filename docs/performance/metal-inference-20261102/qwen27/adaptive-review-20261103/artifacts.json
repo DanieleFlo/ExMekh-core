@@ -1,0 +1,96 @@
+{
+  "base_commit": "ab62874723c837ade442c192b90f0fba68bd2f73",
+  "baseline": "qualified P25 dirty snapshot",
+  "raw_path": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-qwen27-20261102/adaptive-review-20261103",
+  "files": [
+    {
+      "path": "config/flash-metal-streamed.env.example",
+      "sha256": "a7a10007976c214e4f45a17f4481c0a51cb583fd9f088593b856f734d83b9595"
+    },
+    {
+      "path": "config/qwen27-metal-streamed.env.example",
+      "sha256": "f18fef2937ae21c755b8cb2aaca0da608256fec6bb3f98b3a6602384396b278e"
+    },
+    {
+      "path": "ds4.c",
+      "sha256": "4a78e34c6c7c48231c19c88577efa364c635b5e7bc6388b3447badb0c1a7ad6f"
+    },
+    {
+      "path": "ds4.h",
+      "sha256": "3ab34f1b2e29b4f3b968714f1ce025bf31a1e7e68296ee2207bf3c69b55d0225"
+    },
+    {
+      "path": "ds4_gpu.h",
+      "sha256": "5bbd66148798035a57c07c730814f2b36470a6a00fb9da9c3a2f3b632b14bf98"
+    },
+    {
+      "path": "ds4_lifecycle.inc",
+      "sha256": "5a8395b54468b9aeeaa39880ffab17316a90d3c2670823b7a799b915abfddad5"
+    },
+    {
+      "path": "ds4_lifecycle_text.h",
+      "sha256": "fd30c2bd09699ec9906eadf8512d9b5ec6721164b66e13b94dfbeac9cd9a1464"
+    },
+    {
+      "path": "ds4_metal.m",
+      "sha256": "be97c9bc0d58e34c7fc3c10d2e3c1f3660458102322348c29f57dac31295ad71"
+    },
+    {
+      "path": "ds4_metal_device.h",
+      "sha256": "83eb223d562adbe713156fe0af66f65b8871bc47e9151f923a3c4f11f0cd7bbf"
+    },
+    {
+      "path": "ds4_metal_memory.h",
+      "sha256": "ec310a956434d63604cf44abd2ecb142083ebf123c57d639f1af88b4d65a6edc"
+    },
+    {
+      "path": "ds4_qwen4_metal_stream.inc",
+      "sha256": "ea8b16936159df8733c58e71304f2c7f2db4bb6464292c330c88d684f594bb34"
+    },
+    {
+      "path": "start-ds4-server.sh",
+      "sha256": "89313deb14c1f05f536ebb61966bb1e2dea6e4926d899f7462983477899f6019"
+    },
+    {
+      "path": "tests/probe_qwen_metal_stream.c",
+      "sha256": "ffedd67db8c3006d5575b5f7d69bd253c4db88ca8dd0d4a24c572c8a95bf0064"
+    },
+    {
+      "path": "tests/test_flash_launcher.py",
+      "sha256": "172007d0f34c84baa9d0f4d1758368b5fd4bc0841d4c88e8ee55618495e1689b"
+    },
+    {
+      "path": "tests/test_metal_memory_policy.c",
+      "sha256": "40631fd9646601aa8b892ef69894a150093b70b962957d0978e5c407e4691510"
+    },
+    {
+      "path": "tests/test_qwen35_metal_graph.c",
+      "sha256": "921b33ca5953adabd8a475c1ae4f2d94a06a93a21e126d5284715067e76e4469"
+    },
+    {
+      "path": "tests/test_qwen_metal_lifecycle.c",
+      "sha256": "a304e7bcb8df31b75d07ec89d920ae46c2af42fc5e0b7039023191e38987500d"
+    },
+    {
+      "path": "ds4.o",
+      "sha256": "c0d79db1585dfd10868117420238991102113b078a41cd8c10b4b935b18307e4"
+    },
+    {
+      "path": "ds4_metal.o",
+      "sha256": "26c9a105095a61746504a5c996df86ee93f8e4a81e49ed71724f6ad5569901df"
+    },
+    {
+      "path": "ds4-bench",
+      "sha256": "a589c21b22b731840664d379c07d31ca9710b46c51d6890662da507617535bfc"
+    },
+    {
+      "path": "tests/probe_qwen_metal_stream",
+      "sha256": "d8382aae6f15d9b95d58bcc049bfff4f67925c0fdd667f16d49f481c5fdb6f6b"
+    },
+    {
+      "path": "metal/qwen35_quants.metal",
+      "sha256": "d2dfc666a8ec2d0f7abf5312fa9c6197a780586935c9d45fb8240f966f2f036f"
+    }
+  ],
+  "baseline_manifest": "before-manifest.json"
+}

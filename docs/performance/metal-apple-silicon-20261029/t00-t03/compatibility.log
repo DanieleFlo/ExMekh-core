@@ -1,0 +1,36 @@
+test_27b_launcher_ignores_flash_profile (tests.test_flash_launcher.FlashLauncherTests.test_27b_launcher_ignores_flash_profile) ... ok
+test_default_is_the_qualified_profile (tests.test_flash_launcher.FlashLauncherTests.test_default_is_the_qualified_profile) ... ok
+test_explicit_overrides (tests.test_flash_launcher.FlashLauncherTests.test_explicit_overrides) ... ok
+test_invalid_profile_is_rejected (tests.test_flash_launcher.FlashLauncherTests.test_invalid_profile_is_rejected) ... ok
+test_legacy_reproduces_original (tests.test_flash_launcher.FlashLauncherTests.test_legacy_reproduces_original) ... ok
+test_metal_agent_honors_explicit_native_suite (tests.test_flash_launcher.FlashLauncherTests.test_metal_agent_honors_explicit_native_suite) ... ok
+test_metal_flash_uses_small_context_and_no_cuda_profile (tests.test_flash_launcher.FlashLauncherTests.test_metal_flash_uses_small_context_and_no_cuda_profile) ... ok
+test_metal_quick_chat_profile_has_explicit_agent_capacity (tests.test_flash_launcher.FlashLauncherTests.test_metal_quick_chat_profile_has_explicit_agent_capacity) ... ok
+test_native_agent_configuration_preserves_explicit_capacity_and_flags (tests.test_flash_launcher.FlashLauncherTests.test_native_agent_configuration_preserves_explicit_capacity_and_flags) ... ok
+test_root_launcher_retains_llm_default_and_accepts_native_config (tests.test_flash_launcher.FlashLauncherTests.test_root_launcher_retains_llm_default_and_accepts_native_config) ... ok
+test_standard_complete_gpu_profile (tests.test_flash_launcher.FlashLauncherTests.test_standard_complete_gpu_profile) ... ok
+test_cli_and_server_mtp_performance_gate (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_cli_and_server_mtp_performance_gate) ... skipped 'set DS4_TEST_QWEN38_PERF=1 for the CLI/server MTP gate'
+test_cli_auto_mtp_selects_qwen38_sidecar (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_cli_auto_mtp_selects_qwen38_sidecar) ... skipped 'local Qwen3.8 GGUF pair or ds4 binary is not present'
+test_cli_target_and_mtp_generate_after_kernel_promotion (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_cli_target_and_mtp_generate_after_kernel_promotion) ... skipped 'set DS4_TEST_QWEN38_LIVE=1 for model-backed CLI checks'
+test_downloader_pins_both_artifacts (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_downloader_pins_both_artifacts) ... ok
+test_external_mtp_layout (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_external_mtp_layout) ... ok
+test_full_local_artifact_checksums (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_full_local_artifact_checksums) ... skipped 'set DS4_TEST_QWEN38_SHA=1 for the 16.7 GB checksum gate'
+test_generation_uses_its_own_oracle_namespace (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_generation_uses_its_own_oracle_namespace) ... ok
+test_live_inspection_when_artifacts_are_present (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_live_inspection_when_artifacts_are_present) ... skipped 'local Qwen3.8 GGUF pair or ds4 binary is not present'
+test_oracle_generator_writes_only_the_qwen38_namespace (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_oracle_generator_writes_only_the_qwen38_namespace) ... ok
+test_qwen36_mtp_is_rejected_for_qwen38 (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_qwen36_mtp_is_rejected_for_qwen38) ... skipped 'local Qwen3.8 target or CLI is absent'
+test_qwen38_performance_report_uses_the_production_gate (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_qwen38_performance_report_uses_the_production_gate) ... ok
+test_qwen38_quality_entrypoints_are_present (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_qwen38_quality_entrypoints_are_present) ... ok
+test_runtime_kernel_inventory_is_promoted (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_runtime_kernel_inventory_is_promoted) ... ok
+test_server_launcher_preserves_cuda_defaults_and_overrides (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_server_launcher_preserves_cuda_defaults_and_overrides) ... ok
+test_server_model_id_cache_and_agentic_gates_cover_qwen38 (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_server_model_id_cache_and_agentic_gates_cover_qwen38) ... ok
+test_target_embedded_nextn_layout (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_target_embedded_nextn_layout) ... ok
+test_tokenizers_match_but_templates_are_audited_independently (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_tokenizers_match_but_templates_are_audited_independently) ... ok
+test_downloader_rejects_all_retired_targets (tests.test_qwen38_compatibility.RetiredQwenCompatibilityTests.test_downloader_rejects_all_retired_targets) ... ok
+test_help_only_advertises_supported_qwen_targets (tests.test_qwen38_compatibility.RetiredQwenCompatibilityTests.test_help_only_advertises_supported_qwen_targets) ... ok
+test_runtime_rejects_qwen36_metadata_even_with_a_renamed_file (tests.test_qwen38_compatibility.RetiredQwenCompatibilityTests.test_runtime_rejects_qwen36_metadata_even_with_a_renamed_file) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 1.725s
+
+OK (skipped=6)

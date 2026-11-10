@@ -1,5 +1,6 @@
 #include "ds4_image.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -31,7 +32,38 @@ static int check_jpeg(const char *path, uint32_t width, uint32_t height,
     return ok;
 }
 
+static int check_qwen_processor(void) {
+    uint8_t rgb[64 * 80 * 3];
+    for (unsigned y = 0; y < 64; y++)
+        for (unsigned x = 0; x < 80; x++)
+            for (unsigned c = 0; c < 3; c++)
+                rgb[(y * 80 + x) * 3 + c] = (13 * x + 7 * y + 31 * c) % 256;
+    ds4_image image = {.width = 80, .height = 64, .rgb = rgb};
+    ds4_image_patches normalized = {0}, raw = {0};
+    char error[160] = {0};
+    int ok = ds4_image_preprocess_qwen4(&normalized, &image, 1, 128, error, sizeof(error)) &&
+        ds4_image_preprocess_qwen3vl_raw(&raw, &image, 1, 128, error, sizeof(error));
+    /* Python round(80/32) uses ties-to-even: both APIs must select width 64.
+     * Pixel values frozen from Pillow's uint8 bicubic, before normalization. */
+    ok = ok && normalized.content_width == 64 && normalized.content_height == 64 &&
+        raw.content_width == 64 && raw.content_height == 64 &&
+        normalized.patch_count == raw.patch_count;
+    const unsigned indices[] = {0, 256, 512, 15, 256 + 7 * 16 + 11, 512 + 15 * 16 + 15};
+    const float expected[] = {2, 33, 64, 238, 51, 156};
+    for (unsigned i = 0; ok && i < sizeof(indices) / sizeof(indices[0]); i++)
+        ok = raw.patches[indices[i]] == expected[i];
+    for (size_t i = 0; ok && i < (size_t)raw.patch_count * 768; i++) {
+        float value = (raw.patches[i] / 255.0f - 0.5f) / 0.5f;
+        ok = normalized.patches[i] >= -1.0000002f && normalized.patches[i] <= 1.0000002f &&
+            fabsf(normalized.patches[i] - value) < 2e-7f;
+    }
+    if (!ok) fprintf(stderr, "Qwen normalized/raw processor mismatch: %s\n", error);
+    ds4_image_patches_free(&normalized); ds4_image_patches_free(&raw);
+    return ok;
+}
+
 int main(void) {
+    if (!check_qwen_processor()) return 1;
     /* 24x16 grayscale progressive JPEG. Unpatched Iris yields different
      * pixels; patched decode matches libjpeg-turbo djpeg bit-exactly. */
     if (!check_jpeg("tests/vision-fixtures/jpeg/prog_ac_refine_zrl_gray.jpg",

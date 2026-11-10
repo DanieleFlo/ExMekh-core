@@ -298,15 +298,14 @@ int ds4_engine_create_with_gpu_config(ds4_engine **out,
 void ds4_engine_close(ds4_engine *e);
 /* Checked close retains a handle on BUSY/fence failure so callers can retry. */
 ds4_status ds4_engine_close_checked(ds4_engine *e);
-/* CUDA single-GPU service lifetime, independent of any LLM. The caller owns
+/* Single-device CUDA/Metal service lifetime, independent of any LLM. The caller owns
  * one reference and releases it with ds4_runtime_release. Attach engines
  * explicitly; ordinary ds4_engine_open keeps its private-runtime behavior. */
 ds4_status ds4_compute_runtime_open(ds4_runtime **out);
 int ds4_engine_open_with_runtime(ds4_engine **out, ds4_runtime *runtime,
                                  const ds4_engine_options *opt);
-/* Borrowed CUDA runtime handle. A registered component retains the
- * runtime independently of the LLM. Other backends are not yet qualified for
- * shared component residency and return NULL. Sessions must precede engine
+/* Borrowed CUDA/Metal runtime handle. A registered component retains the
+ * runtime independently of the LLM. Unsupported backends return NULL. Sessions must precede engine
  * close, just as before. The legacy map loader permits one live LLM owner. */
 ds4_runtime *ds4_engine_runtime(ds4_engine *e);
 void ds4_engine_summary(ds4_engine *e);
@@ -331,7 +330,7 @@ int ds4_engine_embd_dim(ds4_engine *e);
 uint64_t ds4_engine_model_bytes(ds4_engine *e);
 /* Lifecycle operations are explicit and serialized with inference. Unsupported
  * families/backends return UNSUPPORTED before changing anything. The initial
- * qualified adapter is Qwen27, CUDA single GPU without TP/SSD. */
+ * adapters cover single-device Qwen27 and bounded Metal Flash. */
 typedef struct ds4_session_checkpoint ds4_session_checkpoint;
 typedef struct {
     uint64_t device_capacity, host_capacity, payload, scratch, recurrent, mtp;
@@ -341,8 +340,11 @@ typedef struct {
 ds4_status ds4_session_memory_query(ds4_session *, ds4_session_memory *);
 /* Borrowed backend registry. Entries from a caller must be released before
  * runtime close. capacity_known covers device tensors; host_known is separate. */
-ds4_resources *ds4_engine_resources(ds4_engine *);
+ds4_resources *ds4_engine_resources(const ds4_engine *);
 ds4_status ds4_session_trim(ds4_session *);
+/* Release optional SSD weight cache, retaining sessions and the open model.
+ * The next forward admits its cache from current capacity. Metal Qwen only. */
+ds4_status ds4_engine_trim_cache(ds4_engine *);
 ds4_status ds4_engine_weights_release(ds4_engine *);
 ds4_status ds4_engine_weights_load(ds4_engine *);
 /* Metadata is caller-owned sampler/RNG/request state, copied into the file.
@@ -518,6 +520,7 @@ int ds4_engine_tp_bind(ds4_engine *e, struct ds4_tp *tp, char *err, size_t errle
  * already be closed. Also called by ds4_engine_close(). */
 void ds4_engine_tp_unbind(ds4_engine *e);
 
+/* Creates one owned session. A non-NULL out is set to NULL on failure. */
 int ds4_session_create(ds4_session **out, ds4_engine *e, int ctx_size);
 void ds4_session_free(ds4_session *s);
 int ds4_session_power(ds4_session *s);

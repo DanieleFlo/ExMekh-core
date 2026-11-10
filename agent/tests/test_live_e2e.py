@@ -6,6 +6,7 @@ import pytest
 from dotenv import load_dotenv
 
 from exmekh_agent.config import config
+from exmekh_agent.exmekh_bridge.agents import agent_runner
 from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     check_provider_health,
     run_agent_turn,
@@ -23,6 +24,7 @@ from exmekh_agent.ui.navigation.header import HeaderComponent
 from exmekh_agent.ui.navigation.sidebar import SidebarComponent
 from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 from tests.capability_fixtures import TEST_CAPABILITIES
+from tests.file_workflow_profile import GreedyFileProvider, file_workflow_design
 from tests.live_file_support import verify_file_effects
 
 load_dotenv()
@@ -203,22 +205,17 @@ async def test_live_e2e_deep_agent_tool_execution() -> None:
     safe_print(f"[LIVE Final Response]: {full_response}")
 
 
-@pytest.mark.asyncio
-async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
-    """Exercise the runtime handler through both frontend provider wrappers."""
+async def _verify_interactive_file_creation(
+    tmp_path: Path, user_prompt: str, *, settings: ChatSettings | None = None
+) -> None:
+    """Verify the real runner, file effects, history and terminal tool events."""
     tool_events: list[ToolEvent] = []
     snapshots: list[ChatMessage] = []
     response = await run_agent_turn(
-        user_prompt=(
-            "Open the file-processing skill, then use new-file to create the missing "
-            "file probe.txt with exactly the text FRONTEND_INTERACTIVE_OK. "
-            "Use document='<new-exmekh-file path=\"probe.txt\"/>FRONTEND_INTERACTIVE_OK'. "
-            "Do not use bash, delegate, or create other files. "
-            "Exit the skill and confirm completion."
-        ),
+        user_prompt=user_prompt,
         model=config.default_model,
         agent_mode="deep_agent",
-        settings=ChatSettings(work_root=str(tmp_path)),
+        settings=settings or ChatSettings(work_root=str(tmp_path)),
         on_token=lambda _: None,
         on_reasoning=lambda *_: None,
         on_tool_event=tool_events.append,
@@ -249,6 +246,34 @@ async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
         for event in tool_events
     ), tool_events
     assert response.strip()
+
+
+@pytest.mark.asyncio
+async def test_live_e2e_interactive_file_creation(tmp_path: Path) -> None:
+    """Exercise the runtime handler through both frontend provider wrappers."""
+    await _verify_interactive_file_creation(
+        tmp_path,
+        "Open the file-processing skill, then use new-file to create the missing "
+        "file probe.txt with exactly the text FRONTEND_INTERACTIVE_OK. "
+        "Use document='<new-exmekh-file path=\"probe.txt\"/>FRONTEND_INTERACTIVE_OK'. "
+        "Do not use bash, delegate, or create other files. "
+        "Exit the skill and confirm completion.",
+    )
+
+
+@pytest.mark.asyncio
+async def test_live_e2e_single_skill_file_creation(tmp_path: Path) -> None:
+    """Qualify one explicit skill invocation within a bounded context profile."""
+    await _verify_interactive_file_creation(
+        tmp_path,
+        "Create the missing file probe.txt containing exactly FRONTEND_INTERACTIVE_OK. "
+        "Open file-processing exactly once and call new-file exactly once with "
+        "document='<new-exmekh-file path=\"probe.txt\"/>FRONTEND_INTERACTIVE_OK'. "
+        "After new-file succeeds, call exit_agent with text='Created probe.txt' and "
+        "items=[]. That returns to root and completes the skill invocation. "
+        "At root, answer FRONTEND_INTERACTIVE_OK and stop. Never reopen a skill. "
+        "Do not use bash, delegate, or create other files.",
+    )
 
 
 @pytest.mark.asyncio
@@ -448,13 +473,29 @@ async def test_live_e2e_multi_turn_execution_history_preserves_prior_tools() -> 
 @pytest.mark.parametrize("initial", ["", "ORIGINAL"])
 @pytest.mark.asyncio
 async def test_live_e2e_file_edit_and_delete(tmp_path: Path, initial: str) -> None:
+    await _verify_file_edit_and_delete(tmp_path, initial)
+
+
+async def _verify_file_edit_and_delete(
+    tmp_path: Path,
+    initial: str,
+    *,
+    settings: ChatSettings | None = None,
+    edit_prompt: str | None = None,
+    delete_prompt: str | None = None,
+) -> None:
+    settings = settings or ChatSettings(work_root=str(tmp_path))
     path = tmp_path / "probe.txt"
-    path.write_text(initial)
+    if path.exists():
+        assert path.read_text() == initial
+    else:
+        path.write_text(initial)
     expected = initial + "APPENDED"
     events: list[ToolEvent] = []
     snapshots: list[ChatMessage] = []
     response = await run_agent_turn(
-        user_prompt=(
+        user_prompt=edit_prompt
+        or (
             "Enter the file-processing skill. Inspect and read the existing probe.txt, "
             "then use edit-file to append exactly APPENDED with no newline. "
             "The file already exists, even when its content is empty. "
@@ -463,7 +504,7 @@ async def test_live_e2e_file_edit_and_delete(tmp_path: Path, initial: str) -> No
         ),
         model=config.default_model,
         agent_mode="deep_agent",
-        settings=ChatSettings(work_root=str(tmp_path)),
+        settings=settings,
         on_token=lambda _: None,
         on_reasoning=lambda *_: None,
         on_tool_event=events.append,
@@ -493,14 +534,15 @@ async def test_live_e2e_file_edit_and_delete(tmp_path: Path, initial: str) -> No
     events.clear()
     snapshots.clear()
     response = await run_agent_turn(
-        user_prompt=(
+        user_prompt=delete_prompt
+        or (
             'Enter the file-processing skill and use delete-file with paths=["probe.txt"]. '
             "Delete the existing file directly; no inspect-file or read-file is needed. "
             "Do not use bash or delegate. Exit the skill and confirm completion."
         ),
         model=config.default_model,
         agent_mode="deep_agent",
-        settings=ChatSettings(work_root=str(tmp_path)),
+        settings=settings,
         on_token=lambda _: None,
         on_reasoning=lambda *_: None,
         on_tool_event=events.append,
@@ -529,3 +571,67 @@ async def test_live_e2e_file_edit_and_delete(tmp_path: Path, initial: str) -> No
             "[MODEL_LIMITATION] Model read the file before deleting it although no read is required"
         )
     assert response.strip()
+
+
+@pytest.mark.asyncio
+async def test_live_e2e_custom_file_workflow(tmp_path: Path) -> None:
+    """Real creation, authorized editing and deletion in an explicit Custom profile."""
+    await _verify_custom_file_workflow(tmp_path)
+
+
+@pytest.mark.asyncio
+async def test_live_e2e_custom_literal_greedy_file_workflow(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Same file checks, real greedy provider and explicit literal parameter input."""
+    monkeypatch.setattr(agent_runner, "LocalProvider", GreedyFileProvider)
+    await _verify_custom_file_workflow(
+        tmp_path,
+        edit_prompt=(
+            "Open file-processing exactly once. Inspect and read probe.txt, then "
+            "use edit-file to append APPENDED without any newline. The old text is "
+            "FRONTEND_INTERACTIVE_OK and the complete new text must be exactly "
+            "FRONTEND_INTERACTIVE_OKAPPENDED. Use one exmekh_edit marker and one "
+            "exmekh_new_text separator, copying the ID supplied by the server. "
+            "The edits parameter is one literal line: no newline before or after "
+            "its value. Close the native parameter immediately after the final D; "
+            "a newline before its closing delimiter becomes file content. "
+            "After success call exit_agent with text='Edited probe.txt' and items=[]. "
+            "At root answer DONE and stop. Do not use bash, new-file, or delegate."
+        ),
+        delete_prompt=(
+            'Open file-processing once and use delete-file with paths=["probe.txt"]. '
+            "No inspect-file or read-file is needed. After success, call exit_agent "
+            "with text='Deleted probe.txt' and items=[]. At root answer DONE and stop. "
+            "Do not use bash or delegate."
+        ),
+    )
+
+
+async def _verify_custom_file_workflow(
+    tmp_path: Path,
+    *,
+    edit_prompt: str | None = None,
+    delete_prompt: str | None = None,
+) -> None:
+    settings = ChatSettings(
+        work_root=str(tmp_path),
+        agent_profile="custom",
+        agent_design=file_workflow_design(),
+    )
+    await _verify_interactive_file_creation(
+        tmp_path,
+        "Create the missing file probe.txt containing exactly FRONTEND_INTERACTIVE_OK. "
+        "Open file-processing once and call new-file with "
+        "document='<new-exmekh-file path=\"probe.txt\"/>FRONTEND_INTERACTIVE_OK'. "
+        "After success, call exit_agent with text='Created probe.txt' and items=[]. "
+        "Then answer FRONTEND_INTERACTIVE_OK at root and stop.",
+        settings=settings,
+    )
+    await _verify_file_edit_and_delete(
+        tmp_path,
+        "FRONTEND_INTERACTIVE_OK",
+        settings=settings,
+        edit_prompt=edit_prompt,
+        delete_prompt=delete_prompt,
+    )

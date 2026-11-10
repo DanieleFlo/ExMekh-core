@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="2440.921" timestamp="2026-11-01T10:37:39.603993+00:00" hostname="Danieles-MacBook-Pro.local"><testcase classname="tests.test_live_e2e" name="test_live_e2e_interactive_file_creation" time="2439.720"><failure message="exmekh_lib.core.models.request_budget.ContextBudgetExceededError: History compaction cannot fit the request within 7168 prompt tokens (7218 estimated); protected inputs and original outputs were retained">tmp_path = PosixPath('/private/var/folders/43/31sxwsnx5yj0nkg_09p0dyvc0000gn/T/pytest-of-danieleflorio/pytest-7/test_live_e2e_interactive_file0')
+
+    @pytest.mark.asyncio
+    async def test_live_e2e_interactive_file_creation(tmp_path: Path) -&gt; None:
+        """Exercise the runtime handler through both frontend provider wrappers."""
+        tool_events: list[ToolEvent] = []
+        snapshots: list[ChatMessage] = []
+&gt;       response = await run_agent_turn(
+            user_prompt=(
+                "Open the file-processing skill, then use new-file to create the missing "
+                "file probe.txt with exactly the text FRONTEND_INTERACTIVE_OK. "
+                "Use document='&lt;new-exmekh-file path=\"probe.txt\"/&gt;FRONTEND_INTERACTIVE_OK'. "
+                "Do not use bash, delegate, or create other files. "
+                "Exit the skill and confirm completion."
+            ),
+            model=config.default_model,
+            agent_mode="deep_agent",
+            settings=ChatSettings(work_root=str(tmp_path)),
+            on_token=lambda _: None,
+            on_reasoning=lambda *_: None,
+            on_tool_event=tool_events.append,
+            on_raw_history=lambda raw, tree: snapshots.append(
+                ChatMessage(role="assistant", raw_history=raw, skill_history_tree=tree)
+            ),
+            on_context=lambda _: None,
+        )
+
+agent/tests/test_live_e2e.py:211: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py:533: in run_agent_turn
+    return await loop.run_in_executor(None, _call_sync)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../../.local/share/uv/python/cpython-3.13.13-macos-aarch64-none/lib/python3.13/concurrent/futures/thread.py:59: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py:483: in _call_sync
+    return execute_agent_turn_sync(
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py:152: in execute_agent_turn_sync
+    return _execute_agent_turn_sync_unlocked(
+agent/src/exmekh_agent/exmekh_bridge/agents/agent_runner.py:419: in _execute_agent_turn_sync_unlocked
+    response = agent.run(user_message=content)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/deep_agent/deep_agent.py:59: in run
+    return self._root_node.run(user_message)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node.py:190: in run
+    return self._runtime.run(user_message)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:232: in run
+    return self._run_turn(user_message)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:419: in _run_turn
+    response = self._route_until_complete(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:474: in _route_until_complete
+    response = self._continue_after_tools()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:372: in _continue_after_tools
+    return self._client.continue_after_tools(
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/models/client.py:160: in continue_after_tools
+    return self._call_provider(provider_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/models/client.py:123: in _call_provider
+    request = self._before_request(request)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/agents/node/node_runtime.py:289: in _prepare_inference
+    budget.require_fits(compacted_request)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = RequestBudget(capacity=8192, count_tokens=&lt;bound method ContextTrackingProvider.count_request_tokens of &lt;exmekh_agent.exmekh_bridge.providers.provider_context.ContextTrackingProvider object at 0x10fd13cb0&gt;&gt;, response_reserve=None)
+request = &lt;exmekh_lib.core.models.provider_request.ProviderRequest object at 0x119945490&gt;
+
+    def require_fits(self, request: ProviderRequest) -&gt; None:
+        tokens = self.count_tokens(request)
+        if tokens &gt; self.prompt_limit:
+&gt;           raise ContextBudgetExceededError(
+                HISTORY_COMPACTION.budget_exceeded.format(
+                    limit=self.prompt_limit, tokens=tokens
+                )
+            )
+E           exmekh_lib.core.models.request_budget.ContextBudgetExceededError: History compaction cannot fit the request within 7168 prompt tokens (7218 estimated); protected inputs and original outputs were retained
+
+agent/.venv/lib/python3.13/site-packages/exmekh_lib/core/models/request_budget.py:46: ContextBudgetExceededError</failure></testcase></testsuite></testsuites>

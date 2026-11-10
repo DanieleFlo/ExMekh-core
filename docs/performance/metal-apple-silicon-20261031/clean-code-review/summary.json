@@ -1,0 +1,27 @@
+{
+  "schema": "exmekh-metal-clean-code-review-v1",
+  "status": "PASS",
+  "source_commits": [
+    "b6f2e42",
+    "b8d2574",
+    "b9ea4cb"
+  ],
+  "check_groups": 25,
+  "frontend": {
+    "passed": 1210,
+    "skipped": 46,
+    "coverage_percent": 100,
+    "provider": "mock"
+  },
+  "vision_contract_unit_tests": 13,
+  "real_vision_encoders": "PASS",
+  "full_llm_integration": "NOT_VERIFIED",
+  "artifacts": {
+    "native/verification.json": "910fb88c3418f36abe9eb35f330b6867ad1b97f159e66e110a2860f6669f8982",
+    "flash-vision.json": "815e70608f3f5275bf10d225e92a4267d7e920e5a9c2f5bcb37e4f4b745fcfe8",
+    "flash-vision.log": "64d0c6f87225557c88cc16f7ebd769e14e2e2c895721f2d95e29c993f7fcf41f",
+    "qwen27-vision.json": "2efe3b14d5b261c0e04fdae518276a3ece55ebe7475a1412ad664066a66b3fb4",
+    "qwen27-vision.log": "b63826de83413127d0e490e8bfd03c9f8fccdcc4bf62965592038273b6add1b6",
+    "README.md": "bd89372a22f2b864d3a41dd5fbbce416ed1d30005b717dd6dd041ef4c7e95fd9"
+  }
+}

@@ -32,6 +32,16 @@ Uno stream batch terminava con `incomplete_generation`: il parser ammetteva
 - righe 101–122: **Responsabilità e controlli ancora aperti** — Una riscrittura valida o il mancato adempimento di una richiesta delete non
 - righe 123–137: **Tentativi e limiti conservati** — Il primo tentativo MTP usava `--batched-session 1`: il runtime disabilitava MTP.
 
+## [Qwen Image in batch sul servizio nativo](native-image-batch-20261110.md)
+
+sempre un solo seed per job, ricrea il reclaim e ripete tutti i componenti
+
+- righe 12–62: **Audit prima dell'intervento** — sempre un solo seed per job, ricrea il reclaim e ripete tutti i componenti
+- righe 63–70: **Controllo seriale Metal** — Due PNG e replay idempotente in 143,610 s.
+- righe 71–91: **Prova batch Metal** — Stesso prompt, geometria e seed.
+- righe 92–117: **Gate numerico indipendente a 512 px** — Il probe ha eseguito due immagini nel batch.
+- righe 118–166: **Riesame del ciclo di vita** — Il confronto del riesame usa il binario batch già qualificato e i due PNG
+
 ## [Suite nativa nell'agente: launcher e accettazione live](native-suite-agent-live-20261022.md)
 
 Il caricamento di un payload multimodale creava il buffer RoPE visivo con

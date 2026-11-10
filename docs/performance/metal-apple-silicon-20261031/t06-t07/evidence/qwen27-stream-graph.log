@@ -1,0 +1,18 @@
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Qwen3.8 27B graph allocation failed for context 16
+ds4: Metal model views created in 0.034 ms, residency requested in 0.265 ms, warmup 2.041 ms (mapped 24.22 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+Metal device: unified=1 host=13353926656 recommended=19069665280 allocated=1769472 max_buffer=14302248960 pressure=1
+PASS hybrid chunk=1 logits max_abs=0 state max_abs=0
+PASS hybrid chunk=2 logits max_abs=2.08616257e-07 state max_abs=1.90734863e-06
+PASS hybrid chunk=3 logits max_abs=1.97440386e-07 state max_abs=2.56299973e-06
+PASS hybrid chunk=4 logits max_abs=2.86847353e-07 state max_abs=2.56299973e-06
+PASS hybrid chunk=5 logits max_abs=2.68220901e-07 state max_abs=2.98023224e-06
+PASS hybrid chunk=1 logits max_abs=0 state max_abs=0
+PASS hybrid chunk=2 logits max_abs=2.08616257e-07 state max_abs=1.90734863e-06
+PASS hybrid chunk=3 logits max_abs=1.97440386e-07 state max_abs=2.56299973e-06
+PASS hybrid chunk=4 logits max_abs=2.86847353e-07 state max_abs=2.56299973e-06
+PASS hybrid chunk=5 logits max_abs=2.68220901e-07 state max_abs=2.98023224e-06
+PASS: Qwen27 reduced hybrid replay, aliases, reset, rejected input and partial allocation cleanup

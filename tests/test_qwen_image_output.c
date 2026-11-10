@@ -28,7 +28,7 @@ int main(void) {
   assert(!ds4_resources_create(&resources));
   assert(!ds4_numeric_cpu(&num, resources, 913));
   observer_state state = {0};
-  ds4_qwen_image_observer observer = {&state, cancelled, trace};
+  ds4_qwen_image_observer observer = {.opaque = &state, .cancelled = cancelled, .trace = trace};
   assert(ds4_qwen_image_observe(num, &observer, "ready", 0,
                                 (ds4_num_view){0}) == DS4_STATUS_CANCELLED);
   assert(state.calls == 1);

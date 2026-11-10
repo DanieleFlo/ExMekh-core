@@ -1,0 +1,3 @@
+cc -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math -I. -o tests/test_suite_accelerator tests/test_suite_accelerator.c
+./tests/test_suite_accelerator
+suite accelerator factory ownership: PASS

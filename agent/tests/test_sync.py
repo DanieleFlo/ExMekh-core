@@ -4,6 +4,7 @@ import importlib.metadata
 import importlib.util
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -193,8 +194,15 @@ def test_wsl_launchers_resolve_paths_and_forward_arguments(
         ]
 
 
-def test_sync_launcher_bootstraps_without_installed_packages(tmp_path: Path) -> None:
+def test_sync_launcher_bootstraps_without_installed_packages(
+    tmp_path: Path, source_projects: Path
+) -> None:
     agent_dir = Path(__file__).resolve().parents[1]
+    # The bootstrap must not depend on a sibling checkout on the developer's
+    # machine. Derive package paths from an isolated copy just as production does.
+    shutil.copytree(agent_dir / "src", source_projects / "src")
+    for filename in ("sync_exmekh_lib.sh", ".python-version"):
+        shutil.copy2(agent_dir / filename, source_projects / filename)
     uv = tmp_path / "uv executable"
     uv.write_text(
         '#!/bin/bash\nif [[ "$1" == run ]]; then\n'
@@ -204,7 +212,7 @@ def test_sync_launcher_bootstraps_without_installed_packages(tmp_path: Path) -> 
     )
     uv.chmod(0o755)
     result = subprocess.run(
-        [str(agent_dir / "sync_exmekh_lib.sh")],
+        [str(source_projects / "sync_exmekh_lib.sh")],
         cwd=tmp_path,
         env=dict(os.environ, UV_BIN=str(uv), PYTHONPATH=""),
         capture_output=True,

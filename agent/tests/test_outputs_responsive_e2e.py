@@ -95,6 +95,7 @@ async def test_user_opens_tool_and_skill_outputs_scrolls_and_closes(output_serve
             await browser.close()
 
 
+@pytest.mark.serial(reason="Reads and writes the shared system clipboard")
 async def test_raw_history_multiline_and_json_output_are_readable_and_copy_stays_original(
     output_server,
 ):
@@ -129,6 +130,9 @@ async def test_raw_history_multiline_and_json_output_are_readable_and_copy_stays
                 animations="disabled",
             )
             await page.get_by_role("button", name="Copy full JSON", exact=True).click()
+            await page.wait_for_function(
+                "() => navigator.clipboard.readText().then(value => value.includes('<header>') && value.includes('FIRST RESULT'))"
+            )
             copied = await page.evaluate("navigator.clipboard.readText()")
             assert "<header>" in copied and "FIRST RESULT" in copied
         finally:

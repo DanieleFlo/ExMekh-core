@@ -1,0 +1,24 @@
+{
+  "command": [
+    "./ds4",
+    "--metal",
+    "-m",
+    "gguf/Qwen3.8-27B-UD-Q4_K_S.gguf",
+    "--ctx",
+    "256",
+    "--prefill-chunk",
+    "64",
+    "--no-mtp",
+    "--raw",
+    "--temp",
+    "0",
+    "-p",
+    "1+1=",
+    "-n",
+    "8"
+  ],
+  "returncode": 1,
+  "seconds": 0.29618037500040373,
+  "timeout": false,
+  "forced_cleanup": false
+}

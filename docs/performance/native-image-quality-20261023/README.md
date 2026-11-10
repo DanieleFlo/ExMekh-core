@@ -99,5 +99,5 @@ qualifica di Metal, ROCm, distribuito o SSD LLM. Non cambiano kernel o percorsi 
 
 
 Immagini corrette, con gli stessi input degli originali:
-[Alpi](../../../performance-results/image-quality-20261023/native/case-0/result.png)
-e [cyberpunk](../../../performance-results/image-quality-20261023/native/case-1/result.png).
+`../../../performance-results/image-quality-20261023/native/case-0/result.png`
+e `../../../performance-results/image-quality-20261023/native/case-1/result.png`.

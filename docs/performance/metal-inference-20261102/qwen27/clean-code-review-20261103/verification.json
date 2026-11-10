@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "optimization_commit": "6aa3333c6577038525c0977c6c348f135b87f668",
+  "review_implementation_commit": "0ef84d5387c18c982ac9361ba062453a2561d5f8",
+  "build": "make all + isolated CPU-only compile",
+  "host_tests": 49,
+  "sanitizers": "ASan/UBSan reader and read queue PASS",
+  "full_model_gate": "Qwen128 target/MTP2/MTP4 and Flash serial PASS",
+  "numerical_comparison": "all saved ordinary/spec logits and payloads bit-exact versus pre-review",
+  "performance": "5 paired streamed blocks compatible with noise; focused resident10-pair regression not confirmed; no new speedup claim",
+  "production_shader_unchanged": true,
+  "cpu_large_inference": false,
+  "cuda_rocm_distributed_runtime_changed": false,
+  "global_clean_code_certification": false,
+  "limits": [
+    "Legacy monolithic files and global state remain",
+    "Full27B resident speed not measured on current desktop budget",
+    "No new Image or remote-backend qualification"
+  ]
+}

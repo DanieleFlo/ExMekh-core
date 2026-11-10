@@ -1,0 +1,33 @@
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o tests/test_sha256 tests/test_sha256.c
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -DDS4_SHA256_PORTABLE -o tests/test_sha256_portable tests/test_sha256.c
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -c -o ds4_bundle.o ds4_bundle.c
+./tests/test_sha256
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -I. -o tests/test_bundle tests/test_bundle.c ds4_bundle.o ds4_resources.o -lm -pthread
+tests/test_bundle.c:158:5: warning: label followed by a declaration is a C23 extension [-Wc23-extensions]
+  158 |     ds4_resource_totals totals; ds4_resources_totals(r,0,&totals);
+      |     ^
+1 warning generated.
+cc -O2 -g -fPIC -std=c11 -D_GNU_SOURCE -Wall -Wextra -fno-fast-math -I. -o tests/test_weight_cache tests/test_weight_cache.c ds4_weight_cache.o ds4_bundle.o ds4_resources.o -lm -pthread
+PASS: NIST SHA-256 vectors, zero-length updates and 1..65-byte streaming chunks
+./tests/test_sha256_portable
+python3 -m unittest tests.test_suite_bundle -v
+PASS: NIST SHA-256 vectors, zero-length updates and 1..65-byte streaming chunks
+test_suite_bundle (unittest.loader._FailedTest.test_suite_bundle) ... ERROR
+
+======================================================================
+ERROR: test_suite_bundle (unittest.loader._FailedTest.test_suite_bundle)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_suite_bundle
+Traceback (most recent call last):
+  File "/Library/Frameworks/Python.framework/Versions/3.14/lib/python3.14/unittest/loader.py", line 137, in loadTestsFromName
+    module = __import__(module_name)
+  File "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/tests/test_suite_bundle.py", line 14, in <module>
+    import jsonschema
+ModuleNotFoundError: No module named 'jsonschema'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.000s
+
+FAILED (errors=1)
+make: *** [test-bundle] Error 1

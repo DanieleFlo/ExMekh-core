@@ -1,0 +1,62 @@
+[
+  {
+    "id": "image-0",
+    "prompt": "<|image|>",
+    "media": [
+      {
+        "type": "image",
+        "path": "tests/fixtures/native-suite-v1/media/image-0.png",
+        "soft": 70
+      }
+    ]
+  },
+  {
+    "id": "audio-0",
+    "prompt": "<|audio|>",
+    "media": [
+      {
+        "type": "audio",
+        "path": "tests/fixtures/native-suite-v1/media/audio-0.wav"
+      }
+    ]
+  },
+  {
+    "id": "video-0",
+    "prompt": "<|video|>",
+    "media": [
+      {
+        "type": "video",
+        "path": "tests/fixtures/native-suite-v1/media/video-0.npz",
+        "soft": 70,
+        "indices": [
+          0,
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "id": "interleaved-0",
+    "prompt": "Observe these colors. <|image|> Movement: <|video|> Sound: <|audio|>",
+    "media": [
+      {
+        "type": "image",
+        "path": "tests/fixtures/native-suite-v1/media/image-0.png",
+        "soft": 70
+      },
+      {
+        "type": "video",
+        "path": "tests/fixtures/native-suite-v1/media/video-0.npz",
+        "soft": 70,
+        "indices": [
+          0,
+          1
+        ]
+      },
+      {
+        "type": "audio",
+        "path": "tests/fixtures/native-suite-v1/media/audio-0.wav"
+      }
+    ]
+  }
+]

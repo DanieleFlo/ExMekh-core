@@ -1,0 +1,119 @@
+{
+  "command": [
+    "./ds4",
+    "-m",
+    "gguf/Qwen3.8-Flash-Next-Q2.gguf",
+    "--metal",
+    "--ssd-streaming",
+    "--ssd-streaming-cold",
+    "--ssd-streaming-cache-experts",
+    "2GB",
+    "--ctx",
+    "8192",
+    "--prefill-chunk",
+    "64",
+    "--nothink",
+    "--temp",
+    "0",
+    "-n",
+    "8",
+    "-p",
+    "Please answer this simple question in one short sentence. What is the capital of Italy? Give only the city name, with no explanation or extra formatting.",
+    "--no-mtp"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120,
+  "reason": "T05 real target versus speculative eight-token generation at 8192/64",
+  "footprint_limit_gib": 10,
+  "exit_code": 0,
+  "elapsed_seconds": 10.154668417000721,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 12500.400131,
+      "pressure": 1,
+      "host_available_bytes": 13226541056,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 12501.411687208,
+      "pressure": 1,
+      "host_available_bytes": 9378676736,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6382589256,
+      "resident_bytes": 6291668992
+    },
+    {
+      "monotonic": 12502.420646208,
+      "pressure": 1,
+      "host_available_bytes": 7611613184,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6374708528,
+      "resident_bytes": 6232522752
+    },
+    {
+      "monotonic": 12503.432513375,
+      "pressure": 1,
+      "host_available_bytes": 8145387520,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6370972976,
+      "resident_bytes": 6194151424
+    },
+    {
+      "monotonic": 12504.446333333,
+      "pressure": 1,
+      "host_available_bytes": 8268726272,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6403839256,
+      "resident_bytes": 5575245824
+    },
+    {
+      "monotonic": 12505.453979625,
+      "pressure": 1,
+      "host_available_bytes": 8153972736,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6357243160,
+      "resident_bytes": 5411454976
+    },
+    {
+      "monotonic": 12506.461563708,
+      "pressure": 1,
+      "host_available_bytes": 8103886848,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6442784048,
+      "resident_bytes": 5371281408
+    },
+    {
+      "monotonic": 12507.469232,
+      "pressure": 1,
+      "host_available_bytes": 8291467264,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6408361144,
+      "resident_bytes": 5116231680
+    },
+    {
+      "monotonic": 12508.479030791,
+      "pressure": 1,
+      "host_available_bytes": 7590051840,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6460773608,
+      "resident_bytes": 5160992768
+    },
+    {
+      "monotonic": 12509.489504791,
+      "pressure": 1,
+      "host_available_bytes": 7745257472,
+      "swap_bytes": 1003749376,
+      "footprint_bytes": 6405838056,
+      "resident_bytes": 4746084352
+    }
+  ],
+  "executables_sha256": {
+    "./ds4": "ac5f7314216a7f21be96ad34fa70a3401594b4802d7169d2717a2d392759ee42"
+  },
+  "log_sha256": "8c93424faa2bca9ff63591e5ccfe02ca6ce9285be133d39925f9919554dd6f1c"
+}

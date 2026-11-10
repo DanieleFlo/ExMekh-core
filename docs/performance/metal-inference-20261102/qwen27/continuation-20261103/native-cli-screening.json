@@ -1,0 +1,56 @@
+{
+  "target": {
+    "ctx_tokens": "64",
+    "prefill_tokens": "64",
+    "prefill_tps": "14.06",
+    "gen_tokens": "4",
+    "gen_tps": "0.55",
+    "gen_first_ms": "1806.045",
+    "gen_steady_tokens": "3",
+    "gen_steady_tps": "0.55",
+    "kvcache_bytes": "0"
+  },
+  "mtp4": {
+    "ctx_tokens": "64",
+    "prefill_tokens": "64",
+    "prefill_tps": "13.31",
+    "gen_tokens": "16",
+    "gen_tps": "1.97",
+    "gen_first_ms": "2258.594",
+    "gen_steady_tokens": "12",
+    "gen_steady_tps": "2.05",
+    "kvcache_bytes": "0"
+  },
+  "cache_bytes": 2147483648,
+  "ctx_alloc": 8192,
+  "prompt_tokens": 64,
+  "prefill_chunk": 64,
+  "status": "SCREENING_ONLY_NOT_PAIRED",
+  "target_mode": "4 teacher-forced evals",
+  "mtp_mode": "16 actual greedy output tokens, excluding EOS",
+  "excluded_initial_target_prefill": {
+    "reported_tps": 0.07,
+    "process_uptime_seconds": 18.708320582998567,
+    "reason": "phase CLOCK_MONOTONIC included host suspend; repeat clocks agree; not inference regression"
+  },
+  "repeat_clocks": {
+    "before": {
+      "wall": 1793712763.454533,
+      "monotonic": 93171.101954916,
+      "continuous": 193278.734482,
+      "uptime_raw": 93171.101959625
+    },
+    "after": {
+      "wall": 1793712776.671403,
+      "monotonic": 93184.318875125,
+      "continuous": 193291.95135,
+      "uptime_raw": 93184.318877583
+    },
+    "deltas": {
+      "wall": 13.216869831085205,
+      "monotonic": 13.216920209000818,
+      "continuous": 13.216867999988608,
+      "uptime_raw": 13.216917958008708
+    }
+  }
+}

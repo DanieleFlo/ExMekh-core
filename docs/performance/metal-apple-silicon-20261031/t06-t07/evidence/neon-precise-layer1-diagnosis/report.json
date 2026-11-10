@@ -1,0 +1,85 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "tools/diagnose_qwen_image_encoder.py",
+    "--model",
+    "build/metal-models/Qwen/Qwen-Image-2.1-Turbo/text_encoder/model.safetensors",
+    "--oracle",
+    "build/metal-qualification/t06-t07-20261031/image-text/encoder-cpu-trace/text",
+    "--layer",
+    "1",
+    "--backend",
+    "metal",
+    "--device",
+    "cpu",
+    "--numeric-library",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/libnumeric.so"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 240.0,
+  "base_timeout_seconds": 60.0,
+  "timeout_multiplier": 4,
+  "reason": "Newdifferenceafterglobalprecisemathrequiresnewsourceaudit+sameinputisolation; onlylayer1primitives, nofullmodel.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 5.110358416999588,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 8134.29160275,
+      "pressure": 1,
+      "host_available_bytes": 11572019200,
+      "swap_bytes": 0,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 8135.30773375,
+      "pressure": 1,
+      "host_available_bytes": 11459526656,
+      "swap_bytes": 0,
+      "footprint_bytes": 98419312,
+      "resident_bytes": 147226624
+    },
+    {
+      "monotonic": 8136.322948791,
+      "pressure": 1,
+      "host_available_bytes": 11400691712,
+      "swap_bytes": 0,
+      "footprint_bytes": 119767688,
+      "resident_bytes": 169082880
+    },
+    {
+      "monotonic": 8137.3388295,
+      "pressure": 1,
+      "host_available_bytes": 11376017408,
+      "swap_bytes": 0,
+      "footprint_bytes": 135529096,
+      "resident_bytes": 184991744
+    },
+    {
+      "monotonic": 8138.349703375,
+      "pressure": 1,
+      "host_available_bytes": 11251138560,
+      "swap_bytes": 0,
+      "footprint_bytes": 320341144,
+      "resident_bytes": 514506752
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/diagnose_qwen_image_encoder.py": "8a311ecc0f6a535deceadde5e9d514724cf085b05ee914fb328708b1348d8dc7",
+    "build/metal-qualification/t06-t07-20261031/neon-model-experiment/gemm-cpu-precise-rsqrt/libnumeric.so": "14bdf3f4078e280783b41521f93b5226a735b37798d98a15bcea4787d6a67726"
+  },
+  "log_sha256": "387941b88072a7c63e4ef687f2f02c5a865d366d488df5c36bb7a6abdd0c0c3b"
+}

@@ -1,0 +1,82 @@
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "function": {"type": "function", "name": "file-processing", "parameters": {"type":"object","properties":{},"additionalProperties":false}, "description": "Open a scope for workspace files. Inspect. Read. Edit. Create. Delete."}}
+{"type": "function", "function": {"type": "function", "name": "delete-file", "parameters": {"type":"object","properties":{"paths":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["paths"]}, "description": "Requires open skill 'file-processing'."}}
+{"type": "function", "function": {"type": "function", "name": "edit-file", "parameters": {"type":"object","properties":{"edits":{"type":"string"}},"additionalProperties":false,"required":["edits"]}, "description": "Requires open skill 'file-processing'."}}
+{"type": "function", "function": {"type": "function", "name": "inspect-file", "parameters": {"type":"object","properties":{"path":{"type":"string"},"detailed":{"type":"boolean"},"max_items":{"type":"integer"},"offset":{"type":"integer"},"query":{"anyOf":[{"type":"string"},{"type":"null"}]},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string"},{"type":"null"}]},"wait_seconds":{"anyOf":[{"type":"number"},{"type":"null"}]}},"additionalProperties":false,"required":["path","detailed","max_items","offset","query","execution_mode","wait_seconds"]}, "description": "Requires open skill 'file-processing'."}}
+{"type": "function", "function": {"type": "function", "name": "new-file", "parameters": {"type":"object","properties":{"document":{"type":"string"}},"additionalProperties":false,"required":["document"]}, "description": "Requires open skill 'file-processing'."}}
+{"type": "function", "function": {"type": "function", "name": "read-file", "parameters": {"type":"object","properties":{"path":{"type":"string"},"start_index":{"type":"integer"},"end_index":{"type":"integer"}},"additionalProperties":false,"required":["path","start_index","end_index"]}, "description": "Requires open skill 'file-processing'."}}
+{"type": "function", "function": {"type": "function", "name": "exit_agent", "parameters": {"type":"object","properties":{"text":{"type":"string"},"items":{"type":"array","items":{"type":"string"}}},"additionalProperties":false,"required":["text","items"]}, "description": "Close the current skill; return text and selected saved outputs to its caller. Available in every skill."}}
+</tools>
+
+If you choose to call a function ONLY reply in the following format with NO suffix:
+
+<tool_call>
+<function=example_function_name>
+<parameter=example_parameter_1>
+value_1
+</parameter>
+<parameter=example_parameter_2>
+This is the value for the second parameter
+that can span
+multiple lines
+</parameter>
+</function>
+</tool_call>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
+- Required parameters MUST be specified
+- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
+- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
+</IMPORTANT>
+
+Use file-processing to carry out the user's workspace file operation. Open it once per request. After it returns the completed result, answer the user directly and stop. Do not repeat completed operations.
+
+
+<harness-output-guidance>
+Here, open a skill with a tool call using its exact name; reading a file does not open it. Skill-only tools require an open skill exposing them; after exit, only the restored caller's tools are allowed.
+Finish the scoped work, then call the configured exit tool to close one level. At root, answer the user. Exit replaces the inner transcript with the returned result: carry outcome, completed actions, essential facts, references and next step in text. Reopening starts a new invocation; reuse completed work instead of repeating it.
+Plan for the next consumer: promote saved output IDs in items only if the caller needs their full details immediately. If concise text suffices, use items=[]. If another skill will use the details, return their ID/path and purpose in text, use items=[], and retrieve them there. 
+Tools exposing execution_mode accept 'wait' (default) or 'background' (return immediately). wait_seconds defaults to 60, >0 and <=300; null uses defaults. Wait expiry or user steering leaves work running. Skill navigation and control/read tools stay synchronous. 
+Keep running work's original tool_call_id and output_id. Transient outputs expire with the runtime; jobs do not resume after restart.
+Large outputs return temporary file manifests, also on retrieval or in items. Enter a skill exposing read-file if needed; inspect and read listed files in order. Check status and domain results separately: final does not mean success. Before retrying failed or partially delivered work, check effects already applied.</harness-output-guidance><|im_end|>
+<|im_start|>user
+Create the missing file probe.txt containing exactly FRONTEND_INTERACTIVE_OK. Open file-processing once and call new-file with document='<new-exmekh-file path="probe.txt"/>FRONTEND_INTERACTIVE_OK'. After success, call exit_agent with text='Created probe.txt' and items=[]. Then answer FRONTEND_INTERACTIVE_OK at root and stop.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<tool_call>
+<function=file-processing>
+</function>
+</tool_call><|im_end|>
+<|im_start|>user
+<tool_response>
+<header>
+  <name>file-processing</name>
+  <type>DeepSkill</type>
+  <id>0_0_1</id>
+  <current-time>2026-11-06T08:58:31Z</current-time>
+  <response-type>final</response-type>
+  <used-tools type="array">
+    <item type="object">
+      <name type="string">new-file</name>
+      <id type="string">0_0_0</id>
+    </item>
+  </used-tools>
+  <elapsed>2m 54.5s</elapsed>
+</header>
+Created probe.txt
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+

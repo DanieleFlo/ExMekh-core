@@ -1,0 +1,252 @@
+{
+  "scope": "Same 2 GiB device ceiling, 2 GiB host reserve. Warmup0 excluded.",
+  "pair_count": 1,
+  "summary": {
+    "encoder": {
+      "before_median": 12.671414,
+      "after_median": 12.517815,
+      "paired_percent": [
+        -1.212169375888117
+      ],
+      "geometric_percent": -1.212169375888117
+    },
+    "dit": {
+      "before_median": 74.881519,
+      "after_median": 68.442633,
+      "paired_percent": [
+        -8.5987652040018
+      ],
+      "geometric_percent": -8.5987652040018
+    },
+    "vae": {
+      "before_median": 10.69462,
+      "after_median": 10.477341,
+      "paired_percent": [
+        -2.031666389268638
+      ],
+      "geometric_percent": -2.031666389268638
+    },
+    "operation": {
+      "before_median": 98.247922,
+      "after_median": 91.438093,
+      "paired_percent": [
+        -6.931270261370015
+      ],
+      "geometric_percent": -6.931270261370015
+    },
+    "process": {
+      "before_median": 111.60108320799918,
+      "after_median": 104.74925399999483,
+      "paired_percent": [
+        -6.139572315112829
+      ],
+      "geometric_percent": -6.139572315112829
+    }
+  },
+  "pairs": [
+    {
+      "before": {
+        "label": "cap2-baseline-1",
+        "runtime": {
+          "width": 256,
+          "height": 256,
+          "references": 0,
+          "seed": 20261020,
+          "variant": 10,
+          "victims": 0,
+          "total_seconds": 98.247922,
+          "prepare_seconds": 0.00031,
+          "load_seconds": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "phase_seconds": [
+            0.0,
+            12.671414,
+            74.881519,
+            10.69462
+          ],
+          "loads": [
+            0,
+            0,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            1
+          ],
+          "peak_device_owned": 1547295232,
+          "live_device_owned": 0,
+          "pre_run_device_owned": 0,
+          "previous_device_peak": 0,
+          "plan_device": 1879048192,
+          "plan_host": 1904672,
+          "peak_bound_checked": true,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 0,
+          "h2d_bytes": 123315368824,
+          "d2h_bytes": 1376256,
+          "weight_groups": [
+            {
+              "limit": 1672093376,
+              "loads": 36,
+              "hits": 360,
+              "evictions": 32,
+              "payload_h2d": 13892143104
+            },
+            {
+              "limit": 1496875008,
+              "loads": 250,
+              "hits": 2105,
+              "evictions": 247,
+              "payload_h2d": 108887413248
+            },
+            {
+              "limit": 675480832,
+              "loads": 1,
+              "hits": 127,
+              "evictions": 0,
+              "payload_h2d": 518096424
+            }
+          ],
+          "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+          "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+          "reference_metadata": [],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        },
+        "process_seconds": 111.60108320799918,
+        "host_min_bytes": 8472461312,
+        "swap_growth_bytes": 0,
+        "exact_native_files": {
+          "rgba.f32": true,
+          "result.png": true,
+          "conditioning.bf16": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "latent-5.f32": true,
+          "latent-4.f32": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-3.f32": true,
+          "latent-2.f32": true
+        },
+        "report_sha256": "bbfc3fad86bff7a200ef6e4e0abdf1fe2b7afcb308197c3efd02c16b58b30ef6"
+      },
+      "after": {
+        "label": "cap2-prefetch-1",
+        "runtime": {
+          "width": 256,
+          "height": 256,
+          "references": 0,
+          "seed": 20261020,
+          "variant": 10,
+          "victims": 0,
+          "total_seconds": 91.438093,
+          "prepare_seconds": 0.000244,
+          "load_seconds": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "phase_seconds": [
+            0.0,
+            12.517815,
+            68.442633,
+            10.477341
+          ],
+          "loads": [
+            0,
+            0,
+            0
+          ],
+          "releases": [
+            1,
+            1,
+            1
+          ],
+          "peak_device_owned": 1547295232,
+          "live_device_owned": 0,
+          "pre_run_device_owned": 0,
+          "previous_device_peak": 0,
+          "plan_device": 1879048192,
+          "plan_host": 1904672,
+          "peak_bound_checked": true,
+          "recipe_version": 1,
+          "rng_version": 0,
+          "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+          "reference_resolution": 0,
+          "h2d_bytes": 123315368824,
+          "d2h_bytes": 1376256,
+          "weight_groups": [
+            {
+              "limit": 1672093376,
+              "loads": 36,
+              "hits": 360,
+              "evictions": 32,
+              "payload_h2d": 13892143104
+            },
+            {
+              "limit": 1496875008,
+              "loads": 250,
+              "hits": 2105,
+              "evictions": 247,
+              "payload_h2d": 108887413248
+            },
+            {
+              "limit": 675480832,
+              "loads": 1,
+              "hits": 127,
+              "evictions": 0,
+              "payload_h2d": 518096424
+            }
+          ],
+          "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+          "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+          "reference_metadata": [],
+          "sigmas": [
+            1,
+            0.978452981,
+            0.954180002,
+            0.926626027,
+            0.89507997,
+            0.845148027,
+            0.704533994,
+            0.414568007,
+            0
+          ]
+        },
+        "process_seconds": 104.74925399999483,
+        "host_min_bytes": 8599027712,
+        "swap_growth_bytes": 0,
+        "exact_native_files": {
+          "rgba.f32": true,
+          "result.png": true,
+          "conditioning.bf16": true,
+          "latent-6.f32": true,
+          "latent-7.f32": true,
+          "latent-5.f32": true,
+          "latent-4.f32": true,
+          "latent-0.f32": true,
+          "latent-1.f32": true,
+          "latent-3.f32": true,
+          "latent-2.f32": true
+        },
+        "report_sha256": "a9581e10f7738edf385cc108450ec7673001a54d6b15a669e91e139e73561703"
+      }
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "cases": [
+    {
+      "id": "reference",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [
+        "build/metal-qualification/t06-t07-20261031/image-reference/fixtures/reference.ds4i"
+      ],
+      "fixture_sha256": "30817240093d7cd08043f083d7fa1f4ff31fe07d1352b7fa01ae451e65013529",
+      "conditioning": {
+        "max_abs": 122.0,
+        "rmse": 2.021754593911094,
+        "relative_l2": 0.19138691092175078,
+        "bit_exact": false,
+        "verdict": "FAIL"
+      },
+      "references_encoded": {
+        "max_abs": 0.1328125,
+        "rmse": 0.008021822167941539,
+        "relative_l2": 0.006860549618589463,
+        "bit_exact": false,
+        "verdict": "PASS"
+      },
+      "latents": [
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0014339690345590804,
+          "relative_l2": 0.0014621890697698082,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0017930972146689515,
+          "relative_l2": 0.0018681898632324358,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.002008237288414198,
+          "relative_l2": 0.0021404808963351057,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.002167806331636759,
+          "relative_l2": 0.0023655266666767483,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0024604563448592472,
+          "relative_l2": 0.0027697526558663615,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0028974994616103055,
+          "relative_l2": 0.0033806148416674602,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.004238374814163627,
+          "relative_l2": 0.004208136645955896,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.006450641743877299,
+          "relative_l2": 0.004221883306060393,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.101806640625,
+        "rmse": 0.0020882483304778096,
+        "relative_l2": 0.002256534619992086,
+        "bit_exact": false,
+        "ssim_rgb": 0.9992458102189891,
+        "alpha_mae": 5.844235420227051e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 113.62467,
+        "prepare_seconds": 0.000544,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          9.731344,
+          13.824426,
+          37.658085,
+          52.410215
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 7735967168,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7776563696,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 84936146392,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 7522459888,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 43,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "FAIL"
+    }
+  ],
+  "verdict": "FAIL",
+  "full_t00_corpus": false,
+  "excluded": [],
+  "human_task_review": "NOT_VERIFIED",
+  "tolerance_sha256": "edefea38067da972800a35b107ab78a1f7e349a7d650f0c93857afef63377f87"
+}

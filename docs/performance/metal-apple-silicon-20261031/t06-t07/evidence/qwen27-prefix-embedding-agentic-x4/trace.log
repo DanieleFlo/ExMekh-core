@@ -1,0 +1,510 @@
+
+===== request 1 2026-11-01 10:24:56 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 23
+effective_prompt_tokens: 23
+cached_tokens: 0
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 0
+prompt_tokens: 23
+live_prompt_common: 0
+memory_token_reusable: 0
+memory_miss_reason: no-live-checkpoint
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","input":[{"role":"user","content":"Remember PREFIX27. Reply only PREFIX27."}],"max_output_tokens":16,"reasoning":{"effort":"none"},"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Remember PREFIX27. Reply only PREFIX27.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8169 ---
+
+PREFIX27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 3
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 11.328
+
+content:
+PREFIX27
+
+===== end request 1 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=23 response_prefill=5 target=28 ---
+
+
+===== request 2 2026-11-01 10:25:10 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 0
+think_mode: none
+prompt_tokens: 42
+effective_prompt_tokens: 46
+cached_tokens: 28
+max_tokens: 16
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 28
+prompt_tokens: 42
+live_prompt_common: 19
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: responses-visible
+cached_tokens: 28
+disk_cached_tokens: 0
+
+first_mismatch_token: 19
+token_window: [11..28)
+     11 ==          live 17 "2" | prompt 17 "2"
+     12 ==          live 22 "7" | prompt 22 "7"
+     13 ==          live 13 "." | prompt 13 "."
+     14 ==          live 248046 "<|im_end|>" | prompt 248046 "<|im_end|>"
+     15 ==          live 198 "\n" | prompt 198 "\n"
+     16 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+     17 ==          live 74455 "assistant" | prompt 74455 "assistant"
+     18 ==          live 198 "\n" | prompt 198 "\n"
+     19 !=          live 248068 "<think>" | prompt 54693 "PREFIX"
+     20 !=          live 271 "\n\n" | prompt 17 "2"
+     21 !=          live 248069 "</think>" | prompt 22 "7"
+     22 !=          live 271 "\n\n" | prompt 248046 "<|im_end|>"
+     23 !=          live 54693 "PREFIX" | prompt 198 "\n"
+     24 !=          live 17 "2" | prompt 248045 "<|im_start|>"
+     25 !=          live 22 "7" | prompt 846 "user"
+     26 !=          live 248046 "<|im_end|>" | prompt 198 "\n"
+     27 !=          live 198 "\n" | prompt 37436 "Repeat"
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","input":[{"role":"user","content":"Remember PREFIX27. Reply only PREFIX27."},{"id":"msg_f641e53ccb3c9566a64cb66a","content":[{"annotations":[],"text":"PREFIX27","type":"output_text"}],"role":"assistant","status":"completed","type":"message"},{"role":"user","content":"Repeat the remembered code only."}],"max_output_tokens":16,"reasoning":{"effort":"none"},"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>user
+Remember PREFIX27. Reply only PREFIX27.<|im_end|>
+<|im_start|>assistant
+PREFIX27<|im_end|>
+<|im_start|>user
+Repeat the remembered code only.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=16 ctx_room=8146 ---
+
+PREFIX27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 3
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 10.927
+
+content:
+PREFIX27
+
+===== end request 2 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=46 response_prefill=5 target=51 ---
+
+
+===== request 3 2026-11-01 10:25:24 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 647
+effective_prompt_tokens: 647
+cached_tokens: 0
+max_tokens: 160
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 51
+prompt_tokens: 647
+live_prompt_common: 1
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: none
+cached_tokens: 0
+disk_cached_tokens: 0
+
+first_mismatch_token: 1
+token_window: [0..10)
+      0 ==          live 248045 "<|im_start|>" | prompt 248045 "<|im_start|>"
+      1 !=          live 846 "user" | prompt 8678 "system"
+      2 ==          live 198 "\n" | prompt 198 "\n"
+      3 !=          live 27656 "Remember" | prompt 2 "#"
+      4 !=          live 67607 " PREFIX" | prompt 13455 " Tools"
+      5 !=          live 17 "2" | prompt 271 "\n\n"
+      6 !=          live 22 "7" | prompt 2523 "You"
+      7 !=          live 13 "." | prompt 599 " have"
+      8 !=          live 17308 " Reply" | prompt 2528 " access"
+      9 !=          live 1132 " only" | prompt 310 " to"
+
+--- raw request json ---
+{"model": "Qwen3.8-27B-UD-Q4_K_S", "input": [{"role": "user", "content": "Both safe_tool and safe_tool/child occur here. Call safe_tool/child exactly."}], "tools": [{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}, {"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}], "tool_choice": "auto", "temperature": 0, "max_output_tokens": 160, "stream": false, "agentic": {"agent_context_id": "agentic-api-test", "allowed_tools": ["safe_tool/child"], "allowed_skills": []}, "reasoning": {"effort": "none"}}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type": "function", "name": "execute", "description": "Synthetic integration-test capability execute", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "safe_tool", "description": "Synthetic integration-test capability safe_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "safe_tool/child", "description": "Synthetic integration-test capability safe_tool/child", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "forbidden_tool", "description": "Synthetic integration-test capability forbidden_tool", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A", "description": "Synthetic integration-test capability skill-A", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A/read", "description": "Synthetic integration-test capability skill-A/read", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-A/write", "description": "Synthetic integration-test capability skill-A/write", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-B", "description": "Synthetic integration-test capability skill-B", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+{"type": "function", "name": "skill-B/search", "description": "Synthetic integration-test capability skill-B/search", "parameters": {"type": "object", "properties": {}, "additionalProperties": false}}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT><|im_end|>
+<|im_start|>user
+Both safe_tool and safe_tool/child occur here. Call safe_tool/child exactly.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=160 ctx_room=7545 ---
+
+<｜DSML｜tool_calls>
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+
+<｜DSML｜invoke name="safe_tool/child">
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 39 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 39
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 166.427
+
+tool_call[0]:
+id: call_9af528aba4d3dca62b486ffdf06e6ba2
+name: safe_tool/child
+arguments:
+{}
+
+===== end request 3 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=647 response_prefill=41 target=688 ---
+
+
+===== request 4 2026-11-01 10:28:16 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 411
+effective_prompt_tokens: 411
+cached_tokens: 369
+max_tokens: 256
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 688
+prompt_tokens: 411
+live_prompt_common: 21
+memory_token_reusable: 0
+memory_miss_reason: token-mismatch
+tool_replay: mem=0 disk=0 canonical=0 missing_ids=0
+cache_source: disk-text
+cached_tokens: 369
+disk_cached_tokens: 369
+disk_cache_file: /Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-qualification/t06-t07-20261031/qwen27-prefix-embedding-agentic-x4/kv/136e96f5b498adc587ddd8da3c32257bc47317e9.kv
+
+first_mismatch_token: 21
+token_window: [13..30)
+     13 ==          live 25 ":" | prompt 25 ":"
+     14 ==          live 271 "\n\n" | prompt 271 "\n\n"
+     15 ==          live 27 "<" | prompt 27 "<"
+     16 ==          live 15449 "tools" | prompt 15449 "tools"
+     17 ==          live 29 ">" | prompt 29 ">"
+     18 ==          live 198 "\n" | prompt 198 "\n"
+     19 ==          live 4754 "{\"" | prompt 4754 "{\""
+     20 ==          live 1267 "type" | prompt 1267 "type"
+     21 !=          live 763 "\":" | prompt 3147 "\":\""
+     22 !=          live 328 " \"" | prompt 1628 "function"
+     23 !=          live 1628 "function" | prompt 2129 "\",\""
+     24 !=          live 487 "\"," | prompt 591 "name"
+     25 !=          live 328 " \"" | prompt 3147 "\":\""
+     26 !=          live 591 "name" | prompt 12748 "rank"
+     27 !=          live 763 "\":" | prompt 13171 "_local"
+     28 !=          live 328 " \"" | prompt 13183 "_results"
+     29 !=          live 9951 "execute" | prompt 2129 "\",\""
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":false,"input":[{"role":"system","content":"Use the requested tool and remember the user's code."},{"role":"user","content":"Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code."}],"reasoning":{"effort":"none"},"tool_choice":"required","tools":[{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}],"max_output_tokens":256,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT>
+
+Use the requested tool and remember the user's code.<|im_end|>
+<|im_start|>user
+Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=256 ctx_room=7781 ---
+
+<｜DSML｜tool_calls><
+
+--- trace: entered tool-call block after 8 generated tokens ---
+
+｜DSML｜invoke name="rank_local_results">
+<｜DSML｜parameter name="query" string="true">snow</｜DSML｜parameter>
+<｜DSML｜parameter name="execution_mode" string="true">wait</｜DSML｜parameter>
+<｜DSML｜parameter name="wait_seconds" string="false">60</｜DSML｜parameter></｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+--- trace: closed tool-call block after 106 generated tokens ---
+
+
+
+--- parsed message ---
+finish: tool_calls
+generated_tokens: 106
+dsml_start: 1
+dsml_end: 1
+elapsed_sec: 262.064
+
+tool_call[0]:
+id: call_fac40af3c6859526c469090a6eb9e727
+name: rank_local_results
+arguments:
+{"query": "snow", "execution_mode": "wait", "wait_seconds": 60}
+
+===== end request 4 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=411 response_prefill=108 target=519 ---
+
+
+===== request 5 2026-11-01 10:33:04 =====
+kind: chat
+model: Qwen3.8-27B-UD-Q4_K_S
+stream: 0
+tools: 1
+think_mode: none
+prompt_tokens: 616
+effective_prompt_tokens: 616
+cached_tokens: 519
+max_tokens: 48
+temperature: 0.000
+top_k: 0
+top_p: 1.000
+min_p: 0.050
+ignore_eos: 0
+seed: 0
+stream_include_usage: 0
+
+--- cache decision ---
+live_tokens_before: 519
+prompt_tokens: 616
+live_prompt_common: 519
+memory_token_reusable: 1
+memory_miss_reason: live-prefix-match
+tool_replay: mem=1 disk=0 canonical=0 missing_ids=0
+cache_source: responses-visible
+cached_tokens: 519
+disk_cached_tokens: 0
+
+--- raw request json ---
+{"model":"Qwen3.8-27B-UD-Q4_K_S","stream":false,"input":[{"role":"system","content":"Use the requested tool and remember the user's code."},{"role":"user","content":"Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code."},{"type":"function_call","call_id":"call_fac40af3c6859526c469090a6eb9e727","name":"rank_local_results","arguments":"{\"query\":\"snow\",\"execution_mode\":\"wait\",\"wait_seconds\":60.0}"},{"type":"function_call_output","call_id":"call_fac40af3c6859526c469090a6eb9e727","output":"<tool-result type=\"object\">\n  <scores type=\"array\">\n    <item type=\"number\">0.832023024559021</item>\n    <item type=\"number\">0.743124783039093</item>\n  </scores>\n</tool-result>"}],"reasoning":{"effort":"none"},"tools":[{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}],"max_output_tokens":48,"temperature":0}
+
+--- rendered prompt ---
+<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{"type":"function","name":"rank_local_results","parameters":{"type":"object","properties":{"query":{"type":"string"},"execution_mode":{"anyOf":[{"enum":["wait","background"],"type":"string","description":"Wait up to wait_seconds, or return immediately while the tool continues."},{"type":"null"}],"description":"Null uses the default: wait."},"wait_seconds":{"anyOf":[{"type":"number","description":"Maximum initial wait in seconds; the tool continues after this time."},{"type":"null"}],"description":"Null uses the default: 60.0."}},"additionalProperties":false,"required":["query","execution_mode","wait_seconds"]},"strict":true,"description":"Rank fixed search candidates using the production native embedding consumer."}
+</tools>
+
+If you choose to call a function, ONLY reply in the following DSML format with NO suffix:
+
+<｜DSML｜tool_calls>
+<｜DSML｜invoke name="$TOOL_NAME">
+<｜DSML｜parameter name="$PARAMETER_NAME" string="true|false">$PARAMETER_VALUE</｜DSML｜parameter>
+</｜DSML｜invoke>
+</｜DSML｜tool_calls>
+
+<IMPORTANT>
+Reminder:
+- Function calls MUST use the DSML format above; native <tool_call> syntax is not executable in this runtime
+- Required parameters MUST be specified with their exact schema names
+- String parameters use raw text and string="true"; numbers, booleans, arrays, and objects use JSON and string="false"
+- If no function call is needed, answer normally and do not mention function calls
+</IMPORTANT>
+
+Use the requested tool and remember the user's code.<|im_end|>
+<|im_start|>user
+Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code.<|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+<｜DSML｜tool_calls><｜DSML｜invoke name="rank_local_results">
+<｜DSML｜parameter name="query" string="true">snow</｜DSML｜parameter>
+<｜DSML｜parameter name="execution_mode" string="true">wait</｜DSML｜parameter>
+<｜DSML｜parameter name="wait_seconds" string="false">60</｜DSML｜parameter></｜DSML｜invoke>
+</｜DSML｜tool_calls><|im_end|>
+<|im_start|>user
+<tool_response>
+<tool-result type="object">
+  <scores type="array">
+    <item type="number">0.832023024559021</item>
+    <item type="number">0.743124783039093</item>
+  </scores>
+</tool-result>
+</tool_response><|im_end|>
+<|im_start|>assistant
+<think>
+
+</think>
+
+
+--- generated text ---
+
+
+--- trace: prefill done; decode_max=48 ctx_room=7576 ---
+
+EMBEDDING-E2E-27
+
+--- parsed message ---
+finish: stop
+generated_tokens: 10
+dsml_start: 0
+dsml_end: 0
+elapsed_sec: 38.159
+
+content:
+EMBEDDING-E2E-27
+
+===== end request 5 =====
+
+
+--- trace: post-response checkpoint rebuilt via request frontier: cached=616 response_prefill=12 target=628 ---
+

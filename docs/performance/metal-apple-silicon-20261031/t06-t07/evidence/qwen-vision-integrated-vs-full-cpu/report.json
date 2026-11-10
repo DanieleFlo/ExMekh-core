@@ -1,0 +1,74 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "tools/diagnose_qwen_image_vision.py",
+    "--model",
+    "build/metal-oracles/models/Qwen/Qwen-Image-2.1-Turbo/text_encoder/model.safetensors",
+    "--oracle",
+    "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps/oracle/reference",
+    "--layer",
+    "0",
+    "--backend",
+    "metal",
+    "--device",
+    "cpu"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Integrated vision primitives against separately completed full pinned CPU encoder trace: original RGB pixels, positions, Conv3d, norms, attention, GELU and manual full layer0.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 4.058148291998805,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 19107.8726165,
+      "pressure": 1,
+      "host_available_bytes": 9332080640,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 19108.882105333,
+      "pressure": 1,
+      "host_available_bytes": 9123971072,
+      "swap_bytes": 262144,
+      "footprint_bytes": 161317680,
+      "resident_bytes": 216498176
+    },
+    {
+      "monotonic": 19109.892067708,
+      "pressure": 1,
+      "host_available_bytes": 9045065728,
+      "swap_bytes": 262144,
+      "footprint_bytes": 240796584,
+      "resident_bytes": 257998848
+    },
+    {
+      "monotonic": 19110.903466208,
+      "pressure": 1,
+      "host_available_bytes": 8985755648,
+      "swap_bytes": 262144,
+      "footprint_bytes": 264324008,
+      "resident_bytes": 327712768
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e",
+    "tools/diagnose_qwen_image_vision.py": "3760a6efb221fc13db4a44b64f1d99759f7396fca884248d8a32b3f4b7f9e9e7"
+  },
+  "log_sha256": "b26ac4e7dbafaed5709dbecedbd36307168397b5228d3dc25df3d4895dfe6d6f"
+}

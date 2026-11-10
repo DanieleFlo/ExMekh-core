@@ -228,7 +228,7 @@ async def test_narrow_layout_keeps_navigation_accessible(
             "document.documentElement.scrollWidth <= window.innerWidth"
         )
         await page.locator("button:has(.q-icon:text-is('menu'))").click()
-        assert await page.get_by_text("PROJECTS", exact=True).is_visible()
+        await expect(page.get_by_text("PROJECTS", exact=True)).to_be_visible()
         await browser.close()
 
 

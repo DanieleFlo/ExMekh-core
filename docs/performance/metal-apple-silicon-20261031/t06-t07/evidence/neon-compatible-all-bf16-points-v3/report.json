@@ -1,0 +1,55 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/verify-compatible-points.py"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Repeat full finite-BF16 activation sweep after correcting experimental Metal identifier; unchanged CPU expected tensors.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 3.071959541999604,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 10511.604664958,
+      "pressure": 1,
+      "host_available_bytes": 9602678784,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 10512.61846975,
+      "pressure": 1,
+      "host_available_bytes": 9010118656,
+      "swap_bytes": 262144,
+      "footprint_bytes": 128320136,
+      "resident_bytes": 177700864
+    },
+    {
+      "monotonic": 10513.631256208,
+      "pressure": 1,
+      "host_available_bytes": 9007153152,
+      "swap_bytes": 262144,
+      "footprint_bytes": 161596232,
+      "resident_bytes": 216694784
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "ea592a65ec29f8c0bd9006be940613c5b81752cf1b0e73333bd250f601a54e11"
+}

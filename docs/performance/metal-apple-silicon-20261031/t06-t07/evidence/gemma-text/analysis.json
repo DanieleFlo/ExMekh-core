@@ -1,0 +1,680 @@
+{
+  "scope": "Saved local subset; independent strict internal and final-vector gates",
+  "kind": "text",
+  "native_trace": "build/metal-qualification/t06-t07-20261031/gemma-text/native-128",
+  "oracle_trace": "build/metal-qualification/t06-t07-20261031/gemma-text/oracle",
+  "output_vectors": {
+    "128": {
+      "metrics": {
+        "max_abs": 0.002175748348236084,
+        "rmse": 0.0005991709190361861,
+        "relative_l2": 0.006778844929192358,
+        "bit_exact": false,
+        "cosine_min": 0.9999715886763398,
+        "unit_norm_error_max": 4.3502690116881126e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    "256": {
+      "metrics": {
+        "max_abs": 0.0017998367547988892,
+        "rmse": 0.000502992489712363,
+        "relative_l2": 0.008047879748809654,
+        "bit_exact": false,
+        "cosine_min": 0.9999572170289119,
+        "unit_norm_error_max": 3.571532758428475e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    "512": {
+      "metrics": {
+        "max_abs": 0.0014497004449367523,
+        "rmse": 0.0003860984614385055,
+        "relative_l2": 0.008736410767774323,
+        "bit_exact": false,
+        "cosine_min": 0.9999520904489361,
+        "unit_norm_error_max": 2.263912368682952e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    },
+    "768": {
+      "metrics": {
+        "max_abs": 0.0012604501098394394,
+        "rmse": 0.00032340732587341116,
+        "relative_l2": 0.00896252651458019,
+        "bit_exact": false,
+        "cosine_min": 0.999950792982003,
+        "unit_norm_error_max": 5.603780817153847e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    }
+  },
+  "internal_boundaries": {
+    "criterion": "bit_exact",
+    "status": "FAIL",
+    "exact": 3,
+    "count": 81,
+    "boundaries": [
+      {
+        "file": "item-0-embeddings-0.bf16",
+        "elements": 5632,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "item-0-layer-0.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0023849788094685532
+      },
+      {
+        "file": "item-0-layer-1.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0022948913154765484
+      },
+      {
+        "file": "item-0-layer-10.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.1328125,
+        "rmse": 0.021402491338591675
+      },
+      {
+        "file": "item-0-layer-11.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.01525214038243232
+      },
+      {
+        "file": "item-0-layer-12.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.01785961821069142
+      },
+      {
+        "file": "item-0-layer-13.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.021348179853701372
+      },
+      {
+        "file": "item-0-layer-14.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.375,
+        "rmse": 0.0181302667930993
+      },
+      {
+        "file": "item-0-layer-15.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.02064903001044692
+      },
+      {
+        "file": "item-0-layer-16.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.012630184125287327
+      },
+      {
+        "file": "item-0-layer-17.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.0150169956438869
+      },
+      {
+        "file": "item-0-layer-18.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01448720541962975
+      },
+      {
+        "file": "item-0-layer-19.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01529111586648963
+      },
+      {
+        "file": "item-0-layer-2.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.046875,
+        "rmse": 0.004739316469240388
+      },
+      {
+        "file": "item-0-layer-20.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.016114268347671063
+      },
+      {
+        "file": "item-0-layer-21.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01696940280030681
+      },
+      {
+        "file": "item-0-layer-22.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01906292050862941
+      },
+      {
+        "file": "item-0-layer-23.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.008771779187493296
+      },
+      {
+        "file": "item-0-layer-3.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.010292871425174455
+      },
+      {
+        "file": "item-0-layer-4.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.016747224715125082
+      },
+      {
+        "file": "item-0-layer-5.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.140625,
+        "rmse": 0.01837192365461947
+      },
+      {
+        "file": "item-0-layer-6.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.008656991538041411
+      },
+      {
+        "file": "item-0-layer-7.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.01326592760127299
+      },
+      {
+        "file": "item-0-layer-8.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.018089332641311094
+      },
+      {
+        "file": "item-0-layer-9.bf16",
+        "elements": 5632,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.023960107448079044
+      },
+      {
+        "file": "item-0-ple-0.bf16",
+        "elements": 135168,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.0005004427944087629
+      },
+      {
+        "file": "item-0-projected-24.bf16",
+        "elements": 8448,
+        "bit_exact": false,
+        "max_abs": 16.0,
+        "rmse": 0.9157050299584282
+      },
+      {
+        "file": "item-1-embeddings-0.bf16",
+        "elements": 4608,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "item-1-layer-0.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0026898688614028876
+      },
+      {
+        "file": "item-1-layer-1.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.002310306663335262
+      },
+      {
+        "file": "item-1-layer-10.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.01993360086451015
+      },
+      {
+        "file": "item-1-layer-11.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.014853689011778937
+      },
+      {
+        "file": "item-1-layer-12.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01919860874931643
+      },
+      {
+        "file": "item-1-layer-13.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.020849390023896824
+      },
+      {
+        "file": "item-1-layer-14.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01948150304445566
+      },
+      {
+        "file": "item-1-layer-15.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.02033845145482156
+      },
+      {
+        "file": "item-1-layer-16.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.010269907103978482
+      },
+      {
+        "file": "item-1-layer-17.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.016171251166605137
+      },
+      {
+        "file": "item-1-layer-18.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01617798453553147
+      },
+      {
+        "file": "item-1-layer-19.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01799863382459163
+      },
+      {
+        "file": "item-1-layer-2.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.005262895226244706
+      },
+      {
+        "file": "item-1-layer-20.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.019697414785461165
+      },
+      {
+        "file": "item-1-layer-21.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.020332181202352213
+      },
+      {
+        "file": "item-1-layer-22.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.020867819498142204
+      },
+      {
+        "file": "item-1-layer-23.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.004734538100802733
+      },
+      {
+        "file": "item-1-layer-3.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.010109751836205712
+      },
+      {
+        "file": "item-1-layer-4.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.078125,
+        "rmse": 0.016618922689141634
+      },
+      {
+        "file": "item-1-layer-5.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.09375,
+        "rmse": 0.01742426886284235
+      },
+      {
+        "file": "item-1-layer-6.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.008753214862462859
+      },
+      {
+        "file": "item-1-layer-7.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.011689428385193013
+      },
+      {
+        "file": "item-1-layer-8.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.014718580626700117
+      },
+      {
+        "file": "item-1-layer-9.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.018748911687491897
+      },
+      {
+        "file": "item-1-ple-0.bf16",
+        "elements": 110592,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.00039034415454587077
+      },
+      {
+        "file": "item-1-projected-24.bf16",
+        "elements": 6912,
+        "bit_exact": false,
+        "max_abs": 16.0,
+        "rmse": 1.0605669923952867
+      },
+      {
+        "file": "item-2-embeddings-0.bf16",
+        "elements": 4608,
+        "bit_exact": true,
+        "max_abs": 0.0,
+        "rmse": 0.0
+      },
+      {
+        "file": "item-2-layer-0.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0026316851894451388
+      },
+      {
+        "file": "item-2-layer-1.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.03125,
+        "rmse": 0.0020726899332537806
+      },
+      {
+        "file": "item-2-layer-10.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.02474500627366724
+      },
+      {
+        "file": "item-2-layer-11.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.017587194893574694
+      },
+      {
+        "file": "item-2-layer-12.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.020897475737165768
+      },
+      {
+        "file": "item-2-layer-13.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.025768328146696464
+      },
+      {
+        "file": "item-2-layer-14.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.021578135086928327
+      },
+      {
+        "file": "item-2-layer-15.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.3125,
+        "rmse": 0.02327789589031041
+      },
+      {
+        "file": "item-2-layer-16.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.014074979637332416
+      },
+      {
+        "file": "item-2-layer-17.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.015796107620577805
+      },
+      {
+        "file": "item-2-layer-18.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.75,
+        "rmse": 0.019138149495796872
+      },
+      {
+        "file": "item-2-layer-19.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.022239927587873895
+      },
+      {
+        "file": "item-2-layer-2.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.05078125,
+        "rmse": 0.005304978241603153
+      },
+      {
+        "file": "item-2-layer-20.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 1.0,
+        "rmse": 0.02292657805402484
+      },
+      {
+        "file": "item-2-layer-21.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.01970050902815692
+      },
+      {
+        "file": "item-2-layer-22.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.5,
+        "rmse": 0.019970337142722297
+      },
+      {
+        "file": "item-2-layer-23.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.006746049739685152
+      },
+      {
+        "file": "item-2-layer-3.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.0625,
+        "rmse": 0.009208273299999084
+      },
+      {
+        "file": "item-2-layer-4.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.01613211821266675
+      },
+      {
+        "file": "item-2-layer-5.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.016703238749068882
+      },
+      {
+        "file": "item-2-layer-6.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.00908011205613951
+      },
+      {
+        "file": "item-2-layer-7.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.013101357980575877
+      },
+      {
+        "file": "item-2-layer-8.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.018557408423567238
+      },
+      {
+        "file": "item-2-layer-9.bf16",
+        "elements": 4608,
+        "bit_exact": false,
+        "max_abs": 0.25,
+        "rmse": 0.02524474753858414
+      },
+      {
+        "file": "item-2-ple-0.bf16",
+        "elements": 110592,
+        "bit_exact": false,
+        "max_abs": 0.125,
+        "rmse": 0.000583215231260457
+      },
+      {
+        "file": "item-2-projected-24.bf16",
+        "elements": 6912,
+        "bit_exact": false,
+        "max_abs": 5.0,
+        "rmse": 0.9753779935526689
+      }
+    ]
+  },
+  "status": "FAIL"
+}

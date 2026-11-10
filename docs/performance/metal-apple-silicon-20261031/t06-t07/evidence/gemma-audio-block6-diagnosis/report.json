@@ -1,0 +1,73 @@
+{
+  "command": [
+    "build/metal-venv/bin/python",
+    "build/metal-qualification/t06-t07-20261031/diagnose-gemma-audio-block.py",
+    "production",
+    "6"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 480.0,
+  "base_timeout_seconds": 120.0,
+  "timeout_multiplier": 4,
+  "reason": "Independent later audio block on frozen CPU hidden state, all F32 probability and channel-major primitives checked before claiming full-media correctness.",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 5.07703204200152,
+  "status": "PASS",
+  "cleanup_error": null,
+  "cleanup_forced": false,
+  "samples": [
+    {
+      "monotonic": 19262.156765416,
+      "pressure": 1,
+      "host_available_bytes": 8923037696,
+      "swap_bytes": 262144,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 19263.168243958,
+      "pressure": 1,
+      "host_available_bytes": 9071607808,
+      "swap_bytes": 262144,
+      "footprint_bytes": 169853624,
+      "resident_bytes": 220545024
+    },
+    {
+      "monotonic": 19264.178340833,
+      "pressure": 1,
+      "host_available_bytes": 9034055680,
+      "swap_bytes": 262144,
+      "footprint_bytes": 180323000,
+      "resident_bytes": 231309312
+    },
+    {
+      "monotonic": 19265.187002166,
+      "pressure": 1,
+      "host_available_bytes": 9130180608,
+      "swap_bytes": 262144,
+      "footprint_bytes": 258556672,
+      "resident_bytes": 313425920
+    },
+    {
+      "monotonic": 19266.204227541,
+      "pressure": 1,
+      "host_available_bytes": 9299148800,
+      "swap_bytes": 262144,
+      "footprint_bytes": 488719488,
+      "resident_bytes": 563560448
+    }
+  ],
+  "executables_sha256": {
+    "build/metal-venv/bin/python": "3237648c5222017bba78737370570e4c9d5a01e552cdf2fa11f107c8d00fc06e"
+  },
+  "log_sha256": "f4c4e8dc7b18e8054facc237a4e21f9f7c16dae614449301411214d9e5f24393"
+}

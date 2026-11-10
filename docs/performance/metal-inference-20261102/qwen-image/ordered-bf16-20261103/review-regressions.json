@@ -1,0 +1,88 @@
+{
+  "status": "PASS_WITH_PREEXISTING_NUMERIC_FAILURES",
+  "numeric": {
+    "tests": 43,
+    "passed": 39,
+    "skipped": 3,
+    "failed_tests": 1,
+    "failed_subtests": 2,
+    "failure": "test_vision_trigonometric_boundaries op13/op14",
+    "baseline_control": {
+      "name": "baseline-trig",
+      "tests": 1,
+      "failures": [
+        "tests.test_suite_numeric.SuiteNumeric.test_vision_trigonometric_boundaries (op=13)",
+        "tests.test_suite_numeric.SuiteNumeric.test_vision_trigonometric_boundaries (op=14)"
+      ],
+      "errors": []
+    },
+    "classification": "PREEXISTING_FAILURE"
+  },
+  "gemma_media": {
+    "internal_status": "PASS",
+    "bit_exact_boundaries": 480,
+    "total_boundaries": 480,
+    "vectors": {
+      "metrics": {
+        "max_abs": 5.960464477539063e-08,
+        "rmse": 6.472565998493549e-09,
+        "relative_l2": 7.322872469981983e-08,
+        "bit_exact": false,
+        "cosine_min": 0.9999999999999989,
+        "unit_norm_error_max": 6.491406745467998e-08
+      },
+      "tolerances": {
+        "cosine_min": 0.999,
+        "max_abs": 0.005,
+        "rmse_max": 0.0015,
+        "unit_norm_error_max": 1e-05,
+        "dimensions": [
+          128,
+          256,
+          512,
+          768
+        ],
+        "float16": "REJECT"
+      },
+      "status": "PASS"
+    }
+  },
+  "isolated": {
+    "forms": 8,
+    "variants": [
+      "before",
+      "after",
+      "reviewed",
+      "fallback"
+    ],
+    "cpu_bit_exact": true,
+    "mutually_bit_exact": true,
+    "fallback_capability": "tile rejected in constructor in a separate diagnostic build"
+  },
+  "real_shapes": [
+    {
+      "rows": 256,
+      "inner": 4096,
+      "cols": 4096,
+      "ip01_median_ms": 9.753958,
+      "reviewed_median_ms": 9.869416,
+      "fallback_median_ms": 19.780541
+    },
+    {
+      "rows": 256,
+      "inner": 4096,
+      "cols": 12288,
+      "ip01_median_ms": 30.377583,
+      "reviewed_median_ms": 30.062333,
+      "fallback_median_ms": 116.968084
+    },
+    {
+      "rows": 256,
+      "inner": 12288,
+      "cols": 4096,
+      "ip01_median_ms": 31.983458,
+      "reviewed_median_ms": 31.875833,
+      "fallback_median_ms": 110.60575
+    }
+  ]
+}

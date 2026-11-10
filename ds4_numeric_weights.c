@@ -41,6 +41,11 @@ static ds4_status weight_free(void *p, void *b) {
 }
 static ds4_status weight_fence(void *p) { return ds4_numeric_fence(p); }
 static ds4_status weight_ready(void *p) { return ds4_numeric_weights_ready(p); }
+static ds4_status weight_read(void *p, void *storage, uint64_t offset,
+                              int fd, uint64_t file_offset, uint64_t bytes) {
+  (void)p;
+  return ds4_num_buffer_stage_file(storage, offset, fd, file_offset, bytes);
+}
 ds4_weight_backend ds4_numeric_weight_backend(ds4_numeric *c) {
   return (ds4_weight_backend){c, weight_alloc, weight_write, weight_fence,
                               weight_free};
@@ -59,6 +64,8 @@ ds4_status ds4_numeric_weight_group_selected(ds4_weight_group **out,
       ds4_weight_group_create_selected(out, b, component, ids, count, &backend);
   if (!s)
     s = ds4_weight_group_availability(*out, weight_ready);
+  if (!s)
+    s = ds4_weight_group_file_transport(*out, weight_read);
   return s;
 }
 ds4_num_view ds4_numeric_weight_view(const void *storage, uint64_t off,

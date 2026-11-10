@@ -18,6 +18,8 @@ from qwen_flash_metrics import compare_teacher_logits, teacher_quality_passes
 
 try:
     import bench_qwen_flash_agent as benchmark
+    from exmekh_lib.core.models.interactive import InteractiveHandler
+    from exmekh_lib.core.models.tool_message import ToolMessage
     from exmekh_lib.core.models.user_message import UserMessage
 except ModuleNotFoundError as error:
     if not error.name.startswith(("exmekh_agent", "exmekh_lib")):
@@ -63,12 +65,15 @@ class LauncherEnvironmentTests(unittest.TestCase):
     def test_actual_defaults_ignore_inherited_diagnostic_overrides(self):
         with patch.dict("os.environ", {"DS4_CUDA_QWEN4_KV_STREAMING": "0", "DS4_CTX": "1",
                                        "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB": "2"}):
-            env = launcher_environment()
+            env = launcher_environment(backend="cuda")
         self.assertEqual(env["DS4_CUDA_QWEN4_KV_STREAMING"], "1")
         self.assertEqual(env["DS4_CUDA_WEIGHT_CACHE_LIMIT_GB"], "auto")
         self.assertEqual(env["DS4_CUDA_QWEN4_HYBRID_PREFILL"], "0")
-        self.assertEqual(set(launcher_environment("legacy")), {
+        self.assertEqual(set(launcher_environment("legacy", backend="cuda")), {
             "DS4_CUDA_QWEN4_TIERED_CACHE", "DS4_CUDA_WEIGHT_CACHE_LIMIT_GB", "DS4_CUDA_QWEN4_RAM_CACHE_MB"})
+
+    def test_metal_does_not_inject_cuda_profile_environment(self):
+        self.assertEqual(launcher_environment(backend="metal"), {})
 
 
 @unittest.skipIf(benchmark is None, "requires the agent virtual environment")
@@ -149,6 +154,24 @@ class AgentBenchmarkTests(unittest.TestCase):
             self.assertTrue(all((directory / "request-0.json").is_file() for directory in directories))
             self.assertEqual(call.call_args.args[0].get_extra(), {"sentinel": "preserve", "temperature": 0, "seed": 424242})
             self.assertEqual(request.get_extra(), {"sentinel": "preserve"})
+
+    def test_greedy_adapter_preserves_expanded_attachments_and_interactive_handler(self):
+        attachment = UserMessage("tool attachment")
+        request = benchmark.ProviderRequest([
+            UserMessage("task"),
+            ToolMessage("receipt", "call", "tool", attachments=attachment),
+        ], extra={"agentic": {"agent_context_id": "parent"}}, stream=True)
+        handler = Mock(spec=InteractiveHandler)
+        request.interactive_handler = handler
+        with patch.object(benchmark.LocalProvider, "__init__", return_value=None), \
+                patch.object(benchmark.LocalProvider, "call") as call:
+            benchmark.GreedyProvider().call(request)
+        adapted = call.call_args.args[0]
+        self.assertIs(adapted.interactive_handler, handler)
+        self.assertEqual(adapted.get_messages(), request.get_messages())
+        self.assertEqual(sum(message is attachment for message in adapted.get_messages()), 1)
+        self.assertEqual(adapted.get_extra()["agentic"], {"agent_context_id": "parent"})
+        self.assertTrue(adapted.get_streaming())
 
     def test_three_turns_and_mismatched_pairs(self):
         initial = {"prefill_chunks": [{"total": 100}], "prompt_done_seconds": [10],

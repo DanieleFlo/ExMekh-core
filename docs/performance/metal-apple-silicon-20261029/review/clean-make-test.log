@@ -1,0 +1,429 @@
+cc -O3 -ffast-math -g -mcpu=native -Wall -Wextra -std=c99 -o ds4_test ds4_test.o ds4_help.o ds4_kvstore.o rax.o ds4_test_hooks.o ds4_runtime.o ds4_executor.o ds4_bundle.o ds4_resources.o ds4_checkpoint.o ds4_image.o ds4_distributed.o ds4_tp.o ds4_ssd.o ds4_metal.o ds4_layer_pack.o ds4_engram.o -lm -pthread -framework Foundation -framework Metal
+cc -O2 -Wall -Wextra -std=c99 -o tests/test_q4k_dot tests/test_q4k_dot.c -lm -pthread
+./tests/test_q4k_dot
+Q4_K unit tests:
+  block sizes: Q4_K=144 (expect 144), Q8_K=292 (expect 292): PASS
+  scale extraction: PASS
+  dot known: result=2048.0 expected=2048.0: PASS
+  dot vs reference (50 random blocks): PASS
+
+4/4 tests passed
+cc -O2 -Wall -Wextra -std=c99 -o tests/test_mxfp4_dot tests/test_mxfp4_dot.c -lm
+./tests/test_mxfp4_dot
+MXFP4 unit tests:
+  block size: 17 (expect 17): PASS
+  E8M0 scale conversion: PASS
+  nibble order: -32.0 (expect -32.0): PASS
+  dot vs independent reference: PASS
+
+4/4 tests passed
+./tests/test_session_state
+session state tests: ok
+./tests/test_tp_commands
+ds4-tp: big gate payload exchange failed (layer 39): Connection reset by peer
+ds4-tp: big gate desync: got l=38 tag=b16 seq=17, want l=39 seq=17
+ds4-tp: big gate header exchange failed or peer closed (layer 39 seq 17): Resource temporarily unavailable
+ds4-tp: bad logits frame (type 0 bytes 0)
+ds4-tp: bad logits frame (type 5 bytes 32)
+ds4-tp: bad logits frame (type 10 bytes 28)
+ds4-tp: bad logits frame (type 0 bytes 0)
+TP backend and mutually exclusive placement options: ok
+TP bulk TCP: exact payloads, chunk boundaries, delayed peer, EOF/desync/timeout: ok
+TP cancellation agreement, reuse, interrupted acknowledgment, mismatch and timeout: ok
+TP logits halves: exact frames, reuse, canaries, EOF, invalid frames and timeout: ok
+TP command tests: ok
+./tests/test_tp_rdma
+ds4-tp: duplicate or invalid big gate completion 9223372036854775809
+ds4-tp: big gate chunk 0 received 16385 bytes, expected 16384
+ds4-tp: big gate completion error: wc status 21
+ds4-tp: duplicate or invalid big gate completion 9223372036854776807
+RDMA per-message completion accounting, bulk/decode/drain/verify: PASS
+./tests/test_tp_tcp
+Unix tiny-buffer decode, 1..8-row gates and bulk payloads, nonblocking=0: PASS
+Unix tiny-buffer decode, 1..8-row gates and bulk payloads, nonblocking=1: PASS
+TCP stalled, half-closed and disconnected peers: PASS
+TCP tiny-buffer decode, 1..8-row gates and bulk payloads, nonblocking=0: PASS
+TCP tiny-buffer decode, 1..8-row gates and bulk payloads, nonblocking=1: PASS
+TCP stalled, half-closed and disconnected peers: PASS
+./tests/test_linux_memory
+Linux nonmovable memory: PASS
+./tests/test_read_queue
+read queue: bounded concurrency, completion, error payload, reuse, drain and restart PASS
+./tests/test_engram
+Engram hashes, history and bounded disk rows: PASS
+python3 -m unittest tests.test_product_text_configuration -v
+test_c_guard_combines_literals_but_excludes_comments_wire_and_native_fixtures (tests.test_product_text_configuration.ProductTextConfigurationTests.test_c_guard_combines_literals_but_excludes_comments_wire_and_native_fixtures) ... ok
+test_diagnostics_are_checked_after_long_format_arguments (tests.test_product_text_configuration.ProductTextConfigurationTests.test_diagnostics_are_checked_after_long_format_arguments) ... ok
+test_python_guard_includes_logs_schema_metadata_and_formatted_tooltips (tests.test_product_text_configuration.ProductTextConfigurationTests.test_python_guard_includes_logs_schema_metadata_and_formatted_tooltips) ... ok
+test_repository_production_text_has_no_inline_violations (tests.test_product_text_configuration.ProductTextConfigurationTests.test_repository_production_text_has_no_inline_violations) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.198s
+
+OK
+./tests/test_runtime
+runtime: PASS
+python3 -m unittest tests.test_suite_contracts tests.test_suite_baseline_manifests tests.test_suite_artifacts -v
+test_catalog (tests.test_suite_contracts.SuiteContracts.test_catalog) ... ok
+test_embedding_rejections (tests.test_suite_contracts.SuiteContracts.test_embedding_rejections) ... ok
+test_images (tests.test_suite_contracts.SuiteContracts.test_images) ... ok
+test_media_and_interleaving (tests.test_suite_contracts.SuiteContracts.test_media_and_interleaving) ... ok
+test_schema (tests.test_suite_contracts.SuiteContracts.test_schema) ... ok
+test_standard_embeddings (tests.test_suite_contracts.SuiteContracts.test_standard_embeddings) ... ok
+test_upload (tests.test_suite_contracts.SuiteContracts.test_upload) ... ok
+test_corpus_hashes_counts_and_split_ownership (tests.test_suite_baseline_manifests.BaselineManifests.test_corpus_hashes_counts_and_split_ownership) ... ok
+test_oracles_and_legacy_gates (tests.test_suite_baseline_manifests.BaselineManifests.test_oracles_and_legacy_gates) ... ok
+test_pinned_sources_and_local_weight_hashes (tests.test_suite_baseline_manifests.BaselineManifests.test_pinned_sources_and_local_weight_hashes) ... ok
+test_published_and_local_official_weights_match (tests.test_suite_baseline_manifests.BaselineManifests.test_published_and_local_official_weights_match) ... ok
+test_frontiers_require_paired_full_vocabulary_rows (tests.test_suite_artifacts.SuiteArtifacts.test_frontiers_require_paired_full_vocabulary_rows) ... ok
+test_json_rejects_non_finite_numbers (tests.test_suite_artifacts.SuiteArtifacts.test_json_rejects_non_finite_numbers) ... ok
+test_probe_requires_complete_finite_shape (tests.test_suite_artifacts.SuiteArtifacts.test_probe_requires_complete_finite_shape) ... ok
+test_probe_requires_payload_and_metadata (tests.test_suite_artifacts.SuiteArtifacts.test_probe_requires_payload_and_metadata) ... ok
+test_successful_process_without_outputs_is_a_failed_baseline (tests.test_suite_artifacts.SuiteArtifacts.test_successful_process_without_outputs_is_a_failed_baseline) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.449s
+
+OK
+./tests/test_transfer
+transfer: PASS bounded staging, deferred DMA, faults, drain/retry and 100 alternations
+python3 -m unittest tests.test_suite_release -v
+test_failed_copy_removes_staging_and_allows_retry (tests.test_suite_release.NativePackageTests.test_failed_copy_removes_staging_and_allows_retry) ... ok
+test_release_and_native_dependency_failures_leave_no_output (tests.test_suite_release.NativePackageTests.test_release_and_native_dependency_failures_leave_no_output) ... ok
+test_all_gates_required_individually (tests.test_suite_release.ProfileQualification.test_all_gates_required_individually) ... ok
+test_missing_or_unstable_measurements_cannot_publish (tests.test_suite_release.ProfileQualification.test_missing_or_unstable_measurements_cannot_publish) ... ok
+test_nan_and_undersampled_timings (tests.test_suite_release.ProfileQualification.test_nan_and_undersampled_timings) ... ok
+test_package_cannot_hide_a_missing_release_gate (tests.test_suite_release.ProfileQualification.test_package_cannot_hide_a_missing_release_gate) ... ok
+test_performance_requires_gain_above_noise (tests.test_suite_release.ProfileQualification.test_performance_requires_gain_above_noise) ... ok
+test_storage_ratio_or_unsupported_binding_never_promotes (tests.test_suite_release.ProfileQualification.test_storage_ratio_or_unsupported_binding_never_promotes) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.037s
+
+OK
+python3 -m unittest tests.test_suite_bundle -v
+test_deterministic_inventory_and_native_group_lifetime (tests.test_suite_bundle.SuiteBundleTests.test_deterministic_inventory_and_native_group_lifetime) ... ok
+test_discovery_verifies_shared_artifacts_once (tests.test_suite_bundle.SuiteBundleTests.test_discovery_verifies_shared_artifacts_once) ... ok
+test_explicit_download_checksum_and_resume_without_selection (tests.test_suite_bundle.SuiteBundleTests.test_explicit_download_checksum_and_resume_without_selection) ... ok
+test_invalid_group_and_oversized_directory_fail_before_publication (tests.test_suite_bundle.SuiteBundleTests.test_invalid_group_and_oversized_directory_fail_before_publication) ... ok
+test_lossless_conversion_repeated_and_mixed_types (tests.test_suite_bundle.SuiteBundleTests.test_lossless_conversion_repeated_and_mixed_types) ... ok
+test_mixed_gguf_uses_each_actual_block_geometry (tests.test_suite_bundle.SuiteBundleTests.test_mixed_gguf_uses_each_actual_block_geometry) ... ok
+test_native_bounded_weight_cache (tests.test_suite_bundle.SuiteBundleTests.test_native_bounded_weight_cache) ... ok
+test_pinned_bundle_profiles_conform_to_schema (tests.test_suite_bundle.SuiteBundleTests.test_pinned_bundle_profiles_conform_to_schema) ... ok
+test_reject_artifacts_changed_during_upload (tests.test_suite_bundle.SuiteBundleTests.test_reject_artifacts_changed_during_upload) ... ok
+test_reject_unknown_incompatible_and_corrupt (tests.test_suite_bundle.SuiteBundleTests.test_reject_unknown_incompatible_and_corrupt) ... ok
+test_scalar_calibration_is_preserved (tests.test_suite_bundle.SuiteBundleTests.test_scalar_calibration_is_preserved) ... ok
+test_storage_geometry_matches_vendored_ggml (tests.test_suite_bundle.SuiteBundleTests.test_storage_geometry_matches_vendored_ggml) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 1.014s
+
+OK
+./tests/test_executor
+executor: PASS admission, repeated visits, cancellation, faults, recovery and reservation reuse
+./tests/test_resources
+PASS: resource lifetime, aliases, events, budgets, concurrent reservations and checkpoint validation
+./ds4-eval --validate-cases
+ds4-eval: validated 92 core and 50 hard cases (12 hard-smoke): ok
+./ds4-eval --self-test-extractors
+ds4-eval: answer extractor self-tests passed
+./ds4_server_test
+1029 14:58:57 ds4-server: removed orphan agentic checkpoints files=1 bytes=5
+ds4-server: thinking not closed, ignoring incomplete Qwen tool calls in reasoning
+1029 14:58:57 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen
+1029 14:58:57 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen
+1029 14:58:57 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4
+1029 14:58:57 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4
+ds4-server tests: ok
+./tests/test_server_interactive
+interactive snapshot benchmark bytes=1048520 lines=18590 index_ms=46.455 lookup_us=0.680
+interactive literal server tests: ok
+./tests/test_server_memory_lifetime
+PASS: host frontier allocation lifetime and payload boundaries
+python3 -m unittest tests.test_qwen38_compatibility tests.test_server_sampling_matrix.SamplingMatrixFixtureTests -v
+test_cli_and_server_mtp_performance_gate (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_cli_and_server_mtp_performance_gate) ... skipped 'set DS4_TEST_QWEN38_PERF=1 for the CLI/server MTP gate'
+test_cli_auto_mtp_selects_qwen38_sidecar (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_cli_auto_mtp_selects_qwen38_sidecar) ... skipped 'local Qwen3.8 GGUF pair or ds4 binary is not present'
+test_cli_target_and_mtp_generate_after_kernel_promotion (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_cli_target_and_mtp_generate_after_kernel_promotion) ... skipped 'set DS4_TEST_QWEN38_LIVE=1 for model-backed CLI checks'
+test_downloader_pins_both_artifacts (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_downloader_pins_both_artifacts) ... ok
+test_external_mtp_layout (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_external_mtp_layout) ... ok
+test_full_local_artifact_checksums (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_full_local_artifact_checksums) ... skipped 'set DS4_TEST_QWEN38_SHA=1 for the 16.7 GB checksum gate'
+test_generation_uses_its_own_oracle_namespace (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_generation_uses_its_own_oracle_namespace) ... ok
+test_live_inspection_when_artifacts_are_present (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_live_inspection_when_artifacts_are_present) ... skipped 'local Qwen3.8 GGUF pair or ds4 binary is not present'
+test_oracle_generator_writes_only_the_qwen38_namespace (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_oracle_generator_writes_only_the_qwen38_namespace) ... ok
+test_qwen36_mtp_is_rejected_for_qwen38 (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_qwen36_mtp_is_rejected_for_qwen38) ... skipped 'local Qwen3.8 target or CLI is absent'
+test_qwen38_performance_report_uses_the_production_gate (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_qwen38_performance_report_uses_the_production_gate) ... ok
+test_qwen38_quality_entrypoints_are_present (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_qwen38_quality_entrypoints_are_present) ... ok
+test_runtime_kernel_inventory_is_promoted (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_runtime_kernel_inventory_is_promoted) ... ok
+test_server_launcher_preserves_cuda_defaults_and_overrides (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_server_launcher_preserves_cuda_defaults_and_overrides) ... ok
+test_server_model_id_cache_and_agentic_gates_cover_qwen38 (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_server_model_id_cache_and_agentic_gates_cover_qwen38) ... ok
+test_target_embedded_nextn_layout (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_target_embedded_nextn_layout) ... ok
+test_tokenizers_match_but_templates_are_audited_independently (tests.test_qwen38_compatibility.Qwen38CompatibilityTests.test_tokenizers_match_but_templates_are_audited_independently) ... ok
+test_downloader_rejects_all_retired_targets (tests.test_qwen38_compatibility.RetiredQwenCompatibilityTests.test_downloader_rejects_all_retired_targets) ... ok
+test_help_only_advertises_supported_qwen_targets (tests.test_qwen38_compatibility.RetiredQwenCompatibilityTests.test_help_only_advertises_supported_qwen_targets) ... ok
+test_runtime_rejects_qwen36_metadata_even_with_a_renamed_file (tests.test_qwen38_compatibility.RetiredQwenCompatibilityTests.test_runtime_rejects_qwen36_metadata_even_with_a_renamed_file) ... ok
+test_matrix_covers_temperature_and_thinking_cross_product (tests.test_server_sampling_matrix.SamplingMatrixFixtureTests.test_matrix_covers_temperature_and_thinking_cross_product) ... ok
+test_payloads_cover_plain_optional_and_required_surfaces (tests.test_server_sampling_matrix.SamplingMatrixFixtureTests.test_payloads_cover_plain_optional_and_required_surfaces) ... ok
+test_phase_counters_fail_closed_when_new_telemetry_is_missing (tests.test_server_sampling_matrix.SamplingMatrixFixtureTests.test_phase_counters_fail_closed_when_new_telemetry_is_missing) ... ok
+test_phase_counters_require_constrained_mtp_telemetry (tests.test_server_sampling_matrix.SamplingMatrixFixtureTests.test_phase_counters_require_constrained_mtp_telemetry) ... ok
+test_sampled_optional_text_compares_the_public_contract (tests.test_server_sampling_matrix.SamplingMatrixFixtureTests.test_sampled_optional_text_compares_the_public_contract) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 1.383s
+
+OK (skipped=6)
+./ds4_test
+qwen4-prefill-checkpoints:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.41 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+qwen4-prefill-checkpoints: ERR
+qwen4-restore-reuse:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.40 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+qwen4-restore-reuse: ERR
+session-snapshot:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.40 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+session-snapshot: ERR
+session-rewind:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.40 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+session-rewind: ERR
+session-rewind-resample:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.40 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+session-rewind-resample: ERR
+long-context:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.40 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+long-context: ERR
+tool-call-quality:
+ds4-test: tool-call quality fast path
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.40 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+ds4-test: tool-call quality exact path
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.40 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+tool-call-quality: ERR
+think-tool-recovery:
+ds4-test: think-tool-recovery complete=1 calls=1 name=list_files
+think-tool-recovery: OK
+logprob-vectors:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=off
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.36 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+logprob-vectors: ERR
+metal-ssd-streaming-cache-pressure:
+ds4-test: Metal SSD streaming cache-pressure repro (16GiB cache, layer-batched decode, short_code_completion)
+ds4: --ssd-streaming is not supported for Qwen3.8 27B
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+metal-ssd-streaming-cache-pressure: ERR
+local-golden-vectors:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=off
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.38 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+local-golden-vectors: ERR
+metal-short-prefill:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.38 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+metal-short-prefill: ERR
+glm53-continued-prefill:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.37 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+ds4-test: glm53-continued-prefill skipped (GLM 5.3 model required)
+glm53-continued-prefill: ERR
+metal-kernels:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal model views created in 0.011 ms, residency requested in 0.128 ms, warmup 2.393 ms (mapped 4.00 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 1 overlapping shared buffers
+ds4: Metal model views created in 0.015 ms, residency requested in 0.071 ms, warmup 0.576 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 2 overlapping shared buffers
+ds4: Metal model views created in 0.013 ms, residency requested in 0.079 ms, warmup 0.480 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 3 overlapping shared buffers
+ds4: Metal model views created in 0.015 ms, residency requested in 0.085 ms, warmup 0.504 ms (mapped 0.42 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 4 overlapping shared buffers
+ds4: Metal model views created in 0.009 ms, residency requested in 0.170 ms, warmup 0.601 ms (mapped 4.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 5 overlapping shared buffers
+ds4-test: compressor pair state-store exact width=256 ratio=4 pos=8 emit=0 ape=f32 decode_pack=0 exact_reduce=0 proj=0/0 state=0/0 comp=0 max_ulp=0/0/0/0/0
+ds4-test: compressor pair state-store exact width=256 ratio=4 pos=11 emit=1 ape=f16 decode_pack=1 exact_reduce=1 proj=0/0 state=0/0 comp=0 max_ulp=0/0/0/0/0
+ds4: Metal model views created in 0.012 ms, residency requested in 0.327 ms, warmup 0.563 ms (mapped 16.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 6 overlapping shared buffers
+ds4-test: compressor pair state-store exact width=1024 ratio=4 pos=11 emit=1 ape=f16 decode_pack=1 exact_reduce=1 proj=0/0 state=0/0 comp=0 max_ulp=0/0/0/0/0
+ds4: Metal model views created in 0.010 ms, residency requested in 0.406 ms, warmup 0.585 ms (mapped 8.14 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 7 overlapping shared buffers
+ds4-test: compressor pair state-store exact width=512 ratio=128 pos=255 emit=1 ape=f16 decode_pack=0 exact_reduce=0 proj=0/0 state=0/0 comp=0 max_ulp=0/0/0/0/0
+ds4: Metal model views created in 0.008 ms, residency requested in 0.383 ms, warmup 0.685 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 8 overlapping shared buffers
+ds4-test: compressor APE add exact head=128 ratio=4 pos=3 tokens=16 ape=f16 comp=0/512 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4: Metal model views created in 0.009 ms, residency requested in 0.382 ms, warmup 0.224 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 9 overlapping shared buffers
+ds4-test: compressor APE add exact head=512 ratio=4 pos=0 tokens=16 ape=f16 comp=0/2048 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor APE add exact head=512 ratio=4 pos=1 tokens=14 ape=f32 comp=0/1536 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4: Metal model views created in 0.009 ms, residency requested in 0.319 ms, warmup 0.190 ms (mapped 0.14 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 10 overlapping shared buffers
+ds4-test: compressor APE add exact head=512 ratio=128 pos=127 tokens=257 ape=f16 comp=0/1024 state_kv=0/65536 state_score=0/65536 max_ulp=0/0/0
+ds4-test: compressor ratio4 pack exact head=128 ratio=4 pos=0 tokens=4 ape=f16 comp=0/128 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4-test: compressor ratio4 pack exact head=512 ratio=4 pos=0 tokens=8 ape=f16 comp=0/1024 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 pack exact head=512 ratio=4 pos=1 tokens=14 ape=f32 comp=0/1536 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4: Metal model views created in 0.006 ms, residency requested in 0.308 ms, warmup 0.183 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 11 overlapping shared buffers
+ds4-test: compressor ratio4 replay pack exact head=128 tokens=4 comp=0/128 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4: Metal model views created in 0.008 ms, residency requested in 0.333 ms, warmup 0.668 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 12 overlapping shared buffers
+ds4-test: compressor ratio4 replay pack exact head=512 tokens=8 comp=0/1024 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=prefill head=512 pos=0 tokens=4 comp_rows=1 ape=f16 comp=0/512 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=prefill head=512 pos=1 tokens=16 comp_rows=4 ape=f32 comp=0/2048 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=prefill head=128 pos=3 tokens=14 comp_rows=3 ape=f16 comp=0/384 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4: Metal model views created in 0.008 ms, residency requested in 0.309 ms, warmup 0.175 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 13 overlapping shared buffers
+ds4-test: compressor ratio4 direct pool exact mode=replay head=512 pos=2048 tokens=8 comp_rows=2 ape=f16 comp=0/1024 state_kv=0/8192 state_score=0/8192 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=replay head=128 pos=12 tokens=12 comp_rows=3 ape=f32 comp=0/384 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4-test: compressor ratio4 direct pool exact mode=replay head=128 pos=8 tokens=4 comp_rows=1 ape=f16 comp=0/128 state_kv=0/2048 state_score=0/2048 max_ulp=0/0/0
+ds4-test: in-place RoPE exactness case=0 shape=1x64x512 pos=4294967295 inverse=0 ext=1 pair=0/32768 shared=0/32768 affine=0/32768 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=1 shape=1x1x512 pos=2047 inverse=0 ext=1 pair=0/512 shared=0/512 affine=0/512 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=2 shape=1x64x512 pos=65533 inverse=1 ext=1 pair=0/32768 shared=0/32768 affine=0/32768 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=3 shape=1x64x128 pos=37 inverse=0 ext=0 pair=0/8192 shared=0/8192 affine=0/8192 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=4 shape=32x4x512 pos=0 inverse=0 ext=0 pair=0/65536 shared=0/65536 affine=0/65536 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=5 shape=33x7x512 pos=2047 inverse=1 ext=1 pair=0/118272 shared=0/118272 affine=0/118272 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=6 shape=34x64x128 pos=65533 inverse=0 ext=1 pair=0/278528 shared=0/278528 affine=0/278528 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=7 shape=35x64x128 pos=37 inverse=1 ext=0 pair=0/286720 shared=0/286720 affine=0/286720 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE exactness case=8 shape=35x4x128 pos=4294967279 inverse=1 ext=1 pair=0/17920 shared=0/17920 affine=0/17920 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0 pair_max_ulp=0 shared_max_ulp=0 affine_max_ulp=0 pair_max_abs=0 shared_max_abs=0 affine_max_abs=0
+ds4-test: in-place RoPE total pair=0/841216 shared=0/841216 affine=0/841216 pair_prefix=0 pair_tail=0 shared_prefix=0 shared_tail=0 affine_prefix=0 affine_tail=0
+ds4-test: contiguous conversion exactness f32_f16=0/107 guard=0, f16_f32_roundtrip=0/107 guard=0
+ds4: required Metal gathered KV staging kernel was not selected
+ds4: required Metal gathered KV staging kernel was not selected
+ds4: required Metal gathered KV staging kernel was not selected
+ds4-test: gathered KV staging exact cases=4 raw_bytes=0 comp_bytes=0 guard_bytes=0
+ds4: Metal model views created in 0.010 ms, residency requested in 0.467 ms, warmup 0.202 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 14 overlapping shared buffers
+ds4-test: contiguous compressed-F16 staging exactness mismatches=0/1024 max_ulp=0 max_abs=0
+ds4-test: persistent zero attention mask exact keys=8 candidate=0/1024 max_ulp=0 masked_diff=1024/1024 pad_fusion=0/1024 max_ulp=0 after_mask=0/1024 max_ulp=0
+ds4-test: persistent zero attention mask exact keys=32 candidate=0/1024 max_ulp=0 masked_diff=1024/1024 pad_fusion=0/1024 max_ulp=0 after_mask=0/1024 max_ulp=0
+ds4: Metal model views created in 0.016 ms, residency requested in 0.538 ms, warmup 0.561 ms (mapped 0.02 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 15 overlapping shared buffers
+ds4-test: zero-prefix prefill mask cache raw exact mismatches=0 max_ulp=0 key_diff=33280 masked_diff=0
+ds4-test: zero-prefix prefill mask cache ratio4 exact mismatches=0 max_ulp=0 key_diff=33280 masked_diff=64000
+ds4-test: zero-prefix prefill mask cache ratio128 exact mismatches=0 max_ulp=0 key_diff=33280 masked_diff=512
+ds4: Metal model views created in 0.010 ms, residency requested in 0.505 ms, warmup 0.236 ms (mapped 0.06 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 16 overlapping shared buffers
+ds4-test: batch HC+RMSNorm exactness rows=3 split=0/72 max_ulp=0 max_abs=0, collapse=0/21504 max_ulp=0 max_abs=0, norm=0/21504 max_ulp=0 max_abs=0
+ds4: Metal model views created in 0.009 ms, residency requested in 0.309 ms, warmup 0.252 ms (mapped 0.03 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 17 overlapping shared buffers
+ds4-test: output HC weights4 exact case=0 mismatch=0/4 max_ulp=0 max_abs=0
+ds4-test: output HC weights4 exact case=1 mismatch=0/4 max_ulp=0 max_abs=0
+ds4-test: output HC weights4 exact case=2 mismatch=0/4 max_ulp=0 max_abs=0
+ds4-test: output HC weights4 exact case=3 mismatch=0/4 max_ulp=0 max_abs=0
+ds4: required Metal output HC weights4 kernel was not selected
+ds4-test: output HC weights4 total mismatch=0/16 max_ulp=0
+ds4: Metal model views created in 0.009 ms, residency requested in 0.371 ms, warmup 0.626 ms (mapped 0.77 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 18 overlapping shared buffers
+ds4-test: HC RMS scale F16 projection exact K=16384 rows=33 scale=0/33 max_ulp=0 projection=0/792 max_ulp=0
+ds4: Metal model views created in 0.019 ms, residency requested in 0.543 ms, warmup 0.731 ms (mapped 1.33 MiB from offset 0.00 MiB)
+ds4: Metal mapped mmaped model as 19 overlapping shared buffers
+ds4-test: HC RMS scale F16 projection exact K=28672 rows=33 scale=0/33 max_ulp=0 projection=0/792 max_ulp=0
+ds4-test: router SIMD finalize exactness case=unique mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=unique mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=unique mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=unique mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=bias mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=bias mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=bias mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=bias mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=top6-ties mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=top6-ties mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=top6-ties mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=top6-ties mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=signed-zero-extremes mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=signed-zero-extremes mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=signed-zero-extremes mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=signed-zero-extremes mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=clamp-underflow mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=clamp-underflow mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=clamp-underflow mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=clamp-underflow mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=sum-rounding mode=split-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=sum-rounding mode=fused-weights rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=sum-rounding mode=fused-transform rep=0 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize exactness case=sum-rounding mode=fused-transform rep=1 selected=0/6 weights=0/6 probs=0/256 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router SIMD finalize total selected=0/144 weights=0/144 probs=0/6144
+ds4-test: router batch weights exactness case=rows2-unique rep=0 selected=0/12 weights=0/12 probs=0/512 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows2-unique rep=1 selected=0/12 weights=0/12 probs=0/512 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows17-bias-ties rep=0 selected=0/102 weights=0/102 probs=0/4352 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows17-bias-ties rep=1 selected=0/102 weights=0/102 probs=0/4352 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows129-hash-duplicates rep=0 selected=0/774 weights=0/774 probs=0/33024 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows129-hash-duplicates rep=1 selected=0/774 weights=0/774 probs=0/33024 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows2048-typical rep=0 selected=0/12288 weights=0/12288 probs=0/524288 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows2048-typical rep=1 selected=0/12288 weights=0/12288 probs=0/524288 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows3-clamp-underflow rep=0 selected=0/18 weights=0/18 probs=0/768 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights exactness case=rows3-clamp-underflow rep=1 selected=0/18 weights=0/18 probs=0/768 max_weight_ulp=0 max_prob_ulp=0
+ds4-test: router batch weights total selected=0 weights=0 probs=0
+metal-kernels: OK
+metal-tensor-equivalence:
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.24 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+metal-tensor-equivalence: ERR
+streaming-decode-prefill-correctness:
+ds4-test: streaming decode-prefill correctness skipped (set DS4_TEST_SSD_STREAMING=1 to enable)
+streaming-decode-prefill-correctness: OK
+mtp-verify-depth:
+ds4: Metal device Apple M5 Pro, 24.00 GiB RAM
+ds4: Metal 4 tensor API enabled for Tensor kernels
+ds4: drift-patch flags hc_stable=on norm_unify=on kv_raw_f32=off rope_exp2_log2=off math_safe=off tensor_matmul=on
+ds4: Metal memory admission refused: model/state/runtime 15.91 GiB, available budget 7.31 GiB (2 GiB safety reserve)
+tests/ds4_test.c:141: assertion failed: ds4_engine_open(&engine, &opt) == 0
+ds4-test: mtp-verify-depth skipped (set DS4_TEST_MTP to an MTP GGUF)
+mtp-verify-depth: ERR
+dspark-verify-depth:
+ds4-test: dspark-verify-depth skipped (set DS4_TEST_DSPARK to a DSpark support GGUF)
+dspark-verify-depth: OK
+qwen35-layer-pattern:
+qwen35-layer-pattern: OK
+quant-storage-layout:
+quant-storage-layout: OK
+constraint-trie:
+constraint-trie: OK
+server:
+1029 14:59:04 ds4-server: removed orphan agentic checkpoints files=1 bytes=5
+ds4-server: thinking not closed, ignoring incomplete Qwen tool calls in reasoning
+1029 14:59:04 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen
+1029 14:59:04 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen
+1029 14:59:04 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4
+1029 14:59:04 ds4-server: agent-system boundary system_tokens=4419 prompt_tokens=4431 syntax=qwen4
+server: OK
+ds4 tests: 15 failure(s)
+prefill-checkpoints: Qwen3.8 model required, skipped
+qwen4-restore-reuse: Qwen3.8 with MTP required, skipped
+make: *** [test] Error 1

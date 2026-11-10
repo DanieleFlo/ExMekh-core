@@ -1,0 +1,11 @@
+usage: diagnose_qwen_image_encoder.py [-h] --model MODEL --oracle ORACLE
+                                      [--layer LAYER] [--native NATIVE]
+
+Isolate native primitive error on real Qwen encoder layer operands.
+
+options:
+  -h, --help       show this help message and exit
+  --model MODEL
+  --oracle ORACLE
+  --layer LAYER
+  --native NATIVE

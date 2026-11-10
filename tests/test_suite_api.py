@@ -62,12 +62,14 @@ class FailureOutputs(unittest.TestCase):
             ("ds4_qwen_image_prepare_padded", 6),
             ("ds4_qwen_image_input_create", 7),
             ("ds4_qwen_image_job_create", 6),
+            ("ds4_qwen_image_job_create_batch", 7),
             ("ds4_qwen_image_job_take", 2),
+            ("ds4_qwen_image_job_take_at", 3),
         ):
             with self.subTest(api=name):
                 # Job creation has an out-first signature; other operations
                 # return their new object through the last argument.
-                index = 0 if name == "ds4_qwen_image_job_create" else count - 1
+                index = 0 if name.startswith("ds4_qwen_image_job_create") else count - 1
                 self.rejected(name, [None] * count, index)
 
     def test_tokenizers_clear_independent_outputs(self):

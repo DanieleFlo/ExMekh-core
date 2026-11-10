@@ -9,6 +9,7 @@ extern "C" {
  * and byte strides use GGUF order (fastest dimension first). Quantized stride
  * zero is the block byte size, with block_elements values per block. */
 #define DS4_WEIGHT_MAX_DIMS 8u
+#define DS4_BUNDLE_HINT_MAX_BYTES (16u << 20)
 typedef struct ds4_bundle ds4_bundle;
 typedef struct ds4_weight_group ds4_weight_group;
 typedef struct ds4_bundle_hint ds4_bundle_hint;
@@ -58,6 +59,12 @@ typedef struct {
 /* Optional availability barrier for newly created, unloaded groups. Keeps the
  * v1 backend layout intact. quiesce still drains last use/failed uploads. */
 ds4_status ds4_weight_group_availability(ds4_weight_group *, ds4_status (*ready)(void *));
+/* Optional synchronous transport for verified source ranges. The descriptor
+ * remains bundle-owned. UNSUPPORTED permits the original mapped write only
+ * when no bytes were touched. Keeps the v1 backend layout intact. */
+typedef ds4_status (*ds4_weight_file_read)(void *, void *, uint64_t destination_offset,
+                                          int fd, uint64_t file_offset, uint64_t bytes);
+ds4_status ds4_weight_group_file_transport(ds4_weight_group *, ds4_weight_file_read);
 ds4_status ds4_weight_group_create(ds4_weight_group **, ds4_bundle *, uint32_t component,
                                   uint32_t group, const ds4_weight_backend *);
 /* Architecture-defined execution groups may split an offline storage group.
@@ -68,6 +75,10 @@ ds4_status ds4_weight_group_create_selected(ds4_weight_group **, ds4_bundle *, u
 uint64_t ds4_weight_group_bytes(const ds4_weight_group *);
 uint64_t ds4_weight_group_payload(const ds4_weight_group *);
 bool ds4_weight_group_resident(const ds4_weight_group *);
+/* Best-effort file-cache advice for selected mapped tensors, at most 16 MiB.
+ * Does not allocate/upload, publish residency or affect authoritative loads.
+ * The kernel owns queued I/O after the advisory call returns. */
+ds4_status ds4_weight_group_hint(const ds4_weight_group *, uint64_t max_bytes);
 ds4_status ds4_weight_group_load(ds4_weight_group *);
 ds4_status ds4_weight_group_release(ds4_weight_group *);
 ds4_status ds4_weight_group_close(ds4_weight_group *);

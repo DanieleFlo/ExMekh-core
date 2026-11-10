@@ -1,0 +1,60 @@
+{
+  "command": [
+    "./tests/test_sha256_portable",
+    "gguf/mtp-Qwen3.8-27B-Q4_0.gguf",
+    "50d9ce5a6da381bbcfb31061cf73df94a90e6faf8efeddee379a9cb8f1501c6e"
+  ],
+  "cwd": "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core",
+  "source_head": "9805acbbd65a833a5e2ad53dfae49b33616dbd05",
+  "environment": {},
+  "timeout_seconds": 120.0,
+  "reason": "Same NIST vectors and full pinned GGUF digest using the unchanged portable backend; development timing sample only",
+  "footprint_limit_gib": null,
+  "memory_policy": {
+    "host_reserve_bytes": 2147483648,
+    "critical_pressure": 4,
+    "swap_growth_bytes": 268435456,
+    "unsafe_samples": 2
+  },
+  "exit_code": 0,
+  "elapsed_seconds": 4.076645291999739,
+  "status": "PASS",
+  "samples": [
+    {
+      "monotonic": 18397.494551458,
+      "pressure": 1,
+      "host_available_bytes": 12996476928,
+      "swap_bytes": 683210178,
+      "footprint_bytes": 81992,
+      "resident_bytes": 32768
+    },
+    {
+      "monotonic": 18398.503461875,
+      "pressure": 1,
+      "host_available_bytes": 13296779264,
+      "swap_bytes": 683210178,
+      "footprint_bytes": 1048888,
+      "resident_bytes": 1458176
+    },
+    {
+      "monotonic": 18399.519948458,
+      "pressure": 1,
+      "host_available_bytes": 13116211200,
+      "swap_bytes": 683210178,
+      "footprint_bytes": 1048888,
+      "resident_bytes": 1458176
+    },
+    {
+      "monotonic": 18400.53834275,
+      "pressure": 1,
+      "host_available_bytes": 13318651904,
+      "swap_bytes": 683210178,
+      "footprint_bytes": 1048888,
+      "resident_bytes": 1458176
+    }
+  ],
+  "executables_sha256": {
+    "./tests/test_sha256_portable": "44da78ceb6feb40fb5ea6b467c3c06700e51d4b96a9a4d21624b8b526f7164e5"
+  },
+  "log_sha256": "6427fe216f4a413342b86e51b5e356b4b0c96f3f8f72985e23b75248221b4c17"
+}

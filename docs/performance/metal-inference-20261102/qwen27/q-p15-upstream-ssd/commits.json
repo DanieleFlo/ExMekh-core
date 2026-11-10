@@ -1,0 +1,51 @@
+[
+  {
+    "revision": "22e417286c27050b07cf715798f64b651567d031",
+    "author": "Salvatore Sanfilippo",
+    "authored": "2026-09-06T03:39:00+02:00",
+    "subject": "Keep static Metal streaming weights resident within the runtime budget",
+    "url": "https://github.com/antirez/ds4/commit/22e417286c27050b07cf715798f64b651567d031"
+  },
+  {
+    "revision": "ee7e8405232c8971000cc7ba2b945b00bf6d20d3",
+    "author": "antirez",
+    "authored": "2026-10-21T09:30:33+02:00",
+    "subject": "cuda: improve SSD-streamed prefill with ordered expert reads",
+    "url": "https://github.com/antirez/ds4/commit/ee7e8405232c8971000cc7ba2b945b00bf6d20d3"
+  },
+  {
+    "revision": "347c2e1fbee313824b997a3220d37c1ba8e8f57d",
+    "author": "Matthijs van den Bos",
+    "authored": "2026-09-29T22:49:30+02:00",
+    "subject": "Overlap Qwen PLE reads with prefill GPU work",
+    "url": "https://github.com/antirez/ds4/commit/347c2e1fbee313824b997a3220d37c1ba8e8f57d"
+  },
+  {
+    "revision": "64baaa0678d70b8baf7143d38a461b4a034b4d89",
+    "author": "Matthijs van den Bos",
+    "authored": "2026-09-29T23:11:25+02:00",
+    "subject": "Test Qwen PLE prefetch parity and recovery",
+    "url": "https://github.com/antirez/ds4/commit/64baaa0678d70b8baf7143d38a461b4a034b4d89"
+  },
+  {
+    "revision": "c97964b8aa77034a8e17afb10ca7a686c40ab511",
+    "author": "antirez",
+    "authored": "2026-10-30T18:10:33+01:00",
+    "subject": "Validate Qwen tokens before prefetched input staging",
+    "url": "https://github.com/antirez/ds4/commit/c97964b8aa77034a8e17afb10ca7a686c40ab511"
+  },
+  {
+    "revision": "5382eac5e07c8ea6ee122f134b0311200892da27",
+    "author": "nomish",
+    "authored": "2026-10-19T20:22:48-07:00",
+    "subject": "metal: process medium V4.1 SSD appends in one layer sweep",
+    "url": "https://github.com/antirez/ds4/commit/5382eac5e07c8ea6ee122f134b0311200892da27"
+  },
+  {
+    "revision": "890898cfb437ed256be58ebcf7c58a6dfa8f2f53",
+    "author": "antirez",
+    "authored": "2026-11-02T11:26:14+01:00",
+    "subject": "Apply Metal weight tracking to the model being opened",
+    "url": "https://github.com/antirez/ds4/commit/890898cfb437ed256be58ebcf7c58a6dfa8f2f53"
+  }
+]

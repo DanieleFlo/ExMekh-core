@@ -1,0 +1,579 @@
+{
+  "status": "PASS",
+  "scope": "Final owner/capability review, 3 independent full pipelines, same frozen gates, CPU encoder/DiT and MPS VAE",
+  "cases": [
+    {
+      "id": "text",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [],
+      "fixture_sha256": "8d1dc46d8718f7423c7ba18ce1c26a704e51fdc9d99a7ac7090ab9dc109d83de",
+      "conditioning": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "verdict": "PASS"
+      },
+      "references_encoded": null,
+      "latents": [
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0,
+          "rmse": 0.0,
+          "relative_l2": 0.0,
+          "bit_exact": true,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0013652899358171141,
+          "relative_l2": 0.0016337253968087885,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0026005245171798136,
+          "relative_l2": 0.00273304016569,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.004513292896923952,
+          "relative_l2": 0.0031559522910589934,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.034027099609375,
+        "rmse": 0.001054534751908513,
+        "relative_l2": 0.0011430386104814758,
+        "bit_exact": false,
+        "ssim_rgb": 0.9993229586530248,
+        "alpha_mae": 1.817941665649414e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 0,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 137.131058,
+        "prepare_seconds": 4.5e-05,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          0.0,
+          14.074459,
+          68.734639,
+          54.321862
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          1
+        ],
+        "peak_device_owned": 6949795328,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7497297920,
+        "plan_host": 1904672,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 83620429176,
+        "d2h_bytes": 1376256,
+        "weight_groups": [
+          {
+            "limit": 6946071552,
+            "loads": 36,
+            "hits": 360,
+            "evictions": 18,
+            "payload_h2d": 13892143104
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 1,
+            "hits": 127,
+            "evictions": 0,
+            "payload_h2d": 518096424
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "PASS",
+      "run": "review-text",
+      "native_baseline": "build/metal-qualification/t06-t07-20261031/product-image-text-cpu-vae-mps/native/case-0",
+      "native_bit_exact": {
+        "conditioning.bf16": true,
+        "latent-0.f32": true,
+        "latent-1.f32": true,
+        "latent-2.f32": true,
+        "latent-3.f32": true,
+        "latent-4.f32": true,
+        "latent-5.f32": true,
+        "latent-6.f32": true,
+        "latent-7.f32": true,
+        "result.png": true,
+        "rgba.f32": true
+      },
+      "host_min_bytes": 5374246912,
+      "swap_growth_bytes": 0
+    },
+    {
+      "id": "reference",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [
+        "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-rgb/fixtures/reference.ds4i"
+      ],
+      "fixture_sha256": "30817240093d7cd08043f083d7fa1f4ff31fe07d1352b7fa01ae451e65013529",
+      "conditioning": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "verdict": "PASS"
+      },
+      "references_encoded": {
+        "max_abs": 0.125,
+        "rmse": 0.00825364234856655,
+        "relative_l2": 0.0070588105396709845,
+        "bit_exact": false,
+        "verdict": "PASS"
+      },
+      "latents": [
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0009869755363885022,
+          "relative_l2": 0.0010064210671278746,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0012451488544045666,
+          "relative_l2": 0.0012973262319906295,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.001503742359042826,
+          "relative_l2": 0.001602843395395415,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.0017144248058141459,
+          "relative_l2": 0.0018708108353837933,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0019164582701960739,
+          "relative_l2": 0.002157536424598585,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.002431935751821463,
+          "relative_l2": 0.0028376600959816598,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0035453225130053006,
+          "relative_l2": 0.003522981748514114,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0625,
+          "rmse": 0.005946174122930468,
+          "relative_l2": 0.003896274326498726,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.0995025634765625,
+        "rmse": 0.0026648575967828754,
+        "relative_l2": 0.002879846966899715,
+        "bit_exact": false,
+        "ssim_rgb": 0.9991805840942836,
+        "alpha_mae": 5.4776668548583984e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 146.116563,
+        "prepare_seconds": 0.000408,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          10.101768,
+          16.226083,
+          65.5814,
+          54.206855
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 7528562112,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7776563696,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 84936146392,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 7522459888,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 43,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "8b63258ad2fa0222cc324d1310bc85617ac241f1a8546eb1de26a220fbe0e106"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "PASS",
+      "run": "review-rgb",
+      "native_baseline": "build/metal-qualification/t06-t07-20261031/product-image-reference-cpu-vae-mps-v3/native/case-0",
+      "native_bit_exact": {
+        "conditioning.bf16": true,
+        "latent-0.f32": true,
+        "latent-1.f32": true,
+        "latent-2.f32": true,
+        "latent-3.f32": true,
+        "latent-4.f32": true,
+        "latent-5.f32": true,
+        "latent-6.f32": true,
+        "latent-7.f32": true,
+        "reference-0.bf16": true,
+        "result.png": true,
+        "rgba.f32": true
+      },
+      "host_min_bytes": 5380046848,
+      "swap_growth_bytes": 0
+    },
+    {
+      "id": "rgba",
+      "width": 256,
+      "height": 256,
+      "seed": 20261020,
+      "references": [
+        "/Users/danieleflorio/Desktop/Progetti/Training/ExMekh-core/build/metal-perf-image-20261103/review-rgba/fixtures/rgba.ds4i"
+      ],
+      "fixture_sha256": "e3c96a8fe71baf621be3d440c583c9cd61a2358491ee57beaf8cc22f7444ce98",
+      "conditioning": {
+        "max_abs": 0.0,
+        "rmse": 0.0,
+        "relative_l2": 0.0,
+        "bit_exact": true,
+        "verdict": "PASS"
+      },
+      "references_encoded": {
+        "max_abs": 0.1015625,
+        "rmse": 0.005613435374323408,
+        "relative_l2": 0.0054394122604195265,
+        "bit_exact": false,
+        "verdict": "PASS"
+      },
+      "latents": [
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.001053803171797369,
+          "relative_l2": 0.0010746391972773573,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.001370566372474761,
+          "relative_l2": 0.0014282076985857694,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0015578578494884307,
+          "relative_l2": 0.0016606543799083037,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0016980383036986056,
+          "relative_l2": 0.001852789788200623,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.0234375,
+          "rmse": 0.0018935153304060677,
+          "relative_l2": 0.002130662848524146,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.002275453685226792,
+          "relative_l2": 0.002647596486565209,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.015625,
+          "rmse": 0.0032052085909087063,
+          "relative_l2": 0.003154737855619369,
+          "bit_exact": false,
+          "verdict": "PASS"
+        },
+        {
+          "max_abs": 0.03125,
+          "rmse": 0.005251465295460913,
+          "relative_l2": 0.0033955296859058686,
+          "bit_exact": false,
+          "verdict": "PASS"
+        }
+      ],
+      "rgba": {
+        "max_abs": 0.05169677734375,
+        "rmse": 0.001412632420920551,
+        "relative_l2": 0.001526721319698592,
+        "bit_exact": false,
+        "ssim_rgb": 0.9993751599262385,
+        "alpha_mae": 4.6193599700927734e-05
+      },
+      "runtime": {
+        "width": 256,
+        "height": 256,
+        "references": 1,
+        "seed": 20261020,
+        "variant": 4,
+        "victims": 0,
+        "total_seconds": 146.729774,
+        "prepare_seconds": 0.000405,
+        "load_seconds": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "phase_seconds": [
+          10.084218,
+          16.372353,
+          66.070413,
+          54.202322
+        ],
+        "loads": [
+          0,
+          0,
+          0
+        ],
+        "releases": [
+          1,
+          1,
+          2
+        ],
+        "peak_device_owned": 7528562112,
+        "live_device_owned": 0,
+        "pre_run_device_owned": 0,
+        "previous_device_peak": 0,
+        "plan_device": 7776563696,
+        "plan_host": 13647872,
+        "peak_bound_checked": true,
+        "recipe_version": 1,
+        "rng_version": 0,
+        "model_revision": "fc13ba1986fcb905854dc8de2f52eee395f49b5b",
+        "reference_resolution": 0,
+        "h2d_bytes": 84936146392,
+        "d2h_bytes": 2588672,
+        "weight_groups": [
+          {
+            "limit": 7522459888,
+            "loads": 68,
+            "hits": 678,
+            "evictions": 43,
+            "payload_h2d": 15044919776
+          },
+          {
+            "limit": 7115124736,
+            "loads": 159,
+            "hits": 2196,
+            "evictions": 143,
+            "payload_h2d": 69192473600
+          },
+          {
+            "limit": 518096448,
+            "loads": 2,
+            "hits": 224,
+            "evictions": 0,
+            "payload_h2d": 675480808
+          }
+        ],
+        "prompt_sha256": "6e1706ee9d88106be687a10cb5e6691b929bb4e3cc37d38a6a977df8ae0d6713",
+        "noise_sha256": "6578cd4a5f36d69775f7da03bdac0f899fd9e3f2f08f2aed31e3a7bccb7a05c3",
+        "reference_metadata": [
+          {
+            "latent_width": 16,
+            "latent_height": 16,
+            "sha256": "b47943f25b685bc1f38b785e8fa29c7bed1108561e5af80e017fcf503eecc066"
+          }
+        ],
+        "sigmas": [
+          1,
+          0.978452981,
+          0.954180002,
+          0.926626027,
+          0.89507997,
+          0.845148027,
+          0.704533994,
+          0.414568007,
+          0
+        ]
+      },
+      "verdict": "PASS",
+      "run": "review-rgba",
+      "native_baseline": "build/metal-qualification/t06-t07-20261031/product-image-rgba-cpu-vae-mps-v3/native/case-0",
+      "native_bit_exact": {
+        "conditioning.bf16": true,
+        "latent-0.f32": true,
+        "latent-1.f32": true,
+        "latent-2.f32": true,
+        "latent-3.f32": true,
+        "latent-4.f32": true,
+        "latent-5.f32": true,
+        "latent-6.f32": true,
+        "latent-7.f32": true,
+        "reference-0.bf16": true,
+        "result.png": true,
+        "rgba.f32": true
+      },
+      "host_min_bytes": 5447647232,
+      "swap_growth_bytes": 0
+    }
+  ]
+}
