@@ -24,6 +24,7 @@ from exmekh_agent.exmekh_bridge.history.pasted_input import (
 )
 from exmekh_agent.exmekh_bridge.models import QueuedMessage
 from exmekh_agent.state.temp_storage import TempStorage
+from exmekh_agent.ui.chat.image_attachment import render_image_attachment
 from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 from exmekh_agent.ui.shared.file_icons import get_file_icon
 from exmekh_agent.ui.shared.image_preview import render_image_thumbnail
@@ -872,6 +873,17 @@ class InputBarComponent:
                 self._render_attachment_chip(att)
 
     def _render_attachment_chip(self, att: StagedAttachment) -> None:
+        if att.is_raster_image:
+            render_image_attachment(
+                att.image_urls[0],
+                att.filename,
+                att.file_size,
+                att.image_destination,
+                card_class=UI_PRESENTATION["image_destination.composer_card_classes"],
+                on_change=att.select_image_destination,
+                on_remove=partial(self._delete_attachment, att),
+            )
+            return
         icon_name, color_class, ext_label = get_file_icon(att.filename)
         with ui.row().classes(
             UI_PRESENTATION[
@@ -1014,6 +1026,7 @@ class InputBarComponent:
                 "generated-image.png", image_bytes_from_url(url), storage=storage
             ),
         )
+        attachment.select_image_destination("image")
         if not client.is_deleted:
             with client:
                 self._accept_attachments([attachment], session_id)
@@ -1114,6 +1127,20 @@ class InputBarComponent:
         elif session_id is not None:
             self._drafts.setdefault(session_id, _InputDraft()).attachments.extend(
                 attachments
+            )
+
+    def restore_queued_draft(
+        self, session_id: str, text: str, attachments: list[StagedAttachment]
+    ) -> None:
+        self._accept_attachments(attachments, session_id)
+        if self.session_id == session_id:
+            current = self.textarea.value or "" if self.textarea else ""
+            self.set_text("\n\n".join(filter(None, (text, current))))
+            self.focus()
+        else:
+            draft = self._draft_for_session(session_id)
+            self._update_draft_text(
+                session_id, "\n\n".join(filter(None, (text, draft.text)))
             )
 
     async def _handle_files_dropped(self, e: object) -> None:

@@ -6,8 +6,14 @@ from PIL import Image
 
 
 def png_bytes(color: str = "red", size: tuple[int, int] = (32, 24)) -> bytes:
+    return raster_bytes("PNG", color, size)
+
+
+def raster_bytes(
+    format: str, color: str = "red", size: tuple[int, int] = (32, 24)
+) -> bytes:
     output = BytesIO()
-    Image.new("RGB", size, color).save(output, format="PNG")
+    Image.new("RGB", size, color).save(output, format=format)
     return output.getvalue()
 
 

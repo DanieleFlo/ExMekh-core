@@ -198,6 +198,15 @@ async def wait_turn_completion(page: Page, timeout: float = 15000) -> None:
     )
 
 
+async def open_editor(page: Page, index: int = 0):
+    message = page.locator(".chat-message-user").nth(index)
+    await message.hover()
+    await message.get_by_role("button", name="Edit message", exact=True).click()
+    editor = page.get_by_role("dialog")
+    await expect(editor).to_be_visible()
+    return editor
+
+
 async def wait_for_mock_requests(
     page: Page, stats_url: str, count: int, timeout: float = 10
 ) -> None:

@@ -1,0 +1,77 @@
+diff --git a/src/exmekh_lib/core/models/native_suite.py b/src/exmekh_lib/core/models/native_suite.py
+--- a/src/exmekh_lib/core/models/native_suite.py
++++ b/src/exmekh_lib/core/models/native_suite.py
+@@ -17,12 +17,14 @@
+ from httpx2 import Request as HTTPRequest
+ from httpx2 import Response as HTTPResponse
+ from openai import APIStatusError, OpenAI, Stream
+-from PIL import Image
++from PIL import Image, ImageOps
+ from pydantic import BaseModel, Field
+ 
+ from exmekh_lib.config.native_suite import NATIVE_SUITE, ImageCount, ImageDimension
+ from exmekh_lib.config.provider import DEFAULT_PROVIDER_SETTINGS
+ from exmekh_lib.interfaces.operation_progress import OperationProgress
++
++_IMAGE_UPLOAD_MIME_TYPES = frozenset({"image/png", "image/jpeg", "image/webp"})
+ 
+ 
+ class TextContent(BaseModel):
+@@ -125,6 +127,15 @@
+         mime = {"audio/x-wav": "audio/wav", "audio/x-flac": "audio/flac"}.get(
+             mime, mime
+         )
++        if kind == "image" and mime not in _IMAGE_UPLOAD_MIME_TYPES:
++            # The suite accepts PNG, JPEG and WebP. Decode other raster inputs
++            # once and reuse the normal PNG upload path.
++            with Image.open(path) as source:
++                image = ImageOps.exif_transpose(source)
++                mode = "RGBA" if image.has_transparency_data else "RGB"
++                return self.upload_image(
++                    image.convert(mode), filename=path.with_suffix(".png").name
++                )
+         with path.open("rb") as source:
+             response = self._transport.files.create(
+                 file=(path.name, source, mime),
+@@ -132,11 +143,13 @@
+             )
+         return MediaContent(type=kind, file_id=response.id)
+ 
+-    def upload_image(self, image: Image.Image) -> MediaContent:
++    def upload_image(
++        self, image: Image.Image, *, filename: str = "image.png"
++    ) -> MediaContent:
+         stream = io.BytesIO()
+         image.save(stream, format="PNG")
+         response = self._transport.files.create(
+-            file=("image.png", stream.getvalue(), "image/png"),
++            file=(filename, stream.getvalue(), "image/png"),
+             purpose="ds4_media",  # type: ignore[arg-type]
+         )
+         return MediaContent(type="image", file_id=response.id)
+diff --git a/tests/core/models/test_native_suite.py b/tests/core/models/test_native_suite.py
+--- a/tests/core/models/test_native_suite.py
++++ b/tests/core/models/test_native_suite.py
+@@ -217,6 +217,22 @@
+ 
+     media = transport(handler).upload(path, kind="audio")
+     assert media.type == "audio" and media.file_id == "file-audio"
++
++
++@pytest.mark.parametrize("suffix", ["gif", "tiff", "bmp"])
++def test_upload_converts_unsupported_raster_formats_to_png(tmp_path, suffix):
++    path = tmp_path / f"reference.{suffix}"
++    Image.new("RGB", (32, 24), "red").save(path)
++
++    def handler(request):
++        assert request.url.path == "/v1/files"
++        assert b'filename="reference.png"' in request.content
++        assert b"Content-Type: image/png" in request.content
++        assert b"\x89PNG" in request.content
++        return httpx2.Response(200, json={"id": "file-image"})
++
++    media = transport(handler).upload(path, kind="image")
++    assert media.type == "image" and media.file_id == "file-image"
+ 
+ 
+ def test_invalid_embedding_shape_is_rejected():

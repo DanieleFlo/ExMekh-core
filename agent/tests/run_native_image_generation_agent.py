@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import hashlib
 import json
 import os
@@ -10,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from exmekh_lib.config.capabilities import CAPABILITY_FORMAT
+from exmekh_lib.core.models.native_suite import ImageBatch, NativeSuiteClient
 from exmekh_lib.core.models.provider_request import ProviderRequest
 from exmekh_lib.core.models.provider_response import ProviderResponse
 from exmekh_lib.core.models.tool_message import ToolMessage
@@ -17,6 +17,7 @@ from exmekh_lib.core.models.user_message import UserMessage
 from exmekh_lib.providers.local import LocalProvider
 from httpx2 import Client as HTTPClient
 from nicegui import app
+from openai import APIStatusError
 from PIL import Image
 
 from exmekh_agent.config import config
@@ -31,10 +32,12 @@ TRACE: dict[str, list[dict[str, Any]]] = {
     "image_responses": [],
     "provider_calls": [],
 }
+INFERENCE_EVENTS: list[str] = []
 
 
 def record_request(request: Any) -> None:
     if "/images/" in request.url.path:
+        INFERENCE_EVENTS.append(f"image:{request.url.path.rsplit('/', 1)[-1]}:start")
         TRACE["image_requests"].append(
             {
                 "path": request.url.path,
@@ -44,26 +47,33 @@ def record_request(request: Any) -> None:
         )
 
 
-def record_response(response: Any) -> None:
-    if "/images/" not in response.request.url.path:
-        return
-    body = json.loads(response.read())
-    TRACE["image_responses"].append(
-        {
-            "status": response.status_code,
-            "ds4": body.get("ds4"),
-            "error": body.get("error"),
-            "images": [
-                {
-                    **row["ds4"],
-                    "png_sha256": hashlib.sha256(
-                        base64.b64decode(row["b64_json"])
-                    ).hexdigest(),
-                }
-                for row in body.get("data", [])
-            ],
-        }
-    )
+class ObservedNativeSuiteClient(NativeSuiteClient):
+    def images(self, *args: Any, **kwargs: Any) -> ImageBatch:
+        # Wait for the SDK to consume the terminal event without buffering SSE
+        # in the HTTP hook. The server sends success after restoring the LLM.
+        try:
+            batch = super().images(*args, **kwargs)
+        except APIStatusError as error:
+            TRACE["image_responses"].append(
+                {"status": error.status_code, "error": error.body, "images": []}
+            )
+            raise
+        TRACE["image_responses"].append(
+            {
+                "status": 200,
+                "ds4": batch.ds4,
+                "error": None,
+                "images": [
+                    {
+                        **item.ds4.model_dump(),
+                        "png_sha256": hashlib.sha256(item.png_bytes()).hexdigest(),
+                    }
+                    for item in batch.data
+                ],
+            }
+        )
+        INFERENCE_EVENTS.append("image:completed")
+        return batch
 
 
 class ObservedLocalProvider(LocalProvider):
@@ -76,15 +86,25 @@ class ObservedLocalProvider(LocalProvider):
                 timeout=float(os.getenv("DS4_SUITE_HTTP_TIMEOUT_SECONDS", "600")),
                 event_hooks={
                     "request": [record_request],
-                    "response": [record_response],
                 },
             ),
             **kwargs,
         )
         self.client.max_retries = 0
 
+    def native_suite(self) -> NativeSuiteClient:
+        return ObservedNativeSuiteClient(self.client)
+
     def call(self, request: ProviderRequest) -> ProviderResponse:
         messages = request.get_messages()
+        latest_user = next(
+            (
+                message
+                for message in reversed(messages)
+                if isinstance(message, UserMessage)
+            ),
+            None,
+        )
         entry = {
             "tool_names": request.get_tools().list_tools()
             if request.get_tools()
@@ -103,6 +123,12 @@ class ObservedLocalProvider(LocalProvider):
                 for part in message.iter_content_parts()
                 if isinstance(part, Image.Image)
             ],
+            "latest_user_image_count": sum(
+                isinstance(part, Image.Image)
+                for part in latest_user.iter_content_parts()
+            )
+            if latest_user
+            else 0,
             "tool_attachment_counts": [
                 sum(
                     isinstance(part, Image.Image)
@@ -114,6 +140,7 @@ class ObservedLocalProvider(LocalProvider):
             ],
         }
         TRACE["provider_calls"].append(entry)
+        INFERENCE_EVENTS.append("llm:start")
         response = super().call(
             request.with_extra(
                 {
@@ -128,6 +155,7 @@ class ObservedLocalProvider(LocalProvider):
             {"name": call.get_name(), "arguments": call.get_arguments()}
             for call in response.get_tool_calls() or []
         ]
+        INFERENCE_EVENTS.append("llm:completed")
         return response
 
 
@@ -156,7 +184,32 @@ def image_design() -> AgentDesign:
 
 
 @app.get("/test/native-image-stats")
-def stats() -> dict[str, Any]:
+def stats(summary: bool = False) -> dict[str, Any]:
+    session = session_manager.get_current_session()
+    if summary:
+        return {
+            "inference_events": list(INFERENCE_EVENTS),
+            "latest_user_image_counts": [
+                entry["latest_user_image_count"] for entry in TRACE["provider_calls"]
+            ],
+            "image_input_counts": [
+                len(entry["body"].get("images", []))
+                for entry in TRACE["image_requests"]
+            ],
+            "last_messages": [
+                {
+                    "role": message.role,
+                    "error": message.error,
+                    "tool_errors": [
+                        tool.tool_name
+                        for tool in message.iter_tool_events()
+                        if tool.status == "error"
+                    ],
+                    "has_response": bool(message.content.strip()),
+                }
+                for message in session.messages[-2:]
+            ],
+        }
     files = []
     for path in sorted(
         Path(config.work_root).glob(".exmekh_lib/generated-media/*/*.png")
@@ -172,7 +225,7 @@ def stats() -> dict[str, Any]:
     return {
         **TRACE,
         "files": files,
-        "session": session_manager.get_current_session().model_dump(mode="json"),
+        "session": session.model_dump(mode="json"),
     }
 
 

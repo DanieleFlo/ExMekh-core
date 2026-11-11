@@ -11,20 +11,26 @@ from typing import TypeAlias
 from nicegui import ui
 from nicegui.events import MultiUploadEventArguments
 
-from exmekh_agent.exmekh_bridge.history.message_edit import retained_attachment_paths
+from exmekh_agent.exmekh_bridge.history.message_attachments import (
+    retained_attachment_paths,
+    saved_images,
+)
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
 )
 from exmekh_agent.exmekh_bridge.models import ChatMessage
+from exmekh_agent.exmekh_bridge.models.messages import ImageDestination
 from exmekh_agent.state.temp_storage import TempStorage
+from exmekh_agent.ui.chat.image_attachment import render_image_attachment
 from exmekh_agent.ui.chat.message_text import message_display_text
 from exmekh_agent.ui.resources import presentation_config, ui_text
 
 UI_PRESENTATION = presentation_config("controls/message_editor")
 
 EditMessageCallback: TypeAlias = Callable[
-    [str, str, str, list[str], list[StagedAttachment]], Awaitable[bool]
+    [str, str, str, list[str], list[StagedAttachment], dict[str, ImageDestination]],
+    Awaitable[bool],
 ]
 
 
@@ -40,6 +46,8 @@ class MessageEditor:
         self._session_id = session_id
         self._message_id = message.id
         self._paths = retained_attachment_paths(message)
+        self._images = saved_images(message)
+        self._image_destinations: dict[str, ImageDestination] = {}
         self._storage = storage
         self._client = ui.context.client
         with ui.dialog().classes(
@@ -107,7 +115,12 @@ class MessageEditor:
         if self._saving:
             return
         self._paths.remove(path)
+        self._image_destinations.pop(path, None)
         self._refresh_attachments()
+
+    def _change_destination(self, path: str, destination: ImageDestination) -> None:
+        if not self._saving:
+            self._image_destinations[path] = destination
 
     def _remove_added(self, attachment: StagedAttachment) -> None:
         if self._saving:
@@ -123,15 +136,60 @@ class MessageEditor:
                 "render_attachments.classes.w_full_flex_wrap_gap_2_message_edit_attachmen"
             ]
         ):
+            images_by_path = {image.path: image for image in self._images if image.path}
             for path in self._paths:
-                self._render_attachment(
-                    Path(path).name, partial(self._remove_path, path)
-                )
+                image = images_by_path.get(path)
+                remove = partial(self._remove_path, path)
+                if image is not None and image.destination is not None:
+                    render_image_attachment(
+                        image.url,
+                        image.filename or Path(path).name,
+                        image.file_size,
+                        self._image_destinations.get(path, image.destination),
+                        card_class=UI_PRESENTATION[
+                            "image_destination.editor_card_classes"
+                        ],
+                        on_change=partial(self._change_destination, path),
+                        on_remove=remove,
+                    )
+                else:
+                    self._render_attachment(Path(path).name, remove)
+            for index, image in enumerate(self._images):
+                if image.path is None and image.destination is not None:
+                    render_image_attachment(
+                        image.url,
+                        ui_text(
+                            "chat.chat_view.attached_image_value_1", value_1=index + 1
+                        ),
+                        image.file_size,
+                        image.destination,
+                        card_class=UI_PRESENTATION[
+                            "image_destination.editor_card_classes"
+                        ],
+                    )
             for attachment in self._added:
-                self._render_attachment(
-                    attachment.filename, partial(self._remove_added, attachment)
-                )
+                remove = partial(self._remove_added, attachment)
+                if attachment.is_raster_image:
+                    render_image_attachment(
+                        attachment.image_urls[0],
+                        attachment.filename,
+                        attachment.file_size,
+                        attachment.image_destination,
+                        card_class=UI_PRESENTATION[
+                            "image_destination.editor_card_classes"
+                        ],
+                        on_change=partial(self._change_added_destination, attachment),
+                        on_remove=remove,
+                    )
+                else:
+                    self._render_attachment(attachment.filename, remove)
         self._update_enabled()
+
+    def _change_added_destination(
+        self, attachment: StagedAttachment, destination: ImageDestination
+    ) -> None:
+        if not self._saving:
+            attachment.select_image_destination(destination)
 
     def _render_attachment(self, name: str, on_remove: Callable[[], None]) -> None:
         with ui.row().classes(
@@ -219,14 +277,23 @@ class MessageEditor:
                 self._editor.value or "",
                 list(self._paths),
                 list(self._added),
+                dict(self._image_destinations),
             )
-            if self._saved and not self._client.is_deleted:
+            if (
+                self._saved
+                and not self._client.is_deleted
+                and not self._dialog.is_deleted
+            ):
                 with self._client:
                     self._dialog.close()
         finally:
             self._saving = False
-            if self._client.is_deleted or not self._dialog.value:
+            if (
+                self._client.is_deleted
+                or self._dialog.is_deleted
+                or not self._dialog.value
+            ):
                 self._discard_uploads()
-            if not self._client.is_deleted:
+            if not self._client.is_deleted and not self._dialog.is_deleted:
                 with self._client:
                     self._set_saving(False)

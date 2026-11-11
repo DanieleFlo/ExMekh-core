@@ -70,6 +70,37 @@ def test_new_chat_selects_most_recent_empty_session(
     assert len(manager.list_sessions_sorted()) == 3
 
 
+def test_queue_mutations_only_apply_after_persistence(isolated_session_manager):
+    manager = isolated_session_manager
+    session = manager.get_current_session()
+    message = ChatMessage(role="user", content="Queued", image_urls=["preview"])
+    detached = ChatSession()
+    assert not manager.enqueue_message(detached, message)
+    assert manager.take_queued_message(detached, message.id) is None
+    assert not manager.add_message(session, message, from_queue=True)
+    assert manager.take_queued_message(session, message.id) is None
+    with patch.object(manager, "save_session", return_value=False):
+        assert not manager.enqueue_message(session, message)
+    assert session.next_queued_message() is None
+
+    assert manager.enqueue_message(session, message)
+    queued = session.next_queued_message()
+    assert queued is not None and queued.to_chat_message() == message
+    with patch.object(manager, "save_session", return_value=False):
+        assert manager.take_queued_message(session, message.id) is None
+        assert not manager.add_message(session, message, from_queue=True)
+    assert session.next_queued_message() is queued
+    assert not session.message_history()
+
+    assert manager.add_message(session, message, from_queue=True)
+    assert session.next_queued_message() is None
+    manager.load_all()
+    restored = manager.get_session(session.id)
+    assert restored is not None
+    assert restored.message_history() == [message]
+    assert restored.next_queued_message() is None
+
+
 @pytest.mark.parametrize("content", ["message", "queued_message", "sub_agent"])
 def test_new_chat_creates_session_when_existing_chat_has_content(
     isolated_session_manager: SessionManager, content: str

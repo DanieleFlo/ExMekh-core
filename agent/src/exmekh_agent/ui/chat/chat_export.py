@@ -33,13 +33,13 @@ def _markdown_messages(
                 + message_display_text(guidance.to_chat_message())
                 + "".join(
                     ui_text("chat.chat_export.steering_image", url=url)
-                    for url in guidance.image_urls
+                    for url in guidance.visible_image_urls
                 )
             )
         sections.append(f"## {message.role.title()}\n\n{message_display_text(message)}")
         sections.extend(
             ui_text("chat.chat_export.attached_image", index=index + 1, url=url)
-            for index, url in enumerate(message.image_urls)
+            for index, url in enumerate(message.visible_image_urls)
         )
         data = message.export_data(include_history=include_history)
         if data["reasoning_blocks"]:

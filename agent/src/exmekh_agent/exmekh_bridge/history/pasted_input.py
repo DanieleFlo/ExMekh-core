@@ -15,6 +15,11 @@ from exmekh_agent.config.attachments import XML_TAG_NAME as XML_TAG_NAME
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.history.image_input import attachment_images
 from exmekh_agent.exmekh_bridge.models import ChatMessage
+from exmekh_agent.exmekh_bridge.models.messages import (
+    ImageAttachment,
+    ImageDestination,
+    ImageReference,
+)
 from exmekh_agent.exmekh_bridge.providers.context_usage import count_text_tokens
 from exmekh_agent.state.temp_storage import TempStorage
 from exmekh_agent.utils.filenames import clean_attachment_filename
@@ -36,6 +41,78 @@ class StagedAttachment:
     data: bytes | None = field(default=None, repr=False)
     image_urls: list[str] = field(default_factory=list)
     pdf_pages: int = 0
+    image_destination: ImageDestination = "llm"
+
+    @property
+    def is_raster_image(self) -> bool:
+        return bool(self.image_urls) and not self.pdf_pages
+
+    def select_image_destination(self, destination: ImageDestination) -> None:
+        if self.is_raster_image:
+            self.image_destination = destination
+
+    @property
+    def vision_urls(self) -> list[str]:
+        return (
+            []
+            if self.is_raster_image and self.image_destination == "image"
+            else self.image_urls
+        )
+
+    def image_metadata(self, vision_index: int) -> ImageAttachment | None:
+        if not self.is_raster_image or self.relative_path is None:
+            return None
+        return ImageAttachment(
+            path=self.relative_path,
+            filename=self.filename,
+            file_size=self.file_size,
+            vision_index=vision_index if self.vision_urls else None,
+        )
+
+    def image_edit_reference(self) -> ImageReference | None:
+        if (
+            not self.is_raster_image
+            or self.image_destination == "llm"
+            or self.relative_path is None
+        ):
+            return None
+        return ImageReference(
+            path=self.relative_path,
+            image_only_preview=self.image_urls[0]
+            if self.image_destination == "image"
+            else None,
+        )
+
+    def prompt_part(self, storage: TempStorage, *, use_file_references: bool) -> str:
+        if use_file_references or self.image_urls:
+            reference = self.reference(storage=storage)
+            return "" if self.image_urls and not self.vision_urls else reference
+        if self.is_binary:
+            raise ValueError(
+                app_text(
+                    "errors_history.pasted_input.quick_chat_supports_text_attachments_use_a_project_for_other_fil"
+                )
+            )
+        return app_text(
+            "execution.pasted_input.inline_attachment",
+            filename=self.filename,
+            content=self.content,
+        )
+
+    def pdf_notice(self) -> str:
+        if not self.pdf_pages:
+            return ""
+        notice = app_text(
+            "execution.pasted_input.pdf_page_notice",
+            prefix=app_text("execution.pasted_input.pdf_notice_prefix"),
+            marker=app_text("execution.pasted_input.pdf_notice_marker"),
+            filename=self.filename,
+            sent_pages=len(self.image_urls),
+            total_pages=self.pdf_pages,
+        )
+        if self.pdf_pages > len(self.image_urls):
+            notice += app_text("execution.pasted_input.pdf_remaining_pages")
+        return notice
 
     def reference(
         self,
@@ -71,8 +148,15 @@ class StagedAttachment:
                 self.filename = self.file_path.name
         return format_user_input_file_xml(self.relative_path)
 
-    def upload_payload(self) -> dict[str, Any]:
-        """Serialize the descriptor without sending binary data to the browser."""
+    def upload_payload(self, *, compact: bool = False) -> dict[str, Any]:
+        """Serialize a staged file descriptor for the upload callback."""
+        if compact:
+            return {
+                "filename": self.filename,
+                "relative_path": self.relative_path,
+                "is_binary": self.is_binary,
+                "reload_from_storage": True,
+            }
         return {
             "id": self.id,
             "content": self.content,
@@ -121,6 +205,13 @@ class StagedAttachment:
                 )
             )
         file_path = storage.resolve_attachment(relative_path)
+        if payload.get("reload_from_storage"):
+            return cls.from_file_data(
+                str(payload.get("filename") or file_path.name),
+                file_path.read_bytes(),
+                file_path,
+                relative_path,
+            )
         return cls(
             id=str(payload.get("id") or uuid.uuid4().hex[:6]),
             content=str(payload.get("content", "")),
@@ -137,13 +228,19 @@ class StagedAttachment:
 
     @classmethod
     def from_saved_file(
-        cls, relative_path: str, *, storage: TempStorage
+        cls,
+        relative_path: str,
+        *,
+        storage: TempStorage,
+        image_destination: ImageDestination = "llm",
     ) -> StagedAttachment:
         """Restore an explicit upload using the storage's scoped public API."""
         file_path = storage.resolve_attachment(relative_path, allow_legacy=True)
-        return cls.from_file_data(
+        attachment = cls.from_file_data(
             file_path.name, file_path.read_bytes(), file_path, relative_path
         )
+        attachment.select_image_destination(image_destination)
+        return attachment
 
     @classmethod
     def from_file_data(
@@ -197,6 +294,8 @@ class PreparedUserInput:
     image_urls: list[str] = field(default_factory=list)
     image_paths: list[str] = field(default_factory=list)
     attachment_paths: list[str] = field(default_factory=list)
+    image_references: list[ImageReference] = field(default_factory=list)
+    image_attachments: list[ImageAttachment] = field(default_factory=list)
 
     def to_chat_message(self) -> ChatMessage:
         """Use one mapping for new input and edited input."""
@@ -207,6 +306,8 @@ class PreparedUserInput:
             image_urls=list(self.image_urls),
             image_paths=list(self.image_paths),
             attachment_paths=list(self.attachment_paths),
+            image_references=list(self.image_references),
+            image_attachments=list(self.image_attachments),
         )
 
 
@@ -359,99 +460,69 @@ def prepare_user_input(
     storage: TempStorage | None = None,
 ) -> PreparedUserInput:
     """Prepare model text and the separate text displayed in the chat."""
-    if not use_file_references:
-        if any(
-            attachment.is_binary and not attachment.image_urls
-            for attachment in attachments or []
-        ):
-            raise ValueError(
-                app_text(
-                    "errors_history.pasted_input.quick_chat_supports_text_attachments_use_a_project_for_other_fil"
-                )
-            )
-        parts = [
-            text,
-            *(
-                attachment.reference(work_root, temp_dirname, storage=storage)
-                if attachment.image_urls
-                else app_text(
-                    "execution.pasted_input.inline_attachment",
-                    filename=attachment.filename,
-                    content=attachment.content,
-                )
-                for attachment in attachments or []
-            ),
-        ]
-        prompt = "\n\n".join(part for part in parts if part)
-        display_content = text if attachments else None
-    elif attachments is None:
-        prompt, display_content, _ = process_user_input_text(
-            text, work_root=work_root, temp_dirname=temp_dirname, storage=storage
-        )
-    else:
-        references = [
-            attachment.reference(work_root, temp_dirname, storage=storage)
-            for attachment in attachments
-        ]
-        prompt = "\n\n".join(part for part in [text, *references] if part)
-        display_content = text if attachments else None
-    title_text = text or (
-        attachments[0].preview
-        if attachments
-        else app_text("execution.pasted_input.attached_file")
-    )
-    image_urls = [
-        url for attachment in attachments or [] for url in attachment.image_urls
-    ]
+    storage = storage or TempStorage(work_root, temp_dirname)
+    parts = [text]
+    pdf_notices = []
+    image_urls = []
+    image_paths = []
+    image_references = []
+    image_attachments = []
+    attachment_paths = []
     for attachment in attachments or []:
-        if attachment.pdf_pages:
-            prompt += app_text(
-                "execution.pasted_input.pdf_page_notice",
-                prefix=app_text("execution.pasted_input.pdf_notice_prefix"),
-                marker=app_text("execution.pasted_input.pdf_notice_marker"),
-                filename=attachment.filename,
-                sent_pages=len(attachment.image_urls),
-                total_pages=attachment.pdf_pages,
-            )
-            if attachment.pdf_pages > len(attachment.image_urls):
-                prompt += app_text("execution.pasted_input.pdf_remaining_pages")
-    image_paths = [
-        attachment.relative_path
-        for attachment in attachments or []
-        if attachment.image_urls and attachment.relative_path is not None
-    ]
-    # Editing a queued message returns its original references to the composer.
-    # Rebuild vision parts from those scoped files instead of losing the images.
-    reference_storage = storage or TempStorage(work_root, temp_dirname)
-    for relative_path in extract_attached_files_from_content(text):
-        if relative_path in image_paths:
+        parts.append(
+            attachment.prompt_part(storage, use_file_references=use_file_references)
+        )
+        pdf_notices.append(attachment.pdf_notice())
+        if attachment.relative_path:
+            attachment_paths.append(attachment.relative_path)
+            if attachment.image_urls:
+                image_paths.append(attachment.relative_path)
+        if metadata := attachment.image_metadata(len(image_urls)):
+            image_attachments.append(metadata)
+        if reference := attachment.image_edit_reference():
+            image_references.append(reference)
+        image_urls.extend(attachment.vision_urls)
+
+    if attachments is None and use_file_references:
+        prompt, display_content, _ = process_user_input_text(text, storage=storage)
+    else:
+        if image_references:
+            parts.append(app_text("execution.pasted_input.image_edit_request"))
+        prompt = "\n\n".join(filter(None, parts)) + "".join(pdf_notices)
+        display_content = text if attachments else None
+
+    # Older queued drafts may already contain file references in the text.
+    for path in extract_attached_files_from_content(text):
+        attachment_paths.append(path)
+        if path in image_paths:
             continue
         try:
-            file_path = reference_storage.resolve_attachment(
-                relative_path, allow_legacy=True
-            )
+            file_path = storage.resolve_attachment(path, allow_legacy=True)
         except ValueError:
             continue
         if not file_path.is_file():
             continue
-        urls, _ = attachment_images(file_path.name, file_path.read_bytes())
-        if urls:
-            image_urls.extend(urls)
-            image_paths.append(relative_path)
-    attachment_paths = list(
-        dict.fromkeys(
-            [
-                *(
-                    attachment.relative_path
-                    for attachment in attachments or []
-                    if attachment.relative_path
-                ),
-                *extract_attached_files_from_content(text),
-            ]
-        )
-    )
+        attachment = StagedAttachment.from_saved_file(path, storage=storage)
+        if attachment.image_urls:
+            if metadata := attachment.image_metadata(len(image_urls)):
+                image_attachments.append(metadata)
+            image_urls.extend(attachment.vision_urls)
+            image_paths.append(path)
+
     return PreparedUserInput(
-        prompt, display_content, title_text, image_urls, image_paths, attachment_paths
+        prompt=prompt,
+        display_content=display_content,
+        title_text=text
+        or (
+            attachments[0].preview
+            if attachments
+            else app_text("execution.pasted_input.attached_file")
+        ),
+        image_urls=image_urls,
+        image_paths=image_paths,
+        attachment_paths=list(dict.fromkeys(attachment_paths)),
+        image_references=image_references,
+        image_attachments=image_attachments,
     )
 
 

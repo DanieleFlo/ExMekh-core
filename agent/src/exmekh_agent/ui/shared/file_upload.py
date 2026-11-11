@@ -39,8 +39,8 @@ async def upload_files(request: Request) -> JSONResponse:
         for upload in files:
             if not isinstance(upload, UploadFile):
                 continue
-            data = await upload.read()
             try:
+                data = await upload.read()
                 attachment = await loop.run_in_executor(
                     None,
                     partial(
@@ -73,4 +73,8 @@ async def upload_files(request: Request) -> JSONResponse:
                     status_code=404,
                 )
             staged.append(attachment)
-        return JSONResponse([attachment.upload_payload() for attachment in staged])
+        # The browser echoes these descriptors over Socket.IO. Keep previews and
+        # large text out of that event and restore them from scoped storage.
+        return JSONResponse(
+            [attachment.upload_payload(compact=True) for attachment in staged]
+        )

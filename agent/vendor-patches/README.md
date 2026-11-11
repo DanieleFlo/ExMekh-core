@@ -2,11 +2,15 @@
 
 The current wheel is built from ExMekh Lib revision
 `260bc59397872c391333c3f9fd00a2832ff90b46`. It contains the native progress
-protocol and the provider request adapters used by the node runtime.
+protocol and the provider request adapters used by the node runtime. The
+`exmekh-lib-native-image-upload.patch` adds PNG conversion at the upload
+boundary for raster formats outside the native service's MIME list. The SDK
+uses the first frame of an animated image and preserves the original file.
 The wheel SHA256 in `agent/uv.lock` is
-`8644c3cc9da24fe912baa109656980ca9e79b90bf67ed88536a7532cee1d2bd0`. Its dependency metadata is unchanged.
+`76396a549db4184c168f093d2cadd6cece497807604f811c1ae3b09a08bcdd95`. Its dependency metadata is unchanged.
 
-To rebuild, check out that SDK revision and run `uv build --wheel`. Copy
+To rebuild, check out that SDK revision, apply the upload patch with
+`git apply`, and run `uv build --wheel`. Copy
 the resulting wheel to `agent/wheels/` and refresh its locked hash before
 running `uv sync --locked --reinstall-package exmekh-lib`.
 

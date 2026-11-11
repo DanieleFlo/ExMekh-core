@@ -10,14 +10,16 @@ import time
 from pathlib import Path
 
 import pytest
-from playwright.async_api import async_playwright, expect
+from playwright.async_api import Page, async_playwright, expect
 
 from tests.browser_support import (
     BrowserTestServer,
     get_edge_executable,
+    open_editor,
     send_command,
     wait_turn_completion,
 )
+from tests.image_samples import raster_bytes
 
 pytestmark = [
     pytest.mark.live,
@@ -27,6 +29,160 @@ pytestmark = [
         reason="set DS4_SUITE_HTTP_URL to a native server with vision",
     ),
 ]
+
+
+async def test_live_image_attachment_routes(tmp_path):
+    """Smoke-test upload, edit/resend and reuse of a generated image on a real GPU."""
+    timeout = 600000 * int(os.getenv("DS4_METAL_TIMEOUT_MULTIPLIER", "1"))
+    with BrowserTestServer(
+        tmp_path / "state",
+        module="tests.run_native_image_generation_agent",
+        environment={"INCLUDE_GENERATED_IMAGES_IN_CONTEXT": "false"},
+    ) as url:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable(), headless=True
+            )
+            try:
+                page = await browser.new_page()
+                errors = []
+                page.on("pageerror", lambda error: errors.append(str(error)))
+                await page.goto(url, wait_until="networkidle")
+                stats_url = url + "/test/native-image-stats?summary=true"
+                composer = page.locator(".exmekh-attachments-bar")
+                for index, (upload_route, resend_route) in enumerate(
+                    (("LLM", "Image model"), ("Image model", "Both"), ("Both", "LLM"))
+                ):
+                    await page.locator(".exmekh-file-picker").set_input_files(
+                        {
+                            "name": "reference.gif",
+                            "mimeType": "image/gif",
+                            "buffer": raster_bytes("GIF", size=(256, 256)),
+                        }
+                    )
+                    await expect(
+                        composer.get_by_role("button", name="LLM", exact=True)
+                    ).to_have_attribute("aria-pressed", "true")
+                    await composer.get_by_role(
+                        "button", name=upload_route, exact=True
+                    ).click()
+                    before = await (await page.request.get(stats_url)).json()
+                    await send_command(page, attachment_prompt("Upload", upload_route))
+                    await check_live_turn(
+                        page, stats_url, before, "Upload", upload_route, timeout
+                    )
+
+                    editor = await open_editor(page, index)
+                    await expect(
+                        editor.get_by_role("button", name=upload_route, exact=True)
+                    ).to_have_attribute("aria-pressed", "true")
+                    await editor.get_by_role(
+                        "button", name=resend_route, exact=True
+                    ).click()
+                    await editor.get_by_label("Message", exact=True).fill(
+                        attachment_prompt("Resend", resend_route)
+                    )
+                    before = await (await page.request.get(stats_url)).json()
+                    await editor.get_by_role(
+                        "button", name="Save & regenerate", exact=True
+                    ).click()
+                    await expect(editor).not_to_be_visible()
+                    await check_live_turn(
+                        page, stats_url, before, "Resend", resend_route, timeout
+                    )
+
+                assistant_messages = page.locator(".msg-assistant")
+                generated_index = await assistant_messages.count()
+                before = await (await page.request.get(stats_url)).json()
+                await send_command(
+                    page,
+                    "Generate one red square. Call generate-image once with n=1, width=256, height=256, seed=123. After the tool finishes, reply briefly.",
+                )
+                await check_live_turn(
+                    page,
+                    stats_url,
+                    before,
+                    "Seed image",
+                    "LLM",
+                    timeout,
+                    image_operation="generations",
+                )
+                result = assistant_messages.nth(generated_index)
+                for route in ("LLM", "Image model", "Both"):
+                    await result.get_by_role(
+                        "button", name="Attach image to next message"
+                    ).click()
+                    await expect(
+                        composer.get_by_role("button", name="Image model", exact=True)
+                    ).to_have_attribute("aria-pressed", "true")
+                    await composer.get_by_role("button", name=route, exact=True).click()
+                    before = await (await page.request.get(stats_url)).json()
+                    await send_command(page, attachment_prompt("Reuse", route))
+                    await check_live_turn(
+                        page, stats_url, before, "Reuse", route, timeout
+                    )
+                assert not errors, errors
+            finally:
+                await browser.close()
+
+
+def attachment_prompt(source: str, route: str) -> str:
+    if route == "LLM":
+        return f"{source} check. Briefly describe the attached image. Answer with text only."
+    return (
+        f"{source} check. Change the background of the attached image to blue. "
+        "Call generate-image exactly once with n=1, width=256, height=256. "
+        "After the tool finishes, reply briefly."
+    )
+
+
+async def check_live_turn(
+    page: Page,
+    stats_url: str,
+    before: dict,
+    source: str,
+    route: str,
+    timeout: int,
+    *,
+    image_operation: str | None = None,
+) -> None:
+    label = f"{source} / {route}"
+    await wait_turn_completion(page, timeout=timeout)
+    state = await (await page.request.get(stats_url)).json()
+    assert len(state["last_messages"]) == 2, (label, state)
+    user, assistant = state["last_messages"]
+    assert user["role"] == "user" and assistant["role"] == "assistant", (label, state)
+    assert not assistant["error"] and not assistant["tool_errors"], (label, assistant)
+    assert assistant["has_response"], (label, assistant)
+    if route != "LLM":
+        image_operation = "edits"
+    expected = ["llm:start", "llm:completed"]
+    if image_operation:
+        expected += [
+            f"image:{image_operation}:start",
+            "image:completed",
+            "llm:start",
+            "llm:completed",
+        ]
+    assert state["inference_events"][len(before["inference_events"]) :] == expected, (
+        label,
+        state,
+    )
+    input_counts = state["latest_user_image_counts"][
+        len(before["latest_user_image_counts"]) :
+    ]
+    assert input_counts[0] == int(
+        image_operation != "generations" and route != "Image model"
+    ), (
+        label,
+        state,
+    )
+    reference_counts = state["image_input_counts"][len(before["image_input_counts"]) :]
+    assert (
+        reference_counts
+        == {None: [], "edits": [1], "generations": [0]}[image_operation]
+    ), (label, state)
+    print(f"{label}: {' -> '.join(expected)}", flush=True)
 
 
 async def test_real_image_generation_delivers_pixels_to_model_and_persists_in_ui(
@@ -252,6 +408,11 @@ async def test_real_multiple_image_calls_without_model_previews_can_be_attached(
                 await expect(page.locator(".generated-image-attach")).to_have_count(2)
                 await page.locator(".generated-image-attach").first.click()
                 await expect(page.locator(".exmekh-attachment-chip")).to_have_count(1)
+                await (
+                    page.locator(".image-attachment-destination")
+                    .get_by_role("button", name="LLM", exact=True)
+                    .click()
+                )
                 await send_command(
                     page,
                     "Without generating another image, repeat the remembered code.",

@@ -43,6 +43,8 @@ from exmekh_agent.exmekh_bridge.history.image_input import (
     serialize_user_content,
     user_content,
 )
+from exmekh_agent.exmekh_bridge.history.message_attachments import saved_images
+from exmekh_agent.exmekh_bridge.history.message_edit import prepare_message_edit
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     StagedAttachment,
     create_staged_attachment_from_file,
@@ -55,12 +57,15 @@ from exmekh_agent.exmekh_bridge.models import (
     ChatSettings,
     QueuedMessage,
 )
+from exmekh_agent.exmekh_bridge.models.messages import ImageReference
 from exmekh_agent.exmekh_bridge.providers.context_usage import count_message_dict_tokens
 from exmekh_agent.exmekh_bridge.providers.ds4_prompt import (
     render_ds4_qwen_prompt,
 )
 from exmekh_agent.state.session_manager import SessionManager, session_manager
+from exmekh_agent.state.temp_storage import TempStorage
 from exmekh_agent.ui.chat.chat_export import export_chat
+from exmekh_agent.ui.chat.image_attachment import render_image_attachment
 from exmekh_agent.ui.shared.file_upload import upload_router
 from exmekh_agent.ui.shared.image_preview import (
     render_image_thumbnail,
@@ -114,6 +119,100 @@ def test_pdf_limit_is_visible_in_the_prompt_and_does_not_render_extra_pages(tmp_
     assert "Remaining pages were not sent" in prepared.prompt
     assert prepared.title_text == "long.pdf"
     assert attachment.file_path.read_bytes() == data
+
+
+def test_image_edit_reference_survives_queue_and_message_edit(tmp_path):
+    storage = TempStorage(tmp_path)
+    reference = create_staged_attachment_from_file(
+        "reference.png", png_bytes(), storage=storage
+    )
+    reference.image_destination = "image"
+    prepared = prepare_user_input(
+        "Make it blue", attachments=[reference], storage=storage
+    )
+    queued = ChatSession().add_queued_message(
+        prepared.prompt,
+        prepared.display_content,
+        image_paths=prepared.image_paths,
+        image_references=prepared.image_references,
+        attachment_paths=prepared.attachment_paths,
+    )
+    queued = QueuedMessage.model_validate_json(queued.model_dump_json())
+    saved = queued.to_chat_message()
+    assert saved.visible_image_urls == reference.image_urls
+    edited = prepare_message_edit(
+        saved, "Make it green", storage=storage, use_file_references=True
+    )
+    assert not edited.image_urls
+    assert edited.image_references == prepared.image_references
+    assert reference.relative_path not in edited.prompt
+    assert edited.display_content == "Make it green"
+
+
+def test_legacy_history_keeps_saved_routes_next_to_pdf_previews(tmp_path):
+    storage = TempStorage(tmp_path)
+    document = create_staged_attachment_from_file(
+        "report.pdf", pdf_bytes(), storage=storage
+    )
+    vision = create_staged_attachment_from_file(
+        "vision.png", png_bytes(), storage=storage
+    )
+    edit = create_staged_attachment_from_file(
+        "edit.png", png_bytes("blue"), storage=storage
+    )
+    both = create_staged_attachment_from_file(
+        "both.png", png_bytes("green"), storage=storage
+    )
+    edit.image_destination = "image"
+    both.image_destination = "both"
+    prepared = prepare_user_input(
+        "Edit these", attachments=[edit, document, vision, both], storage=storage
+    )
+    saved = prepared.to_chat_message()
+    assert [card.filename for card in saved_images(saved) if card.path] == [
+        "vision.png",
+        "both.png",
+        "edit.png",
+    ]
+    legacy = ChatMessage.model_validate(saved.model_dump(exclude={"image_attachments"}))
+    cards = saved_images(legacy)
+    assert [card.url for card in cards] == legacy.visible_image_urls
+    assert [card.destination for card in cards] == [None, None, "llm", "both", "image"]
+    assert [card.path for card in cards[2:]] == [
+        vision.relative_path,
+        both.relative_path,
+        edit.relative_path,
+    ]
+
+    # Older records without a PDF page count keep their previews without
+    # associating a PDF page with the image that follows it.
+    without_notice = legacy.model_copy(update={"content": "Edit these"})
+    assert [card.path for card in saved_images(without_notice)] == [
+        None,
+        None,
+        None,
+        None,
+        edit.relative_path,
+    ]
+
+
+def test_compact_upload_and_legacy_pdf_use_scoped_storage(tmp_path):
+    storage = TempStorage(tmp_path)
+    pdf = create_staged_attachment_from_file("pages.pdf", pdf_bytes(), storage=storage)
+    descriptor = pdf.upload_payload(compact=True)
+    assert "image_urls" not in descriptor
+    restored = StagedAttachment.from_upload(descriptor, storage=storage)
+    assert restored.image_urls == pdf.image_urls
+    prepared = prepare_user_input(restored.reference(storage=storage), storage=storage)
+    assert prepared.image_urls == pdf.image_urls
+    assert not prepared.image_attachments
+
+    inline = StagedAttachment.from_file_data("notes.txt", b"Unstaged text")
+    prepared = prepare_user_input(
+        "Read", storage=storage, attachments=[inline], use_file_references=False
+    )
+    assert "Unstaged text" in prepared.prompt
+    assert prepared.attachment_paths == []
 
 
 def test_image_decoding_uses_contents_and_bounds_resolution():
@@ -412,7 +511,15 @@ def test_steering_compares_images_and_retains_unaccepted_guidance():
     url = image_data_url(Image.new("RGB", (2, 2), "red"))
     steering = TurnSteering()
     steering.bind(lambda _: None, history_start=1)
-    assert steering.send(QueuedMessage(text="Same text", image_urls=[url]))
+    assert steering.send(
+        QueuedMessage(
+            text="Same text",
+            image_urls=[url],
+            image_paths=["preview.png", "edit.png"],
+            image_references=[ImageReference(path="edit.png", image_only_preview=url)],
+        )
+    )
+    assert steering.image_routes() == {}
     assert not steering.record_added(
         UserMessage("Same text"),
         after_tool_call_id=None,
@@ -425,6 +532,7 @@ def test_steering_compares_images_and_retains_unaccepted_guidance():
         tool_name=None,
         skill_path="/",
     )
+    assert steering.image_routes() == {"preview.png": False, "edit.png": True}
 
 
 def test_thumbnails_and_modal_build_in_the_client_context():
@@ -433,6 +541,13 @@ def test_thumbnails_and_modal_build_in_the_client_context():
         url = image_data_url(Image.new("RGB", (2, 2), "red"))
         render_image_thumbnail(url, "Red")
         show_image_preview(url, "Red")
+        render_image_attachment(url, "Legacy image", None, "llm", card_class="history")
+        toggle = next(
+            element
+            for element in client.elements.values()
+            if "image-attachment-destination" in element.classes
+        )
+        assert toggle.props["readonly"] is True
         assert any(
             "exmekh-image-thumbnail" in element.classes
             for element in client.elements.values()

@@ -5,10 +5,13 @@ import io
 import json
 import os
 import time
+from email import policy
+from email.parser import BytesParser
 from threading import Event
 from uuid import uuid4
 
 import httpx2
+from exmekh_lib.config.native_suite import NATIVE_SUITE
 from exmekh_lib.core.models.assistant_message import (
     AssistantMessage,
     FunctionCall,
@@ -33,6 +36,8 @@ from exmekh_agent.state.session_manager import session_manager
 from tests.mock_client import MockProvider
 
 generated_calls = []
+edit_requests = []
+uploaded_images = {}
 provider_calls = []
 user_image_counts = []
 generating = False
@@ -78,6 +83,43 @@ def image_response(request):
         generating = False
 
 
+def native_response(request):
+    if request.url.path.endswith("/models"):
+        return httpx2.Response(
+            200,
+            json={
+                "data": [
+                    {
+                        "id": NATIVE_SUITE.image_model,
+                        "ds4": {
+                            "version": 1,
+                            "revision": "test",
+                            "profile": "bf16-native-v1",
+                            "operations": ["image_generate", "image_edit"],
+                            "input_modalities": ["text", "image"],
+                            "configured": True,
+                            "resident": False,
+                            "ready": True,
+                        },
+                    }
+                ]
+            },
+        )
+    if request.url.path.endswith("/files"):
+        content_type = request.headers["content-type"]
+        form = BytesParser(policy=policy.default).parsebytes(
+            f"Content-Type: {content_type}\r\n\r\n".encode() + request.read()
+        )
+        file = next(part for part in form.iter_parts() if part.get_filename())
+        file_id = uuid4().hex
+        uploaded_images[file_id] = file.get_filename()
+        return httpx2.Response(200, json={"id": file_id})
+    if request.url.path.endswith("/images/edits"):
+        body = json.loads(request.content)
+        edit_requests.append([uploaded_images[file_id] for file_id in body["images"]])
+    return image_response(request)
+
+
 class PreviewProvider(MockProvider):
     def __init__(self):
         super().__init__()
@@ -85,7 +127,7 @@ class PreviewProvider(MockProvider):
             api_key="test",
             base_url="http://native/v1",
             max_retries=0,
-            http_client=httpx2.Client(transport=httpx2.MockTransport(image_response)),
+            http_client=httpx2.Client(transport=httpx2.MockTransport(native_response)),
         )
 
     def native_suite(self):
@@ -108,6 +150,7 @@ class PreviewProvider(MockProvider):
                 isinstance(part, Image.Image)
                 for message in messages
                 if isinstance(message, UserMessage)
+                and NATIVE_SUITE.image_result_context not in str(message.get_message())
                 for part in message.iter_content_parts()
             )
         )
@@ -207,6 +250,7 @@ def media_state():
         and "INCLUDE_GENERATED_IMAGES_IN_CONTEXT=false"
         in configuration.DEFAULT_ENV_PATH.read_text(),
         "generated_calls": generated_calls,
+        "edit_requests": edit_requests,
         "provider_calls": provider_calls,
         "user_image_counts": user_image_counts,
         "session": session_manager.get_current_session().model_dump(mode="json"),

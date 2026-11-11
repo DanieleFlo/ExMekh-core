@@ -12,6 +12,9 @@ from nicegui.page import page
 
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.history.pasted_input import (
+    create_staged_attachment_from_file,
+)
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     QueuedMessage,
@@ -41,6 +44,7 @@ from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
 )
 from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
+from tests.image_samples import png_bytes
 
 
 @pytest.fixture
@@ -48,6 +52,40 @@ def ui_context():
     c = Client(page("/test-context"))
     with c:
         yield c
+
+
+@pytest.mark.parametrize("destination", ["llm", "image", "both"])
+async def test_editing_queued_image_restores_its_destination_and_keeps_the_draft(
+    ui_context: Client, tmp_path: Path, destination: str
+) -> None:
+    project = session_manager.create_project(tmp_path)
+    session = session_manager.create_session(project_id=project.id)
+    session_manager.switch_session(session.id)
+    with ui_context:
+        controller = ChatPageController(ui_context)
+        controller.build()
+    assert controller.input_bar is not None
+    attachment = create_staged_attachment_from_file(
+        "queued.png", png_bytes(), storage=session_manager.temp_storage(session)
+    )
+    attachment.select_image_destination(destination)
+    turn = asyncio.create_task(asyncio.sleep(10))
+    active_turns.start(session.id, turn, TurnStreamCollector(), started_at=0)
+    try:
+        await controller.send("Queued caption", [attachment])
+        queued = session.next_queued_message()
+        assert queued is not None
+        controller.input_bar.set_text("New draft")
+        controller.edit_queued_message(queued.id)
+        async with asyncio.timeout(3):
+            while session.find_queued_message(queued.id) is not None:
+                await asyncio.sleep(0.01)
+        (restored,) = controller.input_bar.staged_attachments
+        assert restored.filename == "queued.png"
+        assert restored.image_destination == destination
+        assert controller.input_bar.textarea.value == "Queued caption\n\nNew draft"
+    finally:
+        await active_turns.stop_and_wait(session.id)
 
 
 # =============================================================================
@@ -801,23 +839,28 @@ async def test_page_controller_message_queue_flow(ui_context: Client) -> None:
 
         # Sequential dispatch test:
         # Add two messages to queue
-        session.add_queued_message("Next 1")
+        first_queued = session.add_queued_message("Next 1")
         session.add_queued_message("Next 2")
         fake_task.cancel()
         active_turns.finish(session.id, fake_task)
         await asyncio.gather(fake_task, return_exceptions=True)
         controller._active_tasks.clear()
 
-        with patch.object(controller, "_send_prepared") as mock_send_prepared:
+        with patch.object(controller, "_start_turn") as start_turn:
             controller._check_and_dispatch_next_queued(session)
-            assert mock_send_prepared.call_args.args[1].prompt == "Next 1"
+            start_turn.assert_called_once()
+            dispatched = session.message_history()[-1]
+            assert dispatched.content == "Next 1"
+            assert dispatched.id == first_queued.id
+            assert dispatched.timestamp >= first_queued.created_at
             assert len(session.queued_messages) == 1
             assert session.queued_messages[0].text == "Next 2"
 
         # Resume queue test
-        with patch.object(controller, "_send_prepared") as mock_send_prepared:
+        with patch.object(controller, "_start_turn") as start_turn:
             controller.resume_queue()
-            assert mock_send_prepared.call_args.args[1].prompt == "Next 2"
+            start_turn.assert_called_once()
+            assert session.message_history()[-1].content == "Next 2"
             assert len(session.queued_messages) == 0
 
         # Stop while active task running

@@ -9,6 +9,7 @@ from collections import deque
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from functools import partial
+from pathlib import Path
 from typing import Any, Literal
 
 from exmekh_lib.core.agents.node import Node
@@ -204,20 +205,71 @@ class ToolFeedback:
 
 
 class ImageArguments(BeforeTool):
-    def __init__(self, include_in_context: bool, feedback: ToolFeedback) -> None:
+    def __init__(
+        self,
+        include_in_context: bool,
+        feedback: ToolFeedback,
+        *,
+        image_routes: Callable[[], dict[str, bool]] | None = None,
+        supports_image_edit: Callable[[], bool] | None = None,
+    ) -> None:
         self.feedback = feedback
         self.include_in_context = include_in_context
+        self.image_routes = image_routes
+        self.supports_image_edit = supports_image_edit
 
     def handle(self, context: ToolContext) -> ToolArguments:
+        arguments = {
+            **context.arguments,
+            "include_image_in_result": self.include_in_context,
+        }
+        self._apply_attachment_routes(context.work_root, arguments)
         self.feedback.update(
             context.call_id,
             image_state="running",
             images_in_context=self.include_in_context,
         )
         return ToolArguments(
-            {**context.arguments, "include_image_in_result": self.include_in_context},
+            arguments,
             on_progress=partial(self.feedback.progress, context.call_id),
         )
+
+    def _apply_attachment_routes(
+        self, work_root: Path, arguments: dict[str, Any]
+    ) -> None:
+        routes = self.image_routes() if self.image_routes else {}
+        if not routes:
+            return
+        requested = arguments.get("images")
+        if requested is None:
+            requested = []
+        if not isinstance(requested, list) or any(
+            not isinstance(path, str) for path in requested
+        ):
+            return  # Leave malformed arguments to the tool's existing validation.
+
+        excluded = {
+            (work_root / path).resolve()
+            for path, allowed in routes.items()
+            if not allowed
+        }
+        if any((work_root / path).resolve() in excluded for path in requested):
+            raise ToolInputError(
+                app_text("errors_tools.tool_feedback.image_sent_to_llm_only")
+            )
+
+        selected = [path for path, allowed in routes.items() if allowed]
+        if not selected:
+            return
+        if self.supports_image_edit is not None and not self.supports_image_edit():
+            raise ToolInputError(
+                app_text("errors_tools.tool_feedback.image_edit_unavailable")
+            )
+
+        unique_paths: dict[Path, str] = {}
+        for path in [*selected, *requested]:
+            unique_paths.setdefault((work_root / path).resolve(), path)
+        arguments["images"] = list(unique_paths.values())
 
 
 class ImagePreviews(AfterTool):

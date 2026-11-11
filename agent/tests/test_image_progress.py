@@ -2,8 +2,10 @@
 
 from types import SimpleNamespace
 
+import pytest
 from exmekh_lib.interfaces.operation_progress import OperationProgress
 from exmekh_lib.interfaces.tool_hook import ToolContext
+from exmekh_lib.utils.tool_errors import ToolInputError
 from nicegui.client import Client
 from nicegui.page import page
 
@@ -73,6 +75,41 @@ def test_progress_updates_preserve_invocation_structure_and_results():
     )
     assert image.image_state == "completed"
     assert message.has_same_execution_details(changed)
+
+
+def test_image_tool_respects_attachment_routes_and_edit_support(tmp_path):
+    def routes():
+        return {"llm.png": False, "reference.png": True}
+
+    hook = ImageArguments(
+        False, ToolFeedback(), image_routes=routes, supports_image_edit=lambda: True
+    )
+    with pytest.raises(ToolInputError, match="LLM only"):
+        hook.handle(ToolContext({"images": [str(tmp_path / "llm.png")]}, tmp_path, ()))
+    decision = hook.handle(
+        ToolContext({"images": [str(tmp_path / "reference.png")]}, tmp_path, ())
+    )
+    assert decision.arguments["images"] == ["reference.png"]
+    unguarded = ImageArguments(False, ToolFeedback(), image_routes=routes)
+    assert unguarded.handle(ToolContext({}, tmp_path, ())).arguments["images"] == [
+        "reference.png"
+    ]
+    assert (
+        hook.handle(ToolContext({"images": ""}, tmp_path, ())).arguments["images"] == ""
+    )
+
+    vision_only = ImageArguments(
+        False, ToolFeedback(), image_routes=lambda: {"llm.png": False}
+    )
+    assert vision_only.handle(
+        ToolContext({"images": ["other.png"]}, tmp_path, ())
+    ).arguments["images"] == ["other.png"]
+
+    unsupported = ImageArguments(
+        False, ToolFeedback(), image_routes=routes, supports_image_edit=lambda: False
+    )
+    with pytest.raises(ToolInputError, match="Image editing is unavailable"):
+        unsupported.handle(ToolContext({}, tmp_path, ()))
 
 
 def test_skeleton_only_shows_percentage_and_time_without_replacing_labels(monkeypatch):

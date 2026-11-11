@@ -10,6 +10,7 @@ from playwright.async_api import Page, async_playwright, expect
 
 from tests.browser_support import (
     get_edge_executable,
+    open_editor,
     send_command,
     start_mock_server,
     wait_turn_completion,
@@ -27,15 +28,6 @@ async def state(url: str) -> dict:
     origin = f"{address.scheme}://{address.netloc}"
     async with httpx.AsyncClient(trust_env=False) as client:
         return (await client.get(origin + "/test/state")).json()
-
-
-async def open_editor(page, index: int = 0):
-    message = page.locator(".chat-message-user").nth(index)
-    await message.hover()
-    await message.get_by_role("button", name="Edit message", exact=True).click()
-    editor = page.get_by_role("dialog")
-    await expect(editor).to_be_visible()
-    return editor
 
 
 async def test_completed_message_edit_cancel_trim_regenerate_and_reload(edit_server):

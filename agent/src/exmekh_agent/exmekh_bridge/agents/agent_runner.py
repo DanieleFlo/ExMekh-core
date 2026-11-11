@@ -8,6 +8,7 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
+from exmekh_lib.config.native_suite import NATIVE_SUITE
 from exmekh_lib.core.agents.deep_agent import DeepAgentCompactionProgressEvent
 from exmekh_lib.core.agents.deep_agent.deep_agent import DeepAgent
 from exmekh_lib.core.models.client import Client
@@ -137,6 +138,7 @@ def execute_agent_turn_sync(
     steering: TurnSteering | None = None,
     on_steering_added: Callable[[], None] | None = None,
     image_urls: list[str] | None = None,
+    image_routes: dict[str, bool] | None = None,
     agent_profile: str = AGENT_DEFAULTS["default_profile"],
     agent_design: AgentDesign | None = None,
     capabilities_paths: list[str] | None = None,
@@ -182,6 +184,7 @@ def execute_agent_turn_sync(
                 steering=steering,
                 on_steering_added=on_steering_added,
                 image_urls=image_urls,
+                image_routes=image_routes,
                 agent_profile=agent_profile,
                 agent_design=agent_design,
                 capabilities_paths=capabilities_paths,
@@ -238,6 +241,20 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
     if request.cancellation_event is not None:
         provider = CancellableProvider(provider, request.cancellation_event)
 
+    def image_routes() -> dict[str, bool]:
+        routes = dict(request.image_routes or {})
+        if request.steering is not None:
+            routes.update(request.steering.image_routes())
+        return routes
+
+    def supports_image_edit() -> bool:
+        return any(
+            model.id == NATIVE_SUITE.image_model
+            and model.ds4.configured
+            and "image_edit" in model.ds4.operations
+            for model in provider.native_suite().models()
+        )
+
     feedback = ToolFeedback()
     effective_approval_mode = (
         request.tool_approval_mode
@@ -261,7 +278,12 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
     tool_hooks = {
         AGENT_DEFAULTS["shell_tool"]: ToolHooks(before=approval_hook),
         AGENT_DEFAULTS["image_tool"]: ToolHooks(
-            before=ImageArguments(config.include_generated_images_in_context, feedback),
+            before=ImageArguments(
+                config.include_generated_images_in_context,
+                feedback,
+                image_routes=image_routes,
+                supports_image_edit=supports_image_edit,
+            ),
             after=ImagePreviews(feedback),
         ),
     }
@@ -373,6 +395,12 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
         on_stream=event_handler,
         parameter_descriptions_in_schema=request.parameter_descriptions_in_schema,
     )
+    if any((request.image_routes or {}).values()) and not any(
+        tool.get_name() == AGENT_DEFAULTS["image_tool"]
+        for capabilities in agent.capabilities_by_node.values()
+        for tool in capabilities.tools
+    ):
+        raise ValueError(app_text("errors_tools.tool_feedback.image_edit_unavailable"))
     if context_provider is not None:
         for node in agent.capabilities_by_node:
             policy = AutoCompactionPolicy(
@@ -457,6 +485,7 @@ async def run_agent_turn(
     steering: TurnSteering | None = None,
     on_steering_added: Callable[[], None] | None = None,
     image_urls: list[str] | None = None,
+    image_routes: dict[str, bool] | None = None,
     get_tool_approval_mode: Callable[[], str] | None = None,
     on_model_context: Callable[[ModelContextCheckpoint], None] | None = None,
     on_compaction_progress: Callable[[DeepAgentCompactionProgressEvent], None]
@@ -527,6 +556,7 @@ async def run_agent_turn(
             steering=steering,
             on_steering_added=on_steering_added,
             image_urls=image_urls,
+            image_routes=image_routes,
         )
 
     try:

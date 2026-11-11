@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from exmekh_lib.config.native_suite import NATIVE_SUITE
 from exmekh_lib.core.agents.deep_agent import (
     DeepAgentExecutionEvent,
     DeepAgentStreamEvent,
 )
-from exmekh_lib.core.models.assistant_message import AssistantMessage
+from exmekh_lib.core.models.assistant_message import (
+    AssistantMessage,
+    FunctionCall,
+    ToolCall,
+)
 from exmekh_lib.core.models.provider_response import ProviderResponse
 from exmekh_lib.core.models.provider_stream_event import (
     ProviderStreamEvent,
@@ -23,6 +29,7 @@ from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     generate_chat_title_sync,
     serialize_skill_execution,
 )
+from exmekh_agent.exmekh_bridge.agents.steering import TurnSteering
 from exmekh_agent.exmekh_bridge.models import ChatMessage
 from tests.mock_client import MockProvider
 
@@ -100,6 +107,63 @@ def _run_deep(
     ):
         assert execute_agent_turn_sync(**arguments) == "final"
     return tokens, tools, skills
+
+
+def test_image_reference_requires_an_image_tool_in_the_agent():
+    with pytest.raises(ValueError, match="Image editing is unavailable"):
+        _run_deep([], image_routes={"reference.png": True})
+
+
+@pytest.mark.parametrize("with_steering", [False, True])
+def test_agent_checks_the_native_edit_capability_before_upload(tmp_path, with_steering):
+    suite = MagicMock()
+    suite.models.return_value = [
+        SimpleNamespace(
+            id=NATIVE_SUITE.image_model,
+            ds4=SimpleNamespace(configured=True, operations=["image_generate"]),
+        )
+    ]
+
+    class GenerationOnlyProvider(MockProvider):
+        def native_suite(self):
+            return suite
+
+        def call(self, request):
+            if any(
+                message.get_role_name() == "tool" for message in request.get_messages()
+            ):
+                return ProviderResponse(AssistantMessage("Editing unavailable"))
+            call = ToolCall(
+                "edit", FunctionCall("generate-image", {"prompt": "Make it blue"})
+            )
+            return ProviderResponse(AssistantMessage(None, tool_calls=[call]))
+
+    events = []
+    with patch(
+        "exmekh_agent.exmekh_bridge.agents.agent_runner.LocalProvider",
+        return_value=GenerationOnlyProvider(),
+    ):
+        result = execute_agent_turn_sync(
+            user_prompt="Make it blue",
+            model="model",
+            base_url="http://localhost:8080/v1",
+            api_key="key",
+            api_type="responses",
+            reasoning_effort_str="none",
+            agent_mode="quick_chat",
+            capabilities_path_str="",
+            name_hds="main",
+            on_token=lambda _: None,
+            on_reasoning=lambda *_: None,
+            on_tool_event=events.append,
+            work_root=str(tmp_path),
+            steering=TurnSteering() if with_steering else None,
+            image_routes={"reference.png": True},
+        )
+    assert result == "Editing unavailable"
+    suite.models.assert_called_once_with()
+    suite.upload.assert_not_called()
+    assert events[-1].execution_status == "error"
 
 
 def test_history_converter_accepts_empty_iterator_and_exmekh_messages() -> None:

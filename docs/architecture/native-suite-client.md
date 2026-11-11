@@ -162,6 +162,20 @@ sono locali; trasporto ed embedding usano il servizio reale.
 Il target rifiuta l'avvio senza URL; errori dei modelli e del restore fanno
 fallire l'accettazione.
 
+Per un controllo funzionale degli allegati su CUDA o Metal, usare un server
+nativo già avviato con un LLM vision e Qwen Image abilitato all'editing. Il test
+prova le tre destinazioni con un upload, con **Save & regenerate** e con il
+pulsante sotto un'immagine generata. Verifica che il turno termini senza errori
+e che l'editing si completi fra la richiesta LLM iniziale e la sua continuazione.
+
+```sh
+cd agent
+DS4_SUITE_HTTP_URL=http://127.0.0.1:8080/v1 \
+DS4_SUITE_LLM_MODEL=Qwen3.8-27B-UD-Q4_K_S \
+  uv run --no-sync pytest -o addopts= --run-live -x -q -s \
+  tests/test_native_image_generation_e2e.py::test_live_image_attachment_routes
+```
+
 ## Lifetime e osservabilità
 
 Il [contratto del progresso image](native-image-progress.md) definisce SSE,

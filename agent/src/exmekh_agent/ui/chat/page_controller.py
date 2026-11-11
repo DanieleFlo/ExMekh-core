@@ -22,6 +22,10 @@ from exmekh_agent.exmekh_bridge.agents.agent_runner import (
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.agents.sub_agents import SubAgentEvent
 from exmekh_agent.exmekh_bridge.errors import build_execution_error_message
+from exmekh_agent.exmekh_bridge.history.message_attachments import (
+    restore_staged_attachments,
+    retained_attachment_paths,
+)
 from exmekh_agent.exmekh_bridge.history.message_edit import prepare_message_edit
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     PreparedUserInput,
@@ -32,9 +36,11 @@ from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
     ChatSession,
     ProviderContextUsage,
+    QueuedMessage,
     SkillNode,
     ToolEvent,
 )
+from exmekh_agent.exmekh_bridge.models.messages import ImageDestination
 from exmekh_agent.exmekh_bridge.providers.context_usage import (
     ContextUsageSummary,
     populate_skill_closure_tokens,
@@ -225,7 +231,18 @@ class ChatPageController:
     async def attach_generated_image(self, url: str) -> None:
         """Stage an existing result through the same input API as an uploaded image."""
         if self.input_bar:
-            await self.input_bar.stage_image(url)
+            try:
+                await self.input_bar.stage_image(url)
+            except (OSError, ValueError) as error:
+                if not self._client.is_deleted:
+                    with self._client:
+                        ui.notify(
+                            ui_text(
+                                "chat.input_bar.upload_error_formatted", error=error
+                            ),
+                            type="negative",
+                        )
+                return
             if not self._client.is_deleted:
                 with self._client:
                     self.input_bar.focus()
@@ -573,10 +590,16 @@ class ChatPageController:
         text: str,
         attachment_paths: list[str] | None = None,
         attachments: list[StagedAttachment] | None = None,
+        image_destinations: dict[str, ImageDestination] | None = None,
     ) -> bool:
         async with active_turns.edit_lock(session_id):
             return await self._edit_message(
-                session_id, message_id, text, attachment_paths, attachments
+                session_id,
+                message_id,
+                text,
+                attachment_paths,
+                attachments,
+                image_destinations,
             )
 
     async def split_conversation(self, session_id: str, message_id: str) -> None:
@@ -600,6 +623,7 @@ class ChatPageController:
         text: str,
         attachment_paths: list[str] | None = None,
         attachments: list[StagedAttachment] | None = None,
+        image_destinations: dict[str, ImageDestination] | None = None,
     ) -> bool:
         session = self.sessions.get_session(session_id)
         if session is None:
@@ -618,6 +642,7 @@ class ChatPageController:
                     use_file_references=True,
                     attachment_paths=attachment_paths,
                     attachments=attachments,
+                    image_destinations=image_destinations,
                 ),
             )
         except (OSError, ValueError) as error:
@@ -647,7 +672,8 @@ class ChatPageController:
             self._render_queue_ui(session)
             self._start_turn(
                 session,
-                prepared,
+                replacement,
+                title_text=prepared.title_text,
                 prior_history=session.message_history()[:-1],
                 generate_title=False,
             )
@@ -710,18 +736,32 @@ class ChatPageController:
     def _send_prepared(
         self, session: ChatSession, prepared_input: PreparedUserInput
     ) -> None:
+        self._send_user_message(
+            session,
+            prepared_input.to_chat_message(),
+            title_text=prepared_input.title_text,
+        )
+
+    def _send_user_message(
+        self,
+        session: ChatSession,
+        message: ChatMessage,
+        *,
+        title_text: str,
+        from_queue: bool = False,
+    ) -> None:
         if not self.sessions.owns_session(session):
             return
         with self._client:
             if active_turns.is_running(session.id):
-                session.add_queued_message(
-                    prepared_input.prompt,
-                    prepared_input.display_content,
-                    image_urls=prepared_input.image_urls,
-                    image_paths=prepared_input.image_paths,
-                    attachment_paths=prepared_input.attachment_paths,
-                )
-                self.sessions.save_session(session)
+                if from_queue:
+                    return
+                if not self.sessions.enqueue_message(session, message):
+                    ui.notify(
+                        ui_text("chat.page_controller.unable_to_save_message"),
+                        type="negative",
+                    )
+                    return
                 self._render_queue_ui(session)
                 ui.notify(
                     ui_text("chat.page_controller.message_added_to_queue"),
@@ -733,19 +773,21 @@ class ChatPageController:
             session.model = config.default_model or session.model
             prior_history = session.message_history()
             generate_title = not prior_history
-            title_text = prepared_input.title_text
             if generate_title:
                 session.title = self._fallback_title(title_text)
 
-            if not self.sessions.add_message(session, prepared_input.to_chat_message()):
+            if not self.sessions.add_message(session, message, from_queue=from_queue):
                 ui.notify(
                     ui_text("chat.page_controller.unable_to_save_message"),
                     type="negative",
                 )
                 return
+            if from_queue:
+                self._render_queue_ui(session)
             self._start_turn(
                 session,
-                prepared_input,
+                message,
+                title_text=title_text,
                 prior_history=prior_history,
                 generate_title=generate_title,
             )
@@ -753,8 +795,9 @@ class ChatPageController:
     def _start_turn(
         self,
         session: ChatSession,
-        prepared_input: PreparedUserInput,
+        message: ChatMessage,
         *,
+        title_text: str,
         prior_history: list[ChatMessage],
         generate_title: bool,
     ) -> None:
@@ -781,12 +824,13 @@ class ChatPageController:
             task = asyncio.create_task(
                 self._run_turn(
                     session=session,
-                    user_text=prepared_input.prompt,
-                    image_urls=prepared_input.image_urls,
+                    user_text=message.content,
+                    image_urls=message.image_urls,
+                    image_routes=message.image_tool_routes(),
                     prior_history=prior_history,
                     collector=collector,
                     generate_title=generate_title,
-                    title_text=prepared_input.title_text,
+                    title_text=title_text,
                 )
             )
             self._active_tasks[session.id] = task
@@ -843,6 +887,7 @@ class ChatPageController:
         generate_title: bool,
         title_text: str | None = None,
         image_urls: list[str] | None = None,
+        image_routes: dict[str, bool] | None = None,
     ) -> None:
         with self._client:
             loop = asyncio.get_running_loop()
@@ -1034,6 +1079,7 @@ class ChatPageController:
                 response_text = await run_agent_turn(
                     user_prompt=user_text,
                     image_urls=image_urls,
+                    image_routes=image_routes,
                     model=config.default_model,
                     on_token=on_token,
                     on_reasoning=on_reasoning,
@@ -1311,44 +1357,87 @@ class ChatPageController:
             self._sync_active_turn()
 
     def _check_and_dispatch_next_queued(self, session: ChatSession) -> None:
-        next_msg = session.pop_queued_message()
-        if next_msg is None:
-            return
-        self.sessions.save_session(session)
-        self._render_queue_ui(session)
-        prepared_input = PreparedUserInput(
-            prompt=next_msg.text,
-            display_content=next_msg.display_content,
-            title_text=next_msg.visible_text,
-            image_urls=next_msg.image_urls,
-            image_paths=next_msg.image_paths,
-            attachment_paths=next_msg.attachment_paths or [],
-        )
-        self._send_prepared(session, prepared_input)
+        next_msg = session.next_queued_message()
+        if next_msg is not None:
+            self._send_user_message(
+                session,
+                next_msg.dispatch_message(),
+                title_text=next_msg.visible_text,
+                from_queue=True,
+            )
 
     def edit_queued_message(self, message_id: str) -> None:
         with self._client:
             session = self.sessions.get_current_session()
-            removed = session.remove_queued_message(message_id)
-            if removed:
-                self.sessions.save_session(session)
-                self._render_queue_ui(session)
-                if self.input_bar:
-                    self.input_bar.set_text(removed.text)
-                    self.input_bar.focus()
-                ui.notify(
-                    ui_text(
-                        "chat.page_controller.message_returned_to_chat_for_editing"
-                    ),
-                    type="info",
+            queued = session.find_queued_message(message_id)
+            if queued is None or self.input_bar is None:
+                return
+            paths = retained_attachment_paths(queued.to_chat_message())
+            if paths:
+                self._track_task(
+                    asyncio.create_task(
+                        self._restore_queued_attachments(session, queued, paths)
+                    )
                 )
+            else:
+                self._finish_queued_edit(session, queued, [])
+
+    async def _restore_queued_attachments(
+        self, session: ChatSession, queued: QueuedMessage, paths: list[str]
+    ) -> None:
+        try:
+            attachments = await asyncio.get_running_loop().run_in_executor(
+                None,
+                partial(
+                    restore_staged_attachments,
+                    queued.to_chat_message(),
+                    paths,
+                    storage=self.sessions.temp_storage(session),
+                ),
+            )
+        except (OSError, ValueError) as error:
+            if not self._client.is_deleted:
+                with self._client:
+                    ui.notify(
+                        ui_text(
+                            "chat.page_controller.unable_to_prepare_attachments",
+                            error=error,
+                        ),
+                        type="negative",
+                    )
+            return
+        if self._client.is_deleted or not self.sessions.owns_session(session):
+            return
+        with self._client:
+            self._finish_queued_edit(session, queued, attachments)
+
+    def _finish_queued_edit(
+        self,
+        session: ChatSession,
+        queued: QueuedMessage,
+        attachments: list[StagedAttachment],
+    ) -> None:
+        if self.input_bar is None or session.find_queued_message(queued.id) is None:
+            return
+        if self.sessions.take_queued_message(session, queued.id) is None:
+            ui.notify(
+                ui_text("chat.page_controller.unable_to_save_message"), type="negative"
+            )
+            return
+        self._render_queue_ui(session)
+        self.input_bar.restore_queued_draft(
+            session.id, queued.visible_text, attachments
+        )
+        ui.notify(
+            ui_text("chat.page_controller.message_returned_to_chat_for_editing"),
+            type="info",
+        )
 
     def delete_queued_message(self, message_id: str) -> None:
         with self._client:
             session = self.sessions.get_current_session()
-            removed = session.remove_queued_message(message_id)
+            removed = self.sessions.take_queued_message(session, message_id)
             if removed:
-                self.sessions.save_session(session)
                 self._render_queue_ui(session)
                 ui.notify(
                     ui_text("chat.page_controller.message_removed_from_queue"),

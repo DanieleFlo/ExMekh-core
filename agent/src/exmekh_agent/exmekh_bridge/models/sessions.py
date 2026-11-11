@@ -13,6 +13,8 @@ from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.provider import DEFAULTS as PROVIDER_DEFAULTS
 from exmekh_agent.exmekh_bridge.models.messages import (
     ChatMessage,
+    ImageAttachment,
+    ImageReference,
     QueuedMessage,
     SubAgentConversation,
 )
@@ -241,6 +243,8 @@ class ChatSession(BaseModel):
         image_urls: list[str] | None = None,
         image_paths: list[str] | None = None,
         attachment_paths: list[str] | None = None,
+        image_references: list[ImageReference] | None = None,
+        image_attachments: list[ImageAttachment] | None = None,
     ) -> QueuedMessage:
         msg = QueuedMessage(
             text=text,
@@ -248,9 +252,21 @@ class ChatSession(BaseModel):
             image_urls=image_urls or [],
             image_paths=image_paths or [],
             attachment_paths=attachment_paths,
+            image_references=image_references or [],
+            image_attachments=image_attachments or [],
         )
-        self.queued_messages.append(msg)
+        self.enqueue_message(msg)
         return msg
+
+    def enqueue_message(self, message: QueuedMessage) -> None:
+        self.queued_messages.append(message)
+
+    def queue_snapshot(self) -> ChatSession:
+        """Allow queue operations on an independent list before saving."""
+        return self.model_copy(update={"queued_messages": list(self.queued_messages)})
+
+    def next_queued_message(self) -> QueuedMessage | None:
+        return self.queued_messages[0] if self.queued_messages else None
 
     def pop_queued_message(self) -> QueuedMessage | None:
         if self.queued_messages:

@@ -39,14 +39,62 @@ from exmekh_agent.exmekh_bridge.models.timeline import (
 )
 
 MessageRole = Literal["user", "assistant", "system"]
+ImageDestination = Literal["llm", "image", "both"]
 
 
-class QueuedMessage(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    text: str
+class ImageReference(BaseModel):
+    """An attachment selected for image editing in addition to, or instead of, vision."""
+
+    path: str
+    image_only_preview: str | None = None
+
+    @property
+    def destination(self) -> ImageDestination:
+        return "image" if self.image_only_preview is not None else "both"
+
+
+class ImageAttachment(BaseModel):
+    path: str
+    filename: str
+    file_size: int
+    # Generator-only previews are stored on the matching ImageReference.
+    vision_index: int | None = None
+
+
+class MessageAttachments(BaseModel):
     image_urls: list[str] = Field(default_factory=list)
     image_paths: list[str] = Field(default_factory=list)
+    image_references: list[ImageReference] = Field(default_factory=list)
+    image_attachments: list[ImageAttachment] = Field(default_factory=list)
     attachment_paths: list[str] | None = None
+
+    @property
+    def visible_image_urls(self) -> list[str]:
+        return [
+            *self.image_urls,
+            *(
+                ref.image_only_preview
+                for ref in self.image_references
+                if ref.image_only_preview is not None
+            ),
+        ]
+
+    def image_tool_routes(self) -> dict[str, bool]:
+        """Identify the attached paths allowed to reach the image tool."""
+        routes = dict.fromkeys(self.image_paths, False)
+        routes.update(dict.fromkeys((ref.path for ref in self.image_references), True))
+        return routes
+
+    def image_attachment_paths(self) -> set[str]:
+        return {*self.image_paths, *(ref.path for ref in self.image_references)}
+
+    def attachment_fields(self) -> dict[str, Any]:
+        return self.model_dump(include=set(MessageAttachments.model_fields))
+
+
+class QueuedMessage(MessageAttachments):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    text: str
     display_content: str | None = None
     created_at: float = Field(default_factory=time.time)
 
@@ -54,30 +102,35 @@ class QueuedMessage(BaseModel):
     def visible_text(self) -> str:
         return self.display_content if self.display_content is not None else self.text
 
+    @classmethod
+    def from_user_message(cls, message: ChatMessage) -> QueuedMessage:
+        return cls(
+            id=message.id,
+            text=message.content,
+            display_content=message.display_content,
+            created_at=message.timestamp,
+            **message.attachment_fields(),
+        )
+
     def to_chat_message(self) -> ChatMessage:
         return ChatMessage(
             id=self.id,
             role="user",
             content=self.text,
-            image_urls=list(self.image_urls),
-            image_paths=list(self.image_paths),
-            attachment_paths=(
-                list(self.attachment_paths)
-                if self.attachment_paths is not None
-                else None
-            ),
             display_content=self.display_content,
             timestamp=self.created_at,
+            **self.attachment_fields(),
         )
 
+    def dispatch_message(self) -> ChatMessage:
+        """Place queued input after the turn that was active when it was written."""
+        return self.to_chat_message().model_copy(update={"timestamp": time.time()})
 
-class ChatMessage(BaseModel):
+
+class ChatMessage(MessageAttachments):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     role: MessageRole
     content: str = ""
-    image_urls: list[str] = Field(default_factory=list)
-    image_paths: list[str] = Field(default_factory=list)
-    attachment_paths: list[str] | None = None
     display_content: str | None = None
     reasoning_content: str = ""
     reasoning_blocks: list[ReasoningBlock] = Field(default_factory=list)

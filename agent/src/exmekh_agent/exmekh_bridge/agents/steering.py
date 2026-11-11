@@ -115,3 +115,10 @@ class TurnSteering:
             RecordedHistory(
                 message.raw_history, message.skill_history_tree
             ).restore_user_content(self._image_content)
+
+    def image_routes(self) -> dict[str, bool]:
+        with self._lock:
+            routes = {}
+            for message in self._messages[: len(self._insertions)]:
+                routes.update(message.image_tool_routes())
+            return routes

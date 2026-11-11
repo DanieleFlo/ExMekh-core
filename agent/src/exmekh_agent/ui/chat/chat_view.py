@@ -15,10 +15,9 @@ from nicegui import ui
 from exmekh_agent.config.agents import DEFAULTS as AGENT_DEFAULTS
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.execution import DEFAULTS as EXECUTION_DEFAULTS
-from exmekh_agent.exmekh_bridge.history.image_input import IMAGE_SUFFIXES
-from exmekh_agent.exmekh_bridge.history.message_edit import retained_attachment_paths
-from exmekh_agent.exmekh_bridge.history.pasted_input import (
-    extract_attached_files_from_content,
+from exmekh_agent.exmekh_bridge.history.message_attachments import (
+    attached_files,
+    saved_images,
 )
 from exmekh_agent.exmekh_bridge.models import (
     ChatMessage,
@@ -41,6 +40,7 @@ from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.ui.chat.chat_export import ExportFormat, export_chat
 from exmekh_agent.ui.chat.compaction_progress import CompactionProgressView
+from exmekh_agent.ui.chat.image_attachment import render_image_attachment
 from exmekh_agent.ui.chat.image_progress import ImageProgressView
 from exmekh_agent.ui.chat.message_editor import EditMessageCallback, MessageEditor
 from exmekh_agent.ui.chat.message_text import message_display_text
@@ -783,21 +783,8 @@ class ChatViewComponent:
         pending_steering: bool = False,
     ) -> None:
         if msg.role == "user":
-            attached_files = [
-                path
-                for path in dict.fromkeys(
-                    [
-                        *retained_attachment_paths(msg),
-                        *extract_attached_files_from_content(msg.content),
-                    ]
-                )
-                if path not in msg.image_paths
-                and not (
-                    msg.image_urls
-                    and not msg.image_paths
-                    and Path(path).suffix.lower() in IMAGE_SUFFIXES | {".pdf"}
-                )
-            ]
+            images = saved_images(msg)
+            files = attached_files(msg)
             with ui.row().classes(
                 UI_PRESENTATION[
                     "render_message_body.classes.w_full_justify_end_items_start_chat_message_r"
@@ -852,28 +839,37 @@ class ChatViewComponent:
                             ]
                         )
 
-                    if msg.image_urls:
+                    if images:
                         with ui.row().classes(
                             UI_PRESENTATION[
                                 "render_message_body.classes.exmekh_message_images_gap_2_flex_wrap_mt_2"
                             ]
                         ):
-                            for index, url in enumerate(msg.image_urls):
-                                render_image_thumbnail(
-                                    url,
-                                    app_text(
-                                        "chat.chat_view.attached_image_value_1",
-                                        value_1=index + 1,
-                                    ),
+                            for index, image in enumerate(images):
+                                name = image.filename or app_text(
+                                    "chat.chat_view.attached_image_value_1",
+                                    value_1=index + 1,
                                 )
+                                if image.destination is None:
+                                    render_image_thumbnail(image.url, name)
+                                else:
+                                    render_image_attachment(
+                                        image.url,
+                                        name,
+                                        image.file_size,
+                                        image.destination,
+                                        card_class=UI_PRESENTATION[
+                                            "image_destination.history_card_classes"
+                                        ],
+                                    )
 
-                    if attached_files:
+                    if files:
                         with ui.row().classes(
                             UI_PRESENTATION[
                                 "render_message_body.classes.exmekh_message_attachments_items_center_gap_1"
                             ]
                         ):
-                            for file_path in attached_files:
+                            for file_path in files:
                                 filename = Path(file_path).name
                                 icon_name, color_class, _ = get_file_icon(filename)
                                 with (
@@ -1010,14 +1006,12 @@ class ChatViewComponent:
                             msg,
                         )
                     for index, url in enumerate(msg.unplaced_images()):
-                        render_image_thumbnail(
-                            url,
-                            app_text(
-                                "chat.chat_view.attached_image_value_1",
-                                value_1=index + 1,
-                            ),
-                            gallery=msg.image_gallery(),
-                        )
+                        with ui.column().classes(
+                            UI_PRESENTATION["image_generation.classes.slot"]
+                        ):
+                            self._render_generated_image(
+                                url, index, msg.image_gallery()
+                            )
 
                     # Response Parsed HTML (with LaTeX MathML support)
                     if msg.content:
@@ -1685,11 +1679,6 @@ class ChatViewComponent:
         width = width if type(width) is int and 32 <= width <= 2048 else 2048
         height = height if type(height) is int and 32 <= height <= 2048 else 2048
         gallery = message.image_gallery() if message else urls
-        images_in_context = (
-            message.has_model_images_for_tool(event)
-            if message
-            else event.images_in_context
-        )
         generating = (
             event.image_state == "running"
             if event.image_state is not None
@@ -1697,30 +1686,13 @@ class ChatViewComponent:
         )
         with ui.row().classes(UI_PRESENTATION["image_generation.classes.gallery"]):
             for index in range(len(urls) if urls else count):
-                with (
-                    ui.column()
-                    .classes(UI_PRESENTATION["image_generation.classes.slot"])
-                    .style(f"aspect-ratio: {width} / {height}")
-                ):
+                with ui.column().classes(
+                    UI_PRESENTATION["image_generation.classes.slot"]
+                ) as slot:
                     if urls:
-                        render_image_thumbnail(
-                            urls[index],
-                            app_text(
-                                "chat.chat_view.attached_image_value_1",
-                                value_1=index + 1,
-                            ),
-                            gallery=gallery,
-                        )
-                        if images_in_context is False and self.on_attach_image:
-                            ui.button(
-                                icon=UI_PRESENTATION["image_generation.attach_icon"],
-                                on_click=partial(self.on_attach_image, urls[index]),
-                            ).props(
-                                UI_PRESENTATION["image_generation.attach_props"]
-                            ).classes(
-                                UI_PRESENTATION["image_generation.attach_classes"]
-                            ).tooltip(ui_text("chat.chat_view.attach_generated_image"))
+                        self._render_generated_image(urls[index], index, gallery)
                     else:
+                        slot.style(f"aspect-ratio: {width} / {height}")
                         ui.element("div").classes(
                             UI_PRESENTATION["image_generation.classes.loading"]
                             if generating
@@ -1735,6 +1707,21 @@ class ChatViewComponent:
                             ui.label(
                                 app_text("chat.chat_view.image_unavailable")
                             ).classes(UI_PRESENTATION["image_generation.classes.label"])
+
+    def _render_generated_image(self, url: str, index: int, gallery: list[str]) -> None:
+        render_image_thumbnail(
+            url,
+            app_text("chat.chat_view.attached_image_value_1", value_1=index + 1),
+            gallery=gallery,
+        )
+        if self.on_attach_image:
+            label = ui_text("chat.chat_view.attach_generated_image")
+            ui.button(
+                icon=UI_PRESENTATION["image_generation.attach_icon"],
+                on_click=partial(self.on_attach_image, url),
+            ).props(UI_PRESENTATION["image_generation.attach_props"]).props(
+                f'aria-label="{label}"'
+            ).classes(UI_PRESENTATION["image_generation.attach_classes"]).tooltip(label)
 
     def _render_turn_activity(self, message: ChatMessage) -> None:
         """Render the model's timeline identically during streaming and after reload."""

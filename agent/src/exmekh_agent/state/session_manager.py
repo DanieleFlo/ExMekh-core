@@ -18,6 +18,7 @@ from exmekh_agent.exmekh_bridge.models import (
     ChatSettings,
     Project,
     ProjectSettings,
+    QueuedMessage,
 )
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.agent_design import AgentDesign, AgentProfile
@@ -322,16 +323,49 @@ class SessionManager:
     def is_current_session(self, session_id: str) -> bool:
         return self.current_session_id == session_id
 
-    def add_message(self, session: ChatSession, message: ChatMessage) -> bool:
+    def add_message(
+        self, session: ChatSession, message: ChatMessage, *, from_queue: bool = False
+    ) -> bool:
         """Append and persist a message while the session is still managed."""
         if not self.owns_session(session):
             return False
         updated = session.with_message(message)
+        if from_queue:
+            updated = updated.queue_snapshot()
+            if updated.remove_queued_message(message.id) is None:
+                return False
         if not self.save_session(updated):
             return False
         session.add_message(message)
+        if from_queue:
+            session.remove_queued_message(message.id)
         session.updated_at = updated.updated_at
         return True
+
+    def enqueue_message(self, session: ChatSession, message: ChatMessage) -> bool:
+        if not self.owns_session(session):
+            return False
+        queued = QueuedMessage.from_user_message(message)
+        updated = session.queue_snapshot()
+        updated.enqueue_message(queued)
+        if not self.save_session(updated):
+            return False
+        session.enqueue_message(queued)
+        session.updated_at = updated.updated_at
+        return True
+
+    def take_queued_message(
+        self, session: ChatSession, message_id: str
+    ) -> QueuedMessage | None:
+        if not self.owns_session(session):
+            return None
+        updated = session.queue_snapshot()
+        removed = updated.remove_queued_message(message_id)
+        if removed is None or not self.save_session(updated):
+            return None
+        session.remove_queued_message(message_id)
+        session.updated_at = updated.updated_at
+        return removed
 
     def find_user_message(
         self, session: ChatSession, message_id: str

@@ -8,79 +8,40 @@
     if (window.__exmekhFileDropInit) return;
     window.__exmekhFileDropInit = true;
 
-    let dragCounter = 0;
-
     function hasFiles(e) {
-        if (!e.dataTransfer || !e.dataTransfer.types) return false;
-        for (let i = 0; i < e.dataTransfer.types.length; i++) {
-            if (e.dataTransfer.types[i] === 'Files') return true;
-        }
-        return false;
+        return e.dataTransfer?.types.includes('Files');
     }
-
-    // Prevent default browser behavior on window drop (prevents browser from navigating to/opening files)
-    window.addEventListener('dragover', (e) => {
-        if (hasFiles(e)) {
-            e.preventDefault();
-        }
-    });
-
-    window.addEventListener('drop', (e) => {
-        if (hasFiles(e)) {
-            e.preventDefault();
-        }
-    });
 
     function getDropZone() {
         return document.querySelector('.exmekh-chat-input-box');
     }
 
-    function getOverlay() {
-        return document.querySelector('.exmekh-drop-overlay');
+    function setDropActive(active) {
+        const dropZone = getDropZone();
+        dropZone?.classList.toggle('exmekh-input-box-dragover', active);
+        dropZone?.querySelector('.exmekh-drop-overlay')?.classList.toggle('exmekh-active', active);
     }
 
-    document.addEventListener('dragenter', (e) => {
+    function isChatDropTarget(target) {
+        return target instanceof Element && Boolean(
+            target.closest('.chat-composer, .chat-scroll-container')
+        );
+    }
+
+    function updateFileDrag(e) {
         if (!hasFiles(e)) return;
-        const dropZone = getDropZone();
-        const overlay = getOverlay();
-        if (!dropZone || !overlay) return;
+        e.preventDefault();
+        const active = isChatDropTarget(e.target);
+        e.dataTransfer.dropEffect = active ? 'copy' : 'none';
+        setDropActive(active);
+    }
 
-        if (dropZone.contains(e.target) || overlay.contains(e.target)) {
-            dragCounter++;
-            overlay.classList.add('exmekh-active');
-            dropZone.classList.add('exmekh-input-box-dragover');
-        }
-    });
+    window.addEventListener('dragenter', updateFileDrag);
+    window.addEventListener('dragover', updateFileDrag);
 
-    document.addEventListener('dragover', (e) => {
-        if (!hasFiles(e)) return;
-        const dropZone = getDropZone();
-        const overlay = getOverlay();
-        if (!dropZone || !overlay) return;
-
-        if (dropZone.contains(e.target) || overlay.contains(e.target)) {
-            e.preventDefault();
-            if (e.dataTransfer) {
-                e.dataTransfer.dropEffect = 'copy';
-            }
-            overlay.classList.add('exmekh-active');
-            dropZone.classList.add('exmekh-input-box-dragover');
-        }
-    });
-
-    document.addEventListener('dragleave', (e) => {
-        if (!hasFiles(e)) return;
-        const dropZone = getDropZone();
-        const overlay = getOverlay();
-        if (!dropZone || !overlay) return;
-
-        if (dropZone.contains(e.target) || overlay.contains(e.target)) {
-            dragCounter--;
-            if (dragCounter <= 0) {
-                dragCounter = 0;
-                overlay.classList.remove('exmekh-active');
-                dropZone.classList.remove('exmekh-input-box-dragover');
-            }
+    window.addEventListener('dragleave', (e) => {
+        if (hasFiles(e) && !isChatDropTarget(e.relatedTarget)) {
+            setDropActive(false);
         }
     });
 
@@ -115,23 +76,13 @@
         }
     };
 
-    document.addEventListener('drop', async (e) => {
+    window.addEventListener('drop', async (e) => {
         if (!hasFiles(e)) return;
-        const dropZone = getDropZone();
-        const overlay = getOverlay();
-        if (!dropZone || !overlay) return;
-
-        if (dropZone.contains(e.target) || overlay.contains(e.target)) {
-            e.preventDefault();
-            e.stopPropagation();
-            dragCounter = 0;
-            overlay.classList.remove('exmekh-active');
-            dropZone.classList.remove('exmekh-input-box-dragover');
-
-            const files = e.dataTransfer.files;
-            if (!files || files.length === 0) return;
-
-            await window.__exmekhUploadFiles(files);
+        // Keep file drops from navigating away even outside the composer.
+        e.preventDefault();
+        setDropActive(false);
+        if (isChatDropTarget(e.target)) {
+            await window.__exmekhUploadFiles(e.dataTransfer.files);
         }
     });
 })();

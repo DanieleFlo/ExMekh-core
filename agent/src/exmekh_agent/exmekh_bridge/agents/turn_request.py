@@ -60,6 +60,7 @@ class AgentTurnRequest:
     steering: TurnSteering | None = None
     on_steering_added: Callable[[], None] | None = None
     image_urls: list[str] | None = None
+    image_routes: dict[str, bool] | None = None
     agent_profile: str = AGENT_DEFAULTS["default_profile"]
     agent_design: AgentDesign | None = None
     capabilities_paths: list[str] | None = None

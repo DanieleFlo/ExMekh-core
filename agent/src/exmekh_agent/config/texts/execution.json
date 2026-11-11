@@ -8,6 +8,7 @@
   "history.execution_interrupted": "[Execution interrupted]",
   "pasted_input.file_reference": "<{tag} path=\"{path}\">\nThis file was attached from user input.\nPath: {path}\n</{tag}>",
   "pasted_input.inline_attachment": "Attachment: {filename}\n{content}",
+  "pasted_input.image_edit_request": "The user selected image references for editing. Call generate-image with the requested edit as its prompt and set images to an empty array []. The app supplies the selected files automatically. Never generate URLs, paths, file IDs, or image data for these attachments. If the user has not specified an edit, ask what they would like to change.",
   "pasted_input.pdf_notice_prefix": "PDF ",
   "pasted_input.pdf_notice_marker": "are attached as images",
   "pasted_input.pdf_page_notice": "\n\n{prefix}{filename}: pages 1–{sent_pages} of {total_pages} {marker} in page order.",

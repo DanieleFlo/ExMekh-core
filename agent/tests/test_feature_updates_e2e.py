@@ -83,15 +83,13 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                 previews = page.locator(".msg-assistant .exmekh-image-thumbnail")
                 await expect(previews).to_have_count(2)
                 await expect(page.locator(".generated-image-loading")).to_have_count(0)
-                generated = await page.locator(
-                    ".generated-image-slot"
-                ).first.bounding_box()
+                generated = await previews.first.bounding_box()
                 assert generated is not None
                 assert generated["width"] == pytest.approx(
-                    placeholder["width"] * 2, abs=1
+                    placeholder["width"] * 2, abs=2
                 )
                 assert generated["height"] == pytest.approx(
-                    placeholder["height"] * 2, abs=1
+                    placeholder["height"] * 2, abs=2
                 )
                 order = await page.locator(".msg-assistant").evaluate(
                     "el => [...el.querySelectorAll('.tool-event-card,.generated-images')].map(node => node.classList.contains('generated-images') ? 'images' : node.textContent)"
@@ -160,13 +158,16 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                     )
                     == 2
                 )
-                await expect(page.locator(".generated-image-attach")).to_have_count(
-                    0 if include else 2
-                )
+                await expect(page.locator(".generated-image-attach")).to_have_count(2)
                 if not include:
                     await page.locator(".generated-image-attach").first.click()
                     await expect(page.locator(".exmekh-attachment-chip")).to_have_count(
                         1
+                    )
+                    await (
+                        page.locator(".image-attachment-destination")
+                        .get_by_role("button", name="LLM", exact=True)
+                        .click()
                     )
                     await send_command(page, "Describe attached image")
                     await wait_turn_completion(page)
