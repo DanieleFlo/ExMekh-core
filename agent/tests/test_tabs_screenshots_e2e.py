@@ -244,8 +244,7 @@ async def test_global_and_project_settings_with_delete_confirmation(
         await page.goto(agent_tabs_server, wait_until="networkidle")
 
         await page.locator("button:has(.q-icon:text-is('tune'))").click()
-        await page.get_by_text("LOCAL PROVIDER").wait_for(state="visible")
-        assert await page.locator(".header-provider").is_visible()
+        await page.get_by_role("link", name="Connection", exact=True).wait_for()
         assert not await page.get_by_text(
             "ExMekh-Lib HIERARCHICAL CAPABILITIES"
         ).is_visible()
@@ -257,9 +256,7 @@ async def test_global_and_project_settings_with_delete_confirmation(
                 / "global_settings.png"
             )
         )
-        await page.locator(
-            ".q-drawer--right button:has(.q-icon:text-is('close'))"
-        ).click()
+        await page.get_by_role("link", name="Back to chat").click()
 
         card = (
             page.locator(".sidebar-item")

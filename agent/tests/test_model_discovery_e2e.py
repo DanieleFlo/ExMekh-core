@@ -34,19 +34,10 @@ async def test_loaded_qwen_model_context_and_requests_follow_server_restarts(
             await expect(label).to_have_text("qwen3.8-flash-next", timeout=15000)
             await expect(tokens).to_have_text(re.compile(r"/16\.4k$"))
             await page.locator('.lm-header button:has(i:text-is("tune"))').click()
-            model_display = page.locator(".global-settings-drawer .header-model")
-            await expect(model_display.locator("input")).to_have_value(
-                "qwen3.8-flash-next"
-            )
-            await expect(model_display.locator("input")).to_have_attribute(
-                "readonly", ""
-            )
             await expect(
-                model_display.locator(".q-select__dropdown-icon")
-            ).to_have_count(0)
-            await page.locator(
-                '.global-settings-drawer button:has(i:text-is("close"))'
-            ).click()
+                page.get_by_text("qwen3.8-flash-next", exact=True)
+            ).to_be_visible()
+            await page.get_by_role("link", name="Back to chat").click()
             # Keep the same page and chat open. The regular health timer must
             # refresh both model identity and actual allocation, without reload.
             cases = [
@@ -61,7 +52,6 @@ async def test_loaded_qwen_model_context_and_requests_follow_server_restarts(
                 )
                 assert response.ok
                 await expect(label).to_have_text(model, timeout=20000)
-                await expect(model_display.locator("input")).to_have_value(model)
                 await expect(tokens).to_have_text(
                     re.compile(r"/" + re.escape(compact) + r"$"), timeout=20000
                 )

@@ -118,7 +118,7 @@ async def audit(url: str, output: Path, viewport: dict[str, int]) -> list[dict]:
             )
             reports = []
             await page.locator('.lm-header button:has(i:text-is("tune"))').click()
-            settings = page.locator(".global-settings-drawer")
+            settings = page.locator(".system-settings")
             await expect(settings).to_be_visible()
             reports.append(await capture(page, output, "settings", settings))
             for index, path in enumerate(paths, start=1):

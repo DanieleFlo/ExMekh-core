@@ -198,27 +198,25 @@ async def test_global_threshold_validation_and_save(compaction_server):
             page = await browser.new_page()
             await page.goto(compaction_server, wait_until="networkidle")
             await page.locator("button:has(i:has-text('tune'))").first.click()
-            threshold = page.get_by_label(
-                "Automatic context compaction (%)", exact=True
-            )
+            await page.get_by_role("link", name="Conversations", exact=True).click()
+            threshold = page.get_by_label("Automatic compaction (%)", exact=True)
             await expect(threshold).to_have_value("80")
             await threshold.fill("100")
             await page.get_by_role(
-                "button", name="Save global settings", exact=True
+                "button", name="Save preferences", exact=True
             ).click()
             assert (await state(compaction_server))["threshold"] == 80
             await threshold.fill("65")
             await page.get_by_role(
-                "button", name="Save global settings", exact=True
+                "button", name="Save preferences", exact=True
             ).click()
             await expect(
-                page.get_by_text("Global settings saved", exact=True)
+                page.get_by_text("Preferences saved.", exact=True)
             ).to_be_visible()
             assert (await state(compaction_server))["threshold"] == 65
             await page.reload(wait_until="networkidle")
-            await page.locator("button:has(i:has-text('tune'))").first.click()
             await expect(
-                page.get_by_label("Automatic context compaction (%)", exact=True)
+                page.get_by_label("Automatic compaction (%)", exact=True)
             ).to_have_value("65")
         finally:
             await browser.close()

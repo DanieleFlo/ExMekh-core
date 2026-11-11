@@ -106,13 +106,17 @@ async def test_assistant_tool_image_preview_is_visible_and_persistent():
                         "node => getComputedStyle(node).borderColor"
                     )
                 ]
-                await attachment.get_by_role("button", name="Image model").click()
+                image_route = attachment.get_by_role("button", name="Image model")
+                await image_route.click()
+                await expect(image_route).to_have_attribute("aria-pressed", "true")
                 border_colors.append(
                     await attachment.evaluate(
                         "node => getComputedStyle(node).borderColor"
                     )
                 )
-                await attachment.get_by_role("button", name="Both", exact=True).click()
+                both_route = attachment.get_by_role("button", name="Both", exact=True)
+                await both_route.click()
+                await expect(both_route).to_have_attribute("aria-pressed", "true")
                 border_colors.append(
                     await attachment.evaluate(
                         "node => getComputedStyle(node).borderColor"
@@ -174,9 +178,9 @@ async def test_assistant_tool_image_preview_is_visible_and_persistent():
                     )
                     == border_colors[1]
                 )
-                await generated_edit.get_by_role(
-                    "button", name="LLM", exact=True
-                ).click()
+                llm_route = generated_edit.get_by_role("button", name="LLM", exact=True)
+                await llm_route.click()
+                await expect(llm_route).to_have_attribute("aria-pressed", "true")
                 assert (
                     await generated_edit.evaluate(
                         "node => getComputedStyle(node).borderColor"

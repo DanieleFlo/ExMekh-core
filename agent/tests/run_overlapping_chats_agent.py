@@ -30,7 +30,6 @@ from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.chat import context_updates
 from exmekh_agent.ui.chat.page_controller import ChatPageController
-from exmekh_agent.ui.settings import settings_drawer
 from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.mock_client import MockProvider
 
@@ -134,14 +133,9 @@ async def gated_navigation(controller, event):
     handle_navigation(controller, event)
 
 
-async def health(*args, **kwargs):
-    return True, ["overlap-probe"]
-
-
 agent_runner.LocalProvider = lambda *args, **kwargs: OverlapProvider()
 ChatPageController._handle_chat_navigation = gated_navigation
 agent_runner.generate_chat_title_sync = lambda prompt, *args: prompt
-settings_drawer.check_provider_health = health
 context_updates.compute_session_context_usage = count_context
 config.default_model = "overlap-probe"
 config.reasoning_effort = "none"

@@ -22,7 +22,6 @@ from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.navigation.header import HeaderComponent
 from exmekh_agent.ui.navigation.sidebar import SidebarComponent
-from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.file_workflow_profile import GreedyFileProvider, file_workflow_design
 from tests.live_file_support import verify_file_effects
@@ -78,13 +77,11 @@ def test_live_web_ui_components_init() -> None:
         on_session_switched=lambda _: None,
         on_new_chat=lambda: None,
     )
-    settings_drawer = SettingsDrawerComponent(on_settings_saved=lambda: None)
     chat_view = ChatViewComponent(on_suggested_prompt=lambda _: None)
     input_bar = InputBarComponent(on_send=lambda _: None, on_stop=lambda: None)
 
     assert header is not None
     assert sidebar is not None
-    assert settings_drawer is not None
     assert chat_view is not None
     assert input_bar is not None
     safe_print(

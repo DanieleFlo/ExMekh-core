@@ -5,10 +5,14 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 from threading import Lock
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
 from exmekh_agent.state.json_store import JsonRecordStore
+
+if TYPE_CHECKING:
+    from exmekh_agent.exmekh_bridge.history.pasted_input import StagedAttachment
 
 
 class InputDraft(BaseModel):
@@ -23,6 +27,16 @@ class InputDraftStore:
         self._saved = dict(self._drafts)
         self._write_lock = Lock()
         self._deleted: set[str] = set()
+        self._attachments: dict[str, list[StagedAttachment]] = {}
+
+    def stash_attachments(
+        self, session_id: str, attachments: list[StagedAttachment]
+    ) -> None:
+        if session_id not in self._deleted and attachments:
+            self._attachments[session_id] = list(attachments)
+
+    def take_attachments(self, session_id: str) -> list[StagedAttachment]:
+        return self._attachments.pop(session_id, [])
 
     def text(self, session_id: str) -> str:
         draft = self._drafts.get(session_id)
@@ -40,6 +54,7 @@ class InputDraftStore:
 
     def delete(self, session_id: str) -> None:
         self._deleted.add(session_id)
+        self._attachments.pop(session_id, None)
         self._drafts.pop(session_id, None)
         self._save_latest(session_id)
 

@@ -7,6 +7,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from copy import copy
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from exmekh_agent.config import config
 from exmekh_agent.config.catalogs import message as app_text
@@ -25,6 +26,9 @@ from exmekh_agent.state.agent_design import AgentDesign, AgentProfile
 from exmekh_agent.state.input_drafts import InputDraftStore
 from exmekh_agent.state.json_store import JsonRecordStore
 from exmekh_agent.state.temp_storage import TempStorage
+
+if TYPE_CHECKING:
+    from exmekh_agent.exmekh_bridge.history.pasted_input import StagedAttachment
 
 logger = logging.getLogger(__name__)
 CODE_WORK_ROOT = APPLICATION_ROOT
@@ -418,6 +422,15 @@ class SessionManager:
         return (
             self._input_drafts.text(session_id) if session_id in self.sessions else ""
         )
+
+    def stash_draft_attachments(
+        self, session_id: str, attachments: list[StagedAttachment]
+    ) -> None:
+        if session_id in self.sessions:
+            self._input_drafts.stash_attachments(session_id, attachments)
+
+    def take_draft_attachments(self, session_id: str) -> list[StagedAttachment]:
+        return self._input_drafts.take_attachments(session_id)
 
     async def save_draft_text(self, session_id: str, text: str) -> bool:
         """Persist an owned chat's draft through a single operation."""

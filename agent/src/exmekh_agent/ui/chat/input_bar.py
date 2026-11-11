@@ -67,6 +67,8 @@ class InputBarComponent:
         on_steer_queued: Callable[[str], None] | None = None,
         draft_text_getter: Callable[[str], str] | None = None,
         on_draft_changed: Callable[[str, str], None] | None = None,
+        can_send: Callable[[list[StagedAttachment]], bool] | None = None,
+        take_staged_draft: Callable[[str], list[StagedAttachment]] | None = None,
     ) -> None:
         self.on_send = on_send
         self.on_send_with_attachments = on_send_with_attachments
@@ -80,6 +82,8 @@ class InputBarComponent:
         self.on_steer_queued = on_steer_queued
         self.draft_text_getter = draft_text_getter
         self.on_draft_changed = on_draft_changed
+        self.can_send = can_send
+        self.take_staged_draft = take_staged_draft
 
         self.root_container: ui.column | None = None
         self.queue_container: ui.column | None = None
@@ -1081,6 +1085,14 @@ class InputBarComponent:
                 attachments=list(self.staged_attachments),
             )
 
+    def staged_drafts(self) -> dict[str, list[StagedAttachment]]:
+        self._remember_current_draft()
+        return {
+            session_id: list(draft.attachments)
+            for session_id, draft in self._drafts.items()
+            if draft.attachments
+        }
+
     def _draft_for_session(self, session_id: str) -> _InputDraft:
         draft = self._drafts.get(session_id)
         if draft is None:
@@ -1092,6 +1104,8 @@ class InputBarComponent:
                 else [],
             )
             self._drafts[session_id] = draft
+            if self.take_staged_draft:
+                draft.attachments.extend(self.take_staged_draft(session_id))
         if self.draft_text_getter:
             draft.text = self.draft_text_getter(session_id)
         return draft
@@ -1288,6 +1302,8 @@ class InputBarComponent:
         text = (self.textarea.value or "").strip()
         attachments = list(self.staged_attachments)
         if not text and not attachments:
+            return
+        if self.can_send and not self.can_send(attachments):
             return
 
         self.textarea.set_value("")

@@ -42,7 +42,6 @@ from exmekh_agent.state.temp_storage import (
 from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.chat.page_controller import ChatPageController
-from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 from exmekh_agent.ui.shared.file_icons import format_file_size, get_file_icon
 from exmekh_agent.ui.shared.file_upload import upload_router
 from tests.image_samples import png_bytes
@@ -1285,58 +1284,6 @@ def test_clean_temp_storage(tmp_path: Path) -> None:
         assert del_lock == 0
         assert freed_lock == 0
     f4.unlink()
-
-
-async def test_settings_drawer_tmp_storage_ui(
-    ui_context: Client, tmp_path: Path
-) -> None:
-    tmp_dir = tmp_path / "tmp"
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    f1 = tmp_dir / "report.pdf"
-    f1.write_bytes(b"%PDF-sample pdf content")
-
-    drawer = SettingsDrawerComponent(
-        on_settings_saved=lambda: None,
-        temp_storage_getter=lambda: TempStorage(tmp_path),
-    )
-    with ui_context:
-        drawer.build()
-        await drawer.refresh_tmp_stats()
-        assert drawer.tmp_path_label is not None
-        assert str(tmp_path / "tmp") in drawer.tmp_path_label.text
-        assert drawer.tmp_badge is not None
-        assert "1 file" in drawer.tmp_badge.text
-        assert drawer.clean_tmp_btn is not None
-        assert drawer.refresh_tmp_btn is not None
-
-        # Refresh stats via handler
-        with patch("nicegui.ui.notify") as mock_notify:
-            await drawer._handle_refresh_tmp()
-            mock_notify.assert_called_once()
-            assert (
-                "Temporary storage statistics refreshed" in mock_notify.call_args[0][0]
-            )
-
-        # Clean files via handler
-        with patch("nicegui.ui.notify") as mock_notify:
-            await drawer._handle_clean_tmp()
-            mock_notify.assert_called_once()
-            assert "Temporary storage cleared" in mock_notify.call_args[0][0]
-            assert "1 file deleted" in mock_notify.call_args[0][0]
-
-        # Stats should be updated now (0 files)
-        assert "0 files (0 B)" in drawer.tmp_badge.text
-        assert not f1.exists()
-
-        # Clean again when empty
-        with patch("nicegui.ui.notify") as mock_notify:
-            await drawer._handle_clean_tmp()
-            mock_notify.assert_called_once()
-            assert "No temporary files to delete" in mock_notify.call_args[0][0]
-
-        # Test toggle and open refresh stats
-        drawer.open()
-        drawer.toggle()
 
 
 async def test_page_controller_temp_storage_alert(

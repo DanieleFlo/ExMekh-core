@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
@@ -21,6 +21,7 @@ from exmekh_agent.exmekh_bridge.agents.agent_runner import (
     generate_chat_title_sync,
 )
 from exmekh_agent.exmekh_bridge.models import ChatTitle
+from exmekh_agent.exmekh_bridge.providers.core_management import Connection
 from exmekh_agent.main import index_page
 from exmekh_agent.state.session_manager import session_manager
 from tests.mock_client import MockProvider
@@ -122,8 +123,10 @@ async def test_handle_send_updates_session_title_structured(
         ) as mock_input_cls,
         patch("exmekh_agent.ui.chat.page_controller.ChatViewComponent") as mock_cv_cls,
         patch(
-            "exmekh_agent.ui.chat.page_controller.SettingsDrawerComponent"
-        ) as mock_sd_cls,
+            "exmekh_agent.main.connect_core",
+            new_callable=AsyncMock,
+            return_value=Connection("manual"),
+        ),
     ):
 
         def capture_sidebar(**kwargs):
@@ -139,10 +142,9 @@ async def test_handle_send_updates_session_title_structured(
         mock_sidebar_cls.side_effect = capture_sidebar
         mock_input_cls.side_effect = capture_input
         mock_cv_cls.return_value = MagicMock()
-        mock_sd_cls.return_value = MagicMock()
 
         with app_client:
-            index_page()
+            await index_page()
 
             # Fake turn success
             async def fake_run_turn(*args, **kwargs):

@@ -54,6 +54,10 @@ omit = [
     "src/exmekh_agent/main.py",
     "src/exmekh_agent/sync.py",
     "src/exmekh_agent/ui/settings/project_settings_dialog.py",
+    # NiceGUI rendering runs in a separate browser-test process.
+    "src/exmekh_agent/ui/settings/core_views.py",
+    "src/exmekh_agent/ui/settings/setup_pages.py",
+    "src/exmekh_agent/ui/settings/system_pages.py",
     "src/exmekh_agent/ui/navigation/new_project_dialog.py",
     "src/exmekh_agent/ui/chat/chat_view.py",
     "src/exmekh_agent/ui/chat/message_editor.py",
@@ -62,7 +66,6 @@ omit = [
     "src/exmekh_agent/ui/shared/markdown_parser.py",
     "src/exmekh_agent/ui/chat/page_controller.py",
     "src/exmekh_agent/ui/history/raw_history_view.py",
-    "src/exmekh_agent/ui/settings/settings_drawer.py",
     "src/exmekh_agent/ui/navigation/sidebar.py",
     "src/exmekh_agent/ui/agents/agent_designer.py",
     "src/exmekh_agent/ui/agents/capability_editor.py",

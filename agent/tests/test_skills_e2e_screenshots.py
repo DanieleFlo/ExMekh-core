@@ -115,7 +115,9 @@ def agent_server(tmp_path_factory: pytest.TempPathFactory):
     file_comp = chats_dir / "test-skills-completed.json"
     file_comp.write_text(comp_session.model_dump_json(indent=2), encoding="utf-8")
 
-    with BrowserTestServer(data_dir) as url:
+    with BrowserTestServer(
+        data_dir, environment={"EXMEKH_AGENT_TEST_BYPASS_CORE_HTTP": "1"}
+    ) as url:
         yield url
 
 

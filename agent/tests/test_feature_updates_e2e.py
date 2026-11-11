@@ -41,6 +41,9 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                     await page.locator(
                         '.lm-header button:has(i:text-is("tune"))'
                     ).click()
+                    await page.get_by_role(
+                        "link", name="Conversations", exact=True
+                    ).click()
                     toggle = page.get_by_role(
                         "switch", name="Send generated images to the agent"
                     )
@@ -48,16 +51,17 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                     await toggle.click()
                     await expect(toggle).not_to_be_checked()
                     await page.get_by_role(
-                        "button", name="Save global settings", exact=True
+                        "button", name="Save preferences", exact=True
                     ).click()
                     await expect(
-                        page.get_by_text("Global settings saved", exact=True)
+                        page.get_by_text("Preferences saved.", exact=True)
                     ).to_be_visible()
                     saved = await (
                         await page.request.get(url + "/test/media-state")
                     ).json()
                     assert saved["include_generated_images"] is False
                     assert saved["saved_image_preference"]
+                    await page.get_by_role("link", name="Back to chat").click()
                 await send_command(
                     page,
                     "Generate two images"

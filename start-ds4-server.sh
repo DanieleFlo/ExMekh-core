@@ -2,6 +2,25 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+# A bare launch exposes Core before any model is present. Explicit model
+# arguments, qualification environments and --print-command retain manual use.
+start_managed() {
+    if [[ -f "$SCRIPT_DIR/config/native-suite.env" ]]; then
+        set -a
+        source "$SCRIPT_DIR/config/native-suite.env"
+        set +a
+    fi
+    exec python3 "$SCRIPT_DIR/tools/managed_server.py" "$@"
+}
+if [[ "${1:-}" == --managed ]]; then
+    shift
+    start_managed "$@"
+fi
+if [[ "${1:-}" == --manual ]]; then
+    shift
+elif [[ $# -eq 0 && -z "${DS4_MODEL_PROFILE:-}${DS4_MODEL:-}${DS4_SUITE_CONFIG:-}${DS4_CTX:-}${DS4_SSD_STREAMING:-}${DS4_VISION_MODEL:-}" ]]; then
+    start_managed
+fi
 SERVER_PORT="${DS4_SERVER_PORT:-8080}"
 profile="${DS4_MODEL_PROFILE:-qwen27}"
 backend="${DS4_BACKEND:-auto}"

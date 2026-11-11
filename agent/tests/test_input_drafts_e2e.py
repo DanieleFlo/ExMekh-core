@@ -115,6 +115,7 @@ async def test_unsent_text_survives_closed_windows_and_application_restart(tmp_p
                 await expect(textarea).to_have_value("")
                 await page.locator(".sidebar-item").filter(has_text=quick.title).click()
                 await expect(textarea).to_have_value(quick_text)
+                await page.locator(".chat-navigation-overlay").wait_for(state="hidden")
                 await textarea.press("Enter")
                 await wait_turn_completion(page)
                 await expect(textarea).to_have_value("")

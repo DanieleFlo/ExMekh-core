@@ -10,6 +10,7 @@ from nicegui.page import page
 
 from exmekh_agent.exmekh_bridge.models import ChatMessage, SkillNode, ToolEvent
 from exmekh_agent.exmekh_bridge.providers.context_usage import ContextUsageSummary
+from exmekh_agent.exmekh_bridge.providers.core_management import Connection, CoreStatus
 from exmekh_agent.main import index_page, main, run
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.chat.page_controller import ChatPageController
@@ -50,12 +51,19 @@ async def test_index_page_lifecycle_and_callbacks(app_client: Client) -> None:
             on_skill_event(node, "opened")
             return "Final output text"
 
-        with patch(
-            "exmekh_agent.ui.chat.page_controller.run_agent_turn",
-            side_effect=fake_run_agent,
+        with (
+            patch(
+                "exmekh_agent.ui.chat.page_controller.run_agent_turn",
+                side_effect=fake_run_agent,
+            ),
+            patch(
+                "exmekh_agent.main.connect_core",
+                new_callable=AsyncMock,
+                return_value=Connection("manual"),
+            ),
         ):
             # 1. Build index page
-            index_page()
+            await index_page()
 
             # Retrieve created components from client descendants or context
             curr = session_manager.get_current_session()
@@ -80,8 +88,10 @@ async def test_index_page_full_flow(app_client: Client) -> None:
         ) as mock_input_cls,
         patch("exmekh_agent.ui.chat.page_controller.ChatViewComponent") as mock_cv_cls,
         patch(
-            "exmekh_agent.ui.chat.page_controller.SettingsDrawerComponent"
-        ) as mock_sd_cls,
+            "exmekh_agent.main.connect_core",
+            new_callable=AsyncMock,
+            return_value=Connection("manual"),
+        ),
     ):
 
         def capture_hdr(**kwargs):
@@ -109,10 +119,9 @@ async def test_index_page_full_flow(app_client: Client) -> None:
         mock_sidebar_cls.side_effect = capture_sidebar
         mock_input_cls.side_effect = capture_input
         mock_cv_cls.side_effect = capture_chat
-        mock_sd_cls.return_value = MagicMock()
 
         with app_client:
-            index_page()
+            await index_page()
 
             # 1. Toggle settings
             handlers["toggle_settings"]()
@@ -230,14 +239,24 @@ def test_main_and_run_entrypoints() -> None:
 
 
 @pytest.mark.asyncio
-async def test_page_controller_awaits_model_refresh(app_client: Client) -> None:
-    controller = ChatPageController(app_client)
-    controller.settings_drawer = MagicMock()
-    controller.settings_drawer.refresh_models = AsyncMock()
-
-    await controller.refresh_models()
-
-    controller.settings_drawer.refresh_models.assert_awaited_once_with()
+async def test_index_routes_an_empty_core_to_setup(app_client: Client) -> None:
+    status = CoreStatus(
+        version=1, boot_id="first", revision=0, state="empty", chat_ready=False
+    )
+    with (
+        app_client,
+        patch(
+            "exmekh_agent.main.connect_core",
+            new_callable=AsyncMock,
+            return_value=Connection("managed", status),
+        ) as probe,
+        patch("exmekh_agent.main.ui.navigate.to") as navigate,
+        patch("exmekh_agent.main.ChatPageController") as chat,
+    ):
+        await index_page()
+    probe.assert_awaited_once_with()
+    navigate.assert_called_once_with("/setup/model")
+    chat.assert_not_called()
 
 
 @pytest.mark.asyncio

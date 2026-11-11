@@ -182,62 +182,48 @@ See [Qwen3.8 compatibility and artifact hashes](docs/architecture/qwen38-compati
 
 ## Getting started
 
-The steps below target the audited **Qwen3.8-27B / CUDA `sm_86`** development profile. Other backends or operating systems require their own build and validation procedures.
-
 ### Requirements
 
-- A compatible Linux or WSL2 environment, NVIDIA drivers, CUDA development tools, and sufficient system RAM and disk space for model artifacts.
-- A supported native C/CUDA build toolchain.
+- Linux or WSL2 with a supported CUDA toolchain, or macOS with the Metal build tools.
+- Python 3.11 or newer for Core's management service, and sufficient disk space for the selected model artifacts.
 - **Python 3.13** and [`uv`](https://docs.astral.sh/uv/) for ExMekh Agent.
-- The selected, verified model files; these are downloaded separately from the source repository.
 
-### 1. Build and download the language model
+### 1. Start Core
 
 ```bash
 git clone https://github.com/DanieleFlo/ExMekh-core.git
 cd ExMekh-core
-
-# Pinned 27B GGUF and matching MTP sidecar.
-./download_model.sh qwen38-q4-mtp
-
-# CUDA target used for the RTX 3090 validation.
-make cuda CUDA_ARCH=sm_86
-```
-
-The downloader verifies pinned artifacts as documented in the [model compatibility audit](docs/architecture/qwen38-compatibility.md).
-
-### 2. Start the LLM-only server
-
-In the first terminal:
-
-```bash
 ./start-ds4-server.sh
 ```
 
-The default `qwen27` profile serves the model on **`http://127.0.0.1:8080/v1`**. This launcher supports additional configuration through environment variables; it does **not** enable the native image/embedding suite unless configured for that purpose.
+Core listens on **`http://127.0.0.1:8080/v1`** before it needs model weights or a native build. The first launch waits for a model selection. Later launches restore the last successful profile from `~/.ds4/managed`. Use `--managed` to supply explicit options such as `--backend`, `--port`, `--state-dir` and `--model-dir`.
 
-### 3. Start ExMekh Agent
+### 2. Start Agent and configure a model
 
 In another terminal:
 
 ```bash
-cp agent/.env.example agent/.env
 ./agent/run.sh
 ```
 
-Open **http://127.0.0.1:8000**. The example environment uses the Responses API and points to the local DS4 server. The launcher installs/runs the pinned frontend environment through `uv`.
+Open **http://127.0.0.1:8000**. Choose a chat model, a memory mode supported by Core, and a context size. Core downloads or verifies the files in `gguf/`, builds the worker when required, and reports progress. The chat opens after the native worker is ready. Use **System settings → Server → Reconfigure startup** to change the profile later.
 
-For image inputs to Qwen3.8-27B, download its **matching** vision encoder:
+Core's current managed catalog covers Qwen3.8-27B and Flash Next Q2. It offers bounded Metal SSD streaming and Qwen27 resident GPU profiles where supported. The context ceilings shown by Agent are estimates within the audited launch envelopes. Native admission checks the current resources at load time.
+
+For a remote Core, forward port 8080 over SSH and point Agent at the forwarded loopback endpoint. Set `DS4_MANAGE_TOKEN` on Core if local management also requires a bearer token, then enter it under **Connection** in Agent. Model sources that require Hugging Face access use `HF_TOKEN` from the Core environment.
+
+### 3. Optional features and manual serving
+
+In managed mode, Agent offers the matching Qwen27 vision encoder as an optional download. Native image generation and embeddings require a qualified CUDA SM 8.6 suite installation with the native dependencies available at build time. Embeddings also require the prepared processor asset via `DS4_GEMMA_MEDIA_ASSET`. The suite uses pinned artifacts and only advertises operations that the native server reports as ready. See the [native suite setup guide](docs/architecture/native-suite-release.md).
+
+For the manual Qwen27 CUDA profile, use:
 
 ```bash
-./download_model.sh qwen38-27b-vision
+./download_model.sh qwen38-q4-mtp
+CUDA_ARCH=sm_86 ./start-ds4-server.sh --manual
 ```
 
-The root launcher automatically selects it when the expected file exists. See [vision and checkpoint qualification](docs/architecture/qwen27-vision-checkpoint-20261001.md).
-
-### 4. Add native image generation and embeddings (optional)
-
-This is an **additional build and model-preparation step**. Prepare the pinned Qwen-Image-2.1-Turbo and EmbeddingGemma-2 bundles, tokenizer/processor assets, native libraries, and suite configuration as described in the [native suite setup and release guide](docs/architecture/native-suite-release.md).
+The manual launcher selects the matching Qwen27 encoder after `./download_model.sh qwen38-27b-vision`. To use a manually prepared native suite:
 
 ```bash
 cp config/native-suite.env.example config/native-suite.env

@@ -16,13 +16,31 @@ from exmekh_agent.exmekh_bridge.capabilities.agent_design import validate_agent_
 from exmekh_agent.exmekh_bridge.capabilities.capability_repository import (
     CapabilityRepository,
 )
+from exmekh_agent.exmekh_bridge.history.pasted_input import StagedAttachment
 from exmekh_agent.exmekh_bridge.models import ProjectSettings
 from exmekh_agent.state.agent_design import AgentDesign, DesignLink, DesignNode
+from exmekh_agent.state.input_drafts import InputDraftStore
 from exmekh_agent.state.session_manager import SessionManager
 from exmekh_agent.ui.agents.agent_designer import AgentDesigner
 from exmekh_agent.ui.agents.capability_editor import CapabilityEditor
-from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 from exmekh_agent.ui.shared.disclosure import Disclosure
+
+
+def test_staged_drafts_are_transferred_once_and_follow_session_lifetime(tmp_path):
+    attachment = StagedAttachment("one", "", "", 0)
+    sessions = SessionManager(tmp_path / "chats")
+    session_id = sessions.get_current_session().id
+    sessions.stash_draft_attachments("missing", [attachment])
+    sessions.stash_draft_attachments(session_id, [])
+    assert sessions.take_draft_attachments("missing") == []
+    assert sessions.take_draft_attachments(session_id) == []
+    sessions.stash_draft_attachments(session_id, [attachment])
+    assert sessions.for_view().take_draft_attachments(session_id) == [attachment]
+    assert sessions.take_draft_attachments(session_id) == []
+    store = InputDraftStore(tmp_path / "drafts")
+    store.delete(session_id)
+    store.stash_attachments(session_id, [attachment])
+    assert store.take_attachments(session_id) == []
 
 
 @pytest.fixture
@@ -286,24 +304,3 @@ async def test_async_project_save_preserves_late_approvals_and_concurrent_deleti
         assert restored.get_session(chat.id).settings.approved_commands_history == [
             "git status"
         ]
-
-
-async def test_provider_refresh_ignores_deleted_clients(client):
-    refreshed = []
-    drawer = SettingsDrawerComponent(
-        lambda: None, on_models_refreshed=lambda: refreshed.append(True)
-    )
-
-    async def health(*_):
-        client.delete()
-        return True, ["new-model"]
-
-    with (
-        client,
-        patch(
-            "exmekh_agent.ui.settings.settings_drawer.check_provider_health",
-            side_effect=health,
-        ),
-    ):
-        await drawer.refresh_models()
-    assert refreshed == []

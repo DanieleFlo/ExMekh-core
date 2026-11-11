@@ -7,44 +7,9 @@ from threading import Event, get_ident
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from nicegui.client import Client
-from nicegui.page import page
 
 from exmekh_agent.config import AppConfig, config
 from exmekh_agent.exmekh_bridge.providers.provider_health import check_provider_health
-from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
-
-
-@pytest.fixture
-def settings_view():
-    client = Client(page("/settings-lifecycle"))
-    callback = AsyncMock()
-    drawer = SettingsDrawerComponent(callback)
-    for name, value in {
-        "input_base_url": "http://example.test/v1",
-        "input_api_key": "test-key",
-        "select_api_type": "responses",
-        "select_reasoning": "low",
-        "model_display": "test-model",
-    }.items():
-        setattr(drawer, name, MagicMock(value=value))
-    drawer.save_button = MagicMock()
-    drawer.close = MagicMock()
-    drawer.refresh_btn = MagicMock()
-    drawer.status_spinner = MagicMock()
-    drawer.status_badge = MagicMock()
-    with client:
-        try:
-            yield client, drawer, callback
-        finally:
-            if not client.is_deleted:
-                client.delete()
-
-
-async def in_client(client, operation):
-    """Enter the event's client explicitly, including tasks created by the test."""
-    with client:
-        return await operation()
 
 
 async def test_async_settings_apply_on_caller_and_persist_an_independent_snapshot(
@@ -88,130 +53,6 @@ async def test_async_settings_apply_on_caller_and_persist_an_independent_snapsho
     assert saved[0][1:] == (9079, "test-model")
 
 
-async def test_failed_save_keeps_dialog_open_and_allows_retry(settings_view):
-    client, drawer, callback = settings_view
-    with (
-        patch.object(
-            config, "update_async", AsyncMock(side_effect=[False, True])
-        ) as save,
-        patch("exmekh_agent.ui.settings.settings_drawer.ui.notify") as notify,
-    ):
-        await in_client(client, drawer._save_settings)
-        assert notify.call_args.kwargs["type"] == "negative"
-        drawer.close.assert_not_called()
-        assert not drawer._saving
-        await in_client(client, drawer._save_settings)
-        assert notify.call_args.kwargs["type"] == "positive"
-    assert save.await_count == 2
-    assert callback.await_count == 2
-    drawer.close.assert_called_once()
-    drawer.save_button.set_enabled.assert_called_with(True)
-
-
-@pytest.mark.parametrize("phase", ["persistence", "callback"])
-async def test_duplicate_save_and_client_deletion_do_not_update_dead_ui(
-    settings_view,
-    phase,
-):
-    client, drawer, callback = settings_view
-    started = asyncio.Event()
-    release = asyncio.Event()
-
-    async def pending(**kwargs):
-        started.set()
-        await release.wait()
-        return True
-
-    save = AsyncMock(
-        side_effect=pending if phase == "persistence" else None, return_value=True
-    )
-    if phase == "callback":
-        callback.side_effect = pending
-    with (
-        patch.object(config, "update_async", save),
-        patch("exmekh_agent.ui.settings.settings_drawer.ui.notify") as notify,
-    ):
-        task = asyncio.create_task(in_client(client, drawer._save_settings))
-        try:
-            await asyncio.wait_for(started.wait(), timeout=2)
-            await in_client(client, drawer._save_settings)
-            assert save.await_count == 1
-            client.delete()
-        finally:
-            release.set()
-            await task
-        notify.assert_not_called()
-    drawer.close.assert_not_called()
-    assert not drawer._saving
-    # Only the initial disabling happened; no controls are touched after deletion.
-    drawer.save_button.set_enabled.assert_called_once_with(False)
-    assert callback.await_count == (0 if phase == "persistence" else 1)
-
-
-@pytest.mark.parametrize("outcome", ["changed_endpoint", "deleted_client", "error"])
-async def test_model_refresh_is_exclusive_and_ignores_stale_results(
-    settings_view,
-    monkeypatch,
-    outcome,
-):
-    client, drawer, _ = settings_view
-    drawer.on_models_refreshed = MagicMock()
-    started = asyncio.Event()
-    release = asyncio.Event()
-
-    async def health(*args):
-        started.set()
-        await release.wait()
-        if outcome == "error":
-            raise RuntimeError("probe failed")
-        return True, ["stale-model"]
-
-    with patch(
-        "exmekh_agent.ui.settings.settings_drawer.check_provider_health",
-        AsyncMock(side_effect=health),
-    ) as probe:
-        task = asyncio.create_task(in_client(client, drawer.refresh_models))
-        try:
-            await asyncio.wait_for(started.wait(), timeout=2)
-            await in_client(client, drawer.refresh_models)
-            assert probe.await_count == 1
-            if outcome == "changed_endpoint":
-                monkeypatch.setattr(config, "base_url", "http://new.test/v1")
-            elif outcome == "deleted_client":
-                client.delete()
-        finally:
-            release.set()
-            if outcome == "error":
-                with pytest.raises(RuntimeError, match="probe failed"):
-                    await task
-            else:
-                await task
-    assert not drawer._refreshing_models
-    drawer.on_models_refreshed.assert_not_called()
-    assert drawer.status_badge.text != "Online (1 models)"
-    if not client.is_deleted:
-        drawer.refresh_btn.props.assert_any_call(remove="loading")
-        drawer.status_spinner.set_visibility.assert_called_with(False)
-    else:
-        drawer.status_spinner.set_visibility.assert_called_once_with(True)
-
-
-async def test_storage_cleanup_rechecks_client_after_stats_refresh(settings_view):
-    client, drawer, _ = settings_view
-    storage = MagicMock()
-    storage.clean.return_value = (1, 100)
-    drawer.temp_storage_getter = lambda: storage
-
-    async def close_during_refresh():
-        client.delete()
-
-    drawer.refresh_tmp_stats = AsyncMock(side_effect=close_during_refresh)
-    with patch("exmekh_agent.ui.settings.settings_drawer.ui.notify") as notify:
-        await in_client(client, drawer._handle_clean_tmp)
-        notify.assert_not_called()
-    storage.clean.assert_called_once()
-
-
 async def test_provider_probe_respects_an_explicit_empty_api_key(monkeypatch):
     monkeypatch.setattr(config, "api_key", "configured-key")
     response = MagicMock(status_code=200)
@@ -219,6 +60,101 @@ async def test_provider_probe_respects_an_explicit_empty_api_key(monkeypatch):
     with patch("httpx.AsyncClient.get", AsyncMock(return_value=response)) as request:
         assert await check_provider_health("http://example.test/v1", "") == (True, [])
     assert request.call_args.kwargs["headers"] == {}
+
+
+async def test_legacy_discovery_keeps_valid_models_after_bad_metadata(monkeypatch):
+    monkeypatch.setattr(config, "model_owners", {})
+    response = MagicMock(status_code=200)
+    response.json.return_value = {
+        "data": [
+            {"id": "malformed", "ds4": {"operations": None}},
+            {"id": "chat-model"},
+        ]
+    }
+    with patch("httpx.AsyncClient.get", AsyncMock(return_value=response)):
+        assert await check_provider_health("http://legacy.test/v1", "") == (
+            True,
+            ["chat-model"],
+        )
+
+
+def test_selecting_same_model_on_new_endpoint_uses_new_capacity():
+    configuration = AppConfig(base_url="http://first.test/v1", default_model="shared")
+    configuration.set_model_context_length("shared", 8192)
+    configuration.set_model_context_length(
+        "shared", 32768, base_url="http://second.test/v1"
+    )
+    configuration.base_url = "http://second.test/v1"
+    configuration.select_available_model(["shared"])
+    assert configuration.get_context_length() == 32768
+
+
+async def test_concurrent_settings_saves_keep_the_newest_snapshot(monkeypatch):
+    configuration = AppConfig()
+    loop = asyncio.get_running_loop()
+    started = asyncio.Event()
+    release = Event()
+    saves = []
+
+    def persist(snapshot, env_path=None):
+        saves.append((snapshot.base_url, snapshot.reasoning_effort))
+        if len(saves) == 1:
+            loop.call_soon_threadsafe(started.set)
+            assert release.wait(timeout=5)
+        return True
+
+    monkeypatch.setattr(AppConfig, "save_to_env", persist)
+    first = asyncio.create_task(
+        configuration.update_async(base_url="http://first.test/v1")
+    )
+    second = None
+    try:
+        await asyncio.wait_for(started.wait(), timeout=2)
+        second = asyncio.create_task(configuration.update_async(reasoning_effort="low"))
+        await asyncio.sleep(0)
+        assert len(saves) == 1
+    finally:
+        release.set()
+        await first
+        if second:
+            await second
+    assert saves[-1] == ("http://first.test/v1", "low")
+
+
+async def test_cancelled_settings_save_holds_lock_until_write_finishes(monkeypatch):
+    configuration = AppConfig()
+    loop = asyncio.get_running_loop()
+    started = asyncio.Event()
+    release = Event()
+    saves = []
+
+    def persist(snapshot, env_path=None):
+        saves.append(snapshot.reasoning_effort)
+        if len(saves) == 1:
+            loop.call_soon_threadsafe(started.set)
+            assert release.wait(timeout=5)
+        return True
+
+    monkeypatch.setattr(AppConfig, "save_to_env", persist)
+    first = asyncio.create_task(configuration.update_async(reasoning_effort="low"))
+    await asyncio.wait_for(started.wait(), timeout=2)
+    first.cancel()
+    second = asyncio.create_task(configuration.update_async(reasoning_effort="medium"))
+    try:
+        await asyncio.sleep(0)
+        assert saves == ["low"]
+    finally:
+        release.set()
+    with pytest.raises(asyncio.CancelledError):
+        await first
+    assert await second
+    assert saves == ["low", "medium"]
+
+
+def test_discovery_preserves_capacity_when_provider_omits_context():
+    configuration = AppConfig(default_model="chat", context_length=4096)
+    configuration.select_available_model(["chat"])
+    assert configuration.get_context_length() == 4096
 
 
 async def test_old_provider_response_does_not_replace_current_context_capacity(
@@ -277,15 +213,3 @@ async def test_explicit_provider_probe_caches_capacity_for_the_probed_endpoint(
     assert config.get_server_context_length("shared", "http://other.test/v1") == 32768
     config.set_model_context_length("invalid", True)
     assert config.get_server_context_length("invalid", config.base_url) is None
-
-
-async def test_saving_settings_does_not_replace_runtime_model_with_stale_display(
-    settings_view, monkeypatch
-):
-    client, drawer, callback = settings_view
-    monkeypatch.setattr(config, "default_model", "currently-loaded-model")
-    drawer.model_display.value = "previously-loaded-model"
-    with patch.object(config, "update_async", AsyncMock(return_value=True)) as update:
-        await in_client(client, drawer._save_settings)
-    assert "default_model" not in update.call_args.kwargs
-    assert config.default_model == "currently-loaded-model"

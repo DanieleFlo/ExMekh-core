@@ -11,7 +11,6 @@ from exmekh_agent.state.session_manager import SessionManager
 from exmekh_agent.ui.chat.chat_view import ChatViewComponent
 from exmekh_agent.ui.chat.input_bar import InputBarComponent
 from exmekh_agent.ui.navigation.header import HeaderComponent
-from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 
 
 def test_config_defaults() -> None:
@@ -104,6 +103,3 @@ def test_ui_components_loading_attributes() -> None:
 
     ib = InputBarComponent(on_send=lambda _: None, on_stop=lambda: None)
     assert hasattr(ib, "set_busy")
-
-    sd = SettingsDrawerComponent(on_settings_saved=lambda: None)
-    assert hasattr(sd, "save_button")

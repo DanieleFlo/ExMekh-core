@@ -11,7 +11,7 @@ from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents import agent_runner
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui.settings import capability_paths_editor, settings_drawer
+from exmekh_agent.ui.settings import capability_paths_editor
 
 calls: list[dict[str, Any]] = []
 folder_selection: str | None = None
@@ -58,10 +58,6 @@ def execute_turn(**kwargs: Any) -> str:
     return text
 
 
-async def health(*args: Any, **kwargs: Any) -> tuple[bool, list[str]]:
-    return True, ["project-test-model"]
-
-
 @app.get("/test/state")
 def state() -> dict[str, Any]:
     return {
@@ -82,7 +78,6 @@ def state() -> dict[str, Any]:
 
 agent_runner.execute_agent_turn_sync = execute_turn
 agent_runner.generate_chat_title_sync = lambda text, **kwargs: f"Chat: {text[:30]}"
-settings_drawer.check_provider_health = health
 
 if __name__ == "__main__":
     main()

@@ -45,6 +45,7 @@ from exmekh_agent.exmekh_bridge.providers.context_usage import (
     ContextUsageSummary,
     populate_skill_closure_tokens,
 )
+from exmekh_agent.exmekh_bridge.providers.core_management import ActiveProfile
 from exmekh_agent.exmekh_bridge.tools.tool_approval import ApprovalModeChanged
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager, session_manager
@@ -59,10 +60,10 @@ from exmekh_agent.ui.navigation.header import HeaderComponent
 from exmekh_agent.ui.navigation.new_project_dialog import NewProjectDialogComponent
 from exmekh_agent.ui.navigation.sidebar import SidebarComponent
 from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
+from exmekh_agent.ui.settings.core_navigation import route
 from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
 )
-from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 from exmekh_agent.ui.styles import apply_theme_command
 from exmekh_agent.utils.formatting import format_file_size
 
@@ -108,7 +109,9 @@ class ChatPageController:
         self._context_updates = ContextUsageUpdater(client, self._apply_context_usage)
         self.header: HeaderComponent | None = None
         self.sidebar: SidebarComponent | None = None
-        self.settings_drawer: SettingsDrawerComponent | None = None
+        self._core_profile: ActiveProfile | None = None
+        self._core_paused = False
+        self._provider_model = (config.default_model, config.get_context_length())
         self.project_settings_dialog: ProjectSettingsDialogComponent | None = None
         self.new_project_dialog: NewProjectDialogComponent | None = None
         self.chat_view: ChatViewComponent | None = None
@@ -137,12 +140,6 @@ class ChatPageController:
             on_project_settings=self.open_project_settings,
         )
         self.sidebar.build()
-        self.settings_drawer = SettingsDrawerComponent(
-            on_settings_saved=self.refresh_models,
-            on_models_refreshed=self.update_context_usage,
-            temp_storage_getter=self._get_temp_storage,
-        )
-        self.settings_drawer.build()
         self.project_settings_dialog = ProjectSettingsDialogComponent(
             on_saved=self.update_context_usage
         )
@@ -185,6 +182,8 @@ class ChatPageController:
                 on_approval_mode_changed=self.approval_mode_changed,
                 draft_text_getter=self.sessions.draft_text,
                 on_draft_changed=self._input_draft_changed,
+                can_send=self._can_send,
+                take_staged_draft=self.sessions.take_draft_attachments,
             )
             self.input_bar.build()
             session = self.sessions.get_current_session()
@@ -400,20 +399,34 @@ class ChatPageController:
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.discard)
 
-    async def refresh_models(self) -> None:
-        if self.settings_drawer:
-            await self.settings_drawer.refresh_models()
-        self.update_context_usage()
-
     def toggle_settings(self) -> None:
         if self.project_settings_dialog:
             self.project_settings_dialog.close()
-        if self.settings_drawer:
-            self.settings_drawer.toggle()
+        self._stash_input()
+        destination = ChatRoutes(self.sessions).path_for(
+            self.sessions.get_current_session()
+        )
+        ui.navigate.to(route("/settings/server", destination))
+
+    def _stash_input(self) -> None:
+        if self.input_bar:
+            for session_id, attachments in self.input_bar.staged_drafts().items():
+                self.sessions.stash_draft_attachments(session_id, attachments)
+
+    def follow_core(self, profile: ActiveProfile | None) -> None:
+        model = (config.default_model, config.get_context_length())
+        if profile != self._core_profile or model != self._provider_model:
+            self._core_profile = profile
+            self._provider_model = model
+            if self.input_bar:
+                self.update_context_usage()
+
+    def suspend_for_core(self, destination: str) -> None:
+        self._core_paused = True
+        self._stash_input()
+        ui.navigate.to(destination)
 
     def open_project_settings(self, project_id: str) -> None:
-        if self.settings_drawer:
-            self.settings_drawer.close()
         if self.project_settings_dialog:
             self.project_settings_dialog.open(project_id)
 
@@ -679,6 +692,47 @@ class ChatPageController:
             )
         return True
 
+    def _can_send(self, attachments: list[StagedAttachment]) -> bool:
+        if self._core_paused:
+            ui.notify(
+                ui_text("system_settings.core_is_preparing_the_chat_model"),
+                type="warning",
+            )
+            return False
+        if self._core_profile is None:
+            return True
+        features = self._core_profile.available_features
+        for attachment in attachments:
+            if (
+                attachment.pdf_pages
+                and attachment.vision_urls
+                and "vision" not in features
+            ):
+                ui.notify(
+                    ui_text("system_settings.enable_vision_for_pdf_pages"),
+                    type="warning",
+                )
+                return False
+            if attachment.is_raster_image:
+                destination = attachment.image_destination
+                if destination in ("llm", "both") and "vision" not in features:
+                    ui.notify(
+                        ui_text(
+                            "system_settings.enable_vision_in_system_settings_to_send_images_to_the_chat_model"
+                        ),
+                        type="warning",
+                    )
+                    return False
+                if destination in ("image", "both") and "images" not in features:
+                    ui.notify(
+                        ui_text(
+                            "system_settings.enable_image_generation_in_system_settings_to_use_an_image_reference"
+                        ),
+                        type="warning",
+                    )
+                    return False
+        return True
+
     def start_send(
         self,
         user_text: str,
@@ -750,7 +804,7 @@ class ChatPageController:
         title_text: str,
         from_queue: bool = False,
     ) -> None:
-        if not self.sessions.owns_session(session):
+        if self._core_paused or not self.sessions.owns_session(session):
             return
         with self._client:
             if active_turns.is_running(session.id):

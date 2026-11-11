@@ -3,14 +3,13 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from nicegui import ui
 from nicegui.client import Client
 from nicegui.page import page
 
-from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     create_staged_attachment_from_file,
@@ -43,7 +42,6 @@ from exmekh_agent.ui.navigation.sidebar import SidebarComponent
 from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
 )
-from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
 from tests.image_samples import png_bytes
 
 
@@ -214,41 +212,6 @@ async def test_header_component(ui_context: Client) -> None:
 # =============================================================================
 # SETTINGS DRAWER TESTS
 # =============================================================================
-
-
-@pytest.mark.asyncio
-async def test_settings_drawer_component(ui_context: Client) -> None:
-    saved = False
-
-    async def on_saved():
-        nonlocal saved
-        saved = True
-
-    with ui_context:
-        drawer = SettingsDrawerComponent(on_settings_saved=on_saved)
-        drawer.build()
-
-        assert drawer.select_reasoning is not None
-        assert drawer.select_reasoning.value == "xhigh"
-        assert drawer.select_reasoning.options == ["none", "low", "medium", "xhigh"]
-
-        with patch(
-            "exmekh_agent.ui.settings.settings_drawer.check_provider_health",
-            new_callable=AsyncMock,
-        ) as mock_health:
-            mock_health.return_value = (True, ["alpha-model", "beta-model"])
-            await drawer.refresh_models()
-            assert drawer.status_badge.text == "Online (2 models)"
-            assert drawer.model_display.value == config.default_model
-            assert drawer.model_display.value in ["alpha-model", "beta-model"]
-
-        # Test toggle
-        drawer.toggle()
-
-        # Test save settings
-        with patch("exmekh_agent.config.AppConfig.save_to_env"):
-            await drawer._save_settings()
-        assert saved is True
 
 
 async def test_project_settings_update_all_chats_and_keep_local_approvals(

@@ -24130,6 +24130,26 @@ static server_config parse_options(int argc, char **argv) {
 }
 
 #ifndef DS4_SERVER_TEST
+/* Core's supervisor passes a private Unix listener and a lifetime channel.
+ * Manual invocations retain the ordinary TCP listener. */
+static int managed_descriptor(const char *name) {
+    const char *value = getenv(name);
+    if (!value || !*value) return -1;
+    char *end;
+    errno = 0;
+    long fd = strtol(value, &end, 10);
+    if (errno || *end || fd < 3 || fd > INT_MAX ||
+        fcntl((int)fd, F_GETFD) == -1) return -2;
+    return (int)fd;
+}
+
+static bool managed_phase(int fd, const char *phase) {
+    if (fd < 0) return true;
+    size_t length = strlen(phase);
+    ssize_t result;
+    do { result = write(fd, phase, length); } while (result < 0 && errno == EINTR);
+    return result >= 0 && (size_t)result == length;
+}
 static void server_request_worker_stop(server *s) {
     pthread_mutex_lock(&s->mu);
     s->stopping = true;
@@ -24155,6 +24175,11 @@ int main(int argc, char **argv) {
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
 
+    int managed_listener = managed_descriptor("DS4_MANAGED_LISTENER_FD");
+    int managed_control = managed_descriptor("DS4_MANAGED_CONTROL_FD");
+    if (managed_listener < -1 || managed_control < -1 ||
+        ((managed_listener < 0) != (managed_control < 0)) ||
+        (managed_listener >= 0 && managed_listener == managed_control)) return 2;
     server_config cfg = parse_options(argc, argv);
     if (server_constraint_mode_from_env() == SERVER_CONSTRAINT_INVALID) {
         fprintf(stderr,
@@ -24174,6 +24199,7 @@ int main(int argc, char **argv) {
         cfg.batched_sessions > 0 ? cfg.batched_sessions : 1;
     cfg.engine.share_session_prefill_workspace = cfg.batched_sessions > 0;
     ds4_engine *engine = NULL;
+    if (!managed_phase(managed_control, "opening_model\n")) return 1;
     if (cfg.gpu_vram_arg || cfg.gpu_devices_arg) {
         ds4_gpu_config gpu_cfg = {0};
         bool skip_cuda = false;
@@ -24205,6 +24231,10 @@ int main(int argc, char **argv) {
     }
     server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_LOADED_MODEL_S,
                ds4_engine_model_name(engine));
+    if (!managed_phase(managed_control, "initializing_runtime\n")) {
+        ds4_engine_close(engine);
+        return 1;
+    }
 
     char *automatic_kv_dir = NULL;
     const ds4_model_descriptor *loaded_model =
@@ -24428,7 +24458,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    int lfd = listen_on(cfg.host, cfg.port);
+    int lfd = managed_listener >= 0 ? managed_listener : listen_on(cfg.host, cfg.port);
     if (lfd < 0) {
         server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_FAILED_TO_LISTEN_ON_S_D_S, cfg.host, cfg.port, strerror(errno));
         server_request_worker_stop(&s);
@@ -24445,7 +24475,11 @@ int main(int argc, char **argv) {
         return 1;
     }
     g_listen_fd = lfd;
-    server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_LISTENING_ON_HTTP_S_D, cfg.host, cfg.port);
+    if (managed_control >= 0) {
+        if (!managed_phase(managed_control, "ready\n")) g_stop_requested = 1;
+    } else {
+        server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_LISTENING_ON_HTTP_S_D, cfg.host, cfg.port);
+    }
 
     time_t interactive_maintenance = 0;
     while (!g_stop_requested) {
@@ -24456,13 +24490,18 @@ int main(int argc, char **argv) {
             pthread_mutex_unlock(&s.tool_mu);
             interactive_maintenance = now;
         }
-        struct pollfd incoming = {.fd = lfd, .events = POLLIN};
-        int ready = poll(&incoming, 1, 1000);
+        struct pollfd incoming[] = {
+            {.fd = lfd, .events = POLLIN},
+            {.fd = managed_control, .events = POLLIN},
+        };
+        int ready = poll(incoming, 2, 1000);
         if (ready <= 0) {
             if (ready < 0 && errno != EINTR && !g_stop_requested)
                 server_log(DS4_LOG_DEFAULT, DS4_SERVER_TEXT_LISTEN_POLL_FAILED_S, strerror(errno));
             continue;
         }
+        if (incoming[1].revents) break;
+        if (!(incoming[0].revents & POLLIN)) continue;
         int fd = accept(lfd, NULL, NULL);
         if (fd < 0) {
             if (g_stop_requested) break;

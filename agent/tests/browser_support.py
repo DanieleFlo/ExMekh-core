@@ -32,6 +32,13 @@ from pathlib import Path
 from exmekh_agent.config import config
 
 config.data_dir = Path(os.environ["EXMEKH_AGENT_TEST_DATA_DIR"])
+if os.environ.get("EXMEKH_AGENT_TEST_BYPASS_CORE_HTTP") == "1":
+    from exmekh_agent.exmekh_bridge.providers import core_management
+
+    async def mock_core_connection():
+        return core_management.Connection("manual")
+
+    core_management.connect_core = mock_core_connection
 if os.environ.get("EXMEKH_AGENT_TEST_SCRIPT"):
     runpy.run_path(os.environ["EXMEKH_AGENT_TEST_SCRIPT"], run_name="__main__")
 else:
@@ -93,6 +100,15 @@ class BrowserTestServer:
         )
         if self._script is not None:
             environment["EXMEKH_AGENT_TEST_SCRIPT"] = str(self._script)
+        if self._script is not None or (
+            self._module.startswith("tests.")
+            and self._module
+            not in {
+                "tests.run_model_discovery_agent",
+                "tests.run_compaction_agent",
+            }
+        ):
+            environment.setdefault("EXMEKH_AGENT_TEST_BYPASS_CORE_HTTP", "1")
         try:
             with log_path.open("w", encoding="utf-8") as log:
                 self._process = subprocess.Popen(

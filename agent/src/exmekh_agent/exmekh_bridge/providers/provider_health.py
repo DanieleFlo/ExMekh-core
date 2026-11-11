@@ -63,7 +63,8 @@ async def check_provider_health(
                         continue
                     capabilities = m.get("ds4")
                     if isinstance(capabilities, dict) and "operations" in capabilities:
-                        if "chat" not in capabilities["operations"]:
+                        operations = capabilities["operations"]
+                        if not isinstance(operations, list) or "chat" not in operations:
                             continue
                     m_id = m.get("id")
                     if isinstance(m_id, str) and m_id:

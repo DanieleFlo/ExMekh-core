@@ -26,6 +26,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AppConfig:
+    _persistence_lock: asyncio.Lock = field(
+        default_factory=asyncio.Lock, init=False, repr=False, compare=False
+    )
     # Server / LLM Provider settings
     base_url: str = field(
         default_factory=lambda: os.getenv(
@@ -213,6 +216,11 @@ class AppConfig:
             return
         if self.default_model not in models:
             self.default_model = models[0]
+        known_context = self.get_server_context_length(
+            self.default_model, self.base_url
+        )
+        if known_context is not None:
+            self.set_model_context_length(self.default_model, known_context)
         self.context_length = self.get_context_length()
 
     def _apply_updates(self, values: dict[str, object]) -> None:
@@ -220,7 +228,7 @@ class AppConfig:
             "auto_compaction_threshold_percent", self.auto_compaction_threshold_percent
         )
         self._validate_compaction_threshold(threshold)
-        allowed_fields = {item.name for item in fields(self)}
+        allowed_fields = {item.name for item in fields(self) if item.init}
         for name, value in values.items():
             if name in allowed_fields:
                 setattr(self, name, value)
@@ -234,11 +242,18 @@ class AppConfig:
 
     async def update_async(self, **kwargs: object) -> bool:
         """Apply settings on the caller loop; write an independent snapshot in a worker."""
-        self._apply_updates(kwargs)
-        snapshot = replace(self)
-        return await asyncio.get_running_loop().run_in_executor(
-            None, snapshot.save_to_env
-        )
+        async with self._persistence_lock:
+            self._apply_updates(kwargs)
+            snapshot = replace(self)
+            write = asyncio.get_running_loop().run_in_executor(
+                None, snapshot.save_to_env
+            )
+            try:
+                return await asyncio.shield(write)
+            except asyncio.CancelledError:
+                # A cancelled page must not let the next save race the active write.
+                await write
+                raise
 
 
 config = AppConfig()

@@ -26,7 +26,6 @@ from exmekh_agent.exmekh_bridge.history.converter import exmekh_message_to_raw_d
 from exmekh_agent.exmekh_bridge.history.image_input import content_text
 from exmekh_agent.main import main
 from exmekh_agent.state.session_manager import session_manager
-from exmekh_agent.ui.settings import settings_drawer
 from tests.capability_fixtures import TEST_CAPABILITIES
 from tests.mock_client import MockClient, MockProvider
 
@@ -123,14 +122,6 @@ config.default_model = "edit-test-model"
 config.reasoning_effort = "none"
 config.capabilities_path = str(TEST_CAPABILITIES)
 config.work_root = str(config.data_dir / "work")
-
-
-async def health(*args: Any, **kwargs: Any) -> tuple[bool, list[str]]:
-    return True, [config.default_model]
-
-
-settings_drawer.check_provider_health = health
-agent_runner.check_provider_health = health
 
 
 @app.get("/test/state")

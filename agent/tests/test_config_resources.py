@@ -34,7 +34,10 @@ def test_configuration_resources_are_independent_and_work_outside_repo(
     controls = presentation_settings("controls/agent_designer")
     controls.clear()
     assert presentation_settings("controls/agent_designer")
-    assert message("settings.settings_drawer.online", count=3) == "Online (3 models)"
+    assert (
+        message("settings.capability_paths.browse_failed", error="denied")
+        == "Unable to browse folders: denied"
+    )
     assert message("shared.output_format.empty") == "Empty output"
 
 
@@ -166,7 +169,7 @@ def test_resource_readers_cache_without_mutating_files_and_report_missing_resour
     with pytest.raises(KeyError):
         message("shared.absent")
     with pytest.raises(KeyError):
-        message("settings.settings_drawer.online", incorrect=1)
+        message("settings.capability_paths.browse_failed", incorrect=1)
 
 
 def test_control_configuration_references_and_template_parameters_match():
