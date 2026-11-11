@@ -323,8 +323,7 @@ class RawHistoryComponent:
         self.render_session(session)
         if streaming:
             self.start_live_turn()
-            self.stream_token(content)
-            self.stream_reasoning(reasoning)
+            self._set_live_output(content, reasoning)
 
     def update_context_snapshot(
         self, session: ChatSession, message: ChatMessage
@@ -811,6 +810,9 @@ class RawHistoryComponent:
         if not self.container or not self.content_container:
             return
 
+        if session is not None:
+            self.render_session(session)
+
         self.is_streaming = True
         self.live_response_text = ""
         self.live_reasoning_text = ""
@@ -819,21 +821,8 @@ class RawHistoryComponent:
         self.live_skill_nodes.clear()
         self._last_token_render_time = 0.0
 
-        if session:
-            self.current_session = session
-            # Ensure past messages up to current user prompt are rendered
-            if not self.raw_json_data or (
-                session.messages and len(self.raw_json_data) < len(session.messages)
-            ):
-                self.render_session(session)
-
-        # Remove previous live container if present
-        if self.live_container:
-            try:
-                self.live_container.delete()
-            except Exception:
-                pass
-            self.live_container = None
+        if self.live_container and not self.live_container.is_deleted:
+            self.live_container.delete()
 
         self.live_turn_index = len(self.raw_json_data) + 1
 
@@ -1019,6 +1008,16 @@ class RawHistoryComponent:
 
         self.live_response_text += token
         self._throttled_update_live_json()
+
+    def restore_live_output(self, message: ChatMessage) -> None:
+        """Replace live output with the latest snapshot when following an active turn."""
+        if self.is_streaming:
+            self._set_live_output(message.content, message.reasoning_content)
+
+    def _set_live_output(self, content: str, reasoning: str) -> None:
+        self.live_response_text = content
+        self.live_reasoning_text = reasoning
+        self._throttled_update_live_json(force=True)
 
     def _throttled_update_live_json(self, force: bool = False) -> None:
         """Throttles DOM updates to ~80ms to avoid DOM thrashing / UI freezing while streaming."""

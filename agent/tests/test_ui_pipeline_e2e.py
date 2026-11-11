@@ -350,9 +350,10 @@ async def test_stop_while_awaiting_approval_stops_inference_and_persists_in_chat
             await expect(page.locator(".generation-stopped")).to_be_visible()
             await send_command(page, "Continue with a new turn")
             await wait_turn_completion(page)
+            reply = "Reply after declining the command"
             await expect(
-                page.get_by_text("Reply after declining the command", exact=True)
-            ).to_be_visible()
+                page.locator(".msg-assistant:visible p").filter(has_text=reply)
+            ).to_have_text(reply)
             stats = await page.request.get(
                 f"{agent_approval_mock_server}/test/approval-stats"
             )

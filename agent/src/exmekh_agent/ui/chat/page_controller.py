@@ -52,7 +52,7 @@ from exmekh_agent.ui.navigation.chat_routes import ChatRoutes
 from exmekh_agent.ui.navigation.header import HeaderComponent
 from exmekh_agent.ui.navigation.new_project_dialog import NewProjectDialogComponent
 from exmekh_agent.ui.navigation.sidebar import SidebarComponent
-from exmekh_agent.ui.resources import presentation_config, ui_text
+from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
 )
@@ -185,18 +185,14 @@ class ChatPageController:
             self.input_bar.set_session_id(session.id)
             self.input_bar.set_approval_mode(session.settings.tool_approval_mode)
             self.input_bar.set_agent_mode(session.agent_mode)
-            with (
-                ui.element("div")
-                .classes(UI_PRESENTATION["build.classes.navigation_overlay"])
-                .props(UI_PRESENTATION["build.props.navigation_status"])
-            ):
-                with ui.element("div").classes(
-                    UI_PRESENTATION["build.classes.navigation_status"]
-                ):
-                    ui.element("span").classes(
-                        UI_PRESENTATION["build.classes.navigation_spinner"]
-                    ).props(UI_PRESENTATION["build.props.navigation_spinner"])
-                    ui.label(ui_text("chat.page_controller.loading_conversation"))
+            ui.html(
+                render_html(
+                    "shared/chat_loading.html",
+                    label=ui_text("chat.page_controller.loading_conversation"),
+                )
+            ).classes(UI_PRESENTATION["build.classes.navigation_overlay"]).props(
+                UI_PRESENTATION["build.props.navigation_overlay"]
+            )
         self._render_queue_ui()
         self._sync_chat_url(replace=True)
         self.update_context_usage()

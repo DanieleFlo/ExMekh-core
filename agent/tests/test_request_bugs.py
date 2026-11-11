@@ -282,10 +282,14 @@ def test_background_stream_keeps_its_history_while_another_chat_is_visible(tmp_p
                 view.update_stream_history(snapshot)
                 update.assert_called_once_with(first, snapshot)
 
+            assert view.other_chat_container.visible
             view.finalize_session_stream(other.id)
             assert view.is_streaming_session(first.id)
             view.finalize_session_stream(first.id)
             assert not view.has_active_stream()
+            assert sessions.is_current_session(other.id)
+            assert view.chat_container.visible
+            assert not view.other_chat_container.visible
     finally:
         client.delete()
 

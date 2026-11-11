@@ -74,7 +74,9 @@ async def test_quick_and_project_chats_switch_while_project_waits_for_provider(
                 )
                 assert (await page.request.post(url + "/test/navigation/false")).ok
                 await quick.click()
-                await expect(loader).to_have_css("opacity", "1")
+                await expect(page.locator(".chat-navigation-overlay")).to_have_css(
+                    "opacity", "1"
+                )
                 assert await loader.evaluate(PROBE) == {"checked": 1, "findings": []}
                 await expect(page).to_have_url(project_url)
                 await expect(quick).to_be_enabled()
@@ -99,6 +101,11 @@ async def test_quick_and_project_chats_switch_while_project_waits_for_provider(
                 await expect(counter).to_have_text(project_count)
                 await quick.click()
                 await expect(stream).to_contain_text("Quick reply continued.")
+                await page.get_by_role("tab", name="Raw History").click()
+                await expect(
+                    page.locator(".live-assistant-card:visible")
+                ).to_contain_text("Quick reply continued.")
+                await page.get_by_role("tab", name="Chat", exact=True).click()
                 await expect(counter).to_have_text(positive_count)
                 await expect(counter).not_to_have_text(quick_count)
                 await project.click()
@@ -234,7 +241,9 @@ async def test_mobile_chat_navigation_reveals_the_loader_behind_the_sidebar(tmp_
                 loader = page.get_by_role("status").filter(
                     has_text="Loading conversation"
                 )
-                await expect(loader).to_have_css("opacity", "1")
+                await expect(page.locator(".chat-navigation-overlay")).to_have_css(
+                    "opacity", "1"
+                )
                 await page.wait_for_function(
                     "document.querySelector('.lm-sidebar').getBoundingClientRect().right <= 0",
                     timeout=5000,

@@ -11,7 +11,6 @@
 .global-settings-drawer { max-width: min(360px, 94vw); }
 @media (max-width: 900px) {
     .sidebar-close-button { display: flex; align-self: flex-end; }
-    .chat-page-layout { height: calc(100dvh - 64px); }
     .chat-scroll-container { padding: 16px 12px; }
     .raw-history-container, .graph-view-container { padding: 12px 8px; }
     .chat-composer { width: calc(100% - 20px); margin-bottom: max(8px, env(safe-area-inset-bottom)); }
@@ -19,7 +18,7 @@
     .skill-compact-header { flex-wrap: wrap; gap: 4px; }
 }
 @media (max-width: 520px) {
-    .lm-header { height: 64px !important; min-height: 64px; flex-wrap: nowrap; }
+    .lm-header { height: var(--app-header-height) !important; flex-wrap: nowrap; }
     .lm-header > .nicegui-row { min-width: 0; gap: 8px; }
     .chat-subtabs-toolbar { padding: 0 8px; flex-wrap: wrap; gap: 0; }
     .sub-tabs-bar { flex: 1 1 100%; width: 100%; }

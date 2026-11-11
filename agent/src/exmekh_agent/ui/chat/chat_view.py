@@ -402,16 +402,15 @@ class ChatViewComponent:
         self.switch_tab(str(tab_val))
 
     def switch_tab(self, tab: str) -> None:
+        if tab == self.active_tab:
+            return
         self.active_tab = tab
         self._set_chat_visibility()
         if self.raw_history_container:
             self.raw_history_container.set_visibility(tab == "raw_history")
-            if tab == "raw_history":
-                self._render_selected_raw_history()
         if self.graph_container:
             self.graph_container.set_visibility(tab == "graph")
-            if tab == "graph":
-                self._render_selected_graph()
+        self._render_active_secondary_tab()
         if self.tabs_ref and self.tabs_ref.value != tab:
             self.tabs_ref.value = tab
 
@@ -429,6 +428,16 @@ class ChatViewComponent:
         )
 
     def render_current_session(self) -> None:
+        self._render_chat_session()
+        self._render_active_secondary_tab()
+
+    def _render_active_secondary_tab(self) -> None:
+        if self.active_tab == "raw_history":
+            self._render_selected_raw_history()
+        elif self.active_tab == "graph":
+            self._render_selected_graph()
+
+    def _render_chat_session(self) -> None:
         session = self.sessions.get_current_session()
         if self.agent_settings_button:
             self.agent_settings_button.set_visibility(
@@ -438,11 +447,6 @@ class ChatViewComponent:
         populate_skill_closure_tokens(session, sub_agent=child)
         if self.path_label:
             self.path_label.text = f"{child.path} #{child.order}" if child else ""
-
-        if self.raw_history_container:
-            self._render_selected_raw_history()
-        if self.graph_container:
-            self._render_selected_graph()
 
         if not self.chat_container:
             return
@@ -504,7 +508,8 @@ class ChatViewComponent:
         )
 
     def _render_selected_raw_history(self) -> None:
-        scope = self._display_scope(self.sessions.get_current_session())
+        session = self.sessions.get_current_session()
+        scope = self._display_scope(session)
         if self.root_raw_element:
             self.root_raw_element.set_visibility(scope == "root")
         if self.child_raw_element:
@@ -514,11 +519,9 @@ class ChatViewComponent:
         if scope == "child":
             self.child_raw_history_view.render_session(self._raw_display_session())
         elif scope == "other":
-            self.other_raw_history_view.render_session(
-                self.sessions.get_current_session()
-            )
-        elif not self.raw_history_view.is_streaming:
-            self.raw_history_view.render_session(self.sessions.get_current_session())
+            self.other_raw_history_view.render_session(session)
+        elif not self.is_streaming_session(session.id):
+            self.raw_history_view.render_session(session)
 
     def is_streaming_session(self, session_id: str) -> bool:
         return (
@@ -530,11 +533,11 @@ class ChatViewComponent:
         return self.current_stream_card is not None
 
     def finalize_session_stream(self, session_id: str) -> None:
-        """Close a session's live UI and refresh it when that session is visible."""
-        visible = self.sessions.is_current_session(session_id)
-        if self.is_streaming_session(session_id):
+        """Close a live turn and refresh the selected chat when its layout changes."""
+        released_stream = self.is_streaming_session(session_id)
+        if released_stream:
             self.finalize_stream()
-        if visible:
+        if released_stream or self.sessions.is_current_session(session_id):
             self.render_current_session()
 
     def is_showing_sub_agent(self, conversation_id: str) -> bool:
@@ -563,13 +566,11 @@ class ChatViewComponent:
     def show_sub_agent(self, conversation_id: str) -> None:
         self.selected_sub_agent_id = conversation_id
         self.render_current_session()
-        self.switch_tab(self.active_tab)
         self.reset_scroll_to_bottom(self.child_chat_container)
 
     def show_main(self) -> None:
         self.selected_sub_agent_id = None
         self.render_current_session()
-        self.switch_tab(self.active_tab)
         self.reset_scroll_to_bottom(self.chat_container)
 
     def _render_welcome_hero(self) -> None:
@@ -1784,10 +1785,11 @@ class ChatViewComponent:
             self.finalize_stream()
         if show_main:
             self.selected_sub_agent_id = None
-        self.render_current_session()
+        self._render_chat_session()
 
         self._streaming_history = None
-        self.stream_session_id = self.sessions.get_current_session().id
+        session = self.sessions.get_current_session()
+        self.stream_session_id = session.id
         self.stream_started_at = (
             started_at if started_at is not None else time.monotonic()
         )
@@ -1867,11 +1869,8 @@ class ChatViewComponent:
                         self._update_stream_duration,
                     )
 
-        if self.raw_history_view:
-            session = self.sessions.get_current_session()
-            self.raw_history_view.start_live_turn(session)
-        if self.graph_view:
-            self._render_selected_graph()
+        self.raw_history_view.start_live_turn(session)
+        self._render_active_secondary_tab()
         self.reset_scroll_to_bottom(self.chat_container)
 
     def restore_stream_snapshot(self, message: ChatMessage) -> None:
@@ -1912,6 +1911,7 @@ class ChatViewComponent:
         self.streaming_root_tools = [
             event for event in message.tool_events if event.skill_path == "/"
         ]
+        self.raw_history_view.restore_live_output(message)
         if execution_changed:
             self._refresh_streaming_skills_and_tools()
         else:

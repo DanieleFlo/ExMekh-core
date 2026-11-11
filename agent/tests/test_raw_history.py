@@ -585,6 +585,25 @@ def test_raw_history_expansion_persistence_across_renders(ui_context: Client) ->
         assert rh.expansions[0].value is True
 
 
+def test_start_live_turn_renders_the_new_session_with_equal_history_length(
+    ui_context: Client,
+) -> None:
+    first = ChatSession(messages=[ChatMessage(role="user", content="First prompt")])
+    second = ChatSession(messages=[ChatMessage(role="user", content="Second prompt")])
+    with ui_context:
+        view = RawHistoryComponent()
+        view.build()
+        view.render_session(first)
+        view.start_live_turn(second)
+
+        prompts = [
+            message["content"]
+            for message in view.raw_json_data
+            if message["role"] == "user"
+        ]
+        assert prompts == ["Second prompt"]
+
+
 def test_chat_view_streaming_integration_with_raw_history(ui_context: Client) -> None:
     with ui_context:
         session = session_manager.get_current_session()

@@ -2,14 +2,24 @@
 /* Header, Sidebar and Application Layout Styles                             */
 /* ========================================================================= */
 
+:root {
+    --app-header-height: 64px;
+    --chat-page-bottom-inset: 6px;
+}
+
 /* Header styling */
 .lm-header {
     background: color-mix(in srgb, var(--bg-header) 88%, transparent) !important;
     backdrop-filter: blur(12px) !important;
     border-bottom: 1px solid var(--border-subtle) !important;
+    min-height: var(--app-header-height);
 }
 
-.chat-page-layout { position: relative; }
+.chat-page-layout {
+    position: relative;
+    height: calc(100dvh - var(--app-header-height) - var(--chat-page-bottom-inset));
+    min-height: 0;
+}
 
 .chat-navigation-overlay:not([hidden]) {
     position: absolute;
@@ -22,30 +32,31 @@
     animation: chat-navigation-reveal 140ms 100ms both;
 }
 
-.chat-navigation-status {
+.chat-loading-status {
     display: grid;
     justify-items: center;
     gap: 14px;
     padding: 20px;
+    color: var(--text-main);
     font-size: 0.875rem;
     font-weight: 600;
 }
 
-.chat-navigation-spinner {
+.chat-loading-spinner {
     width: 34px;
     height: 34px;
     border: 3px solid var(--border-active);
     border-top-color: var(--sky);
     border-radius: 50%;
-    animation: chat-navigation-spin 720ms linear infinite;
+    animation: chat-loading-spin 720ms linear infinite;
 }
 
 @keyframes chat-navigation-reveal { from { opacity: 0; } to { opacity: 1; } }
-@keyframes chat-navigation-spin { to { transform: rotate(1turn); } }
+@keyframes chat-loading-spin { to { transform: rotate(1turn); } }
 
 @media (prefers-reduced-motion: reduce) {
     .chat-navigation-overlay:not([hidden]),
-    .chat-navigation-spinner { animation: none; }
+    .chat-loading-spinner { animation: none; }
 }
 
 /* Sidebar styling */
@@ -333,7 +344,7 @@
 }
 
 @media (max-width: 900px) {
-    .chat-page-layout { height: calc(100dvh - 152px); }
+    :root { --chat-page-bottom-inset: 0px; }
     .lm-header { flex-wrap: wrap; height: auto !important; gap: 8px; }
     .header-provider { order: 3; max-width: fit-content; min-width: 0; justify-content: space-between; margin: auto; }
     .header-model { flex: 1; }
