@@ -18,6 +18,11 @@ folder_selection: str | None = None
 picker_calls: list[dict[str, Any]] = []
 
 
+@app.get("/test/ready")
+def ready() -> dict[str, bool]:
+    return {"ready": True}
+
+
 def pick_test_folder(initial_dir):
     picker_calls.append({"initial_dir": initial_dir, "thread": get_ident()})
     return folder_selection

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from exmekh_agent.config import AppConfig
@@ -89,7 +88,6 @@ def test_session_deletion_handles_missing_file_and_noncurrent_session(tmp_path) 
 def test_input_bar_without_elements_ignores_actions() -> None:
     sent: list[str] = []
     bar = InputBarComponent(sent.append, lambda: None)
-    bar._handle_enter(SimpleNamespace())
     bar._trigger_send()
     bar.set_busy(True)
     bar.set_text("ignored")

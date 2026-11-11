@@ -9,7 +9,17 @@ from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.formatting import DEFAULTS as FORMAT_DEFAULTS
 from exmekh_agent.exmekh_bridge.models import ChatSession, Project
 from exmekh_agent.state.session_manager import SessionManager, session_manager
+from exmekh_agent.ui.navigation.chat_routes import ChatRoutes
 from exmekh_agent.ui.resources import presentation_config, ui_text
+
+SELECT_CHAT_JS = """(event) => {
+    if (event.type === 'keydown' && event.target !== event.currentTarget) return;
+    if (window.exmekhChatNavigation) {
+        window.exmekhChatNavigation.select(event.currentTarget.dataset.chatPath);
+    } else {
+        emit();
+    }
+}"""
 
 UI_PRESENTATION = presentation_config("controls/sidebar")
 
@@ -393,8 +403,17 @@ class SidebarComponent:
                 )
             )
             .props(UI_PRESENTATION["render_session.props.flat_tabindex_0_role_button"])
-            .on("click", lambda _, sid=session.id: self._select_session(sid))
-            .on("keydown.enter", lambda _, sid=session.id: self._select_session(sid))
+            .props(f"data-chat-path={ChatRoutes(self.sessions).path_for(session)}")
+            .on(
+                "click",
+                lambda _, sid=session.id: self._select_session(sid),
+                js_handler=SELECT_CHAT_JS,
+            )
+            .on(
+                "keydown.enter",
+                lambda _, sid=session.id: self._select_session(sid),
+                js_handler=SELECT_CHAT_JS,
+            )
         ):
             with ui.row().classes(
                 UI_PRESENTATION[
@@ -498,14 +517,21 @@ class SidebarComponent:
     def expand_project(self, project_id: str) -> None:
         self._project_expansion[project_id] = True
 
-    def _select_session(self, session_id: str) -> None:
-        session = self.sessions.get_session(session_id)
-        if session and session.project_id:
+    def show_session(self, session: ChatSession) -> None:
+        """Show the selected chat and reveal its project in the sidebar."""
+        if session.project_id:
             self.expand_project(session.project_id)
-        self.sessions.switch_session(session_id)
+        self.show_main_selection()
+
+    def show_main_selection(self) -> None:
         self.clear_sub_agent_selection()
         self.render_sessions()
-        self.on_session_switched(session_id)
+
+    def _select_session(self, session_id: str) -> None:
+        session = self.sessions.switch_session(session_id)
+        if session is not None:
+            self.show_session(session)
+            self.on_session_switched(session.id)
 
     def toggle(self) -> None:
         if self.drawer:

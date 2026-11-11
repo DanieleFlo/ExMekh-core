@@ -4,7 +4,7 @@
 
 /* Code blocks styling */
 pre {
-    background-color: #0c0c0f !important;
+    background-color: var(--bg-inset) !important;
     border: 1px solid var(--border-subtle) !important;
     border-radius: 6px !important;
     padding: 12px !important;
@@ -39,21 +39,21 @@ code {
     padding: 0;
     border: 1px solid transparent;
     border-radius: 9999px;
-    background: rgba(24, 24, 27, 0.75);
-    color: #71717a;
+    background: color-mix(in srgb, var(--bg-elevated) 75%, transparent);
+    color: var(--text-dim);
     cursor: pointer;
     transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
 }
 
 .code-copy-btn:hover {
-    color: #d4d4d8;
-    background: rgba(39, 39, 42, 0.95);
-    border-color: #3f3f46;
+    color: var(--text-secondary);
+    background: color-mix(in srgb, var(--bg-raised) 95%, transparent);
+    border-color: var(--border-active);
 }
 
 .code-copy-btn.copied {
-    color: #10b981;
-    border-color: rgba(16, 185, 129, 0.4);
+    color: var(--success);
+    border-color: color-mix(in srgb, var(--success) 40%, transparent);
 }
 
 .code-copy-btn .q-icon,
@@ -66,7 +66,7 @@ code {
 math {
     font-family: 'KaTeX_Math', 'Cambria Math', 'STIX Two Math', 'Latin Modern Math', serif !important;
     font-size: 1.08em;
-    color: #f4f4f5 !important;
+    color: var(--text-main) !important;
 }
 
 .math-display {
@@ -75,9 +75,9 @@ math {
     padding: 0.5rem 0.8rem;
     overflow-x: auto;
     text-align: center;
-    background: rgba(24, 24, 27, 0.35);
+    background: color-mix(in srgb, var(--bg-elevated) 35%, transparent);
     border-radius: 6px;
-    border: 1px solid rgba(39, 39, 42, 0.4);
+    border: 1px solid color-mix(in srgb, var(--border-subtle) 40%, transparent);
 }
 
 .math-display math {
@@ -91,8 +91,8 @@ math {
 }
 
 .math-fallback {
-    color: #a1a1aa;
-    background: #18181b;
+    color: var(--text-muted);
+    background: var(--bg-elevated);
     padding: 2px 5px;
     border-radius: 3px;
 }
@@ -117,14 +117,14 @@ math {
 
 .parsed-response-content th,
 .thinking-box th {
-    background: #18181b;
-    color: #f4f4f5;
+    background: var(--bg-elevated);
+    color: var(--text-main);
     font-weight: 600;
 }
 
 .parsed-response-content tr:nth-child(even),
 .thinking-box tr:nth-child(even) {
-    background: rgba(24, 24, 27, 0.4);
+    background: color-mix(in srgb, var(--bg-elevated) 40%, transparent);
 }
 
 .parsed-response-content ul,

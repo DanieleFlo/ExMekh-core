@@ -210,7 +210,9 @@ async def test_real_multiple_image_calls_without_model_previews_can_be_attached(
                     "Do not combine them into one n=2 call. Do not retry a completed generation. After both succeed finish with IMAGE-MULTI-23.",
                 )
                 await wait_turn_completion(
-                    page, timeout=600000 * int(os.getenv("DS4_METAL_TIMEOUT_MULTIPLIER", "1"))
+                    page,
+                    timeout=600000
+                    * int(os.getenv("DS4_METAL_TIMEOUT_MULTIPLIER", "1")),
                 )
                 await expect(page.locator(".msg-assistant").last).to_contain_text(
                     "IMAGE-MULTI-23"
@@ -255,7 +257,9 @@ async def test_real_multiple_image_calls_without_model_previews_can_be_attached(
                     "Without generating another image, repeat the remembered code.",
                 )
                 await wait_turn_completion(
-                    page, timeout=600000 * int(os.getenv("DS4_METAL_TIMEOUT_MULTIPLIER", "1"))
+                    page,
+                    timeout=600000
+                    * int(os.getenv("DS4_METAL_TIMEOUT_MULTIPLIER", "1")),
                 )
                 await expect(page.locator(".msg-assistant").last).to_contain_text(
                     "IMAGE-MULTI-23"

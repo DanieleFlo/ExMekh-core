@@ -40,6 +40,7 @@ async def test_project_settings_hierarchy_paths_profiles_and_reload(
             page = await browser.new_page(viewport={"width": width, "height": 900})
             await page.goto(settings_server, wait_until="networkidle")
             menu = page.get_by_role("button", name="Open projects menu", exact=True)
+            await expect(menu).to_be_visible()
             if not await page.get_by_role(
                 "button", name="New project", exact=True
             ).is_visible():
@@ -214,6 +215,7 @@ async def test_project_settings_hierarchy_paths_profiles_and_reload(
             ]
             assert state["calls"][-1]["agent_profile"] == "creative"
             await page.reload(wait_until="networkidle")
+            await expect(menu).to_be_visible()
             row = (
                 page.locator(".sidebar-project")
                 .filter(has_text=f"Icon project {width}")

@@ -57,6 +57,7 @@ from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
 )
 from exmekh_agent.ui.settings.settings_drawer import SettingsDrawerComponent
+from exmekh_agent.ui.styles import apply_theme_command
 from exmekh_agent.utils.formatting import format_file_size
 
 UI_PRESENTATION = presentation_config("controls/page_controller")
@@ -184,6 +185,18 @@ class ChatPageController:
             self.input_bar.set_session_id(session.id)
             self.input_bar.set_approval_mode(session.settings.tool_approval_mode)
             self.input_bar.set_agent_mode(session.agent_mode)
+            with (
+                ui.element("div")
+                .classes(UI_PRESENTATION["build.classes.navigation_overlay"])
+                .props(UI_PRESENTATION["build.props.navigation_status"])
+            ):
+                with ui.element("div").classes(
+                    UI_PRESENTATION["build.classes.navigation_status"]
+                ):
+                    ui.element("span").classes(
+                        UI_PRESENTATION["build.classes.navigation_spinner"]
+                    ).props(UI_PRESENTATION["build.props.navigation_spinner"])
+                    ui.label(ui_text("chat.page_controller.loading_conversation"))
         self._render_queue_ui()
         self._sync_chat_url(replace=True)
         self.update_context_usage()
@@ -266,8 +279,7 @@ class ChatPageController:
         if self._url_session_id is not None and self._url_session_id != session.id:
             # A different page may delete the selected chat. Refresh the display,
             # upload scope and URL together before accepting new input.
-            self._url_session_id = session.id
-            self.session_switched(session.id)
+            self.session_switched(session.id, replace_url=True)
             return
         if self._snapshot_session_id != session.id:
             self._snapshot_session_id = session.id
@@ -320,9 +332,6 @@ class ChatPageController:
             return
         with self._client:
             if self.chat_view and not self.chat_view.is_streaming_session(session.id):
-                if self.chat_view.has_active_stream():
-                    self.chat_view.finalize_stream()
-                self.chat_view.render_current_session()
                 self.chat_view.start_assistant_stream(started_at=snapshot.started_at)
                 self._followed_revision = -1
                 snapshot = active_turns.snapshot(session.id, after_revision=-1)
@@ -425,14 +434,16 @@ class ChatPageController:
             type="info",
         )
 
-    def session_switched(self, session_id: str) -> None:
-        session = self.sessions.get_session(session_id)
-        if session is None:
-            return
+    def session_switched(self, session_id: str, *, replace_url: bool = False) -> None:
         with self._client:
-            self.sessions.switch_session(session.id)
-            self._sync_chat_url()
-            self._cancel_pending_approval()
+            session = self.sessions.switch_session(session_id)
+            if session is None:
+                return
+            if self._url_session_id != session.id:
+                self._cancel_pending_approval()
+            self._sync_chat_url(replace=replace_url)
+            if self.sidebar:
+                self.sidebar.show_session(session)
             if self.chat_view:
                 self.chat_view.show_main()
             if self.input_bar:
@@ -454,22 +465,21 @@ class ChatPageController:
 
     def _handle_chat_navigation(self, event: object) -> None:
         args = getattr(event, "args", {})
-        session = (
-            ChatRoutes(self.sessions).resolve(str(args.get("path", "")))
-            if isinstance(args, dict)
-            else None
-        )
-        if session is None:
-            self._sync_chat_url(replace=True)
-            return
-        self.sessions.switch_session(session.id)
-        self._url_session_id = session.id
-        if self.sidebar:
-            self.sidebar.clear_sub_agent_selection()
-            if session.project_id:
-                self.sidebar.expand_project(session.project_id)
-            self.sidebar.render_sessions()
-        self.session_switched(session.id)
+        args = args if isinstance(args, dict) else {}
+        try:
+            session = ChatRoutes(self.sessions).resolve(str(args.get("path", "")))
+            if session is None:
+                self._sync_chat_url(replace=True)
+                return
+            self.session_switched(
+                session.id, replace_url=bool(args.get("history", True))
+            )
+        finally:
+            request_id = args.get("request_id")
+            if type(request_id) is int:
+                self._client.run_javascript(
+                    f"window.exmekhChatNavigation?.finish({request_id})"
+                )
 
     def new_chat(self) -> None:
         with self._client:
@@ -482,11 +492,7 @@ class ChatPageController:
         # The client context survives the sidebar replacing its button's parent.
         with self._client:
             session = self.sessions.get_or_create_empty_session(project_id)
-            if self.sidebar:
-                self.sidebar.clear_sub_agent_selection()
             self.session_switched(session.id)
-            if self.sidebar:
-                self.sidebar.render_sessions()
 
     def use_suggested_prompt(self, prompt: str) -> None:
         if self.input_bar:
@@ -589,13 +595,7 @@ class ChatPageController:
                 with self._client:
                     ui.notify(ui_text("chat.split.save_failed"), type="negative")
                 return
-            with self._client:
-                self.session_switched(branch.id)
-                if self.sidebar:
-                    self.sidebar.clear_sub_agent_selection()
-                    if branch.project_id:
-                        self.sidebar.expand_project(branch.project_id)
-                    self.sidebar.render_sessions()
+            self.session_switched(branch.id)
 
     async def _edit_message(
         self,
@@ -646,8 +646,6 @@ class ChatPageController:
                     type="negative",
                 )
                 return False
-            if self.chat_view and self.chat_view.is_streaming_session(session.id):
-                self.chat_view.finalize_stream()
             self._followed_session_id = None
             self._followed_revision = -1
             self._render_queue_ui(session)
@@ -664,8 +662,9 @@ class ChatPageController:
         user_text: str,
         attachments: list[StagedAttachment] | None = None,
     ) -> None:
+        session = self.sessions.get_current_session()
         self._track_task(
-            asyncio.create_task(self.send(user_text, attachments=attachments))
+            asyncio.create_task(self._send_to_session(session, user_text, attachments))
         )
 
     async def send(
@@ -673,8 +672,19 @@ class ChatPageController:
         user_text: str,
         attachments: list[StagedAttachment] | None = None,
     ) -> None:
+        await self._send_to_session(
+            self.sessions.get_current_session(), user_text, attachments
+        )
+
+    async def _send_to_session(
+        self,
+        session: ChatSession,
+        user_text: str,
+        attachments: list[StagedAttachment] | None,
+    ) -> None:
         with self._client:
-            session = self.sessions.get_current_session()
+            if not attachments and apply_theme_command(self._client, user_text):
+                return
             storage = self.sessions.temp_storage(session)
         loop = asyncio.get_running_loop()
         try:
@@ -753,22 +763,24 @@ class ChatPageController:
         generate_title: bool,
     ) -> None:
         with self._client:
-            if self._is_session_visible(session):
-                if self.sidebar:
-                    self.sidebar.clear_sub_agent_selection()
-                if self.chat_view:
-                    if self.chat_view.has_active_stream():
-                        self.chat_view.finalize_stream()
-                    self.chat_view.show_main()
-            self._render_session_lists()
-            collector = TurnStreamCollector()
-            self.update_context_usage(session=session, collector=collector)
-
-            if self.input_bar and self._is_session_visible(session):
+            visible = self._is_session_visible(session)
+            if visible:
+                self._sync_chat_url(replace=True)
+            if self.sidebar:
+                if visible:
+                    self.sidebar.show_main_selection()
+                else:
+                    self.sidebar.render_sessions()
+            if self.input_bar and visible:
                 self.input_bar.set_busy(True)
             started_at = time.monotonic()
-            if self.chat_view and self._is_session_visible(session):
-                self.chat_view.start_assistant_stream(started_at=started_at)
+            if self.chat_view and visible:
+                self.chat_view.start_assistant_stream(
+                    started_at=started_at, show_main=True
+                )
+
+            collector = TurnStreamCollector()
+            self.update_context_usage(session=session, collector=collector)
 
             task = asyncio.create_task(
                 self._run_turn(
@@ -794,13 +806,6 @@ class ChatPageController:
         clean_text = user_text.strip().replace("\n", " ")
         return clean_text[:30] + ("..." if len(clean_text) > 30 else "")
 
-    def _render_session_lists(self) -> None:
-        self._sync_chat_url(replace=True)
-        if self.sidebar:
-            self.sidebar.render_sessions()
-        if self.chat_view:
-            self.chat_view.render_current_session()
-
     def _is_session_visible(self, session: ChatSession) -> bool:
         return self.sessions.is_current_session(session.id)
 
@@ -813,6 +818,8 @@ class ChatPageController:
         force: bool = False,
         accepts_events: Callable[[], bool] | None = None,
     ) -> None:
+        if not self._is_session_visible(session):
+            return
         self._context_updates.schedule(
             loop,
             partial(self._update_live_context_in_client, session, collector),
@@ -1274,9 +1281,8 @@ class ChatPageController:
                 ui.notify(
                     ui_text("chat.page_controller.generation_stopped"), type="warning"
                 )
-            elif self.chat_view and self.chat_view.has_active_stream():
-                self.chat_view.finalize_stream()
-                self.chat_view.render_current_session()
+            elif self.chat_view and self.chat_view.is_streaming_session(session.id):
+                self.chat_view.finalize_session_stream(session.id)
                 if self.input_bar:
                     self.input_bar.set_busy(False)
 

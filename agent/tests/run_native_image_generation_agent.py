@@ -74,7 +74,10 @@ class ObservedLocalProvider(LocalProvider):
             *args,
             http_client=HTTPClient(
                 timeout=float(os.getenv("DS4_SUITE_HTTP_TIMEOUT_SECONDS", "600")),
-                event_hooks={"request": [record_request], "response": [record_response]}
+                event_hooks={
+                    "request": [record_request],
+                    "response": [record_response],
+                },
             ),
             **kwargs,
         )

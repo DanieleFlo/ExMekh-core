@@ -11,6 +11,7 @@ from exmekh_agent.config.server import DEFAULTS as SERVER_DEFAULTS
 from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.ui.chat.page_controller import ChatPageController
 from exmekh_agent.ui.navigation.chat_routes import ChatRoutes
+from exmekh_agent.ui.resources import render_html
 from exmekh_agent.ui.shared.file_upload import upload_router
 from exmekh_agent.ui.styles import load_css
 
@@ -25,8 +26,22 @@ def index_page() -> None:
 
 def _build_chat_page(sessions: SessionManager) -> None:
     load_css()
+    ui.add_body_html(
+        render_html(
+            "shared/startup_skeleton.html",
+            label=app_text("chat.page_controller.loading_conversation"),
+        )
+    )
     ui.dark_mode().enable()
-    ChatPageController(ui.context.client, sessions=sessions).build()
+    client = ui.context.client
+    ChatPageController(client, sessions=sessions).build()
+
+    def remove_startup_skeleton() -> None:
+        client.run_javascript(
+            "requestAnimationFrame(() => document.getElementById('exmekh-startup')?.remove())"
+        )
+
+    client.on_connect(remove_startup_skeleton)
 
 
 @ui.page("/chat/{project_name}/{chat_name}")

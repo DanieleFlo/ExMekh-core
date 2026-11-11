@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 
 from playwright.async_api import async_playwright, expect
@@ -11,6 +12,57 @@ from tests.browser_support import (
     get_edge_executable,
     wait_turn_completion,
 )
+
+
+async def test_f4_inserts_basito_into_the_chat_draft(tmp_path):
+    storage = tmp_path / "state"
+    sessions = SessionManager(storage / "chats")
+    session = sessions.get_current_session()
+    path = ChatRoutes(sessions).path_for(session)
+    draft_path = storage / "drafts" / f"{session.id}.json"
+
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            executable_path=get_edge_executable(), headless=True
+        )
+        try:
+            with BrowserTestServer(storage, module="tests.run_projects_agent") as url:
+                page = await browser.new_page()
+                await page.goto(url + path, wait_until="networkidle")
+                textarea = page.locator(".chat-input-textarea textarea")
+                await textarea.fill("Sono sorpreso oggi")
+                await textarea.evaluate("element => element.setSelectionRange(5, 13)")
+                await textarea.press("F4")
+                await expect(textarea).to_have_value("Sono basito oggi")
+                assert await textarea.evaluate(
+                    "element => [element.selectionStart, element.selectionEnd]"
+                ) == [11, 11]
+                await textarea.press("Shift+Enter")
+                await expect(textarea).to_have_value("Sono basito\n oggi")
+                await textarea.press("Backspace")
+
+                await textarea.press("Shift+F4")
+                await textarea.blur()
+                await page.keyboard.press("F4")
+                await expect(textarea).to_have_value("Sono basito oggi")
+                await expect(page.locator(".msg-user")).to_have_count(0)
+
+                async with asyncio.timeout(5):
+                    while not draft_path.exists() or (
+                        json.loads(draft_path.read_text())["text"] != "Sono basito oggi"
+                    ):
+                        await asyncio.sleep(0.05)
+
+                await page.reload(wait_until="networkidle")
+                await expect(textarea).to_be_visible()
+                await expect(textarea).to_have_value("Sono basito oggi")
+                await textarea.press("Enter")
+                await wait_turn_completion(page)
+                await expect(page.locator(".msg-user")).to_contain_text(
+                    "Sono basito oggi"
+                )
+        finally:
+            await browser.close()
 
 
 async def test_unsent_text_survives_closed_windows_and_application_restart(tmp_path):

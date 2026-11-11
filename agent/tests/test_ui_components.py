@@ -84,17 +84,8 @@ def test_input_bar_component(ui_context: Client) -> None:
     assert sent_messages == ["Hello NiceGUI"]
     assert ib.textarea.value == ""
 
-    # Test shift+enter (inserts newline)
-    mock_shift_event = MagicMock()
-    mock_shift_event.args = {"shiftKey": True}
-    ib.set_text("Line 1")
-    ib._handle_enter(mock_shift_event)
-    assert ib.textarea.value == "Line 1\n"
-
-    # Test regular enter (triggers send, strips whitespace)
-    mock_enter_event = MagicMock()
-    mock_enter_event.args = {"shiftKey": False}
-    ib._handle_enter(mock_enter_event)
+    ib.set_text("  Line 1\n")
+    ib._trigger_send()
     assert sent_messages == ["Hello NiceGUI", "Line 1"]
 
     # Test set_busy

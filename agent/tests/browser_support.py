@@ -56,11 +56,13 @@ class BrowserTestServer:
         module: str = "exmekh_agent.main",
         script: Path | None = None,
         environment: Mapping[str, str] | None = None,
+        readiness_path: str = "/",
     ) -> None:
         self._data_dir = data_dir
         self._module = module
         self._script = script
         self._environment = environment or {}
+        self._readiness_path = readiness_path
         self._process: subprocess.Popen | None = None
         self.url = ""
 
@@ -117,7 +119,7 @@ class BrowserTestServer:
         with httpx.Client(timeout=1, trust_env=False) as client:
             while time.monotonic() < deadline and self._process.poll() is None:
                 try:
-                    if client.get(self.url).status_code == 200:
+                    if client.get(self.url + self._readiness_path).status_code == 200:
                         return True
                 except httpx.TransportError:
                     pass

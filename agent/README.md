@@ -218,6 +218,20 @@ The application will open at:
 
 ## Running Tests
 
+### Light-theme contrast audit
+
+Run these commands from `agent/` with Playwright and Chromium installed.
+
+```bash
+uv run python -m tests.audit_theme_contrast
+uv run python -m tests.audit_theme_contrast --data-dir data --output .test-tmp/contrast-local
+uv run python -m tests.audit_theme_contrast --url http://127.0.0.1:8000 --width 390 --height 844
+```
+
+The audit defaults to demo conversations. `--data-dir` opens an isolated copy of the chat and project records with a mock provider. `--url` opens the running frontend. The audit discovers chat routes from the sidebar, captures each view, and saves the screenshots and `report.json` in the output directory.
+
+`PASS` means all measured pairs met their WCAG 2.2 AA thresholds. `NOT PASS` includes measured ratios below the threshold. `WARNING` identifies cases such as gradients or incomplete captures that need review. Exit codes are `0` for PASS, `1` for NOT PASS and `2` for WARNING when there are no measured failures. Reports and screenshots can contain conversation content.
+
 ### Offline Unit Tests
 Run the standard (offline) tests:
 ```shell

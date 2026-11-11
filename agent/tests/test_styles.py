@@ -1,17 +1,26 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from exmekh_agent.ui.styles import (
     CSS_DIR,
     CSS_FILE_PATH,
     CSS_FILENAMES,
     CUSTOM_CSS,
+    apply_theme_command,
     get_css_content,
     get_css_files,
     load_css,
 )
+
+
+def test_theme_commands_apply_only_to_complete_messages() -> None:
+    client = Mock()
+    assert not apply_theme_command(client, "Per favore, chiudi tutto")
+    client.run_javascript.assert_not_called()
+    assert apply_theme_command(client, "  ChIuDi TuTtO  ")
+    client.run_javascript.assert_called_once_with("window.exmekhTheme?.set('dark')")
 
 
 def test_styles_file_and_constants() -> None:
@@ -81,8 +90,13 @@ def test_get_css_content_missing_file() -> None:
 
 
 def test_load_css_success() -> None:
-    with patch("exmekh_agent.ui.styles.ui.add_css") as mock_add_css:
+    with (
+        patch("exmekh_agent.ui.styles.ui.add_css") as mock_add_css,
+        patch("exmekh_agent.ui.styles.ui.add_head_html") as mock_add_head_html,
+    ):
         load_css()
+        assert 'id="exmekh-theme-dark"' in mock_add_head_html.call_args.args[0]
+        assert 'id="exmekh-theme-light"' in mock_add_head_html.call_args.args[0]
         files = get_css_files()
         assert mock_add_css.call_count == len(files)
         for f in files:
@@ -91,6 +105,7 @@ def test_load_css_success() -> None:
 
 def test_load_css_fallbacks() -> None:
     with (
+        patch("exmekh_agent.ui.styles.ui.add_head_html"),
         patch("exmekh_agent.ui.styles.get_css_files", return_value=[]),
         patch(
             "exmekh_agent.ui.styles.get_css_content", return_value="/* custom css */"
@@ -101,6 +116,7 @@ def test_load_css_fallbacks() -> None:
         mock_add_css.assert_called_once_with("/* custom css */")
 
     with (
+        patch("exmekh_agent.ui.styles.ui.add_head_html"),
         patch("exmekh_agent.ui.styles.get_css_files", return_value=[]),
         patch("exmekh_agent.ui.styles.get_css_content", return_value=""),
         patch("exmekh_agent.ui.styles.ui.add_css") as mock_add_css,

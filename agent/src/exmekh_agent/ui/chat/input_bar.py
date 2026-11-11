@@ -40,6 +40,7 @@ PASTE_JS_HANDLER = render_html(
     "shared/paste_handler.js",
     paste_char_threshold=ATTACHMENT_DEFAULTS["paste_char_threshold"],
 )
+KEYDOWN_JS_HANDLER = render_html("shared/composer_keydown.js")
 
 
 @dataclass
@@ -285,8 +286,9 @@ class InputBarComponent:
                         )
                     )
 
-                    # Bind Enter key to send (preventing default newline unless shift is pressed)
-                    self.textarea.on("keydown.enter.prevent", self._handle_enter)
+                    self.textarea.on(
+                        "keydown", self._trigger_send, js_handler=KEYDOWN_JS_HANDLER
+                    )
                     self.textarea.on(
                         "paste", self._handle_paste, js_handler=PASTE_JS_HANDLER
                     )
@@ -827,18 +829,21 @@ class InputBarComponent:
                 pct_str=pct_str,
             )
 
-    def _handle_enter(self, e: object) -> None:
-        # Check if shift key was held
-        is_shift = (
-            getattr(e, "args", {}).get("shiftKey", False)
-            if hasattr(e, "args")
-            else False
-        )
-        if is_shift:
-            if self.textarea and self.textarea.value is not None:
-                self.textarea.value += "\n"
-        else:
-            self._trigger_send()
+    def _clear_context_info(self) -> None:
+        self.used_tokens = 0
+        if self.context_percent_label:
+            self.context_percent_label.text = "—"
+            self.context_percent_label.classes(
+                remove=UI_PRESENTATION["update_context_info.state_classes"]
+            )
+        if self.context_tokens_label:
+            self.context_tokens_label.text = (
+                f"—/{format_compact_tokens(self.context_length)}"
+            )
+        if self.context_tooltip:
+            self.context_tooltip.text = ui_text(
+                "chat.input_bar.counting_context_tokens"
+            )
 
     def get_temp_storage(self, session_id: str | None = None) -> TempStorage:
         return (
@@ -1051,6 +1056,7 @@ class InputBarComponent:
             self._remember_current_draft()
             draft = self._draft_for_session(session_id)
             self.session_id = session_id
+            self._clear_context_info()
             self._restore_draft(draft)
         if self.input_container:
             self.input_container.props(f"data-session-id={session_id}")

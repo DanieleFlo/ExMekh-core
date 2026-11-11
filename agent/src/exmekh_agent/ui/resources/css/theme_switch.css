@@ -1,0 +1,51 @@
+.theme-switch {
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: repeat(2, 1fr);
+    place-items: center;
+    vertical-align: middle;
+    width: 66px;
+    height: 36px;
+    padding: 2px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    background: var(--theme-switch-track);
+    cursor: pointer;
+}
+
+.theme-switch::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 50%;
+    background: var(--theme-switch-thumb);
+    transform: translateX(30px);
+    transition: transform 150ms ease;
+}
+
+.theme-switch[aria-checked="true"]::before { transform: translateX(0); }
+.theme-switch:hover { border-color: var(--border-strong); }
+.theme-switch:focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; }
+
+.theme-switch svg {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.45;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.theme-sun { stroke: var(--theme-sun-stroke); filter: var(--theme-sun-shadow); }
+.theme-sun circle { fill: var(--theme-sun-fill-color); }
+.theme-sun path { fill: none; }
+.theme-moon { stroke: var(--theme-moon-stroke); filter: var(--theme-moon-shadow); }
+.theme-moon path { fill: var(--theme-moon-fill-color); }
+
+@media (prefers-reduced-motion: reduce) {
+    .theme-switch::before { transition: none; }
+}

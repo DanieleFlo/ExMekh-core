@@ -4,8 +4,8 @@
 
 /* Chat bubble styling - Codex Minimalist */
 .msg-user {
-    background: #18181b !important;
-    color: #f4f4f5 !important;
+    background: var(--bg-elevated) !important;
+    color: var(--text-main) !important;
     border: none !important;
     border-radius: 12px !important;
     box-shadow: none !important;
@@ -40,29 +40,29 @@
 }
 
 .msg-user-steering {
-    background: #1d1d22 !important;
-    border: 1px solid #3f3f46 !important;
-    border-left: 2px solid #71717a !important;
+    background: var(--bg-message-hover) !important;
+    border: 1px solid var(--border-active) !important;
+    border-left: 2px solid var(--text-dim) !important;
 }
 
 .steering-message-label {
-    color: #a1a1aa;
+    color: var(--text-muted);
     font-size: 10px;
     font-weight: 600;
     letter-spacing: 0.03em;
 }
 
 .steering-loading-spinner {
-    color: #a1a1aa !important;
+    color: var(--text-muted) !important;
     opacity: 0.85;
 }
 
 .steering-tool-marker {
-    color: #a1a1aa;
+    color: var(--text-muted);
     font-family: "JetBrains Mono", Consolas, Menlo, monospace;
     font-size: 10px;
     padding: 2px 0 2px 8px;
-    border-left: 2px solid #52525b;
+    border-left: 2px solid var(--border-strong);
 }
 
 .msg-assistant {
@@ -76,12 +76,12 @@
 .thinking-box {
     background: transparent !important;
     border: none !important;
-    border-left: 2px solid #27272a !important;
+    border-left: 2px solid var(--border-subtle) !important;
     font-family: "JetBrains Mono", Consolas, Menlo, monospace !important;
     font-size: 0.82rem !important;
     line-height: 1.25 !important;
     white-space: normal !important;
-    color: #a1a1aa !important;
+    color: var(--text-muted) !important;
     padding: 4px 0 4px 12px !important;
     margin: 4px 0 !important;
 }
@@ -105,8 +105,8 @@
 }
 
 .reasoning-master-header {
-    background: rgba(24, 24, 27, 0.45) !important;
-    border: 1px solid rgba(39, 39, 42, 0.6) !important;
+    background: color-mix(in srgb, var(--bg-elevated) 45%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--border-subtle) 60%, transparent) !important;
     border-radius: 8px !important;
     padding: 6px 12px !important;
     transition: all 0.2s ease !important;
@@ -114,13 +114,13 @@
 }
 
 .reasoning-master-header:hover {
-    background: rgba(39, 39, 42, 0.55) !important;
-    border-color: rgba(63, 63, 70, 0.85) !important;
+    background: color-mix(in srgb, var(--bg-raised) 55%, transparent) !important;
+    border-color: color-mix(in srgb, var(--border-active) 85%, transparent) !important;
 }
 
 .reasoning-count-badge {
-    background: rgba(39, 39, 42, 0.6) !important;
-    border: 1px solid rgba(63, 63, 70, 0.4) !important;
+    background: color-mix(in srgb, var(--bg-raised) 60%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--border-active) 40%, transparent) !important;
 }
 
 /* Sub-block Reasoning Cards */
@@ -133,8 +133,8 @@
 }
 
 .reasoning-sub-header {
-    background: rgba(18, 18, 20, 0.4) !important;
-    border: 1px solid rgba(39, 39, 42, 0.35) !important;
+    background: color-mix(in srgb, var(--bg-collapsed) 40%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--border-subtle) 35%, transparent) !important;
     border-radius: 6px !important;
     padding: 4px 10px !important;
     transition: all 0.15s ease !important;
@@ -142,8 +142,8 @@
 }
 
 .reasoning-sub-header:hover {
-    background: rgba(24, 24, 27, 0.65) !important;
-    border-color: rgba(63, 63, 70, 0.6) !important;
+    background: color-mix(in srgb, var(--bg-elevated) 65%, transparent) !important;
+    border-color: color-mix(in srgb, var(--border-active) 60%, transparent) !important;
 }
 
 /* Smooth Chevron Rotation */
@@ -192,17 +192,17 @@
 }
 
 .chat-scroll-container::-webkit-scrollbar-track {
-    background: rgba(18, 18, 22, 0.5);
+    background: color-mix(in srgb, var(--bg-overlay) 50%, transparent);
     border-radius: 4px;
 }
 
 .chat-scroll-container::-webkit-scrollbar-thumb {
-    background: #3f3f46;
+    background: var(--bg-hover);
     border-radius: 4px;
 }
 
 .chat-scroll-container::-webkit-scrollbar-thumb:hover {
-    background: #52525b;
+    background: var(--bg-hover-strong);
 }
 
 .scroll-to-bottom-btn {
@@ -214,16 +214,16 @@
     pointer-events: none;
     transform: translateY(8px);
     transition: opacity 180ms ease, transform 180ms ease, background-color 150ms ease !important;
-    background: rgba(24, 24, 27, 0.92) !important;
-    border: 1px solid #3f3f46 !important;
-    color: #e4e4e7 !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55) !important;
+    background: color-mix(in srgb, var(--bg-elevated) 92%, transparent) !important;
+    border: 1px solid var(--border-active) !important;
+    color: var(--text-soft) !important;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow-color) 55%, transparent) !important;
     backdrop-filter: blur(8px) !important;
 }
 
 .scroll-to-bottom-btn:hover {
-    background: rgba(39, 39, 42, 0.98) !important;
-    border-color: #71717a !important;
+    background: color-mix(in srgb, var(--bg-raised) 98%, transparent) !important;
+    border-color: var(--text-dim) !important;
 }
 
 /* ========================================================================= */
@@ -288,21 +288,21 @@
 
 /* Muted message markers with a small accent for the final response. */
 .chat-poi-dot.poi-user {
-    color: #94a3b8;
+    color: var(--text-slate);
 }
 
 .chat-poi-dot.poi-user:hover,
 .chat-poi-dot.poi-user.active {
-    color: #e2e8f0;
+    color: var(--text-slate-strong);
 }
 
 .chat-poi-dot.poi-assistant-final {
-    color: #a78bba;
+    color: var(--violet);
 }
 
 .chat-poi-dot.poi-assistant-final:hover,
 .chat-poi-dot.poi-assistant-final.active {
-    color: #d8b4fe;
+    color: var(--purple-soft);
 }
 
 /* ========================================================================= */
@@ -372,7 +372,7 @@
     padding: 0 !important;
     font-size: 10.5px !important;
     line-height: 25px !important;
-    color: #d4d4d8 !important;
+    color: var(--text-secondary) !important;
     letter-spacing: 0.01em !important;
 }
 
@@ -385,13 +385,13 @@
 
 .input-bar-approval-select .q-field__append .q-icon {
     font-size: 13px !important;
-    color: #a1a1aa !important;
+    color: var(--text-muted) !important;
     transition: transform 0.15s ease !important;
 }
 
 .input-bar-approval-select:hover {
-    border-color: rgba(161, 161, 170, 0.6) !important;
-    background-color: rgba(39, 39, 42, 0.9) !important;
+    border-color: color-mix(in srgb, var(--text-muted) 60%, transparent) !important;
+    background-color: color-mix(in srgb, var(--bg-raised) 90%, transparent) !important;
 }
 
 /* ========================================================================= */
@@ -426,15 +426,15 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    background: rgba(18, 18, 22, 0.94);
+    background: color-mix(in srgb, var(--bg-overlay) 94%, transparent);
     backdrop-filter: blur(10px);
-    border: 2px dashed rgba(56, 189, 248, 0.85);
+    border: 2px dashed color-mix(in srgb, var(--sky) 85%, transparent);
     border-radius: 12px;
     opacity: 0;
     pointer-events: none;
     transform: scale(0.98);
     transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 0 25px rgba(56, 189, 248, 0.22), inset 0 0 15px rgba(56, 189, 248, 0.12);
+    box-shadow: 0 0 25px color-mix(in srgb, var(--sky) 22%, transparent), inset 0 0 15px color-mix(in srgb, var(--sky) 12%, transparent);
 }
 
 .exmekh-drop-overlay * {
@@ -461,8 +461,8 @@
 }
 
 .exmekh-input-box-dragover {
-    border-color: rgba(56, 189, 248, 0.85) !important;
-    box-shadow: 0 0 22px rgba(56, 189, 248, 0.28) !important;
+    border-color: color-mix(in srgb, var(--sky) 85%, transparent) !important;
+    box-shadow: 0 0 22px color-mix(in srgb, var(--sky) 28%, transparent) !important;
 }
 
 /* Keep previews above the conversation, with the source image fully visible. */
@@ -470,7 +470,7 @@
     width: 64px;
     height: 64px;
     flex-shrink: 0;
-    background: #18181b;
+    background: var(--bg-elevated);
 }
 .exmekh-image-dialog .q-dialog__backdrop {
     backdrop-filter: blur(8px);
@@ -485,15 +485,15 @@
     height: 78vh;
 }
 
-.generated-image-slot { position: relative; width: min(320px, 100%); overflow: hidden; border: 1px solid #3f3f46; border-radius: 12px; background: #18181b; margin: 0; padding: 0; }
+.generated-image-slot { position: relative; width: min(320px, 100%); overflow: hidden; border: 1px solid var(--border-active); border-radius: 12px; background: var(--bg-elevated); margin: 0; padding: 0; }
 .generated-image-slot:has(.generated-image-loading, .generated-image-unavailable) { width: min(160px, 50%); }
 .generated-image-slot .exmekh-image-thumbnail { width: 100%; height: 100%; border: 0; border-radius: 0; }
-.generated-image-loading, .generated-image-unavailable { position: absolute; inset: 0; background: #27272a; }
-.generated-image-loading::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 20%, #ffffff18 50%, transparent 80%); animation: image-shimmer 1.8s ease-in-out infinite; }
-.generated-image-label { position: absolute; inset: 0; display: grid; place-items: center; color: #a1a1aa; font-size: 12px; text-align: center; padding: 16px; }
-.tool-approval-pending { color: #a1a1aa; animation: approval-pulse 1.4s ease-in-out infinite; }
-.tool-approval-approved { color: #34d399; }
-.tool-approval-denied { color: #fb7185; }
+.generated-image-loading, .generated-image-unavailable { position: absolute; inset: 0; background: var(--bg-raised); }
+.generated-image-loading::after { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 20%, color-mix(in srgb, var(--theme-contrast) 9.41176%, transparent) 50%, transparent 80%); animation: image-shimmer 1.8s ease-in-out infinite; }
+.generated-image-label { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-muted); font-size: 12px; text-align: center; padding: 16px; }
+.tool-approval-pending { color: var(--text-muted); animation: approval-pulse 1.4s ease-in-out infinite; }
+.tool-approval-approved { color: var(--green); }
+.tool-approval-denied { color: var(--rose); }
 @keyframes image-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-@keyframes approval-pulse { 50% { opacity: .4; box-shadow: 0 0 0 5px #a1a1aa20; } }
+@keyframes approval-pulse { 50% { opacity: .4; box-shadow: 0 0 0 5px color-mix(in srgb, var(--text-muted) 12.549%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .generated-image-loading::after, .tool-approval-pending { animation: none; } }

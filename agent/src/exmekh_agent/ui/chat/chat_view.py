@@ -532,9 +532,7 @@ class ChatViewComponent:
     def finalize_session_stream(self, session_id: str) -> None:
         """Close a session's live UI and refresh it when that session is visible."""
         visible = self.sessions.is_current_session(session_id)
-        if self.is_streaming_session(session_id) or (
-            visible and self.has_active_stream()
-        ):
+        if self.is_streaming_session(session_id):
             self.finalize_stream()
         if visible:
             self.render_current_session()
@@ -1733,9 +1731,9 @@ class ChatViewComponent:
                                 event.invocation_key, []
                             ).append(progress_view)
                         else:
-                            ui.label(app_text("chat.chat_view.image_unavailable")).classes(
-                                UI_PRESENTATION["image_generation.classes.label"]
-                            )
+                            ui.label(
+                                app_text("chat.chat_view.image_unavailable")
+                            ).classes(UI_PRESENTATION["image_generation.classes.label"])
 
     def _render_turn_activity(self, message: ChatMessage) -> None:
         """Render the model's timeline identically during streaming and after reload."""
@@ -1776,9 +1774,17 @@ class ChatViewComponent:
             )
 
     # Streaming support methods
-    def start_assistant_stream(self, *, started_at: float | None = None) -> None:
+    def start_assistant_stream(
+        self, *, started_at: float | None = None, show_main: bool = False
+    ) -> None:
         if not self.chat_container:
             return
+
+        if self.has_active_stream():
+            self.finalize_stream()
+        if show_main:
+            self.selected_sub_agent_id = None
+        self.render_current_session()
 
         self._streaming_history = None
         self.stream_session_id = self.sessions.get_current_session().id
@@ -1874,7 +1880,9 @@ class ChatViewComponent:
             return
         self.update_compaction_progress(message.compaction_progress)
         previous = self._streaming_history
-        execution_changed = previous is None or not message.has_same_execution_details(previous)
+        execution_changed = previous is None or not message.has_same_execution_details(
+            previous
+        )
         self._streaming_history = message
         self.streaming_steering_insertions = message.confirmed_steering_insertions()
         self._update_steering_spinners()
@@ -1931,10 +1939,10 @@ class ChatViewComponent:
         """Publish newly recorded output even when no tool or skill changes state."""
         previous = self._streaming_history
         self._streaming_history = message
-        if self.raw_history_view:
-            self.raw_history_view.update_context_snapshot(
-                self.sessions.get_current_session(), message
-            )
+        if self.raw_history_view and self.stream_session_id is not None:
+            owner = self.sessions.get_session(self.stream_session_id)
+            if owner is not None:
+                self.raw_history_view.update_context_snapshot(owner, message)
         if previous is None or not message.has_same_execution_details(previous):
             self._refresh_streaming_skills_and_tools()
         else:
@@ -2184,7 +2192,8 @@ class ChatViewComponent:
     def add_tool_event(self, ev: ToolEvent) -> None:
         existing = next(
             (
-                item for item in reversed(self.streaming_root_tools)
+                item
+                for item in reversed(self.streaming_root_tools)
                 if item.matches_update(ev)
             ),
             None,

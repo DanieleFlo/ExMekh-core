@@ -4,14 +4,53 @@
 
 /* Header styling */
 .lm-header {
-    background: rgba(13, 13, 16, 0.88) !important;
+    background: color-mix(in srgb, var(--bg-header) 88%, transparent) !important;
     backdrop-filter: blur(12px) !important;
     border-bottom: 1px solid var(--border-subtle) !important;
 }
 
+.chat-page-layout { position: relative; }
+
+.chat-navigation-overlay:not([hidden]) {
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    display: grid;
+    place-items: center;
+    background: color-mix(in srgb, var(--bg-main) 96%, transparent);
+    color: var(--text-main);
+    animation: chat-navigation-reveal 140ms 100ms both;
+}
+
+.chat-navigation-status {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    padding: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.chat-navigation-spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid var(--border-active);
+    border-top-color: var(--sky);
+    border-radius: 50%;
+    animation: chat-navigation-spin 720ms linear infinite;
+}
+
+@keyframes chat-navigation-reveal { from { opacity: 0; } to { opacity: 1; } }
+@keyframes chat-navigation-spin { to { transform: rotate(1turn); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-navigation-overlay:not([hidden]),
+    .chat-navigation-spinner { animation: none; }
+}
+
 /* Sidebar styling */
 .lm-sidebar {
-    background-color: #0c0c0f !important;
+    background-color: var(--bg-inset) !important;
     border-right: 1px solid var(--border-subtle) !important;
 }
 
@@ -24,7 +63,7 @@
 }
 
 .sidebar-section-btn {
-    color: #a1a1aa !important;
+    color: var(--text-muted) !important;
     padding: 0 !important;
     min-height: 18px !important;
     min-width: 18px !important;
@@ -35,16 +74,16 @@
 .sidebar-section-btn .q-icon {
     font-size: 11px !important;
     font-weight: 700 !important;
-    color: #a1a1aa !important;
+    color: var(--text-muted) !important;
     transition: color 150ms ease;
 }
 
 .sidebar-section-btn:hover {
-    background: rgba(255, 255, 255, 0.06) !important;
+    background: color-mix(in srgb, var(--theme-contrast) 6%, transparent) !important;
 }
 
 .sidebar-section-btn:hover .q-icon {
-    color: #f4f4f5 !important;
+    color: var(--text-main) !important;
 }
 
 /* Sidebar scrollable sections and nowrap enforcement */
@@ -78,7 +117,7 @@
     flex-grow: 1 !important;
     min-height: 0 !important;
     scrollbar-width: thin;
-    scrollbar-color: #3f3f46 transparent;
+    scrollbar-color: var(--border-active) transparent;
 }
 
 .sidebar-list-scroll::-webkit-scrollbar {
@@ -90,12 +129,12 @@
 }
 
 .sidebar-list-scroll::-webkit-scrollbar-thumb {
-    background: #3f3f46;
+    background: var(--bg-hover);
     border-radius: 4px;
 }
 
 .sidebar-list-scroll::-webkit-scrollbar-thumb:hover {
-    background: #71717a;
+    background: var(--text-dim);
 }
 
 /* Sidebar project expansion styling */
@@ -106,7 +145,7 @@
 }
 
 .sidebar-project .q-item:hover {
-    background: rgba(255, 255, 255, 0.04) !important;
+    background: color-mix(in srgb, var(--theme-contrast) 4%, transparent) !important;
 }
 
 /* Sidebar project folder open/closed icon toggling */
@@ -137,10 +176,10 @@
 
 /* Sidebar project actions menu */
 .sidebar-project-menu {
-    background: #18181b !important;
-    border: 1px solid #27272a !important;
+    background: var(--bg-elevated) !important;
+    border: 1px solid var(--border-subtle) !important;
     border-radius: 8px !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+    box-shadow: 0 10px 25px -5px color-mix(in srgb, var(--shadow-color) 50%, transparent), 0 8px 10px -6px color-mix(in srgb, var(--shadow-color) 50%, transparent) !important;
     min-width: 175px !important;
     z-index: 6000 !important;
 }
@@ -154,7 +193,7 @@
 }
 
 .sidebar-project-menu-item:hover {
-    background-color: rgba(255, 255, 255, 0.08) !important;
+    background-color: color-mix(in srgb, var(--theme-contrast) 8%, transparent) !important;
 }
 
 .sidebar-project-menu-btn {
@@ -172,7 +211,7 @@
 .sidebar-project-menu-btn .q-icon,
 .sidebar-item .q-btn,
 .sidebar-item .q-btn .q-icon {
-    color: #a1a1aa !important;
+    color: var(--text-muted) !important;
     transition: color 150ms ease, background-color 150ms ease;
 }
 
@@ -182,7 +221,7 @@
 .sidebar-project-menu-btn:hover .q-icon,
 .sidebar-item .q-btn:hover,
 .sidebar-item .q-btn:hover .q-icon {
-    color: #f4f4f5 !important;
+    color: var(--text-main) !important;
 }
 
 /* Delete chat button (visible only on hover or focus of the chat item) */
@@ -237,18 +276,18 @@
 }
 
 .sidebar-item:not(.sub-agent-card):hover {
-    background: rgba(255, 255, 255, 0.04) !important;
+    background: color-mix(in srgb, var(--theme-contrast) 4%, transparent) !important;
 }
 
 .sidebar-item-selected {
-    background: rgba(39, 39, 42, 0.95) !important;
-    border-color: #71717a !important;
-    box-shadow: inset 0 0 0 1px rgba(161, 161, 170, 0.22);
+    background: color-mix(in srgb, var(--bg-raised) 95%, transparent) !important;
+    border-color: var(--text-dim) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-muted) 22%, transparent);
     animation: sidebar-selection-pulse 2.4s ease-in-out infinite;
 }
 
 .sidebar-item-selected:not(.sub-agent-card) {
-    background: rgba(255, 255, 255, 0.04) !important;
+    background: color-mix(in srgb, var(--theme-contrast) 4%, transparent) !important;
     border-color: transparent !important;
     box-shadow: none !important;
     animation: sidebar-selection-pulse 2.4s ease-in-out infinite;
@@ -262,7 +301,7 @@
     left: 0;
     width: 3px;
     border-radius: 3px;
-    background: #e4e4e7;
+    background: var(--text-soft);
     animation: sidebar-selection-bar 2.4s ease-in-out infinite;
 }
 
@@ -272,13 +311,13 @@
     left: 0;
     width: 2.5px;
     border-radius: 2px;
-    background: #ffffff;
+    background: var(--theme-contrast);
     animation: sidebar-selection-bar 2.4s ease-in-out infinite;
 }
 
 @keyframes sidebar-selection-pulse {
-    0%, 100% { box-shadow: inset 0 0 0 1px rgba(161, 161, 170, 0.22), 0 0 0 0 rgba(228, 228, 231, 0); }
-    50% { box-shadow: inset 0 0 0 1px rgba(228, 228, 231, 0.35), 0 0 0 2px rgba(228, 228, 231, 0.18); }
+    0%, 100% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-muted) 22%, transparent), 0 0 0 0 color-mix(in srgb, var(--text-soft) 0%, transparent); }
+    50% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-soft) 35%, transparent), 0 0 0 2px color-mix(in srgb, var(--text-soft) 18%, transparent); }
 }
 
 @keyframes sidebar-selection-bar {

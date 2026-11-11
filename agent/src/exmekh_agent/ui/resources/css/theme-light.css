@@ -1,0 +1,205 @@
+/* Light palette */
+:root {
+    color-scheme: light;
+
+    /* Surfaces */
+    --bg-main: #f8fafc;
+    --bg-header: #ffffff;
+    --bg-surface: #f3f6fa;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --bg-inset: #eef3f8;
+    --bg-elevated: #ffffff;
+    --bg-raised: #eaf0f6;
+    --bg-hover: #dee7f1;
+    --bg-hover-strong: #cad7e6;
+    --bg-message-hover: #eaf0f7;
+    --bg-overlay: #ffffff;
+    --bg-collapsed: #eaf0f7;
+    --bg-history-detail: #f0f4f8;
+    --bg-graph: #f0f5fa;
+    --bg-graph-menu: #ffffff;
+    --bg-preview: #edf4fb;
+    --shadow-color: #8a9bb0;
+
+    /* Borders and text */
+    --border-subtle: #dbe3ec;
+    --border-active: #c4cfdd;
+    --border-strong: #a5b4c7;
+    --border-preview: #d7c2e7;
+    --control-border: #6b7e94;
+    --text-main: #182335;
+    --text-soft: #28364a;
+    --text-secondary: #39495d;
+    --text-muted: #4b5c73;
+    --text-dim: #596b81;
+    --text-slate: #4d5f77;
+    --text-slate-strong: #23334b;
+    --theme-contrast: #1b2e47;
+    --tool-argument-separator-color: var(--text-dim);
+    --json-tool-badge-color: var(--amber);
+
+    /* Accent colors */
+    --sky: #03698f;
+    --sky-soft: #075d84;
+    --sky-vivid: #087dab;
+    --sky-tint: #e5f4fc;
+    --blue-soft: #174ca1;
+    --blue-pale: #185888;
+    --violet: #68518d;
+    --purple: #6c339d;
+    --purple-soft: #633495;
+    --purple-vivid: #7c42b3;
+    --green: #056342;
+    --green-soft: #16643e;
+    --success: #08744e;
+    --amber: #805400;
+    --amber-vivid: #955b00;
+    --yellow: #735500;
+    --danger: #b4232a;
+    --red-soft: #a62e36;
+    --rose: #a52746;
+    --pink: #a42a68;
+
+    /* Theme switch */
+    --theme-switch-track: #f0f3f8;
+    --theme-switch-thumb: #fff9e5;
+    --theme-switch-outline: #596b81;
+    --theme-sun-fill-color: url(#theme-sun-fill);
+    --theme-sun-stroke: #9f620e;
+    --theme-sun-shadow: drop-shadow(0 1px 2px #b7781a40);
+    --theme-moon-fill-color: none;
+    --theme-moon-stroke: var(--theme-switch-outline);
+    --theme-moon-shadow: none;
+
+    /* Tailwind utilities used by the presentation catalogs. */
+    --color-zinc-50: var(--text-main);
+    --color-zinc-100: var(--text-main);
+    --color-zinc-200: var(--text-soft);
+    --color-zinc-300: var(--text-secondary);
+    --color-zinc-400: var(--text-muted);
+    --color-zinc-500: var(--text-dim);
+    --color-zinc-600: var(--text-dim);
+    --color-zinc-700: var(--border-active);
+    --color-zinc-800: var(--border-subtle);
+    --color-zinc-900: var(--bg-surface);
+    --color-zinc-950: var(--bg-card);
+    --color-emerald-300: var(--green-soft);
+    --color-emerald-400: var(--green);
+    --color-emerald-500: var(--green);
+    --color-emerald-700: #499b78;
+    --color-emerald-800: #81bfa6;
+    --color-emerald-900: #ccebdd;
+    --color-emerald-950: #def4e9;
+    --color-sky-300: var(--sky-soft);
+    --color-sky-400: var(--sky);
+    --color-sky-500: var(--sky-vivid);
+    --color-sky-700: #609db9;
+    --color-sky-800: #8db6ce;
+    --color-sky-900: #b8daec;
+    --color-sky-950: var(--sky-tint);
+    --color-amber-300: var(--amber);
+    --color-amber-400: var(--amber);
+    --color-amber-500: var(--amber-vivid);
+    --color-amber-600: var(--amber);
+    --color-amber-700: #bf9951;
+    --color-amber-800: #d5b578;
+    --color-amber-900: #f1dfa9;
+    --color-amber-950: #f9edcc;
+    --color-purple-300: var(--purple-soft);
+    --color-purple-400: var(--purple);
+    --color-purple-500: var(--purple-vivid);
+    --color-purple-700: #a882c0;
+    --color-purple-800: #c6a7da;
+    --color-purple-950: #f0e6f8;
+    --color-pink-300: var(--pink);
+    --color-pink-400: var(--pink);
+    --color-pink-700: #bf75a0;
+    --color-pink-800: #d4a0be;
+    --color-pink-950: #fae6f1;
+    --color-blue-300: var(--blue-soft);
+    --color-blue-400: var(--blue-soft);
+    --color-blue-500: #2359ac;
+    --color-indigo-400: #5148ab;
+    --color-cyan-400: #086d7e;
+    --color-red-400: var(--red-soft);
+    --color-rose-400: var(--rose);
+    --color-orange-300: #91440e;
+    --color-orange-400: #9c4512;
+    --color-orange-500: #9c4512;
+    --color-orange-700: #c89066;
+    --color-orange-950: #faebde;
+}
+
+/* Quasar controls keep their existing props. Supply the light palette for them. */
+body {
+    --q-dark: var(--bg-card) !important;
+    --q-primary: #28669d !important;
+}
+
+.q-dark,
+.q-expansion-item > .q-expansion-item__container > .q-item,
+.q-menu .q-item,
+.q-field--dark .q-field__prefix,
+.q-field--dark .q-field__suffix {
+    color: var(--text-main);
+}
+
+.q-field--dark:not(.q-field--highlighted) .q-field__label,
+.q-field--dark .q-field__marginal,
+.q-field--dark .q-field__bottom,
+.q-field__native::placeholder {
+    color: var(--text-muted);
+}
+
+.q-field__native::placeholder { opacity: 1; }
+
+.q-field--dark .q-field__control::before,
+.q-field--dark .q-field__control:hover::before {
+    border-color: var(--control-border);
+}
+
+.theme-switch,
+.theme-switch:hover,
+.exmekh-chat-input-box {
+    border-color: var(--control-border) !important;
+}
+
+.q-separator--dark { background: var(--border-subtle); }
+.q-menu--dark { box-shadow: 0 4px 18px #344c6a26; }
+.q-menu .q-item--active { color: var(--q-primary); }
+.q-expansion-item .q-expansion-item__toggle-icon { color: var(--text-muted); opacity: 1; }
+.q-tooltip { background: var(--text-soft); color: var(--bg-card); }
+.input-neural-loader { filter: brightness(0.52) saturate(1.2); }
+
+.agent-palette-item small,
+.agent-board-node small {
+    color: color-mix(in srgb, var(--node-color), var(--text-main) 50%);
+}
+
+.graph-star-svg text { fill: var(--text-secondary); opacity: 1; }
+
+/* Markdown code blocks use a light Pygments palette over the shared inset. */
+.code-block-wrapper pre,
+.code-block-wrapper .codehilite pre span { color: var(--text-main) !important; }
+.code-block-wrapper .codehilite pre :is(.c, .c1, .cm, .cp, .cpf, .cs) { color: var(--text-muted) !important; }
+.code-block-wrapper .codehilite pre :is(.k, .kc, .kd, .kn, .kp, .kr, .kt, .ow) { color: var(--purple) !important; }
+.code-block-wrapper .codehilite pre :is(.s, .s1, .s2, .sa, .sb, .sc, .sd, .se, .sh, .si, .sr, .ss, .sx) { color: var(--green) !important; }
+.code-block-wrapper .codehilite pre :is(.m, .mb, .mf, .mh, .mi, .mo, .il) { color: var(--rose) !important; }
+.code-block-wrapper .codehilite pre :is(.nb, .bp, .nc, .nf, .fm, .nn) { color: var(--blue-soft) !important; }
+
+@layer overrides {
+    .q-btn.bg-dark.text-white,
+    .q-tab.text-white,
+    .raw-history-container .q-btn.text-white {
+        color: var(--text-main) !important;
+    }
+
+    .text-grey-3, .text-grey-4, .text-grey-5 {
+        color: var(--text-muted) !important;
+    }
+
+    .lm-sidebar .q-badge.bg-primary {
+        background: var(--bg-surface) !important;
+    }
+}

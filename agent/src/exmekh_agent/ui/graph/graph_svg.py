@@ -193,7 +193,10 @@ def render_star_svg_html(
         # Endpoint labels for the history straight line
         if history.is_main:
             lbl_x = history.x1 + DRAWING_DEFAULTS["minimum_history_length"]
-            lbl_y = history.y1 - DRAWING_DEFAULTS["label_offset_y"]
+            lbl_y = max(
+                DRAWING_DEFAULTS["label_minimum_y"],
+                history.y1 - DRAWING_DEFAULTS["main_label_offset_y"],
+            )
             angle_label = ui_text("graph.graph_svg.main_history")
         else:
             lbl_x = max(

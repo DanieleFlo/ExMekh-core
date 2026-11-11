@@ -1,0 +1,71 @@
+/* Dark palette */
+:root {
+    color-scheme: dark;
+
+    /* Surfaces */
+    --bg-main: #09090b;
+    --bg-header: #0d0d10;
+    --bg-surface: #111114;
+    --bg-card: #16161a;
+    --bg-input: #141418;
+    --bg-inset: #0c0c0f;
+    --bg-elevated: #18181b;
+    --bg-raised: #27272a;
+    --bg-hover: #3f3f46;
+    --bg-hover-strong: #52525b;
+    --bg-message-hover: #1d1d22;
+    --bg-overlay: #121216;
+    --bg-collapsed: #121214;
+    --bg-history-detail: #0e0e11;
+    --bg-graph: #0b0b0e;
+    --bg-graph-menu: #0e0e12;
+    --bg-preview: #000814;
+    --shadow-color: #000000;
+
+    /* Borders and text */
+    --border-subtle: #27272a;
+    --border-active: #3f3f46;
+    --border-strong: #52525b;
+    --border-preview: #3f003b;
+    --text-main: #f4f4f5;
+    --text-soft: #e4e4e7;
+    --text-secondary: #d4d4d8;
+    --text-muted: #a1a1aa;
+    --text-dim: #71717a;
+    --text-slate: #94a3b8;
+    --text-slate-strong: #e2e8f0;
+    --theme-contrast: #ffffff;
+
+    /* Accent colors */
+    --sky: #38bdf8;
+    --sky-soft: #7dd3fc;
+    --sky-vivid: #0ea5e9;
+    --sky-tint: #082f49;
+    --blue-soft: #93c5fd;
+    --blue-pale: #a5d8ff;
+    --violet: #a78bba;
+    --purple: #c084fc;
+    --purple-soft: #d8b4fe;
+    --purple-vivid: #a855f7;
+    --green: #34d399;
+    --green-soft: #86efac;
+    --success: #10b981;
+    --amber: #fbbf24;
+    --amber-vivid: #f59e0b;
+    --yellow: #fde047;
+    --danger: #ef4444;
+    --red-soft: #f87171;
+    --rose: #fb7185;
+    --pink: #f472b6;
+
+    /* Theme switch */
+    --theme-switch-track: #111114;
+    --theme-switch-thumb: #292b35;
+    --theme-switch-outline: #a1a9b8;
+    --theme-sun-fill-color: none;
+    --theme-sun-stroke: var(--theme-switch-outline);
+    --theme-sun-shadow: none;
+    --theme-moon-fill-color: url(#theme-moon-fill);
+    --theme-moon-stroke: #f4f7ff;
+    --theme-moon-shadow: drop-shadow(0 1px 2px #070c1a80);
+}

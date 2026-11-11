@@ -9,6 +9,12 @@ from exmekh_agent.ui.resources import presentation_config, ui_text
 UI_PRESENTATION = presentation_config("controls/header")
 
 
+class ThemeSwitch(ui.element, component="../resources/js/theme_switch.js"):
+    def __init__(self) -> None:
+        super().__init__()
+        self.props["label"] = ui_text("navigation.header.light_mode")
+
+
 class HeaderComponent:
     def __init__(
         self,
@@ -56,6 +62,7 @@ class HeaderComponent:
             with ui.row().classes(
                 UI_PRESENTATION["build.classes.header_actions_items_center_gap_3"]
             ):
+                ThemeSwitch()
                 ui.button(
                     icon=UI_PRESENTATION["build.icon.tune"],
                     on_click=self.on_toggle_drawer,

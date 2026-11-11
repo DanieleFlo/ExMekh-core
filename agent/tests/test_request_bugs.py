@@ -225,6 +225,71 @@ async def test_switching_between_owned_turns_restores_the_visible_stream(tmp_pat
         client.delete()
 
 
+async def test_send_keeps_the_chat_selected_when_the_message_was_submitted(tmp_path):
+    sessions = SessionManager(tmp_path / "chats")
+    first = sessions.get_current_session()
+    other = sessions.create_session("Another chat")
+    sessions.switch_session(first.id)
+    client = Client(page("/send-before-switch"))
+    started = asyncio.get_running_loop().create_future()
+    title_generated = asyncio.Event()
+
+    async def run_turn(**kwargs):
+        started.set_result(kwargs["agent_context_id"])
+        return "Mock reply"
+
+    async def generate_title(**kwargs):
+        title_generated.set()
+        return "Original chat"
+
+    try:
+        with (
+            client,
+            patch("exmekh_agent.ui.chat.page_controller.run_agent_turn", run_turn),
+            patch(
+                "exmekh_agent.ui.chat.page_controller.generate_chat_title",
+                generate_title,
+            ),
+        ):
+            controller = ChatPageController(client, sessions=sessions)
+            controller.start_send("Send to the original chat")
+            controller.session_switched(other.id)
+            assert await asyncio.wait_for(started, timeout=3) == first.id
+            await asyncio.wait_for(title_generated.wait(), timeout=3)
+
+        assert first.messages[0].content == "Send to the original chat"
+        assert not other.messages
+        assert sessions.get_current_session() is other
+    finally:
+        client.delete()
+
+
+def test_background_stream_keeps_its_history_while_another_chat_is_visible(tmp_path):
+    sessions = SessionManager(tmp_path / "chats")
+    first = sessions.get_current_session()
+    client = Client(page("/background-history"))
+    try:
+        with client:
+            view = ChatViewComponent(lambda _: None, sessions=sessions)
+            view.build()
+            view.start_assistant_stream()
+            other = sessions.create_session("Another chat")
+            view.show_main()
+            snapshot = ChatMessage(role="assistant", content="Background response")
+            with patch.object(
+                view.raw_history_view, "update_context_snapshot"
+            ) as update:
+                view.update_stream_history(snapshot)
+                update.assert_called_once_with(first, snapshot)
+
+            view.finalize_session_stream(other.id)
+            assert view.is_streaming_session(first.id)
+            view.finalize_session_stream(first.id)
+            assert not view.has_active_stream()
+    finally:
+        client.delete()
+
+
 async def test_attach_generated_image_stages_a_draft_without_sending(tmp_path):
     manager = SessionManager(tmp_path / "chats")
     client = Client(page("/attach-generated"))

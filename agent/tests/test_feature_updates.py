@@ -465,14 +465,39 @@ def test_observer_failure_does_not_block_later_feedback():
 
     events = []
 
+    def fail_again(event):
+        raise ValueError("second observer failed")
+
     def fail(event):
-        feedback.publish(ToolEvent(tool_name="bash", tool_call_id="two"), events.append)
+        feedback.publish(ToolEvent(tool_name="bash", tool_call_id="two"), fail_again)
+        feedback.publish(
+            ToolEvent(tool_name="bash", tool_call_id="three"), events.append
+        )
         raise RuntimeError("observer failed")
 
-    with pytest.raises(RuntimeError, match="observer failed"):
+    with pytest.raises(RuntimeError, match="observer failed") as caught:
         feedback.publish(ToolEvent(tool_name="bash", tool_call_id="one"), fail)
 
-    assert [event.tool_call_id for event in events] == ["two"]
+    assert caught.value.__notes__ == ["second observer failed"]
+    assert [event.tool_call_id for event in events] == ["three"]
+    feedback.wait_for_images(None)
+
+
+def test_interrupted_observer_releases_feedback_delivery():
+    feedback = ToolFeedback()
+    events = []
+
+    def interrupt(event):
+        feedback.publish(
+            ToolEvent(tool_name="bash", tool_call_id="queued"), events.append
+        )
+        raise KeyboardInterrupt
+
+    with pytest.raises(KeyboardInterrupt):
+        feedback.publish(ToolEvent(tool_name="bash", tool_call_id="first"), interrupt)
+
+    feedback.publish(ToolEvent(tool_name="bash", tool_call_id="next"), events.append)
+    assert [event.tool_call_id for event in events] == ["queued", "next"]
     feedback.wait_for_images(None)
 
 
