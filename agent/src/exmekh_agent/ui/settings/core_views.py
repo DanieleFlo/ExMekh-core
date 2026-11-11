@@ -11,12 +11,13 @@ from exmekh_agent.exmekh_bridge.providers.core_management import (
     CoreProblem,
 )
 from exmekh_agent.ui.resources import presentation_config, ui_text
-from exmekh_agent.ui.settings.core_navigation import SETTINGS, route
+from exmekh_agent.ui.settings.core_navigation import SETTINGS, STEPS, route
 from exmekh_agent.ui.styles import load_css
 from exmekh_agent.utils.formatting import format_file_size
 
 STYLES = presentation_config("controls/system_pages")
 PHASES = {
+    "checking_profile": ui_text("system_settings.checking_saved_profile"),
     "queued": ui_text("system_settings.queued"),
     "downloading": ui_text("system_settings.downloading"),
     "verifying": ui_text("system_settings.verifying_checksum"),
@@ -33,49 +34,94 @@ PHASES = {
 
 
 @contextmanager
-def page(title: str, subtitle: str, destination: str, section: str | None = None):
+def page(
+    title: str,
+    subtitle: str,
+    destination: str,
+    section: str | None = None,
+    *,
+    setup_step: str | None = None,
+    setup_links: dict[str, str] | None = None,
+    connected: bool | None = None,
+):
     load_css()
     ui.dark_mode().enable()
-    with ui.column().classes(
-        STYLES["classes.w_full_max_w_6xl_mx_auto_px_4_sm_px_8_py_6_gap_5"]
-    ):
-        with ui.row().classes(
-            STYLES["classes.w_full_items_center_justify_between_gap_3"]
-        ):
-            ui.label(ui_text("system_settings.exmekh_agent")).classes(
-                STYLES["classes.text_lg_font_semibold"]
+    with ui.element("section").classes(STYLES["classes.console"]):
+        with ui.element("header").classes(STYLES["classes.topbar"]):
+            with ui.row().classes(STYLES["classes.brand"]):
+                ui.label(ui_text("system_settings.exmekh_agent"))
+                badge = None
+                if connected is not None:
+                    badge = (
+                        ui.label("")
+                        .classes(STYLES["classes.status"])
+                        .props(STYLES["props.role_status"])
+                    )
+                    show_connection(badge, connected)
+            key = "back_to_chat" if section else "system_settings"
+            target = destination if section else route("/settings/server", destination)
+            ui.link(ui_text(f"system_settings.{key}"), target).classes(
+                STYLES["classes.header_link"]
             )
-            if section is None:
-                ui.link(
-                    ui_text("system_settings.system_settings"),
-                    route("/settings/server", destination),
-                ).classes(STYLES["classes.text_primary"])
-            else:
-                ui.link(ui_text("system_settings.back_to_chat"), destination).classes(
-                    STYLES["classes.text_primary"]
-                )
+        has_navigation = section or setup_step
         layout = (
-            STYLES["classes.settings_layout"] if section else STYLES["classes.w_full"]
+            STYLES["classes.settings_layout"]
+            if has_navigation
+            else STYLES["classes.w_full"]
         )
         with ui.element("div").classes(layout):
-            if section:
-                with ui.element("nav").classes(STYLES["classes.settings_navigation"]):
-                    for key, label in SETTINGS.items():
-                        link = ui.link(
-                            label, route(f"/settings/{key}", destination)
-                        ).classes(STYLES["classes.rounded_px_3_py_2"])
-                        if key == section:
-                            link.classes(
+            if has_navigation:
+                labels = (
+                    SETTINGS
+                    if section
+                    else {**STEPS, "startup": ui_text("system_settings.startup_step")}
+                )
+                navigation_label = ui_text(
+                    "system_settings.settings_sections"
+                    if section
+                    else "system_settings.setup_steps"
+                )
+                with (
+                    ui.element("nav")
+                    .classes(STYLES["classes.settings_navigation"])
+                    .props(f'aria-label="{navigation_label}"')
+                ):
+                    for key, label in labels.items():
+                        if key == (section or setup_step):
+                            ui.label(label).props(
                                 STYLES[
-                                    "classes.font_semibold_bg_primary_15_text_primary"
+                                    "props.aria_current_page"
+                                    if section
+                                    else "props.aria_current_step"
                                 ]
-                            ).props(STYLES["props.aria_current_page"])
+                            )
+                            continue
+                        target = (
+                            route(f"/settings/{key}", destination)
+                            if section
+                            else (setup_links or {}).get(key)
+                        )
+                        if target:
+                            ui.link(label, target)
+                        else:
+                            ui.label(label).props(STYLES["props.aria_disabled"])
             with ui.column().classes(STYLES["classes.settings_body"]):
                 with ui.column().classes(STYLES["classes.w_full_gap_1"]):
-                    ui.label(title).classes(STYLES["classes.text_3xl_font_semibold"])
+                    ui.label(title).classes(STYLES["classes.heading"]).props(
+                        STYLES["props.heading"]
+                    )
                     if subtitle:
-                        ui.label(subtitle).classes(STYLES["classes.opacity_75"])
-                yield
+                        ui.label(subtitle).classes(STYLES["classes.subtitle"])
+                yield badge
+
+
+def show_connection(badge, connected: bool) -> None:
+    key = "core_connected" if connected else "connecting_to_core"
+    badge.set_text(ui_text(f"system_settings.{key}"))
+    badge.classes(
+        add=STYLES["classes.connected"] if connected else None,
+        remove=None if connected else STYLES["classes.connected"],
+    )
 
 
 def block(title: str, detail: str = "") -> None:
@@ -130,19 +176,27 @@ def progress(job: CoreJob, *, details: bool = False) -> None:
     block(label, job.file if details else "")
     data = job.progress
     elapsed = timespan(job.elapsed_seconds)
-    metrics = [f"{elapsed} elapsed"] if state != "queued" else []
+    metrics = (
+        [ui_text("system_settings.elapsed_time", duration=elapsed)]
+        if state != "queued"
+        else []
+    )
     if job.active:
         percent = data.percent if data else None
         if percent is None:
-            ui.linear_progress(show_value=False).props(
-                STYLES["props.indeterminate_aria_label_progress_unavailable"]
-            )
+            ui.linear_progress(show_value=False).classes(
+                STYLES["classes.progress"]
+            ).props(STYLES["props.indeterminate_aria_label_progress_unavailable"])
         else:
-            ui.linear_progress(percent / 100, show_value=False).props(
-                f'aria-label="{label}"'
+            ui.linear_progress(percent / 100, show_value=False).classes(
+                STYLES["classes.progress"]
+            ).props(f'aria-label="{label}"')
+            metrics.insert(
+                0,
+                ui_text("system_settings.milestone_progress", percent=percent)
+                if data.unit == "milestones"
+                else f"{percent:g}%",
             )
-            suffix = " of milestones" if data.unit == "milestones" else ""
-            metrics.insert(0, f"{percent:g}%{suffix}")
         if (
             data
             and data.unit == "bytes"
@@ -155,7 +209,16 @@ def progress(job: CoreJob, *, details: bool = False) -> None:
         if data and data.bytes_per_second and state == "running":
             metrics.append(f"{format_file_size(data.bytes_per_second)}/s")
         if data and data.eta_seconds is not None and state == "running":
-            metrics.append(f"About {timespan(data.eta_seconds)} remaining")
+            key = (
+                "estimated_load_time"
+                if data.unit == "milestones"
+                else "estimated_transfer_time"
+            )
+            metrics.append(
+                ui_text(f"system_settings.{key}", duration=timespan(data.eta_seconds))
+            )
+        elif data and data.unit == "milestones" and state == "running":
+            metrics.append(ui_text("system_settings.load_estimate_unavailable"))
     if metrics:
         ui.label(" · ".join(metrics)).classes(
             STYLES["classes.text_sm_tabular_nums_opacity_75"]
@@ -193,7 +256,12 @@ def job_controls(client: CoreClient, job: CoreJob) -> None:
 
 def job_poll(client: CoreClient, render, *, catalog: bool = False) -> None:
     view = ui.column().classes(STYLES["classes.w_full_gap_4"])
-    message = ui.label("").classes(STYLES["classes.text_sm_opacity_75"])
+    message = (
+        ui.label("")
+        .classes(STYLES["classes.text_sm_opacity_75"])
+        .props(STYLES["props.role_status"])
+    )
+    message.set_visibility(False)
     previous = None
 
     async def refresh() -> None:
@@ -207,25 +275,27 @@ def job_poll(client: CoreClient, render, *, catalog: bool = False) -> None:
                 with view:
                     render(jobs, data)
                 previous = state
-            message.set_text("")
+            message.set_visibility(False)
         except CoreProblem as error:
-            message.set_text(f"Reconnecting · {error}")
+            message.set_text(
+                ui_text("system_settings.reconnecting_with_detail", detail=error)
+            )
+            message.set_visibility(True)
 
     ui.timer(1.5, refresh)
 
 
 def row_for_model(
-    client: CoreClient, model: dict, jobs: list[CoreJob], choose=None
+    client: CoreClient, model: dict, jobs: list[CoreJob], *, choose=None, selected=False
 ) -> None:
     model_id = model["id"]
-    job = next(
-        (
-            j
-            for j in jobs
-            if j.model_id == model_id and j.kind in {"download", "import"}
-        ),
-        None,
-    )
+    model_jobs = [
+        item
+        for item in jobs
+        if item.model_id == model_id and item.kind in {"download", "import"}
+    ]
+    latest = model_jobs[0] if model_jobs else None
+    job = next((item for item in model_jobs if item.active), latest)
 
     async def operation(kind: str) -> None:
         try:
@@ -233,33 +303,52 @@ def row_for_model(
         except CoreProblem as error:
             notify_error(error)
 
-    with ui.card().classes(STYLES["classes.w_full_p_4_gap_3"]):
+    enabled = any(mode["available"] for mode in model["modes"])
+    with ui.column().classes(STYLES["classes.item"]):
         with ui.row().classes(
             STYLES["classes.w_full_items_center_justify_between_gap_3"]
         ):
-            block(model["name"], format_file_size(model["size_bytes"]))
+            if choose is not None:
+                with ui.element("label").classes(STYLES["classes.choice"]):
+                    radio = (
+                        ui.element("input")
+                        .props(STYLES["props.model_radio"])
+                        .classes(STYLES["classes.radio"])
+                    )
+                    if selected:
+                        radio.props(STYLES["props.checked"])
+                    if not enabled:
+                        radio.props(STYLES["props.disabled"])
+                    radio.on("change", choose)
+                    model_identity(model)
+            else:
+                model_identity(model)
             with ui.row().classes(STYLES["classes.items_center_gap_2"]):
                 if model["installed"]:
                     ui.label(ui_text("system_settings.already_downloaded")).classes(
-                        STYLES["classes.text_positive_text_sm"]
+                        STYLES["classes.installed_status"]
                     )
-                elif not job or not job.active:
+                elif (choose is None or enabled) and (not job or not job.active):
                     kind = "import" if model["importable"] else "download"
-                    label = "Verify local file" if model["importable"] else "Download"
+                    label = ui_text(
+                        "system_settings.verify_local_file"
+                        if kind == "import"
+                        else "system_settings.download"
+                    )
                     ui.button(label, on_click=lambda: operation(kind)).props(
                         STYLES["props.outline_no_caps"]
                     )
-                if choose:
-                    enabled = any(mode["available"] for mode in model["modes"])
-                    ui.button(
-                        ui_text("system_settings.configure"), on_click=choose
-                    ).props(STYLES["props.unelevated_no_caps"]).set_enabled(enabled)
-                elif not job or not job.active:
+                if choose is None and (not job or not job.active):
                     if (model["installed"] or model["importable"]) and model.get(
                         "removable", False
                     ):
                         with ui.dialog() as confirm, ui.card():
-                            ui.label(f"Remove {model['filename']} from Core?")
+                            ui.label(
+                                ui_text(
+                                    "system_settings.confirm_model_removal",
+                                    filename=model["filename"],
+                                )
+                            )
                             with ui.row():
                                 ui.button(
                                     ui_text("system_settings.keep_model"),
@@ -289,20 +378,45 @@ def row_for_model(
                     ui_text("system_settings.discard_partial_download"),
                     on_click=lambda: operation("discard"),
                 ).props(STYLES["props.flat_no_caps"])
-        if choose and not any(mode["available"] for mode in model["modes"]):
+        if choose is not None and not enabled:
             ui.label(
                 ui_text("system_settings.no_qualified_memory_mode_for_this_hardware")
             ).classes(STYLES["classes.opacity_75_text_sm"])
 
 
+def model_identity(model: dict) -> None:
+    details = [format_file_size(model["size_bytes"])]
+    if any(
+        feature["id"] == "vision" and feature["available"]
+        for feature in model.get("features", ())
+    ):
+        details.append(ui_text("system_settings.vision_with_encoder"))
+    with ui.column().classes(STYLES["classes.gap_0"]):
+        ui.label(model["name"]).classes(STYLES["classes.item_title"])
+        ui.label(" · ".join(details)).classes(STYLES["classes.item_detail"])
+
+
 def hardware_summary(host: dict) -> str:
-    memory = "Unified memory" if host["unified_memory"] else "RAM"
+    memory = ui_text(
+        "system_settings.unified_memory"
+        if host["unified_memory"]
+        else "system_settings.ram"
+    )
     values = [host["backend"].upper()]
     if host["ram_bytes"]:
         values.append(f"{format_file_size(host['ram_bytes'])} {memory}")
     values.extend(
-        f"{device['name']} · {format_file_size(device['free_bytes'])} VRAM free"
+        ui_text(
+            "system_settings.device_memory_free",
+            device=device["name"],
+            size=format_file_size(device["free_bytes"]),
+        )
         for device in host["devices"]
     )
-    values.append(f"{format_file_size(host['disk_free_bytes'])} free on model drive")
+    values.append(
+        ui_text(
+            "system_settings.model_disk_free",
+            size=format_file_size(host["disk_free_bytes"]),
+        )
+    )
     return " · ".join(values)

@@ -198,6 +198,10 @@ cd ExMekh-core
 
 Core listens on **`http://127.0.0.1:8080/v1`** before it needs model weights or a native build. The first launch waits for a model selection. Later launches restore the last successful profile from `~/.ds4/managed`. Use `--managed` to supply explicit options such as `--backend`, `--port`, `--state-dir` and `--model-dir`.
 
+During restore, `GET /v1/manage/status` remains available and includes the current activation job, phase, elapsed time, and an ETA once a comparable load is available. Inference returns `503 MODEL_NOT_READY` until the worker is ready. Agent displays the same information on its startup page.
+
+Running `./agent/start-ds4-server.sh` without arguments also starts managed Core. If Agent is already open, it reconnects to the configured endpoint and follows the restore automatically.
+
 ### 2. Start Agent and configure a model
 
 In another terminal:
@@ -230,7 +234,7 @@ cp config/native-suite.env.example config/native-suite.env
 # Edit the native dependency paths and prepare the suite bundles/config.
 
 # Starts the Qwen27 profile with ds4-server-suite.
-./agent/start-ds4-server.sh
+./agent/start-ds4-server.sh --manual
 
 # In a second terminal:
 ./agent/run.sh

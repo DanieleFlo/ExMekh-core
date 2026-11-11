@@ -5,7 +5,6 @@ from uuid import uuid4
 from nicegui import ui
 
 from exmekh_agent.exmekh_bridge.providers.core_management import (
-    Connection,
     CoreClient,
     CoreProblem,
     connect_core,
@@ -15,6 +14,7 @@ from exmekh_agent.ui.settings.core_navigation import (
     FEATURES,
     STEPS,
     chat_destination,
+    gate,
     profile_link,
     route,
 )
@@ -29,6 +29,7 @@ from exmekh_agent.ui.settings.core_views import (
     page,
     progress,
     row_for_model,
+    show_connection,
 )
 from exmekh_agent.utils.formatting import format_file_size
 
@@ -72,35 +73,66 @@ async def setup_page(
         "tokens": tokens or None,
         "features": features,
     }
+    step_order = tuple(STEPS)
+    prior_steps = step_order[: step_order.index(step)]
     with page(
-        STEPS[step],
+        ui_text("system_settings.choose_chat_model")
+        if step == "model"
+        else STEPS[step],
         hardware_summary(host) if step == "model" else selected["name"],
         destination,
+        setup_step=step,
+        setup_links={
+            key: route(f"/setup/{key}", destination, **params) for key in prior_steps
+        },
+        connected=True,
     ):
-        with ui.row().classes(
-            STYLES["classes.w_full_items_center_gap_2_text_sm_opacity_80"]
-        ):
-            for key, title in STEPS.items():
-                if list(STEPS).index(key) < list(STEPS).index(step):
-                    ui.link(title, route(f"/setup/{key}", destination, **params))
-                else:
-                    ui.label(title).classes(
-                        "font-semibold" if key == step else "opacity-60"
-                    )
         if step == "model":
+            selected_model = model
+
+            def advance() -> None:
+                options = (
+                    params if selected_model == model else {"model": selected_model}
+                )
+                ui.navigate.to(route("/setup/runtime", destination, **options))
 
             def render(jobs, data):
-                for item in data["models"]:
+                nonlocal selected_model
+                items = data["models"]
+                available = [
+                    item["id"]
+                    for item in items
+                    if any(mode["available"] for mode in item["modes"])
+                ]
+                if selected_model not in available:
+                    selected_model = available[0] if available else ""
+                configure.set_enabled(bool(available))
+                with ui.column().classes(STYLES["classes.surface"]):
+                    for item in items:
 
-                    def choose(item=item) -> None:
-                        options = (
-                            params if item["id"] == model else {"model": item["id"]}
+                        def choose(item_id=item["id"]) -> None:
+                            nonlocal selected_model
+                            selected_model = item_id
+
+                        row_for_model(
+                            client,
+                            item,
+                            jobs,
+                            choose=choose,
+                            selected=selected_model == item["id"],
                         )
-                        ui.navigate.to(route("/setup/runtime", destination, **options))
-
-                    row_for_model(client, item, jobs, choose=choose)
 
             job_poll(client, render, catalog=True)
+            with ui.row().classes(STYLES["classes.action_row"]):
+                configure = (
+                    ui.button(
+                        ui_text("system_settings.configure_memory_and_context"),
+                        on_click=advance,
+                    )
+                    .props(STYLES["props.unelevated_no_caps"])
+                    .classes(STYLES["classes.primary"])
+                )
+                configure.disable()
             return
         choices = {item["mode_id"]: item for item in selected["modes"]}
         eligible = {
@@ -119,19 +151,23 @@ async def setup_page(
             return
         mode = mode if mode in eligible else next(iter(eligible))
         if step == "runtime":
-            for key, item in choices.items():
-                with ui.card().classes(STYLES["classes.w_full"]):
-                    limit = item["estimated_max_context_tokens"]
-                    block(
-                        item["label"],
-                        f"Estimated maximum · {limit:,} tokens · "
-                        f"Recommended {item['recommended_context_tokens']:,} tokens"
-                        if limit
-                        else item["reason"],
-                    )
-            selection = ui.select(eligible, value=mode, label="Memory mode").classes(
-                STYLES["classes.w_full_max_w_xl"]
-            )
+            with ui.column().classes(STYLES["classes.surface"]):
+                for item in choices.values():
+                    with ui.column().classes(STYLES["classes.item"]):
+                        limit = item["estimated_max_context_tokens"]
+                        block(
+                            item["label"],
+                            ui_text(
+                                "system_settings.context_estimates",
+                                limit=limit,
+                                recommended=item["recommended_context_tokens"],
+                            )
+                            if limit
+                            else item["reason"],
+                        )
+            selection = ui.select(
+                eligible, value=mode, label=ui_text("system_settings.memory_mode")
+            ).classes(STYLES["classes.w_full_max_w_xl"])
             number = ui.number(
                 ui_text("system_settings.context_tokens"),
                 value=tokens or choices[mode]["recommended_context_tokens"],
@@ -157,7 +193,9 @@ async def setup_page(
                 limit = choices[selection.value]["estimated_max_context_tokens"]
                 if value is None or value != int(value) or not 1 <= value <= limit:
                     notify_error(
-                        ValueError(f"Enter a whole number from 1 to {limit:,} tokens.")
+                        ValueError(
+                            ui_text("system_settings.invalid_context", limit=limit)
+                        )
                     )
                     return
                 ui.navigate.to(
@@ -171,34 +209,43 @@ async def setup_page(
                     )
                 )
 
-            ui.button(ui_text("system_settings.continue"), on_click=next_step).props(
-                STYLES["props.unelevated_no_caps"]
-            )
+            with ui.row().classes(STYLES["classes.action_row"]):
+                ui.button(
+                    ui_text("system_settings.continue"), on_click=next_step
+                ).props(STYLES["props.unelevated_no_caps"]).classes(
+                    STYLES["classes.primary"]
+                )
             return
         tokens = tokens or choices[mode]["recommended_context_tokens"]
         toggles = {}
         if step == "features":
-            for item in selected["features"]:
-                key = item["id"]
-                compatible = item["available"] and (key == "vision" or mode == "vram")
-                with ui.card().classes(STYLES["classes.w_full"]):
-                    toggle = ui.checkbox(
-                        FEATURES[key], value=compatible and key in features.split(",")
+            with ui.column().classes(STYLES["classes.surface"]):
+                for item in selected["features"]:
+                    key = item["id"]
+                    compatible = item["available"] and (
+                        key == "vision" or mode == "vram"
                     )
-                    toggle.set_enabled(compatible)
-                    toggles[key] = toggle
-                    if not compatible:
-                        ui.label(
-                            item["reason"]
-                            or "Unavailable for the selected memory mode."
-                        ).classes(STYLES["classes.text_sm_opacity_75"])
-                    elif item.get("size_bytes"):
-                        caption = (
-                            ui_text("system_settings.already_downloaded")
-                            if item["installed"]
-                            else format_file_size(item["size_bytes"])
+                    with ui.column().classes(STYLES["classes.item"]):
+                        toggle = ui.checkbox(
+                            FEATURES[key],
+                            value=compatible and key in features.split(","),
                         )
-                        ui.label(caption).classes(STYLES["classes.text_sm_opacity_75"])
+                        toggle.set_enabled(compatible)
+                        toggles[key] = toggle
+                        if not compatible:
+                            caption = item["reason"] or ui_text(
+                                "system_settings.unavailable_for_memory_mode"
+                            )
+                        elif item.get("size_bytes"):
+                            caption = (
+                                ui_text("system_settings.already_downloaded")
+                                if item["installed"]
+                                else format_file_size(item["size_bytes"])
+                            )
+                        else:
+                            caption = ""
+                        if caption:
+                            ui.label(caption).classes(STYLES["classes.item_detail"])
 
             def review(skip: bool) -> None:
                 chosen = (
@@ -219,7 +266,7 @@ async def setup_page(
                     )
                 )
 
-            with ui.row():
+            with ui.row().classes(STYLES["classes.action_row"]):
                 ui.button(
                     ui_text("system_settings.continue_with_chat_only"),
                     on_click=lambda: review(True),
@@ -227,7 +274,9 @@ async def setup_page(
                 ui.button(
                     ui_text("system_settings.review_profile"),
                     on_click=lambda: review(False),
-                ).props(STYLES["props.unelevated_no_caps"])
+                ).props(STYLES["props.unelevated_no_caps"]).classes(
+                    STYLES["classes.primary"]
+                )
             return
         profile = {
             "model_id": model,
@@ -239,7 +288,8 @@ async def setup_page(
         fact(ui_text("system_settings.context"), f"{tokens:,} tokens")
         fact(
             ui_text("system_settings.optional_features"),
-            ", ".join(FEATURES[key] for key in profile["features"]) or "Chat only",
+            ", ".join(FEATURES[key] for key in profile["features"])
+            or ui_text("system_settings.chat_only"),
         )
         try:
             plan = await client.plan(profile)
@@ -269,21 +319,37 @@ async def setup_page(
                 ui.navigate.to(route("/startup", destination, job=job.id))
             except CoreProblem as error:
                 notify_error(error)
-                action.enable()
+                if error.code == "PLAN_STALE":
+                    action.set_visibility(False)
+                    review_again.set_visibility(True)
+                else:
+                    action.enable()
 
-        label = (
-            "Apply profile"
+        label_key = (
+            "apply_profile"
             if connection.status.chat_ready
-            else "Download and start"
+            else "download_and_start"
             if missing
-            else "Start model"
+            else "start_model"
         )
-        action = ui.button(label, on_click=apply).props(
-            STYLES["props.unelevated_no_caps"]
-        )
+        with ui.row().classes(STYLES["classes.action_row"]):
+            action = (
+                ui.button(ui_text(f"system_settings.{label_key}"), on_click=apply)
+                .props(STYLES["props.unelevated_no_caps"])
+                .classes(STYLES["classes.primary"])
+            )
+            review_again = (
+                ui.button(
+                    ui_text("system_settings.review_updated_profile"),
+                    on_click=ui.navigate.reload,
+                )
+                .props(STYLES["props.unelevated_no_caps"])
+                .classes(STYLES["classes.primary"])
+            )
+            review_again.set_visibility(False)
 
 
-async def startup_page(return_to: str, job: str = "", auto: int = 0) -> None:
+async def startup_page(return_to: str, job: str = "") -> None:
     destination = chat_destination(return_to)
     with page(
         ui_text("system_settings.core_startup"),
@@ -291,38 +357,46 @@ async def startup_page(return_to: str, job: str = "", auto: int = 0) -> None:
             "system_settings.chat_is_available_when_core_has_loaded_a_verified_language_model"
         ),
         destination,
-    ):
+        setup_step="startup",
+        connected=False,
+    ) as badge:
         view = ui.column().classes(STYLES["classes.w_full_gap_4"])
         previous = None
+        tracked_job = job
 
         async def refresh() -> None:
-            nonlocal previous
+            nonlocal previous, tracked_job
             try:
                 client = CoreClient()
-                status = await client.status()
-                key = job or status.job_id
-                activity = None
-                if key:
-                    try:
-                        activity = await client.job(key)
-                    except CoreProblem as error:
-                        if error.status != 404:
-                            raise
-                        if status.job_id and status.job_id != key:
-                            activity = await client.job(status.job_id)
+                connection = await client.connect()
+                if connection.kind == "manual":
+                    client.follow(connection)
+                    ui.navigate.to(destination)
+                    return
+                status = connection.status
+                if status is None:
+                    raise CoreProblem(connection.detail)
+                show_connection(badge, True)
+                activity = await client.activation(status, tracked_job)
+                tracked_job = status.job_id or tracked_job
+                if status.state == "empty" and activity is None:
+                    ui.navigate.to(gate(connection, destination) or destination)
+                    return
                 snapshot = (status, activity)
                 if snapshot == previous:
                     return
                 previous = snapshot
                 if status.ready_profile:
-                    client.follow(Connection("managed", status))
-                    if auto and (not activity or not activity.active):
+                    client.follow(connection)
+                    if not status.error and (
+                        activity is None or activity.state == "completed"
+                    ):
                         ui.navigate.to(destination)
                         return
                 view.clear()
                 with view:
                     if activity:
-                        with ui.card().classes(STYLES["classes.w_full"]):
+                        with ui.column().classes(STYLES["classes.progress_card"]):
                             progress(activity, details=True)
                             job_controls(client, activity)
                     if status.error and not activity:
@@ -331,7 +405,9 @@ async def startup_page(return_to: str, job: str = "", auto: int = 0) -> None:
                         )
                     for feature, error in status.feature_errors.items():
                         block(FEATURES.get(feature, feature), error)
-                    if status.ready_profile:
+                    if status.ready_profile and (
+                        activity is None or not activity.active
+                    ):
                         ui.button(
                             ui_text("system_settings.open_chat"),
                             on_click=lambda: ui.navigate.to(destination),
@@ -344,8 +420,10 @@ async def startup_page(return_to: str, job: str = "", auto: int = 0) -> None:
 
                         async def restore() -> None:
                             try:
-                                await client.start_job("restore")
-                                ui.navigate.to(route("/startup", destination, auto=1))
+                                restore_job = await client.start_job("restore")
+                                ui.navigate.to(
+                                    route("/startup", destination, job=restore_job.id)
+                                )
                             except CoreProblem as error:
                                 notify_error(error)
 
@@ -369,6 +447,7 @@ async def startup_page(return_to: str, job: str = "", auto: int = 0) -> None:
                     )
             except CoreProblem as error:
                 previous = None
+                show_connection(badge, False)
                 view.clear()
                 with view:
                     block(ui_text("system_settings.reconnecting_to_core"), str(error))

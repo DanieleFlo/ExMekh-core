@@ -55,9 +55,7 @@ def _build_chat_page(sessions: SessionManager, connection: Connection) -> None:
     ui.dark_mode().enable()
     client = ui.context.client
     controller = ChatPageController(client, sessions=sessions)
-    controller.follow_core(
-        connection.status.ready_profile if connection.status else None
-    )
+    controller.follow_core(connection.ready_profile)
     controller.build()
 
     def remove_startup_skeleton() -> None:
@@ -73,7 +71,7 @@ def _build_chat_page(sessions: SessionManager, connection: Connection) -> None:
             destination = ChatRoutes(sessions).path_for(session)
             current = await connect_core()
             target = (
-                route("/startup", destination, auto=1)
+                route("/startup", destination)
                 if connection.status and current.kind == "unavailable"
                 else gate(current, destination)
             )
@@ -81,9 +79,7 @@ def _build_chat_page(sessions: SessionManager, connection: Connection) -> None:
                 controller.suspend_for_core(target)
                 timer.cancel()
                 return
-            controller.follow_core(
-                current.status.ready_profile if current.status else None
-            )
+            controller.follow_core(current.ready_profile)
 
         timer = ui.timer(2.0, refresh_core, immediate=False)
 
@@ -126,8 +122,8 @@ async def configure_page(
 
 
 @ui.page("/startup")
-async def loading_page(return_to: str = "/", job: str = "", auto: int = 0) -> None:
-    await startup_page(return_to, job, auto)
+async def loading_page(return_to: str = "/", job: str = "") -> None:
+    await startup_page(return_to, job)
 
 
 def run() -> None:

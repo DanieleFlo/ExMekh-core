@@ -75,7 +75,7 @@ effettive, incluse quelle legacy. I percorsi locali sotto una virtualenv
 contengono file `.so`: il servizio li carica direttamente. Un'installazione
 nativa equivalente può fornire gli stessi file senza un interprete Python.
 
-Per l'agente locale, `./agent/start-ds4-server.sh` avvia la suite sulla porta
+Per l'agente locale, `./agent/start-ds4-server.sh --manual` avvia la suite sulla porta
 8080 con contesto 26000, MTP e visione. `DS4_SUITE_CONFIG` sceglie il JSON dei
 bundle. Copiare `config/native-suite.env.example` in `config/native-suite.env`
 e impostare i tre percorsi delle dipendenze native; le variabili già fornite

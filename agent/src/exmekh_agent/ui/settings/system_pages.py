@@ -65,7 +65,7 @@ def settings_connection(destination: str, initial_setup: bool) -> None:
         )
         protocol = ui.select(
             PROVIDER_DEFAULTS["api_types"],
-            label="Inference protocol",
+            label=ui_text("system_settings.inference_protocol"),
             value=config.api_type,
         ).classes(STYLES["classes.w_full_max_w_xl"])
         status = ui.label("").props(STYLES["props.role_status"])
@@ -81,6 +81,26 @@ def settings_connection(destination: str, initial_setup: bool) -> None:
                     ui_text("system_settings.copy_command"),
                     on_click=lambda: ui.clipboard.write("./start-ds4-server.sh"),
                 ).props(STYLES["props.flat_no_caps"])
+
+            def using_saved_connection() -> bool:
+                return (
+                    verify_button.enabled
+                    and address.value == config.base_url
+                    and key.value == config.api_key
+                    and protocol.value == config.api_type
+                )
+
+            async def reconnect() -> None:
+                if not using_saved_connection():
+                    return
+                connection = await connect_core()
+                if view.is_deleted or not using_saved_connection():
+                    return
+                if connection.kind == "unavailable":
+                    status.set_text(connection.detail)
+                    return
+                retry.cancel()
+                ui.navigate.to(gate(connection, destination) or destination)
 
         async def verify() -> None:
             if not verify_button.enabled:
@@ -124,9 +144,15 @@ def settings_connection(destination: str, initial_setup: bool) -> None:
                 if not view.is_deleted:
                     verify_button.enable()
 
-        verify_button = ui.button(
-            ui_text("system_settings.verify_and_save_connection"), on_click=verify
-        ).props(STYLES["props.unelevated_no_caps"])
+        verify_button = (
+            ui.button(
+                ui_text("system_settings.verify_and_save_connection"), on_click=verify
+            )
+            .props(STYLES["props.unelevated_no_caps"])
+            .classes(STYLES["classes.primary"])
+        )
+        if initial_setup:
+            retry = ui.timer(1.5, reconnect, immediate=False)
 
 
 def client_preferences(destination: str) -> None:
@@ -140,7 +166,7 @@ def client_preferences(destination: str) -> None:
         reasoning = ui.select(
             [effort.value for effort in ReasoningEffortLMX],
             value=config.reasoning_effort,
-            label="Reasoning effort",
+            label=ui_text("system_settings.reasoning_effort"),
         ).classes(STYLES["classes.w_full_max_w_lg"])
         threshold = ui.number(
             ui_text("system_settings.automatic_compaction"),
@@ -160,9 +186,7 @@ def client_preferences(destination: str) -> None:
             value = threshold.value
             if value is None or not 1 <= value <= 99 or int(value) != value:
                 notify_error(
-                    ValueError(
-                        "Enter a whole-number compaction threshold from 1 to 99."
-                    )
+                    ValueError(ui_text("system_settings.invalid_compaction_threshold"))
                 )
                 return
             save_button.disable()
@@ -256,13 +280,14 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
     connection = await connect_core()
     with page(
         SETTINGS[section],
-        "Manage this Core server." if section == "server" else "",
+        ui_text("system_settings.manage_core_server") if section == "server" else "",
         destination,
         section,
+        connected=True if connection.status else None,
     ):
         status = connection.status
         if not status:
-            ui.label(connection.detail or "Core is unavailable.")
+            ui.label(connection.detail or ui_text("system_settings.core_unavailable"))
             if section == "server" and connection.kind == "manual":
                 fact(ui_text("system_settings.chat_model"), config.default_model)
                 fact(
@@ -293,7 +318,7 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
                 fact(ui_text("system_settings.memory_mode"), active.mode_id.upper())
             fact(
                 ui_text("system_settings.profile_at_next_startup"),
-                saved.get("model_id", "No saved profile"),
+                saved.get("model_id") or ui_text("system_settings.no_saved_profile"),
             )
             try:
                 hardware = await client.hardware()
@@ -370,17 +395,18 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
                                     ),
                                 )
                     with ui.tab_panel(catalog).classes(STYLES["classes.p_0_gap_3"]):
-                        for model in data["models"]:
-                            row_for_model(client, model, jobs)
+                        with ui.column().classes(STYLES["classes.surface"]):
+                            for model in data["models"]:
+                                row_for_model(client, model, jobs)
 
             job_poll(client, render, catalog=True)
         elif section == "features":
             for key, title in FEATURES.items():
                 available = active and key in active.available_features
-                detail = status.feature_errors.get(key) or (
-                    "Available for this profile"
+                detail = status.feature_errors.get(key) or ui_text(
+                    "system_settings.feature_available"
                     if available
-                    else "Unavailable for the active profile"
+                    else "system_settings.feature_unavailable"
                 )
                 block(title, detail)
             if saved:

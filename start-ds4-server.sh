@@ -2,8 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# A bare launch exposes Core before any model is present. Explicit model
-# arguments, qualification environments and --print-command retain manual use.
+# A saved managed profile takes priority on a bare launch. Explicit CLI
+# arguments and --manual keep the native path available.
 start_managed() {
     if [[ -f "$SCRIPT_DIR/config/native-suite.env" ]]; then
         set -a
@@ -18,8 +18,11 @@ if [[ "${1:-}" == --managed ]]; then
 fi
 if [[ "${1:-}" == --manual ]]; then
     shift
-elif [[ $# -eq 0 && -z "${DS4_MODEL_PROFILE:-}${DS4_MODEL:-}${DS4_SUITE_CONFIG:-}${DS4_CTX:-}${DS4_SSD_STREAMING:-}${DS4_VISION_MODEL:-}" ]]; then
-    start_managed
+elif [[ $# -eq 0 ]]; then
+    state_dir="${DS4_STATE_DIR:-${HOME}/.ds4/managed}"
+    if [[ -f "$state_dir/profile.json" || -z "${DS4_MODEL_PROFILE:-}${DS4_MODEL:-}${DS4_SUITE_CONFIG:-}${DS4_CTX:-}${DS4_SSD_STREAMING:-}${DS4_VISION_MODEL:-}" ]]; then
+        start_managed
+    fi
 fi
 SERVER_PORT="${DS4_SERVER_PORT:-8080}"
 profile="${DS4_MODEL_PROFILE:-qwen27}"

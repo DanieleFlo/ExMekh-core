@@ -9,6 +9,7 @@ from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.providers.core_management import (
     CoreClient,
     CoreProblem,
+    CoreStatus,
     connect_core,
     validated_url,
 )
@@ -109,6 +110,44 @@ async def test_public_operations_and_profile(server):
     assert requests[0].headers["Authorization"] == "Bearer key"
 
 
+async def test_activation_prefers_the_status_snapshot_and_recovers_completed_jobs(
+    server,
+):
+    requests, responses = server
+    client = CoreClient()
+    status = CoreStatus.model_validate(
+        {**STATUS, "job_id": JOB["id"], "activation_job": JOB}
+    )
+    assert (await client.activation(status, "older")).id == JOB["id"]
+    assert requests == []
+
+    status = status.model_copy(update={"activation_job": None})
+    responses.append(httpx.Response(200, json={**JOB, "state": "completed"}))
+    assert (await client.activation(status, "older")).state == "completed"
+    assert requests[-1].url.path == f"/v1/manage/jobs/{JOB['id']}"
+
+    status = status.model_copy(update={"job_id": None})
+    assert await client.activation(status) is None
+    responses.extend([httpx.Response(404, json={}), httpx.Response(503, json={})])
+    assert await client.activation(status, JOB["id"]) is None
+    with pytest.raises(CoreProblem) as unavailable:
+        await client.activation(status, JOB["id"])
+    assert unavailable.value.status == 503
+
+
+async def test_management_error_exposes_the_server_code(server):
+    _, responses = server
+    responses.append(
+        httpx.Response(
+            409,
+            json={"error": {"message": "Review the plan again.", "code": "PLAN_STALE"}},
+        )
+    )
+    with pytest.raises(CoreProblem, match="Review the plan again") as stale:
+        await CoreClient().start_job("apply", plan_id="expired")
+    assert stale.value.code == "PLAN_STALE"
+
+
 @pytest.mark.parametrize(
     ("response", "detail"),
     [
@@ -162,8 +201,8 @@ async def test_legacy_discovery_requires_chat_model(
     ("state", "destination"),
     [
         ("empty", "/setup/model"),
-        ("starting", "/startup?auto=1"),
-        ("error", "/startup?auto=1"),
+        ("starting", "/startup"),
+        ("error", "/startup"),
     ],
 )
 async def test_not_ready_routes(server, state, destination):

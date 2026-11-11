@@ -10,3 +10,6 @@ IMAGE_SUFFIXES = set(DEFAULTS["image_suffixes"])
 
 PASTE_TOKEN_THRESHOLD = DEFAULTS["paste_token_threshold"]
 XML_TAG_NAME = DEFAULTS["xml_tag_name"]
+
+# Matches the notice stored in chats before image attachment metadata.
+LEGACY_PDF_PREVIEW_PATTERN = r": pages 1–(\d+) of \d+ are attached as images"

@@ -53,7 +53,7 @@ def gate(connection: Connection, destination: str) -> str | None:
     if status.ready_profile:
         return None
     if status.state in {"starting", "error"}:
-        return route("/startup", destination, auto=1)
+        return route("/startup", destination)
     return route("/setup/model", destination)
 
 

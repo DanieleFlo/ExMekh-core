@@ -206,6 +206,7 @@ class Core:
     def status(self):
         with self._lock:
             self._running_profile()
+            activation = self._jobs.get(self._activation)
             state = (
                 "ready"
                 if self._active and not self._draining
@@ -224,6 +225,9 @@ class Core:
                 "active_profile": copy.deepcopy(self._active),
                 "saved_profile": copy.deepcopy(self._saved),
                 "job_id": self._activation,
+                "activation_job": self._job_snapshot(activation)
+                if activation
+                else None,
                 "error": self._error,
                 "feature_errors": self._feature_errors.copy(),
             }
@@ -253,7 +257,7 @@ class Core:
             "loaded_profile",
             "_start",
         }
-        return {
+        snapshot = {
             **{
                 key: copy.deepcopy(value)
                 for key, value in job.items()
@@ -261,6 +265,9 @@ class Core:
             },
             "allowed_actions": cls._job_actions(job),
         }
+        if "_start" in job:
+            snapshot["elapsed_seconds"] = int(time.monotonic() - job["_start"])
+        return snapshot
 
     def get_jobs(self, key=None):
         with self._lock:
@@ -273,6 +280,9 @@ class Core:
             return self._job_snapshot(self._jobs[key])
 
     def submit(self, payload, idempotency=None):
+        return self._submit(payload, idempotency, persist=True)
+
+    def _submit(self, payload, idempotency=None, *, persist):
         with self._lock:
             for old in self._jobs.values():
                 if idempotency and old.get("idempotency") == idempotency:
@@ -357,7 +367,8 @@ class Core:
             if profile:
                 self._activation = job["id"]
                 self._error = None
-            self._write_jobs()
+            if persist:
+                self._write_jobs()
             self._tasks.put(job["id"])
             return self._job_snapshot(job)
 
@@ -525,6 +536,7 @@ class Core:
         return result
 
     def _apply(self, job, restore):
+        self._progress(job, "checking_profile")
         profile = job["profile"]
         host = self._planning_host()
         self._catalog.validate({**profile, "features": []}, host)
@@ -715,9 +727,8 @@ class Core:
                         milestone_count,
                         unit="milestones",
                     )
-                job["elapsed_seconds"] = time.monotonic() - job["_start"]
                 if historical and elapsed < historical:
-                    job["progress"]["eta_seconds"] = round(historical - elapsed)
+                    job["progress"]["eta_seconds"] = max(1, round(historical - elapsed))
                 else:
                     job["progress"]["eta_seconds"] = None
 
@@ -777,7 +788,9 @@ class Core:
     def restore_saved_profile(self):
         with self._lock:
             if self._saved:
-                self.submit({"kind": "restore"})
+                # Startup restores are recreated on every boot. The worker
+                # records their result, so the listener can start serving now.
+                self._submit({"kind": "restore"}, persist=False)
 
     def close(self):
         self._closing.set()
@@ -828,11 +841,12 @@ def main():
 
             signal.signal(signal.SIGTERM, stop)
             signal.signal(signal.SIGINT, stop)
+            # The management listener is bound before any native model work.
+            core.restore_saved_profile()
             LOG.info(
                 "Core management listening on http://127.0.0.1:%s/v1",
                 server.server_port,
             )
-            core.restore_saved_profile()
             server.serve_forever()
     finally:
         core.close()

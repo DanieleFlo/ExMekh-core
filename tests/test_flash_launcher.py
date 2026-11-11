@@ -280,7 +280,7 @@ class ServerLauncherTests(unittest.TestCase):
             DS4_VISION_MODEL="/missing vision/model.gguf",
         )
         result = subprocess.run(
-            ["bash", str(ROOT / "start-ds4-server.sh")],
+            ["bash", str(ROOT / "start-ds4-server.sh"), "--manual"],
             env=env,
             text=True,
             capture_output=True,

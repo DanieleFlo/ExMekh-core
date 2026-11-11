@@ -3,7 +3,14 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_DIR="$(cd -- "${SCRIPT_DIR}/.." && pwd -P)"
-# This entry point always selects Qwen27; Flash has its own launcher.
+# A regular launch lets Core restore the profile selected in Agent.
+if [[ $# -eq 0 ]]; then
+    exec "$REPO_DIR/start-ds4-server.sh" --managed
+fi
+if [[ "$1" == --managed ]]; then
+    exec "$REPO_DIR/start-ds4-server.sh" "$@"
+fi
+# Explicit native launches keep the Qwen27 defaults.
 export DS4_MODEL_PROFILE=qwen27
 # Keep CUDA defaults; the native Mac profile starts with a bounded LLM context.
 if [[ "${DS4_BACKEND:-auto}" == metal || ( "${DS4_BACKEND:-auto}" == auto && "$(uname -s)" == Darwin ) ]]; then

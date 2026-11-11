@@ -149,7 +149,7 @@ set +a
 ```
 
 For Qwen27, source `config/qwen27-metal-streamed.env.example` in both terminals
-and use `./agent/start-ds4-server.sh` for the backend. Start only one backend at
+and use `./agent/start-ds4-server.sh --manual` for that qualification profile. Start only one backend at
 a time. Open [ExMekh Agent](http://127.0.0.1:8000) and choose **New Quick Chat**.
 Profiles do not overwrite a saved `.env` file.
 
@@ -164,7 +164,7 @@ historical preparation profile with its original resource refusal.
 
 ### Qwen27 CUDA and native suite
 
-On CUDA, start `./agent/start-ds4-server.sh` for Qwen27 and the native Images/Embeddings
+On CUDA, start `./agent/start-ds4-server.sh --manual` for a manually configured Qwen27 and the native Images/Embeddings
 endpoints on the same `http://localhost:8080/v1` URL. It builds and runs
 `ds4-server-suite` with `config/native-suite.example.json`, keeping context
 26000, MTP and the matching vision encoder. Set `DS4_SUITE_CONFIG` to use your
@@ -264,6 +264,18 @@ uv run ruff check src tests
 uv run ruff format --check src tests
 uv build
 ```
+
+### Core setup and restart
+
+```bash
+uv run pytest -n 0 --no-cov tests/test_core_setup_e2e.py tests/test_core_lifecycle_e2e.py
+```
+
+The browser tests cover setup, progress, reconnecting, and the system settings
+pages in desktop and mobile layouts. On Unix, the lifecycle test runs the real
+Core management API and persists a profile in temporary storage. It uses local
+test artifacts and a simulated inference worker, so it can run offline without
+model weights or a GPU.
 
 ### Live End-to-End Tests
 Tests with mock providers exercise the agent workflow without an LLM server:
@@ -402,8 +414,8 @@ See [architecture and responsibilities](docs/architecture.md) for the public API
 
 This checkout lives in `agent/`. The sibling `exmekh_lib/` source copy is ignored by
 Git; the versioned wheel in `wheels/` is the runtime dependency. In WSL/Linux,
-start either `./start-ds4-server.sh` (Qwen27B) or
-`./start-ds4-server-flash.sh` (Flash Next), then `./run.sh` in a separate terminal. The model
+start `./start-ds4-server.sh` for managed Core, then `./run.sh` in a separate terminal.
+The server listens while restoring the profile selected in Agent. The model
 server uses port 8080 and the frontend uses port 8000. Set `API_TYPE=responses`
 and keep the client context at or below the server allocation reported by `/v1/models`.
 See [the DS4 frontend guide](../docs/agentic/frontend.md).
@@ -414,10 +426,10 @@ The `.python-version` pins Python 3.13, matching the source environment and test
 
 ### Selecting the local inference model
 
-From `agent/`, use a dedicated server launcher for each model:
+From `agent/`, use these commands for manual native profiles:
 
 ```sh
-./start-ds4-server.sh        # Qwen27B: MTP, context 28000
+./start-ds4-server.sh --manual  # Qwen27B: MTP, context 26000
 ./start-ds4-server-flash.sh  # Flash Next: MTP, context 65536, prefill chunk 2048
 ```
 

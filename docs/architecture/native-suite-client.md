@@ -8,7 +8,7 @@ Qualifica e limiti nel [report](../performance/native-suite-t17-t18-20261022/REA
 ## Avvio
 
 `ds4-server-suite` è un target esplicito, selezionato dal launcher Qwen27
-`./agent/start-ds4-server.sh` con MTP, visione e contesto 26000. Il launcher
+`./agent/start-ds4-server.sh --manual` con MTP, visione e contesto 26000. Il launcher
 LLM della root e quello Flash conservano i propri default. Servono i bundle BF16 e gli asset verificati
 nei task precedenti; [la configurazione](../../config/native-suite.example.json)
 mostra i percorsi della qualifica locale. I percorsi sono relativi alla directory

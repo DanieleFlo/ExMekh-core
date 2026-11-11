@@ -3,7 +3,11 @@
 import hashlib
 import http.client
 import json
+import os
+import re
+import select
 import socket
+import subprocess
 import sys
 import tempfile
 import threading
@@ -13,7 +17,9 @@ import urllib.error
 import urllib.request
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from itertools import product
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -40,6 +46,114 @@ class ServerFixture:
 
 
 class ManagedCoreTests(unittest.TestCase):
+    def test_regular_launchers_open_managed_http_with_or_without_saved_profile(self):
+        launchers = ("start-ds4-server.sh", "agent/start-ds4-server.sh")
+        for launcher, configured in product(launchers, (False, True)):
+            with (
+                self.subTest(launcher=launcher, configured=configured),
+                tempfile.TemporaryDirectory() as directory,
+            ):
+                root = Path(directory)
+                state = root / "state"
+                profile = {
+                    "model_id": "qwen27",
+                    "mode_id": "vram",
+                    "context_tokens": 512,
+                }
+                env = {
+                    key: value
+                    for key, value in os.environ.items()
+                    if not key.startswith("DS4_")
+                }
+                env.update(
+                    DS4_STATE_DIR=str(state),
+                    DS4_GGUF_DIR=str(root / "gguf"),
+                    DS4_BACKEND="cpu",
+                    DS4_SERVER_PORT="0",
+                )
+                if configured:
+                    state.mkdir()
+                    (state / "profile.json").write_text(
+                        json.dumps({"version": 1, "revision": 1, "profile": profile})
+                    )
+                    env["DS4_MODEL_PROFILE"] = "qwen27"
+                with subprocess.Popen(
+                    ["bash", launcher],
+                    cwd=ROOT,
+                    env=env,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                ) as process:
+                    try:
+                        self.assertTrue(select.select([process.stdout], [], [], 5)[0])
+                        line = process.stdout.readline()
+                        endpoint = re.search(r"http://127\.0\.0\.1:\d+/v1", line)
+                        self.assertIsNotNone(endpoint, line)
+                        with urllib.request.urlopen(
+                            endpoint[0] + "/manage/status", timeout=2
+                        ) as response:
+                            status = json.load(response)
+                        self.assertFalse(status["chat_ready"])
+                        if configured:
+                            self.assertIn(status["state"], {"starting", "error"})
+                            self.assertEqual(status["saved_profile"]["context_tokens"], 512)
+                        else:
+                            self.assertEqual(status["state"], "empty")
+                            self.assertIsNone(status["saved_profile"])
+                            self.assertEqual(list((root / "gguf").glob("*.gguf*")), [])
+                        with self.assertRaises(urllib.error.HTTPError) as unavailable:
+                            urllib.request.urlopen(endpoint[0] + "/models", timeout=2)
+                        self.assertEqual(unavailable.exception.code, 503)
+                    finally:
+                        process.terminate()
+                        process.communicate(timeout=5)
+
+    def test_http_reports_saved_profile_restore_while_model_work_is_blocked(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            state = root / "state"
+            state.mkdir()
+            profile = {"model_id": "qwen27", "mode_id": "vram", "context_tokens": 512}
+            (state / "profile.json").write_text(
+                json.dumps({"version": 1, "revision": 1, "profile": profile})
+            )
+            entered = threading.Event()
+            release = threading.Event()
+
+            def prepare(_core, _job):
+                entered.set()
+                if not release.wait(5):
+                    raise TimeoutError("Test did not release the restore")
+
+            with patch.object(Core, "_run_job", prepare):
+                core = Core(state, root / "gguf", "cpu")
+                try:
+                    server = ManagedHTTP(("127.0.0.1", 0), core, None)
+                    core.restore_saved_profile()
+                    self.assertTrue(entered.wait(2))
+                    with ServerFixture(server) as base:
+                        with urllib.request.urlopen(
+                            base + "/v1/manage/status", timeout=2
+                        ) as response:
+                            status = json.load(response)
+                        self.assertEqual(status["state"], "starting")
+                        self.assertFalse(status["chat_ready"])
+                        job = status["activation_job"]
+                        self.assertEqual(job["id"], status["job_id"])
+                        self.assertEqual(job["kind"], "restore")
+                        self.assertEqual(job["model_id"], profile["model_id"])
+                        with urllib.request.urlopen(
+                            base + "/v1/manage/jobs/" + job["id"], timeout=2
+                        ) as response:
+                            self.assertEqual(json.load(response)["id"], job["id"])
+                        with self.assertRaises(urllib.error.HTTPError) as unavailable:
+                            urllib.request.urlopen(base + "/v1/models", timeout=2)
+                        self.assertEqual(unavailable.exception.code, 503)
+                finally:
+                    release.set()
+                    core.close()
+
     def test_saved_profile_can_repair_an_inactive_corrupt_model(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

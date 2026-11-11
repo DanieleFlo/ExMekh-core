@@ -19,7 +19,9 @@ In un altro terminale:
 ./agent/run.sh
 ```
 
-Il launcher server usa `ds4-server-suite`, Qwen3.8, MTP, visione e `--ctx 26000`,
+Il launcher apre la porta di gestione mentre ripristina il profilo salvato.
+Per il profilo nativo esplicito, `./agent/start-ds4-server.sh --manual` usa
+`ds4-server-suite`, Qwen3.8, MTP, visione e `--ctx 26000`,
 porta 8080. Carica `config/native-suite.example.json` (sostituibile con
 `DS4_SUITE_CONFIG`) per servire anche immagini ed embedding dalla stessa URL.
 I percorsi delle librerie native possono essere impostati in

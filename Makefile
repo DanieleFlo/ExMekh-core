@@ -1348,6 +1348,12 @@ test-server-resident-frontier: tests/test_server_resident_frontier
 test-download-model:
 	python3 tests/test_model_download.py
 
+.PHONY: test-managed-core
+test-managed-core:
+	python3 -m unittest tests.test_managed_core tests.test_flash_launcher -v
+
+test: test-managed-core
+
 .PHONY: test-quality-api
 # Only the scorer's JSON parser is needed; discard the unused engine entry point.
 test-quality-api: tests/test_quality_api.c gguf-tools/quality-testing/score_official.c

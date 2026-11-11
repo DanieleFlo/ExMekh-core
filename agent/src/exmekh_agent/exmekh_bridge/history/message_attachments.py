@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from exmekh_agent.config.attachments import LEGACY_PDF_PREVIEW_PATTERN
 from exmekh_agent.exmekh_bridge.history.image_input import IMAGE_SUFFIXES
 from exmekh_agent.exmekh_bridge.history.pasted_input import (
     StagedAttachment,
@@ -124,10 +125,7 @@ def _legacy_image_paths(message: ChatMessage) -> dict[int, str]:
         if Path(path).suffix.lower() in IMAGE_SUFFIXES | {".pdf"}
     ]
     pdf_preview_counts = iter(
-        int(count)
-        for count in re.findall(
-            r": pages 1–(\d+) of \d+ are attached as images", message.content
-        )
+        int(count) for count in re.findall(LEGACY_PDF_PREVIEW_PATTERN, message.content)
     )
     index = 0
     paths_by_index = {}

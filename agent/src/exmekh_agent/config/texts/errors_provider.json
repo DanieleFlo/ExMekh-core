@@ -1,5 +1,14 @@
 {
   "execution.connection_guidance": "Verify that the provider responds at `{base_url}` and that the model `{model}` is available. If the server is running, check the logs to see if the connection was closed during a long request.",
   "execution.general_guidance": "The server may still be running: check the technical cause and request logs before restarting it.",
-  "execution.failure": "⚠️ **Error during model execution**:\n\n`{diagnostics}`\n\n{guidance}"
+  "execution.failure": "⚠️ **Error during model execution**:\n\n`{diagnostics}`\n\n{guidance}",
+  "core.invalid_url": "Enter an HTTP or HTTPS API URL without credentials, for example http://127.0.0.1:8080/v1.",
+  "core.unreachable": "Core is unreachable. Check the address and whether the server is running.",
+  "core.access_denied": "Access denied. Check the Core management credential and address.",
+  "core.request_rejected": "Core did not accept this request.",
+  "core.incompatible_response": "Core returned an incompatible management response.",
+  "core.incompatible_protocol": "Core uses an incompatible management protocol.",
+  "core.manual_connection": "Inference endpoint is reachable. Manage its models on the server.",
+  "core.no_chat_model": "The inference endpoint has no chat model. Load one on the server and retry.",
+  "core.model_discovery_failed": "Could not discover a chat model at this address."
 }

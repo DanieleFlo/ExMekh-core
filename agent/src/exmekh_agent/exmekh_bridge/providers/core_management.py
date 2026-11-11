@@ -1,5 +1,7 @@
 """Agent-side HTTP boundary for Core management."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any, Literal
 from urllib.parse import quote, urlsplit
@@ -8,13 +10,17 @@ import httpx
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from exmekh_agent.config import config
+from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.exmekh_bridge.providers.provider_health import check_provider_health
 
 
 class CoreProblem(Exception):
-    def __init__(self, message: str, status: int = 0) -> None:
+    def __init__(
+        self, message: str, status: int = 0, *, code: str | None = None
+    ) -> None:
         super().__init__(message)
         self.status = status
+        self.code = code
 
 
 class ActiveProfile(BaseModel):
@@ -37,6 +43,7 @@ class CoreStatus(BaseModel):
     active_profile: ActiveProfile | None = None
     saved_profile: dict | None = None
     job_id: str | None = None
+    activation_job: CoreJob | None = None
     error: dict | None = None
     feature_errors: dict[str, str] = Field(default_factory=dict)
 
@@ -97,6 +104,10 @@ class Connection:
     detail: str = ""
     models: tuple[str, ...] = ()
 
+    @property
+    def ready_profile(self) -> ActiveProfile | None:
+        return self.status.ready_profile if self.status else None
+
 
 def validated_url(value: str) -> str:
     try:
@@ -113,9 +124,7 @@ def validated_url(value: str) -> str:
         ):
             raise ValueError
     except ValueError as exc:
-        raise CoreProblem(
-            "Enter an HTTP or HTTPS API URL without credentials, for example http://127.0.0.1:8080/v1."
-        ) from exc
+        raise CoreProblem(app_text("errors_provider.core.invalid_url")) from exc
     return url.geturl().rstrip("/")
 
 
@@ -141,25 +150,24 @@ class CoreClient:
                     method, f"{self._url}/manage/{path}", json=data
                 )
         except httpx.HTTPError as exc:
-            raise CoreProblem(
-                "Core is unreachable. Check the address and whether the server is running."
-            ) from exc
+            raise CoreProblem(app_text("errors_provider.core.unreachable")) from exc
         try:
             result = response.json()
         except ValueError:
             result = None
         if response.status_code >= 400:
             error = result.get("error") if isinstance(result, dict) else None
-            message = error.get("message") if isinstance(error, dict) else None
+            details = error if isinstance(error, dict) else {}
+            message = details.get("message")
             if response.status_code in {401, 403}:
-                message = (
-                    "Access denied. Check the Core management credential and address."
-                )
+                message = app_text("errors_provider.core.access_denied")
             raise CoreProblem(
-                message or "Core did not accept this request.", response.status_code
+                message or app_text("errors_provider.core.request_rejected"),
+                response.status_code,
+                code=details.get("code"),
             )
         if result is None:
-            raise CoreProblem("Core returned an incompatible management response.")
+            raise CoreProblem(app_text("errors_provider.core.incompatible_response"))
         return result
 
     async def _read(self, method, path, schema, data=None, *, idempotency_key=None):
@@ -174,7 +182,9 @@ class CoreClient:
             )
             return validator(payload)
         except ValidationError as exc:
-            raise CoreProblem("Core uses an incompatible management protocol.") from exc
+            raise CoreProblem(
+                app_text("errors_provider.core.incompatible_protocol")
+            ) from exc
 
     async def status(self) -> CoreStatus:
         return await self._read("GET", "status", CoreStatus)
@@ -193,6 +203,22 @@ class CoreClient:
 
     async def job(self, job_id: str) -> CoreJob:
         return await self._read("GET", f"jobs/{quote(job_id, safe='')}", CoreJob)
+
+    async def activation(
+        self, status: CoreStatus, previous_job: str = ""
+    ) -> CoreJob | None:
+        """Use the current snapshot or look up the operation that just ended."""
+        if status.activation_job is not None:
+            return status.activation_job
+        job_id = status.job_id or previous_job
+        if not job_id:
+            return None
+        try:
+            return await self.job(job_id)
+        except CoreProblem as error:
+            if error.status != 404:
+                raise
+            return None
 
     async def start_job(
         self, kind: str, *, idempotency_key: str | None = None, **options
@@ -223,23 +249,24 @@ class CoreClient:
         if online and models:
             return Connection(
                 "manual",
-                detail="Inference endpoint is reachable. Manage its models on the server.",
+                detail=app_text("errors_provider.core.manual_connection"),
                 models=tuple(models),
             )
         if online:
             return Connection(
                 "unavailable",
-                detail="The inference endpoint has no chat model. Load one on the server and retry.",
+                detail=app_text("errors_provider.core.no_chat_model"),
             )
         return Connection(
-            "unavailable", detail="Could not discover a chat model at this address."
+            "unavailable",
+            detail=app_text("errors_provider.core.model_discovery_failed"),
         )
 
     def follow(self, connection: Connection) -> None:
         """Apply discovery only while this endpoint is still selected."""
         if self._url != config.base_url.rstrip("/") or self._key != config.api_key:
             return
-        profile = connection.status.ready_profile if connection.status else None
+        profile = connection.ready_profile
         if profile:
             config.set_model_context_length(
                 profile.api_model, profile.context_tokens, base_url=self._url

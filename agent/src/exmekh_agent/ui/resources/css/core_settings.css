@@ -1,0 +1,217 @@
+/* Managed startup and system settings share the same page frame. */
+.core-console {
+    --core-panel: color-mix(in srgb, var(--bg-card) 92%, var(--blue-soft) 8%);
+    --core-content: color-mix(in srgb, var(--bg-surface) 94%, var(--blue-soft) 6%);
+    --core-line: color-mix(in srgb, var(--border-active) 84%, var(--blue-soft) 16%);
+    --core-selected: light-dark(#e4ecff, #2a3557);
+    --core-action: light-dark(#354b93, #bdc9ff);
+    --core-action-text: light-dark(#fff, #131c38);
+    --q-primary: var(--core-action);
+    width: min(1100px, calc(100% - 32px));
+    margin: clamp(16px, 4vw, 48px) auto;
+    overflow: hidden;
+    border: 1px solid var(--core-line);
+    border-radius: 18px;
+    background: var(--core-content);
+    box-shadow: 0 18px 48px color-mix(in srgb, var(--shadow-color) 22%, transparent);
+    color: var(--text-main);
+}
+
+.core-console .core-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-height: 72px;
+    padding: 14px 24px;
+    background: var(--core-panel);
+    border-bottom: 1px solid var(--core-line);
+}
+
+.core-console .core-brand { gap: 12px; align-items: center; font-size: .95rem; font-weight: 700; }
+
+.core-console .core-status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text-muted);
+    font-size: .82rem;
+    font-weight: 500;
+}
+
+.core-console .core-status::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    background: currentColor;
+    border-radius: 50%;
+}
+
+.core-console :is(.core-connected, .core-installed) { color: var(--green-soft); }
+
+.core-console .core-header-link,
+.core-console .q-btn.q-btn--outline {
+    border-radius: 9px;
+    color: var(--text-main) !important;
+}
+
+.core-console .core-header-link {
+    padding: 9px 13px;
+    border: 1px solid var(--core-line);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.core-console .q-btn.q-btn--outline::before { border-color: var(--core-line); }
+.core-console .q-btn.q-btn--outline .q-btn__content { color: var(--text-main); }
+.core-console .core-header-link:hover,
+.core-console .core-navigation a:hover { background: var(--bg-hover); }
+
+.core-console .core-layout {
+    display: grid;
+    grid-template-columns: minmax(166px, 212px) minmax(0, 1fr);
+    min-height: 375px;
+}
+
+.core-console .core-navigation {
+    display: flex;
+    flex-direction: column;
+    align-content: start;
+    gap: 4px;
+    padding: 20px 13px;
+    border-right: 1px solid var(--core-line);
+    background: var(--core-panel);
+}
+
+.core-console .core-navigation > * {
+    display: block;
+    padding: 10px 13px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    text-decoration: none;
+}
+
+.core-console .core-navigation [aria-current] {
+    background: var(--core-selected);
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.core-console .core-navigation [aria-disabled="true"] { color: var(--text-muted); }
+
+.core-console .core-body {
+    width: 100%;
+    min-width: 0;
+    gap: 20px;
+    padding: clamp(20px, 4.1vw, 42px);
+}
+
+.core-console .core-heading {
+    font-size: clamp(1.45rem, 3.4vw, 1.85rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.025em;
+}
+
+.core-console .core-subtitle {
+    color: var(--text-secondary);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.core-console .core-surface {
+    width: 100%;
+    min-width: 0;
+    background: var(--core-panel);
+    border: 1px solid var(--core-line);
+    border-radius: 12px;
+    box-shadow: none;
+    gap: 0;
+}
+
+.core-console .core-surface > .core-item + .core-item { border-top: 1px solid var(--core-line); }
+
+.core-console .core-item {
+    width: 100%;
+    min-width: 0;
+    padding: 15px 17px;
+    gap: 10px;
+}
+
+.core-console .core-item:first-child { border-radius: 11px 11px 0 0; }
+.core-console .core-item:last-child { border-radius: 0 0 11px 11px; }
+.core-console .core-item:only-child { border-radius: 11px; }
+.core-console .core-item:has(.core-radio:checked) {
+    background: color-mix(in srgb, var(--core-selected) 29%, var(--core-panel));
+}
+
+.core-console .core-choice {
+    display: flex;
+    flex: 1 1 205px;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+    max-width: 100%;
+    cursor: pointer;
+}
+
+.core-console .core-radio {
+    flex: none;
+    inline-size: 16px;
+    block-size: 16px;
+    margin-block-start: 3px;
+    accent-color: var(--core-action);
+}
+
+.core-console .core-item-title { font-size: .98rem; font-weight: 650; overflow-wrap: anywhere; }
+.core-console .core-item-detail { color: var(--text-muted); overflow-wrap: anywhere; }
+.core-console .core-action-row { justify-content: flex-end; width: 100%; gap: 10px; }
+
+.core-console .q-btn.core-primary {
+    min-height: 44px;
+    border-radius: 9px;
+    background: var(--core-action) !important;
+    color: var(--core-action-text) !important;
+    padding-inline: 14px;
+    font-weight: 650;
+}
+.core-console .core-primary .q-btn__content { color: var(--core-action-text); }
+
+.core-console .core-progress-card { padding: clamp(15px, 3vw, 22px); gap: 14px; }
+.core-console .q-linear-progress.core-progress {
+    height: 6px !important;
+    border-radius: 6px;
+    color: var(--core-action) !important;
+}
+.core-console .core-body a { color: var(--blue-soft); }
+
+.core-console :is(a, button, input):focus-visible {
+    outline: 2px solid var(--core-action);
+    outline-offset: 3px;
+}
+
+@media (max-width: 680px) {
+    .core-console { width: calc(100% - 20px); margin-block: 10px; border-radius: 13px; }
+    .core-console .core-topbar { min-height: 62px; padding: 12px 15px; }
+    .core-console .core-layout { grid-template-columns: minmax(0, 1fr); }
+    .core-console .core-navigation {
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: 0;
+        border-bottom: 1px solid var(--core-line);
+        padding: 10px;
+    }
+    .core-console .core-navigation > * { padding: 9px 10px; font-size: .86rem; }
+    .core-console .core-body { gap: 17px; padding: 19px 15px 23px; }
+    .core-console .core-item { padding-inline: 13px; }
+}
+
+@media (pointer: coarse) {
+    .core-console .core-navigation a,
+    .core-console .core-header-link,
+    .core-console .q-btn { min-height: 44px; }
+    .core-console .core-choice { min-height: 44px; align-items: center; }
+    .core-console .core-radio { margin-block-start: 0; }
+}
