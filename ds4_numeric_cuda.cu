@@ -52,16 +52,20 @@ static ds4_status gpu_allocate(void *p, uint64_t n, void **out) {
   (void)p;
   return status(cudaMalloc(out, n));
 }
-static ds4_status gpu_release(void *p, void *storage) {
+static ds4_status gpu_refresh_memory(void *p) {
   numeric_cuda *s = (numeric_cuda *)p;
+  size_t available = 0, total = 0;
+  ds4_status st = status(cudaMemGetInfo(&available, &total));
+  return st ? st : ds4_resources_reconcile(s->context->resources,
+                                            DS4_MEMORY_DEVICE, available, true);
+}
+static ds4_status gpu_release(void *p, void *storage) {
   ds4_status st = status(cudaFree(storage));
   if (!st) {
     /* The legacy allocator shares this registry and samples global free
      * memory while suite tensors are alive. A native free must refresh that
      * sample too, or a later lazy LLM allocation can see a stale zero budget. */
-    size_t available = 0, total = 0;
-    if (cudaMemGetInfo(&available, &total) == cudaSuccess)
-      ds4_resources_reconcile(s->context->resources, DS4_MEMORY_DEVICE, available, true);
+    (void)gpu_refresh_memory(p);
   }
   return st;
 }
@@ -1216,7 +1220,7 @@ static const ds4_numeric_ops gpu_ops = {
     gpu_linear,       gpu_norm,       gpu_point,      gpu_rope,    gpu_attend,
     gpu_conv,         gpu_reorder,    gpu_pool,       gpu_nearest, gpu_softmax,
     gpu_matmul_batch, gpu_channel_l2, gpu_channel_rms, gpu_weight_copy, gpu_weight_ready,
-    gpu_prepare_close, NULL};
+    gpu_prepare_close, NULL, gpu_refresh_memory, NULL};
 extern "C" ds4_status ds4_numeric_cuda(ds4_numeric **out, ds4_resources *r,
                                        uint64_t owner) {
   if (!out)

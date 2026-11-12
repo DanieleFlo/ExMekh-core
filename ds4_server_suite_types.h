@@ -7,7 +7,11 @@
 #include <pthread.h>
 #include <sys/mman.h>
 #define SUITE_FILES 256
-#define SUITE_MODELS 2
+typedef enum {
+    SUITE_MODEL_IMAGE,
+    SUITE_MODEL_EMBEDDING,
+    SUITE_MODELS,
+} suite_model_slot;
 #define SUITE_RECEIPTS 64
 #define SUITE_IMAGE_MAX 8
 #define SUITE_UPLOAD_MAX (512ull * 1024 * 1024)

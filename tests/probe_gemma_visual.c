@@ -462,8 +462,24 @@ int main(int argc, char **argv) {
       CHECK(ds4_gemma_multimodal_resident_weights(adapter, &prior));
       if (prior.audio_bytes || prior.vision_bytes)
         assert(text_plan.release_encoders && text_plan.reclaim_device_bytes);
+      ds4_runtime_estimate peak;
+      CHECK(ds4_gemma_multimodal_prepare_reservation(adapter, text_input, &peak));
+      if (text_plan.reclaim_device_bytes) {
+        ds4_gemma_residency freed;
+        CHECK(ds4_gemma_multimodal_resident_weights(adapter, &freed));
+        assert(!freed.text_bytes && !freed.vision_bytes && !freed.audio_bytes);
+      }
+      uint64_t bytes[DS4_MEMORY_COUNT] = {
+          [DS4_MEMORY_DEVICE] = peak.device_bytes,
+          [DS4_MEMORY_HOST] = peak.host_bytes,
+      };
+      ds4_reservation *lease = NULL;
+      CHECK(ds4_resources_reserve(rs, 500, bytes, &lease));
+      ds4_reservation_scope working = ds4_reservation_enter(lease);
       CHECK(ds4_gemma_multimodal_embed(adapter, text_input, 768, NULL,
                                        &text_result));
+      ds4_reservation_leave(&working);
+      CHECK(ds4_reservation_cancel(lease));
       assert(!memcmp(text_vector, ds4_gemma_result_data(text_result).vectors,
                      sizeof(text_vector)));
       ds4_gemma_residency after;

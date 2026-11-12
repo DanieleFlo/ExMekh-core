@@ -95,14 +95,13 @@ prefix cache device/host e componenti seriali. I limiti si ricavano dai byte
 reali dei gruppi e dal workload; non esiste un numero fisso di blocchi per GPU.
 Gemma applica lo stesso contratto ai rami testo, vision e audio.
 
-Nel servizio HTTP i pesi Gemma restano disponibili per tutte le parti della
-richiesta e vengono rilasciati prima della pubblicazione. Il solo footprint
-della sessione LLM non include i suoi futuri transitori di prefill/visione:
-conservarvi anche cache Gemma poteva causare OOM al turno successivo con
-contesto 26000 e MTP. La conservazione fra richieste attende un bound completo
-del working set LLM; resta uno studio di ottimizzazione aperto. Le cache host
-dei media e la residenza del planner nativo standalone conservano i propri
-contratti.
+Nel servizio HTTP Gemma può riusare i pesi tra richieste consecutive quando
+il piano completo entra insieme alla chat. Se serve spazio, il planner può
+salvare il grafo della sessione su SSD e liberarlo come per la visione di
+Qwen27. I pesi della chat rimangono residenti. Il server rilascia Gemma
+prima di ripristinare il checkpoint e pubblicare gli embedding. Quando la
+chat riprende dopo un piano senza checkpoint, libera la cache Gemma prima
+del prefill per riservare spazio ai buffer temporanei di chat e visione.
 
 Una coda persistente legge il mapping in due slot pinned di massimo 2 MiB
 ciascuno. Il budget pinned può ridurre questi slot; sotto 64 KiB per slot resta

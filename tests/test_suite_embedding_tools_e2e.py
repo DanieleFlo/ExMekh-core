@@ -6,8 +6,11 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
+from exmekh_lib.config.capabilities import CAPABILITY_FORMAT
+from exmekh_lib.core.agents.tools.deep_tools import DeepTools
 from exmekh_lib.core.models.client import Client
 from exmekh_lib.core.models.client_request import ClientRequest
 from exmekh_lib.core.models.native_suite import (
@@ -17,11 +20,11 @@ from exmekh_lib.core.models.native_suite import (
     native_suite_context,
 )
 from exmekh_lib.core.models.system_message import SystemMessage
-from exmekh_lib.core.models.tool import CalledTool, Tool
+from exmekh_lib.core.models.tool import CalledTool
 from exmekh_lib.core.models.tool_message import ToolMessage
 from exmekh_lib.core.models.tools import Tools
 from exmekh_lib.core.models.user_message import ImagesUserMessage, UserMessage
-from exmekh_lib.core.web_navigation import ranking
+from exmekh_lib.core.web_navigation import ranking, search
 from exmekh_lib.core.web_navigation.image_discovery import DiscoveredImage
 from exmekh_lib.providers.local import LocalProvider
 from exmekh_lib.utils.xml import stringify_tool_result
@@ -31,27 +34,6 @@ from PIL import Image
 
 URL = os.getenv("DS4_SUITE_HTTP_URL")
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def rank_local_results(query: str) -> dict:
-    """Rank fixed search candidates using the production native embedding consumer."""
-    return {
-        "scores": ranking.compute_semantic_similarity(
-            query,
-            [
-                {
-                    "title": "Alps",
-                    "url": "https://example.org/alps",
-                    "snippet": "Snowy mountains",
-                },
-                {
-                    "title": "Cooking",
-                    "url": "https://example.org/food",
-                    "snippet": "Bread recipes",
-                },
-            ],
-        )
-    }
 
 
 @unittest.skipUnless(URL, "set DS4_SUITE_HTTP_URL for live ExMekh embedding acceptance")
@@ -73,7 +55,7 @@ class EmbeddingToolsE2E(unittest.TestCase):
                 event_hooks={
                     "request": [cls.capture_request],
                     "response": [cls.capture_response],
-                }
+                },
             ),
         )
         cls.addClassCleanup(cls.provider.close)
@@ -349,7 +331,24 @@ class EmbeddingToolsE2E(unittest.TestCase):
         )
 
     def test_07_llm_ranking_embedding_llm_retains_conversation(self):
-        tool = Tool(rank_local_results)
+        registry = DeepTools(
+            [CAPABILITY_FORMAT.bundled_root / "tools/search-web"],
+            work_root=self.root,
+        )
+        self.addCleanup(registry.unload)
+        tool = registry.load()[0]
+        candidates = [
+            {
+                "title": "Cooking",
+                "url": "https://example.org/food",
+                "snippet": "Bread recipes",
+            },
+            {
+                "title": "Alps",
+                "url": "https://example.org/alps",
+                "snippet": "Snowy mountains",
+            },
+        ]
         client = Client(
             self.provider,
             SystemMessage("Use the requested tool and remember the user's code."),
@@ -358,7 +357,9 @@ class EmbeddingToolsE2E(unittest.TestCase):
         first = client.call(
             ClientRequest(
                 UserMessage(
-                    "Remember EMBEDDING-E2E-27. Call rank_local_results with query snow. After its result reply only with the remembered code."
+                    f"Remember EMBEDDING-E2E-27. Call {tool.get_name()} with query "
+                    "'Alps snowy mountains' and max_results 2. After its result "
+                    "reply only with the remembered code."
                 ),
                 tool_choice="required",
                 extra={"max_output_tokens": 256, "temperature": 0},
@@ -367,10 +368,27 @@ class EmbeddingToolsE2E(unittest.TestCase):
         calls = first.get_tool_calls()
         self.assertEqual(len(calls or []), 1)
         call = calls[0]
-        self.assertEqual(call.get_name(), "rank_local_results")
-        with native_suite_context(client.native_suite):
+        self.assertEqual(call.get_name(), tool.get_name())
+        before = len(self.requests)
+        with (
+            patch.object(search, "_retrieve_candidates", return_value=candidates),
+            native_suite_context(client.native_suite),
+        ):
             ranked = CalledTool.from_tool_call(tool, call).execute(work_root=self.root)
-        self.assertTrue(np.isfinite(ranked["scores"]).all())
+        self.assertGreater(len(self.requests), before)
+        self.assertEqual(self.requests[-1]["model"], "google/embeddinggemma-2")
+        self.assertEqual(self.requests[-1]["ds4"]["task"], "similarity")
+        embedding = self.responses[-1]
+        self.assertTrue(embedding["path"].endswith("/embeddings"))
+        self.assertEqual(embedding["status"], 200)
+        if os.getenv("DS4_SUITE_EXPECT_EMBEDDING_PARK") == "1":
+            self.assertGreater(embedding["ds4"]["plan"]["victims"], 0)
+            self.assertGreater(embedding["ds4"]["reclaimed_device_bytes"], 0)
+        self.assertEqual(ranked["results"][0]["url"], candidates[1]["url"])
+        lexical = ranking.reciprocal_rank_fusion(
+            [([1, 0], ranking.BM25_RRF_WEIGHT), ([0, 1], ranking.PROVIDER_RRF_WEIGHT)]
+        )
+        self.assertGreater(ranked["results"][0]["relevance_score"], lexical[1])
         item = EmbeddingItem(
             content=[
                 TextContent(text="Mountains"),
@@ -391,7 +409,13 @@ class EmbeddingToolsE2E(unittest.TestCase):
         self.assertGreater(cached, 0)
         self.vectors([item])
         self.observations.append(
-            {"case": "llm_embedding_consumers_llm", "cached_tokens": cached}
+            {
+                "case": "llm_search_web_embedding_llm",
+                "cached_tokens": cached,
+                "embedding_plan": embedding["ds4"]["plan"],
+                "reclaimed_device_bytes": embedding["ds4"]["reclaimed_device_bytes"],
+                "ranking": ranked["results"],
+            }
         )
 
     def test_08_long_vision_prefill_after_all_embedding_towers(self):

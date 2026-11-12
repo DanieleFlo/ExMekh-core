@@ -23081,7 +23081,7 @@ static void *worker_main(void *arg) {
         if (!j) break;
 #ifdef DS4_NATIVE_SUITE
         if (j->suite_request) suite_worker(s, j);
-        else if (suite_recover(s)) suite_unavailable(s, j);
+        else if (suite_prepare_chat(s)) suite_unavailable(s, j);
         else
 #endif
         generate_job(s, &s->slots[0], j);

@@ -26,6 +26,8 @@ ds4_status ds4_gemma_visual_open(ds4_gemma_visual **, ds4_bundle *,
                                  const char *text_asset,
                                  const ds4_gemma_processor *);
 ds4_status ds4_gemma_visual_close(ds4_gemma_visual *);
+/* Release all resident branch weights while keeping the adapter open. */
+ds4_status ds4_gemma_visual_release_weights(ds4_gemma_visual *);
 ds4_status ds4_gemma_visual_release_vision(ds4_gemma_visual *);
 ds4_status ds4_gemma_visual_release_text(ds4_gemma_visual *);
 ds4_status ds4_gemma_visual_release_audio(ds4_gemma_visual *);
@@ -57,6 +59,11 @@ typedef struct {
 ds4_status ds4_gemma_visual_plan(ds4_gemma_visual *,
                                  const ds4_gemma_visual_input *,
                                  ds4_gemma_plan *);
+/* Prepare for a caller-owned reservation. If the bounded plan needs to
+ * reclaim this adapter's weights, release them before returning its peak. */
+ds4_status ds4_gemma_visual_prepare_reservation(ds4_gemma_visual *,
+                                                const ds4_gemma_visual_input *,
+                                                ds4_runtime_estimate *);
 /* Serial media groups with eager frame batching, then one isolated backbone per
  * ragged item. Detached features are request temporaries; the read-only plan
  * selects co-residence or tower release before the backbone. No KV survives. */

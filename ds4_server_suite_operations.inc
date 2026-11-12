@@ -127,28 +127,40 @@ static ds4_status suite_prepare_embedding(suite_operation *o, sj *root, uint64_t
     }
     return DS4_STATUS_OK;
 }
-static ds4_status suite_run_embedding(suite_operation *o, buf *body, sj *root,
-                                       uint64_t usage, ds4_execution_plan *plan) {
+static ds4_status suite_plan_embedding(suite_operation *o) {
+    ds4_status status = ds4_numeric_refresh_memory(o->state->numeric);
+    if (status && status != DS4_STATUS_UNSUPPORTED) return status;
+    ds4_gemma_multimodal *adapter = o->model->embed;
     ds4_runtime_estimate estimate;
-    ds4_status status = ds4_gemma_multimodal_estimate(o->model->embed, o->input, &estimate);
+    status = ds4_gemma_multimodal_estimate(adapter, o->input, &estimate);
     if (status) return status;
-    ds4_gemma_plan native_plan;
-    /* Admit a bounded native plan before considering LLM victims. The inner
-     * adapter makes the same read-only decision under the operation lease. */
-    ds4_status bounded = ds4_gemma_multimodal_plan(o->model->embed, o->input, &native_plan);
-    if (!bounded && !native_plan.reclaim_device_bytes) estimate = native_plan.peak;
-    o->group = (ds4_execution_group){.context = o->model, .load = suite_noop, .release = suite_drop_gemma};
-    o->step = (ds4_execution_step){.id = 0, .groups = 1, .retain = 1};
     o->step.working.bytes[DS4_MEMORY_DEVICE] = estimate.device_bytes;
     o->step.working.bytes[DS4_MEMORY_HOST] = estimate.host_bytes;
-    /* Session capacity excludes future LLM prefill/vision transients. Until
-     * that working set is bounded, retain Gemma weights only inside this
-     * request; publication must leave the original LLM headroom available. */
-    o->variant = (ds4_execution_variant){.steps = &o->step, .step_count = 1};
+    ds4_execution_plan full;
+    status = ds4_execution_plan_build(o->state->resources, &o->request, &full);
+    if (status != DS4_STATUS_NOMEM) return status;
+
+    /* Try bounded residency once a full load cannot fit with chat parked. */
+    if (suite_operation_cancel(o)) return DS4_STATUS_CANCELLED;
+    status = ds4_gemma_multimodal_prepare_reservation(adapter, o->input, &estimate);
+    if (status) return status;
+    o->step.working.bytes[DS4_MEMORY_DEVICE] = estimate.device_bytes;
+    o->step.working.bytes[DS4_MEMORY_HOST] = estimate.host_bytes;
+    return DS4_STATUS_OK;
+}
+static ds4_status suite_run_embedding(suite_operation *o, buf *body, sj *root,
+                                       uint64_t usage, ds4_execution_plan *plan) {
+    o->group = (ds4_execution_group){.context = o->model, .load = suite_noop, .release = suite_drop_gemma};
+    o->step = (ds4_execution_step){.groups = 1, .retain = 1};
+    /* Reuse the weights after a direct fit. The executor releases them before
+     * restoring any parked session, and the next chat releases a warm cache. */
+    o->variant = (ds4_execution_variant){.steps = &o->step, .step_count = 1, .keep = 1};
     o->request = (ds4_execution_request){.groups = &o->group, .group_count = 1,
         .variants = &o->variant, .variant_count = 1, .victims = o->victims, .victim_count = o->victim_count};
     ds4_execution_ops ops = {.context = o, .execute = suite_embed_step, .drain = suite_drain,
         .commit = suite_noop, .abort = suite_abort, .cancelled = suite_operation_cancel};
+    ds4_status status = suite_plan_embedding(o);
+    if (status) return status;
     status = ds4_execution_create(&o->execution, o->state->runtime, o->state->resources, 500, &o->request, &ops);
     if (!status) status = ds4_execution_run(o->execution);
     if (status) return status;
@@ -322,7 +334,7 @@ static ds4_status suite_run_images(suite_operation *o, const suite_image_request
             if (status) return status;
             o->reclaim = NULL; o->victim_count = 0;
             memset(o->victims, 0, sizeof(o->victims));
-            status = suite_victims(o->server, o);
+            status = suite_collect_victims(o);
             if (status) return status;
         }
     }
@@ -433,7 +445,8 @@ static void suite_worker(server *s, job *j) {
     buf body = {0}; suite_receipt *receipt = NULL;
     if (!root || root->kind != SCHEMA_JSON_OBJECT) { suite_status_error(s, j, DS4_STATUS_INVALID); goto cleanup; }
     const char *model = suite_str(root, "model");
-    suite_model *m = q->models + (embed ? 1 : 0);
+    suite_model_slot model_slot = embed ? SUITE_MODEL_EMBEDDING : SUITE_MODEL_IMAGE;
+    suite_model *m = &q->models[model_slot];
     if (!model || !m->bundle || strcmp(model, ds4_bundle_model(m->bundle))) {
         bool known = false;
         for (unsigned i = 0; i < SUITE_MODELS; i++) known |= q->models[i].bundle && model && !strcmp(model, ds4_bundle_model(q->models[i].bundle));
@@ -441,7 +454,7 @@ static void suite_worker(server *s, job *j) {
     }
     o = calloc(1, sizeof(*o));
     if (!o) { suite_status_error(s, j, DS4_STATUS_NOMEM); goto cleanup; }
-    o->model = m; o->state = q; o->client = j; o->server = s;
+    o->model = m; o->model_slot = model_slot; o->state = q; o->client = j; o->server = s;
     uint64_t usage = 0;
     double start = now_sec();
     ds4_gemma_cache_stats cache_before = m->processor ? ds4_gemma_processor_cache(m->processor) : (ds4_gemma_cache_stats){0};
@@ -468,7 +481,7 @@ static void suite_worker(server *s, job *j) {
      * output never reaches this path. Advisory CPU I/O is cancellable and
      * bounded to 16 MiB of the configured bundle, with no GPU allocation. */
     (void)ds4_bundle_hint_start(&o->hint, m->bundle, 0, 16u << 20);
-    status = suite_victims(s, o);
+    status = suite_collect_victims(o);
     uint64_t h2d_before, d2h_before;
     ds4_numeric_transfers(q->numeric, &h2d_before, &d2h_before);
     ds4_execution_plan plan = {0};

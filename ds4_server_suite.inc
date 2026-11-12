@@ -336,10 +336,7 @@ static void suite_canonical(buf *b, sj *v) {
 }
 static ds4_status suite_drop_gemma(void *p) {
     suite_model *m = p;
-    ds4_status s = ds4_gemma_multimodal_release_vision(m->embed);
-    if (!s) s = ds4_gemma_multimodal_release_audio(m->embed);
-    if (!s) s = ds4_gemma_multimodal_release_text(m->embed);
-    return s;
+    return ds4_gemma_multimodal_release_weights(m->embed);
 }
 static ds4_status suite_drop_image(void *p) {
     suite_model *m = p;
@@ -351,6 +348,7 @@ struct suite_operation {
     server *server;
     suite_state *state;
     suite_model *model;
+    suite_model_slot model_slot;
     job *client; /* cleared when recovery outlives the HTTP request */
     ds4_engine_reclaim *reclaim;
     ds4_execution_victim victims[DS4_EXECUTOR_MAX_VICTIMS];
@@ -450,6 +448,17 @@ static ds4_status suite_recover(server *s) {
     pthread_mutex_unlock(&s->inference_mu);
     return status;
 }
+static ds4_status suite_prepare_chat(server *s) {
+    ds4_status status = suite_recover(s);
+    if (status || !s->suite) return status;
+    suite_model *gemma = &s->suite->models[SUITE_MODEL_EMBEDDING];
+    if (!gemma->embed) return DS4_STATUS_OK;
+    pthread_mutex_lock(&s->inference_mu);
+    /* Preserve the ordinary chat budget for its next prefill and vision work. */
+    status = suite_drop_gemma(gemma);
+    pthread_mutex_unlock(&s->inference_mu);
+    return status;
+}
 static void suite_unavailable(server *s, job *j) {
     http_error(j->fd, s->enable_cors, 503, DS4_SUITE_RESTORE);
 }
@@ -471,13 +480,15 @@ static ds4_status suite_embed_step(void *p, uint32_t step) {
     return ds4_gemma_multimodal_embed(o->model->embed, o->input,
                                       o->dimensions, &observer, &o->result);
 }
-static ds4_status suite_victims(server *s, suite_operation *o) {
+static ds4_status suite_collect_victims(suite_operation *o) {
+    server *s = o->server;
+    bool embedding = o->model_slot == SUITE_MODEL_EMBEDDING;
+    suite_model *other = &o->state->models[embedding ? SUITE_MODEL_IMAGE : SUITE_MODEL_EMBEDDING];
     /* Reconstructible LLM cache yields to the active adapter before planning;
      * its size is not a mandatory checkpoint restore requirement. */
     ds4_status status = ds4_engine_trim_cache(s->engine);
     if (status != DS4_STATUS_OK && status != DS4_STATUS_UNSUPPORTED) return status;
     bool handoff = status == DS4_STATUS_OK;
-    suite_model *other = o->state->models + (o->model == o->state->models ? 1 : 0);
     if (handoff) {
         /* The inactive adapter yields weights too. Preserve its metadata;
          * the resting state must not depend on the previous Image variant. */
@@ -493,9 +504,11 @@ static ds4_status suite_victims(server *s, suite_operation *o) {
     if (status) return status;
     size_t count = 0;
     const ds4_execution_victim *v = ds4_engine_reclaim_victims(o->reclaim, &count);
-    if (count + 1 > DS4_EXECUTOR_MAX_VICTIMS) return DS4_STATUS_UNSUPPORTED;
-    if (count) memcpy(o->victims, v, count * sizeof(*v));
-    o->victim_count = count;
+    for (size_t i = 0; i < count; i++) {
+        if (embedding && v[i].kind != DS4_RECLAIM_SESSION) continue;
+        if (o->victim_count == DS4_EXECUTOR_MAX_VICTIMS) return DS4_STATUS_UNSUPPORTED;
+        o->victims[o->victim_count++] = v[i];
+    }
     if (handoff) return DS4_STATUS_OK;
     uint64_t bytes = 0;
     if (other->embed) {
@@ -510,6 +523,7 @@ static ds4_status suite_victims(server *s, suite_operation *o) {
         bytes = resident[0] + resident[1] + resident[2];
     }
     if (bytes) {
+        if (o->victim_count == DS4_EXECUTOR_MAX_VICTIMS) return DS4_STATUS_UNSUPPORTED;
         ds4_execution_victim *cache = o->victims + o->victim_count++;
         *cache = (ds4_execution_victim){.kind = DS4_RECLAIM_CACHE, .context = other,
             .release = other->embed ? suite_drop_gemma : suite_drop_image, .cost = bytes};
@@ -608,20 +622,23 @@ static ds4_status suite_open(server *s, const char *path) {
         const char *id = suite_str(entry, "model"), *index = suite_str(entry, "index"),
             *root = suite_str(entry, "root"), *asset = suite_str(entry, "text_asset"),
             *media = suite_str(entry, "media_asset");
-        unsigned slot;
-        if (id && !strcmp(id, "Qwen/Qwen-Image-2.1-Turbo")) slot = 0;
-        else if (id && !strcmp(id, "google/embeddinggemma-2")) slot = 1;
+        suite_model_slot slot;
+        if (id && !strcmp(id, "Qwen/Qwen-Image-2.1-Turbo")) slot = SUITE_MODEL_IMAGE;
+        else if (id && !strcmp(id, "google/embeddinggemma-2")) slot = SUITE_MODEL_EMBEDDING;
         else { status = DS4_STATUS_UNSUPPORTED; break; }
         suite_model *m = q->models + slot;
-        if (!index || !root || !asset || m->bundle || (slot && !media) || (!slot && media)) { status = DS4_STATUS_INVALID; break; }
+        bool embedding = slot == SUITE_MODEL_EMBEDDING;
+        if (!index || !root || !asset || m->bundle || embedding != (media != NULL)) {
+            status = DS4_STATUS_INVALID; break;
+        }
         m->asset = xstrdup(asset);
         status = ds4_bundle_open(&m->bundle, index, root, q->resources, 501 + slot);
         if (!status && strcmp(ds4_bundle_model(m->bundle), id)) status = DS4_STATUS_INVALID;
-        if (!status && !slot) status = ds4_qwen_image_pipeline_open(&m->image,
+        if (!status && !embedding) status = ds4_qwen_image_pipeline_open(&m->image,
             m->bundle, q->numeric, q->runtime, m->asset);
-        if (!status && slot) status = ds4_gemma_processor_open(&m->processor,
+        if (!status && embedding) status = ds4_gemma_processor_open(&m->processor,
             m->bundle, q->resources, 503, media, 64ull << 20);
-        if (!status && slot) status = ds4_gemma_multimodal_open(&m->embed,
+        if (!status && embedding) status = ds4_gemma_multimodal_open(&m->embed,
             m->bundle, q->numeric, q->runtime, m->asset, m->processor);
     }
     if (!status) suite_catalog_refresh(q);

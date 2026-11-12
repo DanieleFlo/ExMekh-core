@@ -110,6 +110,21 @@ ds4_status ds4_gemma_visual_close(ds4_gemma_visual *e) {
   ds4_host_free(&account);
   return DS4_STATUS_OK;
 }
+static ds4_status release_branch_weights(ds4_gemma_visual *e) {
+  ds4_status status = ds4_embedding_gemma2_release_weights(e->text);
+  if (!status) status = ds4_gemma_vision_release_weights(e->vision);
+  if (!status) status = ds4_gemma_audio_release_weights(e->audio);
+  return status;
+}
+ds4_status ds4_gemma_visual_release_weights(ds4_gemma_visual *e) {
+  ds4_gemma_residency resident;
+  ds4_status status = ds4_gemma_visual_resident_weights(e, &resident);
+  if (status) return status;
+  if (e->running) return DS4_STATUS_BUSY;
+  if (!resident.text_bytes && !resident.vision_bytes && !resident.audio_bytes)
+    return DS4_STATUS_OK;
+  return release_branch_weights(e);
+}
 ds4_status ds4_gemma_visual_release_vision(ds4_gemma_visual *e) {
   if (!e)
     return DS4_STATUS_INVALID;
@@ -525,6 +540,28 @@ ds4_status ds4_gemma_visual_plan(ds4_gemma_visual *e,
   return plan_full(e, in, out, limits, &streamed);
 }
 
+ds4_status ds4_gemma_visual_prepare_reservation(
+    ds4_gemma_visual *e, const ds4_gemma_visual_input *in,
+    ds4_runtime_estimate *out) {
+  if (!e || !out) return DS4_STATUS_INVALID;
+  *out = (ds4_runtime_estimate){0};
+  if (e->running) return DS4_STATUS_BUSY;
+
+  ds4_gemma_plan plan;
+  ds4_status status = ds4_gemma_visual_plan(e, in, &plan);
+  if (status) return status;
+  if (plan.reclaim_device_bytes) {
+    status = ds4_gemma_visual_release_weights(e);
+    if (status) return status;
+    status = ds4_numeric_refresh_memory(e->num);
+    if (status && status != DS4_STATUS_UNSUPPORTED) return status;
+    status = ds4_gemma_visual_plan(e, in, &plan);
+    if (status) return status;
+  }
+  *out = plan.peak;
+  return DS4_STATUS_OK;
+}
+
 /* Encoder outputs are detached host rows. This scope owns staging until
  * the backbone copies them; the operation owns only its
  * reservation/transaction. */
@@ -619,11 +656,8 @@ ds4_status ds4_gemma_visual_embed(ds4_gemma_visual *e,
   TRY(plan_full(e, in, &plan, weight_limits, &streamed));
   stream_active = streamed;
   ds4_runtime_estimate estimate = plan.peak;
-  if (plan.release_encoders) {
-    TRY(ds4_embedding_gemma2_release_weights(e->text));
-    TRY(ds4_gemma_vision_release_weights(e->vision));
-    TRY(ds4_gemma_audio_release_weights(e->audio));
-  }
+  if (plan.release_encoders)
+    TRY(release_branch_weights(e));
   if (streamed)
     for (unsigned i = 0; i < BRANCH_COUNT; i++)
       if (weight_limits[i]) TRY(branch_weights(e, i, weight_limits[i], NULL));
@@ -637,9 +671,7 @@ ds4_status ds4_gemma_visual_embed(ds4_gemma_visual *e,
   TRY(ds4_gemma_embed(e->text, in->backbone, dimensions, o, out));
 cleanup:
   if (stream_active) {
-    ds4_status s = ds4_embedding_gemma2_release_weights(e->text);
-    if (!s) s = ds4_gemma_vision_release_weights(e->vision);
-    if (!s) s = ds4_gemma_audio_release_weights(e->audio);
+    ds4_status s = release_branch_weights(e);
     for (unsigned i = 0; i < BRANCH_COUNT && !s; i++)
       s = branch_weights(e, i, UINT64_MAX, NULL);
     if (!status) status = s;
