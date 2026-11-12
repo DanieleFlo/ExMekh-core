@@ -10,7 +10,7 @@ ExMekh Agent conserva chat e configurazione dei progetti in JSON.
 Da root, avviare il server in un terminale:
 
 ```sh
-./agent/start-ds4-server.sh
+./start-ds4-server.sh
 ```
 
 In un altro terminale:
@@ -20,14 +20,17 @@ In un altro terminale:
 ```
 
 Il launcher apre la porta di gestione mentre ripristina il profilo salvato.
-Per il profilo nativo esplicito, `./agent/start-ds4-server.sh --manual` usa
+Da **Impostazioni di sistema → Server → Modelli** puoi cambiare modello a Core
+avviato. Se è in corso un’elaborazione, attendi che termini o usa **Stop active requests**.
+Il profilo Flash Next CUDA usa la cache a più livelli su VRAM, RAM e SSD.
+Per il profilo nativo esplicito, `DS4_CTX=26000 DS4_SUITE_CONFIG=config/native-suite.example.json ./start-ds4-server.sh --manual` usa
 `ds4-server-suite`, Qwen3.8, MTP, visione e `--ctx 26000`,
 porta 8080. Carica `config/native-suite.example.json` (sostituibile con
 `DS4_SUITE_CONFIG`) per servire anche immagini ed embedding dalla stessa URL.
 I percorsi delle librerie native possono essere impostati in
 `config/native-suite.env`, copiando `config/native-suite.env.example`;
 la [guida suite](../architecture/native-suite-release.md) descrive i prerequisiti.
-Il launcher LLM della root e quello Flash conservano i propri default.
+Il profilo Flash CUDA esplicito si seleziona con `DS4_MODEL_PROFILE=flash ./start-ds4-server.sh --manual`.
 Il frontend si apre su [http://127.0.0.1:8000](http://127.0.0.1:8000).
 Il launcher installa le dipendenze dal lockfile quando necessario. Da `agent/`,
 il comando equivalente è `uv run --frozen exmekh-agent`. La distribuzione si

@@ -1,4 +1,4 @@
-"""Pinned artifacts and conservative launch profiles for Core's managed mode."""
+"""Inspect, download and verify the pinned artifacts used by managed Core."""
 
 import contextlib
 import fcntl
@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import shutil
+import stat
 import time
 import urllib.error
 import urllib.request
@@ -31,6 +32,13 @@ class Artifact:
     digest: str
 
 
+@dataclass(frozen=True)
+class ArtifactState:
+    present: bool
+    installed: bool
+    missing_bytes: int
+
+
 def atomic_json(path, value):
     temporary = path.with_suffix(".tmp")
     with temporary.open("w", encoding="utf-8") as stream:
@@ -48,72 +56,100 @@ def atomic_json(path, value):
 
 
 class PinnedStore:
-    def __init__(self, root, token=None):
+    def __init__(self, root, token=None, *, local_receipts=None):
+        """Verify existing bundles in place when local_receipts is supplied."""
         self.root = root.resolve()
-        self.root.mkdir(parents=True, exist_ok=True)
+        self._local_only = local_receipts is not None
+        self._receipt_root = local_receipts.resolve() if self._local_only else self.root
+        self._receipt_root.mkdir(parents=True, exist_ok=True)
         self._token = token
 
     def _path(self, artifact, suffix=""):
-        path = self.root / (artifact.path + suffix)
-        if not path.resolve().is_relative_to(self.root):
+        root = (
+            self._receipt_root if suffix in {".lock", ".verified.json"} else self.root
+        )
+        path = root / (artifact.path + suffix)
+        if not path.resolve().is_relative_to(root):
             raise Problem(
                 "ARTIFACT_PATH", "The artifact path is outside the model directory."
             )
         return path
 
-    def has_local_file(self, artifact):
-        return self._path(artifact).is_file()
+    def has_complete_file(self, artifact):
+        try:
+            metadata = self._regular_file(self._path(artifact))
+            return metadata is not None and metadata.st_size == artifact.size
+        except (OSError, Problem):
+            return False
 
     def discard_partial(self, artifact):
+        self._require_writable()
         with self._claim(artifact):
             self._path(artifact, ".part").unlink(missing_ok=True)
 
     @staticmethod
-    def _fingerprint(path):
-        stat = path.stat()
+    def _fingerprint(metadata):
         return [
-            stat.st_dev,
-            stat.st_ino,
-            stat.st_size,
-            stat.st_mtime_ns,
-            stat.st_ctime_ns,
+            metadata.st_dev,
+            metadata.st_ino,
+            metadata.st_size,
+            metadata.st_mtime_ns,
+            metadata.st_ctime_ns,
         ]
 
-    def installed(self, artifact):
+    def _matches_receipt(self, artifact, metadata):
         try:
-            path = self._path(artifact)
             receipt = json.loads(self._path(artifact, ".verified.json").read_text())
-            return receipt == [artifact.digest, self._fingerprint(path)]
+            return receipt == [artifact.digest, self._fingerprint(metadata)]
         except (OSError, ValueError, Problem):
             return False
 
-    def remaining(self, artifact):
-        if self.installed(artifact):
-            return 0
-        path = self._path(artifact)
-        if path.is_file() and path.stat().st_size == artifact.size:
-            return 0  # The existing file can be verified in place.
-        part = self._path(artifact, ".part")
-        return (
-            artifact.size - min(part.stat().st_size, artifact.size)
-            if part.is_file()
-            else artifact.size
+    @staticmethod
+    def _regular_file(path):
+        try:
+            metadata = path.stat()
+        except FileNotFoundError:
+            return None
+        return metadata if stat.S_ISREG(metadata.st_mode) else None
+
+    def inspect(self, artifact):
+        metadata = self._regular_file(self._path(artifact))
+        if metadata is not None and metadata.st_size == artifact.size:
+            return ArtifactState(True, self._matches_receipt(artifact, metadata), 0)
+        partial = (
+            None
+            if self._local_only
+            else self._regular_file(self._path(artifact, ".part"))
         )
+        downloaded = min(partial.st_size, artifact.size) if partial else 0
+        return ArtifactState(metadata is not None, False, artifact.size - downloaded)
+
+    def installed(self, artifact):
+        try:
+            return self.inspect(artifact).installed
+        except (OSError, Problem):
+            return False
+
+    def remaining(self, artifact):
+        return self.inspect(artifact).missing_bytes
 
     def _verify(self, path, artifact, report, check):
-        before = self._fingerprint(path)
-        if before[2] != artifact.size:
-            return False
         digest = hashlib.sha256()
         processed = 0
         with path.open("rb") as stream:
+            before = self._fingerprint(os.fstat(stream.fileno()))
+            if before[2] != artifact.size:
+                return None
             while data := stream.read(CHUNK):
                 check()
                 digest.update(data)
                 processed += len(data)
                 report("verifying", processed, artifact.size)
-        return digest.hexdigest() == artifact.digest and before == self._fingerprint(
-            path
+            after = self._fingerprint(os.fstat(stream.fileno()))
+        return (
+            before
+            if before == after and digest.hexdigest() == artifact.digest
+            else None
         )
 
     @contextlib.contextmanager
@@ -133,7 +169,9 @@ class PinnedStore:
 
     def ensure(self, artifact, report, check, *, import_only=False):
         with self._claim(artifact):
-            return self._ensure_claimed(artifact, report, check, import_only)
+            return self._ensure_claimed(
+                artifact, report, check, import_only or self._local_only
+            )
 
     def _ensure_claimed(self, artifact, report, check, import_only):
         path = self._path(artifact)
@@ -141,7 +179,8 @@ class PinnedStore:
             return path
         receipt = self._path(artifact, ".verified.json")
         if path.is_file():
-            if not self._verify(path, artifact, report, check):
+            fingerprint = self._verify(path, artifact, report, check)
+            if fingerprint is None:
                 raise Problem(
                     "CHECKSUM_MISMATCH",
                     "The existing file failed verification. Remove it and download again.",
@@ -161,16 +200,35 @@ class PinnedStore:
                 )
             if offset < artifact.size:
                 self._download(artifact, partial, offset, report, check)
-            if not self._verify(partial, artifact, report, check):
+            fingerprint = self._verify(partial, artifact, report, check)
+            if fingerprint is None:
                 partial.unlink(missing_ok=True)
                 raise Problem(
                     "CHECKSUM_MISMATCH",
                     "The downloaded file failed verification. Retry the download.",
                 )
             check()
+            self._require_unchanged(partial, fingerprint)
             partial.replace(path)
-        atomic_json(receipt, [artifact.digest, self._fingerprint(path)])
+            # Renaming can change ctime while leaving the verified bytes intact.
+            fingerprint = self._require_unchanged(path, fingerprint, renamed=True)
+        self._require_unchanged(path, fingerprint)
+        atomic_json(receipt, [artifact.digest, fingerprint])
         return path
+
+    def _require_unchanged(self, path, fingerprint, *, renamed=False):
+        try:
+            current = self._fingerprint(path.stat())
+        except FileNotFoundError:
+            current = []
+        fields = 4 if renamed else len(fingerprint)
+        if current[:fields] != fingerprint[:fields]:
+            raise Problem(
+                "ARTIFACT_CHANGED",
+                "The file changed during verification. Verify it again.",
+                409,
+            )
+        return current
 
     def _download(self, artifact, partial, offset, report, check):
         if shutil.disk_usage(self.root).free < artifact.size - offset:
@@ -234,9 +292,24 @@ class PinnedStore:
             )
 
     def remove(self, artifact):
-        with self._claim(artifact):
-            for suffix in ("", ".part", ".verified.json"):
-                self._path(artifact, suffix).unlink(missing_ok=True)
+        self.remove_all((artifact,))
+
+    def remove_all(self, artifacts):
+        self._require_writable()
+        artifacts = tuple(artifacts)
+        with contextlib.ExitStack() as locks:
+            for artifact in artifacts:
+                locks.enter_context(self._claim(artifact))
+            for artifact in artifacts:
+                for suffix in ("", ".part", ".verified.json"):
+                    self._path(artifact, suffix).unlink(missing_ok=True)
+
+    def _require_writable(self):
+        if self._local_only:
+            raise Problem(
+                "ARTIFACT_READ_ONLY",
+                "The existing suite directory is read-only to Core.",
+            )
 
 
 class SafeRedirect(urllib.request.HTTPRedirectHandler):

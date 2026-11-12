@@ -494,23 +494,18 @@ class Qwen38CompatibilityTests(unittest.TestCase):
                      if not k.startswith("DS4_")}
         clean_env["DS4_BACKEND"] = "cuda"
         cases = (
-            ("start-ds4-server.sh", {}, "22593", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
-            ("agent/start-ds4-server.sh", {}, "26000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
-            ("agent/start-ds4-server.sh", {"DS4_MODEL_PROFILE": "flash"},
-             "26000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
-            ("agent/start-ds4-server-flash.sh", {},
-             "65536", "Qwen3.8-Flash-Next-Q2.gguf", True),
-            ("agent/start-ds4-server-flash.sh", {"DS4_MODEL_PROFILE": "qwen27"},
-             "65536", "Qwen3.8-Flash-Next-Q2.gguf", True),
-            ("agent/start-ds4-server-flash.sh", {"DS4_MODEL_PROFILE": "flash",
+            ({}, "22593", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
+            ({"DS4_CTX": "26000"}, "26000", "Qwen3.8-27B-UD-Q4_K_S.gguf", True),
+            ({"DS4_MODEL_PROFILE": "flash"}, "65536", "Qwen3.8-Flash-Next-Q2.gguf", True),
+            ({"DS4_MODEL_PROFILE": "flash",
              "DS4_CTX": "32768", "DS4_PREFILL_CHUNK": "128",
              "DS4_KV_DISK_DIR": "", "DS4_VISION_MODEL": ""},
              "32768", "Qwen3.8-Flash-Next-Q2.gguf", True),
         )
-        for launcher, overrides, ctx, model, mtp in cases:
-            with self.subTest(launcher=launcher, overrides=overrides):
+        for overrides, ctx, model, mtp in cases:
+            with self.subTest(overrides=overrides):
                 result = subprocess.run(
-                    ["bash", str(PROJECT_ROOT / launcher), "--print-command"],
+                    ["bash", str(PROJECT_ROOT / "start-ds4-server.sh"), "--manual", "--print-command"],
                     cwd=PROJECT_ROOT, env={**clean_env, **overrides},
                     text=True, capture_output=True, timeout=10, check=True,
                 )

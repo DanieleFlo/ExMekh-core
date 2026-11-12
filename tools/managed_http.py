@@ -5,6 +5,7 @@ import hmac
 import json
 import logging
 import select
+import socket
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
@@ -121,13 +122,18 @@ class Handler(BaseHTTPRequestHandler):
                 self.json_response(200, core.host())
                 return
             if path == "catalog":
-                self.json_response(200, core.catalog())
+                self.json_response(
+                    200, core.catalog(refresh=urlsplit(self.path).query == "refresh=1")
+                )
                 return
             if path == "jobs" or path.startswith("jobs/"):
                 key = path.removeprefix("jobs/") if path != "jobs" else None
                 self.json_response(200, core.get_jobs(key))
                 return
         if self.command == "POST":
+            if path == "inference/stop":
+                self.json_response(202, core.stop_inference())
+                return
             if path == "plans":
                 self.json_response(200, core.plan(self.json_payload()))
                 return
@@ -149,7 +155,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def proxy(self):
         length = self.body_length()
-        with self.server.core.open_inference() as worker:
+        processing = self.command == "POST"
+        with self.server.core.open_inference(processing=processing) as worker:
             omit = {"connection", "proxy-connection", "keep-alive", "expect", "upgrade"}
             omit.update(
                 part.strip().lower()
@@ -173,14 +180,28 @@ class Handler(BaseHTTPRequestHandler):
                     return
                 worker.sendall(data)
                 length -= len(data)
-            # Relay raw native responses, including SSE and error framing. Monitor
-            # client EOF even while the worker is silent so native cancellation fires.
-            while not self.server.core.is_closing():
-                readable, _, _ = select.select([worker, self.connection], [], [], 0.5)
-                if self.connection in readable:
+            self.relay_response(worker, processing)
+
+    def relay_response(self, worker, processing):
+        # A write half-close cancels native work. Keep reading until native
+        # closes its side so profile replacement waits for cancellation to finish.
+        client = self.connection
+        while not self.server.core.is_closing():
+            sockets = [worker] if client is None else [worker, client]
+            readable, _, _ = select.select(sockets, [], [], 0.5)
+            if client in readable:
+                client = None
+            if worker in readable:
+                data = worker.recv(CHUNK)
+                if not data:
                     return
-                if worker in readable:
-                    data = worker.recv(CHUNK)
-                    if not data:
-                        return
-                    self.connection.sendall(data)
+                if client is not None:
+                    try:
+                        client.sendall(data)
+                    except OSError:
+                        client = None
+            if client is None and len(sockets) == 2:
+                if not processing:
+                    return
+                with contextlib.suppress(OSError):
+                    worker.shutdown(socket.SHUT_WR)

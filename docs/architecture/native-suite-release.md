@@ -75,14 +75,15 @@ effettive, incluse quelle legacy. I percorsi locali sotto una virtualenv
 contengono file `.so`: il servizio li carica direttamente. Un'installazione
 nativa equivalente può fornire gli stessi file senza un interprete Python.
 
-Per l'agente locale, `./agent/start-ds4-server.sh --manual` avvia la suite sulla porta
-8080 con contesto 26000, MTP e visione. `DS4_SUITE_CONFIG` sceglie il JSON dei
-bundle. Copiare `config/native-suite.env.example` in `config/native-suite.env`
+Per l'agente locale, `DS4_CTX=26000 DS4_SUITE_CONFIG=config/native-suite.example.json ./start-ds4-server.sh --manual` avvia la suite sulla porta
+8080 con contesto 26000, MTP e visione. Il JSON di esempio usa `gguf/suite/`
+per i pesi condivisi con Core gestito. `DS4_SUITE_CONFIG` sceglie un altro JSON
+dei bundle. Copiare `config/native-suite.env.example` in `config/native-suite.env`
 e impostare i tre percorsi delle dipendenze native; le variabili già fornite
 dal chiamante hanno precedenza. Il launcher compila lo stesso target che avvia.
 
 Metal, ROCm, TP/distribuito, SSD LLM e batching suite restano fuori dalla nuova
-qualifica CUDA. Il launcher LLM della root e quello Flash mantengono default e dipendenze.
+qualifica CUDA. Il launcher della root gestisce i profili nativi Qwen27 e Flash.
 Il server suite rifiuta combinazioni non qualificate prima del compute.
 
 ## Policy e misure

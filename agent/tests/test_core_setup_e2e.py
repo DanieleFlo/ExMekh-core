@@ -92,11 +92,12 @@ def core_http():
             self.wfile.write(body)
 
         def do_GET(self):
+            path = self.path.partition("?")[0]
             if not state.get("reachable", True):
                 self.reply({"error": {"message": "Server unavailable"}}, 503)
                 return
             if state.get("manual"):
-                if self.path == "/v1/models":
+                if path == "/v1/models":
                     self.reply({"data": [{"id": "test", "context_length": 4096}]})
                 else:
                     self.reply({}, 404)
@@ -110,13 +111,13 @@ def core_http():
             data.update(
                 {f"/v1/manage/jobs/{job_id}": job for job_id, job in jobs.items()}
             )
-            self.reply(data[self.path]) if self.path in data else self.reply({}, 404)
+            self.reply(data[path]) if path in data else self.reply({}, 404)
 
         def do_POST(self):
             payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             plan_id = f"plan-{state['revision']}"
             if self.path == "/v1/manage/plans":
-                assert payload == PROFILE
+                assert payload == state.get("expected_profile", PROFILE)
                 missing = 0 if catalog["models"][0]["installed"] else 1000
                 self.reply({"id": plan_id, "missing_bytes": missing})
             elif self.path == "/v1/manage/jobs" and payload.get("kind") == "apply":
@@ -139,6 +140,23 @@ def core_http():
                 jobs[job["id"]] = job
                 state.update(state="starting", job_id=job["id"], error=None)
                 self.reply(job, 202)
+            elif self.path == "/v1/manage/jobs" and payload == {
+                "kind": "remove",
+                "model_id": "embeddings",
+            }:
+                if state.get("block_removal"):
+                    self.reply({"error": {"message": "Files are still in use."}}, 409)
+                    return
+                job = {
+                    **ACTIVITY,
+                    "id": "remove-1",
+                    "model_id": "embeddings",
+                    "kind": "remove",
+                    "state": "queued",
+                    "phase": "queued",
+                }
+                jobs[job["id"]] = job
+                self.reply(job, 202)
             else:
                 self.reply({}, 404)
 
@@ -150,6 +168,246 @@ def core_http():
         finally:
             server.shutdown()
             thread.join()
+
+
+async def test_optional_models_inventory_and_profile_actions(tmp_path, core_http):
+    base_url, state, jobs, catalog = core_http
+    profile = {**PROFILE, "features": ["images"]}
+    state.update(
+        state="ready",
+        chat_ready=True,
+        saved_profile=profile,
+        active_profile={**ACTIVE_PROFILE, "available_features": ["images"]},
+    )
+    catalog["profile"] = profile
+    catalog["models"][0]["installed"] = True
+    for feature in catalog["models"][0]["features"][1:]:
+        feature.update(available=True, available_modes=["vram"], reason=None)
+    image = {
+        "id": "images",
+        "name": "Qwen-Image-2.1-Turbo",
+        "size_bytes": 1000,
+        "missing_bytes": 0,
+        "installed": False,
+        "present": True,
+        "managed": False,
+        "active": True,
+        "removable": False,
+    }
+    embedding = {
+        **image,
+        "id": "embeddings",
+        "name": "EmbeddingGemma 2",
+        "installed": True,
+        "managed": True,
+        "active": False,
+        "removable": True,
+    }
+    catalog["optional_models"] = [image, embedding]
+    with BrowserTestServer(tmp_path, environment={"BASE_URL": base_url}) as agent_url:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch()
+            try:
+                page = await browser.new_page()
+                models_url = f"{agent_url.rstrip('/')}/settings/models"
+                await page.goto(models_url)
+                installed = page.get_by_role("tab", name="Installed")
+                catalog_tab = page.get_by_role("tab", name="Catalog")
+                await expect(installed).to_have_attribute("aria-selected", "true")
+                await expect(
+                    page.get_by_text("EmbeddingGemma 2", exact=True)
+                ).to_be_visible()
+                await expect(
+                    page.get_by_text("Files managed outside Core", exact=False)
+                ).to_be_visible()
+                await catalog_tab.click()
+                await expect(catalog_tab).to_have_attribute("aria-selected", "true")
+                image_model = page.get_by_text("Qwen-Image-2.1-Turbo", exact=True)
+                await expect(image_model).to_be_visible()
+                state["expected_profile"] = {
+                    **PROFILE,
+                    "features": ["embeddings", "images"],
+                }
+                await page.get_by_role("link", name="Enable", exact=True).click()
+                await expect(
+                    page.get_by_role("button", name="Apply profile")
+                ).to_be_visible()
+                await expect(
+                    page.get_by_text("Semantic search and embeddings", exact=False)
+                ).to_be_visible()
+
+                catalog["profile"] = state["expected_profile"]
+                embedding["removable"] = False
+                embedding["activation_error"] = (
+                    "The native worker could not load the embedding model."
+                )
+                state["saved_profile"] = catalog["profile"]
+                await page.goto(models_url)
+                await expect(
+                    page.get_by_text("Enabled in startup profile", exact=False)
+                ).to_be_visible()
+                await expect(
+                    page.get_by_text(embedding["activation_error"], exact=True)
+                ).to_be_visible()
+                embedding.pop("activation_error")
+                embedding["active"] = True
+                entry = page.get_by_text("EmbeddingGemma 2", exact=True).locator(
+                    "xpath=ancestor::div[.//a[normalize-space()='Disable']][1]"
+                )
+                state["expected_profile"] = profile
+                await entry.get_by_role("link", name="Disable").click()
+                await expect(
+                    page.get_by_role("button", name="Apply profile")
+                ).to_be_visible()
+                await expect(
+                    page.get_by_text("Semantic search and embeddings", exact=True)
+                ).to_have_count(0)
+
+                catalog["profile"] = profile
+                state["saved_profile"] = profile
+                embedding.update(active=False, removable=True)
+                await page.goto(models_url)
+                button = page.get_by_role("button", name="Remove files")
+                dialog = page.get_by_role("dialog")
+                await button.click()
+                await expect(
+                    dialog.get_by_text(
+                        "Remove the downloaded files for EmbeddingGemma 2 from Core?"
+                    )
+                ).to_be_visible()
+                await dialog.get_by_role("button", name="Keep model").click()
+                await expect(dialog).to_be_hidden()
+                assert not jobs
+                state["block_removal"] = True
+                await button.click()
+                await dialog.get_by_role("button", name="Remove files").click()
+                await expect(
+                    page.get_by_text("Files are still in use.")
+                ).to_be_visible()
+                await expect(dialog).to_be_hidden()
+                state["block_removal"] = False
+                await button.click()
+                await dialog.get_by_role("button", name="Remove files").click()
+                await expect(page.get_by_text("Queued", exact=True)).to_be_visible()
+                embedding.update(
+                    installed=False, present=False, removable=False, missing_bytes=1000
+                )
+                jobs["remove-1"].update(state="completed", phase="completed")
+                await expect(
+                    page.get_by_text("EmbeddingGemma 2", exact=True)
+                ).to_have_count(0)
+                await catalog_tab.click()
+                await expect(catalog_tab).to_have_attribute("aria-selected", "true")
+                await expect(
+                    page.get_by_text("EmbeddingGemma 2", exact=True)
+                ).to_be_visible()
+                await expect(
+                    page.get_by_role("link", name="Enable", exact=True)
+                ).to_be_visible()
+            finally:
+                await browser.close()
+
+
+async def test_context_estimate_refresh_and_vision_adjustment(tmp_path, core_http):
+    base_url, state, _, catalog = core_http
+    catalog["hardware"].update(
+        execution_device_uuid="GPU-selected",
+        devices=[
+            {"uuid": "GPU-other", "name": "Other GPU", "free_bytes": 48 * 2**30},
+            {"uuid": "GPU-selected", "name": "Selected GPU", "free_bytes": 22 * 2**30},
+        ],
+    )
+    model = catalog["models"][0]
+    model["features"][1].update(available=True, available_modes=["ssd"])
+    model["max_context_tokens"] = 262144
+    mode = model["modes"][0]
+    mode["recommended_context_tokens"] = mode["estimated_max_context_tokens"]
+    mode["estimated_max_context_tokens_with_vision"] = 4096
+    state["expected_profile"] = {
+        **PROFILE,
+        "context_tokens": 3072,
+        "features": ["vision"],
+    }
+    with BrowserTestServer(tmp_path, environment={"BASE_URL": base_url}) as agent_url:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch()
+            try:
+                page = await browser.new_page(viewport={"width": 390, "height": 844})
+                await page.goto(agent_url)
+                await expect(
+                    page.get_by_text("Selected GPU", exact=False)
+                ).to_be_visible()
+                await expect(page.get_by_text("Other GPU", exact=False)).to_have_count(
+                    0
+                )
+                await page.get_by_role(
+                    "button", name="Configure memory and context"
+                ).click()
+                await expect(page.get_by_text("262,144 tokens")).to_be_visible()
+                await expect(
+                    page.get_by_text("Estimated maximum · 8,192 tokens", exact=True)
+                ).to_be_visible()
+                context = page.get_by_role("spinbutton")
+                await context.fill("0")
+                await page.get_by_role("button", name="Continue", exact=True).click()
+                await expect(
+                    page.get_by_text("Enter a whole number from 1 to 8,192 tokens.")
+                ).to_be_visible()
+                await expect(context).to_have_value("0")
+                await context.fill("3500")
+                mode["estimated_max_context_tokens_with_vision"] = 3072
+                await page.get_by_role("button", name="Refresh estimate").click()
+                await expect(
+                    page.get_by_text("3,072 tokens", exact=False)
+                ).to_be_visible()
+                await expect(context).to_have_value("3500")
+                await context.fill("4096")
+                await page.get_by_role("button", name="Continue", exact=True).click()
+                await expect(
+                    page.get_by_role("checkbox", name="Generate and edit images")
+                ).to_be_disabled()
+                await page.get_by_role(
+                    "checkbox", name="Analyze images in chat"
+                ).click()
+                review = page.get_by_role("button", name="Review profile")
+                await expect(review).to_be_disabled()
+                await page.get_by_role("button", name="Use 3,072 tokens").click()
+                await expect(review).to_be_enabled()
+                await review.click()
+                await expect(
+                    page.get_by_text("3,072 tokens", exact=True)
+                ).to_be_visible()
+                await expect(
+                    page.get_by_role("button", name="Download and start")
+                ).to_be_visible()
+                assert await page.evaluate(
+                    "document.documentElement.scrollWidth <= innerWidth"
+                )
+            finally:
+                await browser.close()
+
+
+async def test_cancelled_startup_shows_its_final_download_queue(tmp_path, core_http):
+    base_url, _, jobs, _ = core_http
+    jobs["load-1"] = {
+        **ACTIVITY,
+        "phase": "downloading",
+        "state": "cancelled",
+        "files": [{"name": "test.gguf", "size_bytes": 1000, "state": "interrupted"}],
+    }
+    with BrowserTestServer(tmp_path, environment={"BASE_URL": base_url}) as agent_url:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch()
+            try:
+                page = await browser.new_page()
+                await page.goto(f"{agent_url.rstrip('/')}/startup?job=load-1")
+                await expect(page.get_by_text("Core startup cancelled")).to_be_visible()
+                await expect(page.get_by_text("test.gguf")).to_be_visible()
+                await expect(
+                    page.get_by_text("Interrupted", exact=True)
+                ).to_be_visible()
+            finally:
+                await browser.close()
 
 
 @pytest.mark.parametrize("installed", [False, True], ids=["empty", "downloaded"])
@@ -173,6 +431,11 @@ async def test_startup_gate_remounts_and_settings_are_separate(
                 await expect(
                     browser_page.locator('nav [aria-current="step"]')
                 ).to_have_text("Chat model")
+                await expect(
+                    browser_page.get_by_role(
+                        "navigation", name="Setup steps"
+                    ).get_by_text("Review", exact=True)
+                ).to_have_attribute("aria-disabled", "true")
                 assert await browser_page.evaluate(
                     "document.documentElement.scrollWidth <= innerWidth"
                 )
@@ -226,7 +489,7 @@ async def test_startup_gate_remounts_and_settings_are_separate(
                     browser_page.get_by_role("link", name="Reconfigure startup")
                 ).to_be_visible()
                 await browser_page.get_by_role(
-                    "link", name="Conversations", exact=True
+                    "link", name="Client", exact=True
                 ).click()
                 await expect(
                     browser_page.get_by_text("Defaults for conversations in Agent.")
@@ -249,11 +512,12 @@ async def test_startup_gate_remounts_and_settings_are_separate(
                         "id": "restore-2",
                         "kind": "restore",
                         "phase": "initializing_runtime",
-                        "elapsed_seconds": 7,
+                        "elapsed_seconds": 87,
                         "progress": {
                             "percent": 66.7,
                             "unit": "milestones",
                             "eta_seconds": 4,
+                            "elapsed_seconds": 7,
                         },
                     },
                 )
@@ -405,9 +669,30 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 settings = page.get_by_role(
                     "navigation", name="System settings sections"
                 )
+                groups = page.get_by_role("navigation", name="System settings groups")
+                await expect(groups.locator('[aria-current="page"]')).to_have_text(
+                    "Server"
+                )
                 await expect(settings.locator('[aria-current="page"]')).to_have_text(
                     "Server"
                 )
+                await expect(settings.get_by_text("Conversations")).to_have_count(0)
+                await groups.get_by_role("link", name="Client", exact=True).click()
+                await expect(groups.locator('[aria-current="page"]')).to_have_text(
+                    "Client"
+                )
+                await expect(
+                    settings.get_by_role("link", name="Temporary files")
+                ).to_be_visible()
+                await expect(settings.get_by_text("Models")).to_have_count(0)
+                await groups.get_by_role("link", name="Server", exact=True).click()
+                await page.get_by_role(
+                    "link", name="Memory and context", exact=True
+                ).click()
+                await expect(
+                    page.get_by_role("spinbutton", name="Context tokens")
+                ).to_have_value("4096")
+                await groups.get_by_role("link", name="Server", exact=True).click()
                 await settings.get_by_role("link", name="Models", exact=True).click()
                 await expect(
                     page.get_by_role("tab", name="Installed")
@@ -415,6 +700,9 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 await expect(
                     page.get_by_text("Already downloaded", exact=True)
                 ).to_be_visible()
+                await expect(
+                    page.get_by_role("link", name="Configure as chat model")
+                ).to_have_attribute("href", re.compile(r"tokens=4096"))
                 await page.get_by_role("tab", name="Catalog").click()
                 await expect(
                     page.get_by_text("Streaming model", exact=True)
@@ -437,8 +725,11 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 await expect(steps.locator('[aria-current="step"]')).to_have_text(
                     "Chat model"
                 )
-                await expect(steps.get_by_text("Review", exact=True)).to_have_attribute(
-                    "aria-disabled", "true"
+                await expect(
+                    steps.get_by_role("link", name="Review", exact=True)
+                ).to_be_visible()
+                await expect(groups.locator('[aria-current="page"]')).to_have_text(
+                    "Server"
                 )
                 assert await page.evaluate("window.exmekhTheme.mode") == theme
                 assert await page.evaluate(
@@ -478,7 +769,11 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 await page.screenshot(
                     path=tmp_path / "model-selection.png", full_page=True
                 )
-                await next_step.click()
+                memory_step = steps.get_by_role("link", name="Memory and context")
+                await expect(memory_step).to_have_attribute(
+                    "href", re.compile(r"model=stream")
+                )
+                await memory_step.click()
                 await expect(steps.locator('[aria-current="step"]')).to_have_text(
                     "Memory and context"
                 )
@@ -488,6 +783,9 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 context = page.get_by_role("spinbutton", name="Context tokens")
                 await expect(context).to_have_value("2048")
                 await context.fill("4097")
+                await expect(steps.get_by_text("Review", exact=True)).to_have_attribute(
+                    "aria-disabled", "true"
+                )
                 await page.get_by_role("button", name="Continue", exact=True).click()
                 await expect(
                     page.get_by_text("Enter a whole number from 1 to 4,096 tokens.")
@@ -501,12 +799,42 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 await memory_mode.click()
                 await page.get_by_role("option", name="SSD streaming").click()
                 await expect(context).to_have_value("2048")
-                await page.get_by_role("button", name="Continue", exact=True).click()
+                await context.fill("3000")
+                await memory_mode.click()
+                await page.get_by_role("option", name="Fully in VRAM").click()
+                await expect(context).to_have_value("3000")
+                await steps.get_by_role("link", name="Optional features").click()
                 await expect(steps.locator('[aria-current="step"]')).to_have_text(
                     "Optional features"
                 )
+                vision = page.get_by_role("checkbox", name="Analyze images in chat")
+                await vision.click()
                 await steps.get_by_role("link", name="Memory and context").click()
-                await expect(context).to_have_value("2048")
+                await expect(context).to_have_value("3000")
+                await steps.get_by_role("link", name="Optional features").click()
+                await expect(vision).to_be_checked()
+            finally:
+                await browser.close()
+
+
+async def test_catalog_stays_selected_when_first_model_finishes(tmp_path, core_http):
+    base_url, _, _, catalog = core_http
+    with BrowserTestServer(tmp_path, environment={"BASE_URL": base_url}) as agent:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch()
+            try:
+                page = await browser.new_page()
+                await page.goto(f"{agent.rstrip('/')}/settings/models")
+                tab = page.get_by_role("tab", name="Catalog")
+                await expect(tab).to_have_attribute("aria-selected", "true")
+                await expect(
+                    page.get_by_role("button", name="Download")
+                ).to_be_visible()
+                catalog["models"][0]["installed"] = True
+                await expect(
+                    page.get_by_text("Already downloaded", exact=True)
+                ).to_be_visible()
+                await expect(tab).to_have_attribute("aria-selected", "true")
             finally:
                 await browser.close()
 
@@ -619,6 +947,39 @@ async def test_model_row_keeps_the_controls_for_a_paused_download(tmp_path, core
                 await expect(
                     page.get_by_role("button", name="Download", exact=True)
                 ).to_have_count(0)
+            finally:
+                await browser.close()
+
+
+async def test_setup_can_select_a_local_embedding_bundle_pending_verification(
+    tmp_path, core_http
+):
+    base_url, _, _, catalog = core_http
+    embeddings = next(
+        item for item in catalog["models"][0]["features"] if item["id"] == "embeddings"
+    )
+    embeddings.update(
+        available=True, reason=None, installed=False, size_bytes=4096, missing_bytes=0
+    )
+    with BrowserTestServer(tmp_path, environment={"BASE_URL": base_url}) as agent:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable()
+            )
+            try:
+                page = await browser.new_page()
+                await page.goto(
+                    f"{agent}/setup/features?model=test&mode=vram&tokens=4096"
+                )
+                checkbox = page.get_by_role(
+                    "checkbox", name="Semantic search and embeddings"
+                )
+                await expect(checkbox).to_be_enabled()
+                await expect(
+                    page.get_by_text("Available locally · verification required")
+                ).to_be_visible()
+                await checkbox.click()
+                await expect(checkbox).to_be_checked()
             finally:
                 await browser.close()
 

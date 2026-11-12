@@ -1144,7 +1144,7 @@ checks: the model can change the text before the parser sees it.
   `uv run ruff check src tests`, and `uv run ruff format --check src tests`.
 - Run Playwright with `uv run playwright install chromium` before browser tests.
 - Run `./agent/sync_exmekh_lib.sh` in WSL when validating changes to the local ExMekh-Lib sources.
-- Start `./agent/start-ds4-server.sh` and `./agent/run.sh` in separate terminals;
+- Start `./start-ds4-server.sh` and `./agent/run.sh` in separate terminals;
   verify model discovery, Responses streaming, projects, Quick Chats and history.
 - Exercise tools, hierarchical skills, command approval, cancellation and queued
   steering. Confirm switching conversations preserves drafts and active turns.

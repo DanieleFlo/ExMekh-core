@@ -20,16 +20,19 @@ from exmekh_agent.ui.settings.core_navigation import (
 )
 from exmekh_agent.ui.settings.core_views import (
     STYLES,
+    activation_view,
     block,
+    core_frame,
     fact,
     hardware_summary,
+    inference_activity,
     job_controls,
     job_poll,
     notify_error,
     page,
-    progress,
     row_for_model,
     show_connection,
+    whole_number,
 )
 from exmekh_agent.utils.formatting import format_file_size
 
@@ -47,9 +50,18 @@ async def setup_page(
     if not connection.status:
         ui.navigate.to(route("/settings/connection", destination, setup=1))
         return
+    status = connection.status
+    saved = status.saved_profile or (
+        status.active_profile.model_dump() if status.active_profile else {}
+    )
+    if saved and not model:
+        model = saved["model_id"]
+        mode = saved["mode_id"]
+        tokens = saved["context_tokens"]
+        features = ",".join(saved["features"])
     client = CoreClient()
     try:
-        catalog = await client.catalog()
+        catalog = await client.catalog(refresh=step != "model")
     except CoreProblem as error:
         with page(
             ui_text("system_settings.configure_core"),
@@ -74,7 +86,10 @@ async def setup_page(
         "features": features,
     }
     step_order = tuple(STEPS)
-    prior_steps = step_order[: step_order.index(step)]
+    available_steps = step_order if saved else step_order[: step_order.index(step)]
+    step_targets = {
+        key: route(f"/setup/{key}", destination, **params) for key in available_steps
+    }
     with page(
         ui_text("system_settings.choose_chat_model")
         if step == "model"
@@ -82,23 +97,54 @@ async def setup_page(
         hardware_summary(host) if step == "model" else selected["name"],
         destination,
         setup_step=step,
-        setup_links={
-            key: route(f"/setup/{key}", destination, **params) for key in prior_steps
-        },
+        setup_links=step_targets,
+        configured_setup=bool(saved),
+        show_back=not saved or status.chat_ready,
         connected=True,
-    ):
+    ) as links:
+
+        def update_step_links(options: dict, *, blocked: tuple[str, ...] = ()) -> None:
+            for key, link in links.items():
+                if key in blocked:
+                    step_targets.pop(key, None)
+                    link.props(STYLES["props.aria_disabled"], remove="href")
+                else:
+                    target = route(f"/setup/{key}", destination, **options)
+                    step_targets[key] = target
+                    link.props(f'href="{target}"', remove="aria-disabled")
+
+        def follow_step(key: str) -> None:
+            if target := step_targets.get(key):
+                ui.navigate.to(target)
+
+        # Use the same event queue as the draft controls when following a step.
+        for key, link in links.items():
+            link.on(
+                "click",
+                lambda _, key=key: follow_step(key),
+                js_handler=(
+                    "event => {"
+                    "  if (event.button || event.ctrlKey || event.metaKey ||"
+                    "      event.shiftKey || event.altKey) return;"
+                    "  event.preventDefault(); emit();"
+                    "}"
+                ),
+            )
+
         if step == "model":
             selected_model = model
 
-            def advance() -> None:
-                options = (
-                    params if selected_model == model else {"model": selected_model}
-                )
-                ui.navigate.to(route("/setup/runtime", destination, **options))
+            def selected_options() -> dict:
+                return params if selected_model == model else {"model": selected_model}
 
-            def render(jobs, data):
+            def advance() -> None:
+                ui.navigate.to(
+                    route("/setup/runtime", destination, **selected_options())
+                )
+
+            def render(jobs, inventory):
                 nonlocal selected_model
-                items = data["models"]
+                items = inventory["models"]
                 available = [
                     item["id"]
                     for item in items
@@ -107,12 +153,16 @@ async def setup_page(
                 if selected_model not in available:
                     selected_model = available[0] if available else ""
                 configure.set_enabled(bool(available))
+                update_step_links(
+                    selected_options(), blocked=() if available else tuple(links)
+                )
                 with ui.column().classes(STYLES["classes.surface"]):
                     for item in items:
 
                         def choose(item_id=item["id"]) -> None:
                             nonlocal selected_model
                             selected_model = item_id
+                            update_step_links(selected_options())
 
                         row_for_model(
                             client,
@@ -149,8 +199,27 @@ async def setup_page(
                 route("/setup/model", destination),
             )
             return
+        if mode and mode not in eligible and step != "runtime":
+            ui.navigate.to(route("/setup/runtime", destination, **params))
+            return
         mode = mode if mode in eligible else next(iter(eligible))
+
+        def context_limit(mode_id: str, with_vision: bool = False) -> int:
+            option = choices[mode_id]
+            base = option["estimated_max_context_tokens"]
+            return (
+                option.get("estimated_max_context_tokens_with_vision", base)
+                if with_vision
+                else base
+            ) or 0
+
         if step == "runtime":
+            with_vision = "vision" in features.split(",")
+            if model_limit := selected.get("max_context_tokens"):
+                fact(
+                    ui_text("system_settings.model_context_limit"),
+                    f"{model_limit:,} tokens",
+                )
             with ui.column().classes(STYLES["classes.surface"]):
                 for item in choices.values():
                     with ui.column().classes(STYLES["classes.item"]):
@@ -158,56 +227,102 @@ async def setup_page(
                         block(
                             item["label"],
                             ui_text(
-                                "system_settings.context_estimates",
+                                "system_settings.estimated_context_limit"
+                                if limit == item["recommended_context_tokens"]
+                                else "system_settings.context_estimates",
                                 limit=limit,
                                 recommended=item["recommended_context_tokens"],
                             )
                             if limit
                             else item["reason"],
                         )
+                        if vision_limit := item.get(
+                            "estimated_max_context_tokens_with_vision"
+                        ):
+                            ui.label(
+                                ui_text(
+                                    "system_settings.vision_context_limit",
+                                    limit=vision_limit,
+                                )
+                            ).classes(STYLES["classes.item_detail"])
             selection = ui.select(
                 eligible, value=mode, label=ui_text("system_settings.memory_mode")
             ).classes(STYLES["classes.w_full_max_w_xl"])
-            number = ui.number(
+
+            def recommended(mode_id: str) -> int:
+                tokens = choices[mode_id]["recommended_context_tokens"]
+                vision_limit = context_limit(mode_id, True) if with_vision else 0
+                return min(tokens, vision_limit) if vision_limit else tokens
+
+            number = ui.input(
                 ui_text("system_settings.context_tokens"),
-                value=tokens or choices[mode]["recommended_context_tokens"],
-                min=1,
-                step=1,
-            )
+                value=str(tokens or recommended(mode)),
+            ).props(STYLES["props.positive_integer"])
 
             def recommend() -> None:
-                number.value = choices[selection.value]["recommended_context_tokens"]
+                number.value = str(recommended(selection.value))
 
-            selection.on_value_change(lambda _: recommend())
+            def current_options() -> dict:
+                value = whole_number(number.value)
+                return {
+                    **params,
+                    "mode": selection.value,
+                    "tokens": value if value is not None and value > 0 else None,
+                }
+
+            def refresh_estimate() -> None:
+                ui.navigate.to(
+                    route("/setup/runtime", destination, **current_options())
+                )
+
+            def sync_navigation() -> None:
+                options = current_options()
+                count = options["tokens"]
+                limit = context_limit(selection.value, with_vision)
+                blocked = (
+                    ("features", "review")
+                    if count is None
+                    else ("review",)
+                    if count > limit
+                    else ()
+                )
+                update_step_links(options, blocked=blocked)
+
+            previous_mode = mode
+
+            def change_mode() -> None:
+                nonlocal previous_mode
+                if whole_number(number.value) == recommended(previous_mode):
+                    recommend()
+                previous_mode = selection.value
+                sync_navigation()
+
+            selection.on_value_change(lambda _: change_mode())
+            number.on_value_change(lambda _: sync_navigation())
+            sync_navigation()
             with ui.row():
                 ui.button(
                     ui_text("system_settings.use_recommended"), on_click=recommend
                 ).props(STYLES["props.outline_no_caps"])
-                ui.link(
+                ui.button(
                     ui_text("system_settings.refresh_estimate"),
-                    route("/setup/runtime", destination, **params),
-                ).classes(STYLES["classes.self_center"])
+                    on_click=refresh_estimate,
+                ).props(STYLES["props.flat_no_caps"])
 
             def next_step() -> None:
-                value = number.value
-                limit = choices[selection.value]["estimated_max_context_tokens"]
-                if value is None or value != int(value) or not 1 <= value <= limit:
+                options = current_options()
+                value = options["tokens"]
+                limit = (
+                    context_limit(selection.value, True) if with_vision else 0
+                ) or context_limit(selection.value)
+                if value is None or value > limit:
                     notify_error(
                         ValueError(
                             ui_text("system_settings.invalid_context", limit=limit)
                         )
                     )
                     return
-                ui.navigate.to(
-                    route(
-                        "/setup/features",
-                        destination,
-                        model=model,
-                        mode=selection.value,
-                        tokens=int(value),
-                        features=features,
-                    )
-                )
+                ui.navigate.to(route("/setup/features", destination, **options))
 
             with ui.row().classes(STYLES["classes.action_row"]):
                 ui.button(
@@ -219,11 +334,24 @@ async def setup_page(
         tokens = tokens or choices[mode]["recommended_context_tokens"]
         toggles = {}
         if step == "features":
+            optional_models = {
+                item["id"]: item for item in catalog.get("optional_models", ())
+            }
             with ui.column().classes(STYLES["classes.surface"]):
                 for item in selected["features"]:
                     key = item["id"]
-                    compatible = item["available"] and (
-                        key == "vision" or mode == "vram"
+                    if key not in FEATURES:
+                        continue
+                    available_modes = item.get("available_modes")
+                    compatible = (
+                        mode in available_modes
+                        if available_modes is not None
+                        else item["available"]
+                        and (
+                            context_limit(mode, True) > 0
+                            if key == "vision"
+                            else mode == "vram"
+                        )
                     )
                     with ui.column().classes(STYLES["classes.item"]):
                         toggle = ui.checkbox(
@@ -232,29 +360,91 @@ async def setup_page(
                         )
                         toggle.set_enabled(compatible)
                         toggles[key] = toggle
+                        if optional := optional_models.get(key):
+                            ui.label(optional["name"]).classes(
+                                STYLES["classes.item_detail"]
+                            )
                         if not compatible:
                             caption = item["reason"] or ui_text(
                                 "system_settings.unavailable_for_memory_mode"
                             )
                         elif item.get("size_bytes"):
-                            caption = (
-                                ui_text("system_settings.already_downloaded")
-                                if item["installed"]
-                                else format_file_size(item["size_bytes"])
-                            )
+                            missing = item.get("missing_bytes", item["size_bytes"])
+                            if item["installed"]:
+                                caption = ui_text("system_settings.already_downloaded")
+                            elif missing == 0:
+                                caption = ui_text(
+                                    "system_settings.available_for_verification"
+                                )
+                            else:
+                                caption = ui_text(
+                                    "system_settings.feature_download_remaining",
+                                    size=format_file_size(missing),
+                                )
                         else:
                             caption = ""
+                        if (
+                            key == "vision"
+                            and compatible
+                            and "estimated_max_context_tokens_with_vision"
+                            in choices[mode]
+                        ):
+                            maximum = ui_text(
+                                "system_settings.vision_context_limit",
+                                limit=context_limit(mode, True),
+                            )
+                            caption = " · ".join(
+                                part for part in (caption, maximum) if part
+                            )
                         if caption:
                             ui.label(caption).classes(STYLES["classes.item_detail"])
 
-            def review(skip: bool) -> None:
-                chosen = (
-                    ""
-                    if skip
-                    else ",".join(
-                        key for key, toggle in toggles.items() if toggle.value
-                    )
+            def selected_limit() -> int:
+                vision = toggles.get("vision")
+                return context_limit(mode, bool(vision and vision.value))
+
+            def selected_features() -> str:
+                return ",".join(key for key, toggle in toggles.items() if toggle.value)
+
+            def update_limit() -> None:
+                limit = selected_limit()
+                needs_adjustment = tokens > limit
+                limit_message.set_text(
+                    ui_text("system_settings.selected_context_limit", limit=limit)
                 )
+                limit_message.set_visibility(needs_adjustment)
+                adjust.set_text(
+                    ui_text("system_settings.use_context_limit", limit=limit)
+                )
+                adjust.set_visibility(needs_adjustment)
+                review_button.set_enabled(not needs_adjustment)
+                update_step_links(
+                    {
+                        **params,
+                        "mode": mode,
+                        "tokens": tokens,
+                        "features": selected_features(),
+                    },
+                    blocked=("review",) if needs_adjustment else (),
+                )
+
+            def adjust_context() -> None:
+                nonlocal tokens
+                tokens = selected_limit()
+                update_limit()
+
+            def review(skip: bool) -> None:
+                limit = context_limit(mode) if skip else selected_limit()
+                if tokens > limit:
+                    notify_error(
+                        ValueError(
+                            ui_text(
+                                "system_settings.selected_context_limit", limit=limit
+                            )
+                        )
+                    )
+                    return
+                chosen = "" if skip else selected_features()
                 ui.navigate.to(
                     route(
                         "/setup/review",
@@ -266,17 +456,26 @@ async def setup_page(
                     )
                 )
 
+            limit_message = ui.label("").props(STYLES["props.role_status"])
+            adjust = ui.button("", on_click=adjust_context).props(
+                STYLES["props.outline_no_caps"]
+            )
             with ui.row().classes(STYLES["classes.action_row"]):
                 ui.button(
                     ui_text("system_settings.continue_with_chat_only"),
                     on_click=lambda: review(True),
                 ).props(STYLES["props.outline_no_caps"])
-                ui.button(
-                    ui_text("system_settings.review_profile"),
-                    on_click=lambda: review(False),
-                ).props(STYLES["props.unelevated_no_caps"]).classes(
-                    STYLES["classes.primary"]
+                review_button = (
+                    ui.button(
+                        ui_text("system_settings.review_profile"),
+                        on_click=lambda: review(False),
+                    )
+                    .props(STYLES["props.unelevated_no_caps"])
+                    .classes(STYLES["classes.primary"])
                 )
+            for toggle in toggles.values():
+                toggle.on_value_change(lambda _: update_limit())
+            update_limit()
             return
         profile = {
             "model_id": model,
@@ -309,9 +508,21 @@ async def setup_page(
             ),
         )
         application_key = uuid4().hex
+        submitting = False
+        expired = False
+        busy = status.active_requests > 0
+
+        def update_apply(active_requests: bool) -> None:
+            nonlocal busy
+            busy = active_requests
+            action.set_enabled(not (busy or submitting or expired))
 
         async def apply() -> None:
-            action.disable()
+            nonlocal submitting, expired
+            if submitting or expired or busy:
+                return
+            submitting = True
+            update_apply(busy)
             try:
                 job = await client.start_job(
                     "apply", plan_id=plan.id, idempotency_key=application_key
@@ -320,10 +531,11 @@ async def setup_page(
             except CoreProblem as error:
                 notify_error(error)
                 if error.code == "PLAN_STALE":
+                    expired = True
                     action.set_visibility(False)
                     review_again.set_visibility(True)
-                else:
-                    action.enable()
+                submitting = False
+                update_apply(busy or error.code == "INFERENCE_BUSY")
 
         label_key = (
             "apply_profile"
@@ -347,20 +559,15 @@ async def setup_page(
                 .classes(STYLES["classes.primary"])
             )
             review_again.set_visibility(False)
+        inference_activity(client, status, on_busy=update_apply)
 
 
 async def startup_page(return_to: str, job: str = "") -> None:
     destination = chat_destination(return_to)
-    with page(
-        ui_text("system_settings.core_startup"),
-        ui_text(
-            "system_settings.chat_is_available_when_core_has_loaded_a_verified_language_model"
-        ),
-        destination,
-        setup_step="startup",
-        connected=False,
+    with core_frame(
+        destination, connected=False, extra_classes=STYLES["classes.activation_console"]
     ) as badge:
-        view = ui.column().classes(STYLES["classes.w_full_gap_4"])
+        view = ui.column().classes(STYLES["classes.activation_body"])
         previous = None
         tracked_job = job
 
@@ -395,14 +602,9 @@ async def startup_page(return_to: str, job: str = "") -> None:
                         return
                 view.clear()
                 with view:
+                    activation_view(activity, status.error)
                     if activity:
-                        with ui.column().classes(STYLES["classes.progress_card"]):
-                            progress(activity, details=True)
-                            job_controls(client, activity)
-                    if status.error and not activity:
-                        ui.label(status.error["message"]).classes(
-                            STYLES["classes.text_negative"]
-                        )
+                        job_controls(client, activity)
                     for feature, error in status.feature_errors.items():
                         block(FEATURES.get(feature, feature), error)
                     if status.ready_profile and (

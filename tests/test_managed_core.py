@@ -25,9 +25,26 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 
 from managed_assets import Artifact, PinnedStore, Problem  # noqa: E402
+from managed_catalog import (  # noqa: E402
+    MODELS,
+    SUITE_MANIFESTS,
+    ModelCatalog,
+    modes,
+)
+from managed_hardware import HardwareProbe, cuda_device  # noqa: E402
 from managed_http import ManagedHTTP  # noqa: E402
+from managed_memory import (  # noqa: E402
+    CUDA_RESERVE,
+    GIB,
+    MODEL_MEMORY,
+    PREFILL_ROWS,
+    ReplacementMemory,
+    context_bytes,
+    max_context,
+)
 from managed_server import Core  # noqa: E402
-from managed_worker import NativeLaunch, NativeWorker  # noqa: E402
+from managed_worker import NativeLaunch, NativeModel, NativeWorker  # noqa: E402
+from qwen_flash_launcher import FLASH_CUDA_STANDARD  # noqa: E402
 
 
 class ServerFixture:
@@ -45,12 +62,472 @@ class ServerFixture:
         self.server.server_close()
 
 
+class ManagedMemoryTests(unittest.TestCase):
+    def cuda_host(self, free=22 * GIB):
+        return {
+            "backend": "cuda",
+            "system": "Linux",
+            "execution_device_uuid": "GPU-example",
+            "devices": [
+                {
+                    "compute": "8.6",
+                    "uuid": "GPU-example",
+                    "total_bytes": 24 * GIB,
+                    "free_bytes": free,
+                }
+            ],
+        }
+
+    def test_cuda_limit_is_maximal_and_vision_uses_the_same_budget(self):
+        host = self.cuda_host()
+        model = MODELS["qwen27"]
+        weights = model["artifact"].size
+        vision = model["vision"].size
+        mode = next(item for item in modes("qwen27", host) if item["mode_id"] == "vram")
+        limit = mode["estimated_max_context_tokens"]
+        self.assertEqual(mode["recommended_context_tokens"], limit)
+        self.assertGreater(limit, 22593)
+        budget = host["devices"][0]["free_bytes"] - weights - CUDA_RESERVE
+        for tokens, fits in ((limit, True), (limit + 1, False)):
+            scores = tokens * 2048 * 4
+            self.assertEqual(
+                context_bytes("qwen27", "vram", tokens) + scores <= budget, fits
+            )
+        vision_limit = max_context("qwen27", "vram", host, weights, vision)
+        self.assertLess(vision_limit, limit)
+        self.assertEqual(mode["estimated_max_context_tokens_with_vision"], vision_limit)
+        self.assertEqual(max_context("qwen27", "vram", self.cuda_host(GIB), weights), 0)
+        large = self.cuda_host(128 * GIB)
+        large["devices"][0]["total_bytes"] = 128 * GIB
+        self.assertEqual(max_context("qwen27", "vram", large, weights, vision), 262144)
+        self.assertEqual(max_context("flash", "vram", large, weights), 0)
+
+        profile = {
+            "model_id": "qwen27",
+            "mode_id": "vram",
+            "context_tokens": limit,
+            "features": [],
+        }
+        catalog = ModelCatalog(None, None, suite_store=None, native_stores={})
+        catalog.validate(profile, host)
+        with self.assertRaisesRegex(Problem, f"{vision_limit:,} tokens"):
+            catalog.validate({**profile, "features": ["vision"]}, host)
+        with self.assertRaisesRegex(Problem, "262,144 tokens"):
+            catalog.parse_profile({**profile, "context_tokens": 262145})
+
+    def test_flash_cuda_streaming_uses_available_vram_and_ram(self):
+        host = {**self.cuda_host(), "ram_available_bytes": 24 * GIB}
+        flash = MODELS["flash"]
+        weights = flash["artifact"].size
+        vision = flash["vision"].size
+        option = next(
+            item for item in modes("flash", host) if item["mode_id"] == "tiered"
+        )
+        self.assertEqual(option["estimated_max_context_tokens"], 262144)
+        self.assertEqual(option["recommended_context_tokens"], 65536)
+        self.assertEqual(option["estimated_max_context_tokens_with_vision"], 262144)
+
+        host["ram_available_bytes"] = 4 * GIB
+        limit = max_context("flash", "tiered", host, weights, vision)
+        self.assertEqual(limit, ((2 * GIB) // (13 * 4 * 2048)) * 4)
+        host["devices"][0]["free_bytes"] = 6 * GIB
+        self.assertEqual(max_context("flash", "tiered", host, weights), 0)
+
+    def test_managed_launch_preserves_qualified_prefill_and_memory_geometry(self):
+        profiles = (
+            ("qwen27", "cuda", "vram", 2048, None),
+            ("qwen27", "metal", "unified", 64, "64"),
+            ("qwen27", "metal", "ssd", 64, "64"),
+            ("flash", "cuda", "tiered", 2048, "2048"),
+            ("flash", "metal", "ssd", 64, "64"),
+        )
+        for model, backend, mode, rows, override in profiles:
+            with self.subTest(model=model, backend=backend, mode=mode):
+                profile = {"model_id": model, "mode_id": mode, "context_tokens": 8192}
+                launch = NativeLaunch.for_profile(
+                    Path("ds4-server"),
+                    backend,
+                    profile,
+                    Path("weights.gguf"),
+                    None,
+                    None,
+                    Path("kv"),
+                )
+                self.assertEqual(PREFILL_ROWS[mode], rows)
+                self.assertIn(f"--{backend}", launch.argv)
+                if override is None:
+                    self.assertNotIn("--prefill-chunk", launch.argv)
+                else:
+                    index = launch.argv.index("--prefill-chunk")
+                    self.assertEqual(launch.argv[index + 1], override)
+                self.assertEqual("--ssd-streaming" in launch.argv, mode == "ssd")
+                self.assertEqual("--ssd-streaming-cold" in launch.argv, mode == "ssd")
+                self.assertEqual("--warm-weights" in launch.argv, mode == "unified")
+                self.assertEqual("--mtp" in launch.argv, mode == "tiered")
+                self.assertEqual(
+                    dict(launch.environment),
+                    FLASH_CUDA_STANDARD if mode == "tiered" else {},
+                )
+
+    @patch.dict(os.environ, {"DS4_METAL_HOST_RESERVE_BYTES": str(2 * GIB)})
+    def test_metal_resident_and_streaming_use_separate_ram_samples(self):
+        host = {
+            "backend": "metal",
+            "system": "Darwin",
+            "unified_memory": True,
+            "ram_bytes": 24 * GIB,
+            "ram_available_bytes": 20 * GIB,
+            "ram_stream_available_bytes": 14 * GIB,
+            "metal": {"working_set_bytes": 18 * GIB, "max_buffer_bytes": 2 * GIB},
+            "devices": [],
+        }
+        weights = MODELS["qwen27"]["artifact"].size
+        resident = max_context("qwen27", "unified", host, weights)
+        stream = max_context("qwen27", "ssd", host, weights)
+        flash_weights = MODELS["flash"]["artifact"].size
+        self.assertGreater(resident, 4096)
+        self.assertGreater(stream, resident)
+        self.assertGreater(max_context("flash", "ssd", host, flash_weights), 8192)
+        self.assertEqual(max_context("flash", "unified", host, flash_weights), 0)
+        small = {
+            **host,
+            "ram_bytes": 16 * GIB,
+            "ram_available_bytes": 12 * GIB,
+            "ram_stream_available_bytes": 9 * GIB,
+            "metal": {**host["metal"], "working_set_bytes": 11 * GIB},
+        }
+        self.assertEqual(max_context("qwen27", "unified", small, weights), 0)
+        self.assertGreater(max_context("qwen27", "ssd", small, weights), 0)
+        self.assertLess(max_context("qwen27", "ssd", small, weights), stream)
+        pressured = {
+            **host,
+            "ram_available_bytes": 0,
+            "ram_stream_available_bytes": GIB,
+        }
+        self.assertEqual(max_context("qwen27", "unified", pressured, weights), 0)
+        self.assertEqual(max_context("qwen27", "ssd", pressured, weights), 0)
+        small_buffer = {
+            **host,
+            "metal": {**host["metal"], "max_buffer_bytes": GIB // 2},
+        }
+        self.assertEqual(max_context("flash", "ssd", small_buffer, flash_weights), 0)
+        large = {
+            **host,
+            "ram_bytes": 128 * GIB,
+            "ram_available_bytes": 110 * GIB,
+            "ram_stream_available_bytes": 100 * GIB,
+            "metal": {"working_set_bytes": 96 * GIB, "max_buffer_bytes": 2 * GIB},
+        }
+        self.assertEqual(
+            max_context("flash", "ssd", large, flash_weights),
+            MODEL_MEMORY["flash"].max_tokens,
+        )
+
+    def test_replacement_recovers_only_memory_of_the_worker_on_the_same_gpu(self):
+        weights = MODELS["qwen27"]["artifact"].size
+        profile = {"model_id": "qwen27", "mode_id": "vram", "context_tokens": 16384}
+        resident = weights + context_bytes("qwen27", "vram", profile["context_tokens"])
+        cold = self.cuda_host()
+        active = self.cuda_host(22 * GIB - resident)
+        replacement = ReplacementMemory.observed(
+            cold, active, profile, weights, 0, device_bytes=resident
+        )
+        replacement.credit(active)
+        self.assertEqual(active, cold)
+        busy = self.cuda_host(21 * GIB - resident)
+        replacement.credit(busy)
+        self.assertEqual(busy, self.cuda_host(21 * GIB))
+        changed = self.cuda_host(GIB)
+        changed["devices"][0]["uuid"] = "GPU-other"
+        changed["execution_device_uuid"] = "GPU-other"
+        replacement.credit(changed, worker_vram=resident)
+        self.assertEqual(changed["devices"][0]["free_bytes"], GIB)
+        live = self.cuda_host(GIB)
+        replacement.credit(live, worker_vram=20 * GIB)
+        self.assertEqual(live["devices"][0]["free_bytes"], 21 * GIB)
+        warm = self.cuda_host(21 * GIB - resident)
+        replacement.credit(warm, device_bytes=resident + GIB)
+        self.assertEqual(warm, cold)
+
+    def test_flash_replacement_credits_anonymous_ram_to_the_plan(self):
+        profile = {"model_id": "flash", "mode_id": "tiered", "context_tokens": 65536}
+        cold = self.cuda_host()
+        active = {
+            **self.cuda_host(3 * GIB),
+            "ram_bytes": 24 * GIB,
+            "ram_available_bytes": 6 * GIB,
+        }
+        replacement = ReplacementMemory.observed(
+            cold, active, profile, MODELS["flash"]["artifact"].size, 0
+        )
+        with (
+            patch.object(HardwareProbe, "worker_vram", return_value=18 * GIB),
+            patch.object(
+                HardwareProbe, "worker_anonymous_ram", return_value=8 * GIB
+            ) as ram,
+        ):
+            replacement.credit(active, *replacement.sample(HardwareProbe, None, 123))
+        ram.assert_called_once_with(123)
+        self.assertEqual(active["ram_available_bytes"], 14 * GIB)
+        self.assertEqual(active["devices"][0]["free_bytes"], 21 * GIB)
+
+    def test_streaming_cache_growth_is_credited_once_in_unified_memory(self):
+        profile = {"model_id": "flash", "mode_id": "ssd", "context_tokens": 4096}
+        cold = {
+            "devices": [],
+            "unified_memory": True,
+            "ram_bytes": 24 * GIB,
+            "ram_available_bytes": 20 * GIB,
+            "ram_stream_available_bytes": 14 * GIB,
+        }
+        active = {
+            **cold,
+            "ram_available_bytes": 19 * GIB,
+            "ram_stream_available_bytes": 13 * GIB,
+        }
+        replacement = ReplacementMemory.observed(
+            cold, active, profile, MODELS["flash"]["artifact"].size, 0, device_bytes=GIB
+        )
+        warm = {
+            **active,
+            "ram_available_bytes": 15 * GIB,
+            "ram_stream_available_bytes": 9 * GIB,
+        }
+        replacement.credit(warm, device_bytes=5 * GIB)
+        self.assertEqual(warm, cold)
+        critical = {**active, "ram_available_bytes": 0, "ram_stream_available_bytes": 0}
+        replacement.credit(critical, device_bytes=5 * GIB)
+        self.assertEqual(critical["ram_available_bytes"], 0)
+        self.assertEqual(critical["ram_stream_available_bytes"], 0)
+
+    def test_worker_memory_probe_accepts_only_positive_device_bytes(self):
+        worker = NativeWorker()
+        with patch.object(worker, "_get_json", return_value={"device_bytes": GIB}):
+            self.assertEqual(worker.device_memory(), GIB)
+        with patch.object(worker, "_get_json", return_value={"device_bytes": True}):
+            self.assertIsNone(worker.device_memory())
+        with patch.object(worker, "_get_json", side_effect=ValueError("older worker")):
+            self.assertIsNone(worker.device_memory())
+
+    @patch(
+        "managed_hardware.command_output",
+        return_value="77, GPU-other, 500\n88, GPU-example, 600\n77, GPU-example, 12000",
+    )
+    def test_nvml_sample_uses_only_the_managed_pid_and_device(self, _):
+        self.assertEqual(HardwareProbe.worker_vram(77, "GPU-example"), 12000 * 2**20)
+        self.assertIsNone(HardwareProbe.worker_vram(33, "GPU-example"))
+
+    @patch("managed_hardware.platform.system", return_value="Linux")
+    @patch(
+        "managed_hardware.Path.read_text",
+        return_value="MemTotal: 67108864 kB\nMemAvailable: 50331648 kB\n",
+    )
+    @patch("managed_hardware.cuda_device_uuid", return_value="GPU-second")
+    @patch(
+        "managed_hardware.command_output",
+        return_value="Large GPU, 49152, 48000, 9.0, GPU-first\n"
+        "Selected GPU, 24576, 22528, 8.6, GPU-second",
+    )
+    def test_cuda_capacity_uses_driver_device_with_multiple_gpus(
+        self, _, selected, _meminfo, _system
+    ):
+        probe = HardwareProbe("auto", ROOT)
+        host = probe.snapshot()
+        self.assertEqual(len(host["devices"]), 2)
+        device = cuda_device(host)
+        self.assertEqual(device["uuid"], "GPU-second")
+        weights = MODELS["qwen27"]["artifact"].size
+        limit = max_context("qwen27", "vram", host, weights)
+        self.assertEqual(
+            limit, max_context("qwen27", "vram", self.cuda_host(), weights)
+        )
+
+        active = probe.snapshot()
+        cuda_device(active)["free_bytes"] -= 16 * GIB
+        profile = {"model_id": "qwen27", "mode_id": "vram", "context_tokens": 8192}
+        replacement = ReplacementMemory.observed(host, active, profile, weights, 0)
+        replacement.credit(active, worker_vram=16 * GIB)
+        self.assertEqual(active, host)
+
+        selected.return_value = "GPU-first"
+        self.assertGreater(
+            max_context("qwen27", "vram", probe.snapshot(refresh=True), weights), limit
+        )
+        selected.return_value = None
+        self.assertEqual(
+            max_context("qwen27", "vram", probe.snapshot(refresh=True), weights), 0
+        )
+
+
 class ManagedCoreTests(unittest.TestCase):
-    def test_regular_launchers_open_managed_http_with_or_without_saved_profile(self):
-        launchers = ("start-ds4-server.sh", "agent/start-ds4-server.sh")
-        for launcher, configured in product(launchers, (False, True)):
+    def test_native_suite_config_makes_local_images_and_embeddings_plannable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifests = root / "config" / "suite-bundles"
+            manifests.mkdir(parents=True)
+            native = root / "native-models"
+            config = {"version": 1, "models": []}
+            media = root / "gemma-media.ds4p"
+            for filename in SUITE_MANIFESTS.values():
+                spec = json.loads(
+                    (ROOT / "config" / "suite-bundles" / filename).read_text()
+                )
+                for item in spec["files"]:
+                    source = native / item["path"]
+                    source.parent.mkdir(parents=True, exist_ok=True)
+                    payload = item["path"].encode()
+                    source.write_bytes(payload)
+                    item["bytes"] = len(payload)
+                    item["sha256"] = hashlib.sha256(payload).hexdigest()
+                (manifests / filename).write_text(json.dumps(spec))
+                config["models"].append(
+                    {"model": spec["model"], "root": "native-models"}
+                )
+            config["models"][-1]["media_asset"] = media.name
+            config_path = root / "native.json"
+            config_path.write_text(json.dumps(config))
+            host = {
+                "backend": "cuda",
+                "system": "Linux",
+                "ram_bytes": 64 * 2**30,
+                "disk_free_bytes": 100 * 2**30,
+                "execution_device_uuid": "GPU-test",
+                "devices": [
+                    {
+                        "uuid": "GPU-test",
+                        "compute": "8.6",
+                        "free_bytes": 24 * GIB,
+                        "total_bytes": 24 * GIB,
+                    }
+                ],
+            }
+            profile = {"model_id": "qwen27", "mode_id": "vram", "context_tokens": 512}
             with (
-                self.subTest(launcher=launcher, configured=configured),
+                patch("managed_catalog.ROOT", root),
+                patch("managed_suite.ROOT", root),
+                patch.object(Core, "host", return_value=host),
+            ):
+                core = Core(
+                    root / "state", root / "models", "cuda", suite_config=config_path
+                )
+                try:
+
+                    def features():
+                        model = next(
+                            item
+                            for item in core.catalog()["models"]
+                            if item["id"] == "qwen27"
+                        )
+                        return {item["id"]: item for item in model["features"]}
+
+                    self.assertFalse(features()["embeddings"]["available"])
+                    self.assertIn("media asset", features()["embeddings"]["reason"])
+                    optional = {
+                        item["id"]: item for item in core.catalog()["optional_models"]
+                    }
+                    self.assertTrue(optional["embeddings"]["present"])
+                    self.assertFalse(optional["embeddings"]["removable"])
+                    self.assertFalse(optional["embeddings"]["active"])
+                    media.write_bytes(b"fixture media processor")
+                    for feature in ("images", "embeddings"):
+                        entry = features()[feature]
+                        self.assertTrue(entry["available"])
+                        self.assertEqual(entry["missing_bytes"], 0)
+                        self.assertFalse(entry["installed"])
+                    self.assertEqual(
+                        core.plan({**profile, "features": ["images", "embeddings"]})[
+                            "missing_bytes"
+                        ],
+                        core.plan(profile)["missing_bytes"],
+                    )
+                    (native / "google/embeddinggemma-2/model.safetensors").unlink()
+                    self.assertGreater(features()["embeddings"]["missing_bytes"], 0)
+                    self.assertEqual(features()["images"]["missing_bytes"], 0)
+                    self.assertEqual(
+                        features()["embeddings"]["available_modes"], ["vram"]
+                    )
+                    spec = json.loads(
+                        (manifests / SUITE_MANIFESTS["embeddings"]).read_text()
+                    )
+                    managed_files = [
+                        root / "models" / "suite" / item["path"]
+                        for item in spec["files"]
+                    ]
+                    for path, item in zip(managed_files, spec["files"]):
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_bytes(item["path"].encode())
+                    removal = {"kind": "remove", "model_id": "embeddings"}
+                    with core._lock:
+                        core._saved = {**profile, "features": ["embeddings"]}
+                    with self.assertRaises(Problem) as in_use:
+                        core.submit(removal)
+                    self.assertEqual(in_use.exception.code, "MODEL_IN_USE")
+                    with core._lock:
+                        core._saved = {**profile, "features": []}
+                    optional = {
+                        item["id"]: item for item in core.catalog()["optional_models"]
+                    }
+                    self.assertTrue(optional["embeddings"]["removable"])
+                    job = core.submit(removal)
+                    deadline = time.monotonic() + 5
+                    while core.get_jobs(job["id"])["state"] not in {
+                        "completed",
+                        "failed",
+                    }:
+                        self.assertLess(time.monotonic(), deadline)
+                        time.sleep(0.02)
+                    self.assertEqual(core.get_jobs(job["id"])["state"], "completed")
+                    self.assertFalse(any(path.exists() for path in managed_files))
+                    self.assertTrue(
+                        (native / "google/embeddinggemma-2/tokenizer.json").is_file()
+                    )
+                    (manifests / SUITE_MANIFESTS["images"]).write_text("[]")
+                    self.assertFalse(features()["images"]["available"])
+                    self.assertTrue(features()["embeddings"]["available"])
+                    with self.assertRaises(Problem) as invalid:
+                        core.plan({**profile, "features": ["images"]})
+                    self.assertEqual(invalid.exception.code, "SUITE_MANIFEST_INVALID")
+                finally:
+                    core.close()
+
+    def test_local_suite_store_verifies_in_place_and_never_modifies_the_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            native = root / "native"
+            native.mkdir()
+            source = native / "model.safetensors"
+            source.write_bytes(b"verified weights")
+            artifact = Artifact(
+                source.name,
+                "",
+                source.stat().st_size,
+                hashlib.sha256(source.read_bytes()).hexdigest(),
+            )
+            store = PinnedStore(native, local_receipts=root / "verification")
+            reports = []
+            self.assertEqual(store.remaining(artifact), 0)
+            self.assertEqual(
+                store.ensure(
+                    artifact, lambda phase, *_: reports.append(phase), lambda: None
+                ),
+                source,
+            )
+            self.assertTrue(store.installed(artifact))
+            self.assertEqual(reports, ["verifying"])
+            self.assertEqual(list(native.iterdir()), [source])
+            with self.assertRaises(Problem) as read_only:
+                store.remove(artifact)
+            self.assertEqual(read_only.exception.code, "ARTIFACT_READ_ONLY")
+            source.write_bytes(b"corrupted bytes!")
+            with self.assertRaises(Problem) as invalid:
+                store.ensure(artifact, lambda *_: None, lambda: None)
+            self.assertEqual(invalid.exception.code, "CHECKSUM_MISMATCH")
+            self.assertEqual(source.read_bytes(), b"corrupted bytes!")
+
+    def test_root_launcher_opens_managed_http_with_or_without_saved_profile(self):
+        for configured, native_env in product((False, True), repeat=2):
+            with (
+                self.subTest(configured=configured, native_env=native_env),
                 tempfile.TemporaryDirectory() as directory,
             ):
                 root = Path(directory)
@@ -67,19 +544,20 @@ class ManagedCoreTests(unittest.TestCase):
                 }
                 env.update(
                     DS4_STATE_DIR=str(state),
-                    DS4_GGUF_DIR=str(root / "gguf"),
+                    DS4_GGUF_DIR=os.path.relpath(root / "gguf", ROOT),
                     DS4_BACKEND="cpu",
                     DS4_SERVER_PORT="0",
                 )
+                if native_env:
+                    env["DS4_MODEL_PROFILE"] = "flash"
                 if configured:
                     state.mkdir()
                     (state / "profile.json").write_text(
                         json.dumps({"version": 1, "revision": 1, "profile": profile})
                     )
-                    env["DS4_MODEL_PROFILE"] = "qwen27"
                 with subprocess.Popen(
-                    ["bash", launcher],
-                    cwd=ROOT,
+                    ["bash", str(ROOT / "start-ds4-server.sh")],
+                    cwd=root,
                     env=env,
                     text=True,
                     stdout=subprocess.PIPE,
@@ -95,9 +573,12 @@ class ManagedCoreTests(unittest.TestCase):
                         ) as response:
                             status = json.load(response)
                         self.assertFalse(status["chat_ready"])
+                        self.assertTrue((root / "gguf").is_dir())
                         if configured:
                             self.assertIn(status["state"], {"starting", "error"})
-                            self.assertEqual(status["saved_profile"]["context_tokens"], 512)
+                            self.assertEqual(
+                                status["saved_profile"]["context_tokens"], 512
+                            )
                         else:
                             self.assertEqual(status["state"], "empty")
                             self.assertIsNone(status["saved_profile"])
@@ -194,6 +675,138 @@ class ManagedCoreTests(unittest.TestCase):
                 self.assertEqual(result["allowed_actions"], [])
                 self.assertFalse(model.exists())
                 self.assertEqual(core.status()["saved_profile"]["model_id"], "qwen27")
+            finally:
+                core.close()
+
+    def test_activation_waits_for_a_conflicting_removal(self):
+        profile = {"model_id": "qwen27", "mode_id": "vram", "context_tokens": 512}
+        payload = b"model fixture"
+        artifact = Artifact(
+            "model.gguf", "", len(payload), hashlib.sha256(payload).hexdigest()
+        )
+        host = {
+            "backend": "cuda",
+            "system": "Linux",
+            "disk_free_bytes": 100 * GIB,
+            "execution_device_uuid": "GPU-test",
+            "devices": [
+                {
+                    "uuid": "GPU-test",
+                    "compute": "8.6",
+                    "free_bytes": 24 * GIB,
+                    "total_bytes": 24 * GIB,
+                }
+            ],
+        }
+        entered = threading.Event()
+        release = threading.Event()
+        remove_file = PinnedStore.remove
+
+        def remove(store, item):
+            entered.set()
+            release.wait(5)
+            remove_file(store, item)
+
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(Core, "host", return_value=host),
+            patch.object(PinnedStore, "remove", remove),
+            patch.dict(MODELS["qwen27"], artifact=artifact),
+        ):
+            root = Path(directory)
+            core = Core(root / "state", root / "gguf", "cuda")
+            try:
+                (root / "gguf" / artifact.path).write_bytes(payload)
+                plan = core.plan(profile)
+                self.assertEqual(plan["missing_bytes"], 0)
+                job = core.submit({"kind": "remove", "model_id": profile["model_id"]})
+                self.assertTrue(entered.wait(2))
+                with self.assertRaises(Problem) as conflict:
+                    core.submit({"kind": "apply", "plan_id": plan["id"]})
+                self.assertEqual(conflict.exception.code, "MODEL_BUSY")
+                release.set()
+                deadline = time.monotonic() + 5
+                while core.get_jobs(job["id"])["state"] != "completed":
+                    self.assertLess(time.monotonic(), deadline)
+                    time.sleep(0.02)
+                with self.assertRaises(Problem) as stale:
+                    core.submit({"kind": "apply", "plan_id": plan["id"]})
+                self.assertEqual(stale.exception.code, "PLAN_STALE")
+                self.assertEqual(core.plan(profile)["missing_bytes"], len(payload))
+            finally:
+                release.set()
+                core.close()
+
+    def test_memory_change_at_launch_preserves_chat_when_only_vision_no_longer_fits(
+        self,
+    ):
+        payload = b"fixture"
+        digest = hashlib.sha256(payload).hexdigest()
+        model = Artifact("model.gguf", "", len(payload), digest)
+        vision = Artifact("vision.gguf", "", len(payload), digest)
+        tokens = 8192
+        profile = {
+            "model_id": "qwen27",
+            "mode_id": "vram",
+            "context_tokens": tokens,
+            "features": ["vision"],
+        }
+        host = {
+            "backend": "cuda",
+            "system": "Linux",
+            "disk_free_bytes": GIB,
+            "execution_device_uuid": "GPU-test",
+        }
+        device = {
+            "uuid": "GPU-test",
+            "compute": "8.6",
+            "free_bytes": 24 * GIB,
+            "total_bytes": 24 * GIB,
+        }
+        chat_budget = (
+            model.size
+            + CUDA_RESERVE
+            + context_bytes("qwen27", "vram", tokens)
+            + tokens * 2048 * 4
+        )
+        enough = {**host, "devices": [device]}
+        reduced = {**host, "devices": [{**device, "free_bytes": chat_budget}]}
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.dict(
+                MODELS,
+                {"qwen27": {**MODELS["qwen27"], "artifact": model, "vision": vision}},
+            ),
+            patch.object(
+                Core, "host", side_effect=[enough, enough, reduced, reduced, reduced]
+            ),
+            patch.dict(os.environ, {"DS4_MANAGED_SERVER_BIN": sys.executable}),
+            patch.object(
+                NativeWorker,
+                "start",
+                return_value=NativeModel("test", "ds4.c", frozenset()),
+            ) as start,
+            patch.object(NativeWorker, "is_running", return_value=True),
+        ):
+            root = Path(directory)
+            models = root / "gguf"
+            models.mkdir()
+            for artifact in (model, vision):
+                (models / artifact.path).write_bytes(payload)
+            core = Core(root / "state", models, "cuda")
+            try:
+                plan = core.plan(profile)
+                job = core.submit({"kind": "apply", "plan_id": plan["id"]})
+                for _ in range(100):
+                    if core.get_jobs(job["id"])["state"] == "completed":
+                        break
+                    time.sleep(0.01)
+                status = core.status()
+                self.assertTrue(status["chat_ready"], status)
+                self.assertEqual(status["saved_profile"]["features"], ["vision"])
+                self.assertEqual(status["active_profile"]["available_features"], [])
+                self.assertIn("vision", status["feature_errors"])
+                self.assertNotIn("--vision", start.call_args.args[0].argv)
             finally:
                 core.close()
 
@@ -322,6 +935,31 @@ with socket.socket(fileno=int(os.environ["DS4_MANAGED_LISTENER_FD"])) as listene
                     )
                 self.assertEqual(mismatch.exception.code, "CHECKSUM_MISMATCH")
 
+    def test_changed_partial_is_not_certified_after_checksum(self):
+        payload = b"fixture weights"
+        artifact = Artifact(
+            "model.gguf", "", len(payload), hashlib.sha256(payload).hexdigest()
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            store = PinnedStore(Path(directory))
+            partial = store.root / "model.gguf.part"
+            partial.write_bytes(payload)
+            verified = False
+
+            def report(phase, completed, total):
+                nonlocal verified
+                verified = phase == "verifying" and completed == total
+
+            def check():
+                if verified:
+                    partial.write_bytes(b"!" * len(payload))
+
+            with self.assertRaises(Problem) as changed:
+                store.ensure(artifact, report, check)
+            self.assertEqual(changed.exception.code, "ARTIFACT_CHANGED")
+            self.assertFalse(store.installed(artifact))
+            self.assertFalse((store.root / artifact.path).exists())
+
     def test_proxy_preserves_multipart_and_propagates_disconnect(self):
         multipart = (
             b'--fixture\r\nContent-Disposition: form-data; name="image";'
@@ -344,7 +982,7 @@ with socket.socket(fileno=int(os.environ["DS4_MANAGED_LISTENER_FD"])) as listene
                     return False
 
                 @contextmanager
-                def open_inference(self):
+                def open_inference(self, *, processing=False):
                     with socket.socket(socket.AF_UNIX) as connection:
                         connection.settimeout(5)
                         connection.connect(path)

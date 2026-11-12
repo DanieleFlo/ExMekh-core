@@ -869,10 +869,7 @@ l'interno. Ogni capitolo presuppone quelli precedenti.
 - `download_model.sh` — download dei modelli e support model conosciuti dal
   progetto: DeepSeek Flash 0731/DSpark, PRO 0813, GLM e gli artefatti Qwen3.8
   fissati con revisione e checksum.
-- `start-ds4-server.sh`, `agent/start-ds4-server.sh`,
-  `agent/start-ds4-server-flash.sh`, `agent/run.sh` —
-  launcher eseguibili nativi per server CUDA e frontend ExMekh Agent dalla copia WSL2
-  `/home/daniele/ds4`; il launcher principale mantiene Qwen27 come default e aggiunge il profilo Flash esplicito; i due launcher in `agent/` selezionano rispettivamente Qwen27B e Flash Next, con proiettore corretto e `--print-command`, MTP attivo per entrambi e contesto Flash 64K. Il launcher agent Qwen27 avvia `ds4-server-suite`, contesto 26000 e bundle scelti da `DS4_SUITE_CONFIG`, per immagini/embedding sulla stessa URL. `config/native-suite.env.example` documenta i percorsi delle dipendenze native nel file locale ignorato `config/native-suite.env`; il progetto non modifica proxy o firewall Windows.
+- `start-ds4-server.sh` avvia Core gestito dalla root. Con `--manual` e `DS4_MODEL_PROFILE` espone i profili nativi Qwen27 e Flash Next. `DS4_SUITE_CONFIG` seleziona il binario con immagini ed embedding. `agent/run.sh` avvia il frontend separatamente.
 - `ds4_cli.c` — eseguibile `ds4`: parsing opzioni, modalità one-shot e REPL,
   prompt, generazione, sampling, perplexity e dump diagnostici. `--mtp` senza
   argomento seleziona il sidecar Qwen auditato; `--mtp FILE` e l'alias

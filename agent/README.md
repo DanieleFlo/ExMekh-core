@@ -136,7 +136,7 @@ From the repository root, start Flash in the backend terminal:
 set -a
 source config/flash-metal-streamed.env.example
 set +a
-./agent/start-ds4-server-flash.sh --host 127.0.0.1
+./start-ds4-server.sh --manual --host 127.0.0.1
 ```
 
 In the frontend terminal, source the same profile:
@@ -149,7 +149,7 @@ set +a
 ```
 
 For Qwen27, source `config/qwen27-metal-streamed.env.example` in both terminals
-and use `./agent/start-ds4-server.sh --manual` for that qualification profile. Start only one backend at
+and use `./start-ds4-server.sh --manual --host 127.0.0.1` for that qualification profile. Start only one backend at
 a time. Open [ExMekh Agent](http://127.0.0.1:8000) and choose **New Quick Chat**.
 Profiles do not overwrite a saved `.env` file.
 
@@ -164,7 +164,7 @@ historical preparation profile with its original resource refusal.
 
 ### Qwen27 CUDA and native suite
 
-On CUDA, start `./agent/start-ds4-server.sh --manual` for a manually configured Qwen27 and the native Images/Embeddings
+On CUDA, start `DS4_CTX=26000 DS4_SUITE_CONFIG=config/native-suite.example.json ./start-ds4-server.sh --manual` from the repository root for a manually configured Qwen27 and the native Images/Embeddings
 endpoints on the same `http://localhost:8080/v1` URL. It builds and runs
 `ds4-server-suite` with `config/native-suite.example.json`, keeping context
 26000, MTP and the matching vision encoder. Set `DS4_SUITE_CONFIG` to use your
@@ -174,7 +174,7 @@ own bundle configuration. Configure installed native libraries in
 the offline model and dependency preparation. An LLM-only `ds4-server` returns
 `404 unknown endpoint` when the image tool calls `/v1/images/generations`.
 
-For Qwen Flash CUDA, start `./agent/start-ds4-server-flash.sh` from the repository
+For Qwen Flash CUDA, start `DS4_MODEL_PROFILE=flash ./start-ds4-server.sh --manual` from the repository
 root. Its standard profile enables the qualified expert ring, explicit KV
 streaming with 32768 resident cells, CUDA decode graphs/ranking and prefill
 chunk 2048. The default context capacity is 64K; set `DS4_CTX` for an explicit
@@ -332,8 +332,6 @@ agent/
 ├── .python-version      # Python 3.13
 ├── run.sh               # WSL launcher for the UI
 ├── sync_exmekh_lib.sh    # Build and install the sibling ExMekh-Lib sources
-├── start-ds4-server.sh  # WSL launcher for Qwen27B
-├── start-ds4-server-flash.sh  # WSL launcher for Qwen Flash Next
 ├── wheels/               # Synchronized exmekh_lib wheel
 │   └── exmekh_lib-0.1.0-py3-none-any.whl
 ├── data/
@@ -414,7 +412,7 @@ See [architecture and responsibilities](docs/architecture.md) for the public API
 
 This checkout lives in `agent/`. The sibling `exmekh_lib/` source copy is ignored by
 Git; the versioned wheel in `wheels/` is the runtime dependency. In WSL/Linux,
-start `./start-ds4-server.sh` for managed Core, then `./run.sh` in a separate terminal.
+start `./start-ds4-server.sh` from the repository root for managed Core, then `./agent/run.sh` in a separate terminal.
 The server listens while restoring the profile selected in Agent. The model
 server uses port 8080 and the frontend uses port 8000. Set `API_TYPE=responses`
 and keep the client context at or below the server allocation reported by `/v1/models`.
@@ -426,19 +424,28 @@ The `.python-version` pins Python 3.13, matching the source environment and test
 
 ### Selecting the local inference model
 
-From `agent/`, use these commands for manual native profiles:
+In managed mode, select an available profile in **System settings → Server → Models**.
+**Catalog** lists the optional image and embedding models. **Installed** shows
+the models whose files are already on the server. Choose **Enable** or **Disable**
+on an optional model, then apply the reviewed profile. **Remove files** frees
+disk space after you disable a model whose files Core manages.
+On qualified CUDA SM 8.6 hardware, Flash Next uses its standard tiered cache
+profile with a 2,048-token prefill chunk and a recommended 65,536-token context
+when memory permits. The context field can be increased up to the estimated ceiling.
+Core waits for an idle worker before switching models. **Stop active requests**
+is available on the server overview and profile review while Core is busy.
+From the repository root, use these commands for manual native profiles:
 
 ```sh
-./start-ds4-server.sh --manual  # Qwen27B: MTP, context 26000
-./start-ds4-server-flash.sh  # Flash Next: MTP, context 65536, prefill chunk 2048
+./start-ds4-server.sh --manual  # Qwen27B: MTP, context 22593 on CUDA
+DS4_MODEL_PROFILE=flash ./start-ds4-server.sh --manual  # Flash Next: CUDA context 65536
 ```
 
-Start the frontend with `./run.sh` in another terminal. Each launcher selects
-its model profile even if `DS4_MODEL_PROFILE` is set in the environment.
-Model discovery reads the real server model and allocated context. Flash uses
-its matching projector and CUDA tiered cache. Both launchers enable MTP.
+Start the frontend with `./agent/run.sh` in another terminal. Model discovery
+reads the real server model and allocated context. The CUDA Flash profile uses
+its matching projector and tiered cache. Both manual CUDA profiles default to MTP.
 
-Both scripts accept `--print-command` to review the exact command without
+The launcher accepts `--print-command` to review the exact command without
 loading weights. `DS4_CTX`, `DS4_PREFILL_CHUNK`, `DS4_MODEL`, `DS4_VISION_MODEL`
 and `DS4_KV_DISK_DIR` can override the profile. An empty vision path disables
 vision; an empty KV directory disables the shared launcher's KV disk arguments.

@@ -140,10 +140,10 @@ class Acceptance:
 
     def server(self, mtp: bool) -> None:
         tag = "mtp" if mtp else "target"
-        launcher = "agent/start-ds4-server.sh" if mtp else "start-ds4-server.sh"
         command = [
             "bash",
-            launcher,
+            "start-ds4-server.sh",
+            "--manual",
             "--host",
             "127.0.0.1",
             "--port",
@@ -157,7 +157,12 @@ class Acceptance:
             process = subprocess.Popen(
                 command,
                 cwd=ROOT,
-                env=self.environment,
+                env={
+                    **self.environment,
+                    "DS4_MODEL_PROFILE": "qwen27",
+                    "DS4_CTX": "26000" if mtp else "22593",
+                    "DS4_SUITE_CONFIG": "config/native-suite.example.json" if mtp else "",
+                },
                 stdout=log,
                 stderr=subprocess.STDOUT,
             )

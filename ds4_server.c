@@ -14950,6 +14950,7 @@ struct server {
     server_image_cache image_cache; /* Protected by inference_mu. */
     bool disable_exact_dsml_tool_replay;
     bool enable_cors;
+    bool managed_listener;
     pthread_mutex_t tool_mu;
     pthread_mutex_t kv_mu;
     pthread_mutex_t constraint_cache_mu;
@@ -23506,6 +23507,17 @@ static void *client_main(void *arg) {
     }
 #endif
 
+    if (s->managed_listener && !strcmp(hr.method, "GET") &&
+        !strcmp(hr.path, "/internal/memory")) {
+        ds4_resource_totals totals;
+        ds4_resources_totals(ds4_engine_resources(s->engine), 0, &totals);
+        char body[64];
+        snprintf(body, sizeof(body), "{\"device_bytes\":%llu}",
+                 (unsigned long long)totals.allocated[DS4_MEMORY_DEVICE]);
+        http_response(fd, false, 200, "application/json", body);
+        http_request_free(&hr);
+        goto done;
+    }
     if (!strcmp(hr.method, "GET") && !strcmp(hr.path, "/v1/models")) {
         send_models(s, fd);
         http_request_free(&hr);
@@ -24321,6 +24333,7 @@ int main(int argc, char **argv) {
     s.disable_exact_dsml_tool_replay = cfg.disable_exact_dsml_tool_replay;
     s.tool_mem.max_entries = cfg.tool_memory_max_ids;
     s.enable_cors = cfg.enable_cors;
+    s.managed_listener = managed_listener >= 0;
     s.slots = xmalloc((size_t)slot_count * sizeof(*s.slots));
     memset(s.slots, 0, (size_t)slot_count * sizeof(*s.slots));
     if (s.batched_mode) {

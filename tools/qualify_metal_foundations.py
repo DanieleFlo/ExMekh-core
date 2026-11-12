@@ -28,8 +28,6 @@ SNAPSHOT = Path("gguf-tools/quality-testing/data/qwen38-metadata/target.json")
 SOURCES = (
     "Makefile",
     "start-ds4-server.sh",
-    "agent/start-ds4-server.sh",
-    "agent/start-ds4-server-flash.sh",
     "ds4.c",
     "ds4.h",
     "ds4_sha256.h",
@@ -498,15 +496,11 @@ def run_gates(runner: CommandRunner, cpu_build: bool) -> None:
             "-v",
         ],
     )
-    for name, wrapper in [
-        ("root", "start-ds4-server.sh"),
-        ("agent", "agent/start-ds4-server.sh"),
-        ("flash-agent", "agent/start-ds4-server-flash.sh"),
-    ]:
+    for model in ("qwen27", "flash"):
         runner.run(
-            "launcher-" + name,
-            ["bash", wrapper, "--print-command"],
-            extra={"DS4_BACKEND": "metal"},
+            "launcher-" + model,
+            ["bash", "start-ds4-server.sh", "--manual", "--print-command"],
+            extra={"DS4_BACKEND": "metal", "DS4_MODEL_PROFILE": model},
         )
     for name, command, extra in [
         ("quant-gdn", ["./tests/test_qwen35_metal"], {}),

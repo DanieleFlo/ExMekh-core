@@ -237,7 +237,7 @@ def freeze_candidate(args):
                "agent/tests/test_agent_runner.py",
                "agent/docs/architecture.md", "docs/architecture/clean-code-review-20261008.md",
                "tests/qwen_flash_quality_probe.c", "tests/test_flash_launcher.py",
-               "start-ds4-server.sh", "agent/start-ds4-server-flash.sh", "agent/start-ds4-server.sh",
+               "start-ds4-server.sh",
                "docs/performance/qwen-flash-agent-launcher-20261008.md",
                "docs/performance/qwen-flash-prefill-strata-20261008.md",
                "docs/experiments/qwen27-4bis-20261008/README.md", "docs/experiments/qwen27-4bis-20261008/manifest.json",

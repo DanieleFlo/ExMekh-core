@@ -105,6 +105,14 @@ estesa e hardware non provato conservano i rispettivi esiti aperti.
 
 ## 2. Ordine e avanzamento
 
+Riesame del 12 novembre sul prefill di Core gestito. Per Flash Next Q2 e
+Qwen27, nell'ordine, verificati staticamente gli argomenti Metal SSD dei
+profili gestiti contro i profili di qualifica a 64 righe e le rispettive
+stime di memoria. Qwen27 residente Metal conserva le 64 righe del launcher
+manuale. La prova su WSL ha misurato il solo Qwen27 CUDA residente. Nessuna
+promozione di chunk o cambio di soglia Metal. Nuova misura su Apple Silicon
+`NOT_VERIFIED`. [Riesame del prefill](../performance/managed-qwen27-prefill-20261112.md#riesame-dei-300-e-600-tokens)
+
 Si mantiene la priorità Flash → Qwen27 della roadmap. Seguono i modelli suite,
 ciascuno con metriche proprie; non attribuire TPS LLM alla generazione image.
 

@@ -40,6 +40,8 @@ class CoreStatus(BaseModel):
     revision: int
     state: Literal["empty", "starting", "error", "ready"]
     chat_ready: bool
+    active_requests: int = 0
+    stopping_requests: int = 0
     active_profile: ActiveProfile | None = None
     saved_profile: dict | None = None
     job_id: str | None = None
@@ -59,6 +61,15 @@ class JobProgress(BaseModel):
     percent: float | None = None
     eta_seconds: int | None = None
     bytes_per_second: int | None = None
+    elapsed_seconds: int | None = None
+
+
+class JobFile(BaseModel):
+    name: str
+    feature: str | None = None
+    size_bytes: int
+    state: str
+    progress: JobProgress | None = None
 
 
 class CoreJob(BaseModel):
@@ -69,6 +80,8 @@ class CoreJob(BaseModel):
     phase: str
     elapsed_seconds: float = 0
     file: str = ""
+    model_name: str = ""
+    files: list[JobFile] = Field(default_factory=list)
     profile: dict | None = None
     progress: JobProgress | None = None
     error: dict[str, str] | None = None
@@ -79,6 +92,12 @@ class CoreJob(BaseModel):
     @property
     def active(self) -> bool:
         return self.state in {"queued", "running", "paused", "pausing", "cancelling"}
+
+    @property
+    def preparing_files(self) -> bool:
+        return self.phase in {"downloading", "verifying"} or any(
+            file.state in {"queued", "downloading", "verifying"} for file in self.files
+        )
 
     @property
     def retryable(self) -> bool:
@@ -189,11 +208,14 @@ class CoreClient:
     async def status(self) -> CoreStatus:
         return await self._read("GET", "status", CoreStatus)
 
+    async def stop_inference(self) -> None:
+        await self._request("POST", "inference/stop")
+
     async def hardware(self) -> dict:
         return await self._request("GET", "hardware")
 
-    async def catalog(self) -> dict:
-        return await self._request("GET", "catalog")
+    async def catalog(self, *, refresh: bool = False) -> dict:
+        return await self._request("GET", "catalog?refresh=1" if refresh else "catalog")
 
     async def plan(self, profile: dict) -> ActivationPlan:
         return await self._read("POST", "plans", ActivationPlan, profile)

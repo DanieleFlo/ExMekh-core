@@ -3,6 +3,7 @@
 import os
 import shlex
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -20,12 +21,12 @@ def launcher_environment(**overrides):
 
 class ServerLauncherTests(unittest.TestCase):
     def flash_command(self, profile="standard", **overrides):
-        env = launcher_environment(DS4_BACKEND="cuda")
+        env = launcher_environment(DS4_BACKEND="cuda", DS4_MODEL_PROFILE="flash")
         env.update(overrides)
         if profile is not None:
             env["DS4_FLASH_PROFILE"] = profile
         result = subprocess.run(
-            ["bash", str(ROOT / "agent/start-ds4-server-flash.sh"), "--print-command"],
+            ["bash", str(ROOT / "start-ds4-server.sh"), "--manual", "--print-command"],
             cwd=ROOT,
             env=env,
             text=True,
@@ -88,13 +89,49 @@ class ServerLauncherTests(unittest.TestCase):
             },
         )
 
+    def test_flash_uses_the_shared_model_directory(self):
+        with tempfile.TemporaryDirectory(prefix="flash models ") as directory:
+            model_dir = Path(directory)
+            vision = model_dir / "mmproj-Qwen3.8-Flash-Next-Q8_0.gguf"
+            vision.touch()
+            args, _ = self.flash_command(DS4_GGUF_DIR=directory)
+            self.assertEqual(
+                args[args.index("-m") + 1],
+                str(model_dir / "Qwen3.8-Flash-Next-Q2.gguf"),
+            )
+            self.assertEqual(args[args.index("--vision") + 1], str(vision))
+
+    def test_explicit_manual_flash_ignores_the_saved_managed_profile(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "profile.json").write_text("{}")
+            result = subprocess.run(
+                ["bash", str(ROOT / "start-ds4-server.sh"), "--manual"],
+                env=launcher_environment(
+                    DS4_STATE_DIR=directory,
+                    DS4_GGUF_DIR=directory,
+                    DS4_BACKEND="cuda",
+                    DS4_MODEL_PROFILE="flash",
+                ),
+                text=True,
+                capture_output=True,
+                timeout=5,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(
+                f"Model not found: {root / 'Qwen3.8-Flash-Next-Q2.gguf'}", result.stderr
+            )
+
     def test_27b_launcher_ignores_flash_profile(self):
         env = launcher_environment()
         env["DS4_BACKEND"] = "cuda"
         env["DS4_VISION_MODEL"] = __file__
         env["DS4_FLASH_PROFILE"] = "standard"
+        env["DS4_SUITE_CONFIG"] = "config/native-suite.example.json"
+        env["DS4_CTX"] = "26000"
         result = subprocess.run(
-            ["bash", str(ROOT / "agent/start-ds4-server.sh"), "--print-command"],
+            ["bash", str(ROOT / "start-ds4-server.sh"), "--manual", "--print-command"],
             cwd=ROOT,
             env=env,
             text=True,
@@ -123,7 +160,8 @@ class ServerLauncherTests(unittest.TestCase):
         result = subprocess.run(
             [
                 "bash",
-                str(ROOT / "agent/start-ds4-server.sh"),
+                str(ROOT / "start-ds4-server.sh"),
+                "--manual",
                 "--print-command",
                 "--no-mtp",
             ],
@@ -163,15 +201,25 @@ class ServerLauncherTests(unittest.TestCase):
         )
 
     def test_streamed_profiles_align_server_and_client(self):
-        for family, wrapper in (("flash", "start-ds4-server-flash.sh"),
-                                ("qwen27", "start-ds4-server.sh")):
+        for family in ("flash", "qwen27"):
             with self.subTest(family=family):
                 result = subprocess.run(
-                    ["bash", "-c", 'set -a; source "$1"; shift; exec "$@"',
-                     "profile", str(ROOT / f"config/{family}-metal-streamed.env.example"),
-                     "bash", str(ROOT / "agent" / wrapper), "--print-command"],
-                    cwd="/tmp", env=launcher_environment(), text=True,
-                    capture_output=True, check=True,
+                    [
+                        "bash",
+                        "-c",
+                        'set -a; source "$1"; shift; exec "$@"',
+                        "profile",
+                        str(ROOT / f"config/{family}-metal-streamed.env.example"),
+                        "bash",
+                        str(ROOT / "start-ds4-server.sh"),
+                        "--manual",
+                        "--print-command",
+                    ],
+                    cwd="/tmp",
+                    env=launcher_environment(),
+                    text=True,
+                    capture_output=True,
+                    check=True,
                 )
                 args = shlex.split(result.stdout)
                 self.assertEqual(args[args.index("--ctx") + 1], "8192")
@@ -181,10 +229,16 @@ class ServerLauncherTests(unittest.TestCase):
                 self.assertIn("--no-mtp", args)
                 self.assertNotIn("--vision", args)
                 self.assertNotIn("--suite-config", args)
-                profile = (ROOT / f"config/{family}-metal-streamed.env.example").read_text()
+                profile = (
+                    ROOT / f"config/{family}-metal-streamed.env.example"
+                ).read_text()
                 self.assertIn("CONTEXT_LENGTH=8192", profile)
                 self.assertIn("REASONING_EFFORT=none", profile)
-                model = "qwen3.8-flash-next" if family == "flash" else "Qwen3.8-27B-UD-Q4_K_S"
+                model = (
+                    "qwen3.8-flash-next"
+                    if family == "flash"
+                    else "Qwen3.8-27B-UD-Q4_K_S"
+                )
                 self.assertIn(f"DEFAULT_MODEL={model}", profile)
 
     def test_metal_flash_uses_small_context_and_no_cuda_profile(self):
@@ -198,8 +252,9 @@ class ServerLauncherTests(unittest.TestCase):
     def test_streamed_cache_uses_metal_admission_and_keeps_explicit_ceiling(self):
         args, _ = self.flash_command(DS4_BACKEND="metal", DS4_SSD_STREAMING="1")
         self.assertNotIn("--ssd-streaming-cache-experts", args)
-        args, _ = self.flash_command(DS4_BACKEND="metal", DS4_SSD_STREAMING="1",
-                                     DS4_SSD_CACHE_GB="1.5")
+        args, _ = self.flash_command(
+            DS4_BACKEND="metal", DS4_SSD_STREAMING="1", DS4_SSD_CACHE_GB="1.5"
+        )
         self.assertEqual(args[args.index("--ssd-streaming-cache-experts") + 1], "1.5GB")
         args, _ = self.flash_command(DS4_BACKEND="cuda", DS4_SSD_STREAMING="1")
         self.assertEqual(args[args.index("--ssd-streaming-cache-experts") + 1], "2GB")
@@ -214,7 +269,8 @@ class ServerLauncherTests(unittest.TestCase):
                 "profile",
                 str(ROOT / "config/qwen27-metal-quick.env.example"),
                 "bash",
-                str(ROOT / "agent/start-ds4-server.sh"),
+                str(ROOT / "start-ds4-server.sh"),
+                "--manual",
                 "--print-command",
                 "--host",
                 "127.0.0.1",
@@ -241,7 +297,7 @@ class ServerLauncherTests(unittest.TestCase):
             DS4_BACKEND="metal", DS4_SUITE_CONFIG="config/native-suite.example.json"
         )
         result = subprocess.run(
-            ["bash", str(ROOT / "agent/start-ds4-server.sh"), "--print-command"],
+            ["bash", str(ROOT / "start-ds4-server.sh"), "--manual", "--print-command"],
             env=env,
             text=True,
             capture_output=True,

@@ -68,6 +68,34 @@
 .core-console .core-header-link:hover,
 .core-console .core-navigation a:hover { background: var(--bg-hover); }
 
+.core-console .core-settings-tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    padding-inline: 24px;
+    background: var(--core-panel);
+    border-bottom: 1px solid var(--core-line);
+}
+
+.core-console .core-settings-tabs a {
+    display: grid;
+    place-items: center;
+    min-width: 104px;
+    min-height: 44px;
+    padding: 8px 18px;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.core-console .core-settings-tabs a:hover { background: var(--bg-hover); }
+.core-console .core-settings-tabs [aria-current] {
+    border-bottom-color: var(--core-action);
+    background: var(--core-selected);
+    color: var(--text-main);
+}
+
 .core-console .core-layout {
     display: grid;
     grid-template-columns: minmax(166px, 212px) minmax(0, 1fr);
@@ -179,7 +207,6 @@
 }
 .core-console .core-primary .q-btn__content { color: var(--core-action-text); }
 
-.core-console .core-progress-card { padding: clamp(15px, 3vw, 22px); gap: 14px; }
 .core-console .q-linear-progress.core-progress {
     height: 6px !important;
     border-radius: 6px;
@@ -192,9 +219,118 @@
     outline-offset: 3px;
 }
 
+.core-activation { width: min(880px, calc(100% - 32px)); }
+.core-activation .core-activation-body { padding: clamp(18px, 4vw, 36px); }
+
+.core-activation-files,
+.core-activation-loading {
+    width: 100%;
+    min-width: 0;
+    gap: 18px;
+}
+
+.core-activation-heading {
+    width: 100%;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: clamp(12px, 3vw, 20px);
+}
+
+.core-activation-heading > .nicegui-column { min-width: 0; }
+.core-activation-model { font-weight: 600; overflow-wrap: anywhere; }
+
+.core-activation-icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--core-selected);
+    color: var(--core-action);
+}
+
+.core-activation-icon .q-icon { font-size: 26px; }
+
+.core-activation-loading {
+    align-items: center;
+    gap: clamp(22px, 4vw, 34px);
+    padding: clamp(24px, 7vw, 64px) clamp(12px, 4vw, 38px);
+    border: 1px solid var(--core-line);
+    border-radius: 16px;
+    background: radial-gradient(ellipse at top, var(--core-selected), var(--core-panel) 65%);
+}
+
+.core-activation-loading .core-activation-heading {
+    flex-direction: column;
+    text-align: center;
+}
+
+.core-activation-loading .core-activation-heading > .nicegui-column {
+    align-items: center;
+    gap: 6px;
+}
+
+.core-activation-loading .core-activation-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 22px;
+    border: 1px solid var(--core-line);
+    background: var(--core-panel);
+}
+
+.core-activation-loading .core-activation-icon .q-icon { font-size: 36px; }
+
+.core-activation-status {
+    width: min(100%, 520px);
+    gap: 10px;
+    padding: clamp(14px, 3vw, 20px);
+    background: var(--core-content);
+    border: 1px solid var(--core-line);
+    border-radius: 12px;
+}
+
+.core-transfer-count { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.core-transfer-group { margin-bottom: -10px; color: var(--text-secondary); font-weight: 600; }
+
+.core-transfer-list {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--core-line);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.core-transfer-file { padding: 10px 14px; list-style: none; }
+.core-transfer-file + .core-transfer-file { border-top: 1px solid var(--core-line); }
+.core-transfer-file[data-state="verified"] .q-icon { color: var(--green-soft); }
+.core-transfer-file:is([data-state="downloading"], [data-state="verifying"]) { background: var(--core-selected); }
+.core-transfer-file .core-progress { margin-top: 9px; }
+
+.core-transfer-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.core-transfer-row .q-icon { align-self: center; color: var(--text-secondary); }
+.core-transfer-name { overflow-wrap: anywhere; }
+.core-transfer-state,
+.core-transfer-details { font-size: .86rem; color: var(--text-secondary); }
+.core-transfer-details { padding-left: 24px; font-variant-numeric: tabular-nums; }
+
+@media (max-width: 540px) {
+    .core-transfer-row { grid-template-columns: auto minmax(0, 1fr); }
+    .core-transfer-state { grid-column: 2; }
+}
+
 @media (max-width: 680px) {
     .core-console { width: calc(100% - 20px); margin-block: 10px; border-radius: 13px; }
     .core-console .core-topbar { min-height: 62px; padding: 12px 15px; }
+    .core-console .core-settings-tabs { padding-inline: 10px; }
+    .core-console .core-settings-tabs a { flex: 1; min-width: 0; }
     .core-console .core-layout { grid-template-columns: minmax(0, 1fr); }
     .core-console .core-navigation {
         flex-direction: row;

@@ -73,7 +73,7 @@ source config/qwen27-metal-quick.env.example
 set +a
 ```
 
-Nel primo terminale avviare `./agent/start-ds4-server.sh --host 127.0.0.1`.
+Nel primo terminale avviare `./start-ds4-server.sh --manual --host 127.0.0.1`.
 Nel secondo avviare `./agent/run.sh`, poi aprire `http://127.0.0.1:8000`
 e scegliere **New Quick Chat**. Il profilo mantiene allineati server e UI
 sui 4096 token; non riscrive un `.env` personale.

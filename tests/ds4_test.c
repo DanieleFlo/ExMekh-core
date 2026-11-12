@@ -892,6 +892,12 @@ static void test_fill_q8_0_weights(uint8_t *weights,
     }
 }
 
+static void test_release_weight_mapping(void) {
+#ifndef DS4_ROCM_BUILD
+    ds4_gpu_legacy_model_release();
+#endif
+}
+
 static void test_metal_f16_matvec_fast_nr0_4(void) {
     /*
      * This is the short regression for the long-context repetition failure.
@@ -963,6 +969,7 @@ static void test_metal_f16_matvec_fast_nr0_4(void) {
     }
     TEST_ASSERT(max_abs < 0.02f);
 
+    test_release_weight_mapping();
     free(x_host);
     free(out_host);
     ds4_gpu_tensor_free(x);
@@ -1054,6 +1061,7 @@ static void test_metal_f16_prefill_matmul(void) {
     TEST_ASSERT(max_abs < 0.08f);
     TEST_ASSERT(rms < 0.02f);
 
+    test_release_weight_mapping();
     free(x_host);
     free(out_host);
     ds4_gpu_tensor_free(x);
@@ -1148,6 +1156,7 @@ static void test_metal_q8_0_prefill_matmul(void) {
     TEST_ASSERT(max_abs < 0.08f);
     TEST_ASSERT(rms < 0.02f);
 
+    test_release_weight_mapping();
     free(x_host);
     free(out_host);
     ds4_gpu_tensor_free(x);
@@ -1403,6 +1412,7 @@ static void test_metal_q8_0_decode_pair_exact_case(
     TEST_ASSERT(mismatch0 == 0);
     TEST_ASSERT(mismatch1 == 0);
 
+    test_release_weight_mapping();
     free(x_host);
     free(ref0_host);
     free(ref1_host);
@@ -5146,6 +5156,17 @@ static void test_metal_router_weights_batch_exact(void) {
 #endif
 
 static void test_metal_kernel_group(void) {
+#ifdef DS4_ROCM_BUILD
+    const int initialized = ds4_gpu_init();
+    TEST_ASSERT(initialized);
+    if (!initialized) return;
+#else
+    ds4_runtime *runtime = NULL;
+    ds4_status status = ds4_compute_runtime_open(&runtime);
+    TEST_ASSERT(status == DS4_STATUS_OK);
+    if (status != DS4_STATUS_OK) return;
+#endif
+
     test_metal_f16_matvec_fast_nr0_4();
     test_metal_f16_prefill_matmul();
     test_metal_q8_0_prefill_matmul();
@@ -5170,6 +5191,11 @@ static void test_metal_kernel_group(void) {
     test_metal_hc_rms_scale_project_f16_exact();
     test_metal_router_simd_finalize_exact();
     test_metal_router_weights_batch_exact();
+#endif
+#ifdef DS4_ROCM_BUILD
+    ds4_gpu_cleanup();
+#else
+    ds4_runtime_release(runtime);
 #endif
 }
 

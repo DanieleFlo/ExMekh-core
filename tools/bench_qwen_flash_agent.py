@@ -122,7 +122,8 @@ class OwnedServer:
             probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             probe.bind(("127.0.0.1", self.port))
         self.directory.mkdir(parents=True, exist_ok=True)
-        self.command = [str(ROOT / "agent/start-ds4-server-flash.sh"), "--host", "127.0.0.1"]
+        self.command = [str(ROOT / "start-ds4-server.sh"), "--manual", "--host", "127.0.0.1"]
+        self._env["DS4_MODEL_PROFILE"] = "flash"
         if self._env.get("DS4_AGENT_BENCH_TRACE") == "1":
             self.command += ["--trace", str(self.directory / "server-trace.txt")]
         started = time.monotonic()
@@ -283,7 +284,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     config.data_dir = args.output / "agent-isolated-data"
     identity = {"server_sha256": digest(ROOT / "ds4-server"),
-                "launcher_sha256": digest(ROOT / "agent/start-ds4-server-flash.sh"),
+                "launcher_sha256": digest(ROOT / "start-ds4-server.sh"),
                 "shared_launcher_sha256": digest(ROOT / "start-ds4-server.sh"),
                 "context_capacity": 131072, "api": "responses", "agent_mode": "deep_agent",
                 "reasoning": args.reasoning, "greedy": args.greedy, "mtp": True, "vision_loaded": True,
@@ -306,7 +307,7 @@ def main():
             if args.trace:
                 extra["DS4_AGENT_BENCH_TRACE"] = "1"
             env = environment(extra)
-            print(f"Starting sample={sample} profile={profile} via agent/start-ds4-server-flash.sh", flush=True)
+            print(f"Starting sample={sample} profile={profile} via start-ds4-server.sh", flush=True)
             with OwnedServer(dest, env, args.port) as server:
                 records.append({"sample": sample, "warmup": sample < args.warmup_pairs, "profile": profile, "startup_seconds": server.startup,
                                 "command": server.command, "environment": extra, "turns": []})

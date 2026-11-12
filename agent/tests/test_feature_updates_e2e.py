@@ -41,9 +41,7 @@ async def test_generated_batch_loading_order_gallery_and_model_delivery(
                     await page.locator(
                         '.lm-header button:has(i:text-is("tune"))'
                     ).click()
-                    await page.get_by_role(
-                        "link", name="Conversations", exact=True
-                    ).click()
+                    await page.get_by_role("link", name="Client", exact=True).click()
                     toggle = page.get_by_role(
                         "switch", name="Send generated images to the agent"
                     )

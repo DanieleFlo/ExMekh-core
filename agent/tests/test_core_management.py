@@ -8,6 +8,7 @@ import pytest
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.providers.core_management import (
     CoreClient,
+    CoreJob,
     CoreProblem,
     CoreStatus,
     connect_core,
@@ -18,6 +19,7 @@ from exmekh_agent.ui.settings.core_navigation import (
     gate,
     profile_link,
     route,
+    settings_group,
 )
 
 BASE = "http://example.test/v1"
@@ -47,6 +49,43 @@ JOB = {
     "phase": "downloading",
     "allowed_actions": ["pause", "cancel"],
 }
+
+
+@pytest.mark.parametrize(
+    ("section", "group"),
+    [
+        ("server", "server"),
+        ("connection", "server"),
+        ("models", "server"),
+        ("features", "server"),
+        ("activity", "server"),
+        ("conversations", "client"),
+        ("storage", "client"),
+    ],
+)
+def test_settings_sections_belong_to_their_group(section, group):
+    assert settings_group(section) == group
+
+
+@pytest.mark.parametrize(
+    ("phase", "file_state", "expected"),
+    [
+        ("downloading", None, True),
+        ("checking_profile", "queued", True),
+        ("opening_model", "verified", False),
+        ("opening_model", None, False),
+    ],
+)
+def test_job_identifies_file_preparation(phase, file_state, expected):
+    files = (
+        [{"name": "model.gguf", "size_bytes": 1024, "state": file_state}]
+        if file_state
+        else []
+    )
+    assert (
+        CoreJob.model_validate({**JOB, "phase": phase, "files": files}).preparing_files
+        is expected
+    )
 
 
 @pytest.fixture
@@ -82,11 +121,13 @@ async def test_public_operations_and_profile(server):
         STATUS,
         {"devices": []},
         {"models": []},
+        {"models": []},
         {"id": "plan", "missing_bytes": 5},
         [JOB],
         JOB,
         JOB,
         {**JOB, "state": "failed"},
+        {"requested": 1},
     ]
     responses.extend(httpx.Response(200, json=value) for value in values)
     connection = await connect_core()
@@ -96,6 +137,8 @@ async def test_public_operations_and_profile(server):
     client = CoreClient()
     assert await client.hardware() == {"devices": []}
     assert await client.catalog() == {"models": []}
+    assert await client.catalog(refresh=True) == {"models": []}
+    assert requests[-1].url.params == httpx.QueryParams({"refresh": "1"})
     assert (await client.plan(PROFILE)).missing_bytes == 5
     (job,) = await client.jobs()
     assert job.active and not job.retryable
@@ -107,6 +150,9 @@ async def test_public_operations_and_profile(server):
     failed = await client.change_job(job.id, "pause")
     assert not failed.active and failed.retryable
     assert requests[-1].url.path == "/v1/manage/jobs/job-1/actions"
+    await client.stop_inference()
+    assert requests[-1].url.path == "/v1/manage/inference/stop"
+    assert requests[-1].method == "POST"
     assert requests[0].headers["Authorization"] == "Bearer key"
 
 

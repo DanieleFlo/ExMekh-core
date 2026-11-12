@@ -1,19 +1,12 @@
-"""Catalog identity, hardware snapshots and managed profile compatibility."""
+"""Pinned models, artifact selection and managed profile compatibility."""
 
-import copy
 import json
-import platform
-import re
-import shutil
-import subprocess
-import threading
-import time
-from pathlib import Path
 
 from managed_assets import ROOT, Artifact, Problem
+from managed_hardware import cuda_device
+from managed_memory import MODEL_MEMORY, max_context
 from suite_bundle import validate_spec
 
-GIB = 2**30
 HF = "https://huggingface.co"
 QWEN_REV = "4ca720788d1e01f1bff70c033e0d0028fd02e502"
 
@@ -48,11 +41,21 @@ MODELS = {
             147207127040,
             "b1b93fa69aca5f187b0fb813aca8f3ec1beb5cf8cf0bd38cf041b93e0b6ccac9",
         ),
+        "vision": Artifact(
+            "mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+            f"{HF}/antirez/qwen3.8-flash-next-gguf/resolve/main/mmproj-Qwen3.8-Flash-Next-Q8_0.gguf",
+            616703104,
+            "b2e9b5e4a44c107f8867e67dbf09b607fd99ae33c1a97a60a6720aeb252a9dad",
+        ),
     },
 }
 SUITE_IDS = {
     "images": "Qwen/Qwen-Image-2.1-Turbo",
     "embeddings": "google/embeddinggemma-2",
+}
+SUITE_NAMES = {
+    "images": "Qwen-Image-2.1-Turbo",
+    "embeddings": "EmbeddingGemma 2",
 }
 SUITE_MANIFESTS = {
     "images": "qwen-image-2.1-turbo-bf16.json",
@@ -60,151 +63,70 @@ SUITE_MANIFESTS = {
 }
 
 
-def command_output(*argv):
-    try:
-        return subprocess.check_output(
-            argv, text=True, stderr=subprocess.DEVNULL, timeout=4
-        )
-    except (OSError, subprocess.SubprocessError):
-        return ""
-
-
-def hardware(backend, directory):
-    total = available = None
-    devices = []
-    if platform.system() == "Darwin":
-        value = command_output("sysctl", "-n", "hw.memsize").strip()
-        total = int(value) if value.isdecimal() else None
-        vm = command_output("vm_stat")
-        page = re.search(r"page size of (\d+) bytes", vm)
-        if page:
-            counts = re.findall(r"Pages (?:free|inactive|speculative):\s*(\d+)", vm)
-            available = int(page[1]) * sum(map(int, counts)) if counts else None
-    elif platform.system() == "Linux":
-        mem = dict(
-            re.findall(
-                r"^(MemTotal|MemAvailable):\s+(\d+) kB",
-                Path("/proc/meminfo").read_text(),
-                re.M,
-            )
-        )
-        total = int(mem["MemTotal"]) * 1024 if "MemTotal" in mem else None
-        available = int(mem["MemAvailable"]) * 1024 if "MemAvailable" in mem else None
-    if backend in {"auto", "cuda"} and platform.system() != "Darwin":
-        gpu = command_output(
-            "nvidia-smi",
-            "--query-gpu=name,memory.total,memory.free,compute_cap",
-            "--format=csv,noheader,nounits",
-        )
-        for line in gpu.splitlines():
-            fields = [field.strip() for field in line.split(",")]
-            if len(fields) == 4 and all(field.isdecimal() for field in fields[1:3]):
-                name, size, free, capability = fields
-                devices.append(
-                    {
-                        "name": name,
-                        "total_bytes": int(size) * 2**20,
-                        "free_bytes": int(free) * 2**20,
-                        "compute": capability,
-                    }
-                )
-    if backend == "auto":
-        backend = (
-            "metal" if platform.system() == "Darwin" else "cuda" if devices else "cpu"
-        )
-    return {
-        "backend": backend,
-        "system": platform.system(),
-        "ram_bytes": total,
-        "ram_available_bytes": available,
-        "unified_memory": backend == "metal",
-        "devices": devices,
-        "disk_free_bytes": shutil.disk_usage(directory).free,
-    }
-
-
-def modes(model, host, vision=False):
+def modes(model, host):
     """Expose qualified envelopes. The worker performs native admission at load."""
-    backend = host["backend"]
-    metal = backend == "metal" and host["system"] == "Darwin"
-    cuda = backend == "cuda" and len(host["devices"]) == 1
-    ram = host["ram_bytes"] or 0
-    free = host["devices"][0]["free_bytes"] if cuda else 0
-    vision_bytes = (
-        MODELS[model]["vision"].size if vision and "vision" in MODELS[model] else 0
-    )
-    # Qwen27 has 16 full-attention layers and two FP32 KV tensors per layer.
-    # The headroom covers scratch, driver and allocations outside the raw KV.
-    # Keep the resulting estimate inside the existing launcher envelope.
-    kv_bytes_per_token = 16 * 2 * 4 * 256 * 4
-    vision_overhead = vision_bytes + GIB // 2 if vision_bytes else 0
-    room = free - MODELS[model]["artifact"].size - 3 * GIB - vision_overhead
-    cuda_limit = min(22593, room // kv_bytes_per_token) if model == "qwen27" else 0
-    # Keep admission decisions in the native runtime.
-    limits = {
-        "ssd": 8192 if metal and ram >= 24 * GIB else 0,
-        "ram": 0,
-        "vram": cuda_limit if cuda and cuda_limit >= 512 else 0,
-        "unified": 4096 if model == "qwen27" and metal and ram >= 24 * GIB else 0,
-    }
+    metal = host["backend"] == "metal" and host["system"] == "Darwin"
+    weights = MODELS[model]["artifact"].size
+    vision = MODELS[model].get("vision")
     labels = {
         "ssd": "SSD streaming",
+        "tiered": "CUDA streaming (VRAM, RAM and SSD)",
         "ram": "Fully in RAM",
         "vram": "Fully in VRAM",
         "unified": "Resident in unified memory",
     }
     reasons = {
-        "ssd": "The managed SSD profile requires a qualified Metal host with at least 24 GiB.",
-        "ram": "A guaranteed full-RAM profile is unavailable for this model and backend.",
-        "vram": "The managed VRAM profile requires Qwen3.8-27B and a single CUDA GPU with sufficient free VRAM.",
-        "unified": "The managed resident profile requires Qwen3.8-27B on Metal with at least 24 GiB.",
+        "ssd": "SSD streaming requires compatible Metal unified memory and enough room for the model's streaming cache and context.",
+        "tiered": "Flash CUDA streaming requires an SM 8.6 GPU and enough free VRAM and RAM.",
+        "ram": "This model has no managed CPU-only profile.",
+        "vram": "This profile requires a compatible CUDA model and enough free memory on the GPU selected by CUDA.",
+        "unified": "This profile requires a compatible Metal model and enough unified memory for the weights and context.",
     }
-    return [
-        {
-            "mode_id": key,
-            "label": labels[key],
-            "available": bool(limit),
-            "reason": None if limit else reasons[key],
-            "estimated_max_context_tokens": limit or None,
-            "recommended_context_tokens": min(limit, 8192) if limit else None,
-        }
-        for key, limit in limits.items()
-        if key != "unified" or metal
-    ]
-
-
-class HardwareProbe:
-    def __init__(self, backend, directory):
-        self._backend = backend
-        self._directory = directory
-        self._lock = threading.Lock()
-        self._sample = None
-        self._sampled_at = 0
-
-    def snapshot(self, *, refresh=False):
-        with self._lock:
-            if (
-                refresh
-                or self._sample is None
-                or time.monotonic() - self._sampled_at > 5
-            ):
-                self._sample = hardware(self._backend, self._directory)
-                self._sampled_at = time.monotonic()
-            return copy.deepcopy(self._sample)
-
-    def invalidate(self):
-        with self._lock:
-            self._sample = None
+    options = []
+    for key, label in labels.items():
+        if key == "unified" and not metal:
+            continue
+        if key == "tiered" and (model != "flash" or host["backend"] != "cuda"):
+            continue
+        limit = max_context(model, key, host, weights)
+        vision_limit = (
+            max_context(model, key, host, weights, vision.size)
+            if vision and limit and (model != "flash" or key == "tiered")
+            else 0
+        )
+        recommended = min(limit, 65536) if key == "tiered" else limit
+        options.append(
+            {
+                "mode_id": key,
+                "label": label,
+                "available": bool(limit),
+                "reason": None if limit else reasons[key],
+                "estimated_max_context_tokens": limit or None,
+                "recommended_context_tokens": recommended or None,
+                "estimated_max_context_tokens_with_vision": vision_limit or None,
+            }
+        )
+    return options
 
 
 class ModelCatalog:
-    def __init__(self, store, gemma_media):
+    def __init__(self, store, gemma_media, *, suite_store, native_stores):
         self._store = store
         self._gemma_media = gemma_media
+        self._suite_store = suite_store
+        self._native_stores = native_stores
 
     @staticmethod
     def has_model(model_id):
         return isinstance(model_id, str) and model_id in MODELS
+
+    @staticmethod
+    def has_suite_model(model_id):
+        return isinstance(model_id, str) and model_id in SUITE_IDS
+
+    @staticmethod
+    def suite_model_name(model_id):
+        return SUITE_NAMES[model_id]
 
     @staticmethod
     def model_file(model_id):
@@ -214,10 +136,47 @@ class ModelCatalog:
     def vision_file(model_id):
         return MODELS[model_id]["vision"]
 
-    def files_for_suite(self, feature):
-        spec = self._suite_manifest(feature)
-        validate_spec(spec)
-        return [self._suite_artifact(item) for item in spec["files"]]
+    def suite_bundle(self, feature):
+        try:
+            spec = self._suite_manifest(feature)
+            validate_spec(spec)
+            artifacts = [self._suite_artifact(item) for item in spec["files"]]
+        except (OSError, TypeError, ValueError, KeyError) as exc:
+            raise Problem(
+                "SUITE_MANIFEST_INVALID",
+                "Core could not read the file manifest for this feature.",
+            ) from exc
+        native = self._native_stores.get(feature)
+        if (
+            native
+            and not all(self._suite_store.installed(item) for item in artifacts)
+            and all(native.has_complete_file(item) for item in artifacts)
+        ):
+            return native, artifacts
+        return self._suite_store, artifacts
+
+    def _describe_suite(self):
+        inventory = {}
+        for feature, name in SUITE_NAMES.items():
+            entry = {"id": feature, "name": name}
+            try:
+                store, assets = self.suite_bundle(feature)
+                states = [store.inspect(item) for item in assets]
+                entry.update(
+                    size_bytes=sum(item.size for item in assets),
+                    missing_bytes=sum(state.missing_bytes for state in states),
+                    installed=all(state.installed for state in states),
+                    present=all(store.has_complete_file(item) for item in assets),
+                    managed=store is self._suite_store,
+                )
+            except (OSError, Problem) as error:
+                entry["error"] = str(error)
+            inventory[feature] = entry
+        return inventory
+
+    def remove_suite_model(self, feature):
+        store, assets = self.suite_bundle(feature)
+        store.remove_all(assets)
 
     @staticmethod
     def parse_profile(payload):
@@ -230,11 +189,16 @@ class ModelCatalog:
         if (
             not isinstance(model, str)
             or model not in MODELS
-            or mode not in ("ssd", "ram", "vram", "unified")
+            or mode not in ("ssd", "ram", "vram", "unified", "tiered")
         ):
             raise Problem("PROFILE_INVALID", "Choose a known model and memory mode.")
-        if type(context) is not int or not 1 <= context <= 262144:
+        if type(context) is not int or context < 1:
             raise Problem("CONTEXT_INVALID", "Enter a positive integer context length.")
+        if context > MODEL_MEMORY[model].max_tokens:
+            raise Problem(
+                "CONTEXT_LIMIT",
+                f"This model supports at most {MODEL_MEMORY[model].max_tokens:,} tokens.",
+            )
         if not isinstance(features, list) or any(
             feature not in ("vision", "images", "embeddings") for feature in features
         ):
@@ -247,12 +211,18 @@ class ModelCatalog:
         }
 
     def _features(self, model_id, host, mode=None):
-        cuda = host["backend"] == "cuda" and len(host["devices"]) == 1
-        metal = host["backend"] == "metal"
-        suite = (
-            cuda and host["devices"][0]["compute"] == "8.6" and mode in (None, "vram")
+        device = cuda_device(host)
+        metal = host["backend"] == "metal" and host.get("unified_memory")
+        suite = bool(device and device["compute"] == "8.6" and mode in (None, "vram"))
+        suite_reason = (
+            "This suite profile requires the qualified CUDA SM 8.6 configuration."
         )
-        vision = "vision" in MODELS[model_id] and (cuda or metal)
+        gemma_media = bool(self._gemma_media and self._gemma_media.is_file())
+        vision = (
+            bool(device and mode in (None, "tiered"))
+            if model_id == "flash"
+            else "vision" in MODELS[model_id] and bool(device or metal)
+        )
         return {
             "vision": (
                 vision,
@@ -262,57 +232,127 @@ class ModelCatalog:
             ),
             "images": (
                 suite,
-                None
-                if suite
-                else "This suite profile requires the qualified CUDA SM 8.6 configuration.",
+                None if suite else suite_reason,
             ),
             "embeddings": (
-                suite and bool(self._gemma_media and self._gemma_media.is_file()),
-                None
-                if suite and self._gemma_media and self._gemma_media.is_file()
-                else "Requires the qualified CUDA suite and a prepared Gemma media asset.",
+                suite and gemma_media,
+                (
+                    None
+                    if gemma_media
+                    else "Configure the prepared EmbeddingGemma 2 media asset in the native suite or set DS4_GEMMA_MEDIA_ASSET."
+                )
+                if suite
+                else suite_reason,
             ),
         }
 
-    def describe(self, host):
+    def inventory(self, host):
+        suite = self._describe_suite()
         data = []
         for key, model in MODELS.items():
             artifact = model["artifact"]
-            installed = self._store.installed(artifact)
-            features = self._features(key, host)
+            state = self._store.inspect(artifact)
+            options = modes(key, host)
             data.append(
                 {
                     "id": key,
                     "name": model["name"],
                     "filename": artifact.path,
                     "size_bytes": artifact.size,
-                    "installed": installed,
-                    "importable": not installed
-                    and self._store.has_local_file(artifact),
-                    "modes": modes(key, host),
-                    "features": [
-                        self._feature_entry(key, name, available, reason)
-                        for name, (available, reason) in features.items()
-                    ],
+                    "max_context_tokens": MODEL_MEMORY[key].max_tokens,
+                    "installed": state.installed,
+                    "importable": not state.installed and state.present,
+                    "modes": options,
+                    "features": self._describe_features(key, host, options, suite),
                 }
             )
-        return data
+        return data, list(suite.values())
 
-    def _feature_entry(self, model, name, available, reason):
-        entry = {"id": name, "available": available, "reason": reason}
-        if available:
-            assets = list(self.artifacts({"model_id": model, "features": [name]}))[1:]
-            entry["size_bytes"] = sum(item.size for item in assets)
-            entry["installed"] = all(self._store.installed(item) for item in assets)
-        return entry
+    def _describe_features(self, model, host, options, suite):
+        qualified = {
+            option["mode_id"]: (option, self._features(model, host, option["mode_id"]))
+            for option in options
+            if option["available"]
+        }
+        features = []
+        for name, (_, reason) in self._features(model, host).items():
+            available_modes = [
+                mode
+                for mode, (option, features_for_mode) in qualified.items()
+                if features_for_mode[name][0]
+                and (
+                    name != "vision"
+                    or option["estimated_max_context_tokens_with_vision"]
+                )
+            ]
+            features.append(
+                self._feature_entry(model, name, available_modes, reason, suite)
+            )
+        return features
 
-    def artifacts(self, profile):
-        yield self.model_file(profile["model_id"])
-        if "vision" in profile["features"]:
-            yield self.vision_file(profile["model_id"])
-        for feature in profile["features"]:
-            if feature in SUITE_IDS:
-                yield from self.files_for_suite(feature)
+    def _feature_entry(self, model, name, available_modes, reason, suite):
+        entry = {"id": name, "available_modes": available_modes}
+        if not available_modes:
+            return {
+                **entry,
+                "available": False,
+                "reason": reason or "No available memory mode can use this feature.",
+            }
+        inventory = suite.get(name)
+        if inventory is None:
+            try:
+                store, (asset,) = self.files_for(model, name)
+                state = store.inspect(asset)
+                inventory = {
+                    "size_bytes": asset.size,
+                    "missing_bytes": state.missing_bytes,
+                    "installed": state.installed,
+                }
+            except (OSError, Problem) as error:
+                inventory = {"error": str(error)}
+        if error := inventory.get("error"):
+            return {
+                **entry,
+                "available_modes": [],
+                "available": False,
+                "reason": error,
+            }
+        return {
+            **entry,
+            "available": True,
+            "reason": None,
+            "size_bytes": inventory["size_bytes"],
+            "missing_bytes": inventory["missing_bytes"],
+            "installed": inventory["installed"],
+        }
+
+    def inspect_profile_files(self, profile):
+        files = []
+        for feature in (None, *profile["features"]):
+            store, artifacts = self.files_for(profile["model_id"], feature)
+            for artifact in artifacts:
+                state = store.inspect(artifact)
+                files.append(
+                    {
+                        "name": artifact.path,
+                        "feature": feature,
+                        "size_bytes": artifact.size,
+                        "missing_bytes": state.missing_bytes,
+                        "installed": state.installed,
+                    }
+                )
+        return files
+
+    def files_for(self, model_id, feature):
+        if feature is None:
+            return self._store, [self.model_file(model_id)]
+        if feature == "vision":
+            return self._store, [self.vision_file(model_id)]
+        return self.suite_bundle(feature)
+
+    @staticmethod
+    def model_name(model_id):
+        return MODELS[model_id]["name"]
 
     @staticmethod
     def _suite_manifest(feature):
@@ -322,13 +362,11 @@ class ModelCatalog:
 
     @staticmethod
     def _suite_artifact(item):
-        return Artifact(
-            "suite/" + item["path"], item["url"], item["bytes"], item["sha256"]
-        )
+        return Artifact(item["path"], item["url"], item["bytes"], item["sha256"])
 
     def validate(self, profile, host):
         model = profile["model_id"]
-        options = modes(model, host, vision="vision" in profile["features"])
+        options = modes(model, host)
         option = next(
             (item for item in options if item["mode_id"] == profile["mode_id"]), None
         )
@@ -337,11 +375,18 @@ class ModelCatalog:
                 "MODE_UNAVAILABLE",
                 option["reason"] if option else "This memory mode is unavailable.",
             )
-        if profile["context_tokens"] > option["estimated_max_context_tokens"]:
-            raise Problem(
-                "CONTEXT_LIMIT", "The requested context exceeds the estimated limit."
-            )
         features = self._features(model, host, profile["mode_id"])
         for name in profile["features"]:
             if not features[name][0]:
                 raise Problem("FEATURE_UNAVAILABLE", features[name][1])
+        key = (
+            "estimated_max_context_tokens_with_vision"
+            if "vision" in profile["features"]
+            else "estimated_max_context_tokens"
+        )
+        limit = option[key] or 0
+        if profile["context_tokens"] > limit:
+            raise Problem(
+                "CONTEXT_LIMIT",
+                f"The current memory budget fits at most {limit:,} tokens with these settings.",
+            )

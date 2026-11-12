@@ -194,13 +194,13 @@ def inventory(path: Path, storage: str):
                         raise ValueError("invalid converted scalar dimensions")
                     shape = []
                 tensors.append(
-                    dict(
-                        name=name,
-                        shape=shape,
-                        type=kind,
-                        offset=offset,
-                        alignment=alignment,
-                    )
+                    {
+                        "name": name,
+                        "shape": shape,
+                        "type": kind,
+                        "offset": offset,
+                        "alignment": alignment,
+                    }
                 )
             start = (stream.tell() + alignment - 1) // alignment * alignment
             for tensor in tensors:
@@ -232,13 +232,13 @@ def inventory(path: Path, storage: str):
                 if end - begin != extent or begin < 0:
                     raise ValueError("invalid safetensors extent")
                 tensors.append(
-                    dict(
-                        name=name,
-                        shape=shape,
-                        type=kind,
-                        offset=start + begin,
-                        alignment=1,
-                    )
+                    {
+                        "name": name,
+                        "shape": shape,
+                        "type": kind,
+                        "offset": start + begin,
+                        "alignment": 1,
+                    }
                 )
         else:
             raise ValueError("unknown native storage format")
@@ -260,12 +260,13 @@ def inventory(path: Path, storage: str):
     ordered = sorted(tensors, key=lambda t: (t["offset"], t["bytes"]))
     previous = None
     for tensor in ordered:
-        if previous and tensor["offset"] < previous["offset"] + previous["bytes"]:
-            if any(
-                tensor[key] != previous[key]
-                for key in ("offset", "bytes", "type", "shape")
-            ):
-                raise ValueError("partially overlapping tensor payloads")
+        overlaps = (
+            previous and tensor["offset"] < previous["offset"] + previous["bytes"]
+        )
+        if overlaps and any(
+            tensor[key] != previous[key] for key in ("offset", "bytes", "type", "shape")
+        ):
+            raise ValueError("partially overlapping tensor payloads")
         previous = tensor
     return sorted(tensors, key=lambda t: t["name"])
 
@@ -287,7 +288,12 @@ def atomic_write(path, data):
 
 
 def validate_spec(spec):
-    if spec.get("version") != 1 or not spec.get("model") or not spec.get("profile"):
+    if (
+        not isinstance(spec, dict)
+        or spec.get("version") != 1
+        or not spec.get("model")
+        or not spec.get("profile")
+    ):
         raise ValueError("invalid bundle identity")
     if not re.fullmatch(r"[0-9a-f]{40}", spec.get("revision", "")):
         raise ValueError("bundle requires a pinned source revision")
@@ -319,14 +325,17 @@ def validate_spec(spec):
             raise ValueError("artifact requires exact revision, size and SHA-256")
     if not paths:
         raise ValueError("empty bundle")
-    if not spec.get("assets") or any(
-        path not in paths for path in spec["assets"].values()
+    assets = spec.get("assets")
+    if (
+        not isinstance(assets, dict)
+        or not assets
+        or any(path not in paths for path in assets.values())
     ):
         raise ValueError("bundle must pin its configuration/processor assets")
     files = {file["path"]: file for file in spec["files"]}
     if any(
         files[path]["format"] != "asset" or files[path]["revision"] != spec["revision"]
-        for path in spec["assets"].values()
+        for path in assets.values()
     ):
         raise ValueError("configuration/processor assets must match the model revision")
     for component in components:

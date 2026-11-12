@@ -198,13 +198,20 @@ async def test_global_threshold_validation_and_save(compaction_server):
             page = await browser.new_page()
             await page.goto(compaction_server, wait_until="networkidle")
             await page.locator("button:has(i:has-text('tune'))").first.click()
-            await page.get_by_role("link", name="Conversations", exact=True).click()
+            await page.get_by_role("link", name="Client", exact=True).click()
             threshold = page.get_by_label("Automatic compaction (%)", exact=True)
             await expect(threshold).to_have_value("80")
             await threshold.fill("100")
             await page.get_by_role(
                 "button", name="Save preferences", exact=True
             ).click()
+            await expect(
+                page.get_by_text(
+                    "Enter a whole-number compaction threshold from 1 to 99.",
+                    exact=True,
+                )
+            ).to_be_visible()
+            await expect(threshold).to_have_value("100")
             assert (await state(compaction_server))["threshold"] == 80
             await threshold.fill("65")
             await page.get_by_role(

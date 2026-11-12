@@ -14,6 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from managed_assets import ROOT, Problem, atomic_json
+from managed_memory import PREFILL_ROWS
+from qwen_flash_launcher import FLASH_CUDA_STANDARD
 
 STARTUP_PHASES = ("opening_model", "initializing_runtime", "ready")
 
@@ -26,6 +28,37 @@ class Stopped(Exception):
 class NativeLaunch:
     argv: tuple[str, ...]
     suite_config: dict | None = None
+    environment: tuple[tuple[str, str], ...] = ()
+
+    @classmethod
+    def for_profile(cls, binary, backend, profile, model, vision, suite, kv_dir):
+        mode = profile["mode_id"]
+        argv = [
+            str(binary),
+            f"--{backend}",
+            "--host",
+            "127.0.0.1",
+            "-m",
+            str(model),
+            "--ctx",
+            str(profile["context_tokens"]),
+            "--mtp" if mode == "tiered" else "--no-mtp",
+            "--kv-disk-dir",
+            str(kv_dir),
+        ]
+        # Resident Qwen27 on CUDA already has a tuned native prefill default.
+        if mode != "vram":
+            argv.extend(["--prefill-chunk", str(PREFILL_ROWS[mode])])
+        if mode == "ssd":
+            argv.extend(["--ssd-streaming", "--ssd-streaming-cold"])
+        elif mode == "unified":
+            argv.append("--warm-weights")
+        elif mode == "tiered":
+            argv.extend(["--kv-disk-space-mb", "8192"])
+        if vision:
+            argv.extend(["--vision", str(vision)])
+        environment = tuple(FLASH_CUDA_STANDARD.items()) if mode == "tiered" else ()
+        return cls(tuple(argv), suite, environment)
 
 
 @dataclass(frozen=True)
@@ -44,14 +77,19 @@ class NativeWorker:
     def is_running(self):
         return self._process is not None and self._process.poll() is None
 
+    @property
+    def pid(self):
+        return self._process.pid if self._process is not None else None
+
     def connect(self, timeout=30):
         """Open a connection owned by the caller."""
-        if self._directory is None:
+        directory = self._directory
+        if directory is None:
             raise OSError("native worker has no listener")
         connection = socket.socket(socket.AF_UNIX)
         try:
             connection.settimeout(timeout)
-            connection.connect(str(Path(self._directory.name) / "inference.sock"))
+            connection.connect(str(Path(directory.name) / "inference.sock"))
         except BaseException:
             connection.close()
             raise
@@ -87,6 +125,7 @@ class NativeWorker:
                     DS4_MANAGED_LISTENER_FD=str(listener.fileno()),
                     DS4_MANAGED_CONTROL_FD=str(child.fileno()),
                 )
+                environment.update(launch.environment)
                 self._process = subprocess.Popen(
                     argv,
                     cwd=ROOT,
@@ -131,17 +170,28 @@ class NativeWorker:
             "Core could not start the model. Check the Core terminal, then retry or change the profile.",
         )
 
+    def _get_json(self, path, *, timeout):
+        with self.connect(timeout=timeout) as connection:
+            connection.sendall(
+                f"GET {path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n".encode()
+            )
+            with http.client.HTTPResponse(connection) as response:
+                response.begin()
+                if response.status != 200:
+                    raise ValueError("unexpected HTTP status")
+                return json.loads(response.read())
+
+    def device_memory(self):
+        try:
+            data = self._get_json("/internal/memory", timeout=1)
+        except (OSError, ValueError, http.client.HTTPException):
+            return None
+        size = data.get("device_bytes") if isinstance(data, dict) else None
+        return size if type(size) is int and size > 0 else None
+
     def _discover_model(self):
         try:
-            with self.connect(timeout=10) as connection:
-                connection.sendall(
-                    b"GET /v1/models HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
-                )
-                with http.client.HTTPResponse(connection) as response:
-                    response.begin()
-                    if response.status != 200:
-                        raise ValueError("unexpected HTTP status")
-                    models = json.loads(response.read())["data"]
+            models = self._get_json("/v1/models", timeout=10)["data"]
             chat = next(
                 model
                 for model in models
@@ -187,6 +237,28 @@ class NativeWorker:
         if self._directory is not None:
             self._directory.cleanup()
             self._directory = None
+
+
+def build_native_server(backend, suite, closing):
+    configured = os.environ.get(
+        "DS4_MANAGED_SUITE_BIN" if suite else "DS4_MANAGED_SERVER_BIN"
+    )
+    if configured:
+        binary = Path(configured).resolve()
+        if not binary.is_file():
+            raise Problem(
+                "WORKER_MISSING", "The configured native binary was not found."
+            )
+        return binary
+    target = "ds4-server-suite" if suite else "ds4-server"
+    if backend == "cpu":
+        run_command(["make", "-j2", "cpu"], closing)
+    else:
+        args = ["make", "-j2", target]
+        if backend == "cuda":
+            args.append("CUDA_ARCH=" + os.environ.get("CUDA_ARCH", "native"))
+        run_command(args, closing)
+    return ROOT / target
 
 
 def run_command(argv, closing):

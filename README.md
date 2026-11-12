@@ -200,7 +200,7 @@ Core listens on **`http://127.0.0.1:8080/v1`** before it needs model weights or 
 
 During restore, `GET /v1/manage/status` remains available and includes the current activation job, phase, elapsed time, and an ETA once a comparable load is available. Inference returns `503 MODEL_NOT_READY` until the worker is ready. Agent displays the same information on its startup page.
 
-Running `./agent/start-ds4-server.sh` without arguments also starts managed Core. If Agent is already open, it reconnects to the configured endpoint and follows the restore automatically.
+If Agent is already open, it reconnects to the configured endpoint and follows the restore automatically.
 
 ### 2. Start Agent and configure a model
 
@@ -212,13 +212,17 @@ In another terminal:
 
 Open **http://127.0.0.1:8000**. Choose a chat model, a memory mode supported by Core, and a context size. Core downloads or verifies the files in `gguf/`, builds the worker when required, and reports progress. The chat opens after the native worker is ready. Use **System settings → Server → Reconfigure startup** to change the profile later.
 
-Core's current managed catalog covers Qwen3.8-27B and Flash Next Q2. It offers bounded Metal SSD streaming and Qwen27 resident GPU profiles where supported. The context ceilings shown by Agent are estimates within the audited launch envelopes. Native admission checks the current resources at load time.
+Core accepts a profile change when there are no active inference requests. Use **Stop active requests** on the Server overview or profile review to cancel work and wait for the worker to become idle. The same Core address serves the new model once it is ready.
+
+The downloader and both managed and manual launchers use `gguf/` for Qwen27, Flash Next Q2, and their vision encoders. Set `DS4_GGUF_DIR` to use a shared alternative. A relative value is resolved from the checkout root.
+
+Core's managed catalog covers Qwen3.8-27B and Flash Next Q2. On supported CUDA systems, select Qwen27 in VRAM or Flash Next with a tiered VRAM, RAM and SSD cache. Apple Silicon supports bounded SSD streaming and a resident Qwen27 profile. Agent shows the estimated context ceiling for each mode. The native worker checks the current resources at load time.
 
 For a remote Core, forward port 8080 over SSH and point Agent at the forwarded loopback endpoint. Set `DS4_MANAGE_TOKEN` on Core if local management also requires a bearer token, then enter it under **Connection** in Agent. Model sources that require Hugging Face access use `HF_TOKEN` from the Core environment.
 
 ### 3. Optional features and manual serving
 
-In managed mode, Agent offers the matching Qwen27 vision encoder as an optional download. Native image generation and embeddings require a qualified CUDA SM 8.6 suite installation with the native dependencies available at build time. Embeddings also require the prepared processor asset via `DS4_GEMMA_MEDIA_ASSET`. The suite uses pinned artifacts and only advertises operations that the native server reports as ready. See the [native suite setup guide](docs/architecture/native-suite-release.md).
+In managed mode, Agent offers the matching Qwen27 vision encoder as an optional download. Native image generation and embeddings require a qualified CUDA SM 8.6 suite installation with the native dependencies available at build time. Both launch modes use `gguf/suite/` for the local bundles in `config/native-suite.example.json`. Core verifies complete local bundles in place and reuses prepared `text_asset` files. Use `DS4_SUITE_CONFIG=/path/to/native-suite.json ./start-ds4-server.sh --managed` to use another configuration. Relative paths in that file are resolved from the checkout root. For embeddings, Core uses the prepared `media_asset` from the configuration or the explicit `DS4_GEMMA_MEDIA_ASSET` override. The suite only advertises operations that the native server reports as ready. See the [native suite setup guide](docs/architecture/native-suite-release.md).
 
 For the manual Qwen27 CUDA profile, use:
 
@@ -234,15 +238,15 @@ cp config/native-suite.env.example config/native-suite.env
 # Edit the native dependency paths and prepare the suite bundles/config.
 
 # Starts the Qwen27 profile with ds4-server-suite.
-./agent/start-ds4-server.sh --manual
+DS4_CTX=26000 DS4_SUITE_CONFIG=config/native-suite.example.json ./start-ds4-server.sh --manual
 
 # In a second terminal:
 ./agent/run.sh
 ```
 
-The suite uses the same `/v1` base URL for chat and native media operations, but requires its own model assets and configuration. **The LLM-only server does not provide image-generation endpoints.** The example suite paths must be adapted to the local machine. The agent launcher uses a **26K** context default, different from the root LLM-only launcher's default.
+The suite uses the same `/v1` base URL for chat and native media operations. Adapt the example suite paths to the local machine.
 
-For Qwen Flash Next, use the separately documented [`agent/start-ds4-server-flash.sh`](agent/start-ds4-server-flash.sh) and its pinned artifacts; it is **not** a drop-in switch from the 27B setup.
+Use `DS4_MODEL_PROFILE=flash ./start-ds4-server.sh --manual` to launch the native CUDA Flash Next profile with explicit overrides.
 
 ## Validation, performance, and limitations
 

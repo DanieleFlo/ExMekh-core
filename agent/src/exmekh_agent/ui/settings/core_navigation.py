@@ -15,6 +15,13 @@ SETTINGS = {
     "conversations": ui_text("system_settings.conversations"),
     "storage": ui_text("system_settings.temporary_files"),
 }
+SETTINGS_GROUPS = {
+    "server": ("server", "connection", "models", "features", "activity"),
+    "client": ("conversations", "storage"),
+}
+SETTINGS_GROUP_LABELS = {
+    group: ui_text(f"system_settings.{group}") for group in SETTINGS_GROUPS
+}
 STEPS = {
     "model": ui_text("system_settings.chat_model"),
     "runtime": ui_text("system_settings.memory_and_context"),
@@ -65,4 +72,10 @@ def profile_link(profile: dict, destination: str, step: str = "model") -> str:
         mode=profile.get("mode_id"),
         tokens=profile.get("context_tokens"),
         features=",".join(profile.get("features", [])),
+    )
+
+
+def settings_group(section: str) -> str:
+    return next(
+        group for group, sections in SETTINGS_GROUPS.items() if section in sections
     )
