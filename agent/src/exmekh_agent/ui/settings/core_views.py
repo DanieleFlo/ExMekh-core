@@ -1,10 +1,13 @@
 """Shared settings layout, model rows and activity rendering."""
 
+from collections.abc import Awaitable, Callable
 from contextlib import contextmanager
 from functools import partial
 from itertools import groupby
+from typing import Literal
 
 from nicegui import ui
+from nicegui.events import ClickEventArguments, Handler
 
 from exmekh_agent.exmekh_bridge.providers.core_management import (
     CoreClient,
@@ -27,6 +30,7 @@ from exmekh_agent.ui.styles import load_css
 from exmekh_agent.utils.formatting import format_file_size
 
 STYLES = presentation_config("controls/system_pages")
+ActionTone = Literal["neutral", "accent", "positive", "caution", "danger"]
 PHASES = {
     "checking_profile": ui_text("system_settings.checking_saved_profile"),
     "queued": ui_text("system_settings.queued"),
@@ -42,6 +46,29 @@ PHASES = {
     "rolling_back": ui_text("system_settings.restoring_the_previous_profile"),
     "completed": ui_text("system_settings.completed"),
 }
+
+
+def action_link(label: str, target: str, *, tone: ActionTone = "neutral") -> ui.link:
+    """Style a settings link as an action while preserving its destination."""
+    return (
+        ui.link(label, target)
+        .classes(STYLES["classes.control"])
+        .props(f"data-tone={tone}")
+    )
+
+
+def action_button(
+    label: str,
+    on_click: Handler[ClickEventArguments] | None = None,
+    *,
+    tone: ActionTone = "neutral",
+) -> ui.button:
+    return (
+        ui.button(label, on_click=on_click, color=None)
+        .props(STYLES["props.unelevated_no_caps"])
+        .classes(STYLES["classes.control"])
+        .props(f"data-tone={tone}")
+    )
 
 
 @contextmanager
@@ -228,9 +255,9 @@ def inference_activity(
                 notify_error(error)
                 button.enable()
 
-        button = ui.button(
-            ui_text("system_settings.stop_active_requests"), on_click=stop
-        ).props(STYLES["props.outline_no_caps"])
+        button = action_button(
+            ui_text("system_settings.stop_active_requests"), stop, tone="caution"
+        )
 
     def render(status: CoreStatus) -> None:
         busy = status.active_requests > 0
@@ -454,26 +481,27 @@ async def job_action(client: CoreClient, job: CoreJob, action: str) -> None:
 
 
 def job_controls(client: CoreClient, job: CoreJob) -> None:
-    labels = {
-        "pause": "system_settings.pause",
-        "resume": "system_settings.resume",
-        "cancel": "system_settings.cancel_keep_partial_files",
+    actions: dict[str, tuple[str, ActionTone]] = {
+        "pause": ("system_settings.pause", "caution"),
+        "resume": ("system_settings.resume", "positive"),
+        "cancel": ("system_settings.cancel_keep_partial_files", "danger"),
     }
     if not job.allowed_actions:
         return
     with ui.row().classes(STYLES["classes.gap_2"]):
         for action in job.allowed_actions:
-            ui.button(
-                ui_text(labels[action]),
-                on_click=partial(job_action, client, job, action),
-            ).props(
-                STYLES["props.flat_no_caps"]
-                if action == "cancel"
-                else STYLES["props.outline_no_caps"]
+            label, tone = actions[action]
+            action_button(
+                ui_text(label), partial(job_action, client, job, action), tone=tone
             )
 
 
-def job_poll(client: CoreClient, render, *, catalog: bool = False) -> None:
+def job_poll(
+    client: CoreClient,
+    render: Callable[[list[CoreJob], dict | None], None],
+    *,
+    load_inventory: Callable[[], Awaitable[dict]] | None = None,
+) -> None:
     view = ui.column().classes(STYLES["classes.w_full_gap_4"])
     message = (
         ui.label("")
@@ -487,10 +515,15 @@ def job_poll(client: CoreClient, render, *, catalog: bool = False) -> None:
         nonlocal previous
         try:
             jobs = await client.jobs()
-            inventory = await client.catalog() if catalog else None
-            if inventory:
-                inventory.pop("hardware", None)
-            state = (jobs, inventory)
+            inventory = await load_inventory() if load_inventory else None
+            # Free-memory estimates change frequently. Refresh these lists when
+            # the displayed catalog or its jobs change.
+            visible_inventory = (
+                {key: value for key, value in inventory.items() if key != "hardware"}
+                if inventory is not None
+                else None
+            )
+            state = (jobs, visible_inventory)
             if state != previous:
                 view.clear()
                 with view:
@@ -507,7 +540,14 @@ def job_poll(client: CoreClient, render, *, catalog: bool = False) -> None:
 
 
 def row_for_model(
-    client: CoreClient, model: dict, jobs: list[CoreJob], *, choose=None, selected=False
+    client: CoreClient,
+    model: dict,
+    jobs: list[CoreJob],
+    *,
+    choose=None,
+    selected=False,
+    configure_url: str | None = None,
+    active_chat_model: bool = False,
 ) -> None:
     model_id = model["id"]
     model_jobs = [
@@ -546,7 +586,12 @@ def row_for_model(
                 model_identity(model)
             with ui.row().classes(STYLES["classes.items_center_gap_2"]):
                 if model["installed"]:
-                    ui.label(ui_text("system_settings.already_downloaded")).classes(
+                    status_key = (
+                        "active_chat_model"
+                        if active_chat_model
+                        else "already_downloaded"
+                    )
+                    ui.label(ui_text(f"system_settings.{status_key}")).classes(
                         STYLES["classes.installed_status"]
                     )
                 elif (choose is None or enabled) and (not job or not job.active):
@@ -556,9 +601,13 @@ def row_for_model(
                         if kind == "import"
                         else "system_settings.download"
                     )
-                    ui.button(label, on_click=lambda: operation(kind)).props(
-                        STYLES["props.outline_no_caps"]
-                    )
+                    action_button(label, lambda: operation(kind), tone="accent")
+                if configure_url:
+                    label = ui_text("system_settings.configure_as_chat_model")
+                    if active_chat_model:
+                        action_button(label, tone="accent").disable()
+                    else:
+                        action_link(label, configure_url, tone="accent")
                 if choose is None and (not job or not job.active):
                     if (model["installed"] or model["importable"]) and model.get(
                         "removable", False
@@ -579,10 +628,11 @@ def row_for_model(
                 "RESUME_UNAVAILABLE",
                 "CHECKSUM_MISMATCH",
             } and not model["importable"]:
-                ui.button(
+                action_button(
                     ui_text("system_settings.discard_partial_download"),
-                    on_click=lambda: operation("discard"),
-                ).props(STYLES["props.flat_no_caps"])
+                    lambda: operation("discard"),
+                    tone="danger",
+                )
         if choose is not None and not enabled:
             ui.label(
                 ui_text("system_settings.no_qualified_memory_mode_for_this_hardware")
@@ -602,13 +652,9 @@ def removal_button(
     with ui.dialog() as confirm, ui.card():
         ui.label(confirmation)
         with ui.row():
-            ui.button(
-                ui_text("system_settings.keep_model"), on_click=confirm.close
-            ).props(STYLES["props.flat_no_caps"])
-            ui.button(label, on_click=remove, color="negative").props(
-                STYLES["props.no_caps"]
-            )
-    ui.button(label, on_click=confirm.open).props(STYLES["props.flat_no_caps"])
+            action_button(ui_text("system_settings.keep_model"), confirm.close)
+            action_button(label, remove, tone="danger")
+    action_button(label, confirm.open, tone="danger")
 
 
 def row_for_optional_model(
@@ -634,7 +680,7 @@ def row_for_optional_model(
                     next_features = (
                         features - {model_id} if enabled else features | {model_id}
                     )
-                    ui.link(
+                    action_link(
                         ui_text(
                             "system_settings.disable_optional_model"
                             if enabled
@@ -645,6 +691,7 @@ def row_for_optional_model(
                             destination,
                             "review",
                         ),
+                        tone="caution" if enabled else "positive",
                     )
                 if model["removable"] and not (job and job.active):
                     removal_button(

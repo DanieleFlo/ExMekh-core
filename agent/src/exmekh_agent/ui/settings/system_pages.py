@@ -17,6 +17,7 @@ from exmekh_agent.exmekh_bridge.providers.core_management import (
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.navigation.chat_routes import ChatRoutes
 from exmekh_agent.ui.resources import ui_text
+from exmekh_agent.ui.settings.activity_view import activity_view
 from exmekh_agent.ui.settings.core_navigation import (
     FEATURES,
     SETTINGS,
@@ -28,18 +29,17 @@ from exmekh_agent.ui.settings.core_navigation import (
 )
 from exmekh_agent.ui.settings.core_views import (
     STYLES,
+    action_button,
+    action_link,
     block,
     fact,
     hardware_summary,
     inference_activity,
-    job_controls,
     job_poll,
     notify_error,
     page,
-    progress,
     row_for_model,
     row_for_optional_model,
-    transfer_queue,
     whole_number,
 )
 from exmekh_agent.utils.formatting import format_file_size
@@ -83,10 +83,10 @@ def settings_connection(destination: str, initial_setup: bool) -> None:
             )
             with ui.row().classes(STYLES["classes.items_center"]):
                 ui.code("./start-ds4-server.sh", language="bash")
-                ui.button(
+                action_button(
                     ui_text("system_settings.copy_command"),
-                    on_click=lambda: ui.clipboard.write("./start-ds4-server.sh"),
-                ).props(STYLES["props.flat_no_caps"])
+                    lambda: ui.clipboard.write("./start-ds4-server.sh"),
+                )
 
             def using_saved_connection() -> bool:
                 return (
@@ -216,9 +216,11 @@ def client_preferences(destination: str) -> None:
                 if not view.is_deleted:
                     save_button.enable()
 
-        save_button = ui.button(
-            ui_text("system_settings.save_preferences"), on_click=save
-        ).props(STYLES["props.unelevated_no_caps"])
+        save_button = (
+            ui.button(ui_text("system_settings.save_preferences"), on_click=save)
+            .props(STYLES["props.unelevated_no_caps"])
+            .classes(STYLES["classes.primary"])
+        )
 
 
 def client_storage(destination: str) -> None:
@@ -254,21 +256,15 @@ def client_storage(destination: str) -> None:
                 )
             )
             with ui.row():
-                ui.button(
-                    ui_text("system_settings.keep_files"), on_click=confirm.close
-                ).props(STYLES["props.flat_no_caps"])
-                ui.button(
-                    ui_text("system_settings.clear_files"),
-                    color="negative",
-                    on_click=clean,
-                ).props(STYLES["props.no_caps"])
+                action_button(ui_text("system_settings.keep_files"), confirm.close)
+                action_button(
+                    ui_text("system_settings.clear_files"), clean, tone="danger"
+                )
         with ui.row():
-            ui.button(ui_text("system_settings.refresh"), on_click=refresh).props(
-                STYLES["props.outline_no_caps"]
+            action_button(ui_text("system_settings.refresh"), refresh)
+            clear = action_button(
+                ui_text("system_settings.clear_cache"), confirm.open, tone="danger"
             )
-            clear = ui.button(
-                ui_text("system_settings.clear_cache"), on_click=confirm.open
-            ).props(STYLES["props.outline_no_caps"])
             clear.disable()
         ui.timer(0.1, refresh, once=True)
 
@@ -285,9 +281,11 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
         client_storage(destination)
         return
     connection = await connect_core()
+    descriptions = {"server": "manage_core_server", "activity": "activity_description"}
+    description = descriptions.get(section)
     with page(
         SETTINGS[section],
-        ui_text("system_settings.manage_core_server") if section == "server" else "",
+        ui_text(f"system_settings.{description}") if description else "",
         destination,
         section,
         connected=True if connection.status else None,
@@ -302,9 +300,10 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
                     ui_text("system_settings.context"),
                     f"{config.get_context_length():,} tokens",
                 )
-            ui.link(
+            action_link(
                 ui_text("system_settings.connection_settings"),
                 route("/settings/connection", destination),
+                tone="accent",
             )
             return
         client = CoreClient()
@@ -341,13 +340,14 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
             with ui.column().classes(STYLES["classes.w_full_gap_1"]):
                 block(ui_text("system_settings.startup_profile"))
                 with ui.row():
-                    ui.link(
+                    action_link(
                         ui_text("system_settings.reconfigure_startup"),
                         profile_link(profile, destination),
+                        tone="accent",
                     )
                     if profile:
                         for step in ("runtime", "features"):
-                            ui.link(
+                            action_link(
                                 STEPS[step], profile_link(profile, destination, step)
                             )
             with ui.row():
@@ -365,22 +365,33 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
                     ),
                     indent=2,
                 )
-                ui.button(
+                action_button(
                     ui_text("system_settings.copy_diagnostics"),
-                    on_click=lambda: ui.clipboard.write(diagnostic),
-                ).props(STYLES["props.flat_no_caps"])
+                    lambda: ui.clipboard.write(diagnostic),
+                )
                 if status.job_id:
-                    ui.link(
+                    action_link(
                         ui_text("system_settings.view_startup"),
                         route("/startup", destination),
                     )
                 elif status.error:
-                    ui.link(
+                    action_link(
                         ui_text("system_settings.review_startup_error"),
                         route("/startup", destination),
+                        tone="caution",
                     )
         elif section == "models":
             current_tab = None
+
+            async def load_inventory() -> dict:
+                inventory, current_status = await asyncio.gather(
+                    client.catalog(), client.status()
+                )
+                ready = current_status.ready_profile
+                return {
+                    **inventory,
+                    "active_chat_model_id": ready.model_id if ready else None,
+                }
 
             def remember_tab(event) -> None:
                 nonlocal current_tab
@@ -394,13 +405,11 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
                 installed_optional = [
                     model for model in optional_models if model.get("present")
                 ]
+                active_chat_model_id = inventory["active_chat_model_id"]
                 configured_profile = inventory.get("profile", profile) or {}
+                configured_model_id = configured_profile.get("model_id")
                 selected = next(
-                    (
-                        model
-                        for model in models
-                        if model["id"] == configured_profile.get("model_id")
-                    ),
+                    (model for model in models if model["id"] == configured_model_id),
                     {},
                 )
                 capabilities = {
@@ -433,23 +442,26 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
                                 block(ui_text("system_settings.chat_models"))
                                 with ui.column().classes(STYLES["classes.surface"]):
                                     for model in chat_models:
-                                        row_for_model(client, model, jobs)
-                                        if tab is installed:
-                                            ui.link(
-                                                ui_text(
-                                                    "system_settings.configure_as_chat_model"
-                                                ),
-                                                profile_link(
-                                                    configured_profile
-                                                    if configured_profile.get(
-                                                        "model_id"
-                                                    )
-                                                    == model["id"]
-                                                    else {"model_id": model["id"]},
-                                                    destination,
-                                                    "runtime",
-                                                ),
+                                        model_profile = (
+                                            configured_profile
+                                            if model["id"] == configured_model_id
+                                            else {"model_id": model["id"]}
+                                        )
+                                        configure_url = (
+                                            profile_link(
+                                                model_profile, destination, "runtime"
                                             )
+                                            if tab is installed
+                                            else None
+                                        )
+                                        row_for_model(
+                                            client,
+                                            model,
+                                            jobs,
+                                            configure_url=configure_url,
+                                            active_chat_model=model["id"]
+                                            == active_chat_model_id,
+                                        )
                             if extras:
                                 block(ui_text("system_settings.optional_models"))
                                 with ui.column().classes(STYLES["classes.surface"]):
@@ -463,7 +475,7 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
                                             destination,
                                         )
 
-            job_poll(client, render, catalog=True)
+            job_poll(client, render, load_inventory=load_inventory)
         elif section == "features":
             ready = status.ready_profile
             for key, title in FEATURES.items():
@@ -475,40 +487,10 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
                 )
                 block(title, detail)
             if profile:
-                ui.link(
+                action_link(
                     ui_text("system_settings.configure_optional_features"),
                     profile_link(profile, destination, "features"),
+                    tone="accent",
                 )
         elif section == "activity":
-
-            def render(jobs, _):
-                if not jobs:
-                    ui.label(ui_text("system_settings.no_recent_activity"))
-                for job in jobs:
-                    with ui.card().classes(STYLES["classes.w_full_p_4"]):
-                        block(
-                            f"{job.kind.capitalize()} · {job.model_name or job.model_id}"
-                        )
-                        progress(job, details=True)
-                        if job.files:
-                            with ui.expansion(
-                                ui_text("system_settings.model_files_activity"),
-                                value=job.active,
-                            ).classes(STYLES["classes.w_full"]):
-                                transfer_queue(job)
-                        job_controls(client, job)
-                        if job.retryable:
-
-                            async def retry(item=job) -> None:
-                                try:
-                                    await client.start_job(
-                                        item.kind, model_id=item.model_id
-                                    )
-                                except CoreProblem as error:
-                                    notify_error(error)
-
-                            ui.button(
-                                ui_text("system_settings.retry"), on_click=retry
-                            ).props(STYLES["props.outline_no_caps"])
-
-            job_poll(client, render)
+            activity_view(client)

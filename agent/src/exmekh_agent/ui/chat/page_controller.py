@@ -40,6 +40,7 @@ from exmekh_agent.exmekh_bridge.models import (
     SkillNode,
     ToolEvent,
 )
+from exmekh_agent.exmekh_bridge.models.inference_timing import InferenceTiming
 from exmekh_agent.exmekh_bridge.models.messages import ImageDestination
 from exmekh_agent.exmekh_bridge.providers.context_usage import (
     ContextUsageSummary,
@@ -337,6 +338,8 @@ class ChatPageController:
             and self.chat_view
             and self.chat_view.is_streaming_session(session.id)
         ):
+            with self._client:
+                self.chat_view.update_inference_timing(snapshot.timing)
             return
         with self._client:
             if self.chat_view and not self.chat_view.is_streaming_session(session.id):
@@ -349,6 +352,8 @@ class ChatPageController:
                 self.chat_view.restore_stream_snapshot(snapshot.message)
                 self.update_context_usage(session=session)
                 self._followed_revision = snapshot.revision
+            if self.chat_view and snapshot:
+                self.chat_view.update_inference_timing(snapshot.timing)
             self._followed_session_id = session.id
 
     def update_context_usage(
@@ -978,6 +983,14 @@ class ChatPageController:
             def mark_stream_changed() -> None:
                 active_turns.mark_changed(session.id, collector)
 
+            def on_timing(timing: InferenceTiming | None) -> None:
+                if turn_task is not None and accepts_events():
+                    if collector.observe_inference_timing(timing):
+                        mark_stream_changed()
+                    loop.call_soon_threadsafe(
+                        active_turns.set_timing, session.id, turn_task, timing
+                    )
+
             def on_token(token: str, skill_path: str = "/", depth: int = 0) -> None:
                 if not accepts_events():
                     return
@@ -1153,6 +1166,7 @@ class ChatPageController:
                     sub_agent_history=list(session.sub_agent_conversations),
                     settings=self.sessions.execution_settings(session),
                     on_context=on_context,
+                    on_timing=on_timing,
                     on_request_manual_approval=on_request_manual_approval,
                     get_tool_approval_mode=lambda: session.settings.tool_approval_mode,
                     on_command_approved=on_command_approved,

@@ -7,6 +7,7 @@ from exmekh_agent.exmekh_bridge.models import (
     ToolEvent,
     format_duration,
 )
+from exmekh_agent.exmekh_bridge.models.inference_timing import InferenceTiming
 
 
 def test_turn_stream_collector_token_accumulation() -> None:
@@ -154,6 +155,21 @@ def test_turn_stream_collector_reasoning_segmentation() -> None:
     assert "Reasoning 1a" in collector.get_reasoning_content()
     assert "Skill reasoning" in collector.get_reasoning_content()
     assert "After tool reasoning" in collector.get_reasoning_content()
+
+
+def test_inference_timing_closes_reasoning_once_per_tool_phase() -> None:
+    collector = TurnStreamCollector()
+    reasoning = collector.append_reasoning("Choose an action")
+    tool = InferenceTiming("tool", None)
+    assert collector.observe_inference_timing(tool)
+    assert reasoning.end_time is not None
+    assert not collector.observe_inference_timing(InferenceTiming("tool", 20.0))
+    assert not collector.observe_inference_timing(None)
+
+    following = collector.append_reasoning("Choose another action")
+    assert following is not reasoning
+    assert collector.observe_inference_timing(tool)
+    assert following.end_time is not None
 
 
 def test_turn_stream_collector_skills() -> None:

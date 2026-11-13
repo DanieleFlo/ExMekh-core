@@ -50,21 +50,15 @@
 
 .core-console :is(.core-connected, .core-installed) { color: var(--green-soft); }
 
-.core-console .core-header-link,
-.core-console .q-btn.q-btn--outline {
-    border-radius: 9px;
-    color: var(--text-main) !important;
-}
-
 .core-console .core-header-link {
     padding: 9px 13px;
     border: 1px solid var(--core-line);
+    border-radius: 9px;
+    color: var(--text-main);
     font-weight: 500;
     text-decoration: none;
 }
 
-.core-console .q-btn.q-btn--outline::before { border-color: var(--core-line); }
-.core-console .q-btn.q-btn--outline .q-btn__content { color: var(--text-main); }
 .core-console .core-header-link:hover,
 .core-console .core-navigation a:hover { background: var(--bg-hover); }
 
@@ -195,6 +189,11 @@
 
 .core-console .core-item-title { font-size: .98rem; font-weight: 650; overflow-wrap: anywhere; }
 .core-console .core-item-detail { color: var(--text-muted); overflow-wrap: anywhere; }
+.core-console .core-activity-date {
+    color: var(--text-secondary);
+    font-size: .85rem;
+    font-variant-numeric: tabular-nums;
+}
 .core-console .core-action-row { justify-content: flex-end; width: 100%; gap: 10px; }
 
 .core-console .q-btn.core-primary {
@@ -207,12 +206,60 @@
 }
 .core-console .core-primary .q-btn__content { color: var(--core-action-text); }
 
+/* Dialogs are rendered outside the console, so these controls use theme tokens. */
+.core-control[data-tone="accent"] { --control-color: var(--core-action, var(--blue-soft)); }
+.core-control[data-tone="positive"] { --control-color: var(--green-soft); }
+.core-control[data-tone="caution"] { --control-color: var(--yellow); }
+.core-control[data-tone="danger"] { --control-color: var(--red-soft); }
+
+.core-control:is(.q-btn, :any-link) {
+    --control-ink: var(--control-color, var(--text-main));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    max-width: 100%;
+    padding: 7px 12px;
+    border: 1px solid color-mix(in srgb, var(--control-ink) 74%, transparent);
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--control-ink) 9%, transparent);
+    color: var(--control-ink);
+    font-size: .875rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    text-align: center;
+    text-decoration: none;
+}
+
+.core-control:is(.q-btn, :any-link):hover:not(.disabled) {
+    background: color-mix(in srgb, var(--control-ink) 17%, transparent);
+}
+
+.core-control:focus-visible {
+    outline: 2px solid var(--control-ink);
+    outline-offset: 3px;
+}
+
+.core-control.q-btn.core-context-preset {
+    min-height: 28px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: .78rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.core-control.q-btn.core-context-preset[aria-pressed="true"] {
+    border-color: var(--core-action);
+    background: var(--core-selected);
+    color: var(--core-action);
+}
+
 .core-console .q-linear-progress.core-progress {
     height: 6px !important;
     border-radius: 6px;
     color: var(--core-action) !important;
 }
-.core-console .core-body a { color: var(--blue-soft); }
 
 .core-console :is(a, button, input):focus-visible {
     outline: 2px solid var(--core-action);
@@ -347,7 +394,9 @@
 @media (pointer: coarse) {
     .core-console .core-navigation a,
     .core-console .core-header-link,
+    .core-control:is(.q-btn, :any-link),
     .core-console .q-btn { min-height: 44px; }
+    .core-control.q-btn.core-context-preset { min-height: 44px; }
     .core-console .core-choice { min-height: 44px; align-items: center; }
     .core-console .core-radio { margin-block-start: 0; }
 }

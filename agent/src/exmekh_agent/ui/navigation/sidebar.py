@@ -4,13 +4,14 @@ from collections.abc import Callable
 from datetime import datetime
 
 from nicegui import ui
+from nicegui.events import GenericEventArguments
 
 from exmekh_agent.config.catalogs import message as app_text
 from exmekh_agent.config.formatting import DEFAULTS as FORMAT_DEFAULTS
 from exmekh_agent.exmekh_bridge.models import ChatSession, Project
 from exmekh_agent.state.session_manager import SessionManager, session_manager
 from exmekh_agent.ui.navigation.chat_routes import ChatRoutes
-from exmekh_agent.ui.resources import presentation_config, ui_text
+from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
 
 SELECT_CHAT_JS = """(event) => {
     if (event.type === 'keydown' && event.target !== event.currentTarget) return;
@@ -21,7 +22,10 @@ SELECT_CHAT_JS = """(event) => {
     }
 }"""
 
+TRACK_PROJECT_SCROLL_JS = render_html("shared/track_project_scroll.js")
+
 UI_PRESENTATION = presentation_config("controls/sidebar")
+PROJECT_CHAT_PAGE_SIZE = 5
 
 
 class SidebarComponent:
@@ -46,8 +50,14 @@ class SidebarComponent:
         self.container: ui.column | None = None
         self.drawer: ui.left_drawer | None = None
         self._project_list: ui.column | None = None
+        self._project_rail: ui.element | None = None
         self._quick_chat_list: ui.column | None = None
         self._project_expansion: dict[str, bool] = {}
+        self._project_chat_limits: dict[str, int] = {}
+        self._pending_project_jump: ui.expansion | None = None
+        self._project_dots: dict[str, ui.element] = {}
+        self._selected_project_id: str | None = None
+        self._selected_session_id: str | None = None
 
     @property
     def sessions(self) -> SessionManager:
@@ -120,13 +130,33 @@ class SidebarComponent:
         if self._project_list is None or self._quick_chat_list is None:
             self._build_session_lists()
         assert self._project_list is not None and self._quick_chat_list is not None
+        assert self._project_rail is not None
 
         # Keep the scroll containers mounted when selection or history changes.
+        projects = self.sessions.list_projects()
+        current = self.sessions.get_current_session()
+        if current.id != self._selected_session_id:
+            self._selected_session_id = current.id
+            if current.project_id is not None:
+                self._selected_project_id = current.project_id
+        if self._selected_project_id not in {project.id for project in projects}:
+            self._selected_project_id = current.project_id
+        self._pending_project_jump = None
         self._project_list.clear()
+        self._project_list.props["data-visible-project"] = (
+            self._selected_project_id or ""
+        )
+        self._project_rail.set_visibility(len(projects) > 1)
+        self._project_rail.clear()
+        self._project_dots.clear()
         with self._project_list:
-            projects = self.sessions.list_projects()
             for project in projects:
-                self._render_project(project, self.sessions.list_sessions(project.id))
+                expansion = self._render_project(
+                    project, self.sessions.list_sessions(project.id)
+                )
+                if len(projects) > 1:
+                    with self._project_rail:
+                        self._render_project_dot(project, expansion)
             if not projects:
                 ui.label(ui_text("navigation.sidebar.no_projects_yet")).classes(
                     UI_PRESENTATION[
@@ -168,11 +198,23 @@ class SidebarComponent:
                         UI_PRESENTATION["render_sessions.classes.sidebar_section_btn"]
                     ).tooltip(ui_text("navigation.sidebar.new_project"))
 
-                self._project_list = ui.column().classes(
-                    UI_PRESENTATION[
-                        "render_sessions.classes.sidebar_list_scroll_w_full_overflow_y_auto_fl"
-                    ]
-                )
+                with ui.row().classes(UI_PRESENTATION["projects.classes.content"]):
+                    self._project_list = ui.column().classes(
+                        UI_PRESENTATION[
+                            "render_sessions.classes.sidebar_list_scroll_w_full_overflow_y_auto_fl"
+                        ]
+                    )
+                    self._project_list.on(
+                        "scroll",
+                        self._on_project_scroll,
+                        js_handler=TRACK_PROJECT_SCROLL_JS,
+                    )
+                    self._project_rail = ui.element("nav").classes(
+                        UI_PRESENTATION["projects.classes.rail"]
+                    )
+                    self._project_rail.props["aria-label"] = ui_text(
+                        "navigation.sidebar.project_navigation"
+                    )
 
             # Generous spacing between PROJECTS and QUICK CHATS
             ui.element("div").classes(
@@ -212,7 +254,66 @@ class SidebarComponent:
                     ]
                 )
 
-    def _render_project(self, project: Project, sessions: list[ChatSession]) -> None:
+    def _render_project_dot(self, project: Project, expansion: ui.expansion) -> None:
+        label = ui_text("navigation.sidebar.jump_to_project", name=project.name)
+        dot = (
+            ui.element("button")
+            .classes(UI_PRESENTATION["projects.classes.dot"])
+            .props(UI_PRESENTATION["projects.props.dot"])
+        )
+        dot.props["aria-label"] = label
+        dot.props["aria-controls"] = expansion.html_id
+        self._project_dots[project.id] = dot
+        dot.props["aria-current"] = str(project.id == self._selected_project_id).lower()
+        dot.tooltip(project.name)
+        dot.on("click", lambda: self._jump_to_project(project.id, expansion))
+
+    def _select_project_dot(self, project_id: str) -> None:
+        if self._selected_project_id == project_id:
+            return
+        previous = self._project_dots.get(self._selected_project_id or "")
+        if previous is not None:
+            previous.props["aria-current"] = "false"
+        self._selected_project_id = project_id
+        self._project_dots[project_id].props["aria-current"] = "true"
+        if self._project_list is not None:
+            self._project_list.props["data-visible-project"] = project_id
+
+    def _on_project_scroll(self, event: GenericEventArguments) -> None:
+        if isinstance(event.args, str) and event.args in self._project_dots:
+            self._select_project_dot(event.args)
+
+    def _jump_to_project(self, project_id: str, expansion: ui.expansion) -> None:
+        if self._pending_project_jump is expansion:
+            return
+        self._select_project_dot(project_id)
+        self.expand_project(project_id)
+        if expansion.value:
+            self._pending_project_jump = None
+            self._scroll_to_project(expansion)
+        else:
+            self._pending_project_jump = expansion
+            expansion.open()
+
+    def _on_project_opened(self, expansion: ui.expansion) -> None:
+        if self._pending_project_jump is expansion:
+            self._pending_project_jump = None
+            self._scroll_to_project(expansion)
+
+    def _scroll_to_project(self, expansion: ui.expansion) -> None:
+        if self._project_list is None:
+            return
+        ui.run_javascript(
+            render_html(
+                "shared/scroll_to_project.js",
+                list_id=self._project_list.html_id,
+                project_id=expansion.html_id,
+            )
+        )
+
+    def _render_project(
+        self, project: Project, sessions: list[ChatSession]
+    ) -> ui.expansion:
         is_expanded = self.is_project_expanded(project.id)
         if is_expanded:
             self.expand_project(project.id)
@@ -228,9 +329,11 @@ class SidebarComponent:
             )
             .tooltip(project.work_root) as expansion
         ):
+            expansion.props["data-project-id"] = project.id
             expansion.on_value_change(
                 lambda e, pid=project.id: self._on_project_toggle(pid, bool(e.value))
             )
+            expansion.on("after-show", lambda: self._on_project_opened(expansion))
             with expansion.add_slot("header"):
                 with ui.row().classes(
                     UI_PRESENTATION[
@@ -359,19 +462,62 @@ class SidebarComponent:
                                         "render_project.classes.self_center_leading_none_text_rose_400"
                                     ]
                                 )
-            with ui.column().classes(
-                UI_PRESENTATION["render_project.classes.w_full_gap_1_pl_2"]
+            self._render_project_chats(project.id, sessions)
+        return expansion
+
+    def _render_project_chats(
+        self, project_id: str, sessions: list[ChatSession]
+    ) -> None:
+        with ui.column().classes(
+            UI_PRESENTATION["render_project.classes.w_full_gap_1_pl_2"]
+        ) as chat_list:
+            if not sessions:
+                ui.label(ui_text("navigation.sidebar.no_conversations_yet")).classes(
+                    UI_PRESENTATION[
+                        "render_project.classes.text_xs_text_zinc_500_italic"
+                    ]
+                )
+                return
+
+        def render() -> None:
+            limit = self._project_chat_limits.get(project_id, PROJECT_CHAT_PAGE_SIZE)
+            current = self.sessions.get_current_session()
+            visible = sessions[:limit]
+            if current.project_id == project_id and all(
+                chat.id != current.id for chat in visible
             ):
-                for session in sessions:
+                visible = [*visible[:-1], current]
+            remaining = len(sessions) - len(visible)
+            chat_list.clear()
+            with chat_list:
+                for session in visible:
                     self._render_session(session)
-                if not sessions:
-                    ui.label(
-                        ui_text("navigation.sidebar.no_conversations_yet")
-                    ).classes(
-                        UI_PRESENTATION[
-                            "render_project.classes.text_xs_text_zinc_500_italic"
-                        ]
-                    )
+                if remaining or limit > PROJECT_CHAT_PAGE_SIZE:
+                    with ui.row().classes(
+                        UI_PRESENTATION["project_chats.classes.actions"]
+                    ):
+                        if remaining:
+                            button(
+                                "show_more_chats",
+                                limit + PROJECT_CHAT_PAGE_SIZE,
+                                remaining=remaining,
+                            )
+                        if limit > PROJECT_CHAT_PAGE_SIZE:
+                            button("show_fewer_chats", PROJECT_CHAT_PAGE_SIZE)
+
+        def change_limit(limit: int) -> None:
+            self._project_chat_limits[project_id] = limit
+            render()
+
+        def button(key: str, limit: int, **values) -> None:
+            ui.button(
+                ui_text(f"navigation.sidebar.{key}", **values),
+                on_click=lambda: change_limit(limit),
+            ).props(UI_PRESENTATION["project_chats.props.button"]).classes(
+                UI_PRESENTATION["project_chats.classes.button"]
+            )
+
+        render()
 
     @staticmethod
     def _action(
@@ -590,6 +736,7 @@ class SidebarComponent:
                 )
             else:
                 self._project_expansion.pop(project_id, None)
+                self._project_chat_limits.pop(project_id, None)
             self.clear_sub_agent_selection()
             self.render_sessions()
             self.on_session_switched(self.sessions.get_current_session().id)

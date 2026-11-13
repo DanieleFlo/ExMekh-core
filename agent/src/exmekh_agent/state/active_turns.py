@@ -8,6 +8,7 @@ from weakref import WeakValueDictionary
 
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
 from exmekh_agent.exmekh_bridge.models import ChatMessage, QueuedMessage
+from exmekh_agent.exmekh_bridge.models.inference_timing import InferenceTiming
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,7 @@ class TurnSnapshot:
     started_at: float
     revision: int
     message: ChatMessage | None
+    timing: InferenceTiming | None = None
 
 
 @dataclass
@@ -23,6 +25,7 @@ class _ActiveTurn:
     collector: TurnStreamCollector
     started_at: float
     revision: int = 0
+    timing: InferenceTiming | None = None
 
 
 class ActiveTurnRegistry:
@@ -64,7 +67,14 @@ class ActiveTurnRegistry:
             if turn.revision != after_revision
             else None
         )
-        return TurnSnapshot(turn.started_at, turn.revision, message)
+        return TurnSnapshot(turn.started_at, turn.revision, message, turn.timing)
+
+    def set_timing(
+        self, session_id: str, task: asyncio.Task[None], timing: InferenceTiming | None
+    ) -> None:
+        turn = self._turns.get(session_id)
+        if turn is not None and turn.task is task and not task.cancelling():
+            turn.timing = timing
 
     def mark_changed(self, session_id: str, collector: TurnStreamCollector) -> None:
         turn = self._turns.get(session_id)

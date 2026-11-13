@@ -4,6 +4,7 @@ import asyncio
 import logging
 import threading
 from collections.abc import Callable
+from contextlib import ExitStack
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -74,6 +75,7 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
+from exmekh_agent.exmekh_bridge.models.inference_timing import TimingObserver
 from exmekh_agent.exmekh_bridge.providers.provider_context import (
     ContextTrackingProvider,
 )
@@ -83,6 +85,7 @@ from exmekh_agent.exmekh_bridge.providers.provider_health import (
 from exmekh_agent.exmekh_bridge.providers.provider_health import (
     extract_model_context_length as extract_model_context_length,
 )
+from exmekh_agent.exmekh_bridge.providers.stream_timing import timing_client
 from exmekh_agent.exmekh_bridge.resources import load_prompt
 from exmekh_agent.exmekh_bridge.tools.tool_approval import (
     DEFAULT_TOOL_APPROVAL_MODE,
@@ -128,6 +131,7 @@ def execute_agent_turn_sync(
     work_root: str | None = None,
     coding_agent_persistent_history: bool | None = None,
     on_context: Callable[[ProviderContextUsage], None] | None = None,
+    on_timing: TimingObserver | None = None,
     on_request_manual_approval: Callable[[str], bool] | None = None,
     on_command_approved: CommandApprovedCallback | None = None,
     tool_approval_mode: str | None = None,
@@ -174,6 +178,7 @@ def execute_agent_turn_sync(
                 work_root=work_root,
                 coding_agent_persistent_history=coding_agent_persistent_history,
                 on_context=on_context,
+                on_timing=on_timing,
                 on_request_manual_approval=on_request_manual_approval,
                 on_command_approved=on_command_approved,
                 tool_approval_mode=tool_approval_mode,
@@ -197,7 +202,6 @@ def execute_agent_turn_sync(
 
 def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
     """Synchronous execution of a turn using exmekh_lib, dispatched in background thread."""
-    content = user_content(request.user_prompt, request.image_urls or [])
     reasoning_effort: ReasoningEffort | None = None
     if request.reasoning_effort_str:
         clean_effort = request.reasoning_effort_str.strip().lower()
@@ -209,13 +213,25 @@ def _execute_agent_turn_sync_unlocked(request: AgentTurnRequest) -> str:
             except ValueError:
                 reasoning_effort = None
 
-    provider = LocalProvider(
-        model=request.model,
-        api="responses" if request.api_type == "responses" else "chat_completions",
-        reasoning_effort=reasoning_effort,
-        base_url=request.base_url,
-        api_key=request.api_key,
-    )
+    with ExitStack() as resources:
+        options = {}
+        if request.on_timing is not None:
+            options["http_client"] = resources.enter_context(
+                timing_client(request.on_timing)
+            )
+        provider = LocalProvider(
+            model=request.model,
+            api="responses" if request.api_type == "responses" else "chat_completions",
+            reasoning_effort=reasoning_effort,
+            base_url=request.base_url,
+            api_key=request.api_key,
+            **options,
+        )
+        return _run_agent_with_provider(request, provider)
+
+
+def _run_agent_with_provider(request: AgentTurnRequest, provider: LocalProvider) -> str:
+    content = user_content(request.user_prompt, request.image_urls or [])
     context_provider = None
     if (
         config.get_server_context_length(request.model, request.base_url) is not None
@@ -485,6 +501,7 @@ async def run_agent_turn(
     sub_agent_history: list[SubAgentConversation] | None = None,
     settings: ChatSettings | None = None,
     on_context: Callable[[ProviderContextUsage], None] | None = None,
+    on_timing: TimingObserver | None = None,
     on_request_manual_approval: Callable[[str], bool] | None = None,
     on_command_approved: CommandApprovedCallback | None = None,
     steering: TurnSteering | None = None,
@@ -545,6 +562,7 @@ async def run_agent_turn(
                 else settings.coding_agent_persistent_history
             ),
             on_context=on_context,
+            on_timing=on_timing,
             on_model_context=on_model_context,
             on_compaction_progress=on_compaction_progress,
             on_request_manual_approval=partial(

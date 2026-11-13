@@ -48,7 +48,7 @@ async def test_compaction_bar_is_in_response_and_survives_reload(
                 "button", name="New project chat", exact=True
             ).first.click()
             await page.request.post(compaction_server + "/test/pause-compaction")
-            await send_command(page, "Show compaction progress")
+            await send_command(page, f"Show compaction progress ({completion})")
             progress = page.locator(".msg-assistant .compaction-progress")
             await expect(progress).to_be_visible()
             await expect(progress).to_contain_text("Evaluating outputs")

@@ -1,5 +1,6 @@
 """Configure a Core profile and follow activation across page reloads."""
 
+from functools import partial
 from uuid import uuid4
 
 from nicegui import ui
@@ -20,6 +21,8 @@ from exmekh_agent.ui.settings.core_navigation import (
 )
 from exmekh_agent.ui.settings.core_views import (
     STYLES,
+    action_button,
+    action_link,
     activation_view,
     block,
     core_frame,
@@ -69,8 +72,10 @@ async def setup_page(
             destination,
         ):
             ui.label(str(error))
-            ui.link(
-                ui_text("system_settings.retry"), route("/setup/model", destination)
+            action_link(
+                ui_text("system_settings.retry"),
+                route("/setup/model", destination),
+                tone="accent",
             )
         return
     models = {item["id"]: item for item in catalog["models"]}
@@ -172,7 +177,7 @@ async def setup_page(
                             selected=selected_model == item["id"],
                         )
 
-            job_poll(client, render, catalog=True)
+            job_poll(client, render, load_inventory=client.catalog)
             with ui.row().classes(STYLES["classes.action_row"]):
                 configure = (
                     ui.button(
@@ -194,7 +199,7 @@ async def setup_page(
                     "system_settings.this_server_has_no_qualified_memory_mode_for_the_selected_model"
                 )
             ).classes(STYLES["classes.text_negative"])
-            ui.link(
+            action_link(
                 ui_text("system_settings.choose_another_model"),
                 route("/setup/model", destination),
             )
@@ -254,10 +259,31 @@ async def setup_page(
                 vision_limit = context_limit(mode_id, True) if with_vision else 0
                 return min(tokens, vision_limit) if vision_limit else tokens
 
-            number = ui.input(
-                ui_text("system_settings.context_tokens"),
-                value=str(tokens or recommended(mode)),
-            ).props(STYLES["props.positive_integer"])
+            presets: dict[int, ui.button] = {}
+            with ui.column().classes(STYLES["classes.w_full_gap_1"]):
+                number = ui.input(
+                    ui_text("system_settings.context_tokens"),
+                    value=str(tokens or recommended(mode)),
+                ).props(STYLES["props.positive_integer"])
+                max_limit = max(context_limit(key, with_vision) for key in eligible)
+                with (
+                    ui.row()
+                    .classes(STYLES["classes.gap_2"])
+                    .props(
+                        f'role=group aria-label="{ui_text("system_settings.context_presets")}"'
+                    ) as preset_row
+                ):
+                    count = 4096
+                    while count <= max_limit:
+                        label = ui_text(
+                            "system_settings.use_context_limit", limit=count
+                        )
+                        button = action_button(
+                            f"{count // 1024}K", partial(number.set_value, str(count))
+                        ).classes(STYLES["classes.context_preset"])
+                        button.props(f'aria-label="{label}"').tooltip(label)
+                        presets[count] = button
+                        count *= 2
 
             def recommend() -> None:
                 number.value = str(recommended(selection.value))
@@ -275,10 +301,14 @@ async def setup_page(
                     route("/setup/runtime", destination, **current_options())
                 )
 
-            def sync_navigation() -> None:
+            def sync_context_controls() -> None:
                 options = current_options()
                 count = options["tokens"]
                 limit = context_limit(selection.value, with_vision)
+                preset_row.set_visibility(any(value <= limit for value in presets))
+                for value, button in presets.items():
+                    button.set_visibility(value <= limit)
+                    button.props(f"aria-pressed={str(value == count).lower()}")
                 blocked = (
                     ("features", "review")
                     if count is None
@@ -295,19 +325,16 @@ async def setup_page(
                 if whole_number(number.value) == recommended(previous_mode):
                     recommend()
                 previous_mode = selection.value
-                sync_navigation()
+                sync_context_controls()
 
             selection.on_value_change(lambda _: change_mode())
-            number.on_value_change(lambda _: sync_navigation())
-            sync_navigation()
+            number.on_value_change(lambda _: sync_context_controls())
+            sync_context_controls()
             with ui.row():
-                ui.button(
-                    ui_text("system_settings.use_recommended"), on_click=recommend
-                ).props(STYLES["props.outline_no_caps"])
-                ui.button(
-                    ui_text("system_settings.refresh_estimate"),
-                    on_click=refresh_estimate,
-                ).props(STYLES["props.flat_no_caps"])
+                action_button(ui_text("system_settings.use_recommended"), recommend)
+                action_button(
+                    ui_text("system_settings.refresh_estimate"), refresh_estimate
+                )
 
             def next_step() -> None:
                 options = current_options()
@@ -457,14 +484,12 @@ async def setup_page(
                 )
 
             limit_message = ui.label("").props(STYLES["props.role_status"])
-            adjust = ui.button("", on_click=adjust_context).props(
-                STYLES["props.outline_no_caps"]
-            )
+            adjust = action_button("", adjust_context, tone="caution")
             with ui.row().classes(STYLES["classes.action_row"]):
-                ui.button(
+                action_button(
                     ui_text("system_settings.continue_with_chat_only"),
-                    on_click=lambda: review(True),
-                ).props(STYLES["props.outline_no_caps"])
+                    lambda: review(True),
+                )
                 review_button = (
                     ui.button(
                         ui_text("system_settings.review_profile"),
@@ -494,9 +519,10 @@ async def setup_page(
             plan = await client.plan(profile)
         except CoreProblem as error:
             ui.label(str(error)).classes(STYLES["classes.text_negative"])
-            ui.link(
+            action_link(
                 ui_text("system_settings.adjust_memory_and_context"),
                 route("/setup/runtime", destination, **params),
+                tone="caution",
             )
             return
         missing = plan.missing_bytes
@@ -613,7 +639,9 @@ async def startup_page(return_to: str, job: str = "") -> None:
                         ui.button(
                             ui_text("system_settings.open_chat"),
                             on_click=lambda: ui.navigate.to(destination),
-                        ).props(STYLES["props.unelevated_no_caps"])
+                        ).props(STYLES["props.unelevated_no_caps"]).classes(
+                            STYLES["classes.primary"]
+                        )
                     if (
                         status.saved_profile
                         and not status.job_id
@@ -629,21 +657,23 @@ async def startup_page(return_to: str, job: str = "") -> None:
                             except CoreProblem as error:
                                 notify_error(error)
 
-                        ui.button(
+                        action_button(
                             ui_text("system_settings.retry_saved_profile"),
-                            on_click=restore,
-                        ).props(STYLES["props.outline_no_caps"])
+                            restore,
+                            tone="accent",
+                        )
                     if not activity or not activity.active:
                         retry_profile = (
                             (activity.profile if activity else None)
                             or status.saved_profile
                             or {}
                         )
-                        ui.link(
+                        action_link(
                             ui_text("system_settings.configure_startup"),
                             profile_link(retry_profile, destination),
+                            tone="accent",
                         )
-                    ui.link(
+                    action_link(
                         ui_text("system_settings.activity_details"),
                         route("/settings/activity", destination),
                     )
@@ -653,9 +683,10 @@ async def startup_page(return_to: str, job: str = "") -> None:
                 view.clear()
                 with view:
                     block(ui_text("system_settings.reconnecting_to_core"), str(error))
-                    ui.link(
+                    action_link(
                         ui_text("system_settings.connection_settings"),
                         route("/settings/connection", destination, setup=1),
+                        tone="accent",
                     )
 
         await refresh()

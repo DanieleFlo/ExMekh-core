@@ -123,7 +123,7 @@ async def test_public_operations_and_profile(server):
         {"models": []},
         {"models": []},
         {"id": "plan", "missing_bytes": 5},
-        [JOB],
+        [{**JOB, "created_at": 1794564000.5}],
         JOB,
         JOB,
         {**JOB, "state": "failed"},
@@ -142,7 +142,10 @@ async def test_public_operations_and_profile(server):
     assert (await client.plan(PROFILE)).missing_bytes == 5
     (job,) = await client.jobs()
     assert job.active and not job.retryable
-    assert (await client.job(job.id)).allowed_actions == ["pause", "cancel"]
+    assert job.created_at is not None and job.created_at.timestamp() == 1794564000.5
+    legacy_job = await client.job(job.id)
+    assert legacy_job.created_at is None
+    assert legacy_job.allowed_actions == ["pause", "cancel"]
     assert (
         await client.start_job("download", model_id="qwen27", idempotency_key="same")
     ).id == job.id

@@ -2279,6 +2279,7 @@ typedef struct {
     uint64_t seed;
     bool stream;
     bool stream_include_usage;
+    bool stream_timing;
     bool ignore_eos;
     int cache_read_tokens;
     int cache_write_tokens;
@@ -9338,6 +9339,39 @@ static bool sse_headers(int fd, bool enable_cors) {
     bool ok = send_all(fd, h.ptr, h.len);
     buf_free(&h);
     return ok;
+}
+
+/* Opt-in SSE comments keep timing separate from the API's generation events. */
+static bool sse_timing(int fd, const char *phase, int tokens, double elapsed) {
+    char line[128];
+    long long milliseconds = elapsed > 0.0 ? (long long)(elapsed * 1000.0) : 0;
+    int len = snprintf(line, sizeof(line), ": ds4-timing %s %d %lld\n\n",
+                       phase, tokens, milliseconds);
+    return len > 0 && (size_t)len < sizeof(line) && send_all(fd, line, (size_t)len);
+}
+
+static const double stream_timing_interval = 0.4;
+
+typedef struct {
+    const char *phase;
+    double started_at;
+    int start_tokens;
+    double last_sent;
+} decode_stream_timing;
+
+static bool send_decode_timing(int fd, decode_stream_timing *timing,
+                               const char *phase, int tokens, double now) {
+    if (!timing->phase || strcmp(timing->phase, phase)) {
+        if (timing->phase) {
+            timing->started_at = now;
+            timing->start_tokens = tokens;
+        }
+        timing->phase = phase;
+    } else if (now - timing->last_sent < stream_timing_interval) {
+        return true;
+    }
+    timing->last_sent = now;
+    return sse_timing(fd, phase, tokens - timing->start_tokens, now - timing->started_at);
 }
 
 static bool sse_error_event(int fd, const request *r, const char *msg) {
@@ -18040,6 +18074,7 @@ typedef struct {
     bool headers_sent;
     bool stream_failed;
     double last_keepalive;
+    double last_timing;
     job *request_job;
 } server_prefill_progress;
 
@@ -19409,14 +19444,12 @@ static void server_progress_cb(void *ud, const char *event, int current, int tot
             }
         }
     }
-    if (is_display) return;
+    if (p->stream_failed) return;
+    const bool timing = p->stream && p->headers_sent && p->request_job &&
+                        p->request_job->req.stream_timing &&
+                        (p->last_timing == 0.0 || now - p->last_timing >= stream_timing_interval);
+    if (is_display && !timing) return;
     double elapsed = now - p->t0;
-    if (p->seen && current == p->last_current) {
-        if (p->srv && p->slot && current > p->cached_tokens) {
-            kv_cache_maybe_store_continued(p->srv, p->slot);
-        }
-        return;
-    }
     int display_start = p->cached_tokens;
     if (display_start < 0 || display_start > p->prompt_tokens) display_start = 0;
     int display_total = p->prompt_tokens - display_start;
@@ -19427,6 +19460,21 @@ static void server_progress_cb(void *ud, const char *event, int current, int tot
     int display_current = current - display_start;
     if (display_current < 0) display_current = 0;
     if (display_current > display_total) display_current = display_total;
+    if (timing) {
+        if (!sse_timing(p->fd, "prefill", display_current, elapsed)) {
+            p->stream_failed = true;
+            job_mark_cancelled(p->request_job);
+            return;
+        }
+        p->last_timing = now;
+    }
+    if (is_display) return;
+    if (p->seen && current == p->last_current) {
+        if (p->srv && p->slot && current > p->cached_tokens) {
+            kv_cache_maybe_store_continued(p->srv, p->slot);
+        }
+        return;
+    }
     double pct = display_total > 0 ? 100.0 * (double)display_current / (double)display_total : 100.0;
     double avg_tps = elapsed > 0.0 ? (double)display_current / elapsed : 0.0;
     int interval_tokens = p->seen ? current - p->last_current : 0;
@@ -21326,6 +21374,10 @@ decode_again:
     phase.grammar_compile_ms = j->req.grammar_compile_ms;
     double last_decode_log_t = decode_t0;
     int last_decode_log_completion = resumed_completion;
+    decode_stream_timing stream_timing = {
+        .started_at = decode_t0,
+        .start_tokens = resumed_completion,
+    };
     thinking_state thinking = generation.thinking;
     const bool thinking_gates_tool_markers = ds4_think_mode_enabled(j->req.think_mode);
     bool tool_scan_waiting_for_think_close =
@@ -22003,6 +22055,20 @@ decode_again:
                                     completion, saw_tool_start ? 1 : 0, saw_tool_end ? 1 : 0);
                         next_tool_progress += 128;
                     }
+                }
+            }
+
+            if (j->req.stream && j->req.stream_timing) {
+                const char *stream_phase = thinking.inside ? "reasoning" :
+                    (dsml_decode_state_is_tool(dsml_tracker.decode) ||
+                     (saw_tool_start && !saw_tool_end)) ? "tool" : "decode";
+                if (!send_decode_timing(j->fd, &stream_timing, stream_phase,
+                                        completion, now_sec())) {
+                    job_mark_cancelled(j);
+                    finish = "error";
+                    snprintf(err, sizeof(err), DS4_SERVER_TEXT_CLIENT_STREAM_WRITE_FAILED);
+                    stop_decode = true;
+                    break;
                 }
             }
 
@@ -23134,6 +23200,7 @@ typedef struct {
     char path[256];
     char *body;
     size_t body_len;
+    bool stream_timing;
 #ifdef DS4_NATIVE_SUITE
     char content_type[256], idempotency_key[129];
     bool suite_stream;
@@ -23181,6 +23248,25 @@ static long content_length(const char *h, size_t n) {
     return 0;
 }
 
+static bool wants_stream_timing(const char *headers, size_t len) {
+    const char *end = headers + len;
+    const char *name = "X-DS4-Stream-Timing:";
+    const size_t name_len = strlen(name);
+    for (const char *line = headers; line < end;) {
+        const char *newline = memchr(line, '\n', (size_t)(end - line));
+        if (!newline) break;
+        if ((size_t)(newline - line) > name_len && !strncasecmp(line, name, name_len)) {
+            const char *value = line + name_len;
+            while (value < newline && isspace((unsigned char)*value)) value++;
+            if (value == newline || *value++ != '1') return false;
+            while (value < newline && isspace((unsigned char)*value)) value++;
+            return value == newline;
+        }
+        line = newline + 1;
+    }
+    return false;
+}
+
 static bool read_http_request(int fd, http_request *r) {
     buf b = {0};
     ssize_t hend = -1;
@@ -23209,6 +23295,7 @@ static bool read_http_request(int fd, http_request *r) {
     if (q) *q = '\0';
 
     long clen = content_length(b.ptr, (size_t)hend);
+    r->stream_timing = wants_stream_timing(b.ptr, (size_t)hend);
 #ifdef DS4_NATIVE_SUITE
     if (!suite_read_headers(b.ptr, (size_t)hend, r->content_type,
                             sizeof(r->content_type), r->idempotency_key,
@@ -23579,7 +23666,10 @@ static void *client_main(void *arg) {
         http_request_free(&hr);
         goto done;
     }
-    if (ok && !interactive_resume) req.raw_body = xstrndup(hr.body, hr.body_len);
+    if (ok) {
+        req.stream_timing = hr.stream_timing;
+        if (!interactive_resume) req.raw_body = xstrndup(hr.body, hr.body_len);
+    }
     http_request_free(&hr);
     if (!ok) {
         http_error(fd, s->enable_cors, 400, err);
@@ -25702,6 +25792,32 @@ static void test_cors_sse_headers(void) {
     TEST_ASSERT(strstr(out, "X-Accel-Buffering: no") != NULL);
     TEST_ASSERT(strstr(out, "Access-Control-Allow-Origin: *") != NULL);
 
+    free(out);
+    close(sv[0]);
+    close(sv[1]);
+}
+
+static void test_opt_in_stream_timing(void) {
+    static const char enabled[] = "POST /v1/responses HTTP/1.1\r\nx-ds4-stream-timing: 1\r\n\r\n";
+    static const char disabled[] = "POST /v1/responses HTTP/1.1\r\nX-DS4-Stream-Timing: 10\r\n\r\n";
+    TEST_ASSERT(wants_stream_timing(enabled, sizeof(enabled) - 1));
+    TEST_ASSERT(!wants_stream_timing(disabled, sizeof(disabled) - 1));
+    TEST_ASSERT(!wants_stream_timing(enabled, 10));
+
+    int sv[2];
+    TEST_ASSERT(socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == 0);
+    if (sv[0] < 0 || sv[1] < 0) return;
+    decode_stream_timing timing = {.started_at = 1.0, .start_tokens = 10};
+    TEST_ASSERT(send_decode_timing(sv[0], &timing, "reasoning", 20, 1.5));
+    TEST_ASSERT(send_decode_timing(sv[0], &timing, "reasoning", 23, 1.625));
+    TEST_ASSERT(send_decode_timing(sv[0], &timing, "tool", 25, 1.75));
+    TEST_ASSERT(send_decode_timing(sv[0], &timing, "tool", 29, 2.25));
+    shutdown(sv[0], SHUT_WR);
+    char *out = read_socket_text(sv[1]);
+    TEST_ASSERT(!strcmp(out,
+        ": ds4-timing reasoning 10 500\n\n"
+        ": ds4-timing tool 0 0\n\n"
+        ": ds4-timing tool 4 500\n\n"));
     free(out);
     close(sv[0]);
     close(sv[1]);
@@ -34582,6 +34698,7 @@ static void ds4_server_unit_tests_run(void) {
     test_cors_headers_are_opt_in();
     test_cors_preflight_response_is_no_content();
     test_cors_sse_headers();
+    test_opt_in_stream_timing();
     test_responses_stream_sends_live_reasoning_and_decoding();
     test_anthropic_live_stream_sends_incremental_blocks();
     test_anthropic_stream_reroutes_second_reasoning_pass();

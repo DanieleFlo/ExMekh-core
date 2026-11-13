@@ -7,7 +7,7 @@ from typing import Any, Literal
 from urllib.parse import quote, urlsplit
 
 import httpx
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError
+from pydantic import AwareDatetime, BaseModel, Field, TypeAdapter, ValidationError
 
 from exmekh_agent.config import config
 from exmekh_agent.config.catalogs import message as app_text
@@ -78,6 +78,7 @@ class CoreJob(BaseModel):
     model_id: str
     state: str
     phase: str
+    created_at: AwareDatetime | None = None
     elapsed_seconds: float = 0
     file: str = ""
     model_name: str = ""

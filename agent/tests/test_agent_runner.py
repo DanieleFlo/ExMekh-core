@@ -104,6 +104,7 @@ def test_execute_agent_turn_sync_quick_chat() -> None:
             on_token=tokens.append,
             on_reasoning=lambda _: None,
             on_tool_event=lambda _: None,
+            on_timing=lambda _: None,
         )
     assert result == "Mock response for: Hello"
     assert tokens == [result]

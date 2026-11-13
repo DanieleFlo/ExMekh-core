@@ -34,6 +34,7 @@ from exmekh_agent.exmekh_bridge.models.execution import (
     find_skill_invocation,
     record_skill_snapshot,
 )
+from exmekh_agent.exmekh_bridge.models.inference_timing import InferenceTiming
 
 
 class TurnStreamCollector:
@@ -58,6 +59,16 @@ class TurnStreamCollector:
         self.context_usage: ProviderContextUsage | None = None
         self._pending_skill_before: dict[str, int] = {}
         self._compactions: list[CompactionActivity] = []
+        self._preparing_tool = False
+
+    def observe_inference_timing(self, timing: InferenceTiming | None) -> bool:
+        """Close the current block when generation enters tool arguments."""
+        preparing = timing is not None and timing.preparing_tool
+        entered_tool = preparing and not self._preparing_tool
+        self._preparing_tool = preparing
+        if entered_tool:
+            self.finish_stream_block()
+        return entered_tool
 
     def set_compaction_progress(self, event: DeepAgentCompactionProgressEvent) -> None:
         if update_compaction_activity(self._compactions, event):

@@ -23,6 +23,7 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
+from exmekh_agent.exmekh_bridge.models.inference_timing import InferenceTiming
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import session_manager
 from exmekh_agent.ui.chat.chat_view import (
@@ -475,6 +476,36 @@ def test_chat_view_welcome_hero(ui_context: Client) -> None:
 
     # Chat container should show welcome hero
     assert cv.chat_container is not None
+
+
+def test_tool_preparation_is_shown_inside_the_active_skill(ui_context: Client) -> None:
+    with ui_context:
+        view = ChatViewComponent(on_suggested_prompt=lambda _: None)
+        view.build()
+        view.start_assistant_stream()
+        view.handle_live_skill_event(
+            SkillNode(name="parent", path="/parent", depth=1), "opened"
+        )
+        view.handle_live_skill_event(
+            SkillNode(name="child", path="/parent/child", depth=2), "opened"
+        )
+        view.stream_reasoning("Choosing arguments", skill_path="/parent/child", depth=2)
+        view.update_inference_timing(InferenceTiming("tool", None))
+
+        (header,) = [
+            element
+            for element in ui_context.elements.values()
+            if "tool-preparation-header" in element.classes
+        ]
+        assert view.current_live_reasoning_container is None
+        assert header.parent_slot.parent is not view.current_activity_container
+        reasoning, preparation = header.parent_slot.children
+        assert reasoning.value is False
+        assert preparation is header
+
+        view.update_inference_timing(None)
+        assert header.is_deleted
+        view.finalize_stream()
 
 
 def test_reselecting_chat_preserves_live_thinking_and_response(

@@ -36,6 +36,7 @@ from exmekh_agent.exmekh_bridge.models import (
     record_tool_event,
 )
 from exmekh_agent.exmekh_bridge.models.execution import record_skill_snapshot
+from exmekh_agent.exmekh_bridge.models.inference_timing import InferenceTiming
 from exmekh_agent.exmekh_bridge.models.timeline import Activity
 from exmekh_agent.exmekh_bridge.providers.context_usage import (
     compute_skill_node_closure_tokens,
@@ -124,6 +125,7 @@ class ChatViewComponent:
         self.current_response_text: str = ""
         self.stream_started_at: float | None = None
         self.stream_duration_label: ui.label | None = None
+        self._inference_timing: InferenceTiming | None = None
         self.stream_timer: ui.timer | None = None
         self.streaming_compactions: list[CompactionActivity] = []
         self.live_compaction_views: dict[str, CompactionProgressView] = {}
@@ -133,6 +135,8 @@ class ChatViewComponent:
         self.current_live_reasoning_container: ui.column | None = None
         self.current_live_reasoning_block: ReasoningBlock | None = None
         self.current_activity_container: ui.column | None = None
+        self._preparing_tool_call = False
+        self._tool_preparation_skill_id: str | None = None
         self.streaming_reasoning_blocks: list[ReasoningBlock] = []
         self.streaming_content_blocks: list[ContentBlock] = []
         self.current_content_block: ContentBlock | None = None
@@ -1058,11 +1062,7 @@ class ChatViewComponent:
         with ui.row().classes(UI_PRESENTATION[style]):
             with ui.row().classes(UI_PRESENTATION["execution_row.main"]):
                 if live:
-                    ui.spinner(
-                        UI_PRESENTATION["execution_row.spinner"],
-                        size=UI_PRESENTATION["execution_row.icon_size"],
-                        color=UI_PRESENTATION["execution_row.spinner_color"],
-                    )
+                    self._render_execution_spinner()
                 else:
                     ui.icon(
                         UI_PRESENTATION["render_reasoning_block.icon.psychology"],
@@ -1078,6 +1078,26 @@ class ChatViewComponent:
             with ui.row().classes(UI_PRESENTATION["execution_row.meta"]):
                 return ui.label(format_duration(block.elapsed_seconds())).classes(
                     UI_PRESENTATION["execution_row.duration"]
+                )
+
+    @staticmethod
+    def _render_execution_spinner() -> None:
+        ui.spinner(
+            UI_PRESENTATION["execution_row.spinner"],
+            size=UI_PRESENTATION["execution_row.icon_size"],
+            color=UI_PRESENTATION["execution_row.spinner_color"],
+        )
+
+    def _render_tool_preparation(self) -> None:
+        with (
+            ui.row()
+            .classes(UI_PRESENTATION["tool_preparation.classes.header"])
+            .props(UI_PRESENTATION["tool_preparation.props.status"])
+        ):
+            with ui.row().classes(UI_PRESENTATION["execution_row.main"]):
+                self._render_execution_spinner()
+                ui.label(ui_text("chat.chat_view.preparing_tool_call")).classes(
+                    UI_PRESENTATION["execution_row.title"]
                 )
 
     def _render_skill_node(self, node: SkillNode) -> None:
@@ -1279,6 +1299,8 @@ class ChatViewComponent:
             else node.ordered_activity()
         )
         self._render_scope_activity(activities, node=node)
+        if self._rendering_live_activity and node.id == self._tool_preparation_skill_id:
+            self._render_tool_preparation()
 
     def _render_scope_activity(
         self,
@@ -1784,9 +1806,7 @@ class ChatViewComponent:
                     view.refresh()
         for view in self.live_compaction_views.values():
             view.refresh()
-        if self.stream_duration_label and self.stream_started_at is not None:
-            elapsed = time.monotonic() - self.stream_started_at
-            self.stream_duration_label.text = format_duration(elapsed)
+        self._update_stream_duration_label()
         now = time.time()
         if (
             self.current_live_reasoning_block is not None
@@ -1799,6 +1819,36 @@ class ChatViewComponent:
             skill_lbl.text = format_duration(skill_node.elapsed_seconds(now))
         for tool_ev, tool_lbl in list(self.live_tool_timer_labels):
             tool_lbl.text = format_duration(tool_ev.elapsed_seconds(now))
+
+    def update_inference_timing(self, timing: InferenceTiming | None) -> None:
+        if self._inference_timing == timing:
+            return
+        self._inference_timing = timing
+        self._show_tool_preparation(timing is not None and timing.preparing_tool)
+        self._update_stream_duration_label()
+
+    def _update_stream_duration_label(self) -> None:
+        if self.stream_duration_label is None or self.stream_started_at is None:
+            return
+        duration = format_duration(time.monotonic() - self.stream_started_at)
+        timing = self._inference_timing
+        if timing is not None:
+            phase = ui_text(f"chat.chat_view.timing_{timing.phase}")
+            activity = (
+                phase
+                if timing.tokens_per_second is None
+                else ui_text(
+                    "chat.chat_view.timing_rate",
+                    phase=phase,
+                    rate=timing.tokens_per_second,
+                )
+            )
+            duration = ui_text(
+                "chat.chat_view.timing_with_duration",
+                timing=activity,
+                duration=duration,
+            )
+        self.stream_duration_label.set_text(duration)
 
     def _close_live_reasoning_block(self) -> None:
         """Finalize end_time and duration_seconds on the currently active live thinking block."""
@@ -1903,6 +1953,21 @@ class ChatViewComponent:
         if element is not None:
             element.content = parse_markdown_to_html(block.content)
 
+    def _show_tool_preparation(self, preparing: bool) -> None:
+        """Show the current generation phase without adding an event to history."""
+        if (
+            self.current_activity_container is None
+            or self._preparing_tool_call == preparing
+        ):
+            return
+        self._preparing_tool_call = preparing
+        if preparing:
+            self._close_live_reasoning_block()
+            self.current_content_block = None
+            if self.current_loading_placeholder:
+                self.current_loading_placeholder.set_visibility(False)
+        self._refresh_streaming_activity()
+
     def _refresh_streaming_activity(self) -> None:
         """Refresh the ordered activity when its blocks or execution details change."""
         if (
@@ -1936,11 +2001,28 @@ class ChatViewComponent:
         )
         if recorded is not None:
             message = message.with_recorded_execution(recorded)
+        active_skill = (
+            max(
+                (
+                    node
+                    for root in message.skills
+                    for node in root.iter_nodes()
+                    if node.status == "active"
+                ),
+                key=lambda node: (node.start_time, node.depth),
+                default=None,
+            )
+            if self._preparing_tool_call
+            else None
+        )
+        self._tool_preparation_skill_id = active_skill.id if active_skill else None
         with self.current_activity_container:
             self.current_activity_container.clear()
             self._render_turn_activity(message, live=True)
             if message.unsegmented_content:
                 self._render_response_text(message.unsegmented_content)
+            if self._preparing_tool_call and active_skill is None:
+                self._render_tool_preparation()
 
     def handle_live_skill_event(self, node: SkillNode, action: str) -> None:
         if action != "updated":
@@ -1988,6 +2070,10 @@ class ChatViewComponent:
             self._refresh_streaming_activity()
 
     def finalize_stream(self) -> None:
+        was_preparing_tool = self._preparing_tool_call
+        self._preparing_tool_call = False
+        self._inference_timing = None
+        self._update_stream_duration_label()
         for view in self.live_compaction_views.values():
             view.show([])
         self.live_compaction_views.clear()
@@ -2002,7 +2088,7 @@ class ChatViewComponent:
 
         if self.current_loading_placeholder:
             self.current_loading_placeholder.set_visibility(False)
-        if self.current_live_reasoning_block is not None:
+        if self.current_live_reasoning_block is not None or was_preparing_tool:
             self._close_live_reasoning_block()
             self._refresh_streaming_activity()
 

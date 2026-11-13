@@ -245,6 +245,10 @@ async def test_switching_old_chats_preserves_both_sidebar_scroll_positions(
                 )
                 lists = page.locator(".sidebar-list-scroll")
                 await expect(lists).to_have_count(2)
+                for remaining in (19, 14, 9, 4):
+                    await page.get_by_role(
+                        "button", name=f"Show more chats ({remaining})", exact=True
+                    ).click()
                 await lists.evaluate_all(
                     "elements => elements.forEach(el => el.scrollTop = el.scrollHeight)"
                 )

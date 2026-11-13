@@ -228,7 +228,10 @@ async def test_optional_models_inventory_and_profile_actions(tmp_path, core_http
                     **PROFILE,
                     "features": ["embeddings", "images"],
                 }
-                await page.get_by_role("link", name="Enable", exact=True).click()
+                enable = page.get_by_role("link", name="Enable", exact=True)
+                await expect(enable).to_have_attribute("data-tone", "positive")
+                await expect(enable).to_have_css("text-decoration-line", "none")
+                await enable.click()
                 await expect(
                     page.get_by_role("button", name="Apply profile")
                 ).to_be_visible()
@@ -255,7 +258,10 @@ async def test_optional_models_inventory_and_profile_actions(tmp_path, core_http
                     "xpath=ancestor::div[.//a[normalize-space()='Disable']][1]"
                 )
                 state["expected_profile"] = profile
-                await entry.get_by_role("link", name="Disable").click()
+                disable = entry.get_by_role("link", name="Disable")
+                await expect(disable).to_have_attribute("data-tone", "caution")
+                await expect(disable).to_have_css("text-decoration-line", "none")
+                await disable.click()
                 await expect(
                     page.get_by_role("button", name="Apply profile")
                 ).to_be_visible()
@@ -269,6 +275,8 @@ async def test_optional_models_inventory_and_profile_actions(tmp_path, core_http
                 await page.goto(models_url)
                 button = page.get_by_role("button", name="Remove files")
                 dialog = page.get_by_role("dialog")
+                await expect(button).to_have_attribute("data-tone", "danger")
+                await expect(button).to_have_css("border-top-style", "solid")
                 await button.click()
                 await expect(
                     dialog.get_by_text(
@@ -304,6 +312,105 @@ async def test_optional_models_inventory_and_profile_actions(tmp_path, core_http
                 await expect(
                     page.get_by_role("link", name="Enable", exact=True)
                 ).to_be_visible()
+            finally:
+                await browser.close()
+
+
+async def test_activity_shows_dates_active_operations_and_paged_history(
+    tmp_path, core_http
+):
+    base_url, state, jobs, _ = core_http
+    state.update(state="ready", chat_ready=True, active_profile=ACTIVE_PROFILE)
+    jobs.update(
+        {
+            f"history-{index}": {
+                **ACTIVITY,
+                "id": f"history-{index}",
+                "kind": "remove",
+                "model_name": f"Archived model {index:02d}",
+                "state": "completed",
+                "phase": "completed",
+                "created_at": 1794564000 + index * 60,
+            }
+            for index in reversed(range(11))
+        }
+    )
+    jobs["legacy"] = {
+        **ACTIVITY,
+        "id": "legacy",
+        "model_name": "Legacy model",
+        "state": "failed",
+        "phase": "failed",
+    }
+    jobs["active"] = {
+        **ACTIVITY,
+        "id": "active",
+        "model_name": "Live model",
+        "created_at": 1794564000,
+        "files": [{"name": "live-model.gguf", "size_bytes": 1024, "state": "queued"}],
+    }
+    with BrowserTestServer(tmp_path, environment={"BASE_URL": base_url}) as agent:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch()
+            try:
+                page = await browser.new_page(
+                    viewport={"width": 390, "height": 844}, timezone_id="Europe/Rome"
+                )
+                await page.goto(f"{agent.rstrip('/')}/settings/activity")
+                await expect(
+                    page.get_by_text("Track Core operations", exact=False)
+                ).to_be_visible()
+                await expect(
+                    page.get_by_role("heading", name="Active operations")
+                ).to_be_visible()
+                await expect(
+                    page.get_by_role("heading", name="Operation history")
+                ).to_be_visible()
+                await expect(page.get_by_text("Showing 1–10 of 12")).to_be_visible()
+                await expect(
+                    page.get_by_text(re.compile("^Remove model files · Archived model"))
+                ).to_have_count(10)
+                archive_rows = page.locator(".core-item-title").filter(
+                    has_text="Archived model"
+                )
+                await expect(archive_rows.first).to_have_text(
+                    "Remove model files · Archived model 10"
+                )
+                await expect(
+                    page.get_by_text(
+                        "Requested 13 Nov 2026, 11:00 CET", exact=True
+                    ).first
+                ).to_be_visible()
+                live_row = page.locator(".core-item").filter(has_text="Live model")
+                await live_row.get_by_text("Model files", exact=True).click()
+                await expect(live_row.get_by_text("live-model.gguf")).to_be_visible()
+                await expect(page.get_by_role("button", name="Newer")).to_be_disabled()
+                await page.get_by_role("button", name="Older").click()
+                await expect(page.get_by_text("Showing 11–12 of 12")).to_be_visible()
+                await expect(archive_rows).to_have_text(
+                    ["Remove model files · Archived model 00"]
+                )
+                await expect(
+                    page.get_by_text("Request date unavailable")
+                ).to_be_visible()
+                await expect(page.get_by_role("button", name="Older")).to_be_disabled()
+
+                jobs["active"].update(phase="downloading")
+                await expect(
+                    live_row.get_by_text("Downloading", exact=True)
+                ).to_be_visible()
+                await expect(live_row.get_by_text("live-model.gguf")).to_be_visible()
+                await expect(page.get_by_text("Showing 11–12 of 12")).to_be_visible()
+                jobs["active"].update(state="completed", phase="completed")
+                await expect(
+                    page.get_by_role("heading", name="Active operations")
+                ).to_have_count(0)
+                await expect(page.get_by_text("Showing 11–13 of 13")).to_be_visible()
+                await page.get_by_role("button", name="Newer").click()
+                await expect(page.get_by_text("Showing 1–10 of 13")).to_be_visible()
+                assert await page.evaluate(
+                    "document.documentElement.scrollWidth <= innerWidth"
+                )
             finally:
                 await browser.close()
 
@@ -348,7 +455,16 @@ async def test_context_estimate_refresh_and_vision_adjustment(tmp_path, core_htt
                     page.get_by_text("Estimated maximum · 8,192 tokens", exact=True)
                 ).to_be_visible()
                 context = page.get_by_role("spinbutton")
+                presets = page.get_by_role("group", name="Quick context sizes")
+                await expect(presets.get_by_role("button")).to_have_text(["4K", "8K"])
+                four_k = presets.get_by_role("button", name="Use 4,096 tokens")
+                eight_k = presets.get_by_role("button", name="Use 8,192 tokens")
+                await expect(eight_k).to_have_attribute("aria-pressed", "true")
+                await four_k.click()
+                await expect(context).to_have_value("4096")
+                await expect(four_k).to_have_attribute("aria-pressed", "true")
                 await context.fill("0")
+                await expect(four_k).to_have_attribute("aria-pressed", "false")
                 await page.get_by_role("button", name="Continue", exact=True).click()
                 await expect(
                     page.get_by_text("Enter a whole number from 1 to 8,192 tokens.")
@@ -373,6 +489,11 @@ async def test_context_estimate_refresh_and_vision_adjustment(tmp_path, core_htt
                 await expect(review).to_be_disabled()
                 await page.get_by_role("button", name="Use 3,072 tokens").click()
                 await expect(review).to_be_enabled()
+                steps = page.get_by_role("navigation", name="Setup steps")
+                await steps.get_by_role("link", name="Memory and context").click()
+                await expect(context).to_have_value("3072")
+                await expect(presets).to_be_hidden()
+                await page.get_by_role("button", name="Continue", exact=True).click()
                 await review.click()
                 await expect(
                     page.get_by_text("3,072 tokens", exact=True)
@@ -380,6 +501,15 @@ async def test_context_estimate_refresh_and_vision_adjustment(tmp_path, core_htt
                 await expect(
                     page.get_by_role("button", name="Download and start")
                 ).to_be_visible()
+                mode["estimated_max_context_tokens"] = 262144
+                await page.goto(
+                    f"{agent_url.rstrip('/')}/setup/runtime?model=test&mode=vram"
+                )
+                await expect(presets.get_by_role("button")).to_have_text(
+                    ["4K", "8K", "16K", "32K", "64K", "128K", "256K"]
+                )
+                await presets.get_by_role("button", name="Use 262,144 tokens").click()
+                await expect(context).to_have_value("262144")
                 assert await page.evaluate(
                     "document.documentElement.scrollWidth <= innerWidth"
                 )
@@ -697,12 +827,24 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 await expect(
                     page.get_by_role("tab", name="Installed")
                 ).to_have_attribute("aria-selected", "true")
-                await expect(
-                    page.get_by_text("Already downloaded", exact=True)
-                ).to_be_visible()
-                await expect(
-                    page.get_by_role("link", name="Configure as chat model")
-                ).to_have_attribute("href", re.compile(r"tokens=4096"))
+                model_row = page.locator(".core-item").filter(has_text="Test model")
+                await expect(model_row.get_by_text("Active chat model")).to_be_visible()
+                configure = model_row.get_by_role(
+                    "button", name="Configure as chat model"
+                )
+                await expect(configure).to_be_disabled()
+                await expect(configure).to_have_attribute("data-tone", "accent")
+                await expect(configure).to_have_css("text-decoration-line", "none")
+                await expect(configure).to_have_css("border-top-style", "solid")
+                assert await page.evaluate(
+                    "document.documentElement.scrollWidth <= innerWidth"
+                )
+                model_contrast = await page.locator(".core-console").evaluate(PROBE)
+                assert not [
+                    item
+                    for item in model_contrast["findings"]
+                    if item["status"] == "NOT PASS"
+                ], model_contrast["findings"]
                 await page.get_by_role("tab", name="Catalog").click()
                 await expect(
                     page.get_by_text("Streaming model", exact=True)
@@ -717,7 +859,9 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 await settings.get_by_role("link", name="Activity", exact=True).click()
                 await expect(page.get_by_text("No recent activity.")).to_be_visible()
                 await settings.get_by_role("link", name="Server", exact=True).click()
-                await page.get_by_role("link", name="Reconfigure startup").click()
+                reconfigure = page.get_by_role("link", name="Reconfigure startup")
+                await expect(reconfigure).to_have_css("text-decoration-line", "none")
+                await reconfigure.click()
 
                 steps = page.get_by_role("navigation", name="Setup steps")
                 heading = page.get_by_role("heading", name="Choose your chat model")
@@ -782,6 +926,8 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 ).to_be_visible()
                 context = page.get_by_role("spinbutton", name="Context tokens")
                 await expect(context).to_have_value("2048")
+                presets = page.get_by_role("group", name="Quick context sizes")
+                await expect(presets.get_by_role("button")).to_have_text(["4K"])
                 await context.fill("4097")
                 await expect(steps.get_by_text("Review", exact=True)).to_have_attribute(
                     "aria-disabled", "true"
@@ -796,9 +942,11 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 await memory_mode.click()
                 await page.get_by_role("option", name="Fully in VRAM").click()
                 await expect(context).to_have_value("4096")
+                await expect(presets.get_by_role("button")).to_have_text(["4K", "8K"])
                 await memory_mode.click()
                 await page.get_by_role("option", name="SSD streaming").click()
                 await expect(context).to_have_value("2048")
+                await expect(presets.get_by_role("button")).to_have_text(["4K"])
                 await context.fill("3000")
                 await memory_mode.click()
                 await page.get_by_role("option", name="Fully in VRAM").click()
@@ -813,6 +961,57 @@ async def test_settings_navigation_and_setup_layout(tmp_path, core_http, width, 
                 await expect(context).to_have_value("3000")
                 await steps.get_by_role("link", name="Optional features").click()
                 await expect(vision).to_be_checked()
+            finally:
+                await browser.close()
+
+
+async def test_only_the_running_chat_model_cannot_be_configured(tmp_path, core_http):
+    base_url, state, _, catalog = core_http
+    model = catalog["models"][0]
+    model["installed"] = True
+    catalog["models"].append({**model, "id": "other", "name": "Other chat model"})
+    catalog["profile"] = PROFILE
+    state.update(
+        state="ready",
+        chat_ready=True,
+        saved_profile=PROFILE,
+        active_profile=ACTIVE_PROFILE,
+    )
+    with BrowserTestServer(tmp_path, environment={"BASE_URL": base_url}) as agent:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch()
+            try:
+                page = await browser.new_page()
+                await page.goto(f"{agent.rstrip('/')}/settings/models")
+                test_model = page.locator(".core-item").filter(has_text="Test model")
+                other_model = page.locator(".core-item").filter(
+                    has_text="Other chat model"
+                )
+                action = "Configure as chat model"
+                await expect(
+                    test_model.get_by_role("button", name=action)
+                ).to_be_disabled()
+                await expect(
+                    other_model.get_by_role("link", name=action)
+                ).to_have_attribute("href", re.compile(r"model=other"))
+
+                state["active_profile"] = {**ACTIVE_PROFILE, "model_id": "other"}
+                await expect(
+                    other_model.get_by_role("button", name=action)
+                ).to_be_disabled()
+                configure_saved = test_model.get_by_role("link", name=action)
+                await expect(configure_saved).to_have_attribute(
+                    "href", re.compile(r"tokens=4096")
+                )
+
+                state.update(state="error", chat_ready=False)
+                await expect(
+                    other_model.get_by_role("link", name=action)
+                ).to_be_enabled()
+                await configure_saved.click()
+                await expect(
+                    page.get_by_role("spinbutton", name="Context tokens")
+                ).to_have_value("4096")
             finally:
                 await browser.close()
 

@@ -5,6 +5,7 @@ import asyncio
 import pytest
 
 from exmekh_agent.exmekh_bridge.agents.collector import TurnStreamCollector
+from exmekh_agent.exmekh_bridge.models.inference_timing import InferenceTiming
 from exmekh_agent.state.active_turns import ActiveTurnRegistry
 
 
@@ -30,6 +31,15 @@ async def test_active_turn_snapshot_and_queue_handoff() -> None:
     assert initial.revision == 0
     assert initial.message is not None and initial.message.is_streaming
     assert registry.snapshot("chat", after_revision=0).message is None
+
+    timing = InferenceTiming("prefill", 100.0)
+    registry.set_timing("missing", task, timing)
+    registry.set_timing("chat", other_task, timing)
+    assert registry.snapshot("chat", after_revision=0).timing is None
+    registry.set_timing("chat", task, timing)
+    assert registry.snapshot("chat", after_revision=0).timing == timing
+    registry.set_timing("chat", task, None)
+    assert registry.snapshot("chat", after_revision=0).timing is None
 
     registry.mark_changed("missing", collector)
     registry.mark_changed("chat", TurnStreamCollector())
@@ -81,6 +91,8 @@ async def test_stopping_and_forgetting_active_turns() -> None:
     running_task = asyncio.create_task(asyncio.sleep(10))
     registry.start("running", running_task, TurnStreamCollector(), started_at=2.0)
     assert registry.stop("running")
+    registry.set_timing("running", running_task, InferenceTiming("decode", 40.0))
+    assert registry.snapshot("running", after_revision=0).timing is None
     with pytest.raises(asyncio.CancelledError):
         await running_task
     registry.cancel_and_forget("running")

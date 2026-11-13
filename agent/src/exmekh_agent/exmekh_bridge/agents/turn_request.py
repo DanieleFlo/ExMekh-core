@@ -19,6 +19,7 @@ from exmekh_agent.exmekh_bridge.models import (
     SubAgentConversation,
     ToolEvent,
 )
+from exmekh_agent.exmekh_bridge.models.inference_timing import TimingObserver
 from exmekh_agent.exmekh_bridge.tools.tool_approval import CommandApprovedCallback
 from exmekh_agent.state.agent_design import AgentDesign
 
@@ -50,6 +51,7 @@ class AgentTurnRequest:
     work_root: str | None = None
     coding_agent_persistent_history: bool | None = None
     on_context: Callable[[ProviderContextUsage], None] | None = None
+    on_timing: TimingObserver | None = None
     on_request_manual_approval: Callable[[str], bool] | None = None
     on_command_approved: CommandApprovedCallback | None = None
     tool_approval_mode: str | None = None
