@@ -9,6 +9,9 @@ extern "C" {
 typedef struct ds4_qwen_image_pipeline ds4_qwen_image_pipeline;
 typedef struct ds4_qwen_image_job ds4_qwen_image_job;
 typedef struct {
+  uint32_t estimated_max_pixels, suggested_width, suggested_height;
+} ds4_qwen_image_admission;
+typedef struct {
   const char *prompt;
   uint32_t width, height;
   uint64_t seed;
@@ -80,6 +83,10 @@ ds4_status ds4_qwen_image_job_create_batch(ds4_qwen_image_job **,
 ds4_status ds4_qwen_image_job_plan(ds4_qwen_image_job *, ds4_execution_plan *);
 /* True until the executor begins, including after a rejected admission. */
 bool ds4_qwen_image_job_admission_pending(const ds4_qwen_image_job *);
+/* Estimate the pixel limit at a similar aspect ratio and suggest a smaller
+ * retry size. Reuses prepared conditioning inputs without compute or eviction.
+ * A zero estimate means no smaller geometry was admitted by the planner. */
+ds4_qwen_image_admission ds4_qwen_image_job_admission_hint(const ds4_qwen_image_job *);
 ds4_status ds4_qwen_image_job_run(ds4_qwen_image_job *);
 ds4_status ds4_qwen_image_job_recover(ds4_qwen_image_job *);
 ds4_status ds4_qwen_image_job_recovery(ds4_qwen_image_job *,

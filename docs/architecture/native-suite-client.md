@@ -70,6 +70,21 @@ devono essere allineati e già ammessi dal piano Qwen3-VL. Geometrie che richied
 un resize implicito vengono rifiutate prima del compute; per esempio usare
 riferimenti 256×256, non l'output diagnostico 64×96, per il round trip di editing.
 
+Se un job Image già preparato supera il budget di memoria, l'errore
+`insufficient_resources` può includere `ds4.image_admission` con
+`estimated_max_pixels_per_image`, `suggested_width` e `suggested_height`.
+Il messaggio riporta gli stessi dati anche nel terminale SSE, così il tool
+può riproporre una dimensione più piccola. La stima usa la memoria corrente,
+il prompt, i riferimenti e un formato vicino a quello richiesto. Le
+dimensioni consigliate privilegiano un piano senza rilascio di altre risorse
+e lasciano margine quando il minimo allineato di 32×32 lo consente.
+
+Il catalogo nativo espone anche `ds4.accepting_requests`. Il campo indica
+se il modello configurato può ricevere richieste, soggette ad ammissione
+delle risorse. Su Metal è distinto da `ready`, che rimane legato alla
+qualifica del backend. Un ripristino pendente sospende l'accettazione
+delle richieste.
+
 ## Client tipizzato ExMekh
 
 `Client.native_suite()` usa il medesimo oggetto OpenAI di `LocalProvider`.

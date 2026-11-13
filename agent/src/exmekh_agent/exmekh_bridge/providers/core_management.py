@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any, Literal
 from urllib.parse import quote, urlsplit
@@ -32,6 +33,14 @@ class ActiveProfile(BaseModel):
     owned_by: str
     available_features: list[str]
     runtime_id: str
+
+    def configuration(self, *, features: Iterable[str] | None = None) -> dict:
+        return {
+            "model_id": self.model_id,
+            "mode_id": self.mode_id,
+            "context_tokens": self.context_tokens,
+            "features": sorted(self.features if features is None else features),
+        }
 
 
 class CoreStatus(BaseModel):
@@ -217,6 +226,13 @@ class CoreClient:
 
     async def catalog(self, *, refresh: bool = False) -> dict:
         return await self._request("GET", "catalog?refresh=1" if refresh else "catalog")
+
+    async def model_capabilities(self, model_id: str) -> dict[str, dict]:
+        catalog = await self.catalog()
+        for model in catalog["models"]:
+            if model["id"] == model_id:
+                return {item["id"]: item for item in model["features"]}
+        return {}
 
     async def plan(self, profile: dict) -> ActivationPlan:
         return await self._read("POST", "plans", ActivationPlan, profile)

@@ -14,7 +14,8 @@ static void *slow_image_operation(void *opaque) {
         assert(suite_cancel(run->j));
         suite_status_error(run->s, run->j, DS4_STATUS_CANCELLED);
     } else if (run->result == SLOW_FAILED) {
-        suite_error(run->s, run->j, 400, "invalid_request", "request_cancelled", NULL);
+        suite_status_error_with_admission(run->s, run->j, DS4_STATUS_NOMEM,
+                                          (ds4_qwen_image_admission){1658880, 1344, 768});
     } else {
         assert(!suite_cancel(run->j));
         suite_progress_update(run->j, &(ds4_operation_progress){
@@ -64,6 +65,15 @@ static void test_progress_contract(void) {
             assert(strstr(wire.ptr, "\"active_items\":2"));
             assert(strstr(end, "\"overall_fraction\":1,\"overall_kind\":\"work\""));
             assert(strstr(end, "\"result\":{\"created\":1,\"data\":[],\"ds4\":{}}}\n\n"));
+        }
+        if (result == SLOW_FAILED) {
+            assert(strstr(end, "\"status_code\":503"));
+            assert(strstr(end, "\"phase\":\"generation\""));
+            assert(strstr(end, "Try 1344x768 or smaller"));
+            assert(strstr(end, "estimated limit is 1658880 pixels per image"));
+            assert(strstr(end, "\"code\":\"insufficient_resources\",\"param\":\"size\""));
+            assert(strstr(end, "\"estimated_max_pixels_per_image\":1658880,"
+                "\"suggested_width\":1344,\"suggested_height\":768"));
         }
         assert(!strstr(end + 7, "event: operation."));
         free(h.terminal.body); buf_free(&wire);

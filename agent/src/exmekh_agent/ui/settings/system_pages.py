@@ -309,7 +309,7 @@ async def system_settings(section: str, return_to: str, setup: int = 0) -> None:
         client = CoreClient()
         active = status.active_profile
         saved = status.saved_profile or {}
-        profile = saved or (active.model_dump() if active else {})
+        profile = saved or (active.configuration() if active else {})
         if section == "server":
             fact(ui_text("system_settings.connection"), config.base_url)
             fact(

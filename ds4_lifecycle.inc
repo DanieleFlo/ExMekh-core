@@ -8,7 +8,7 @@ struct ds4_session_checkpoint {
     ds4_resource *account;
 };
 
-static bool lifecycle_supported(const ds4_engine *e) {
+static bool lifecycle_weight_reclaim_supported(const ds4_engine *e) {
 #if defined(DS4_NO_GPU) || defined(DS4_ROCM_BUILD)
     (void)e;
     return false;
@@ -24,6 +24,19 @@ static bool lifecycle_supported(const ds4_engine *e) {
            !e->multi_tier && !e->cuda_tensor_parallel && !e->tp.active &&
            e->distributed.role == DS4_DISTRIBUTED_NONE;
 #endif
+}
+
+static bool lifecycle_session_supported(const ds4_engine *e) {
+#if !defined(DS4_NO_GPU) && !defined(DS4_ROCM_BUILD) && !defined(__APPLE__)
+    /* Flash can park its private session graph independently of the tiered
+     * weight bindings. The latter remain installed for graph recreation. */
+    if (e && e->backend == DS4_BACKEND_CUDA && e->shape.variant == DS4_VARIANT_QWEN4_EXP &&
+        !e->ssd_streaming && g_n_gpus == 1 && !e->multi_tier && !e->cuda_tensor_parallel &&
+        !e->tp.active && e->distributed.role == DS4_DISTRIBUTED_NONE &&
+        ds4_env_flag_enabled("DS4_CUDA_QWEN4_TIERED_CACHE", 0))
+        return true;
+#endif
+    return lifecycle_weight_reclaim_supported(e);
 }
 
 ds4_resources *ds4_engine_resources(const ds4_engine *e) {
@@ -134,7 +147,7 @@ static ds4_status lifecycle_checkpoint_capture(ds4_session *s, const char *direc
     *out = NULL;
     if (!s || !directory || !directory[0] || (metadata_bytes && !metadata))
         return DS4_STATUS_INVALID;
-    if (!lifecycle_supported(s->engine))
+    if (!lifecycle_session_supported(s->engine))
         return DS4_STATUS_UNSUPPORTED;
     if (s->lifecycle_parked)
         return DS4_STATUS_NOT_RESIDENT;
@@ -231,7 +244,7 @@ static ds4_status lifecycle_checkpoint_restore(ds4_session *s, const ds4_session
                                                void *metadata, size_t *metadata_bytes) {
     if (!s || !p || !metadata_bytes)
         return DS4_STATUS_INVALID;
-    if (!lifecycle_supported(s->engine))
+    if (!lifecycle_session_supported(s->engine))
         return DS4_STATUS_UNSUPPORTED;
     if (s->engine->weights_evicted)
         return lifecycle_restore_failed(s, "weights", DS4_STATUS_NOT_RESIDENT, NULL);
@@ -278,7 +291,7 @@ static ds4_status lifecycle_checkpoint_restore(ds4_session *s, const ds4_session
     if (!status) {
 #ifdef DS4_HAS_QWEN4_GPU
         if (ds4_session_is_qwen4(s)) {
-            /* SSD Flash owns private state/scratch, so the validated candidate
+            /* Streamed Flash owns private state/scratch, so the validated candidate
              * can replace it atomically without rebinding shared pool views. */
             qwen4_graph_free(&s->qwen4_graph);
             s->qwen4_graph = candidate->qwen4_graph;
@@ -363,7 +376,7 @@ static ds4_status lifecycle_suspend(ds4_session *s, ds4_session_checkpoint *p) {
 static ds4_status lifecycle_park(ds4_session *s, const char *directory) {
     if (!s || !directory || !directory[0])
         return DS4_STATUS_INVALID;
-    if (!lifecycle_supported(s->engine))
+    if (!lifecycle_session_supported(s->engine))
         return DS4_STATUS_UNSUPPORTED;
     if (s->lifecycle_parked)
         return DS4_STATUS_OK;
@@ -386,7 +399,7 @@ static ds4_status lifecycle_park(ds4_session *s, const char *directory) {
 static ds4_status lifecycle_resume(ds4_session *s) {
     if (!s)
         return DS4_STATUS_INVALID;
-    if (!lifecycle_supported(s->engine))
+    if (!lifecycle_session_supported(s->engine))
         return DS4_STATUS_UNSUPPORTED;
     if (!s->lifecycle_parked)
         return DS4_STATUS_OK;
@@ -439,7 +452,7 @@ ds4_status ds4_session_trim(ds4_session *s) {
     DS4_ENGINE_MAINTENANCE_SCOPE(s ? s->engine : NULL, DS4_STATUS_BUSY);
     if (!s)
         return DS4_STATUS_INVALID;
-    if (!lifecycle_supported(s->engine))
+    if (!lifecycle_weight_reclaim_supported(s->engine))
         return DS4_STATUS_UNSUPPORTED;
 #ifndef DS4_NO_GPU
     if (!ds4_gpu_synchronize())
@@ -453,7 +466,7 @@ ds4_status ds4_engine_trim_cache(ds4_engine *e) {
     if (!e) return DS4_STATUS_INVALID;
     DS4_ENGINE_MAINTENANCE_SCOPE(e, DS4_STATUS_BUSY);
 #if defined(__APPLE__) && !defined(DS4_NO_GPU)
-    if (!lifecycle_supported(e) || !e->ssd_streaming)
+    if (!lifecycle_weight_reclaim_supported(e) || !e->ssd_streaming)
         return DS4_STATUS_UNSUPPORTED;
     if (e->weights_evicted) return DS4_STATUS_OK;
     if (!ds4_gpu_qwen4_stream_trim(e->model.map, e->model.size))
@@ -468,7 +481,7 @@ ds4_status ds4_engine_weights_release(ds4_engine *e) {
     if (!e)
         return DS4_STATUS_INVALID;
     DS4_ENGINE_MAINTENANCE_SCOPE(e, DS4_STATUS_BUSY);
-    if (!lifecycle_supported(e))
+    if (!lifecycle_weight_reclaim_supported(e))
         return DS4_STATUS_UNSUPPORTED;
     if (e->weights_evicted)
         return DS4_STATUS_OK;
@@ -499,7 +512,7 @@ ds4_status ds4_engine_weights_load(ds4_engine *e) {
     if (!e)
         return DS4_STATUS_INVALID;
     DS4_ENGINE_MAINTENANCE_SCOPE(e, DS4_STATUS_BUSY);
-    if (!lifecycle_supported(e))
+    if (!lifecycle_weight_reclaim_supported(e))
         return DS4_STATUS_UNSUPPORTED;
     if (!e->weights_evicted)
         return DS4_STATUS_OK;
@@ -590,7 +603,7 @@ ds4_status ds4_session_memory_query(ds4_session *s, ds4_session_memory *out) {
     memset(out, 0, sizeof(*out));
     out->parked = s->lifecycle_parked;
     out->weights_resident = !s->engine->weights_evicted;
-    if (!lifecycle_supported(s->engine))
+    if (!lifecycle_session_supported(s->engine))
         return DS4_STATUS_OK; /* Explicitly unknown. */
     out->capacity_known = true;
     out->payload = s->parked_checkpoint
@@ -738,7 +751,7 @@ ds4_status ds4_engine_reclaim_create(ds4_engine_reclaim **out, ds4_engine *e,
     if (!e || !directory || !directory[0])
         return DS4_STATUS_INVALID;
     DS4_ENGINE_MAINTENANCE_SCOPE(e, DS4_STATUS_BUSY);
-    if (!lifecycle_supported(e))
+    if (!lifecycle_session_supported(e))
         return DS4_STATUS_UNSUPPORTED;
     if (e->weights_evicted)
         return DS4_STATUS_NOT_RESIDENT;
@@ -781,6 +794,10 @@ ds4_status ds4_engine_reclaim_create(ds4_engine_reclaim **out, ds4_engine *e,
             .release = lifecycle_reclaim_release,
             .restore = lifecycle_reclaim_restore,
             .discard = lifecycle_reclaim_discard};
+    }
+    if (!lifecycle_weight_reclaim_supported(e)) {
+        *out = a;
+        return DS4_STATUS_OK;
     }
     size_t i = a->count++;
     a->contexts[i] = (lifecycle_reclaim_context){.engine = e, .directory = a->directory};

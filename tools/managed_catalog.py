@@ -212,10 +212,19 @@ class ModelCatalog:
 
     def _features(self, model_id, host, mode=None):
         device = cuda_device(host)
-        metal = host["backend"] == "metal" and host.get("unified_memory")
-        suite = bool(device and device["compute"] == "8.6" and mode in (None, "vram"))
+        metal = (
+            host["backend"] == "metal"
+            and host["system"] == "Darwin"
+            and host.get("unified_memory")
+        )
+        cuda_suite_mode = "tiered" if model_id == "flash" else "vram"
+        suite = bool(
+            (device and device["compute"] == "8.6" and mode in (None, cuda_suite_mode))
+            or (metal and model_id == "flash" and mode in (None, "ssd"))
+        )
         suite_reason = (
-            "This suite profile requires the qualified CUDA SM 8.6 configuration."
+            "Image generation and embeddings require a compatible CUDA SM 8.6 "
+            "profile or Metal SSD streaming."
         )
         gemma_media = bool(self._gemma_media and self._gemma_media.is_file())
         vision = (

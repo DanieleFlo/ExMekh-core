@@ -15,6 +15,7 @@ from exmekh_agent.ui.settings.core_navigation import (
     FEATURES,
     STEPS,
     chat_destination,
+    feature_matches_mode,
     gate,
     profile_link,
     route,
@@ -55,7 +56,7 @@ async def setup_page(
         return
     status = connection.status
     saved = status.saved_profile or (
-        status.active_profile.model_dump() if status.active_profile else {}
+        status.active_profile.configuration() if status.active_profile else {}
     )
     if saved and not model:
         model = saved["model_id"]
@@ -369,16 +370,12 @@ async def setup_page(
                     key = item["id"]
                     if key not in FEATURES:
                         continue
-                    available_modes = item.get("available_modes")
-                    compatible = (
-                        mode in available_modes
-                        if available_modes is not None
-                        else item["available"]
-                        and (
-                            context_limit(mode, True) > 0
-                            if key == "vision"
-                            else mode == "vram"
-                        )
+                    compatible = feature_matches_mode(
+                        item,
+                        mode,
+                        legacy=context_limit(mode, True) > 0
+                        if key == "vision"
+                        else mode == "vram",
                     )
                     with ui.column().classes(STYLES["classes.item"]):
                         toggle = ui.checkbox(

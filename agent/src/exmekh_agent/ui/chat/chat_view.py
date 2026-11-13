@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import Callable, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 from datetime import datetime
 from functools import partial
 from pathlib import Path
@@ -100,7 +100,7 @@ class ChatViewComponent:
         self,
         on_suggested_prompt: Callable[[str], None],
         on_edit_message: EditMessageCallback | None = None,
-        on_agent_settings: Callable[[], None] | None = None,
+        on_agent_settings: Callable[[], Awaitable[None]] | None = None,
         sessions: SessionManager | None = None,
         on_split_message: Callable[[str, str], object] | None = None,
         on_attach_image: Callable[[str], object] | None = None,
@@ -112,6 +112,7 @@ class ChatViewComponent:
         self.on_split_message = on_split_message
         self.on_attach_image = on_attach_image
         self.agent_settings_button: ui.button | None = None
+        self._managed_model_options = False
         self.chat_container: ui.column | None = None
         self.child_chat_container: ui.column | None = None
         self.other_chat_container: ui.column | None = None
@@ -438,12 +439,20 @@ class ChatViewComponent:
         elif self.active_tab == "graph":
             self._render_selected_graph()
 
-    def _render_chat_session(self) -> None:
-        session = self.sessions.get_current_session()
+    def set_managed_model_options(self, enabled: bool) -> None:
+        self._managed_model_options = enabled
+        self._update_agent_settings_visibility()
+
+    def _update_agent_settings_visibility(self) -> None:
         if self.agent_settings_button:
             self.agent_settings_button.set_visibility(
-                session.agent_mode == "deep_agent"
+                self._managed_model_options
+                or self.sessions.get_current_session().agent_mode == "deep_agent"
             )
+
+    def _render_chat_session(self) -> None:
+        session = self.sessions.get_current_session()
+        self._update_agent_settings_visibility()
         child = session.find_sub_agent_conversation(self.selected_sub_agent_id)
         populate_skill_closure_tokens(session, sub_agent=child)
         if self.path_label:

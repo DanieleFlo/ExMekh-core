@@ -1183,6 +1183,59 @@ async def test_setup_can_select_a_local_embedding_bundle_pending_verification(
                 await browser.close()
 
 
+@pytest.mark.parametrize("gemma_available", [True, False])
+async def test_agent_menu_selects_optional_models_for_streamed_flash(
+    tmp_path, core_http, gemma_available
+):
+    base_url, state, _, catalog = core_http
+    profile = {**ACTIVE_PROFILE, "model_id": "flash", "mode_id": "tiered"}
+    state.update(state="ready", chat_ready=True, active_profile=profile)
+    model = catalog["models"][0]
+    model.update(id="flash", name="Flash Next")
+    model["modes"][0].update(mode_id="tiered", label="CUDA streaming")
+    for feature in model["features"]:
+        feature.update(available=True, reason=None, available_modes=["tiered"])
+
+    if not gemma_available:
+        model["features"][-1].update(
+            available=False,
+            reason="Gemma media asset is unavailable",
+            available_modes=[],
+        )
+
+    with BrowserTestServer(tmp_path, environment={"BASE_URL": base_url}) as agent:
+        async with async_playwright() as playwright:
+            browser = await playwright.chromium.launch(
+                executable_path=get_edge_executable()
+            )
+            try:
+                page = await browser.new_page()
+                await page.goto(agent)
+                await page.get_by_role("button", name="Chat agent settings").click()
+                await page.get_by_role("checkbox", name="Qwen Image 2.1 Turbo").click()
+                gemma = page.get_by_role("checkbox", name="Google EmbeddingGemma 2")
+                if gemma_available:
+                    await gemma.click()
+                else:
+                    await expect(gemma).to_be_disabled()
+                await page.get_by_role(
+                    "button", name="Review Core model settings"
+                ).click()
+                await expect(page).to_have_url(re.compile(r"/setup/features\?"))
+                await expect(
+                    page.get_by_role("checkbox", name="Generate and edit images")
+                ).to_be_checked()
+                gemma = page.get_by_role(
+                    "checkbox", name="Semantic search and embeddings"
+                )
+                if gemma_available:
+                    await expect(gemma).to_be_checked()
+                else:
+                    await expect(gemma).to_be_disabled()
+            finally:
+                await browser.close()
+
+
 @pytest.mark.parametrize("manual", [False, True], ids=["empty-core", "manual-server"])
 async def test_startup_reconnects_when_the_server_mode_changes(
     tmp_path, core_http, manual

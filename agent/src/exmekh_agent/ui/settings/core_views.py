@@ -22,6 +22,7 @@ from exmekh_agent.ui.settings.core_navigation import (
     SETTINGS_GROUP_LABELS,
     SETTINGS_GROUPS,
     STEPS,
+    feature_matches_mode,
     profile_link,
     route,
     settings_group,
@@ -668,7 +669,7 @@ def row_for_optional_model(
     model_id = model["id"]
     features = set(profile.get("features", ()))
     enabled = model_id in features
-    compatible = profile.get("mode_id") in capability.get("available_modes", ())
+    compatible = feature_matches_mode(capability, profile["mode_id"])
     job = next((item for item in jobs if item.model_id == model_id), None)
     with ui.column().classes(STYLES["classes.item"]):
         with ui.row().classes(

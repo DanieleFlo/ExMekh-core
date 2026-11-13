@@ -133,6 +133,36 @@ class ManagedMemoryTests(unittest.TestCase):
         host["devices"][0]["free_bytes"] = 6 * GIB
         self.assertEqual(max_context("flash", "tiered", host, weights), 0)
 
+    def test_flash_streaming_accepts_native_suite_features(self):
+        cuda = {**self.cuda_host(), "ram_available_bytes": 24 * GIB}
+        metal = {
+            "backend": "metal",
+            "system": "Darwin",
+            "unified_memory": True,
+            "ram_bytes": 24 * GIB,
+            "ram_available_bytes": 16 * GIB,
+            "ram_stream_available_bytes": 16 * GIB,
+            "metal": {"working_set_bytes": 18 * GIB, "max_buffer_bytes": 2 * GIB},
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            media = Path(directory) / "gemma-media.ds4p"
+            catalog = ModelCatalog(None, media, suite_store=None, native_stores={})
+            for host, mode in ((cuda, "tiered"), (metal, "ssd")):
+                with self.subTest(mode=mode):
+                    profile = {
+                        "model_id": "flash",
+                        "mode_id": mode,
+                        "context_tokens": 8192,
+                        "features": ["images"],
+                    }
+                    catalog.validate(profile, host)
+                    both = {**profile, "features": ["images", "embeddings"]}
+                    with self.assertRaisesRegex(Problem, "media asset"):
+                        catalog.validate(both, host)
+                    media.touch()
+                    catalog.validate(both, host)
+                    media.unlink()
+
     def test_managed_launch_preserves_qualified_prefill_and_memory_geometry(self):
         profiles = (
             ("qwen27", "cuda", "vram", 2048, None),
@@ -852,6 +882,44 @@ with socket.socket(fileno=int(os.environ["DS4_MANAGED_LISTENER_FD"])) as listene
         self.assertFalse(worker.is_running())
         with self.assertRaises(OSError):
             worker.connect()
+
+    def test_worker_discovers_configured_operations_with_request_admission(self):
+        worker = NativeWorker()
+        models = [
+            {"id": "flash"},
+            {
+                "id": "image",
+                "ds4": {
+                    "ready": False,
+                    "configured": True,
+                    "operations": ["image_generate", "image_edit"],
+                    "limits": {"admission_required": True},
+                },
+            },
+            {
+                "id": "gemma",
+                "ds4": {
+                    "configured": True,
+                    "ready": False,
+                    "accepting_requests": False,
+                    "operations": ["embed"],
+                    "limits": {"admission_required": True},
+                },
+            },
+        ]
+        with patch.object(worker, "_get_json", return_value={"data": models}):
+            native = worker._discover_model()
+        self.assertEqual(native.name, "flash")
+        self.assertEqual(
+            native.available_features(["vision", "images", "embeddings"]),
+            ["vision", "images"],
+        )
+        self.assertEqual(native.available_features(["embeddings"]), [])
+        models[-1]["ds4"]["accepting_requests"] = True
+        self.assertEqual(
+            NativeModel.from_catalog(models).available_features(["embeddings"]),
+            ["embeddings"],
+        )
 
     def test_empty_core_and_authentication(self):
         with tempfile.TemporaryDirectory() as directory:

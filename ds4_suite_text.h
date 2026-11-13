@@ -8,6 +8,8 @@
 #define DS4_SUITE_MODEL "The requested model is not configured for this operation."
 #define DS4_SUITE_MEDIA "Media is missing, expired, or cannot be decoded."
 #define DS4_SUITE_RESOURCES "The operation exceeds the configured resource budget."
+#define DS4_SUITE_IMAGE_RETRY_SIZE DS4_SUITE_RESOURCES \
+    " Try %ux%u or smaller at a similar aspect ratio. The current estimated limit is %u pixels per image."
 #define DS4_SUITE_FAILED "Native inference failed."
 #define DS4_SUITE_RESTORE "Session restoration failed; checkpoints are retained."
 #define DS4_SUITE_CANCELLED "The request was cancelled or its deadline expired."

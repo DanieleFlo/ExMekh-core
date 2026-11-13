@@ -137,6 +137,13 @@ static void check_fallback_retry(void) {
   assert(!ds4_resources_close(resources));
 }
 int main(void) {
+  ds4_qwen_image_size landscape = scaled_size((ds4_qwen_image_size){2048, 1152}, 42);
+  assert(landscape.width == 1344 && landscape.height == 768);
+  ds4_qwen_image_size portrait = scaled_size((ds4_qwen_image_size){1152, 2048}, 42);
+  assert(portrait.width == 768 && portrait.height == 1344);
+  ds4_qwen_image_size thin = scaled_size((ds4_qwen_image_size){2048, 32}, 1);
+  assert(thin.width == 32 && thin.height == 32);
+  assert(!ds4_qwen_image_job_admission_hint(NULL).estimated_max_pixels);
   assert(ds4_numeric_refresh_memory(NULL) == DS4_STATUS_INVALID);
   ds4_resources *resources = NULL;
   ds4_numeric *numeric = NULL;

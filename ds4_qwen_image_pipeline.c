@@ -65,6 +65,7 @@ struct ds4_qwen_image_job {
   ds4_execution_variant variants[VARIANT_COUNT];
   uint64_t weight_limits[VARIANT_COUNT][COMPONENT_COUNT];
   ds4_execution_victim victims[DS4_EXECUTOR_MAX_VICTIMS];
+  size_t external_victims;
   uint64_t resident[COMPONENT_COUNT];
   ds4_weight_budget weights_before[COMPONENT_COUNT];
   bool cache_fallback;
@@ -429,6 +430,14 @@ cleanup:
   }
   return status;
 }
+static ds4_status plan_decode(ds4_qwen_image_job *j, uint32_t width,
+                              uint32_t height, uint32_t core) {
+  ds4_qwen_image_vae *vae = j->pipeline->vae;
+  return core ? ds4_qwen_image_vae_plan_tiled(vae, height / 16, width / 16,
+                                            core, &j->decode)
+              : ds4_qwen_image_vae_plan_decode(vae, height / 16, width / 16,
+                                             UINT64_MAX, &j->decode);
+}
 static ds4_status prepare_inputs(ds4_qwen_image_job *j,
                                  const ds4_qwen_image_request *r) {
   ds4_qwen_image_pipeline *p = j->pipeline;
@@ -463,12 +472,7 @@ static ds4_status prepare_inputs(ds4_qwen_image_job *j,
     else
       TRY(ds4_qwen_image_noise(noise, j->target_count, r->seed + item));
   }
-  if (r->vae_core)
-    TRY(ds4_qwen_image_vae_plan_tiled(p->vae, r->height / 16, r->width / 16,
-                                      r->vae_core, &j->decode));
-  else
-    TRY(ds4_qwen_image_vae_plan_decode(p->vae, r->height / 16, r->width / 16,
-                                       UINT64_MAX, &j->decode));
+  status = plan_decode(j, r->width, r->height, r->vae_core);
 cleanup:
   return status;
 }
@@ -645,7 +649,7 @@ static ds4_status configure_plan(ds4_qwen_image_job *j,
   j->request.variant_count = VARIANT_COUNT;
   j->request.victims = j->victims;
   j->request.victim_count = count;
-  status = refine_stream_cache(j);
+  j->external_victims = count;
 cleanup:
   return status;
 }
@@ -727,6 +731,7 @@ ds4_status ds4_qwen_image_job_create_batch(ds4_qwen_image_job **out,
   j->target_count = (uint64_t)r->width * r->height / 4;
   TRY(prepare_inputs(j, r));
   TRY(configure_plan(j, victims, count));
+  TRY(refine_stream_cache(j));
   TRY(create_execution(j));
   record_request(j, r, now() - start);
   *out = j;
@@ -743,21 +748,15 @@ ds4_status ds4_qwen_image_job_create(ds4_qwen_image_job **out,
                                      const ds4_qwen_image_observer *o) {
   return ds4_qwen_image_job_create_batch(out, p, r, 1, victims, count, o);
 }
-static ds4_status prepare_cache_fallback(ds4_qwen_image_job *j) {
+static bool add_cache_victims(ds4_qwen_image_job *j) {
   size_t caches = 0;
   for (uint32_t i = 0; i < COMPONENT_COUNT; i++)
     if (j->resident[i])
       caches++;
   if (!caches || j->request.victim_count + caches > DS4_EXECUTOR_MAX_VICTIMS)
-    return DS4_STATUS_NOMEM;
-  /* Existing component caches are optional owners, just like any other
-   * rebuildable cache. Only consider reclaiming them after the plan which
-   * keeps all of them has failed. No release happens during planning. */
-  ds4_status status = ds4_execution_close(j->execution);
-  if (status)
-    return status;
-  j->execution = NULL;
-  j->cache_fallback = true;
+    return false;
+  /* Already-resident component weights can be rebuilt if the current
+   * working set cannot fit alongside them. This only builds descriptors. */
   j->request.resident_groups = 0;
   for (uint32_t i = 0; i < COMPONENT_COUNT; i++)
     if (j->resident[i]) {
@@ -768,7 +767,16 @@ static ds4_status prepare_cache_fallback(ds4_qwen_image_job *j) {
                                   .release = release};
       v->reclaimed.bytes[DS4_MEMORY_DEVICE] = j->resident[i];
     }
-  return DS4_STATUS_OK;
+  return true;
+}
+static ds4_status prepare_cache_fallback(ds4_qwen_image_job *j) {
+  if (!add_cache_victims(j))
+    return DS4_STATUS_NOMEM;
+  j->cache_fallback = true;
+  ds4_status status = ds4_execution_close(j->execution);
+  if (!status)
+    j->execution = NULL;
+  return status;
 }
 ds4_status ds4_qwen_image_job_plan(ds4_qwen_image_job *j,
                                    ds4_execution_plan *out) {
@@ -804,6 +812,89 @@ ds4_status ds4_qwen_image_job_plan(ds4_qwen_image_job *j,
 bool ds4_qwen_image_job_admission_pending(const ds4_qwen_image_job *j) {
   return j && (!j->execution ||
                ds4_execution_get_state(j->execution) == DS4_EXECUTION_NEW);
+}
+
+typedef struct { uint32_t width, height; } ds4_qwen_image_size;
+
+static ds4_qwen_image_size scaled_size(ds4_qwen_image_size original,
+                                      uint32_t long_blocks) {
+  bool landscape = original.width >= original.height;
+  uint32_t longer = landscape ? original.width : original.height;
+  uint32_t shorter = landscape ? original.height : original.width;
+  uint32_t short_blocks = (shorter * long_blocks + longer / 2) / longer;
+  uint32_t long_side = long_blocks * 32;
+  uint32_t short_side = (short_blocks ? short_blocks : 1) * 32;
+  return landscape ? (ds4_qwen_image_size){long_side, short_side}
+                   : (ds4_qwen_image_size){short_side, long_side};
+}
+
+static uint32_t admitted_blocks(const ds4_qwen_image_job *j, ds4_resources *rs,
+                                 ds4_qwen_image_size original, uint32_t high,
+                                 bool allow_victims) {
+  uint32_t best = 0;
+  /* The failed job still owns the prepared host input. Include it in the
+   * budget check and rebuild only the shape-dependent plan descriptors. */
+  for (uint32_t low = 1; low < high;) {
+    if (j->observer.cancelled && j->observer.cancelled(j->observer.opaque))
+      break;
+    uint32_t middle = low + (high - low) / 2;
+    ds4_qwen_image_size candidate = scaled_size(original, middle);
+    ds4_qwen_image_job trial = {.pipeline = j->pipeline, .images = 1, .input = j->input,
+                               .references = j->references, .text = j->text,
+                               .prefix = j->prefix, .ref_count = j->ref_count,
+                               .target_count = (uint64_t)candidate.width * candidate.height / 4};
+    memcpy(trial.refs, j->refs, j->references * sizeof(*j->refs));
+    trial.total = trial.prefix + trial.target_count / 64;
+    ds4_status status = plan_decode(&trial, candidate.width, candidate.height, 0);
+    if (!status)
+      status = configure_plan(&trial, j->victims, allow_victims ? j->external_victims : 0);
+    if (status)
+      break;
+    ds4_execution_plan plan;
+    status = ds4_execution_plan_build(rs, &trial.request, &plan);
+    if (status == DS4_STATUS_NOMEM && allow_victims && add_cache_victims(&trial))
+      status = ds4_execution_plan_build(rs, &trial.request, &plan);
+    if (!status) {
+      best = middle;
+      low = middle + 1;
+    } else if (status == DS4_STATUS_NOMEM) {
+      high = middle;
+    } else {
+      break;
+    }
+  }
+  return best;
+}
+
+ds4_qwen_image_admission ds4_qwen_image_job_admission_hint(const ds4_qwen_image_job *j) {
+  ds4_qwen_image_admission hint = {0};
+  if (!j || j->images != 1 || j->decode.core)
+    return hint;
+  if (!ds4_qwen_image_job_admission_pending(j)) {
+    ds4_execution_recovery recovery;
+    if (ds4_execution_recovery_query(j->execution, &recovery) ||
+        recovery.state != DS4_EXECUTION_FAILED || recovery.operation_status != DS4_STATUS_NOMEM)
+      return hint;
+  }
+  ds4_numeric *num = j->pipeline->num;
+  ds4_status status = ds4_numeric_refresh_memory(num);
+  if (status && status != DS4_STATUS_UNSUPPORTED)
+    return hint;
+  ds4_resources *rs = ds4_numeric_resources(num, NULL);
+  ds4_qwen_image_size original = {j->decode.latent_width * 16,
+                                   j->decode.latent_height * 16};
+  uint32_t longer = original.width >= original.height ? original.width : original.height;
+  uint32_t limit_blocks = admitted_blocks(j, rs, original, longer / 32, true);
+  if (limit_blocks) {
+    uint32_t without_victims = admitted_blocks(j, rs, original, limit_blocks + 1, false);
+    uint32_t retry_limit = without_victims ? without_victims : limit_blocks;
+    /* Admission uses a memory snapshot. Leave headroom for the real retry. */
+    uint32_t retry_blocks = retry_limit * 7 / 8;
+    ds4_qwen_image_size limit = scaled_size(original, limit_blocks);
+    ds4_qwen_image_size retry = scaled_size(original, retry_blocks ? retry_blocks : 1);
+    hint = (ds4_qwen_image_admission){limit.width * limit.height, retry.width, retry.height};
+  }
+  return hint;
 }
 ds4_status ds4_qwen_image_job_run(ds4_qwen_image_job *j) {
   if (!ds4_qwen_image_job_admission_pending(j))

@@ -80312,7 +80312,7 @@ static void ds4_session_note_prefill_progress(void *ud, const char *event, int c
 
 static int engine_vision_resume_sessions(ds4_engine *e, char *err, size_t errlen) {
 #ifndef DS4_NO_GPU
-    if (lifecycle_supported(e)) {
+    if (lifecycle_weight_reclaim_supported(e)) {
         for (ds4_session *s = e->sessions; s; s = s->engine_next) {
             if (!s->vision_lifecycle_parked) continue;
             ds4_status status = lifecycle_resume(s);
@@ -80352,7 +80352,7 @@ static int engine_vision_resume_sessions(ds4_engine *e, char *err, size_t errlen
 
 static int engine_vision_suspend_sessions(ds4_engine *e, char *err, size_t errlen) {
 #ifndef DS4_NO_GPU
-    if (lifecycle_supported(e)) {
+    if (lifecycle_weight_reclaim_supported(e)) {
         for (ds4_session *s = e->sessions; s; s = s->engine_next) {
             if (s->lifecycle_parked) continue;
             if (lifecycle_park(s, "/tmp") != DS4_STATUS_OK) {

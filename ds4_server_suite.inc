@@ -128,26 +128,48 @@ static bool suite_respond(server *s, job *j, suite_event event, int code, const 
 static bool suite_send(server *s, job *j, int code, const char *body) {
     return suite_respond(s, j, SUITE_EVENT_COMPLETED, code, body);
 }
-static void suite_error(server *s, job *j, int code, const char *error,
-                         const char *message, const char *param) {
+static void suite_error_with_admission(server *s, job *j, int code, const char *error,
+                                       const char *message, const char *param,
+                                       ds4_qwen_image_admission admission) {
     buf b = {0};
     buf_puts(&b, "{\"error\":{\"message\":"); json_escape(&b, message);
     buf_puts(&b, ",\"type\":\"invalid_request_error\",\"code\":"); json_escape(&b, error);
     buf_puts(&b, ",\"param\":"); if (param) json_escape(&b, param); else buf_puts(&b, "null");
     buf_puts(&b, "},\"ds4\":{\"version\":1,\"request_id\":");
     json_escape(&b, j->suite_request->request_id);
-    buf_printf(&b, ",\"recovery_required\":%s}}", s->suite && s->suite->recovery ? "true" : "false");
+    buf_printf(&b, ",\"recovery_required\":%s", s->suite && s->suite->recovery ? "true" : "false");
+    if (admission.estimated_max_pixels)
+        buf_printf(&b, ",\"image_admission\":{\"estimated_max_pixels_per_image\":%u,"
+            "\"suggested_width\":%u,\"suggested_height\":%u}",
+            admission.estimated_max_pixels, admission.suggested_width, admission.suggested_height);
+    buf_puts(&b, "}}");
     suite_event event = !strcmp(error, "request_cancelled") ? SUITE_EVENT_CANCELLED : SUITE_EVENT_FAILED;
     suite_respond(s, j, event, code, b.ptr);
     buf_free(&b);
 }
-static void suite_status_error(server *s, job *j, ds4_status status) {
+static void suite_error(server *s, job *j, int code, const char *error,
+                         const char *message, const char *param) {
+    suite_error_with_admission(s, j, code, error, message, param, (ds4_qwen_image_admission){0});
+}
+static void suite_status_error_with_admission(server *s, job *j, ds4_status status,
+                                              ds4_qwen_image_admission admission) {
     server_log(DS4_LOG_DEFAULT, DS4_SUITE_STATUS, (unsigned)status, j->suite_request->path);
     if (status == DS4_STATUS_RESTORE || status == DS4_STATUS_DEVICE_LOST)
         suite_error(s, j, 503, "restore_failed", DS4_SUITE_RESTORE, NULL);
-    else if (status == DS4_STATUS_NOMEM)
-        suite_error(s, j, 503, "insufficient_resources", DS4_SUITE_RESOURCES, NULL);
-    else if (status == DS4_STATUS_CANCELLED)
+    else if (status == DS4_STATUS_NOMEM) {
+        char message[384];
+        const char *param = NULL;
+        const char *description = DS4_SUITE_RESOURCES;
+        if (admission.estimated_max_pixels) {
+            snprintf(message, sizeof(message), DS4_SUITE_IMAGE_RETRY_SIZE,
+                     admission.suggested_width, admission.suggested_height,
+                     admission.estimated_max_pixels);
+            description = message;
+            param = "size";
+        }
+        suite_error_with_admission(s, j, 503, "insufficient_resources",
+                                   description, param, admission);
+    } else if (status == DS4_STATUS_CANCELLED)
         suite_error(s, j, 409, "request_cancelled", DS4_SUITE_CANCELLED, NULL);
     else if (status == DS4_STATUS_INVALID)
         suite_error(s, j, 400, "invalid_request", DS4_SUITE_INVALID, NULL);
@@ -158,6 +180,9 @@ static void suite_status_error(server *s, job *j, ds4_status status) {
     else if (status == DS4_STATUS_NOT_READY || status == DS4_STATUS_BUSY)
         suite_error(s, j, 503, "model_not_ready", DS4_SUITE_MODEL, "model");
     else suite_error(s, j, 500, "inference_failed", DS4_SUITE_FAILED, NULL);
+}
+static void suite_status_error(server *s, job *j, ds4_status status) {
+    suite_status_error_with_admission(s, j, status, (ds4_qwen_image_admission){0});
 }
 static bool suite_cancel(void *p) {
     job *j = p;
@@ -354,6 +379,7 @@ struct suite_operation {
     ds4_execution_victim victims[DS4_EXECUTOR_MAX_VICTIMS];
     size_t victim_count;
     ds4_qwen_image_job *image;
+    ds4_qwen_image_admission image_admission;
     ds4_gemma_multimodal_input *input;
     ds4_gemma_result *result;
     ds4_execution *execution;
@@ -418,7 +444,6 @@ static ds4_status suite_close_image_job(suite_operation *o) {
     return status;
 }
 static ds4_status suite_operation_close(suite_operation *o) {
-    suite_phase(o->client, "restore");
     ds4_status s = ds4_bundle_hint_close(o->hint);
     if (s) return s;
     o->hint = NULL;
@@ -433,6 +458,19 @@ static ds4_status suite_operation_close(suite_operation *o) {
     ds4_gemma_multimodal_input_free(o->input);
     free(o);
     return DS4_STATUS_OK;
+}
+/* The inference worker owns recovery once the request releases its operation. */
+static ds4_status suite_operation_finish(suite_operation **operation) {
+    suite_operation *o = *operation;
+    if (!o) return DS4_STATUS_OK;
+    suite_state *state = o->state;
+    ds4_status status = suite_operation_close(o);
+    if (status) {
+        o->client = NULL;
+        state->recovery = o;
+    }
+    *operation = NULL;
+    return status ? DS4_STATUS_RESTORE : DS4_STATUS_OK;
 }
 static ds4_status suite_recover(server *s) {
     if (!s->suite || !s->suite->recovery) return DS4_STATUS_OK;
@@ -646,13 +684,15 @@ done:
     schema_json_free(config);
     return status;
 }
-static void suite_append_model(buf *b, suite_state *q, suite_model *m) {
-    bool embed = m->embed != NULL;
+static void suite_append_model(buf *b, suite_state *q, suite_model_slot slot) {
+    suite_model *m = &q->models[slot];
+    bool embed = slot == SUITE_MODEL_EMBEDDING;
+    bool accepting_requests = !q->recovery;
     bool resident = false;
     uint64_t component_bytes[3] = {0}, totals[3] = {0};
     if (embed) {
         ds4_gemma_residency r;
-        if (!ds4_gemma_multimodal_resident_weights(m->embed, &r)) {
+        if (m->embed && !ds4_gemma_multimodal_resident_weights(m->embed, &r)) {
             component_bytes[0] = r.text_bytes; component_bytes[1] = r.vision_bytes; component_bytes[2] = r.audio_bytes;
             resident = r.text_bytes && r.vision_bytes && r.audio_bytes;
         }
@@ -669,17 +709,18 @@ static void suite_append_model(buf *b, suite_state *q, suite_model *m) {
     json_escape(b, DS4_SUITE_METAL_QUALIFICATION);
     buf_puts(b, "}");
 #endif
-    buf_printf(b, ",\"configured\":true,\"resident\":%s,\"ready\":%s,\"qualified_backends\":%s,"
+    buf_printf(b, ",\"configured\":true,\"resident\":%s,\"accepting_requests\":%s,"
+        "\"ready\":%s,\"qualified_backends\":%s,"
         "\"operations\":%s,\"input_modalities\":%s,\"context_tokens\":%u,\"embedding_dimensions\":%s,"
         "\"limits\":{\"file_bytes\":536870912,\"storage_bytes\":%llu,\"files\":256,\"receipts\":64,\"max_inflight_requests\":8,"
         "\"receipt_bytes\":67108864,\"receipt_ttl_seconds\":600,\"media_ttl_seconds\":3600,"
         "\"timeout_seconds\":%.0f,\"batch_items\":32,\"image_total_pixels\":4194304,\"reference_resolution\":0,\"output_formats\":[\"png\"]",
-        resident ? "true" : "false",
+        resident ? "true" : "false", accepting_requests ? "true" : "false",
 #ifdef __APPLE__
         "false", /* Full Metal quality qualification is still open. */
         "[]",
 #else
-        q->recovery ? "false" : "true",
+        accepting_requests ? "true" : "false",
         "[\"cuda-sm86\"]",
 #endif
         embed ? "[\"embed\"]" : "[\"image_generate\",\"image_edit\"]",
@@ -720,7 +761,7 @@ static void suite_catalog_refresh(suite_state *q) {
     suite_catalog_model models[SUITE_MODELS] = {0};
     for (unsigned i = 0; i < SUITE_MODELS; i++) if (q->models[i].bundle) {
         buf body = {0};
-        suite_append_model(&body, q, q->models + i);
+        suite_append_model(&body, q, i);
         models[i].id = xstrdup(ds4_bundle_model(q->models[i].bundle));
         models[i].json = body.ptr;
     }

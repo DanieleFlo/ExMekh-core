@@ -64,6 +64,17 @@ def gate(connection: Connection, destination: str) -> str | None:
     return route("/setup/model", destination)
 
 
+def feature_matches_mode(
+    capability: dict, mode: str, *, legacy: bool | None = None
+) -> bool:
+    modes = capability.get("available_modes")
+    if modes is not None:
+        return mode in modes
+    return bool(capability.get("available")) and (
+        mode == "vram" if legacy is None else legacy
+    )
+
+
 def profile_link(profile: dict, destination: str, step: str = "model") -> str:
     return route(
         f"/setup/{step}",

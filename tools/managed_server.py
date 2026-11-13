@@ -904,20 +904,11 @@ class Core:
                 job["native_load_seconds"] = time.monotonic() - started
                 job["loaded_profile"] = copy.deepcopy(profile)
 
-        configured = profile["features"]
-        operations = native.ready_operations
-        available = {
-            "vision": "vision" in configured,
-            "images": {"image_generate", "image_edit"} <= operations,
-            "embeddings": "embed" in operations,
-        }
         return {
             **profile,
             "api_model": native.name,
             "owned_by": native.owner,
-            "available_features": [
-                name for name, enabled in available.items() if enabled
-            ],
+            "available_features": native.available_features(profile["features"]),
             "runtime_id": uuid.uuid4().hex,
         }
 

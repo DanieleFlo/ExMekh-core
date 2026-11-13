@@ -292,8 +292,12 @@ static ds4_status suite_run_image_batch(suite_operation *o,
         ds4_status status = ds4_qwen_image_job_create_batch(&o->image, o->model->image,
             request, *active, o->victims, o->victim_count, &observer);
         if (!status) status = ds4_qwen_image_job_run(o->image);
-        if (status != DS4_STATUS_NOMEM || *active == 1 ||
-            (o->image && !ds4_qwen_image_job_admission_pending(o->image)))
+        if (status != DS4_STATUS_NOMEM) return status;
+        if (*active == 1) {
+            o->image_admission = ds4_qwen_image_job_admission_hint(o->image);
+            return status;
+        }
+        if (o->image && !ds4_qwen_image_job_admission_pending(o->image))
             return status;
         status = suite_close_image_job(o);
         if (status) return status;
@@ -489,9 +493,10 @@ static void suite_worker(server *s, job *j) {
         status = embed ? suite_run_embedding(o, &body, root, usage, &plan) :
             suite_run_images(o, &image, &body, &plan, pending_images);
     if (status) {
-        ds4_status close = suite_operation_close(o);
-        if (close) { o->client = NULL; q->recovery = o; status = DS4_STATUS_RESTORE; }
-        o = NULL; suite_status_error(s, j, status); goto cleanup;
+        ds4_qwen_image_admission admission = o->image_admission;
+        ds4_status close = suite_operation_finish(&o);
+        suite_status_error_with_admission(s, j, close ? close : status, admission);
+        goto cleanup;
     }
     buf_puts(&body, ",\"ds4\":{\"version\":1,\"request_id\":"); json_escape(&body, h->request_id);
     buf_puts(&body, ",\"revision\":"); json_escape(&body, ds4_bundle_revision(m->bundle));
@@ -513,9 +518,8 @@ static void suite_worker(server *s, job *j) {
     else buf_printf(&body, ",\"load_seconds\":[%.9f,%.9f,%.9f],\"phase_seconds\":[%.9f,%.9f,%.9f,%.9f]",
         o->load_seconds[0], o->load_seconds[1], o->load_seconds[2],
         o->phase_seconds[0], o->phase_seconds[1], o->phase_seconds[2], o->phase_seconds[3]);
-    status = suite_operation_close(o);
-    if (status) { o->client = NULL; q->recovery = o; o = NULL; suite_status_error(s, j, DS4_STATUS_RESTORE); goto cleanup; }
-    o = NULL;
+    status = suite_operation_finish(&o);
+    if (status) { suite_status_error(s, j, status); goto cleanup; }
     /* Snapshot after request cleanup. Host media caches have their own owner;
      * native buffers, legacy weights and unowned global memory stay distinct. */
     suite_append_resources(&body, q);
@@ -537,10 +541,7 @@ static void suite_worker(server *s, job *j) {
     images_committed = true;
     suite_send(s, j, 200, body.ptr);
 cleanup:
-    if (o) {
-        ds4_status close = suite_operation_close(o);
-        if (close) { o->client = NULL; q->recovery = o; }
-    }
+    (void)suite_operation_finish(&o);
     if (!images_committed)
         for (size_t i = 0; i < image.count; i++) suite_remove_file(q, pending_images[i]);
     suite_image_request_free(&image);

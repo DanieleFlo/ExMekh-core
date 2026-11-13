@@ -65,7 +65,40 @@ class NativeLaunch:
 class NativeModel:
     name: str
     owner: str
-    ready_operations: frozenset[str]
+    _operations: frozenset[str]
+
+    @classmethod
+    def from_catalog(cls, models):
+        chat = next(
+            model
+            for model in models
+            if "chat" in model.get("ds4", {}).get("operations", ["chat"])
+        )
+        if not isinstance(chat["id"], str) or not chat["id"]:
+            raise ValueError("invalid chat model ID")
+        operations = set()
+        for model in models:
+            metadata = model.get("ds4", {})
+            accepting = metadata.get("accepting_requests")
+            if accepting is None:
+                accepting = metadata.get("ready") is True or (
+                    metadata.get("configured") is True
+                    and metadata.get("limits", {}).get("admission_required") is True
+                )
+            if accepting is True:
+                operations.update(metadata.get("operations", ()))
+        return cls(chat["id"], chat.get("owned_by", ""), frozenset(operations))
+
+    def available_features(self, configured):
+        requirements = {
+            "images": {"image_generate", "image_edit"},
+            "embeddings": {"embed"},
+        }
+        return [
+            feature for feature in configured
+            if feature == "vision"
+            or (feature in requirements and requirements[feature] <= self._operations)
+        ]
 
 
 class NativeWorker:
@@ -192,20 +225,7 @@ class NativeWorker:
     def _discover_model(self):
         try:
             models = self._get_json("/v1/models", timeout=10)["data"]
-            chat = next(
-                model
-                for model in models
-                if "chat" in model.get("ds4", {}).get("operations", ["chat"])
-            )
-            if not isinstance(chat["id"], str) or not chat["id"]:
-                raise ValueError("invalid chat model ID")
-            operations = frozenset(
-                operation
-                for model in models
-                if (metadata := model.get("ds4", {})).get("ready") is True
-                for operation in metadata.get("operations", ())
-            )
-            return NativeModel(chat["id"], chat.get("owned_by", ""), operations)
+            return NativeModel.from_catalog(models)
         except (
             OSError,
             http.client.HTTPException,

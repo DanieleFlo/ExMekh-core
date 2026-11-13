@@ -429,6 +429,11 @@ In managed mode, select an available profile in **System settings → Server →
 the models whose files are already on the server. Choose **Enable** or **Disable**
 on an optional model, then apply the reviewed profile. **Remove files** frees
 disk space after you disable a model whose files Core manages.
+The **Agent** menu in a managed chat also lets you select **Qwen Image 2.1
+Turbo** and **Google EmbeddingGemma 2** and review the changes to the shared
+Core profile. Flash Next offers them with CUDA streaming on SM 8.6 and with
+Metal SSD streaming. Qwen Image loads weight blocks from the local bundle when
+the available memory calls for streaming.
 On qualified CUDA SM 8.6 hardware, Flash Next uses its standard tiered cache
 profile with a 2,048-token prefill chunk and a recommended 65,536-token context
 when memory permits. The context field can be increased up to the estimated ceiling.

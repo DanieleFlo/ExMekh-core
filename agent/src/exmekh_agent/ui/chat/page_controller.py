@@ -46,7 +46,11 @@ from exmekh_agent.exmekh_bridge.providers.context_usage import (
     ContextUsageSummary,
     populate_skill_closure_tokens,
 )
-from exmekh_agent.exmekh_bridge.providers.core_management import ActiveProfile
+from exmekh_agent.exmekh_bridge.providers.core_management import (
+    ActiveProfile,
+    CoreClient,
+    CoreProblem,
+)
 from exmekh_agent.exmekh_bridge.tools.tool_approval import ApprovalModeChanged
 from exmekh_agent.state.active_turns import active_turns
 from exmekh_agent.state.session_manager import SessionManager, session_manager
@@ -61,7 +65,12 @@ from exmekh_agent.ui.navigation.header import HeaderComponent
 from exmekh_agent.ui.navigation.new_project_dialog import NewProjectDialogComponent
 from exmekh_agent.ui.navigation.sidebar import SidebarComponent
 from exmekh_agent.ui.resources import presentation_config, render_html, ui_text
-from exmekh_agent.ui.settings.core_navigation import route
+from exmekh_agent.ui.settings.core_navigation import (
+    feature_matches_mode,
+    profile_link,
+    route,
+)
+from exmekh_agent.ui.settings.core_views import notify_error
 from exmekh_agent.ui.settings.project_settings_dialog import (
     ProjectSettingsDialogComponent,
 )
@@ -71,6 +80,10 @@ from exmekh_agent.utils.formatting import format_file_size
 UI_PRESENTATION = presentation_config("controls/page_controller")
 
 logger = logging.getLogger(__name__)
+OPTIONAL_MODELS = {
+    "images": "chat.page_controller.qwen_image_model",
+    "embeddings": "chat.page_controller.google_embedding_model",
+}
 
 QUEUE_DRAG_JS_PATH: Path = (
     Path(__file__).parents[1] / "resources" / "js" / "queue_drag.js"
@@ -170,6 +183,7 @@ class ChatPageController:
                 on_attach_image=self.attach_generated_image,
             )
             self.chat_view.build()
+            self.chat_view.set_managed_model_options(self._core_profile is not None)
             self.input_bar = InputBarComponent(
                 on_send=self.start_send,
                 on_send_with_attachments=self.start_send,
@@ -419,6 +433,8 @@ class ChatPageController:
         if profile != self._core_profile or model != self._provider_model:
             self._core_profile = profile
             self._provider_model = model
+            if self.chat_view:
+                self.chat_view.set_managed_model_options(profile is not None)
             if self.input_bar:
                 self.update_context_usage()
 
@@ -531,11 +547,23 @@ class ChatPageController:
                 self.chat_view.show_sub_agent(conversation_id)
             self.update_context_usage()
 
-    def open_chat_agent_settings(self) -> None:
+    async def open_chat_agent_settings(self) -> None:
         session = self.sessions.get_current_session()
-        if session.agent_mode != "deep_agent":
+        deep_agent = session.agent_mode == "deep_agent"
+        profile = self._core_profile
+        capabilities = {}
+        if profile is not None:
+            try:
+                capabilities = await CoreClient().model_capabilities(profile.model_id)
+            except CoreProblem as error:
+                notify_error(error)
+            if (
+                profile != self._core_profile
+                or session.id != self.sessions.get_current_session().id
+            ):
+                return
+        if not deep_agent and not capabilities:
             return
-        settings = self.sessions.execution_settings(session)
         with (
             ui.dialog() as dialog,
             ui.card().classes(
@@ -547,44 +575,23 @@ class ChatPageController:
             ui.label(ui_text("chat.page_controller.chat_agent_settings")).classes(
                 UI_PRESENTATION["open_chat_agent_settings.classes.text_lg"]
             )
-            selector = AgentSelector(
-                lambda: settings.capability_paths(config.capabilities_path)
-            )
-            selector.build()
-            selector.set_value(settings.agent_profile, settings.agent_design)
-            ui.label(
-                ui_text("chat.page_controller.applies_to_the_next_response_in_this")
-            ).classes(
-                UI_PRESENTATION[
-                    "open_chat_agent_settings.classes.text_xs_text_zinc_400"
-                ]
-            )
-
-            async def save_agent() -> None:
-                if active_turns.is_running(session.id):
-                    ui.notify(
-                        ui_text(
-                            "chat.page_controller.wait_for_the_current_response_before_changing"
-                        ),
-                        type="warning",
-                    )
-                    return
-                saved = await asyncio.get_running_loop().run_in_executor(
-                    None,
-                    partial(
-                        self.sessions.save_chat_agent,
-                        session.id,
-                        selector.profile,
-                        selector.design_snapshot(),
-                    ),
+            selector = None
+            if deep_agent:
+                settings = self.sessions.execution_settings(session)
+                selector = AgentSelector(
+                    lambda: settings.capability_paths(config.capabilities_path)
                 )
-                with self._client:
-                    if saved:
-                        dialog.close()
-                        ui.notify(
-                            ui_text("chat.page_controller.chat_agent_saved"),
-                            type="positive",
-                        )
+                selector.build()
+                selector.set_value(settings.agent_profile, settings.agent_design)
+                ui.label(
+                    ui_text("chat.page_controller.applies_to_the_next_response_in_this")
+                ).classes(
+                    UI_PRESENTATION[
+                        "open_chat_agent_settings.classes.text_xs_text_zinc_400"
+                    ]
+                )
+            if profile is not None and capabilities:
+                self._build_chat_model_options(profile, session, capabilities)
 
             with ui.row().classes(
                 UI_PRESENTATION["open_chat_agent_settings.classes.w_full_justify_end"]
@@ -592,10 +599,77 @@ class ChatPageController:
                 ui.button(
                     ui_text("chat.page_controller.cancel"), on_click=dialog.close
                 ).props(UI_PRESENTATION["open_chat_agent_settings.props.flat"])
-                ui.button(
-                    ui_text("chat.page_controller.save_chat_agent"), on_click=save_agent
-                )
+                if selector is not None:
+                    ui.button(
+                        ui_text("chat.page_controller.save_chat_agent"),
+                        on_click=partial(
+                            self._save_chat_agent, session.id, selector, dialog
+                        ),
+                    )
         dialog.open()
+
+    async def _save_chat_agent(
+        self, session_id: str, selector: AgentSelector, dialog: ui.dialog
+    ) -> None:
+        if active_turns.is_running(session_id):
+            ui.notify(
+                ui_text(
+                    "chat.page_controller.wait_for_the_current_response_before_changing"
+                ),
+                type="warning",
+            )
+            return
+        saved = await asyncio.get_running_loop().run_in_executor(
+            None,
+            partial(
+                self.sessions.save_chat_agent,
+                session_id,
+                selector.profile,
+                selector.design_snapshot(),
+            ),
+        )
+        with self._client:
+            if saved:
+                dialog.close()
+                ui.notify(
+                    ui_text("chat.page_controller.chat_agent_saved"), type="positive"
+                )
+
+    def _build_chat_model_options(
+        self,
+        profile: ActiveProfile,
+        session: ChatSession,
+        capabilities: dict[str, dict],
+    ) -> None:
+        features = set(profile.features)
+        ui.label(ui_text("system_settings.optional_models"))
+        toggles = {}
+        for name, label in OPTIONAL_MODELS.items():
+            capability = capabilities.get(name, {})
+            compatible = feature_matches_mode(capability, profile.mode_id)
+            toggle = ui.checkbox(ui_text(label), value=name in features)
+            toggle.set_enabled(compatible or name in features)
+            if not compatible and capability.get("reason"):
+                toggle.tooltip(capability["reason"])
+            toggles[name] = toggle
+
+        def review_models() -> None:
+            selected = features.difference(toggles) | {
+                name for name, toggle in toggles.items() if toggle.value
+            }
+            self._stash_input()
+            ui.navigate.to(
+                profile_link(
+                    profile.configuration(features=selected),
+                    ChatRoutes(self.sessions).path_for(session),
+                    "features",
+                )
+            )
+
+        ui.button(
+            ui_text("chat.page_controller.review_optional_models"),
+            on_click=review_models,
+        ).props(UI_PRESENTATION["open_chat_agent_settings.props.flat"])
 
     async def edit_message(
         self,

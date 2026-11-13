@@ -7,6 +7,7 @@ import pytest
 
 from exmekh_agent.config import config
 from exmekh_agent.exmekh_bridge.providers.core_management import (
+    ActiveProfile,
     CoreClient,
     CoreJob,
     CoreProblem,
@@ -16,6 +17,7 @@ from exmekh_agent.exmekh_bridge.providers.core_management import (
 )
 from exmekh_agent.ui.settings.core_navigation import (
     chat_destination,
+    feature_matches_mode,
     gate,
     profile_link,
     route,
@@ -283,3 +285,41 @@ def test_reconfigure_link_carries_the_selected_profile():
     ) == (
         "/setup/features?model=qwen27&mode=vram&tokens=8192&features=vision&return_to=%2Fchat%2Fa%2Fb"
     )
+
+
+def test_active_profile_exports_only_configuration():
+    profile = ActiveProfile.model_validate(
+        {**PROFILE, "features": ["vision", "images"]}
+    )
+    assert profile.configuration() == {
+        "model_id": "qwen27",
+        "mode_id": "vram",
+        "context_tokens": 8192,
+        "features": ["images", "vision"],
+    }
+    assert profile.configuration(features=[])["features"] == []
+    assert profile.features == ["vision", "images"]
+
+
+async def test_model_capabilities_are_scoped_to_the_active_model(server):
+    _, responses = server
+    image = {"id": "images", "available": True, "available_modes": ["tiered"]}
+    catalog = {
+        "models": [
+            {"id": "other", "features": []},
+            {"id": "flash", "features": [image]},
+        ]
+    }
+    responses.extend(httpx.Response(200, json=catalog) for _ in range(2))
+    client = CoreClient()
+    assert await client.model_capabilities("flash") == {"images": image}
+    assert await client.model_capabilities("missing") == {}
+
+
+def test_feature_compatibility_uses_the_catalog_mode_and_legacy_fallback():
+    assert feature_matches_mode({"available_modes": ["tiered"]}, "tiered")
+    assert not feature_matches_mode({"available": True, "available_modes": []}, "vram")
+    assert feature_matches_mode({"available": True}, "vram")
+    assert not feature_matches_mode({"available": True}, "tiered")
+    assert feature_matches_mode({"available": True}, "ssd", legacy=True)
+    assert not feature_matches_mode({"available": False}, "vram")
